@@ -6,12 +6,6 @@
    <packaging>pom</packaging>
    <name>FlyWorkstation</name>
    <modules>
-      <module>projects</module>
-      <module>primary-source</module>
-      <module>servlets</module>
-      <module>ejbs</module>
-      <module>ear</module>
-      <!--<module>site</module>-->
       <module>console</module>
    </modules>
    <build>
@@ -27,20 +21,6 @@
          </plugins>
       </pluginManagement>
    </build>
-   <dependencyManagement>
-      <dependencies>
-         <dependency>
-            <groupId>org.janelia.it.FlyWorkstation.project.projects</groupId>
-            <artifactId>logging</artifactId>
-            <version>1.0</version>
-         </dependency>
-         <dependency>
-            <groupId>org.janelia.it.FlyWorkstation.project</groupId>
-            <artifactId>primary-source</artifactId>
-            <version>1.0</version>
-         </dependency>
-      </dependencies>
-   </dependencyManagement>
    <distributionManagement>
       <site>
          <id>site</id>
