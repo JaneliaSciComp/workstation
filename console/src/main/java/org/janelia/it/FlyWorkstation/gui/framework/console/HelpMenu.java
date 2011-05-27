@@ -1,0 +1,17 @@
+package org.janelia.it.FlyWorkstation.gui.framework.console;
+
+import javax.swing.*;
+
+/**
+ * Created by IntelliJ IDEA.
+ * User: saffordt
+ * Date: 2/8/11
+ * Time: 3:47 PM
+ * To change this template use File | Settings | File Templates.
+ */
+public class HelpMenu extends JMenu {
+    public HelpMenu(ConsoleFrame console) {
+        super("Help");
+        add(new JMenuItem("TBD"));
+    }
+}
