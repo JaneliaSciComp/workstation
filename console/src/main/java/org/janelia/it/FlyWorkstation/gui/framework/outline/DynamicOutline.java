@@ -32,7 +32,7 @@ public class DynamicOutline extends JPanel implements ActionListener, TreeSelect
 
         // Create the components.
         DynamicTree treePanel = new DynamicTree();
-        treePanel.setPreferredSize(new Dimension(300, 150));
+//        treePanel.setPreferredSize(new Dimension(300, 150));
         treePanel.tree.addTreeSelectionListener(this);
         treeMap.put(treePanel.rootNode, treePanel);
         for (DynamicTree dynamicTree : treeMap.values()) {
@@ -56,7 +56,7 @@ public class DynamicOutline extends JPanel implements ActionListener, TreeSelect
         treesPanel.add(treePanel);
         selectedTree = treePanel;
         JScrollPane treeScrollPane = new JScrollPane(treesPanel);
-        treeScrollPane.createVerticalScrollBar();
+        treeScrollPane.createVerticalScrollBar().setVisible(true);
         add(new JLabel("Ontology Editor"), BorderLayout.NORTH);
         add(treeScrollPane, BorderLayout.CENTER);
 
@@ -103,7 +103,7 @@ public class DynamicOutline extends JPanel implements ActionListener, TreeSelect
             populateTrees(newTreePanel);
             treeMap.put(newTreePanel.rootNode, newTreePanel);
             treesPanel.add(newTreePanel);
-            treesPanel.updateUI();
+            this.updateUI();
         }
     }
 
