@@ -17,7 +17,7 @@ import java.util.HashMap;
  * Date: 6/1/11
  * Time: 4:54 PM
  */
-public class DynamicOutline extends JPanel implements ActionListener, TreeSelectionListener {
+public class OntologyOutline extends JPanel implements ActionListener, TreeSelectionListener {
     private int newNodeSuffix = 1;
     private static String ADD_COMMAND = "add";
     private static String REMOVE_COMMAND = "remove";
@@ -27,7 +27,7 @@ public class DynamicOutline extends JPanel implements ActionListener, TreeSelect
     private HashMap<DefaultMutableTreeNode, DynamicTree> treeMap = new HashMap<DefaultMutableTreeNode, DynamicTree>();
     private DynamicTree selectedTree;
 
-    public DynamicOutline() {
+    public OntologyOutline() {
         super(new BorderLayout());
 
         // Create the components.
