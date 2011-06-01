@@ -30,7 +30,7 @@ import java.io.IOException;
  */
 public class FileOutline extends JScrollPane implements Cloneable {
     // todo Remove this hard-wiring of the path
-    public static final String DATA_SOURCE_PATH = "/Volumes/jacsData/filestore/saffordt/NeuronSeparator/1600586366989631664";
+    public static final String DATA_SOURCE_PATH = "/Volumes/jacsData/filestore/"+System.getenv("USER")+"/NeuronSeparator/1600586366989631664";
     public static final String NO_DATASOURCE = "Data Source Unreachable";
     private ConsoleFrame consoleFrame;
     private JTree tree;
@@ -155,7 +155,7 @@ public class FileOutline extends JScrollPane implements Cloneable {
             public void actionPerformed(ActionEvent actionEvent) {
                 System.out.println("DEBUG: Creating new Annotation Session Task");
                 try {
-                    AnnotationSessionTask newSessionTask = new AnnotationSessionTask(null, "saffordt", null, null);
+                    AnnotationSessionTask newSessionTask = new AnnotationSessionTask(null, System.getenv("USER"), null, null);
                     newSessionTask.setParameter(AnnotationSessionTask.PARAM_annotatioNode, treePath.getPath()[treePath.getPath().length-1].toString());
                     newSessionTask.setParameter(AnnotationSessionTask.PARAM_annotationValues, "good, partially good, low quality, trash");
                     newSessionTask.setParameter(AnnotationSessionTask.PARAM_annotationCategories, "quality");
@@ -176,7 +176,7 @@ public class FileOutline extends JScrollPane implements Cloneable {
         JMenuItem v3dMenuItem = new JMenuItem("Show in V3D");
         v3dMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-                String tmpCmd = "/Users/saffordt/Dev/NeuroAnnotator/v3d/v3d64.app/Contents/MacOS/v3d64 -f "+ treePath.getAbsolutePath();
+                String tmpCmd = "/Users/"+System.getenv("USER")+"/Dev/NeuroAnnotator/v3d/v3d64.app/Contents/MacOS/v3d64 -f "+ treePath.getAbsolutePath();
                 System.out.println("DEBUG: "+tmpCmd);
                 try {
                     Runtime.getRuntime().exec(tmpCmd);

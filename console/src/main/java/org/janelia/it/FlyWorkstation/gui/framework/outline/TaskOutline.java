@@ -127,7 +127,7 @@ public class TaskOutline extends JScrollPane implements Cloneable {
             if (null!=computeBean) {
                 DefaultMutableTreeNode top = new DefaultMutableTreeNode();
                 try {
-                    List<Task> tmpTasks = computeBean.getUserTasksByType(AnnotationSessionTask.TASK_NAME, "saffordt");
+                    List<Task> tmpTasks = computeBean.getUserTasksByType(AnnotationSessionTask.TASK_NAME, System.getenv("USER"));
                     if (null==tmpTasks || tmpTasks.size()<=0) {
                         return nullNode;
                     }

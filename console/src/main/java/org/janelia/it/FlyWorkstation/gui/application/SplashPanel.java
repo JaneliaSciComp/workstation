@@ -14,7 +14,7 @@ public class SplashPanel extends JPanel {
     JPanel panel1 = new JPanel();
     JPanel panel2 = new JPanel();
 
-    JLabel logoImageControl = new JLabel(new ImageIcon("/Users/saffordt/Dev/FlyWorkstation/console/target/classes/org/janelia/it/FlyWorkstation/gui/application/jfrc-bg4.jpg"));
+    JLabel logoImageControl = new JLabel(new ImageIcon("/Users/"+System.getenv("USER")+"/Dev/jacs/console/target/classes/org/janelia/it/FlyWorkstation/gui/application/jfrc-bg4.jpg"));
 
     public SplashPanel() {
         try {

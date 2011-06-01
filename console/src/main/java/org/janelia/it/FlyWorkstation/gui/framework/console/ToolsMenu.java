@@ -22,12 +22,12 @@ public class ToolsMenu extends JMenu {
         super("Tools");
         this.parentFrame = console;
         // todo This needs to be customized
-        v3dMenuItem = new JMenuItem("V3D - NeuroAnnotator", new ImageIcon("/Users/saffordt/Dev/FlyWorkstation/console/target/classes/org/janelia/it/FlyWorkstation/gui/application/v3d_16x16x32.png"));
+        v3dMenuItem = new JMenuItem("V3D - NeuroAnnotator", new ImageIcon("/Users/"+System.getenv("USER")+"/Dev/jacs/console/target/classes/org/janelia/it/FlyWorkstation/gui/application/v3d_16x16x32.png"));
         v3dMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
                     // todo This needs to be a custom user setting.
-                    Runtime.getRuntime().exec("/Users/saffordt/Dev/NeuroAnnotator/v3d/v3d64.app/Contents/MacOS/v3d64");
+                    Runtime.getRuntime().exec("/Users/"+System.getenv("USER")+"/Dev/NeuroAnnotator/v3d/v3d64.app/Contents/MacOS/v3d64");
                 }
                 catch (IOException e) {
                     JOptionPane.showMessageDialog(v3dMenuItem.getParent(),"Could not launch V3D - NeuroAnnotator",

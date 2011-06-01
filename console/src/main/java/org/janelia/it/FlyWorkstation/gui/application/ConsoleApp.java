@@ -178,7 +178,7 @@ public class ConsoleApp {
             final ConsoleFrame mainConsole = new ConsoleFrame(.8f);// sessionMgr.newBrowser();
             mainConsole.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             mainConsole.setTitle("Fly Workstation 0.1");
-            mainConsole.setBrowserImageIcon(new ImageIcon("/Users/saffordt/Dev/FlyWorkstation/console/target/classes/org/janelia/it/flyscope.jpg"));
+            mainConsole.setBrowserImageIcon(new ImageIcon("/Users/"+System.getenv("USER")+"/Dev/jacs/console/target/classes/org/janelia/it/flyscope.jpg"));
             // todo remove this repaint if this is an image definition problem
             mainConsole.repaint();
             mainConsole.setVisible(true);

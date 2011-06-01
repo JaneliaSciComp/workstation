@@ -19,7 +19,7 @@ public class MainFileInfoPanel extends JPanel {
     GridLayout experimentLayout = new GridLayout(0,2);
     JPanel compsToExperiment = new JPanel();
     // todo Need a default image here
-    public static final String DEFAULT_IMAGE_PATH = "/Users/saffordt/Dev/FlyWorkstation/console/target/classes/org/janelia/it/flyscope.jpg";
+    public static final String DEFAULT_IMAGE_PATH = "/Users/"+System.getenv("USER")+"/Dev/jacs/console/target/classes/org/janelia/it/flyscope.jpg";
 
     public MainFileInfoPanel() {
         super(new VerticalBagLayout());
