@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
 import org.janelia.it.FlyWorkstation.gui.application.SplashPanel;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.DynamicOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.FileOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.TaskOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.search.SearchToolbar;
@@ -60,6 +61,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //    private Editor subEditor;
     private FileOutline fileOutline;
     private TaskOutline taskOutline;
+    private DynamicOutline ontologyOutline;
     private String mostRecentFileOutlinePath;
     private JTabbedPane icsTabPane = new JTabbedPane();
     private int rightDividerLocation;
@@ -219,6 +221,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //        subBrowserTabPane = new SubBrowser(browserModel);
         fileOutline = new FileOutline(this);
         taskOutline = new TaskOutline(this);
+        ontologyOutline = new DynamicOutline();
 //        icsTabPane = new ICSTabPane(this);
 
         ConsolePosition consolePosition = new ConsolePosition();//(ConsolePosition) SessionMgr.getSessionMgr()
@@ -275,6 +278,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
         collapsedOutlineView.setLayout(new BorderLayout());
         mainPanel.add(collapsedOutlineView, "Collapsed FileOutline");
         getContentPane().add(mainPanel, BorderLayout.CENTER);
+        getContentPane().add(ontologyOutline, BorderLayout.EAST);
     }
 
     private JPanel getFormattedSplashPanel() {
