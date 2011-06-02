@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import sun.awt.VerticalBagLayout;
 
 import javax.swing.*;
@@ -18,7 +19,6 @@ import java.util.HashMap;
  * Time: 4:54 PM
  */
 public class OntologyOutline extends JPanel implements ActionListener, TreeSelectionListener {
-    private int newNodeSuffix = 1;
     private static String ADD_COMMAND = "add";
     private static String REMOVE_COMMAND = "remove";
     private static String ROOT_COMMAND = "root";
@@ -31,7 +31,7 @@ public class OntologyOutline extends JPanel implements ActionListener, TreeSelec
         super(new BorderLayout());
 
         // Create the components.
-        DynamicTree treePanel = new DynamicTree();
+        DynamicTree treePanel = new DynamicTree(null);
 //        treePanel.setPreferredSize(new Dimension(300, 150));
         treePanel.tree.addTreeSelectionListener(this);
         treeMap.put(treePanel.rootNode, treePanel);
@@ -90,20 +90,59 @@ public class OntologyOutline extends JPanel implements ActionListener, TreeSelec
 
         if (ADD_COMMAND.equals(command)) {
             // Add button clicked
-            selectedTree.addObject("New Node " + newNodeSuffix++);
+            String termName = (String)JOptionPane.showInputDialog(
+                                this,
+                                "Ontology Term:\n",
+                                "New Ontology Term",
+                                JOptionPane.PLAIN_MESSAGE,
+                                null,
+                                null,
+                                null);
+
+            if ((termName == null) || (termName.length() <= 0)) {
+                JOptionPane.showMessageDialog(this, "Require a valid term", "Ontology Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            selectedTree.addObject(termName);
+            EJBFactory.getRemoteAnnotationBean().createOntologyTerm(System.getenv("USER"), selectedTree.rootNode.toString(),
+                    termName);
         }
         else if (REMOVE_COMMAND.equals(command)) {
             // Remove button clicked
+            int deleteConfirmation = JOptionPane.showConfirmDialog(
+                this,
+                "Are you sure you want to delete this term?",
+                "Delete Term",
+                JOptionPane.YES_NO_OPTION);
+            if (deleteConfirmation!=0) {
+                return;
+            }
             selectedTree.removeCurrentNode();
+            EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(System.getenv("USER"), selectedTree.getCurrentNodeName());
         }
         else if (ROOT_COMMAND.equals(command)) {
             // New Root button clicked.
-            DynamicTree newTreePanel = new DynamicTree();
+            String rootName = (String)JOptionPane.showInputDialog(
+                                this,
+                                "Ontology Root Name:\n",
+                                "New Ontology",
+                                JOptionPane.PLAIN_MESSAGE,
+                                null,
+                                null,
+                                null);
+
+            if ((rootName == null) || (rootName.length() <= 0)) {
+                JOptionPane.showMessageDialog(this, "Require a valid name", "Ontology Error", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            DynamicTree newTreePanel = new DynamicTree(rootName);
             newTreePanel.tree.addTreeSelectionListener(this);
-            populateTrees(newTreePanel);
+//            populateTrees(newTreePanel);
             treeMap.put(newTreePanel.rootNode, newTreePanel);
             treesPanel.add(newTreePanel);
             this.updateUI();
+            EJBFactory.getRemoteAnnotationBean().createOntologyRoot(System.getenv("USER"), rootName);
         }
     }
 

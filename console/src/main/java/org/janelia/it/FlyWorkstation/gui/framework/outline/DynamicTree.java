@@ -18,10 +18,10 @@ class DynamicTree extends JPanel {
     protected JTree tree;
     private Toolkit toolkit = Toolkit.getDefaultToolkit();
 
-    public DynamicTree() {
+    public DynamicTree(String rootName) {
         super(new GridLayout(1, 0));
-
-        rootNode = new DefaultMutableTreeNode("Root Node - "+System.currentTimeMillis());
+        String tmpName = (rootName==null)?"Root Node - "+System.currentTimeMillis():rootName;
+        rootNode = new DefaultMutableTreeNode(tmpName);
         treeModel = new DefaultTreeModel(rootNode);
 
         tree = new JTree(treeModel);
@@ -52,6 +52,18 @@ class DynamicTree extends JPanel {
     }
 
     /**
+      * Get the currently selected node name.
+      */
+     public String getCurrentNodeName() {
+         TreePath currentSelection = tree.getSelectionPath();
+         if (currentSelection != null) {
+             DefaultMutableTreeNode currentNode = (DefaultMutableTreeNode) (currentSelection.getLastPathComponent());
+             return currentNode.toString();
+         }
+         return null;
+     }
+
+     /**
      * Add child to the currently selected node.
      */
     public DefaultMutableTreeNode addObject(Object child) {
