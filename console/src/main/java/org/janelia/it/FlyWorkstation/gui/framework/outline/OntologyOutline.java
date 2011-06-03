@@ -1,6 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
 import sun.awt.VerticalBagLayout;
 
 import javax.swing.*;
@@ -11,6 +14,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -19,9 +23,9 @@ import java.util.HashMap;
  * Time: 4:54 PM
  */
 public class OntologyOutline extends JPanel implements ActionListener, TreeSelectionListener {
-    private static String ADD_COMMAND = "add";
-    private static String REMOVE_COMMAND = "remove";
-    private static String ROOT_COMMAND = "root";
+    private static String ADD_COMMAND       = "add";
+    private static String REMOVE_COMMAND    = "remove";
+    private static String ROOT_COMMAND      = "root";
 
     private JPanel treesPanel;
     private HashMap<DefaultMutableTreeNode, DynamicTree> treeMap = new HashMap<DefaultMutableTreeNode, DynamicTree>();
@@ -29,15 +33,6 @@ public class OntologyOutline extends JPanel implements ActionListener, TreeSelec
 
     public OntologyOutline() {
         super(new BorderLayout());
-
-        // Create the components.
-        DynamicTree treePanel = new DynamicTree(null);
-//        treePanel.setPreferredSize(new Dimension(300, 150));
-        treePanel.tree.addTreeSelectionListener(this);
-        treeMap.put(treePanel.rootNode, treePanel);
-        for (DynamicTree dynamicTree : treeMap.values()) {
-            populateTrees(dynamicTree);
-        }
 
         JButton addButton = new JButton("Add");
         addButton.setActionCommand(ADD_COMMAND);
@@ -53,8 +48,12 @@ public class OntologyOutline extends JPanel implements ActionListener, TreeSelec
 
         // Lay everything out.
         treesPanel = new JPanel(new VerticalBagLayout());
-        treesPanel.add(treePanel);
-        selectedTree = treePanel;
+        // Create the components.
+        List<Entity> ontologyRootList = EJBFactory.getRemoteAnnotationBean().getUserEntitiesByType(System.getenv("USER"),
+                EntityConstants.TYPE_ONTOLOGY_ROOT_ID);
+        for (Entity entity : ontologyRootList) {
+            treesPanel.add(populateTree(entity));
+        }
         JScrollPane treeScrollPane = new JScrollPane(treesPanel);
         treeScrollPane.createVerticalScrollBar().setVisible(true);
         add(new JLabel("Ontology Editor"), BorderLayout.NORTH);
@@ -67,22 +66,19 @@ public class OntologyOutline extends JPanel implements ActionListener, TreeSelec
         add(panel, BorderLayout.SOUTH);
     }
 
-    public void populateTrees(DynamicTree dynamicTree) {
-        String p1Name = new String("Parent 1");
-        String p2Name = new String("Parent 2");
-        String c1Name = new String("Child 1");
-        String c2Name = new String("Child 2");
+    public DynamicTree populateTree(Entity ontology) {
+        DynamicTree treePanel = new DynamicTree(ontology.getName());
+        treePanel.tree.addTreeSelectionListener(this);
+        addNodes(treePanel, null, ontology);
+        treeMap.put(treePanel.rootNode, treePanel);
+        return treePanel;
+    }
 
-        DefaultMutableTreeNode p1, p2;
-
-        p1 = dynamicTree.addObject(null, p1Name);
-        p2 = dynamicTree.addObject(null, p2Name);
-
-        dynamicTree.addObject(p1, c1Name);
-        dynamicTree.addObject(p1, c2Name);
-
-        dynamicTree.addObject(p2, c1Name);
-        dynamicTree.addObject(p2, c2Name);
+    private void addNodes(DynamicTree tree, DefaultMutableTreeNode parentNode, Entity childEntity){
+        DefaultMutableTreeNode newNode = tree.addObject(parentNode, childEntity);
+        for (EntityData tmpData : childEntity.getEntityData()) {
+            addNodes(tree, newNode, tmpData.getChildEntity());
+        }
     }
 
     public void actionPerformed(ActionEvent e) {

@@ -34,7 +34,7 @@ public class ConsoleApp {
         // Show the Splash Screen
         final SplashScreen splash = new SplashScreen();
         splash.setStatusText("Initializing Application...");
-        splash.setVisible(true);
+//        splash.setVisible(true);
 
 //        final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
         try {
