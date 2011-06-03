@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import org.janelia.it.jacs.model.entity.Entity;
+
 import javax.swing.*;
 import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
@@ -59,6 +61,18 @@ class DynamicTree extends JPanel {
          if (currentSelection != null) {
              DefaultMutableTreeNode currentNode = (DefaultMutableTreeNode) (currentSelection.getLastPathComponent());
              return currentNode.toString();
+         }
+         return null;
+     }
+
+    /**
+      * Get the currently selected node id.
+      */
+     public String getCurrentNodeId() {
+         TreePath currentSelection = tree.getSelectionPath();
+         if (currentSelection != null) {
+             DefaultMutableTreeNode currentNode = (DefaultMutableTreeNode) (currentSelection.getLastPathComponent());
+             return ((Entity)currentNode.getUserObject()).getId().toString();
          }
          return null;
      }

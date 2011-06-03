@@ -28,7 +28,7 @@ public class OntologyOutline extends JPanel implements ActionListener, TreeSelec
     private static String ROOT_COMMAND      = "root";
 
     private JPanel treesPanel;
-    private HashMap<DefaultMutableTreeNode, DynamicTree> treeMap = new HashMap<DefaultMutableTreeNode, DynamicTree>();
+    private HashMap<Long, DynamicTree> treeMap = new HashMap<Long, DynamicTree>();
     private DynamicTree selectedTree;
 
     public OntologyOutline() {
@@ -66,11 +66,11 @@ public class OntologyOutline extends JPanel implements ActionListener, TreeSelec
         add(panel, BorderLayout.SOUTH);
     }
 
-    public DynamicTree populateTree(Entity ontology) {
-        DynamicTree treePanel = new DynamicTree(ontology.getName());
+    public DynamicTree populateTree(Entity ontologyRoot) {
+        DynamicTree treePanel = new DynamicTree(ontologyRoot.getName());
         treePanel.tree.addTreeSelectionListener(this);
-        addNodes(treePanel, null, ontology);
-        treeMap.put(treePanel.rootNode, treePanel);
+        addNodes(treePanel, null, ontologyRoot);
+        treeMap.put(ontologyRoot.getId(), treePanel);
         return treePanel;
     }
 
@@ -99,9 +99,10 @@ public class OntologyOutline extends JPanel implements ActionListener, TreeSelec
                 JOptionPane.showMessageDialog(this, "Require a valid term", "Ontology Error", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            selectedTree.addObject(termName);
-            EJBFactory.getRemoteAnnotationBean().createOntologyTerm(System.getenv("USER"), selectedTree.rootNode.toString(),
+//            selectedTree.addObject(termName);
+            EJBFactory.getRemoteAnnotationBean().createOntologyTerm(System.getenv("USER"), selectedTree.getCurrentNodeId(),
                     termName);
+            updateSelectedTreeEntity();
         }
         else if (REMOVE_COMMAND.equals(command)) {
             // Remove button clicked
@@ -114,7 +115,8 @@ public class OntologyOutline extends JPanel implements ActionListener, TreeSelec
                 return;
             }
             selectedTree.removeCurrentNode();
-            EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(System.getenv("USER"), selectedTree.getCurrentNodeName());
+            EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(System.getenv("USER"), selectedTree.getCurrentNodeId());
+            updateSelectedTreeEntity();
         }
         else if (ROOT_COMMAND.equals(command)) {
             // New Root button clicked.
@@ -132,13 +134,17 @@ public class OntologyOutline extends JPanel implements ActionListener, TreeSelec
                 return;
             }
 
-            DynamicTree newTreePanel = new DynamicTree(rootName);
-            newTreePanel.tree.addTreeSelectionListener(this);
-//            populateTrees(newTreePanel);
-            treeMap.put(newTreePanel.rootNode, newTreePanel);
-            treesPanel.add(newTreePanel);
-            this.updateUI();
-            EJBFactory.getRemoteAnnotationBean().createOntologyRoot(System.getenv("USER"), rootName);
+            Entity newOntologyRoot = EJBFactory.getRemoteAnnotationBean().createOntologyRoot(System.getenv("USER"), rootName);
+            populateTree(newOntologyRoot);
+        }
+    }
+
+    // todo This is toooooooo brute-force
+    private void updateSelectedTreeEntity(){
+        Entity entity= EJBFactory.getRemoteAnnotationBean().getUserEntityById(System.getenv("USER"), ((Entity)selectedTree.rootNode.getUserObject()).getId());
+        if (null!=selectedTree || entity.getName().equals(((Entity)selectedTree.rootNode.getUserObject()).getName())){
+            selectedTree.removeAll();
+            addNodes(selectedTree, null, entity);
         }
     }
 
