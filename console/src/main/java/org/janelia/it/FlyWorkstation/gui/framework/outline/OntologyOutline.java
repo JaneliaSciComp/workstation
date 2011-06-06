@@ -52,7 +52,7 @@ public class OntologyOutline extends JPanel implements ActionListener, TreeSelec
                 EntityConstants.TYPE_ONTOLOGY_ROOT_ID);
         for (Entity entity : ontologyRootList) {
             DynamicTree treePanel = createTree(entity);
-//            populateTree(treePanel, entity);
+            populateTree(treePanel, entity);
         }
         JScrollPane treeScrollPane = new JScrollPane(treesPanel);
         treeScrollPane.createVerticalScrollBar().setVisible(true);
@@ -81,7 +81,14 @@ public class OntologyOutline extends JPanel implements ActionListener, TreeSelec
     }
 
     private void addNodes(DynamicTree tree, EntityMutableTreeNode parentNode, Entity childEntity){
-        EntityMutableTreeNode newNode = tree.addObject(parentNode, childEntity);
+        EntityMutableTreeNode newNode;
+        if (null!=parentNode) {
+            newNode = tree.addObject(parentNode, childEntity);
+        }
+        else {
+            // If the parent node is null, assume the parentNode userObject is the childEntity passed, and the parent is root
+            newNode = tree.rootNode;
+        }
         for (EntityData tmpData : childEntity.getEntityData()) {
             addNodes(tree, newNode, tmpData.getChildEntity());
         }
