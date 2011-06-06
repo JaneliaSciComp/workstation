@@ -9,7 +9,6 @@ import sun.awt.VerticalBagLayout;
 import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
-import javax.swing.tree.DefaultMutableTreeNode;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -52,7 +51,8 @@ public class OntologyOutline extends JPanel implements ActionListener, TreeSelec
         List<Entity> ontologyRootList = EJBFactory.getRemoteAnnotationBean().getUserEntitiesByType(System.getenv("USER"),
                 EntityConstants.TYPE_ONTOLOGY_ROOT_ID);
         for (Entity entity : ontologyRootList) {
-            treesPanel.add(populateTree(entity));
+            DynamicTree treePanel = createTree(entity);
+//            populateTree(treePanel, entity);
         }
         JScrollPane treeScrollPane = new JScrollPane(treesPanel);
         treeScrollPane.createVerticalScrollBar().setVisible(true);
@@ -66,16 +66,22 @@ public class OntologyOutline extends JPanel implements ActionListener, TreeSelec
         add(panel, BorderLayout.SOUTH);
     }
 
-    public DynamicTree populateTree(Entity ontologyRoot) {
-        DynamicTree treePanel = new DynamicTree(ontologyRoot.getName());
+    private DynamicTree createTree(Entity ontologyRoot) {
+        DynamicTree treePanel = new DynamicTree(ontologyRoot);
         treePanel.tree.addTreeSelectionListener(this);
-        addNodes(treePanel, null, ontologyRoot);
+        treesPanel.add(treePanel);
         treeMap.put(ontologyRoot.getId(), treePanel);
+        this.updateUI();
         return treePanel;
     }
 
-    private void addNodes(DynamicTree tree, DefaultMutableTreeNode parentNode, Entity childEntity){
-        DefaultMutableTreeNode newNode = tree.addObject(parentNode, childEntity);
+    public DynamicTree populateTree(DynamicTree treePanel, Entity ontologyRoot) {
+        addNodes(treePanel, null, ontologyRoot);
+        return treePanel;
+    }
+
+    private void addNodes(DynamicTree tree, EntityMutableTreeNode parentNode, Entity childEntity){
+        EntityMutableTreeNode newNode = tree.addObject(parentNode, childEntity);
         for (EntityData tmpData : childEntity.getEntityData()) {
             addNodes(tree, newNode, tmpData.getChildEntity());
         }
@@ -135,13 +141,13 @@ public class OntologyOutline extends JPanel implements ActionListener, TreeSelec
             }
 
             Entity newOntologyRoot = EJBFactory.getRemoteAnnotationBean().createOntologyRoot(System.getenv("USER"), rootName);
-            populateTree(newOntologyRoot);
+            createTree(newOntologyRoot);
         }
     }
 
     // todo This is toooooooo brute-force
     private void updateSelectedTreeEntity(){
-        Entity entity= EJBFactory.getRemoteAnnotationBean().getUserEntityById(System.getenv("USER"), ((Entity)selectedTree.rootNode.getUserObject()).getId());
+        Entity entity= EJBFactory.getRemoteAnnotationBean().getUserEntityById(System.getenv("USER"), ((Entity) selectedTree.rootNode.getUserObject()).getId());
         if (null!=selectedTree || entity.getName().equals(((Entity)selectedTree.rootNode.getUserObject()).getName())){
             selectedTree.removeAll();
             addNodes(selectedTree, null, entity);
@@ -150,7 +156,12 @@ public class OntologyOutline extends JPanel implements ActionListener, TreeSelec
 
     @Override
     public void valueChanged(TreeSelectionEvent treeSelectionEvent) {
-        DefaultMutableTreeNode rootNode = (DefaultMutableTreeNode) treeSelectionEvent.getPath().getPathComponent(0);
-        selectedTree = treeMap.get(rootNode);
+        EntityMutableTreeNode rootNode = (EntityMutableTreeNode) treeSelectionEvent.getPath().getPathComponent(0);
+        selectedTree = treeMap.get(rootNode.getEntityId());
+        for (DynamicTree dynamicTree : treeMap.values()) {
+            if (selectedTree!=dynamicTree) {
+                dynamicTree.tree.getSelectionModel().clearSelection();
+            }
+        }
     }
 }
