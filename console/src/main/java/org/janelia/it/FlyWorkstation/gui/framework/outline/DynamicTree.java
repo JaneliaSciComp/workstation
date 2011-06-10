@@ -7,6 +7,7 @@ import javax.swing.event.TreeModelEvent;
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.*;
 import java.awt.*;
+import java.util.Enumeration;
 
 /**
  * Created by IntelliJ IDEA.
@@ -22,7 +23,6 @@ class DynamicTree extends JPanel {
 
     public DynamicTree(Entity rootEntity) {
         super(new GridLayout(1, 0));
-        String tmpName = (rootEntity.getName()==null)?"Root Node - "+System.currentTimeMillis():rootEntity.getName();
         rootNode = new EntityMutableTreeNode(rootEntity);
         treeModel = new DefaultTreeModel(rootNode);
 
@@ -32,6 +32,7 @@ class DynamicTree extends JPanel {
         tree.setShowsRootHandles(true);
 
         JScrollPane scrollPane = new JScrollPane(tree);
+        scrollPane.setPreferredSize(new Dimension(300,800));
         add(scrollPane);
     }
 
@@ -113,6 +114,35 @@ class DynamicTree extends JPanel {
             tree.scrollPathToVisible(new TreePath(childNode.getPath()));
         }
         return childNode;
+    }
+
+    public void removeRootChildren() {
+        try {
+            TreePath currentSelection = tree.getSelectionPath();
+            if (currentSelection != null) {
+                EntityMutableTreeNode rootNode = (EntityMutableTreeNode) (currentSelection.getPathComponent(0));
+                Enumeration enumeration = rootNode.children();
+                while(enumeration.hasMoreElements()) {
+                    EntityMutableTreeNode currentNode = (EntityMutableTreeNode)enumeration.nextElement();
+                    MutableTreeNode parent = (MutableTreeNode) (currentNode.getParent());
+                    if (parent != null) {
+                        treeModel.removeNodeFromParent(currentNode);
+                    }
+                }
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void expandAll() {
+        // expand to the last leaf from the root
+        int row = 0;
+        while (row < tree.getRowCount()) {
+          tree.expandRow(row);
+          row++;
+         }
     }
 
     class MyTreeModelListener implements TreeModelListener {

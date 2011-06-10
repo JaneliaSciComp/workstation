@@ -1,15 +1,18 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import org.janelia.it.FlyWorkstation.gui.application.SplashPanel;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.FileOutline;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.TaskOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.search.SearchToolbar;
+import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
+import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
+import org.janelia.it.FlyWorkstation.shared.util.PrintableImage;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.awt.print.PageFormat;
+import java.awt.print.PrinterJob;
 import java.io.File;
 
 /**
@@ -17,7 +20,6 @@ import java.io.File;
  * User: saffordt
  * Date: 2/8/11
  * Time: 12:29 PM
- * To change this template use File | Settings | File Templates.
  */
 public class ConsoleFrame extends JFrame implements Cloneable {
 //    private static Hashtable editorTypeToConstructorRegistry = new MultiHash();
@@ -28,7 +30,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //    private static Hashtable editorNameToConstructorRegistry = new Hashtable();
 //    private static Hashtable editorNameToTypeRegistry = new Hashtable();
 //    private static Map typeToDefaultEditorName = new HashMap();
-//    private static String BROWSER_POSITION = "BROWSER_POSITION_ON_SCREEN";
+    private static String BROWSER_POSITION = "BROWSER_POSITION_ON_SCREEN";
 
     // Used by printing mechanism to ensure capacity.
     private static String MEMORY_EXCEEDED_PRT_SCR_MSG = "Insufficient memory to print screen";
@@ -38,9 +40,10 @@ public class ConsoleFrame extends JFrame implements Cloneable {
     private static final float TOP_LEFT_PANE_VERTICAL_PERCENT = .55f;
     private static final float MAIN_VIEWER_PANE_HORIZONTAL_PERCENT = .8f;
     private static Class menuBarClass;
-    private JSplitPane jSplitPaneLeftVertical;
+    private JSplitPane dataSplitPaneVertical;
     private JSplitPane jSplitPaneRightVertical;
-    private JSplitPane jSplitPaneHorizontal;
+    private JSplitPane centerLeftHorizontalSplitPane;
+    private JSplitPane centerRightHorizontalSplitPane;
     private JSplitPane jSplitPaneBottom;
     private JSplitPane jSplitPaneMain;
     private JPanel allPanelsView = new JPanel();
@@ -76,6 +79,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
     private boolean usingSplashPanel = true;
     private boolean isDrillingDownToSelectedEntity = false;
     private String currentAnnotationSessionTaskId;
+
     /**
      * Center Window, use passed realEstatePercent (0-1.0, where 1.0 is 100% of the screen)
      */
@@ -97,31 +101,30 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 
 //            if ((position == null) ||
 //                    !position.getScreenSize().equals(screenSize)) {
-                setSize(new Dimension(
-                        (int) (screenSize.width * realEstatePercent),
-                        (int) (screenSize.height * realEstatePercent)));
+            setSize(new Dimension((int) (screenSize.width * realEstatePercent), (int) (screenSize.height * realEstatePercent)));
 
-                Dimension frameSize = getSize();
+            Dimension frameSize = getSize();
 
-                if (frameSize.height > screenSize.height) {
-                    frameSize.height = screenSize.height;
-                }
+            if (frameSize.height > screenSize.height) {
+                frameSize.height = screenSize.height;
+            }
 
-                if (frameSize.width > screenSize.width) {
-                    frameSize.width = screenSize.width;
-                }
+            if (frameSize.width > screenSize.width) {
+                frameSize.width = screenSize.width;
+            }
 
-                setLocation((screenSize.width - frameSize.width) / 2,
-                        (screenSize.height - frameSize.height) / 2);
+            setLocation((screenSize.width - frameSize.width) / 2, (screenSize.height - frameSize.height) / 2);
 //            } else {
 //                setSize(position.getConsoleSize());
 //                setLocation(position.getConsoleLocation());
 //            }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             try {
                 System.out.println(e.getMessage());
 //                SessionMgr.getSessionMgr().handleException(e);
-            } catch (Exception ex) {
+            }
+            catch (Exception ex) {
                 e.printStackTrace();
             }
         }
@@ -149,11 +152,13 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 
             setLocation(topLeftX, topLeftY);
             setSize(size);
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             try {
                 e.getMessage();
 //                SessionMgr.getSessionMgr().handleException(e);
-            } catch (Exception ex) {
+            }
+            catch (Exception ex) {
                 e.printStackTrace();
             }
         }
@@ -183,9 +188,9 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //        postMasterEditorChanged(null, false);
 //        resetMasterEditorMenus();
 //
-//        int location = jSplitPaneHorizontal.getDividerLocation();
-//        jSplitPaneHorizontal.setRightComponent(rightPanel);
-//        jSplitPaneHorizontal.setDividerLocation(location);
+//        int location = centerLeftHorizontalSplitPane.getDividerLocation();
+//        centerLeftHorizontalSplitPane.setRightComponent(rightPanel);
+//        centerLeftHorizontalSplitPane.setDividerLocation(location);
 //    }
 
     private void jbInit(/*BrowserModel browserModel*/) throws Exception {
@@ -207,16 +212,16 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 
         if (menuBarClass == null) {
             menuBar = new ConsoleMenuBar(this);
-        } else {
-            menuBar = (JMenuBar) menuBarClass.getConstructor(
-                    new Class[]{this.getClass()})
-                    .newInstance(new Object[]{this});
+        }
+        else {
+            menuBar = (JMenuBar) menuBarClass.getConstructor(new Class[]{this.getClass()}).newInstance(new Object[]{this});
         }
 
         setJMenuBar(menuBar);
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-//        viewerPanel = new MainFileInfoPanel();//getFormattedSplashPanel();
+        viewerPanel.setBorder(BorderFactory.createLineBorder(Color.black));
+        viewerPanel.reloadData(null);
         usingSplashPanel = true;
 //        subBrowserTabPane = new SubBrowser(browserModel);
         fileOutline = new FileOutline(this);
@@ -234,63 +239,58 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //        ConsolePosition consolePosition = new ConsolePosition();//BrowserPosition) SessionMgr.getSessionMgr()
         //.getModelProperty(this.BROWSER_POSITION);
 
-        jSplitPaneLeftVertical = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true,
-                fileOutline, taskOutline);
-        jSplitPaneLeftVertical.setMinimumSize(new Dimension(0, 0));
+        dataSplitPaneVertical = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, fileOutline, taskOutline);
+        dataSplitPaneVertical.setMinimumSize(new Dimension(0, 0));
 
         if (fileOutline.nodesShowing()) {
             if (consolePosition == null) {
                 jSplitPaneRightVerticalSplitLocation = (int) (screenSize.height * realEstatePercent * TOP_LEFT_PANE_VERTICAL_PERCENT);
-            } else {
+            }
+            else {
                 jSplitPaneRightVerticalSplitLocation = consolePosition.getVerticalDividerLocation();
             }
 
-            jSplitPaneLeftVertical.setDividerLocation(
-                    (int) (screenSize.height * realEstatePercent * TOP_LEFT_PANE_VERTICAL_PERCENT));
-        } else {
-            jSplitPaneLeftVertical.setDividerLocation((int) 0);
+            dataSplitPaneVertical.setDividerLocation((int) (screenSize.height * realEstatePercent * TOP_LEFT_PANE_VERTICAL_PERCENT));
+        }
+        else {
+            dataSplitPaneVertical.setDividerLocation(0);
         }
 
-        jSplitPaneLeftVertical.setOneTouchExpandable(true);
-        jSplitPaneLeftVertical.setDividerSize(10);
+        dataSplitPaneVertical.setOneTouchExpandable(true);
+        dataSplitPaneVertical.setDividerSize(10);
 
-        jSplitPaneHorizontal = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                false, jSplitPaneLeftVertical,
-                viewerPanel);
-        jSplitPaneHorizontal.setMinimumSize(new Dimension(0, 0));
+        centerRightHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, viewerPanel, ontologyOutline);
+        centerRightHorizontalSplitPane.setMinimumSize(new Dimension(200, 0));
+        centerRightHorizontalSplitPane.setOpaque(true);
 
+        centerRightHorizontalSplitPane.setDividerSize(10);
         if (consolePosition == null) {
-            jSplitPaneHorizontal.setDividerLocation(
-                    (int) (screenSize.width * realEstatePercent * (1 - MAIN_VIEWER_PANE_HORIZONTAL_PERCENT)));
-        } else {
-            jSplitPaneHorizontal.setDividerLocation(
-                    consolePosition.getHorizontalDividerLocation());
+            centerRightHorizontalSplitPane.setDividerLocation((int) (screenSize.width * realEstatePercent * (1 - MAIN_VIEWER_PANE_HORIZONTAL_PERCENT)));
         }
+        else {
+            centerRightHorizontalSplitPane.setDividerLocation(0.2);
+        }
+        centerRightHorizontalSplitPane.setOneTouchExpandable(true);
 
-        jSplitPaneHorizontal.setOneTouchExpandable(false);
+        centerLeftHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, dataSplitPaneVertical, centerRightHorizontalSplitPane);
+        centerLeftHorizontalSplitPane.setMinimumSize(new Dimension(0, 0));
+        if (consolePosition == null) {
+            centerLeftHorizontalSplitPane.setDividerLocation((int) (screenSize.width * realEstatePercent * (1 - MAIN_VIEWER_PANE_HORIZONTAL_PERCENT)));
+        }
+        else {
+            centerLeftHorizontalSplitPane.setDividerLocation(consolePosition.getHorizontalDividerLocation());
+        }
+        centerLeftHorizontalSplitPane.setOneTouchExpandable(true);
 
         mainPanel.setLayout(layout);
         allPanelsView.setLayout(new BorderLayout());
         allPanelsView.add(new SearchToolbar(), BorderLayout.NORTH);
-        allPanelsView.add(jSplitPaneHorizontal, BorderLayout.CENTER);
+        allPanelsView.add(centerLeftHorizontalSplitPane, BorderLayout.CENTER);
         getContentPane().add(statusBar, BorderLayout.SOUTH);
         mainPanel.add(allPanelsView, "Regular");
         collapsedOutlineView.setLayout(new BorderLayout());
         mainPanel.add(collapsedOutlineView, "Collapsed FileOutline");
         getContentPane().add(mainPanel, BorderLayout.CENTER);
-        getContentPane().add(ontologyOutline, BorderLayout.EAST);
-    }
-
-    private JPanel getFormattedSplashPanel() {
-        Component splash = new SplashPanel(); //SessionMgr.getSessionMgr().getSplashPanel();
-        JPanel splashPanel = new JPanel();
-        splashPanel.setBackground(Color.white);
-        splashPanel.setLayout(new BoxLayout(splashPanel, BoxLayout.Y_AXIS));
-        splashPanel.add(Box.createGlue());
-        splashPanel.add(splash);
-        splashPanel.add(Box.createGlue());
-
-        return splashPanel;
     }
 
     ///////// Browser Controller section////////////
@@ -413,85 +413,86 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //        pageFormat = printJob.validatePage(pageFormat);
 //    }
 //
-//    /**
-//     * Print the screen state by first creating a buffered image.
-//     */
-//    public void printBrowser() {
-//        // For now, use whole thing.
-//        Component component = this;
-//
-//        // Ensure sufficient resources.
-//        long requiredSize = (long) (RGB_TYPE_BYTES_PER_PIXEL * component.getWidth() * component.getHeight()) +
-//                            (long) PRINT_OVERHEAD_SIZE;
-//
-//        if (requiredSize > FreeMemoryWatcher.getFreeMemoryWatcher()
-//                                            .getFreeMemory()) {
-//            JOptionPane.showMessageDialog(this, MEMORY_EXCEEDED_PRT_SCR_MSG,
-//                                          MEMORY_EXCEEDED_ADVISORY,
-//                                          JOptionPane.ERROR_MESSAGE);
-//
-//            return;
-//        } // Memory capacity WOULD be exceeded.
-//
-//        PrinterJob printJob = PrinterJob.getPrinterJob();
-//
-//        if (pageFormat == null) {
-//            pageFormat = new PageFormat();
-//            pageFormat.setOrientation(PageFormat.LANDSCAPE);
-//            pageFormat = printJob.validatePage(pageFormat);
-//        } // Must create a page format.
-//
-//        if (printJob.printDialog()) {
-//            // Get a buffered image of the component.
-//            java.awt.image.BufferedImage bufferedImage =
-//                    new java.awt.image.BufferedImage(component.getWidth(),
-//                                                     component.getHeight(),
-//                                                     java.awt.image.BufferedImage.TYPE_INT_RGB);
-//            Graphics2D graphics = bufferedImage.createGraphics();
-//            component.paint(graphics);
-//
-//            // Wrap buffered image in a component, and print that.
-//            PrintableImage printableImage = new PrintableImage(bufferedImage);
-//            printJob.setPrintable(printableImage, pageFormat);
-//
-//            try {
-//                printJob.print();
-//            } // Print the job.
-//            catch (Exception ex) {
-//                SessionMgr.getSessionMgr().handleException(ex);
-//            } // Got exception.
-//
-//            printableImage.setVisible(false);
-//            printableImage = null;
-//        } // User says: "Go"
-//    } // End method: printBrowser
-//
-//    public void printEditor(boolean master) {
-//        PrinterJob printJob = PrinterJob.getPrinterJob();
-//
-//        if (pageFormat == null) {
-//            pageFormat = new PageFormat();
-//            pageFormat.setOrientation(PageFormat.LANDSCAPE);
-//        }
-//
-//        Component comp;
-//
+    /**
+     * Print the screen state by first creating a buffered image.
+     */
+    public void printBrowser() {
+        // For now, use whole thing.
+        Component component = this;
+
+        // Ensure sufficient resources.
+        long requiredSize = (long) (RGB_TYPE_BYTES_PER_PIXEL * component.getWidth() * component.getHeight()) +
+                            (long) PRINT_OVERHEAD_SIZE;
+
+        if (requiredSize > FreeMemoryWatcher.getFreeMemoryWatcher()
+                                            .getFreeMemory()) {
+            JOptionPane.showMessageDialog(this, MEMORY_EXCEEDED_PRT_SCR_MSG,
+                                          MEMORY_EXCEEDED_ADVISORY,
+                                          JOptionPane.ERROR_MESSAGE);
+
+            return;
+        } // Memory capacity WOULD be exceeded.
+
+        PrinterJob printJob = PrinterJob.getPrinterJob();
+
+        if (pageFormat == null) {
+            pageFormat = new PageFormat();
+            pageFormat.setOrientation(PageFormat.LANDSCAPE);
+            pageFormat = printJob.validatePage(pageFormat);
+        } // Must create a page format.
+
+        if (printJob.printDialog()) {
+            // Get a buffered image of the component.
+            java.awt.image.BufferedImage bufferedImage =
+                    new java.awt.image.BufferedImage(component.getWidth(),
+                                                     component.getHeight(),
+                                                     java.awt.image.BufferedImage.TYPE_INT_RGB);
+            Graphics2D graphics = bufferedImage.createGraphics();
+            component.paint(graphics);
+
+            // Wrap buffered image in a component, and print that.
+            PrintableImage printableImage = new PrintableImage(bufferedImage);
+            printJob.setPrintable(printableImage, pageFormat);
+
+            try {
+                printJob.print();
+            } // Print the job.
+            catch (Exception ex) {
+                ex.printStackTrace();
+                //SessionMgr.getSessionMgr().handleException(ex);
+            } // Got exception.
+
+            printableImage.setVisible(false);
+            printableImage = null;
+        } // User says: "Go"
+    } // End method: printBrowser
+
+    public void printEditor(boolean master) {
+        PrinterJob printJob = PrinterJob.getPrinterJob();
+
+        if (pageFormat == null) {
+            pageFormat = new PageFormat();
+            pageFormat.setOrientation(PageFormat.LANDSCAPE);
+        }
+
+        Component comp;
+        comp = this;
 //        if (master) {
 //            comp = (Component) masterEditor;
 //        } else {
 //            comp = (Component) subEditor;
 //        }
-//
-//        if (printJob.printDialog()) {
-//            printJob.setPrintable(new PrintableComponent(comp), pageFormat);
-//
-//            try {
-//                printJob.print();
-//            } catch (Exception ex) {
-//                ex.printStackTrace();
-//            }
-//        }
-//    }
+
+        if (printJob.printDialog()) {
+            printJob.setPrintable(new PrintableComponent(comp), pageFormat);
+
+            try {
+                printJob.print();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
 //
 //    void setMasterEditor(String editorName) {
 //        if ((masterEditor != null) &&
@@ -781,28 +782,27 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //            BrowserPosition browserPosition = (BrowserPosition) SessionMgr.getSessionMgr()
 //                                                                          .getModelProperty(this.BROWSER_POSITION);
 
-            jSplitPaneHorizontal = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-            jSplitPaneHorizontal.setMinimumSize(new Dimension(0, 0));
+            centerLeftHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+            centerLeftHorizontalSplitPane.setMinimumSize(new Dimension(0, 0));
 
             //also add back the components on the Left vertical pane which got removed
             //when View 2 was showing
-            if (jSplitPaneHorizontal.getParent() == null) {
-                allPanelsView.add(jSplitPaneHorizontal, BorderLayout.CENTER);
+            if (centerLeftHorizontalSplitPane.getParent() == null) {
+                allPanelsView.add(centerLeftHorizontalSplitPane, BorderLayout.CENTER);
             }
 
             layout.first(mainPanel);
 
-//            jSplitPaneLeftVertical = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
+//            dataSplitPaneVertical = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
 //                                                    false, fileOutline, icsTabPane);
-            jSplitPaneLeftVertical.setMinimumSize(new Dimension(0, 0));
+            dataSplitPaneVertical.setMinimumSize(new Dimension(0, 0));
 
-            jSplitPaneLeftVertical.setDividerLocation(
-                    (int) (screenSize.height * realEstatePercent * TOP_LEFT_PANE_VERTICAL_PERCENT));
-            jSplitPaneLeftVertical.setDividerSize(10);
-            jSplitPaneLeftVertical.setOneTouchExpandable(true);
+            dataSplitPaneVertical.setDividerLocation((int) (screenSize.height * realEstatePercent * TOP_LEFT_PANE_VERTICAL_PERCENT));
+            dataSplitPaneVertical.setDividerSize(10);
+            dataSplitPaneVertical.setOneTouchExpandable(true);
 
-            if (jSplitPaneLeftVertical.getParent() == null) {
-                jSplitPaneHorizontal.setLeftComponent(jSplitPaneLeftVertical);
+            if (dataSplitPaneVertical.getParent() == null) {
+                centerLeftHorizontalSplitPane.setLeftComponent(dataSplitPaneVertical);
             }
 
             //this will handle the right pane of the Split Pane in view1. If display subeditor property is on
@@ -813,18 +813,19 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //                handleSubEditor();
 //            } else {
 //                usingSplashPanel = true;
-//                jSplitPaneHorizontal.setRightComponent(
+//                centerLeftHorizontalSplitPane.setRightComponent(
 //                        getFormattedSplashPanel());
 //            }
 
 //            if (browserPosition == null) {
-//                jSplitPaneHorizontal.setDividerLocation(
+//                centerLeftHorizontalSplitPane.setDividerLocation(
 //                        (int) (screenSize.width * realEstatePercent * (1 - MAIN_VIEWER_PANE_HORIZONTAL_PERCENT)));
 //            } else {
-//                jSplitPaneHorizontal.setDividerLocation(
+//                centerLeftHorizontalSplitPane.setDividerLocation(
 //                        browserPosition.getHorizontalDividerLocation());
 //            }
-        } else {
+        }
+        else {
             clearDefaultView();
 
             if (jSplitPaneBottom != null) {
@@ -846,8 +847,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //                jSplitPaneMain.setBottomComponent(icsTabPane);
 //            }
 
-            jSplitPaneMain.setDividerLocation(
-                    (int) (screenSize.height * realEstatePercent * TOP_LEFT_PANE_VERTICAL_PERCENT));
+            jSplitPaneMain.setDividerLocation((int) (screenSize.height * realEstatePercent * TOP_LEFT_PANE_VERTICAL_PERCENT));
 
             jSplitPaneBottom = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
             jSplitPaneBottom.setMinimumSize(new Dimension(0, 0));
@@ -870,14 +870,14 @@ public class ConsoleFrame extends JFrame implements Cloneable {
     }
 
     private void clearDefaultView() {
-        if (jSplitPaneHorizontal != null) {
-            jSplitPaneHorizontal.removeAll();
+        if (centerLeftHorizontalSplitPane != null) {
+            centerLeftHorizontalSplitPane.removeAll();
 
-            //jSplitPaneHorizontal.repaint();
+            //centerLeftHorizontalSplitPane.repaint();
         }
 
-        if (jSplitPaneLeftVertical != null) {
-            jSplitPaneLeftVertical.removeAll();
+        if (dataSplitPaneVertical != null) {
+            dataSplitPaneVertical.removeAll();
         }
 
         if (jSplitPaneRightVertical != null) {
@@ -952,16 +952,16 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //
 //    private void removeSubEditorSplitPane() {
 //        if (!outlineIsCollapsed) {
-//            int location = jSplitPaneHorizontal.getDividerLocation();
+//            int location = centerLeftHorizontalSplitPane.getDividerLocation();
 //
 //            if (jSplitPaneRightVertical != null) {
 //                jSplitPaneRightVerticalSplitLocation = jSplitPaneRightVertical.getDividerLocation();
 //
-//                jSplitPaneHorizontal.remove(jSplitPaneRightVertical);
+//                centerLeftHorizontalSplitPane.remove(jSplitPaneRightVertical);
 //            }
 //
-//            jSplitPaneHorizontal.setRightComponent((Component) masterEditor);
-//            jSplitPaneHorizontal.setDividerLocation(location);
+//            centerLeftHorizontalSplitPane.setRightComponent((Component) masterEditor);
+//            centerLeftHorizontalSplitPane.setDividerLocation(location);
 //        } else {
 //            jSplitPaneBottom.removeAll();
 //
@@ -988,7 +988,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //            jSplitPaneRightVertical.setOneTouchExpandable(true);
 //            jSplitPaneRightVertical.setDividerSize(10);
 //
-//            jSplitPaneHorizontal.setRightComponent(jSplitPaneRightVertical);
+//            centerLeftHorizontalSplitPane.setRightComponent(jSplitPaneRightVertical);
 //        } else {
 //            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 //            int location = jSplitPaneMain.getDividerLocation();
@@ -1116,9 +1116,9 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //            position.setBrowserSize(Browser.this.getSize());
 //            position.setBrowserLocation(Browser.this.getLocation());
 //            position.setVerticalDividerLocation(
-//                    jSplitPaneLeftVertical.getDividerLocation());
+//                    dataSplitPaneVertical.getDividerLocation());
 //            position.setHorizontalDividerLocation(
-//                    jSplitPaneHorizontal.getDividerLocation());
+//                    centerLeftHorizontalSplitPane.getDividerLocation());
 //            SessionMgr.getSessionMgr()
 //                      .setModelProperty(BROWSER_POSITION, position);
 //            dispose();

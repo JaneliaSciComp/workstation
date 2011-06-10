@@ -13,7 +13,7 @@ import javax.swing.*;
  */
 public class ConsoleApp {
     static private final String VERSION_NUMBER = "0.1";
-
+    private static boolean useSplashScreen = false;
     static {
         System.out.println("Java version: " +
                 System.getProperty("java.version"));
@@ -34,7 +34,9 @@ public class ConsoleApp {
         // Show the Splash Screen
         final SplashScreen splash = new SplashScreen();
         splash.setStatusText("Initializing Application...");
-//        splash.setVisible(true);
+        if (useSplashScreen) {
+            splash.setVisible(true);
+        }
 
 //        final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
         try {

@@ -71,7 +71,7 @@ public class FileMenu extends JMenu {
     }
 
     private void filePrint_actionPerformed() {
-//       console.printBrowser();
+       console.printBrowser();
     }
 
 }

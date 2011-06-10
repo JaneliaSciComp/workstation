@@ -7,12 +7,10 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import sun.awt.VerticalBagLayout;
 
 import javax.swing.*;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
 
 /**
@@ -21,13 +19,13 @@ import java.util.List;
  * Date: 6/1/11
  * Time: 4:54 PM
  */
-public class OntologyOutline extends JPanel implements ActionListener, TreeSelectionListener {
+public class OntologyOutline extends JPanel implements ActionListener {
     private static String ADD_COMMAND       = "add";
     private static String REMOVE_COMMAND    = "remove";
     private static String ROOT_COMMAND      = "root";
+    private static String SWITCH_COMMAND    = "switch";
 
     private JPanel treesPanel;
-    private HashMap<Long, DynamicTree> treeMap = new HashMap<Long, DynamicTree>();
     private DynamicTree selectedTree;
 
     public OntologyOutline() {
@@ -41,43 +39,44 @@ public class OntologyOutline extends JPanel implements ActionListener, TreeSelec
         removeButton.setActionCommand(REMOVE_COMMAND);
         removeButton.addActionListener(this);
 
-        JButton clearButton = new JButton("New");
-        clearButton.setActionCommand(ROOT_COMMAND);
-        clearButton.addActionListener(this);
+        JButton newButton = new JButton("New");
+        newButton.setActionCommand(ROOT_COMMAND);
+        newButton.addActionListener(this);
+
+        JButton switchButton = new JButton("Switch");
+        switchButton.setActionCommand(SWITCH_COMMAND);
+        switchButton.addActionListener(this);
 
         // Lay everything out.
         treesPanel = new JPanel(new VerticalBagLayout());
         // Create the components.
         List<Entity> ontologyRootList = EJBFactory.getRemoteAnnotationBean().getUserEntitiesByType(System.getenv("USER"),
                 EntityConstants.TYPE_ONTOLOGY_ROOT_ID);
-        for (Entity entity : ontologyRootList) {
-            DynamicTree treePanel = createTree(entity);
-            populateTree(treePanel, entity);
+        // For now, populate off the first tree
+        if (null!=ontologyRootList && ontologyRootList.size()>=1) {
+            initializeTree(ontologyRootList.get(0));
         }
-        JScrollPane treeScrollPane = new JScrollPane(treesPanel);
-        treeScrollPane.createVerticalScrollBar().setVisible(true);
         add(new JLabel("Ontology Editor"), BorderLayout.NORTH);
-        add(treeScrollPane, BorderLayout.CENTER);
+        add(treesPanel, BorderLayout.CENTER);
 
-        JPanel panel = new JPanel(new GridLayout(0, 3));
+        JPanel panel = new JPanel(new GridLayout(0, 2));
         panel.add(addButton);
         panel.add(removeButton);
-        panel.add(clearButton);
+        panel.add(switchButton);
+        panel.add(newButton);
         add(panel, BorderLayout.SOUTH);
     }
 
-    private DynamicTree createTree(Entity ontologyRoot) {
-        DynamicTree treePanel = new DynamicTree(ontologyRoot);
-        treePanel.tree.addTreeSelectionListener(this);
-        treesPanel.add(treePanel);
-        treeMap.put(ontologyRoot.getId(), treePanel);
-        this.updateUI();
-        return treePanel;
-    }
+    private DynamicTree initializeTree(Entity ontologyRoot) {
+        DynamicTree newTreePanel = new DynamicTree(ontologyRoot);
+        treesPanel.removeAll();
+        treesPanel.add(newTreePanel);
 
-    public DynamicTree populateTree(DynamicTree treePanel, Entity ontologyRoot) {
-        addNodes(treePanel, null, ontologyRoot);
-        return treePanel;
+        addNodes(newTreePanel, null, ontologyRoot);
+        selectedTree = newTreePanel;
+        newTreePanel.expandAll();
+        this.updateUI();
+        return newTreePanel;
     }
 
     private void addNodes(DynamicTree tree, EntityMutableTreeNode parentNode, Entity childEntity){
@@ -102,17 +101,15 @@ public class OntologyOutline extends JPanel implements ActionListener, TreeSelec
             String termName = (String)JOptionPane.showInputDialog(
                                 this,
                                 "Ontology Term:\n",
-                                "New Ontology Term",
+                                "Adding to "+selectedTree.getCurrentNodeName(),
                                 JOptionPane.PLAIN_MESSAGE,
                                 null,
                                 null,
                                 null);
 
             if ((termName == null) || (termName.length() <= 0)) {
-                JOptionPane.showMessageDialog(this, "Require a valid term", "Ontology Error", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-//            selectedTree.addObject(termName);
             EJBFactory.getRemoteAnnotationBean().createOntologyTerm(System.getenv("USER"), selectedTree.getCurrentNodeId(),
                     termName);
             updateSelectedTreeEntity();
@@ -127,7 +124,6 @@ public class OntologyOutline extends JPanel implements ActionListener, TreeSelec
             if (deleteConfirmation!=0) {
                 return;
             }
-            selectedTree.removeCurrentNode();
             EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(System.getenv("USER"), selectedTree.getCurrentNodeId());
             updateSelectedTreeEntity();
         }
@@ -148,27 +144,42 @@ public class OntologyOutline extends JPanel implements ActionListener, TreeSelec
             }
 
             Entity newOntologyRoot = EJBFactory.getRemoteAnnotationBean().createOntologyRoot(System.getenv("USER"), rootName);
-            createTree(newOntologyRoot);
+            initializeTree(newOntologyRoot);
+        }
+        else if (SWITCH_COMMAND.equals(command)) {
+            List<Entity> ontologyRootList = EJBFactory.getRemoteAnnotationBean().getUserEntitiesByType(System.getenv("USER"),
+                    EntityConstants.TYPE_ONTOLOGY_ROOT_ID);
+            ArrayList<String> ontologyNames = new ArrayList<String>();
+            for (Entity entity : ontologyRootList) {
+                ontologyNames.add(entity.getName());
+            }
+            String choice = (String)JOptionPane.showInputDialog(
+                                this,
+                                "Choose an ontology:\n",
+                                "Ontology Chooser",
+                                JOptionPane.PLAIN_MESSAGE,
+                                null,
+                                ontologyNames.toArray(),
+                                ontologyNames.get(0));
+
+            if ((choice != null) && (choice.length() > 0)) {
+                for (Entity ontologyEntity : ontologyRootList) {
+                    if (ontologyEntity.getName().equals(choice)) {
+                        initializeTree(ontologyEntity);
+                        break;
+                    }
+                }
+            }
         }
     }
 
     // todo This is toooooooo brute-force
     private void updateSelectedTreeEntity(){
-        Entity entity= EJBFactory.getRemoteAnnotationBean().getUserEntityById(System.getenv("USER"), ((Entity) selectedTree.rootNode.getUserObject()).getId());
-        if (null!=selectedTree || entity.getName().equals(((Entity)selectedTree.rootNode.getUserObject()).getName())){
-            selectedTree.removeAll();
-            addNodes(selectedTree, null, entity);
+        Entity entity= EJBFactory.getRemoteAnnotationBean().getUserEntityById(System.getenv("USER"), selectedTree.rootNode.getEntityId());
+        if (null!=selectedTree || entity.getName().equals(selectedTree.rootNode.getEntityName())){
+            initializeTree(entity);
         }
+        this.updateUI();
     }
 
-    @Override
-    public void valueChanged(TreeSelectionEvent treeSelectionEvent) {
-        EntityMutableTreeNode rootNode = (EntityMutableTreeNode) treeSelectionEvent.getPath().getPathComponent(0);
-        selectedTree = treeMap.get(rootNode.getEntityId());
-        for (DynamicTree dynamicTree : treeMap.values()) {
-            if (selectedTree!=dynamicTree) {
-                dynamicTree.tree.getSelectionModel().clearSelection();
-            }
-        }
-    }
 }

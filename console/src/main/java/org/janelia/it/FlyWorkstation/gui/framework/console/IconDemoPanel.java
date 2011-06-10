@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
+import org.janelia.it.FlyWorkstation.gui.application.SplashPanel;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -26,6 +28,7 @@ public class IconDemoPanel extends JPanel {
      * List of all the image files to load.
      */
     private String[] imageFileNames;
+    private SplashPanel splashPanel;
 
     /**
      * Default constructor for the demo.
@@ -33,7 +36,7 @@ public class IconDemoPanel extends JPanel {
     public IconDemoPanel() {
         setLayout(new GridLayout(0, 2));
         setSize(400, 300);
-
+        splashPanel = new SplashPanel();
         // start the image loading SwingWorker in a background thread
         loadimages.execute();
     }
@@ -127,16 +130,19 @@ public class IconDemoPanel extends JPanel {
     public void reloadData(String pathToData) {
         try {
             System.out.println("reload");
-            if (null==pathToData) {
-                // Do nothing
-                return;
-            }
+
             // Clear out the old images
             for (Component component : getComponents()) {
-                if (component instanceof JToggleButton) {
+                if (component instanceof JToggleButton || component==splashPanel) {
                     remove(component);
                 }
             }
+
+            if (null==pathToData) {
+                addSplashPanel();
+                return;
+            }
+            setLayout(new GridLayout(0, 2));
             File tmpFile = new File(pathToData);
             if (tmpFile.isDirectory()) {
                 File[] childImageFiles = tmpFile.listFiles(new FilenameFilter(){
@@ -194,6 +200,7 @@ public class IconDemoPanel extends JPanel {
 
             };
             loadimages.execute();
+            SwingUtilities.updateComponentTreeUI(IconDemoPanel.this);
             // else do nothing
         }
         catch (Exception e) {
@@ -201,4 +208,10 @@ public class IconDemoPanel extends JPanel {
         }
     }
 
+
+    private void addSplashPanel() {
+        setBackground(Color.white);
+        setLayout(new GridBagLayout());
+        add(splashPanel);
+    }
 }
