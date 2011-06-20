@@ -30,7 +30,7 @@ import java.io.IOException;
  */
 public class FileOutline extends JScrollPane implements Cloneable {
     // todo Remove this hard-wiring of the path
-    public static final String DATA_SOURCE_PATH = "/Volumes/jacsData/filestore/"+System.getenv("USER")+"/NeuronSeparator/1600586366989631664";
+    public static final String DATA_SOURCE_PATH = "/Volumes/jacsData/filestore/"+System.getenv("USER");
     public static final String NO_DATASOURCE = "Data Source Unreachable";
     private ConsoleFrame consoleFrame;
     private JTree tree;
