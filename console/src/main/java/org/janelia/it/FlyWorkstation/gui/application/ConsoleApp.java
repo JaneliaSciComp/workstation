@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.application;
 
 import org.janelia.it.FlyWorkstation.gui.framework.console.ConsoleFrame;
+import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyBindings;
 
 import javax.swing.*;
 
@@ -14,6 +15,9 @@ import javax.swing.*;
 public class ConsoleApp {
     static private final String VERSION_NUMBER = "0.1";
     private static boolean useSplashScreen = false;
+    private static ConsoleFrame mainConsole;
+    private static KeyBindings bindings;
+
     static {
         System.out.println("Java version: " +
                 System.getProperty("java.version"));
@@ -22,12 +26,16 @@ public class ConsoleApp {
         System.out.println("Code Source: " + pd.getCodeSource().getLocation());
     }
 
-    public ConsoleApp() {
-        newConsole();
+    public static ConsoleFrame getMainFrame() {
+        return mainConsole;
+    }
+
+    public static KeyBindings getKeyBindings() {
+        return bindings;
     }
 
     public static void main(final String[] args) {
-        new ConsoleApp();
+        newConsole();
     }
 
     private static void newConsole() {
@@ -40,10 +48,14 @@ public class ConsoleApp {
 
 //        final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
         try {
+            // Load key bindings
+            bindings = new KeyBindings();
+            bindings.load();
+
             //Browser Setup
             final String versionString = System.getProperty("x.genomebrowser.Version");
             final boolean internal = (versionString != null) &&
-                    (versionString.toLowerCase().indexOf("internal") > -1);
+                    (versionString.toLowerCase().contains("internal"));
 
 //            sessionMgr.setNewBrowserTitle(System.getProperty(
 //                    "x.genomebrowser.Title") + " " + VERSION_NUMBER);
@@ -177,10 +189,10 @@ public class ConsoleApp {
             splash.setStatusText("Connecting to Remote Data Sources...");
             splash.setAlwaysOnTop(true);
             //Start FirstConsole
-            final ConsoleFrame mainConsole = new ConsoleFrame(.8f);// sessionMgr.newBrowser();
+            mainConsole = new ConsoleFrame(.8f);
             mainConsole.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             mainConsole.setTitle("Fly Workstation 0.1");
-            mainConsole.setBrowserImageIcon(new ImageIcon("/Users/"+System.getenv("USER")+"/Dev/jacs/console/target/classes/org/janelia/it/flyscope.jpg"));
+            mainConsole.setBrowserImageIcon(new ImageIcon("/Users/" + System.getenv("USER") + "/Dev/jacs/console/target/classes/org/janelia/it/flyscope.jpg"));
             // todo remove this repaint if this is an image definition problem
             mainConsole.repaint();
             mainConsole.setVisible(true);

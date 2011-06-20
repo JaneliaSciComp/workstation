@@ -49,7 +49,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
     private JPanel allPanelsView = new JPanel();
     private JPanel collapsedOutlineView = new JPanel();
     private JPanel mainPanel = new JPanel();
-    private IconDemoPanel viewerPanel = new IconDemoPanel();
+    private IconDemoPanel viewerPanel;
     private CardLayout layout = new CardLayout();
     private JMenuBar menuBar;
     private JTabbedPane subBrowserTabPane = new JTabbedPane();
@@ -87,6 +87,8 @@ public class ConsoleFrame extends JFrame implements Cloneable {
         enableEvents(AWTEvent.WINDOW_EVENT_MASK);
         this.realEstatePercent = realEstatePercent;
 
+        viewerPanel = new IconDemoPanel();
+
         try {
             jbInit(/*browserModel*/);
 
@@ -118,10 +120,14 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //                setSize(position.getConsoleSize());
 //                setLocation(position.getConsoleLocation());
 //            }
+
+
+
+
         }
         catch (Exception e) {
             try {
-                System.out.println(e.getMessage());
+                e.printStackTrace();
 //                SessionMgr.getSessionMgr().handleException(e);
             }
             catch (Exception ex) {
@@ -138,6 +144,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 
         try {
             jbInit(/*browserModel*/);
+
 
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
             Dimension frameSize = getSize();

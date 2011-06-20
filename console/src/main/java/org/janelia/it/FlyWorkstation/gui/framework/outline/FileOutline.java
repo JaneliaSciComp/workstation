@@ -111,7 +111,6 @@ public class FileOutline extends JScrollPane implements Cloneable {
     }
 
     private void handleMouseEvents(MouseEvent e) {
-        System.out.println("Handle mouse events");
         TreePath treePath = tree.getSelectionPath();
         if (treePath == null) return;
         java.lang.Object treeObj = treePath.getPath();
@@ -190,7 +189,7 @@ public class FileOutline extends JScrollPane implements Cloneable {
         stackInfoItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 System.out.println("Calling for tree info...");
-                new TifImageInfoDialog(consoleFrame, treePath.getAbsolutePath()).show();
+                new TifImageInfoDialog(consoleFrame, treePath.getAbsolutePath()).setVisible(true);
                 JOptionPane.showMessageDialog(actionPopup, "Calling for TIF Info...", "Show Image Info", JOptionPane.PLAIN_MESSAGE);
             }
         });

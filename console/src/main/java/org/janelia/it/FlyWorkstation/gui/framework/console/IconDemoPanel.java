@@ -1,9 +1,14 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
+import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.FlyWorkstation.gui.application.SplashPanel;
+import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
+import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 
 import javax.swing.*;
+import javax.swing.border.LineBorder;
 import java.awt.*;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FilenameFilter;
@@ -34,9 +39,58 @@ public class IconDemoPanel extends JPanel {
      * Default constructor for the demo.
      */
     public IconDemoPanel() {
+
         setLayout(new GridLayout(0, 2));
         setSize(400, 300);
+        setBorder(new LineBorder(Color.red, 1));
         splashPanel = new SplashPanel();
+
+        // Implement a focusable JPanel
+
+        setFocusable(true);
+
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                requestFocus();
+            }
+        });
+
+        addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                setBorder(new LineBorder(UIManager.getColor("Focus.color"), 1));
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                setBorder(new LineBorder(Color.black, 1));
+            }
+        });
+
+        // Listen for key strokes
+
+        addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {}
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getID() == KeyEvent.KEY_PRESSED) {
+                    if (KeymapUtil.isModifier(e)) return;
+                    KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
+                    if (shortcut != null) {
+                        ConsoleApp.getKeyBindings().executeBinding(shortcut);
+                    }
+                }
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {}
+        });
+
+
+
         // start the image loading SwingWorker in a background thread
         loadimages.execute();
     }
@@ -129,7 +183,6 @@ public class IconDemoPanel extends JPanel {
 
     public void reloadData(String pathToData) {
         try {
-            System.out.println("reload");
 
             // Clear out the old images
             for (Component component : getComponents()) {

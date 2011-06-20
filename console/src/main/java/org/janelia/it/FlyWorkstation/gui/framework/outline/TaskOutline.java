@@ -12,7 +12,10 @@ import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeExpansionListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
-import javax.swing.tree.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
+import javax.swing.tree.TreeSelectionModel;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
@@ -33,7 +36,7 @@ public class TaskOutline extends JScrollPane implements Cloneable {
     public TaskOutline(ConsoleFrame consoleFrame) {
         this.consoleFrame = consoleFrame;
         tree = new JTree();
-        rebuildTreeModel();
+        //rebuildTreeModel();
         tree.addTreeExpansionListener(new TreeExpansionListener() {
             public void treeExpanded(TreeExpansionEvent event) {
             }
@@ -61,7 +64,24 @@ public class TaskOutline extends JScrollPane implements Cloneable {
         // todo Change the root to not visible
         tree.setRootVisible(true);
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-        setViewportView(tree);
+
+
+        // Load the tree in the background so that the app starts up first
+        SwingWorker<Void, Void> loadTasks = new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                try {
+                    rebuildTreeModel();
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+                setViewportView(tree);
+                return null;
+            }
+        };
+
+        loadTasks.execute();
     }
 
     public void rebuildTreeModel(){
@@ -71,7 +91,7 @@ public class TaskOutline extends JScrollPane implements Cloneable {
     }
 
     private void handleMouseEvents(MouseEvent e) {
-        System.out.println("Handle mouse events");
+
         if (null==tree || null==tree.getLastSelectedPathComponent()) return;
         String treePath = tree.getLastSelectedPathComponent().toString();
         if ((e.getModifiers() & MouseEvent.BUTTON3_MASK) > 0) {

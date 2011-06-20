@@ -1,7 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import org.janelia.it.jacs.model.entity.Entity;
-
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.util.Comparator;
 
@@ -17,17 +15,21 @@ public class EntityMutableTreeNode extends DefaultMutableTreeNode implements Com
         super(o);
     }
 
+    public ActionableEntity getEntityNode() {
+        return (ActionableEntity)this.getUserObject();
+    }
+
     public String getEntityName() {
-        return ((Entity)this.getUserObject()).getName();
+        return ((ActionableEntity)this.getUserObject()).getEntity().getName();
     }
 
     public Long getEntityId() {
-        return ((Entity)this.getUserObject()).getId();
+        return ((ActionableEntity)this.getUserObject()).getEntity().getId();
     }
 
     @Override
     public String toString() {
-        return ((Entity)this.getUserObject()).getName();
+        return ((ActionableEntity)this.getUserObject()).getEntity().getName();
     }
 
     @Override

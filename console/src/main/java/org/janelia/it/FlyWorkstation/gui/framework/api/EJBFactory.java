@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.api;
 
+import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.jacs.compute.api.*;
 
 import javax.naming.Context;
@@ -8,14 +9,14 @@ import javax.naming.NamingException;
 import java.util.Properties;
 
 public class EJBFactory {
-    private static final String PROVIDER_URL = "jnp://saffordt-ws1.janelia.priv:1199";
-    private static final String INITIAL_CONTEXT_FACTORY = "org.jnp.interfaces.NamingContextFactory";
-    private static final String URL_PKG_PREFIXES = "org.jboss.naming:org.jnp.interfaces";
-    private static final String REMOTE_ANNOTATION_JNDI_NAME = "compute/AnnotationEJB/remote";
-    private static final String REMOTE_COMPUTE_JNDI_NAME = "compute/ComputeEJB/remote";
-    private static final String REMOTE_SEARCH_JNDI_NAME = "compute/SearchEJB/remote";
-    private static final String REMOTE_GENOME_CONTEXT_JNDI_NAME = "compute/GenomeContextEJB/remote";
-    private static final String REMOTE_JOB_CONTROL_JNDI_NAME = "compute/JobControlEJB/remote";
+    private static final String PROVIDER_URL = ConsoleProperties.getProperty("provider.url");
+    private static final String INITIAL_CONTEXT_FACTORY = ConsoleProperties.getProperty("initial.context.factory");
+    private static final String URL_PKG_PREFIXES = ConsoleProperties.getProperty("url.pkg.prefixes");
+    private static final String REMOTE_ANNOTATION_JNDI_NAME = ConsoleProperties.getProperty("remote.annotation.jndi.name");
+    private static final String REMOTE_COMPUTE_JNDI_NAME = ConsoleProperties.getProperty("remote.compute.jndi.name");
+    private static final String REMOTE_SEARCH_JNDI_NAME = ConsoleProperties.getProperty("remote.search.jndi.name");
+    private static final String REMOTE_GENOME_CONTEXT_JNDI_NAME = ConsoleProperties.getProperty("remote.genome.context.jndi.name");
+    private static final String REMOTE_JOB_CONTROL_JNDI_NAME = ConsoleProperties.getProperty("remote.job.control.jndi.name");
     private static Properties icProperties = new Properties();
 
     static {
