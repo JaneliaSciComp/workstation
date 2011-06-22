@@ -1,3 +1,9 @@
+/**
+ * Created by IntelliJ IDEA.
+ * User: saffordt
+ * Date: 5/6/11
+ * Time: 10:47 AM
+ */
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
 import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
@@ -21,27 +27,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by IntelliJ IDEA.
- * User: saffordt
- * Date: 5/6/11
- * Time: 10:47 AM
+ * This panel shows titled images in a grid with optional textual annotation tags beneath each one.
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class IconDemoPanel extends JPanel  {
 
     private MissingIcon placeholderIcon = new MissingIcon();
-
     private List<AnnotatedImageButton> annotImages = new ArrayList<AnnotatedImageButton>();
 
     /**
      * List of all the image files to load.
      */
-    private String[] imageFileNames;
     private SplashPanel splashPanel;
     private JPanel imagesPanel;
     private JScrollPane scrollPane;
     private Integer currIndex;
     private ButtonGroup buttonGroup;
-
 
     // Listen for key strokes and execute the appropriate key bindings
     private KeyListener keyListener = new KeyListener() {
@@ -116,23 +118,18 @@ public class IconDemoPanel extends JPanel  {
             remove(splashPanel);
 
             // Clear out the old images
+            annotImages.clear();
+            buttonGroup = new ButtonGroup();
             for (Component component : imagesPanel.getComponents()) {
-                if (component instanceof JButton) {
-                    imagesPanel.remove(component);
-                }
+                imagesPanel.remove(component);
             }
 
-            if (null==pathToData) {
+            if (null == pathToData) {
                 add(splashPanel);
                 return;
             }
 
-
             add(scrollPane, BorderLayout.CENTER);
-
-            // Clear current images
-            annotImages.clear();
-            buttonGroup = new ButtonGroup();
 
             File tmpFile = new File(pathToData);
             if (tmpFile.isDirectory()) {
@@ -162,42 +159,29 @@ public class IconDemoPanel extends JPanel  {
         }
     }
 
-//    private class TabPolicy extends FocusTraversalPolicy {
-//
-//        @Override
-//        public Component getComponentAfter(Container aContainer, Component aComponent) {
-//            if (annotImages.isEmpty()) return imagesPanel;
-//            int i = annotImages.indexOf(aComponent);
-//            if (++i < annotImages.size()) return annotImages.get(i);
-//            System.out.println("wtf");
-//            return aComponent;
-//        }
-//
-//        @Override
-//        public Component getComponentBefore(Container aContainer, Component aComponent) {
-//            if (annotImages.isEmpty()) return imagesPanel;
-//            int i = annotImages.indexOf(aComponent);
-//            if (--i >= 0) return annotImages.get(i);
-//            return aComponent;
-//        }
-//
-//        @Override
-//        public Component getFirstComponent(Container aContainer) {
-//            return getDefaultComponent(aContainer);
-//        }
-//
-//        @Override
-//        public Component getLastComponent(Container aContainer) {
-//            if (annotImages.isEmpty()) return imagesPanel;
-//            return annotImages.get(annotImages.size()-1);
-//        }
-//
-//        @Override
-//        public Component getDefaultComponent(Container aContainer) {
-//            if (annotImages.isEmpty()) return imagesPanel;
-//            return annotImages.get(0);
-//        }
-//    }
+    /**
+     * Add or remove the given tag from the currently selected image button.
+     * @param tag
+     */
+    public void addOrRemoveTag(String tag) {
+
+        if (currIndex == null || currIndex >= annotImages.size()) return;
+
+        AnnotatedImageButton currImage = annotImages.get(currIndex);
+
+        List<String> tags = currImage.getTags();
+
+        if (tags.contains(tag)) {
+            tags.remove(tag);
+        }
+        else {
+            tags.add(tag);
+        }
+
+        currImage.refreshTags();
+        validate();
+        SwingUtilities.updateComponentTreeUI(IconDemoPanel.this);
+    }
 
     /**
      * This subclass of JPanel disable horizontal scrolling when the panel is inserted into a JScrollPane.
@@ -236,12 +220,12 @@ public class IconDemoPanel extends JPanel  {
 
         @Override
         public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
-            return 0;
+            return 10;
         }
 
         @Override
         public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
-            return 0;
+            return 100;
         }
 
         @Override
@@ -254,31 +238,6 @@ public class IconDemoPanel extends JPanel  {
             return false;
         }
     }
-
-    /**
-     * Add or remove the given tag from the currently selected image button.
-     * @param tag
-     */
-    public void addOrRemoveTag(String tag) {
-
-        if (currIndex == null || currIndex >= annotImages.size()) return;
-
-        AnnotatedImageButton currImage = annotImages.get(currIndex);
-
-        List<String> tags = currImage.getTags();
-
-        if (tags.contains(tag)) {
-            tags.remove(tag);
-        }
-        else {
-            tags.add(tag);
-        }
-
-        currImage.displayTags();
-        validate();
-        SwingUtilities.updateComponentTreeUI(IconDemoPanel.this);
-    }
-
 
     /**
      * A slot in the ImagesPanel for an image with a title and annotations.
@@ -336,7 +295,7 @@ public class IconDemoPanel extends JPanel  {
 
             tagPanel = new JPanel(new WrapLayout());
             tagPanel.setOpaque(false);
-            displayTags();
+            refreshTags();
 
             c.gridx = 0;
             c.gridy = 2;
@@ -349,6 +308,10 @@ public class IconDemoPanel extends JPanel  {
                 public void focusGained(FocusEvent e) {
                     currIndex = index;
                     setSelected(true);
+                    
+                    // Scroll to the newly focused button
+                    imagesPanel.scrollRectToVisible(getBounds());
+                    SwingUtilities.updateComponentTreeUI(IconDemoPanel.this);
                 }
             });
 
@@ -359,7 +322,7 @@ public class IconDemoPanel extends JPanel  {
             return tags;
         }
 
-        public void displayTags() {
+        public void refreshTags() {
 
             tagPanel.removeAll();
 

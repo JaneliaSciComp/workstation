@@ -13,6 +13,7 @@ import javax.swing.*;
  * This is the main
  */
 public class ConsoleApp {
+    
     static private final String VERSION_NUMBER = "0.1";
     private static boolean useSplashScreen = false;
     private static ConsoleFrame mainConsole;
