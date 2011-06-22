@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.outline;
 import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
+import org.janelia.it.jacs.model.entity.Entity;
 
 import javax.swing.*;
 import javax.swing.event.TreeModelEvent;
@@ -24,6 +25,7 @@ class DynamicTree extends JPanel {
     protected JTree tree;
     private Toolkit toolkit = Toolkit.getDefaultToolkit();
 
+   
     public DynamicTree(ActionableEntity rootEntity) {
         super(new GridLayout(1, 0));
 
@@ -39,6 +41,7 @@ class DynamicTree extends JPanel {
         JScrollPane scrollPane = new JScrollPane(tree);
         scrollPane.setPreferredSize(new Dimension(300,800));
         add(scrollPane);
+
     }
 
     /**
@@ -116,6 +119,7 @@ class DynamicTree extends JPanel {
         return addObject(parent, child, false);
     }
 
+
     public EntityMutableTreeNode addObject(EntityMutableTreeNode parent, Object child, boolean shouldBeVisible) {
         EntityMutableTreeNode childNode = new EntityMutableTreeNode(child);
 
@@ -161,6 +165,57 @@ class DynamicTree extends JPanel {
             row++;
         }
     }
+
+    public EntityMutableTreeNode refreshDescendants(EntityMutableTreeNode currentNode) {
+        treeModel.nodeChanged(currentNode);
+        Enumeration enumeration = currentNode.children();
+        while(enumeration.hasMoreElements()) {
+            refreshDescendants((EntityMutableTreeNode)enumeration.nextElement());
+        }
+
+        return null;
+    }
+
+    public void navigateToNextRow() {
+
+        int[] selection = tree.getSelectionRows();
+        if (selection != null && selection.length > 0) {
+            int nextRow = selection[0]+1;
+            if (nextRow >= tree.getRowCount()) {
+                tree.setSelectionRow(0);
+            }
+            else {
+                tree.setSelectionRow(nextRow);
+            }
+        }
+    }
+
+    public void navigateToEntityNode(Entity entity) {
+
+        EntityMutableTreeNode node = getNodeForEntity(entity, (EntityMutableTreeNode)treeModel.getRoot());
+        if (node == null) return;
+        
+        TreePath treePath = new TreePath(node.getPath());
+        tree.expandPath(treePath);
+        tree.setSelectionPath(treePath);
+    }
+
+    private EntityMutableTreeNode getNodeForEntity(Entity entity, EntityMutableTreeNode currentNode) {
+
+        if (currentNode.getEntityId().equals(entity.getId())) {
+            return currentNode;
+        }
+
+        Enumeration enumeration = currentNode.children();
+        while(enumeration.hasMoreElements()) {
+            EntityMutableTreeNode childNode = (EntityMutableTreeNode)enumeration.nextElement();
+            EntityMutableTreeNode foundNode = getNodeForEntity(entity, childNode);
+            if (foundNode != null) return foundNode;
+        }
+
+        return null;
+    }
+
 
     /**
      * Special tree cell renderer which displays a label (icon and text) as well as a key binding next to it,

@@ -1,8 +1,8 @@
 /*
  * Created by IntelliJ IDEA.
  * User: rokickik
- * Date: 6/15/11
- * Time: 12:40 PM
+ * Date: 6/22/11
+ * Time: 1:31 PM
  */
 package org.janelia.it.FlyWorkstation.gui.framework.keybind;
 
@@ -10,20 +10,18 @@ import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.jacs.model.entity.Entity;
 
 /**
- * This action adds or removes an entity tag from the currently selected item in an IconDemoPanel.
+ * This action expands or collapses the corresponding entity node in the ontology tree.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class AddOrRemoveTagAction extends EntityAction {
+public class NavigateToNodeAction extends EntityAction {
 
-    public AddOrRemoveTagAction(Entity entity) {
+    public NavigateToNodeAction(Entity entity) {
         super(entity);
     }
 
     @Override
     public void doAction() {
         ConsoleApp.getMainFrame().getOntologyOutline().navigateToEntityNode(getEntity());
-        ConsoleApp.getMainFrame().getViewerPanel().addOrRemoveTag(getName());
     }
-
 }

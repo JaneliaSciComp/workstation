@@ -1189,6 +1189,10 @@ public class ConsoleFrame extends JFrame implements Cloneable {
         return viewerPanel;
     }
 
+    public OntologyOutline getOntologyOutline() {
+        return ontologyOutline;
+    }
+
 
     public String getMostRecentFileOutlinePath() {
         return mostRecentFileOutlinePath;

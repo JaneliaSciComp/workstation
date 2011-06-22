@@ -46,23 +46,15 @@ public class IconDemoPanel extends JPanel  {
     private ButtonGroup buttonGroup;
 
     // Listen for key strokes and execute the appropriate key bindings
-    private KeyListener keyListener = new KeyListener() {
-        @Override
-        public void keyTyped(KeyEvent e) {}
-
+    private KeyListener keyListener = new KeyAdapter() {
         @Override
         public void keyPressed(KeyEvent e) {
             if (e.getID() == KeyEvent.KEY_PRESSED) {
                 if (KeymapUtil.isModifier(e)) return;
                 KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
-                if (shortcut != null) {
-                    ConsoleApp.getKeyBindings().executeBinding(shortcut);
-                }
+                ConsoleApp.getKeyBindings().executeBinding(shortcut);
             }
         }
-
-        @Override
-        public void keyReleased(KeyEvent e) {}
     };
 
     /**
@@ -149,7 +141,9 @@ public class IconDemoPanel extends JPanel  {
                 }
             }
             else if (tmpFile.isFile()) {
-                annotImages.add(new AnnotatedImageButton(tmpFile.getName(), tmpFile.getAbsolutePath(), 0));
+                AnnotatedImageButton button = new AnnotatedImageButton(tmpFile.getName(), tmpFile.getAbsolutePath(), 0);
+                annotImages.add(button);
+                buttonGroup.add(button);
             }
 
             new LoadImageWorker().execute();

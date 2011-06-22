@@ -1,7 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
-import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyBindFrame;
+import org.janelia.it.FlyWorkstation.gui.framework.keybind.*;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -25,11 +26,13 @@ public class OntologyOutline extends JPanel implements ActionListener {
     private static String REMOVE_COMMAND    = "remove";
     private static String ROOT_COMMAND      = "root";
     private static String SWITCH_COMMAND    = "switch";
-    private static String BIND_COMMAND      = "change_bind";
+    private static String BIND_EDIT_COMMAND = "change_bind";
+    private static String BIND_MODE_COMMAND = "bind_mode";
 
     private JPanel treesPanel;
     private DynamicTree selectedTree;
     private KeyBindFrame keyBindDialog;
+    private JToggleButton keyBindButton;
 
     public OntologyOutline() {
         super(new BorderLayout());
@@ -52,17 +55,45 @@ public class OntologyOutline extends JPanel implements ActionListener {
         switchButton.setActionCommand(SWITCH_COMMAND);
         switchButton.addActionListener(this);
 
+        keyBindButton = new JToggleButton("Set Shortcuts");
+        keyBindButton.setActionCommand(BIND_MODE_COMMAND);
+        keyBindButton.addActionListener(this);
+
         // Lay everything out
 
         this.treesPanel = new JPanel(new VerticalBagLayout());
         add(new JLabel("Ontology Editor"), BorderLayout.NORTH);
         add(treesPanel, BorderLayout.CENTER);
 
-        JPanel panel = new JPanel(new GridLayout(0, 2));
-        panel.add(addButton);
-        panel.add(removeButton);
-        panel.add(switchButton);
-        panel.add(newButton);
+        GridBagConstraints c = new GridBagConstraints();
+        JPanel panel = new JPanel(new GridBagLayout());
+
+        c.gridx = 0;
+        c.gridy = 0;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        panel.add(addButton, c);
+
+        c.gridx = 1;
+        c.gridy = 0;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        panel.add(removeButton, c);
+
+        c.gridx = 0;
+        c.gridy = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        panel.add(switchButton, c);
+
+        c.gridx = 1;
+        c.gridy = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        panel.add(newButton, c);
+
+        c.gridx = 0;
+        c.gridy = 2;
+        c.gridwidth = 2;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        panel.add(keyBindButton, c);
+        
         add(panel, BorderLayout.SOUTH);
 
         // Prepare the key binding dialog box
@@ -103,9 +134,17 @@ public class OntologyOutline extends JPanel implements ActionListener {
         // Create a new tree and add all the nodes to it
 
         ActionableEntity rootAE = new ActionableEntity(ontologyRoot);
+        rootAE.setAction(new NavigateToNodeAction(ontologyRoot));
 
-        this.selectedTree = new DynamicTree(rootAE);
+        selectedTree = new DynamicTree(rootAE);
         addNodes(selectedTree, null, rootAE);
+
+        // Set the key listener
+        
+        final JTree tree = selectedTree.getTree();
+        KeyListener defaultKeyListener = tree.getKeyListeners()[0];
+        tree.removeKeyListener(defaultKeyListener);
+        tree.addKeyListener(keyListener);
 
         // Replace the tree in the panel
 
@@ -121,7 +160,7 @@ public class OntologyOutline extends JPanel implements ActionListener {
 
         JMenuItem mi = new JMenuItem("Assign shortcut...");
         mi.addActionListener(this);
-        mi.setActionCommand(BIND_COMMAND);
+        mi.setActionCommand(BIND_EDIT_COMMAND);
         popup.add(mi);
 
         mi = new JMenuItem("Add child node");
@@ -136,8 +175,6 @@ public class OntologyOutline extends JPanel implements ActionListener {
 
         // Mouse listener which keeps track of doubleclicks on nodes, and rightclicks to show the context menu
 
-        final JTree tree = selectedTree.getTree();
-
         tree.addMouseListener(new MouseAdapter() {
             public void mouseReleased(MouseEvent e) {
                 int row = tree.getRowForLocation(e.getX(), e.getY());
@@ -149,7 +186,8 @@ public class OntologyOutline extends JPanel implements ActionListener {
                     }
                     else if (e.getClickCount()==2) {
                         ActionableEntity curr = selectedTree.getCurrentNode().getEntityNode();
-                        curr.getAction().doAction();
+                        if (!(curr.getAction() instanceof NavigateToNodeAction))
+                            curr.getAction().doAction();
                     }
                 }
             }
@@ -172,6 +210,10 @@ public class OntologyOutline extends JPanel implements ActionListener {
         return selectedTree;
     }
 
+    public void navigateToEntityNode(Entity entity) {
+        selectedTree.navigateToEntityNode(entity);
+    }
+
     private void addNodes(DynamicTree tree, EntityMutableTreeNode parentNode, ActionableEntity node) {
         EntityMutableTreeNode newNode;
         if (parentNode != null) {
@@ -184,7 +226,19 @@ public class OntologyOutline extends JPanel implements ActionListener {
         Entity entity = node.getEntity();
         if (entity.getEntityData() != null) {
             for (EntityData tmpData : entity.getEntityData()) {
-                addNodes(tree, newNode, new ActionableEntity(tmpData.getChildEntity()));
+                Entity childEntity = tmpData.getChildEntity();
+                ActionableEntity actionEntity = new ActionableEntity(childEntity);
+
+                if (tmpData.getChildEntity().getEntityData().isEmpty()) {
+                    // leaf node
+                    actionEntity.setAction(new AddOrRemoveTagAction(childEntity));
+                }
+                else {
+                    // category node
+                    actionEntity.setAction(new NavigateToNodeAction(childEntity));
+                }
+
+                addNodes(tree, newNode, actionEntity);
             }
         }
     }
@@ -270,7 +324,7 @@ public class OntologyOutline extends JPanel implements ActionListener {
                 }
             }
         }
-        else if (BIND_COMMAND.equals(command)) {
+        else if (BIND_EDIT_COMMAND.equals(command)) {
             EntityMutableTreeNode treeNode = selectedTree.getCurrentNode();
             if (treeNode != null) {
                 ActionableEntity ae = treeNode.getEntityNode();
@@ -289,4 +343,37 @@ public class OntologyOutline extends JPanel implements ActionListener {
         this.updateUI();
     }
 
+    // Listen for key strokes and execute the appropriate key bindings
+    private KeyListener keyListener = new KeyAdapter() {
+
+        @Override
+        public void keyPressed(KeyEvent e) {
+            if (e.getID() == KeyEvent.KEY_PRESSED) {
+                if (KeymapUtil.isModifier(e)) return;
+                KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
+
+                if (keyBindButton.isSelected()) {
+
+                    // Set the key bind
+
+                    ActionableEntity actionEntity = selectedTree.getCurrentNode().getEntityNode();
+                    ConsoleApp.getKeyBindings().setBinding(shortcut, actionEntity.getAction());
+
+                    // Refresh the entire tree (another key bind may have been overridden)
+
+                    JTree tree = selectedTree.getTree();
+                    DefaultTreeModel treeModel = (DefaultTreeModel)tree.getModel();
+                    selectedTree.refreshDescendants((EntityMutableTreeNode)treeModel.getRoot());
+
+                    // Move to the next row
+
+                    selectedTree.navigateToNextRow();
+
+                }
+                else {
+                    ConsoleApp.getKeyBindings().executeBinding(shortcut);
+                }
+            }
+        }
+    };
 }

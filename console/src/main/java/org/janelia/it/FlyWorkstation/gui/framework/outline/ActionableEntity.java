@@ -7,7 +7,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.Action;
-import org.janelia.it.FlyWorkstation.gui.framework.keybind.AddOrRemoveTagAction;
 import org.janelia.it.jacs.model.entity.Entity;
 
 /**
@@ -23,7 +22,6 @@ public class ActionableEntity {
 
     public ActionableEntity(Entity entity) {
         this.entity = entity;
-        setAction(new AddOrRemoveTagAction(entity));
     }
 
     public String getName() {
