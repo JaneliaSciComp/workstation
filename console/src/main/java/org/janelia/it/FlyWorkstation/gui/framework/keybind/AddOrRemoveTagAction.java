@@ -6,6 +6,7 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.keybind;
 
+import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.jacs.model.entity.Entity;
 
 /**
@@ -28,11 +29,7 @@ public class AddOrRemoveTagAction implements Action {
 
     @Override
     public void doAction() {
-
-        System.out.println("Tagging with "+getName());
-        // TODO: set tag on the currently selected image
-
-
+        ConsoleApp.getMainFrame().getViewerPanel().addOrRemoveTag(getName());
     }
 
     @Override

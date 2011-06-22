@@ -38,7 +38,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
     private static int RGB_TYPE_BYTES_PER_PIXEL = 4;
     private static int PRINT_OVERHEAD_SIZE = 1000000;
     private static final float TOP_LEFT_PANE_VERTICAL_PERCENT = .55f;
-    private static final float MAIN_VIEWER_PANE_HORIZONTAL_PERCENT = .8f;
+    private static final float MAIN_VIEWER_PANE_HORIZONTAL_PERCENT = .2f;
     private static Class menuBarClass;
     private JSplitPane dataSplitPaneVertical;
     private JSplitPane jSplitPaneRightVertical;
@@ -57,7 +57,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //    private SessionModelListener modelListener = new MySessionModelListener();
 //    private DescriptionObserver descriptionObserver = new DescriptionObserver();
 
-    private float realEstatePercent = .8f;
+    private float realEstatePercent = .2f;
     //    private BrowserModel browserModel;
     private BorderLayout borderLayout = new BorderLayout();
     //    private Editor masterEditor;
@@ -241,7 +241,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
         consolePosition.setScreenSize(screenSize);
         consolePosition.setConsoleSize(new Dimension(400, 400));
         consolePosition.setConsoleLocation(new Point(100, 100));
-        consolePosition.setHorizontalDividerLocation(200);
+        consolePosition.setHorizontalDividerLocation(400);
         consolePosition.setVerticalDividerLocation(200);
 //        ConsolePosition consolePosition = new ConsolePosition();//BrowserPosition) SessionMgr.getSessionMgr()
         //.getModelProperty(this.BROWSER_POSITION);
@@ -1183,6 +1183,11 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //            }
 //        }
 //    }
+
+
+    public IconDemoPanel getViewerPanel() {
+        return viewerPanel;
+    }
 
 
     public String getMostRecentFileOutlinePath() {
