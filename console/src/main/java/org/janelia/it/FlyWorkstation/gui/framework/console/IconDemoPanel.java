@@ -164,12 +164,18 @@ public class IconDemoPanel extends JPanel  {
      * @param tag
      */
     public void addOrRemoveTag(String tag) {
-
         if (currIndex == null || currIndex >= annotImages.size()) return;
-
         AnnotatedImageButton currImage = annotImages.get(currIndex);
+        addOrRemoveTag(tag, currImage);
+    }
 
-        List<String> tags = currImage.getTags();
+    /**
+     * Add or remove the given tag from the currently selected image button.
+     * @param tag
+     */
+    public void addOrRemoveTag(String tag, AnnotatedImageButton button) {
+
+        List<String> tags = button.getTags();
 
         if (tags.contains(tag)) {
             tags.remove(tag);
@@ -178,7 +184,7 @@ public class IconDemoPanel extends JPanel  {
             tags.add(tag);
         }
 
-        currImage.refreshTags();
+        button.refreshTags();
         validate();
         SwingUtilities.updateComponentTreeUI(IconDemoPanel.this);
     }
@@ -342,7 +348,7 @@ public class IconDemoPanel extends JPanel  {
                     @Override
                     public void mouseClicked(MouseEvent e) {
                         if (e.getClickCount()==2) {
-                            addOrRemoveTag(tag);
+                            addOrRemoveTag(tag, AnnotatedImageButton.this);
                         }
                     }
                 });
