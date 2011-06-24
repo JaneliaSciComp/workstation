@@ -6,8 +6,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.jacs.model.entity.Entity;
 
 import javax.swing.*;
-import javax.swing.event.TreeModelEvent;
-import javax.swing.event.TreeModelListener;
 import javax.swing.tree.*;
 import java.awt.*;
 import java.util.Enumeration;
@@ -221,15 +219,15 @@ class DynamicTree extends JPanel {
      * Special tree cell renderer which displays a label (icon and text) as well as a key binding next to it,
      * if one exists.
      */
-    class EntityCellRenderer extends DefaultTreeCellRenderer implements TreeCellRenderer {
-        JLabel titleLabel;
-        JLabel keybindLabel;
-        JPanel cellPanel;
-        Color foregroundSelectionColor;
-        Color foregroundNonSelectionColor;
-        Color backgroundSelectionColor;
-        Color backgroundNonSelectionColor;
-        DefaultTreeCellRenderer defaultRenderer = new DefaultTreeCellRenderer();
+    private class EntityCellRenderer extends DefaultTreeCellRenderer implements TreeCellRenderer {
+        private JLabel titleLabel;
+        private JLabel keybindLabel;
+        private JPanel cellPanel;
+        private Color foregroundSelectionColor;
+        private Color foregroundNonSelectionColor;
+        private Color backgroundSelectionColor;
+        private Color backgroundNonSelectionColor;
+        private DefaultTreeCellRenderer defaultRenderer = new DefaultTreeCellRenderer();
 
         public EntityCellRenderer() {
             cellPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -294,34 +292,6 @@ class DynamicTree extends JPanel {
                         value, selected, expanded, leaf, row, hasFocus);
             }
             return returnValue;
-        }
-    }
-
-    class MyTreeModelListener implements TreeModelListener {
-        public void treeNodesChanged(TreeModelEvent e) {
-            EntityMutableTreeNode node;
-            node = (EntityMutableTreeNode) (e.getTreePath().getLastPathComponent());
-
-            /*
-            * If the event lists children, then the changed node is the child of the
-            * node we've already gotten. Otherwise, the changed node and the
-            * specified node are the same.
-            */
-
-            int index = e.getChildIndices()[0];
-            node = (EntityMutableTreeNode) (node.getChildAt(index));
-
-            System.out.println("The user has finished editing the node.");
-            System.out.println("New value: " + node.getUserObject());
-        }
-
-        public void treeNodesInserted(TreeModelEvent e) {
-        }
-
-        public void treeNodesRemoved(TreeModelEvent e) {
-        }
-
-        public void treeStructureChanged(TreeModelEvent e) {
         }
     }
 

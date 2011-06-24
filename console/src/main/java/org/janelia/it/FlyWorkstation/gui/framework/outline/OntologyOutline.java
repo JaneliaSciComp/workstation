@@ -34,8 +34,18 @@ public class OntologyOutline extends JPanel implements ActionListener {
     private KeyBindFrame keyBindDialog;
     private JToggleButton keyBindButton;
 
+    final JPopupMenu popupMenu;
+    private List<String> nodeTypes = new ArrayList<String>();
+    private MouseListener mouseListener;
+
     public OntologyOutline() {
         super(new BorderLayout());
+
+        nodeTypes.add("Category");
+        nodeTypes.add("Tag");
+        nodeTypes.add("Enumeration");
+        nodeTypes.add("Interval");
+        nodeTypes.add("Text");
 
         // Create the components
 
@@ -58,6 +68,65 @@ public class OntologyOutline extends JPanel implements ActionListener {
         keyBindButton = new JToggleButton("Set Shortcuts");
         keyBindButton.setActionCommand(BIND_MODE_COMMAND);
         keyBindButton.addActionListener(this);
+
+        // Create context menus
+
+        popupMenu = new JPopupMenu();
+        popupMenu.setLightWeightPopupEnabled(true);
+
+        JMenuItem mi = new JMenuItem("Assign shortcut...");
+        mi.addActionListener(this);
+        mi.setActionCommand(BIND_EDIT_COMMAND);
+        popupMenu.add(mi);
+
+        JMenu addMenuPopup = new JMenu("Add Child Node");
+
+        for(String nodeType : nodeTypes) {
+            JMenuItem smi = new JMenuItem(nodeType);
+            smi.addActionListener(this);
+            smi.setActionCommand(ADD_COMMAND);
+            addMenuPopup.add(smi);
+        }
+
+        popupMenu.add(addMenuPopup);
+
+        mi = new JMenuItem("Remove this node");
+        mi.addActionListener(this);
+        mi.setActionCommand(REMOVE_COMMAND);
+        popupMenu.add(mi);
+
+        mouseListener = new MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+                JTree tree = selectedTree.getTree();
+                int row = tree.getRowForLocation(e.getX(), e.getY());
+                if (row >= 0) {
+                    tree.setSelectionRow(row);
+                    if (e.isPopupTrigger()) {
+                        popupMenu.show( (JComponent)e.getSource(),
+                                e.getX(), e.getY() );
+                    }
+                    else if (e.getClickCount()==2) {
+                        ActionableEntity curr = selectedTree.getCurrentNode().getEntityNode();
+                        if (!(curr.getAction() instanceof NavigateToNodeAction))
+                            curr.getAction().doAction();
+                    }
+                }
+            }
+            public void mousePressed(MouseEvent e) {
+                JTree tree = selectedTree.getTree();
+                // We have to also listen for mousePressed because OSX generates the popup trigger here
+                // instead of mouseReleased like any sane OS.
+                int row = tree.getRowForLocation(e.getX(), e.getY());
+                if (row >= 0) {
+                    tree.setSelectionRow(row);
+                    if (e.isPopupTrigger()) {
+                        popupMenu.show( (JComponent)e.getSource(),
+                                e.getX(), e.getY() );
+                    }
+                }
+            }
+        };
+
 
         // Lay everything out
 
@@ -138,73 +207,23 @@ public class OntologyOutline extends JPanel implements ActionListener {
 
         selectedTree = new DynamicTree(rootAE);
         addNodes(selectedTree, null, rootAE);
+        selectedTree.expandAll();
 
-        // Set the key listener
+        // Replace the default key listener on the tree
         
         final JTree tree = selectedTree.getTree();
         KeyListener defaultKeyListener = tree.getKeyListeners()[0];
         tree.removeKeyListener(defaultKeyListener);
         tree.addKeyListener(keyListener);
 
+        // Set the mouse listener which keeps track of doubleclicks on nodes, and rightclicks to show the context menu
+
+        tree.addMouseListener(mouseListener);
+
         // Replace the tree in the panel
 
-        selectedTree.expandAll();
         treesPanel.removeAll();
         treesPanel.add(selectedTree);
-
-        // Context menu for nodes
-
-        final JPopupMenu popup = new JPopupMenu();
-        popup.setOpaque(true);
-        popup.setLightWeightPopupEnabled(true);
-
-        JMenuItem mi = new JMenuItem("Assign shortcut...");
-        mi.addActionListener(this);
-        mi.setActionCommand(BIND_EDIT_COMMAND);
-        popup.add(mi);
-
-        mi = new JMenuItem("Add child node");
-        mi.addActionListener(this);
-        mi.setActionCommand(ADD_COMMAND);
-        popup.add(mi);
-
-        mi = new JMenuItem("Remove this node");
-        mi.addActionListener(this);
-        mi.setActionCommand(REMOVE_COMMAND);
-        popup.add(mi);
-
-        // Mouse listener which keeps track of doubleclicks on nodes, and rightclicks to show the context menu
-
-        tree.addMouseListener(new MouseAdapter() {
-            public void mouseReleased(MouseEvent e) {
-                int row = tree.getRowForLocation(e.getX(), e.getY());
-                if (row >= 0) {
-                    tree.setSelectionRow(row);
-                    if (e.isPopupTrigger()) {
-                        popup.show( (JComponent)e.getSource(),
-                                e.getX(), e.getY() );
-                    }
-                    else if (e.getClickCount()==2) {
-                        ActionableEntity curr = selectedTree.getCurrentNode().getEntityNode();
-                        if (!(curr.getAction() instanceof NavigateToNodeAction))
-                            curr.getAction().doAction();
-                    }
-                }
-            }
-            public void mousePressed(MouseEvent e) {
-                // We have to also listen for mousePressed because OSX generates the popup trigger here
-                // instead of mouseReleased like any sane OS.
-                int row = tree.getRowForLocation(e.getX(), e.getY());
-                if (row >= 0) {
-                    tree.setSelectionRow(row);
-                    if (e.isPopupTrigger()) {
-                        popup.show( (JComponent)e.getSource(),
-                                e.getX(), e.getY() );
-                    }
-                }
-            }
-        });
-
 
         this.updateUI();
         return selectedTree;

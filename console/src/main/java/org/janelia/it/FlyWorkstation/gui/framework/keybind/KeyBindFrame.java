@@ -64,6 +64,8 @@ public class KeyBindFrame extends JDialog implements ActionListener {
 
         conflictInfoArea = new JTextArea(5, 20);
         conflictInfoArea.setEditable(false);
+        conflictInfoArea.setLineWrap(true);
+        conflictInfoArea.setWrapStyleWord(true);
         JScrollPane scrollPane = new JScrollPane(conflictInfoArea);
 
         JPanel conflictPane = new JPanel(new BorderLayout());
