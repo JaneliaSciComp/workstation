@@ -7,8 +7,12 @@
 package org.janelia.it.FlyWorkstation.gui.framework.keybind;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 
 /**
  * Maintains a set of key bindings for the user. Maps KeyboardShortcuts to Actions. Enforces a one-to-one mapping,
@@ -18,29 +22,31 @@ import java.util.Map;
  */
 public class KeyBindings {
 
-    private HashMap<KeyboardShortcut, Action>bindings;
+	private List<KeybindChangeListener> listeners = new ArrayList<KeybindChangeListener>();
+	
+    private Map<KeyboardShortcut, Action>bindings;
 
     public KeyBindings() {
         this.bindings = new HashMap<KeyboardShortcut, Action>();
     }
+   
+    public boolean add(KeybindChangeListener o) {
+		return listeners.add(o);
+	}
 
-    public void load() {
+	public boolean remove(KeybindChangeListener o) {
+		return listeners.remove(o);
+	}
 
-        // TODO: load from config file
-
-    }
-
-    public void save() {
-
-        // TODO: save to config file
-
-    }
-
-    public Action getConflict(KeyboardShortcut shortcut) {
+	public Action getConflict(KeyboardShortcut shortcut) {
         return bindings.get(shortcut);
     }
 
-    public KeyboardShortcut getBinding(Action action) {
+    public Map<KeyboardShortcut, Action> getBindings() {
+		return Collections.unmodifiableMap(bindings);
+	}
+
+	public KeyboardShortcut getBinding(Action action) {
         for(Map.Entry<KeyboardShortcut, Action> entry : bindings.entrySet()) {
             if (action.equals(entry.getValue())) {
                 return entry.getKey();
@@ -62,6 +68,10 @@ public class KeyBindings {
         }
         // Now we can add the new shortcut
         bindings.put(shortcut, action);
+        
+        for(KeybindChangeListener listener : listeners) {
+        	listener.keybindChange(new KeybindChangeEvent(this, shortcut, action));
+        }
     }
 
     public void executeBinding(KeyboardShortcut shortcut) {

@@ -78,7 +78,7 @@ public class IconDemoPanel extends JPanel  {
      * @throws MalformedURLException - bad URL exception
      */
     protected ImageIcon createImageIcon(String path) throws MalformedURLException {
-        java.net.URL imgURL = new File(path).toURL();
+        java.net.URL imgURL = new File(path).toURI().toURL();
         int tmpSize = getWidth()/8;
         if (imgURL != null) {
             return new ImageIcon(getScaledImage(new ImageIcon(imgURL).getImage(), tmpSize, tmpSize));

@@ -15,21 +15,21 @@ public class EntityMutableTreeNode extends DefaultMutableTreeNode implements Com
         super(o);
     }
 
-    public ActionableEntity getEntityNode() {
-        return (ActionableEntity)this.getUserObject();
+    public OntologyTerm getOntologyTerm() {
+        return (OntologyTerm)this.getUserObject();
     }
 
     public String getEntityName() {
-        return ((ActionableEntity)this.getUserObject()).getEntity().getName();
+        return ((OntologyTerm)this.getUserObject()).getEntity().getName();
     }
 
     public Long getEntityId() {
-        return ((ActionableEntity)this.getUserObject()).getEntity().getId();
+        return ((OntologyTerm)this.getUserObject()).getEntity().getId();
     }
 
     @Override
     public String toString() {
-        return ((ActionableEntity)this.getUserObject()).getEntity().getName();
+        return ((OntologyTerm)this.getUserObject()).getEntity().getName();
     }
 
     @Override

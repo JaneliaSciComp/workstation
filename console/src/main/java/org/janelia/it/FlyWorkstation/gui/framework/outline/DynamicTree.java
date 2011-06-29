@@ -1,14 +1,33 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.GridLayout;
+import java.awt.Toolkit;
+import java.math.BigDecimal;
+import java.util.Enumeration;
+
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTree;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.MutableTreeNode;
+import javax.swing.tree.TreeCellRenderer;
+import javax.swing.tree.TreePath;
+import javax.swing.tree.TreeSelectionModel;
+
 import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
-
-import javax.swing.*;
-import javax.swing.tree.*;
-import java.awt.*;
-import java.util.Enumeration;
+import org.janelia.it.jacs.model.ontology.OntologyTermType;
 
 /**
  * Created by IntelliJ IDEA.
@@ -16,18 +35,21 @@ import java.util.Enumeration;
  * Date: 6/1/11
  * Time: 4:55 PM
  */
-class DynamicTree extends JPanel {
+public class DynamicTree extends JPanel {
 
+	private static final Color typeLabelColor = new Color(149, 125, 71);
+	private static final Color keybindLabelColor = new Color(128, 128, 128);
+	
     protected EntityMutableTreeNode rootNode;
     protected DefaultTreeModel treeModel;
     protected JTree tree;
     private Toolkit toolkit = Toolkit.getDefaultToolkit();
 
    
-    public DynamicTree(ActionableEntity rootEntity) {
+    public DynamicTree(OntologyTerm rootTerm) {
         super(new GridLayout(1, 0));
 
-        rootNode = new EntityMutableTreeNode(rootEntity);
+        rootNode = new EntityMutableTreeNode(rootTerm);
         treeModel = new DefaultTreeModel(rootNode);
 
         tree = new JTree(treeModel);
@@ -39,17 +61,21 @@ class DynamicTree extends JPanel {
         JScrollPane scrollPane = new JScrollPane(tree);
         scrollPane.setPreferredSize(new Dimension(300,800));
         add(scrollPane);
-
     }
 
-    /**
-     * Retrieve the underlying tree.
-     */
     public JTree getTree() {
         return tree;
     }
 
-    /**
+    public EntityMutableTreeNode getRootNode() {
+		return rootNode;
+	}
+
+	public DefaultTreeModel getTreeModel() {
+		return treeModel;
+	}
+
+	/**
      * Remove the currently selected node.
      */
     public void removeCurrentNode() {
@@ -216,11 +242,13 @@ class DynamicTree extends JPanel {
 
 
     /**
-     * Special tree cell renderer which displays a label (icon and text) as well as a key binding next to it,
-     * if one exists.
+     * Special tree cell renderer for OntologyTerms which displays the term, its type, and its key binding. The icon
+     * is customized based on the term type.
      */
     private class EntityCellRenderer extends DefaultTreeCellRenderer implements TreeCellRenderer {
+    	
         private JLabel titleLabel;
+        private JLabel typeLabel;
         private JLabel keybindLabel;
         private JPanel cellPanel;
         private Color foregroundSelectionColor;
@@ -230,15 +258,23 @@ class DynamicTree extends JPanel {
         private DefaultTreeCellRenderer defaultRenderer = new DefaultTreeCellRenderer();
 
         public EntityCellRenderer() {
+        	
             cellPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            
             titleLabel = new JLabel(" ");
             titleLabel.setOpaque(true);
-            titleLabel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
+            titleLabel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 0));
             titleLabel.setForeground(Color.black);
             cellPanel.add(titleLabel);
+            
+            typeLabel = new JLabel(" ");
+            typeLabel.setForeground(typeLabelColor);
+            cellPanel.add(typeLabel);
+            
             keybindLabel = new JLabel(" ");
-            keybindLabel.setForeground(Color.gray);
+            keybindLabel.setForeground(keybindLabelColor);
             cellPanel.add(keybindLabel);
+            
             foregroundSelectionColor = defaultRenderer.getTextSelectionColor();
             foregroundNonSelectionColor = defaultRenderer.getTextNonSelectionColor();
             backgroundSelectionColor = defaultRenderer
@@ -253,21 +289,38 @@ class DynamicTree extends JPanel {
                                                       boolean expanded, boolean leaf, int row, boolean hasFocus) {
             Component returnValue = null;
             if ((value != null) && (value instanceof DefaultMutableTreeNode)) {
-                Object userObject = ((DefaultMutableTreeNode) value)
-                        .getUserObject();
-                if (userObject instanceof ActionableEntity) {
-                    ActionableEntity node = (ActionableEntity)userObject;
+                Object userObject = ((DefaultMutableTreeNode) value).getUserObject();
+                if (userObject instanceof OntologyTerm) {
+                    OntologyTerm term = (OntologyTerm)userObject;
 
-                    titleLabel.setText(node.getEntity().getName());
-
-                    KeyboardShortcut bind = ConsoleApp.getKeyBindings().getBinding(node.getAction());
+                    // Set the labels
+                    
+                    titleLabel.setText(term.getEntity().getName());
+                    
+                    OntologyTermType type = term.getType(); 
+                    if (type != null) {
+                    	if (type instanceof org.janelia.it.jacs.model.ontology.Interval) {
+                    		org.janelia.it.jacs.model.ontology.Interval interval = (org.janelia.it.jacs.model.ontology.Interval)type;
+                    		typeLabel.setText(""+term.getType().getName()+" ("+interval.getLowerBound() +"-"+interval.getUpperBound()+")");
+                    	}
+                    	else {
+                    		typeLabel.setText(""+term.getType().getName()+"");	
+                    	}
+                    }
+                    else {
+                        typeLabel.setText("[Unknown]");
+                    }
+                    
+                    KeyboardShortcut bind = ConsoleApp.getKeyBindings().getBinding(term.getAction());
                     if (bind != null) {
                         keybindLabel.setText("("+KeymapUtil.getShortcutText(bind)+")");
                     }
                     else {
-                        keybindLabel.setText("");
+                        keybindLabel.setText(" ");
                     }
 
+                    // Set the colors 
+                    
                     if (selected) {
                         titleLabel.setForeground(foregroundSelectionColor);
                         titleLabel.setBackground(backgroundSelectionColor);
@@ -275,7 +328,9 @@ class DynamicTree extends JPanel {
                         titleLabel.setForeground(foregroundNonSelectionColor);
                         titleLabel.setBackground(backgroundNonSelectionColor);
                     }
-
+                    
+                    // Set the icon
+                    
                     cellPanel.setEnabled(tree.isEnabled());
                     if (leaf)
                       titleLabel.setIcon(getLeafIcon());
@@ -284,6 +339,31 @@ class DynamicTree extends JPanel {
                     else
                       titleLabel.setIcon(getClosedIcon());
 
+                    try {
+                    	// Icons from http://www.famfamfam.com/lab/icons/silk/
+                    	
+                    	if (type instanceof org.janelia.it.jacs.model.ontology.Category) {
+							titleLabel.setIcon(Utils.getImage("folder.png"));
+						}
+                    	else if (type instanceof org.janelia.it.jacs.model.ontology.Enum) {
+							titleLabel.setIcon(Utils.getImage("folder_page.png"));
+						}
+                    	else if (type instanceof org.janelia.it.jacs.model.ontology.Interval) {
+							titleLabel.setIcon(Utils.getImage("page_white_code.png"));
+						}
+						else if (type instanceof org.janelia.it.jacs.model.ontology.Tag) {
+							titleLabel.setIcon(Utils.getImage("page_white.png"));
+						}
+						else if (type instanceof org.janelia.it.jacs.model.ontology.Text) {
+							titleLabel.setIcon(Utils.getImage("page_white_text.png"));
+						}
+						else if (type instanceof org.janelia.it.jacs.model.ontology.EnumItem) {
+							titleLabel.setIcon(Utils.getImage("page.png"));
+						}
+						
+					} catch (Throwable r) {
+						r.printStackTrace();
+					}
                     returnValue = cellPanel;
                 }
             }
@@ -295,4 +375,5 @@ class DynamicTree extends JPanel {
         }
     }
 
+    
 }

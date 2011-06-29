@@ -4,7 +4,7 @@
  * Date: 6/15/11
  * Time: 12:38 PM
  */
-package org.janelia.it.FlyWorkstation.gui.framework.keybind;
+package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
 /**
  * A named action.

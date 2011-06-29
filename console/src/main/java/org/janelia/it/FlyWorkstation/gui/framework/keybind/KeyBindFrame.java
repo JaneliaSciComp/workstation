@@ -7,6 +7,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.keybind;
 
 import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 
 import javax.swing.*;
 import java.awt.*;

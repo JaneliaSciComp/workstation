@@ -1,9 +1,10 @@
 package org.janelia.it.FlyWorkstation.gui.application;
 
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+
 import org.janelia.it.FlyWorkstation.gui.framework.console.ConsoleFrame;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyBindings;
-
-import javax.swing.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -14,7 +15,7 @@ import javax.swing.*;
  */
 public class ConsoleApp {
     
-    static private final String VERSION_NUMBER = "0.1";
+    private static final String VERSION_NUMBER = "0.1";
     private static boolean useSplashScreen = false;
     private static ConsoleFrame mainConsole;
     private static KeyBindings bindings;
@@ -39,6 +40,7 @@ public class ConsoleApp {
         newConsole();
     }
 
+    
     private static void newConsole() {
         // Show the Splash Screen
         final SplashScreen splash = new SplashScreen();
@@ -51,8 +53,7 @@ public class ConsoleApp {
         try {
             // Load key bindings
             bindings = new KeyBindings();
-            bindings.load();
-
+            
             //Browser Setup
             final String versionString = System.getProperty("x.genomebrowser.Version");
             final boolean internal = (versionString != null) &&
@@ -192,7 +193,7 @@ public class ConsoleApp {
             //Start FirstConsole
             mainConsole = new ConsoleFrame(.8f);
             mainConsole.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            mainConsole.setTitle("Fly Workstation 0.1");
+            mainConsole.setTitle("Fly Workstation "+VERSION_NUMBER);
             mainConsole.setBrowserImageIcon(new ImageIcon("/Users/" + System.getenv("USER") + "/Dev/jacs/console/target/classes/org/janelia/it/flyscope.jpg"));
             // todo remove this repaint if this is an image definition problem
             mainConsole.repaint();
