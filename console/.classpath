@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src/main/java"/>
+	<classpathentry kind="src" path="src/test/java"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/model"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/compute"/>
+	<classpathentry kind="lib" path="/compute/build/jars/compute-client.jar" sourcepath="/compute/src"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/shared"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/owlapi-bin.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Common"/>
+	<classpathentry kind="output" path="target/classes"/>
+</classpath>
