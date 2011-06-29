@@ -2,6 +2,9 @@ package org.janelia.it.FlyWorkstation.gui.ontology;
 
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.ontology.Category;
+import org.janelia.it.jacs.model.ontology.OntologyTermType;
+import org.janelia.it.jacs.model.ontology.Tag;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.io.OWLOntologyCreationIOException;
 import org.semanticweb.owlapi.io.OWLParser;
@@ -80,9 +83,9 @@ public class OWLDataLoader {
         Entity newNode = DRYRUN ? new Entity() : EJBFactory.getRemoteAnnotationBean().createOntologyRoot(
                 System.getenv("USER"), label);
 
-        out.println(label+" (saved as "+newNode.getId()+")");
+		out.println(label + " (Category saved as " + newNode.getId() + ")");
 
-        printHierarchy(reasoner, newNode, null, clazz, 1);
+        printHierarchy(reasoner, newNode, null, clazz, 1, 0);
 
         /* Now print out any unsatisfiable classes */
         for (OWLClass cl: ontology.getClassesInSignature()) {
@@ -98,33 +101,47 @@ public class OWLDataLoader {
      * the given level. Makes no attempt to deal sensibly with multiple
      * inheritance.
      */
-    public void printHierarchy(OWLReasoner reasoner, Entity parentEntity, OWLClass parent, OWLClass clazz, int level)
-            throws OWLException {
-        /*
-         * Only print satisfiable classes -- otherwise we end up with bottom
-         * everywhere
-         */
-        if (reasoner.isSatisfiable(clazz)) {
-            for (int i = 0; i < level * INDENT; i++) {
-                out.print(" ");
-            }
+	public void printHierarchy(OWLReasoner reasoner, Entity parentEntity,
+			OWLClass parent, OWLClass clazz, int level, int orderIndex) throws OWLException {
+		
+		for (int i = 0; i < level * INDENT; i++) {
+			out.print(" ");
+		}
 
-            String label = labelFor(clazz);
-            if (label.contains("#")) label = label.substring(label.indexOf("#")+1);
-            
-            Entity newNode = DRYRUN ? new Entity() : EJBFactory.getRemoteAnnotationBean().createOntologyTerm(
-                    System.getenv("USER"), parentEntity.getId().toString(), label);
+		String label = labelFor(clazz);
+		if (label.contains("#"))
+			label = label.substring(label.indexOf("#") + 1);
 
-            out.println(label+" (saved as "+newNode.getId()+")");
+		boolean hasChildren = false;
+		for (OWLClass child : reasoner.getSubClasses(clazz, true)
+				.getFlattened()) {
+			if (!child.equals(clazz)) {
+				if (reasoner.isSatisfiable(child)) {
+					hasChildren = true;
+					break;
+				}
+			}
+		}
 
-            /* Find the children and recurse */
-            for (OWLClass child : reasoner.getSubClasses(clazz, true).getFlattened()) {
-                if (!child.equals(clazz)) {
-                    printHierarchy(reasoner, newNode, clazz, child, level + 1);
-                }
-            }
-        }
-    }
+		OntologyTermType type = hasChildren ? new Category() : new Tag();
+		Entity newNode = DRYRUN ? new Entity() : EJBFactory
+				.getRemoteAnnotationBean().createOntologyTerm(
+						System.getenv("USER"), parentEntity.getId().toString(),
+						label, type, orderIndex);
+
+		out.println(label + " ("+type.getName()+" saved as " + newNode.getId() + ")");
+
+		// Find the children and recurse 
+		int childOrder = 0;
+		for (OWLClass child : reasoner.getSubClasses(clazz, true)
+				.getFlattened()) {
+			if (!child.equals(clazz)) {
+				if (reasoner.isSatisfiable(child)) {
+					printHierarchy(reasoner, newNode, clazz, child, level + 1, childOrder++);
+				}
+			}
+		}
+	}
 
     public static void main(String[] args) throws Exception {
         try {
