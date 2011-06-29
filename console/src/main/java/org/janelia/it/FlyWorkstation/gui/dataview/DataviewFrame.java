@@ -6,24 +6,45 @@
  */
 package org.janelia.it.FlyWorkstation.gui.dataview;
 
-import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityAttribute;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.entity.EntityType;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Toolkit;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Vector;
 
-import javax.swing.*;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTable;
+import javax.swing.JTree;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingWorker;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
-import javax.swing.table.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
-import java.awt.*;
-import java.util.*;
-import java.util.List;
+
+import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityAttribute;
+import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.entity.EntityType;
 
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
@@ -57,6 +78,7 @@ public class DataviewFrame extends JFrame {
         setLayout(new BorderLayout());
         initUI();
         initData();
+
     }
 
     private void initUI() {
@@ -69,7 +91,6 @@ public class DataviewFrame extends JFrame {
         JSplitPane splitPaneHorizontal = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, entityTypePane, entityPane);
         splitPaneHorizontal.setDividerLocation(300);
         getContentPane().add(splitPaneHorizontal, BorderLayout.CENTER);
-
     }
 
     private void initData() {
@@ -102,30 +123,37 @@ public class DataviewFrame extends JFrame {
                 @Override
                 protected Void doInBackground() throws Exception {
 
-                    List<EntityType> entityTypes = EJBFactory.getRemoteAnnotationBean().getEntityTypes();
+                	try {
+                        List<EntityType> entityTypes = EJBFactory.getRemoteAnnotationBean().getEntityTypes();
 
-                    DefaultMutableTreeNode root = new DefaultMutableTreeNode("EntityType");
+                        DefaultMutableTreeNode root = new DefaultMutableTreeNode("EntityType");
 
-                    for(EntityType entityType : entityTypes) {
-                        DefaultMutableTreeNode entityTypeNode = new DefaultMutableTreeNode(entityType) {
-                            @Override
-                            public String toString() {
-                                return ((EntityType)getUserObject()).getName();
-                            }
-                        };
-                        root.add(entityTypeNode);
-
-                        for(EntityAttribute entityAttribute : entityType.getAttributes()) {
-                            DefaultMutableTreeNode entityAttrNode = new DefaultMutableTreeNode(entityAttribute) {
+                        for(EntityType entityType : entityTypes) {
+                            DefaultMutableTreeNode entityTypeNode = new DefaultMutableTreeNode(entityType) {
                                 @Override
                                 public String toString() {
-                                    return ((EntityAttribute)getUserObject()).getName();
+                                    return ((EntityType)getUserObject()).getName();
                                 }
                             };
-                            entityTypeNode.add(entityAttrNode);
+                            root.add(entityTypeNode);
+
+                            for(EntityAttribute entityAttribute : entityType.getOrderedAttributes()) {
+                                DefaultMutableTreeNode entityAttrNode = new DefaultMutableTreeNode(entityAttribute) {
+                                    @Override
+                                    public String toString() {
+                                        return ((EntityAttribute)getUserObject()).getName();
+                                    }
+                                };
+                                entityTypeNode.add(entityAttrNode);
+                            }
                         }
-                    }
-                    publish(new DefaultTreeModel(root));
+                        publish(new DefaultTreeModel(root));
+                	}
+                	catch (Exception e) {
+                		e.printStackTrace();
+                		throw e;
+                	}
+                	
                     return null;
                 }
 
@@ -189,9 +217,9 @@ public class DataviewFrame extends JFrame {
             ListSelectionListener listener = new ListSelectionListener() {
                 public void valueChanged(ListSelectionEvent e) {
                     if (!e.getValueIsAdjusting()) {
-                        int i = table.getSelectedRow();
-                        if (i > 0 && i<entities.size()) {
-                            entityDetailPane.showEntity(entities.get(i));
+                        int row = table.getSelectedRow();
+                        if (row >= 0 && row<entities.size()) {
+                            entityDetailPane.showEntity(entities.get(row));
                         }
                     }
                 }
@@ -232,21 +260,37 @@ public class DataviewFrame extends JFrame {
             SwingWorker<Void,Void> loadEntityTask = new SwingWorker<Void,Void>() {
                 @Override
                 protected Void doInBackground() throws Exception {
-                    List<Entity> entities = EJBFactory.getRemoteAnnotationBean().getEntitiesByType(entityType.getId());
-                    tableModel = updateTableModel(entities);
+                	try {
+                		List<Entity> entities = EJBFactory.getRemoteAnnotationBean().getEntitiesByType(entityType.getId());
+                		tableModel = updateTableModel(entities);
+                	} 
+                	catch (Exception e) {
+                		e.printStackTrace();
+                		throw e;
+                	}
                     return null;
                 }
 
                 @Override
                 protected void done() {
                     table.setModel(tableModel);
-                    autoResizeColWidth(table);
+                    Utils.autoResizeColWidth(table);
                     remove(progressPanel);
                     add(scrollPane, BorderLayout.CENTER);
+                    entityDetailPane.showEmpty();
                 }
             };
 
             loadEntityTask.execute();
+        }
+
+        public void showEntity(final Entity entity) {
+            titleLabel.setText("Entity: "+entity.getEntityType().getName()+" ("+entity.getName()+")");
+            List<Entity> entities = new ArrayList<Entity>();
+            entities.add(entity);
+            table.setModel(updateTableModel(entities));
+            Utils.autoResizeColWidth(table);
+            table.getSelectionModel().setSelectionInterval(0, 0);
         }
 
         /**
@@ -269,16 +313,13 @@ public class DataviewFrame extends JFrame {
 
             // Build the data in column order
             for(Entity entity : entities) {
-                Set<EntityData> dataSet = entity.getEntityData();
                 Vector<String> rowData = new Vector<String>();
-
                 rowData.add(entity.getId().toString());
                 rowData.add((entity.getUser() == null) ? "" : entity.getUser().getUserLogin());
                 //rowData.add((entity.getEntityStatus() == null) ? "" : entity.getEntityStatus().getName());
                 rowData.add((entity.getCreationDate() == null) ? "" : entity.getCreationDate().toString());
                 rowData.add((entity.getUpdatedDate() == null) ? "" : entity.getUpdatedDate().toString());
                 rowData.add(entity.getName());
-
                 data.add(rowData);
             }
             
@@ -307,7 +348,7 @@ public class DataviewFrame extends JFrame {
             staticColumns.add("Id");
             staticColumns.add("User");
             staticColumns.add("Updated Date");
-            //staticColumns.add("Order");
+            staticColumns.add("Order");
             staticColumns.add("Child");
             staticColumns.add("Value");
             
@@ -316,6 +357,21 @@ public class DataviewFrame extends JFrame {
             table.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             table.setColumnSelectionAllowed(false);
             table.setRowSelectionAllowed(true);
+
+            table.addMouseListener(new MouseAdapter(){
+                public void mouseClicked(MouseEvent e){
+                    if (e.getClickCount() == 2) {
+                        JTable target = (JTable)e.getSource();
+                        int row = target.getSelectedRow();
+                        if (row >= 0 && row<datas.size()) {
+                            EntityData entityData = datas.get(row);
+                            if (entityData.getChildEntity() != null) {
+                                entityListPane.showEntity(entityData.getChildEntity());
+                            }
+                        }
+                    }
+                }
+            });
 
             scrollPane = new JScrollPane();
             scrollPane.setViewportView(table);
@@ -333,6 +389,12 @@ public class DataviewFrame extends JFrame {
             repaint();
         }
 
+        public void showEmpty() {
+            titleLabel.setText("EntityData");
+            remove(scrollPane);
+            repaint();
+        }
+
         /**
          * Async method for loading and displaying entities of a given type.
          */
@@ -344,14 +406,25 @@ public class DataviewFrame extends JFrame {
             SwingWorker<Void,Void> loadEntityTask = new SwingWorker<Void,Void>() {
                 @Override
                 protected Void doInBackground() throws Exception {
-                    tableModel = updateTableModel(entity.getEntityData());
+                    try {
+                        tableModel = updateTableModel(entity.getOrderedEntityData());
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
                     return null;
                 }
 
                 @Override
                 protected void done() {
-                    table.setModel(tableModel);
-                    autoResizeColWidth(table);
+                    if (tableModel == null) {
+                        System.out.println("TableModel was null");
+                        return;
+                    }
+                    else {
+                        table.setModel(tableModel);
+                        Utils.autoResizeColWidth(table);
+                    }
                     remove(progressPanel);
                     add(scrollPane, BorderLayout.CENTER);
                 }
@@ -362,25 +435,13 @@ public class DataviewFrame extends JFrame {
 
 
         /**
+         *
+         *
          * Synchronous method for updating the JTable model. Should be called from the EDT.
          */
-        private TableModel updateTableModel(Set<EntityData> dataSet) {
+        private TableModel updateTableModel(List<EntityData> dataSet) {
 
-            datas = new ArrayList<EntityData>(dataSet);
-
-            Collections.sort(datas, new Comparator<EntityData>() {
-                @Override
-                public int compare(EntityData o1, EntityData o2) {
-                    int c = o1.getEntityAttribute().getName().compareTo(o2.getEntityAttribute().getName());
-                    if (c == 0) {
-                        if (o1.getOrderIndex() == null || o2.getOrderIndex() == null) {
-                            return o1.getId().compareTo(o2.getId());
-                        }
-                        return o1.getOrderIndex().compareTo(o2.getOrderIndex());
-                    }
-                    return c;
-                }
-            });
+            datas = dataSet;
 
             // Data formatted for the JTable
             Vector<String> columnNames = new Vector<String>();
@@ -397,7 +458,7 @@ public class DataviewFrame extends JFrame {
                 rowData.add(entityData.getId().toString());
                 rowData.add((entityData.getUser() == null) ? "" : entityData.getUser().getUserLogin());
                 rowData.add((entityData.getUpdatedDate() == null) ? "" : entityData.getUpdatedDate().toString());
-                //rowData.add((entityData.getOrderIndex() == null) ? "" : entityData.getOrderIndex().toString());
+                rowData.add((entityData.getOrderIndex() == null) ? "" : entityData.getOrderIndex().toString());
                 rowData.add((entityData.getChildEntity() == null) ? "" : entityData.getChildEntity().getName());
                 rowData.add(entityData.getValue());
                 data.add(rowData);
@@ -412,40 +473,5 @@ public class DataviewFrame extends JFrame {
 
     }
 
-    /**
-     * Borrowed from http://www.pikopong.com/blog/2008/08/13/auto-resize-jtable-column-width/
-     */
-    private void autoResizeColWidth(JTable table) {
-        
-        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        DefaultTableCellRenderer defaultRenderer = (DefaultTableCellRenderer)table.getTableHeader().getDefaultRenderer();
-
-        int margin = 5;
-
-        for (int i = 0; i < table.getColumnCount(); i++) {
-            DefaultTableColumnModel colModel = (DefaultTableColumnModel)table.getColumnModel();
-            TableColumn col = colModel.getColumn(i);
-            int width = 0;
-
-            // Get width of column header
-            TableCellRenderer renderer = col.getHeaderRenderer();
-            if (renderer == null) renderer = defaultRenderer;
-
-            Component comp = renderer.getTableCellRendererComponent(table, col.getHeaderValue(), false, false, 0, 0);
-            width = comp.getPreferredSize().width;
-
-            // Get maximum width of column data
-            for (int r = 0; r < table.getRowCount(); r++) {
-                renderer = table.getCellRenderer(r, i);
-                comp = renderer.getTableCellRendererComponent(table, table.getValueAt(r, i), false, false, r, i);
-                width = Math.max(width, comp.getPreferredSize().width);
-            }
-
-            width += 2 * margin;
-            col.setPreferredWidth(width);
-        }
-
-        defaultRenderer.setHorizontalAlignment(SwingConstants.LEFT);
-    }
 
 }
