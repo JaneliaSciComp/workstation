@@ -15,7 +15,9 @@ import javax.swing.table.TableColumn;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.DynamicTree;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
@@ -73,5 +75,33 @@ public class Utils {
         defaultRenderer.setHorizontalAlignment(SwingConstants.LEFT);
     }
 
+    
+    /**
+     * Create an image from the source image, scaled at the given percentage.
+     * @param sourceImage
+     * @param scale
+     * @return
+     * @throws MalformedURLException
+     */
+    public static BufferedImage getScaledImageIcon(BufferedImage sourceImage, double scale) {
+    	int newWidth = (int)Math.round(scale * sourceImage.getWidth());
+    	int newHeight = (int)Math.round(scale * sourceImage.getHeight());
+    	return getScaledImage(sourceImage, newWidth, newHeight);
+    }
 
+    /**
+     * Resizes an image using a Graphics2D object backed by a BufferedImage.
+     * @param sourceImage - source image to scale
+     * @param w - desired width
+     * @param h - desired height
+     * @return - the new resized image
+     */
+    public static BufferedImage getScaledImage(BufferedImage sourceImage, int w, int h){
+        BufferedImage resizedImg = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2 = resizedImg.createGraphics();
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2.drawImage(sourceImage, 0, 0, w, h, null);
+        g2.dispose();
+        return resizedImg;
+    }
 }

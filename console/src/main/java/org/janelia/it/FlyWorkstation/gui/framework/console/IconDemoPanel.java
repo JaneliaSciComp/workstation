@@ -6,25 +6,64 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
-import org.janelia.it.FlyWorkstation.gui.application.SplashPanel;
-import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
-import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
-import org.janelia.it.FlyWorkstation.gui.util.WrapLayout;
-
-import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
+import java.awt.Rectangle;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSlider;
+import javax.swing.JTextPane;
+import javax.swing.JToggleButton;
+import javax.swing.Scrollable;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
+import javax.swing.border.Border;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
+
+import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
+import org.janelia.it.FlyWorkstation.gui.application.SplashPanel;
+import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
+import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationToolbar;
+import org.janelia.it.FlyWorkstation.gui.util.WrapLayout;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
+
+import com.sun.media.jai.codec.FileSeekableStream;
+import com.sun.media.jai.codec.SeekableStream;
+
 
 /**
  * This panel shows titled images in a grid with optional textual annotation tags beneath each one.
@@ -33,6 +72,8 @@ import java.util.List;
  */
 public class IconDemoPanel extends JPanel  {
 
+	private static final int MAX_THUMBNAIL_WIDTH = 400;
+	
     private MissingIcon placeholderIcon = new MissingIcon();
     private List<AnnotatedImageButton> annotImages = new ArrayList<AnnotatedImageButton>();
 
@@ -40,11 +81,15 @@ public class IconDemoPanel extends JPanel  {
      * List of all the image files to load.
      */
     private SplashPanel splashPanel;
-    private JPanel imagesPanel;
+    private AnnotationToolbar toolbar;
+    private ImagesPanel imagesPanel;
     private JScrollPane scrollPane;
     private Integer currIndex;
     private ButtonGroup buttonGroup;
 
+    private double imageSizePercent = 1.0d;
+    private double maxThumbnailWidth = 500;
+    
     // Listen for key strokes and execute the appropriate key bindings
     private KeyListener keyListener = new KeyAdapter() {
         @Override
@@ -66,42 +111,29 @@ public class IconDemoPanel extends JPanel  {
         setLayout(new BorderLayout(0,0));
 
         splashPanel = new SplashPanel();
+        toolbar = new AnnotationToolbar();
         imagesPanel = new ImagesPanel();
         scrollPane = new JScrollPane();
         scrollPane.setViewportView(imagesPanel);
-    }
-
-    /**
-     * Creates an ImageIcon if the path is valid.
-     * @param path - resource path
-     * @return ImageIcon to use
-     * @throws MalformedURLException - bad URL exception
-     */
-    protected ImageIcon createImageIcon(String path) throws MalformedURLException {
-        java.net.URL imgURL = new File(path).toURI().toURL();
-        int tmpSize = getWidth()/8;
-        if (imgURL != null) {
-            return new ImageIcon(getScaledImage(new ImageIcon(imgURL).getImage(), tmpSize, tmpSize));
-        } else {
-            System.err.println("Couldn't find file: " + path);
-            return null;
-        }
-    }
-
-    /**
-     * Resizes an image using a Graphics2D object backed by a BufferedImage.
-     * @param srcImg - source image to scale
-     * @param w - desired width
-     * @param h - desired height
-     * @return - the new resized image
-     */
-    private Image getScaledImage(Image srcImg, int w, int h){
-        BufferedImage resizedImg = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
-        Graphics2D g2 = resizedImg.createGraphics();
-        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        g2.drawImage(srcImg, 0, 0, w, h, null);
-        g2.dispose();
-        return resizedImg;
+        
+        toolbar.getSlider().addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				JSlider source = (JSlider)e.getSource();
+	    		int sizePct = (int)source.getValue();
+	    		imageSizePercent = (double)sizePct/(double)100;
+	    		maxThumbnailWidth = 0;
+	            for (Component component : imagesPanel.getComponents()) {
+	            	if (component instanceof AnnotatedImageButton) {
+	            		AnnotatedImageButton button = (AnnotatedImageButton)component;
+	            		button.rescaleImage(imageSizePercent);
+	            		int w = button.getImage().getIconWidth();
+	            		if (w>maxThumbnailWidth) maxThumbnailWidth = w;
+	            	}
+	            }
+			}
+        });
+        
     }
 
     public void reloadData(String pathToData) {
@@ -112,22 +144,21 @@ public class IconDemoPanel extends JPanel  {
             // Clear out the old images
             annotImages.clear();
             buttonGroup = new ButtonGroup();
-            for (Component component : imagesPanel.getComponents()) {
-                imagesPanel.remove(component);
-            }
+            imagesPanel.removeAllButtons();
 
             if (null == pathToData) {
                 add(splashPanel);
                 return;
             }
 
+            add(toolbar, BorderLayout.NORTH);
             add(scrollPane, BorderLayout.CENTER);
 
             File tmpFile = new File(pathToData);
             if (tmpFile.isDirectory()) {
                 File[] childImageFiles = tmpFile.listFiles(new FilenameFilter(){
                     public boolean accept(File file, String s) {
-                        // todo Need a whole mechanism to categorize the files and editors used for them.
+                        // TODO: Need a whole mechanism to categorize the files and editors used for them.
                         return s.endsWith(".tif");
                     }
                 });
@@ -184,24 +215,50 @@ public class IconDemoPanel extends JPanel  {
     }
 
     /**
-     * This subclass of JPanel disable horizontal scrolling when the panel is inserted into a JScrollPane.
+     * 
+     * @param path
+     * @return
+     * @throws MalformedURLException
      */
-    private class ImagesPanel extends JPanel implements Scrollable, ComponentListener {
+    private BufferedImage readImage(String path) throws Exception {
+        SeekableStream s = new FileSeekableStream(new File(path));
+        BufferedImage image = ImageIO.read(s);
+        s.close();
+        return image;
+        
+    }
+	    
+	/**
+	 * Self-adjusting panel of images
+	 */
+    private class ImagesPanel extends JPanel implements ComponentListener, Scrollable {
 
-        ImagesPanel() {
+    	private List<AnnotatedImageButton> buttons = new ArrayList<AnnotatedImageButton>();
+    	
+        public ImagesPanel() {
             setLayout(new GridLayout(0, 2));
             setOpaque(false);
             addComponentListener(this);
         }
+        
+        public void addButton(AnnotatedImageButton button) {
+        	buttons.add(button);
+        	add(button);
+        }
+        
+        public void removeAllButtons() {
+            for (Component component : imagesPanel.getComponents()) {
+            	if (component instanceof AnnotatedImageButton) {
+            		remove(component);
+            	}
+            }
+            buttons.clear();
+        }
 
         @Override
         public void componentResized(ComponentEvent e) {
-            if (getSize().width > 1400) {
-                ((GridLayout)getLayout()).setColumns(3);
-            }
-            else {
-                ((GridLayout)getLayout()).setColumns(2);
-            }
+        	int numCols = (int)Math.floor((double)getParent().getSize().width / (maxThumbnailWidth+20));
+            ((GridLayout)getLayout()).setColumns(numCols);
         }
 
         @Override
@@ -215,7 +272,9 @@ public class IconDemoPanel extends JPanel  {
 
         @Override
         public Dimension getPreferredScrollableViewportSize() {
-            return getPreferredSize();
+        	Dimension d = getPreferredSize();
+        	System.out.println("getPreferredScrollableViewportSize: "+d);
+            return d;
         }
 
         @Override
@@ -230,7 +289,7 @@ public class IconDemoPanel extends JPanel  {
 
         @Override
         public boolean getScrollableTracksViewportWidth() {
-            return true;
+            return false;
         }
 
         @Override
@@ -244,22 +303,33 @@ public class IconDemoPanel extends JPanel  {
      */
     private class AnnotatedImageButton extends JToggleButton {
 
+    	private BufferedImage maxSizeImage;
         private String imageFilename;
         private String title;
         private int index;
         private JPanel tagPanel;
         private List<String> tags = new ArrayList<String>();
+		private JLabel imageLabel;
 
-        AnnotatedImageButton(String title, String imageFilename, final int index) {
+        public AnnotatedImageButton(String title, String imageFilename, final int index) {
             this.title = title;
             this.imageFilename = imageFilename;
             this.index = index;
         }
 
-        public void init() throws MalformedURLException {
+        public void rescaleImage(double scale) {
+        	imageLabel.setIcon(new ImageIcon(Utils.getScaledImageIcon(maxSizeImage, scale)));
+        }
+        
+        public Icon getImage() {
+        	return imageLabel.getIcon();
+        }
+        
+        public void init() throws Throwable {
 
-            Icon icon = createImageIcon(imageFilename);
-            if (icon == null) icon = placeholderIcon;
+        	maxSizeImage = readImage(imageFilename);
+        	
+        	// TODO: what if the filename is not found?
 
             GridBagConstraints c = new GridBagConstraints();
             JPanel imagePanel = new JPanel(new GridBagLayout());
@@ -285,8 +355,9 @@ public class IconDemoPanel extends JPanel  {
             c.weightx = 0.5;
             imagePanel.add(imageCaption,c);
 
-            JLabel imageLabel = new JLabel(icon);
+            imageLabel = new JLabel();
             imageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            rescaleImage(imageSizePercent);
 
             c.gridx = 0;
             c.gridy = 1;
@@ -355,7 +426,7 @@ public class IconDemoPanel extends JPanel  {
      * SwingWorker class that loads the images a background thread and calls publish
      * when a new one is ready to be displayed.
      *
-     * We use Void as the first SwingWroker param as we do not need to return
+     * We use Void as the first SwingWorker param as we do not need to return
      * anything from doInBackground().
      */
     private class LoadImageWorker extends SwingWorker<Void, AnnotatedImageButton> {
@@ -364,13 +435,17 @@ public class IconDemoPanel extends JPanel  {
          */
         @Override
         protected Void doInBackground() throws Exception {
+        	try {
+                System.out.println("loading "+annotImages.size()+" images......");
 
-            System.out.println("loading "+annotImages.size()+" images......");
-
-            for (AnnotatedImageButton annotImage : annotImages) {
-                annotImage.init();
-                publish(annotImage);
-            }
+                for (AnnotatedImageButton annotImage : annotImages) {
+                    annotImage.init();
+                    publish(annotImage);
+                }
+        	}
+        	catch (Throwable e) {
+        		e.printStackTrace();
+        	}
             // unfortunately we must return something, and only null is valid to
             // return when the return type is void.
             return null;
@@ -379,7 +454,14 @@ public class IconDemoPanel extends JPanel  {
         @Override
         protected void process(java.util.List<AnnotatedImageButton> buttons) {
             for (AnnotatedImageButton button : buttons) {
-                imagesPanel.add(button);
+                imagesPanel.addButton(button);
+
+        		int w = button.getImage().getIconWidth();
+        		if (w>maxThumbnailWidth) maxThumbnailWidth = w;
+        		
+                int numCols = (int)Math.floor((double)getSize().width / maxThumbnailWidth);
+                ((GridLayout)imagesPanel.getLayout()).setColumns(numCols);
+                
                 validate();
                 SwingUtilities.updateComponentTreeUI(IconDemoPanel.this);
             }
