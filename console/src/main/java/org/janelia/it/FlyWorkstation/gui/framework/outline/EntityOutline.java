@@ -28,7 +28,7 @@ import java.io.IOException;
  * Time: 2:09 PM
  * This class is the initial outline of the data file tree
  */
-public class FileOutline extends JScrollPane implements Cloneable {
+public class EntityOutline extends JScrollPane implements Cloneable {
     // todo Remove this hard-wiring of the path
     public static final String DATA_SOURCE_PATH = "/Volumes/jacsData/filestore/"+System.getenv("USER");
     public static final String NO_DATASOURCE = "Data Source Unreachable";
@@ -42,7 +42,7 @@ public class FileOutline extends JScrollPane implements Cloneable {
     //    private BrowserModelObserver browserModelObserver;
     private TreeModel treeModel;
 
-    public FileOutline(ConsoleFrame consoleFrame) {
+    public EntityOutline(ConsoleFrame consoleFrame) {
         this.consoleFrame = consoleFrame;
         tree = new JTree(buildTreeModel(DATA_SOURCE_PATH));
         treeModel = tree.getModel();
@@ -74,7 +74,7 @@ public class FileOutline extends JScrollPane implements Cloneable {
                 if (tmpPath.getLastPathComponent().toString().equals(NO_DATASOURCE)) {return;}
                 File tmpFile = getFileForTreePath(tmpPath);
                 if (null!=tmpFile && tmpFile.exists()) {
-                    FileOutline.this.consoleFrame.setMostRecentFileOutlinePath(tmpFile.getAbsolutePath());
+                    EntityOutline.this.consoleFrame.setMostRecentFileOutlinePath(tmpFile.getAbsolutePath());
                 }
             }
         }));
@@ -126,7 +126,7 @@ public class FileOutline extends JScrollPane implements Cloneable {
     private void handleMouseEvents(MouseEvent e) {
         TreePath treePath = tree.getSelectionPath();
         if (treePath == null) return;
-        java.lang.Object treeObj = treePath.getPath();
+        Object treeObj = treePath.getPath();
         if ((e.getModifiers() & MouseEvent.BUTTON3_MASK) > 0) {
             System.out.println("Rt. button mouse pressed clicks: " + e.getClickCount() + " " + System.currentTimeMillis());
             if (getFileForTreePath(treePath).isFile()) {
@@ -172,7 +172,7 @@ public class FileOutline extends JScrollPane implements Cloneable {
 //                    newSessionTask.setParameter(AnnotationSessionTask.PARAM_annotationValues, "good, partially good, low quality, trash");
 //                    newSessionTask.setParameter(AnnotationSessionTask.PARAM_annotationCategories, "quality");
                     AnnotationSessionTask returnSessionTask = (AnnotationSessionTask)EJBFactory.getRemoteComputeBean().saveOrUpdateTask(newSessionTask);
-                    FileOutline.this.consoleFrame.setAnnotationSessionChanged(returnSessionTask.getObjectId().toString());
+                    EntityOutline.this.consoleFrame.setAnnotationSessionChanged(returnSessionTask.getObjectId().toString());
                 }
                 catch (Exception e) {
                     e.printStackTrace();

@@ -37,7 +37,9 @@ public class SplashPanel extends JPanel {
         panel2.setBackground(Color.white);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
+        panel2.add(Box.createVerticalGlue());
         panel2.add(logoImageControl);
+        panel2.add(Box.createVerticalGlue());
         setBackground(Color.white);
         add(panel1);
         add(panel2);

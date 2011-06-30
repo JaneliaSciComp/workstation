@@ -11,7 +11,6 @@ import java.net.URL;
  * User: saffordt
  * Date: 2/8/11
  * Time: 4:57 PM
- * To change this template use File | Settings | File Templates.
  */
 public class SearchToolbar extends JPanel implements ActionListener {
     protected JTextArea textArea;

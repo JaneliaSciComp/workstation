@@ -1,9 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.FileOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.TaskOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.search.SearchToolbar;
+import org.janelia.it.FlyWorkstation.gui.util.JOutlookBar;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableImage;
@@ -14,6 +16,7 @@ import java.awt.event.WindowEvent;
 import java.awt.print.PageFormat;
 import java.awt.print.PrinterJob;
 import java.io.File;
+import java.util.HashMap;
 
 /**
  * Created by IntelliJ IDEA.
@@ -33,12 +36,13 @@ public class ConsoleFrame extends JFrame implements Cloneable {
     private static String BROWSER_POSITION = "BROWSER_POSITION_ON_SCREEN";
 
     // Used by printing mechanism to ensure capacity.
+    public static final String VIEW_SEARCH   = "Search Toolbar";
+    public static final String VIEW_OUTLINES = "Outlines Section";
+    public static final String VIEW_ONTOLOGY = "Ontology Section";
     private static String MEMORY_EXCEEDED_PRT_SCR_MSG = "Insufficient memory to print screen";
     private static String MEMORY_EXCEEDED_ADVISORY = "Low Memory";
     private static int RGB_TYPE_BYTES_PER_PIXEL = 4;
     private static int PRINT_OVERHEAD_SIZE = 1000000;
-    private static final float TOP_LEFT_PANE_VERTICAL_PERCENT = .55f;
-    private static final float MAIN_VIEWER_PANE_HORIZONTAL_PERCENT = .2f;
     private static Class menuBarClass;
     private JSplitPane dataSplitPaneVertical;
     private JSplitPane jSplitPaneRightVertical;
@@ -52,6 +56,8 @@ public class ConsoleFrame extends JFrame implements Cloneable {
     private IconDemoPanel viewerPanel;
     private CardLayout layout = new CardLayout();
     private JMenuBar menuBar;
+    private SearchToolbar searchToolbar;
+    private HashMap<String, JComponent> viewMap = new HashMap<String, JComponent>();
     private JTabbedPane subBrowserTabPane = new JTabbedPane();
 //    private Vector browserObservers = new Vector();
 //    private SessionModelListener modelListener = new MySessionModelListener();
@@ -64,6 +70,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //    private Editor subEditor;
     private FileOutline fileOutline;
     private TaskOutline taskOutline;
+    private EntityOutline entityOutline;
     private OntologyOutline ontologyOutline;
     private String mostRecentFileOutlinePath;
     private JTabbedPane icsTabPane = new JTabbedPane();
@@ -229,12 +236,20 @@ public class ConsoleFrame extends JFrame implements Cloneable {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         viewerPanel.setBorder(BorderFactory.createLineBorder(Color.black));
         viewerPanel.reloadData(null);
+        searchToolbar = new SearchToolbar();
         usingSplashPanel = true;
 //        subBrowserTabPane = new SubBrowser(browserModel);
         fileOutline = new FileOutline(this);
         taskOutline = new TaskOutline(this);
+        entityOutline = new EntityOutline(this);
         ontologyOutline = new OntologyOutline();
 //        icsTabPane = new ICSTabPane(this);
+
+        JOutlookBar outlookBar = new JOutlookBar();
+        outlookBar.addBar("Tasks", taskOutline);
+        outlookBar.addBar("Collections", entityOutline);
+        outlookBar.addBar("Files", fileOutline);
+        outlookBar.setVisibleBar(2);
 
         ConsolePosition consolePosition = new ConsolePosition();//(ConsolePosition) SessionMgr.getSessionMgr()
         //.getModelProperty(BROWSER_POSITION);
@@ -247,21 +262,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
         //.getModelProperty(this.BROWSER_POSITION);
 
         dataSplitPaneVertical = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, fileOutline, taskOutline);
-        dataSplitPaneVertical.setMinimumSize(new Dimension(0, 0));
-
-        if (fileOutline.nodesShowing()) {
-            if (consolePosition == null) {
-                jSplitPaneRightVerticalSplitLocation = (int) (screenSize.height * realEstatePercent * TOP_LEFT_PANE_VERTICAL_PERCENT);
-            }
-            else {
-                jSplitPaneRightVerticalSplitLocation = consolePosition.getVerticalDividerLocation();
-            }
-
-            dataSplitPaneVertical.setDividerLocation((int) (screenSize.height * realEstatePercent * TOP_LEFT_PANE_VERTICAL_PERCENT));
-        }
-        else {
-            dataSplitPaneVertical.setDividerLocation(0);
-        }
+        dataSplitPaneVertical.setMinimumSize(new Dimension(200, 0));
 
         dataSplitPaneVertical.setOneTouchExpandable(true);
         dataSplitPaneVertical.setDividerSize(10);
@@ -271,27 +272,22 @@ public class ConsoleFrame extends JFrame implements Cloneable {
         centerRightHorizontalSplitPane.setOpaque(true);
 
         centerRightHorizontalSplitPane.setDividerSize(10);
-        if (consolePosition == null) {
-            centerRightHorizontalSplitPane.setDividerLocation((int) (screenSize.width * realEstatePercent * (1 - MAIN_VIEWER_PANE_HORIZONTAL_PERCENT)));
-        }
-        else {
-            centerRightHorizontalSplitPane.setDividerLocation(0.2);
-        }
         centerRightHorizontalSplitPane.setOneTouchExpandable(true);
 
         centerLeftHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, dataSplitPaneVertical, centerRightHorizontalSplitPane);
         centerLeftHorizontalSplitPane.setMinimumSize(new Dimension(0, 0));
-        if (consolePosition == null) {
-            centerLeftHorizontalSplitPane.setDividerLocation((int) (screenSize.width * realEstatePercent * (1 - MAIN_VIEWER_PANE_HORIZONTAL_PERCENT)));
-        }
-        else {
-            centerLeftHorizontalSplitPane.setDividerLocation(consolePosition.getHorizontalDividerLocation());
-        }
         centerLeftHorizontalSplitPane.setOneTouchExpandable(true);
 
+        // set up the real estate
+        viewMap.put(VIEW_SEARCH, searchToolbar);
+        viewMap.put(VIEW_ONTOLOGY, ontologyOutline);
+        viewMap.put(VIEW_OUTLINES, dataSplitPaneVertical);
+        searchToolbar.setVisible(false);
+
+        // Collect the final components
         mainPanel.setLayout(layout);
         allPanelsView.setLayout(new BorderLayout());
-        allPanelsView.add(new SearchToolbar(), BorderLayout.NORTH);
+        allPanelsView.add(searchToolbar, BorderLayout.NORTH);
         allPanelsView.add(centerLeftHorizontalSplitPane, BorderLayout.CENTER);
         getContentPane().add(statusBar, BorderLayout.SOUTH);
         mainPanel.add(allPanelsView, "Regular");
@@ -803,8 +799,6 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //            dataSplitPaneVertical = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
 //                                                    false, fileOutline, icsTabPane);
             dataSplitPaneVertical.setMinimumSize(new Dimension(0, 0));
-
-            dataSplitPaneVertical.setDividerLocation((int) (screenSize.height * realEstatePercent * TOP_LEFT_PANE_VERTICAL_PERCENT));
             dataSplitPaneVertical.setDividerSize(10);
             dataSplitPaneVertical.setOneTouchExpandable(true);
 
@@ -853,8 +847,6 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //                usingSplashPanel = true;
 //                jSplitPaneMain.setBottomComponent(icsTabPane);
 //            }
-
-            jSplitPaneMain.setDividerLocation((int) (screenSize.height * realEstatePercent * TOP_LEFT_PANE_VERTICAL_PERCENT));
 
             jSplitPaneBottom = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
             jSplitPaneBottom.setMinimumSize(new Dimension(0, 0));
@@ -1196,6 +1188,26 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 
     public String getMostRecentFileOutlinePath() {
         return mostRecentFileOutlinePath;
+    }
+
+    public void toggleViewComponentState(String viewComponentKey) {
+        if (viewMap.containsKey(viewComponentKey)) {
+            JComponent tmpView = viewMap.get(viewComponentKey);
+            // todo The layout needs to be much nicer.  See IntelliJ layouts, with perhaps the component menu name still visible
+            if (VIEW_SEARCH.equals(viewComponentKey)) { tmpView.setVisible(!tmpView.isVisible());}
+            else if (VIEW_OUTLINES.equals(viewComponentKey)) {
+                centerLeftHorizontalSplitPane.getLeftComponent().setVisible(
+                        !centerLeftHorizontalSplitPane.getLeftComponent().isVisible());
+                centerLeftHorizontalSplitPane.setDividerLocation(centerLeftHorizontalSplitPane.getLastDividerLocation());
+            }
+            else if (VIEW_ONTOLOGY.equals(viewComponentKey)) {
+                centerRightHorizontalSplitPane.getRightComponent().setVisible(
+                        !centerRightHorizontalSplitPane.getRightComponent().isVisible());
+                centerRightHorizontalSplitPane.setDividerLocation(centerRightHorizontalSplitPane.getLastDividerLocation());
+            }
+
+        }
+
     }
 
     public void setMostRecentFileOutlinePath(String mostRecentFileOutlinePath) {

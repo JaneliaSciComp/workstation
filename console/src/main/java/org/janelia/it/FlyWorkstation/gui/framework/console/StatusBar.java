@@ -12,7 +12,6 @@ import java.awt.event.ComponentEvent;
  * User: saffordt
  * Date: 2/8/11
  * Time: 12:46 PM
- * To change this template use File | Settings | File Templates.
  */
 public class StatusBar extends JPanel {
     private FreeMemoryViewer freeMemoryViewer;

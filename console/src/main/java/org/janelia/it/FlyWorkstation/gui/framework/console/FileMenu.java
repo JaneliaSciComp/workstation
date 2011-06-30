@@ -10,7 +10,6 @@ import java.util.ArrayList;
  * User: saffordt
  * Date: 2/8/11
  * Time: 1:16 PM
- * To change this template use File | Settings | File Templates.
  */
 public class FileMenu extends JMenu {
     ConsoleFrame console;

@@ -2,16 +2,14 @@ package org.janelia.it.FlyWorkstation.gui.framework.console;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Vector;
 
 /**
  * Created by IntelliJ IDEA.
  * User: saffordt
  * Date: 2/8/11
  * Time: 1:07 PM
- * To change this template use File | Settings | File Templates.
  */
 public class ConsoleMenuBar extends JMenuBar {
     public static final Position LEFT = new Position(0);
@@ -53,13 +51,15 @@ public class ConsoleMenuBar extends JMenuBar {
         toolsMenu = new ToolsMenu(console);
         ontologyMenu = new OntologyMenu(console);
         helpMenu = new HelpMenu(console);
+        viewMenu = new ViewMenu(console);
     }
 
     private void addMenus() {
         add(fileMenu);
-        add(preferencesMenu);
+//        add(preferencesMenu);
         add(toolsMenu);
-        add(ontologyMenu);
+        add(viewMenu);
+//        add(ontologyMenu);
         add(helpMenu);
         add(menuGlue);
         if (staticImageLabel != null) add(staticImageLabel);
