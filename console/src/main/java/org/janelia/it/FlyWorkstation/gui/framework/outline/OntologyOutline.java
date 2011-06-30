@@ -14,6 +14,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,6 +44,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeybindChangeEvent;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeybindChangeListener;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
+import org.janelia.it.jacs.compute.access.DaoException;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -507,6 +509,23 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
 
             EJBFactory.getRemoteAnnotationBean().createOntologyTerm(System.getenv("USER"), selectedTree.getCurrentNodeId(),
                     termName, childType, null);
+            
+            
+            if (parentType instanceof Tag) {
+            	// Adding a child to a Tag, so it must be coerced into a Category
+            	
+            	EntityData ed = actionEntity.getEntity().getEntityDataByAttributeName(EntityConstants.ATTR_NAME_ONTOLOGY_TERM_TYPE);
+            	ed.setValue(Category.class.getSimpleName());
+            	
+            	try {
+					EJBFactory.getRemoteComputeBean().genericSave(ed);
+				} catch (DaoException ex) {
+					ex.printStackTrace();
+				} catch (RemoteException ex) {
+					ex.printStackTrace();
+				}
+            }
+            
             updateSelectedTreeEntity();
 
         }
