@@ -28,7 +28,7 @@ public class JOutlookBar extends JPanel implements ActionListener
   /**
    * A LinkedHashMap of bars: we use a linked hash map to preserve the order of the bars
    */
-  private Map bars = new LinkedHashMap();
+  private Map<String, BarInfo> bars = new LinkedHashMap<String, BarInfo>();
 
   /**
    * The currently visible bar (zero-based index)
@@ -185,19 +185,17 @@ public class JOutlookBar extends JPanel implements ActionListener
   public void actionPerformed( ActionEvent e )
   {
     int currentBar = 0;
-    for( Iterator i=this.bars.keySet().iterator(); i.hasNext(); )
-    {
-      String barName = ( String )i.next();
-      BarInfo barInfo = ( BarInfo )this.bars.get( barName );
-      if( barInfo.getButton() == e.getSource() )
-      {
-        // Found the selected button
-        this.visibleBar = currentBar;
-        render();
-        return;
+      for (Object o : this.bars.keySet()) {
+          String barName = (String) o;
+          BarInfo barInfo = (BarInfo) this.bars.get(barName);
+          if (barInfo.getButton() == e.getSource()) {
+              // Found the selected button
+              this.visibleBar = currentBar;
+              render();
+              return;
+          }
+          currentBar++;
       }
-      currentBar++;
-    }
   }
 
   /**

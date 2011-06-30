@@ -44,7 +44,6 @@ public class ConsoleFrame extends JFrame implements Cloneable {
     private static int RGB_TYPE_BYTES_PER_PIXEL = 4;
     private static int PRINT_OVERHEAD_SIZE = 1000000;
     private static Class menuBarClass;
-    private JSplitPane dataSplitPaneVertical;
     private JSplitPane jSplitPaneRightVertical;
     private JSplitPane centerLeftHorizontalSplitPane;
     private JSplitPane centerRightHorizontalSplitPane;
@@ -57,7 +56,6 @@ public class ConsoleFrame extends JFrame implements Cloneable {
     private CardLayout layout = new CardLayout();
     private JMenuBar menuBar;
     private SearchToolbar searchToolbar;
-    private HashMap<String, JComponent> viewMap = new HashMap<String, JComponent>();
     private JTabbedPane subBrowserTabPane = new JTabbedPane();
 //    private Vector browserObservers = new Vector();
 //    private SessionModelListener modelListener = new MySessionModelListener();
@@ -68,6 +66,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
     private BorderLayout borderLayout = new BorderLayout();
     //    private Editor masterEditor;
 //    private Editor subEditor;
+    private JOutlookBar outlookBar;
     private FileOutline fileOutline;
     private TaskOutline taskOutline;
     private EntityOutline entityOutline;
@@ -245,7 +244,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
         ontologyOutline = new OntologyOutline();
 //        icsTabPane = new ICSTabPane(this);
 
-        JOutlookBar outlookBar = new JOutlookBar();
+        outlookBar = new JOutlookBar();
         outlookBar.addBar("Tasks", taskOutline);
         outlookBar.addBar("Collections", entityOutline);
         outlookBar.addBar("Files", fileOutline);
@@ -261,12 +260,6 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //        ConsolePosition consolePosition = new ConsolePosition();//BrowserPosition) SessionMgr.getSessionMgr()
         //.getModelProperty(this.BROWSER_POSITION);
 
-        dataSplitPaneVertical = new JSplitPane(JSplitPane.VERTICAL_SPLIT, true, fileOutline, taskOutline);
-        dataSplitPaneVertical.setMinimumSize(new Dimension(200, 0));
-
-        dataSplitPaneVertical.setOneTouchExpandable(true);
-        dataSplitPaneVertical.setDividerSize(10);
-
         centerRightHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, viewerPanel, ontologyOutline);
         centerRightHorizontalSplitPane.setMinimumSize(new Dimension(200, 0));
         centerRightHorizontalSplitPane.setOpaque(true);
@@ -274,14 +267,10 @@ public class ConsoleFrame extends JFrame implements Cloneable {
         centerRightHorizontalSplitPane.setDividerSize(10);
         centerRightHorizontalSplitPane.setOneTouchExpandable(true);
 
-        centerLeftHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, dataSplitPaneVertical, centerRightHorizontalSplitPane);
+        centerLeftHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, outlookBar, centerRightHorizontalSplitPane);
         centerLeftHorizontalSplitPane.setMinimumSize(new Dimension(0, 0));
         centerLeftHorizontalSplitPane.setOneTouchExpandable(true);
 
-        // set up the real estate
-        viewMap.put(VIEW_SEARCH, searchToolbar);
-        viewMap.put(VIEW_ONTOLOGY, ontologyOutline);
-        viewMap.put(VIEW_OUTLINES, dataSplitPaneVertical);
         searchToolbar.setVisible(false);
 
         // Collect the final components
@@ -796,16 +785,6 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 
             layout.first(mainPanel);
 
-//            dataSplitPaneVertical = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-//                                                    false, fileOutline, icsTabPane);
-            dataSplitPaneVertical.setMinimumSize(new Dimension(0, 0));
-            dataSplitPaneVertical.setDividerSize(10);
-            dataSplitPaneVertical.setOneTouchExpandable(true);
-
-            if (dataSplitPaneVertical.getParent() == null) {
-                centerLeftHorizontalSplitPane.setLeftComponent(dataSplitPaneVertical);
-            }
-
             //this will handle the right pane of the Split Pane in view1. If display subeditor property is on
             //it will add the master editor and the subeditor and if it is off then it will add only the master
             //editor on the right pane
@@ -873,10 +852,6 @@ public class ConsoleFrame extends JFrame implements Cloneable {
             centerLeftHorizontalSplitPane.removeAll();
 
             //centerLeftHorizontalSplitPane.repaint();
-        }
-
-        if (dataSplitPaneVertical != null) {
-            dataSplitPaneVertical.removeAll();
         }
 
         if (jSplitPaneRightVertical != null) {
@@ -1191,10 +1166,8 @@ public class ConsoleFrame extends JFrame implements Cloneable {
     }
 
     public void toggleViewComponentState(String viewComponentKey) {
-        if (viewMap.containsKey(viewComponentKey)) {
-            JComponent tmpView = viewMap.get(viewComponentKey);
             // todo The layout needs to be much nicer.  See IntelliJ layouts, with perhaps the component menu name still visible
-            if (VIEW_SEARCH.equals(viewComponentKey)) { tmpView.setVisible(!tmpView.isVisible());}
+            if (VIEW_SEARCH.equals(viewComponentKey)) { searchToolbar.setVisible(!searchToolbar.isVisible());}
             else if (VIEW_OUTLINES.equals(viewComponentKey)) {
                 centerLeftHorizontalSplitPane.getLeftComponent().setVisible(
                         !centerLeftHorizontalSplitPane.getLeftComponent().isVisible());
@@ -1205,9 +1178,6 @@ public class ConsoleFrame extends JFrame implements Cloneable {
                         !centerRightHorizontalSplitPane.getRightComponent().isVisible());
                 centerRightHorizontalSplitPane.setDividerLocation(centerRightHorizontalSplitPane.getLastDividerLocation());
             }
-
-        }
-
     }
 
     public void setMostRecentFileOutlinePath(String mostRecentFileOutlinePath) {
