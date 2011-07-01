@@ -9,14 +9,14 @@ import javax.naming.NamingException;
 import java.util.Properties;
 
 public class EJBFactory {
-    private static final String PROVIDER_URL = ConsoleProperties.getProperty("provider.url");
-    private static final String INITIAL_CONTEXT_FACTORY = ConsoleProperties.getProperty("initial.context.factory");
-    private static final String URL_PKG_PREFIXES = ConsoleProperties.getProperty("url.pkg.prefixes");
-    private static final String REMOTE_ANNOTATION_JNDI_NAME = ConsoleProperties.getProperty("remote.annotation.jndi.name");
-    private static final String REMOTE_COMPUTE_JNDI_NAME = ConsoleProperties.getProperty("remote.compute.jndi.name");
-    private static final String REMOTE_SEARCH_JNDI_NAME = ConsoleProperties.getProperty("remote.search.jndi.name");
-    private static final String REMOTE_GENOME_CONTEXT_JNDI_NAME = ConsoleProperties.getProperty("remote.genome.context.jndi.name");
-    private static final String REMOTE_JOB_CONTROL_JNDI_NAME = ConsoleProperties.getProperty("remote.job.control.jndi.name");
+    private static final String PROVIDER_URL = ConsoleProperties.getInstance().getProperty("provider.url");
+    private static final String INITIAL_CONTEXT_FACTORY = ConsoleProperties.getInstance().getProperty("initial.context.factory");
+    private static final String URL_PKG_PREFIXES = ConsoleProperties.getInstance().getProperty("url.pkg.prefixes");
+    private static final String REMOTE_ANNOTATION_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.annotation.jndi.name");
+    private static final String REMOTE_COMPUTE_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.compute.jndi.name");
+    private static final String REMOTE_SEARCH_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.search.jndi.name");
+    private static final String REMOTE_GENOME_CONTEXT_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.genome.context.jndi.name");
+    private static final String REMOTE_JOB_CONTROL_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.job.control.jndi.name");
     private static Properties icProperties = new Properties();
 
     static {
