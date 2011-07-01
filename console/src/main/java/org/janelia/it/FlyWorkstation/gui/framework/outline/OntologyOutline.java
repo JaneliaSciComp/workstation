@@ -214,7 +214,7 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
         
         // Add ourselves as a keybind change listener
         
-        ConsoleApp.getKeyBindings().add(this);
+        ConsoleApp.getKeyBindings().addChangeListener(this);
 
         // Prepare the key binding dialog box
 
@@ -325,17 +325,22 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
 
     	try {
         	User user = EJBFactory.getRemoteComputeBean().getUserByName(System.getenv("USER"));
-        	
+        	Long rootNodeId = selectedTree.getRootNode().getOntologyTerm().getEntity().getId();
+
+        	// Delete all keybinds first, to maintain one key per entity
+        	for(String key : user.getCategoryPreferences(KEYBIND_PREF_CATEGORY+":"+rootNodeId).keySet()) {
+        		user.getPreferenceMap().remove(KEYBIND_PREF_CATEGORY+":"+rootNodeId+":"+key);
+        	}
+        	        	
             for(Map.Entry<KeyboardShortcut, Action> entry : ConsoleApp.getKeyBindings().getBindings().entrySet()) {
                 if (entry.getValue() instanceof OntologyTermAction) {
                 	OntologyTermAction ota = (OntologyTermAction)entry.getValue();
                 	String shortcut = entry.getKey().toString();
                 	Long entityId = ota.getOntologyTerm().getEntity().getId();
-                	Long rootNodeId = selectedTree.getRootNode().getOntologyTerm().getEntity().getId();
-                	user.setPreference(new UserPreference(shortcut, KEYBIND_PREF_CATEGORY+":"+rootNodeId, entityId.toString()));    	
+                	user.setPreference(new UserPreference(shortcut, KEYBIND_PREF_CATEGORY+":"+rootNodeId, entityId.toString()));  
                 }
             }
-            
+
             EJBFactory.getRemoteComputeBean().genericSave(user);
     	}
     	catch (Exception e) {
@@ -350,7 +355,10 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
     	// Check if there is a keyboard shortcut preference for this entity
     	KeyboardShortcut shortcut = entityId2Shortcut.get(node.getEntity().getId().toString());
     	if (shortcut != null) {
+    		// Disable listener so that we don't save the prefs for every pref we load
+    		ConsoleApp.getKeyBindings().removeChangeListener(this);
         	ConsoleApp.getKeyBindings().setBinding(shortcut, node.getAction());
+        	ConsoleApp.getKeyBindings().addChangeListener(this);
     	}
     	
         EntityMutableTreeNode newNode;
