@@ -30,11 +30,11 @@ public class KeyBindings {
         this.bindings = new HashMap<KeyboardShortcut, Action>();
     }
    
-    public boolean add(KeybindChangeListener o) {
+    public boolean addChangeListener(KeybindChangeListener o) {
 		return listeners.add(o);
 	}
 
-	public boolean remove(KeybindChangeListener o) {
+	public boolean removeChangeListener(KeybindChangeListener o) {
 		return listeners.remove(o);
 	}
 
