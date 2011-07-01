@@ -22,6 +22,6 @@ public class NavigateToNodeAction extends OntologyTermAction {
 
     @Override
     public void doAction() {
-        ConsoleApp.getMainFrame().getOntologyOutline().navigateToEntityNode(getOntologyTerm().getEntity());
+        ConsoleApp.getMainFrame().getOntologyOutline().navigateToOntologyTerm(getOntologyTerm());
     }
 }

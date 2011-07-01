@@ -39,6 +39,10 @@ public class OntologyTerm {
         return entity.getName();
     }
 
+    public Long getId() {
+        return entity.getId();
+    }
+
     public Entity getEntity() {
         return entity;
     }
@@ -68,8 +72,7 @@ public class OntologyTerm {
         if (this == o) return true;
         if (!(o instanceof OntologyTerm)) return false;
         OntologyTerm that = (OntologyTerm) o;
-        if (!entity.getId().equals(that.getEntity().getId())) return false;
-        return true;
+        return entity.getId().equals(that.getEntity().getId());
     }
 
     @Override

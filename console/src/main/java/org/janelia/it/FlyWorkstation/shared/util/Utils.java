@@ -6,27 +6,22 @@
  */
 package org.janelia.it.FlyWorkstation.shared.util;
 
-import java.awt.Component;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import com.sun.media.jai.codec.FileSeekableStream;
+import com.sun.media.jai.codec.SeekableStream;
+
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableColumnModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-
-import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.JTable;
-import javax.swing.SwingConstants;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableColumnModel;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumn;
-
-import com.sun.media.jai.codec.FileSeekableStream;
-import com.sun.media.jai.codec.SeekableStream;
 
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
@@ -36,9 +31,10 @@ public class Utils {
     public static boolean isEmpty(String str) {
         return (str == null || "".equals(str));
     }
-    
+
     /**
      * Borrowed from http://www.pikopong.com/blog/2008/08/13/auto-resize-jtable-column-width/
+     * @param table table to work against
      */
     public static void autoResizeColWidth(JTable table) {
 
@@ -50,7 +46,7 @@ public class Utils {
         for (int i = 0; i < table.getColumnCount(); i++) {
             DefaultTableColumnModel colModel = (DefaultTableColumnModel)table.getColumnModel();
             TableColumn col = colModel.getColumn(i);
-            int width = 0;
+            int width;
 
             // Get width of column header
             TableCellRenderer renderer = col.getHeaderRenderer();
@@ -104,10 +100,9 @@ public class Utils {
     
     /**
      * Create an image from the source image, scaled at the given percentage.
-     * @param sourceImage
-     * @param scale
-     * @return
-     * @throws MalformedURLException
+     * @param sourceImage image to work against
+     * @param scale percentage to change the image
+     * @return returns a BufferedImage to work with
      */
     public static BufferedImage getScaledImageIcon(BufferedImage sourceImage, double scale) {
     	int newWidth = (int)Math.round(scale * sourceImage.getWidth());

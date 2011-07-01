@@ -6,16 +6,12 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
-import javax.swing.JOptionPane;
-
 import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyTerm;
-import org.janelia.it.jacs.model.ontology.Category;
+import org.janelia.it.jacs.model.ontology.*;
 import org.janelia.it.jacs.model.ontology.Enum;
-import org.janelia.it.jacs.model.ontology.Interval;
-import org.janelia.it.jacs.model.ontology.EnumItem;
-import org.janelia.it.jacs.model.ontology.OntologyTermType;
-import org.janelia.it.jacs.model.ontology.Text;
+
+import javax.swing.*;
 
 /**
  * This action adds or removes an entity tag from the currently selected item in an IconDemoPanel.
@@ -30,7 +26,7 @@ public class AnnotateAction extends OntologyTermAction {
 
     @Override
     public void doAction() {
-        ConsoleApp.getMainFrame().getOntologyOutline().navigateToEntityNode(getOntologyTerm().getEntity());
+        ConsoleApp.getMainFrame().getOntologyOutline().navigateToOntologyTerm(getOntologyTerm());
         OntologyTerm term = getOntologyTerm();
         OntologyTermType type = term.getType();
         

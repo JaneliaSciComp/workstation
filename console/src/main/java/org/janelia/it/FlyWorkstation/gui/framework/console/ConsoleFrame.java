@@ -1,32 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import java.awt.AWTEvent;
-import java.awt.BorderLayout;
-import java.awt.CardLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Graphics2D;
-import java.awt.Point;
-import java.awt.Toolkit;
-import java.awt.event.WindowEvent;
-import java.awt.print.PageFormat;
-import java.awt.print.PrinterJob;
-import java.io.File;
-import java.io.FilenameFilter;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
-
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.FileOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
@@ -36,6 +9,16 @@ import org.janelia.it.FlyWorkstation.gui.util.JOutlookBar;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableImage;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.WindowEvent;
+import java.awt.print.PageFormat;
+import java.awt.print.PrinterJob;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -259,7 +242,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //        subBrowserTabPane = new SubBrowser(browserModel);
         fileOutline = new FileOutline(this);
         taskOutline = new TaskOutline(this);
-        entityOutline = new EntityOutline(this);
+        entityOutline = new EntityOutline();
         ontologyOutline = new OntologyOutline();
 //        icsTabPane = new ICSTabPane(this);
 
