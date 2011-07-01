@@ -1,7 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.FileOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.TaskOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.search.SearchToolbar;
@@ -69,7 +68,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
     //    private Editor masterEditor;
 //    private Editor subEditor;
     private JOutlookBar outlookBar;
-    private FileOutline fileOutline;
+//    private FileOutline fileOutline;
     private TaskOutline taskOutline;
     private EntityOutline entityOutline;
     private OntologyOutline ontologyOutline;
@@ -240,16 +239,16 @@ public class ConsoleFrame extends JFrame implements Cloneable {
         searchToolbar = new SearchToolbar();
         usingSplashPanel = true;
 //        subBrowserTabPane = new SubBrowser(browserModel);
-        fileOutline = new FileOutline(this);
+//        fileOutline = new FileOutline(this);
         taskOutline = new TaskOutline(this);
         entityOutline = new EntityOutline();
         ontologyOutline = new OntologyOutline();
 //        icsTabPane = new ICSTabPane(this);
 
         outlookBar = new JOutlookBar();
-        outlookBar.addBar("Tasks", taskOutline);
         outlookBar.addBar("Collections", entityOutline);
-        outlookBar.addBar("Files", fileOutline);
+        outlookBar.addBar("Tasks", taskOutline);
+//        outlookBar.addBar("Files", fileOutline);
         outlookBar.setVisibleBar(2);
 
         ConsolePosition consolePosition = new ConsolePosition();//(ConsolePosition) SessionMgr.getSessionMgr()
@@ -265,7 +264,6 @@ public class ConsoleFrame extends JFrame implements Cloneable {
         centerRightHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, viewerPanel, ontologyOutline);
         centerRightHorizontalSplitPane.setMinimumSize(new Dimension(200, 0));
         centerRightHorizontalSplitPane.setOpaque(true);
-
         centerRightHorizontalSplitPane.setDividerSize(10);
         centerRightHorizontalSplitPane.setOneTouchExpandable(true);
 

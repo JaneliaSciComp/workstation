@@ -1,10 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.application;
 
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-
 import org.janelia.it.FlyWorkstation.gui.framework.console.ConsoleFrame;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyBindings;
+
+import javax.swing.*;
 
 /**
  * Created by IntelliJ IDEA.
