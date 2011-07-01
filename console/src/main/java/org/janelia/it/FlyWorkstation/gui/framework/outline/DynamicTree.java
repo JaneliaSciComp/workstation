@@ -343,22 +343,22 @@ public class DynamicTree extends JPanel {
                     	// Icons from http://www.famfamfam.com/lab/icons/silk/
                     	
                     	if (type instanceof org.janelia.it.jacs.model.ontology.Category) {
-							titleLabel.setIcon(Utils.getImage("folder.png"));
+							titleLabel.setIcon(Utils.getClasspathImage("folder.png"));
 						}
                     	else if (type instanceof org.janelia.it.jacs.model.ontology.Enum) {
-							titleLabel.setIcon(Utils.getImage("folder_page.png"));
+							titleLabel.setIcon(Utils.getClasspathImage("folder_page.png"));
 						}
                     	else if (type instanceof org.janelia.it.jacs.model.ontology.Interval) {
-							titleLabel.setIcon(Utils.getImage("page_white_code.png"));
+							titleLabel.setIcon(Utils.getClasspathImage("page_white_code.png"));
 						}
 						else if (type instanceof org.janelia.it.jacs.model.ontology.Tag) {
-							titleLabel.setIcon(Utils.getImage("page_white.png"));
+							titleLabel.setIcon(Utils.getClasspathImage("page_white.png"));
 						}
 						else if (type instanceof org.janelia.it.jacs.model.ontology.Text) {
-							titleLabel.setIcon(Utils.getImage("page_white_text.png"));
+							titleLabel.setIcon(Utils.getClasspathImage("page_white_text.png"));
 						}
 						else if (type instanceof org.janelia.it.jacs.model.ontology.EnumItem) {
-							titleLabel.setIcon(Utils.getImage("page.png"));
+							titleLabel.setIcon(Utils.getClasspathImage("page.png"));
 						}
 						
 					} catch (Throwable r) {
