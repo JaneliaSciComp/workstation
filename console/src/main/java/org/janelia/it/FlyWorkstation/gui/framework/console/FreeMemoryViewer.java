@@ -17,6 +17,7 @@ import java.util.Observer;
  * Class to monitor the memory usage of the application
  */
 public class FreeMemoryViewer extends JPanel implements Observer {
+    public static final int MEMORY_CONSTANT = 1024000; // Value to display memory in MB
     private BoxLayout boxLayout = new BoxLayout(this, BoxLayout.X_AXIS);
     private JProgressBar bar;
     private JLabel label = new JLabel("  Mem Usage  ");
@@ -144,10 +145,10 @@ public class FreeMemoryViewer extends JPanel implements Observer {
 
     private void showMemoryDialog() {
         String[] strings = new String[6];
-        strings[0] = "Total Memory: " + (getTotalMemory() / 1024) + " KB";
-        strings[1] = "Free Memory: " + (getFreeMemory() / 1024) + " KB";
+        strings[0] = "Total Memory:\t" + (getTotalMemory() / MEMORY_CONSTANT) + " MB";
+        strings[1] = "Free Memory :\t" + (getFreeMemory() / MEMORY_CONSTANT) + " MB";
         strings[2] = "-----------------------------------";
-        strings[3] = "Used Memory: " + (getUsedMemory() / 1024) + " KB";
+        strings[3] = "Used Memory:\t" + (getUsedMemory() / MEMORY_CONSTANT) + " MB";
         strings[4] = "                                   ";
         strings[5] = "Would you like to compact memory now?";
         int ans = JOptionPane.showConfirmDialog(this.getParent().getParent(), strings, "Memory Usage", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);

@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.shared.util;
 
+import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
+
 /**
  * Created by IntelliJ IDEA.
  * User: saffordt
@@ -13,15 +15,9 @@ public class FreeMemoryWatcher extends MTObservable {
     private Thread updater;
     private Runtime runtime = Runtime.getRuntime();
     private long totalMemory, reservedMemory;
-    private static long DEFAULT_RESERVED_MEMORY = 5 * 1024 * 1000;  //5MB
-    private static long DEFAULT_TOTAL_MEMORY = 64 * 1024 * 1000; //64MB
 //    private  LoadRequestStatusObserverAdapter statusObserver =
 //       new MyLoadRequestStatusObserver();
 
-
-    private FreeMemoryWatcher() {
-        this(5, true);
-    }
 
     private FreeMemoryWatcher(int numSecondsToUpdate, boolean startUpdate) {
         this.numSecondsToUpdate = numSecondsToUpdate;
@@ -29,7 +25,8 @@ public class FreeMemoryWatcher extends MTObservable {
     }
 
     static public FreeMemoryWatcher getFreeMemoryWatcher() {
-        if (freeMemoryWatcher == null) freeMemoryWatcher = new FreeMemoryWatcher();
+        if (freeMemoryWatcher == null) freeMemoryWatcher = new FreeMemoryWatcher(ConsoleProperties.getInt("console.memory.updateSeconds"),
+                true);
         return freeMemoryWatcher;
     }
 
@@ -54,19 +51,19 @@ public class FreeMemoryWatcher extends MTObservable {
 
     public long getTotalMemory() {
         if (totalMemory > 0) return totalMemory;
-        String memoryStr = System.getProperty("x.genomebrowser.TotalMemory");
+        String memoryStr = ConsoleProperties.getString("console.memory.TotalMemory");
         try {
-            if (memoryStr.endsWith("m") || memoryStr.endsWith("M")) {
+            if (memoryStr.endsWith("mb") || memoryStr.endsWith("MB")) {
                 totalMemory = 1024 * 1000 * Long.parseLong(memoryStr.substring(0, memoryStr.length() - 1));
                 return totalMemory;
             }
-            if (memoryStr.endsWith("k") || memoryStr.endsWith("K")) {
+            if (memoryStr.endsWith("kb") || memoryStr.endsWith("KB")) {
                 totalMemory = 1024 * Long.parseLong(memoryStr.substring(0, memoryStr.length() - 1));
                 return totalMemory;
             }
             totalMemory = Long.parseLong(memoryStr);
         } catch (Exception ex) {
-            totalMemory = DEFAULT_TOTAL_MEMORY;
+            totalMemory = 262144000; // 256MB, if necessary.  The property file should be there.
         }
         return totalMemory;
     }
