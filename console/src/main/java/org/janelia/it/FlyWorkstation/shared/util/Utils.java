@@ -6,19 +6,27 @@
  */
 package org.janelia.it.FlyWorkstation.shared.util;
 
-import javax.swing.*;
+import java.awt.Component;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import javax.swing.JTable;
+import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
-import org.janelia.it.FlyWorkstation.gui.framework.outline.DynamicTree;
-
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.io.FileNotFoundException;
-import java.net.MalformedURLException;
-import java.net.URL;
+import com.sun.media.jai.codec.FileSeekableStream;
+import com.sun.media.jai.codec.SeekableStream;
 
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
@@ -27,16 +35,6 @@ public class Utils {
 
     public static boolean isEmpty(String str) {
         return (str == null || "".equals(str));
-    }
-
-    public static Icon getImage(String filename) throws FileNotFoundException {
-    	try {
-    	URL picURL = DynamicTree.class.getResource("/images/"+filename);
-    	return new ImageIcon(picURL);
-    	}
-    	catch (Exception e) {
-    		throw new FileNotFoundException("/images/"+filename);
-    	}
     }
     
     /**
@@ -75,6 +73,34 @@ public class Utils {
         defaultRenderer.setHorizontalAlignment(SwingConstants.LEFT);
     }
 
+    /**
+     * Load an image that is found in the /images directory within the classpath.
+     * @param filename
+     * @return
+     * @throws FileNotFoundException
+     */
+	public static ImageIcon getClasspathImage(String filename) throws FileNotFoundException {
+		try {
+			URL picURL = Utils.class.getResource("/images/" + filename);
+			return new ImageIcon(picURL);
+		} 
+		catch (Exception e) {
+			throw new FileNotFoundException("/images/" + filename);
+		}
+	}
+	
+    /**
+     * Read an image using the ImageIO API. Supports TIFFs.
+     * @param path
+     * @return
+     * @throws MalformedURLException
+     */
+	public static BufferedImage readImage(String path) throws IOException {
+        SeekableStream s = new FileSeekableStream(new File(path));
+        BufferedImage image = ImageIO.read(s);
+        s.close();
+        return image;
+    }
     
     /**
      * Create an image from the source image, scaled at the given percentage.

@@ -1,5 +1,32 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
+import java.awt.AWTEvent;
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.event.WindowEvent;
+import java.awt.print.PageFormat;
+import java.awt.print.PrinterJob;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
+
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.FileOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
@@ -9,14 +36,6 @@ import org.janelia.it.FlyWorkstation.gui.util.JOutlookBar;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableImage;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.WindowEvent;
-import java.awt.print.PageFormat;
-import java.awt.print.PrinterJob;
-import java.io.File;
-import java.util.HashMap;
 
 /**
  * Created by IntelliJ IDEA.
@@ -234,7 +253,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         viewerPanel.setBorder(BorderFactory.createLineBorder(Color.black));
-        viewerPanel.reloadData(null);
+        viewerPanel.loadImages(null);
         searchToolbar = new SearchToolbar();
         usingSplashPanel = true;
 //        subBrowserTabPane = new SubBrowser(browserModel);
@@ -1186,10 +1205,37 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //        taskOutline.clearSelection();
         File tmpFile = new File(mostRecentFileOutlinePath);
         if (tmpFile.exists()) {
-            viewerPanel.reloadData(mostRecentFileOutlinePath);
+            viewerPanel.loadImages(getFiles(mostRecentFileOutlinePath));
         }
     }
 
+    /**
+     * TODO: put this in the FileOutline
+     * @param pathToData
+     * @return
+     */
+    public List<File> getFiles(String pathToData) {
+
+    	List<File> files = new ArrayList<File>();
+        File tmpFile = new File(pathToData);
+        if (tmpFile.isDirectory()) {
+            File[] childImageFiles = tmpFile.listFiles(new FilenameFilter(){
+                public boolean accept(File file, String s) {
+                    // TODO: Need a whole mechanism to categorize the files and editors used for them.
+                    return s.endsWith(".tif");
+                }
+            });
+            for (File file : childImageFiles) {
+            	files.add(file);
+            }
+        }
+        else if (tmpFile.isFile()) {
+        	files.add(tmpFile);
+        }
+        
+        return files;
+    }
+    
     public void setAnnotationSessionChanged(String returnSessionTask) {
         currentAnnotationSessionTaskId = returnSessionTask;
         this.mostRecentFileOutlinePath = null;
