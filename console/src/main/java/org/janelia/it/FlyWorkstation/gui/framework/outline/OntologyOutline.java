@@ -38,10 +38,9 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
 	
 	private static final String KEYBIND_PREF_CATEGORY = "Keybind";
 	
-    private static final String ADD_COMMAND       = "add";
-    private static final String REMOVE_COMMAND    = "remove";
-    private static final String ROOT_COMMAND      = "root";
-    private static final String SWITCH_COMMAND    = "switch";
+    private static final String ADD_COMMAND = "add";
+    private static final String REMOVE_COMMAND = "remove";
+    private static final String SHOW_MANAGER_COMMAND = "manager";
     private static final String BIND_EDIT_COMMAND = "change_bind";
     private static final String BIND_MODE_COMMAND = "bind_mode";
     private static final String DELIMITER = "#";
@@ -52,7 +51,8 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
     private DynamicTree selectedTree;
     private KeyBindFrame keyBindDialog;
     private JToggleButton keyBindButton;
-
+    private OntologyManager ontologyManager;
+    
     private final JPopupMenu popupMenu;
     private final JMenu addMenuPopup;
     private final JMenu addItemPopup;
@@ -72,13 +72,9 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
 
         // Create the components
 
-        JButton newButton = new JButton("New Ontology");
-        newButton.setActionCommand(ROOT_COMMAND);
-        newButton.addActionListener(this);
-
-        JButton switchButton = new JButton("Switch Ontology");
-        switchButton.setActionCommand(SWITCH_COMMAND);
-        switchButton.addActionListener(this);
+        JButton manageButton = new JButton("Ontology Manager");
+        manageButton.setActionCommand(SHOW_MANAGER_COMMAND);
+        manageButton.addActionListener(this);
 
         keyBindButton = new JToggleButton("Set Shortcuts");
         keyBindButton.setActionCommand(BIND_MODE_COMMAND);
@@ -166,12 +162,7 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
         c.gridx = 0;
         c.gridy = 1;
         c.fill = GridBagConstraints.HORIZONTAL;
-        panel.add(switchButton, c);
-
-        c.gridx = 1;
-        c.gridy = 1;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        panel.add(newButton, c);
+        panel.add(manageButton, c);
 
         c.gridx = 0;
         c.gridy = 2;
@@ -199,6 +190,11 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
             }
         });
 
+        // Prepare the ontology manager
+        
+        this.ontologyManager = new OntologyManager(this);
+        ontologyManager.pack();
+        
         // Populate the tree view with the user's first tree
 
         // Load the tree in the background so that the app starts up first
@@ -226,7 +222,7 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
         loadTasks.execute();
     }
 
-    private DynamicTree initializeTree(Entity ontologyRoot) {
+    DynamicTree initializeTree(Entity ontologyRoot) {
 
     	// Load preferences for this ontology first, so that keys can be bound during tree loading
     	
@@ -388,49 +384,32 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
             EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(System.getenv("USER"), getEntityNameFromTreeNode(selectedTree.getCurrentNode()));
             updateSelectedTreeEntity();
         }
-        else if (ROOT_COMMAND.equals(command)) {
-            // New Root button clicked.
-            String rootName = (String)JOptionPane.showInputDialog(
-                    this,
-                    "Ontology Root Name:\n",
-                    "New Ontology",
-                    JOptionPane.PLAIN_MESSAGE,
-                    null,
-                    null,
-                    null);
-
-            if ((rootName == null) || (rootName.length() <= 0)) {
-                JOptionPane.showMessageDialog(this, "Require a valid name", "Ontology Error", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
-            Entity newOntologyRoot = EJBFactory.getRemoteAnnotationBean().createOntologyRoot(System.getenv("USER"), rootName);
-            initializeTree(newOntologyRoot);
-        }
-        else if (SWITCH_COMMAND.equals(command)) {
-            List<Entity> ontologyRootList = EJBFactory.getRemoteAnnotationBean().getUserEntitiesByType(System.getenv("USER"),
-                    EntityConstants.TYPE_ONTOLOGY_ROOT_ID);
-            ArrayList<String> ontologyNames = new ArrayList<String>();
-            for (Entity entity : ontologyRootList) {
-                ontologyNames.add(entity.getName());
-            }
-            String choice = (String)JOptionPane.showInputDialog(
-                    this,
-                    "Choose an ontology:\n",
-                    "Ontology Chooser",
-                    JOptionPane.PLAIN_MESSAGE,
-                    null,
-                    ontologyNames.toArray(),
-                    ontologyNames.get(0));
-
-            if ((choice != null) && (choice.length() > 0)) {
-                for (Entity ontologyEntity : ontologyRootList) {
-                    if (ontologyEntity.getName().equals(choice)) {
-                        initializeTree(ontologyEntity);
-                        break;
-                    }
-                }
-            }
+        else if (SHOW_MANAGER_COMMAND.equals(command)) {
+        	ontologyManager.showDialog();
+        	
+//        	List<Entity> ontologyRootList = EJBFactory.getRemoteAnnotationBean().getUserEntitiesByType(System.getenv("USER"),
+//                    EntityConstants.TYPE_ONTOLOGY_ROOT_ID);
+//            ArrayList<String> ontologyNames = new ArrayList<String>();
+//            for (Entity entity : ontologyRootList) {
+//                ontologyNames.add(entity.getName());
+//            }
+//            String choice = (String)JOptionPane.showInputDialog(
+//                    this,
+//                    "Choose an ontology:\n",
+//                    "Ontology Chooser",
+//                    JOptionPane.PLAIN_MESSAGE,
+//                    null,
+//                    ontologyNames.toArray(),
+//                    ontologyNames.get(0));
+//
+//            if ((choice != null) && (choice.length() > 0)) {
+//                for (Entity ontologyEntity : ontologyRootList) {
+//                    if (ontologyEntity.getName().equals(choice)) {
+//                        initializeTree(ontologyEntity);
+//                        break;
+//                    }
+//                }
+//            }
         }
         else if (BIND_EDIT_COMMAND.equals(command)) {
             DefaultMutableTreeNode treeNode = selectedTree.getCurrentNode();

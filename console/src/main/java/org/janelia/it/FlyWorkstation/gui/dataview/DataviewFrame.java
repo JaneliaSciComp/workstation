@@ -310,7 +310,7 @@ public class DataviewFrame extends JFrame {
             // Data formatted for the JTable
             Vector<String> columnNames = new Vector<String>(staticColumns);
             Vector<Vector<String>> data = new Vector<Vector<String>>();
-
+            	
             // Build the data in column order
             for(Entity entity : entities) {
                 Vector<String> rowData = new Vector<String>();
