@@ -193,6 +193,7 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
         // Prepare the ontology manager
         
         this.ontologyManager = new OntologyManager(this);
+        ontologyManager.setAlwaysOnTop(true);
         ontologyManager.pack();
         
         // Populate the tree view with the user's first tree
@@ -221,9 +222,21 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
 
         loadTasks.execute();
     }
-
+    
+    
+    public Entity getCurrentOntology() {
+    	if (selectedTree == null) return null;
+    	return getOntologyTermFromTreeNode(selectedTree.getRootNode()).getEntity();
+    }
+    
     DynamicTree initializeTree(Entity ontologyRoot) {
 
+    	if (ontologyRoot == null) {
+            treesPanel.removeAll();
+            this.updateUI();
+            return null;
+    	}
+    	
     	// Load preferences for this ontology first, so that keys can be bound during tree loading
     	
     	loadKeyBindPrefs(ontologyRoot);
@@ -386,30 +399,6 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
         }
         else if (SHOW_MANAGER_COMMAND.equals(command)) {
         	ontologyManager.showDialog();
-        	
-//        	List<Entity> ontologyRootList = EJBFactory.getRemoteAnnotationBean().getUserEntitiesByType(System.getenv("USER"),
-//                    EntityConstants.TYPE_ONTOLOGY_ROOT_ID);
-//            ArrayList<String> ontologyNames = new ArrayList<String>();
-//            for (Entity entity : ontologyRootList) {
-//                ontologyNames.add(entity.getName());
-//            }
-//            String choice = (String)JOptionPane.showInputDialog(
-//                    this,
-//                    "Choose an ontology:\n",
-//                    "Ontology Chooser",
-//                    JOptionPane.PLAIN_MESSAGE,
-//                    null,
-//                    ontologyNames.toArray(),
-//                    ontologyNames.get(0));
-//
-//            if ((choice != null) && (choice.length() > 0)) {
-//                for (Entity ontologyEntity : ontologyRootList) {
-//                    if (ontologyEntity.getName().equals(choice)) {
-//                        initializeTree(ontologyEntity);
-//                        break;
-//                    }
-//                }
-//            }
         }
         else if (BIND_EDIT_COMMAND.equals(command)) {
             DefaultMutableTreeNode treeNode = selectedTree.getCurrentNode();
