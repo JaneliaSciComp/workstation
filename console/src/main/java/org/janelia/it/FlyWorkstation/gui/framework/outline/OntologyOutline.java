@@ -7,6 +7,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.NavigateToNodeAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OntologyTermAction;
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.*;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.jacs.compute.access.DaoException;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -196,10 +197,16 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
         ontologyManager.setAlwaysOnTop(true);
         ontologyManager.pack();
         
-        // Populate the tree view with the user's first tree
+        // Show a loading spinner until the data is loaded
+        
+		treesPanel.add(new JLabel(Icons.loadingIcon));
 
         // Load the tree in the background so that the app starts up first
+		
         SwingWorker<Void, Void> loadTasks = new SwingWorker<Void, Void>() {
+        	
+        	private Entity toLoad;
+        	
             @Override
             protected Void doInBackground() throws Exception {
 				try {
@@ -210,7 +217,7 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
 
 					if (null != ontologyRootList
 							&& ontologyRootList.size() >= 1) {
-						initializeTree(ontologyRootList.get(0));
+						toLoad = ontologyRootList.get(0);
 					}
 				}
             	catch (Exception e) {
@@ -218,6 +225,12 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
             	}
                 return null;
             }
+
+			@Override
+			protected void done() {
+				initializeTree(toLoad);
+			}
+            
         };
 
         loadTasks.execute();

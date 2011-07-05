@@ -9,6 +9,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.outline;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.*;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,9 +17,11 @@ import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
-import org.janelia.it.jacs.compute.access.DaoException;
+import org.janelia.it.FlyWorkstation.gui.ontology.OWLDataLoader;
+import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.semanticweb.owlapi.model.OWLException;
 
 /**
  * A dialog for managing ontologies that can be loaded into the OntologyOutline.
@@ -32,6 +35,7 @@ public class OntologyManager extends JDialog implements ActionListener {
     private static final String ONTOLOGY_CLONE_COMMAND = "ontology_clone";
     private static final String ONTOLOGY_SHARE_COMMAND = "ontology_share";
     private static final String ONTOLOGY_NEW_COMMAND = "ontology_new";
+    private static final String IMPORT_OWL_COMMAND = "ontology_import";
     private static final String CANCEL_COMMAND = "clicked_cancel";
 
     private JPopupMenu privateMenu;
@@ -92,10 +96,15 @@ public class OntologyManager extends JDialog implements ActionListener {
         newButton.setActionCommand(ONTOLOGY_NEW_COMMAND);
         newButton.setToolTipText("Create a new ontology");
         newButton.addActionListener(this);
+
+        JButton importButton = new JButton("Import OWL File");
+        importButton.setActionCommand(IMPORT_OWL_COMMAND);
+        importButton.setToolTipText("Import an ontology in OWL format");
+        importButton.addActionListener(this);
         
         JButton okButton = new JButton("Load");
         okButton.setActionCommand(ONTOLOGY_LOAD_COMMAND);
-        okButton.setToolTipText("Load the selected ontology");
+        okButton.setToolTipText("Load the currently selected ontology");
         okButton.addActionListener(this);
 
         JButton cancelButton = new JButton("Cancel");
@@ -107,6 +116,7 @@ public class OntologyManager extends JDialog implements ActionListener {
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
         buttonPane.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
         buttonPane.add(newButton);
+        buttonPane.add(importButton);
         buttonPane.add(Box.createHorizontalGlue());
         buttonPane.add(okButton);
         buttonPane.add(Box.createRigidArea(new Dimension(10, 0)));
@@ -184,7 +194,81 @@ public class OntologyManager extends JDialog implements ActionListener {
 			return publicTable.getSelectedEntity();
 		}
     }
+
+    private void newOntology() {
+    	String rootName = (String) JOptionPane.showInputDialog(this,
+				"Ontology Name:\n", "New Ontology",
+				JOptionPane.PLAIN_MESSAGE, null, null, null);
+
+		if ((rootName == null) || (rootName.length() <= 0)) {
+			JOptionPane.showMessageDialog(this, "Require a valid name",
+					"Ontology Error", JOptionPane.WARNING_MESSAGE);
+			return;
+		}
+		
+		Entity newOntologyRoot = EJBFactory.getRemoteAnnotationBean().createOntologyRoot(System.getenv("USER"), rootName);
+    	tabbedPane.setSelectedIndex(0);
+    	privateTable.reloadData(newOntologyRoot);
+    }
     
+    private void importOntology() {
+    	
+    	final JFileChooser fc = new JFileChooser();
+    	int returnVal = fc.showOpenDialog(this);
+        if (returnVal != JFileChooser.APPROVE_OPTION) return;
+        
+        try {
+            File file = fc.getSelectedFile();
+        	final OWLDataLoader loader = new OWLDataLoader(file);	
+        	loader.setOutput(System.out);
+
+			String rootName = (String) JOptionPane.showInputDialog(this,
+					"New Ontology Name:\n", "Import Ontology",
+					JOptionPane.PLAIN_MESSAGE, null, null, loader.getOntologyName());
+
+			if ((rootName == null) || (rootName.length() <= 0)) {
+				JOptionPane.showMessageDialog(this, "Require a valid name",
+						"Ontology Error", JOptionPane.WARNING_MESSAGE);
+				return;
+			}
+			
+			loader.setOntologyName(rootName);  
+			
+	    	tabbedPane.setSelectedIndex(0);
+	    	privateTable.setLoading(true);
+        	
+	        SimpleWorker worker = new SimpleWorker() {
+	        	
+	        	private Entity root;
+	        	
+	            protected void doStuff() throws Exception {
+					root = loader.loadAsEntities(System.getenv("USER"));
+	            }
+
+				protected void hadSuccess() {
+		        	privateTable.reloadData(root);
+				}
+				
+				protected void hadError(Throwable error) {
+					error.printStackTrace();
+					JOptionPane.showMessageDialog(OntologyManager.this, "Error loading ontology",
+							"Ontology Import Error", JOptionPane.ERROR_MESSAGE);
+			    	privateTable.setLoading(false);
+				}
+	            
+	        };
+
+	        worker.execute();
+        	
+        }
+        catch (OWLException ex) {
+        	ex.printStackTrace();
+        	JOptionPane.showMessageDialog(this, "Error reading file", "Error", JOptionPane.ERROR_MESSAGE);
+        	return;
+        }
+        
+    }
+
     private void loadSelected() {
 
     	Entity root = getSelectedOntology();
@@ -212,7 +296,7 @@ public class OntologyManager extends JDialog implements ActionListener {
     
     private void deleteSelected() {
 
-    	Entity root = getSelectedOntology();
+    	final Entity root = getSelectedOntology();
 		if (root != null) {
 			int deleteConfirmation = JOptionPane.showConfirmDialog(
 					this, "Are you sure you want to delete the ontology named '"
@@ -220,13 +304,31 @@ public class OntologyManager extends JDialog implements ActionListener {
 			
 			if (deleteConfirmation != 0) return;
 			
-            EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(System.getenv("USER"), root.getId().toString());
-            
-            if (root.getId().equals(ontologyOutline.getCurrentOntology().getId())) {
-                ontologyOutline.initializeTree(null);
-            }
-            
-        	privateTable.reloadData(null);
+	    	tabbedPane.setSelectedIndex(0);
+	    	privateTable.setLoading(true);
+
+	        SimpleWorker worker = new SimpleWorker() {
+	        	
+	            protected void doStuff() throws Exception {
+	            	EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(System.getenv("USER"), root.getId().toString());
+	            }
+
+				protected void hadSuccess() {
+		            if (root.getId().equals(ontologyOutline.getCurrentOntology().getId())) {
+		                ontologyOutline.initializeTree(null);
+		            }
+		        	privateTable.reloadData(null);
+				}
+				
+				protected void hadError(Throwable error) {
+					error.printStackTrace();
+					JOptionPane.showMessageDialog(OntologyManager.this, "Error deleting ontology",
+							"Ontology Deletion Error", JOptionPane.ERROR_MESSAGE);
+			    	privateTable.setLoading(false);
+				}
+	            
+	        };
+	        worker.execute();
 		}
 		else {
 			JOptionPane.showMessageDialog(this, "Please select an ontology to delete",
@@ -236,30 +338,44 @@ public class OntologyManager extends JDialog implements ActionListener {
 
     private void cloneSelected() {
 
-    	Entity root = getSelectedOntology();
+    	final Entity root = getSelectedOntology();
 		if (root != null) {
 
-			String rootName = (String) JOptionPane.showInputDialog(this,
-					"Ontology Name:\n", "New Ontology",
-					JOptionPane.PLAIN_MESSAGE, null, null, null);
+			final String rootName = (String) JOptionPane.showInputDialog(this,
+					"New Ontology Name:\n", "Clone Ontology",
+					JOptionPane.PLAIN_MESSAGE, null, null, root.getName());
 
 			if ((rootName == null) || (rootName.length() <= 0)) {
 				JOptionPane.showMessageDialog(this, "Require a valid name",
 						"Ontology Error", JOptionPane.WARNING_MESSAGE);
 				return;
 			}
-
-			try {
-				Entity newOntologyRoot = EJBFactory.getRemoteAnnotationBean().cloneEntityTree(root, System.getenv("USER"), rootName);
-	        	privateTable.reloadData(newOntologyRoot);
-			}
-			catch (DaoException e) {
-				e.printStackTrace();
-				JOptionPane.showMessageDialog(this, "Error cloning ontology", "Error", JOptionPane.ERROR_MESSAGE);
-			}
 			
-			// Move to private tab to show cloned 
-			tabbedPane.setSelectedIndex(0);
+	    	tabbedPane.setSelectedIndex(0);
+	    	privateTable.setLoading(true);
+
+	        SimpleWorker worker = new SimpleWorker() {
+	        	
+	        	private Entity newRoot;
+	        	
+	            protected void doStuff() throws Exception {
+	            	newRoot = EJBFactory.getRemoteAnnotationBean().cloneEntityTree(root, System.getenv("USER"), rootName);
+	            }
+
+				protected void hadSuccess() {
+		        	privateTable.reloadData(newRoot);
+				}
+				
+				protected void hadError(Throwable error) {
+					error.printStackTrace();
+					JOptionPane.showMessageDialog(OntologyManager.this, "Error cloning ontology",
+							"Ontology Clone Error", JOptionPane.ERROR_MESSAGE);
+			    	privateTable.setLoading(false);
+				}
+	            
+	        };
+	        worker.execute();
+			
 		}
 		else {
 			JOptionPane.showMessageDialog(this, "Please select an ontology to clone",
@@ -271,19 +387,11 @@ public class OntologyManager extends JDialog implements ActionListener {
         String cmd = e.getActionCommand();
 
 		if (ONTOLOGY_NEW_COMMAND.equals(cmd)) {
-			String rootName = (String) JOptionPane.showInputDialog(this,
-					"Ontology Name:\n", "New Ontology",
-					JOptionPane.PLAIN_MESSAGE, null, null, null);
-
-			if ((rootName == null) || (rootName.length() <= 0)) {
-				JOptionPane.showMessageDialog(this, "Require a valid name",
-						"Ontology Error", JOptionPane.WARNING_MESSAGE);
-				return;
-			}
-			
-			Entity newOntologyRoot = EJBFactory.getRemoteAnnotationBean().createOntologyRoot(System.getenv("USER"), rootName);
-	    	privateTable.reloadData(newOntologyRoot);
+			newOntology();
 		} 
+        else if (IMPORT_OWL_COMMAND.equals(cmd)) {
+        	importOntology();
+        }
         else if (CANCEL_COMMAND.equals(cmd)) {
             setVisible(false);
         }

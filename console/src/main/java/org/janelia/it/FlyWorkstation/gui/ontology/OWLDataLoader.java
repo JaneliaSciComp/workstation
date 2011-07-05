@@ -1,5 +1,13 @@
 package org.janelia.it.FlyWorkstation.gui.ontology;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.net.UnknownHostException;
+import java.util.Map;
+import java.util.Set;
+
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.Category;
@@ -16,98 +24,113 @@ import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
 import org.semanticweb.owlapi.reasoner.structural.StructuralReasonerFactory;
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.net.MalformedURLException;
-import java.net.UnknownHostException;
-import java.util.Map;
-import java.util.Set;
-
 /**
- * Loads an OWL file into the Entity schema as an ontology.
+ * Parses OWL files and loads them into the Entity model as ontologies.
+ *
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class OWLDataLoader {
 
-    private static int INDENT = 4;
+    private static final int INDENT = 4;
 
-    private static boolean DRYRUN = false;
-
-    private OWLReasonerFactory reasonerFactory;
-
+    private final OWLOntologyManager manager;
+    private final OWLReasonerFactory reasonerFactory;
+    
     private OWLOntology ontology;
-
+    private OWLReasoner reasoner;
+    private String ontologyName;
+    
     private PrintStream out;
-
-    public OWLDataLoader(OWLOntologyManager manager, OWLReasonerFactory reasonerFactory)
-            throws OWLException, MalformedURLException {
-        this.reasonerFactory = reasonerFactory;
-        out = System.out;
+    private boolean saveObjects = false;
+    
+    protected OWLDataLoader() {
+        this.manager = OWLManager.createOWLOntologyManager();
+        this.reasonerFactory = new StructuralReasonerFactory();
+    }
+    
+    public OWLDataLoader(String url) throws OWLException {
+    	this();
+        IRI iri = IRI.create(url);
+        init(manager.loadOntologyFromOntologyDocument(iri));
     }
 
-    private String labelFor( OWLClass clazz) {
-        /*
-         * Use a visitor to extract label annotations
-         */
-        LabelExtractor le = new LabelExtractor();
-        Set<OWLAnnotation> annotations = clazz.getAnnotations(ontology);
-        for (OWLAnnotation anno : annotations) {
-            anno.accept(le);
-        }
-        /* Print out the label if there is one. If not, just use the class URI */
-        if (le.getResult() != null) {
-            return le.getResult().toString();
-        } else {
-            return clazz.getIRI().toString();
-        }
+    public OWLDataLoader(File file) throws OWLException {
+    	this();
+    	init(manager.loadOntologyFromOntologyDocument(file));
     }
-
-    /**
-     * Print the class hierarchy for the given ontology from this class down, assuming this class is at
-     * the given level. Makes no attempt to deal sensibly with multiple
-     * inheritance.
-     */
-    public void printHierarchy(OWLOntology ontology,  OWLClass clazz) throws OWLException {
-        OWLReasoner reasoner = reasonerFactory.createNonBufferingReasoner(ontology);
-        this.ontology = ontology;
-
-        String label = ontology.getOntologyID().toString();
+    
+    protected void init(OWLOntology ontology) throws OWLException {
+    	
+    	this.ontology = ontology;
+        this.reasoner = reasonerFactory.createNonBufferingReasoner(ontology);
+        
+    	String label = ontology.getOntologyID().toString();
         for(OWLAnnotation a: ontology.getAnnotations()) {
             if ("rdfs:label".equals(a.getProperty().toString())) {
-                label = a.getValue().toString();
+            	label = a.getValue().toString();
                 break;
             }
         }
         label = label.replaceAll("\"","").replaceAll("<", "").replaceAll(">","");
+        this.ontologyName = label;
+    }
+    
+    public void setOutput(PrintStream out) {
+    	this.out = out;
+    }
+    
+    public void setSaveObjects(boolean saveObjects) {
+    	this.saveObjects = saveObjects;
+    }
+    
+    public synchronized String getOntologyName() {
+		return ontologyName;
+	}
 
-        Entity newNode = DRYRUN ? new Entity() : EJBFactory.getRemoteAnnotationBean().createOntologyRoot(
-                System.getenv("USER"), label);
+	public synchronized void setOntologyName(String ontologyName) {
+		this.ontologyName = ontologyName;
+	}
 
-		out.println(label + " (Category saved as " + newNode.getId() + ")");
+	/**
+	 * Load the entire ontology into the Entity model with the given user as owner.
+	 * @param userLogin
+	 * @return the root Entity of the new ontology tree
+	 * @throws OWLException
+	 */
+    public Entity loadAsEntities(String userLogin) throws OWLException {
+    	
+    	IRI classIRI = OWLRDFVocabulary.OWL_THING.getIRI();
+    	OWLClass clazz = manager.getOWLDataFactory().getOWLClass(classIRI);
 
-        printHierarchy(reasoner, newNode, null, clazz, 1, 0);
+        Entity newNode = saveObjects ? new Entity() : EJBFactory.getRemoteAnnotationBean().createOntologyRoot(
+                System.getenv("USER"), ontologyName);
 
-        /* Now print out any unsatisfiable classes */
-        for (OWLClass cl: ontology.getClassesInSignature()) {
-            if (!reasoner.isSatisfiable(cl)) {
-                out.println("XXX: " + labelFor(cl));
-            }
+		if (out != null) out.println(ontologyName + " (Category saved as " + newNode.getId() + ")");
+
+        loadAsEntities(userLogin, newNode, clazz, 1, 0);
+
+        if (out != null) {
+	        /* Now print out any unsatisfiable classes */
+	        for (OWLClass cl: ontology.getClassesInSignature()) {
+	            if (!reasoner.isSatisfiable(cl)) {
+	            	out.println("XXX: " + labelFor(cl));
+	            }
+	        }
         }
+        
         reasoner.dispose();
+        return newNode;
     }
 
-    /**
-     * Print the class hierarchy from this class down, assuming this class is at
-     * the given level. Makes no attempt to deal sensibly with multiple
-     * inheritance.
-     */
-	public void printHierarchy(OWLReasoner reasoner, Entity parentEntity,
-			OWLClass parent, OWLClass clazz, int level, int orderIndex) throws OWLException {
+	private void loadAsEntities(String userLogin, Entity parentEntity,
+			OWLClass clazz, int level, int orderIndex) throws OWLException {
 		
-		for (int i = 0; i < level * INDENT; i++) {
-			out.print(" ");
+		if (out != null)  {
+			for (int i = 0; i < level * INDENT; i++) {
+				out.print(" ");
+			}	
 		}
-
+		
 		String label = labelFor(clazz);
 		if (label.contains("#"))
 			label = label.substring(label.indexOf("#") + 1);
@@ -124,12 +147,12 @@ public class OWLDataLoader {
 		}
 
 		OntologyTermType type = hasChildren ? new Category() : new Tag();
-		Entity newNode = DRYRUN ? new Entity() : EJBFactory
+		Entity newNode = saveObjects ? new Entity() : EJBFactory
 				.getRemoteAnnotationBean().createOntologyTerm(
 						System.getenv("USER"), parentEntity.getId().toString(),
 						label, type, orderIndex);
 
-		out.println(label + " ("+type.getName()+" saved as " + newNode.getId() + ")");
+		if (out != null) out.println(label + " ("+type.getName()+" saved as " + newNode.getId() + ")");
 
 		// Find the children and recurse 
 		int childOrder = 0;
@@ -137,44 +160,97 @@ public class OWLDataLoader {
 				.getFlattened()) {
 			if (!child.equals(clazz)) {
 				if (reasoner.isSatisfiable(child)) {
-					printHierarchy(reasoner, newNode, clazz, child, level + 1, childOrder++);
+					loadAsEntities(userLogin, newNode, child, level + 1, childOrder++);
 				}
 			}
 		}
 	}
 
+    private String labelFor(OWLClass clazz) {
+    	
+        // Use a visitor to extract label annotations
+        LabelExtractor le = new LabelExtractor();
+        
+        Set<OWLAnnotation> annotations = clazz.getAnnotations(ontology);
+        for (OWLAnnotation anno : annotations) {
+            anno.accept(le);
+        }
+        
+        // Return the label if there is one. If not, just use the class URI.
+        if (le.getResult() != null) {
+            return le.getResult().toString();
+        } 
+        else {
+            return clazz.getIRI().toString();
+        }
+    }
+
+    private class LabelExtractor implements OWLAnnotationObjectVisitor {
+
+        private String result;
+
+        @Override
+        public void visit(OWLLiteral owlLiteral) {
+        }
+
+        @Override
+        public void visit(OWLAnnotationAssertionAxiom owlAnnotationAssertionAxiom) {
+        }
+
+        @Override
+        public void visit(OWLSubAnnotationPropertyOfAxiom owlSubAnnotationPropertyOfAxiom) {
+        }
+
+        @Override
+        public void visit(OWLAnnotationPropertyDomainAxiom owlAnnotationPropertyDomainAxiom) {
+        }
+
+        @Override
+        public void visit(OWLAnnotationPropertyRangeAxiom owlAnnotationPropertyRangeAxiom) {
+        }
+
+        @Override
+        public void visit(IRI iri) {
+        }
+
+        @Override
+        public void visit(OWLAnonymousIndividual owlAnonymousIndividual) {
+        }
+
+        public void visit(OWLAnnotation annotation) {
+            /*
+            * If it's a label, grab it as the result. Note that if there are
+            * multiple labels, the last one will be used.
+            */
+            if (annotation.getProperty().isLabel()) {
+                OWLLiteral c = (OWLLiteral) annotation.getValue();
+                result = c.getLiteral();
+            }
+        }
+
+        public String getResult() {
+            return result;
+        }
+    }
+    
+    /**
+     * Test harness
+     * @param args
+     * @throws Exception
+     */
     public static void main(String[] args) throws Exception {
         try {
-            // Get hold of an ontology manager
-            OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
-
             // Mouse anatomy = http://www.berkeleybop.org/ontologies/owl/MA
             // 46 - Amino acid = http://www.co-ode.org/ontologies/amino-acid/2006/05/18/amino-acid.owl
             // 83 - Phylogenetic = http://rest.bioontology.org/bioportal/ontologies/download/45588?applicationid=4ea81d74-8960-4525-810b-fa1baab576ff
             // 132 - Drosophila dev = http://www.berkeleybop.org/ontologies/owl/FBdv
             // 743 - FlyBase CV = http://www.berkeleybop.org/ontologies/owl/FBcv
             // 6599 - Flybase taxa = http://www.berkeleybop.org/ontologies/owl/FBsp
-
-            // Let's load an ontology from the web
-            IRI iri = IRI.create("http://www.berkeleybop.org/ontologies/owl/FBdv");
-            OWLOntology ontology = manager.loadOntologyFromOntologyDocument(iri);
-            System.out.println("Loaded ontology: " + ontology);
-
-            // We can always obtain the location where an ontology was loaded from
-            IRI documentIRI = manager.getOntologyDocumentIRI(ontology);
-            System.out.println("from: " + documentIRI);
-
-            // / Create a new SimpleHierarchy object with the given reasoner.
-            OWLDataLoader simpleHierarchy = new OWLDataLoader(
-                    manager, new StructuralReasonerFactory());
-
-            // Get Thing
-            IRI classIRI = OWLRDFVocabulary.OWL_THING.getIRI();
-            OWLClass clazz = manager.getOWLDataFactory().getOWLClass(classIRI);
-
-            // Print the hierarchy below thing
-            simpleHierarchy.printHierarchy(ontology, clazz);
-
+        	
+            OWLDataLoader loader = new OWLDataLoader("http://www.berkeleybop.org/ontologies/owl/FBdv");
+            loader.setOutput(System.out);
+            loader.setSaveObjects(false);
+            loader.loadAsEntities(System.getenv("USER"));
         }
         catch (OWLOntologyCreationIOException e) {
             // IOExceptions during loading get wrapped in an OWLOntologyCreationIOException
@@ -214,58 +290,5 @@ public class OWLDataLoader {
         }
     }
 
-    private class LabelExtractor implements OWLAnnotationObjectVisitor {
-
-        String result;
-
-        public LabelExtractor() {
-            result = null;
-        }
-
-        @Override
-        public void visit(OWLLiteral owlLiteral) {
-        }
-
-        @Override
-        public void visit(OWLAnnotationAssertionAxiom owlAnnotationAssertionAxiom) {
-        }
-
-        @Override
-        public void visit(OWLSubAnnotationPropertyOfAxiom owlSubAnnotationPropertyOfAxiom) {
-        }
-
-        @Override
-        public void visit(OWLAnnotationPropertyDomainAxiom owlAnnotationPropertyDomainAxiom) {
-        }
-
-        @Override
-        public void visit(OWLAnnotationPropertyRangeAxiom owlAnnotationPropertyRangeAxiom) {
-        }
-
-        @Override
-        public void visit(IRI iri) {
-        }
-
-        @Override
-        public void visit(OWLAnonymousIndividual owlAnonymousIndividual) {
-
-        }
-
-        public void visit(OWLAnnotation annotation) {
-            /*
-            * If it's a label, grab it as the result. Note that if there are
-            * multiple labels, the last one will be used.
-            */
-            if (annotation.getProperty().isLabel()) {
-                OWLLiteral c = (OWLLiteral) annotation.getValue();
-                result = c.getLiteral();
-            }
-
-        }
-
-        public String getResult() {
-            return result;
-        }
-    }
 
 }

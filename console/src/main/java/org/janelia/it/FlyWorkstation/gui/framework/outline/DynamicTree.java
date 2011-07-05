@@ -17,7 +17,6 @@ public class DynamicTree extends JPanel {
     protected JTree tree;
     private Toolkit toolkit = Toolkit.getDefaultToolkit();
 
-   
     public DynamicTree(DefaultTreeCellRenderer cellRenderer, Object userObject) {
         super(new GridLayout(1, 0));
 
@@ -136,14 +135,19 @@ public class DynamicTree extends JPanel {
     }
 
     public void expandAll() {
-        // expand to the last leaf from the root
         int row = 0;
         while (row < tree.getRowCount()) {
-            tree.expandRow(row);
-            row++;
+            tree.expandRow(row++);
         }
     }
 
+    public void collapseAll() {
+        int row = 0;
+        while (row < tree.getRowCount()) {
+            tree.collapseRow(row++);
+        }
+    }
+    
     public DefaultMutableTreeNode refreshDescendants(DefaultMutableTreeNode currentNode) {
         treeModel.nodeChanged(currentNode);
         Enumeration enumeration = currentNode.children();

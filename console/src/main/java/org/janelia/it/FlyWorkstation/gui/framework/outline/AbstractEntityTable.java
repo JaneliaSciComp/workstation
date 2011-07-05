@@ -10,6 +10,7 @@ import javax.swing.*;
 import javax.swing.table.TableModel;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 
@@ -92,6 +93,10 @@ public abstract class AbstractEntityTable extends JScrollPane {
     	}
     }
 
+    public void setLoading(boolean loading) {
+        setViewportView(loading ? loadingView : table);
+    }
+    
     /**
      * Asynchronous method to reload the data in the table. May be called from EDT.
      * This method will call load() in a separate worker thread and populate the table with the results.
@@ -99,38 +104,34 @@ public abstract class AbstractEntityTable extends JScrollPane {
      */
     public void reloadData(final Entity selectWhenDone) {
 
-        setViewportView(loadingView);
+    	setLoading(true);
         
-        SwingWorker<Void,Void> loadEntityTask = new SwingWorker<Void,Void>() {
-        	
+        SimpleWorker worker = new SimpleWorker() {
+
         	private TableModel tableModel;
         	
-            @Override
-            protected Void doInBackground() throws Exception {
-            	try {    
-            		// TODO: show loading animation
-            		entityList.clear();
-            		entityList.addAll(load());
-                    tableModel = updateTableModel(entityList);
-            	} 
-            	catch (Exception e) {
-            		e.printStackTrace();
-            	}
-                return null;
+            protected void doStuff() throws Exception {
+        		entityList.clear();
+        		entityList.addAll(load());
+                tableModel = updateTableModel(entityList);
             }
 
-            @Override
-            protected void done() {
+			protected void hadSuccess() {
                 table.setModel(tableModel);
                 Utils.autoResizeColWidth(table);
                 if (selectWhenDone != null) {
                 	selectEntity(selectWhenDone);
                 }
-                setViewportView(table);
-            }
+                setLoading(false);
+			}
+			
+			protected void hadError(Throwable error) {
+				error.printStackTrace();
+			}
+            
         };
 
-        loadEntityTask.execute();
+        worker.execute();
     }
     
     /**
