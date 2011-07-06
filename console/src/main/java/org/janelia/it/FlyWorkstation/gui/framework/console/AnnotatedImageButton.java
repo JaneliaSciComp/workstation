@@ -1,11 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
@@ -14,20 +9,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.BorderFactory;
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextPane;
-import javax.swing.JToggleButton;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.WrapLayout;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 
@@ -35,18 +23,6 @@ import org.janelia.it.FlyWorkstation.shared.util.Utils;
  * A lazy-loading image with a title on top and optional annotation tags underneath.
  */
 public class AnnotatedImageButton extends JToggleButton {
-
-	private static Icon loadingIcon;
-	private static Icon missingIcon = new MissingIcon();
-	
-	static {
-        try {
-        	loadingIcon = Utils.getClasspathImage("spinner.gif");
-        }
-        catch (FileNotFoundException e) {
-        	e.printStackTrace();
-        }
-	}
 	
     private final List<String> tags = new ArrayList<String>();
     private final JPanel tagPanel;
@@ -86,7 +62,7 @@ public class AnnotatedImageButton extends JToggleButton {
 
         imageLabel = new JLabel();
         imageLabel.setSize(300, 300);
-        imageLabel.setIcon(loadingIcon);
+        imageLabel.setIcon(Icons.loadingIcon);
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
         imageLabel.setVerticalAlignment(SwingConstants.TOP);
         
@@ -122,7 +98,7 @@ public class AnnotatedImageButton extends JToggleButton {
     		
 	    	imageLabel.setIcon(null);
 	    	imageLabel.setForeground(Color.red);
-        	imageLabel.setIcon(missingIcon);
+        	imageLabel.setIcon(Icons.missingIcon);
         	imageLabel.setVerticalTextPosition(JLabel.BOTTOM);
         	imageLabel.setHorizontalTextPosition(JLabel.CENTER);
         	
