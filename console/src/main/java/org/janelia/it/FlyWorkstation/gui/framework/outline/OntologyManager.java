@@ -9,6 +9,8 @@ package org.janelia.it.FlyWorkstation.gui.framework.outline;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +30,7 @@ import org.semanticweb.owlapi.model.OWLException;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class OntologyManager extends JDialog implements ActionListener {
+public class OntologyManager extends JDialog implements ActionListener, PropertyChangeListener {
 
     private static final String ONTOLOGY_LOAD_COMMAND = "ontology_load";
     private static final String ONTOLOGY_DELETE_COMMAND = "ontology_delete";
@@ -47,6 +49,9 @@ public class OntologyManager extends JDialog implements ActionListener {
     private OntologyOutline ontologyOutline;
 	private JTabbedPane tabbedPane;   
     
+	private ProgressMonitor progressMonitor;
+	private OWLDataLoader owlLoader;
+	
     public OntologyManager(final OntologyOutline ontologyOutline) {
 
     	this.ontologyOutline = ontologyOutline;
@@ -219,12 +224,23 @@ public class OntologyManager extends JDialog implements ActionListener {
         
         try {
             File file = fc.getSelectedFile();
-        	final OWLDataLoader loader = new OWLDataLoader(file);	
-        	loader.setOutput(System.out);
+            owlLoader = new OWLDataLoader(file) {
+
+				protected void hadSuccess() {
+		        	privateTable.reloadData(getResult());
+				}
+				
+				protected void hadError(Throwable error) {
+					error.printStackTrace();
+					JOptionPane.showMessageDialog(OntologyManager.this, "Error loading ontology",
+							"Ontology Import Error", JOptionPane.ERROR_MESSAGE);
+		        	privateTable.reloadData(null);
+				}
+        	};
 
 			String rootName = (String) JOptionPane.showInputDialog(this,
 					"New Ontology Name:\n", "Import Ontology",
-					JOptionPane.PLAIN_MESSAGE, null, null, loader.getOntologyName());
+					JOptionPane.PLAIN_MESSAGE, null, null, owlLoader.getOntologyName());
 
 			if ((rootName == null) || (rootName.length() <= 0)) {
 				JOptionPane.showMessageDialog(this, "Require a valid name",
@@ -232,33 +248,15 @@ public class OntologyManager extends JDialog implements ActionListener {
 				return;
 			}
 			
-			loader.setOntologyName(rootName);  
-			
 	    	tabbedPane.setSelectedIndex(0);
 	    	privateTable.setLoading(true);
-        	
-	        SimpleWorker worker = new SimpleWorker() {
-	        	
-	        	private Entity root;
-	        	
-	            protected void doStuff() throws Exception {
-					root = loader.loadAsEntities(System.getenv("USER"));
-	            }
 
-				protected void hadSuccess() {
-		        	privateTable.reloadData(root);
-				}
-				
-				protected void hadError(Throwable error) {
-					error.printStackTrace();
-					JOptionPane.showMessageDialog(OntologyManager.this, "Error loading ontology",
-							"Ontology Import Error", JOptionPane.ERROR_MESSAGE);
-			    	privateTable.setLoading(false);
-				}
-	            
-	        };
-
-	        worker.execute();
+	        progressMonitor = new ProgressMonitor(this,"Importing OWL","", 0, 100);
+	        progressMonitor.setProgress(0);
+	        
+	        owlLoader.addPropertyChangeListener(this);
+	        owlLoader.setOntologyName(rootName);  
+	        owlLoader.execute();
         	
         }
         catch (OWLException ex) {
@@ -266,7 +264,21 @@ public class OntologyManager extends JDialog implements ActionListener {
         	JOptionPane.showMessageDialog(this, "Error reading file", "Error", JOptionPane.ERROR_MESSAGE);
         	return;
         }
-        
+    }
+    
+    /**
+     * Invoked when the owl loader's progress property changes.
+     */
+    public void propertyChange(PropertyChangeEvent e) {
+        if ("progress".equals(e.getPropertyName())) {
+            int progress = (Integer) e.getNewValue();
+            progressMonitor.setProgress(progress);
+            String message = String.format("Completed %d%%", progress);
+            progressMonitor.setNote(message);
+            if (progressMonitor.isCanceled()) {
+            	owlLoader.cancel(true);
+            }
+        }
     }
 
     private void loadSelected() {

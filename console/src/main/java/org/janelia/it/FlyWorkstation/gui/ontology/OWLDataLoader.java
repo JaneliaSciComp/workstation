@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
+import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.Category;
 import org.janelia.it.jacs.model.ontology.OntologyTermType;
@@ -26,10 +27,13 @@ import org.semanticweb.owlapi.vocab.OWLRDFVocabulary;
 
 /**
  * Parses OWL files and loads them into the Entity model as ontologies.
- *
+ * 
+ * May be involved directly with the loadAsEntities() method, or asynchronously as a worker task. In the case
+ * of the worker task, it supports progress updates via PropertyChangeListener. 
+ * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class OWLDataLoader {
+public class OWLDataLoader extends SimpleWorker {
 
     private static final int INDENT = 4;
 
@@ -39,13 +43,19 @@ public class OWLDataLoader {
     private OWLOntology ontology;
     private OWLReasoner reasoner;
     private String ontologyName;
+    private int classCount = 0;
+    private String userLogin;
+    
+    private int classesDone = 0;
     
     private PrintStream out;
-    private boolean saveObjects = false;
+    private boolean saveObjects = true;
+    private Entity root;
     
     protected OWLDataLoader() {
         this.manager = OWLManager.createOWLOntologyManager();
         this.reasonerFactory = new StructuralReasonerFactory();
+        this.userLogin = System.getenv("USER");
     }
     
     public OWLDataLoader(String url) throws OWLException {
@@ -73,6 +83,12 @@ public class OWLDataLoader {
         }
         label = label.replaceAll("\"","").replaceAll("<", "").replaceAll(">","");
         this.ontologyName = label;
+        
+        for (OWLClass cl: ontology.getClassesInSignature()) {
+            if (reasoner.isSatisfiable(cl)) {
+            	classCount++;
+            }
+        }
     }
     
     public void setOutput(PrintStream out) {
@@ -83,32 +99,70 @@ public class OWLDataLoader {
     	this.saveObjects = saveObjects;
     }
     
-    public synchronized String getOntologyName() {
+    public String getOntologyName() {
 		return ontologyName;
 	}
 
-	public synchronized void setOntologyName(String ontologyName) {
+	public void setOntologyName(String ontologyName) {
 		this.ontologyName = ontologyName;
 	}
 
+	public int getClassCount() {
+		return classCount+1;
+	}
+	
+	public Entity getResult() {
+		return root;
+	}
+
+	private void incrementProgress() {
+		classesDone++;
+		int p = (int)Math.round(100*((double)classesDone/(double)getClassCount()));
+		// There is always one more class than class count (i.e. the root), so the progress
+		// will always go slightly above 100, but that's good because it lets the user have a glimpse of the 
+		// "Completed 100%" message before the progress dialog disappears.
+		if (p > 100) p = 100;
+        setProgress(p);
+	}
+	
+	@Override
+    protected void doStuff() throws Exception {
+		root = loadAsEntities();
+	}
+
+	@Override
+	protected void hadSuccess() {
+	}
+
+	@Override
+	protected void hadError(Throwable error) {
+		error.printStackTrace();
+	}
+	
 	/**
 	 * Load the entire ontology into the Entity model with the given user as owner.
 	 * @param userLogin
 	 * @return the root Entity of the new ontology tree
 	 * @throws OWLException
 	 */
-    public Entity loadAsEntities(String userLogin) throws OWLException {
+    public Entity loadAsEntities() throws OWLException {
+
+    	setProgress(0);
     	
     	IRI classIRI = OWLRDFVocabulary.OWL_THING.getIRI();
     	OWLClass clazz = manager.getOWLDataFactory().getOWLClass(classIRI);
 
-        Entity newNode = saveObjects ? new Entity() : EJBFactory.getRemoteAnnotationBean().createOntologyRoot(
-                System.getenv("USER"), ontologyName);
+        root = saveObjects ? EJBFactory.getRemoteAnnotationBean().createOntologyRoot(
+                System.getenv("USER"), ontologyName) : new Entity();
+        incrementProgress();
+                
+		if (out != null) out.println(ontologyName + " (Category saved as " + root.getId() + ")");
 
-		if (out != null) out.println(ontologyName + " (Category saved as " + newNode.getId() + ")");
+		if (isCancelled()) return root;
+		
+        loadAsEntities(userLogin, root, clazz, 1, 0);
 
-        loadAsEntities(userLogin, newNode, clazz, 1, 0);
-
+        
         if (out != null) {
 	        /* Now print out any unsatisfiable classes */
 	        for (OWLClass cl: ontology.getClassesInSignature()) {
@@ -119,7 +173,9 @@ public class OWLDataLoader {
         }
         
         reasoner.dispose();
-        return newNode;
+        setProgress(100);
+        
+        return root;
     }
 
 	private void loadAsEntities(String userLogin, Entity parentEntity,
@@ -136,8 +192,7 @@ public class OWLDataLoader {
 			label = label.substring(label.indexOf("#") + 1);
 
 		boolean hasChildren = false;
-		for (OWLClass child : reasoner.getSubClasses(clazz, true)
-				.getFlattened()) {
+		for (OWLClass child : reasoner.getSubClasses(clazz, true).getFlattened()) {
 			if (!child.equals(clazz)) {
 				if (reasoner.isSatisfiable(child)) {
 					hasChildren = true;
@@ -147,20 +202,19 @@ public class OWLDataLoader {
 		}
 
 		OntologyTermType type = hasChildren ? new Category() : new Tag();
-		Entity newNode = saveObjects ? new Entity() : EJBFactory
-				.getRemoteAnnotationBean().createOntologyTerm(
-						System.getenv("USER"), parentEntity.getId().toString(),
-						label, type, orderIndex);
-
+		Entity newNode = saveObjects ? EJBFactory.getRemoteAnnotationBean().createOntologyTerm(System.getenv("USER"), 
+				parentEntity.getId().toString(), label, type, orderIndex) : new Entity();
+		incrementProgress();
+		
 		if (out != null) out.println(label + " ("+type.getName()+" saved as " + newNode.getId() + ")");
 
 		// Find the children and recurse 
 		int childOrder = 0;
-		for (OWLClass child : reasoner.getSubClasses(clazz, true)
-				.getFlattened()) {
+		for (OWLClass child : reasoner.getSubClasses(clazz, true).getFlattened()) {
 			if (!child.equals(clazz)) {
 				if (reasoner.isSatisfiable(child)) {
 					loadAsEntities(userLogin, newNode, child, level + 1, childOrder++);
+					if (isCancelled()) return;
 				}
 			}
 		}
@@ -250,7 +304,7 @@ public class OWLDataLoader {
             OWLDataLoader loader = new OWLDataLoader("http://www.berkeleybop.org/ontologies/owl/FBdv");
             loader.setOutput(System.out);
             loader.setSaveObjects(false);
-            loader.loadAsEntities(System.getenv("USER"));
+            loader.loadAsEntities();
         }
         catch (OWLOntologyCreationIOException e) {
             // IOExceptions during loading get wrapped in an OWLOntologyCreationIOException
