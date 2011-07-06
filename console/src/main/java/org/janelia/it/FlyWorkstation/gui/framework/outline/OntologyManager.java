@@ -57,6 +57,7 @@ public class OntologyManager extends JDialog implements ActionListener, Property
     	this.ontologyOutline = ontologyOutline;
     	
         setTitle("Ontology Manager");
+        setModalityType(ModalityType.APPLICATION_MODAL);
         setPreferredSize(new Dimension(800, 600));
         getContentPane().setLayout(new BorderLayout());
         setLocationRelativeTo(ConsoleApp.getMainFrame());
@@ -77,7 +78,6 @@ public class OntologyManager extends JDialog implements ActionListener, Property
         	protected void rightClick(Entity entity, MouseEvent e) {
         		privateMenu.show((JComponent)e.getSource(), e.getX(), e.getY());
             }
-            
         };
         
         publicTable = new AbstractOntologyTable() {
@@ -181,17 +181,31 @@ public class OntologyManager extends JDialog implements ActionListener, Property
         publicMenu.add(mi);
     }
     
+    public void preload() {
+    	privateTable.reloadData(null);
+    	publicTable.reloadData(null);
+    }
+    
 	/**
 	 * Reload the ontologies and show the dialog.
 	 */
     public void showDialog() {
+    	privateTable.reloadData(null);
     	publicTable.reloadData(null);
-    	privateTable.reloadData(ontologyOutline.getCurrentOntology());
+//    	privateTable.reloadData(ontologyOutline.getCurrentOntology());
     	tabbedPane.setSelectedIndex(0);
     	setVisible(true);
     }
     
-    private Entity getSelectedOntology() {
+    public AbstractEntityTable getPrivateTable() {
+		return privateTable;
+	}
+
+	public AbstractEntityTable getPublicTable() {
+		return publicTable;
+	}
+
+	private Entity getSelectedOntology() {
 		if (tabbedPane.getSelectedIndex() == 0) {
 			return privateTable.getSelectedEntity();
 		}

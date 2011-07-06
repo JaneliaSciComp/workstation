@@ -1,4 +1,24 @@
+/*
+ * Created by IntelliJ IDEA.
+ * User: saffordt
+ * Date: 6/1/11
+ * Time: 4:54 PM
+ */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
+
+import java.awt.BorderLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.event.*;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 
 import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
@@ -17,25 +37,14 @@ import org.janelia.it.jacs.model.ontology.Enum;
 import org.janelia.it.jacs.model.user_data.User;
 import org.janelia.it.jacs.model.user_data.prefs.UserPreference;
 
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import java.awt.*;
-import java.awt.event.*;
-import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 
 /**
- * Created by IntelliJ IDEA.
- * User: saffordt
- * Date: 6/1/11
- * Time: 4:54 PM
+ * An ontology editor panel.
+ * 
+ * @author saffordt
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class OntologyOutline extends JPanel implements ActionListener, KeybindChangeListener {
+public class OntologyOutline extends JPanel implements ActionListener, KeybindChangeListener, DataAvailabilityListener {
 	
 	private static final String KEYBIND_PREF_CATEGORY = "Keybind";
 	
@@ -189,52 +198,20 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
                 DefaultTreeModel treeModel = (DefaultTreeModel)selectedTree.getTree().getModel();
                 treeModel.nodeChanged(selectedTree.getCurrentNode());
             }
-        });
+		});
 
-        // Prepare the ontology manager
-        
-        this.ontologyManager = new OntologyManager(this);
-        ontologyManager.setAlwaysOnTop(true);
-        ontologyManager.pack();
-        
-        // Show a loading spinner until the data is loaded
-        
+		// Prepare the ontology manager and start preloading ontologies
+
+		this.ontologyManager = new OntologyManager(this);
+		ontologyManager.pack();
+		ontologyManager.getPrivateTable().addDataListener(this);
+		ontologyManager.preload();
+
+		// Show a loading spinner until the data is loaded
+
 		treesPanel.add(new JLabel(Icons.loadingIcon));
 
-        // Load the tree in the background so that the app starts up first
-		
-        SwingWorker<Void, Void> loadTasks = new SwingWorker<Void, Void>() {
-        	
-        	private Entity toLoad;
-        	
-            @Override
-            protected Void doInBackground() throws Exception {
-				try {
-					List<Entity> ontologyRootList = EJBFactory
-							.getRemoteAnnotationBean().getUserEntitiesByType(
-									System.getenv("USER"),
-									EntityConstants.TYPE_ONTOLOGY_ROOT_ID);
-
-					if (null != ontologyRootList
-							&& ontologyRootList.size() >= 1) {
-						toLoad = ontologyRootList.get(0);
-					}
-				}
-            	catch (Exception e) {
-            		e.printStackTrace();
-            	}
-                return null;
-            }
-
-			@Override
-			protected void done() {
-				initializeTree(toLoad);
-			}
-            
-        };
-
-        loadTasks.execute();
-    }
+	}
     
     
     public Entity getCurrentOntology() {
@@ -261,7 +238,7 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
 
         selectedTree = new DynamicTree(new OntologyTreeCellRenderer(), rootAE);
         addNodes(selectedTree, null, rootAE);
-        selectedTree.expandAll();
+        selectedTree.expandAll(true);
 
         // Replace the default key listener on the tree
         
@@ -296,7 +273,7 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
     }
 
     public void navigateToOntologyTerm(OntologyTerm term) {
-        selectedTree.navigateToNode(term);
+        selectedTree.navigateToNodeWithObject(term);
     }
 
     /**
@@ -521,20 +498,34 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
     
     // todo This is toooooooo brute-force
     private void updateSelectedTreeEntity(){
-        Entity entity= EJBFactory.getRemoteAnnotationBean().getUserEntityById(System.getenv("USER"),getEntityIdFromTreeNode(selectedTree.rootNode));
-        if (null!=selectedTree || entity.getName().equals(getEntityNameFromTreeNode(selectedTree.rootNode))){
+        Entity entity = EJBFactory.getRemoteAnnotationBean().getUserEntityById(System.getenv("USER"),getEntityIdFromTreeNode(selectedTree.rootNode));
+        if (null != selectedTree || entity.getName().equals(getEntityNameFromTreeNode(selectedTree.rootNode))){
             initializeTree(entity);
         }
         this.updateUI();
     }
 
+    
     @Override
+	public void dataReady(DataReadyEvent evt) {
+    	AbstractEntityTable privateTable = ontologyManager.getPrivateTable();
+    	if (selectedTree == null) {
+	    	List<Entity> entities = privateTable.getEntityList();
+	    	if (entities == null || entities.isEmpty()) return;
+	    	initializeTree(entities.get(0));
+    	}
+    	// We got the data, no need to listen any longer
+    	privateTable.removeDataListener(this);
+	}
+
+
+	@Override
 	public void keybindChange(KeybindChangeEvent evt) {
         // Save all the key bindings
         // TODO: in the future, save just the one that changed
         saveKeyBinds();
 	}
-    
+
 	// Listen for key strokes and execute the appropriate key bindings
     private KeyListener keyListener = new KeyAdapter() {
 

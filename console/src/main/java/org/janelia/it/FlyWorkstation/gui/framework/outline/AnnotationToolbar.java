@@ -8,7 +8,8 @@ import java.awt.event.ActionListener;
 import java.net.URL;
 
 /**
- * A dialog for setting a key binding to an action. THe dialog should be shown with showForAction.
+ * A toolbar which sits on top of the main annotation window and provides functions for dealing with the images
+ * presented there. For example, sorting the images, resizing them, and so forth.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */

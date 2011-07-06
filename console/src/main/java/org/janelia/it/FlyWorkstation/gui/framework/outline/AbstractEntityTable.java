@@ -20,11 +20,13 @@ import org.janelia.it.jacs.model.entity.Entity;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public abstract class AbstractEntityTable extends JScrollPane {
-	
-    private final JTable table;
-    private final List<Entity> entityList = new ArrayList<Entity>();
+
+	private final JTable table;
+	private final List<Entity> entityList = new ArrayList<Entity>();
 	private final JComponent loadingView;
-    
+	private final List<DataAvailabilityListener> listeners = new ArrayList<DataAvailabilityListener>();
+	private SimpleWorker loadingWorker;
+	
     public AbstractEntityTable() {
 
     	loadingView = new JLabel(Icons.loadingIcon);
@@ -41,26 +43,27 @@ public abstract class AbstractEntityTable extends JScrollPane {
                 if (entity != null) {
                     if (e.isPopupTrigger()) {
                     	rightClick(entity, e);
-                    }
-                    // This masking is to make sure that the right button is being double clicked, not left and then right or right and then left
-                    else if (e.getClickCount()==2 
-                    		&& e.getButton()==MouseEvent.BUTTON1 
-                    		&& (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
-                    
-                    	doubleClick(entity, e);
-                    }
-                }
-            	
-            }
-            public void mousePressed(MouseEvent e) {
-                // We have to also listen for mousePressed because OSX generates the popup trigger here
-                // instead of mouseReleased like any sane OS.
-                Entity entity = getSelectedEntity();
-                if (entity != null) {
-                    if (e.isPopupTrigger()) {
-                    	rightClick(entity, e);
-                    }
-                }
+					}
+					// This masking is to make sure that the right button is
+					// being double clicked, not left and then right or right
+					// and then left
+					else if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1
+							&& (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
+						doubleClick(entity, e);
+					}
+				}
+
+			}
+
+			public void mousePressed(MouseEvent e) {
+				// We have to also listen for mousePressed because OSX generates
+				// the popup trigger here instead of mouseReleased like any sane OS.
+				Entity entity = getSelectedEntity();
+				if (entity != null) {
+					if (e.isPopupTrigger()) {
+						rightClick(entity, e);
+					}
+				}
             }
         });
         
@@ -68,6 +71,14 @@ public abstract class AbstractEntityTable extends JScrollPane {
     }
     
     /**
+     * Returns the list of entities. Will return null until reloadData() has completed.
+     * @return
+     */
+    public List<Entity> getEntityList() {
+		return entityList;
+	}
+
+	/**
      * Get the entity which is the currently selected row in the table.
      * @return
      */
@@ -97,6 +108,14 @@ public abstract class AbstractEntityTable extends JScrollPane {
         setViewportView(loading ? loadingView : table);
     }
     
+    public boolean addDataListener(DataAvailabilityListener o) {
+		return listeners.add(o);
+	}
+
+	public boolean removeDataListener(DataAvailabilityListener o) {
+		return listeners.remove(o);
+	}
+    
     /**
      * Asynchronous method to reload the data in the table. May be called from EDT.
      * This method will call load() in a separate worker thread and populate the table with the results.
@@ -104,9 +123,14 @@ public abstract class AbstractEntityTable extends JScrollPane {
      */
     public void reloadData(final Entity selectWhenDone) {
 
+    	if (loadingWorker != null && !loadingWorker.isDone()) {
+    		// Already loading, don't spawn another worker
+    		return;
+    	}
+    	
     	setLoading(true);
-        
-        SimpleWorker worker = new SimpleWorker() {
+    	
+    	loadingWorker = new SimpleWorker() {
 
         	private TableModel tableModel;
         	
@@ -123,6 +147,11 @@ public abstract class AbstractEntityTable extends JScrollPane {
                 	selectEntity(selectWhenDone);
                 }
                 setLoading(false);
+                // Must clone in case removeDataListener gets called by the listener
+                List<DataAvailabilityListener> clone = new ArrayList<DataAvailabilityListener>(listeners);
+                for(DataAvailabilityListener listener : clone) {
+                	listener.dataReady(new DataReadyEvent(this));
+                }
 			}
 			
 			protected void hadError(Throwable error) {
@@ -130,8 +159,8 @@ public abstract class AbstractEntityTable extends JScrollPane {
 			}
             
         };
-
-        worker.execute();
+        
+        loadingWorker.execute();
     }
     
     /**

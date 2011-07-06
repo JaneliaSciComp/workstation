@@ -25,10 +25,10 @@ public abstract class AbstractOntologyTable extends AbstractEntityTable {
         Vector<Vector<String>> data = new Vector<Vector<String>>();
 
         // Prepend the static columns
-        columnNames.add("Name");
-        columnNames.add("User");
-        columnNames.add("Created");
-        columnNames.add("Updated");
+        columnNames.add("Ontology Name");
+        columnNames.add("Owner");
+        columnNames.add("Date Created");
+        columnNames.add("Date Updated");
         
         // Build the data in column order
         if (entities != null) {
