@@ -1,14 +1,29 @@
-package org.janelia.it.FlyWorkstation.gui.framework.outline;
-
-import javax.swing.*;
-import javax.swing.tree.*;
-import java.awt.*;
-import java.util.Enumeration;
-/**
+/*
  * Created by IntelliJ IDEA.
  * User: saffordt
  * Date: 6/1/11
  * Time: 4:55 PM
+ */
+package org.janelia.it.FlyWorkstation.gui.framework.outline;
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.util.Enumeration;
+
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTree;
+import javax.swing.text.Position;
+import javax.swing.tree.*;
+
+import org.janelia.it.FlyWorkstation.gui.util.TreeSearcher;
+
+/**
+ * A reusable tree component with toolbar features.
+ * 
+ * @author saffordt
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class DynamicTree extends JPanel {
 
@@ -18,7 +33,7 @@ public class DynamicTree extends JPanel {
     private Toolkit toolkit = Toolkit.getDefaultToolkit();
 
     public DynamicTree(DefaultTreeCellRenderer cellRenderer, Object userObject) {
-        super(new GridLayout(1, 0));
+        super(new BorderLayout());
 
         rootNode = new DefaultMutableTreeNode(userObject);
         treeModel = new DefaultTreeModel(rootNode);
@@ -29,21 +44,36 @@ public class DynamicTree extends JPanel {
         tree.setShowsRootHandles(true);
         tree.setCellRenderer(cellRenderer);
 
+        DynamicTreeToolbar toolbar = new DynamicTreeToolbar(this);
+        add(toolbar, BorderLayout.PAGE_START);
+        
         JScrollPane scrollPane = new JScrollPane(tree);
         scrollPane.setPreferredSize(new Dimension(300,800));
-        add(scrollPane);
+        add(scrollPane, BorderLayout.CENTER);
     }
 
+    /**
+     * Returns the underlying JTree.
+     * @return
+     */
     public JTree getTree() {
         return tree;
     }
 
-    public DefaultMutableTreeNode getRootNode() {
-		return rootNode;
-	}
-
+    /**
+     * Returns the underlying tree model.
+     * @return
+     */
 	public DefaultTreeModel getTreeModel() {
 		return treeModel;
+	}
+	
+    /**
+     * Returns the root node of the tree.
+     * @return
+     */
+    public DefaultMutableTreeNode getRootNode() {
+		return rootNode;
 	}
 
 	/**
@@ -96,7 +126,6 @@ public class DynamicTree extends JPanel {
         return addObject(parent, child, false);
     }
 
-
     public DefaultMutableTreeNode addObject(DefaultMutableTreeNode parent, Object child, boolean shouldBeVisible) {
         DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(child);
 
@@ -114,40 +143,41 @@ public class DynamicTree extends JPanel {
         return childNode;
     }
 
-    public void removeRootChildren() {
-        try {
-            TreePath currentSelection = tree.getSelectionPath();
-            if (currentSelection != null) {
-                DefaultMutableTreeNode rootNode = (DefaultMutableTreeNode) (currentSelection.getPathComponent(0));
-                Enumeration enumeration = rootNode.children();
-                while(enumeration.hasMoreElements()) {
-                    DefaultMutableTreeNode currentNode = (DefaultMutableTreeNode)enumeration.nextElement();
-                    MutableTreeNode parent = (MutableTreeNode) (currentNode.getParent());
-                    if (parent != null) {
-                        treeModel.removeNodeFromParent(currentNode);
-                    }
-                }
-            }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+    /**
+     * Expand or collapse all the nodes in the tree.
+     * @param expand expand or collapse?
+     */
+	public void expandAll(boolean expand) {
+		TreeNode root = (TreeNode) tree.getModel().getRoot();
+		expandAll(new TreePath(root), expand);
+	}
 
-    public void expandAll() {
-        int row = 0;
-        while (row < tree.getRowCount()) {
-            tree.expandRow(row++);
-        }
-    }
+	private void expandAll(TreePath parent, boolean expand) {
+		
+		// Traverse children
+		TreeNode node = (TreeNode) parent.getLastPathComponent();
+		if (node.getChildCount() >= 0) {
+			for (Enumeration e = node.children(); e.hasMoreElements();) {
+				TreeNode n = (TreeNode) e.nextElement();
+				TreePath path = parent.pathByAddingChild(n);
+				expandAll(path, expand);
+			}
+		}
 
-    public void collapseAll() {
-        int row = 0;
-        while (row < tree.getRowCount()) {
-            tree.collapseRow(row++);
-        }
-    }
-    
+		// Expansion or collapse must be done bottom-up
+		if (expand) {
+			tree.expandPath(parent);
+		} else {
+			tree.collapsePath(parent);
+		}
+	}
+
+	/**
+	 * Iterates through the tree structure and calls treeModel.nodeChanged() on each descendant of the 
+	 * given node.
+	 * @param currentNode 
+	 * @return
+	 */
     public DefaultMutableTreeNode refreshDescendants(DefaultMutableTreeNode currentNode) {
         treeModel.nodeChanged(currentNode);
         Enumeration enumeration = currentNode.children();
@@ -158,6 +188,9 @@ public class DynamicTree extends JPanel {
         return null;
     }
 
+    /**
+     * Move to the next row in the tree. If we are already at the end of the tree, go back to the first row.
+     */
     public void navigateToNextRow() {
 
         int[] selection = tree.getSelectionRows();
@@ -172,13 +205,14 @@ public class DynamicTree extends JPanel {
         }
     }
 
-    public void navigateToNode(Object targetUserObject) {
+    /**
+     * Select the node with the given user object and scroll to it.
+     * @param targetUserObject
+     */
+    public void navigateToNodeWithObject(Object targetUserObject) {
+    	if (targetUserObject == null) tree.setSelectionPath(null);
         DefaultMutableTreeNode node = getNodeForUserObject(targetUserObject, (DefaultMutableTreeNode) treeModel.getRoot());
-        if (node == null) return;
-        
-        TreePath treePath = new TreePath(node.getPath());
-        tree.expandPath(treePath);
-        tree.setSelectionPath(treePath);
+        navigateToNode(node);
     }
 
     private DefaultMutableTreeNode getNodeForUserObject(Object targetUserObject, DefaultMutableTreeNode currentNode) {
@@ -194,5 +228,38 @@ public class DynamicTree extends JPanel {
         }
 
         return null;
+    }
+    
+    /**
+     * Select the given node and scroll to it.
+     * @param node
+     */
+	public void navigateToNode(DefaultMutableTreeNode node) {
+		if (node == null) {
+			tree.setSelectionPath(null);
+		}
+		TreePath treePath = new TreePath(node.getPath());
+		tree.expandPath(treePath);
+		tree.setSelectionPath(treePath);
+		tree.scrollPathToVisible(treePath);
+	}
+    
+	/**
+	 * Select the node containing the given search string. If bias is null then we search forward starting with the 
+	 * current node. If the current node contains the searchString then we don't move. If the bias is Forward then we
+	 * start searching in the node after the selected one. If bias is Backward then we look backwards from the node 
+	 * before the selected one. 
+	 * @param searchString
+	 * @param bias
+	 */
+    public void navigateToNodeStartingWith(String searchString, Position.Bias bias) {
+    	
+    	TreePath selectionPath = tree.getSelectionPath();
+    	DefaultMutableTreeNode startingNode = (selectionPath == null) ? null : (DefaultMutableTreeNode)selectionPath.getLastPathComponent();
+    	TreeSearcher searcher = new TreeSearcher(treeModel, searchString, startingNode, bias);
+    	DefaultMutableTreeNode node = searcher.find();
+    	if (node != null) {
+    		navigateToNode(node);
+    	}
     }
 }

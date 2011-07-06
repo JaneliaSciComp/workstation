@@ -79,4 +79,11 @@ public class OntologyTerm {
     public int hashCode() {
         return entity.hashCode();
     }
+
+	@Override
+	public String toString() {
+		return getName();
+	}
+    
+    
 }
