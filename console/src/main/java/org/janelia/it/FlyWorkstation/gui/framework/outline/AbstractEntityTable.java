@@ -150,7 +150,7 @@ public abstract class AbstractEntityTable extends JScrollPane {
                 // Must clone in case removeDataListener gets called by the listener
                 List<DataAvailabilityListener> clone = new ArrayList<DataAvailabilityListener>(listeners);
                 for(DataAvailabilityListener listener : clone) {
-                	listener.dataReady(new DataReadyEvent(this));
+                	listener.dataReady(new DataReadyEvent(AbstractEntityTable.this));
                 }
 			}
 			

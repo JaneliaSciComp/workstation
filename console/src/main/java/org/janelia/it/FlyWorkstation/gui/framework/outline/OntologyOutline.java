@@ -579,6 +579,7 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
     @Override
 	public void dataReady(DataReadyEvent evt) {
     	AbstractEntityTable privateTable = ontologyManager.getPrivateTable();
+    	if (evt.getSource() != privateTable) return;
     	if (selectedTree == null) {
 	    	List<Entity> entities = privateTable.getEntityList();
 	    	if (entities == null || entities.isEmpty()) {
