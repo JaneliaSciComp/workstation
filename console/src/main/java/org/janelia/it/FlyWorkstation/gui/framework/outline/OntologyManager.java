@@ -394,8 +394,7 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 	        	
 	            protected void doStuff() throws Exception {
 	            	EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(System.getenv("USER"), root.getId().toString());
-
-	            	// TODO: also delete all key bindings that reference it	            	
+	            	ontologyOutline.removeKeyBinds(root);        	
 	            }
 
 				protected void hadSuccess() {

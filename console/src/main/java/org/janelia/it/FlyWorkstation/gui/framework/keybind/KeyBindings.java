@@ -74,6 +74,10 @@ public class KeyBindings {
         }
     }
 
+    public void clearBindings() {
+    	bindings.clear();
+    }
+    
     public void executeBinding(KeyboardShortcut shortcut) {
         Action action = bindings.get(shortcut);
         if (action == null) return;

@@ -92,8 +92,6 @@ public class FileOutline extends JScrollPane implements Cloneable {
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         setViewportView(tree);
 
-
-        // TODO: for testing:
         expandAll();
     }
 

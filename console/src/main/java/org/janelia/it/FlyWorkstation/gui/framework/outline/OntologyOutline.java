@@ -229,6 +229,10 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
     	
     	loadKeyBindPrefs(ontologyRoot);
     	
+    	// Clear the key bindings
+    	
+    	ConsoleApp.getKeyBindings().clearBindings();
+    	
         // Create a new tree and add all the nodes to it
 
         OntologyTerm rootAE = new OntologyTerm(ontologyRoot,null);
@@ -275,7 +279,8 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
     }
 
     /**
-     * Load the key binds for a given ontology.
+     * Load the key binding preferences for a given ontology. This loads preferences into a local map which is then used
+     * to populate the KeyBindings object during tree load.
      * @param ontologyRoot
      */
     private void loadKeyBindPrefs(Entity ontologyRoot) {
@@ -325,7 +330,20 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
     		System.out.println("Could not save user's key binding preferences");
     		e.printStackTrace();
     	}
-    	
+    }
+    
+    /**
+     * Remove all key binds referencing the given ontology.
+     */
+    public void removeKeyBinds(Entity root) {
+
+    	try {
+            EJBFactory.getRemoteComputeBean().removePreferenceCategory(KEYBIND_PREF_CATEGORY+":"+root.getId());
+    	}
+    	catch (Exception e) {
+    		System.out.println("Could not delete defunct key binding preferences");
+    		e.printStackTrace();
+    	}
     }
     
     private void addNodes(DynamicTree tree, DefaultMutableTreeNode parentNode, OntologyTerm node) {
@@ -392,6 +410,14 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
                 if (ae != null)
                     keyBindDialog.showForAction(ae.getAction());
             }
+        }
+        else if (BIND_MODE_COMMAND.equals(command)) {
+        	// Transfer focus to a node in the tree in preparation for key presses
+        	selectedTree.getTree().grabFocus();
+        	if (selectedTree.getCurrentNode() == null) {
+        		selectedTree.setCurrentNode(selectedTree.getRootNode());
+        	}
+        	
         }
         else if (command.startsWith(ADD_COMMAND)) {
 
@@ -473,6 +499,9 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
         }
     }
     
+    /**
+     * @return true if the user is allowed to edit the current ontology, false otherwise.
+     */
     public boolean isEditable() {
     	OntologyTerm rootTerm = getOntologyTermFromTreeNode(selectedTree.getRootNode());
     	return !rootTerm.isPublic();

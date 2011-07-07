@@ -105,6 +105,10 @@ public class DynamicTree extends JPanel {
          return null;
      }
 
+     public void setCurrentNode(DefaultMutableTreeNode currentNode) {
+    	 tree.setSelectionPath(new TreePath(currentNode.getPath()));
+     }
+     
      /**
      * Add child to the currently selected node.
      */
