@@ -167,7 +167,7 @@ public abstract class AbstractEntityTable extends JScrollPane {
      * Implement this method to load the entities that are to be displayed in the table.
      * @return
      */
-    protected abstract List<Entity> load();
+    protected abstract List<Entity> load() throws Exception;
     
     /**
      * Implement this method to decide what happens when an entity is double clicked.

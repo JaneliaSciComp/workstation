@@ -64,6 +64,8 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
     private OntologyManager ontologyManager;
     
     private final JPopupMenu popupMenu;
+    private final JMenuItem assignShortcutMenuItem;
+    private final JMenuItem removeNodeMenuItem;
     private final JMenu addMenuPopup;
     private final JMenu addItemPopup;
 
@@ -95,10 +97,9 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
         popupMenu = new JPopupMenu();
         popupMenu.setLightWeightPopupEnabled(true);
 
-        JMenuItem mi = new JMenuItem("Assign shortcut...");
-        mi.addActionListener(this);
-        mi.setActionCommand(BIND_EDIT_COMMAND);
-        popupMenu.add(mi);
+        assignShortcutMenuItem = new JMenuItem("Assign shortcut...");
+        assignShortcutMenuItem.addActionListener(this);
+        assignShortcutMenuItem.setActionCommand(BIND_EDIT_COMMAND);
 
         addMenuPopup = new JMenu("Add...");
         for(Class<? extends OntologyTermType> nodeType : nodeTypes) {
@@ -119,12 +120,9 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
         smi.setActionCommand(ADD_COMMAND+DELIMITER+EnumItem.class.getSimpleName());
         addItemPopup.add(smi);
 
-        popupMenu.add(addMenuPopup);
-
-        mi = new JMenuItem("Remove this node");
-        mi.addActionListener(this);
-        mi.setActionCommand(REMOVE_COMMAND);
-        popupMenu.add(mi);
+        removeNodeMenuItem = new JMenuItem("Remove this node");
+        removeNodeMenuItem.addActionListener(this);
+        removeNodeMenuItem.setActionCommand(REMOVE_COMMAND);
 
         mouseListener = new MouseAdapter() {
             public void mouseReleased(MouseEvent e) {
@@ -214,9 +212,9 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
 	}
     
     
-    public Entity getCurrentOntology() {
+    public OntologyTerm getCurrentOntology() {
     	if (selectedTree == null) return null;
-    	return getOntologyTermFromTreeNode(selectedTree.getRootNode()).getEntity();
+    	return getOntologyTermFromTreeNode(selectedTree.getRootNode());
     }
     
     DynamicTree initializeTree(Entity ontologyRoot) {
@@ -374,17 +372,14 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
     public void actionPerformed(ActionEvent e) {
         String command = e.getActionCommand();
 
-        if (REMOVE_COMMAND.equals(command)) {
-            // Remove button clicked
-            int deleteConfirmation = JOptionPane.showConfirmDialog(
-                    this,
-                    "Are you sure you want to delete this term?",
-                    "Delete Term",
-                    JOptionPane.YES_NO_OPTION);
-            if (deleteConfirmation!=0) {
-                return;
-            }
-            EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(System.getenv("USER"), getEntityNameFromTreeNode(selectedTree.getCurrentNode()));
+		if (REMOVE_COMMAND.equals(command)) {
+			int deleteConfirmation = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this term?",
+					"Delete Term", JOptionPane.YES_NO_OPTION);
+			if (deleteConfirmation != 0) {
+				return;
+			}
+			String nodeId = getEntityIdFromTreeNode(selectedTree.getCurrentNode()).toString();
+            EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(System.getenv("USER"), nodeId);
             updateSelectedTreeEntity();
         }
         else if (SHOW_MANAGER_COMMAND.equals(command)) {
@@ -451,6 +446,7 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
                 catch (Exception ex) {
                     ex.printStackTrace();
                     JOptionPane.showMessageDialog(this, "Invalid bounds");
+                    return;
                 }
             }
 
@@ -461,7 +457,7 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
             if (parentType instanceof Tag) {
             	// Adding a child to a Tag, so it must be coerced into a Category
             	
-            	EntityData ed = actionEntity.getEntity().getEntityDataByAttributeName(EntityConstants.ATTR_NAME_ONTOLOGY_TERM_TYPE);
+            	EntityData ed = actionEntity.getEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_ONTOLOGY_TERM_TYPE);
             	ed.setValue(Category.class.getSimpleName());
             	
             	try {
@@ -474,25 +470,37 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
             }
             
             updateSelectedTreeEntity();
-
         }
+    }
+    
+    public boolean isEditable() {
+    	OntologyTerm rootTerm = getOntologyTermFromTreeNode(selectedTree.getRootNode());
+    	return !rootTerm.isPublic();
     }
 
     private void showPopupMenu(MouseEvent e) {
 
-        OntologyTerm curr = getOntologyTermFromTreeNode(selectedTree.getCurrentNode());
-        OntologyTermType type = curr.getType();
+        popupMenu.removeAll();
+        popupMenu.add(assignShortcutMenuItem);
+        
+        if (isEditable()) {
 
-        popupMenu.remove(addMenuPopup);
-        popupMenu.remove(addItemPopup);
+            OntologyTerm curr = getOntologyTermFromTreeNode(selectedTree.getCurrentNode());
+            OntologyTermType type = curr.getType();
+            
+            if (type instanceof Enum) {
+            	popupMenu.add(addItemPopup);
+            }
+            else if (type.allowsChildren() || type instanceof Tag) {
+            	popupMenu.add(addMenuPopup); 
+            }
 
-        if (type instanceof Enum) {
-        	popupMenu.add(addItemPopup);
+            // Disallow deletion of root nodes. You've gotta use the OntologyManager for that.
+            if (curr.getParentTerm() != null) {
+                popupMenu.add(removeNodeMenuItem);
+            }
         }
-        else if (type.allowsChildren() || type instanceof Tag) {
-        	popupMenu.add(addMenuPopup); 
-        }
-
+        
         popupMenu.show((JComponent)e.getSource(), e.getX(), e.getY());
     }
     

@@ -28,7 +28,7 @@ public class OntologyTerm {
         this.entity = entity;
         this.parentTerm = parentTerm;
 
-        String typeName = entity.getValueByAttributeName(EntityConstants.ATTR_NAME_ONTOLOGY_TERM_TYPE);
+        String typeName = entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_ONTOLOGY_TERM_TYPE);
         if (!Utils.isEmpty(typeName)) {
             type = OntologyTermType.createTypeByName(typeName);
             if (type != null) type.init(entity);
@@ -67,6 +67,15 @@ public class OntologyTerm {
         this.type = type;
     }
 
+    /**
+     * Returns true if this term is part of a public ontology. 
+     * @return
+     */
+    public boolean isPublic() {
+    	if (parentTerm != null) return parentTerm.isPublic();
+		return (!Utils.isEmpty(entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_IS_PUBLIC)));
+    }
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
