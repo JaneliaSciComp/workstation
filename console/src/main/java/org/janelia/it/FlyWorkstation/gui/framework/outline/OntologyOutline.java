@@ -44,7 +44,7 @@ import org.janelia.it.jacs.model.user_data.prefs.UserPreference;
  * @author saffordt
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class OntologyOutline extends JPanel implements ActionListener, KeybindChangeListener, DataAvailabilityListener {
+public class OntologyOutline extends JPanel implements ActionListener, DataAvailabilityListener {
 	
 	private static final String KEYBIND_PREF_CATEGORY = "Keybind";
 	
@@ -55,24 +55,24 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
     private static final String BIND_MODE_COMMAND = "bind_mode";
     private static final String DELIMITER = "#";
 
-    private Map<String,KeyboardShortcut> entityId2Shortcut = new HashMap<String,KeyboardShortcut>();
-    
-    private JPanel treesPanel;
-    private DynamicTree selectedTree;
-    private KeyBindFrame keyBindDialog;
-    private JToggleButton keyBindButton;
-    private OntologyManager ontologyManager;
-    
+    private final List<Class<? extends OntologyTermType>> nodeTypes = new ArrayList<Class<? extends OntologyTermType>>();
+    private final Map<String,KeyboardShortcut> entityId2Shortcut = new HashMap<String,KeyboardShortcut>();
+
+    private final KeyListener keyListener;
+    private final MouseListener mouseListener;
+    private final JPanel treesPanel;
+    private final KeyBindFrame keyBindDialog;
+    private final JToggleButton keyBindButton;
+    private final JButton manageButton;
+    private final OntologyManager ontologyManager;
     private final JPopupMenu popupMenu;
     private final JMenuItem assignShortcutMenuItem;
     private final JMenuItem removeNodeMenuItem;
     private final JMenu addMenuPopup;
     private final JMenu addItemPopup;
-
-    private List<Class<? extends OntologyTermType>> nodeTypes = new ArrayList<Class<? extends OntologyTermType>>();
-    private MouseListener mouseListener;
-
-
+    
+    private DynamicTree selectedTree;
+    
     public OntologyOutline() {
         super(new BorderLayout());
 
@@ -84,7 +84,9 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
 
         // Create the components
 
-        JButton manageButton = new JButton("Ontology Manager");
+        treesPanel = new JPanel(new BorderLayout());
+        
+        manageButton = new JButton("Ontology Manager");
         manageButton.setActionCommand(SHOW_MANAGER_COMMAND);
         manageButton.addActionListener(this);
 
@@ -113,17 +115,52 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
 			}
         }
         
-        // Prepare an alternative submenu for enumeration nodes
+        // Alternative "Add" menu for enumeration nodes
         addItemPopup = new JMenu("Add...");
         JMenuItem smi = new JMenuItem("Item");
         smi.addActionListener(this);
-        smi.setActionCommand(ADD_COMMAND+DELIMITER+EnumItem.class.getSimpleName());
+        smi.setActionCommand(ADD_COMMAND + DELIMITER + EnumItem.class.getSimpleName());
         addItemPopup.add(smi);
 
         removeNodeMenuItem = new JMenuItem("Remove this node");
         removeNodeMenuItem.addActionListener(this);
         removeNodeMenuItem.setActionCommand(REMOVE_COMMAND);
 
+        // Create input listeners which will be added to the DynamicTree later
+        
+        keyListener = new KeyAdapter() {
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getID() == KeyEvent.KEY_PRESSED) {
+                    if (KeymapUtil.isModifier(e)) return;
+                    KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
+
+                    if (keyBindButton.isSelected()) {
+
+                        // Set the key bind
+                        OntologyTerm actionEntity = getOntologyTermFromTreeNode(selectedTree.getCurrentNode());
+                        ConsoleApp.getKeyBindings().setBinding(shortcut, actionEntity.getAction());
+                        
+                        // Refresh the entire tree (another key bind may have been overridden)
+                        // TODO: this is very slow on large trees...
+
+                        JTree tree = selectedTree.getTree();
+                        DefaultTreeModel treeModel = (DefaultTreeModel)tree.getModel();
+                        selectedTree.refreshDescendants((DefaultMutableTreeNode)treeModel.getRoot());
+
+                        // Move to the next row
+
+                        selectedTree.navigateToNextRow();
+
+                    }
+                    else {
+                        ConsoleApp.getKeyBindings().executeBinding(shortcut);
+                    }
+                }
+            }
+        };
+        
         mouseListener = new MouseAdapter() {
             public void mouseReleased(MouseEvent e) {
                 JTree tree = selectedTree.getTree();
@@ -161,32 +198,16 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
 
         add(new JLabel("Ontology Editor"), BorderLayout.NORTH);
         
-        this.treesPanel = new JPanel(new BorderLayout());
         add(treesPanel, BorderLayout.CENTER);
 
-        GridBagConstraints c = new GridBagConstraints();
-        JPanel panel = new JPanel(new GridBagLayout());
-
-        c.gridx = 0;
-        c.gridy = 1;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        panel.add(manageButton, c);
-
-        c.gridx = 0;
-        c.gridy = 2;
-        c.gridwidth = 2;
-        c.fill = GridBagConstraints.HORIZONTAL;
-        panel.add(keyBindButton, c);
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.add(manageButton);
+        buttonPanel.add(keyBindButton);
+        add(buttonPanel, BorderLayout.SOUTH);
         
-        add(panel, BorderLayout.SOUTH);
-        
-        // Add ourselves as a keybind change listener
-        
-        ConsoleApp.getKeyBindings().addChangeListener(this);
-
         // Prepare the key binding dialog box
 
-        this.keyBindDialog = new KeyBindFrame();
+        this.keyBindDialog = new KeyBindFrame(this);
         keyBindDialog.pack();
 
         keyBindDialog.addComponentListener(new ComponentAdapter() {
@@ -225,40 +246,49 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
             return null;
     	}
     	
-    	// Load preferences for this ontology first, so that keys can be bound during tree loading
+    	try {
+        	// Load preferences for this ontology first, so that keys can be bound during tree loading
+        	
+        	loadKeyBindPrefs(ontologyRoot);
+        	
+        	// Clear the key bindings
+        	
+        	ConsoleApp.getKeyBindings().clearBindings();
+        	
+            // Create a new tree and add all the nodes to it
+
+            OntologyTerm rootAE = new OntologyTerm(ontologyRoot,null);
+            rootAE.setAction(new NavigateToNodeAction(rootAE));
+
+            selectedTree = new DynamicTree(new OntologyTreeCellRenderer(), rootAE);
+            addNodes(selectedTree, null, rootAE);
+            selectedTree.expandAll(true);
+
+            // Replace the default key listener on the tree
+            
+            final JTree tree = selectedTree.getTree();
+            KeyListener defaultKeyListener = tree.getKeyListeners()[0];
+            tree.removeKeyListener(defaultKeyListener);
+            tree.addKeyListener(keyListener);
+
+            // Set the mouse listener which keeps track of doubleclicks on nodes, and rightclicks to show the context menu
+
+            tree.addMouseListener(mouseListener);
+
+            // Replace the tree in the panel
+
+            treesPanel.removeAll();
+            treesPanel.add(selectedTree);
+
+            this.updateUI();
+    	}
+    	catch (Exception e) {
+			JOptionPane.showMessageDialog(this, "Error loading ontology", "Ontology Load Error", JOptionPane.ERROR_MESSAGE);
+            treesPanel.removeAll();
+            this.updateUI();
+            return null;
+    	}
     	
-    	loadKeyBindPrefs(ontologyRoot);
-    	
-    	// Clear the key bindings
-    	
-    	ConsoleApp.getKeyBindings().clearBindings();
-    	
-        // Create a new tree and add all the nodes to it
-
-        OntologyTerm rootAE = new OntologyTerm(ontologyRoot,null);
-        rootAE.setAction(new NavigateToNodeAction(rootAE));
-
-        selectedTree = new DynamicTree(new OntologyTreeCellRenderer(), rootAE);
-        addNodes(selectedTree, null, rootAE);
-        selectedTree.expandAll(true);
-
-        // Replace the default key listener on the tree
-        
-        final JTree tree = selectedTree.getTree();
-        KeyListener defaultKeyListener = tree.getKeyListeners()[0];
-        tree.removeKeyListener(defaultKeyListener);
-        tree.addKeyListener(keyListener);
-
-        // Set the mouse listener which keeps track of doubleclicks on nodes, and rightclicks to show the context menu
-
-        tree.addMouseListener(mouseListener);
-
-        // Replace the tree in the panel
-
-        treesPanel.removeAll();
-        treesPanel.add(selectedTree);
-
-        this.updateUI();
         return selectedTree;
     }
 
@@ -304,8 +334,10 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
     /**
      * Save the key binds for the current ontology.
      */
-    private void saveKeyBinds() {
+    public void saveKeyBinds() {
 
+    	System.out.println("Saving key bindings");
+    	
     	try {
         	User user = EJBFactory.getRemoteComputeBean().getUserByName(System.getenv("USER"));
         	Long rootNodeId = getOntologyTermFromTreeNode(selectedTree.getRootNode()).getEntity().getId();
@@ -351,10 +383,7 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
     	// Check if there is a keyboard shortcut preference for this entity
     	KeyboardShortcut shortcut = entityId2Shortcut.get(node.getEntity().getId().toString());
     	if (shortcut != null) {
-    		// Disable listener so that we don't save the prefs for every pref we load
-    		ConsoleApp.getKeyBindings().removeChangeListener(this);
         	ConsoleApp.getKeyBindings().setBinding(shortcut, node.getAction());
-        	ConsoleApp.getKeyBindings().addChangeListener(this);
     	}
     	
         DefaultMutableTreeNode newNode;
@@ -412,12 +441,16 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
             }
         }
         else if (BIND_MODE_COMMAND.equals(command)) {
-        	// Transfer focus to a node in the tree in preparation for key presses
-        	selectedTree.getTree().grabFocus();
-        	if (selectedTree.getCurrentNode() == null) {
-        		selectedTree.setCurrentNode(selectedTree.getRootNode());
-        	}
-        	
+            if (keyBindButton.isSelected()) {
+            	// Transfer focus to a node in the tree in preparation for key presses
+            	selectedTree.getTree().grabFocus();
+            	if (selectedTree.getCurrentNode() == null) {
+            		selectedTree.setCurrentNode(selectedTree.getRootNode());
+            	}	
+            }
+            else {
+            	saveKeyBinds();
+            }
         }
         else if (command.startsWith(ADD_COMMAND)) {
 
@@ -548,53 +581,15 @@ public class OntologyOutline extends JPanel implements ActionListener, KeybindCh
     	AbstractEntityTable privateTable = ontologyManager.getPrivateTable();
     	if (selectedTree == null) {
 	    	List<Entity> entities = privateTable.getEntityList();
-	    	if (entities == null || entities.isEmpty()) return;
+	    	if (entities == null || entities.isEmpty()) {
+	    		initializeTree(null);
+	    		return;
+	    	}
 	    	initializeTree(entities.get(0));
     	}
     	// We got the data, no need to listen any longer
     	privateTable.removeDataListener(this);
 	}
 
-
-	@Override
-	public void keybindChange(KeybindChangeEvent evt) {
-        // Save all the key bindings
-        // TODO: in the future, save just the one that changed
-        saveKeyBinds();
-	}
-
-	// Listen for key strokes and execute the appropriate key bindings
-    private KeyListener keyListener = new KeyAdapter() {
-
-        @Override
-        public void keyPressed(KeyEvent e) {
-            if (e.getID() == KeyEvent.KEY_PRESSED) {
-                if (KeymapUtil.isModifier(e)) return;
-                KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
-
-                if (keyBindButton.isSelected()) {
-
-                    // Set the key bind
-                    OntologyTerm actionEntity = getOntologyTermFromTreeNode(selectedTree.getCurrentNode());
-                    ConsoleApp.getKeyBindings().setBinding(shortcut, actionEntity.getAction());
-                    
-                    // Refresh the entire tree (another key bind may have been overridden)
-                    // TODO: this is very slow on large trees...
-
-                    JTree tree = selectedTree.getTree();
-                    DefaultTreeModel treeModel = (DefaultTreeModel)tree.getModel();
-                    selectedTree.refreshDescendants((DefaultMutableTreeNode)treeModel.getRoot());
-
-                    // Move to the next row
-
-                    selectedTree.navigateToNextRow();
-
-                }
-                else {
-                    ConsoleApp.getKeyBindings().executeBinding(shortcut);
-                }
-            }
-        }
-    };
 
 }

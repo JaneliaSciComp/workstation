@@ -9,7 +9,6 @@ package org.janelia.it.FlyWorkstation.gui.framework.keybind;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
@@ -22,22 +21,12 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
  */
 public class KeyBindings {
 
-	private List<KeybindChangeListener> listeners = new ArrayList<KeybindChangeListener>();
-	
     private Map<KeyboardShortcut, Action>bindings;
 
     public KeyBindings() {
         this.bindings = new HashMap<KeyboardShortcut, Action>();
     }
-   
-    public boolean addChangeListener(KeybindChangeListener o) {
-		return listeners.add(o);
-	}
-
-	public boolean removeChangeListener(KeybindChangeListener o) {
-		return listeners.remove(o);
-	}
-
+  
 	public Action getConflict(KeyboardShortcut shortcut) {
         return bindings.get(shortcut);
     }
@@ -68,10 +57,6 @@ public class KeyBindings {
         }
         // Now we can add the new shortcut
         bindings.put(shortcut, action);
-        
-        for(KeybindChangeListener listener : listeners) {
-        	listener.keybindChange(new KeybindChangeEvent(this, shortcut, action));
-        }
     }
 
     public void clearBindings() {

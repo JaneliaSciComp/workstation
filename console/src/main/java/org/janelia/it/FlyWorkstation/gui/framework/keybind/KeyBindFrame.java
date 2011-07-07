@@ -8,6 +8,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.keybind;
 
 import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
 
 import javax.swing.*;
 import java.awt.*;
@@ -23,12 +24,15 @@ public class KeyBindFrame extends JDialog implements ActionListener {
     private static final String CLICKED_OK = "clicked_ok";
     private static final String CLICKED_CANCEL = "clicked_cancel";
 
+    private OntologyOutline ontologyOutline;
     private JTextArea conflictInfoArea;
     private ShortcutTextField shortcutField;
     private Action actionToBind;
 
-    public KeyBindFrame() {
+    public KeyBindFrame(OntologyOutline ontologyOutline) {
 
+    	this.ontologyOutline = ontologyOutline;
+    	
         setTitle("Enter Keyboard Shortcut");
         setSize(200, 200);
         getContentPane().setLayout(new BorderLayout());
@@ -120,6 +124,7 @@ public class KeyBindFrame extends JDialog implements ActionListener {
 
             KeyboardShortcut keyboardShortcut = getKeyboardShortcut();
             ConsoleApp.getKeyBindings().setBinding(keyboardShortcut, actionToBind);
+            ontologyOutline.saveKeyBinds();
             setVisible(false);
         }
         else if (CLICKED_CANCEL.equals(cmd)) {
