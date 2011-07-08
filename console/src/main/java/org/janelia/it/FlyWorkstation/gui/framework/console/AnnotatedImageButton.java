@@ -27,12 +27,14 @@ public class AnnotatedImageButton extends JToggleButton {
     private final List<String> tags = new ArrayList<String>();
     private final JPanel tagPanel;
     private final JLabel imageLabel;
+    private final String title;
     private final String imageFilename;
 	private BufferedImage maxSizeImage;
 	private double scale;
 	
     public AnnotatedImageButton(String title, String imageFilename, final int index) {
     	
+    	this.title = title;
         this.imageFilename = imageFilename;
         
         GridBagConstraints c = new GridBagConstraints();
@@ -121,8 +123,15 @@ public class AnnotatedImageButton extends JToggleButton {
     	return imageLabel.getIcon();
     }
     
-    
-    private synchronized void setScale(double scale) {
+	public String getTitle() {
+		return title;
+	}
+
+	public String getImageFilename() {
+		return imageFilename;
+	}
+
+	private synchronized void setScale(double scale) {
 		this.scale = scale;
 	}
 
@@ -167,17 +176,21 @@ public class AnnotatedImageButton extends JToggleButton {
     /**
      * Add or remove the given tag from the currently selected image button.
      * @param tag
+     * @return true if tag was added
      */
-    public void addOrRemoveTag(String tag) {
+    public boolean addOrRemoveTag(String tag) {
 
         if (tags.contains(tag)) {
             tags.remove(tag);
+            refreshTags();
+            return false;
         }
         else {
             tags.add(tag);
+            refreshTags();
+            return true;
         }
 
-        refreshTags();
     }
 
 	    

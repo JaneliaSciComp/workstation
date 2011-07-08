@@ -24,7 +24,6 @@ import javax.swing.event.ChangeListener;
 import org.janelia.it.FlyWorkstation.gui.application.SplashPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationToolbar;
 
-
 /**
  * This panel shows titled images in a grid with optional textual annotation tags beneath each one.
  * 
@@ -98,13 +97,22 @@ public class IconDemoPanel extends JPanel {
             e.printStackTrace();
         }
     }
+    
+    /**
+     * Return the currently selected image.
+     * @return
+     */
+    public AnnotatedImageButton getSelectedImage() {
+    	// TODO: this should probably return an Entity, not the Component
+    	return imagesPanel.getSelectedImage();
+    }
 
     /**
      * Add or remove the given tag from the currently selected image.
      * @param tag
      */
-    public void addOrRemoveTag(String tag) {
-        imagesPanel.addOrRemoveTag(tag);
+    public boolean addOrRemoveTag(String tag) {
+        return imagesPanel.addOrRemoveTag(tag);
     }
 
 }

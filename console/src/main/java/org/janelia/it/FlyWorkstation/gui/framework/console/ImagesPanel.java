@@ -120,6 +120,17 @@ public class ImagesPanel extends JPanel implements Scrollable {
     		button.rescaleImage(imageSizePercent);
         }
 	}
+    
+    /**
+     * Returns the currently selected image button in the panel.
+     * @return
+     */
+    public AnnotatedImageButton getSelectedImage() {
+        if (currIndex == null || currIndex >= buttons.size()) {
+        	return null;
+        }
+        return buttons.get(currIndex);
+    }
 
     /**
      * Set the number of columns in the grid layout based on the width of the parent component and the width of the
@@ -147,11 +158,14 @@ public class ImagesPanel extends JPanel implements Scrollable {
      * Add or remove the given tag from the currently selected image button.
      * @param tag
      */
-    public void addOrRemoveTag(String tag) {
-        if (currIndex == null || currIndex >= buttons.size()) return;
+    public boolean addOrRemoveTag(String tag) {
+        if (currIndex == null || currIndex >= buttons.size()) {
+        	throw new IllegalStateException("Cannot add a tag when there is no button selected");
+        }
         AnnotatedImageButton currButton = buttons.get(currIndex);
-        currButton.addOrRemoveTag(tag);
+        boolean added = currButton.addOrRemoveTag(tag);
         SwingUtilities.updateComponentTreeUI(ImagesPanel.this);
+        return added;
     }
     
     @Override
