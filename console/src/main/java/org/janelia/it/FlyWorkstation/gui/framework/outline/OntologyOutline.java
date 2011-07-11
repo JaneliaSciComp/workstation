@@ -265,7 +265,6 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
             
         };
 
-
         loadingWorker.execute();
     }
     

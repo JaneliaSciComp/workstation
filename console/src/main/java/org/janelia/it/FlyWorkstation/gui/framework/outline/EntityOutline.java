@@ -1,19 +1,17 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import java.awt.BorderLayout;
 import java.util.List;
 
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
-import javax.swing.SwingWorker;
+import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
-
-import sun.awt.VerticalBagLayout;
 
 /**
  * Created by IntelliJ IDEA.
@@ -25,43 +23,87 @@ import sun.awt.VerticalBagLayout;
 public class EntityOutline extends JScrollPane implements Cloneable {
 
     private final JPopupMenu popupMenu;
-
+    private final JPanel treesPanel;
+    
     public EntityOutline() {
         // Create context menus
         popupMenu = new JPopupMenu();
         popupMenu.setLightWeightPopupEnabled(true);
 
-        // Populate the tree view with the user's first tree
-        // Load the tree in the background so that the app starts up first
-        SwingWorker<Void, Void> loadTasks = new SwingWorker<Void, Void>() {
-            @Override
-            protected Void doInBackground() throws Exception {
-                try {
-                    List<Entity> entityRootList = EJBFactory.getRemoteAnnotationBean().getCommonRootEntitiesByType(EntityConstants.TYPE_FOLDER_ID);
-                    if (null != entityRootList
-                            && entityRootList.size() >= 1) {
-                        initializeTree(entityRootList);
-                    }
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
-                return null;
+        treesPanel = new JPanel(new BorderLayout());
+        setViewportView(treesPanel);
+        
+		treesPanel.add(new JLabel(Icons.loadingIcon));
+
+		SimpleWorker loadingWorker = new SimpleWorker() {
+
+			private List<Entity> entityRootList;
+			
+            protected void doStuff() throws Exception {
+            	entityRootList = EJBFactory.getRemoteAnnotationBean().getCommonRootEntitiesByType(EntityConstants.TYPE_FOLDER_ID);
             }
+
+			protected void hadSuccess() {
+				if (null != entityRootList && entityRootList.size() >= 1) {
+                    initializeTree(entityRootList.get(0).getId());
+                }
+			}
+			
+			protected void hadError(Throwable error) {
+				error.printStackTrace();
+				JOptionPane.showMessageDialog(EntityOutline.this, "Error loading folders", "Folder Load Error", JOptionPane.ERROR_MESSAGE);
+	            treesPanel.removeAll();
+	            EntityOutline.this.updateUI();
+			}
+            
         };
-        loadTasks.execute();
+
+        loadingWorker.execute();
     }
 
-    private void initializeTree(List<Entity> entities) {
-        JPanel treesPanel = new JPanel(new VerticalBagLayout());
-        for (Entity entity : entities) {
-            // Create a new tree and add all the nodes to it
-            DynamicTree newTree = new DynamicTree(entity);
-            addNodes(newTree, null, entity);
-            treesPanel.add(newTree);
-        }
-        setViewportView(treesPanel);
+    private void initializeTree(final Long rootId) {
+
+        treesPanel.removeAll();
+        
+        if (rootId == null) return;
+        
+		treesPanel.add(new JLabel(Icons.loadingIcon));
         this.updateUI();
+        
+		SimpleWorker loadingWorker = new SimpleWorker() {
+
+			private Entity rootEntity;
+        	
+            protected void doStuff() throws Exception {
+            	rootEntity = EJBFactory.getRemoteAnnotationBean().getEntityTree(rootId);
+            }
+
+			protected void hadSuccess() {
+				try {
+			        // Create a new tree and add all the nodes to it
+			        DynamicTree newTree = new DynamicTree(rootEntity);
+			        addNodes(newTree, null, rootEntity);
+			        
+		            treesPanel.removeAll();
+			        treesPanel.add(newTree);
+			        
+			        EntityOutline.this.updateUI();
+				}
+				catch (Exception e) {
+					hadError(e);
+				}
+			}
+			
+			protected void hadError(Throwable error) {
+				error.printStackTrace();
+				JOptionPane.showMessageDialog(EntityOutline.this, "Error loading folders", "Folder Load Error", JOptionPane.ERROR_MESSAGE);
+	            treesPanel.removeAll();
+	            EntityOutline.this.updateUI();
+			}
+            
+        };
+
+        loadingWorker.execute();
     }
 
     private void addNodes(DynamicTree tree, DefaultMutableTreeNode parentNode, Entity newEntity) {
@@ -75,12 +117,12 @@ public class EntityOutline extends JScrollPane implements Cloneable {
         }
 
         List<EntityData> dataList = newEntity.getOrderedEntityData();
-        for (EntityData tmpData : dataList) {
-        	// The tree was fetched with getCommonRootEntitiesByType, so the child entities have already been prepopulated
-            Entity childEntity = tmpData.getChildEntity();
-            if (childEntity != null) {
-                addNodes(tree, newNode, childEntity);
-            }
+        for (EntityData entityData : dataList) {
+    		// The tree was fetched with getEntityTree, so the child entities have already been prepopulated
+        	Entity child = entityData.getChildEntity();
+        	if (child != null) {
+        		addNodes(tree, newNode, child);
+        	}
         }
     }
 
