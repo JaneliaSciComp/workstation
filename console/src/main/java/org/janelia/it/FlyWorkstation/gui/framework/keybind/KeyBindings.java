@@ -13,7 +13,6 @@ import java.util.Map;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OntologyElementAction;
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
-import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
 import org.janelia.it.jacs.model.user_data.User;
 import org.janelia.it.jacs.model.user_data.prefs.UserPreference;
@@ -100,7 +99,7 @@ public class KeyBindings {
      * Load the key binding preferences for a given ontology. 
      * @param ontologyRoot
      */
-    public void loadOntologyKeybinds(OntologyRoot root, Map<OntologyElement, Action> ontologyActionMap) {
+    public void loadOntologyKeybinds(OntologyRoot root, Map<Long, Action> entityActionMap) {
 
     	System.out.println("Loading key bindings for ontology "+root.getName());
     	
@@ -116,20 +115,13 @@ public class KeyBindings {
         		
         		try {
             		long entityId = Long.parseLong(pref.getValue());
-            		OntologyElement element = root.getElementById(entityId);
-            		if (element == null) {
-            			// This means that the element was deleted but the keybind remains. It's ok because 
-            			// it will get deleted the next time the ontology is saved.
-            		}
-            		else {
-            			Action action = ontologyActionMap.get(element);
-            			if (action == null) {
-            				System.out.println("Ontology does not have an action for element "+entityId);
-            			}
-            			else {
-            				ontologyBindings.put(shortcut, action);	
-            			}
-            		}
+        			Action action = entityActionMap.get(entityId);
+        			if (action == null) {
+        				System.out.println("Ontology does not have an action for element "+entityId);
+        			}
+        			else {
+        				ontologyBindings.put(shortcut, action);	
+        			}
         		}
         		catch (Exception e) {
         			System.out.println("Could not load key binding from user preference '"+pref.getValue()+"'.");

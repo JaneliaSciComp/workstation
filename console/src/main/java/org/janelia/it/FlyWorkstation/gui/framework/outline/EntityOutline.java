@@ -74,13 +74,12 @@ public class EntityOutline extends JScrollPane implements Cloneable {
             newNode = tree.rootNode;
         }
 
-        if (newEntity.getEntityData() != null) {
-            List<EntityData> dataList = newEntity.getOrderedEntityData();
-            for (EntityData tmpData : dataList) {
-                Entity childEntity = tmpData.getChildEntity();
-                if (childEntity != null) {
-                    addNodes(tree, newNode, childEntity);
-                }
+        List<EntityData> dataList = newEntity.getOrderedEntityData();
+        for (EntityData tmpData : dataList) {
+        	// The tree was fetched with getCommonRootEntitiesByType, so the child entities have already been prepopulated
+            Entity childEntity = tmpData.getChildEntity();
+            if (childEntity != null) {
+                addNodes(tree, newNode, childEntity);
             }
         }
     }

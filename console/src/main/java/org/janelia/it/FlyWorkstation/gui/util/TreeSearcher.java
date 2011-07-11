@@ -1,7 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.util;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import javax.swing.text.Position.Bias;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -65,7 +65,7 @@ public class TreeSearcher {
 			if (found != null) return found;
 		}
 		
-		ArrayList<DefaultMutableTreeNode> children = Collections.list(currNode.children());
+		List<DefaultMutableTreeNode> children = Collections.list(currNode.children());
 		if (bias == Bias.Backward) Collections.reverse(children);
 		for(DefaultMutableTreeNode child : children) {
 			DefaultMutableTreeNode found = find(child);

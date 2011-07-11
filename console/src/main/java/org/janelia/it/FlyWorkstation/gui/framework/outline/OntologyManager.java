@@ -312,7 +312,7 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 
     	final OntologyRoot root = getSelectedOntology();
 		if (root != null) {
-			ontologyOutline.initializeTree(root);
+			ontologyOutline.initializeTree(root.getId());
             setVisible(false);
 		}
 		else {
@@ -344,7 +344,7 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 	        	private Entity newRoot;
 	        	
 	            protected void doStuff() throws Exception {
-	            	newRoot = EJBFactory.getRemoteAnnotationBean().publishOntology(root.getEntity(), rootName);
+	            	newRoot = EJBFactory.getRemoteAnnotationBean().publishOntology(root.getId(), rootName);
 	            }
 
 				protected void hadSuccess() {
@@ -393,7 +393,7 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 	        SimpleWorker worker = new SimpleWorker() {
 	        	
 	            protected void doStuff() throws Exception {
-	            	EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(System.getenv("USER"), rootEntity.getId().toString());
+	            	EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(System.getenv("USER"), root.getId().toString());
 	            	ConsoleApp.getKeyBindings().removeOntologyKeybinds(root);        	
 	            }
 
@@ -424,8 +424,6 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 
     	final OntologyRoot root = getSelectedOntology();
 		if (root != null) {
-	    	final Entity rootEntity = root.getEntity();
-
 			final String rootName = (String) JOptionPane.showInputDialog(this,
 					"New Ontology Name:\n", "Clone Ontology",
 					JOptionPane.PLAIN_MESSAGE, null, null, root.getName());
@@ -444,7 +442,7 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 	        	private Entity newRoot;
 	        	
 	            protected void doStuff() throws Exception {
-	            	newRoot = EJBFactory.getRemoteAnnotationBean().cloneEntityTree(rootEntity, System.getenv("USER"), rootName);
+	            	newRoot = EJBFactory.getRemoteAnnotationBean().cloneEntityTree(root.getId(), System.getenv("USER"), rootName);
 	            }
 
 				protected void hadSuccess() {

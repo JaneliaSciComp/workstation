@@ -285,11 +285,14 @@ public class DataviewFrame extends JFrame {
         }
 
         public void showEntity(final Entity entity) {
+
             titleLabel.setText("Entity: "+entity.getEntityType().getName()+" ("+entity.getName()+")");
             List<Entity> entities = new ArrayList<Entity>();
             entities.add(entity);
-            table.setModel(updateTableModel(entities));
+    		tableModel = updateTableModel(entities);
+            table.setModel(tableModel);
             Utils.autoResizeColWidth(table);
+            entityDetailPane.showEmpty();
             table.getSelectionModel().setSelectionInterval(0, 0);
         }
 
@@ -407,7 +410,16 @@ public class DataviewFrame extends JFrame {
                 @Override
                 protected Void doInBackground() throws Exception {
                     try {
-                        tableModel = updateTableModel(entity.getOrderedEntityData());
+                    	List<EntityData> datas = entity.getOrderedEntityData();
+
+                    	for(EntityData data : datas) {
+                    		Entity child = data.getChildEntity();
+                    		if (child != null) {
+                    			data.setChildEntity(EJBFactory.getRemoteAnnotationBean().getEntityById(child.getId().toString()));	
+                    		}
+                    	}
+                	    
+                        tableModel = updateTableModel(datas);
                     }
                     catch (Exception e) {
                         e.printStackTrace();
