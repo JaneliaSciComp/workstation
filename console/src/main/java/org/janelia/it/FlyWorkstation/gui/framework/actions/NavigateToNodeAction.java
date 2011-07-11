@@ -7,21 +7,16 @@
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
 import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyTerm;
 
 /**
  * This action expands or collapses the corresponding entity node in the ontology tree.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class NavigateToNodeAction extends OntologyTermAction {
-
-    public NavigateToNodeAction(OntologyTerm ontologyTerm) {
-        super(ontologyTerm);
-    }
+public class NavigateToNodeAction extends OntologyElementAction {
 
     @Override
     public void doAction() {
-        ConsoleApp.getMainFrame().getOntologyOutline().navigateToOntologyTerm(getOntologyTerm());
+        ConsoleApp.getMainFrame().getOntologyOutline().navigateToOntologyElement(getOntologyElement());
     }
 }

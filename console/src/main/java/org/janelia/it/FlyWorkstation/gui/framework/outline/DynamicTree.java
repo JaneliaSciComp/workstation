@@ -9,7 +9,12 @@ package org.janelia.it.FlyWorkstation.gui.framework.outline;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.awt.event.InputEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -17,6 +22,8 @@ import javax.swing.JTree;
 import javax.swing.text.Position;
 import javax.swing.tree.*;
 
+import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.NavigateToNodeAction;
 import org.janelia.it.FlyWorkstation.gui.util.TreeSearcher;
 
 /**
@@ -29,10 +36,13 @@ public class DynamicTree extends JPanel {
 
     protected DefaultMutableTreeNode rootNode;
     protected DefaultTreeModel treeModel;
-    protected JTree tree;
+    protected final JTree tree;
     private Toolkit toolkit = Toolkit.getDefaultToolkit();
 
-    public DynamicTree(DefaultTreeCellRenderer cellRenderer, Object userObject) {
+    private Map<DefaultMutableTreeNode,Action> actionMap = new HashMap<DefaultMutableTreeNode,Action>();
+    
+    
+    public DynamicTree(Object userObject) {
         super(new BorderLayout());
 
         rootNode = new DefaultMutableTreeNode(userObject);
@@ -42,14 +52,64 @@ public class DynamicTree extends JPanel {
         tree.setRowHeight(25);
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         tree.setShowsRootHandles(true);
-        tree.setCellRenderer(cellRenderer);
 
+        // Set the mouse listener which keeps track of doubleclicks on nodes, and rightclicks to show the context menu
+
+        tree.addMouseListener(new MouseAdapter() {
+            public void mouseReleased(MouseEvent e) {
+
+                int row = tree.getRowForLocation(e.getX(), e.getY());
+                if (row >= 0) {
+                    tree.setSelectionRow(row);
+                    if (e.isPopupTrigger()) {
+                        showPopupMenu(e);
+                    }
+                    // This masking is to make sure that the right button is being double clicked, not left and then right or right and then left
+                    else if (e.getClickCount()==2 
+                    		&& e.getButton()==MouseEvent.BUTTON1 
+                    		&& (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
+                        Action action = getActionForNode(getCurrentNode());
+                        if (action != null && !(action instanceof NavigateToNodeAction)) {
+                        	action.doAction();
+                        }
+                    }
+                }
+            }
+            public void mousePressed(MouseEvent e) {
+                // We have to also listen for mousePressed because OSX generates the popup trigger here
+                // instead of mouseReleased like any sane OS.
+                int row = tree.getRowForLocation(e.getX(), e.getY());
+                if (row >= 0) {
+                    tree.setSelectionRow(row);
+                    if (e.isPopupTrigger()) {
+                        showPopupMenu(e);
+                    }
+                }
+            }
+        });
+        
+        
         DynamicTreeToolbar toolbar = new DynamicTreeToolbar(this);
         add(toolbar, BorderLayout.PAGE_START);
         
         JScrollPane scrollPane = new JScrollPane(tree);
         scrollPane.setPreferredSize(new Dimension(300,800));
         add(scrollPane, BorderLayout.CENTER);
+    }
+
+    /**
+     * Override this method to show a popup menu when the user right clicks a node in the tree.
+     * @param e
+     */
+    protected void showPopupMenu(MouseEvent e) {
+    }
+    
+    /**
+     * Set the cell renderer on the underlying JTree.
+     * @param cellRenderer
+     */
+    public void setCellRenderer(TreeCellRenderer cellRenderer) {
+    	tree.setCellRenderer(cellRenderer);
     }
 
     /**
@@ -147,6 +207,24 @@ public class DynamicTree extends JPanel {
         return childNode;
     }
 
+    /**
+     * Set an associated action for the node.
+     * @param node
+     * @param action
+     */
+    public void setActionForNode(DefaultMutableTreeNode node, Action action) {
+    	actionMap.put(node, action);
+    }
+    
+    /**
+     * Get the associated action for the given node.
+     * @param node
+     * @return
+     */
+    public Action getActionForNode(DefaultMutableTreeNode node) {
+    	return actionMap.get(node);
+    }
+    
     /**
      * Expand or collapse all the nodes in the tree.
      * @param expand expand or collapse?

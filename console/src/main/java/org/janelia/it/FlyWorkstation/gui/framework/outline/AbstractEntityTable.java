@@ -21,9 +21,9 @@ import org.janelia.it.jacs.model.entity.Entity;
  */
 public abstract class AbstractEntityTable extends JScrollPane {
 
-	private final JTable table;
+	protected final JTable table;
+	protected final JComponent loadingView;
 	private final List<Entity> entityList = new ArrayList<Entity>();
-	private final JComponent loadingView;
 	private final List<DataAvailabilityListener> listeners = new ArrayList<DataAvailabilityListener>();
 	private SimpleWorker loadingWorker;
 	
@@ -141,17 +141,13 @@ public abstract class AbstractEntityTable extends JScrollPane {
             }
 
 			protected void hadSuccess() {
-                table.setModel(tableModel);
-                Utils.autoResizeColWidth(table);
-                if (selectWhenDone != null) {
-                	selectEntity(selectWhenDone);
-                }
-                setLoading(false);
-                // Must clone in case removeDataListener gets called by the listener
-                List<DataAvailabilityListener> clone = new ArrayList<DataAvailabilityListener>(listeners);
-                for(DataAvailabilityListener listener : clone) {
-                	listener.dataReady(new DataReadyEvent(AbstractEntityTable.this));
-                }
+		        table.setModel(tableModel);
+		        Utils.autoResizeColWidth(table);
+		        if (selectWhenDone != null) {
+		        	selectEntity(selectWhenDone);
+		        }
+		        setLoading(false);
+		        postLoad();
 			}
 			
 			protected void hadError(Throwable error) {
@@ -161,6 +157,18 @@ public abstract class AbstractEntityTable extends JScrollPane {
         };
         
         loadingWorker.execute();
+    }
+
+    /**
+     * Called after the entityList has been populated and the table has been updated.
+     * @return
+     */
+    protected void postLoad() {
+        // Must clone in case removeDataListener gets called by the listener
+        List<DataAvailabilityListener> clone = new ArrayList<DataAvailabilityListener>(listeners);
+        for(DataAvailabilityListener listener : clone) {
+        	listener.dataReady(new DataReadyEvent(AbstractEntityTable.this));
+        }
     }
     
     /**

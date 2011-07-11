@@ -11,9 +11,9 @@ import java.util.Set;
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.ontology.Category;
-import org.janelia.it.jacs.model.ontology.OntologyTermType;
-import org.janelia.it.jacs.model.ontology.Tag;
+import org.janelia.it.jacs.model.ontology.types.Category;
+import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
+import org.janelia.it.jacs.model.ontology.types.Tag;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.io.OWLOntologyCreationIOException;
 import org.semanticweb.owlapi.io.OWLParser;
@@ -201,7 +201,7 @@ public class OWLDataLoader extends SimpleWorker {
 			}
 		}
 
-		OntologyTermType type = hasChildren ? new Category() : new Tag();
+		OntologyElementType type = hasChildren ? new Category() : new Tag();
 		Entity newNode = saveObjects ? EJBFactory.getRemoteAnnotationBean().createOntologyTerm(System.getenv("USER"), 
 				parentEntity.getId().toString(), label, type, orderIndex) : new Entity();
 		incrementProgress();

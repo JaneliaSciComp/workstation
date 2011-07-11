@@ -12,7 +12,6 @@ import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.*;
@@ -21,9 +20,8 @@ import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.ontology.OWLDataLoader;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.ontology.OntologyRoot;
 import org.semanticweb.owlapi.model.OWLException;
 
 /**
@@ -44,8 +42,8 @@ public class OntologyManager extends JDialog implements ActionListener, Property
     private JPopupMenu privateMenu;
     private JPopupMenu publicMenu;
     
-    private final AbstractEntityTable privateTable;
-    private final AbstractEntityTable publicTable;
+    private final AbstractOntologyTable privateTable;
+    private final AbstractOntologyTable publicTable;
     
     private OntologyOutline ontologyOutline;
 	private JTabbedPane tabbedPane;   
@@ -196,36 +194,36 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 	 */
     public void showDialog() {
     	
-    	OntologyTerm rootTerm = ontologyOutline.getCurrentOntology();
+    	OntologyRoot root = ontologyOutline.getCurrentOntology();
     	
-    	if (rootTerm != null && rootTerm.isPublic()) {
+    	if (root != null && root.isPublic()) {
     		tabbedPane.setSelectedIndex(1);
         	privateTable.reloadData(null);
-        	publicTable.reloadData(rootTerm.getEntity());
+        	publicTable.reloadData(root.getEntity());
     	}
     	else {
     		tabbedPane.setSelectedIndex(0);
-        	privateTable.reloadData(rootTerm == null ? null : rootTerm.getEntity());
+        	privateTable.reloadData(root == null ? null : root.getEntity());
         	publicTable.reloadData(null);
     	}
     	
     	setVisible(true);
     }
     
-    public AbstractEntityTable getPrivateTable() {
+    public AbstractOntologyTable getPrivateTable() {
 		return privateTable;
 	}
 
-	public AbstractEntityTable getPublicTable() {
+	public AbstractOntologyTable getPublicTable() {
 		return publicTable;
 	}
 
-	private Entity getSelectedOntology() {
+	private OntologyRoot getSelectedOntology() {
 		if (tabbedPane.getSelectedIndex() == 0) {
-			return privateTable.getSelectedEntity();
+			return privateTable.getSelectedOntology();
 		}
 		else {
-			return publicTable.getSelectedEntity();
+			return publicTable.getSelectedOntology();
 		}
     }
 
@@ -312,7 +310,7 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 
     private void loadSelected() {
 
-    	Entity root = getSelectedOntology();
+    	final OntologyRoot root = getSelectedOntology();
 		if (root != null) {
 			ontologyOutline.initializeTree(root);
             setVisible(false);
@@ -325,7 +323,7 @@ public class OntologyManager extends JDialog implements ActionListener, Property
     
     private void shareSelected() {
 
-    	final Entity root = getSelectedOntology();
+    	final OntologyRoot root = getSelectedOntology();
 		if (root != null) {
 
 			final String rootName = (String) JOptionPane.showInputDialog(this,
@@ -346,7 +344,7 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 	        	private Entity newRoot;
 	        	
 	            protected void doStuff() throws Exception {
-	            	newRoot = EJBFactory.getRemoteAnnotationBean().publishOntology(root, rootName);
+	            	newRoot = EJBFactory.getRemoteAnnotationBean().publishOntology(root.getEntity(), rootName);
 	            }
 
 				protected void hadSuccess() {
@@ -371,15 +369,17 @@ public class OntologyManager extends JDialog implements ActionListener, Property
     
     private void deleteSelected() {
 
-    	final Entity root = getSelectedOntology();
+    	final OntologyRoot root = getSelectedOntology();
 		if (root != null) {
+	    	final Entity rootEntity = root.getEntity();
+	    	
 			int deleteConfirmation = JOptionPane.showConfirmDialog(
 					this, "Are you sure you want to delete the ontology named '"
 					+root.getName()+"'?", "Delete Ontology", JOptionPane.YES_NO_OPTION);
 			
 			if (deleteConfirmation != 0) return;
 			
-			if (!Utils.isEmpty(root.getValueByAttributeName(EntityConstants.ATTRIBUTE_IS_PUBLIC))) {
+			if (root.isPublic()) {
 				deleteConfirmation = JOptionPane.showConfirmDialog(
 						this, "This ontology is public and may be in use by others. Are you absolutely certain you want to delete it?", 
 						"Are you really sure?", JOptionPane.YES_NO_OPTION);
@@ -393,12 +393,12 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 	        SimpleWorker worker = new SimpleWorker() {
 	        	
 	            protected void doStuff() throws Exception {
-	            	EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(System.getenv("USER"), root.getId().toString());
-	            	ontologyOutline.removeKeyBinds(root);        	
+	            	EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(System.getenv("USER"), rootEntity.getId().toString());
+	            	ConsoleApp.getKeyBindings().removeOntologyKeybinds(root);        	
 	            }
 
 				protected void hadSuccess() {
-		            if (root.getId().equals(ontologyOutline.getCurrentOntology().getId())) {
+		            if (rootEntity.getId().equals(ontologyOutline.getCurrentOntology().getId())) {
 		                ontologyOutline.initializeTree(null);
 		            }
 		            table.reloadData(null);
@@ -422,8 +422,9 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 
     private void cloneSelected() {
 
-    	final Entity root = getSelectedOntology();
+    	final OntologyRoot root = getSelectedOntology();
 		if (root != null) {
+	    	final Entity rootEntity = root.getEntity();
 
 			final String rootName = (String) JOptionPane.showInputDialog(this,
 					"New Ontology Name:\n", "Clone Ontology",
@@ -443,7 +444,7 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 	        	private Entity newRoot;
 	        	
 	            protected void doStuff() throws Exception {
-	            	newRoot = EJBFactory.getRemoteAnnotationBean().cloneEntityTree(root, System.getenv("USER"), rootName);
+	            	newRoot = EJBFactory.getRemoteAnnotationBean().cloneEntityTree(rootEntity, System.getenv("USER"), rootName);
 	            }
 
 				protected void hadSuccess() {

@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
@@ -7,14 +8,18 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.ontology.OntologyElement;
+import org.janelia.it.jacs.model.ontology.OntologyRoot;
 
 /**
- * A table for displaying ontologies. 
+ * A table for displaying ontology roots 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public abstract class AbstractOntologyTable extends AbstractEntityTable {
 
+	private final List<OntologyRoot> ontologyRoots = new ArrayList<OntologyRoot>();
+	
     /**
      * Synchronous method for updating the JTable model. Should be called from the EDT.
      */
@@ -49,5 +54,29 @@ public abstract class AbstractOntologyTable extends AbstractEntityTable {
             }
         };
     }
-	
+
+	@Override
+	protected void postLoad() {
+		ontologyRoots.clear();
+		for(Entity entity : getEntityList()) {
+			ontologyRoots.add(new OntologyRoot(entity));
+		}
+		super.postLoad();
+	}
+
+	public List<OntologyRoot> getOntologyRoots() {
+		return ontologyRoots;
+	}
+
+	/**
+     * Get the ontology which is the currently selected row in the table.
+     * @return
+     */
+    public OntologyRoot getSelectedOntology() {
+        int row = table.getSelectedRow();
+        if (row >= 0 && row<ontologyRoots.size()) {
+            return ontologyRoots.get(row);
+        }
+        return null;
+    }
 }

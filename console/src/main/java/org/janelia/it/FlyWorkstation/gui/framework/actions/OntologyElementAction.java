@@ -6,28 +6,28 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
-import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyTerm;
+import org.janelia.it.jacs.model.ontology.OntologyElement;
 
 /**
  * An abstract base class for actions dealing with entities.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class OntologyTermAction implements Action {
+public abstract class OntologyElementAction implements Action {
 
-    private OntologyTerm term;
+    private OntologyElement element;
 
-    public OntologyTermAction(OntologyTerm term) {
-        this.term = term;
+    public void init(OntologyElement element) {
+        this.element = element;
     }
-
-    public OntologyTerm getOntologyTerm() {
-        return term;
+    
+    public OntologyElement getOntologyElement() {
+        return element;
     }
 
     @Override
     public String getName() {
-        return term.getName();
+        return element.getName();
     }
 
     @Override
@@ -36,14 +36,14 @@ public abstract class OntologyTermAction implements Action {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof OntologyTermAction)) return false;
-        OntologyTermAction that = (OntologyTermAction) o;
-        if (!term.equals(that.term)) return false;
+        if (!(o instanceof OntologyElementAction)) return false;
+        OntologyElementAction that = (OntologyElementAction) o;
+        if (!element.equals(that.element)) return false;
         return true;
     }
 
     @Override
     public int hashCode() {
-        return term.hashCode();
+        return element.hashCode();
     }
 }

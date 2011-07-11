@@ -124,7 +124,7 @@ public class KeyBindFrame extends JDialog implements ActionListener {
 
             KeyboardShortcut keyboardShortcut = getKeyboardShortcut();
             ConsoleApp.getKeyBindings().setBinding(keyboardShortcut, actionToBind);
-            ontologyOutline.saveKeyBinds();
+            ConsoleApp.getKeyBindings().saveOntologyKeybinds(ontologyOutline.getCurrentOntology());
             setVisible(false);
         }
         else if (CLICKED_CANCEL.equals(cmd)) {

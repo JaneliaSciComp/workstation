@@ -11,26 +11,22 @@ import javax.swing.JOptionPane;
 import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.framework.console.AnnotatedImageButton;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyTerm;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.ontology.*;
-import org.janelia.it.jacs.model.ontology.Enum;
+import org.janelia.it.jacs.model.ontology.OntologyElement;
+import org.janelia.it.jacs.model.ontology.types.*;
+import org.janelia.it.jacs.model.ontology.types.Enum;
 
 /**
  * This action creates and saves an annotation, and adds a corresponding tag to the currently selected item in an IconDemoPanel.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class AnnotateAction extends OntologyTermAction {
-
-    public AnnotateAction(OntologyTerm term) {
-        super(term);
-    }
+public class AnnotateAction extends OntologyElementAction {
 
     @Override
     public void doAction() {
-        ConsoleApp.getMainFrame().getOntologyOutline().navigateToOntologyTerm(getOntologyTerm());
+        ConsoleApp.getMainFrame().getOntologyOutline().navigateToOntologyElement(getOntologyElement());
         
         AnnotatedImageButton currImage = ConsoleApp.getMainFrame().getViewerPanel().getSelectedImage();
         
@@ -39,8 +35,8 @@ public class AnnotateAction extends OntologyTermAction {
         	return;
         }
         
-        OntologyTerm term = getOntologyTerm();
-        OntologyTermType type = term.getType();
+        OntologyElement term = getOntologyElement();
+        OntologyElementType type = term.getType();
         
         if (type instanceof Category || type instanceof Enum) {
         	// Cannot annotate with a category or enum
@@ -104,7 +100,7 @@ public class AnnotateAction extends OntologyTermAction {
     	String valueString = value;
     	
         if (type instanceof EnumItem) {
-        	keyEntity = term.getParentTerm().getEntity();
+        	keyEntity = term.getParent().getEntity();
         	valueEntity = term.getEntity();
         	keyString = keyEntity.getName();
         	valueString = valueEntity.getName();
@@ -154,4 +150,10 @@ public class AnnotateAction extends OntologyTermAction {
 		};
 		worker.execute();
 	}
+	
+
+	
+	
+	
+	
 }

@@ -7,8 +7,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import java.awt.BorderLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.event.*;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -24,18 +22,20 @@ import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.AnnotateAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.NavigateToNodeAction;
-import org.janelia.it.FlyWorkstation.gui.framework.actions.OntologyTermAction;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.OntologyElementAction;
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
-import org.janelia.it.FlyWorkstation.gui.framework.keybind.*;
+import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyBindFrame;
+import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
+import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.jacs.compute.access.DaoException;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.ontology.*;
-import org.janelia.it.jacs.model.ontology.Enum;
-import org.janelia.it.jacs.model.user_data.User;
-import org.janelia.it.jacs.model.user_data.prefs.UserPreference;
+import org.janelia.it.jacs.model.ontology.OntologyElement;
+import org.janelia.it.jacs.model.ontology.OntologyRoot;
+import org.janelia.it.jacs.model.ontology.types.*;
+import org.janelia.it.jacs.model.ontology.types.Enum;
 
 
 /**
@@ -46,7 +46,6 @@ import org.janelia.it.jacs.model.user_data.prefs.UserPreference;
  */
 public class OntologyOutline extends JPanel implements ActionListener, DataAvailabilityListener {
 	
-	private static final String KEYBIND_PREF_CATEGORY = "Keybind";
 	
     private static final String ADD_COMMAND = "add";
     private static final String REMOVE_COMMAND = "remove";
@@ -55,11 +54,9 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
     private static final String BIND_MODE_COMMAND = "bind_mode";
     private static final String DELIMITER = "#";
 
-    private final List<Class<? extends OntologyTermType>> nodeTypes = new ArrayList<Class<? extends OntologyTermType>>();
-    private final Map<String,KeyboardShortcut> entityId2Shortcut = new HashMap<String,KeyboardShortcut>();
-
+    private final List<Class<? extends OntologyElementType>> nodeTypes = new ArrayList<Class<? extends OntologyElementType>>();
+    
     private final KeyListener keyListener;
-    private final MouseListener mouseListener;
     private final JPanel treesPanel;
     private final KeyBindFrame keyBindDialog;
     private final JToggleButton keyBindButton;
@@ -71,7 +68,10 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
     private final JMenu addMenuPopup;
     private final JMenu addItemPopup;
     
+    private final Map<OntologyElement, Action> ontologyActionMap = new HashMap<OntologyElement, Action>();
     private DynamicTree selectedTree;
+    private OntologyRoot root;
+    
     
     public OntologyOutline() {
         super(new BorderLayout());
@@ -104,7 +104,7 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
         assignShortcutMenuItem.setActionCommand(BIND_EDIT_COMMAND);
 
         addMenuPopup = new JMenu("Add...");
-        for(Class<? extends OntologyTermType> nodeType : nodeTypes) {
+        for(Class<? extends OntologyElementType> nodeType : nodeTypes) {
 			try {
 				JMenuItem smi = new JMenuItem(nodeType.newInstance().getName());
 				smi.addActionListener(this);
@@ -139,8 +139,8 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
                     if (keyBindButton.isSelected()) {
 
                         // Set the key bind
-                        OntologyTerm actionEntity = getOntologyTermFromTreeNode(selectedTree.getCurrentNode());
-                        ConsoleApp.getKeyBindings().setBinding(shortcut, actionEntity.getAction());
+                        Action action = selectedTree.getActionForNode(selectedTree.getCurrentNode());
+                        ConsoleApp.getKeyBindings().setBinding(shortcut, action);
                         
                         // Refresh the entire tree (another key bind may have been overridden)
                         // TODO: this is very slow on large trees...
@@ -161,38 +161,6 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
             }
         };
         
-        mouseListener = new MouseAdapter() {
-            public void mouseReleased(MouseEvent e) {
-                JTree tree = selectedTree.getTree();
-                int row = tree.getRowForLocation(e.getX(), e.getY());
-                if (row >= 0) {
-                    tree.setSelectionRow(row);
-                    if (e.isPopupTrigger()) {
-                        showPopupMenu(e);
-                    }
-                    // This masking is to make sure that the right button is being double clicked, not left and then right or right and then left
-                    else if (e.getClickCount()==2 
-                    		&& e.getButton()==MouseEvent.BUTTON1 
-                    		&& (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
-                        OntologyTerm currTerm = getOntologyTermFromTreeNode(selectedTree.getCurrentNode());
-                        if (!(currTerm.getAction() instanceof NavigateToNodeAction))
-                            currTerm.getAction().doAction();
-                    }
-                }
-            }
-            public void mousePressed(MouseEvent e) {
-                JTree tree = selectedTree.getTree();
-                // We have to also listen for mousePressed because OSX generates the popup trigger here
-                // instead of mouseReleased like any sane OS.
-                int row = tree.getRowForLocation(e.getX(), e.getY());
-                if (row >= 0) {
-                    tree.setSelectionRow(row);
-                    if (e.isPopupTrigger()) {
-                        showPopupMenu(e);
-                    }
-                }
-            }
-        };
 
         // Lay everything out
 
@@ -233,37 +201,65 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
 	}
     
     
-    public OntologyTerm getCurrentOntology() {
-    	if (selectedTree == null) return null;
-    	return getOntologyTermFromTreeNode(selectedTree.getRootNode());
+    public OntologyRoot getCurrentOntology() {
+    	return root;
     }
     
-    DynamicTree initializeTree(Entity ontologyRoot) {
+    DynamicTree initializeTree(OntologyRoot root) {
 
-    	if (ontologyRoot == null) {
+    	this.root = root;
+    	
+    	if (root == null) {
             treesPanel.removeAll();
             this.updateUI();
             return null;
     	}
     	
     	try {
-        	// Load preferences for this ontology first, so that keys can be bound during tree loading
-        	
-        	loadKeyBindPrefs(ontologyRoot);
-        	
-        	// Clear the key bindings
-        	
-        	ConsoleApp.getKeyBindings().clearBindings();
-        	
+    		
             // Create a new tree and add all the nodes to it
 
-            OntologyTerm rootAE = new OntologyTerm(ontologyRoot,null);
-            rootAE.setAction(new NavigateToNodeAction(rootAE));
+    		ontologyActionMap.clear();
+            selectedTree = new DynamicTree(root) {
 
-            selectedTree = new DynamicTree(new OntologyTreeCellRenderer(), rootAE);
-            addNodes(selectedTree, null, rootAE);
-            selectedTree.expandAll(true);
+                protected void showPopupMenu(MouseEvent e) {
 
+                    popupMenu.removeAll();
+                    popupMenu.add(assignShortcutMenuItem);
+                    
+                    if (isEditable()) {
+
+                        OntologyElement curr = getOntologyElement(selectedTree.getCurrentNode());
+                        OntologyElementType type = curr.getType();
+                        
+                        if (type instanceof Enum) {
+                        	popupMenu.add(addItemPopup);
+                        }
+                        else if (type.allowsChildren() || type instanceof Tag) {
+                        	popupMenu.add(addMenuPopup); 
+                        }
+
+                        // Disallow deletion of root nodes. You've gotta use the OntologyManager for that.
+                        if (curr.getParent() != null) {
+                            popupMenu.add(removeNodeMenuItem);
+                        }
+                    }
+                    
+                    popupMenu.show((JComponent)e.getSource(), e.getX(), e.getY());
+                }
+                
+            };
+            
+            selectedTree.setCellRenderer(new OntologyTreeCellRenderer(selectedTree));
+            
+            // Add all the nodes
+            
+            addNodes(null, root);
+
+            // Load key bind actions
+            
+            ConsoleApp.getKeyBindings().loadOntologyKeybinds(root, ontologyActionMap);
+            
             // Replace the default key listener on the tree
             
             final JTree tree = selectedTree.getTree();
@@ -271,18 +267,19 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
             tree.removeKeyListener(defaultKeyListener);
             tree.addKeyListener(keyListener);
 
-            // Set the mouse listener which keeps track of doubleclicks on nodes, and rightclicks to show the context menu
-
-            tree.addMouseListener(mouseListener);
 
             // Replace the tree in the panel
 
             treesPanel.removeAll();
             treesPanel.add(selectedTree);
 
+            // Prepare for display and update the UI
+            
+            selectedTree.expandAll(true);
             this.updateUI();
     	}
     	catch (Exception e) {
+    		e.printStackTrace();
 			JOptionPane.showMessageDialog(this, "Error loading ontology", "Ontology Load Error", JOptionPane.ERROR_MESSAGE);
             treesPanel.removeAll();
             this.updateUI();
@@ -292,130 +289,52 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
         return selectedTree;
     }
 
-    private OntologyTerm getOntologyTermFromTreeNode(DefaultMutableTreeNode targetNode) {
-        return (OntologyTerm)targetNode.getUserObject();
-    }
-
-    private String getEntityNameFromTreeNode(DefaultMutableTreeNode targetNode) {
-        return ((OntologyTerm)targetNode.getUserObject()).getName();
-    }
-
-    private Long getEntityIdFromTreeNode(DefaultMutableTreeNode targetNode) {
-        return ((OntologyTerm)targetNode.getUserObject()).getId();
-    }
-
-    public void navigateToOntologyTerm(OntologyTerm term) {
-        selectedTree.navigateToNodeWithObject(term);
-    }
-
-    /**
-     * Load the key binding preferences for a given ontology. This loads preferences into a local map which is then used
-     * to populate the KeyBindings object during tree load.
-     * @param ontologyRoot
-     */
-    private void loadKeyBindPrefs(Entity ontologyRoot) {
-    	
-    	entityId2Shortcut.clear();
-
-    	try {
-        	User user = EJBFactory.getRemoteComputeBean().getUserByName(System.getenv("USER"));
-        	Map<String,UserPreference> prefs = user.getCategoryPreferences(KEYBIND_PREF_CATEGORY+":"+ontologyRoot.getId());
-        	
-        	for(UserPreference pref : prefs.values()) {
-        		entityId2Shortcut.put(pref.getValue(), KeyboardShortcut.fromString(pref.getName()));
-        	}
-    	}
-    	catch (Exception e) {
-    		System.out.println("Could not load user's key binding preferences");
-    		e.printStackTrace();
-    	}
-    }
-    
-    /**
-     * Save the key binds for the current ontology.
-     */
-    public void saveKeyBinds() {
-
-    	System.out.println("Saving key bindings");
-    	
-    	try {
-        	User user = EJBFactory.getRemoteComputeBean().getUserByName(System.getenv("USER"));
-        	Long rootNodeId = getOntologyTermFromTreeNode(selectedTree.getRootNode()).getEntity().getId();
-
-        	// Delete all keybinds first, to maintain one key per entity
-        	for(String key : user.getCategoryPreferences(KEYBIND_PREF_CATEGORY+":"+rootNodeId).keySet()) {
-        		user.getPreferenceMap().remove(KEYBIND_PREF_CATEGORY+":"+rootNodeId+":"+key);
-        	}
-        	        	
-            for(Map.Entry<KeyboardShortcut, Action> entry : ConsoleApp.getKeyBindings().getBindings().entrySet()) {
-                if (entry.getValue() instanceof OntologyTermAction) {
-                	OntologyTermAction ota = (OntologyTermAction)entry.getValue();
-                	String shortcut = entry.getKey().toString();
-                	Long entityId = ota.getOntologyTerm().getEntity().getId();
-                	user.setPreference(new UserPreference(shortcut, KEYBIND_PREF_CATEGORY+":"+rootNodeId, entityId.toString()));  
-                }
-            }
-
-            EJBFactory.getRemoteComputeBean().genericSave(user);
-    	}
-    	catch (Exception e) {
-    		System.out.println("Could not save user's key binding preferences");
-    		e.printStackTrace();
-    	}
-    }
-    
-    /**
-     * Remove all key binds referencing the given ontology.
-     */
-    public void removeKeyBinds(Entity root) {
-
-    	try {
-            EJBFactory.getRemoteComputeBean().removePreferenceCategory(KEYBIND_PREF_CATEGORY+":"+root.getId());
-    	}
-    	catch (Exception e) {
-    		System.out.println("Could not delete defunct key binding preferences");
-    		e.printStackTrace();
-    	}
-    }
-    
-    private void addNodes(DynamicTree tree, DefaultMutableTreeNode parentNode, OntologyTerm node) {
-    	
-    	// Check if there is a keyboard shortcut preference for this entity
-    	KeyboardShortcut shortcut = entityId2Shortcut.get(node.getEntity().getId().toString());
-    	if (shortcut != null) {
-        	ConsoleApp.getKeyBindings().setBinding(shortcut, node.getAction());
-    	}
+    private void addNodes(DefaultMutableTreeNode parentNode, OntologyElement element) {
     	
         DefaultMutableTreeNode newNode;
         if (parentNode != null) {
-            newNode = tree.addObject(parentNode, node);
+            newNode = selectedTree.addObject(parentNode, element);
         }
         else {
             // If the parent node is null, then the node is already in the tree as the root
-            newNode = tree.rootNode;
+            newNode = selectedTree.rootNode;
         }
-        Entity entity = node.getEntity();
-        if (entity.getEntityData() != null) {
-            for (EntityData tmpData : entity.getOrderedEntityData()) {
-                Entity childEntity = tmpData.getChildEntity();
-                if (childEntity != null) {
-                    OntologyTerm ontologyTerm = new OntologyTerm(childEntity,node);
-                    OntologyTermType type = ontologyTerm.getType();
-                    if (type instanceof Category || type instanceof Enum) {
-                        // These node types don't allow direct annotation actions, just navigate to them
-                        ontologyTerm.setAction(new NavigateToNodeAction(ontologyTerm));
-                    }
-                    else {
-                        // The other node types are annotatable
-                        ontologyTerm.setAction(new AnnotateAction(ontologyTerm));
-                    }
-
-                    addNodes(tree, newNode, ontologyTerm);
-                }
-            }
+        
+        // Define an action for this node
+    	OntologyElementType type = element.getType();
+    	OntologyElementAction action = null;
+    	if (type instanceof Category || type instanceof Enum) {
+    		action = new NavigateToNodeAction();
+    	}
+    	else {
+    		action = new AnnotateAction();
+    	}
+    	action.init(element);
+    	ontologyActionMap.put(element, action);
+    	selectedTree.setActionForNode(newNode, action);
+    	
+    	// Add the node's children
+        for(OntologyElement child : element.getChildren()) {
+        	addNodes(newNode, child);
         }
     }
 
+    private OntologyElement getOntologyElement(DefaultMutableTreeNode targetNode) {
+        return (OntologyElement)targetNode.getUserObject();
+    }
+
+    private String getEntityNameFromTreeNode(DefaultMutableTreeNode targetNode) {
+        return ((OntologyElement)targetNode.getUserObject()).getName();
+    }
+
+    private Long getEntityIdFromTreeNode(DefaultMutableTreeNode targetNode) {
+        return ((OntologyElement)targetNode.getUserObject()).getId();
+    }
+
+    public void navigateToOntologyElement(OntologyElement element) {
+        selectedTree.navigateToNodeWithObject(element);
+    }
+    
     public void actionPerformed(ActionEvent e) {
         String command = e.getActionCommand();
 
@@ -435,9 +354,11 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
         else if (BIND_EDIT_COMMAND.equals(command)) {
             DefaultMutableTreeNode treeNode = selectedTree.getCurrentNode();
             if (treeNode != null) {
-                OntologyTerm ae = getOntologyTermFromTreeNode(treeNode);
-                if (ae != null)
-                    keyBindDialog.showForAction(ae.getAction());
+                OntologyElement element = getOntologyElement(treeNode);
+                if (element != null) {
+                	Action action = selectedTree.getActionForNode(treeNode);
+                    keyBindDialog.showForAction(action);
+                }
             }
         }
         else if (BIND_MODE_COMMAND.equals(command)) {
@@ -449,7 +370,7 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
             	}	
             }
             else {
-            	saveKeyBinds();
+            	ConsoleApp.getKeyBindings().saveOntologyKeybinds(root);
             }
         }
         else if (command.startsWith(ADD_COMMAND)) {
@@ -459,11 +380,11 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
             }
 
             DefaultMutableTreeNode treeNode = selectedTree.getCurrentNode();
-            OntologyTerm actionEntity = getOntologyTermFromTreeNode(treeNode);
-            OntologyTermType parentType = actionEntity.getType();
+            OntologyElement element = getOntologyElement(treeNode);
+            OntologyElementType parentType = element.getType();
 
             String className = command.split(DELIMITER)[1];
-            OntologyTermType childType = OntologyTermType.createTypeByName(className);
+            OntologyElementType childType = OntologyElementType.createTypeByName(className);
             
             // Add button clicked
             String termName = (String)JOptionPane.showInputDialog(
@@ -516,7 +437,7 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
             if (parentType instanceof Tag) {
             	// Adding a child to a Tag, so it must be coerced into a Category
             	
-            	EntityData ed = actionEntity.getEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_ONTOLOGY_TERM_TYPE);
+            	EntityData ed = element.getEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_ONTOLOGY_TERM_TYPE);
             	ed.setValue(Category.class.getSimpleName());
             	
             	try {
@@ -536,41 +457,14 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
      * @return true if the user is allowed to edit the current ontology, false otherwise.
      */
     public boolean isEditable() {
-    	OntologyTerm rootTerm = getOntologyTermFromTreeNode(selectedTree.getRootNode());
-    	return !rootTerm.isPublic();
+    	return !root.isPublic();
     }
 
-    private void showPopupMenu(MouseEvent e) {
-
-        popupMenu.removeAll();
-        popupMenu.add(assignShortcutMenuItem);
-        
-        if (isEditable()) {
-
-            OntologyTerm curr = getOntologyTermFromTreeNode(selectedTree.getCurrentNode());
-            OntologyTermType type = curr.getType();
-            
-            if (type instanceof Enum) {
-            	popupMenu.add(addItemPopup);
-            }
-            else if (type.allowsChildren() || type instanceof Tag) {
-            	popupMenu.add(addMenuPopup); 
-            }
-
-            // Disallow deletion of root nodes. You've gotta use the OntologyManager for that.
-            if (curr.getParentTerm() != null) {
-                popupMenu.add(removeNodeMenuItem);
-            }
-        }
-        
-        popupMenu.show((JComponent)e.getSource(), e.getX(), e.getY());
-    }
-    
-    // todo This is toooooooo brute-force
+    // TODO: This is toooooooo brute-force
     private void updateSelectedTreeEntity(){
         Entity entity = EJBFactory.getRemoteAnnotationBean().getUserEntityById(System.getenv("USER"),getEntityIdFromTreeNode(selectedTree.rootNode));
         if (null != selectedTree || entity.getName().equals(getEntityNameFromTreeNode(selectedTree.rootNode))){
-            initializeTree(entity);
+            initializeTree(new OntologyRoot(entity));
         }
         this.updateUI();
     }
@@ -578,15 +472,15 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
     
     @Override
 	public void dataReady(DataReadyEvent evt) {
-    	AbstractEntityTable privateTable = ontologyManager.getPrivateTable();
+    	AbstractOntologyTable privateTable = ontologyManager.getPrivateTable();
     	if (evt.getSource() != privateTable) return;
     	if (selectedTree == null) {
-	    	List<Entity> entities = privateTable.getEntityList();
-	    	if (entities == null || entities.isEmpty()) {
+	    	List<OntologyRoot> roots = privateTable.getOntologyRoots();
+	    	if (roots == null || roots.isEmpty()) {
 	    		initializeTree(null);
 	    		return;
 	    	}
-	    	initializeTree(entities.get(0));
+	    	initializeTree(roots.get(0));
     	}
     	// We got the data, no need to listen any longer
     	privateTable.removeDataListener(this);

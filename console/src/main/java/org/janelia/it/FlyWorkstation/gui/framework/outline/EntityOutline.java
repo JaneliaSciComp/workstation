@@ -1,15 +1,19 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import java.util.List;
+
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.SwingWorker;
+import javax.swing.tree.DefaultMutableTreeNode;
+
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
-import sun.awt.VerticalBagLayout;
 
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeCellRenderer;
-import java.util.List;
+import sun.awt.VerticalBagLayout;
 
 /**
  * Created by IntelliJ IDEA.
@@ -52,7 +56,7 @@ public class EntityOutline extends JScrollPane implements Cloneable {
         JPanel treesPanel = new JPanel(new VerticalBagLayout());
         for (Entity entity : entities) {
             // Create a new tree and add all the nodes to it
-            DynamicTree newTree = new DynamicTree(new DefaultTreeCellRenderer(), entity);
+            DynamicTree newTree = new DynamicTree(entity);
             addNodes(newTree, null, entity);
             treesPanel.add(newTree);
         }
