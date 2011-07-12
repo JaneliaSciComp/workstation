@@ -81,7 +81,7 @@ public class EntityOutline extends JScrollPane implements Cloneable {
 			protected void hadSuccess() {
 				try {
 			        // Create a new tree and add all the nodes to it
-			        DynamicTree newTree = new DynamicTree(rootEntity);
+			        DynamicTree newTree = new DynamicTree(rootEntity, null);
 			        addNodes(newTree, null, rootEntity);
 			        
 		            treesPanel.removeAll();
@@ -109,7 +109,7 @@ public class EntityOutline extends JScrollPane implements Cloneable {
     private void addNodes(DynamicTree tree, DefaultMutableTreeNode parentNode, Entity newEntity) {
         DefaultMutableTreeNode newNode;
         if (parentNode != null) {
-            newNode = tree.addObject(parentNode, newEntity);
+            newNode = tree.addObject(parentNode, newEntity, null);
         }
         else {
             // If the parent node is null, then the node is already in the tree as the root

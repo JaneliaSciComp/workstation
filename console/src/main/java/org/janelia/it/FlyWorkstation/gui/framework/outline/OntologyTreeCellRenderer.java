@@ -102,7 +102,7 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
                 else {
                     keybindLabel.setText(" ");
                 }
-
+                
                 // Set the colors
 
                 if (selected) {

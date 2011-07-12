@@ -10,7 +10,9 @@ import java.util.Set;
 
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.jacs.compute.api.ComputeException;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.types.Category;
 import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
 import org.janelia.it.jacs.model.ontology.types.Tag;
@@ -145,7 +147,7 @@ public class OWLDataLoader extends SimpleWorker {
 	 * @return the root Entity of the new ontology tree
 	 * @throws OWLException
 	 */
-    public Entity loadAsEntities() throws OWLException {
+    public Entity loadAsEntities() throws OWLException, ComputeException {
 
     	setProgress(0);
     	
@@ -179,7 +181,7 @@ public class OWLDataLoader extends SimpleWorker {
     }
 
 	private void loadAsEntities(String userLogin, Entity parentEntity,
-			OWLClass clazz, int level, int orderIndex) throws OWLException {
+			OWLClass clazz, int level, int orderIndex) throws OWLException, ComputeException {
 		
 		if (out != null)  {
 			for (int i = 0; i < level * INDENT; i++) {
@@ -202,18 +204,18 @@ public class OWLDataLoader extends SimpleWorker {
 		}
 
 		OntologyElementType type = hasChildren ? new Category() : new Tag();
-		Entity newNode = saveObjects ? EJBFactory.getRemoteAnnotationBean().createOntologyTerm(System.getenv("USER"), 
-				parentEntity.getId().toString(), label, type, orderIndex) : new Entity();
+		EntityData newData = saveObjects ? EJBFactory.getRemoteAnnotationBean().createOntologyTerm(System.getenv("USER"), 
+				parentEntity.getId(), label, type, orderIndex) : new EntityData();
 		incrementProgress();
 		
-		if (out != null) out.println(label + " ("+type.getName()+" saved as " + newNode.getId() + ")");
+		if (out != null) out.println(label + " ("+type.getName()+" saved as " + newData.getId() + ")");
 
 		// Find the children and recurse 
 		int childOrder = 0;
 		for (OWLClass child : reasoner.getSubClasses(clazz, true).getFlattened()) {
 			if (!child.equals(clazz)) {
 				if (reasoner.isSatisfiable(child)) {
-					loadAsEntities(userLogin, newNode, child, level + 1, childOrder++);
+					loadAsEntities(userLogin, newData.getChildEntity(), child, level + 1, childOrder++);
 					if (isCancelled()) return;
 				}
 			}

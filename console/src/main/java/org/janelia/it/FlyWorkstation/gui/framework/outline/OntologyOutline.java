@@ -8,14 +8,12 @@ package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import java.awt.BorderLayout;
 import java.awt.event.*;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.swing.*;
-import javax.swing.table.TableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 
@@ -30,8 +28,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.jacs.compute.access.DaoException;
+import org.janelia.it.jacs.compute.api.ComputeException;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -223,7 +220,6 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
         	
             protected void doStuff() throws Exception {
             	rootEntity = EJBFactory.getRemoteAnnotationBean().getOntologyTree(System.getenv("USER"), rootId);
-            	
             }
 
 			protected void hadSuccess() {
@@ -270,7 +266,10 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
     
     private DynamicTree createNewTree(OntologyElement root) {
     	
-    	DynamicTree dtree = new DynamicTree(root) {
+    	NavigateToNodeAction rootAction = new NavigateToNodeAction();
+    	rootAction.init(root);
+    	
+    	DynamicTree dtree = new DynamicTree(root, rootAction) {
 
             protected void showPopupMenu(MouseEvent e) {
 
@@ -316,16 +315,7 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
     
 
     private void addNodes(DefaultMutableTreeNode parentNode, OntologyElement element) {
-    	
-        DefaultMutableTreeNode newNode;
-        if (parentNode != null) {
-            newNode = selectedTree.addObject(parentNode, element);
-        }
-        else {
-            // If the parent node is null, then the node is already in the tree as the root
-            newNode = selectedTree.rootNode;
-        }
-        
+
         // Define an action for this node
     	OntologyElementType type = element.getType();
     	OntologyElementAction action = null;
@@ -337,17 +327,21 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
     	}
     	action.init(element);
     	ontologyActionMap.put(element.getId(), action);
-    	selectedTree.setActionForNode(newNode, action);
     	
-    	// Load the node's children
-//    	for(EntityData data : element.getEntity().getEntityData()) {
-//    		Entity childEntity = data.getChildEntity();
-//    		if (childEntity != null) {
-//    			data.setChildEntity(EJBFactory.getRemoteAnnotationBean().getEntityById(childEntity.getId().toString()));
-//    		}
-//    	}
+    	// Add the node to the tree
+        DefaultMutableTreeNode newNode;
+        if (parentNode != null) {
+            newNode = selectedTree.addObject(parentNode, element, action);
+        }
+        else {
+            // If the parent node is null, then the node is already in the tree as the root
+            newNode = selectedTree.rootNode;
+        }
+        
+    	//selectedTree.setActionForNode(newNode, action);
     	
-    	// Add the node's children
+    	// Add the node's children. 
+    	// They are available because the root was loaded with the eager-loading getOntologyTree() method. 
         for(OntologyElement child : element.getChildren()) {
         	addNodes(newNode, child);
         }
@@ -378,9 +372,23 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
 			if (deleteConfirmation != 0) {
 				return;
 			}
-			String nodeId = getEntityIdFromTreeNode(selectedTree.getCurrentNode()).toString();
-            EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(System.getenv("USER"), nodeId);
-            updateSelectedTreeEntity();
+			
+			try {
+				// Update object model
+				OntologyElement element = getOntologyElement(selectedTree.getCurrentNode());
+				OntologyElement parent = element.getParent();
+				parent.removeChild(element);
+				
+				// Update database
+	            EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(System.getenv("USER"), element.getId());
+	            
+	            // Update Tree UI
+	            selectedTree.removeNode(selectedTree.getCurrentNode());
+			}
+			catch (ComputeException ex) {
+				ex.printStackTrace();
+				JOptionPane.showMessageDialog(OntologyOutline.this, "Error deleting ontology term", "Error", JOptionPane.ERROR_MESSAGE);
+			}
         }
         else if (SHOW_MANAGER_COMMAND.equals(command)) {
         	ontologyManager.showDialog();
@@ -464,26 +472,38 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
                 }
             }
 
-            EJBFactory.getRemoteAnnotationBean().createOntologyTerm(System.getenv("USER"), getEntityIdFromTreeNode(selectedTree.getCurrentNode()).toString(),
-                    termName, childType, null);
-            
-            
-            if (parentType instanceof Tag) {
-            	// Adding a child to a Tag, so it must be coerced into a Category
-            	
-            	EntityData ed = element.getEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_ONTOLOGY_TERM_TYPE);
-            	ed.setValue(Category.class.getSimpleName());
-            	
-            	try {
-					EJBFactory.getRemoteComputeBean().genericSave(ed);
-				} catch (DaoException ex) {
-					ex.printStackTrace();
-				} catch (RemoteException ex) {
-					ex.printStackTrace();
-				}
-            }
-            
-            updateSelectedTreeEntity();
+			try {
+				// Update database
+				EntityData newData = EJBFactory.getRemoteAnnotationBean().createOntologyTerm(System.getenv("USER"), element.getId(),
+	                    termName, childType, null);
+
+	            if (parentType instanceof Tag) {
+	            	// Adding a child to a Tag, so it must be coerced into a Category
+	            	
+	            	EntityData ed = element.getEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_ONTOLOGY_TERM_TYPE);
+	            	ed.setValue(Category.class.getSimpleName());
+
+	            	try {
+						EJBFactory.getRemoteComputeBean().genericSave(ed);
+					} catch (Exception ex) {
+						throw new ComputeException("Error coercing term type",ex);
+					}
+	            }
+
+				// Update object model
+	            element.getEntity().getEntityData().add(newData);
+	            element.init();
+
+	            // Update Tree UI
+	            OntologyElement newElement = new OntologyElement(newData.getChildEntity(), element);
+	            addNodes(treeNode, newElement);
+	            selectedTree.expand(treeNode, true);
+	            
+			}
+			catch (ComputeException ex) {
+				ex.printStackTrace();
+				JOptionPane.showMessageDialog(OntologyOutline.this, "Error creating ontology term", "Error", JOptionPane.ERROR_MESSAGE);
+			}
         }
     }
     

@@ -42,12 +42,15 @@ public class DynamicTree extends JPanel {
     private Map<DefaultMutableTreeNode,Action> actionMap = new HashMap<DefaultMutableTreeNode,Action>();
     
     
-    public DynamicTree(Object userObject) {
+    public DynamicTree(Object userObject, Action rootAction) {
         super(new BorderLayout());
 
         rootNode = new DefaultMutableTreeNode(userObject);
         treeModel = new DefaultTreeModel(rootNode);
 
+        // Set the action for the root node
+        setActionForNode(rootNode, rootAction);
+        
         tree = new JTree(treeModel);
         tree.setRowHeight(25);
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
@@ -139,19 +142,8 @@ public class DynamicTree extends JPanel {
 	/**
      * Remove the currently selected node.
      */
-    public void removeCurrentNode() {
-        TreePath currentSelection = tree.getSelectionPath();
-        if (currentSelection != null) {
-            DefaultMutableTreeNode currentNode = (DefaultMutableTreeNode) (currentSelection.getLastPathComponent());
-            MutableTreeNode parent = (MutableTreeNode) (currentNode.getParent());
-            if (parent != null) {
-                treeModel.removeNodeFromParent(currentNode);
-                return;
-            }
-        }
-
-        // Either there was no selection, or the root was selected.
-        toolkit.beep();
+    public void removeNode(DefaultMutableTreeNode node) {
+        treeModel.removeNodeFromParent(node);
     }
 
     /**
@@ -172,7 +164,7 @@ public class DynamicTree extends JPanel {
      /**
      * Add child to the currently selected node.
      */
-    public DefaultMutableTreeNode addObject(Object child) {
+    public DefaultMutableTreeNode addObject(Object child, Action action) {
         DefaultMutableTreeNode parentNode = null;
         TreePath parentPath = tree.getSelectionPath();
 
@@ -183,20 +175,23 @@ public class DynamicTree extends JPanel {
             parentNode = (DefaultMutableTreeNode) (parentPath.getLastPathComponent());
         }
 
-        return addObject(parentNode, child, true);
+        return addObject(parentNode, child, true, action);
     }
 
-    public DefaultMutableTreeNode addObject(DefaultMutableTreeNode parent, Object child) {
-        return addObject(parent, child, false);
+    public DefaultMutableTreeNode addObject(DefaultMutableTreeNode parent, Object child, Action action) {
+        return addObject(parent, child, false, action);
     }
 
-    public DefaultMutableTreeNode addObject(DefaultMutableTreeNode parent, Object child, boolean shouldBeVisible) {
+    public DefaultMutableTreeNode addObject(DefaultMutableTreeNode parent, Object child, boolean shouldBeVisible, Action action) {
         DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(child);
 
         if (parent == null) {
             parent = rootNode;
         }
 
+        // Set the action BEFORE adding the node, since the cell renderer may need it
+        setActionForNode(childNode, action);
+        
         // It is key to invoke this on the TreeModel, and NOT DefaultMutableTreeNode
         treeModel.insertNodeInto(childNode, parent, parent.getChildCount());
 
@@ -204,6 +199,7 @@ public class DynamicTree extends JPanel {
         if (shouldBeVisible) {
             tree.scrollPathToVisible(new TreePath(childNode.getPath()));
         }
+        
         return childNode;
     }
 
@@ -223,6 +219,15 @@ public class DynamicTree extends JPanel {
      */
     public Action getActionForNode(DefaultMutableTreeNode node) {
     	return actionMap.get(node);
+    }
+    
+    public void expand(DefaultMutableTreeNode node, boolean expand) {
+    	if (expand) {
+    		tree.expandPath(new TreePath(node.getPath()));	
+    	}
+    	else {
+    		tree.collapsePath(new TreePath(node.getPath()));
+    	}
     }
     
     /**
@@ -257,12 +262,12 @@ public class DynamicTree extends JPanel {
 	/**
 	 * Iterates through the tree structure and calls treeModel.nodeChanged() on each descendant of the 
 	 * given node.
-	 * @param currentNode 
+	 * @param node 
 	 * @return
 	 */
-    public DefaultMutableTreeNode refreshDescendants(DefaultMutableTreeNode currentNode) {
-        treeModel.nodeChanged(currentNode);
-        Enumeration enumeration = currentNode.children();
+    public DefaultMutableTreeNode refreshDescendants(DefaultMutableTreeNode node) {
+        treeModel.nodeChanged(node);
+        Enumeration enumeration = node.children();
         while(enumeration.hasMoreElements()) {
             refreshDescendants((DefaultMutableTreeNode)enumeration.nextElement());
         }

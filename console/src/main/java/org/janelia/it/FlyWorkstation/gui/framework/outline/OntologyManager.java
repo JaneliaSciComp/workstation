@@ -228,7 +228,7 @@ public class OntologyManager extends JDialog implements ActionListener, Property
     }
 
     private void newOntology() {
-    	String rootName = (String) JOptionPane.showInputDialog(this,
+    	final String rootName = (String) JOptionPane.showInputDialog(this,
 				"Ontology Name:\n", "New Ontology",
 				JOptionPane.PLAIN_MESSAGE, null, null, null);
 
@@ -237,10 +237,31 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 					"Ontology Error", JOptionPane.WARNING_MESSAGE);
 			return;
 		}
-		
-		Entity newOntologyRoot = EJBFactory.getRemoteAnnotationBean().createOntologyRoot(System.getenv("USER"), rootName);
+
     	tabbedPane.setSelectedIndex(0);
-    	privateTable.reloadData(newOntologyRoot);
+		privateTable.setLoading(true);
+		
+        SimpleWorker worker = new SimpleWorker() {
+        	
+        	private Entity newRoot;
+        	
+            protected void doStuff() throws Exception {
+            	newRoot = EJBFactory.getRemoteAnnotationBean().createOntologyRoot(System.getenv("USER"), rootName);
+            }
+
+			protected void hadSuccess() {
+		    	privateTable.reloadData(newRoot);
+			}
+			
+			protected void hadError(Throwable error) {
+				error.printStackTrace();
+				JOptionPane.showMessageDialog(OntologyManager.this, "Error creating ontology",
+						"Ontology Creation Error", JOptionPane.ERROR_MESSAGE);
+				privateTable.setLoading(false);
+			}
+            
+        };
+        worker.execute();
     }
     
     private void importOntology() {
@@ -393,7 +414,7 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 	        SimpleWorker worker = new SimpleWorker() {
 	        	
 	            protected void doStuff() throws Exception {
-	            	EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(System.getenv("USER"), root.getId().toString());
+	            	EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(System.getenv("USER"), root.getId());
 	            	ConsoleApp.getKeyBindings().removeOntologyKeybinds(root);        	
 	            }
 
