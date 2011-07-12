@@ -225,12 +225,12 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
 			protected void hadSuccess() {
 
 				try {
+		    		ontologyActionMap.clear();
+		    		
 		            // Create a new tree and add all the nodes to it
 		    		
 		    		root = new OntologyRoot(rootEntity);
-		    		selectedTree = createNewTree(root);
-		            
-		    		ontologyActionMap.clear();
+		    		createNewTree(root);
 		    		addNodes(null, root);
 
 		            // Load key bind preferences and bind keys to actions 
@@ -264,12 +264,9 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
         loadingWorker.execute();
     }
     
-    private DynamicTree createNewTree(OntologyElement root) {
+    private void createNewTree(OntologyElement root) {
     	
-    	NavigateToNodeAction rootAction = new NavigateToNodeAction();
-    	rootAction.init(root);
-    	
-    	DynamicTree dtree = new DynamicTree(root, rootAction) {
+    	selectedTree = new DynamicTree(root) {
 
             protected void showPopupMenu(MouseEvent e) {
 
@@ -301,16 +298,14 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
         
         // Replace the cell renderer
         
-        dtree.setCellRenderer(new OntologyTreeCellRenderer(dtree));
+        selectedTree.setCellRenderer(new OntologyTreeCellRenderer(selectedTree));
         
         // Replace the default key listener on the tree
         
-        final JTree tree = dtree.getTree();
+        final JTree tree = selectedTree.getTree();
         KeyListener defaultKeyListener = tree.getKeyListeners()[0];
         tree.removeKeyListener(defaultKeyListener);
         tree.addKeyListener(keyListener);
-
-        return dtree;
     }
     
 
@@ -336,9 +331,10 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
         else {
             // If the parent node is null, then the node is already in the tree as the root
             newNode = selectedTree.rootNode;
+
+            // Set the action for the root node
+            selectedTree.setActionForNode(selectedTree.rootNode, action);
         }
-        
-    	//selectedTree.setActionForNode(newNode, action);
     	
     	// Add the node's children. 
     	// They are available because the root was loaded with the eager-loading getOntologyTree() method. 

@@ -8,7 +8,6 @@ package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.Toolkit;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -37,19 +36,15 @@ public class DynamicTree extends JPanel {
     protected DefaultMutableTreeNode rootNode;
     protected DefaultTreeModel treeModel;
     protected final JTree tree;
-    private Toolkit toolkit = Toolkit.getDefaultToolkit();
 
     private Map<DefaultMutableTreeNode,Action> actionMap = new HashMap<DefaultMutableTreeNode,Action>();
     
     
-    public DynamicTree(Object userObject, Action rootAction) {
+    public DynamicTree(Object userObject) {
         super(new BorderLayout());
 
         rootNode = new DefaultMutableTreeNode(userObject);
         treeModel = new DefaultTreeModel(rootNode);
-
-        // Set the action for the root node
-        setActionForNode(rootNode, rootAction);
         
         tree = new JTree(treeModel);
         tree.setRowHeight(25);
@@ -221,6 +216,11 @@ public class DynamicTree extends JPanel {
     	return actionMap.get(node);
     }
     
+    /**
+     * Expand or collapse the given node.
+     * @param node the node to expand or collapse
+     * @param expand expand or collapse?
+     */
     public void expand(DefaultMutableTreeNode node, boolean expand) {
     	if (expand) {
     		tree.expandPath(new TreePath(node.getPath()));	
