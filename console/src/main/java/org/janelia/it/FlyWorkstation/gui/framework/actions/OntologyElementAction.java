@@ -9,7 +9,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.actions;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 
 /**
- * An abstract base class for actions dealing with entities.
+ * An abstract base class for actions dealing with ontology elements.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
