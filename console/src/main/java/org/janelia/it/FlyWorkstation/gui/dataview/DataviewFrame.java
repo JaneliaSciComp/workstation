@@ -6,29 +6,14 @@
  */
 package org.janelia.it.FlyWorkstation.gui.dataview;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Toolkit;
+import java.awt.*;
+import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.*;
 import java.util.List;
-import java.util.Vector;
 
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JTable;
-import javax.swing.JTree;
-import javax.swing.ListSelectionModel;
-import javax.swing.SwingWorker;
+import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.event.TreeSelectionEvent;
@@ -38,8 +23,10 @@ import javax.swing.table.TableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreePath;
 
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
+import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityAttribute;
@@ -57,9 +44,9 @@ public class DataviewFrame extends JFrame {
     private EntityPane entityPane;
     private EntityListPane entityListPane;
     private EntityDetailPane entityDetailPane;
-
     private JPanel progressPanel;
-
+    private SimpleWorker loadTask;
+    
     public DataviewFrame() {
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -105,66 +92,87 @@ public class DataviewFrame extends JFrame {
             tree = new JTree(new DefaultMutableTreeNode("Loading..."));
             setViewportView(tree);
 
-            tree.addTreeSelectionListener(new TreeSelectionListener() {
-                @Override
-                public void valueChanged(TreeSelectionEvent e) {
-                    DefaultMutableTreeNode node = (DefaultMutableTreeNode)tree.getLastSelectedPathComponent();
-                    if (node.getUserObject() instanceof EntityType) {
-                        entityListPane.showEntities((EntityType)node.getUserObject());
+            tree.addMouseListener(new MouseAdapter() {
+                public void mouseReleased(MouseEvent e) {
+
+                    int row = tree.getRowForLocation(e.getX(), e.getY());
+                    if (row >= 0) {
+                        if (e.isPopupTrigger()) {
+                        	// Right click
+                        }
+                        else if (e.getClickCount()==2 
+                        		&& e.getButton()==MouseEvent.BUTTON1 
+                        		&& (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
+                        	// Double click
+                        }
+                        else if (e.getClickCount()==1 
+                        		&& e.getButton()==MouseEvent.BUTTON1 ) {
+                        	// Single click
+                        	TreePath path = tree.getClosestPathForLocation(e.getX(), e.getY());
+                        	DefaultMutableTreeNode node = (DefaultMutableTreeNode)path.getLastPathComponent();
+                            if (node.getUserObject() instanceof EntityType) {
+                                entityListPane.showEntities((EntityType)node.getUserObject());
+                                tree.setSelectionPath(path);
+                            }
+                            else if (node.getUserObject() instanceof EntityAttribute) {
+                            	DefaultMutableTreeNode parent = (DefaultMutableTreeNode)node.getParent();
+                                entityListPane.showEntities((EntityType)parent.getUserObject());
+                                tree.setSelectionPath(path.getParentPath());
+                            }
+                        }
                     }
                 }
             });
-
         }
 
         public void refresh() {
 
-            SwingWorker<Void, TreeModel> loadEntityTask = new SwingWorker<Void, TreeModel>() {
-                @Override
-                protected Void doInBackground() throws Exception {
+            loadTask = new SimpleWorker() {
 
-                	try {
-                        List<EntityType> entityTypes = EJBFactory.getRemoteAnnotationBean().getEntityTypes();
+            	private TreeModel model;
+            	
+				@Override
+				protected void doStuff() throws Exception {
+                    List<EntityType> entityTypes = EJBFactory.getRemoteAnnotationBean().getEntityTypes();
 
-                        DefaultMutableTreeNode root = new DefaultMutableTreeNode("EntityType");
+                    DefaultMutableTreeNode root = new DefaultMutableTreeNode("EntityType");
 
-                        for(EntityType entityType : entityTypes) {
-                            DefaultMutableTreeNode entityTypeNode = new DefaultMutableTreeNode(entityType) {
+                    for(EntityType entityType : entityTypes) {
+                        DefaultMutableTreeNode entityTypeNode = new DefaultMutableTreeNode(entityType) {
+                            @Override
+                            public String toString() {
+                                return ((EntityType)getUserObject()).getName();
+                            }
+                        };
+                        root.add(entityTypeNode);
+
+                        for(EntityAttribute entityAttribute : entityType.getOrderedAttributes()) {
+                            DefaultMutableTreeNode entityAttrNode = new DefaultMutableTreeNode(entityAttribute) {
                                 @Override
                                 public String toString() {
-                                    return ((EntityType)getUserObject()).getName();
+                                    return ((EntityAttribute)getUserObject()).getName();
                                 }
                             };
-                            root.add(entityTypeNode);
-
-                            for(EntityAttribute entityAttribute : entityType.getOrderedAttributes()) {
-                                DefaultMutableTreeNode entityAttrNode = new DefaultMutableTreeNode(entityAttribute) {
-                                    @Override
-                                    public String toString() {
-                                        return ((EntityAttribute)getUserObject()).getName();
-                                    }
-                                };
-                                entityTypeNode.add(entityAttrNode);
-                            }
+                            entityTypeNode.add(entityAttrNode);
                         }
-                        publish(new DefaultTreeModel(root));
-                	}
-                	catch (Exception e) {
-                		e.printStackTrace();
-                		throw e;
-                	}
-                	
-                    return null;
-                }
+                    }
+                    model = new DefaultTreeModel(root);
+				}
+				
+				@Override
+				protected void hadSuccess() {
+                    tree.setModel(model);
+                    expandAll();
+				}
+				
+				@Override
+				protected void hadError(Throwable error) {
+					error.printStackTrace();
+				}
+				
+			};
 
-                @Override
-                protected void process(List<TreeModel> chunks) {
-                        tree.setModel(chunks.get(0));
-                        expandAll();
-                }
-            };
-
-            loadEntityTask.execute();
+            loadTask.execute();
         }
 
         public void expandAll() {
@@ -202,7 +210,8 @@ public class DataviewFrame extends JFrame {
         private final JScrollPane scrollPane;
         private List<Entity> entities;
         private TableModel tableModel;
-
+        private SimpleWorker loadTask;
+        
         public EntityListPane(final EntityDetailPane entityDetailPane) {
 
             this.entityDetailPane = entityDetailPane;
@@ -254,44 +263,62 @@ public class DataviewFrame extends JFrame {
          */
         public void showEntities(final EntityType entityType) {
 
+        	if (loadTask != null && !loadTask.isDone()) {
+        		System.out.println("Cancel current entity type load");
+        		loadTask.cancel(true);
+        	}
+
+    		System.out.println("Loading entities of type "+entityType.getName());
+    		
             titleLabel.setText("Entity: "+entityType.getName());
             showLoading();
 
-            SwingWorker<Void,Void> loadEntityTask = new SwingWorker<Void,Void>() {
-                @Override
-                protected Void doInBackground() throws Exception {
-                	try {
-                		List<Entity> entities = EJBFactory.getRemoteAnnotationBean().getEntitiesByType(entityType.getId());
-                		tableModel = updateTableModel(entities);
-                	} 
-                	catch (Exception e) {
-                		e.printStackTrace();
-                		throw e;
-                	}
-                    return null;
-                }
+            loadTask = new SimpleWorker() {
 
-                @Override
-                protected void done() {
+				@Override
+				protected void doStuff() throws Exception {
+            		List<Entity> entities = EJBFactory.getRemoteAnnotationBean().getEntitiesByType(entityType.getId());
+            		if (isCancelled()) return;
+            		tableModel = updateTableModel(entities);
+				}
+				
+				@Override
+				protected void hadSuccess() {
                     table.setModel(tableModel);
                     Utils.autoResizeColWidth(table);
                     remove(progressPanel);
                     add(scrollPane, BorderLayout.CENTER);
                     entityDetailPane.showEmpty();
-                }
-            };
+				}
+				
+				@Override
+				protected void hadError(Throwable error) {
+					error.printStackTrace();
+				}
+				
+			};
 
-            loadEntityTask.execute();
+            loadTask.execute();
         }
 
         public void showEntity(final Entity entity) {
 
+        	if (loadTask != null && !loadTask.isDone()) {
+        		System.out.println("Cancel current entity load");
+        		loadTask.cancel(true);
+        	}
+
+    		System.out.println("Loading entity "+entity.getName());
+    		showLoading();
+    		 
             titleLabel.setText("Entity: "+entity.getEntityType().getName()+" ("+entity.getName()+")");
             List<Entity> entities = new ArrayList<Entity>();
             entities.add(entity);
     		tableModel = updateTableModel(entities);
             table.setModel(tableModel);
             Utils.autoResizeColWidth(table);
+            remove(progressPanel);
+            add(scrollPane, BorderLayout.CENTER);
             entityDetailPane.showEmpty();
             table.getSelectionModel().setSelectionInterval(0, 0);
         }
@@ -322,7 +349,7 @@ public class DataviewFrame extends JFrame {
                 //rowData.add((entity.getEntityStatus() == null) ? "" : entity.getEntityStatus().getName());
                 rowData.add((entity.getCreationDate() == null) ? "" : entity.getCreationDate().toString());
                 rowData.add((entity.getUpdatedDate() == null) ? "" : entity.getUpdatedDate().toString());
-                rowData.add(entity.getName());
+                rowData.add((entity.getName() == null) ? "(unnamed)" : entity.getName().toString());
                 data.add(rowData);
             }
             
@@ -343,6 +370,7 @@ public class DataviewFrame extends JFrame {
         private final JScrollPane scrollPane;
         private List<EntityData> datas;
         private TableModel tableModel;
+        private SimpleWorker loadTask;
 
         public EntityDetailPane() {
 
@@ -403,32 +431,35 @@ public class DataviewFrame extends JFrame {
          */
         public void showEntity(final Entity entity) {
 
+        	if (loadTask != null && !loadTask.isDone()) {
+        		System.out.println("Cancel current entity data load");
+        		loadTask.cancel(true);
+        	}
+        	
+        	System.out.println("Loading data for entity "+entity.getName());
+        	
             titleLabel.setText("EntityData: "+entity.getName());
             showLoading();
 
-            SwingWorker<Void,Void> loadEntityTask = new SwingWorker<Void,Void>() {
-                @Override
-                protected Void doInBackground() throws Exception {
-                    try {
-                    	List<EntityData> datas = entity.getOrderedEntityData();
+            loadTask = new SimpleWorker() {
 
-                    	for(EntityData data : datas) {
-                    		Entity child = data.getChildEntity();
-                    		if (child != null) {
-                    			data.setChildEntity(EJBFactory.getRemoteAnnotationBean().getEntityById(child.getId().toString()));	
-                    		}
-                    	}
-                	    
-                        tableModel = updateTableModel(datas);
-                    }
-                    catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    return null;
-                }
+				@Override
+				protected void doStuff() throws Exception {
+                	List<EntityData> datas = entity.getOrderedEntityData();
 
-                @Override
-                protected void done() {
+                	for(EntityData data : datas) {
+                		Entity child = data.getChildEntity();
+                		if (child != null) {
+                			data.setChildEntity(EJBFactory.getRemoteAnnotationBean().getEntityById(child.getId().toString()));	
+                		}
+                		if (isCancelled()) return;
+                	}
+            	    
+                    tableModel = updateTableModel(datas);
+				}
+				
+				@Override
+				protected void hadSuccess() {
                     if (tableModel == null) {
                         System.out.println("TableModel was null");
                         return;
@@ -439,10 +470,16 @@ public class DataviewFrame extends JFrame {
                     }
                     remove(progressPanel);
                     add(scrollPane, BorderLayout.CENTER);
-                }
-            };
+				}
+				
+				@Override
+				protected void hadError(Throwable error) {
+					error.printStackTrace();
+				}
+				
+			};
 
-            loadEntityTask.execute();
+            loadTask.execute();
         }
 
 
@@ -471,7 +508,7 @@ public class DataviewFrame extends JFrame {
                 rowData.add((entityData.getUser() == null) ? "" : entityData.getUser().getUserLogin());
                 rowData.add((entityData.getUpdatedDate() == null) ? "" : entityData.getUpdatedDate().toString());
                 rowData.add((entityData.getOrderIndex() == null) ? "" : entityData.getOrderIndex().toString());
-                rowData.add((entityData.getChildEntity() == null) ? "" : entityData.getChildEntity().getName());
+                rowData.add((entityData.getChildEntity() == null) ? "" : (entityData.getChildEntity().getName() == null) ? "(unnamed)" : entityData.getChildEntity().getName().toString());
                 rowData.add(entityData.getValue());
                 data.add(rowData);
             }
