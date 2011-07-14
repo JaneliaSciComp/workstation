@@ -1,16 +1,14 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.Position.Bias;
-
-import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
  * A toolbar which sits on top of a DynamicTree and provides generic tree-related functions such as 
@@ -27,29 +25,29 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
     
     private final DynamicTree tree;
 	private JTextField textField;
-    
+    private JButton expandAllButton;
+    private JButton collapseAllButton;
 	public DynamicTreeToolbar(final DynamicTree tree) {
         super(new BorderLayout());
 
         this.tree = tree;
-        
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
         toolBar.setRollover(true);
         
-        JButton button = new JButton(Icons.expandAllIcon);
-        button.setActionCommand(EXPAND_ALL);
-        button.setToolTipText("Expand all the nodes in the tree.");
-        button.addActionListener(this);
-        button.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
-        toolBar.add(button);
+        expandAllButton = new JButton(Icons.expandAllIcon);
+        expandAllButton.setActionCommand(EXPAND_ALL);
+        expandAllButton.setToolTipText("Expand all the nodes in the tree.");
+        expandAllButton.addActionListener(this);
+        expandAllButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
+        toolBar.add(expandAllButton);
 
-        button = new JButton(Icons.collapseAllIcon);
-        button.setActionCommand(COLLAPSE_ALL);
-        button.setToolTipText("Collapse all the nodes in the tree.");
-        button.addActionListener(this);
-        button.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
-        toolBar.add(button);
+        collapseAllButton = new JButton(Icons.collapseAllIcon);
+        collapseAllButton.setActionCommand(COLLAPSE_ALL);
+        collapseAllButton.setToolTipText("Collapse all the nodes in the tree.");
+        collapseAllButton.addActionListener(this);
+        collapseAllButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
+        toolBar.add(collapseAllButton);
         
         toolBar.addSeparator();
 
@@ -77,7 +75,7 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
 			}
 		});
         	  
-        button = new JButton("Next");
+        JButton button = new JButton("Next");
         button.setActionCommand(NEXT_MATCH);
         button.setToolTipText("Find the next occurence of the phrase.");
         button.addActionListener(this);
@@ -96,10 +94,42 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         String cmd = e.getActionCommand();
         if (EXPAND_ALL.equals(cmd)) { 
-        	tree.expandAll(true);
-        } 
+            SwingWorker<Void, Void> expand = new SwingWorker<Void, Void>() {
+                @Override
+                protected Void doInBackground() throws Exception {
+                    try {
+                        expandAllButton.setEnabled(false);
+                        collapseAllButton.setEnabled(false);
+                        tree.expandAll(true);
+                        expandAllButton.setEnabled(true);
+                        collapseAllButton.setEnabled(true);
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                }
+            };
+            expand.execute();
+        }
         else if (COLLAPSE_ALL.equals(cmd)) { 
-        	tree.expandAll(false);
+            SwingWorker<Void, Void> expand = new SwingWorker<Void, Void>() {
+                @Override
+                protected Void doInBackground() throws Exception {
+                    try {
+                        collapseAllButton.setEnabled(false);
+                        expandAllButton.setEnabled(false);
+                        tree.expandAll(false);
+                        collapseAllButton.setEnabled(true);
+                        expandAllButton.setEnabled(true);
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                }
+            };
+            expand.execute();
         } 
         else if (NEXT_MATCH.equals(cmd)) { 
             tree.navigateToNodeStartingWith(textField.getText(), Bias.Forward);

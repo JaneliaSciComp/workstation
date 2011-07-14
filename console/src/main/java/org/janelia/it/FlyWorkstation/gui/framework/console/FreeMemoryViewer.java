@@ -32,8 +32,19 @@ public class FreeMemoryViewer extends JPanel implements Observer {
     private boolean reachedFirstWarningPercent;
     private boolean reachedSecondWarningPercent;
     private boolean reachedFinalWarningPercent;
+    private JOptionPane warningPane;
+    private JDialog warningDialog;
+    private JOptionPane errorPane;
+    private JDialog errorDialog;
 
     public FreeMemoryViewer() {
+        warningPane = new JOptionPane("Available memory is currently at x percent.",
+            JOptionPane.WARNING_MESSAGE, JOptionPane.OK_OPTION);
+        warningDialog = warningPane.createDialog(this.getParent(), "Warning: Low Available Memory");
+        errorPane = new JOptionPane("Available memory is currently at x and is critically low!",
+            JOptionPane.ERROR_MESSAGE, JOptionPane.OK_OPTION);
+        errorDialog = errorPane.createDialog(this.getParent(), "Error: Critically Low Available Memory");
+
         bar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 100);
         BAR_HEIGHT = this.getFontMetrics(this.getFont()).getHeight();
         bar.setMaximumSize(new Dimension(BAR_WIDTH, BAR_HEIGHT));
@@ -132,15 +143,19 @@ public class FreeMemoryViewer extends JPanel implements Observer {
     }
 
     private void showMemWarningDialog(int percentAvailable) {
-        String[] strings = new String[1];
-        strings[0] = "Available memory is currently at " + percentAvailable + " percent.";
-        JOptionPane.showMessageDialog(this.getParent().getParent(), strings, "Warning: Low Available Memory", JOptionPane.WARNING_MESSAGE);
+        warningPane.setMessage("Available memory is currently at " + percentAvailable + " percent.");
+        warningPane.updateUI();
+        if (!warningDialog.isShowing()) {
+            warningDialog.setVisible(true);
+        }
     }
 
     private void showMemErrorDialog(int percentAvailable) {
-        String[] strings = new String[1];
-        strings[0] = "Available memory is currently at " + percentAvailable + " and is critically low!";
-        JOptionPane.showMessageDialog(this.getParent().getParent(), strings, "Error: Critically Low Available Memory", JOptionPane.ERROR_MESSAGE);
+        errorPane.setMessage("Available memory is currently at " + percentAvailable + " and is critically low!");
+        errorPane.updateUI();
+        if (!errorDialog.isShowing()) {
+            errorDialog.setVisible(true);
+        }
     }
 
     private void showMemoryDialog() {

@@ -1,10 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.framework.search;
 
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.net.URL;
+import java.io.FileNotFoundException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -16,65 +18,70 @@ public class SearchToolbar extends JPanel implements ActionListener {
     protected JTextArea textArea;
     protected String newline = "\n";
     static final private String PREVIOUS = "previous";
-    static final private String UP = "up";
+    static final private String SAVE = "save";
     static final private String NEXT = "next";
-    static final private String SOMETHING_ELSE = "other";
+    static final private String SEARCH = "search";
     static final private String TEXT_ENTERED = "text";
 
     public SearchToolbar() {
         super(new BorderLayout());
 
-        //Create the toolbar.
-        JToolBar toolBar = new JToolBar("Still draggable");
-        addButtons(toolBar);
-        toolBar.setFloatable(false);
-        toolBar.setRollover(true);
+        try {
+            //Create the toolbar.
+            JToolBar toolBar = new JToolBar("Still draggable");
+            addButtons(toolBar);
+            toolBar.setFloatable(false);
+            toolBar.setRollover(true);
 
-        //Create the text area used for output.  Request
-        //enough space for 5 rows and 30 columns.
-        textArea = new JTextArea(5, 30);
-        textArea.setEditable(false);
-        JScrollPane scrollPane = new JScrollPane(textArea);
+            //Create the text area used for output.  Request
+            //enough space for 5 rows and 30 columns.
+            textArea = new JTextArea(5, 30);
+            textArea.setEditable(false);
+            JScrollPane scrollPane = new JScrollPane(textArea);
 
-        //Lay out the main panel.
-        setPreferredSize(new Dimension(450, 130));
-        add(toolBar, BorderLayout.PAGE_START);
-        add(scrollPane, BorderLayout.CENTER);
+            //Lay out the main panel.
+            setPreferredSize(new Dimension(450, 130));
+            add(toolBar, BorderLayout.PAGE_START);
+            add(scrollPane, BorderLayout.CENTER);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    protected void addButtons(JToolBar toolBar) {
+    protected void addButtons(JToolBar toolBar) throws FileNotFoundException {
         JButton button = null;
 
         //first button
-        button = makeNavigationButton("Back24", PREVIOUS,
-                                      "Back to previous something-or-other",
+        button = makeNavigationButton("arrow_left", PREVIOUS,
+                                      "Back to previous Search",
                                       "Previous");
         toolBar.add(button);
 
         //second button
-        button = makeNavigationButton("Up24", UP,
-                                      "Up to something-or-other",
-                                      "Up");
+        button = makeNavigationButton("arrow_right", NEXT,
+                                      "Forward to following Search",
+                                      "Next");
         toolBar.add(button);
 
         //third button
-        button = makeNavigationButton("Forward24", NEXT,
-                                      "Forward to something-or-other",
-                                      "Next");
+        button = makeNavigationButton("table_save", SAVE,
+                                      "Save the Search and results",
+                                      "Save");
         toolBar.add(button);
 
         //separator
         toolBar.addSeparator();
 
         //fourth button
-        button = new JButton("Another button");
-        button.setActionCommand(SOMETHING_ELSE);
-        button.setToolTipText("Something else");
+        button = new JButton("Search");
+        button.setActionCommand(SEARCH);
+        button.setToolTipText("Search the Database");
         button.addActionListener(this);
         toolBar.add(button);
 
         //fifth component is NOT a button!
-        JTextField textField = new JTextField("A text field");
+        JTextField textField = new JTextField("<Enter Search Terms>");
         textField.setColumns(10);
         textField.addActionListener(this);
         textField.setActionCommand(TEXT_ENTERED);
@@ -84,26 +91,14 @@ public class SearchToolbar extends JPanel implements ActionListener {
     protected JButton makeNavigationButton(String imageName,
                                            String actionCommand,
                                            String toolTipText,
-                                           String altText) {
-        //Look for the image.
-        String imgLocation = "images/"
-                             + imageName
-                             + ".gif";
-        URL imageURL = SearchToolbar.class.getResource(imgLocation);
-
+                                           String altText) throws FileNotFoundException {
         //Create and initialize the button.
         JButton button = new JButton();
         button.setActionCommand(actionCommand);
         button.setToolTipText(toolTipText);
         button.addActionListener(this);
-
-        if (imageURL != null) {                      //image found
-            button.setIcon(new ImageIcon(imageURL, altText));
-        } else {                                     //no image found
-            button.setText(altText);
-            System.err.println("Resource not found: "
-                               + imgLocation);
-        }
+        button.setIcon(Utils.getClasspathImage(imageName+".png"));
+        ((ImageIcon)button.getIcon()).setDescription(altText);
 
         return button;
     }
@@ -114,13 +109,13 @@ public class SearchToolbar extends JPanel implements ActionListener {
 
         // Handle each button.
         if (PREVIOUS.equals(cmd)) { //first button clicked
-            description = "taken you to the previous <something>.";
-        } else if (UP.equals(cmd)) { // second button clicked
-            description = "taken you up one level to <something>.";
+            description = "taken you to the previous Search terms.";
+        } else if (SAVE.equals(cmd)) { // second button clicked
+            description = "saved the Search result set.";
         } else if (NEXT.equals(cmd)) { // third button clicked
-            description = "taken you to the next <something>.";
-        } else if (SOMETHING_ELSE.equals(cmd)) { // fourth button clicked
-            description = "done something else.";
+            description = "taken you to the next Search terms.";
+        } else if (SEARCH.equals(cmd)) { // fourth button clicked
+            description = "Searches the database for entites that match your Search terms.";
         } else if (TEXT_ENTERED.equals(cmd)) { // text field
             JTextField tf = (JTextField)e.getSource();
             String text = tf.getText();
@@ -130,7 +125,7 @@ public class SearchToolbar extends JPanel implements ActionListener {
                           + text + "\"";
         }
 
-        displayResult("If this were a real app, it would have "
+        displayResult("If this were fully functional, it would have "
                         + description);
     }
 

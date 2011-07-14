@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.application;
 
 import org.janelia.it.FlyWorkstation.gui.framework.console.ConsoleFrame;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyBindings;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 
 import javax.swing.*;
 
@@ -193,9 +194,9 @@ public class ConsoleApp {
             mainConsole = new ConsoleFrame(.8f);
             mainConsole.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             mainConsole.setTitle("Fly Workstation "+VERSION_NUMBER);
-            mainConsole.setBrowserImageIcon(new ImageIcon("/Users/" + System.getenv("USER") + "/Dev/jacs/console/target/classes/org/janelia/it/flyscope.jpg"));
-            // todo remove this repaint if this is an image definition problem
-            mainConsole.repaint();
+            mainConsole.setBrowserImageIcon(Utils.getClasspathImage("flyscope.jpg"));
+                    // todo remove this repaint if this is an image definition problem
+                    mainConsole.repaint();
             mainConsole.setVisible(true);
             Thread.sleep(3000);
             splash.setVisible(false);

@@ -50,24 +50,8 @@ public class FreeMemoryWatcher extends MTObservable {
     }
 
     public long getTotalMemory() {
-        if (totalMemory > 0) return totalMemory;
-        String memoryStr = ConsoleProperties.getString("console.memory.TotalMemory");
-        try {
-            if (memoryStr.endsWith("mb") || memoryStr.endsWith("MB")) {
-                totalMemory = 1024 * 1000 * Long.parseLong(memoryStr.substring(0, memoryStr.length() - 1));
-                return totalMemory;
-            }
-            if (memoryStr.endsWith("kb") || memoryStr.endsWith("KB")) {
-                totalMemory = 1024 * Long.parseLong(memoryStr.substring(0, memoryStr.length() - 1));
-                return totalMemory;
-            }
-            totalMemory = Long.parseLong(memoryStr);
-        } catch (Exception ex) {
-            totalMemory = 262144000; // 256MB, if necessary.  The property file should be there.
-        }
-        return totalMemory;
+        return Runtime.getRuntime().totalMemory();
     }
-
 
     public long getUsedMemory() {
         return Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();

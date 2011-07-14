@@ -6,24 +6,20 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.NavigateToNodeAction;
+import org.janelia.it.FlyWorkstation.gui.util.TreeSearcher;
+
+import javax.swing.*;
+import javax.swing.text.Position;
+import javax.swing.tree.*;
+import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTree;
-import javax.swing.text.Position;
-import javax.swing.tree.*;
-
-import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
-import org.janelia.it.FlyWorkstation.gui.framework.actions.NavigateToNodeAction;
-import org.janelia.it.FlyWorkstation.gui.util.TreeSearcher;
 
 /**
  * A reusable tree component with toolbar features.
@@ -240,7 +236,7 @@ public class DynamicTree extends JPanel {
 	}
 
 	private void expandAll(TreePath parent, boolean expand) {
-		
+
 		// Traverse children
 		TreeNode node = (TreeNode) parent.getLastPathComponent();
 		if (node.getChildCount() >= 0) {

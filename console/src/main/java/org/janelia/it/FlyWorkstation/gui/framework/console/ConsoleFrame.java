@@ -2,7 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.console;
 
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.TaskOutline;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.SessionOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.search.SearchToolbar;
 import org.janelia.it.FlyWorkstation.gui.util.JOutlookBar;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
@@ -69,7 +69,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //    private Editor subEditor;
     private JOutlookBar outlookBar;
 //    private FileOutline fileOutline;
-    private TaskOutline taskOutline;
+    private SessionOutline sessionOutline;
     private EntityOutline entityOutline;
     private OntologyOutline ontologyOutline;
     private String mostRecentFileOutlinePath;
@@ -100,13 +100,13 @@ public class ConsoleFrame extends JFrame implements Cloneable {
             jbInit(/*browserModel*/);
 
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-            ConsolePosition position = new ConsolePosition();//(ConsolePosition) SessionMgr.getSessionMgr()
-            //.getModelProperty(BROWSER_POSITION);
-            position.setScreenSize(screenSize);
-            position.setConsoleSize(new Dimension(400, 400));
-            position.setConsoleLocation(new Point(100, 100));
-            position.setHorizontalDividerLocation(200);
-            position.setVerticalDividerLocation(200);
+//            ConsolePosition position = new ConsolePosition();//(ConsolePosition) SessionMgr.getSessionMgr()
+//            //.getModelProperty(BROWSER_POSITION);
+//            position.setScreenSize(screenSize);
+//            position.setConsoleSize(new Dimension(400, 400));
+//            position.setConsoleLocation(new Point(100, 100));
+//            position.setHorizontalDividerLocation(200);
+//            position.setVerticalDividerLocation(200);
 
 //            if ((position == null) ||
 //                    !position.getScreenSize().equals(screenSize)) {
@@ -240,24 +240,25 @@ public class ConsoleFrame extends JFrame implements Cloneable {
         usingSplashPanel = true;
 //        subBrowserTabPane = new SubBrowser(browserModel);
 //        fileOutline = new FileOutline(this);
-        taskOutline = new TaskOutline(this);
+        sessionOutline = new SessionOutline(this);
         entityOutline = new EntityOutline();
         ontologyOutline = new OntologyOutline();
+        ontologyOutline.setPreferredSize(new Dimension());
 //        icsTabPane = new ICSTabPane(this);
 
         outlookBar = new JOutlookBar();
         outlookBar.addBar("Collections", entityOutline);
-        outlookBar.addBar("Tasks", taskOutline);
+        outlookBar.addBar("Sessions", sessionOutline);
 //        outlookBar.addBar("Files", fileOutline);
         outlookBar.setVisibleBar(2);
 
-        ConsolePosition consolePosition = new ConsolePosition();//(ConsolePosition) SessionMgr.getSessionMgr()
-        //.getModelProperty(BROWSER_POSITION);
-        consolePosition.setScreenSize(screenSize);
-        consolePosition.setConsoleSize(new Dimension(400, 400));
-        consolePosition.setConsoleLocation(new Point(100, 100));
-        consolePosition.setHorizontalDividerLocation(400);
-        consolePosition.setVerticalDividerLocation(200);
+//        ConsolePosition consolePosition = new ConsolePosition();//(ConsolePosition) SessionMgr.getSessionMgr()
+//        //.getModelProperty(BROWSER_POSITION);
+//        consolePosition.setScreenSize(screenSize);
+//        consolePosition.setConsoleSize(new Dimension(400, 400));
+//        consolePosition.setConsoleLocation(new Point(100, 100));
+//        consolePosition.setHorizontalDividerLocation(400);
+//        consolePosition.setVerticalDividerLocation(200);
 //        ConsolePosition consolePosition = new ConsolePosition();//BrowserPosition) SessionMgr.getSessionMgr()
         //.getModelProperty(this.BROWSER_POSITION);
 
@@ -1183,7 +1184,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
     public void setMostRecentFileOutlinePath(String mostRecentFileOutlinePath) {
         this.mostRecentFileOutlinePath = mostRecentFileOutlinePath;
         this.currentAnnotationSessionTaskId = null;
-//        taskOutline.clearSelection();
+//        sessionOutline.clearSelection();
         File tmpFile = new File(mostRecentFileOutlinePath);
         if (tmpFile.exists()) {
             viewerPanel.loadImages(getFiles(mostRecentFileOutlinePath));
@@ -1221,7 +1222,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
         currentAnnotationSessionTaskId = returnSessionTask;
         this.mostRecentFileOutlinePath = null;
 //        fileOutline.clearSelection();
-        taskOutline.rebuildTreeModel();
-        taskOutline.selectSession(currentAnnotationSessionTaskId);
+        sessionOutline.rebuildTreeModel();
+        sessionOutline.selectSession(currentAnnotationSessionTaskId);
     }
 }

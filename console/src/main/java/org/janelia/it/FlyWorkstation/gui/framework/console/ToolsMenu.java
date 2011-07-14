@@ -1,9 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.prefs.BackingStoreException;
 
@@ -21,54 +24,59 @@ public class ToolsMenu extends JMenu {
 
     public ToolsMenu(ConsoleFrame console) {
         super("Tools");
-        this.parentFrame = console;
-        // todo This needs to be customized
-        v3dMenuItem = new JMenuItem("V3D - NeuroAnnotator", new ImageIcon("/Users/"+System.getenv("USER")+"/Dev/jacs/console/target/classes/org/janelia/it/FlyWorkstation/gui/application/v3d_16x16x32.png"));
-        v3dMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                try {
-                    // todo This needs to be a custom user setting.
-                    Runtime.getRuntime().exec("/Users/"+System.getenv("USER")+"/Dev/v3d/v3d/v3d64.app/Contents/MacOS/v3d64");
+        try {
+            this.parentFrame = console;
+            // todo This needs to be customized
+            v3dMenuItem = new JMenuItem("V3D - NeuroAnnotator", Utils.getClasspathImage("v3d_16x16x32.png"));
+            v3dMenuItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
+                    try {
+                        // todo This needs to be a custom user setting.
+                        Runtime.getRuntime().exec("/Users/"+System.getenv("USER")+"/Dev/v3d/v3d/v3d64.app/Contents/MacOS/v3d64");
+                    }
+                    catch (IOException e) {
+                        JOptionPane.showMessageDialog(v3dMenuItem.getParent(),"Could not launch V3D - NeuroAnnotator",
+                                "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);                }
                 }
-                catch (IOException e) {
-                    JOptionPane.showMessageDialog(v3dMenuItem.getParent(),"Could not launch V3D - NeuroAnnotator",
-                            "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);                }
-            }
-        });
+            });
 
-        ImageIcon fijiImageIcon = new ImageIcon("/Users/"+System.getenv("USER")+"/Dev/jacs/console/target/classes/org/janelia/it/FlyWorkstation/gui/application/fijiicon.png");
-        Image img = fijiImageIcon.getImage();
-        Image newimg = img.getScaledInstance(16, 16,  java.awt.Image.SCALE_SMOOTH);
-        fijiImageIcon = new ImageIcon(newimg);
-        fijiMenuItem = new JMenuItem("FIJI", fijiImageIcon);
-        fijiMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                try {
-                    // todo This needs to be a custom user setting.
-                    Runtime.getRuntime().exec("/Applications/Fiji.app/Contents/MacOS/fiji-macosx");
+            ImageIcon fijiImageIcon = Utils.getClasspathImage("fijiicon.png");
+            Image img = fijiImageIcon.getImage();
+            Image newimg = img.getScaledInstance(16, 16,  Image.SCALE_SMOOTH);
+            fijiImageIcon = new ImageIcon(newimg);
+            fijiMenuItem = new JMenuItem("FIJI", fijiImageIcon);
+            fijiMenuItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
+                    try {
+                        // todo This needs to be a custom user setting.
+                        Runtime.getRuntime().exec("/Applications/Fiji.app/Contents/MacOS/fiji-macosx");
+                    }
+                    catch (IOException e) {
+                        JOptionPane.showMessageDialog(fijiMenuItem.getParent(),"Could not launch Fiji",
+                                "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);                }
                 }
-                catch (IOException e) {
-                    JOptionPane.showMessageDialog(fijiMenuItem.getParent(),"Could not launch Fiji",
-                            "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);                }
-            }
-        });
+            });
 
-        toolsConfiguration = new JMenuItem("Configure Tools...");
-        toolsConfiguration.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                try {
-                    new ToolConfigurationDialog(parentFrame);
+            toolsConfiguration = new JMenuItem("Configure Tools...");
+            toolsConfiguration.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
+                    try {
+                        new ToolConfigurationDialog(parentFrame);
+                    }
+                    catch (BackingStoreException e) {
+                        e.printStackTrace();
+                    }
                 }
-                catch (BackingStoreException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+            });
 
-        // Add the tools
-        add(fijiMenuItem);
-        add(v3dMenuItem);
-        addSeparator();
-        add(toolsConfiguration);
+            // Add the tools
+            add(fijiMenuItem);
+            add(v3dMenuItem);
+            addSeparator();
+            add(toolsConfiguration);
+        }
+        catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 }

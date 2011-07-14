@@ -27,13 +27,13 @@ import java.util.List;
  * Time: 2:09 PM
  * This class is the initial outline of the data file tree
  */
-public class TaskOutline extends JScrollPane implements Cloneable {
+public class SessionOutline extends JScrollPane implements Cloneable {
     public static final String NO_DATASOURCE = "Tasks Unreachable";
     private ConsoleFrame consoleFrame;
     private JTree tree;
     private static final String ANNOTATION_SESSIONS = "Annotation Sessions";
 
-    public TaskOutline(ConsoleFrame consoleFrame) {
+    public SessionOutline(ConsoleFrame consoleFrame) {
         this.consoleFrame = consoleFrame;
         tree = new JTree();
         //rebuildTreeModel();
@@ -51,7 +51,7 @@ public class TaskOutline extends JScrollPane implements Cloneable {
                 if (tmpPath.getLastPathComponent().toString().equals(NO_DATASOURCE)) {return;}
                 String tmpTask = tmpPath.getLastPathComponent().toString();
                 if (null!=tmpTask && !"".equals(tmpTask)) {
-                    TaskOutline.this.consoleFrame.setMostRecentFileOutlinePath(tmpTask);
+                    SessionOutline.this.consoleFrame.setMostRecentFileOutlinePath(tmpTask);
                 }
             }
         }));
@@ -95,7 +95,7 @@ public class TaskOutline extends JScrollPane implements Cloneable {
         if (null==tree || null==tree.getLastSelectedPathComponent()) return;
         String treePath = tree.getLastSelectedPathComponent().toString();
         if ((e.getModifiers() & MouseEvent.BUTTON3_MASK) > 0) {
-            System.out.println("TaskOutline Rt. button mouse pressed clicks: " + e.getClickCount() + " " + System.currentTimeMillis());
+            System.out.println("SessionOutline Rt. button mouse pressed clicks: " + e.getClickCount() + " " + System.currentTimeMillis());
 //            if (treePath.equals(ANNOTATION_SESSIONS)) {
 //                getAnnotationPopupMenu(e);
 //            }
