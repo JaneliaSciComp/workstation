@@ -39,10 +39,10 @@ public class FreeMemoryViewer extends JPanel implements Observer {
 
     public FreeMemoryViewer() {
         warningPane = new JOptionPane("Available memory is currently at x percent.",
-            JOptionPane.WARNING_MESSAGE, JOptionPane.OK_OPTION);
+            JOptionPane.WARNING_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
         warningDialog = warningPane.createDialog(this.getParent(), "Warning: Low Available Memory");
         errorPane = new JOptionPane("Available memory is currently at x and is critically low!",
-            JOptionPane.ERROR_MESSAGE, JOptionPane.OK_OPTION);
+            JOptionPane.ERROR_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
         errorDialog = errorPane.createDialog(this.getParent(), "Error: Critically Low Available Memory");
 
         bar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 100);
@@ -143,7 +143,7 @@ public class FreeMemoryViewer extends JPanel implements Observer {
     }
 
     private void showMemWarningDialog(int percentAvailable) {
-        warningPane.setMessage("Available memory is currently at " + percentAvailable + " percent.");
+        warningPane.setMessage("Available memory is " + percentAvailable + " percent.");
         warningPane.updateUI();
         if (!warningDialog.isShowing()) {
             warningDialog.setVisible(true);
@@ -151,7 +151,9 @@ public class FreeMemoryViewer extends JPanel implements Observer {
     }
 
     private void showMemErrorDialog(int percentAvailable) {
-        errorPane.setMessage("Available memory is currently at " + percentAvailable + " and is critically low!");
+        // If we are critical, hide the warning message
+        if (warningDialog.isShowing()) {warningDialog.setVisible(false);}
+        errorPane.setMessage("Available memory is " + percentAvailable + " and is critically low!");
         errorPane.updateUI();
         if (!errorDialog.isShowing()) {
             errorDialog.setVisible(true);
