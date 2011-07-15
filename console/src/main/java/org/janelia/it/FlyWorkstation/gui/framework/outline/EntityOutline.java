@@ -24,19 +24,21 @@ import org.janelia.it.jacs.model.entity.EntityData;
  * Time: 2:09 PM
  * This class is the initial outline of the data file tree
  */
-public class EntityOutline extends JScrollPane implements Cloneable {
+public class EntityOutline extends JPanel implements Cloneable {
 
     private final JPopupMenu popupMenu;
     private final JPanel treesPanel;
     private int nodeCount;
     
     public EntityOutline() {
+        super(new BorderLayout());
+    	
         // Create context menus
         popupMenu = new JPopupMenu();
         popupMenu.setLightWeightPopupEnabled(true);
 
         treesPanel = new JPanel(new BorderLayout());
-        setViewportView(treesPanel);
+        add(treesPanel, BorderLayout.CENTER);
         
 		treesPanel.add(new JLabel(Icons.loadingIcon));
 

@@ -192,10 +192,6 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
 		ontologyManager.pack();
 		ontologyManager.getPrivateTable().addDataListener(this);
 		ontologyManager.preload();
-
-		// Show a loading spinner until the data is loaded
-
-		treesPanel.add(new JLabel(Icons.loadingIcon));
 	}
     
     

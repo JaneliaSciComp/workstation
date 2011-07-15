@@ -12,14 +12,9 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeCellRenderer;
 
-import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
-import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
-import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
-import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.ontology.types.*;
 
 /**
  * Special tree cell renderer for generic Entity trees.
@@ -69,7 +64,7 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
 
     public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
         Component returnValue = null;
-        if ((value != null) && (value instanceof DefaultMutableTreeNode)) {
+        if ((value != null) || (value instanceof DefaultMutableTreeNode)) {
 
             // Set the colors
 
