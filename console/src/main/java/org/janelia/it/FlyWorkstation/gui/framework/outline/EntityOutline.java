@@ -1,5 +1,14 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import java.awt.BorderLayout;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
@@ -7,10 +16,6 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import java.awt.*;
-import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -82,6 +87,10 @@ public class EntityOutline extends JScrollPane implements Cloneable {
 				try {
 			        // Create a new tree and add all the nodes to it
 			        DynamicTree newTree = new DynamicTree(rootEntity);
+			        
+			        // Replace the cell renderer
+			        newTree.setCellRenderer(new EntityTreeCellRenderer(newTree));
+			        
                     addNodes(newTree, null, rootEntity);
 		            treesPanel.removeAll();
 			        treesPanel.add(newTree);
@@ -116,7 +125,38 @@ public class EntityOutline extends JScrollPane implements Cloneable {
             newNode = tree.rootNode;
         }
 
-        List<EntityData> dataList = newEntity.getOrderedEntityData();
+        List<EntityData> dataList = new ArrayList<EntityData>(newEntity.getEntityData());
+        
+    	Collections.sort(dataList, new Comparator<EntityData>() {
+			@Override
+			public int compare(EntityData o1, EntityData o2) {
+				if (o1.getOrderIndex() == null) {
+					if (o2.getOrderIndex() == null) {
+						Entity child1 = o1.getChildEntity();
+						Entity child2 = o2.getChildEntity();
+						if (child1 == null) {
+							if (child2 == null) {
+								return o1.getId().compareTo(o2.getId());		
+							}
+							else {
+								return -1;
+							}
+						}
+						else if (child2 == null) {
+							return 1;
+						}
+						return child1.getName().compareTo(child2.getName());
+						
+					}
+					return -1;
+				}
+				else if (o2.getOrderIndex() == null) {
+					return 1;
+				}
+				return o1.getOrderIndex().compareTo(o2.getOrderIndex());
+			}
+		});
+	    
         for (EntityData entityData : dataList) {
     		// The tree was fetched with getEntityTree, so the child entities have already been prepopulated
         	Entity child = entityData.getChildEntity();

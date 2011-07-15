@@ -46,7 +46,8 @@ public class DynamicTree extends JPanel {
         tree.setRowHeight(25);
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         tree.setShowsRootHandles(true);
-
+        tree.setLargeModel(true);
+        
         // Set the mouse listener which keeps track of doubleclicks on nodes, and rightclicks to show the context menu
 
         tree.addMouseListener(new MouseAdapter() {
