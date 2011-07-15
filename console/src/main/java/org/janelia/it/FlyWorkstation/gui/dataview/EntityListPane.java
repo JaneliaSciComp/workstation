@@ -179,6 +179,7 @@ public class EntityListPane extends JPanel {
 		        remove(loadingView);
 		        add(scrollPane, BorderLayout.CENTER);
 		        table.getSelectionModel().setSelectionInterval(0, 0);
+		        populateEntityDataPanes(entity);
 			}
 			
 			@Override
