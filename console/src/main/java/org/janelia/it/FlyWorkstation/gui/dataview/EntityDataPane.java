@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.dataview;
 
 import java.awt.BorderLayout;
+import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -58,12 +59,22 @@ public class EntityDataPane extends JPanel {
 
         table.addMouseListener(new MouseAdapter(){
             public void mouseClicked(MouseEvent e){
-                if (e.getClickCount() == 2) {
-                    JTable target = (JTable)e.getSource();
-                    int row = target.getSelectedRow();
-                    if (row >= 0 && row<datas.size()) {
+                JTable target = (JTable)e.getSource();
+                int row = target.getSelectedRow();
+                if (row >= 0 && row<datas.size()) {
+	                if (e.isPopupTrigger()) {
+	                	// Right click
+	                }
+	                else if (e.getClickCount()==2 
+	                		&& e.getButton()==MouseEvent.BUTTON1 
+	                		&& (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
+	                	// Double click
                         doubleClick(datas.get(row));
-                    }
+	                }
+	                else if (e.getClickCount()==1 
+	                		&& e.getButton()==MouseEvent.BUTTON1 ) {
+	                	// Single click
+	                }
                 }
             }
         });

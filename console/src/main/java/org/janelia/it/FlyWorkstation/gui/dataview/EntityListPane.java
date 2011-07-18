@@ -1,8 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.dataview;
 
 import java.awt.BorderLayout;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.util.*;
 
 import javax.swing.*;
@@ -13,12 +12,16 @@ import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.jacs.compute.api.ComputeException;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
 
-public class EntityListPane extends JPanel {
+public class EntityListPane extends JPanel implements ActionListener {
 
+    private static final String DELETE_ENTITY_COMMAND = "delete_entity";
+    private static final String DELETE_TREE_COMMAND = "delete_tree";
+    
     private final EntityDataPane entityParentsPane;
     private final EntityDataPane entityChildrenPane;
     private final List<String> staticColumns = new ArrayList<String>();
@@ -29,6 +32,9 @@ public class EntityListPane extends JPanel {
     private TableModel tableModel;
     private SimpleWorker loadTask;
     private JComponent loadingView = new JLabel(Icons.loadingIcon);
+    
+    private EntityType shownEntityType;
+    private Entity shownEntity;
     
     public EntityListPane(final EntityDataPane entityParentsPane, final EntityDataPane entityChildrenPane) {
 
@@ -42,6 +48,20 @@ public class EntityListPane extends JPanel {
         staticColumns.add("Updated Date");
         staticColumns.add("Name");
 
+
+        final JPopupMenu popupMenu = new JPopupMenu();
+        popupMenu.setLightWeightPopupEnabled(true);
+
+        JMenuItem deleteEntityMenuItem = new JMenuItem("Delete entity");
+        deleteEntityMenuItem.addActionListener(this);
+        deleteEntityMenuItem.setActionCommand(DELETE_ENTITY_COMMAND);
+        popupMenu.add(deleteEntityMenuItem);
+        
+        JMenuItem deleteTreeMenuItem = new JMenuItem("Delete tree");
+        deleteTreeMenuItem.addActionListener(this);
+        deleteTreeMenuItem.setActionCommand(DELETE_TREE_COMMAND);
+        popupMenu.add(deleteTreeMenuItem);
+        
         table = new JTable();
         table.setFillsViewportHeight(true);
         table.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -49,13 +69,34 @@ public class EntityListPane extends JPanel {
         table.setRowSelectionAllowed(true);
 
         table.addMouseListener(new MouseAdapter(){
-            public void mouseClicked(MouseEvent e){
-                if (e.getClickCount() == 1) {
-                    JTable target = (JTable)e.getSource();
-                    int row = target.getSelectedRow();
-                    if (row >= 0 && row<entities.size()) {
-                    	populateEntityDataPanes(entities.get(row));
-                    }
+			public void mousePressed(MouseEvent e) {
+                JTable target = (JTable)e.getSource();
+                int row = target.getSelectedRow();
+                if (row >= 0 && row<entities.size()) {
+	                if (e.isPopupTrigger()) {
+	                	// Right click
+	                    popupMenu.show((JComponent)e.getSource(), e.getX(), e.getY());
+	                }
+                }
+			}
+            public void mouseReleased(MouseEvent e){
+                JTable target = (JTable)e.getSource();
+                int row = target.getSelectedRow();
+                if (row >= 0 && row<entities.size()) {
+	                if (e.isPopupTrigger()) {
+	                	// Right click
+	                    popupMenu.show((JComponent)e.getSource(), e.getX(), e.getY());
+	                }
+	                else if (e.getClickCount()==2 
+	                		&& e.getButton()==MouseEvent.BUTTON1 
+	                		&& (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
+	                	// Double click
+	                }
+	                else if (e.getClickCount()==1 
+	                		&& e.getButton()==MouseEvent.BUTTON1 ) {
+	                	// Single click
+	                	populateEntityDataPanes(entities.get(row));
+	                }
                 }
             }
         });
@@ -106,11 +147,23 @@ public class EntityListPane extends JPanel {
         repaint();
     }
 
+    public void reshow() {
+    	if (shownEntity != null) {
+    		showEntity(shownEntity);
+    	}
+    	else if (shownEntityType != null) {
+    		showEntities(shownEntityType);
+    	}
+    }
+    
     /**
      * Async method for loading and displaying entities of a given type. 
      */
     public void showEntities(final EntityType entityType) {
-
+    	
+    	shownEntityType = entityType;
+    	shownEntity = null;
+    	
     	if (loadTask != null && !loadTask.isDone()) {
     		System.out.println("Cancel current entity type load");
     		loadTask.cancel(true);
@@ -127,7 +180,7 @@ public class EntityListPane extends JPanel {
 			protected void doStuff() throws Exception {
         		List<Entity> entities = EJBFactory.getRemoteAnnotationBean().getEntitiesByType(entityType.getId());
         		if (isCancelled()) return;
-        		tableModel = updateTableModel(entities);
+        		updateTableModel(entities);
 			}
 			
 			@Override
@@ -152,6 +205,9 @@ public class EntityListPane extends JPanel {
 
     public void showEntity(final Entity entity) {
 
+    	shownEntityType = null;
+    	shownEntity = entity;
+    	
     	if (loadTask != null && !loadTask.isDone()) {
     		System.out.println("Cancel current entity load");
     		loadTask.cancel(true);
@@ -169,7 +225,7 @@ public class EntityListPane extends JPanel {
 		        titleLabel.setText("Entity: "+entity.getEntityType().getName()+" ("+entity.getName()+")");
 		        List<Entity> entities = new ArrayList<Entity>();
 		        entities.add(entity);
-				tableModel = updateTableModel(entities);
+		        updateTableModel(entities);
 			}
 			
 			@Override
@@ -195,7 +251,7 @@ public class EntityListPane extends JPanel {
     /**
      * Synchronous method for updating the JTable model. Should be called from the EDT.
      */
-    private TableModel updateTableModel(List<Entity> entities) {
+    private void updateTableModel(List<Entity> entities) {
 
         this.entities = entities;
 
@@ -222,11 +278,63 @@ public class EntityListPane extends JPanel {
             data.add(rowData);
         }
         
-        return new DefaultTableModel(data, columnNames) {
+        tableModel = new DefaultTableModel(data, columnNames) {
             public boolean isCellEditable(int rowIndex, int mColIndex) {
                 return false;
             }
         };
     }
+    public void actionPerformed(ActionEvent e) {
+        String command = e.getActionCommand();
+        int num = table.getSelectedRows().length;
+        
+		if (DELETE_ENTITY_COMMAND.equals(command)) {
+			
+			int deleteConfirmation = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete "+num+" entities?",
+					"Delete Term", JOptionPane.YES_NO_OPTION);
+			if (deleteConfirmation != 0) {
+				return;
+			}
 
+			List<Entity> toDelete = new ArrayList<Entity>();
+	        for(int i : table.getSelectedRows()) {
+	        	toDelete.add(entities.get(i));
+	        }
+			
+	        // Update database
+	        for(Entity entity : toDelete) {
+	            boolean success = EJBFactory.getRemoteAnnotationBean().deleteEntityById(entity.getId());
+				if (!success) {
+					JOptionPane.showMessageDialog(this, "Error deleting entity with id="+entity.getId(), "Error", JOptionPane.ERROR_MESSAGE);
+				}
+	        }
+
+	        reshow();
+        }
+		else if (DELETE_TREE_COMMAND.equals(command)) {
+			int deleteConfirmation = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete "+num+" entities and all their descendants?",
+					"Delete Term", JOptionPane.YES_NO_OPTION);
+			if (deleteConfirmation != 0) {
+				return;
+			}
+	
+			List<Entity> toDelete = new ArrayList<Entity>();
+	        for(int i : table.getSelectedRows()) {
+	        	toDelete.add(entities.get(i));
+	        }
+			
+	        // Update database
+	        for(Entity entity : toDelete) {
+	            try {
+	            	EJBFactory.getRemoteAnnotationBean().deleteEntityTree(System.getenv("USER"), entity.getId());
+	            }
+	            catch (ComputeException ex) {
+	            	ex.printStackTrace();
+					JOptionPane.showMessageDialog(this, "Error deleting entity with id="+entity.getId(), "Error", JOptionPane.ERROR_MESSAGE);
+				}
+	        }
+	        
+	        reshow();
+        }
+    }
 }
