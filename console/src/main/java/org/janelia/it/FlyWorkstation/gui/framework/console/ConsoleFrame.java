@@ -110,19 +110,19 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 
 //            if ((position == null) ||
 //                    !position.getScreenSize().equals(screenSize)) {
-            setSize(new Dimension((int) (screenSize.width * realEstatePercent), (int) (screenSize.height * realEstatePercent)));
+//            setSize(new Dimension((int) (screenSize.width * realEstatePercent), (int) (screenSize.height * realEstatePercent)));
 
-            Dimension frameSize = getSize();
-
-            if (frameSize.height > screenSize.height) {
-                frameSize.height = screenSize.height;
-            }
-
-            if (frameSize.width > screenSize.width) {
-                frameSize.width = screenSize.width;
-            }
-
-            setLocation((screenSize.width - frameSize.width) / 2, (screenSize.height - frameSize.height) / 2);
+//            Dimension frameSize = getSize();
+//
+//            if (frameSize.height > screenSize.height) {
+//                frameSize.height = screenSize.height;
+//            }
+//
+//            if (frameSize.width > screenSize.width) {
+//                frameSize.width = screenSize.width;
+//            }
+//
+//            setLocation((screenSize.width - frameSize.width) / 2, (screenSize.height - frameSize.height) / 2);
 //            } else {
 //                setSize(position.getConsoleSize());
 //                setLocation(position.getConsoleLocation());
@@ -216,7 +216,6 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //                                     .getModelProperty(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY)).booleanValue());
 
         useFreeMemoryViewer(true);
-        this.setSize(400, 400);
         getContentPane().setLayout(borderLayout);
         setTitle("");
 
@@ -234,6 +233,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
         setJMenuBar(menuBar);
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        setSize(screenSize);
         viewerPanel.setBorder(BorderFactory.createLineBorder(Color.black));
         viewerPanel.loadImages(null);
         searchToolbar = new SearchToolbar();
@@ -241,7 +241,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //        subBrowserTabPane = new SubBrowser(browserModel);
 //        fileOutline = new FileOutline(this);
         sessionOutline = new SessionOutline(this);
-        entityOutline = new EntityOutline();
+        entityOutline = new EntityOutline(this);
         ontologyOutline = new OntologyOutline();
         ontologyOutline.setPreferredSize(new Dimension());
 //        icsTabPane = new ICSTabPane(this);

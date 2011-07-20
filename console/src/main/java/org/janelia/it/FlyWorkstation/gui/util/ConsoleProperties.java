@@ -6,8 +6,6 @@
  */
 package org.janelia.it.FlyWorkstation.gui.util;
 
-import org.apache.log4j.Logger;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -286,7 +284,7 @@ public class ConsoleProperties extends Properties {
             in = cl.getResourceAsStream(propertiesFileName);
         }
         if (in == null) {
-            Logger.getLogger(ConsoleProperties.class).warn("Could not read properties file: " + propertiesFileName);
+            System.out.println("Could not read properties file: " + propertiesFileName);
         }
         try {
             properties.load(in);
@@ -295,7 +293,7 @@ public class ConsoleProperties extends Properties {
             }
         }
         catch (Exception e) {
-            Logger.getLogger(ConsoleProperties.class).warn("Could not read properties file: " + propertiesFileName);
+            System.out.println("Could not read properties file: " + propertiesFileName);
         }
         return properties;
     }
