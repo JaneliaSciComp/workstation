@@ -60,8 +60,8 @@ public class JOutlookBar extends JPanel implements ActionListener
   public void addBar( String name, JComponent component )
   {
     BarInfo barInfo = new BarInfo( name, component );
-    barInfo.getButton().addActionListener( this );
-    this.bars.put( name, barInfo );
+    barInfo.getButton().addActionListener(this);
+    this.bars.put(name, barInfo);
     render();
   }
 
@@ -87,7 +87,7 @@ public class JOutlookBar extends JPanel implements ActionListener
    */
   public void removeBar( String name )
   {
-    this.bars.remove( name );
+    this.bars.remove(name);
     render();
   }
 
@@ -116,6 +116,25 @@ public class JOutlookBar extends JPanel implements ActionListener
       render();
     }
   }
+
+    /**
+     * Programmatically sets the currently visible bar; the visible bar
+     * index must be in the range of 0 to size() - 1
+     *
+     * @param  desiredBarName   The name of the bar to set visible
+     */
+    public void setVisibleBarByName( String desiredBarName )
+    {
+        int count=-1;
+        for (String bar : bars.keySet()) {
+            count++;
+            if (bar.equals(desiredBarName)) {
+                this.visibleBar = count;
+                render();
+                break;
+            }
+        }
+    }
 
   /**
    * Causes the outlook bar component to rebuild itself; this means that

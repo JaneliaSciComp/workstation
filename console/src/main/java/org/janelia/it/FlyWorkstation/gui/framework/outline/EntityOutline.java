@@ -131,8 +131,10 @@ public class EntityOutline extends JPanel implements Cloneable {
                 newSessionItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
                         System.out.println("DEBUG: Creating new Annotation Session Task");
-                        createAnnotationSession(getSelectedEntity());
+                        AnnotationSessionTask newTask = createAnnotationSession(getSelectedEntity());
+                        consoleFrame.getOutlookBar().setVisibleBarByName(ConsoleFrame.BAR_SESSION);
                         consoleFrame.getAnnotationSessionOutline().rebuildDataModel();
+                        consoleFrame.getAnnotationSessionOutline().selectSession(newTask.getObjectId().toString());
                     }
                 });
                 popupMenu.add(newSessionItem);

@@ -198,7 +198,6 @@ public class ConsoleApp {
                     // todo remove this repaint if this is an image definition problem
                     mainConsole.repaint();
             mainConsole.setVisible(true);
-            Thread.sleep(3000);
             splash.setVisible(false);
 //            mainBrowser.getBrowserModel()
 //                    .setModelProperty("DefaultSubViewName",

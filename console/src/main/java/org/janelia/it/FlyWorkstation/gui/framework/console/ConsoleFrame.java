@@ -40,6 +40,9 @@ public class ConsoleFrame extends JFrame implements Cloneable {
     public static final String VIEW_SEARCH   = "Search Toolbar";
     public static final String VIEW_OUTLINES = "Outlines Section";
     public static final String VIEW_ONTOLOGY = "Ontology Section";
+    public static final String BAR_SESSION   = "Annotation Sessions";
+    public static final String BAR_DATA      = "Data";
+
     private static String MEMORY_EXCEEDED_PRT_SCR_MSG = "Insufficient memory to print screen";
     private static String MEMORY_EXCEEDED_ADVISORY = "Low Memory";
     private static int RGB_TYPE_BYTES_PER_PIXEL = 4;
@@ -143,41 +146,6 @@ public class ConsoleFrame extends JFrame implements Cloneable {
         }
     }
 
-    /**
-     * Use given coordinates of the top left point and passed realEstatePercent (0-1.0)
-     */
-    public ConsoleFrame(int topLeftX, int topLeftY, Dimension size/*, BrowserModel browserModel*/) {
-        enableEvents(AWTEvent.WINDOW_EVENT_MASK);
-
-        try {
-            jbInit(/*browserModel*/);
-
-
-            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-            Dimension frameSize = getSize();
-
-            if (frameSize.height > screenSize.height) {
-                frameSize.height = screenSize.height;
-            }
-
-            if (frameSize.width > screenSize.width) {
-                frameSize.width = screenSize.width;
-            }
-
-            setLocation(topLeftX, topLeftY);
-            setSize(size);
-        }
-        catch (Exception e) {
-            try {
-                e.getMessage();
-//                SessionMgr.getSessionMgr().handleException(e);
-            }
-            catch (Exception ex) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     static public void setMenuBarClass(Class aMenuBarClass) {
         menuBarClass = aMenuBarClass;
     }
@@ -247,8 +215,8 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //        icsTabPane = new ICSTabPane(this);
 
         outlookBar = new JOutlookBar();
-        outlookBar.addBar("Collections", entityOutline);
-        outlookBar.addBar("Sessions", sessionOutline);
+        outlookBar.addBar(BAR_DATA, entityOutline);
+        outlookBar.addBar(BAR_SESSION, sessionOutline);
 //        outlookBar.addBar("Files", fileOutline);
         outlookBar.setVisibleBar(2);
 
@@ -269,7 +237,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
         centerRightHorizontalSplitPane.setOneTouchExpandable(true);
 
         centerLeftHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, outlookBar, centerRightHorizontalSplitPane);
-        centerLeftHorizontalSplitPane.setMinimumSize(new Dimension(0, 0));
+        centerLeftHorizontalSplitPane.setMinimumSize(new Dimension(400, 0));
         centerLeftHorizontalSplitPane.setOneTouchExpandable(true);
 
         searchToolbar.setVisible(false);
@@ -283,7 +251,6 @@ public class ConsoleFrame extends JFrame implements Cloneable {
         mainPanel.add(allPanelsView, "Regular");
         collapsedOutlineView.setLayout(new BorderLayout());
         mainPanel.add(collapsedOutlineView, "Collapsed FileOutline");
-        centerRightHorizontalSplitPane.setDividerLocation(0.8);
         getContentPane().add(mainPanel, BorderLayout.CENTER);
     }
 
@@ -1229,5 +1196,9 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //        fileOutline.clearSelection();
         sessionOutline.rebuildDataModel();
         sessionOutline.selectSession(currentAnnotationSessionTaskId);
+    }
+
+    public JOutlookBar getOutlookBar() {
+        return outlookBar;
     }
 }

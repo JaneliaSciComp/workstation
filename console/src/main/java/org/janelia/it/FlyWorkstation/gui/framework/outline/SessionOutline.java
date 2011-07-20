@@ -184,7 +184,9 @@ public class SessionOutline extends JScrollPane implements Cloneable {
         }
         for (int i = 0; i < rootNode.getChildCount(); i++) {
             boolean walkSuccess = selectSessionNode((DefaultMutableTreeNode)rootNode.getChildAt(i), currentAnnotationSessionTaskId);
-            if (walkSuccess) {return true;}
+            if (walkSuccess) {
+                return true;
+            }
         }
         return false;
     }
