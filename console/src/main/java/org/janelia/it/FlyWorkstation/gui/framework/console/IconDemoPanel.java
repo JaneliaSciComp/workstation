@@ -129,7 +129,6 @@ public class IconDemoPanel extends JPanel {
 				
 				String filepath = entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
 				File file = new File(convertPath(filepath));
-				System.out.println(file.getAbsolutePath());
 				labels.add(file.getName());
 				filenames.add(file.getAbsolutePath());
 			}
