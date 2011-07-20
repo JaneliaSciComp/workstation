@@ -92,10 +92,16 @@ public class Utils {
      * @throws MalformedURLException
      */
 	public static BufferedImage readImage(String path) throws IOException {
-        SeekableStream s = new FileSeekableStream(new File(path));
-        BufferedImage image = ImageIO.read(s);
-        s.close();
-        return image;
+		try {
+	        SeekableStream s = new FileSeekableStream(new File(path));
+	        BufferedImage image = ImageIO.read(s);
+	        s.close();
+	        return image;
+		}
+		catch (Exception e) {
+			if (e instanceof IOException) throw (IOException)e;
+			throw new IOException("Error reading image",e);
+		}
     }
     
     /**

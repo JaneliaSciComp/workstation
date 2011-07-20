@@ -23,6 +23,8 @@ import javax.swing.event.ChangeListener;
 
 import org.janelia.it.FlyWorkstation.gui.application.SplashPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationToolbar;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 
 /**
  * This panel shows titled images in a grid with optional textual annotation tags beneath each one.
@@ -96,6 +98,54 @@ public class IconDemoPanel extends JPanel {
         catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Load the given image entities and display them in a grid. If files is null then redisplay the splash image.
+     * @param files
+     */
+    public void loadImageEntities(List<Entity> images) {
+    	
+        try {
+            remove(splashPanel);
+           
+            if (images == null) {
+                add(splashPanel);
+                return;
+            }
+
+            add(toolbar, BorderLayout.NORTH);
+            add(scrollPane, BorderLayout.CENTER);
+
+            List<String> labels = new ArrayList<String>();
+            List<String> filenames = new ArrayList<String>();
+
+			for (Entity entity : images) {
+				
+				if (!entity.getEntityType().getName().equals(EntityConstants.TYPE_TIF_2D)) {
+					// Ignore things we can't display
+					continue;
+				}
+				
+				String filepath = entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
+				File file = new File(convertPath(filepath));
+				System.out.println(file.getAbsolutePath());
+				labels.add(file.getName());
+				filenames.add(file.getAbsolutePath());
+			}
+
+            imagesPanel.load(labels, filenames);
+            SwingUtilities.updateComponentTreeUI(IconDemoPanel.this);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    // TODO: move this into a configuration file
+    private static final String JACS_DATA_PATH = "/Volumes/jacsData";
+    public String convertPath(String filepath) {
+    	return filepath.replace("/groups/scicomp/jacsData", JACS_DATA_PATH);
     }
     
     /**

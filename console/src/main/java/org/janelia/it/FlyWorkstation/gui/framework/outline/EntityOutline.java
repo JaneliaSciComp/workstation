@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import java.awt.BorderLayout;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -9,6 +10,7 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 
+import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
@@ -29,6 +31,8 @@ public class EntityOutline extends JPanel implements Cloneable {
     private final JPopupMenu popupMenu;
     private final JPanel treesPanel;
     private int nodeCount;
+    
+    private DynamicTree selectedTree;
     
     public EntityOutline() {
         super(new BorderLayout());
@@ -87,15 +91,13 @@ public class EntityOutline extends JPanel implements Cloneable {
 
 			protected void hadSuccess() {
 				try {
-			        // Create a new tree and add all the nodes to it
-			        DynamicTree newTree = new DynamicTree(rootEntity);
-			        
-			        // Replace the cell renderer
-			        newTree.setCellRenderer(new EntityTreeCellRenderer(newTree));
-			        
-                    addNodes(newTree, null, rootEntity);
+			        createNewTree(rootEntity);
+                    addNodes(selectedTree, null, rootEntity);
+                    
 		            treesPanel.removeAll();
-			        treesPanel.add(newTree);
+			        treesPanel.add(selectedTree);
+			        
+			        selectedTree.expand(selectedTree.getRootNode(), true);
 			        
 			        EntityOutline.this.updateUI();
 				}
@@ -116,6 +118,48 @@ public class EntityOutline extends JPanel implements Cloneable {
         loadingWorker.execute();
     }
 
+    
+    private void createNewTree(Entity root) {
+    	
+    	selectedTree = new DynamicTree(root) {
+
+            protected void showPopupMenu(MouseEvent e) {
+
+            }
+
+            protected void nodeClicked(MouseEvent e) {
+            	
+            	DefaultMutableTreeNode node = getCurrentNode();
+            	Entity entity = (Entity)node.getUserObject();
+            	
+            	String type = entity.getEntityType().getName();
+            	
+            	List<Entity> entities = new ArrayList<Entity>();
+            	
+            	if (type.equals(EntityConstants.TYPE_TIF_2D)) {
+            		entities.add(entity);
+            	}
+            	else if (type.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
+            		// Get all the 2d TIFFs that are children of this result
+            		for(EntityData ed : entity.getOrderedEntityData()) {
+            			Entity child = ed.getChildEntity();
+            			if (child == null) continue;
+            			String childType = child.getEntityType().getName();
+            			if (!childType.equals(EntityConstants.TYPE_TIF_2D)) continue;
+            			entities.add(child);
+            		}
+            	}
+
+            	ConsoleApp.getMainFrame().getViewerPanel().loadImageEntities(entities);
+            }
+            
+        };
+        
+        // Replace the cell renderer
+
+        selectedTree.setCellRenderer(new EntityTreeCellRenderer(selectedTree));
+    }
+    
     private void addNodes(DynamicTree tree, DefaultMutableTreeNode parentNode, Entity newEntity) {
         nodeCount++;
         DefaultMutableTreeNode newNode;

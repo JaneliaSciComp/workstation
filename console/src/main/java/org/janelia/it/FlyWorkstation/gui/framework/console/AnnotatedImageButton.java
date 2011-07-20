@@ -108,6 +108,7 @@ public class AnnotatedImageButton extends JToggleButton {
     	    	imageLabel.setText("File not found");
     		}
     		else {
+    			e.printStackTrace();
     	    	imageLabel.setText("Image could not be loaded");
     		}
     	}

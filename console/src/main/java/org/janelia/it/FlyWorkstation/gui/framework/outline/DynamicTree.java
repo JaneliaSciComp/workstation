@@ -63,10 +63,11 @@ public class DynamicTree extends JPanel {
                     else if (e.getClickCount()==2 
                     		&& e.getButton()==MouseEvent.BUTTON1 
                     		&& (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
-                        Action action = getActionForNode(getCurrentNode());
-                        if (action != null && !(action instanceof NavigateToNodeAction)) {
-                        	action.doAction();
-                        }
+                    	nodeDoubleClicked(e);
+                    }
+                    else if (e.getClickCount()==1
+                    		&& e.getButton()==MouseEvent.BUTTON1 ) {
+                    	nodeClicked(e);
                     }
                 }
             }
@@ -97,6 +98,25 @@ public class DynamicTree extends JPanel {
      * @param e
      */
     protected void showPopupMenu(MouseEvent e) {
+    }
+
+    /**
+     * Override this method to do something when the user left clicks a node.
+     * @param e
+     */
+    protected void nodeClicked(MouseEvent e) {
+    	
+    }
+
+    /**
+     * Override this method to do something when the user double clicks a node.
+     * @param e
+     */
+    protected void nodeDoubleClicked(MouseEvent e) {
+        Action action = getActionForNode(getCurrentNode());
+        if (action != null && !(action instanceof NavigateToNodeAction)) {
+        	action.doAction();
+        }
     }
     
     /**
