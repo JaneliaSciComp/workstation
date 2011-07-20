@@ -201,6 +201,44 @@ public class EntityListPane extends JPanel implements ActionListener {
 
         loadTask.execute();
     }
+    
+    public void showEntities(final List<Entity> entities) {
+    	
+    	if (loadTask != null && !loadTask.isDone()) {
+    		System.out.println("Cancel current entity type load");
+    		loadTask.cancel(true);
+    	}
+		
+        titleLabel.setText("Entity Search Results");
+        showLoading();
+
+        loadTask = new SimpleWorker() {
+
+			@Override
+			protected void doStuff() throws Exception {
+        		if (isCancelled()) return;
+        		updateTableModel(entities);
+			}
+			
+			@Override
+			protected void hadSuccess() {
+                table.setModel(tableModel);
+                Utils.autoResizeColWidth(table);
+                remove(loadingView);
+                add(scrollPane, BorderLayout.CENTER);
+                entityParentsPane.showEmpty();
+                entityChildrenPane.showEmpty();
+			}
+			
+			@Override
+			protected void hadError(Throwable error) {
+				error.printStackTrace();
+			}
+			
+		};
+
+        loadTask.execute();
+    }
 
     public void showEntity(final Entity entity) {
 

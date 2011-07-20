@@ -56,12 +56,18 @@ public class DataviewFrame extends JFrame {
         progressPanel.add(progressBar,c);
 
         setLayout(new BorderLayout());
+
+        setJMenuBar(new DataviewMenuBar(this));
+        
         initUI();
         initData();
-
     }
 
-    private void initUI() {
+    public EntityListPane getEntityListPane() {
+		return entityListPane;
+	}
+
+	private void initUI() {
 
         entityTypePane = new EntityTypePane();
         
