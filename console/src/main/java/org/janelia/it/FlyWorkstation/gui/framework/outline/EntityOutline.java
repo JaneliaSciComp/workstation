@@ -251,7 +251,7 @@ public class EntityOutline extends JPanel implements Cloneable {
     		// The tree was fetched with getEntityTree, so the child entities have already been prepopulated
         	Entity child = entityData.getChildEntity();
         	if (child != null) {
-                if (EntityConstants.TYPE_TIF_2D.equals(child.getEntityType().toString())) {
+                if (EntityConstants.TYPE_TIF_2D.equals(child.getEntityType().getName())) {
                     entityList.add(parentEntity);
                 }
         		get2DTIFItems(child, entityList);
