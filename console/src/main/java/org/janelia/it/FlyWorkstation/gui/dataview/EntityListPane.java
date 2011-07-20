@@ -64,7 +64,6 @@ public class EntityListPane extends JPanel implements ActionListener {
         
         table = new JTable();
         table.setFillsViewportHeight(true);
-        table.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setColumnSelectionAllowed(false);
         table.setRowSelectionAllowed(true);
 
@@ -284,6 +283,7 @@ public class EntityListPane extends JPanel implements ActionListener {
             }
         };
     }
+    
     public void actionPerformed(ActionEvent e) {
         String command = e.getActionCommand();
         int num = table.getSelectedRows().length;
@@ -302,6 +302,7 @@ public class EntityListPane extends JPanel implements ActionListener {
 	        }
 			
 	        // Update database
+	        // TODO: do this in a worker thread and show a spinner, because it may take a long time
 	        for(Entity entity : toDelete) {
 	            boolean success = EJBFactory.getRemoteAnnotationBean().deleteEntityById(entity.getId());
 				if (!success) {
@@ -324,8 +325,10 @@ public class EntityListPane extends JPanel implements ActionListener {
 	        }
 			
 	        // Update database
+	        // TODO: do this in a worker thread and show a spinner, because it may take a long time
 	        for(Entity entity : toDelete) {
 	            try {
+	            	// TODO: allow dataviewer user to override owner?
 	            	EJBFactory.getRemoteAnnotationBean().deleteEntityTree(System.getenv("USER"), entity.getId());
 	            }
 	            catch (ComputeException ex) {
