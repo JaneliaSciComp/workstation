@@ -8,8 +8,6 @@ import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 
 import javax.swing.*;
-import javax.swing.event.TreeExpansionEvent;
-import javax.swing.event.TreeExpansionListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -28,23 +26,19 @@ import java.util.List;
  * This class is the initial outline of the data file tree
  */
 public class SessionOutline extends JScrollPane implements Cloneable {
-    public static final String NO_DATASOURCE = "Tasks Unreachable";
+    public static final String NO_DATASOURCE = "No Tasks Available";
     private ConsoleFrame consoleFrame;
-    private JTree tree;
+    private JPopupMenu popupMenu;
+    private DynamicTree treePanel;
     private static final String ANNOTATION_SESSIONS = "Annotation Sessions";
 
     public SessionOutline(ConsoleFrame consoleFrame) {
         this.consoleFrame = consoleFrame;
-        tree = new JTree();
+        popupMenu = new JPopupMenu();
+        popupMenu.setLightWeightPopupEnabled(true);
+        treePanel = new DynamicTree(ANNOTATION_SESSIONS);
         //rebuildTreeModel();
-        tree.addTreeExpansionListener(new TreeExpansionListener() {
-            public void treeExpanded(TreeExpansionEvent event) {
-            }
-
-            public void treeCollapsed(TreeExpansionEvent event) {
-            }
-        });
-        tree.addTreeSelectionListener((new TreeSelectionListener() {
+        treePanel.getTree().addTreeSelectionListener((new TreeSelectionListener() {
             public void valueChanged(TreeSelectionEvent treeSelectionEvent) {
 //                System.out.println("Selected "+treeSelectionEvent.getPath());
                 TreePath tmpPath = treeSelectionEvent.getPath();
@@ -55,55 +49,37 @@ public class SessionOutline extends JScrollPane implements Cloneable {
                 }
             }
         }));
-        tree.addMouseListener(new MouseAdapter() {
+        treePanel.getTree().addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
                 handleMouseEvents(mouseEvent);
             }
         });
         // todo Change the root to not visible
-        tree.setRootVisible(true);
-        tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-
-
-        // Load the tree in the background so that the app starts up first
-        SwingWorker<Void, Void> loadTasks = new SwingWorker<Void, Void>() {
-            @Override
-            protected Void doInBackground() throws Exception {
-                try {
-                    rebuildTreeModel();
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
-                setViewportView(tree);
-                return null;
-            }
-        };
-
-        loadTasks.execute();
+        treePanel.getTree().setRootVisible(true);
+        treePanel.getTree().getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+        rebuildDataModel();
     }
 
-    public void rebuildTreeModel(){
+    private void rebuildTreeModel(){
         DefaultMutableTreeNode newRootNode = buildTreeModel();
         DefaultTreeModel newModel = new DefaultTreeModel(newRootNode);
-        tree.setModel(newModel);
+        treePanel.getTree().setModel(newModel);
     }
 
     private void handleMouseEvents(MouseEvent e) {
-
-        if (null==tree || null==tree.getLastSelectedPathComponent()) return;
-        String treePath = tree.getLastSelectedPathComponent().toString();
+        if (null==treePanel.getTree() || null==treePanel.getTree().getLastSelectedPathComponent()) return;
+        String treePath = treePanel.getTree().getLastSelectedPathComponent().toString();
         if ((e.getModifiers() & MouseEvent.BUTTON3_MASK) > 0) {
             System.out.println("SessionOutline Rt. button mouse pressed clicks: " + e.getClickCount() + " " + System.currentTimeMillis());
 //            if (treePath.equals(ANNOTATION_SESSIONS)) {
 //                getAnnotationPopupMenu(e);
 //            }
         }
-        if (tree.getLastSelectedPathComponent() instanceof DefaultMutableTreeNode) {    //if not a DefaultMutableTreeNode, punt
-            DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+        if (treePanel.getTree().getLastSelectedPathComponent() instanceof DefaultMutableTreeNode) {    //if not a DefaultMutableTreeNode, punt
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) treePanel.getTree().getLastSelectedPathComponent();
             Object userObj = node.getUserObject();
-//            tree.setSelectionPath(previousTreeSelectionPath);
+//            treePanel.getTree().setSelectionPath(previousTreeSelectionPath);
         }
     }
 
@@ -176,15 +152,34 @@ public class SessionOutline extends JScrollPane implements Cloneable {
         return nullNode;
     }
 
+    public void rebuildDataModel() {
+        // Load the tree in the background so that the app starts up first
+        SwingWorker<Void, Void> loadTasks = new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                try {
+                    rebuildTreeModel();
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+                setViewportView(treePanel);
+                return null;
+            }
+        };
+
+        loadTasks.execute();
+    }
+
 
     public void selectSession(String currentAnnotationSessionTaskId) {
-        DefaultMutableTreeNode rootNode = (DefaultMutableTreeNode) tree.getModel().getRoot();
+        DefaultMutableTreeNode rootNode = (DefaultMutableTreeNode) treePanel.getTree().getModel().getRoot();
         selectSessionNode(rootNode, currentAnnotationSessionTaskId);
     }
 
     private boolean selectSessionNode(DefaultMutableTreeNode rootNode, String currentAnnotationSessionTaskId) {
         if (rootNode.toString().equals(currentAnnotationSessionTaskId)) {
-            tree.getSelectionModel().setSelectionPath(new TreePath(rootNode.getPath()));
+            treePanel.getTree().getSelectionModel().setSelectionPath(new TreePath(rootNode.getPath()));
             return true;
         }
         for (int i = 0; i < rootNode.getChildCount(); i++) {
@@ -195,6 +190,6 @@ public class SessionOutline extends JScrollPane implements Cloneable {
     }
 
     public void clearSelection() {
-        tree.clearSelection();
+        treePanel.getTree().clearSelection();
     }
 }

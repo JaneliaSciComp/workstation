@@ -74,7 +74,7 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
     
     public OntologyOutline() {
         super(new BorderLayout());
-
+        setMaximumSize(new Dimension(500,1300));
         nodeTypes.add(Category.class);
         nodeTypes.add(Tag.class);
         nodeTypes.add(Enum.class);

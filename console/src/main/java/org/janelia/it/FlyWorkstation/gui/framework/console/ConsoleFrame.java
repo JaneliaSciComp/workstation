@@ -283,6 +283,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
         mainPanel.add(allPanelsView, "Regular");
         collapsedOutlineView.setLayout(new BorderLayout());
         mainPanel.add(collapsedOutlineView, "Collapsed FileOutline");
+        centerRightHorizontalSplitPane.setDividerLocation(0.8);
         getContentPane().add(mainPanel, BorderLayout.CENTER);
     }
 
@@ -1161,6 +1162,10 @@ public class ConsoleFrame extends JFrame implements Cloneable {
         return ontologyOutline;
     }
 
+    public SessionOutline getAnnotationSessionOutline() {
+        return sessionOutline;
+    }
+
 
     public String getMostRecentFileOutlinePath() {
         return mostRecentFileOutlinePath;
@@ -1222,7 +1227,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
         currentAnnotationSessionTaskId = returnSessionTask;
         this.mostRecentFileOutlinePath = null;
 //        fileOutline.clearSelection();
-        sessionOutline.rebuildTreeModel();
+        sessionOutline.rebuildDataModel();
         sessionOutline.selectSession(currentAnnotationSessionTaskId);
     }
 }

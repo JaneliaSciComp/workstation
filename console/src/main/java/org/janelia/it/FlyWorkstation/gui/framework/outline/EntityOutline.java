@@ -18,9 +18,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import java.util.*;
 import java.util.List;
 
 
@@ -42,6 +40,7 @@ public class EntityOutline extends JPanel implements Cloneable {
     public EntityOutline(ConsoleFrame consoleFrame) {
         super(new BorderLayout());
         this.consoleFrame = consoleFrame;
+        this.setMinimumSize(new Dimension(400,400));
         // Create context menus
         popupMenu = new JPopupMenu();
         popupMenu.setLightWeightPopupEnabled(true);
@@ -125,7 +124,6 @@ public class EntityOutline extends JPanel implements Cloneable {
 
 
     private void createNewTree(Entity root) {
-
     	selectedTree = new DynamicTree(root) {
             protected void showPopupMenu(MouseEvent e) {
                 popupMenu = new JPopupMenu();
@@ -134,6 +132,7 @@ public class EntityOutline extends JPanel implements Cloneable {
                     public void actionPerformed(ActionEvent actionEvent) {
                         System.out.println("DEBUG: Creating new Annotation Session Task");
                         createAnnotationSession(getSelectedEntity());
+                        consoleFrame.getAnnotationSessionOutline().rebuildDataModel();
                     }
                 });
                 popupMenu.add(newSessionItem);
@@ -233,8 +232,8 @@ public class EntityOutline extends JPanel implements Cloneable {
 
     private AnnotationSessionTask createAnnotationSession(Entity targetEntity) {
         try {
-            List<Entity> targetEntities = get2DTIFItems(targetEntity, new ArrayList<Entity>());
-            String entityIds = Task.csvStringFromList(targetEntities);
+            Set<String> targetEntityIds = get2DTIFItems(targetEntity, new HashSet<String>());
+            String entityIds = Task.csvStringFromCollection(targetEntityIds);
             AnnotationSessionTask newSessionTask = new AnnotationSessionTask(null, System.getenv("USER"), null, null);
             newSessionTask.setParameter(AnnotationSessionTask.PARAM_annotationTargets, entityIds);
             newSessionTask.setParameter(AnnotationSessionTask.PARAM_annotationCategories, "");
@@ -246,17 +245,17 @@ public class EntityOutline extends JPanel implements Cloneable {
         return null;
     }
 
-    public List<Entity> get2DTIFItems(Entity parentEntity, List<Entity> entityList) {
+    public Set<String> get2DTIFItems(Entity parentEntity, Set<String> entitySet) {
         for (EntityData entityData : parentEntity.getEntityData()) {
     		// The tree was fetched with getEntityTree, so the child entities have already been prepopulated
         	Entity child = entityData.getChildEntity();
         	if (child != null) {
                 if (EntityConstants.TYPE_TIF_2D.equals(child.getEntityType().getName())) {
-                    entityList.add(parentEntity);
+                    entitySet.add(child.getId().toString());
                 }
-        		get2DTIFItems(child, entityList);
+        		get2DTIFItems(child, entitySet);
         	}
         }
-        return entityList;
+        return entitySet;
     }
 }
