@@ -33,6 +33,10 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
  */
 public class IconDemoPanel extends JPanel {
 
+    // TODO: move these into a configuration file
+    private static final String JACS_DATA_PATH_MAC = "/Volumes/jacsData";
+    private static final String JACS_DATA_PATH_LINUX = "/groups/scicomp/jacsData";
+    
     private SplashPanel splashPanel;
     private AnnotationToolbar toolbar;
     private ImagesPanel imagesPanel;
@@ -141,10 +145,8 @@ public class IconDemoPanel extends JPanel {
         }
     }
     
-    // TODO: move this into a configuration file
-    private static final String JACS_DATA_PATH = "/Volumes/jacsData";
     public String convertPath(String filepath) {
-    	return filepath.replace("/groups/scicomp/jacsData", JACS_DATA_PATH);
+    	return filepath.replace(JACS_DATA_PATH_LINUX, JACS_DATA_PATH_MAC);
     }
     
     /**
