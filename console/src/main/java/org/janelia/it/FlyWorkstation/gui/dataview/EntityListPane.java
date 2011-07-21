@@ -367,7 +367,7 @@ public class EntityListPane extends JPanel implements ActionListener {
 	        for(Entity entity : toDelete) {
 	            try {
 	            	// TODO: allow dataviewer user to override owner?
-	            	EJBFactory.getRemoteAnnotationBean().deleteEntityTree(System.getenv("USER"), entity.getId());
+	            	EJBFactory.getRemoteAnnotationBean().deleteEntityTree(entity.getUser().getUserLogin(), entity.getId());
 	            }
 	            catch (ComputeException ex) {
 	            	ex.printStackTrace();
