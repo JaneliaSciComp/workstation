@@ -37,11 +37,11 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
     private Color backgroundSelectionColor;
     private Color backgroundNonSelectionColor;
     private DefaultTreeCellRenderer defaultRenderer = new DefaultTreeCellRenderer();
-    private DynamicTree dtree;
+    private OntologyOutline ontologyOutline;
     
-    public OntologyTreeCellRenderer(DynamicTree dtree) {
+    public OntologyTreeCellRenderer(OntologyOutline ontologyOutline) {
 
-    	this.dtree = dtree;
+    	this.ontologyOutline = ontologyOutline;
     	
         cellPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
@@ -94,7 +94,7 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
                 }
 
 
-                Action action = dtree.getActionForNode(node);
+                Action action = ontologyOutline.getActionForNode(node);
                 KeyboardShortcut bind = ConsoleApp.getKeyBindings().getBinding(action);
                 if (bind != null) {
                     keybindLabel.setText("(" + KeymapUtil.getShortcutText(bind) + ")");

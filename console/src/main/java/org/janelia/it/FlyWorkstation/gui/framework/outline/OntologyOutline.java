@@ -68,8 +68,19 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
     private final JMenu addItemPopup;
     
     private final Map<Long, Action> ontologyActionMap = new HashMap<Long, Action>();
+    
     private DynamicTree selectedTree;
     private OntologyRoot root;
+    
+    /**
+     * Get the associated action for the given node.
+     * @param node
+     * @return
+     */
+    public Action getActionForNode(DefaultMutableTreeNode node) {
+    	OntologyElement element = (OntologyElement)node.getUserObject();
+    	return ontologyActionMap.get(element.getId());
+    }
     
     
     public OntologyOutline() {
@@ -138,7 +149,7 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
                     if (keyBindButton.isSelected()) {
 
                         // Set the key bind
-                        Action action = selectedTree.getActionForNode(selectedTree.getCurrentNode());
+                        Action action = getActionForNode(selectedTree.getCurrentNode());
                         ConsoleApp.getKeyBindings().setBinding(shortcut, action);
                         
                         // Refresh the entire tree (another key bind may have been overridden)
@@ -289,11 +300,17 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
                 popupMenu.show((JComponent)e.getSource(), e.getX(), e.getY());
             }
             
+            protected void nodeDoubleClicked(MouseEvent e) {
+                Action action = getActionForNode(getCurrentNode());
+                if (action != null && !(action instanceof NavigateToNodeAction)) {
+                	action.doAction();
+                }
+            }
         };
         
         // Replace the cell renderer
         
-        selectedTree.setCellRenderer(new OntologyTreeCellRenderer(selectedTree));
+        selectedTree.setCellRenderer(new OntologyTreeCellRenderer(this));
         
         // Replace the default key listener on the tree
         
@@ -326,9 +343,6 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
         else {
             // If the parent node is null, then the node is already in the tree as the root
             newNode = selectedTree.rootNode;
-
-            // Set the action for the root node
-            selectedTree.setActionForNode(selectedTree.rootNode, action);
         }
     	
     	// Add the node's children. 
@@ -389,7 +403,7 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
             if (treeNode != null) {
                 OntologyElement element = getOntologyElement(treeNode);
                 if (element != null) {
-                	Action action = selectedTree.getActionForNode(treeNode);
+                	Action action = getActionForNode(treeNode);
                     keyBindDialog.showForAction(action);
                 }
             }

@@ -126,8 +126,18 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
                 catch (Throwable r) {
                     r.printStackTrace();
                 }
-                returnValue = cellPanel;
             }
+            else if (userObject instanceof LazyEntity) {
+                titleLabel.setText("Loading...");
+                typeLabel.setText("");
+                try {
+                	titleLabel.setIcon(Utils.getClasspathImage("page.png"));
+                }
+                catch (Throwable r) {
+                    r.printStackTrace();
+                }
+            }
+            returnValue = cellPanel;
         }
         if (returnValue == null) {
             returnValue = defaultRenderer.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);

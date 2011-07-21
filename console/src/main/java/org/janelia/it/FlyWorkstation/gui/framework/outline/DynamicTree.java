@@ -32,9 +32,6 @@ public class DynamicTree extends JPanel {
     protected DefaultMutableTreeNode rootNode;
     protected DefaultTreeModel treeModel;
     protected final JTree tree;
-
-    private Map<DefaultMutableTreeNode,Action> actionMap = new HashMap<DefaultMutableTreeNode,Action>();
-    
     
     public DynamicTree(Object userObject) {
         super(new BorderLayout());
@@ -105,7 +102,6 @@ public class DynamicTree extends JPanel {
      * @param e
      */
     protected void nodeClicked(MouseEvent e) {
-    	
     }
 
     /**
@@ -113,10 +109,6 @@ public class DynamicTree extends JPanel {
      * @param e
      */
     protected void nodeDoubleClicked(MouseEvent e) {
-        Action action = getActionForNode(getCurrentNode());
-        if (action != null && !(action instanceof NavigateToNodeAction)) {
-        	action.doAction();
-        }
     }
     
     /**
@@ -200,37 +192,11 @@ public class DynamicTree extends JPanel {
         if (parent == null) {
             parent = rootNode;
         }
-
-        // Set the action BEFORE adding the node, since the cell renderer may need it
-        setActionForNode(childNode, action);
         
         // It is key to invoke this on the TreeModel, and NOT DefaultMutableTreeNode
         treeModel.insertNodeInto(childNode, parent, parent.getChildCount());
-
-        // Make sure the user can see the lovely new node.
-        if (shouldBeVisible) {
-            tree.scrollPathToVisible(new TreePath(childNode.getPath()));
-        }
         
         return childNode;
-    }
-
-    /**
-     * Set an associated action for the node.
-     * @param node
-     * @param action
-     */
-    public void setActionForNode(DefaultMutableTreeNode node, Action action) {
-    	actionMap.put(node, action);
-    }
-    
-    /**
-     * Get the associated action for the given node.
-     * @param node
-     * @return
-     */
-    public Action getActionForNode(DefaultMutableTreeNode node) {
-    	return actionMap.get(node);
     }
     
     /**
