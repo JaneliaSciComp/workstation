@@ -45,7 +45,6 @@ import java.util.Map;
  */
 public class OntologyOutline extends JPanel implements ActionListener, DataAvailabilityListener {
 	
-	
     private static final String ADD_COMMAND = "add";
     private static final String REMOVE_COMMAND = "remove";
     private static final String SHOW_MANAGER_COMMAND = "manager";
@@ -281,7 +280,9 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
                 
                 if (isEditable()) {
 
-                    OntologyElement curr = getOntologyElement(getCurrentNode());
+                	DefaultMutableTreeNode node = getCurrentNode();
+                	if (node == null) return;
+                    OntologyElement curr = getOntologyElement(node);
                     OntologyElementType type = curr.getType();
                     
                     if (type instanceof Enum) {
@@ -338,7 +339,7 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
     	// Add the node to the tree
         DefaultMutableTreeNode newNode;
         if (parentNode != null) {
-            newNode = selectedTree.addObject(parentNode, element, action);
+            newNode = selectedTree.addObject(parentNode, element);
         }
         else {
             // If the parent node is null, then the node is already in the tree as the root
@@ -354,14 +355,6 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
 
     private OntologyElement getOntologyElement(DefaultMutableTreeNode targetNode) {
         return (OntologyElement)targetNode.getUserObject();
-    }
-
-    private String getEntityNameFromTreeNode(DefaultMutableTreeNode targetNode) {
-        return ((OntologyElement)targetNode.getUserObject()).getName();
-    }
-
-    private Long getEntityIdFromTreeNode(DefaultMutableTreeNode targetNode) {
-        return ((OntologyElement)targetNode.getUserObject()).getId();
     }
 
     public void navigateToOntologyElement(OntologyElement element) {
@@ -437,7 +430,7 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
             String termName = (String)JOptionPane.showInputDialog(
                     this,
                     "Ontology Term:\n",
-                    "Adding to "+getEntityNameFromTreeNode(selectedTree.getCurrentNode()),
+                    "Adding to "+getOntologyElement(selectedTree.getCurrentNode()).getName(),
                     JOptionPane.PLAIN_MESSAGE,
                     null,
                     null,
@@ -518,16 +511,6 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
     public boolean isEditable() {
     	return !root.isPublic();
     }
-
-    // TODO: This is toooooooo brute-force
-    private void updateSelectedTreeEntity(){
-        Entity entity = EJBFactory.getRemoteAnnotationBean().getUserEntityById(System.getenv("USER"),getEntityIdFromTreeNode(selectedTree.rootNode));
-        if (null != selectedTree || entity.getName().equals(getEntityNameFromTreeNode(selectedTree.rootNode))){
-            initializeTree(entity.getId());
-        }
-        this.updateUI();
-    }
-
     
     @Override
 	public void dataReady(DataReadyEvent evt) {

@@ -32,11 +32,8 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
     private Color backgroundSelectionColor;
     private Color backgroundNonSelectionColor;
     private DefaultTreeCellRenderer defaultRenderer = new DefaultTreeCellRenderer();
-    private DynamicTree dtree;
     
-    public EntityTreeCellRenderer(DynamicTree dtree) {
-
-    	this.dtree = dtree;
+    public EntityTreeCellRenderer() {
     	
         cellPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
@@ -88,6 +85,12 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
             
         	DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
             Object userObject = node.getUserObject();
+            
+            if (node instanceof LazyTreeNode) {
+                titleLabel.setText("");
+                typeLabel.setText("");
+                titleLabel.setIcon(null);
+            }
             if (userObject instanceof Entity) {
             	Entity entity = (Entity) userObject;
 
@@ -122,16 +125,6 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
                         titleLabel.setIcon(Utils.getClasspathImage("page.png"));
                     }
 
-                }
-                catch (Throwable r) {
-                    r.printStackTrace();
-                }
-            }
-            else if (userObject instanceof LazyEntity) {
-                titleLabel.setText("Loading...");
-                typeLabel.setText("");
-                try {
-                	titleLabel.setIcon(Utils.getClasspathImage("page.png"));
                 }
                 catch (Throwable r) {
                     r.printStackTrace();

@@ -6,20 +6,23 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
-import org.janelia.it.FlyWorkstation.gui.framework.actions.NavigateToNodeAction;
-import org.janelia.it.FlyWorkstation.gui.util.TreeSearcher;
-
-import javax.swing.*;
-import javax.swing.text.Position;
-import javax.swing.tree.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
+
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTree;
+import javax.swing.event.TreeExpansionEvent;
+import javax.swing.event.TreeWillExpandListener;
+import javax.swing.text.Position;
+import javax.swing.tree.*;
+
+import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.gui.util.TreeSearcher;
 
 /**
  * A reusable tree component with toolbar features.
@@ -34,6 +37,10 @@ public class DynamicTree extends JPanel {
     protected final JTree tree;
     
     public DynamicTree(Object userObject) {
+    	this(userObject, true, false);
+    }
+    
+    public DynamicTree(Object userObject, boolean showToolbar, boolean lazyLoading) {
         super(new BorderLayout());
 
         rootNode = new DefaultMutableTreeNode(userObject);
@@ -52,8 +59,8 @@ public class DynamicTree extends JPanel {
 
                 int row = tree.getRowForLocation(e.getX(), e.getY());
                 if (row >= 0) {
-                    tree.setSelectionRow(row);
                     if (e.isPopupTrigger()) {
+                    	tree.setSelectionRow(row);
                         showPopupMenu(e);
                     }
                     // This masking is to make sure that the right button is being double clicked, not left and then right or right and then left
@@ -73,23 +80,70 @@ public class DynamicTree extends JPanel {
                 // instead of mouseReleased like any sane OS.
                 int row = tree.getRowForLocation(e.getX(), e.getY());
                 if (row >= 0) {
-                    tree.setSelectionRow(row);
                     if (e.isPopupTrigger()) {
+                    	tree.setSelectionRow(row);
                         showPopupMenu(e);
                     }
                 }
             }
         });
+
+        if (lazyLoading) {
+	        tree.addTreeWillExpandListener(new TreeWillExpandListener() {
+				
+				@Override
+				public void treeWillExpand(TreeExpansionEvent event) throws ExpandVetoException {
+					final DefaultMutableTreeNode node = (DefaultMutableTreeNode)event.getPath().getLastPathComponent();
+					
+			        boolean allLoaded = true;
+					for(int i=0; i<node.getChildCount(); i++) {
+						DefaultMutableTreeNode childNode = (DefaultMutableTreeNode)node.getChildAt(i);
+						if (childNode instanceof LazyTreeNode) {
+			        		allLoaded = false;
+			        		break;
+						}
+					}
+					
+					if (allLoaded) return;
+
+	            	loadLazyChildren(node);
+				}
+				
+				@Override
+				public void treeWillCollapse(TreeExpansionEvent event) throws ExpandVetoException {
+					// We don't care
+				}
+			});
+        }
         
-        
-        DynamicTreeToolbar toolbar = new DynamicTreeToolbar(this);
-        add(toolbar, BorderLayout.PAGE_START);
+        if (showToolbar) {
+	        DynamicTreeToolbar toolbar = new DynamicTreeToolbar(this);
+	        add(toolbar, BorderLayout.PAGE_START);
+        }
         
         JScrollPane scrollPane = new JScrollPane(tree);
         scrollPane.setPreferredSize(new Dimension(300,800));
         add(scrollPane, BorderLayout.CENTER);
     }
 
+    
+    public void removeLazyChild(DefaultMutableTreeNode node) {
+
+		// Replace the children nodes
+		int[] childIndices = { 0 };
+		Object[] removedChildren = { node.getChildAt(0) };
+		node.remove(0);
+		treeModel.nodesWereRemoved(node, childIndices, removedChildren);
+    }
+    
+    /**
+     * Override this method to do any necessary lazy loading of children. Called in a separate worker thread.
+     * @param node
+     */
+    protected SimpleWorker loadLazyChildren(DefaultMutableTreeNode node)  {
+    	return null;
+    }
+    
     /**
      * Override this method to show a popup menu when the user right clicks a node in the tree.
      * @param e
@@ -168,7 +222,7 @@ public class DynamicTree extends JPanel {
      /**
      * Add child to the currently selected node.
      */
-    public DefaultMutableTreeNode addObject(Object child, Action action) {
+    public DefaultMutableTreeNode addObject(Object child) {
         DefaultMutableTreeNode parentNode = null;
         TreePath parentPath = tree.getSelectionPath();
 
@@ -179,26 +233,25 @@ public class DynamicTree extends JPanel {
             parentNode = (DefaultMutableTreeNode) (parentPath.getLastPathComponent());
         }
 
-        return addObject(parentNode, child, true, action);
+        return addObject(parentNode, child);
     }
 
-    public DefaultMutableTreeNode addObject(DefaultMutableTreeNode parent, Object child, Action action) {
-        return addObject(parent, child, false, action);
+    public DefaultMutableTreeNode addObject(DefaultMutableTreeNode parentNode, Object child) {
+        return addObject(parentNode, new DefaultMutableTreeNode(child));
     }
 
-    public DefaultMutableTreeNode addObject(DefaultMutableTreeNode parent, Object child, boolean shouldBeVisible, Action action) {
-        DefaultMutableTreeNode childNode = new DefaultMutableTreeNode(child);
+    public DefaultMutableTreeNode addObject(DefaultMutableTreeNode parentNode, DefaultMutableTreeNode childNode) {
 
-        if (parent == null) {
-            parent = rootNode;
+        if (parentNode == null) {
+        	parentNode = rootNode;
         }
         
         // It is key to invoke this on the TreeModel, and NOT DefaultMutableTreeNode
-        treeModel.insertNodeInto(childNode, parent, parent.getChildCount());
+        treeModel.insertNodeInto(childNode, parentNode, parentNode.getChildCount());
         
         return childNode;
     }
-    
+		
     /**
      * Expand or collapse the given node.
      * @param node the node to expand or collapse

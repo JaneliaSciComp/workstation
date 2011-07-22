@@ -38,6 +38,10 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
     private Color backgroundNonSelectionColor;
     private DefaultTreeCellRenderer defaultRenderer = new DefaultTreeCellRenderer();
     private OntologyOutline ontologyOutline;
+
+    public OntologyTreeCellRenderer() {
+    	this(null);
+    }
     
     public OntologyTreeCellRenderer(OntologyOutline ontologyOutline) {
 
@@ -93,14 +97,17 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
                     typeLabel.setText("[Unknown]");
                 }
 
+                
+                // Set the key bind hint
 
-                Action action = ontologyOutline.getActionForNode(node);
-                KeyboardShortcut bind = ConsoleApp.getKeyBindings().getBinding(action);
-                if (bind != null) {
-                    keybindLabel.setText("(" + KeymapUtil.getShortcutText(bind) + ")");
-                }
-                else {
-                    keybindLabel.setText(" ");
+                keybindLabel.setText(" ");
+                
+                if (ontologyOutline != null) {
+                    Action action = ontologyOutline.getActionForNode(node);
+                    KeyboardShortcut bind = ConsoleApp.getKeyBindings().getBinding(action);
+                    if (bind != null) {
+                        keybindLabel.setText("(" + KeymapUtil.getShortcutText(bind) + ")");
+                    }
                 }
                 
                 // Set the colors

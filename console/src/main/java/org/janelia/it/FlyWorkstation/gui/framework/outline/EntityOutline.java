@@ -8,10 +8,7 @@ import java.awt.event.MouseEvent;
 import java.util.*;
 
 import javax.swing.*;
-import javax.swing.event.TreeExpansionEvent;
-import javax.swing.event.TreeWillExpandListener;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreePath;
 
 import org.hibernate.Hibernate;
@@ -23,9 +20,6 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.tasks.Task;
-import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
-
 
 /**
  * Created by IntelliJ IDEA.
@@ -42,6 +36,7 @@ public class EntityOutline extends JPanel implements Cloneable {
     private DynamicTree selectedTree;
     private boolean lazy = true;
     
+    
     public EntityOutline(final ConsoleFrame consoleFrame) {
         super(new BorderLayout());
         this.consoleFrame = consoleFrame;
@@ -52,11 +47,26 @@ public class EntityOutline extends JPanel implements Cloneable {
         JMenuItem newSessionItem = new JMenuItem("Create Annotation Session for 2D Images");
         newSessionItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-                System.out.println("DEBUG: Creating new Annotation Session Task");
-                AnnotationSessionTask newTask = createAnnotationSession(getSelectedEntity());
-                consoleFrame.getOutlookBar().setVisibleBarByName(ConsoleFrame.BAR_SESSION);
-                consoleFrame.getAnnotationSessionOutline().rebuildDataModel();
-                consoleFrame.getAnnotationSessionOutline().selectSession(newTask.getObjectId().toString());
+            	
+            	DefaultMutableTreeNode node = selectedTree.getCurrentNode();
+        		Entity entity = (Entity)node.getUserObject();
+        		
+            	try {
+            		loadLazyDescendants(node);	
+            		List<Entity> entities = getDescendantsOfType(entity, EntityConstants.TYPE_TIF_2D);
+                	consoleFrame.getAnnotationSessionPropertyPanel().showForNewSession(entity.getName(), entities);
+		            SwingUtilities.updateComponentTreeUI(EntityOutline.this);
+            	}
+            	catch (Exception e) {
+            		e.printStackTrace();
+            	}
+            	
+            	// TODO: move this to AnnotationSessionPropertyPanel.save()
+//                System.out.println("DEBUG: Creating new Annotation Session Task");
+//                AnnotationSessionTask newTask = createAnnotationSession(getSelectedEntity());
+//                consoleFrame.getOutlookBar().setVisibleBarByName(ConsoleFrame.BAR_SESSION);
+//                consoleFrame.getAnnotationSessionOutline().rebuildDataModel();
+//                consoleFrame.getAnnotationSessionOutline().selectSession(newTask.getObjectId().toString());
             }
         });
         popupMenu.add(newSessionItem);
@@ -119,6 +129,8 @@ public class EntityOutline extends JPanel implements Cloneable {
 			        createNewTree(rootEntity);
                     addNodes(null, rootEntity);
 
+                    selectedTree.expand(selectedTree.getRootNode(), true);
+                    
 		            treesPanel.removeAll();
 			        treesPanel.add(selectedTree);
 
@@ -143,7 +155,7 @@ public class EntityOutline extends JPanel implements Cloneable {
 
     private void createNewTree(Entity root) {
 
-    	selectedTree = new DynamicTree(root) {
+    	selectedTree = new DynamicTree(root, true, true) {
     		
             protected void showPopupMenu(MouseEvent e) {
                 popupMenu.show(tree, e.getX(), e.getY());
@@ -152,12 +164,10 @@ public class EntityOutline extends JPanel implements Cloneable {
             protected void nodeClicked(MouseEvent e) {
 
             	DefaultMutableTreeNode node = getCurrentNode();
-            	if (node.getUserObject() instanceof LazyEntity) return;
+            	if (node instanceof LazyTreeNode) return;
             	
             	Entity entity = (Entity)node.getUserObject();
-
             	String type = entity.getEntityType().getName();
-
             	List<Entity> entities = new ArrayList<Entity>();
 
             	if (type.equals(EntityConstants.TYPE_TIF_2D)) {
@@ -177,66 +187,19 @@ public class EntityOutline extends JPanel implements Cloneable {
             	ConsoleApp.getMainFrame().getViewerPanel().loadImageEntities(entities);
             }
 
-        };
-
-        selectedTree.getTree().addTreeWillExpandListener(new TreeWillExpandListener() {
-			
-			@Override
-			public void treeWillExpand(TreeExpansionEvent event) throws ExpandVetoException {
-				final DefaultMutableTreeNode node = (DefaultMutableTreeNode)event.getPath().getLastPathComponent();
-				
-		        boolean allLoaded = true;
-				for(int i=0; i<node.getChildCount(); i++) {
-					DefaultMutableTreeNode childNode = (DefaultMutableTreeNode)node.getChildAt(i);
-					if (childNode.getUserObject() instanceof LazyEntity) {
-		        		allLoaded = false;
-		        		break;
-					}
-				}
-				
-				if (allLoaded) return;
-				
-				final Entity entity = (Entity)node.getUserObject();
-
+            public SimpleWorker loadLazyChildren(final DefaultMutableTreeNode node) {
+            	
 				SimpleWorker loadingWorker = new SimpleWorker() {
 
-					private Map<Long,Entity> childEntityMap;
-
 		            protected void doStuff() throws Exception {
-		            	Set<Entity> childEntitySet = EJBFactory.getRemoteAnnotationBean().getChildEntities(entity.getId());
-		            	childEntityMap = new HashMap<Long,Entity>();
-		            	for(Entity childEntity : childEntitySet) {
-		            		childEntityMap.put(childEntity.getId(), childEntity);
-		            	}
+		                Entity entity = (Entity)node.getUserObject();
+		            	loadLazyEntity(entity, false);
 		            }
 
 					protected void hadSuccess() {
-						
-						// Replace the entity data  with real objects
-						final Entity entity = (Entity)node.getUserObject();
-						for(EntityData ed : entity.getEntityData()) {
-							if (ed.getChildEntity() != null) {
-								ed.setChildEntity(childEntityMap.get(ed.getChildEntity().getId()));
-							}
-						}
-
-						// Replace the children nodes
-						int[] childIndices = { 0 };
-						Object[] removedChildren = { node.getChildAt(0) };
-						node.remove(0);
-						selectedTree.getTreeModel().nodesWereRemoved(node, childIndices, removedChildren);
-						
-						ArrayList<EntityData> edList = new ArrayList<EntityData>(entity.getEntityData());
-				        addChildren(node, edList);
-				        
-				        childIndices = new int[node.getChildCount()];
-				        for(int i=0; i<childIndices.length; i++) {
-				        	childIndices[i] = i;
-				        }
-				        selectedTree.getTreeModel().nodesWereInserted(node, childIndices);
-				        
+						replaceLazyChildNodes(node, false);
 				        // Re-expand the node because the model was updated
-				        selectedTree.expand(node, true);
+				        expand(node, true);
 			            SwingUtilities.updateComponentTreeUI(EntityOutline.this);
 					}
 
@@ -249,25 +212,95 @@ public class EntityOutline extends JPanel implements Cloneable {
 		        };
 
 		        loadingWorker.execute();
-//		        throw new ExpandVetoException(event);
-			}
-			
-			@Override
-			public void treeWillCollapse(TreeExpansionEvent event) throws ExpandVetoException {
-				// We don't care
-			}
-		});
+		        
+		        return loadingWorker;
+            }
+        };
         
         // Replace the cell renderer
 
-        selectedTree.setCellRenderer(new EntityTreeCellRenderer(selectedTree));
+        selectedTree.setCellRenderer(new EntityTreeCellRenderer());
     }
 
+    private void loadLazyDescendants(DefaultMutableTreeNode node) throws Exception {
+
+    	// Fill out the model
+        Entity entity = (Entity)node.getUserObject();
+        loadLazyEntity(entity, true);
+    	
+    	// Sync the tree with the model
+        replaceLazyChildNodes(node, true);
+    	
+    }
+    private void loadLazyEntity(Entity entity, boolean recurse) {
+    	
+    	if (!areLoaded(entity.getEntityData())) {
+        	Set<Entity> childEntitySet = EJBFactory.getRemoteAnnotationBean().getChildEntities(entity.getId());
+        	Map<Long,Entity> childEntityMap = new HashMap<Long,Entity>();
+        	for(Entity childEntity : childEntitySet) {
+        		childEntityMap.put(childEntity.getId(), childEntity);
+        	}
+        	
+			// Replace the entity data with real objects
+			for(EntityData ed : entity.getEntityData()) {
+				if (ed.getChildEntity() != null) {
+					ed.setChildEntity(childEntityMap.get(ed.getChildEntity().getId()));
+				}
+			}
+    	}
+		
+    	if (recurse) {
+			for(EntityData ed : entity.getEntityData()) {
+				if (ed.getChildEntity() != null) {
+					loadLazyEntity(ed.getChildEntity(), true);
+				}
+			}
+    	}
+    }
+    
+    private void replaceLazyChildNodes(DefaultMutableTreeNode node, boolean recurse) {
+    	
+    	if (node.getChildCount() == 1 && node.getChildAt(0) instanceof LazyTreeNode) {
+
+        	Entity entity = (Entity)node.getUserObject();
+			ArrayList<EntityData> edList = new ArrayList<EntityData>(entity.getEntityData());
+			
+			if (!areLoaded(edList)) {
+				return;
+			}
+
+			selectedTree.removeLazyChild(node);
+	        addChildren(node, edList);
+	        
+	        int[] childIndices = new int[node.getChildCount()];
+	        for(int i=0; i<childIndices.length; i++) {
+	        	childIndices[i] = i;
+	        }
+	        selectedTree.getTreeModel().nodesWereInserted(node, childIndices);
+    	}
+    	
+    	if (recurse) {
+    		for (Enumeration e = node.children(); e.hasMoreElements();) {
+    			DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) e.nextElement();
+    			replaceLazyChildNodes(childNode, true);
+            }    	
+    	}
+    }
+    
+    private boolean areLoaded(Collection<EntityData> eds) {
+        for(EntityData entityData : eds) {
+        	if (!Hibernate.isInitialized(entityData.getChildEntity())) {
+        		return false;
+        	}
+        }
+        return true;
+    }
+    
     private void addNodes(DefaultMutableTreeNode parentNode, Entity newEntity) {
 		
         DefaultMutableTreeNode newNode;
         if (parentNode != null) {
-            newNode = selectedTree.addObject(parentNode, newEntity, null);
+            newNode = selectedTree.addObject(parentNode, newEntity);
         }
         else {
             // If the parent node is null, then the node is already in the tree as the root
@@ -286,16 +319,10 @@ public class EntityOutline extends JPanel implements Cloneable {
         if (childDataList.isEmpty()) return;
         
         // Test for proxies
-        boolean allLoaded = true;
-        for(EntityData entityData : childDataList) {
-        	if (!Hibernate.isInitialized(entityData.getChildEntity())) {
-        		allLoaded = false;
-        		break;
-        	}
-        }
+        boolean allLoaded = areLoaded(childDataList);
 
         if (!allLoaded) {
-        	selectedTree.addObject(newNode, new LazyEntity(null), null);
+        	selectedTree.addObject(newNode, new LazyTreeNode());
         }
         else {
             addChildren(newNode, childDataList);
@@ -343,20 +370,20 @@ public class EntityOutline extends JPanel implements Cloneable {
         }
     }
     
-    private AnnotationSessionTask createAnnotationSession(Entity targetEntity) {
-        try {
-            Set<String> targetEntityIds = get2DTIFItems(targetEntity, new HashSet<String>());
-            String entityIds = Task.csvStringFromCollection(targetEntityIds);
-            AnnotationSessionTask newSessionTask = new AnnotationSessionTask(null, System.getenv("USER"), null, null);
-            newSessionTask.setParameter(AnnotationSessionTask.PARAM_annotationTargets, entityIds);
-            newSessionTask.setParameter(AnnotationSessionTask.PARAM_annotationCategories, "");
-            return (AnnotationSessionTask)EJBFactory.getRemoteComputeBean().saveOrUpdateTask(newSessionTask);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
+//    private AnnotationSessionTask createAnnotationSession(Entity targetEntity) {
+//        try {
+//            Set<String> targetEntityIds = get2DTIFItems(targetEntity, new HashSet<String>());
+//            String entityIds = Task.csvStringFromCollection(targetEntityIds);
+//            AnnotationSessionTask newSessionTask = new AnnotationSessionTask(null, System.getenv("USER"), null, null);
+//            newSessionTask.setParameter(AnnotationSessionTask.PARAM_annotationTargets, entityIds);
+//            newSessionTask.setParameter(AnnotationSessionTask.PARAM_annotationCategories, "");
+//            return (AnnotationSessionTask)EJBFactory.getRemoteComputeBean().saveOrUpdateTask(newSessionTask);
+//        }
+//        catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        return null;
+//    }
 
     private Entity getSelectedEntity() {
         TreePath tmpPath = selectedTree.getTree().getSelectionPath();
@@ -364,17 +391,22 @@ public class EntityOutline extends JPanel implements Cloneable {
         return (Entity)((DefaultMutableTreeNode)tmpPath.getLastPathComponent()).getUserObject();
     }
     
-    public Set<String> get2DTIFItems(Entity parentEntity, Set<String> entitySet) {
-        for (EntityData entityData : parentEntity.getEntityData()) {
-    		// The tree was fetched with getEntityTree, so the child entities have already been prepopulated
+    //EntityConstants.TYPE_TIF_2D
+    
+    public List<Entity> getDescendantsOfType(Entity entity, String typeName) {
+    	
+    	List<Entity> items = new ArrayList<Entity>();
+        if (typeName.equals(entity.getEntityType().getName())) {
+        	items.add(entity);
+        }
+        
+        for (EntityData entityData : entity.getOrderedEntityData()) {
         	Entity child = entityData.getChildEntity();
         	if (child != null) {
-                if (EntityConstants.TYPE_TIF_2D.equals(child.getEntityType().getName())) {
-                    entitySet.add(child.getId().toString());
-                }
-        		get2DTIFItems(child, entitySet);
+                items.addAll(getDescendantsOfType(child, typeName));
         	}
         }
-        return entitySet;
+        
+        return items;
     }
 }
