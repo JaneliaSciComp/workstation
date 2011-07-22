@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
+import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSessionPropertyDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.SessionOutline;
@@ -75,6 +76,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
     private SessionOutline sessionOutline;
     private EntityOutline entityOutline;
     private OntologyOutline ontologyOutline;
+    private AnnotationSessionPropertyDialog annotationSessionPropertyPanel;
     private String mostRecentFileOutlinePath;
     private JTabbedPane icsTabPane = new JTabbedPane();
     private int rightDividerLocation;
@@ -209,8 +211,12 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //        subBrowserTabPane = new SubBrowser(browserModel);
 //        fileOutline = new FileOutline(this);
         sessionOutline = new SessionOutline(this);
-        entityOutline = new EntityOutline(this);
+
         ontologyOutline = new OntologyOutline();
+        annotationSessionPropertyPanel = new AnnotationSessionPropertyDialog(ontologyOutline);
+        annotationSessionPropertyPanel.pack();
+        
+        entityOutline = new EntityOutline(this);
         ontologyOutline.setPreferredSize(new Dimension());
 //        icsTabPane = new ICSTabPane(this);
 
@@ -1131,6 +1137,10 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 
     public SessionOutline getAnnotationSessionOutline() {
         return sessionOutline;
+    }
+    
+    public AnnotationSessionPropertyDialog getAnnotationSessionPropertyPanel() {
+    	return annotationSessionPropertyPanel;
     }
 
 
