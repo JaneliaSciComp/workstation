@@ -14,7 +14,6 @@ import javax.swing.tree.TreePath;
 import org.hibernate.Hibernate;
 import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
-import org.janelia.it.FlyWorkstation.gui.framework.console.ConsoleFrame;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -30,16 +29,14 @@ import org.janelia.it.jacs.model.entity.EntityData;
  */
 public class EntityOutline extends JPanel implements Cloneable {
 
-    private final ConsoleFrame consoleFrame;
     private final JPopupMenu popupMenu;
     private final JPanel treesPanel;
     private DynamicTree selectedTree;
     private boolean lazy = true;
     
     
-    public EntityOutline(final ConsoleFrame consoleFrame) {
+    public EntityOutline() {
         super(new BorderLayout());
-        this.consoleFrame = consoleFrame;
         this.setMinimumSize(new Dimension(400,400));
         
         // Create context menus
@@ -54,7 +51,7 @@ public class EntityOutline extends JPanel implements Cloneable {
             	try {
             		loadLazyDescendants(node);	
             		List<Entity> entities = getDescendantsOfType(entity, EntityConstants.TYPE_TIF_2D);
-                	consoleFrame.getAnnotationSessionPropertyPanel().showForNewSession(entity.getName(), entities);
+                	ConsoleApp.getMainFrame().getAnnotationSessionPropertyPanel().showForNewSession(entity.getName(), entities);
 		            SwingUtilities.updateComponentTreeUI(EntityOutline.this);
             	}
             	catch (Exception e) {

@@ -18,20 +18,22 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 
 /**
  * Special tree cell renderer for generic Entity trees.
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements TreeCellRenderer {
-    private static final Color typeLabelColor = new Color(149, 125, 71);
-    private static final Color keybindLabelColor = new Color(128, 128, 128);
+	protected static final Color typeLabelColor = new Color(149, 125, 71);
+	protected static final Color keybindLabelColor = new Color(128, 128, 128);
 
-    private JLabel titleLabel;
-    private JLabel typeLabel;
-    private JLabel keybindLabel;
-    private JPanel cellPanel;
-    private Color foregroundSelectionColor;
-    private Color foregroundNonSelectionColor;
-    private Color backgroundSelectionColor;
-    private Color backgroundNonSelectionColor;
-    private DefaultTreeCellRenderer defaultRenderer = new DefaultTreeCellRenderer();
+    protected JLabel titleLabel;
+    protected JLabel typeLabel;
+    protected JLabel keybindLabel;
+    protected JPanel cellPanel;
+    protected Color foregroundSelectionColor;
+    protected Color foregroundNonSelectionColor;
+    protected Color backgroundSelectionColor;
+    protected Color backgroundNonSelectionColor;
+    protected DefaultTreeCellRenderer defaultRenderer = new DefaultTreeCellRenderer();
     
     public EntityTreeCellRenderer() {
     	
@@ -130,6 +132,7 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
                     r.printStackTrace();
                 }
             }
+            
             returnValue = cellPanel;
         }
         if (returnValue == null) {

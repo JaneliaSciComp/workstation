@@ -216,7 +216,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
         annotationSessionPropertyPanel = new AnnotationSessionPropertyDialog(ontologyOutline);
         annotationSessionPropertyPanel.pack();
         
-        entityOutline = new EntityOutline(this);
+        entityOutline = new EntityOutline();
         ontologyOutline.setPreferredSize(new Dimension());
 //        icsTabPane = new ICSTabPane(this);
 

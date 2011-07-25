@@ -23,6 +23,8 @@ import org.janelia.it.jacs.model.ontology.types.*;
 /**
  * Special tree cell renderer for OntologyTerms which displays the term, its type, and its key binding. The icon
  * is customized based on the term type.
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements TreeCellRenderer {
     private static final Color typeLabelColor = new Color(149, 125, 71);

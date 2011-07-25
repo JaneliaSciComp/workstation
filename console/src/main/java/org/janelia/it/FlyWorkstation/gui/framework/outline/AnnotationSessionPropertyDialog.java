@@ -8,12 +8,10 @@ import java.awt.event.WindowEvent;
 import java.util.List;
 
 import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreePath;
-import javax.swing.tree.TreeSelectionModel;
 
 import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.ontology.OntologyElement;
 
 /**
  * A dialog for creating a new annotation session, or editing an existing one. 
@@ -30,15 +28,12 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
     
     private SelectionTreePanel entityTreePanel;
     private SelectionTreePanel categoryTreePanel;
-	
-    private OntologyElementChooserDialog ontologyChooser;
     
 	public AnnotationSessionPropertyDialog(final OntologyOutline ontologyOutline) {
 
         setModalityType(ModalityType.APPLICATION_MODAL);
         setPreferredSize(new Dimension(800, 600));
         getContentPane().setLayout(new BorderLayout());
-        setLocationRelativeTo(ConsoleApp.getMainFrame());
         
         GridBagConstraints c = new GridBagConstraints();
         
@@ -86,7 +81,7 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
         JPanel treesPanel = new JPanel(new GridLayout(1,2));
         
         entityTreePanel = new SelectionTreePanel("Entities to annotation") {
-    		public void showChooser() {
+    		public void addClicked() {
     			
     		}
         };
@@ -95,10 +90,18 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
         treesPanel.add(entityTreePanel);
         
         categoryTreePanel = new SelectionTreePanel("Annotations to complete") {
-    		public void showChooser() {
-    			ontologyChooser.showForOntology(ontologyOutline.getCurrentOntology());
+    		public void addClicked() {
+
+    		    OntologyElementChooser ontologyChooser = new OntologyElementChooser("Choose annotations to complete", ontologyOutline.getCurrentOntology());
+    			int returnVal = ontologyChooser.showDialog(AnnotationSessionPropertyDialog.this);
+    	        if (returnVal != OntologyElementChooser.CHOOSE_OPTION) return;
+    	        for(OntologyElement element : ontologyChooser.getChosenElements()) {
+    	        	categoryTreePanel.addItem(element);
+    	        }
+    	        SwingUtilities.updateComponentTreeUI(this);
     		}
         };
+        
         c.gridx = 1;
         c.gridy = 0;
         treesPanel.add(categoryTreePanel);
@@ -130,105 +133,25 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
                 setVisible(false);
             }
         });
-
-        this.ontologyChooser = new OntologyElementChooserDialog();
-        ontologyChooser.pack();
-	}
-
-	public class SelectionTreePanel extends JPanel implements ActionListener {
-
-	    private static final String ADD_COMMAND = "add";
-	    private static final String REMOVE_COMMAND = "remove";
-		
-	    private DynamicTree tree;		
-		private JPanel treePanel;
-
-	    public SelectionTreePanel(String title) {
-	        super(new BorderLayout());
-	        
-	        setBorder(BorderFactory.createCompoundBorder(
-	        				BorderFactory.createEmptyBorder(0, 10, 0, 10), 
-	        				BorderFactory.createTitledBorder(
-	        						BorderFactory.createCompoundBorder(
-		    	        				BorderFactory.createEmptyBorder(),
-		    	        				BorderFactory.createEmptyBorder(10, 10, 0, 10)), title)));
-	        
-	        treePanel = new JPanel(new BorderLayout());
-	        
-	        add(treePanel, BorderLayout.CENTER);
-
-	        JPanel buttonPane = new JPanel();
-	        buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
-	        buttonPane.setBackground(new Color(0.8f, 0.8f, 0.8f));
-	        
-	        buttonPane.add(Box.createHorizontalGlue());
-	        
-	        JButton addButton = new JButton("Add");
-	        addButton.setActionCommand(ADD_COMMAND);
-	        addButton.addActionListener(this);
-	        buttonPane.add(addButton);
-
-	        JButton removeButton = new JButton("Remove");
-	        removeButton.setActionCommand(REMOVE_COMMAND);
-	        removeButton.addActionListener(this);
-	        buttonPane.add(removeButton);
-	        
-	        add(buttonPane, BorderLayout.SOUTH);
-	        
-	    }
-	    
-	    public DynamicTree getDynamicTree() {
-			return tree;
-		}
-
-		private void createNewTree() {
-	    	
-	    	tree = new DynamicTree("ROOT", false, false);
-	        tree.getTree().setRootVisible(false);
-	        tree.getTree().getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
-	        
-	        // Replace the cell renderer
- 	        tree.setCellRenderer(new EntityTreeCellRenderer());
-
-	        treePanel.removeAll();
-	        treePanel.add(tree);
-	    }
-		
-		public void showChooser() {
-			
-		}
-		
-	    public void actionPerformed(ActionEvent e) {
-	        String command = e.getActionCommand();
-
-			if (REMOVE_COMMAND.equals(command)) {
-				TreePath[] paths = tree.getTree().getSelectionPaths();
-				if (paths == null) return;
-				for(TreePath path : paths) {
-					DefaultMutableTreeNode node = (DefaultMutableTreeNode)path.getLastPathComponent();
-					tree.removeNode(node);
-				}
-	            SwingUtilities.updateComponentTreeUI(this);
-			}
-			else if (ADD_COMMAND.equals(command)) {
-				showChooser();
-			}
-	    }
 	}
 	
 	public void showForNewSession(String name, List<Entity> entities) {
 
+        if (entityTreePanel.getTree() == null) setLocationRelativeTo(ConsoleApp.getMainFrame());
+        
         setTitle("New Annotation Session");
         nameValueField.setText(name);
         ownerValueLabel.setText(System.getenv("USER"));
 
         entityTreePanel.createNewTree();
+        entityTreePanel.getTree().setCellRenderer(new EntityTreeCellRenderer());
         
         for(Entity entity : entities) {
-        	entityTreePanel.getDynamicTree().addObject(entityTreePanel.getDynamicTree().getRootNode(), entity);
+        	entityTreePanel.addItem(entity);
         }
         
         categoryTreePanel.createNewTree();
+        categoryTreePanel.getTree().setCellRenderer(new OntologyTreeCellRenderer());
 
         SwingUtilities.updateComponentTreeUI(this);
         setVisible(true);
@@ -241,7 +164,9 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
 			setVisible(false);
 		} 
 		else if (SESSION_SAVE_COMMAND.equals(cmd)) {
-			// TODO: save
+			// TODO: save the session
+			
+			setVisible(false);
 		} 
     }
 }

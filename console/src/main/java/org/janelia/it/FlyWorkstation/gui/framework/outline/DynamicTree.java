@@ -51,8 +51,6 @@ public class DynamicTree extends JPanel {
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         tree.setShowsRootHandles(true);
         tree.setLargeModel(true);
-        
-        // Set the mouse listener which keeps track of doubleclicks on nodes, and rightclicks to show the context menu
 
         tree.addMouseListener(new MouseAdapter() {
             public void mouseReleased(MouseEvent e) {
@@ -70,7 +68,7 @@ public class DynamicTree extends JPanel {
                     	nodeDoubleClicked(e);
                     }
                     else if (e.getClickCount()==1
-                    		&& e.getButton()==MouseEvent.BUTTON1 ) {
+                    		&& e.getButton()==MouseEvent.BUTTON1) {
                     	nodeClicked(e);
                     }
                 }
@@ -83,6 +81,9 @@ public class DynamicTree extends JPanel {
                     if (e.isPopupTrigger()) {
                     	tree.setSelectionRow(row);
                         showPopupMenu(e);
+                    }
+                    else {
+                    	nodePressed(e);
                     }
                 }
             }
@@ -158,6 +159,13 @@ public class DynamicTree extends JPanel {
     protected void nodeClicked(MouseEvent e) {
     }
 
+    /**
+     * Override this method to do something when the user presses down on a node.
+     * @param e
+     */
+    protected void nodePressed(MouseEvent e) {
+    }
+    
     /**
      * Override this method to do something when the user double clicks a node.
      * @param e
