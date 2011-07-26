@@ -10,6 +10,8 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import org.janelia.it.FlyWorkstation.gui.framework.tree.DynamicTree;
+
 /**
  * A panel containing a tree which supports adding and removing items at its top level. 
  *
@@ -66,7 +68,10 @@ public class SelectionTreePanel extends JPanel implements ActionListener {
      * @param object
      */
     public void addItem(Object object) {
-    	getDynamicTree().addObject(getDynamicTree().getRootNode(), object);
+    	DefaultMutableTreeNode node = getDynamicTree().addObject(getDynamicTree().getRootNode(), object);
+    	TreePath path = new TreePath(node.getPath());
+    	getDynamicTree().getTree().setSelectionPath(path);
+    	getDynamicTree().getTree().scrollPathToVisible(path);
     }
 
 	public void createNewTree() {
@@ -76,10 +81,6 @@ public class SelectionTreePanel extends JPanel implements ActionListener {
         treePanel.removeAll();
         treePanel.add(tree);
     }
-	
-	public DynamicTree getTree() {
-		return tree;
-	}
 	
 	/**
 	 * Override this method to do something when the user clicks the "Add" button. 

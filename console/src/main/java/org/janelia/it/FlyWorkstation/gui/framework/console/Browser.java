@@ -253,7 +253,7 @@ public class Browser extends JFrame implements Cloneable {
         sessionOutline = new SessionOutline(this);
         entityOutline = new EntityOutline();
         ontologyOutline = new OntologyOutline();
-        annotationSessionPropertyPanel = new AnnotationSessionPropertyDialog(ontologyOutline);
+        annotationSessionPropertyPanel = new AnnotationSessionPropertyDialog(entityOutline, ontologyOutline);
         annotationSessionPropertyPanel.pack();
         ontologyOutline.setPreferredSize(new Dimension());
 //        icsTabPane = new ICSTabPane(this);

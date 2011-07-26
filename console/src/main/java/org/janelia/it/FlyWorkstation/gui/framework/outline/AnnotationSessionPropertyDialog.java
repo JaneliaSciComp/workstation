@@ -1,16 +1,19 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.ontology.OntologyElement;
-
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.List;
+
+import javax.swing.*;
+
+import org.janelia.it.FlyWorkstation.gui.framework.outline.choose.EntityChooser;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.choose.OntologyElementChooser;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.ontology.OntologyElement;
 
 /**
  * A dialog for creating a new annotation session, or editing an existing one. 
@@ -28,7 +31,7 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
     private SelectionTreePanel entityTreePanel;
     private SelectionTreePanel categoryTreePanel;
     
-	public AnnotationSessionPropertyDialog(final OntologyOutline ontologyOutline) {
+	public AnnotationSessionPropertyDialog(final EntityOutline entityOutline, final OntologyOutline ontologyOutline) {
 
         setModalityType(ModalityType.APPLICATION_MODAL);
         setPreferredSize(new Dimension(800, 600));
@@ -81,7 +84,14 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
         
         entityTreePanel = new SelectionTreePanel("Entities to annotation") {
     		public void addClicked() {
-    			
+
+    		    EntityChooser entityChooser = new EntityChooser("Choose entities to annotation", entityOutline);
+    			int returnVal = entityChooser.showDialog(AnnotationSessionPropertyDialog.this);
+    	        if (returnVal != EntityChooser.CHOOSE_OPTION) return;
+    	        for(Entity entity : entityChooser.getChosenEntities()) {
+    	        	entityTreePanel.addItem(entity);
+    	        }
+    	        SwingUtilities.updateComponentTreeUI(this);
     		}
         };
         c.gridx = 0;
@@ -136,24 +146,28 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
 	
 	public void showForNewSession(String name, List<Entity> entities) {
 
-        if (entityTreePanel.getTree() == null) setLocationRelativeTo(SessionMgr.getSessionMgr().getActiveBrowser());
+        if (entityTreePanel.getDynamicTree() == null) setLocationRelativeTo(SessionMgr.getSessionMgr().getActiveBrowser());
         
         setTitle("New Annotation Session");
         nameValueField.setText(name);
         ownerValueLabel.setText(System.getenv("USER"));
 
         entityTreePanel.createNewTree();
-        entityTreePanel.getTree().setCellRenderer(new EntityTreeCellRenderer());
+        entityTreePanel.getDynamicTree().setCellRenderer(new EntityTreeCellRenderer());
         
         for(Entity entity : entities) {
         	entityTreePanel.addItem(entity);
         }
         
         categoryTreePanel.createNewTree();
-        categoryTreePanel.getTree().setCellRenderer(new OntologyTreeCellRenderer());
+        categoryTreePanel.getDynamicTree().setCellRenderer(new OntologyTreeCellRenderer());
 
         SwingUtilities.updateComponentTreeUI(this);
         setVisible(true);
+	}
+	
+	public void showForSession(Entity annotationSession) {
+		// TODO: implement
 	}
 	
     public void actionPerformed(ActionEvent e) {

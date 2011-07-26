@@ -6,6 +6,16 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.event.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.util.List;
+
+import javax.swing.*;
+
 import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -14,14 +24,6 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
 import org.semanticweb.owlapi.model.OWLException;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.File;
-import java.util.List;
 
 /**
  * A dialog for managing ontologies that can be loaded into the OntologyOutline.
@@ -419,7 +421,7 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 
 				protected void hadSuccess() {
 		            if (rootEntity.getId().equals(ontologyOutline.getCurrentOntology().getId())) {
-		                ontologyOutline.initializeTree(null);
+		                ontologyOutline.clearTree();
 		            }
 		            table.reloadData(null);
 				}

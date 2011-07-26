@@ -43,7 +43,7 @@ import java.util.Map;
  * @author saffordt
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class OntologyOutline extends JPanel implements ActionListener, DataAvailabilityListener {
+public class OntologyOutline extends OntologyTree implements ActionListener, DataAvailabilityListener {
 	
     private static final String ADD_COMMAND = "add";
     private static final String REMOVE_COMMAND = "remove";
@@ -51,11 +51,8 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
     private static final String BIND_EDIT_COMMAND = "change_bind";
     private static final String BIND_MODE_COMMAND = "bind_mode";
     private static final String DELIMITER = "#";
-
-    private final List<Class<? extends OntologyElementType>> nodeTypes = new ArrayList<Class<? extends OntologyElementType>>();
     
     private final KeyListener keyListener;
-    private final JPanel treesPanel;
     private final KeyBindFrame keyBindDialog;
     private final JToggleButton keyBindButton;
     private final JButton manageButton;
@@ -68,33 +65,14 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
     
     private final Map<Long, Action> ontologyActionMap = new HashMap<Long, Action>();
     
-    private DynamicTree selectedTree;
-    private OntologyRoot root;
-    
-    /**
-     * Get the associated action for the given node.
-     * @param node
-     * @return
-     */
-    public Action getActionForNode(DefaultMutableTreeNode node) {
-    	OntologyElement element = (OntologyElement)node.getUserObject();
-    	return ontologyActionMap.get(element.getId());
-    }
-    
     
     public OntologyOutline() {
-        super(new BorderLayout());
+    	super();
+    	
         setMaximumSize(new Dimension(500,1300));
-        nodeTypes.add(Category.class);
-        nodeTypes.add(Tag.class);
-        nodeTypes.add(Enum.class);
-        nodeTypes.add(Interval.class);
-        nodeTypes.add(Text.class);
-
+        
         // Create the components
 
-        treesPanel = new JPanel(new BorderLayout());
-        
         manageButton = new JButton("Ontology Manager");
         manageButton.setActionCommand(SHOW_MANAGER_COMMAND);
         manageButton.addActionListener(this);
@@ -113,6 +91,8 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
         assignShortcutMenuItem.setActionCommand(BIND_EDIT_COMMAND);
 
         addMenuPopup = new JMenu("Add...");
+        
+        Class[] nodeTypes = {Category.class, Tag.class, Enum.class, Interval.class, Text.class};
         for(Class<? extends OntologyElementType> nodeType : nodeTypes) {
 			try {
 				JMenuItem smi = new JMenuItem(nodeType.newInstance().getName());
@@ -171,12 +151,8 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
         };
         
 
-        // Lay everything out
-
         add(new JLabel("Ontology Editor"), BorderLayout.NORTH);
         
-        add(treesPanel, BorderLayout.CENTER);
-
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(manageButton);
         buttonPanel.add(keyBindButton);
@@ -204,112 +180,63 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
 		ontologyManager.preload();
 	}
     
-    
-    public OntologyRoot getCurrentOntology() {
-    	return root;
+    /**
+     * Get the associated action for the given node.
+     * @param node
+     * @return
+     */
+    public Action getActionForNode(DefaultMutableTreeNode node) {
+    	OntologyElement element = (OntologyElement)node.getUserObject();
+    	return ontologyActionMap.get(element.getId());
     }
-    
-    public void initializeTree(final Long rootId) {
-    	
-        treesPanel.removeAll();
 
-        if (rootId == null) return;
-    	
-		// Show a loading spinner until the data is loaded
-		treesPanel.add(new JLabel(Icons.loadingIcon));
-        this.updateUI();
-		
-		SimpleWorker loadingWorker = new SimpleWorker() {
-
-			private Entity rootEntity;
-        	
-            protected void doStuff() throws Exception {
-            	rootEntity = EJBFactory.getRemoteAnnotationBean().getOntologyTree(System.getenv("USER"), rootId);
-            }
-
-			protected void hadSuccess() {
-
-				try {
-		    		ontologyActionMap.clear();
-		    		
-		            // Create a new tree and add all the nodes to it
-		    		
-		    		root = new OntologyRoot(rootEntity);
-		    		createNewTree(root);
-		    		addNodes(null, root);
-
-		            // Load key bind preferences and bind keys to actions 
-		            
-		            ConsoleApp.getKeyBindings().loadOntologyKeybinds(root, ontologyActionMap);
-		            
-		            // Replace the tree in the panel
-
-		            treesPanel.removeAll();
-		            treesPanel.add(selectedTree);
-
-		            // Prepare for display and update the UI
-		            
-		            selectedTree.expandAll(true);
-		            OntologyOutline.this.updateUI();
-				}
-				catch (Exception e) {
-					hadError(e);
-				}
-			}
-			
-			protected void hadError(Throwable error) {
-				error.printStackTrace();
-				JOptionPane.showMessageDialog(OntologyOutline.this, "Error loading ontology", "Ontology Load Error", JOptionPane.ERROR_MESSAGE);
-	            treesPanel.removeAll();
-	            OntologyOutline.this.updateUI();
-			}
-            
-        };
-
-        loadingWorker.execute();
-    }
-    
-    private void createNewTree(OntologyElement root) {
-    	
-    	selectedTree = new DynamicTree(root) {
-
-            protected void showPopupMenu(MouseEvent e) {
-
-                popupMenu.removeAll();
-                popupMenu.add(assignShortcutMenuItem);
-                
-                if (isEditable()) {
-
-                	DefaultMutableTreeNode node = getCurrentNode();
-                	if (node == null) return;
-                    OntologyElement curr = getOntologyElement(node);
-                    OntologyElementType type = curr.getType();
-                    
-                    if (type instanceof Enum) {
-                    	popupMenu.add(addItemPopup);
-                    }
-                    else if (type.allowsChildren() || type instanceof Tag) {
-                    	popupMenu.add(addMenuPopup); 
-                    }
-
-                    // Disallow deletion of root nodes. You've gotta use the OntologyManager for that.
-                    if (curr.getParent() != null) {
-                        popupMenu.add(removeNodeMenuItem);
-                    }
-                }
-                
-                popupMenu.show((JComponent)e.getSource(), e.getX(), e.getY());
-            }
-            
-            protected void nodeDoubleClicked(MouseEvent e) {
-                Action action = getActionForNode(getCurrentNode());
-                if (action != null && !(action instanceof NavigateToNodeAction)) {
-                	action.doAction();
-                }
-            }
-        };
+	/**
+     * Override this method to show a popup menu when the user right clicks a node in the tree.
+     * @param e
+     */
+    protected void showPopupMenu(MouseEvent e) {
+        popupMenu.removeAll();
+        popupMenu.add(assignShortcutMenuItem);
         
-        // Replace the cell renderer
+        if (isEditable()) {
+
+        	DefaultMutableTreeNode node = getDynamicTree().getCurrentNode();
+        	if (node == null) return;
+            OntologyElement curr = getOntologyElement(node);
+            OntologyElementType type = curr.getType();
+            
+            if (type instanceof Enum) {
+            	popupMenu.add(addItemPopup);
+            }
+            else if (type.allowsChildren() || type instanceof Tag) {
+            	popupMenu.add(addMenuPopup); 
+            }
+
+            // Disallow deletion of root nodes. You've gotta use the OntologyManager for that.
+            if (curr.getParent() != null) {
+                popupMenu.add(removeNodeMenuItem);
+            }
+        }
+        
+        popupMenu.show((JComponent)e.getSource(), e.getX(), e.getY());
+    }
+
+    /**
+     * Override this method to do something when the user double clicks a node.
+     * @param e
+     */
+    protected void nodeDoubleClicked(MouseEvent e) {
+        Action action = getActionForNode(getDynamicTree().getCurrentNode());
+        if (action != null && !(action instanceof NavigateToNodeAction)) {
+        	action.doAction();
+        }
+    }
+    
+    protected void createNewTree(OntologyRoot root) {
+    	
+    	super.createNewTree(root);
+    		
+        // Replace the cell renderer with one that knows about the outline so that it can retrieve key binds
         
         selectedTree.setCellRenderer(new OntologyTreeCellRenderer(this));
         
@@ -319,10 +246,18 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
         KeyListener defaultKeyListener = tree.getKeyListeners()[0];
         tree.removeKeyListener(defaultKeyListener);
         tree.addKeyListener(keyListener);
+
+        // Build a lookup table of the action for each node
+        
+		ontologyActionMap.clear();
+        populateActionMap(root);
+        
+        // Load key bind preferences and bind keys to actions 
+        
+        ConsoleApp.getKeyBindings().loadOntologyKeybinds(root, ontologyActionMap);
     }
     
-
-    private void addNodes(DefaultMutableTreeNode parentNode, OntologyElement element) {
+    private void populateActionMap(OntologyElement element) {
 
         // Define an action for this node
     	OntologyElementType type = element.getType();
@@ -336,20 +271,10 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
     	action.init(element);
     	ontologyActionMap.put(element.getId(), action);
     	
-    	// Add the node to the tree
-        DefaultMutableTreeNode newNode;
-        if (parentNode != null) {
-            newNode = selectedTree.addObject(parentNode, element);
-        }
-        else {
-            // If the parent node is null, then the node is already in the tree as the root
-            newNode = selectedTree.rootNode;
-        }
-    	
     	// Add the node's children. 
     	// They are available because the root was loaded with the eager-loading getOntologyTree() method. 
         for(OntologyElement child : element.getChildren()) {
-        	addNodes(newNode, child);
+        	populateActionMap(child);
         }
     }
 
@@ -410,7 +335,7 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
             	}	
             }
             else {
-            	ConsoleApp.getKeyBindings().saveOntologyKeybinds(root);
+            	ConsoleApp.getKeyBindings().saveOntologyKeybinds(getCurrentOntology());
             }
         }
         else if (command.startsWith(ADD_COMMAND)) {
@@ -505,24 +430,15 @@ public class OntologyOutline extends JPanel implements ActionListener, DataAvail
         }
     }
     
-    /**
-     * @return true if the user is allowed to edit the current ontology, false otherwise.
-     */
-    public boolean isEditable() {
-    	return !root.isPublic();
-    }
-    
     @Override
 	public void dataReady(DataReadyEvent evt) {
     	AbstractOntologyTable privateTable = ontologyManager.getPrivateTable();
     	if (evt.getSource() != privateTable) return;
     	if (selectedTree == null) {
 	    	List<OntologyRoot> roots = privateTable.getOntologyRoots();
-	    	if (roots == null || roots.isEmpty()) {
-	    		initializeTree(null);
-	    		return;
+	    	if (roots != null && !roots.isEmpty()) {
+		    	initializeTree(roots.get(0).getId());
 	    	}
-	    	initializeTree(roots.get(0).getId());
     	}
     	// We got the data, no need to listen any longer
     	privateTable.removeDataListener(this);
