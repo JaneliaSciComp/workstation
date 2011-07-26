@@ -1,14 +1,22 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
+import org.janelia.it.FlyWorkstation.api.entity_model.access.LoadRequestStatusObserverAdapter;
+import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestState;
+import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestStatus;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSessionPropertyDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.SessionOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.search.SearchToolbar;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModelListenerAdapter;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.FlyWorkstation.gui.util.JOutlookBar;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableImage;
+import org.janelia.it.jacs.model.entity.Entity;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,7 +25,9 @@ import java.awt.print.PageFormat;
 import java.awt.print.PrinterJob;
 import java.io.File;
 import java.io.FilenameFilter;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -26,7 +36,7 @@ import java.util.List;
  * Date: 2/8/11
  * Time: 12:29 PM
  */
-public class ConsoleFrame extends JFrame implements Cloneable {
+public class Browser extends JFrame implements Cloneable {
 //    private static Hashtable editorTypeToConstructorRegistry = new MultiHash();
 //    private static Hashtable editorClassToSubEditorClassRegistry =
 //            new MultiHash();
@@ -62,12 +72,12 @@ public class ConsoleFrame extends JFrame implements Cloneable {
     private JMenuBar menuBar;
     private SearchToolbar searchToolbar;
     private JTabbedPane subBrowserTabPane = new JTabbedPane();
-//    private Vector browserObservers = new Vector();
-//    private SessionModelListener modelListener = new MySessionModelListener();
-//    private DescriptionObserver descriptionObserver = new DescriptionObserver();
+    private ArrayList browserObservers = new ArrayList();
+    private SessionModelListener modelListener = new MySessionModelListener();
+    private DescriptionObserver descriptionObserver = new DescriptionObserver();
 
     private float realEstatePercent = .2f;
-    //    private BrowserModel browserModel;
+    private BrowserModel browserModel;
     private BorderLayout borderLayout = new BorderLayout();
     //    private Editor masterEditor;
 //    private Editor subEditor;
@@ -95,47 +105,45 @@ public class ConsoleFrame extends JFrame implements Cloneable {
     /**
      * Center Window, use passed realEstatePercent (0-1.0, where 1.0 is 100% of the screen)
      */
-    public ConsoleFrame(float realEstatePercent/*, BrowserModel browserModel*/) {
+    public Browser(float realEstatePercent, BrowserModel browserModel) {
         enableEvents(AWTEvent.WINDOW_EVENT_MASK);
         this.realEstatePercent = realEstatePercent;
 
         viewerPanel = new IconDemoPanel();
 
         try {
-            jbInit(/*browserModel*/);
+            jbInit(browserModel);
 
             Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-//            ConsolePosition position = new ConsolePosition();//(ConsolePosition) SessionMgr.getSessionMgr()
-//            //.getModelProperty(BROWSER_POSITION);
-//            position.setScreenSize(screenSize);
-//            position.setConsoleSize(new Dimension(400, 400));
-//            position.setConsoleLocation(new Point(100, 100));
-//            position.setHorizontalDividerLocation(200);
-//            position.setVerticalDividerLocation(200);
+            BrowserPosition position = (BrowserPosition)SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
+            if (null==position) {
+                position = new BrowserPosition();
+            }
+            position.setScreenSize(screenSize);
+            position.setBrowserSize(new Dimension(400, 400));
+            position.setBrowserLocation(new Point(100, 100));
+            position.setHorizontalDividerLocation(200);
+            position.setVerticalDividerLocation(200);
 
-//            if ((position == null) ||
-//                    !position.getScreenSize().equals(screenSize)) {
-//            setSize(new Dimension((int) (screenSize.width * realEstatePercent), (int) (screenSize.height * realEstatePercent)));
+            if ((position == null) ||
+                    !position.getScreenSize().equals(screenSize)) {
+            setSize(new Dimension((int) (screenSize.width * realEstatePercent), (int) (screenSize.height * realEstatePercent)));
 
-//            Dimension frameSize = getSize();
-//
-//            if (frameSize.height > screenSize.height) {
-//                frameSize.height = screenSize.height;
-//            }
-//
-//            if (frameSize.width > screenSize.width) {
-//                frameSize.width = screenSize.width;
-//            }
-//
-//            setLocation((screenSize.width - frameSize.width) / 2, (screenSize.height - frameSize.height) / 2);
-//            } else {
-//                setSize(position.getConsoleSize());
-//                setLocation(position.getConsoleLocation());
-//            }
+            Dimension frameSize = getSize();
 
+            if (frameSize.height > screenSize.height) {
+                frameSize.height = screenSize.height;
+            }
 
+            if (frameSize.width > screenSize.width) {
+                frameSize.width = screenSize.width;
+            }
 
-
+            setLocation((screenSize.width - frameSize.width) / 2, (screenSize.height - frameSize.height) / 2);
+            } else {
+                setSize(position.getBrowserSize());
+                setLocation(position.getBrowserLocation());
+            }
         }
         catch (Exception e) {
             try {
@@ -148,19 +156,50 @@ public class ConsoleFrame extends JFrame implements Cloneable {
         }
     }
 
+    /**
+    * Use given coordinates of the top left point and passed realEstatePercent (0-1.0)
+    */
+    public Browser(int topLeftX, int topLeftY, Dimension size, BrowserModel browserModel) {
+        enableEvents(AWTEvent.WINDOW_EVENT_MASK);
+
+        try {
+            jbInit(browserModel);
+
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            Dimension frameSize = getSize();
+
+            if (frameSize.height > screenSize.height) {
+                frameSize.height = screenSize.height;
+            }
+
+            if (frameSize.width > screenSize.width) {
+                frameSize.width = screenSize.width;
+            }
+
+            setLocation(topLeftX, topLeftY);
+            setSize(size);
+        } catch (Exception e) {
+            try {
+                SessionMgr.getSessionMgr().handleException(e);
+            } catch (Exception ex) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     static public void setMenuBarClass(Class aMenuBarClass) {
         menuBarClass = aMenuBarClass;
     }
 
-//    public void addBrowserObserver(BrowserObserver browserObserver) {
-//        browserObservers.addElement(browserObserver);
-//    }
-//
-//    public void removeBrowserObserver(BrowserObserver browserObserver) {
-//        browserObservers.removeElement(browserObserver);
-//    }
-//
-//    public void closeAllViews() {
+    public void addBrowserObserver(BrowserObserver browserObserver) {
+        browserObservers.add(browserObserver);
+    }
+
+    public void removeBrowserObserver(BrowserObserver browserObserver) {
+        browserObservers.remove(browserObserver);
+    }
+
+    public void closeAllViews() {
 //        if (masterEditor == null) {
 //            return;
 //        }
@@ -171,33 +210,34 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //        masterEditor = null;
 //        postMasterEditorChanged(null, false);
 //        resetMasterEditorMenus();
-//
+
 //        int location = centerLeftHorizontalSplitPane.getDividerLocation();
 //        centerLeftHorizontalSplitPane.setRightComponent(rightPanel);
 //        centerLeftHorizontalSplitPane.setDividerLocation(location);
-//    }
+    }
 
-    private void jbInit(/*BrowserModel browserModel*/) throws Exception {
+    private void jbInit(BrowserModel browserModel) throws Exception {
 //        showSubEditorWhenAvailable = ((Boolean) SessionMgr.getSessionMgr()
 //                                                          .getModelProperty(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY)).booleanValue();
-
-//        useFreeMemoryViewer(
-//                ((Boolean) SessionMgr.getSessionMgr()
-//                                     .getModelProperty(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY)).booleanValue());
 
         useFreeMemoryViewer(true);
         getContentPane().setLayout(borderLayout);
         setTitle("");
 
-//        this.browserModel = browserModel;
-//        browserModel.addBrowserModelListener(new BrowserModelObserver());
-//        SessionMgr.getSessionMgr().addSessionModelListener(modelListener);
+        this.browserModel = browserModel;
+        browserModel.addBrowserModelListener(new BrowserModelObserver());
+        SessionMgr.getSessionMgr().addSessionModelListener(modelListener);
 
         if (menuBarClass == null) {
             menuBar = new ConsoleMenuBar(this);
         }
         else {
-            menuBar = (JMenuBar) menuBarClass.getConstructor(new Class[]{this.getClass()}).newInstance(new Object[]{this});
+//            menuBar = (JMenuBar) menuBarClass.getConstructor(new Class[] { this.getClass() }).newInstance(new Object[] { this });
+            Constructor[] cons = menuBarClass.getConstructors();
+            for (Constructor con : cons) {
+                System.out.println(con.toString());
+            }
+            menuBar = (JMenuBar) menuBarClass.getConstructor(new Class[] { this.getClass() }).newInstance(new Object[] { this });
         }
 
         setJMenuBar(menuBar);
@@ -211,12 +251,8 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //        subBrowserTabPane = new SubBrowser(browserModel);
 //        fileOutline = new FileOutline(this);
         sessionOutline = new SessionOutline(this);
-
-        ontologyOutline = new OntologyOutline();
-        annotationSessionPropertyPanel = new AnnotationSessionPropertyDialog(ontologyOutline);
-        annotationSessionPropertyPanel.pack();
-        
         entityOutline = new EntityOutline();
+        ontologyOutline = new OntologyOutline();
         ontologyOutline.setPreferredSize(new Dimension());
 //        icsTabPane = new ICSTabPane(this);
 
@@ -226,15 +262,15 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //        outlookBar.addBar("Files", fileOutline);
         outlookBar.setVisibleBar(2);
 
-//        ConsolePosition consolePosition = new ConsolePosition();//(ConsolePosition) SessionMgr.getSessionMgr()
-//        //.getModelProperty(BROWSER_POSITION);
-//        consolePosition.setScreenSize(screenSize);
-//        consolePosition.setConsoleSize(new Dimension(400, 400));
-//        consolePosition.setConsoleLocation(new Point(100, 100));
-//        consolePosition.setHorizontalDividerLocation(400);
-//        consolePosition.setVerticalDividerLocation(200);
-//        ConsolePosition consolePosition = new ConsolePosition();//BrowserPosition) SessionMgr.getSessionMgr()
-        //.getModelProperty(this.BROWSER_POSITION);
+        BrowserPosition consolePosition = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
+        if (null==consolePosition) {
+            consolePosition = new BrowserPosition();
+        }
+        consolePosition.setScreenSize(screenSize);
+        consolePosition.setBrowserSize(new Dimension(400, 400));
+        consolePosition.setBrowserLocation(new Point(100, 100));
+        consolePosition.setHorizontalDividerLocation(400);
+        consolePosition.setVerticalDividerLocation(200);
 
         centerRightHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, viewerPanel, ontologyOutline);
         centerRightHorizontalSplitPane.setMinimumSize(new Dimension(200, 0));
@@ -529,13 +565,13 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //        }
 //    }
 //
-//    /**
-//    *  @return BrowserModel The browserModel for this instance of the console.
-//    */
-//    public BrowserModel getBrowserModel() {
-//        return browserModel;
-//    }
-//
+    /**
+    *  @return BrowserModel The browserModel for this instance of the console.
+    */
+    public BrowserModel getBrowserModel() {
+        return browserModel;
+    }
+
 //    public Editor getMasterEditor() {
 //        return masterEditor;
 //    }
@@ -544,25 +580,18 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //        return editorNameToConstructorRegistry;
 //    }
 //
-//    public Object clone() {
-//        java.awt.Point topLeft = this.getLocation();
-//        Dimension size = this.getSize();
-//        BrowserModel newBrowserModel = (BrowserModel) this.browserModel.clone();
-//        Browser newBrowser = new Browser(topLeft.x + 25, topLeft.y + 25, size,
-//                                         newBrowserModel);
-//        newBrowser.fileOutline = this.fileOutline;
-//        newBrowser.setTitle(title);
-//        newBrowser.setBrowserImageIcon(browserImageIcon);
-//        newBrowser.setVisible(true);
-//
-//        if (masterEditor != null) {
-//            newBrowser.setMasterEditor(
-//                    (String) editorClassToNameRegistry.get(
-//                            masterEditor.getClass()));
-//        }
-//
-//        return newBrowser;
-//    }
+    public Object clone() {
+        java.awt.Point topLeft = this.getLocation();
+        Dimension size = this.getSize();
+        BrowserModel newBrowserModel = (BrowserModel) this.browserModel.clone();
+        Browser newBrowser = new Browser(topLeft.x + 25, topLeft.y + 25, size,
+                                         newBrowserModel);
+        newBrowser.setTitle(title);
+        newBrowser.setBrowserImageIcon(browserImageIcon);
+        newBrowser.setVisible(true);
+
+        return newBrowser;
+    }
     public void setTitle(String title) {
         this.title = title;
         super.setTitle(title);
@@ -746,8 +775,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 
             collapsedOutlineView.removeAll();
 
-//            BrowserPosition browserPosition = (BrowserPosition) SessionMgr.getSessionMgr()
-//                                                                          .getModelProperty(this.BROWSER_POSITION);
+            BrowserPosition browserPosition = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(this.BROWSER_POSITION);
 
             centerLeftHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
             centerLeftHorizontalSplitPane.setMinimumSize(new Dimension(0, 0));
@@ -990,12 +1018,12 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //        return editor;
 //    }
 //
-//    private void postNumOpenBrowsersChanged() {
-//        for (int i = 0; i < browserObservers.size(); i++) {
-//            ((BrowserObserver) browserObservers.elementAt(i)).openBrowserCountChanged(
-//                    SessionMgr.getSessionMgr().getNumberOfOpenBrowsers());
-//        }
-//    }
+    private void postNumOpenBrowsersChanged() {
+        for (int i = 0; i < browserObservers.size(); i++) {
+            ((BrowserObserver) browserObservers.get(i)).openBrowserCountChanged(
+                    SessionMgr.getSessionMgr().getNumberOfOpenBrowsers());
+        }
+    }
 
 //    private void postEditorSpecificMenusChanged() {
 //        for (int i = 0; i < browserObservers.size(); i++) {
@@ -1017,24 +1045,24 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //        }
 //    }
 
-//    private class BrowserModelObserver extends BrowserModelListenerAdapter {
-//        public void browserCurrentSelectionChanged(GenomicEntity newSelection) {
-//            if (newSelection != null) {
+    private class BrowserModelObserver extends BrowserModelListenerAdapter {
+        public void browserCurrentSelectionChanged(Entity newSelection) {
+            if (newSelection != null) {
 //                LoadRequestStatus lrs = newSelection.loadPropertiesBackground();
 //
 //                if (lrs.getLoadRequestState()
 //                       .equals(LoadRequestStatus.COMPLETE)) {
-//                    String description;
+//                    String description = "Entity";
 //
-//                    if (newSelection instanceof Feature) {
-//                        description = "[" +
-//                                      ((Feature) newSelection).getEnvironment() +
-//                                      "]";
-//                        description = description +
-//                                      newSelection.getDescriptiveText();
-//                    } else {
-//                        description = newSelection.getDescriptiveText();
-//                    }
+////                    if (newSelection instanceof Feature) {
+////                        description = "[" +
+////                                      ((Feature) newSelection).getEnvironment() +
+////                                      "]";
+////                        description = description +
+////                                      newSelection.getDescriptiveText();
+////                    } else {
+////                        description = newSelection.getDescriptiveText();
+////                    }
 //
 //                    statusBar.setDescription("Current Selection: " +
 //                                             description);
@@ -1044,87 +1072,87 @@ public class ConsoleFrame extends JFrame implements Cloneable {
 //                    statusBar.setDescription(
 //                            "Current Selection: Loading Properties");
 //                }
-//            } else {
-//                statusBar.setDescription("");
-//            }
-//        }
-//
-//        public void browserClosing() {
-//            setVisible(false);
-//            SessionMgr.getSessionMgr()
-//                      .removeSessionModelListener(modelListener);
-//
-//            BrowserPosition position = (BrowserPosition) SessionMgr.getSessionMgr()
-//                                                                   .getModelProperty(BROWSER_POSITION);
-//
-//            if (position == null) {
-//                position = new BrowserPosition();
-//            }
-//
-//            position.setScreenSize(Toolkit.getDefaultToolkit().getScreenSize());
-//            position.setBrowserSize(Browser.this.getSize());
-//            position.setBrowserLocation(Browser.this.getLocation());
+            } else {
+                statusBar.setDescription("");
+            }
+        }
+
+        public void browserClosing() {
+            setVisible(false);
+            SessionMgr.getSessionMgr()
+                      .removeSessionModelListener(modelListener);
+
+            BrowserPosition position = (BrowserPosition) SessionMgr.getSessionMgr()
+                                                                   .getModelProperty(BROWSER_POSITION);
+
+            if (position == null) {
+                position = new BrowserPosition();
+            }
+
+            position.setScreenSize(Toolkit.getDefaultToolkit().getScreenSize());
+            position.setBrowserSize(Browser.this.getSize());
+            position.setBrowserLocation(Browser.this.getLocation());
 //            position.setVerticalDividerLocation(
 //                    dataSplitPaneVertical.getDividerLocation());
-//            position.setHorizontalDividerLocation(
-//                    centerLeftHorizontalSplitPane.getDividerLocation());
-//            SessionMgr.getSessionMgr()
-//                      .setModelProperty(BROWSER_POSITION, position);
-//            dispose();
-//        }
-//    }
+            position.setHorizontalDividerLocation(
+                    centerLeftHorizontalSplitPane.getDividerLocation());
+            SessionMgr.getSessionMgr()
+                      .setModelProperty(BROWSER_POSITION, position);
+            dispose();
+        }
+    }
 
-//    class DescriptionObserver extends LoadRequestStatusObserverAdapter {
-//        private GenomicEntity ge;
-//
-//        public void setEntity(GenomicEntity ge) {
-//            this.ge = ge;
-//        }
-//
-//        public void stateChanged(LoadRequestStatus loadRequestStatus,
-//                                 LoadRequestState newState) {
-//            if (newState == LoadRequestStatus.COMPLETE) {
-//                String description;
-//
-//                if (ge instanceof Feature) {
-//                    description = "[" + ((Feature) ge).getEnvironment() +
+    class DescriptionObserver extends LoadRequestStatusObserverAdapter {
+        private Entity ge;
+
+        public void setEntity(Entity ge) {
+            this.ge = ge;
+        }
+
+        public void stateChanged(LoadRequestStatus loadRequestStatus,
+                                 LoadRequestState newState) {
+            if (newState == LoadRequestStatus.COMPLETE) {
+                String description = "Test";
+
+//                if (ge instanceof Entity) {
+//                    description = "[" + ((Entity) ge).getEnvironment() +
 //                                  "]";
 //                    description = description + ge.getDescriptiveText();
 //                } else {
 //                    description = ge.getDescriptiveText();
 //                }
-//
-//                statusBar.setDescription("Current Selection: " + description);
-//                loadRequestStatus.removeLoadRequestStatusObserver(this);
-//            }
-//        }
-//    }
 
-//    class MySessionModelListener implements SessionModelListener {
-//        public void browserAdded(BrowserModel browserModel) {
-//            postNumOpenBrowsersChanged();
-//        }
-//
-//        public void browserRemoved(BrowserModel browserModel) {
-//            postNumOpenBrowsersChanged();
-//        }
-//
-//        public void sessionWillExit() {
-//        }
-//
-//        public void modelPropertyChanged(Object key, Object oldValue,
-//                                         Object newValue) {
+                statusBar.setDescription("Current Selection: " + description);
+                loadRequestStatus.removeLoadRequestStatusObserver(this);
+            }
+        }
+    }
+
+    class MySessionModelListener implements SessionModelListener {
+        public void browserAdded(BrowserModel browserModel) {
+            postNumOpenBrowsersChanged();
+        }
+
+        public void browserRemoved(BrowserModel browserModel) {
+            postNumOpenBrowsersChanged();
+        }
+
+        public void sessionWillExit() {
+        }
+
+        public void modelPropertyChanged(Object key, Object oldValue,
+                                         Object newValue) {
 //            if (key.equals(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY)) {
 //                showSubEditorWhenAvailable = ((Boolean) SessionMgr.getSessionMgr()
 //                                                                  .getModelProperty(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY)).booleanValue();
 //                handleSubEditor();
 //            }
-//
-//            if (key.equals(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY)) {
-//                useFreeMemoryViewer(((Boolean) newValue).booleanValue());
-//            }
-//        }
-//    }
+
+            if (key.equals(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY)) {
+                useFreeMemoryViewer(((Boolean) newValue).booleanValue());
+            }
+        }
+    }
 
 
     public IconDemoPanel getViewerPanel() {
@@ -1138,11 +1166,10 @@ public class ConsoleFrame extends JFrame implements Cloneable {
     public SessionOutline getAnnotationSessionOutline() {
         return sessionOutline;
     }
-    
+
     public AnnotationSessionPropertyDialog getAnnotationSessionPropertyPanel() {
     	return annotationSessionPropertyPanel;
     }
-
 
     public String getMostRecentFileOutlinePath() {
         return mostRecentFileOutlinePath;
@@ -1189,9 +1216,7 @@ public class ConsoleFrame extends JFrame implements Cloneable {
                     return s.endsWith(".tif");
                 }
             });
-            for (File file : childImageFiles) {
-            	files.add(file);
-            }
+            Collections.addAll(files, childImageFiles);
         }
         else if (tmpFile.isFile()) {
         	files.add(tmpFile);

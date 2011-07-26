@@ -9,7 +9,7 @@ import javax.swing.*;
  * Time: 3:46 PM
  */
 public class PreferencesMenu extends JMenu {
-    public PreferencesMenu(ConsoleFrame console) {
+    public PreferencesMenu(Browser console) {
         super("Preferences");
         add(new JMenuItem("TBD"));
     }

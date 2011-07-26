@@ -1,7 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
-import org.janelia.it.FlyWorkstation.gui.framework.console.ConsoleFrame;
+import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.jacs.compute.api.ComputeBeanRemote;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
@@ -27,12 +27,12 @@ import java.util.List;
  */
 public class SessionOutline extends JScrollPane implements Cloneable {
     public static final String NO_DATASOURCE = "No Tasks Available";
-    private ConsoleFrame consoleFrame;
+    private Browser consoleFrame;
     private JPopupMenu popupMenu;
     private DynamicTree treePanel;
     private static final String ANNOTATION_SESSIONS = "Annotation Sessions";
 
-    public SessionOutline(ConsoleFrame consoleFrame) {
+    public SessionOutline(Browser consoleFrame) {
         this.consoleFrame = consoleFrame;
         popupMenu = new JPopupMenu();
         popupMenu.setLightWeightPopupEnabled(true);

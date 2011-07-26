@@ -11,12 +11,12 @@ import java.awt.event.ActionListener;
  * Time: 1:16 PM
  */
 public class ViewMenu extends JMenu {
-    ConsoleFrame console;
+    Browser console;
     JMenuItem searchMenuItem;
     JMenuItem ontologyMenuItem;
     JMenuItem outlinesMenuItem;
 
-    public ViewMenu(ConsoleFrame console) {
+    public ViewMenu(Browser console) {
         super("View");
         this.setMnemonic('V');
         this.console = console;
@@ -24,21 +24,21 @@ public class ViewMenu extends JMenu {
         searchMenuItem = new JCheckBoxMenuItem("Search", false);
         searchMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                viewActionPerformed(ConsoleFrame.VIEW_SEARCH);
+                viewActionPerformed(Browser.VIEW_SEARCH);
             }
         });
 
         ontologyMenuItem = new JCheckBoxMenuItem("Ontology Editor", true);
         ontologyMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                viewActionPerformed(ConsoleFrame.VIEW_ONTOLOGY);
+                viewActionPerformed(Browser.VIEW_ONTOLOGY);
             }
         });
 
         outlinesMenuItem = new JCheckBoxMenuItem("Outlines", true);
         outlinesMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                viewActionPerformed(ConsoleFrame.VIEW_OUTLINES);
+                viewActionPerformed(Browser.VIEW_OUTLINES);
             }
         });
 

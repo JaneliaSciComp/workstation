@@ -12,7 +12,7 @@ import java.util.ArrayList;
  * Time: 1:16 PM
  */
 public class FileMenu extends JMenu {
-    ConsoleFrame console;
+    Browser console;
     JMenuItem menuFileExit;
     JMenuItem menuFilePrint;
     ArrayList<JMenuItem> addedMenus = new ArrayList<JMenuItem>();
@@ -23,7 +23,7 @@ public class FileMenu extends JMenu {
 //    GenomeVersion workspaceGenomeVersion;
 //    private AxisObserver myAxisObserver = new MyAxisObserver();
 
-    public FileMenu(ConsoleFrame console) {
+    public FileMenu(Browser console) {
         super("File");
         this.setMnemonic('F');
         this.console = console;

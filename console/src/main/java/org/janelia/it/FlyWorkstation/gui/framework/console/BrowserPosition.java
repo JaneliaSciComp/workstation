@@ -10,7 +10,7 @@ import java.io.Serializable;
  * Time: 12:40 PM
  * Class to keep track of Console real-estate
  */
-public class ConsolePosition implements Serializable {
+public class BrowserPosition implements Serializable {
     private Dimension consoleSize;
     private Dimension screenSize;
     private Point consoleLocation;
@@ -40,19 +40,19 @@ public class ConsolePosition implements Serializable {
         screenSize = dimension;
     }
 
-    Dimension getConsoleSize() {
+    Dimension getBrowserSize() {
         return consoleSize;
     }
 
-    Point getConsoleLocation() {
+    Point getBrowserLocation() {
         return consoleLocation;
     }
 
-    void setConsoleLocation(Point location) {
+    void setBrowserLocation(Point location) {
         consoleLocation = location;
     }
 
-    void setConsoleSize(Dimension dimension) {
+    void setBrowserSize(Dimension dimension) {
         consoleSize = dimension;
     }
 }

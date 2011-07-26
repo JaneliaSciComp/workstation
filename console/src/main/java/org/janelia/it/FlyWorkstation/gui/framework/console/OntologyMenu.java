@@ -9,7 +9,7 @@ import javax.swing.*;
  * Time: 3:47 PM
  */
 public class OntologyMenu extends JMenu {
-    public OntologyMenu(ConsoleFrame console) {
+    public OntologyMenu(Browser console) {
         super("Ontology");
         add(new JMenuItem("TBD"));
     }

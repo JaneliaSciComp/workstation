@@ -9,7 +9,7 @@ import javax.swing.*;
  * Time: 3:47 PM
  */
 public class HelpMenu extends JMenu {
-    public HelpMenu(ConsoleFrame console) {
+    public HelpMenu(Browser console) {
         super("Help");
         add(new JMenuItem("TBD"));
     }

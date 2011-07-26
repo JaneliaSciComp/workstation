@@ -20,7 +20,7 @@ public class ConsoleMenuBar extends JMenuBar {
     public static final Position RIGHT = AFTER_SPACING_GLUE;
     private static final Position EDITOR_SPECIFIC = new Position(5);
 
-    protected ConsoleFrame console;   //protected so that when subclasses, the subclasses menus can have access to it.
+    protected Browser console;   //protected so that when subclasses, the subclasses menus can have access to it.
     private boolean animation;
     private HashMap /*MultiHash*/ addedMenus = new HashMap();/*MultiHash()*/
 
@@ -35,7 +35,7 @@ public class ConsoleMenuBar extends JMenuBar {
     protected Component menuGlue = Box.createHorizontalGlue();
 
 
-    protected ConsoleMenuBar(ConsoleFrame console) {
+    public ConsoleMenuBar(Browser console) {
         this.console = console;
         BoxLayout layout = new BoxLayout(this, BoxLayout.X_AXIS);
         setLayout(layout);

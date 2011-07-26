@@ -22,7 +22,7 @@ public class ToolsMenu extends JMenu {
     private JMenuItem toolsConfiguration;
     private JFrame parentFrame;
 
-    public ToolsMenu(ConsoleFrame console) {
+    public ToolsMenu(Browser console) {
         super("Tools");
         try {
             this.parentFrame = console;
