@@ -399,6 +399,7 @@ public class SessionMgr {
 //
   private void writeSettings() {
     try {
+     System.out.println("Saving user settings.");
      settingsFile.delete();
      ObjectOutputStream ostream= new ObjectOutputStream(new FileOutputStream(settingsFile));
      ostream.writeInt(1);  //stream format

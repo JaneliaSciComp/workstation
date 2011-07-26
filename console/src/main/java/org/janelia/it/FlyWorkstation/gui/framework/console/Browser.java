@@ -1189,7 +1189,8 @@ public class Browser extends JFrame implements Cloneable {
         position.setScreenSize(screenSize);
         position.setBrowserSize(screenSize);
         position.setBrowserLocation(new Point(0, 0));
-        position.setHorizontalLeftDividerLocation(200);
+        position.setHorizontalLeftDividerLocation(400);
+        position.setHorizontalRightDividerLocation(1100);
         position.setVerticalDividerLocation(800);
         return position;
     }
