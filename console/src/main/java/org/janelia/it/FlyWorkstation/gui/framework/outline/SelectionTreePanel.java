@@ -4,6 +4,9 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -72,6 +75,23 @@ public class SelectionTreePanel extends JPanel implements ActionListener {
     	TreePath path = new TreePath(node.getPath());
     	getDynamicTree().getTree().setSelectionPath(path);
     	getDynamicTree().getTree().scrollPathToVisible(path);
+    }
+    
+    /**
+     * Return the currently selected items.
+     * @return
+     */
+    public List<Object> getItems() {
+    	
+    	List<Object> items = new ArrayList<Object>();
+    	DefaultMutableTreeNode rootNode = getDynamicTree().getRootNode();
+    	
+		for (Enumeration e = rootNode.children(); e.hasMoreElements();) {
+			DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) e.nextElement();
+			items.add(childNode.getUserObject());
+		}
+		
+		return items;
     }
 
 	public void createNewTree() {

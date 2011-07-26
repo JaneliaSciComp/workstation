@@ -5,15 +5,20 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.*;
 
+import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
+import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.choose.EntityChooser;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.choose.OntologyElementChooser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
+import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 
 /**
  * A dialog for creating a new annotation session, or editing an existing one. 
@@ -30,6 +35,8 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
     
     private SelectionTreePanel entityTreePanel;
     private SelectionTreePanel categoryTreePanel;
+    
+    private AnnotationSessionTask task;
     
 	public AnnotationSessionPropertyDialog(final EntityOutline entityOutline, final OntologyOutline ontologyOutline) {
 
@@ -144,41 +151,108 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
         });
 	}
 	
+	private void init() {
+        if (entityTreePanel.getDynamicTree() == null) setLocationRelativeTo(SessionMgr.getSessionMgr().getActiveBrowser());
+        
+        entityTreePanel.createNewTree();
+        entityTreePanel.getDynamicTree().setCellRenderer(new EntityTreeCellRenderer());
+        
+        categoryTreePanel.createNewTree();
+        categoryTreePanel.getDynamicTree().setCellRenderer(new OntologyTreeCellRenderer());
+	}
+
+    public AnnotationSessionTask getTask() {
+		return task;
+	}
+    
 	public void showForNewSession(String name, List<Entity> entities) {
 
-        if (entityTreePanel.getDynamicTree() == null) setLocationRelativeTo(SessionMgr.getSessionMgr().getActiveBrowser());
+        init();
         
         setTitle("New Annotation Session");
         nameValueField.setText(name);
         ownerValueLabel.setText(System.getenv("USER"));
 
-        entityTreePanel.createNewTree();
-        entityTreePanel.getDynamicTree().setCellRenderer(new EntityTreeCellRenderer());
-        
         for(Entity entity : entities) {
         	entityTreePanel.addItem(entity);
         }
-        
-        categoryTreePanel.createNewTree();
-        categoryTreePanel.getDynamicTree().setCellRenderer(new OntologyTreeCellRenderer());
 
         SwingUtilities.updateComponentTreeUI(this);
         setVisible(true);
 	}
 	
-	public void showForSession(Entity annotationSession) {
-		// TODO: implement
+	public void showForSession(AnnotationSessionTask task) {
+
+        init();
+
+		this.task = task;
+        setTitle("Edit Annotation Session");
+        nameValueField.setText(task.getTaskName());
+        ownerValueLabel.setText(task.getOwner());
+        
+		String entityIds = task.getParameter(AnnotationSessionTask.PARAM_annotationTargets);
+		String categoryIds = task.getParameter(AnnotationSessionTask.PARAM_annotationCategories);
+		
+		String[] entityIdArray = entityIds.split(",");
+		String[] categoryIdArray = categoryIds.split(",");
+
+        for(String entityId : entityIdArray) {
+        	Entity entity = EJBFactory.getRemoteAnnotationBean().getEntityById(entityId);
+        	entityTreePanel.addItem(entity);
+        }
+
+        for(String entityId : categoryIdArray) {
+        	Entity entity = EJBFactory.getRemoteAnnotationBean().getEntityById(entityId);
+        	entityTreePanel.addItem(entity);
+        }
+		
+        SwingUtilities.updateComponentTreeUI(this);
+        setVisible(true);
 	}
 	
-    public void actionPerformed(ActionEvent e) {
+	protected void save() {
+        
+        try {
+            List<String> entityIdList = new ArrayList<String>();
+            for(Object o : entityTreePanel.getItems()) {
+            	entityIdList.add(((Entity)o).getId().toString());
+            }
+            String entityIds = Task.csvStringFromCollection(entityIdList);
+            
+            List<String> categoryIdList = new ArrayList<String>();
+            for(Object o : categoryTreePanel.getItems()) {
+            	categoryIdList.add(((OntologyElement)o).getId().toString());
+            }
+            String categoryIds = Task.csvStringFromCollection(categoryIdList);
+            
+            if (task == null) {
+            	task = new AnnotationSessionTask(null, System.getenv("USER"), null, null);
+            }
+            
+            task.setParameter(AnnotationSessionTask.PARAM_annotationTargets, entityIds);
+            task.setParameter(AnnotationSessionTask.PARAM_annotationCategories, categoryIds);
+            task = (AnnotationSessionTask)EJBFactory.getRemoteComputeBean().saveOrUpdateTask(task);
+            System.out.println("Saved annotation session with taskId="+task.getObjectId());
+            
+            Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
+            browser.getOutlookBar().setVisibleBarByName(Browser.BAR_SESSION);
+            browser.getAnnotationSessionOutline().rebuildDataModel();
+            browser.getAnnotationSessionOutline().selectSession(task.getObjectId().toString());
+        }
+        catch (Exception e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(AnnotationSessionPropertyDialog.this, "Error creating new session", "Session Save Error", JOptionPane.ERROR_MESSAGE);
+        }
+	}
+	
+	public void actionPerformed(ActionEvent e) {
         String cmd = e.getActionCommand();
 
 		if (CANCEL_COMMAND.equals(cmd)) {
 			setVisible(false);
 		} 
 		else if (SESSION_SAVE_COMMAND.equals(cmd)) {
-			// TODO: save the session
-			
+			save();
 			setVisible(false);
 		} 
     }

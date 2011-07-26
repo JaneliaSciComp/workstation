@@ -73,13 +73,6 @@ public class EntityOutline extends EntityTree implements Cloneable {
             	catch (Exception e) {
             		e.printStackTrace();
             	}
-            	
-            	// TODO: move this to AnnotationSessionPropertyPanel.save()
-//                System.out.println("DEBUG: Creating new Annotation Session Task");
-//                AnnotationSessionTask newTask = createAnnotationSession(getSelectedEntity());
-//                consoleFrame.getOutlookBar().setVisibleBarByName(ConsoleFrame.BAR_SESSION);
-//                consoleFrame.getAnnotationSessionOutline().rebuildDataModel();
-//                consoleFrame.getAnnotationSessionOutline().selectSession(newTask.getObjectId().toString());
             }
         });
         popupMenu.add(newSessionItem);
@@ -161,27 +154,6 @@ public class EntityOutline extends EntityTree implements Cloneable {
      * @param e
      */
     protected void nodeDoubleClicked(MouseEvent e) {
-    }
-    
-//    private AnnotationSessionTask createAnnotationSession(Entity targetEntity) {
-//        try {
-//            Set<String> targetEntityIds = get2DTIFItems(targetEntity, new HashSet<String>());
-//            String entityIds = Task.csvStringFromCollection(targetEntityIds);
-//            AnnotationSessionTask newSessionTask = new AnnotationSessionTask(null, System.getenv("USER"), null, null);
-//            newSessionTask.setParameter(AnnotationSessionTask.PARAM_annotationTargets, entityIds);
-//            newSessionTask.setParameter(AnnotationSessionTask.PARAM_annotationCategories, "");
-//            return (AnnotationSessionTask)EJBFactory.getRemoteComputeBean().saveOrUpdateTask(newSessionTask);
-//        }
-//        catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        return null;
-//    }
-
-    private Entity getSelectedEntity() {
-        TreePath tmpPath = selectedTree.getTree().getSelectionPath();
-        if (null==tmpPath) return null;
-        return (Entity)((DefaultMutableTreeNode)tmpPath.getLastPathComponent()).getUserObject();
     }
     
 }
