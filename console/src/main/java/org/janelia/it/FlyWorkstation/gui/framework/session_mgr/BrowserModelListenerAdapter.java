@@ -2,12 +2,6 @@ package org.janelia.it.FlyWorkstation.gui.framework.session_mgr;
 
 import org.janelia.it.jacs.model.entity.Entity;
 
-/**
- * Title:        Genome Browser Client
- * Description:  This project is for JBuilder 4.0
- * @author Peter Davies
- */
-
 public class BrowserModelListenerAdapter implements BrowserModelListener {
 
   public void browserMasterEditorEntityChanged(Entity masterEditorEntity) {}

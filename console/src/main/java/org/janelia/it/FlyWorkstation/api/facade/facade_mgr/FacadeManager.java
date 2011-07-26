@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.api.facade.facade_mgr;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.aggregate.AggregateFacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.FlyWorkstation.api.stub.data.NoData;
+import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 
 import java.util.*;
 
@@ -14,35 +15,33 @@ public class FacadeManager {
   static Hashtable displayNames=new Hashtable();
   static String protocolString;
   static ArrayList inUseProtocols=new ArrayList();
-//  static List availableProtocols=new Vector();
+  static List availableProtocols=new Vector();
   static List protocolListeners;
-//  static boolean useAggregate;
+  static boolean useAggregate;
   static final String AGGREGATE_PROTOCOL="aggregate";
   static final String EJB_PROTOCOL="ejb";
   static private Vector exceptionHandlers;
 //  static private FacadeManagerBase assemblyFacade;
 //  static private Set assemblyProtocols= new HashSet();
-  static private Map genomeVersionIdToInfo=new HashMap();
-  static private int genomeVersionWithWorkspaceId;
 
   static {
-//      try {
-//         protocolString=System.getProperty("x.genomebrowser.Protocol");
-//      }
-//      catch (Exception ex) {}
-//      if (protocolString==null) {
-//          System.err.println("Protocol has not been set.  Protocol must be a system property "+
-//               "passed from the command line with -DProtocol=<protocolName>");
-//          System.exit(1);
-//      }
-//      System.out.println("protocol = " + protocolString);
-//      try {
-//         FacadeManager.setProtocol(protocolString);
-//      }
-//      catch (Exception ex) {
-//        System.out.println("FacadeManager:: Error!! - Protocol set has not been added to the system");
-//        System.exit(1);
-//      }
+      try {
+         protocolString= ConsoleProperties.getString("console.Protocol");
+      }
+      catch (Exception ex) {}
+      if (protocolString==null) {
+          System.err.println("Protocol has not been set.  Protocol must be a system property "+
+               "passed from the command line with -DProtocol=<protocolName>");
+          System.exit(1);
+      }
+      System.out.println("protocol = " + protocolString);
+      try {
+         FacadeManager.setProtocol(protocolString);
+      }
+      catch (Exception ex) {
+        System.out.println("FacadeManager:: Error!! - Protocol set has not been added to the system");
+        System.exit(1);
+      }
       registerFacade(AGGREGATE_PROTOCOL,AggregateFacadeManager.class);
   }
 
@@ -75,13 +74,13 @@ public class FacadeManager {
     displayNames.put(protocol,displayName);
   }
 
-//  static private void setProtocol(String protocol) throws Exception{
-//       String[] protocols=parseProtocol(protocol);
-//       for (int i=0;i<protocols.length;i++) {
-//           availableProtocols.add(protocols[i]);
-//       }
-//       if (protocols.length>1) useAggregate=true;
-//  }
+  static private void setProtocol(String protocol) throws Exception{
+       String[] protocols=parseProtocol(protocol);
+      for (String protocol1 : protocols) {
+          availableProtocols.add(protocol1);
+      }
+       if (protocols.length>1) useAggregate=true;
+  }
 
 //  static public GenomeVersionInfo getGenomeVersionInfo(int genomeVersionId){
 //     return (GenomeVersionInfo) genomeVersionIdToInfo.get(new Integer(genomeVersionId));
@@ -110,19 +109,19 @@ public class FacadeManager {
 //     removeProtocolFromUseList(AGGREGATE_PROTOCOL);
   }
 
-//  static private String[] parseProtocol(String protocolString) {
-//       Vector protocols=new Vector();
-//       while (protocolString.indexOf("+")!=-1) {
-//          protocols.add(new String(protocolString.substring(0,protocolString.indexOf("+"))));
-//          protocolString = protocolString.substring(protocolString.indexOf("+")+1);
-//       }
-//       protocols.add(protocolString);
-//       return (String[]) protocols.toArray(new String[0]);
-//  }
+  static private String[] parseProtocol(String protocolString) {
+       Vector protocols=new Vector();
+       while (protocolString.indexOf("+")!=-1) {
+          protocols.add(new String(protocolString.substring(0,protocolString.indexOf("+"))));
+          protocolString = protocolString.substring(protocolString.indexOf("+")+1);
+       }
+       protocols.add(protocolString);
+       return (String[]) protocols.toArray(new String[0]);
+  }
 
-  //Revisit::should be removed as soon as XML works with new dataSourceSelector
+  //todo should be removed as soon as XML works with new dataSourceSelector
   static public String getProtocol() {
-//    if (useAggregate) return AGGREGATE_PROTOCOL;
+    if (useAggregate) return AGGREGATE_PROTOCOL;
     return protocolString;
   }
 //
@@ -130,9 +129,9 @@ public class FacadeManager {
     return concreteFacadesClasses.keySet().contains(protocol);
   }
 
-//  static public boolean isProtocolInUse(String protocol) {
-//    return inUseProtocols.contains(protocol);
-//  }
+  static public boolean isProtocolInUse(String protocol) {
+    return inUseProtocols.contains(protocol);
+  }
 
   /**
    * This method is for the data source selectors and allows them to get the protocol string associated with

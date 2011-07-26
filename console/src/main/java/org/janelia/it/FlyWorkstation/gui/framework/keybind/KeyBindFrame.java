@@ -9,6 +9,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.keybind;
 import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 
 import javax.swing.*;
 import java.awt.*;
@@ -37,7 +38,7 @@ public class KeyBindFrame extends JDialog implements ActionListener {
         setSize(200, 200);
         getContentPane().setLayout(new BorderLayout());
 
-        setLocationRelativeTo(ConsoleApp.getMainFrame());
+        setLocationRelativeTo(SessionMgr.getSessionMgr().getActiveBrowser());
 
         shortcutField = new ShortcutTextField() {
             protected void updateCurrentKeyStrokeInfo() {

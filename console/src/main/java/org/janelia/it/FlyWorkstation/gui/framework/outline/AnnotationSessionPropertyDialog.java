@@ -1,17 +1,16 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.ontology.OntologyElement;
+
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.List;
-
-import javax.swing.*;
-
-import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.ontology.OntologyElement;
 
 /**
  * A dialog for creating a new annotation session, or editing an existing one. 
@@ -137,7 +136,7 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
 	
 	public void showForNewSession(String name, List<Entity> entities) {
 
-        if (entityTreePanel.getTree() == null) setLocationRelativeTo(ConsoleApp.getMainFrame());
+        if (entityTreePanel.getTree() == null) setLocationRelativeTo(SessionMgr.getSessionMgr().getActiveBrowser());
         
         setTitle("New Annotation Session");
         nameValueField.setText(name);

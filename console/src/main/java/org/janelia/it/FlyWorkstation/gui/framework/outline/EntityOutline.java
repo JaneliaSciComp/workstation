@@ -1,24 +1,23 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.util.*;
-
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreePath;
-
 import org.hibernate.Hibernate;
-import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.util.*;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -51,7 +50,7 @@ public class EntityOutline extends JPanel implements Cloneable {
             	try {
             		loadLazyDescendants(node);	
             		List<Entity> entities = getDescendantsOfType(entity, EntityConstants.TYPE_TIF_2D);
-                	ConsoleApp.getMainFrame().getAnnotationSessionPropertyPanel().showForNewSession(entity.getName(), entities);
+                	SessionMgr.getSessionMgr().getActiveBrowser().getAnnotationSessionPropertyPanel().showForNewSession(entity.getName(), entities);
 		            SwingUtilities.updateComponentTreeUI(EntityOutline.this);
             	}
             	catch (Exception e) {
@@ -181,7 +180,7 @@ public class EntityOutline extends JPanel implements Cloneable {
             		}
             	}
 
-            	ConsoleApp.getMainFrame().getViewerPanel().loadImageEntities(entities);
+            	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(entities);
             }
 
             public SimpleWorker loadLazyChildren(final DefaultMutableTreeNode node) {

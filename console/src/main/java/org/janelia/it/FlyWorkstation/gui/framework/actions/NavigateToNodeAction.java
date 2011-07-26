@@ -6,7 +6,7 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
-import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 
 /**
  * This action expands or collapses the corresponding entity node in the ontology tree.
@@ -17,6 +17,6 @@ public class NavigateToNodeAction extends OntologyElementAction {
 
     @Override
     public void doAction() {
-        ConsoleApp.getMainFrame().getOntologyOutline().navigateToOntologyElement(getOntologyElement());
+        SessionMgr.getSessionMgr().getActiveBrowser().getOntologyOutline().navigateToOntologyElement(getOntologyElement());
     }
 }

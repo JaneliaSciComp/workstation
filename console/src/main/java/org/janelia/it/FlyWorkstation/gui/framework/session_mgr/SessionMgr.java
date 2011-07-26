@@ -42,8 +42,8 @@ public class SessionMgr {
   private File settingsFile;
   private String fileSep=File.separator;
   private String prefsDir=System.getProperty("user.home")+fileSep+
-         "x"+fileSep+"GenomeBrowser"+fileSep;
-  private String prefsFile=prefsDir+"GB_Settings4.2";
+         "x"+fileSep+"FlyWorkstation"+fileSep;
+  private String prefsFile=prefsDir+"FW_Settings0.1";
   private Map browserModelsToBrowser=new HashMap();
   private String backupFileName=null;
   private WindowListener myBrowserWindowListener=new MyBrowserListener();

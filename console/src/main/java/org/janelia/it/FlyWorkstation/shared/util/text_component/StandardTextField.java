@@ -5,8 +5,8 @@ import javax.swing.text.Document;
 
 
 /**
- * Title:        Standard Text Field to be Used in Genome Browser
- * Description:  Wherever in the GenomeBrowser you wish to use a text field widget,
+ * Title:        Standard Text Field to be used
+ * Description:  Wherever in the tool you wish to use a text field widget,
  *               use this instead of JTextField.
  */
 public class StandardTextField extends JTextField {

@@ -28,7 +28,6 @@ import javax.swing.*;
 public class ConsoleApp {
     
     private static boolean useSplashScreen = false;
-    private static Browser mainConsole;
     private static KeyBindings bindings;
 
     static {
@@ -39,10 +38,6 @@ public class ConsoleApp {
         System.out.println("Code Source: " + pd.getCodeSource().getLocation());
     }
 
-    public static Browser getMainFrame() {
-        return mainConsole;
-    }
-
     public static KeyBindings getKeyBindings() {
         return bindings;
     }
@@ -51,7 +46,6 @@ public class ConsoleApp {
         newBrowser();
     }
 
-    
     private static void newBrowser() {
         // Show the Splash Screen
         final SplashScreen splash = new SplashScreen();

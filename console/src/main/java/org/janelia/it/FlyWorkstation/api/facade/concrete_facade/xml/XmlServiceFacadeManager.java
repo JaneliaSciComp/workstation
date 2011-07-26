@@ -24,7 +24,7 @@ public class XmlServiceFacadeManager extends XmlFacadeManager {
   public static final String URL_SETTING_PREFIX = "XMLService.URL.".intern();
 
   public static final File URLS_PREF_FILE=new File(System.getProperty("user.home")+fileSep+
-         "x"+fileSep+"GenomeBrowser"+fileSep+LOCATION_PROP_NAME+".properties");
+         "x"+fileSep+"FlyWorkstation"+fileSep+LOCATION_PROP_NAME+".properties");
 
   //-------------------------------------------MEMBER VARIABLES
   private OntologyLoader ontology = null;
@@ -61,7 +61,7 @@ public class XmlServiceFacadeManager extends XmlFacadeManager {
       else {
         if (URLS_PREF_FILE.exists())
           FacadeManager.handleException(new IllegalArgumentException("Service URL Settings File "+URLS_PREF_FILE.getAbsolutePath()
-            +" exists but is not readable by the Genome Browser.  Please change its permissions."));
+            +" exists but is not readable by the Fly Workstation.  Please change its permissions."));
         returnList = Collections.EMPTY_LIST;
       } // Not granted.
 

@@ -7,6 +7,7 @@ import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.FlyWorkstation.api.stub.data.FatalCommError;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.util.text_component.StandardTextArea;
@@ -80,17 +81,17 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
      if ( ((FatalCommError)throwable).getMachineName()!=null) {
        messages[0]="There has been a problem communicating with the Application Server.";
        messages[1]="Please try again in several minutes. ";
-       messages[2]="If the problem persists, please contact your Genome Browser Administrator.";
+       messages[2]="If the problem persists, please contact your Fly Workstation Administrator.";
        messages[3]="Please tell the administrator that: "+
          ((FatalCommError)throwable).getMachineName()+" is not responding.";
      }
      else {
        messages[0]="The Application Server has had difficulty handling your request.";
-       messages[1]="If the problem persists, please contact your Genome Browser Administrator.";
+       messages[1]="If the problem persists, please contact your Fly Workstation Administrator.";
        messages[2]="The server message is: "+
          throwable.getMessage();
      }
-     //getParentFrame().setIconImage((new ImageIcon(this.getClass().getResource(System.getProperty("x.genomebrowser.WindowCornerLogo"))).getImage()));
+     //getParentFrame().setIconImage((new ImageIcon(this.getClass().getResource(System.getProperty("console.WindowCornerLogo"))).getImage()));
      if (getEmailURL()!=null) {
          int ans=getOptionPane().showOptionDialog(getParentFrame(), messages, "ERROR!!", JOptionPane.DEFAULT_OPTION,
             JOptionPane.ERROR_MESSAGE,null, normalOptions, defaultOption);
@@ -106,7 +107,7 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
      Object [] messages=new String[3];
      messages[0]="Invalid Login to Application Server.";
      messages[1]="Please (re)enter your credentials (File->Set Login...)";
-     messages[2]="If the problem persists, please contact your Genome Browser Administrator.";
+     messages[2]="If the problem persists, please contact your Fly Workstation Administrator.";
      getOptionPane().showMessageDialog(getParentFrame(), messages, "ERROR!!", JOptionPane.ERROR_MESSAGE);
   }
 
@@ -132,7 +133,7 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
      messages[2]="Please try again in several minutes";
 
      if (getEmailURL()!=null) {
-        sendEmail(throwable,"FlyWorkstation","Major Error -- Server "+System.getProperty("console.ApplicationServer") +
+        sendEmail(throwable,"FlyWorkstation","Major Error -- Server "+ ConsoleProperties.getString("console.ApplicationServer") +
                 " cannot contact database!");
      }
      getOptionPane().showMessageDialog(getParentFrame(), messages, "ERROR!!", JOptionPane.ERROR_MESSAGE);
@@ -212,7 +213,7 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
        PrintStream out = new PrintStream(connection.getOutputStream());
        out.print("emailFrom="+ URLEncoder.encode(emailFrom, "UTF-8") +"&problemDescription="+
           URLEncoder.encode(formMessage(exception,emailFrom,desc),"UTF-8")+"&subject="+
-          URLEncoder.encode("Genome Browser Exception Report","UTF-8"));
+          URLEncoder.encode("Fly Workstation Exception Report","UTF-8"));
        out.close();
        connection.getInputStream();
        // Now we read the response
@@ -329,7 +330,8 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
 
   private URL getEmailURL() {
      if (emailURL!=null) return emailURL;
-     String appServer=System.getProperty("console.HttpServer");
+      // todo These features expect a bunch of helper jsps.  Fix this.
+      String appServer=ConsoleProperties.getString("console.ApplicationServer");
      if (appServer!=null) {
         appServer="http://"+appServer;
         try {

@@ -13,7 +13,7 @@ import org.janelia.it.jacs.shared.utils.FileUtil;
 import java.io.*;
 import java.util.*;
 
-/** Manages XML DTD, Schema validation for Genome Browser. */
+/** Manages XML DTD, Schema validation for Fly Workstation. */
 public class ValidationManager {
 
   //----------------------------EXPOSED CONSTANTS
@@ -41,7 +41,7 @@ public class ValidationManager {
 
   //----------------------------OBJECT MEMBER VARIABLES
   private File validationPrefFile=new File(System.getProperty("user.home")+fileSep+
-         "x"+fileSep+"GenomeBrowser"+fileSep+"userPrefs."+VALIDATION_PROP_NAME);
+         "x"+fileSep+"FlyWorkstation"+fileSep+"userPrefs."+VALIDATION_PROP_NAME);
 
   private List filesValidatedInSession = null;
 

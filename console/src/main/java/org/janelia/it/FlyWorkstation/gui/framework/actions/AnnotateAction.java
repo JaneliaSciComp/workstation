@@ -6,16 +6,16 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
-import javax.swing.JOptionPane;
-
-import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.framework.console.AnnotatedImageButton;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.types.*;
 import org.janelia.it.jacs.model.ontology.types.Enum;
+
+import javax.swing.*;
 
 /**
  * This action creates and saves an annotation, and adds a corresponding tag to the currently selected item in an IconDemoPanel.
@@ -26,9 +26,9 @@ public class AnnotateAction extends OntologyElementAction {
 
     @Override
     public void doAction() {
-        ConsoleApp.getMainFrame().getOntologyOutline().navigateToOntologyElement(getOntologyElement());
+        SessionMgr.getSessionMgr().getActiveBrowser().getOntologyOutline().navigateToOntologyElement(getOntologyElement());
         
-        AnnotatedImageButton currImage = ConsoleApp.getMainFrame().getViewerPanel().getSelectedImage();
+        AnnotatedImageButton currImage = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().getSelectedImage();
         
         if (currImage == null) {
         	// Cannot annotate nothing
@@ -48,7 +48,7 @@ public class AnnotateAction extends OntologyElementAction {
         String value = null;
         if (type instanceof Interval) {
             value = (String) JOptionPane.showInputDialog(
-            		ConsoleApp.getMainFrame(),
+            		SessionMgr.getSessionMgr().getActiveBrowser(),
                     "Value:\n",
                     "Annotating with interval",
                     JOptionPane.PLAIN_MESSAGE,
@@ -60,13 +60,13 @@ public class AnnotateAction extends OntologyElementAction {
             
             Interval interval = (Interval)type;
             if (dvalue < interval.getLowerBound().doubleValue() || dvalue > interval.getUpperBound().doubleValue()) {
-            	JOptionPane.showMessageDialog(ConsoleApp.getMainFrame(), "Input out of range ["+interval.getLowerBound()+","+interval.getUpperBound()+"]");
+            	JOptionPane.showMessageDialog(SessionMgr.getSessionMgr().getActiveBrowser(), "Input out of range ["+interval.getLowerBound()+","+interval.getUpperBound()+"]");
             	return;
             }
         }
         else if (type instanceof Text) {
             value = (String) JOptionPane.showInputDialog(
-            		ConsoleApp.getMainFrame(),
+            		SessionMgr.getSessionMgr().getActiveBrowser(),
                     "Value:\n",
                     "Annotating with text",
                     JOptionPane.PLAIN_MESSAGE,
@@ -112,7 +112,7 @@ public class AnnotateAction extends OntologyElementAction {
         // TODO: check if annotation exists (do we need to delete it or replace it instead?)
         
         String tag = (valueString == null) ? keyString : keyString+" = "+valueString;
-        boolean added = ConsoleApp.getMainFrame().getViewerPanel().addOrRemoveTag(tag);
+        boolean added = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().addOrRemoveTag(tag);
 
         // TODO: add sanity check to verify that a tag was added 
         
@@ -141,9 +141,9 @@ public class AnnotateAction extends OntologyElementAction {
 			}
 
 			protected void hadError(Throwable error) {
-		        ConsoleApp.getMainFrame().getViewerPanel().addOrRemoveTag(tag);
+		        SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().addOrRemoveTag(tag);
 				error.printStackTrace();
-				JOptionPane.showMessageDialog(ConsoleApp.getMainFrame().getViewerPanel(), "Error saving annotation",
+				JOptionPane.showMessageDialog(SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel(), "Error saving annotation",
 						"Annotation Error", JOptionPane.ERROR_MESSAGE);
 			}
 

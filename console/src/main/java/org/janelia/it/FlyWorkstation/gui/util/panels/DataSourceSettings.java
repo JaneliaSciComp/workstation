@@ -43,7 +43,7 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
    private JComboBox validationComboBox;
    private static String fileSep = File.separator;
    protected File directoryPrefFile =
-      new File(System.getProperty("user.home") + fileSep + "x" + fileSep + "GenomeBrowser" + fileSep + "userPrefs." + LOCATION_PROP_NAME);
+      new File(System.getProperty("user.home") + fileSep + "x" + fileSep + "FlyWorkstation" + fileSep + "userPrefs." + LOCATION_PROP_NAME);
 
    private JList currentDirectoryJList;
    private CollectionJListModel directoryLocationModel;
