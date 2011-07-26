@@ -188,7 +188,7 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
          public void focusLost(FocusEvent e) {
          }
       });
-      titledBorder2 = new TitledBorder("CDS Login Information");
+      titledBorder2 = new TitledBorder("Workstation Login Information");
       setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
       ejbPanel.setBorder(titledBorder2);
       ejbPanel.setLayout(new BoxLayout(ejbPanel, BoxLayout.Y_AXIS));
@@ -480,8 +480,7 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
          if (widgetForRemoval.getSelectedValues() != null) {
             Object[] removables = widgetForRemoval.getSelectedValues();
             CollectionJListModel listModel = (CollectionJListModel) widgetForRemoval.getModel();
-            for (int i = 0; i < removables.length; i++)
-               listModel.remove(removables[i]);
+            for (Object removable : removables) listModel.remove(removable);
 
             button.setEnabled(listModel.getSize() > 0);
 

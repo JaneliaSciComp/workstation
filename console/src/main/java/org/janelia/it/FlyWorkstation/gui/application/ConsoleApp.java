@@ -60,6 +60,9 @@ public class ConsoleApp {
 
         final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
         try {
+            // Load Key Bindings
+            bindings = new KeyBindings();
+
             //Browser Setup
             final String versionString = ConsoleProperties.getString("console.versionNumber");
             final boolean internal = (versionString != null) &&
