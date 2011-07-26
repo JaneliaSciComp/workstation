@@ -20,7 +20,7 @@ public class FreeMemoryViewer extends JPanel implements Observer {
     public static final int MEMORY_CONSTANT = 1024000; // Value to display memory in MB
     private BoxLayout boxLayout = new BoxLayout(this, BoxLayout.X_AXIS);
     private JProgressBar bar;
-    private JLabel label = new JLabel("  Mem Usage  ");
+    private JLabel label = new JLabel("  Memory Usage  ");
     private long totalMemory;
     private static int FIRST_WARNING_PERCENT = 10;
     private static int SECOND_WARNING_PERCENT = 5;
