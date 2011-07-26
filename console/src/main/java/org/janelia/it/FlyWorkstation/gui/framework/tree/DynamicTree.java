@@ -4,7 +4,7 @@
  * Date: 6/1/11
  * Time: 4:55 PM
  */
-package org.janelia.it.FlyWorkstation.gui.framework.outline;
+package org.janelia.it.FlyWorkstation.gui.framework.tree;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -21,9 +21,6 @@ import javax.swing.event.TreeWillExpandListener;
 import javax.swing.text.Position;
 import javax.swing.tree.*;
 
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.gui.util.TreeSearcher;
-
 /**
  * A reusable tree component with toolbar features.
  * 
@@ -35,14 +32,17 @@ public class DynamicTree extends JPanel {
     protected DefaultMutableTreeNode rootNode;
     protected DefaultTreeModel treeModel;
     protected final JTree tree;
+    protected boolean lazyLoading;
     
     public DynamicTree(Object userObject) {
     	this(userObject, true, false);
     }
     
-    public DynamicTree(Object userObject, boolean showToolbar, boolean lazyLoading) {
+	public DynamicTree(Object userObject, boolean showToolbar, boolean lazyLoading) {
         super(new BorderLayout());
 
+        this.lazyLoading = lazyLoading;
+        
         rootNode = new DefaultMutableTreeNode(userObject);
         treeModel = new DefaultTreeModel(rootNode);
         
@@ -89,33 +89,23 @@ public class DynamicTree extends JPanel {
             }
         });
 
-        if (lazyLoading) {
-	        tree.addTreeWillExpandListener(new TreeWillExpandListener() {
-				
-				@Override
-				public void treeWillExpand(TreeExpansionEvent event) throws ExpandVetoException {
+        tree.addTreeWillExpandListener(new TreeWillExpandListener() {
+			
+			@Override
+			public void treeWillExpand(TreeExpansionEvent event) throws ExpandVetoException {
+		        if (isLazyLoading()) {
 					final DefaultMutableTreeNode node = (DefaultMutableTreeNode)event.getPath().getLastPathComponent();
-					
-			        boolean allLoaded = true;
-					for(int i=0; i<node.getChildCount(); i++) {
-						DefaultMutableTreeNode childNode = (DefaultMutableTreeNode)node.getChildAt(i);
-						if (childNode instanceof LazyTreeNode) {
-			        		allLoaded = false;
-			        		break;
-						}
+					if (!childrenAreLoaded(node)) {
+	            		expandNodeWithLazyChildren(node);
 					}
-					
-					if (allLoaded) return;
-
-	            	loadLazyChildren(node);
 				}
-				
-				@Override
-				public void treeWillCollapse(TreeExpansionEvent event) throws ExpandVetoException {
-					// We don't care
-				}
-			});
-        }
+			}
+			
+			@Override
+			public void treeWillCollapse(TreeExpansionEvent event) throws ExpandVetoException {
+				// We don't care
+			}
+		});
         
         if (showToolbar) {
 	        DynamicTreeToolbar toolbar = new DynamicTreeToolbar(this);
@@ -127,22 +117,92 @@ public class DynamicTree extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
     }
 
-    
-    public void removeLazyChild(DefaultMutableTreeNode node) {
+    public boolean isLazyLoading() {
+		return lazyLoading;
+	}
 
-		// Replace the children nodes
-		int[] childIndices = { 0 };
-		Object[] removedChildren = { node.getChildAt(0) };
-		node.remove(0);
+	protected void setLazyLoading(boolean lazyLoading) {
+		this.lazyLoading = lazyLoading;
+	}
+
+    /**
+     * Returns true if the children of the given node have been loaded. Always returns true if the tree is lazy.
+     * @param node
+     * @return
+     */
+    public boolean childrenAreLoaded(DefaultMutableTreeNode node) {
+
+    	if (!isLazyLoading()) return true;
+    	
+        boolean allLoaded = true;
+		for(int i=0; i<node.getChildCount(); i++) {
+			DefaultMutableTreeNode childNode = (DefaultMutableTreeNode)node.getChildAt(i);
+			if (childNode instanceof LazyTreeNode) {
+        		allLoaded = false;
+        		break;
+			}
+		}
+		return allLoaded;
+    }
+
+    /**
+     * Remove all the children of the given node.
+     * @param node
+     */
+    public void removeChildren(DefaultMutableTreeNode node) {
+
+    	int c = node.getChildCount();
+		int[] childIndices = new int[c];
+		Object[] removedChildren = new Object[c];
+		
+		for(int i=0; i<c; i++) {
+			childIndices[i] = i;
+			removedChildren[i] = node.getChildAt(i);
+		}
+		
+    	node.removeAllChildren();
+    	
 		treeModel.nodesWereRemoved(node, childIndices, removedChildren);
     }
     
     /**
-     * Override this method to do any necessary lazy loading of children. Called in a separate worker thread.
+     * Override this to load the necessary data for the given node so that its children can be expanded with
+     * replaceLazyChildNodes. 
+     * Call this in a worker thread.
+     * @param node
+     * @param recurse
+     */
+    public void loadLazyNodeData(DefaultMutableTreeNode node, boolean recurse) {
+    	throw new UnsupportedOperationException("This tree does not support lazy loading");
+    }
+    
+    /**
+     * Override this to replace the current child nodes of the given node with new nodes created from its data.
+     * Call this in the EDT.
+     * @param node
+     * @param recurse
+     */
+    protected int recreateChildNodes(DefaultMutableTreeNode node) {
+    	throw new UnsupportedOperationException("This tree does not support child recreation");
+    }
+    
+    public void recreateChildNodes(DefaultMutableTreeNode node, boolean recurse) {
+
+		recreateChildNodes(node);
+    	
+    	if (recurse) {
+    		for (Enumeration e = node.children(); e.hasMoreElements();) {
+    			DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) e.nextElement();
+    			recreateChildNodes(childNode, true);
+            }    	
+    	}
+    }
+    
+    /**
+     * Override this method to do any necessary lazy loading of children. Do everything in a separate worker thread.
      * @param node
      */
-    protected SimpleWorker loadLazyChildren(DefaultMutableTreeNode node)  {
-    	return null;
+    public void expandNodeWithLazyChildren(DefaultMutableTreeNode node) {
     }
     
     /**
@@ -283,23 +343,23 @@ public class DynamicTree extends JPanel {
 		expandAll(new TreePath(root), expand);
 	}
 
-	private void expandAll(TreePath parent, boolean expand) {
+	protected void expandAll(TreePath path, boolean expand) {
 
 		// Traverse children
-		TreeNode node = (TreeNode) parent.getLastPathComponent();
+		TreeNode node = (TreeNode) path.getLastPathComponent();
 		if (node.getChildCount() >= 0) {
 			for (Enumeration e = node.children(); e.hasMoreElements();) {
 				TreeNode n = (TreeNode) e.nextElement();
-				TreePath path = parent.pathByAddingChild(n);
-				expandAll(path, expand);
+				TreePath childPath = path.pathByAddingChild(n);
+				expandAll(childPath, expand);
 			}
 		}
 
 		// Expansion or collapse must be done bottom-up
 		if (expand) {
-			tree.expandPath(parent);
-		} else {
-			tree.collapsePath(parent);
+			tree.expandPath(path);
+		} else if (tree.isExpanded(path)) {
+			tree.collapsePath(path);
 		}
 	}
 
@@ -387,7 +447,7 @@ public class DynamicTree extends JPanel {
     	
     	TreePath selectionPath = tree.getSelectionPath();
     	DefaultMutableTreeNode startingNode = (selectionPath == null) ? null : (DefaultMutableTreeNode)selectionPath.getLastPathComponent();
-    	TreeSearcher searcher = new TreeSearcher(treeModel, searchString, startingNode, bias);
+    	DynamicTreeSearcher searcher = new DynamicTreeSearcher(this, searchString, startingNode, bias);
     	DefaultMutableTreeNode node = searcher.find();
     	if (node != null) {
     		navigateToNode(node);

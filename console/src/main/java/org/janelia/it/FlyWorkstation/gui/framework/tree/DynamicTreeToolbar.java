@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.outline;
+package org.janelia.it.FlyWorkstation.gui.framework.tree;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 
@@ -94,42 +94,18 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         String cmd = e.getActionCommand();
         if (EXPAND_ALL.equals(cmd)) { 
-            SwingWorker<Void, Void> expand = new SwingWorker<Void, Void>() {
-                @Override
-                protected Void doInBackground() throws Exception {
-                    try {
-                        expandAllButton.setEnabled(false);
-                        collapseAllButton.setEnabled(false);
-                        tree.expandAll(true);
-                        expandAllButton.setEnabled(true);
-                        collapseAllButton.setEnabled(true);
-                    }
-                    catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    return null;
-                }
-            };
-            expand.execute();
+            expandAllButton.setEnabled(false);
+            collapseAllButton.setEnabled(false);
+            tree.expandAll(true);
+            expandAllButton.setEnabled(true);
+            collapseAllButton.setEnabled(true);
         }
         else if (COLLAPSE_ALL.equals(cmd)) { 
-            SwingWorker<Void, Void> expand = new SwingWorker<Void, Void>() {
-                @Override
-                protected Void doInBackground() throws Exception {
-                    try {
-                        collapseAllButton.setEnabled(false);
-                        expandAllButton.setEnabled(false);
-                        tree.expandAll(false);
-                        collapseAllButton.setEnabled(true);
-                        expandAllButton.setEnabled(true);
-                    }
-                    catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    return null;
-                }
-            };
-            expand.execute();
+            collapseAllButton.setEnabled(false);
+            expandAllButton.setEnabled(false);
+            tree.expandAll(false);
+            collapseAllButton.setEnabled(true);
+            expandAllButton.setEnabled(true);
         } 
         else if (NEXT_MATCH.equals(cmd)) { 
             tree.navigateToNodeStartingWith(textField.getText(), Bias.Forward);

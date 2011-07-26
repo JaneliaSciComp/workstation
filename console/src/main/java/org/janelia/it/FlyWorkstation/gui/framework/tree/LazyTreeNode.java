@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.outline;
+package org.janelia.it.FlyWorkstation.gui.framework.tree;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
