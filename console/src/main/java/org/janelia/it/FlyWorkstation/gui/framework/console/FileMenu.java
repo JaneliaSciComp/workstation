@@ -60,7 +60,7 @@ public class FileMenu extends JMenu {
         menuOpenDataSource.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, InputEvent.CTRL_MASK, false));
         menuOpenDataSource.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                fileOpen_actionPerformed(e, "ejb", null);
+                fileOpen_actionPerformed(e, FacadeManager.getEJBProtocolString(), null);
             }
         });
 
@@ -119,7 +119,6 @@ public class FileMenu extends JMenu {
     }
 
     private void fileExit_actionPerformed() {
-        System.exit(0);
        SessionMgr.getSessionMgr().systemExit();
     }
 

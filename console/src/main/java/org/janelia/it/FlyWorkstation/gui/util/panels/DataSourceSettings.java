@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.util.panels;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.xml.ValidationManager;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.xml.XmlServiceFacadeManager;
+import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.framework.roles.PrefEditor;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -111,25 +112,25 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
       List delayedChanges = new ArrayList();
       userLogin = loginTextField.getText().trim();
       userPassword = new String(passwordTextField.getPassword());
-// JCVI LLF, 10/19/2006
-//      if ((!userLogin.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME)))
-//         || (!userPassword.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_PASSWORD)))) {
-//         if (saveCheckBox.isSelected()) {
-//            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, userLogin);
-//            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_PASSWORD, userPassword);
-//         }
-//         PropertyConfigurator.getProperties().setProperty(SessionMgr.USER_NAME, userLogin);
-//         PropertyConfigurator.getProperties().setProperty(SessionMgr.USER_PASSWORD, userPassword);
-//         // End login apply code
-//
-//         // Begin Datasource directory selection apply code
+
+      if ((!userLogin.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME)))
+         || (!userPassword.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_PASSWORD)))) {
+         if (saveCheckBox.isSelected()) {
+            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, userLogin);
+            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_PASSWORD, userPassword);
+         }
+         PropertyConfigurator.getProperties().setProperty(SessionMgr.USER_NAME, userLogin);
+         PropertyConfigurator.getProperties().setProperty(SessionMgr.USER_PASSWORD, userPassword);
+         // End login apply code
+
+         // Begin Datasource directory selection apply code
 //         List list = FacadeManager.getInUseProtocolStrings();
 //         for (Iterator it = list.iterator(); it.hasNext();) {
 //            if (it.next().equals(FacadeManager.getEJBProtocolString()))
 //               delayedChanges.add("Changing the User Login while currently Logged in");
 //         }
-//         FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
-//      }
+         FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
+      }
       try {
          if (directoryLocationModel.isModified()) {
             if (ModelMgr.getModelMgr().getNumberOfLoadedOntologies() > 0)
@@ -149,8 +150,7 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
       } // End catch for delete
       // End datasource dir selection, apply code
 
-      if (urlLocationModel.isModified())
-         delayedChanges.add("Changing the XML Service URLs");
+      if (urlLocationModel.isModified()) { delayedChanges.add("Changing the XML Service URLs");}
 
       setNewUrlLocations(urlLocationModel.getList());
       settingsChanged = false;

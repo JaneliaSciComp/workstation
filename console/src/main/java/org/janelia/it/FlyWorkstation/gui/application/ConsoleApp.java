@@ -79,7 +79,7 @@ public class ConsoleApp {
             // Protocol Registration
             final ModelMgr modelMgr = ModelMgr.getModelMgr();
             // OMIT for CONVERSION
-            modelMgr.registerFacadeManagerForProtocol("ejb", AggregateFacadeManager.class, "Internal Database via EJB Server");
+            modelMgr.registerFacadeManagerForProtocol(FacadeManager.getEJBProtocolString(), AggregateFacadeManager.class, "Internal Database via EJB Server");
 
             // Editor Registration
             //      sessionMgr.registerEditorForType(api.entity_model.model.genetics.Species.class,
@@ -129,7 +129,7 @@ public class ConsoleApp {
             sessionMgr.setSplashPanel(new SplashPanel());
 
             splash.setStatusText("Connecting to Remote Data Sources...");
-            FacadeManager.addProtocolToUseList("ejb");
+            FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
 //            FacadeManager.addProtocolToUseList("sage");
 
             //Start First Browser

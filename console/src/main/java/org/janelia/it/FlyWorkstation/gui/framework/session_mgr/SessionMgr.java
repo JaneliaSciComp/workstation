@@ -131,7 +131,11 @@ public class SessionMgr {
            }
         }
      }
+     catch (EOFException eof) {
+         // Do nothing, there are no preferences
+     }
      catch (Exception ioEx) {
+        SessionMgr.getSessionMgr().handleException(ioEx);
      } //new settingsFile
   }
 
