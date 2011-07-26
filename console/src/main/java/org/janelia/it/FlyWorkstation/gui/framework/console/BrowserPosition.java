@@ -14,22 +14,30 @@ public class BrowserPosition implements Serializable {
     private Dimension consoleSize;
     private Dimension screenSize;
     private Point consoleLocation;
-    private int verticalDividerLocation, horizontalDividerLocation;
+    private int verticalDividerLocation, horizontalLeftDividerLocation, horizontalRightDividerLocation;
 
     void setVerticalDividerLocation(int location) {
         verticalDividerLocation = location;
     }
 
-    void setHorizontalDividerLocation(int location) {
-        horizontalDividerLocation = location;
+    void setHorizontalLeftDividerLocation(int location) {
+        horizontalLeftDividerLocation = location;
+    }
+
+    void setHorizontalRightDividerLocation(int location) {
+        horizontalRightDividerLocation = location;
     }
 
     int getVerticalDividerLocation() {
         return verticalDividerLocation;
     }
 
-    int getHorizontalDividerLocation() {
-        return horizontalDividerLocation;
+    int getHorizontalLeftDividerLocation() {
+        return horizontalLeftDividerLocation;
+    }
+
+    int getHorizontalRightDividerLocation() {
+        return horizontalRightDividerLocation;
     }
 
     Dimension getScreenSize() {

@@ -240,7 +240,7 @@ public class FileMenu extends JMenu {
        }
 
        public void sessionWillExit() {
-          // saveLastDataSources();
+//          saveLastDataSources();
 //          if (/*menuItemSaveAsXML.isEnabled() &&*/
 //             SessionMgr.getSessionMgr().getNumberOfOpenBrowsers() < 2 && isworkspaceDirty) {
 //             int answer = JOptionPane.showConfirmDialog(browser, "Would you like to save the workspace before closing?", "Save?", JOptionPane.YES_NO_OPTION);

@@ -113,77 +113,26 @@ public class Browser extends JFrame implements Cloneable {
 
         try {
             jbInit(browserModel);
-
-            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-            BrowserPosition position = (BrowserPosition)SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
-            if (null==position) {
-                position = new BrowserPosition();
-            }
-            position.setScreenSize(screenSize);
-            position.setBrowserSize(new Dimension(400, 400));
-            position.setBrowserLocation(new Point(100, 100));
-            position.setHorizontalDividerLocation(200);
-            position.setVerticalDividerLocation(200);
-
-            if ((position == null) ||
-                    !position.getScreenSize().equals(screenSize)) {
-            setSize(new Dimension((int) (screenSize.width * realEstatePercent), (int) (screenSize.height * realEstatePercent)));
-
-            Dimension frameSize = getSize();
-
-            if (frameSize.height > screenSize.height) {
-                frameSize.height = screenSize.height;
-            }
-
-            if (frameSize.width > screenSize.width) {
-                frameSize.width = screenSize.width;
-            }
-
-            setLocation((screenSize.width - frameSize.width) / 2, (screenSize.height - frameSize.height) / 2);
-            } else {
-                setSize(position.getBrowserSize());
-                setLocation(position.getBrowserLocation());
-            }
         }
         catch (Exception e) {
-            try {
-                e.printStackTrace();
-//                SessionMgr.getSessionMgr().handleException(e);
-            }
-            catch (Exception ex) {
-                e.printStackTrace();
-            }
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 
     /**
-    * Use given coordinates of the top left point and passed realEstatePercent (0-1.0)
+    * Use given coordinates of the top left point and passed realEstatePercent (0-1.0).
+    * THis constructor is used only by the clone method
     */
     public Browser(int topLeftX, int topLeftY, Dimension size, BrowserModel browserModel) {
         enableEvents(AWTEvent.WINDOW_EVENT_MASK);
 
         try {
             jbInit(browserModel);
-
-            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-            Dimension frameSize = getSize();
-
-            if (frameSize.height > screenSize.height) {
-                frameSize.height = screenSize.height;
-            }
-
-            if (frameSize.width > screenSize.width) {
-                frameSize.width = screenSize.width;
-            }
-
             setLocation(topLeftX, topLeftY);
             setSize(size);
-        } catch (Exception e) {
-            try {
-                SessionMgr.getSessionMgr().handleException(e);
-            } catch (Exception ex) {
-                e.printStackTrace();
-            }
+        }
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 
@@ -242,8 +191,6 @@ public class Browser extends JFrame implements Cloneable {
 
         setJMenuBar(menuBar);
 
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        setSize(screenSize);
         viewerPanel.setBorder(BorderFactory.createLineBorder(Color.black));
         viewerPanel.loadImages(null);
         searchToolbar = new SearchToolbar();
@@ -266,23 +213,23 @@ public class Browser extends JFrame implements Cloneable {
 
         BrowserPosition consolePosition = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
         if (null==consolePosition) {
-            consolePosition = new BrowserPosition();
+            consolePosition = getNewBrowserPosition();
         }
-        consolePosition.setScreenSize(screenSize);
-        consolePosition.setBrowserSize(new Dimension(400, 400));
-        consolePosition.setBrowserLocation(new Point(100, 100));
-        consolePosition.setHorizontalDividerLocation(400);
-        consolePosition.setVerticalDividerLocation(200);
 
         centerRightHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, viewerPanel, ontologyOutline);
         centerRightHorizontalSplitPane.setMinimumSize(new Dimension(200, 0));
         centerRightHorizontalSplitPane.setOpaque(true);
         centerRightHorizontalSplitPane.setDividerSize(10);
         centerRightHorizontalSplitPane.setOneTouchExpandable(true);
+        centerRightHorizontalSplitPane.setDividerLocation(consolePosition.getHorizontalRightDividerLocation());
 
         centerLeftHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, outlookBar, centerRightHorizontalSplitPane);
         centerLeftHorizontalSplitPane.setMinimumSize(new Dimension(400, 0));
         centerLeftHorizontalSplitPane.setOneTouchExpandable(true);
+        centerLeftHorizontalSplitPane.setDividerLocation(consolePosition.getHorizontalLeftDividerLocation());
+
+        setSize(consolePosition.getBrowserSize());
+        setLocation(consolePosition.getBrowserLocation());
 
         searchToolbar.setVisible(false);
 
@@ -594,6 +541,7 @@ public class Browser extends JFrame implements Cloneable {
 
         return newBrowser;
     }
+
     public void setTitle(String title) {
         this.title = title;
         super.setTitle(title);
@@ -619,7 +567,7 @@ public class Browser extends JFrame implements Cloneable {
         super.processWindowEvent(e);
 
         if (e.getID() == WindowEvent.WINDOW_CLOSING) {
-//            SessionMgr.getSessionMgr().removeBrowser(this);
+            SessionMgr.getSessionMgr().removeBrowser(this);
         }
     }
 
@@ -807,7 +755,7 @@ public class Browser extends JFrame implements Cloneable {
 //                        (int) (screenSize.width * realEstatePercent * (1 - MAIN_VIEWER_PANE_HORIZONTAL_PERCENT)));
 //            } else {
 //                centerLeftHorizontalSplitPane.setDividerLocation(
-//                        browserPosition.getHorizontalDividerLocation());
+//                        browserPosition.getHorizontalLeftDividerLocation());
 //            }
         }
         else {
@@ -1096,8 +1044,8 @@ public class Browser extends JFrame implements Cloneable {
             position.setBrowserLocation(Browser.this.getLocation());
 //            position.setVerticalDividerLocation(
 //                    dataSplitPaneVertical.getDividerLocation());
-            position.setHorizontalDividerLocation(
-                    centerLeftHorizontalSplitPane.getDividerLocation());
+            position.setHorizontalLeftDividerLocation(centerLeftHorizontalSplitPane.getDividerLocation());
+            position.setHorizontalRightDividerLocation(centerRightHorizontalSplitPane.getDividerLocation());
             SessionMgr.getSessionMgr()
                       .setModelProperty(BROWSER_POSITION, position);
             dispose();
@@ -1233,6 +1181,17 @@ public class Browser extends JFrame implements Cloneable {
 //        fileOutline.clearSelection();
         sessionOutline.rebuildDataModel();
         sessionOutline.selectSession(currentAnnotationSessionTaskId);
+    }
+
+    public BrowserPosition getNewBrowserPosition(){
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        BrowserPosition position = new BrowserPosition();
+        position.setScreenSize(screenSize);
+        position.setBrowserSize(screenSize);
+        position.setBrowserLocation(new Point(0, 0));
+        position.setHorizontalLeftDividerLocation(200);
+        position.setVerticalDividerLocation(800);
+        return position;
     }
 
     public JOutlookBar getOutlookBar() {

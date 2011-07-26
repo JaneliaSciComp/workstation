@@ -261,7 +261,7 @@ public class SessionMgr {
 
   public void useFreeMemoryWatcher(boolean use) {
       this.setModelProperty("FreeMemoryViewer", use);
-      //freeMemoryWatcher=use;
+//      freeMemoryWatcher=use;
   }
 /*
   public boolean isUsingMemoryWatcher() {

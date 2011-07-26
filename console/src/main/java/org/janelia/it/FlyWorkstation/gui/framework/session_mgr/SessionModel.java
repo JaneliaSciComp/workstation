@@ -1,7 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.session_mgr;
 
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.Vector;
 
 /**
@@ -83,18 +82,18 @@ public class SessionModel extends GenericModel {
 //  }
 
   private void fireBrowserRemoved(BrowserModel browserModel) {
-    for (Iterator e=modelListeners.iterator();e.hasNext();)
-       ((SessionModelListener)e.next()).browserRemoved(browserModel);
+      for (GenericModelListener modelListener : modelListeners)
+          ((SessionModelListener) modelListener).browserRemoved(browserModel);
   }
 
   private void fireBrowserAdded(BrowserModel browserModel) {
-    for (Iterator e=modelListeners.iterator();e.hasNext();)
-       ((SessionModelListener)e.next()).browserAdded(browserModel);
+      for (GenericModelListener modelListener : modelListeners)
+          ((SessionModelListener) modelListener).browserAdded(browserModel);
   }
 
   private void fireSystemExit() {
-    for (Iterator e=modelListeners.iterator();e.hasNext();)
-       ((SessionModelListener)e.next()).sessionWillExit();
+      for (GenericModelListener modelListener : modelListeners)
+          ((SessionModelListener) modelListener).sessionWillExit();
   }
 
 }
