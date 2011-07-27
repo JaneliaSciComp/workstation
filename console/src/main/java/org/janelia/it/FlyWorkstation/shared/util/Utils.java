@@ -6,17 +6,13 @@
  */
 package org.janelia.it.FlyWorkstation.shared.util;
 
-import java.awt.Component;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
@@ -28,10 +24,9 @@ import javax.swing.table.TableColumn;
 import loci.formats.gui.BufferedImageReader;
 import loci.formats.in.TiffReader;
 
-import com.sun.media.jai.codec.FileSeekableStream;
-import com.sun.media.jai.codec.SeekableStream;
-
 /**
+ * Common utilities for loading images, testing strings, etc.
+ * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class Utils {
@@ -139,5 +134,13 @@ public class Utils {
         g2.drawImage(sourceImage, 0, 0, w, h, null);
         g2.dispose();
         return resizedImg;
+    }
+    
+    public static void setWaitingCursor(Component component) {
+    	component.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+    }
+    
+    public static void setDefaultCursor(Component component) {
+    	component.setCursor(Cursor.getDefaultCursor());
     }
 }

@@ -13,13 +13,13 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreePath;
 
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNode;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeExpansionWorker;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -48,12 +48,12 @@ public class EntityOutline extends EntityTree implements Cloneable {
         		final Entity entity = (Entity)node.getUserObject();
         		
             	try {
-            		getDynamicTree().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+            		Utils.setWaitingCursor(EntityOutline.this);
             		
             		SimpleWorker loadingWorker = new LazyTreeNodeExpansionWorker(selectedTree, node, true) {
 
             			protected void doneExpanding() {
-            				getDynamicTree().setCursor(Cursor.getDefaultCursor());
+            				Utils.setDefaultCursor(EntityOutline.this);
                     		List<Entity> entities = getDescendantsOfType(entity, EntityConstants.TYPE_TIF_2D);
                     		SessionMgr.getSessionMgr().getActiveBrowser().getAnnotationSessionPropertyPanel().showForNewSession(entity.getName(), entities);
         		            SwingUtilities.updateComponentTreeUI(EntityOutline.this);
@@ -61,7 +61,7 @@ public class EntityOutline extends EntityTree implements Cloneable {
 
 						@Override
 						protected void hadError(Throwable error) {
-							getDynamicTree().setCursor(Cursor.getDefaultCursor());
+							Utils.setDefaultCursor(EntityOutline.this);
 							JOptionPane.showMessageDialog(EntityOutline.this, "Error expanding tree", "Internal Error", JOptionPane.ERROR_MESSAGE);
 						}
             			

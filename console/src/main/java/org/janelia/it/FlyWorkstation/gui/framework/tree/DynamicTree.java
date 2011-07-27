@@ -30,8 +30,6 @@ import javax.swing.tree.*;
  */
 public class DynamicTree extends JPanel {
 
-    protected DefaultMutableTreeNode rootNode;
-    protected DefaultTreeModel treeModel;
     protected final JTree tree;
     protected boolean lazyLoading;
     
@@ -44,8 +42,8 @@ public class DynamicTree extends JPanel {
 
         this.lazyLoading = lazyLoading;
         
-        rootNode = new DefaultMutableTreeNode(userObject);
-        treeModel = new DefaultTreeModel(rootNode);
+        DefaultMutableTreeNode rootNode = new DefaultMutableTreeNode(userObject);
+        DefaultTreeModel treeModel = new DefaultTreeModel(rootNode);
         
         tree = new JTree(treeModel);
         tree.setRowHeight(25);
@@ -163,7 +161,7 @@ public class DynamicTree extends JPanel {
 		
     	node.removeAllChildren();
     	
-		treeModel.nodesWereRemoved(node, childIndices, removedChildren);
+		getTreeModel().nodesWereRemoved(node, childIndices, removedChildren);
     }
     
     /**
@@ -255,7 +253,7 @@ public class DynamicTree extends JPanel {
      * @return
      */
 	public DefaultTreeModel getTreeModel() {
-		return treeModel;
+		return (DefaultTreeModel)tree.getModel();
 	}
 	
     /**
@@ -263,14 +261,14 @@ public class DynamicTree extends JPanel {
      * @return
      */
     public DefaultMutableTreeNode getRootNode() {
-		return rootNode;
+		return (DefaultMutableTreeNode)getTreeModel().getRoot();
 	}
 
 	/**
      * Remove the currently selected node.
      */
     public void removeNode(DefaultMutableTreeNode node) {
-        treeModel.removeNodeFromParent(node);
+    	getTreeModel().removeNodeFromParent(node);
     }
 
     /**
@@ -296,7 +294,7 @@ public class DynamicTree extends JPanel {
         TreePath parentPath = tree.getSelectionPath();
 
         if (parentPath == null) {
-            parentNode = rootNode;
+            parentNode = getRootNode();
         }
         else {
             parentNode = (DefaultMutableTreeNode) (parentPath.getLastPathComponent());
@@ -312,11 +310,11 @@ public class DynamicTree extends JPanel {
     public DefaultMutableTreeNode addObject(DefaultMutableTreeNode parentNode, DefaultMutableTreeNode childNode) {
 
         if (parentNode == null) {
-        	parentNode = rootNode;
+        	parentNode = getRootNode();
         }
         
         // It is key to invoke this on the TreeModel, and NOT DefaultMutableTreeNode
-        treeModel.insertNodeInto(childNode, parentNode, parentNode.getChildCount());
+        getTreeModel().insertNodeInto(childNode, parentNode, parentNode.getChildCount());
         
         return childNode;
     }
@@ -371,7 +369,7 @@ public class DynamicTree extends JPanel {
 	 * @return
 	 */
     public DefaultMutableTreeNode refreshDescendants(DefaultMutableTreeNode node) {
-        treeModel.nodeChanged(node);
+    	getTreeModel().nodeChanged(node);
         Enumeration enumeration = node.children();
         while(enumeration.hasMoreElements()) {
             refreshDescendants((DefaultMutableTreeNode)enumeration.nextElement());
@@ -403,7 +401,7 @@ public class DynamicTree extends JPanel {
      */
     public void navigateToNodeWithObject(Object targetUserObject) {
     	if (targetUserObject == null) tree.setSelectionPath(null);
-        DefaultMutableTreeNode node = getNodeForUserObject(targetUserObject, (DefaultMutableTreeNode) treeModel.getRoot());
+        DefaultMutableTreeNode node = getNodeForUserObject(targetUserObject, (DefaultMutableTreeNode) getRootNode());
         navigateToNode(node);
     }
 

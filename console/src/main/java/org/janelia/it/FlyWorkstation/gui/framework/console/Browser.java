@@ -1176,11 +1176,11 @@ public class Browser extends JFrame implements Cloneable {
     }
     
     public void setAnnotationSessionChanged(String returnSessionTask) {
-        currentAnnotationSessionTaskId = returnSessionTask;
-        this.mostRecentFileOutlinePath = null;
-//        fileOutline.clearSelection();
-        sessionOutline.rebuildDataModel();
-        sessionOutline.selectSession(currentAnnotationSessionTaskId);
+//        currentAnnotationSessionTaskId = returnSessionTask;
+//        this.mostRecentFileOutlinePath = null;
+////        fileOutline.clearSelection();
+//        sessionOutline.rebuildDataModel();
+//        sessionOutline.selectSession(currentAnnotationSessionTaskId);
     }
 
     public BrowserPosition getNewBrowserPosition(){

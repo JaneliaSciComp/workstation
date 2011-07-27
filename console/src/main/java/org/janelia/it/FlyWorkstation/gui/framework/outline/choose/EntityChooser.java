@@ -39,8 +39,12 @@ public class EntityChooser extends AbstractChooser {
     public List<Entity> getChosenEntities() {
 		return chosenEntities;
 	}
-	
-    protected void choosePressed() {
+    
+    public EntityTree getEntityTree() {
+		return entityTree;
+	}
+
+	protected void choosePressed() {
     	chosenEntities.clear();
 		for(TreePath path : entityTree.getDynamicTree().getTree().getSelectionPaths()) {
 			DefaultMutableTreeNode node = (DefaultMutableTreeNode)path.getLastPathComponent();
