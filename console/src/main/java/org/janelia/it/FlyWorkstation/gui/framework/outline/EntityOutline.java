@@ -24,6 +24,15 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by IntelliJ IDEA.
  * User: saffordt
@@ -135,11 +144,14 @@ public class EntityOutline extends EntityTree implements Cloneable {
     			if (child == null) continue;
     			String childType = child.getEntityType().getName();
     			if (!childType.equals(EntityConstants.TYPE_TIF_2D)) continue;
-    			entities.add(child);
+                entities.add(child);
     		}
     	}
 
-    	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(entities);
+        // Get the annotations to adorn the AnnotationImageButtons with
+        List<Entity> annotations = EJBFactory.getRemoteAnnotationBean().getAnnotationsForEntities(
+                (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME), entities);
+    	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(entities, annotations);
     }
 
     /**

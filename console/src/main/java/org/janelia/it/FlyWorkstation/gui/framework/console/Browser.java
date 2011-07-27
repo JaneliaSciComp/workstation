@@ -192,7 +192,7 @@ public class Browser extends JFrame implements Cloneable {
         setJMenuBar(menuBar);
 
         viewerPanel.setBorder(BorderFactory.createLineBorder(Color.black));
-        viewerPanel.loadImages(null);
+        viewerPanel.loadImageEntities(null, null);
         searchToolbar = new SearchToolbar();
         usingSplashPanel = true;
 //        subBrowserTabPane = new SubBrowser(browserModel);
@@ -1146,7 +1146,7 @@ public class Browser extends JFrame implements Cloneable {
 //        sessionOutline.clearSelection();
         File tmpFile = new File(mostRecentFileOutlinePath);
         if (tmpFile.exists()) {
-            viewerPanel.loadImages(getFiles(mostRecentFileOutlinePath));
+//            viewerPanel.loadImageEntities(getFiles(mostRecentFileOutlinePath));
         }
     }
 

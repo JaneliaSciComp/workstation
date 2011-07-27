@@ -1,12 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 
 /**
  * Wrapper for AnnotationSessionTask which keeps track of associated entities.

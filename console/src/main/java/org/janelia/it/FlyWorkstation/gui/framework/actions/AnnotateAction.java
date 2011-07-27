@@ -87,11 +87,8 @@ public class AnnotateAction extends OntologyElementAction {
 //            tag = (value == null) ? getName() : getName()+" = "+value;
 //        }
 //        
-        // TODO: get entity from currImage
-        Entity targetEntity = new Entity();
-        targetEntity.setId(12345L);
-        
-        
+        Entity targetEntity = currImage.getEntity();
+
         // Save the annotation
 
         Entity keyEntity = term.getEntity();
@@ -119,8 +116,13 @@ public class AnnotateAction extends OntologyElementAction {
         String keyEntityId = (keyEntity == null) ? null : keyEntity.getId().toString();
         String valueEntityId = (valueEntity == null) ? null : valueEntity.getId().toString();
         
-		saveAnnotation(sessionId, targetEntity.getId().toString(), keyEntityId, keyString, 
+		if (added) {
+            saveAnnotation(sessionId, targetEntity.getId().toString(), keyEntityId, keyString,
 				valueEntityId, valueString, tag);
+        }
+        else {
+            deteteAnnotation();
+        }
 	}
 
 	private void saveAnnotation(final String sessionId, final String targetEntityId, final String keyEntityId,
@@ -128,10 +130,8 @@ public class AnnotateAction extends OntologyElementAction {
 
 		SimpleWorker worker = new SimpleWorker() {
 
-			private Entity newAnnot;
-
 			protected void doStuff() throws Exception {
-				newAnnot = EJBFactory.getRemoteAnnotationBean().createOntologyAnnotation(System.getenv("USER"),
+				EJBFactory.getRemoteAnnotationBean().createOntologyAnnotation(System.getenv("USER"),
 						sessionId, targetEntityId, keyEntityId, keyString, valueEntityId, valueString, tag);
 			}
 

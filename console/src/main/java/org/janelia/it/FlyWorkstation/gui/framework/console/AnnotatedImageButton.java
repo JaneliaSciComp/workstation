@@ -1,5 +1,15 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.gui.util.WrapLayout;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.jacs.model.entity.Entity;
+
+import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -8,16 +18,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
-
-import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.gui.util.WrapLayout;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
 
 /**
  * A lazy-loading image with a title on top and optional annotation tags underneath.
@@ -31,9 +31,10 @@ public class AnnotatedImageButton extends JToggleButton {
     private final String imageFilename;
 	private BufferedImage maxSizeImage;
 	private double scale;
+    private Entity entity;
 	
-    public AnnotatedImageButton(String title, String imageFilename, final int index) {
-    	
+    public AnnotatedImageButton(String title, String imageFilename, final int index, Entity entity) {
+    	this.entity = entity;
     	this.title = title;
         this.imageFilename = imageFilename;
         
@@ -172,6 +173,14 @@ public class AnnotatedImageButton extends JToggleButton {
             });
 
         }
+    }
+
+    public Entity getEntity() {
+        return entity;
+    }
+
+    public void setEntity(Entity entity) {
+        this.entity = entity;
     }
 
     /**

@@ -1,37 +1,35 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.GridLayout;
-import java.awt.Rectangle;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.ButtonGroup;
-import javax.swing.JPanel;
-import javax.swing.Scrollable;
-import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
-
 import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Self-adjusting panel of images
  */
 public class ImagesPanel extends JPanel implements Scrollable {
 	
-	private final List<AnnotatedImageButton> buttons = new ArrayList<AnnotatedImageButton>();
+    private static final String JACS_DATA_PATH_MAC = ConsoleProperties.getString("remote.defaultMacPath");
+    private static final String JACS_DATA_PATH_LINUX = ConsoleProperties.getString("remote.defaultLinuxPath");
+
+	private final HashMap<String, AnnotatedImageButton> buttons = new HashMap<String, AnnotatedImageButton>();
 	
 	private ButtonGroup buttonGroup;
     private double imageSizePercent = 1.0d;
-    private Integer currIndex;
+    private String currentEntityId;
     private List<SwingWorker> workers = new ArrayList<SwingWorker>();
     
     // Listen for key strokes and execute the appropriate key bindings
@@ -54,10 +52,8 @@ public class ImagesPanel extends JPanel implements Scrollable {
     /**
      * Load in some new images asynchronously. In the meantime, show the filenames with a "loading" spinner for 
      * each image to be loaded.
-     * @param labels
-     * @param filenames
      */
-	public void load(List<String> labels, List<String> filenames) {
+	public void load(List<Entity> entities, List<Entity> annotations) {
 
 		for(SwingWorker worker : workers) {
 	    	if (worker != null && !worker.isDone()) {
@@ -74,32 +70,51 @@ public class ImagesPanel extends JPanel implements Scrollable {
         		remove(component);
         	}
         }
-    	
-        for(int i=0; i<labels.size(); i++) {
-        	
-        	final AnnotatedImageButton button = new AnnotatedImageButton(labels.get(i), filenames.get(i), i);
-        	final int index = i;
-        	
-        	button.addFocusListener(new FocusAdapter() {
+
+        for (int i = 0; i < entities.size(); i++) {
+            final Entity tmpEntity = entities.get(i);
+            String filepath = tmpEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
+            File file = new File(convertPath(filepath));
+
+            final AnnotatedImageButton button = new AnnotatedImageButton(file.getName(), file.getAbsolutePath(), i, tmpEntity);
+            final int index = i;
+
+            button.addFocusListener(new FocusAdapter() {
                 @Override
                 public void focusGained(FocusEvent e) {
-                    currIndex = index;
+                    currentEntityId = tmpEntity.getId().toString();
                     button.setSelected(true);
-                    
+
                     // Scroll to the newly focused button
                     ImagesPanel.this.scrollRectToVisible(button.getBounds());
                     SwingUtilities.updateComponentTreeUI(ImagesPanel.this.getParent());
                 }
             });
 
-        	button.addKeyListener(keyListener);
+            button.addKeyListener(keyListener);
 
-        	buttons.add(button);
+            buttons.put(tmpEntity.getId().toString(), button) ;
             buttonGroup.add(button);
-        	add(button);
+            add(button);
         }
 
-        for (AnnotatedImageButton button : buttons) {
+        // Now adorn the buttons with the annotations - only go through this list once
+        if (null!=annotations) {
+            for (Entity annotation : annotations) {
+                try {
+                    EntityData tmpTarget = annotation.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_TARGET_ID);
+                    if (null!=tmpTarget) {
+                        AnnotatedImageButton tmpButton = buttons.get(tmpTarget.getValue());
+                        if (null!=tmpButton) {tmpButton.addOrRemoveTag(annotation.getName());}
+                    }
+                }
+                catch (Exception e) {
+                    SessionMgr.getSessionMgr().handleException(e);
+                }
+            }
+        }
+
+        for (AnnotatedImageButton button : buttons.values()) {
         	SwingWorker worker = new LoadImageWorker(button);
     		worker.execute();
     		workers.add(worker);
@@ -116,7 +131,7 @@ public class ImagesPanel extends JPanel implements Scrollable {
     		return;
     	}
 		this.imageSizePercent = imageSizePercent;
-        for (AnnotatedImageButton button : buttons) {
+        for (AnnotatedImageButton button : buttons.values()) {
     		button.rescaleImage(imageSizePercent);
         }
 	}
@@ -126,10 +141,10 @@ public class ImagesPanel extends JPanel implements Scrollable {
      * @return
      */
     public AnnotatedImageButton getSelectedImage() {
-        if (currIndex == null || currIndex >= buttons.size()) {
+        if (currentEntityId == null) {
         	return null;
         }
-        return buttons.get(currIndex);
+        return buttons.get(currentEntityId);
     }
 
     /**
@@ -138,7 +153,7 @@ public class ImagesPanel extends JPanel implements Scrollable {
      */
     public void recalculateGrid() {
 		double maxButtonWidth = 0;
-        for (AnnotatedImageButton button : buttons) {
+        for (AnnotatedImageButton button : buttons.values()) {
     		int w = button.getPreferredSize().width;
     		if (w>maxButtonWidth) maxButtonWidth = w;
         }
@@ -159,10 +174,10 @@ public class ImagesPanel extends JPanel implements Scrollable {
      * @param tag
      */
     public boolean addOrRemoveTag(String tag) {
-        if (currIndex == null || currIndex >= buttons.size()) {
+        if (currentEntityId == null) {
         	throw new IllegalStateException("Cannot add a tag when there is no button selected");
         }
-        AnnotatedImageButton currButton = buttons.get(currIndex);
+        AnnotatedImageButton currButton = buttons.get(currentEntityId);
         boolean added = currButton.addOrRemoveTag(tag);
         SwingUtilities.updateComponentTreeUI(ImagesPanel.this);
         return added;
@@ -191,6 +206,10 @@ public class ImagesPanel extends JPanel implements Scrollable {
     @Override
     public boolean getScrollableTracksViewportHeight() {
         return false;
+    }
+
+    public String convertPath(String filepath) {
+    	return filepath.replace(JACS_DATA_PATH_LINUX, JACS_DATA_PATH_MAC);
     }
 
     /**

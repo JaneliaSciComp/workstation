@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
+import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.TifImageInfoDialog;
 import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 
@@ -30,7 +31,7 @@ import java.io.IOException;
  */
 public class FileOutline extends JScrollPane implements Cloneable {
     // todo Remove this hard-wiring of the path
-    public static final String DATA_SOURCE_PATH = "/Volumes/jacsData/filestore/"+System.getenv("USER");
+    public static final String DATA_SOURCE_PATH = ConsoleProperties.getString("remote.defaultMacPath")+"/filestore/"+System.getenv("USER");
     public static final String NO_DATASOURCE = "Data Source Unreachable";
     private Browser consoleFrame;
     private JTree tree;

@@ -6,25 +6,19 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSlider;
-import javax.swing.SwingUtilities;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 import org.janelia.it.FlyWorkstation.gui.application.SplashPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationToolbar;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This panel shows titled images in a grid with optional textual annotation tags beneath each one.
@@ -33,10 +27,6 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
  */
 public class IconDemoPanel extends JPanel {
 
-    // TODO: move these into a configuration file
-    private static final String JACS_DATA_PATH_MAC = "/Volumes/jacsData";
-    private static final String JACS_DATA_PATH_LINUX = "/groups/scicomp/jacsData";
-    
     private SplashPanel splashPanel;
     private AnnotationToolbar toolbar;
     private ImagesPanel imagesPanel;
@@ -71,49 +61,50 @@ public class IconDemoPanel extends JPanel {
         });
     }
 
-    /**
-     * Load the given image files and display them in a grid. If files is null then redisplay the splash image.
-     * @param files
-     */
-    public void loadImages(List<File> files) {
-    	
-        try {
-            remove(splashPanel);
-           
-            if (files == null) {
-                add(splashPanel);
-                return;
-            }
-
-            add(toolbar, BorderLayout.NORTH);
-            add(scrollPane, BorderLayout.CENTER);
-
-            List<String> labels = new ArrayList<String>();
-            List<String> filenames = new ArrayList<String>();
-
-			for (File file : files) {
-				labels.add(file.getName());
-				filenames.add(file.getAbsolutePath());
-			}
-
-            imagesPanel.load(labels, filenames);
-            SwingUtilities.updateComponentTreeUI(IconDemoPanel.this);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+//    /**
+//     * Load the given image files and display them in a grid. If files is null then redisplay the splash image.
+//     * @param files
+//     */
+//    public void loadImages(List<File> files) {
+//
+//        try {
+//            remove(splashPanel);
+//
+//            if (files == null) {
+//                add(splashPanel);
+//                return;
+//            }
+//
+//            add(toolbar, BorderLayout.NORTH);
+//            add(scrollPane, BorderLayout.CENTER);
+//
+//            List<String> labels = new ArrayList<String>();
+//            List<String> filenames = new ArrayList<String>();
+//
+//			for (File file : files) {
+//				labels.add(file.getName());
+//				filenames.add(file.getAbsolutePath());
+//			}
+//
+//            imagesPanel.load(labels, filenames);
+//            SwingUtilities.updateComponentTreeUI(IconDemoPanel.this);
+//        }
+//        catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     /**
      * Load the given image entities and display them in a grid. If files is null then redisplay the splash image.
-     * @param files
+     * @param entities List of entities
+     * @param annotations
      */
-    public void loadImageEntities(List<Entity> images) {
+    public void loadImageEntities(List<Entity> entities, List<Entity> annotations) {
     	
         try {
             remove(splashPanel);
            
-            if (images == null) {
+            if (entities == null) {
                 add(splashPanel);
                 return;
             }
@@ -121,32 +112,23 @@ public class IconDemoPanel extends JPanel {
             add(toolbar, BorderLayout.NORTH);
             add(scrollPane, BorderLayout.CENTER);
 
-            List<String> labels = new ArrayList<String>();
-            List<String> filenames = new ArrayList<String>();
+            List<Entity> renderedEntities = new ArrayList<Entity>();
 
-			for (Entity entity : images) {
+			for (Entity entity : entities) {
 				
 				if (!entity.getEntityType().getName().equals(EntityConstants.TYPE_TIF_2D)) {
 					// Ignore things we can't display
 					continue;
 				}
-				
-				String filepath = entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
-				File file = new File(convertPath(filepath));
-				labels.add(file.getName());
-				filenames.add(file.getAbsolutePath());
+				renderedEntities.add(entity);
 			}
 
-            imagesPanel.load(labels, filenames);
+            imagesPanel.load(renderedEntities, annotations);
             SwingUtilities.updateComponentTreeUI(IconDemoPanel.this);
         }
         catch (Exception e) {
             e.printStackTrace();
         }
-    }
-    
-    public String convertPath(String filepath) {
-    	return filepath.replace(JACS_DATA_PATH_LINUX, JACS_DATA_PATH_MAC);
     }
     
     /**
