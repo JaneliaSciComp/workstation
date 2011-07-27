@@ -3,18 +3,14 @@ package org.janelia.it.FlyWorkstation.gui.framework.tree;
 import java.util.Collections;
 import java.util.List;
 
-import javax.swing.SwingUtilities;
 import javax.swing.text.Position.Bias;
 import javax.swing.tree.DefaultMutableTreeNode;
-
-import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTree;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 
 
 /**
  * Searches a tree model forward or backward to find nodes matching some search string. 
  * 
- * Aware of lazy trees, and will load nodes as it is searching. 
+ * TODO: refactor this as a SwingWorker so that it can load lazy nodes as it searches
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -65,22 +61,6 @@ public class DynamicTreeSearcher {
 	}
 	
 	private DefaultMutableTreeNode find(DefaultMutableTreeNode currNode) {
-		
-		// TODO: remove this
-//
-//		if (!dynamicTree.childrenAreLoaded(currNode)) {
-//
-//			SimpleWorker loadingWorker = new LazyTreeNodeExpansionWorker(dynamicTree, currNode, false) {
-//
-//				protected void doneExpanding() {
-//					
-//				}
-//
-//	        };
-//
-//	        loadingWorker.execute();
-//	        return null;
-//		}
 		
 		if (bias == Bias.Forward) {
 			DefaultMutableTreeNode found = checkCurrent(currNode);

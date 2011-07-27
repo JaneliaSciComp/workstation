@@ -70,12 +70,10 @@ public class SelectionTreePanel extends JPanel implements ActionListener {
      * Add an item at the top level of the tree.
      * @param object
      */
-    public void addItem(Object object) {
-    	DefaultMutableTreeNode node = getDynamicTree().addObject(getDynamicTree().getRootNode(), object);
-    	TreePath path = new TreePath(node.getPath());
-    	getDynamicTree().getTree().setSelectionPath(path);
-    	getDynamicTree().getTree().scrollPathToVisible(path);
+    public DefaultMutableTreeNode addItem(Object object) {
+    	return getDynamicTree().addObject(getDynamicTree().getRootNode(), object);
     }
+    
     
     /**
      * Return the currently selected items.

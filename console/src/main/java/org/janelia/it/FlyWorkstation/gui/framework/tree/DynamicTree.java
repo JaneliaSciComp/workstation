@@ -12,6 +12,7 @@ import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Enumeration;
+import java.util.List;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -426,15 +427,32 @@ public class DynamicTree extends JPanel {
      * @param node
      */
 	public void navigateToNode(DefaultMutableTreeNode node) {
-		if (node == null) {
-			tree.setSelectionPath(null);
-		}
+		tree.setSelectionPath(null);
+		if (node == null) return;
 		TreePath treePath = new TreePath(node.getPath());
 		tree.expandPath(treePath);
 		tree.setSelectionPath(treePath);
 		tree.scrollPathToVisible(treePath);
 	}
+
     
+    /**
+     * Select the given nodes and scroll to ensure the first one is displayed.
+     * @param node
+     */
+	public void selectAndShowNodes(List<DefaultMutableTreeNode> nodes) {
+		tree.setSelectionPath(null);
+		boolean scrolled = false;
+		for(DefaultMutableTreeNode node : nodes) {
+			TreePath treePath = new TreePath(node.getPath());
+			tree.addSelectionPath(treePath);
+			if (!scrolled) {
+				tree.scrollPathToVisible(treePath);
+				scrolled = true;
+			}
+		}
+	}
+	
 	/**
 	 * Select the node containing the given search string. If bias is null then we search forward starting with the 
 	 * current node. If the current node contains the searchString then we don't move. If the bias is Forward then we

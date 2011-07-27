@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
@@ -95,9 +96,11 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
     		    EntityChooser entityChooser = new EntityChooser("Choose entities to annotation", entityOutline);
     			int returnVal = entityChooser.showDialog(AnnotationSessionPropertyDialog.this);
     	        if (returnVal != EntityChooser.CHOOSE_OPTION) return;
+    	        List<DefaultMutableTreeNode> nodes = new ArrayList<DefaultMutableTreeNode>();
     	        for(Entity entity : entityChooser.getChosenEntities()) {
-    	        	entityTreePanel.addItem(entity);
+    	        	nodes.add(entityTreePanel.addItem(entity));
     	        }
+    	        getDynamicTree().selectAndShowNodes(nodes);
     	        SwingUtilities.updateComponentTreeUI(this);
     		}
         };
@@ -111,9 +114,11 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
     		    OntologyElementChooser ontologyChooser = new OntologyElementChooser("Choose annotations to complete", ontologyOutline.getCurrentOntology());
     			int returnVal = ontologyChooser.showDialog(AnnotationSessionPropertyDialog.this);
     	        if (returnVal != OntologyElementChooser.CHOOSE_OPTION) return;
+    	        List<DefaultMutableTreeNode> nodes = new ArrayList<DefaultMutableTreeNode>();
     	        for(OntologyElement element : ontologyChooser.getChosenElements()) {
-    	        	categoryTreePanel.addItem(element);
+    	        	nodes.add(categoryTreePanel.addItem(element));
     	        }
+    	        getDynamicTree().selectAndShowNodes(nodes);
     	        SwingUtilities.updateComponentTreeUI(this);
     		}
         };
@@ -187,25 +192,26 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
 
 		this.task = task;
         setTitle("Edit Annotation Session");
-        nameValueField.setText(task.getTaskName());
-        ownerValueLabel.setText(task.getOwner());
-        
+
+		String name = task.getParameter(AnnotationSessionTask.PARAM_sessionName);
 		String entityIds = task.getParameter(AnnotationSessionTask.PARAM_annotationTargets);
 		String categoryIds = task.getParameter(AnnotationSessionTask.PARAM_annotationCategories);
-		
-		String[] entityIdArray = entityIds.split(",");
-		String[] categoryIdArray = categoryIds.split(",");
 
+        nameValueField.setText(name);
+        ownerValueLabel.setText(task.getOwner());
+        
+		String[] entityIdArray = entityIds.split(",");
         for(String entityId : entityIdArray) {
         	Entity entity = EJBFactory.getRemoteAnnotationBean().getEntityById(entityId);
         	entityTreePanel.addItem(entity);
         }
 
+		String[] categoryIdArray = categoryIds.split(",");
         for(String entityId : categoryIdArray) {
         	Entity entity = EJBFactory.getRemoteAnnotationBean().getEntityById(entityId);
-        	entityTreePanel.addItem(entity);
+        	categoryTreePanel.addItem(entity);
         }
-		
+        
         SwingUtilities.updateComponentTreeUI(this);
         setVisible(true);
 	}
@@ -229,6 +235,7 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
             	task = new AnnotationSessionTask(null, System.getenv("USER"), null, null);
             }
             
+            task.setParameter(AnnotationSessionTask.PARAM_sessionName, nameValueField.getText());
             task.setParameter(AnnotationSessionTask.PARAM_annotationTargets, entityIds);
             task.setParameter(AnnotationSessionTask.PARAM_annotationCategories, categoryIds);
             task = (AnnotationSessionTask)EJBFactory.getRemoteComputeBean().saveOrUpdateTask(task);
