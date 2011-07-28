@@ -18,7 +18,9 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * Self-adjusting panel of images
+ * Self-adjusting grid of images which may be resized together.
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ImagesPanel extends JPanel implements Scrollable {
 	

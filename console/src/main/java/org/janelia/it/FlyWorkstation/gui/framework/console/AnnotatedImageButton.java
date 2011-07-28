@@ -1,17 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.gui.util.WrapLayout;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.jacs.model.entity.Entity;
-
-import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -20,6 +8,19 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
+
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.gui.util.WrapLayout;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.jacs.model.entity.Entity;
 
 /**
  * A lazy-loading image with a title on top and optional annotation tags underneath.
@@ -41,7 +42,7 @@ public class AnnotatedImageButton extends JToggleButton {
         this.imageFilename = imageFilename;
         
         GridBagConstraints c = new GridBagConstraints();
-        JPanel imagePanel = new JPanel(new GridBagLayout());
+        final JPanel imagePanel = new JPanel(new GridBagLayout());
         imagePanel.setOpaque(false);
         add(imagePanel);
 
@@ -81,6 +82,23 @@ public class AnnotatedImageButton extends JToggleButton {
 
         tagPanel = new JPanel(new WrapLayout());
         tagPanel.setOpaque(false);
+
+        // Fix event dispatching so that user can click on the title or the tags and still select the button
+
+        imageCaption.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                AnnotatedImageButton.this.dispatchEvent(e);
+            }
+        });
+        
+        this.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+            	setSelected(!isSelected());
+            }
+        });
+        
         refreshTags();
 
         c.gridx = 0;
@@ -150,7 +168,7 @@ public class AnnotatedImageButton extends JToggleButton {
     public void refreshTags() {
 
         tagPanel.removeAll();
-
+        
         Border paddingBorder = BorderFactory.createEmptyBorder(5,5,5,5);
         Border lineBorder = BorderFactory.createLineBorder(Color.black, 1);
         Border border = BorderFactory.createCompoundBorder(lineBorder, paddingBorder);
@@ -173,9 +191,10 @@ public class AnnotatedImageButton extends JToggleButton {
                                 entity.getId(),tag);
                         SwingUtilities.updateComponentTreeUI(AnnotatedImageButton.this);
                     }
+                    // Clicking a tag should select the button regardless of what happens to the tag
+                    AnnotatedImageButton.this.dispatchEvent(e);
                 }
             });
-
         }
     }
 
