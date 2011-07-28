@@ -96,10 +96,10 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
         
         JPanel treesPanel = new JPanel(new GridLayout(1,2));
         
-        entityTreePanel = new SelectionTreePanel<Entity>("Entities to annotation") {
+        entityTreePanel = new SelectionTreePanel<Entity>("Entities to annotate") {
     		public void addClicked() {
 
-    		    final EntityChooser entityChooser = new EntityChooser("Choose entities to annotation", entityOutline);
+    		    final EntityChooser entityChooser = new EntityChooser("Choose entities to annotate", entityOutline);
     			int returnVal = entityChooser.showDialog(AnnotationSessionPropertyDialog.this);
     	        if (returnVal != EntityChooser.CHOOSE_OPTION) return;
     	        
@@ -262,34 +262,24 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
         setVisible(true);
 	}
 	
-	public void showForSession(AnnotationSessionTask task) {
+	public void showForSession(AnnotationSession session) {
 
         init();
 
-		this.task = task;
+		this.task = session.getTask();
         setTitle("Edit Annotation Session");
 
-		String name = task.getParameter(AnnotationSessionTask.PARAM_sessionName);
-		String entityIds = task.getParameter(AnnotationSessionTask.PARAM_annotationTargets);
-		String categoryIds = task.getParameter(AnnotationSessionTask.PARAM_annotationCategories);
-
-        nameValueField.setText(name);
-        ownerValueLabel.setText(task.getOwner());
+        nameValueField.setText(session.getName());
+        ownerValueLabel.setText(session.getOwner());
         
-		String[] entityIdArray = entityIds.split(",");
-        for(String entityId : entityIdArray) {
-        	if (Utils.isEmpty(entityId)) continue;
-        	Entity entity = EJBFactory.getRemoteAnnotationBean().getEntityById(entityId);
+        for(Entity entity : session.getEntities()) {
         	entityTreePanel.addItem(entity);
         }
 
-		String[] categoryIdArray = categoryIds.split(",");
-        for(String entityId : categoryIdArray) {
-        	if (Utils.isEmpty(entityId)) continue;
-        	Entity entity = EJBFactory.getRemoteAnnotationBean().getEntityById(entityId);
-        	categoryTreePanel.addItem(new OntologyElement(entity, null));
+        for(OntologyElement element : session.getCategories()) {
+        	categoryTreePanel.addItem(element);
         }
-
+        
         SwingUtilities.updateComponentTreeUI(this);
         setVisible(true);
 	}

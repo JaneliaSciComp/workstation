@@ -124,7 +124,7 @@ public class SessionOutline extends JPanel{
 			        JMenuItem editMenuItem = new JMenuItem("Edit");
 			        editMenuItem.addActionListener(new ActionListener() {
 			            public void actionPerformed(ActionEvent actionEvent) {
-			        		SessionMgr.getSessionMgr().getActiveBrowser().getAnnotationSessionPropertyPanel().showForSession(session.getTask());
+			        		SessionMgr.getSessionMgr().getActiveBrowser().getAnnotationSessionPropertyPanel().showForSession(session);
 			            }
 			        });
 			        popupMenu.add(editMenuItem);

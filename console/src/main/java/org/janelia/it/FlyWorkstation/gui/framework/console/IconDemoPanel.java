@@ -137,6 +137,20 @@ public class IconDemoPanel extends JPanel {
             protected void doStuff() throws Exception {
             	entities = session.getEntities();
                 annotations = session.getAnnotations();
+                
+                // TODO: remove debugging code
+//                for(Entity entity : session.getAnnotationMap().keySet()) {
+//                	List<Entity> annots = session.getAnnotationMap().get(entity);
+//                	
+//                	System.out.println(entity.getName()+" : ");
+//                	for(Entity annot : annots) {
+//                		System.out.println("  "+annot.getName()+" ");	
+//                		System.out.println("      "+annot.getUser().getUserLogin()+" ");	
+//                		System.out.println("      "+annot.getValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_KEY_TERM)+" ");	
+//                		System.out.println("      "+annot.getValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_VALUE_TERM)+" ");	
+//                		System.out.println("      "+annot.getValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_SESSION_ID)+" ");	
+//                	}
+//                }
             }
 
 			protected void hadSuccess() {
