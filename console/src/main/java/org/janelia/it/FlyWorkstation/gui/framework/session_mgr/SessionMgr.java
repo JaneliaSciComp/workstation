@@ -360,7 +360,7 @@ public class SessionMgr {
           browser.closeAllViews();
           browser.getBrowserModel().reset();
       }
-     ModelMgr.getModelMgr().removeAllOntologiess();
+     ModelMgr.getModelMgr().removeAllOntologies();
      FacadeManager.resetFacadeManager();
   }
 

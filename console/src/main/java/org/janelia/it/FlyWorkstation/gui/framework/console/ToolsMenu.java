@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 
 import javax.swing.*;
@@ -32,7 +33,8 @@ public class ToolsMenu extends JMenu {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
                         // todo This needs to be a custom user setting.
-                        Runtime.getRuntime().exec("/Users/"+System.getenv("USER")+"/Dev/v3d/v3d/v3d64.app/Contents/MacOS/v3d64");
+                        Runtime.getRuntime().exec("/Users/"+(String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME)
+                                +"/Dev/v3d/v3d/v3d64.app/Contents/MacOS/v3d64");
                     }
                     catch (IOException e) {
                         JOptionPane.showMessageDialog(v3dMenuItem.getParent(),"Could not launch V3D - NeuroAnnotator",

@@ -6,17 +6,6 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.event.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-
 import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.AnnotateAction;
@@ -26,6 +15,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyBindFrame;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.compute.api.ComputeException;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -33,6 +23,13 @@ import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
 import org.janelia.it.jacs.model.ontology.types.*;
 import org.janelia.it.jacs.model.ontology.types.Enum;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.*;
 
 
 /**
@@ -301,7 +298,8 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Dat
 				parent.removeChild(element);
 				
 				// Update database
-	            EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(System.getenv("USER"), element.getId());
+	            EJBFactory.getRemoteAnnotationBean().removeOntologyTerm((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME),
+                        element.getId());
 	            
 	            // Update Tree UI
 	            selectedTree.removeNode(selectedTree.getCurrentNode());
@@ -395,8 +393,8 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Dat
 
 			try {
 				// Update database
-				EntityData newData = EJBFactory.getRemoteAnnotationBean().createOntologyTerm(System.getenv("USER"), element.getId(),
-	                    termName, childType, null);
+				EntityData newData = EJBFactory.getRemoteAnnotationBean().createOntologyTerm((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME),
+                        element.getId(),termName, childType, null);
 
 	            if (parentType instanceof Tag) {
 	            	// Adding a child to a Tag, so it must be coerced into a Category
@@ -433,10 +431,16 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Dat
     	AbstractOntologyTable privateTable = ontologyManager.getPrivateTable();
     	if (evt.getSource() != privateTable) return;
     	if (selectedTree == null) {
-	    	List<OntologyRoot> roots = privateTable.getOntologyRoots();
-	    	if (roots != null && !roots.isEmpty()) {
-		    	initializeTree(roots.get(0).getId());
-	    	}
+            String lastSessionId = (String)SessionMgr.getSessionMgr().getModelProperty("lastSelectedOntology");
+            if (null==lastSessionId) {
+                java.util.List<OntologyRoot> roots = privateTable.getOntologyRoots();
+                if (roots != null && !roots.isEmpty()) {
+                    initializeTree(roots.get(0).getId());
+                }
+            }
+            else {
+                initializeTree(Long.valueOf(lastSessionId));
+            }
     	}
     	// We got the data, no need to listen any longer
     	privateTable.removeDataListener(this);

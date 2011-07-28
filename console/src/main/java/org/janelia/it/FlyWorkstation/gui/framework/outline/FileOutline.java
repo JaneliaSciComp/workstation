@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.TifImageInfoDialog;
 import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
@@ -31,7 +32,8 @@ import java.io.IOException;
  */
 public class FileOutline extends JScrollPane implements Cloneable {
     // todo Remove this hard-wiring of the path
-    public static final String DATA_SOURCE_PATH = ConsoleProperties.getString("remote.defaultMacPath")+"/filestore/"+System.getenv("USER");
+    public static final String DATA_SOURCE_PATH = ConsoleProperties.getString("remote.defaultMacPath")+"/filestore/"+
+            (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
     public static final String NO_DATASOURCE = "Data Source Unreachable";
     private Browser consoleFrame;
     private JTree tree;
@@ -166,7 +168,8 @@ public class FileOutline extends JScrollPane implements Cloneable {
             public void actionPerformed(ActionEvent actionEvent) {
                 System.out.println("DEBUG: Creating new Annotation Session Task");
                 try {
-                    AnnotationSessionTask newSessionTask = new AnnotationSessionTask(null, System.getenv("USER"), null, null);
+                    AnnotationSessionTask newSessionTask = new AnnotationSessionTask(null, (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME)
+                            , null, null);
 //                    newSessionTask.setParameter(AnnotationSessionTask.PARAM_annotatioNode, treePath.getPath()[treePath.getPath().length-1].toString());
 //                    newSessionTask.setParameter(AnnotationSessionTask.PARAM_annotationValues, "good, partially good, low quality, trash");
 //                    newSessionTask.setParameter(AnnotationSessionTask.PARAM_annotationCategories, "quality");
@@ -187,7 +190,8 @@ public class FileOutline extends JScrollPane implements Cloneable {
         JMenuItem v3dMenuItem = new JMenuItem("Show in V3D");
         v3dMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-                String tmpCmd = "/Users/"+System.getenv("USER")+"/Dev/NeuroAnnotator/v3d/v3d64.app/Contents/MacOS/v3d64 -f "+ treePath.getAbsolutePath();
+                String tmpCmd = "/Users/"+(String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME)
+                        +"/Dev/NeuroAnnotator/v3d/v3d64.app/Contents/MacOS/v3d64 -f "+ treePath.getAbsolutePath();
                 System.out.println("DEBUG: "+tmpCmd);
                 try {
                     Runtime.getRuntime().exec(tmpCmd);

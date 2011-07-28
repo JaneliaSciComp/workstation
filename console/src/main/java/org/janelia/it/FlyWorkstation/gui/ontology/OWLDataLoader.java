@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.compute.api.ComputeException;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -57,7 +58,7 @@ public class OWLDataLoader extends SimpleWorker {
     protected OWLDataLoader() {
         this.manager = OWLManager.createOWLOntologyManager();
         this.reasonerFactory = new StructuralReasonerFactory();
-        this.userLogin = System.getenv("USER");
+        this.userLogin = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
     }
     
     public OWLDataLoader(String url) throws OWLException {
@@ -155,7 +156,7 @@ public class OWLDataLoader extends SimpleWorker {
     	OWLClass clazz = manager.getOWLDataFactory().getOWLClass(classIRI);
 
         root = saveObjects ? EJBFactory.getRemoteAnnotationBean().createOntologyRoot(
-                System.getenv("USER"), ontologyName) : new Entity();
+                (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME), ontologyName) : new Entity();
         incrementProgress();
                 
 		if (out != null) out.println(ontologyName + " (Category saved as " + root.getId() + ")");
@@ -204,7 +205,7 @@ public class OWLDataLoader extends SimpleWorker {
 		}
 
 		OntologyElementType type = hasChildren ? new Category() : new Tag();
-		EntityData newData = saveObjects ? EJBFactory.getRemoteAnnotationBean().createOntologyTerm(System.getenv("USER"), 
+		EntityData newData = saveObjects ? EJBFactory.getRemoteAnnotationBean().createOntologyTerm((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME),
 				parentEntity.getId(), label, type, orderIndex) : new EntityData();
 		incrementProgress();
 		

@@ -13,6 +13,7 @@ import java.util.Map;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OntologyElementAction;
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
 import org.janelia.it.jacs.model.user_data.User;
 import org.janelia.it.jacs.model.user_data.prefs.UserPreference;
@@ -107,7 +108,7 @@ public class KeyBindings {
     	
     	try {
     		String category = CATEGORY_KEYBINDS_ONTOLOGY+root.getId();
-        	User user = EJBFactory.getRemoteComputeBean().getUserByName(System.getenv("USER"));
+        	User user = EJBFactory.getRemoteComputeBean().getUserByName((String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME));
         	Map<String,UserPreference> prefs = user.getCategoryPreferences(category);
         	
         	for(UserPreference pref : prefs.values()) {
@@ -144,7 +145,7 @@ public class KeyBindings {
     	
     	try {
     		String category = CATEGORY_KEYBINDS_ONTOLOGY+root.getId();
-        	User user = EJBFactory.getRemoteComputeBean().getUserByName(System.getenv("USER"));
+        	User user = EJBFactory.getRemoteComputeBean().getUserByName((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME));
 
         	// Delete all keybinds first, to maintain one key per entity
         	for(String key : user.getCategoryPreferences(category).keySet()) {

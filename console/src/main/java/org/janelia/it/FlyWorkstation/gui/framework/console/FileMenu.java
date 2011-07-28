@@ -164,7 +164,7 @@ public class FileMenu extends JMenu {
         * and going through each feature in the data model is probably the most accurate
         * but not the best way to get this information.
         */
-       Entity ontology = ModelMgr.getModelMgr().getSelectedOntologies();
+       Entity ontology = ModelMgr.getModelMgr().getSelectedOntology();
        ArrayList allDataSources = new ArrayList(Arrays.asList(FacadeManager.getFacadeManager().getOpenDataSources()));
        ArrayList<String> finalDataSources = new ArrayList<String>();
        finalDataSources.add(ontology.getName());

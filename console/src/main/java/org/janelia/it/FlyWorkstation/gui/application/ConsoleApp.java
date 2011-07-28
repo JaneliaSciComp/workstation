@@ -27,7 +27,6 @@ import javax.swing.*;
  */
 public class ConsoleApp {
     
-    private static boolean useSplashScreen = false;
     private static KeyBindings bindings;
 
     static {
@@ -48,9 +47,9 @@ public class ConsoleApp {
 
     private static void newBrowser() {
         // Show the Splash Screen
-        final SplashScreen splash = new SplashScreen();
-        splash.setStatusText("Initializing Application...");
-        splash.setVisible(true);
+//        final SplashScreen splash = new SplashScreen();
+//        splash.setStatusText("Initializing Application...");
+//        splash.setVisible(true);
 
         final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
         try {
@@ -126,15 +125,15 @@ public class ConsoleApp {
 
             ServerStatusReportManager.getReportManager().startCheckingForReport();
 
-            sessionMgr.setSplashPanel(new SplashPanel());
+//            sessionMgr.setSplashPanel(new SplashPanel());
 
-            splash.setStatusText("Connecting to Remote Data Sources...");
+//            splash.setStatusText("Connecting to Remote Data Sources...");
             FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
 //            FacadeManager.addProtocolToUseList("sage");
 
             //Start First Browser
             final Browser mainBrowser = sessionMgr.newBrowser();
-            splash.setVisible(false);
+//            splash.setVisible(false);
             if (sessionMgr.getModelProperty(SessionMgr.USER_NAME) == null || sessionMgr.getModelProperty(SessionMgr.USER_NAME).equals("")
                     /*&& modelMgr.getNumberOfLoadedGenomeVersions() == 0*/) {
                 final int answer =
@@ -143,12 +142,12 @@ public class ConsoleApp {
                     PrefController.getPrefController().getPrefInterface(DataSourceSettings.class, mainBrowser);
                 }
             }
-            splash.setStatusText("Connected.");
+//            splash.setStatusText("Connected.");
         } catch (Exception ex) {
             SessionMgr.getSessionMgr().handleException(ex);
         } finally {
-            splash.setVisible(false);
-            splash.dispose();
+//            splash.setVisible(false);
+//            splash.dispose();
         }
     }
 }

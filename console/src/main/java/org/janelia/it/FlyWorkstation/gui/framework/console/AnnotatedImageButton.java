@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.WrapLayout;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -32,7 +34,7 @@ public class AnnotatedImageButton extends JToggleButton {
 	private BufferedImage maxSizeImage;
 	private double scale;
     private Entity entity;
-	
+
     public AnnotatedImageButton(String title, String imageFilename, final int index, Entity entity) {
     	this.entity = entity;
     	this.title = title;
@@ -167,6 +169,8 @@ public class AnnotatedImageButton extends JToggleButton {
                 public void mouseClicked(MouseEvent e) {
                     if (e.getClickCount()==2) {
                         AnnotatedImageButton.this.addOrRemoveTag(tag);
+                        ModelMgr.getModelMgr().deleteAnnotation((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME),
+                                entity.getId(),tag);
                         SwingUtilities.updateComponentTreeUI(AnnotatedImageButton.this);
                     }
                 }

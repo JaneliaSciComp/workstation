@@ -6,16 +6,7 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.event.*;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.File;
-import java.util.List;
-
-import javax.swing.*;
-
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -24,6 +15,14 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
 import org.semanticweb.owlapi.model.OWLException;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.util.List;
 
 /**
  * A dialog for managing ontologies that can be loaded into the OntologyOutline.
@@ -67,7 +66,7 @@ public class OntologyManager extends JDialog implements ActionListener, Property
         
         privateTable = new AbstractOntologyTable() {
         	protected List<Entity> load() throws Exception {
-                return EJBFactory.getRemoteAnnotationBean().getPrivateOntologies(System.getenv("USER"));
+                return EJBFactory.getRemoteAnnotationBean().getPrivateOntologies((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME));
         	}
         	
         	protected void doubleClick(Entity entity, MouseEvent e) {
@@ -247,7 +246,8 @@ public class OntologyManager extends JDialog implements ActionListener, Property
         	private Entity newRoot;
         	
             protected void doStuff() throws Exception {
-            	newRoot = EJBFactory.getRemoteAnnotationBean().createOntologyRoot(System.getenv("USER"), rootName);
+            	newRoot = EJBFactory.getRemoteAnnotationBean().createOntologyRoot((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME),
+                        rootName);
             }
 
 			protected void hadSuccess() {
@@ -336,6 +336,8 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 		if (root != null) {
 			ontologyOutline.initializeTree(root.getId());
             setVisible(false);
+            ModelMgr.getModelMgr().setSelectedOntology(root.getEntity());
+            SessionMgr.getSessionMgr().setModelProperty("lastSelectedOntology", root.getEntity().getId().toString());
 		}
 		else {
 			JOptionPane.showMessageDialog(this, "Please select an ontology to load",
@@ -415,7 +417,8 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 	        SimpleWorker worker = new SimpleWorker() {
 	        	
 	            protected void doStuff() throws Exception {
-	            	EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(System.getenv("USER"), root.getId());
+	            	EJBFactory.getRemoteAnnotationBean().removeOntologyTerm((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME),
+                            root.getId());
 	            	ConsoleApp.getKeyBindings().removeOntologyKeybinds(root);        	
 	            }
 
@@ -464,7 +467,8 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 	        	private Entity newRoot;
 	        	
 	            protected void doStuff() throws Exception {
-	            	newRoot = EJBFactory.getRemoteAnnotationBean().cloneEntityTree(root.getId(), System.getenv("USER"), rootName);
+	            	newRoot = EJBFactory.getRemoteAnnotationBean().cloneEntityTree(root.getId(), (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME),
+                            rootName);
 	            }
 
 				protected void hadSuccess() {

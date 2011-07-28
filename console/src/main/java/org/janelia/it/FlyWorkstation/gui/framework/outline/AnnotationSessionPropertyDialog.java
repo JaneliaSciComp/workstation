@@ -1,17 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.choose.EntityChooser;
@@ -22,9 +10,20 @@ import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
-import org.janelia.it.jacs.model.ontology.types.*;
+import org.janelia.it.jacs.model.ontology.types.Tag;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 
 /**
  * A dialog for creating a new annotation session, or editing an existing one. 
@@ -253,7 +252,7 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
         this.task = null;
         setTitle("New Annotation Session");
         nameValueField.setText(name);
-        ownerValueLabel.setText(System.getenv("USER"));
+        ownerValueLabel.setText((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME));
 
         for(Entity entity : entities) {
         	entityTreePanel.addItem(entity);
@@ -311,7 +310,8 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
             String categoryIds = Task.csvStringFromCollection(categoryIdList);
             
             if (task == null) {
-            	task = new AnnotationSessionTask(null, System.getenv("USER"), null, null);
+            	task = new AnnotationSessionTask(null, (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME)
+                        , null, null);
             }
             
             task.setParameter(AnnotationSessionTask.PARAM_sessionName, nameValueField.getText());

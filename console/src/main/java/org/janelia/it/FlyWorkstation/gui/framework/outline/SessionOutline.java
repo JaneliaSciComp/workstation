@@ -1,18 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.util.Enumeration;
-import java.util.List;
-
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
-
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -22,6 +9,17 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.util.Enumeration;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -71,7 +69,8 @@ public class SessionOutline extends JPanel{
 			private List<Task> tasks;
 
             protected void doStuff() throws Exception {
-            	tasks = EJBFactory.getRemoteComputeBean().getUserTasksByType(AnnotationSessionTask.TASK_NAME, System.getenv("USER"));
+            	tasks = EJBFactory.getRemoteComputeBean().getUserTasksByType(AnnotationSessionTask.TASK_NAME,
+                        (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME));
             }
 
 			protected void hadSuccess() {
@@ -130,7 +129,7 @@ public class SessionOutline extends JPanel{
 			        });
 			        popupMenu.add(editMenuItem);
 			        
-			        if (session.getTask().getOwner().equals(System.getenv("USER"))) {
+			        if (session.getTask().getOwner().equals((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME))) {
 				        JMenuItem deleteMenuItem = new JMenuItem("Delete");
 				        deleteMenuItem.addActionListener(new ActionListener() {
 				            public void actionPerformed(ActionEvent actionEvent) {
@@ -197,7 +196,7 @@ public class SessionOutline extends JPanel{
     
     private void deleteSession(AnnotationSession session) {
     	
-    	if (!session.getTask().getOwner().equals(System.getenv("USER"))) {
+    	if (!session.getTask().getOwner().equals((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME))) {
 			JOptionPane.showMessageDialog(consoleFrame, "Only the owner may delete a session", "Cannot Delete", JOptionPane.ERROR_MESSAGE);
     		return;
     	}
@@ -212,7 +211,7 @@ public class SessionOutline extends JPanel{
 		try {
 			// Remove all annotations
 			EJBFactory.getRemoteAnnotationBean().removeAllOntologyAnnotationsForSession(
-					System.getenv("USER"), session.getTask().getObjectId().toString());
+					(String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME), session.getTask().getObjectId().toString());
 			
 			// Remove the task
             EJBFactory.getRemoteComputeBean().deleteTaskById(session.getTask().getObjectId());

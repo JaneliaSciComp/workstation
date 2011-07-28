@@ -7,10 +7,11 @@ import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.InUseProtocolListener;
 import org.janelia.it.FlyWorkstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.FlyWorkstation.api.stub.data.NoData;
+import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.shared.exception_handlers.PrintStackTraceHandler;
-import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
 import org.janelia.it.FlyWorkstation.shared.util.ThreadQueue;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.tasks.Task;
 
 import java.lang.reflect.Constructor;
 import java.util.*;
@@ -26,6 +27,7 @@ public class ModelMgr {
   private ResourceBundle modelMgrResourceBundle;
   private EntityFactory entityFactory;
   private Entity selectedOntology;
+  private Task annotationSesisonTask;
   private Class factoryClass;
   private boolean ontologyLookupNeeded =true;
 
@@ -125,7 +127,7 @@ public class ModelMgr {
      FacadeManager.handleException(throwable);
   }
 
-  public void removeAllOntologiess() {
+  public void removeAllOntologies() {
      ontologies=null;
   }
 
@@ -185,17 +187,23 @@ public class ModelMgr {
       return null;  //none found
   }
 
-  /**
-   * @return Set of genomeVersions
-   */
-  public Entity getSelectedOntologies() {
+    public Task getCurrentAnnotationSessionTask() {
+        return annotationSesisonTask;
+    }
+
+    public void setCurtrentAnnotationSesisonTask(Task annotationSesisonTask) {
+        this.annotationSesisonTask = annotationSesisonTask;
+    }
+
+  public Entity getSelectedOntology() {
      return selectedOntology;
   }
 
-  public void addSelectedGenomeVersion(Entity ontology) {
-     if (!selectedOntology.equals(ontology)) {
+  public void setSelectedOntology(Entity ontology) {
+     if (selectedOntology==null || !selectedOntology.equals(ontology)) {
        modelAvailable=true;
-       if (modelMgrObservers!=null) {
+         selectedOntology=ontology;
+         if (modelMgrObservers!=null) {
          Object[] listeners=modelMgrObservers.toArray();
            for (Object listener : listeners) {
                ((ModelMgrObserver) listener).ontologySelected(ontology);
@@ -213,6 +221,10 @@ public class ModelMgr {
            }
      }
     if (null==selectedOntology) modelAvailable=false;
+  }
+
+  public void deleteAnnotation(String userlogin, Long annotatedEntityId, String tag) {
+      EJBFactory.getRemoteAnnotationBean().deleteAnnotation(userlogin, annotatedEntityId.toString(), tag);
   }
 
   public void prepareForSystemExit() {

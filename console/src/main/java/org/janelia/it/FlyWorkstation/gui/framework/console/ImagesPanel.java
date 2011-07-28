@@ -13,7 +13,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -30,7 +29,7 @@ public class ImagesPanel extends JPanel implements Scrollable {
 	private ButtonGroup buttonGroup;
     private double imageSizePercent = 1.0d;
     private String currentEntityId;
-    private List<SwingWorker> workers = new ArrayList<SwingWorker>();
+//    private List<SwingWorker> workers = new ArrayList<SwingWorker>();
     
     // Listen for key strokes and execute the appropriate key bindings
     private KeyListener keyListener = new KeyAdapter() {
@@ -55,11 +54,11 @@ public class ImagesPanel extends JPanel implements Scrollable {
      */
 	public void load(List<Entity> entities, List<Entity> annotations) {
 
-		for(SwingWorker worker : workers) {
-	    	if (worker != null && !worker.isDone()) {
-	    		worker.cancel(true);	
-	    	}	
-		}
+//		for(SwingWorker worker : workers) {
+//	    	if (worker != null && !worker.isDone()) {
+//	    		worker.cancel(true);
+//	    	}
+//		}
     	
     	((GridLayout)getLayout()).setColumns(10);
     	
@@ -117,7 +116,7 @@ public class ImagesPanel extends JPanel implements Scrollable {
         for (AnnotatedImageButton button : buttons.values()) {
         	SwingWorker worker = new LoadImageWorker(button);
     		worker.execute();
-    		workers.add(worker);
+//    		workers.add(worker);
         }
     }
     

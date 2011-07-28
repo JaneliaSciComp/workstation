@@ -6,6 +6,7 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.framework.console.AnnotatedImageButton;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -14,6 +15,7 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.types.*;
 import org.janelia.it.jacs.model.ontology.types.Enum;
+import org.janelia.it.jacs.model.tasks.Task;
 
 import javax.swing.*;
 
@@ -90,7 +92,6 @@ public class AnnotateAction extends OntologyElementAction {
         Entity targetEntity = currImage.getEntity();
 
         // Save the annotation
-
         Entity keyEntity = term.getEntity();
         Entity valueEntity = null;
     	String keyString = keyEntity.getName();
@@ -103,9 +104,8 @@ public class AnnotateAction extends OntologyElementAction {
         	valueString = valueEntity.getName();
         }
 
-        // TODO: get session id
-        String sessionId = null;
-
+        Task sessionId = ModelMgr.getModelMgr().getCurrentAnnotationSessionTask();
+        String sessionIdString = (null!=sessionId)?sessionId.getObjectId().toString():null;
         // TODO: check if annotation exists (do we need to delete it or replace it instead?)
         
         String tag = (valueString == null) ? keyString : keyString+" = "+valueString;
@@ -117,21 +117,22 @@ public class AnnotateAction extends OntologyElementAction {
         String valueEntityId = (valueEntity == null) ? null : valueEntity.getId().toString();
         
 		if (added) {
-            saveAnnotation(sessionId, targetEntity.getId().toString(), keyEntityId, keyString,
+            saveAnnotation(sessionIdString, targetEntity.getId().toString(), keyEntityId, keyString,
 				valueEntityId, valueString, tag);
         }
         else {
-            deteteAnnotation();
+            ModelMgr.getModelMgr().deleteAnnotation((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME),
+                    targetEntity.getId(), tag);
         }
 	}
 
-	private void saveAnnotation(final String sessionId, final String targetEntityId, final String keyEntityId,
+    private void saveAnnotation(final String sessionId, final String targetEntityId, final String keyEntityId,
 			final String keyString, final String valueEntityId, final String valueString, final String tag) {
 
 		SimpleWorker worker = new SimpleWorker() {
 
 			protected void doStuff() throws Exception {
-				EJBFactory.getRemoteAnnotationBean().createOntologyAnnotation(System.getenv("USER"),
+				EJBFactory.getRemoteAnnotationBean().createOntologyAnnotation((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME),
 						sessionId, targetEntityId, keyEntityId, keyString, valueEntityId, valueString, tag);
 			}
 
