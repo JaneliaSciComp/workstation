@@ -145,12 +145,11 @@ public class SessionOutline extends JPanel{
 
 			@Override
 			protected void nodeClicked(MouseEvent e) {
-                TreePath tmpPath = new TreePath(getCurrentNode().getPath());
-                if (tmpPath.getLastPathComponent().toString().equals(NO_DATASOURCE)) {return;}
-                String tmpTask = tmpPath.getLastPathComponent().toString();
-                if (null!=tmpTask && !"".equals(tmpTask)) {
-                    SessionOutline.this.consoleFrame.setMostRecentFileOutlinePath(tmpTask);
-                }
+		    	Object o = dynamicTree.getCurrentNode().getUserObject();
+		    	if (o instanceof AnnotationSession) {
+			    	final AnnotationSession session = (AnnotationSession)o;
+			    	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(session);
+		    	}
 			}
 			
         };
@@ -173,7 +172,8 @@ public class SessionOutline extends JPanel{
                 for (Task task : tasks) {
                 	if (task.isTaskDeleted()) continue;
                 	AnnotationSessionTask asTask = (AnnotationSessionTask)task;
-                    DefaultMutableTreeNode tmpNode = new DefaultMutableTreeNode(new AnnotationSession(asTask));
+                	AnnotationSession session = new AnnotationSession(asTask);
+                    DefaultMutableTreeNode tmpNode = new DefaultMutableTreeNode(session);
                     top.add(tmpNode);
                     // Add the properties under the items
                     int paramCount = 0;
@@ -239,8 +239,9 @@ public class SessionOutline extends JPanel{
     }
     
     public void selectSession(long taskId) {
-    	dynamicTree.navigateToNodeWithObject(getSessionById(taskId));
-		SessionOutline.this.updateUI();
+    	AnnotationSession session = getSessionById(taskId);
+    	dynamicTree.navigateToNodeWithObject(session);
+		SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(session);
     }
     
     public DynamicTree getDynamicTree() {

@@ -1,5 +1,18 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
+import javax.swing.SwingUtilities;
+import javax.swing.tree.DefaultMutableTreeNode;
+
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNode;
@@ -9,15 +22,6 @@ import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
-
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -134,12 +138,7 @@ public class EntityOutline extends EntityTree implements Cloneable {
     		}
     	}
 
-        // Get the annotations to adorn the AnnotationImageButtons with
-        if (0<entities.size()) {
-            List<Entity> annotations = EJBFactory.getRemoteAnnotationBean().getAnnotationsForEntities(
-                    (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME), entities);
-            SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(entities, annotations);
-        }
+    	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(entities);
     }
 
     /**

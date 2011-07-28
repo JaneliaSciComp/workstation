@@ -77,7 +77,6 @@ public class ImagesPanel extends JPanel implements Scrollable {
             File file = new File(convertPath(filepath));
 
             final AnnotatedImageButton button = new AnnotatedImageButton(file.getName(), file.getAbsolutePath(), i, tmpEntity);
-            final int index = i;
 
             button.addFocusListener(new FocusAdapter() {
                 @Override
