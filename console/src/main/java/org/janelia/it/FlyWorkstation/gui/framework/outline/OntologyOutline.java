@@ -252,6 +252,11 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Dat
         ConsoleApp.getKeyBindings().loadOntologyKeybinds(root, ontologyActionMap);
     }
     
+    /**
+     * Register a corresponding Action for the given element, based on its term type. Recurses through the
+     * element's children if there are any.
+     * @param element
+     */
     private void populateActionMap(OntologyElement element) {
 
         // Define an action for this node
@@ -266,8 +271,6 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Dat
     	action.init(element);
     	ontologyActionMap.put(element.getId(), action);
     	
-    	// Add the node's children. 
-    	// They are available because the root was loaded with the eager-loading getOntologyTree() method. 
         for(OntologyElement child : element.getChildren()) {
         	populateActionMap(child);
         }
@@ -416,10 +419,13 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Dat
 	            // Update Tree UI
 	            OntologyElement newElement = new OntologyElement(newData.getChildEntity(), element);
 	            addNodes(treeNode, newElement);
+	            
+	            populateActionMap(newElement);
+	            
 	            selectedTree.expand(treeNode, true);
 	            
 			}
-			catch (ComputeException ex) {
+			catch (Exception ex) {
 				ex.printStackTrace();
 				JOptionPane.showMessageDialog(OntologyOutline.this, "Error creating ontology term", "Error", JOptionPane.ERROR_MESSAGE);
 			}

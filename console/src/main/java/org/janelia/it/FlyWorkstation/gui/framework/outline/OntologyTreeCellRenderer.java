@@ -106,9 +106,14 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
                 
                 if (ontologyOutline != null) {
                     Action action = ontologyOutline.getActionForNode(node);
-                    KeyboardShortcut bind = ConsoleApp.getKeyBindings().getBinding(action);
-                    if (bind != null) {
-                        keybindLabel.setText("(" + KeymapUtil.getShortcutText(bind) + ")");
+                    if (action != null) {
+                    	KeyboardShortcut bind = ConsoleApp.getKeyBindings().getBinding(action);
+                    	if (bind != null) {
+                    		keybindLabel.setText("(" + KeymapUtil.getShortcutText(bind) + ")");
+                    	}
+                    }
+                    else {
+                    	System.out.println("Node has a null action: "+element.getName());
                     }
                 }
                 

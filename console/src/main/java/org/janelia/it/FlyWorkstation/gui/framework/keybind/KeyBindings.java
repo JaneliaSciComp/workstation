@@ -51,6 +51,9 @@ public class KeyBindings {
     }
 	
 	public KeyboardShortcut getBinding(Action action) {
+		if (action == null) {
+			throw new IllegalArgumentException("Action cannot be null for KeyBindings.getBinding(Action)");
+		}
 		KeyboardShortcut ontologyAction = getBinding(ontologyBindings, action);
         if (ontologyAction != null) {
             return ontologyAction;
