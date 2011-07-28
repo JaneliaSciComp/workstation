@@ -1,27 +1,26 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
-import javax.swing.SwingUtilities;
-import javax.swing.tree.DefaultMutableTreeNode;
-
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNode;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeExpansionWorker;
+import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -32,50 +31,12 @@ import org.janelia.it.jacs.model.entity.EntityData;
  */
 public class EntityOutline extends EntityTree implements Cloneable {
 
-    private final JPopupMenu popupMenu;
-    
+    private static final String JACS_DATA_PATH_MAC = ConsoleProperties.getString("remote.defaultMacPath");
+    private static final String JACS_DATA_PATH_LINUX = ConsoleProperties.getString("remote.defaultLinuxPath");
+
     public EntityOutline() {
         this.setMinimumSize(new Dimension(400,400));
-        
-        // Create context menus
-        popupMenu = new JPopupMenu();
-        JMenuItem newSessionItem = new JMenuItem("Create Annotation Session for 2D Images");
-        newSessionItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-            	
-            	DefaultMutableTreeNode node = selectedTree.getCurrentNode();
-        		final Entity entity = (Entity)node.getUserObject();
-        		
-            	try {
-            		Utils.setWaitingCursor(EntityOutline.this);
-            		
-            		SimpleWorker loadingWorker = new LazyTreeNodeExpansionWorker(selectedTree, node, true) {
 
-            			protected void doneExpanding() {
-            				Utils.setDefaultCursor(EntityOutline.this);
-                    		List<Entity> entities = getDescendantsOfType(entity, EntityConstants.TYPE_TIF_2D);
-                    		SessionMgr.getSessionMgr().getActiveBrowser().getAnnotationSessionPropertyPanel().showForNewSession(entity.getName(), entities);
-        		            SwingUtilities.updateComponentTreeUI(EntityOutline.this);
-            			}
-
-						@Override
-						protected void hadError(Throwable error) {
-							Utils.setDefaultCursor(EntityOutline.this);
-							JOptionPane.showMessageDialog(EntityOutline.this, "Error expanding tree", "Internal Error", JOptionPane.ERROR_MESSAGE);
-						}
-            			
-            			
-                    };
-
-                    loadingWorker.execute();
-            	}
-            	catch (Exception e) {
-            		e.printStackTrace();
-            	}
-            }
-        });
-        popupMenu.add(newSessionItem);
-        
         showLoadingIndicator();
 
 		SimpleWorker loadingWorker = new SimpleWorker() {
@@ -109,7 +70,72 @@ public class EntityOutline extends EntityTree implements Cloneable {
      * @param e
      */
     protected void showPopupMenu(MouseEvent e) {
+        // Create context menus
+        JPopupMenu popupMenu = new JPopupMenu();
+        JMenuItem newSessionItem = new JMenuItem("Create Annotation Session for 2D Images");
+        newSessionItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+
+            	DefaultMutableTreeNode node = selectedTree.getCurrentNode();
+        		final Entity entity = (Entity)node.getUserObject();
+
+            	try {
+            		Utils.setWaitingCursor(EntityOutline.this);
+
+            		SimpleWorker loadingWorker = new LazyTreeNodeExpansionWorker(selectedTree, node, true) {
+
+            			protected void doneExpanding() {
+            				Utils.setDefaultCursor(EntityOutline.this);
+                    		List<Entity> entities = getDescendantsOfType(entity, EntityConstants.TYPE_TIF_2D);
+                    		SessionMgr.getSessionMgr().getActiveBrowser().getAnnotationSessionPropertyPanel().showForNewSession(entity.getName(), entities);
+        		            SwingUtilities.updateComponentTreeUI(EntityOutline.this);
+            			}
+
+						@Override
+						protected void hadError(Throwable error) {
+							Utils.setDefaultCursor(EntityOutline.this);
+							JOptionPane.showMessageDialog(EntityOutline.this, "Error expanding tree", "Internal Error", JOptionPane.ERROR_MESSAGE);
+						}
+
+
+                    };
+
+                    loadingWorker.execute();
+            	}
+            	catch (Exception e) {
+            		e.printStackTrace();
+            	}
+            }
+        });
+        DefaultMutableTreeNode node = selectedTree.getCurrentNode();
+        final Entity entity = (Entity)node.getUserObject();
+        String filepath = entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
+        filepath = convertPath(filepath);
+        final File file = new File(filepath);
+        if (file.isFile() && (file.getAbsolutePath().toLowerCase().endsWith(".tif") || file.getAbsolutePath().toLowerCase().endsWith(".lsm"))) {
+            JMenuItem v3dMenuItem = new JMenuItem("Show in V3D");
+            v3dMenuItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
+                    String tmpCmd = "/Users/"+(String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME)
+                                +"/Dev/v3d/v3d/v3d64.app/Contents/MacOS/v3d64 -i "+ file.getAbsolutePath();
+                    System.out.println("DEBUG: "+tmpCmd);
+                    try {
+                        Runtime.getRuntime().exec(tmpCmd);
+                    }
+                    catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            popupMenu.add(v3dMenuItem);
+        }
+
+        popupMenu.add(newSessionItem);
         popupMenu.show(selectedTree.getTree(), e.getX(), e.getY());
+    }
+
+    public String convertPath(String filepath) {
+    	return filepath.replace(JACS_DATA_PATH_LINUX, JACS_DATA_PATH_MAC);
     }
 
     /**
