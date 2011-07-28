@@ -10,6 +10,7 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -167,10 +168,10 @@ public class ImagesPanel extends JPanel implements Scrollable {
     		((GridLayout)getLayout()).setColumns(numCols);
     	}
 
-    	invalidate();
+        revalidate();
         repaint();
     }
-
+    
     /**
      * Add or remove the given tag from the currently selected image button.
      * @param tag
