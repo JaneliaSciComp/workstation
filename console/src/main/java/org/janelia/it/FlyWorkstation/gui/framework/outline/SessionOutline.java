@@ -148,8 +148,9 @@ public class SessionOutline extends JPanel{
 		    	Object o = dynamicTree.getCurrentNode().getUserObject();
 		    	if (o instanceof AnnotationSession) {
 			    	final AnnotationSession session = (AnnotationSession)o;
+			    	session.clearDerivedProperties();
 			    	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(session);
-                    ModelMgr.getModelMgr().setCurtrentAnnotationSesisonTask(session.getTask());
+                    ModelMgr.getModelMgr().setCurrentAnnotationSesisonTask(session.getTask());
 		    	}
 			}
 			
@@ -243,7 +244,7 @@ public class SessionOutline extends JPanel{
     	AnnotationSession session = getSessionById(taskId);
     	dynamicTree.navigateToNodeWithObject(session);
 		SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(session);
-        ModelMgr.getModelMgr().setCurtrentAnnotationSesisonTask(session.getTask());
+        ModelMgr.getModelMgr().setCurrentAnnotationSesisonTask(session.getTask());
     }
     
     public DynamicTree getDynamicTree() {

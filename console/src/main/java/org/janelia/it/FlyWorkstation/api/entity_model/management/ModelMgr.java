@@ -191,7 +191,7 @@ public class ModelMgr {
         return annotationSesisonTask;
     }
 
-    public void setCurtrentAnnotationSesisonTask(Task annotationSesisonTask) {
+    public void setCurrentAnnotationSesisonTask(Task annotationSesisonTask) {
         this.annotationSesisonTask = annotationSesisonTask;
     }
 

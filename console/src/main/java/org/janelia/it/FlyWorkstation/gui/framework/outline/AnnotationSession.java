@@ -23,9 +23,13 @@ public class AnnotationSession {
 	
 	private final AnnotationSessionTask task;
 	
+	private class StringHolder {
+		String str;
+	}
+	
 	// Derived properties
-	private String name;
-	private String owner;
+	private StringHolder name;
+	private StringHolder owner;
 	private List<Entity> entities;
 	private List<OntologyElement> categories;
 	private List<Entity> annotations;
@@ -34,14 +38,13 @@ public class AnnotationSession {
 	public AnnotationSession(AnnotationSessionTask task) {
 		super();
 		this.task = task;
-		this.name = task.getParameter(AnnotationSessionTask.PARAM_sessionName);
-		this.owner = task.getOwner();
 	}
 
 	@Override
 	public String toString() {
-		if (name == null) return task.getDisplayName()+" "+task.getObjectId();
-		return name;
+		String trueName = getName();
+		if (trueName == null) return task.getDisplayName()+" "+task.getObjectId();
+		return trueName;
 	}
 
 	public AnnotationSessionTask getTask() {
@@ -49,11 +52,19 @@ public class AnnotationSession {
 	}
 
 	public String getName() {
-		return name;
+		if (name == null) {
+			name = new StringHolder();
+			name.str = task.getParameter(AnnotationSessionTask.PARAM_sessionName);
+		}
+		return name.str;
 	}
 
 	public String getOwner() {
-		return owner;
+		if (owner == null) {
+			owner = new StringHolder();
+			owner.str = task.getOwner();
+		}
+		return owner.str;
 	}
 
 	public List<Entity> getEntities() {
@@ -118,5 +129,14 @@ public class AnnotationSession {
 	        }
 		}
 		return annotationMap;
+	}
+
+	public void clearDerivedProperties() {
+		name = null;
+		owner = null;
+		entities = null;
+		categories = null;
+		annotations = null;
+		annotationMap = null;
 	}
 }

@@ -153,16 +153,20 @@ public class SelectionTreePanel<T> extends JPanel implements ActionListener {
         String command = e.getActionCommand();
 
 		if (REMOVE_COMMAND.equals(command)) {
-			Utils.setWaitingCursor(SelectionTreePanel.this);
-			TreePath[] paths = tree.getTree().getSelectionPaths();
-			if (paths == null) return;
-			for(TreePath path : paths) {
-				DefaultMutableTreeNode node = (DefaultMutableTreeNode)path.getLastPathComponent();
-				tree.removeNode(node);
+			try {
+				Utils.setWaitingCursor(SelectionTreePanel.this);
+				TreePath[] paths = tree.getTree().getSelectionPaths();
+				if (paths == null) return;
+				for(TreePath path : paths) {
+					DefaultMutableTreeNode node = (DefaultMutableTreeNode)path.getLastPathComponent();
+					tree.removeNode(node);
+				}
+		        updateCount();
+	            SwingUtilities.updateComponentTreeUI(this);
 			}
-	        updateCount();
-            SwingUtilities.updateComponentTreeUI(this);
-            Utils.setDefaultCursor(SelectionTreePanel.this);
+            finally {
+                Utils.setDefaultCursor(SelectionTreePanel.this);
+            }
 		}
 		else if (ADD_COMMAND.equals(command)) {
 			addClicked();
