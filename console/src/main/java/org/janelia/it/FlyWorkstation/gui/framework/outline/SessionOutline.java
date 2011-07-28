@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -13,7 +14,6 @@ import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -149,6 +149,7 @@ public class SessionOutline extends JPanel{
 		    	if (o instanceof AnnotationSession) {
 			    	final AnnotationSession session = (AnnotationSession)o;
 			    	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(session);
+                    ModelMgr.getModelMgr().setCurtrentAnnotationSesisonTask(session.getTask());
 		    	}
 			}
 			
@@ -242,6 +243,7 @@ public class SessionOutline extends JPanel{
     	AnnotationSession session = getSessionById(taskId);
     	dynamicTree.navigateToNodeWithObject(session);
 		SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(session);
+        ModelMgr.getModelMgr().setCurtrentAnnotationSesisonTask(session.getTask());
     }
     
     public DynamicTree getDynamicTree() {
