@@ -205,7 +205,7 @@ public class IconDemoPanel extends JPanel {
 			}
 
             imagesPanel.load(renderedEntities, annotations);
-            SwingUtilities.updateComponentTreeUI(IconDemoPanel.this);
+            revalidate();
         }
         catch (Exception e) {
             e.printStackTrace();

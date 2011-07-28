@@ -189,13 +189,17 @@ public class AnnotatedImageButton extends JToggleButton {
                         AnnotatedImageButton.this.addOrRemoveTag(tag);
                         ModelMgr.getModelMgr().deleteAnnotation((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME),
                                 entity.getId(),tag);
-                        SwingUtilities.updateComponentTreeUI(AnnotatedImageButton.this);
+                        revalidate();
+                        repaint();
                     }
                     // Clicking a tag should select the button regardless of what happens to the tag
                     AnnotatedImageButton.this.dispatchEvent(e);
                 }
             });
         }
+        
+        revalidate();
+        repaint();
     }
 
     public Entity getEntity() {

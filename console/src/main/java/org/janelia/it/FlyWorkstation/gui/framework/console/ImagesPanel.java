@@ -88,7 +88,7 @@ public class ImagesPanel extends JPanel implements Scrollable {
 
                     // Scroll to the newly focused button
                     ImagesPanel.this.scrollRectToVisible(button.getBounds());
-                    SwingUtilities.updateComponentTreeUI(ImagesPanel.this.getParent());
+                    revalidate();
                 }
             });
 
@@ -166,8 +166,9 @@ public class ImagesPanel extends JPanel implements Scrollable {
     	if (numCols > 0) {    		
     		((GridLayout)getLayout()).setColumns(numCols);
     	}
-    	
-        SwingUtilities.updateComponentTreeUI(this);
+
+    	invalidate();
+        repaint();
     }
 
     /**
@@ -180,7 +181,6 @@ public class ImagesPanel extends JPanel implements Scrollable {
         }
         AnnotatedImageButton currButton = buttons.get(currentEntityId);
         boolean added = currButton.addOrRemoveTag(tag);
-        SwingUtilities.updateComponentTreeUI(ImagesPanel.this);
         return added;
     }
     
@@ -251,5 +251,6 @@ public class ImagesPanel extends JPanel implements Scrollable {
             }
         	recalculateGrid();
         }
+        
     }
 }
