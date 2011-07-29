@@ -6,15 +6,13 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import java.awt.Adjustable;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.event.AdjustmentEvent;
-import java.awt.event.AdjustmentListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
+import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -24,11 +22,11 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.janelia.it.FlyWorkstation.gui.application.SplashPanel;
-import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationToolbar;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 
@@ -39,19 +37,33 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
  */
 public class IconDemoPanel extends JPanel {
 
+    private static final String JACS_DATA_PATH_MAC = ConsoleProperties.getString("remote.defaultMacPath");
+    private static final String JACS_DATA_PATH_LINUX = ConsoleProperties.getString("remote.defaultLinuxPath");
+    
+    private AnnotationSession session;
+    
     private SplashPanel splashPanel;
     private AnnotationToolbar toolbar;
     private ImagesPanel imagesPanel;
     private JScrollPane scrollPane;
+    private ImageDetailPanel imageDetailPanel;
 
+    private List<Entity> entities;
+    private Entity currentEntity;
+	private boolean viewingSingleImage = true;
+    
 	public IconDemoPanel() {
 
         setBackground(Color.white);
-        setLayout(new BorderLayout(0,0));
+        setLayout(new BorderLayout());
 
         splashPanel = new SplashPanel();
+        add(splashPanel);
+        
         toolbar = new AnnotationToolbar(this);
-        imagesPanel = new ImagesPanel();
+        imagesPanel = new ImagesPanel(this);
+        imageDetailPanel = new ImageDetailPanel(this);
+        
         scrollPane = new JScrollPane();
         scrollPane.setViewportView(imagesPanel);
         
@@ -65,7 +77,6 @@ public class IconDemoPanel extends JPanel {
 			}
         });
 
-        
         addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentResized(ComponentEvent e) {
@@ -73,6 +84,32 @@ public class IconDemoPanel extends JPanel {
 			}
         	
         });
+
+        imageDetailPanel.addMouseWheelListener(new MouseWheelListener() {
+			@Override
+			public void mouseWheelMoved(MouseWheelEvent e) {
+				int i = entities.indexOf(currentEntity);
+				
+				// Adjust current entity
+				
+				if (e.getWheelRotation() > 0) {
+					if (i > entities.size()-2) {
+						// Already at the end
+						return;
+					}
+					setCurrentEntity(entities.get(i+1));
+				}
+				else {
+					if (i < 1) {
+						// Already at the beginning 
+						return;
+					}
+					setCurrentEntity(entities.get(i-1));
+				}
+			
+				showCurrentEntityDetails();
+			}
+		});
         
         scrollPane.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
 			
@@ -80,107 +117,41 @@ public class IconDemoPanel extends JPanel {
 			public void adjustmentValueChanged(AdjustmentEvent e) {
 		        
 				int value = e.getValue();
-				
+				// TODO: load/unload images as they move out of the viewport?
 				
 			}
 		});
+        
     }
 
-//    /**
-//     * Load the given image files and display them in a grid. If files is null then redisplay the splash image.
-//     * @param files
-//     */
-//    public void loadImages(List<File> files) {
-//
-//        try {
-//            remove(splashPanel);
-//
-//            if (files == null) {
-//                add(splashPanel);
-//                return;
-//            }
-//
-//            add(toolbar, BorderLayout.NORTH);
-//            add(scrollPane, BorderLayout.CENTER);
-//
-//            List<String> labels = new ArrayList<String>();
-//            List<String> filenames = new ArrayList<String>();
-//
-//			for (File file : files) {
-//				labels.add(file.getName());
-//				filenames.add(file.getAbsolutePath());
-//			}
-//
-//            imagesPanel.load(labels, filenames);
-//            SwingUtilities.updateComponentTreeUI(IconDemoPanel.this);
-//        }
-//        catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
-
-    public void loadImageEntities(final List<Entity> entities) {
-    
-		SimpleWorker loadingWorker = new SimpleWorker() {
-
-			private List<Entity> annotations;
-
-            protected void doStuff() throws Exception {
-            	annotations = EJBFactory.getRemoteAnnotationBean().getAnnotationsForEntities(
-    	                (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME), entities);
-            }
-
-			protected void hadSuccess() {
-            	loadImageEntities(entities, annotations);
-			}
-
-			protected void hadError(Throwable error) {
-				error.printStackTrace();
-				JOptionPane.showMessageDialog(IconDemoPanel.this, "Error loading annotations", "Data Loading Error", JOptionPane.ERROR_MESSAGE);
-            	loadImageEntities(entities, new ArrayList<Entity>());
-            	// TODO: set read-only mode
-			}
-
-        };
-
-        loadingWorker.execute();
+	// TODO: need a more general way of doing this
+    public String convertImagePath(String filepath) {
+    	return filepath.replace(JACS_DATA_PATH_LINUX, JACS_DATA_PATH_MAC);
     }
-    
+
     public void loadImageEntities(final AnnotationSession session) {
     
+    	this.session = session;
+    	
 		SimpleWorker loadingWorker = new SimpleWorker() {
 
 			private List<Entity> entities;
-			private List<Entity> annotations;
+			private Map<Long, List<Entity>> annotationMap;
 
             protected void doStuff() throws Exception {
             	entities = session.getEntities();
-                annotations = session.getAnnotations();
-                
-                // TODO: remove debugging code
-//                for(Entity entity : session.getAnnotationMap().keySet()) {
-//                	List<Entity> annots = session.getAnnotationMap().get(entity);
-//                	
-//                	System.out.println(entity.getName()+" : ");
-//                	for(Entity annot : annots) {
-//                		System.out.println("  "+annot.getName()+" ");	
-//                		System.out.println("      "+annot.getUser().getUserLogin()+" ");	
-//                		System.out.println("      "+annot.getValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_KEY_TERM)+" ");	
-//                		System.out.println("      "+annot.getValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_VALUE_TERM)+" ");	
-//                		System.out.println("      "+annot.getValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_SESSION_ID)+" ");	
-//                	}
-//                }
+                annotationMap = session.getAnnotationMap();
             }
 
 			protected void hadSuccess() {
-            	loadImageEntities(entities, annotations);
+            	loadImageEntities(entities, annotationMap);
 			}
 
 			protected void hadError(Throwable error) {
 				error.printStackTrace();
 				if (entities != null) {
 					JOptionPane.showMessageDialog(IconDemoPanel.this, "Error loading annotations", "Data Loading Error", JOptionPane.ERROR_MESSAGE);
-					loadImageEntities(entities, new ArrayList<Entity>());
+					loadImageEntities(entities, new HashMap());
 					// TODO: set read-only mode
 				}
 				else {
@@ -199,20 +170,10 @@ public class IconDemoPanel extends JPanel {
      * @param entities List of entities
      * @param annotations
      */
-    public void loadImageEntities(List<Entity> entities, List<Entity> annotations) {
-    	
+    private void loadImageEntities(List<Entity> entities, Map<Long, List<Entity>> annotationMap) {
+        
         try {
-            remove(splashPanel);
-           
-            if (entities == null) {
-                add(splashPanel);
-                return;
-            }
-
-            add(toolbar, BorderLayout.NORTH);
-            add(scrollPane, BorderLayout.CENTER);
-
-            List<Entity> renderedEntities = new ArrayList<Entity>();
+            this.entities = new ArrayList<Entity>();
 
 			for (Entity entity : entities) {
 				
@@ -220,36 +181,87 @@ public class IconDemoPanel extends JPanel {
 					// Ignore things we can't display
 					continue;
 				}
-				renderedEntities.add(entity);
+				this.entities.add(entity);
 			}
-
-            imagesPanel.load(renderedEntities, annotations);
-            revalidate();
+            imagesPanel.load(this.entities, annotationMap);
+            
+        	showAllEntities();
         }
         catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+	public void showCurrentEntityDetails() {
+		imageDetailPanel.load(currentEntity, null);
+		if (!viewingSingleImage) {
+			viewingSingleImage  = true;
+			removeAll();
+			add(imageDetailPanel);
+		}
+        updateUI();
+	}
+
+	public void showAllEntities() {
+		if (viewingSingleImage) {
+			viewingSingleImage = false;
+			removeAll();
+	        add(toolbar, BorderLayout.NORTH);
+	        add(scrollPane, BorderLayout.CENTER);
+		}
+        updateUI();
+	}
+	
     public ImagesPanel getImagesPanel() {
 		return imagesPanel;
 	}
-    
-    /**
-     * Return the currently selected image.
-     * @return
-     */
-    public AnnotatedImageButton getSelectedImage() {
-    	// TODO: this should probably return an Entity, not the Component
-    	return imagesPanel.getSelectedImage();
+
+    public Entity getCurrentEntity() {
+		return currentEntity;
+	}
+
+	public void setCurrentEntity(Entity entity) {
+    	this.currentEntity = entity;
+    	imagesPanel.setSelectedImage(currentEntity);
     }
 
-    /**
-     * Add or remove the given tag from the currently selected image.
-     * @param tag
-     */
-    public boolean addOrRemoveTag(String tag) {
-        return imagesPanel.addOrRemoveTag(tag);
-    }
+	public void refreshEntity(Entity entity) {
 
+		session.clearDerivedProperties();
+		
+		if (viewingSingleImage) {
+			if (currentEntity.getId().equals(entity.getId())) {
+				// TODO: update tag cloud
+			}
+		}
+		else {
+			final AnnotatedImageButton button = imagesPanel.getButtons().get(entity.getId().toString());
+			if (button != null) {
+				SimpleWorker worker = new SimpleWorker() {
+
+					@Override
+					protected void doStuff() throws Exception {
+						session.getAnnotationMap();
+					}
+					
+					@Override
+					protected void hadSuccess() {
+						imagesPanel.updateTags(session.getAnnotationMap());
+						Utils.setDefaultCursor(IconDemoPanel.this);
+					}
+					
+					@Override
+					protected void hadError(Throwable error) {
+				    	Utils.setDefaultCursor(IconDemoPanel.this);
+						error.printStackTrace();
+					}
+				};
+				
+				worker.execute();
+			}
+			
+		}
+		
+	}
+	
 }

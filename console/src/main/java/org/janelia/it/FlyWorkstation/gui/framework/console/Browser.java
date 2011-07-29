@@ -192,7 +192,6 @@ public class Browser extends JFrame implements Cloneable {
         setJMenuBar(menuBar);
 
         viewerPanel.setBorder(BorderFactory.createLineBorder(Color.black));
-        viewerPanel.loadImageEntities(null, null);
         searchToolbar = new SearchToolbar();
         usingSplashPanel = true;
 //        subBrowserTabPane = new SubBrowser(browserModel);
@@ -209,7 +208,7 @@ public class Browser extends JFrame implements Cloneable {
         outlookBar.addBar(BAR_DATA, entityOutline);
         outlookBar.addBar(BAR_SESSION, sessionOutline);
 //        outlookBar.addBar("Files", fileOutline);
-        outlookBar.setVisibleBar(2);
+        outlookBar.setVisibleBarByName(Browser.BAR_SESSION);
 
         BrowserPosition consolePosition = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
         if (null==consolePosition) {

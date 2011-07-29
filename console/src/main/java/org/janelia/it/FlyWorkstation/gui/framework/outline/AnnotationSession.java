@@ -21,19 +21,19 @@ import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
  */
 public class AnnotationSession {
 	
-	private final AnnotationSessionTask task;
+	protected final AnnotationSessionTask task;
 	
-	private class StringHolder {
+	protected class StringHolder {
 		String str;
 	}
 	
 	// Derived properties
-	private StringHolder name;
-	private StringHolder owner;
-	private List<Entity> entities;
-	private List<OntologyElement> categories;
-	private List<Entity> annotations;
-	private Map<Entity,List<Entity>> annotationMap;
+	protected StringHolder name;
+	protected StringHolder owner;
+	protected List<Entity> entities;
+	protected List<OntologyElement> categories;
+	protected List<Entity> annotations;
+	protected Map<Long,List<Entity>> annotationMap;
 	
 	public AnnotationSession(AnnotationSessionTask task) {
 		super();
@@ -99,34 +99,16 @@ public class AnnotationSession {
 
 	public List<Entity> getAnnotations() {
 		if (annotations == null) {
+			// TODO: get only annotations belonging to this session
 			annotations = EJBFactory.getRemoteAnnotationBean().getAnnotationsForEntities(
-	                (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME), entities);
+	                (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME), getEntities());
 		}
 		return annotations;
 	}
 
-	public Map<Entity, List<Entity>> getAnnotationMap() {
+	public Map<Long, List<Entity>> getAnnotationMap() {
 		if (annotationMap == null) {
-			annotationMap = new HashMap<Entity,List<Entity>>();
-	        for(Entity annotation : getAnnotations()) {
-	        	EntityData ed = annotation.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_TARGET_ID);
-	        	if (ed == null) continue;
-	    		for(Entity entity : entities) {
-	    			boolean found = false;
-	    			if (entity.getId().toString().equals(ed.getValue())) {
-	    				List<Entity> entityAnnots = annotationMap.get(entity);
-	    				if (entityAnnots == null) {
-	    					entityAnnots = new ArrayList<Entity>();
-	    					annotationMap.put(entity, entityAnnots);
-	    				}
-	    				entityAnnots.add(annotation);
-	    				found = true;
-	    			}
-	    			if (!found) {
-	    				System.out.println("Could not find this annotated entity in its session: "+entity.getId());
-	    			}
-	    		}
-	        }
+			annotationMap = mapAnnotations(getEntities(), getAnnotations());
 		}
 		return annotationMap;
 	}
@@ -139,4 +121,30 @@ public class AnnotationSession {
 		annotations = null;
 		annotationMap = null;
 	}
+	
+	private Map<Long, List<Entity>> mapAnnotations(List<Entity> entities, List<Entity> annotations) {
+
+		Map<String, Entity> entityMap = new HashMap<String, Entity>();
+		Map<Long, List<Entity>> map = new HashMap<Long,List<Entity>>();
+
+        for(Entity entity : entities) {
+        	entityMap.put(entity.getId().toString(), entity);
+        }
+		
+        for(Entity annotation : annotations) {
+        	EntityData ed = annotation.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_TARGET_ID);
+        	if (ed == null) continue;
+        	Entity entity = entityMap.get(ed.getValue());
+        	if (entity == null) continue;
+			List<Entity> entityAnnots = map.get(entity.getId());
+			if (entityAnnots == null) {
+				entityAnnots = new ArrayList<Entity>();
+				map.put(entity.getId(), entityAnnots);
+			}
+			entityAnnots.add(annotation);
+        }
+		
+        return map;
+	}
+	
 }

@@ -6,19 +6,13 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.gui.util.WrapLayout;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 
@@ -27,9 +21,8 @@ import org.janelia.it.jacs.model.entity.Entity;
  */
 public class AnnotatedImageButton extends JToggleButton {
 	
-    private final List<String> tags = new ArrayList<String>();
     private JTextPane imageCaption;
-    private final JPanel tagPanel;
+    private final TagCloudPanel<Entity> tagPanel;
     private final JLabel imageLabel;
     private final String title;
     private final String imageFilename;
@@ -83,8 +76,7 @@ public class AnnotatedImageButton extends JToggleButton {
         c.weighty = 0;
         imagePanel.add(imageLabel,c);
 
-        tagPanel = new JPanel(new WrapLayout());
-        tagPanel.setOpaque(false);
+        tagPanel = new TagCloudPanel<Entity>();
 
         // Fix event dispatching so that user can click on the title or the tags and still select the button
 
@@ -101,8 +93,6 @@ public class AnnotatedImageButton extends JToggleButton {
             	setSelected(!isSelected());
             }
         });
-        
-        refreshTags();
 
         c.gridx = 0;
         c.gridy = 2;
@@ -184,50 +174,13 @@ public class AnnotatedImageButton extends JToggleButton {
 		return title;
 	}
 
+	public TagCloudPanel<Entity> getTagPanel() {
+		return tagPanel;
+	}
+
 	public String getImageFilename() {
 		return imageFilename;
 	}
-
-	public List<String> getTags() {
-        return tags;
-    }
-
-    public void refreshTags() {
-
-        tagPanel.removeAll();
-        
-        Border paddingBorder = BorderFactory.createEmptyBorder(5,5,5,5);
-        Border lineBorder = BorderFactory.createLineBorder(Color.black, 1);
-        Border border = BorderFactory.createCompoundBorder(lineBorder, paddingBorder);
-        
-        for(final String tag : tags) {
-            JLabel tagLabel = new JLabel(tag);
-            tagLabel.setBorder(border);
-            tagLabel.setFont(new Font("Sans Serif", Font.BOLD, 12));
-            tagLabel.setOpaque(true);
-            tagLabel.setBackground(Color.white);
-            tagLabel.setForeground(Color.black);
-            tagPanel.add(tagLabel);
-
-            tagLabel.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    if (e.getClickCount()==2) {
-                        AnnotatedImageButton.this.addOrRemoveTag(tag);
-                        ModelMgr.getModelMgr().deleteAnnotation((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME),
-                                entity.getId(),tag);
-                        revalidate();
-                        repaint();
-                    }
-                    // Clicking a tag should select the button regardless of what happens to the tag
-                    AnnotatedImageButton.this.dispatchEvent(e);
-                }
-            });
-        }
-        
-        revalidate();
-        repaint();
-    }
 
     public Entity getEntity() {
         return entity;
@@ -237,25 +190,6 @@ public class AnnotatedImageButton extends JToggleButton {
         this.entity = entity;
     }
 
-    /**
-     * Add or remove the given tag from the currently selected image button.
-     * @param tag
-     * @return true if tag was added
-     */
-    public boolean addOrRemoveTag(String tag) {
-
-        if (tags.contains(tag)) {
-            tags.remove(tag);
-            refreshTags();
-            return false;
-        }
-        else {
-            tags.add(tag);
-            refreshTags();
-            return true;
-        }
-
-    }
 
 	    
 }
