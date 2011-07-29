@@ -91,6 +91,9 @@ public class KeyBindings {
         if (action == null) {
         	action = generalBindings.get(shortcut);
         }
+        if (action == null) {
+        	return;
+        }
         action.doAction();
     }
     
