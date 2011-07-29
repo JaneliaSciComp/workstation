@@ -11,6 +11,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyBindings;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
+import org.janelia.it.FlyWorkstation.gui.util.panels.ApplicationSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.panels.DataSourceSettings;
 import org.janelia.it.FlyWorkstation.gui.util.server_status.ServerStatusReportManager;
 import org.janelia.it.FlyWorkstation.shared.exception_handlers.PrintStackTraceHandler;
@@ -105,9 +106,9 @@ public class ConsoleApp {
 //            sessionMgr.registerPreferenceInterface(
 //                    client.gui.other.panels.BackupPanel.class,
 //                    client.gui.other.panels.BackupPanel.class);
-//            sessionMgr.registerPreferenceInterface(
-//                    client.gui.other.panels.ApplicationSettingsPanel.class,
-//                    client.gui.other.panels.ApplicationSettingsPanel.class);
+            sessionMgr.registerPreferenceInterface(
+                    ApplicationSettingsPanel.class,
+                    ApplicationSettingsPanel.class);
 //            sessionMgr.registerPreferenceInterface(
 //                    client.gui.other.panels.ViewSettingsPanel.class,
 //                    client.gui.other.panels.ViewSettingsPanel.class);
