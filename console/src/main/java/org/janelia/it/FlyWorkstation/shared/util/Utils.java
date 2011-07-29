@@ -6,13 +6,17 @@
  */
 package org.janelia.it.FlyWorkstation.shared.util;
 
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import javax.media.jai.operator.InvertDescriptor;
 import javax.swing.ImageIcon;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
@@ -108,6 +112,16 @@ public class Utils {
 		}
     }
     
+	/**
+	 * Returns a color inverted version of the given image.
+	 * @param image
+	 * @return
+	 */
+	public static BufferedImage invertImage(BufferedImage image) {
+        RenderingHints hints = new RenderingHints(null);
+        return InvertDescriptor.create(image, hints).getAsBufferedImage();
+	}
+	
     /**
      * Create an image from the source image, scaled at the given percentage.
      * @param sourceImage image to work against
@@ -120,6 +134,28 @@ public class Utils {
     	return getScaledImage(sourceImage, newWidth, newHeight);
     }
 
+    /**
+     * Create an image from the source image, scaled with the larger dimension. 
+     * @param sourceImage image to work against
+     * @param scale percentage to change the image
+     * @return returns a BufferedImage to work with
+     */
+    public static BufferedImage getScaledImageIcon(BufferedImage sourceImage, int size) {
+    	int width = sourceImage.getWidth();
+    	int height = sourceImage.getHeight();
+    	int newWidth = size;
+    	int newHeight = size;
+    	if (width > height) {
+    		double scale = (double)newWidth / (double)width;
+    		newHeight = (int)Math.round(scale * height);
+    	}
+    	else if (width < height) {
+    		double scale = (double)newHeight / (double)height;
+    		newWidth = (int)Math.round(scale * width);
+    	}
+    	return getScaledImage(sourceImage, newWidth, newHeight);
+    }
+    
     /**
      * Resizes an image using a Graphics2D object backed by a BufferedImage.
      * @param sourceImage - source image to scale

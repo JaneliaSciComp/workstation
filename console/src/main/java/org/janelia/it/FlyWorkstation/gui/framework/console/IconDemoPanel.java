@@ -6,14 +6,20 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
+import java.awt.Adjustable;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.*;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -38,13 +44,13 @@ public class IconDemoPanel extends JPanel {
     private ImagesPanel imagesPanel;
     private JScrollPane scrollPane;
 
-    public IconDemoPanel() {
+	public IconDemoPanel() {
 
         setBackground(Color.white);
         setLayout(new BorderLayout(0,0));
 
         splashPanel = new SplashPanel();
-        toolbar = new AnnotationToolbar();
+        toolbar = new AnnotationToolbar(this);
         imagesPanel = new ImagesPanel();
         scrollPane = new JScrollPane();
         scrollPane.setViewportView(imagesPanel);
@@ -53,11 +59,13 @@ public class IconDemoPanel extends JPanel {
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				JSlider source = (JSlider)e.getSource();
-	    		imagesPanel.rescaleImages((double)source.getValue()/(double)100);
+				double imageSizePercent = (double)source.getValue()/(double)100;
+	    		imagesPanel.rescaleImages(imageSizePercent);
 				imagesPanel.recalculateGrid();
 			}
         });
 
+        
         addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentResized(ComponentEvent e) {
@@ -65,6 +73,17 @@ public class IconDemoPanel extends JPanel {
 			}
         	
         });
+        
+        scrollPane.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
+			
+			@Override
+			public void adjustmentValueChanged(AdjustmentEvent e) {
+		        
+				int value = e.getValue();
+				
+				
+			}
+		});
     }
 
 //    /**
@@ -211,6 +230,10 @@ public class IconDemoPanel extends JPanel {
             e.printStackTrace();
         }
     }
+
+    public ImagesPanel getImagesPanel() {
+		return imagesPanel;
+	}
     
     /**
      * Return the currently selected image.

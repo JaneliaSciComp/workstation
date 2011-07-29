@@ -24,6 +24,9 @@ import java.util.List;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ImagesPanel extends JPanel implements Scrollable {
+
+	public static final int MIN_THUMBNAIL_SIZE = 50;
+	public static final int MAX_THUMBNAIL_SIZE = 300;
 	
     private static final String JACS_DATA_PATH_MAC = ConsoleProperties.getString("remote.defaultMacPath");
     private static final String JACS_DATA_PATH_LINUX = ConsoleProperties.getString("remote.defaultLinuxPath");
@@ -31,7 +34,8 @@ public class ImagesPanel extends JPanel implements Scrollable {
 	private final HashMap<String, AnnotatedImageButton> buttons = new HashMap<String, AnnotatedImageButton>();
 	
 	private ButtonGroup buttonGroup;
-    private double imageSizePercent = 1.0d;
+//    private double imageSizePercent = 1.0d;
+	private int imageSize = MAX_THUMBNAIL_SIZE;
     private String currentEntityId;
     private List<SwingWorker> workers = new ArrayList<SwingWorker>();
     
@@ -81,6 +85,8 @@ public class ImagesPanel extends JPanel implements Scrollable {
 
             final AnnotatedImageButton button = new AnnotatedImageButton(file.getName(), file.getAbsolutePath(), i, tmpEntity);
 
+            button.addKeyListener(keyListener);
+            
             button.addFocusListener(new FocusAdapter() {
                 @Override
                 public void focusGained(FocusEvent e) {
@@ -92,9 +98,7 @@ public class ImagesPanel extends JPanel implements Scrollable {
                     revalidate();
                 }
             });
-
-            button.addKeyListener(keyListener);
-
+            
             buttons.put(tmpEntity.getId().toString(), button) ;
             buttonGroup.add(button);
             add(button);
@@ -122,19 +126,30 @@ public class ImagesPanel extends JPanel implements Scrollable {
     		workers.add(worker);
         }
     }
-    
+
 	/**
-	 * Scale all the images to the desired percent of their true size. Also recalculates maxButtonWidth so that the 
-	 * grid may be recalculated by recalculateGrid.
+	 * Scale all the images to the desired percent of their true size. 
 	 * @param imageSizePercent
 	 */
     public void rescaleImages(double imageSizePercent) {
-    	if (imageSizePercent < 0 || imageSizePercent == this.imageSizePercent) {
+    	if (imageSizePercent < 0 || imageSizePercent > 1) {
     		return;
     	}
-		this.imageSizePercent = imageSizePercent;
+    	double range = (double)(MAX_THUMBNAIL_SIZE - MIN_THUMBNAIL_SIZE);
+    	rescaleImages(MIN_THUMBNAIL_SIZE + (int)(range*imageSizePercent));
+	}
+    
+	/**
+	 * Scale all the images to the given max size. 
+	 * @param imageSize
+	 */
+    public void rescaleImages(int imageSize) {
+    	if (imageSize < MIN_THUMBNAIL_SIZE || imageSize > MAX_THUMBNAIL_SIZE || imageSize == this.imageSize) {
+    		return;
+    	}
+		this.imageSize = imageSize;
         for (AnnotatedImageButton button : buttons.values()) {
-    		button.rescaleImage(imageSizePercent);
+    		button.rescaleImage(imageSize);
         }
 	}
     
@@ -185,7 +200,11 @@ public class ImagesPanel extends JPanel implements Scrollable {
         return added;
     }
     
-    @Override
+    public HashMap<String, AnnotatedImageButton> getButtons() {
+		return buttons;
+	}
+
+	@Override
     public Dimension getPreferredScrollableViewportSize() {
         return getPreferredSize();
     }
@@ -231,7 +250,7 @@ public class ImagesPanel extends JPanel implements Scrollable {
         protected Void doInBackground() throws Exception {
         	try {
             	if (isCancelled()) return null;
-            	button.loadImage(imageSizePercent);
+            	button.loadImage(MAX_THUMBNAIL_SIZE);
             	if (isCancelled()) return null;
                 publish(button);
                 if (isCancelled()) return null;
@@ -246,8 +265,8 @@ public class ImagesPanel extends JPanel implements Scrollable {
         protected void process(List<AnnotatedImageButton> buttons) {
         	// If the scale has changed since the image began loading then we have to rescale it
             for (AnnotatedImageButton button : buttons) {
-            	if (button.getScale() != imageSizePercent)
-            		button.rescaleImage(imageSizePercent);
+            	if (button.getDisplaySize() != imageSize)
+            		button.rescaleImage(imageSize);
             		
             }
         	recalculateGrid();

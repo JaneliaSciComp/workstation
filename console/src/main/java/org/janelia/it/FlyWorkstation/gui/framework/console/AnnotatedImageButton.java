@@ -28,14 +28,17 @@ import org.janelia.it.jacs.model.entity.Entity;
 public class AnnotatedImageButton extends JToggleButton {
 	
     private final List<String> tags = new ArrayList<String>();
+    private JTextPane imageCaption;
     private final JPanel tagPanel;
     private final JLabel imageLabel;
     private final String title;
     private final String imageFilename;
 	private BufferedImage maxSizeImage;
-	private double scale;
+	private BufferedImage invertedMaxSizeImage;
+	private int displaySize;
+	private boolean inverted = false;
     private Entity entity;
-
+    
     public AnnotatedImageButton(String title, String imageFilename, final int index, Entity entity) {
     	this.entity = entity;
     	this.title = title;
@@ -46,10 +49,10 @@ public class AnnotatedImageButton extends JToggleButton {
         imagePanel.setOpaque(false);
         add(imagePanel);
 
-        JTextPane imageCaption = new JTextPane();
+        imageCaption = new JTextPane();
         imageCaption.setFocusable(false);
         imageCaption.setText(title);
-        imageCaption.setFont(new Font("Sans Serif", Font.PLAIN, 14));
+        imageCaption.setFont(new Font("Sans Serif", Font.PLAIN, 12));
         imageCaption.setAlignmentX(Component.CENTER_ALIGNMENT);
         imageCaption.setEditable(false);
         imageCaption.setOpaque(false);
@@ -57,7 +60,7 @@ public class AnnotatedImageButton extends JToggleButton {
         SimpleAttributeSet center = new SimpleAttributeSet();
         StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
         doc.setParagraphAttributes(0, doc.getLength(), center, false);
-        
+
         c.gridx = 0;
         c.gridy = 0;
         c.insets = new Insets(0,0,5,0);
@@ -110,12 +113,25 @@ public class AnnotatedImageButton extends JToggleButton {
 
     }
 
-    public void loadImage(double scale) {
+    public void setTitleVisible(boolean visible) {
+    	imageCaption.setVisible(visible);
+    }
+    
+    public void setTagsVisible(boolean visible) {
+    	tagPanel.setVisible(visible);
+    }
+    
+    public void loadImage(int imageSize) {
     	
     	try {
-        	maxSizeImage = Utils.readImage(imageFilename);
-        	rescaleImage(scale);
-        	
+    		this.displaySize = imageSize;
+    		maxSizeImage = Utils.getScaledImageIcon(Utils.readImage(imageFilename), imageSize);
+        	if (displaySize != imageSize) {
+        		rescaleImage(displaySize);
+        	}
+        	else {
+            	imageLabel.setIcon(new ImageIcon(maxSizeImage));
+        	}
     	}
     	catch (IOException e) {
     		
@@ -135,13 +151,32 @@ public class AnnotatedImageButton extends JToggleButton {
     	}
     }
     
-    public void rescaleImage(double scale) {
+    public void rescaleImage(int imageSize) {
     	if (maxSizeImage == null) return;
-    	imageLabel.setIcon(new ImageIcon(Utils.getScaledImageIcon(maxSizeImage, scale)));
-    	setScale(scale);
+    	BufferedImage image = Utils.getScaledImageIcon(inverted ? invertedMaxSizeImage : maxSizeImage, imageSize);
+    	imageLabel.setIcon(new ImageIcon(image));
+    	this.displaySize = imageSize;
     }
-    
-    public Icon getImage() {
+
+	public void setInvertedColors(boolean inverted) {
+		
+		this.inverted = inverted;
+		if (inverted == true) {
+			invertedMaxSizeImage = Utils.invertImage(maxSizeImage);	
+		}
+		else {
+			// Free up memory when we don't need inverted images
+			invertedMaxSizeImage = null;
+		}
+		
+    	rescaleImage(displaySize);
+	}
+	
+    public int getDisplaySize() {
+		return displaySize;
+	}
+
+	public Icon getImage() {
     	return imageLabel.getIcon();
     }
     
@@ -151,14 +186,6 @@ public class AnnotatedImageButton extends JToggleButton {
 
 	public String getImageFilename() {
 		return imageFilename;
-	}
-
-	private synchronized void setScale(double scale) {
-		this.scale = scale;
-	}
-
-	public synchronized double getScale() {
-		return scale;
 	}
 
 	public List<String> getTags() {
