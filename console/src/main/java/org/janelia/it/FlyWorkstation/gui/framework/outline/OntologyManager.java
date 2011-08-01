@@ -66,7 +66,7 @@ public class OntologyManager extends JDialog implements ActionListener, Property
         
         privateTable = new AbstractOntologyTable() {
         	protected List<Entity> load() throws Exception {
-                return EJBFactory.getRemoteAnnotationBean().getPrivateOntologies((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME));
+                return EJBFactory.getRemoteAnnotationBean().getPrivateOntologies(SessionMgr.getUsername());
         	}
         	
         	protected void doubleClick(Entity entity, MouseEvent e) {
@@ -246,8 +246,8 @@ public class OntologyManager extends JDialog implements ActionListener, Property
         	private Entity newRoot;
         	
             protected void doStuff() throws Exception {
-            	newRoot = EJBFactory.getRemoteAnnotationBean().createOntologyRoot((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME),
-                        rootName);
+            	newRoot = EJBFactory.getRemoteAnnotationBean().createOntologyRoot(
+            			SessionMgr.getUsername(), rootName);
             }
 
 			protected void hadSuccess() {
@@ -417,8 +417,8 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 	        SimpleWorker worker = new SimpleWorker() {
 	        	
 	            protected void doStuff() throws Exception {
-	            	EJBFactory.getRemoteAnnotationBean().removeOntologyTerm((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME),
-                            root.getId());
+	            	EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(
+	            			SessionMgr.getUsername(), root.getId());
 	            	ConsoleApp.getKeyBindings().removeOntologyKeybinds(root);        	
 	            }
 
@@ -467,8 +467,8 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 	        	private Entity newRoot;
 	        	
 	            protected void doStuff() throws Exception {
-	            	newRoot = EJBFactory.getRemoteAnnotationBean().cloneEntityTree(root.getId(), (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME),
-                            rootName);
+	            	newRoot = EJBFactory.getRemoteAnnotationBean().cloneEntityTree(
+	            			root.getId(), SessionMgr.getUsername(), rootName);
 	            }
 
 				protected void hadSuccess() {

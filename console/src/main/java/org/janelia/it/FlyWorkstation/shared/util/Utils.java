@@ -6,10 +6,7 @@
  */
 package org.janelia.it.FlyWorkstation.shared.util;
 
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -35,6 +32,19 @@ import loci.formats.in.TiffReader;
  */
 public class Utils {
 
+	public static ImageIcon grabOpenedIcon;
+	public static ImageIcon grabClosedIcon;
+	
+	static {
+        try {
+        	grabOpenedIcon = Utils.getClasspathImage("grab_opened.png");
+        	grabClosedIcon = Utils.getClasspathImage("grab_closed.png");
+        }
+        catch (FileNotFoundException e) {
+        	e.printStackTrace();
+        }
+	}
+	
     public static boolean isEmpty(String str) {
         return (str == null || "".equals(str));
     }
@@ -178,5 +188,16 @@ public class Utils {
     
     public static void setDefaultCursor(Component component) {
     	component.setCursor(Cursor.getDefaultCursor());
+    }
+    
+    public static void setOpenedHandCursor(Component component) {
+    	Cursor grabClosedCursor = Toolkit.getDefaultToolkit().createCustomCursor(grabOpenedIcon.getImage(), new Point(0,0), "img");  
+    	component.setCursor(grabClosedCursor);
+    }
+    
+    public static void setClosedHandCursor(Component component) {
+//    	component.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
+    	Cursor grabClosedCursor = Toolkit.getDefaultToolkit().createCustomCursor(grabClosedIcon.getImage(), new Point(0,0), "img");  
+    	component.setCursor(grabClosedCursor); 
     }
 }

@@ -1,19 +1,19 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
 import java.awt.BorderLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseWheelListener;
+import java.awt.Color;
+import java.awt.Point;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.io.FileNotFoundException;
 import java.util.List;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -27,12 +27,17 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
  */
 public class ImageDetailPanel extends JPanel {
 
-	private IconDemoPanel iconDemoPanel;
+	private final IconDemoPanel iconDemoPanel;
 	
-	private JLabel imageCaption;
-	private JLabel imageLabel;
+	private JLabel zoomLabel;
+	private final JPanel imageViewer;
+	private final JLabel imageCaption;
+	private final JLabel imageLabel;
+	private final JPanel southernPanel;
+	private final EntityTagCloudPanel tagPanel;
 	
-	private SimpleWorker worker;
+	private SimpleWorker imageWorker;
+	private SimpleWorker dataWorker;
 	private Entity entity;
 	
 	private BufferedImage maxSizeImage;
@@ -41,54 +46,107 @@ public class ImageDetailPanel extends JPanel {
 	private boolean inverted;
 	private double scale = 1.0d;
 	
-	public ImageDetailPanel(IconDemoPanel iconDemoPanel) {
+	public ImageDetailPanel(final IconDemoPanel iconDemoPanel) {
 
+		this.iconDemoPanel = iconDemoPanel;
+		
 		setLayout(new BorderLayout());
+        setFocusable(true);
 		
 		add(createToolbar(), BorderLayout.PAGE_START);
 		
-		JPanel imageViewer = new JPanel();
-		add(imageViewer, BorderLayout.CENTER);
-		
-		imageViewer.setLayout(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-        
-		this.iconDemoPanel = iconDemoPanel;
+		imageViewer = new JPanel();
+
+		imageViewer.setLayout(new BorderLayout());
         
         imageCaption = new JLabel();
-        
-        c.gridx = 0;
-        c.gridy = 0;
-        c.insets = new Insets(0,0,5,0);
-        imageViewer.add(imageCaption,c);
+        imageCaption.setHorizontalAlignment(SwingConstants.CENTER);
+        imageViewer.add(imageCaption,BorderLayout.NORTH);
 
-		this.imageLabel = new JLabel((ImageIcon)Icons.loadingIcon);		
-		imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
-		imageLabel.setVerticalAlignment(SwingConstants.CENTER);
+		this.imageLabel = new JLabel((ImageIcon)Icons.loadingIcon);
 		JPanel imagePanel = new JPanel(new BorderLayout());
 		imagePanel.add(imageLabel, BorderLayout.CENTER);
 
-		JScrollPane scrollPane = new JScrollPane();
+		final JScrollPane scrollPane = new JScrollPane();
 		scrollPane.setViewportView(imagePanel);
-		// TODO: implement drag scrolling and disable the scroll bars:
-//		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-//		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
         
-        c.gridx = 0;
-        c.gridy = 1;
-        c.insets = new Insets(0,0,5,0);
-        c.fill = GridBagConstraints.BOTH;
-        c.weightx = 1.0;
-        c.weighty = 1.0;
-        imageViewer.add(scrollPane,c);
+        imageViewer.add(scrollPane,BorderLayout.CENTER);
+
+        this.southernPanel = new JPanel(new BorderLayout());
+
+		final JScrollPane southernScrollPane = new JScrollPane();
+		southernScrollPane.setViewportView(southernPanel);
 		
-        
+        final JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, false, imageViewer, southernScrollPane);
+        splitPane.setResizeWeight(0.85);
+        add(splitPane, BorderLayout.CENTER);
+
+    	this.tagPanel = new EntityTagCloudPanel();
+    	
         // Remove the scrollpane's listeners so that mouse wheel events get propagated up
         for(MouseWheelListener l : scrollPane.getMouseWheelListeners()) {
         	scrollPane.removeMouseWheelListener(l);
         }
-	}
+        
+        scrollPane.addMouseListener(new MouseAdapter() {
+			
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				Utils.setOpenedHandCursor(scrollPane);
+			}
+			
+			@Override
+			public void mousePressed(MouseEvent e) {
+				Utils.setClosedHandCursor(scrollPane);
+			}
+			
+			@Override
+			public void mouseExited(MouseEvent e) {
+				Utils.setDefaultCursor(scrollPane);
+			}
+			
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				Utils.setOpenedHandCursor(scrollPane);
+			}
+		});
+        
+        scrollPane.addMouseMotionListener(new MouseMotionListener() {
+			
+        	private Point lastPoint;
+        	private double sensitivity = 1.0;
+        	
+			@Override
+			public void mouseMoved(MouseEvent e) {
+				lastPoint = e.getPoint();
+			}
+			
+			@Override
+			public void mouseDragged(MouseEvent e) {
 
+				int x = e.getX() - lastPoint.x;
+				int y = e.getY() - lastPoint.y;
+				x *= -1*sensitivity;
+				y *= -1*sensitivity;
+				
+				Point vp = scrollPane.getViewport().getViewPosition();
+				vp.translate(x, y);
+				if (vp.x < 0) vp.x = 0;
+				if (vp.y < 0) vp.y = 0;
+				scrollPane.getViewport().setViewPosition(vp);
+				
+				lastPoint = e.getPoint();
+				
+				scrollPane.revalidate();
+				scrollPane.repaint();
+			}
+		});
+
+        this.addKeyListener(iconDemoPanel.getKeyListener());
+	}
+    
 	private JToolBar createToolbar() {
 		
         JToolBar toolBar = new JToolBar();
@@ -100,6 +158,7 @@ public class ImageDetailPanel extends JPanel {
         backButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				iconDemoPanel.reloadAnnotations();
 				iconDemoPanel.showAllEntities();
 			}
 		});
@@ -108,6 +167,7 @@ public class ImageDetailPanel extends JPanel {
         toolBar.addSeparator();
         
         JSlider slider = new JSlider(100,400,100);
+        slider.setFocusable(false);
         slider.setToolTipText("Image size percentage");
         slider.addChangeListener(new ChangeListener() {
 			@Override
@@ -115,31 +175,47 @@ public class ImageDetailPanel extends JPanel {
 				JSlider source = (JSlider)e.getSource();
 				double imageSizePercent = (double)source.getValue()/(double)100;
 				rescaleImage(imageSizePercent);
+				zoomLabel.setText((int)source.getValue()+"%");
 			}
         });
         toolBar.add(slider);
         
+        zoomLabel = new JLabel();
+        zoomLabel.setText("100%");
+        toolBar.add(zoomLabel);
+        
         return toolBar;
     }
-
 	
-	public void load(Entity entity, List<Entity> annotations) {
+	public EntityTagCloudPanel getTagPanel() {
+		return tagPanel;
+	}
 
-    	if (worker != null && !worker.isDone()) {
-    		worker.cancel(true);
+	public void load(Entity entity, List<Entity> annotations) {
+		
+    	if (imageWorker != null && !imageWorker.isDone()) {
+    		imageWorker.cancel(true);
+    	}
+
+    	if (dataWorker != null && !dataWorker.isDone()) {
+    		dataWorker.cancel(true);
     	}
     	
     	this.entity = entity;
 
-        imageCaption.setText(entity.getName());
-        
-    	worker = new LoadImageWorker();
-		worker.execute();
+    	imageCaption.setText(entity.getName());
+        southernPanel.removeAll();
+    	
+    	imageWorker = new LoadImageWorker();
+		imageWorker.execute();
+		
+    	dataWorker = new LoadDataWorker();
+		dataWorker.execute();
 	}
 
     public void rescaleImage(double scale) {
     	if (maxSizeImage == null) return;
-    	BufferedImage image = Utils.getScaledImageIcon(maxSizeImage, scale);
+    	BufferedImage image = Utils.getScaledImageIcon(inverted ? invertedMaxSizeImage : maxSizeImage, scale);
 		imageLabel.setIcon(new ImageIcon(image));
     	this.scale = scale;
     }
@@ -172,12 +248,64 @@ public class ImageDetailPanel extends JPanel {
 		@Override
 		protected void hadSuccess() {
         	if (isCancelled()) return;
-    		rescaleImage(scale);    		
+
+        	if (iconDemoPanel.isInverted()) {
+        		setInvertedColors(iconDemoPanel.isInverted());
+        	}
+        	else {
+        		rescaleImage(scale);  
+        	}  		
 		}
 
 		@Override
 		protected void hadError(Throwable error) {
-			error.printStackTrace();
+
+	    	imageLabel.setForeground(Color.red);
+        	imageLabel.setIcon(Icons.missingIcon);
+        	imageLabel.setVerticalTextPosition(JLabel.BOTTOM);
+        	imageLabel.setHorizontalTextPosition(JLabel.CENTER);
+        	
+    		if (error instanceof FileNotFoundException) {
+    	    	imageLabel.setText("File not found");
+    		}
+    		else {
+    			error.printStackTrace();
+    	    	imageLabel.setText("Image could not be loaded");
+    		}
+    		
+	        // TODO: set read-only mode
+		}
+    }
+    
+    /**
+     * SwingWorker class that loads the supporting data.  This thread supports being canceled.
+     */
+    private class LoadDataWorker extends SimpleWorker {
+        
+    	List<Entity> annotations;
+    	
+		@Override
+		protected void doStuff() throws Exception {
+			annotations = EJBFactory.getRemoteAnnotationBean().getAnnotationsForEntity(SessionMgr.getUsername(), entity.getId());
+		}
+
+		@Override
+		protected void hadSuccess() {
+        	if (isCancelled()) return;
+        	tagPanel.setTags(annotations);
+	        southernPanel.removeAll();
+	        southernPanel.add(tagPanel, BorderLayout.CENTER);
+	        southernPanel.updateUI();
+		}
+
+		@Override
+		protected void hadError(Throwable error) {
+	        JLabel errorLabel = new JLabel("Annotations could not be loaded");
+	        errorLabel.setForeground(Color.red);
+	        southernPanel.removeAll();
+	        southernPanel.add(errorLabel);
+	        southernPanel.updateUI();
+	        // TODO: set read-only mode
 		}
     }
 }

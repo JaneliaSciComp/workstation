@@ -114,7 +114,7 @@ public class KeyBindings {
     	
     	try {
     		String category = CATEGORY_KEYBINDS_ONTOLOGY+root.getId();
-        	User user = EJBFactory.getRemoteComputeBean().getUserByName((String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME));
+        	User user = EJBFactory.getRemoteComputeBean().getUserByName(SessionMgr.getUsername());
         	Map<String,UserPreference> prefs = user.getCategoryPreferences(category);
         	
         	for(UserPreference pref : prefs.values()) {
@@ -151,7 +151,7 @@ public class KeyBindings {
     	
     	try {
     		String category = CATEGORY_KEYBINDS_ONTOLOGY+root.getId();
-        	User user = EJBFactory.getRemoteComputeBean().getUserByName((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME));
+        	User user = EJBFactory.getRemoteComputeBean().getUserByName(SessionMgr.getUsername());
 
         	// Delete all keybinds first, to maintain one key per entity
         	for(String key : user.getCategoryPreferences(category).keySet()) {

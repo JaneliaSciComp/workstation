@@ -47,7 +47,6 @@ public class OWLDataLoader extends SimpleWorker {
     private OWLReasoner reasoner;
     private String ontologyName;
     private int classCount = 0;
-    private String userLogin;
     
     private int classesDone = 0;
     
@@ -58,7 +57,6 @@ public class OWLDataLoader extends SimpleWorker {
     protected OWLDataLoader() {
         this.manager = OWLManager.createOWLOntologyManager();
         this.reasonerFactory = new StructuralReasonerFactory();
-        this.userLogin = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
     }
     
     public OWLDataLoader(String url) throws OWLException {
@@ -156,14 +154,14 @@ public class OWLDataLoader extends SimpleWorker {
     	OWLClass clazz = manager.getOWLDataFactory().getOWLClass(classIRI);
 
         root = saveObjects ? EJBFactory.getRemoteAnnotationBean().createOntologyRoot(
-                (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME), ontologyName) : new Entity();
+        		SessionMgr.getUsername(), ontologyName) : new Entity();
         incrementProgress();
                 
 		if (out != null) out.println(ontologyName + " (Category saved as " + root.getId() + ")");
 
 		if (isCancelled()) return root;
 		
-        loadAsEntities(userLogin, root, clazz, 1, 0);
+        loadAsEntities(root, clazz, 1, 0);
 
         
         if (out != null) {
@@ -181,7 +179,7 @@ public class OWLDataLoader extends SimpleWorker {
         return root;
     }
 
-	private void loadAsEntities(String userLogin, Entity parentEntity,
+	private void loadAsEntities(Entity parentEntity,
 			OWLClass clazz, int level, int orderIndex) throws OWLException, ComputeException {
 		
 		if (out != null)  {
@@ -205,8 +203,8 @@ public class OWLDataLoader extends SimpleWorker {
 		}
 
 		OntologyElementType type = hasChildren ? new Category() : new Tag();
-		EntityData newData = saveObjects ? EJBFactory.getRemoteAnnotationBean().createOntologyTerm((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME),
-				parentEntity.getId(), label, type, orderIndex) : new EntityData();
+		EntityData newData = saveObjects ? EJBFactory.getRemoteAnnotationBean().createOntologyTerm(
+				SessionMgr.getUsername(), parentEntity.getId(), label, type, orderIndex) : new EntityData();
 		incrementProgress();
 		
 		if (out != null) out.println(label + " ("+type.getName()+" saved as " + newData.getId() + ")");
@@ -216,7 +214,7 @@ public class OWLDataLoader extends SimpleWorker {
 		for (OWLClass child : reasoner.getSubClasses(clazz, true).getFlattened()) {
 			if (!child.equals(clazz)) {
 				if (reasoner.isSatisfiable(child)) {
-					loadAsEntities(userLogin, newData.getChildEntity(), child, level + 1, childOrder++);
+					loadAsEntities(newData.getChildEntity(), child, level + 1, childOrder++);
 					if (isCancelled()) return;
 				}
 			}

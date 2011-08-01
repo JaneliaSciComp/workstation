@@ -61,8 +61,8 @@ public class OntologyTree extends JPanel {
 			private Entity rootEntity;
         	
             protected void doStuff() throws Exception {
-            	rootEntity = EJBFactory.getRemoteAnnotationBean().getOntologyTree((String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME),
-                        rootId);
+            	rootEntity = EJBFactory.getRemoteAnnotationBean().getOntologyTree(
+            			SessionMgr.getUsername(), rootId);
             }
 
 			protected void hadSuccess() {

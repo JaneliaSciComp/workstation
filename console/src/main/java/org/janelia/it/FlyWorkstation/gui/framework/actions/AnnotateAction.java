@@ -10,6 +10,9 @@ import javax.swing.JOptionPane;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
+import org.janelia.it.FlyWorkstation.gui.framework.console.AnnotatedImageButton;
+import org.janelia.it.FlyWorkstation.gui.framework.console.IconDemoPanel;
+import org.janelia.it.FlyWorkstation.gui.framework.console.ImageDetailPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -34,6 +37,7 @@ public class AnnotateAction extends OntologyElementAction {
         
         if (targetEntity == null) {
         	// Cannot annotate nothing
+        	System.out.println("AnnotateAction called without an entity being selected");
         	return;
         }
         
@@ -105,26 +109,42 @@ public class AnnotateAction extends OntologyElementAction {
     private void saveAnnotation(final String sessionId, final Entity targetEntity, final String keyEntityId,
 			final String keyString, final String valueEntityId, final String valueString, final String tag) {
     	
+    	final IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
+    	final AnnotatedImageButton button = iconDemoPanel.getImagesPanel().getSelectedButton();
+    	final ImageDetailPanel imageDetailPanel = iconDemoPanel.getImageDetailPanel();
+    	
+    	if (button == null) {
+    		// Cannot annotate nothing
+    		System.out.println("AnnotateAction called without a button being selected");
+    		return;
+    	}
+    	
     	Utils.setWaitingCursor(SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel());
     	
 		SimpleWorker worker = new SimpleWorker() {
 
+			private Entity annotation;
+			
 			protected void doStuff() throws Exception {
-		        // TODO: check if annotation exists 
-				EJBFactory.getRemoteAnnotationBean().createOntologyAnnotation((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME),
+		        // TODO: check if annotation exists already
+				annotation = EJBFactory.getRemoteAnnotationBean().createOntologyAnnotation(SessionMgr.getUsername(),
 						sessionId, targetEntity.getId().toString(), keyEntityId, keyString, valueEntityId, valueString, tag);
 			}
 
 			protected void hadSuccess() { 
+		    	Utils.setDefaultCursor(SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel());
 				System.out.println("Saved annotation "+tag);
-		        SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().refreshEntity(targetEntity);
-				
+				button.getTagPanel().addTag(annotation);
+				if (imageDetailPanel != null) {
+					imageDetailPanel.getTagPanel().addTag(annotation);
+				}
 			}
 
 			protected void hadError(Throwable error) {
+		    	Utils.setDefaultCursor(SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel());
 				error.printStackTrace();
 				JOptionPane.showMessageDialog(SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel(), "Error saving annotation",
-						"Annotation Error", JOptionPane.ERROR_MESSAGE);
+						"Error", JOptionPane.ERROR_MESSAGE);
 			}
 
 		};

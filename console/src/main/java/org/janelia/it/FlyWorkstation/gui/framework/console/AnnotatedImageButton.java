@@ -22,7 +22,7 @@ import org.janelia.it.jacs.model.entity.Entity;
 public class AnnotatedImageButton extends JToggleButton {
 	
     private JTextPane imageCaption;
-    private final TagCloudPanel<Entity> tagPanel;
+    private final EntityTagCloudPanel tagPanel;
     private final JLabel imageLabel;
     private final String title;
     private final String imageFilename;
@@ -76,7 +76,15 @@ public class AnnotatedImageButton extends JToggleButton {
         c.weighty = 0;
         imagePanel.add(imageLabel,c);
 
-        tagPanel = new TagCloudPanel<Entity>();
+        tagPanel = new EntityTagCloudPanel();
+        
+        c.gridx = 0;
+        c.gridy = 2;
+        c.fill = GridBagConstraints.BOTH;
+        c.anchor = GridBagConstraints.PAGE_START;
+        c.weighty = 1;
+        imagePanel.add(tagPanel, c);
+
 
         // Fix event dispatching so that user can click on the title or the tags and still select the button
 
@@ -93,14 +101,7 @@ public class AnnotatedImageButton extends JToggleButton {
             	setSelected(!isSelected());
             }
         });
-
-        c.gridx = 0;
-        c.gridy = 2;
-        c.fill = GridBagConstraints.BOTH;
-        c.anchor = GridBagConstraints.PAGE_START;
-        c.weighty = 1;
-        imagePanel.add(tagPanel, c);
-
+        
     }
 
     public void setTitleVisible(boolean visible) {
@@ -125,7 +126,6 @@ public class AnnotatedImageButton extends JToggleButton {
     	}
     	catch (IOException e) {
     		
-	    	imageLabel.setIcon(null);
 	    	imageLabel.setForeground(Color.red);
         	imageLabel.setIcon(Icons.missingIcon);
         	imageLabel.setVerticalTextPosition(JLabel.BOTTOM);
@@ -174,7 +174,7 @@ public class AnnotatedImageButton extends JToggleButton {
 		return title;
 	}
 
-	public TagCloudPanel<Entity> getTagPanel() {
+	public EntityTagCloudPanel getTagPanel() {
 		return tagPanel;
 	}
 
@@ -189,7 +189,4 @@ public class AnnotatedImageButton extends JToggleButton {
     public void setEntity(Entity entity) {
         this.entity = entity;
     }
-
-
-	    
 }

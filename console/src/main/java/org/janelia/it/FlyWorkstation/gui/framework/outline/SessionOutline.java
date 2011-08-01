@@ -69,8 +69,8 @@ public class SessionOutline extends JPanel{
 			private List<Task> tasks;
 
             protected void doStuff() throws Exception {
-            	tasks = EJBFactory.getRemoteComputeBean().getUserTasksByType(AnnotationSessionTask.TASK_NAME,
-                        (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME));
+            	tasks = EJBFactory.getRemoteComputeBean().getUserTasksByType(
+            			AnnotationSessionTask.TASK_NAME, SessionMgr.getUsername());
             }
 
 			protected void hadSuccess() {
@@ -129,7 +129,7 @@ public class SessionOutline extends JPanel{
 			        });
 			        popupMenu.add(editMenuItem);
 			        
-			        if (session.getTask().getOwner().equals((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME))) {
+			        if (session.getTask().getOwner().equals(SessionMgr.getUsername())) {
 				        JMenuItem deleteMenuItem = new JMenuItem("Delete");
 				        deleteMenuItem.addActionListener(new ActionListener() {
 				            public void actionPerformed(ActionEvent actionEvent) {
@@ -198,7 +198,7 @@ public class SessionOutline extends JPanel{
     
     private void deleteSession(AnnotationSession session) {
     	
-    	if (!session.getTask().getOwner().equals((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME))) {
+    	if (!session.getTask().getOwner().equals(SessionMgr.getUsername())) {
 			JOptionPane.showMessageDialog(consoleFrame, "Only the owner may delete a session", "Cannot Delete", JOptionPane.ERROR_MESSAGE);
     		return;
     	}
@@ -213,7 +213,7 @@ public class SessionOutline extends JPanel{
 		try {
 			// Remove all annotations
 			EJBFactory.getRemoteAnnotationBean().removeAllOntologyAnnotationsForSession(
-					(String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME), session.getTask().getObjectId().toString());
+					SessionMgr.getUsername(), session.getTask().getObjectId());
 			
 			// Remove the task
             EJBFactory.getRemoteComputeBean().deleteTaskById(session.getTask().getObjectId());

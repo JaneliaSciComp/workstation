@@ -425,5 +425,9 @@ public class SessionMgr {
         activeBrowser=(Browser)e.getWindow();
       }
   }
+  
+  public static String getUsername() {
+	  return (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
+  }
 
 }

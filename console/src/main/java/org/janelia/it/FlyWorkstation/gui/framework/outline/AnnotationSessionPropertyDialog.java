@@ -252,7 +252,7 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
         this.task = null;
         setTitle("New Annotation Session");
         nameValueField.setText(name);
-        ownerValueLabel.setText((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME));
+        ownerValueLabel.setText(SessionMgr.getUsername());
 
         for(Entity entity : entities) {
         	entityTreePanel.addItem(entity);
@@ -300,8 +300,7 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
             String categoryIds = Task.csvStringFromCollection(categoryIdList);
             
             if (task == null) {
-            	task = new AnnotationSessionTask(null, (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME)
-                        , null, null);
+            	task = new AnnotationSessionTask(null, SessionMgr.getUsername(), null, null);
             }
             
             task.setParameter(AnnotationSessionTask.PARAM_sessionName, nameValueField.getText());

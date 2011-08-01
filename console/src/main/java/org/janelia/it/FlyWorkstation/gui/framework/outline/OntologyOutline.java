@@ -301,8 +301,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Dat
 				parent.removeChild(element);
 				
 				// Update database
-	            EJBFactory.getRemoteAnnotationBean().removeOntologyTerm((String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME),
-                        element.getId());
+	            EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(SessionMgr.getUsername(), element.getId());
 	            
 	            // Update Tree UI
 	            selectedTree.removeNode(selectedTree.getCurrentNode());

@@ -2,6 +2,9 @@ package org.janelia.it.FlyWorkstation.gui.framework.console;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.event.InputEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,6 +46,16 @@ public class TagCloudPanel<T> extends JPanel {
         refresh();
 	}
 
+    public void removeTag(T tag) {
+    	tags.remove(tag);
+    	refresh();
+    }
+    
+    public void addTag(T tag) {
+    	tags.add(tag);
+    	refresh();
+    }
+    
 	public Map<T, JLabel> getTagLabels() {
 		return tagLabels;
 	}
@@ -65,11 +78,44 @@ public class TagCloudPanel<T> extends JPanel {
             tagLabel.setForeground(Color.black);
             add(tagLabel);
             tagLabels.put(tag, tagLabel);
+            
+            tagLabel.addMouseListener(new MouseAdapter() {
+                public void mouseReleased(MouseEvent e) {
+
+                    if (e.isPopupTrigger()) {
+                        showPopupMenu(e, tag);
+                    }
+                    // This masking is to make sure that the right button is being double clicked, not left and then right or right and then left
+                    else if (e.getClickCount()==2 
+                    		&& e.getButton()==MouseEvent.BUTTON1 
+                    		&& (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
+                    	tagDoubleClicked(e, tag);
+                    }
+                    else if (e.getClickCount()==1
+                    		&& e.getButton()==MouseEvent.BUTTON1) {
+                    	tagClicked(e, tag);
+                    }
+                }
+                public void mousePressed(MouseEvent e) {
+                    // We have to also listen for mousePressed because OSX generates the popup trigger here
+                    // instead of mouseReleased like any sane OS.
+                    if (e.isPopupTrigger()) {
+                        showPopupMenu(e, tag);
+                    }
+                }
+            });
         }
         
         revalidate();
         repaint();
     }
 	
-	
+    protected void showPopupMenu(MouseEvent e, T tag) {
+    }
+    
+    protected void tagDoubleClicked(MouseEvent e, T tag) {
+    }
+
+    protected void tagClicked(MouseEvent e, T tag) {
+    }
 }

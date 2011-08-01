@@ -70,7 +70,7 @@ public class AnnotationSession {
 	public List<Entity> getEntities() {
 		if (entities==null) {
 			try {
-				entities = EJBFactory.getRemoteAnnotationBean().getEntitiesForSession(task.getObjectId());	
+				entities = EJBFactory.getRemoteAnnotationBean().getEntitiesForSession(SessionMgr.getUsername(),task.getObjectId());	
 			}
 			catch (ComputeException e) {
 				e.printStackTrace();
@@ -84,7 +84,7 @@ public class AnnotationSession {
 		if (categories == null) {
 			try {
 				categories = new ArrayList<OntologyElement>();
-				List<Entity> tmps = EJBFactory.getRemoteAnnotationBean().getCategoriesForSession(task.getObjectId());	
+				List<Entity> tmps = EJBFactory.getRemoteAnnotationBean().getCategoriesForSession(SessionMgr.getUsername(),task.getObjectId());	
 				for(Entity tmp : tmps) {
 					categories.add(new OntologyElement(tmp, null));
 				}
@@ -99,9 +99,13 @@ public class AnnotationSession {
 
 	public List<Entity> getAnnotations() {
 		if (annotations == null) {
-			// TODO: get only annotations belonging to this session
-			annotations = EJBFactory.getRemoteAnnotationBean().getAnnotationsForEntities(
-	                (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME), getEntities());
+			try {
+				annotations = EJBFactory.getRemoteAnnotationBean().getAnnotationsForSession(SessionMgr.getUsername(),task.getObjectId());
+			}
+			catch (ComputeException e) {
+				e.printStackTrace();
+				return new ArrayList<Entity>(); 
+			}
 		}
 		return annotations;
 	}

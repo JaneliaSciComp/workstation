@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.jacs.compute.api.ComputeException;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 
@@ -44,8 +45,17 @@ public class GlobalSession extends AnnotationSession {
 	@Override
 	public List<Entity> getAnnotations() {
 		if (annotations == null) {
-			annotations = EJBFactory.getRemoteAnnotationBean().getAnnotationsForEntities(
-	                (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME), entities);
+            List<Long> entityIds = new ArrayList<Long>();
+            for (Entity entity : entities) {
+                entityIds.add(entity.getId());
+            }
+            try {
+            	annotations = EJBFactory.getRemoteAnnotationBean().getAnnotationsForEntities(SessionMgr.getUsername(), entityIds);
+            }
+			catch (ComputeException e) {
+				e.printStackTrace();
+				return new ArrayList<Entity>(); 
+			}
 		}
 		return annotations;
 	}

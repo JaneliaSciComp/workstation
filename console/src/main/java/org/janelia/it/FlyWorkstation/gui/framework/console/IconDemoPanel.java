@@ -10,20 +10,18 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSlider;
+import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.FlyWorkstation.gui.application.SplashPanel;
+import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
+import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationToolbar;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -31,7 +29,7 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 
 /**
- * This panel shows titled images in a grid with optional textual annotation tags beneath each one.
+ * This panel shows images for annotation. It may show a bunch of images at once, or a single image.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -43,7 +41,9 @@ public class IconDemoPanel extends JPanel {
     private AnnotationSession session;
     
     private SplashPanel splashPanel;
-    private AnnotationToolbar toolbar;
+    private JToolBar toolbar;
+	private JSlider slider;
+	private JToggleButton invertButton;
     private ImagesPanel imagesPanel;
     private JScrollPane scrollPane;
     private ImageDetailPanel imageDetailPanel;
@@ -51,6 +51,18 @@ public class IconDemoPanel extends JPanel {
     private List<Entity> entities;
     private Entity currentEntity;
 	private boolean viewingSingleImage = true;
+
+    // Listen for key strokes and execute the appropriate key bindings
+    private KeyListener keyListener = new KeyAdapter() {
+        @Override
+        public void keyPressed(KeyEvent e) {
+            if (e.getID() == KeyEvent.KEY_PRESSED) {
+                if (KeymapUtil.isModifier(e)) return;
+                KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
+                ConsoleApp.getKeyBindings().executeBinding(shortcut);
+            }
+        }
+    };
     
 	public IconDemoPanel() {
 
@@ -60,14 +72,14 @@ public class IconDemoPanel extends JPanel {
         splashPanel = new SplashPanel();
         add(splashPanel);
         
-        toolbar = new AnnotationToolbar(this);
+        toolbar = createToolbar();
         imagesPanel = new ImagesPanel(this);
         imageDetailPanel = new ImageDetailPanel(this);
         
         scrollPane = new JScrollPane();
         scrollPane.setViewportView(imagesPanel);
         
-        toolbar.getSlider().addChangeListener(new ChangeListener() {
+        slider.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				JSlider source = (JSlider)e.getSource();
@@ -77,21 +89,13 @@ public class IconDemoPanel extends JPanel {
 			}
         });
 
-        addComponentListener(new ComponentAdapter() {
-			@Override
-			public void componentResized(ComponentEvent e) {
-				imagesPanel.recalculateGrid();
-			}
-        	
-        });
-
         imageDetailPanel.addMouseWheelListener(new MouseWheelListener() {
 			@Override
 			public void mouseWheelMoved(MouseWheelEvent e) {
+				List<Entity> entities = getEntities();
 				int i = entities.indexOf(currentEntity);
 				
 				// Adjust current entity
-				
 				if (e.getWheelRotation() > 0) {
 					if (i > entities.size()-2) {
 						// Already at the end
@@ -107,6 +111,7 @@ public class IconDemoPanel extends JPanel {
 					setCurrentEntity(entities.get(i-1));
 				}
 			
+				// Update the details screen 
 				showCurrentEntityDetails();
 			}
 		});
@@ -123,6 +128,87 @@ public class IconDemoPanel extends JPanel {
 		});
         
     }
+	
+	private JToolBar createToolbar() {
+
+        JToolBar toolBar = new JToolBar("Still draggable");
+        toolBar.setFloatable(true);
+        toolBar.setRollover(true);
+
+        toolBar.add(new JLabel("Show:"));
+        
+        final JToggleButton showTitlesButton = new JToggleButton("Titles");
+        showTitlesButton.setSelected(true);
+        showTitlesButton.setToolTipText("Show the image title above each image.");
+        showTitlesButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				for(AnnotatedImageButton button : getImagesPanel().getButtons().values()) {
+					button.setTitleVisible(showTitlesButton.isSelected());
+				}
+				getImagesPanel().recalculateGrid();
+			}
+		});
+        toolBar.add(showTitlesButton);
+
+        final JToggleButton showTagsButton = new JToggleButton("Tags");
+        showTagsButton.setSelected(true);
+        showTagsButton.setToolTipText("Show tags below each images");
+        showTagsButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				for(AnnotatedImageButton button : getImagesPanel().getButtons().values()) {
+					button.setTagsVisible(showTagsButton.isSelected());
+				}
+				getImagesPanel().recalculateGrid();
+			}
+		});
+        toolBar.add(showTagsButton);
+        
+        toolBar.addSeparator();
+
+        invertButton = new JToggleButton("Invert colors");
+        invertButton.setToolTipText("Invert the color space on all images");
+        invertButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Utils.setWaitingCursor(IconDemoPanel.this);
+				try {
+					for(AnnotatedImageButton button : getImagesPanel().getButtons().values()) {
+						button.setInvertedColors(invertButton.isSelected());
+					}
+					getImagesPanel().repaint();
+				}
+				finally {
+					Utils.setDefaultCursor(IconDemoPanel.this);	
+				}
+			}
+		});
+        toolBar.add(invertButton);
+        
+        final JToggleButton hideCompletedButton = new JToggleButton("Hide completed");
+        hideCompletedButton.setToolTipText("Hide images which have been annotated completely according to the annotation session's ruleset.");
+        hideCompletedButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO: implement this
+			}
+		});
+        toolBar.add(hideCompletedButton);
+        
+        toolBar.addSeparator();
+        
+        slider = new JSlider(1,100,100);
+        slider.setFocusable(false);
+        slider.setToolTipText("Image size percentage");
+        toolBar.add(slider);
+        
+        return toolBar;
+	}
+
+	public boolean isInverted() {
+		return invertButton.isSelected();
+	}
 
 	// TODO: need a more general way of doing this
     public String convertImagePath(String filepath) {
@@ -130,79 +216,87 @@ public class IconDemoPanel extends JPanel {
     }
 
     public void loadImageEntities(final AnnotationSession session) {
-    
+
     	this.session = session;
-    	
+
 		SimpleWorker loadingWorker = new SimpleWorker() {
 
-			private List<Entity> entities;
 			private Map<Long, List<Entity>> annotationMap;
 
             protected void doStuff() throws Exception {
-            	entities = session.getEntities();
+            	List<Entity> loadedEntities = new ArrayList<Entity>();
+            	List<Entity> allEntities = session.getEntities();
+        		for (Entity entity : allEntities) {
+        			if (!entity.getEntityType().getName().equals(EntityConstants.TYPE_TIF_2D)) {
+        				// Ignore things we can't display
+        				continue;
+        			}
+        			loadedEntities.add(entity);
+        		}
+        		setEntities(loadedEntities);
                 annotationMap = session.getAnnotationMap();
             }
 
 			protected void hadSuccess() {
-            	loadImageEntities(entities, annotationMap);
+		        imagesPanel.load(getEntities());
+                imagesPanel.loadAnnotations(annotationMap);
+		    	showAllEntities();
 			}
 
 			protected void hadError(Throwable error) {
 				error.printStackTrace();
-				if (entities != null) {
+				if (getEntities() != null) {
 					JOptionPane.showMessageDialog(IconDemoPanel.this, "Error loading annotations", "Data Loading Error", JOptionPane.ERROR_MESSAGE);
-					loadImageEntities(entities, new HashMap());
+			        imagesPanel.load(getEntities());
+			    	showAllEntities();
 					// TODO: set read-only mode
 				}
 				else {
 					JOptionPane.showMessageDialog(IconDemoPanel.this, "Error loading session", "Data Loading Error", JOptionPane.ERROR_MESSAGE);
 				}
-            	
 			}
-
         };
 
         loadingWorker.execute();
     }
-    
-    /**
-     * Load the given image entities and display them in a grid. If files is null then redisplay the splash image.
-     * @param entities List of entities
-     * @param annotations
-     */
-    private void loadImageEntities(List<Entity> entities, Map<Long, List<Entity>> annotationMap) {
-        
-        try {
-            this.entities = new ArrayList<Entity>();
 
-			for (Entity entity : entities) {
-				
-				if (!entity.getEntityType().getName().equals(EntityConstants.TYPE_TIF_2D)) {
-					// Ignore things we can't display
-					continue;
-				}
-				this.entities.add(entity);
+	public void reloadAnnotations() {
+
+		session.clearDerivedProperties();
+		
+		SimpleWorker loadingWorker = new SimpleWorker() {
+
+			private Map<Long, List<Entity>> annotationMap;
+
+            protected void doStuff() throws Exception {
+                annotationMap = session.getAnnotationMap();
+            }
+
+			protected void hadSuccess() {
+	            imagesPanel.loadAnnotations(annotationMap);
 			}
-            imagesPanel.load(this.entities, annotationMap);
-            
-        	showAllEntities();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
-	public void showCurrentEntityDetails() {
+			protected void hadError(Throwable error) {
+				error.printStackTrace();
+				JOptionPane.showMessageDialog(IconDemoPanel.this, "Error loading annotations", "Data Loading Error", JOptionPane.ERROR_MESSAGE);
+			}
+        };
+
+        loadingWorker.execute();
+	}
+	
+	public synchronized void showCurrentEntityDetails() {
 		imageDetailPanel.load(currentEntity, null);
 		if (!viewingSingleImage) {
 			viewingSingleImage  = true;
 			removeAll();
 			add(imageDetailPanel);
+			imageDetailPanel.grabFocus();
 		}
         updateUI();
 	}
 
-	public void showAllEntities() {
+	public synchronized void showAllEntities() {
 		if (viewingSingleImage) {
 			viewingSingleImage = false;
 			removeAll();
@@ -212,56 +306,32 @@ public class IconDemoPanel extends JPanel {
         updateUI();
 	}
 	
-    public ImagesPanel getImagesPanel() {
-		return imagesPanel;
+    public synchronized List<Entity> getEntities() {
+		return entities;
 	}
 
-    public Entity getCurrentEntity() {
+	public synchronized void setEntities(List<Entity> entities) {
+		this.entities = entities;
+	}
+
+	public synchronized Entity getCurrentEntity() {
 		return currentEntity;
 	}
 
-	public void setCurrentEntity(Entity entity) {
+	public synchronized void setCurrentEntity(Entity entity) {
     	this.currentEntity = entity;
     	imagesPanel.setSelectedImage(currentEntity);
     }
 
-	public void refreshEntity(Entity entity) {
-
-		session.clearDerivedProperties();
-		
-		if (viewingSingleImage) {
-			if (currentEntity.getId().equals(entity.getId())) {
-				// TODO: update tag cloud
-			}
-		}
-		else {
-			final AnnotatedImageButton button = imagesPanel.getButtons().get(entity.getId().toString());
-			if (button != null) {
-				SimpleWorker worker = new SimpleWorker() {
-
-					@Override
-					protected void doStuff() throws Exception {
-						session.getAnnotationMap();
-					}
-					
-					@Override
-					protected void hadSuccess() {
-						imagesPanel.updateTags(session.getAnnotationMap());
-						Utils.setDefaultCursor(IconDemoPanel.this);
-					}
-					
-					@Override
-					protected void hadError(Throwable error) {
-				    	Utils.setDefaultCursor(IconDemoPanel.this);
-						error.printStackTrace();
-					}
-				};
-				
-				worker.execute();
-			}
-			
-		}
-		
+	public ImagesPanel getImagesPanel() {
+		return imagesPanel;
 	}
-	
+
+    public ImageDetailPanel getImageDetailPanel() {
+		return imageDetailPanel;
+	}
+
+	public KeyListener getKeyListener() {
+		return keyListener;
+	}
 }
