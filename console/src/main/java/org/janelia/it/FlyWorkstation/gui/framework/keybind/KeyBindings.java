@@ -86,15 +86,16 @@ public class KeyBindings {
 		
     }
     
-    public void executeBinding(KeyboardShortcut shortcut) {
+    public boolean executeBinding(KeyboardShortcut shortcut) {
         Action action = ontologyBindings.get(shortcut);
         if (action == null) {
         	action = generalBindings.get(shortcut);
         }
         if (action == null) {
-        	return;
+        	return false;
         }
         action.doAction();
+        return true;
     }
     
     public void loadGeneralKeybinds() {

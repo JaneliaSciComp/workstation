@@ -58,8 +58,18 @@ public class IconDemoPanel extends JPanel {
         public void keyPressed(KeyEvent e) {
             if (e.getID() == KeyEvent.KEY_PRESSED) {
                 if (KeymapUtil.isModifier(e)) return;
+                
                 KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
-                ConsoleApp.getKeyBindings().executeBinding(shortcut);
+                if (ConsoleApp.getKeyBindings().executeBinding(shortcut)) return;
+                	
+                if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+                	previousEntity();
+                    updateUI();
+                }
+                else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+                	nextEntity();
+                    updateUI();
+                }
             }
         }
     };
@@ -68,6 +78,7 @@ public class IconDemoPanel extends JPanel {
 
         setBackground(Color.white);
         setLayout(new BorderLayout());
+        setFocusable(true);
 
         splashPanel = new SplashPanel();
         add(splashPanel);
@@ -88,33 +99,6 @@ public class IconDemoPanel extends JPanel {
 				imagesPanel.recalculateGrid();
 			}
         });
-
-        imageDetailPanel.addMouseWheelListener(new MouseWheelListener() {
-			@Override
-			public void mouseWheelMoved(MouseWheelEvent e) {
-				List<Entity> entities = getEntities();
-				int i = entities.indexOf(currentEntity);
-				
-				// Adjust current entity
-				if (e.getWheelRotation() > 0) {
-					if (i > entities.size()-2) {
-						// Already at the end
-						return;
-					}
-					setCurrentEntity(entities.get(i+1));
-				}
-				else {
-					if (i < 1) {
-						// Already at the beginning 
-						return;
-					}
-					setCurrentEntity(entities.get(i-1));
-				}
-			
-				// Update the details screen 
-				showCurrentEntityDetails();
-			}
-		});
         
         scrollPane.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
 			
@@ -126,7 +110,8 @@ public class IconDemoPanel extends JPanel {
 				
 			}
 		});
-        
+
+        this.addKeyListener(getKeyListener());
     }
 	
 	private JToolBar createToolbar() {
@@ -284,17 +269,6 @@ public class IconDemoPanel extends JPanel {
 
         loadingWorker.execute();
 	}
-	
-	public synchronized void showCurrentEntityDetails() {
-		imageDetailPanel.load(currentEntity, null);
-		if (!viewingSingleImage) {
-			viewingSingleImage  = true;
-			removeAll();
-			add(imageDetailPanel);
-			imageDetailPanel.grabFocus();
-		}
-        updateUI();
-	}
 
 	public synchronized void showAllEntities() {
 		if (viewingSingleImage) {
@@ -304,6 +278,47 @@ public class IconDemoPanel extends JPanel {
 	        add(scrollPane, BorderLayout.CENTER);
 		}
         updateUI();
+	}
+	
+	public synchronized void showCurrentEntityDetails() {
+		imageDetailPanel.load(currentEntity, null);
+		if (!viewingSingleImage) {
+			viewingSingleImage  = true;
+			removeAll();
+			add(imageDetailPanel);
+		}
+        updateUI();
+		
+		// Focus on the panel so that it can receive keyboard input
+		requestFocusInWindow();
+	}
+	
+	public boolean previousEntity() {
+		List<Entity> entities = getEntities();
+		int i = entities.indexOf(currentEntity);
+		if (i < 1) {
+			// Already at the beginning 
+			return false;
+		}
+		setCurrentEntity(entities.get(i-1));
+		if (viewingSingleImage) {
+			showCurrentEntityDetails();
+		}
+		return true;
+	}
+	
+	public boolean nextEntity() {
+		List<Entity> entities = getEntities();
+		int i = entities.indexOf(currentEntity);
+		if (i > entities.size()-2) {
+			// Already at the end
+			return false;
+		}
+		setCurrentEntity(entities.get(i+1));
+		if (viewingSingleImage) {
+			showCurrentEntityDetails();
+		}
+		return true;
 	}
 	
     public synchronized List<Entity> getEntities() {

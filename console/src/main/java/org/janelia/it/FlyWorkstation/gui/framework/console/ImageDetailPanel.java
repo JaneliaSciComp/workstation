@@ -51,7 +51,6 @@ public class ImageDetailPanel extends JPanel {
 		this.iconDemoPanel = iconDemoPanel;
 		
 		setLayout(new BorderLayout());
-        setFocusable(true);
 		
 		add(createToolbar(), BorderLayout.PAGE_START);
 		
@@ -111,6 +110,18 @@ public class ImageDetailPanel extends JPanel {
 			public void mouseEntered(MouseEvent e) {
 				Utils.setOpenedHandCursor(scrollPane);
 			}
+			
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				iconDemoPanel.requestFocusInWindow();
+			}
+		});
+        
+        southernPanel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				iconDemoPanel.requestFocusInWindow();
+			}
 		});
         
         scrollPane.addMouseMotionListener(new MouseMotionListener() {
@@ -144,7 +155,17 @@ public class ImageDetailPanel extends JPanel {
 			}
 		});
 
-        this.addKeyListener(iconDemoPanel.getKeyListener());
+        this.addMouseWheelListener(new MouseWheelListener() {
+			@Override
+			public void mouseWheelMoved(MouseWheelEvent e) {
+				if (e.getWheelRotation() > 0) {
+					iconDemoPanel.nextEntity();	
+				}
+				else {
+					iconDemoPanel.previousEntity();
+				}
+			}
+		});
 	}
     
 	private JToolBar createToolbar() {
@@ -153,17 +174,39 @@ public class ImageDetailPanel extends JPanel {
         toolBar.setFloatable(true);
         toolBar.setRollover(true);
         
-        final JButton backButton = new JButton("Back to index");
-        backButton.setToolTipText("Return to the index of images.");
-        backButton.addActionListener(new ActionListener() {
+        final JButton indexButton = new JButton("Back to index");
+        indexButton.setToolTipText("Return to the index of images.");
+        indexButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				iconDemoPanel.reloadAnnotations();
 				iconDemoPanel.showAllEntities();
 			}
 		});
-        toolBar.add(backButton);
+        toolBar.add(indexButton);
         
+        toolBar.addSeparator();
+        
+        final JButton prevButton = new JButton("Previous");
+        prevButton.setToolTipText("Go to the previous image.");
+        prevButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				iconDemoPanel.previousEntity();
+			}
+		});
+        toolBar.add(prevButton);
+        
+        final JButton nextButton = new JButton("Next");
+        nextButton.setToolTipText("Go to the next image.");
+        nextButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				iconDemoPanel.nextEntity();
+			}
+		});
+        toolBar.add(nextButton);
+
         toolBar.addSeparator();
         
         JSlider slider = new JSlider(100,400,100);
@@ -205,7 +248,10 @@ public class ImageDetailPanel extends JPanel {
 
     	imageCaption.setText(entity.getName());
         southernPanel.removeAll();
-    	
+        southernPanel.add(new JLabel(Icons.loadingIcon));
+        
+        imageLabel.setIcon(Icons.loadingIcon);
+        
     	imageWorker = new LoadImageWorker();
 		imageWorker.execute();
 		

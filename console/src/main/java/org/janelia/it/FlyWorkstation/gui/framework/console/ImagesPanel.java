@@ -167,6 +167,7 @@ public class ImagesPanel extends JPanel implements Scrollable {
 	public void setSelectedImage(Entity entity) {
 		AnnotatedImageButton button = buttons.get(entity.getId().toString());
 		button.setSelected(true);
+		button.requestFocusInWindow();
 	}
 	
     /**
