@@ -286,18 +286,18 @@ public class ExternalListener {
            //System.out.println("Processing search request");
            Set searchTypes=getValidSearchTypes();
            String nextType=null;
-           for (Iterator it=searchTypes.iterator();it.hasNext();) {
-             nextType=(String)it.next();
-             if (parameters.get(nextType)!=null) {
-                 // Fix this
-                 ControlledVocabulary cv=new ControlledVocabulary(); //AutoNavigationMgr.getAutoNavigationMgr().getNavigationSearchTypes();
-                String tmpSearch = cv.lookup(nextType);
-                if (tmpSearch.equals(nextType)) tmpSearch = null;
-                 // Fix this
+            for (Object searchType : searchTypes) {
+                nextType = (String) searchType;
+                if (parameters.get(nextType) != null) {
+                    // Fix this
+                    ControlledVocabulary cv = new ControlledVocabulary(); //AutoNavigationMgr.getAutoNavigationMgr().getNavigationSearchTypes();
+                    String tmpSearch = cv.lookup(nextType);
+                    if (tmpSearch.equals(nextType)) tmpSearch = null;
+                    // Fix this
 //                SearchManager.getSearchManager().launchSearch(tmpSearch,(String)parameters.get(nextType));
-                break;
-             }
-           }
+                    break;
+                }
+            }
         }
     }
   }
