@@ -68,7 +68,8 @@ public class ConsoleApp {
             sessionMgr.setNewBrowserImageIcon(Utils.getClasspathImage("flyscope.jpg"));
             sessionMgr.setNewBrowserSize(.8f);
             sessionMgr.setNewBrowserMenuBar(ConsoleMenuBar.class);
-            sessionMgr.startExternalListener(30000);
+            sessionMgr.startExternalHttpListener(30000);
+            sessionMgr.startAxisServer(30001);
             sessionMgr.setModelProperty("ShowInternalDataSourceInDialogs", new Boolean(internal));
 
             //Exception Handler Registration

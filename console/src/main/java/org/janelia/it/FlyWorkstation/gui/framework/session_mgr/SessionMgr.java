@@ -4,6 +4,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
+import org.janelia.it.FlyWorkstation.gui.framework.external_listener.EmbeddedAxisServer;
 import org.janelia.it.FlyWorkstation.gui.framework.external_listener.ExternalListener;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
@@ -38,7 +39,8 @@ public class SessionMgr {
   private ImageIcon browserImageIcon;
   private Component splashPanel;
   //private String releaseVersion="$date$";
-  private ExternalListener externalListener;
+  private ExternalListener externalHttpListener;
+  private EmbeddedAxisServer axisServer;
   private File settingsFile;
   private String fileSep=File.separator;
   private String prefsDir=System.getProperty("user.home")+fileSep+
@@ -345,9 +347,28 @@ public class SessionMgr {
      return activeBrowser;
   }
 
-  public void startExternalListener(int port) {
-     if (externalListener==null) externalListener=new ExternalListener(port);
-  }
+    public void startExternalHttpListener(int port) {
+       if (externalHttpListener ==null) externalHttpListener =new ExternalListener(port);
+    }
+
+      public void stopExternalHttpListener() {
+         if (externalHttpListener !=null) {
+            externalHttpListener.stop();
+            externalHttpListener =null;
+         }
+      }
+
+    public void startAxisServer(int port) {
+       if (axisServer ==null) axisServer = new EmbeddedAxisServer(port);
+        axisServer.start();
+    }
+
+      public void stopAxisServer() {
+         if (axisServer !=null) {
+            axisServer.stop();
+            axisServer =null;
+         }
+      }
 
   public void resetSession() {
      Set keys=browserModelsToBrowser.keySet();
@@ -362,13 +383,6 @@ public class SessionMgr {
       }
      ModelMgr.getModelMgr().removeAllOntologies();
      FacadeManager.resetFacadeManager();
-  }
-
-  public void stopExternalListener() {
-     if (externalListener!=null) {
-        externalListener.stop();
-        externalListener=null;
-     }
   }
 
   public Browser getBrowserFor(BrowserModel model) {
