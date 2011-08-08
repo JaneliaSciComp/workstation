@@ -8,7 +8,8 @@ package org.janelia.it.FlyWorkstation.api.facade.facade_mgr;
  */
 public interface DataSourceSelector {
 
-   void selectDataSource(FacadeManagerBase facade);
-   void setDataSource(FacadeManagerBase facade, Object dataSource);
+    void selectDataSource(FacadeManagerBase facade);
+
+    void setDataSource(FacadeManagerBase facade, Object dataSource);
 
 }

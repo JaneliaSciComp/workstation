@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.api;
+package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.jacs.compute.api.*;
@@ -8,7 +8,7 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import java.util.Properties;
 
-public class EJBFactory {
+class EJBFactory {
     private static final String PROVIDER_URL = ConsoleProperties.getInstance().getProperty("provider.url");
     private static final String INITIAL_CONTEXT_FACTORY = ConsoleProperties.getInstance().getProperty("initial.context.factory");
     private static final String URL_PKG_PREFIXES = ConsoleProperties.getInstance().getProperty("url.pkg.prefixes");
@@ -36,7 +36,6 @@ public class EJBFactory {
     }
 
     /**
-     *
      * @param lookupName the jndi name for the ejb
      * @return EJBObject
      */
@@ -58,7 +57,6 @@ public class EJBFactory {
     }
 
     /**
-     *
      * @return ComputeBeanRemote
      */
     public static AnnotationBeanRemote getRemoteAnnotationBean() {

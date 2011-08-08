@@ -34,8 +34,7 @@ public class LsmEnhancer {
         LsmEnhancer enhancer = new LsmEnhancer(args[0]);
         enhancer.run();
         long elapsed = System.currentTimeMillis() - start;
-        System.out.println("\n\nProcessing completed in " + elapsed +
-                           " milliseconds.");
+        System.out.println("\n\nProcessing completed in " + elapsed + " milliseconds.");
     }
 
     private String fileName;
@@ -49,24 +48,19 @@ public class LsmEnhancer {
         try {
             StringBuilder xml = new StringBuilder(32000);
             xml.append("<data>");
-            String janeliaMetadata = "<janeliaMetadata>" +
-                                    "<line>GMR_52E06_AE_01</line>" +
-                                    "<age>A01</age>" +
-                                    "<area>b</area>" +
-                                    "<slideCode>02</slideCode>" +
-                                    "</janeliaMetadata>";
+            String janeliaMetadata = "<janeliaMetadata>" + "<line>GMR_52E06_AE_01</line>" + "<age>A01</age>" + "<area>b</area>" + "<slideCode>02</slideCode>" + "</janeliaMetadata>";
             xml.append(janeliaMetadata);
             xml = appendZeissMetadata(xml);
             xml.append("</data>");
             addMetadata(xml.toString());
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             e.printStackTrace();
         }
 
     }
 
-    private StringBuilder appendZeissMetadata(StringBuilder xml)
-            throws FormatException, IOException {
+    private StringBuilder appendZeissMetadata(StringBuilder xml) throws FormatException, IOException {
 
 
         List<String> keyList;
@@ -75,8 +69,7 @@ public class LsmEnhancer {
 
         xml.append("<zeissMetadata>");
         for (CoreMetadata coreMetadata : reader.getCoreMetadata()) {
-            keyList = new ArrayList<String>(
-                    coreMetadata.seriesMetadata.keySet());
+            keyList = new ArrayList<String>(coreMetadata.seriesMetadata.keySet());
             Collections.sort(keyList);
             for (String key : keyList) {
                 xml.append("<item><key>");
@@ -93,8 +86,7 @@ public class LsmEnhancer {
         return xml;
     }
 
-    private void addMetadata(String metadata)
-            throws IOException, FormatException {
+    private void addMetadata(String metadata) throws IOException, FormatException {
 
         RandomAccessInputStream in = null;
         RandomAccessOutputStream out = null;
@@ -108,8 +100,7 @@ public class LsmEnhancer {
 
             in = parser.getStream();
             long next = getNextOffsetLocation(in, firstIFDOffset);
-            long nextValue = (next & ~0xffffffffL) |
-                             (in.readInt() & 0xffffffffL);
+            long nextValue = (next & ~0xffffffffL) | (in.readInt() & 0xffffffffL);
             in.close();
             in = null;
 
@@ -127,18 +118,21 @@ public class LsmEnhancer {
             out.seek(4);
             out.writeInt((int) endOfFile);
 
-        } finally {
+        }
+        finally {
             if (in != null) {
                 try {
                     in.close();
-                } catch (IOException e) {
+                }
+                catch (IOException e) {
                     e.printStackTrace();
                 }
             }
             if (out != null) {
                 try {
                     out.close();
-                } catch (IOException e) {
+                }
+                catch (IOException e) {
                     e.printStackTrace();
                 }
             }
@@ -146,9 +140,7 @@ public class LsmEnhancer {
 
     }
 
-    private long getNextOffsetLocation(RandomAccessInputStream in,
-                                       long offset)
-            throws IOException, FormatException {
+    private long getNextOffsetLocation(RandomAccessInputStream in, long offset) throws IOException, FormatException {
 
         in.seek(offset);
         int nEntries = in.readUnsignedShort();
@@ -156,7 +148,9 @@ public class LsmEnhancer {
         return in.getFilePointer();
     }
 
-    /** Tag number reserved by Gene Myers for his tiff formatted files. */
+    /**
+     * Tag number reserved by Gene Myers for his tiff formatted files.
+     */
     protected static final int TIFF_JF_TAGGER_TAG = 36036;
 
 }

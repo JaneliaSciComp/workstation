@@ -33,18 +33,17 @@ public class ToolsMenu extends JMenu {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
                         // todo This needs to be a custom user setting.
-                        Runtime.getRuntime().exec("/Users/"+(String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME)
-                                +"/Dev/v3d/v3d/v3d64.app/Contents/MacOS/v3d64");
+                        Runtime.getRuntime().exec("/Users/" + (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME) + "/Dev/v3d/v3d/v3d64.app/Contents/MacOS/v3d64");
                     }
                     catch (IOException e) {
-                        JOptionPane.showMessageDialog(v3dMenuItem.getParent(),"Could not launch V3D - NeuroAnnotator",
-                                "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);                }
+                        JOptionPane.showMessageDialog(v3dMenuItem.getParent(), "Could not launch V3D - NeuroAnnotator", "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
             });
 
             ImageIcon fijiImageIcon = Utils.getClasspathImage("fijiicon.png");
             Image img = fijiImageIcon.getImage();
-            Image newimg = img.getScaledInstance(16, 16,  Image.SCALE_SMOOTH);
+            Image newimg = img.getScaledInstance(16, 16, Image.SCALE_SMOOTH);
             fijiImageIcon = new ImageIcon(newimg);
             fijiMenuItem = new JMenuItem("FIJI", fijiImageIcon);
             fijiMenuItem.addActionListener(new ActionListener() {
@@ -54,8 +53,8 @@ public class ToolsMenu extends JMenu {
                         Runtime.getRuntime().exec("/Applications/Fiji.app/Contents/MacOS/fiji-macosx");
                     }
                     catch (IOException e) {
-                        JOptionPane.showMessageDialog(fijiMenuItem.getParent(),"Could not launch Fiji",
-                                "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);                }
+                        JOptionPane.showMessageDialog(fijiMenuItem.getParent(), "Could not launch Fiji", "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
             });
 

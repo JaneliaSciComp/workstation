@@ -27,7 +27,7 @@ public class ToolConfigurationDialog extends JDialog {
     public ToolConfigurationDialog(JFrame parentFrame) throws HeadlessException, BackingStoreException {
         super(parentFrame);
         getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
-        setSize(400,400);
+        setSize(400, 400);
         setModal(true);
         model = new DefaultTableModel();
         model.addColumn("Tool");
@@ -41,7 +41,7 @@ public class ToolConfigurationDialog extends JDialog {
                 printDebugData(table);
             }
         });
-         //Create the scroll pane and add the table to it.
+        //Create the scroll pane and add the table to it.
         JScrollPane scrollPane = new JScrollPane(table);
 
         _toolTextField = new JTextField(40);
@@ -49,16 +49,15 @@ public class ToolConfigurationDialog extends JDialog {
         JButton _addButton = new JButton("Add");
         _addButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-                if (_toolFileChooser.getSelectedFile().exists() &&
-                        (null != _toolTextField.getText() && !"".equals(_toolTextField.getText()))) {
+                if (_toolFileChooser.getSelectedFile().exists() && (null != _toolTextField.getText() && !"".equals(_toolTextField.getText()))) {
                     Preferences prefs = Preferences.userNodeForPackage(getClass());
                     String toolTest = prefs.get(_toolTextField.getText(), null);
                     if (null == toolTest) {
                         prefs.put(_toolTextField.getText(), _toolFileChooser.getSelectedFile().getAbsolutePath());
                         refreshTable();
-                    } else {
-                        JOptionPane.showMessageDialog(ToolConfigurationDialog.this, "The tool has already been added.",
-                                "Tool Already Added", JOptionPane.WARNING_MESSAGE);
+                    }
+                    else {
+                        JOptionPane.showMessageDialog(ToolConfigurationDialog.this, "The tool has already been added.", "Tool Already Added", JOptionPane.WARNING_MESSAGE);
                     }
                 }
 
@@ -71,7 +70,8 @@ public class ToolConfigurationDialog extends JDialog {
                 if (returnVal == JFileChooser.APPROVE_OPTION) {
                     File file = _toolFileChooser.getSelectedFile();
                     System.out.println("Opening: " + file.getName() + ".");
-                } else {
+                }
+                else {
                     System.out.println("Open command cancelled by user.");
                 }
             }
@@ -97,7 +97,7 @@ public class ToolConfigurationDialog extends JDialog {
         Dimension screenSize = tk.getScreenSize();
         int screenHeight = screenSize.height;
         int screenWidth = screenSize.width;
-        setLocation((screenWidth-getWidth()) / 2, (screenHeight-getHeight()) / 2);
+        setLocation((screenWidth - getWidth()) / 2, (screenHeight - getHeight()) / 2);
         setVisible(true);
     }
 
@@ -125,9 +125,9 @@ public class ToolConfigurationDialog extends JDialog {
         javax.swing.table.TableModel model = table.getModel();
 
         System.out.println("Value of data: ");
-        for (int i=0; i < numRows; i++) {
+        for (int i = 0; i < numRows; i++) {
             System.out.print("    row " + i + ":");
-            for (int j=0; j < numCols; j++) {
+            for (int j = 0; j < numCols; j++) {
                 System.out.print("  " + model.getValueAt(i, j));
             }
             System.out.println();

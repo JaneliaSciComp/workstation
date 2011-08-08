@@ -2,19 +2,19 @@ package org.janelia.it.FlyWorkstation.api.facade.facade_mgr;
 
 public class ConnectionStatus {
 
-  private String statusMessage;
-  private boolean notifyUser;
+    private String statusMessage;
+    private boolean notifyUser;
 
-  public ConnectionStatus(String statusMessage, boolean notifyUser) {
-    this.statusMessage=statusMessage;
-    this.notifyUser=notifyUser;
-  }
+    public ConnectionStatus(String statusMessage, boolean notifyUser) {
+        this.statusMessage = statusMessage;
+        this.notifyUser = notifyUser;
+    }
 
-  public String getStatusMessage() {
-    return statusMessage;
-  }
+    public String getStatusMessage() {
+        return statusMessage;
+    }
 
-  public boolean notifyUser() {
-    return notifyUser;
-  }
+    public boolean notifyUser() {
+        return notifyUser;
+    }
 }

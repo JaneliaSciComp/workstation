@@ -11,29 +11,38 @@ import org.janelia.it.jacs.model.tasks.Task;
  */
 public class ModelMgrObserverAdapter implements org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver {
     @Override
-    public void ontologyAdded(Entity ontology) {}
+    public void ontologyAdded(Entity ontology) {
+    }
 
     @Override
-    public void ontologyRemoved(Entity ontology) {}
+    public void ontologyRemoved(Entity ontology) {
+    }
 
     @Override
-    public void ontologySelected(Entity ontology) {}
+    public void ontologySelected(Entity ontology) {
+    }
 
     @Override
-    public void ontologyUnselected(Entity ontology) {}
+    public void ontologyUnselected(Entity ontology) {
+    }
 
     @Override
-    public void annotationSessionCreated(Task annotationSession) {}
+    public void annotationSessionCreated(Task annotationSession) {
+    }
 
     @Override
-    public void annotationSessionRemoved(Task annotationSession) {}
+    public void annotationSessionRemoved(Task annotationSession) {
+    }
 
     @Override
-    public void annotationSessionSelected(Task annotationSession) {}
+    public void annotationSessionSelected(Task annotationSession) {
+    }
 
     @Override
-    public void annotationSessionUnselected(Task annotationSession) {}
+    public void annotationSessionUnselected(Task annotationSession) {
+    }
 
     @Override
-    public void annotationSessionCriteriaChanged(Task annotationSession) {}
+    public void annotationSessionCriteriaChanged(Task annotationSession) {
+    }
 }

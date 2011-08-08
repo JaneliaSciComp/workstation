@@ -1,13 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.application;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.aggregate.AggregateFacadeManager;
+import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.console.ConsoleMenuBar;
 import org.janelia.it.FlyWorkstation.gui.framework.exception_handlers.ExitHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.exception_handlers.UserNotificationExceptionHandler;
-import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyBindings;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
@@ -27,19 +26,11 @@ import javax.swing.*;
  * This is the main
  */
 public class ConsoleApp {
-    
-    private static KeyBindings bindings;
 
     static {
-        System.out.println("Java version: " +
-                System.getProperty("java.version"));
-
+        System.out.println("Java version: " + System.getProperty("java.version"));
         java.security.ProtectionDomain pd = ConsoleApp.class.getProtectionDomain();
         System.out.println("Code Source: " + pd.getCodeSource().getLocation());
-    }
-
-    public static KeyBindings getKeyBindings() {
-        return bindings;
     }
 
     public static void main(final String[] args) {
@@ -54,13 +45,9 @@ public class ConsoleApp {
 
         final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
         try {
-            // Load Key Bindings
-            bindings = new KeyBindings();
-
             //Browser Setup
             final String versionString = ConsoleProperties.getString("console.versionNumber");
-            final boolean internal = (versionString != null) &&
-                    (versionString.toLowerCase().indexOf("internal") > -1);
+            final boolean internal = (versionString != null) && (versionString.toLowerCase().indexOf("internal") > -1);
 
             sessionMgr.setNewBrowserTitle(ConsoleProperties.getString("console.Title") + " " + ConsoleProperties.getString("console.versionNumber"));
             sessionMgr.setApplicationName(ConsoleProperties.getString("console.Title"));
@@ -77,10 +64,9 @@ public class ConsoleApp {
             sessionMgr.registerExceptionHandler(new UserNotificationExceptionHandler());
             sessionMgr.registerExceptionHandler(new ExitHandler()); //should be last so that other handlers can complete first.
 
-            // Protocol Registration
+            // Protocol Registration - Adding more than one type should automatically switch over to the Aggregate Facade
             final ModelMgr modelMgr = ModelMgr.getModelMgr();
-            // OMIT for CONVERSION
-            modelMgr.registerFacadeManagerForProtocol(FacadeManager.getEJBProtocolString(), AggregateFacadeManager.class, "Internal Database via EJB Server");
+            modelMgr.registerFacadeManagerForProtocol(FacadeManager.getEJBProtocolString(), EJBFacadeManager.class, "JACS EJB Facade Manager");
 
             // Editor Registration
             //      sessionMgr.registerEditorForType(api.entity_model.model.genetics.Species.class,
@@ -107,15 +93,11 @@ public class ConsoleApp {
 //            sessionMgr.registerPreferenceInterface(
 //                    client.gui.other.panels.BackupPanel.class,
 //                    client.gui.other.panels.BackupPanel.class);
-            sessionMgr.registerPreferenceInterface(
-                    ApplicationSettingsPanel.class,
-                    ApplicationSettingsPanel.class);
+            sessionMgr.registerPreferenceInterface(ApplicationSettingsPanel.class, ApplicationSettingsPanel.class);
 //            sessionMgr.registerPreferenceInterface(
 //                    client.gui.other.panels.ViewSettingsPanel.class,
 //                    client.gui.other.panels.ViewSettingsPanel.class);
-            sessionMgr.registerPreferenceInterface(
-                    DataSourceSettings.class,
-                    DataSourceSettings.class);
+            sessionMgr.registerPreferenceInterface(DataSourceSettings.class, DataSourceSettings.class);
 //            sessionMgr.registerPreferenceInterface(
 //                    client.gui.other.panels.TransTransPanel.class,
 //                    client.gui.other.panels.TransTransPanel.class);
@@ -137,17 +119,18 @@ public class ConsoleApp {
             final Browser mainBrowser = sessionMgr.newBrowser();
 //            splash.setVisible(false);
             if (sessionMgr.getModelProperty(SessionMgr.USER_NAME) == null || sessionMgr.getModelProperty(SessionMgr.USER_NAME).equals("")
-                    /*&& modelMgr.getNumberOfLoadedGenomeVersions() == 0*/) {
-                final int answer =
-                        JOptionPane.showConfirmDialog(mainBrowser, "Please enter your login information.", "Information Required", JOptionPane.OK_CANCEL_OPTION);
+                /*&& modelMgr.getNumberOfLoadedGenomeVersions() == 0*/) {
+                final int answer = JOptionPane.showConfirmDialog(mainBrowser, "Please enter your login information.", "Information Required", JOptionPane.OK_CANCEL_OPTION);
                 if (answer != JOptionPane.CANCEL_OPTION) {
                     PrefController.getPrefController().getPrefInterface(DataSourceSettings.class, mainBrowser);
                 }
             }
 //            splash.setStatusText("Connected.");
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             SessionMgr.getSessionMgr().handleException(ex);
-        } finally {
+        }
+        finally {
 //            splash.setVisible(false);
 //            splash.dispose();
         }

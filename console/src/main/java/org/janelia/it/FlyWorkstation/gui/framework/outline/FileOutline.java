@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
@@ -32,8 +32,7 @@ import java.io.IOException;
  */
 public class FileOutline extends JScrollPane implements Cloneable {
     // todo Remove this hard-wiring of the path
-    public static final String DATA_SOURCE_PATH = ConsoleProperties.getString("remote.defaultMacPath")+"/filestore/"+
-            (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
+    public static final String DATA_SOURCE_PATH = ConsoleProperties.getString("remote.defaultMacPath") + "/filestore/" + (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
     public static final String NO_DATASOURCE = "Data Source Unreachable";
     private Browser consoleFrame;
     private JTree tree;
@@ -74,9 +73,11 @@ public class FileOutline extends JScrollPane implements Cloneable {
             public void valueChanged(TreeSelectionEvent treeSelectionEvent) {
 //                System.out.println("Selected "+treeSelectionEvent.getPath());
                 TreePath tmpPath = treeSelectionEvent.getPath();
-                if (tmpPath.getLastPathComponent().toString().equals(NO_DATASOURCE)) {return;}
+                if (tmpPath.getLastPathComponent().toString().equals(NO_DATASOURCE)) {
+                    return;
+                }
                 File tmpFile = getFileForTreePath(tmpPath);
-                if (null!=tmpFile && tmpFile.exists()) {
+                if (null != tmpFile && tmpFile.exists()) {
                     FileOutline.this.consoleFrame.setMostRecentFileOutlinePath(tmpFile.getAbsolutePath());
                 }
             }
@@ -109,14 +110,14 @@ public class FileOutline extends JScrollPane implements Cloneable {
 
     private File getFileForTreePath(TreePath tmpPath) {
         String tmpFilePath = tmpPath.toString();
-        tmpFilePath = tmpFilePath.replace("[","");
-        tmpFilePath = tmpFilePath.replace("]","");
-        tmpFilePath = tmpFilePath.replace(" ","");
-        tmpFilePath = tmpFilePath.replace(",",File.separator);
+        tmpFilePath = tmpFilePath.replace("[", "");
+        tmpFilePath = tmpFilePath.replace("]", "");
+        tmpFilePath = tmpFilePath.replace(" ", "");
+        tmpFilePath = tmpFilePath.replace(",", File.separator);
         // trim off the root node
-        if (tmpFilePath.indexOf("/")<0) return null;
+        if (tmpFilePath.indexOf("/") < 0) return null;
         tmpFilePath = tmpFilePath.substring(tmpFilePath.indexOf("/"));
-        tmpFilePath = DATA_SOURCE_PATH+tmpFilePath;
+        tmpFilePath = DATA_SOURCE_PATH + tmpFilePath;
         return new File(tmpFilePath);
     }
 
@@ -133,7 +134,7 @@ public class FileOutline extends JScrollPane implements Cloneable {
             if (getFileForTreePath(treePath).isFile()) {
                 getImagePopupMenu(getFileForTreePath(treePath), e);
             }
-            else if (getFileForTreePath(treePath).isDirectory()){
+            else if (getFileForTreePath(treePath).isDirectory()) {
                 getAnnotationSessionPopup(treePath, e);
             }
 //             if (treePath.getLastPathComponent() instanceof GenomicEntityTreeNode) {
@@ -168,12 +169,11 @@ public class FileOutline extends JScrollPane implements Cloneable {
             public void actionPerformed(ActionEvent actionEvent) {
                 System.out.println("DEBUG: Creating new Annotation Session Task");
                 try {
-                    AnnotationSessionTask newSessionTask = new AnnotationSessionTask(null, (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME)
-                            , null, null);
+                    AnnotationSessionTask newSessionTask = new AnnotationSessionTask(null, (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME), null, null);
 //                    newSessionTask.setParameter(AnnotationSessionTask.PARAM_annotatioNode, treePath.getPath()[treePath.getPath().length-1].toString());
 //                    newSessionTask.setParameter(AnnotationSessionTask.PARAM_annotationValues, "good, partially good, low quality, trash");
 //                    newSessionTask.setParameter(AnnotationSessionTask.PARAM_annotationCategories, "quality");
-                    AnnotationSessionTask returnSessionTask = (AnnotationSessionTask)EJBFactory.getRemoteComputeBean().saveOrUpdateTask(newSessionTask);
+                    AnnotationSessionTask returnSessionTask = (AnnotationSessionTask) ModelMgr.getModelMgr().saveOrUpdateTask(newSessionTask);
                     FileOutline.this.consoleFrame.setAnnotationSessionChanged(returnSessionTask.getObjectId().toString());
                 }
                 catch (Exception e) {
@@ -190,9 +190,8 @@ public class FileOutline extends JScrollPane implements Cloneable {
         JMenuItem v3dMenuItem = new JMenuItem("Show in V3D");
         v3dMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-                String tmpCmd = "/Users/"+(String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME)
-                        +"/Dev/NeuroAnnotator/v3d/v3d64.app/Contents/MacOS/v3d64 -f "+ treePath.getAbsolutePath();
-                System.out.println("DEBUG: "+tmpCmd);
+                String tmpCmd = "/Users/" + SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME) + "/Dev/NeuroAnnotator/v3d/v3d64.app/Contents/MacOS/v3d64 -f " + treePath.getAbsolutePath();
+                System.out.println("DEBUG: " + tmpCmd);
                 try {
                     Runtime.getRuntime().exec(tmpCmd);
                 }
@@ -210,7 +209,7 @@ public class FileOutline extends JScrollPane implements Cloneable {
             }
         });
         actionPopup.add(v3dMenuItem);
-        if (treePath.getAbsolutePath().toLowerCase().endsWith(".tif")|| treePath.getAbsolutePath().toLowerCase().endsWith(".lsm")) {
+        if (treePath.getAbsolutePath().toLowerCase().endsWith(".tif") || treePath.getAbsolutePath().toLowerCase().endsWith(".lsm")) {
             actionPopup.add(stackInfoItem);
         }
         actionPopup.show(tree, e.getX(), e.getY());
@@ -227,18 +226,18 @@ public class FileOutline extends JScrollPane implements Cloneable {
         DefaultMutableTreeNode top = new DefaultMutableTreeNode();
 
         top.setUserObject(f.getName());
-        if (f.isDirectory() ) {
-          //System.out.println("Processing Directory " + f);
-          File fls[] = f.listFiles();
-          for (int i=0;i<fls.length;i++) {
-                top.insert(buildTreeModel(fls[i].getPath()),i);
-          }
+        if (f.isDirectory()) {
+            //System.out.println("Processing Directory " + f);
+            File fls[] = f.listFiles();
+            for (int i = 0; i < fls.length; i++) {
+                top.insert(buildTreeModel(fls[i].getPath()), i);
+            }
         }
-        return(top);
+        return (top);
 //      Set genomeVersions = ModelMgr.getModelMgr().getSelectedGenomeVersions();
 //      HeadNodeVisitor headNodeVisitor= new HeadNodeVisitor();
 //      GenomeVersion genomeVersion;
-            //genomeVersion.getSpecies().acceptVisitorForSelf(headNodeVisitor);
+        //genomeVersion.getSpecies().acceptVisitorForSelf(headNodeVisitor);
 //      for (Iterator i=genomeVersions.iterator();i.hasNext();) {
 //        genomeVersion=(GenomeVersion)i.next();
 //        genomeVersion.getSpecies().acceptVisitorForSelf(headNodeVisitor);

@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.DynamicTree;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
@@ -17,71 +17,70 @@ import java.awt.event.MouseEvent;
 
 /**
  * An tree of ontology terms, which knows how to loads ontologies from the Entity data model.
- * 
+ * <p/>
  * TODO: allow lazy loading similar to how EntityTree works
- * 
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class OntologyTree extends JPanel {
-	
+
     protected final JPanel treesPanel;
     protected DynamicTree selectedTree;
-    
+
     public OntologyTree() {
         super(new BorderLayout());
 
         treesPanel = new JPanel(new BorderLayout());
         add(treesPanel, BorderLayout.CENTER);
-	}
+    }
 
     public void showLoadingIndicator() {
         treesPanel.removeAll();
-		treesPanel.add(new JLabel(Icons.loadingIcon));
-		this.updateUI();
+        treesPanel.add(new JLabel(Icons.loadingIcon));
+        this.updateUI();
     }
-    
+
     public OntologyRoot getCurrentOntology() {
-    	return (OntologyRoot)selectedTree.getRootNode().getUserObject();
+        return (OntologyRoot) selectedTree.getRootNode().getUserObject();
     }
-    
+
     public void clearTree() {
         treesPanel.removeAll();
     }
-    
+
     public void initializeTree(final Long rootId) {
-    	
+
         treesPanel.removeAll();
 
         if (rootId == null) return;
-    	
-        showLoadingIndicator();
-        
-		SimpleWorker loadingWorker = new SimpleWorker() {
 
-			private Entity rootEntity;
-        	
+        showLoadingIndicator();
+
+        SimpleWorker loadingWorker = new SimpleWorker() {
+
+            private Entity rootEntity;
+
             protected void doStuff() throws Exception {
-            	rootEntity = EJBFactory.getRemoteAnnotationBean().getOntologyTree(
-            			SessionMgr.getUsername(), rootId);
+                rootEntity = ModelMgr.getModelMgr().getOntologyTree(SessionMgr.getUsername(), rootId);
             }
 
-			protected void hadSuccess() {
+            protected void hadSuccess() {
 
-				try {
-					initializeTree(rootEntity);
-				}
-				catch (Exception e) {
-					hadError(e);
-				}
-			}
-			
-			protected void hadError(Throwable error) {
-				error.printStackTrace();
-				JOptionPane.showMessageDialog(OntologyTree.this, "Error loading ontology", "Ontology Load Error", JOptionPane.ERROR_MESSAGE);
-	            treesPanel.removeAll();
-	            OntologyTree.this.updateUI();
-			}
-            
+                try {
+                    initializeTree(rootEntity);
+                }
+                catch (Exception e) {
+                    hadError(e);
+                }
+            }
+
+            protected void hadError(Throwable error) {
+                error.printStackTrace();
+                JOptionPane.showMessageDialog(OntologyTree.this, "Error loading ontology", "Ontology Load Error", JOptionPane.ERROR_MESSAGE);
+                treesPanel.removeAll();
+                OntologyTree.this.updateUI();
+            }
+
         };
 
         loadingWorker.execute();
@@ -89,16 +88,16 @@ public class OntologyTree extends JPanel {
 
     public void initializeTree(final Entity rootEntity) {
 
-		OntologyRoot root = new OntologyRoot(rootEntity);
-		initializeTree(root);
+        OntologyRoot root = new OntologyRoot(rootEntity);
+        initializeTree(root);
     }
 
     public void initializeTree(final OntologyRoot root) {
 
         // Create a new tree and add all the nodes to it
-		
-		createNewTree(root);
-		addNodes(null, root);
+
+        createNewTree(root);
+        addNodes(null, root);
 
         // Replace the tree in the panel
 
@@ -106,21 +105,22 @@ public class OntologyTree extends JPanel {
         treesPanel.add(selectedTree);
 
         // Prepare for display and update the UI
-        
+
         selectedTree.expandAll(true);
         OntologyTree.this.updateUI();
     }
-    
+
     public DynamicTree getDynamicTree() {
-		return selectedTree;
-	}
+        return selectedTree;
+    }
 
     public JTree getTree() {
-		return selectedTree.getTree();
-	}
+        return selectedTree.getTree();
+    }
 
-	/**
+    /**
      * Override this method to show a popup menu when the user right clicks a node in the tree.
+     *
      * @param e
      */
     protected void showPopupMenu(MouseEvent e) {
@@ -128,6 +128,7 @@ public class OntologyTree extends JPanel {
 
     /**
      * Override this method to do something when the user left clicks a node.
+     *
      * @param e
      */
     protected void nodeClicked(MouseEvent e) {
@@ -135,48 +136,50 @@ public class OntologyTree extends JPanel {
 
     /**
      * Override this method to do something when the user presses down on a node.
+     *
      * @param e
      */
     protected void nodePressed(MouseEvent e) {
     }
-    
+
     /**
      * Override this method to do something when the user double clicks a node.
+     *
      * @param e
      */
     protected void nodeDoubleClicked(MouseEvent e) {
     }
-    
+
     protected void createNewTree(OntologyRoot root) {
 
-    	selectedTree = new DynamicTree(root, true, true) {
-    		
+        selectedTree = new DynamicTree(root, true, true) {
+
             protected void showPopupMenu(MouseEvent e) {
-            	OntologyTree.this.showPopupMenu(e);
+                OntologyTree.this.showPopupMenu(e);
             }
 
             protected void nodeClicked(MouseEvent e) {
-            	OntologyTree.this.nodeClicked(e);
+                OntologyTree.this.nodeClicked(e);
             }
-            
+
             protected void nodePressed(MouseEvent e) {
-            	OntologyTree.this.nodePressed(e);
+                OntologyTree.this.nodePressed(e);
             }
-            
+
             protected void nodeDoubleClicked(MouseEvent e) {
-            	OntologyTree.this.nodeDoubleClicked(e);
+                OntologyTree.this.nodeDoubleClicked(e);
             }
 
         };
-        
+
         // Replace the cell renderer
-        
+
         selectedTree.setCellRenderer(new OntologyTreeCellRenderer());
     }
-    
+
     protected void addNodes(DefaultMutableTreeNode parentNode, OntologyElement element) {
-    	
-    	// Add the node to the tree
+
+        // Add the node to the tree
         DefaultMutableTreeNode newNode;
         if (parentNode != null) {
             newNode = selectedTree.addObject(parentNode, element);
@@ -185,23 +188,23 @@ public class OntologyTree extends JPanel {
             // If the parent node is null, then the node is already in the tree as the root
             newNode = selectedTree.getRootNode();
         }
-    	
-    	// Add the node's children. 
-    	// They are available because the root was loaded with the eager-loading getOntologyTree() method. 
-        for(OntologyElement child : element.getChildren()) {
-        	addNodes(newNode, child);
+
+        // Add the node's children.
+        // They are available because the root was loaded with the eager-loading getOntologyTree() method.
+        for (OntologyElement child : element.getChildren()) {
+            addNodes(newNode, child);
         }
     }
 
     public void navigateToOntologyElement(OntologyElement element) {
         selectedTree.navigateToNodeWithObject(element);
     }
-    
+
     /**
      * @return true if the user is allowed to edit the current ontology, false otherwise.
      */
     public boolean isEditable() {
-    	return !getCurrentOntology().isPublic();
+        return !getCurrentOntology().isPublic();
     }
-    
+
 }

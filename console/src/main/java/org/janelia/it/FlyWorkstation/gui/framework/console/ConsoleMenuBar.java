@@ -97,10 +97,9 @@ public class ConsoleMenuBar extends JMenuBar {
 
     private void setEditorSpecificMenus(JMenuItem[] menus) {
         addedMenus.remove(EDITOR_SPECIFIC);
-        if (menus != null)
-            for (int i = 0; i < menus.length; i++) {
-                addedMenus.put(EDITOR_SPECIFIC, menus[i]);
-            }
+        if (menus != null) for (int i = 0; i < menus.length; i++) {
+            addedMenus.put(EDITOR_SPECIFIC, menus[i]);
+        }
         redraw();
     }
 
@@ -135,9 +134,8 @@ public class ConsoleMenuBar extends JMenuBar {
             tmpVec = (Vector) addedMenus.get(AFTER_SPACING_GLUE);
             menuList.addAll(tmpVec);
         }
-        if (staticImageLabel != null)
-            if (!animation) menuList.add(staticImageLabel);
-            else menuList.add(animatedImageLabel);
+        if (staticImageLabel != null) if (!animation) menuList.add(staticImageLabel);
+        else menuList.add(animatedImageLabel);
 
 
         removeAll();

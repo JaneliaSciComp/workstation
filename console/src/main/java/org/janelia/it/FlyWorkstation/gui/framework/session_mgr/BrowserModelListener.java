@@ -4,8 +4,9 @@ import org.janelia.it.jacs.model.entity.Entity;
 
 public interface BrowserModelListener extends GenericModelListener {
 
-    /** The axis of the master editor
-    */
+    /**
+     * The axis of the master editor
+     */
     void browserMasterEditorEntityChanged(Entity masterEditorEntity);
 
 //    /**
@@ -21,6 +22,7 @@ public interface BrowserModelListener extends GenericModelListener {
 //     */
 //    void browserSubViewVisibleRangeChanged(Range subViewVisibleRange);
 //
+
     /**
      * Notification that the current system seleciton has changed
      */

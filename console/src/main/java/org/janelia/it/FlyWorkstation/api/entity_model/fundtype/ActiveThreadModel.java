@@ -11,13 +11,16 @@ import org.janelia.it.FlyWorkstation.shared.util.MTObservable;
 
 import java.util.*;
 
-/** This is a model of the threads that are actively loading in the system */
+/**
+ * This is a model of the threads that are actively loading in the system
+ */
 public class ActiveThreadModel extends MTObservable {
     static private ActiveThreadModel activeThreadModel;
 
     private Map statusObjects = Collections.synchronizedMap(new HashMap());
 
-    private ActiveThreadModel() { }
+    private ActiveThreadModel() {
+    }
 
     public static ActiveThreadModel getActiveThreadModel() {
         if (activeThreadModel == null) activeThreadModel = new ActiveThreadModel();
@@ -25,15 +28,15 @@ public class ActiveThreadModel extends MTObservable {
     }
 
     public LoadRequestStatus[] getActiveLoadRequestStatusObjects() {
-      Set activeEntries=null;
-      synchronized (statusObjects) {
-        activeEntries=statusObjects.entrySet();
-      }
-      List statusObjects=new ArrayList();
-      for (Iterator it=activeEntries.iterator();it.hasNext();) {
-        statusObjects.add( ((Map.Entry)it.next()).getValue());
-      }
-      return (LoadRequestStatus[])statusObjects.toArray(new LoadRequestStatus[statusObjects.size()]);
+        Set activeEntries = null;
+        synchronized (statusObjects) {
+            activeEntries = statusObjects.entrySet();
+        }
+        List statusObjects = new ArrayList();
+        for (Iterator it = activeEntries.iterator(); it.hasNext(); ) {
+            statusObjects.add(((Map.Entry) it.next()).getValue());
+        }
+        return (LoadRequestStatus[]) statusObjects.toArray(new LoadRequestStatus[statusObjects.size()]);
     }
 
     public int getActiveThreadCount() {

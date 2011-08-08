@@ -4,7 +4,14 @@ import java.util.Iterator;
 
 public class EmptyIterator implements Iterator {
 
-      public boolean hasNext() {return false;}
-      public Object next() {return null;}
-      public void remove() {}
+    public boolean hasNext() {
+        return false;
+    }
+
+    public Object next() {
+        return null;
+    }
+
+    public void remove() {
+    }
 }

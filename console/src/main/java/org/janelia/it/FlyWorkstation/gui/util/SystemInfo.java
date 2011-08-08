@@ -88,16 +88,13 @@ public class SystemInfo {
 
     /**
      * Operating system is supposed to have middle mouse button click occupied by paste action.
+     *
      * @since 6.0
      */
     public static boolean X11PasteEnabledSystem = isUnix && !isMac;
 
     private static boolean isTiger() {
-        return isMac &&
-                !OS_VERSION.startsWith("10.0") &&
-                !OS_VERSION.startsWith("10.1") &&
-                !OS_VERSION.startsWith("10.2") &&
-                !OS_VERSION.startsWith("10.3");
+        return isMac && !OS_VERSION.startsWith("10.0") && !OS_VERSION.startsWith("10.1") && !OS_VERSION.startsWith("10.2") && !OS_VERSION.startsWith("10.3");
     }
 
     private static boolean isIntelMac() {

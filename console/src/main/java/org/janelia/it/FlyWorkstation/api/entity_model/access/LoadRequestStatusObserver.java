@@ -12,8 +12,10 @@ import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestStatus
 public interface LoadRequestStatusObserver {
 
     void stateChanged(LoadRequestStatus loadRequestStatus, LoadRequestState newState);
+
     void loadedPercentageChanged(LoadRequestStatus loadRequestStatus, int newPercent);
-    void notifiedPercentageChanged(LoadRequestStatus loadRequestStatus,  int newPercent);
+
+    void notifiedPercentageChanged(LoadRequestStatus loadRequestStatus, int newPercent);
 //   void alignedPercentageChanged(LoadRequestStatus loadRequestStatus,  int newPercent);
 
 }

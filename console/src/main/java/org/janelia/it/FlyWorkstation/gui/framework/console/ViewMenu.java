@@ -55,7 +55,7 @@ public class ViewMenu extends JMenu {
     }
 
     private void viewActionPerformed(String viewComponent) {
-       console.toggleViewComponentState(viewComponent);
+        console.toggleViewComponentState(viewComponent);
     }
 
 }

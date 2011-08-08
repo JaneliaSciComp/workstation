@@ -52,21 +52,18 @@ public final class SplashScreen extends JWindow {
         rightsPanel.add(statusLabel);
 
         final JPanel outerRightsPanel = new JPanel();
-        outerRightsPanel.setLayout(
-                new BoxLayout(outerRightsPanel, BoxLayout.X_AXIS));
+        outerRightsPanel.setLayout(new BoxLayout(outerRightsPanel, BoxLayout.X_AXIS));
         outerRightsPanel.setBackground(Color.white);
         outerRightsPanel.add(rightsPanel);
         outerPanel.add(outerRightsPanel, BorderLayout.SOUTH);
 
-        outerPanel.setBorder(
-                new BevelBorder(BevelBorder.RAISED, Color.lightGray,
-                        Color.darkGray));
+        outerPanel.setBorder(new BevelBorder(BevelBorder.RAISED, Color.lightGray, Color.darkGray));
         getContentPane().add(outerPanel);
         pack();
 
         final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         final Dimension frameSize = getSize();
-        frameSize.setSize(frameSize.getWidth()+200, frameSize.getHeight()+50);
+        frameSize.setSize(frameSize.getWidth() + 200, frameSize.getHeight() + 50);
 
         if (frameSize.height > screenSize.height) {
             frameSize.height = screenSize.height;
@@ -76,7 +73,6 @@ public final class SplashScreen extends JWindow {
             frameSize.width = screenSize.width;
         }
 
-        setLocation((screenSize.width - frameSize.width) / 2,
-                (screenSize.height - frameSize.height) / 2);
+        setLocation((screenSize.width - frameSize.width) / 2, (screenSize.height - frameSize.height) / 2);
     }
 }

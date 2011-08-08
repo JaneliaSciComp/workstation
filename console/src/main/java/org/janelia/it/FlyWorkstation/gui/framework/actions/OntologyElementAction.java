@@ -20,7 +20,7 @@ public abstract class OntologyElementAction implements Action {
     public void init(OntologyElement element) {
         this.element = element;
     }
-    
+
     public OntologyElement getOntologyElement() {
         return element;
     }

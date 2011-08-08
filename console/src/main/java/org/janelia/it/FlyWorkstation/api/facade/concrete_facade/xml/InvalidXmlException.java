@@ -8,24 +8,38 @@ package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.xml;
  */
 public class InvalidXmlException extends Throwable {
 
-  StringBuffer msg = null;
-  String fileName = null;
-  String title = null;
+    StringBuffer msg = null;
+    String fileName = null;
+    String title = null;
 
-  /** Simple constructor to allow set of message. */
-  public InvalidXmlException(StringBuffer msg, String fileName, String title) {
-    super("XML Parse Failure");
-    this.msg = msg;
-    this.fileName = fileName;
-    this.title = title;
-  } // End constructor
+    /**
+     * Simple constructor to allow set of message.
+     */
+    public InvalidXmlException(StringBuffer msg, String fileName, String title) {
+        super("XML Parse Failure");
+        this.msg = msg;
+        this.fileName = fileName;
+        this.title = title;
+    } // End constructor
 
-  /** Returns the parse error output. */
-  public StringBuffer getParseData() { return msg; }
+    /**
+     * Returns the parse error output.
+     */
+    public StringBuffer getParseData() {
+        return msg;
+    }
 
-  /** Tells which file this was on. */
-  public String getFileName() { return fileName; }
+    /**
+     * Tells which file this was on.
+     */
+    public String getFileName() {
+        return fileName;
+    }
 
-  /** Can be used for special presentation. */
-  public String getTitle() { return title; }
+    /**
+     * Can be used for special presentation.
+     */
+    public String getTitle() {
+        return title;
+    }
 } // End class

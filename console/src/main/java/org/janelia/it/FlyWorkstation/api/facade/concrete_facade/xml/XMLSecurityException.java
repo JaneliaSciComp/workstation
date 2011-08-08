@@ -8,7 +8,7 @@ package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.xml;
  */
 public class XMLSecurityException extends Exception {
 
-  public XMLSecurityException(String exceptionText) {
-    super(exceptionText);
-  }
+    public XMLSecurityException(String exceptionText) {
+        super(exceptionText);
+    }
 }

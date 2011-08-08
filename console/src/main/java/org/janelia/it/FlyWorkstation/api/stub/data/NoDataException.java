@@ -6,9 +6,7 @@ package org.janelia.it.FlyWorkstation.api.stub.data;
  * Date: 7/22/11
  * Time: 3:29 PM
  */
-public class NoData extends UserException
-{
-    public NoData()
-    {
+public class NoDataException extends UserException {
+    public NoDataException() {
     }
 }

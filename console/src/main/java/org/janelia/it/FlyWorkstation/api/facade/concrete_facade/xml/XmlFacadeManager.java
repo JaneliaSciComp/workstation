@@ -1,10 +1,9 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.xml;
 
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.ControlledVocabService;
-import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.OntologyLoader;
-import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.fundtype.EntityLoader;
+import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.EntityFacade;
+import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.OntologyFacade;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManagerBase;
-import org.janelia.it.jacs.model.entity.EntityType;
 
 /**
  * Base class for all XML-file facade managers.  Returns all types of API facades
@@ -12,74 +11,58 @@ import org.janelia.it.jacs.model.entity.EntityType;
  */
 public abstract class XmlFacadeManager extends FacadeManagerBase {
 
-   private OntologyLoader ontologyLoader = null;
-   private ControlledVocabService controlledVocabularyService = null;
-   public abstract String getDataSourceSelectorClass();
+    private OntologyFacade ontologyLoader = null;
+    private ControlledVocabService controlledVocabularyService = null;
 
-   /** Tells what has been opened. */
-   public abstract Object[] getOpenDataSources();
+    public abstract String getDataSourceSelectorClass();
 
-   /**
-    * Make this default constructor to build a detector for GV entity
-    * removals.
-    */
-   public XmlFacadeManager() {
-   } // End constructor
+    /**
+     * Tells what has been opened.
+     */
+    public abstract Object[] getOpenDataSources();
 
-   /**
-    * Called when system is about to close down, or when facade manager is
-    * to be released.  Sort of like finalize (in an ideal world ;-)
-    */
-   public void prepareForSystemExit() {
-      super.prepareForSystemExit();
-      ontologyLoader=null;
-      controlledVocabularyService = null;
-   } // End method: prepareForSystemExit
+    /**
+     * Make this default constructor to build a detector for GV entity
+     * removals.
+     */
+    public XmlFacadeManager() {
+    } // End constructor
 
-   /** Returns the Ontology facade. */
-   public OntologyLoader getOntology() throws Exception {
-//      if (ontologyLoader == null) {
-//         XmlOntologyLoader xmlOntologyLoader = new XmlOntologyLoader();
-//         ontologyLoader = xmlOntologyLoader;
-//      } // Need to create it.
-//      return ontologyLoader;
-       return null;
-   } // End method: getOntology */
+    /**
+     * Called when system is about to close down, or when facade manager is
+     * to be released.  Sort of like finalize (in an ideal world ;-)
+     */
+    public void prepareForSystemExit() {
+        super.prepareForSystemExit();
+        ontologyLoader = null;
+        controlledVocabularyService = null;
+    } // End method: prepareForSystemExit
 
-   /**
-    * Returns name of server to satisfy the facade manager requirement.
-    */
-   public String getServerName() {
-      return "XML";
-   } // End method: getServerName
+    /**
+     * Returns name of server to satisfy the facade manager requirement.
+     */
+    public String getServerName() {
+        return "XML";
+    } // End method: getServerName
 
-   /**
-    * This is a request-decoder method.  All requests for "api facades"
-    * should come through this method.
-    */
-   public EntityLoader getFacade(EntityType featureType) throws Exception {
+    /**
+     * This is a request-decoder method.  All requests for "api facades"
+     * should come through this method.
+     */
+    public EntityFacade getFacade(String featureTypeName) throws Exception {
+        // return the XML-Favored facades here.
+        return null;
+    } // End method: getFacade
 
-//      switch (featureType.value()) {
-//         case EntityTypeConstants.BlastN_Hit :
-//         case EntityTypeConstants.BlastX_Hit :
-//         case EntityTypeConstants.tBlastN :
-//         case EntityTypeConstants.tBlastX :
-//            return (this.getBlastHitFacade());
-//
-//
-//         default :
-//            return (this.getFeatureFacade());
-       return null;
-//      }
-   } // End method: getFacade
-
-   /** Return new or cached controlled vocab service. */
-   public ControlledVocabService getControlledVocabService() throws Exception {
+    /**
+     * Return new or cached controlled vocab service.
+     */
+    public ControlledVocabService getControlledVocabService() throws Exception {
 //      if (controlledVocabularyService == null)
 //         controlledVocabularyService = new XmlControlledVocabService();
 //
 //      return controlledVocabularyService;
-       return null;
-   } // End method: getControlledVocabService
+        return null;
+    } // End method: getControlledVocabService
 
 } // End class: XmlFacadeManager

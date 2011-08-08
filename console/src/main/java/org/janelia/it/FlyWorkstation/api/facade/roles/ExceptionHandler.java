@@ -7,5 +7,5 @@ package org.janelia.it.FlyWorkstation.api.facade.roles;
  * Time: 2:51 PM
  */
 public interface ExceptionHandler {
-  public void handleException(Throwable t);
+    public void handleException(Throwable t);
 }

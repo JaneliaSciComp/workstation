@@ -5,32 +5,33 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 
 public class AutoNavigationMgr {
 
-  private static AutoNavigationMgr autoNavMgr;
-  public static final String PATH_DISCOVERED   = "Path Discovered";
-  public static final String SEARCH_INITIATED  = "Searching...";
-  public static final String SEARCH_COMPLETE   = "Search Complete";
+    private static AutoNavigationMgr autoNavMgr;
+    public static final String PATH_DISCOVERED = "Path Discovered";
+    public static final String SEARCH_INITIATED = "Searching...";
+    public static final String SEARCH_COMPLETE = "Search Complete";
 
-  private String lastSearchType = new String("");
-  private String lastSearchString = new String("");
+    private String lastSearchType = new String("");
+    private String lastSearchString = new String("");
 
-  private static final String NAV_COMPLETE_KEY="AutoNavigationMgr.NavigationComplete";
+    private static final String NAV_COMPLETE_KEY = "AutoNavigationMgr.NavigationComplete";
 
-  private AutoNavigationMgr() {  }
+    private AutoNavigationMgr() {
+    }
 
-  public static AutoNavigationMgr getAutoNavigationMgr() {
-    if (autoNavMgr==null) autoNavMgr=new AutoNavigationMgr();
-    return autoNavMgr;
-  }
+    public static AutoNavigationMgr getAutoNavigationMgr() {
+        if (autoNavMgr == null) autoNavMgr = new AutoNavigationMgr();
+        return autoNavMgr;
+    }
 
-  public void showNavigationCompleteMsgs(boolean show) {
-    SessionMgr.getSessionMgr().setModelProperty(NAV_COMPLETE_KEY,new Boolean(show));
-  }
+    public void showNavigationCompleteMsgs(boolean show) {
+        SessionMgr.getSessionMgr().setModelProperty(NAV_COMPLETE_KEY, new Boolean(show));
+    }
 
-  public boolean isShowingNavigationCompleteMsgs() {
-     Boolean bool=(Boolean)SessionMgr.getSessionMgr().getModelProperty(NAV_COMPLETE_KEY);
-     if (bool==null) return false;
-     return bool.booleanValue();
-  }
+    public boolean isShowingNavigationCompleteMsgs() {
+        Boolean bool = (Boolean) SessionMgr.getSessionMgr().getModelProperty(NAV_COMPLETE_KEY);
+        if (bool == null) return false;
+        return bool.booleanValue();
+    }
 
 
 //  // Returns a boolean about successful path discovery.
@@ -70,8 +71,8 @@ public class AutoNavigationMgr {
 //    }
 //  }
 
-  // Returns a boolean about successful path discovery.
-  public void findEntity(Browser browser, String searchType, String searchString) {
+    // Returns a boolean about successful path discovery.
+    public void findEntity(Browser browser, String searchType, String searchString) {
 //    lastSearchType = searchType;
 //    lastSearchString = searchString;
 //    browser.getBrowserModel().setModelProperty(SEARCH_INITIATED, null);
@@ -82,7 +83,7 @@ public class AutoNavigationMgr {
 //    catch (Exception ex) {
 //      SessionMgr.getSessionMgr().handleException(ex);
 //    }
-  }
+    }
 
 
 //  public void navigate(Browser browser,NavigationPath path) {

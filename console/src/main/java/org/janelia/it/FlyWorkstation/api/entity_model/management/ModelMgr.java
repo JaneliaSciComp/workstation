@@ -2,190 +2,195 @@ package org.janelia.it.FlyWorkstation.api.entity_model.management;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.ActiveThreadModel;
-import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.OntologyLoader;
+import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.OntologyFacade;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.InUseProtocolListener;
 import org.janelia.it.FlyWorkstation.api.facade.roles.ExceptionHandler;
-import org.janelia.it.FlyWorkstation.api.stub.data.NoData;
-import org.janelia.it.FlyWorkstation.gui.framework.api.EJBFactory;
+import org.janelia.it.FlyWorkstation.api.stub.data.NoDataException;
 import org.janelia.it.FlyWorkstation.shared.exception_handlers.PrintStackTraceHandler;
 import org.janelia.it.FlyWorkstation.shared.util.ThreadQueue;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.entity.EntityType;
+import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
 import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.model.user_data.User;
 
 import java.lang.reflect.Constructor;
 import java.util.*;
 
 public class ModelMgr {
-  private static ModelMgr modelManager=new ModelMgr();
-  private boolean readOnly;
-  private List<ModelMgrObserver> modelMgrObservers;
-  private boolean modelAvailable;
-  private Set<Entity> ontologies=new HashSet<Entity>();
-  private ThreadQueue threadQueue;
-  private ThreadQueue notificationQueue;
-  private ResourceBundle modelMgrResourceBundle;
-  private EntityFactory entityFactory;
-  private Entity selectedOntology;
-  private Task annotationSesisonTask;
-  private Class factoryClass;
-  private boolean ontologyLookupNeeded =true;
+    private static ModelMgr modelManager = new ModelMgr();
+    private boolean readOnly;
+    private List<ModelMgrObserver> modelMgrObservers;
+    private boolean modelAvailable;
+    private Set<Entity> ontologies = new HashSet<Entity>();
+    private ThreadQueue threadQueue;
+    private ThreadQueue notificationQueue;
+    private ResourceBundle modelMgrResourceBundle;
+    private EntityFactory entityFactory;
+    private Entity selectedOntology;
+    private Task annotationSesisonTask;
+    private Class factoryClass;
+    private boolean ontologyLookupNeeded = true;
 
-  static {
-    // Register an exception handler.
-    ModelMgr.getModelMgr().registerExceptionHandler(new PrintStackTraceHandler());
-  }
+    static {
+        // Register an exception handler.
+        ModelMgr.getModelMgr().registerExceptionHandler(new PrintStackTraceHandler());
+    }
 
-  {
-    try {
+    {
+        try {
 //       String propsFile = PropertyConfigurator.getProperties().getProperty("console.ModelMgrProperties");
 //       modelMgrResourceBundle = ResourceBundle.getBundle(propsFile);
+        }
+        catch (java.util.MissingResourceException mre) {
+            System.out.println("ModelMgr: Error! - Cannot find resource files.  Resource directory must be on the classpath!!  Exiting..");
+            System.exit(1);
+        }
     }
-    catch (java.util.MissingResourceException mre) {
-      System.out.println("ModelMgr: Error! - Cannot find resource files.  Resource directory must be on the classpath!!  Exiting..");
-      System.exit(1);
+
+    private ModelMgr() {
+        FacadeManager.addInUseProtocolListener(new MyInUseProtocolListener());
+    } //Singleton enforcement
+
+    static public ModelMgr getModelMgr() {
+        return modelManager;
     }
-  }
 
-  private ModelMgr() {
-    FacadeManager.addInUseProtocolListener(new MyInUseProtocolListener());
-  } //Singleton enforcement
-
-  static public ModelMgr getModelMgr() {return modelManager;}
-
-  public void addModelMgrObserver(ModelMgrObserver mml){
-     if (modelMgrObservers==null) modelMgrObservers=new ArrayList<ModelMgrObserver>();
-     modelMgrObservers.add(mml);
-  }
-
-  public void removeModelMgrObserver(ModelMgrObserver mml){
-     if (modelMgrObservers==null) return;
-     modelMgrObservers.remove(mml);
-  }
-
-
-  public void registerExceptionHandler(ExceptionHandler handler) {
-     FacadeManager.registerExceptionHandler(handler);
-  }
-
-  public void deregisterExceptionHandler(ExceptionHandler handler) {
-     FacadeManager.deregisterExceptionHandler(handler);
-  }
-
-  /**
-   * Override the read-only state to true for all Ontologies
-   */
-
-  public void makeReadOnly(){
-     readOnly=true;
-  }
-
-  public EntityFactory getEntityFactory() {
-    if (entityFactory==null) {
-      try {
-       Constructor cons=factoryClass.getConstructor(new Class[]{Integer.class});
-       entityFactory = (EntityFactory)cons.newInstance(new Object[]{new Integer(this.hashCode())});
-      }
-      catch (Exception ex) {
-        handleException(ex);
-      }
+    public void addModelMgrObserver(ModelMgrObserver mml) {
+        if (modelMgrObservers == null) modelMgrObservers = new ArrayList<ModelMgrObserver>();
+        modelMgrObservers.add(mml);
     }
-    return entityFactory;
-  }
 
-  public boolean isMultiThreaded() {
-    String mt = modelMgrResourceBundle.getString("MultiThreadedServerCalls");
-      return mt != null && mt.equalsIgnoreCase("TRUE");
-  }
+    public void removeModelMgrObserver(ModelMgrObserver mml) {
+        if (modelMgrObservers == null) return;
+        modelMgrObservers.remove(mml);
+    }
 
 
-  public void registerFacadeManagerForProtocol(String protocol, Class facadeClass, String displayName) {
-    FacadeManager.registerFacade(protocol,facadeClass,displayName);
-  }
+    public void registerExceptionHandler(ExceptionHandler handler) {
+        FacadeManager.registerExceptionHandler(handler);
+    }
 
-  public ThreadQueue getLoaderThreadQueue() {
-      if (threadQueue==null)
-        if (isMultiThreaded()) threadQueue=new ThreadQueue(6,"LoaderGroup",Thread.MIN_PRIORITY,true);
-        else threadQueue=new ThreadQueue(0,"LoaderGroup",Thread.NORM_PRIORITY,true);
-      return threadQueue;
-  }
+    public void deregisterExceptionHandler(ExceptionHandler handler) {
+        FacadeManager.deregisterExceptionHandler(handler);
+    }
 
-  public ThreadQueue getNotificationQueue() {
-      if (notificationQueue==null)
-        if (isMultiThreaded())  notificationQueue=new ThreadQueue(1,"NotificationThreads",Thread.MIN_PRIORITY,false);
-        else notificationQueue=new ThreadQueue(0,"NotificationThreads",Thread.NORM_PRIORITY,false);
-      return notificationQueue;
-  }
+    /**
+     * Override the read-only state to true for all Ontologies
+     */
+
+    public void makeReadOnly() {
+        readOnly = true;
+    }
+
+    public EntityFactory getEntityFactory() {
+        if (entityFactory == null) {
+            try {
+                Constructor cons = factoryClass.getConstructor(new Class[]{Integer.class});
+                entityFactory = (EntityFactory) cons.newInstance(new Object[]{new Integer(this.hashCode())});
+            }
+            catch (Exception ex) {
+                handleException(ex);
+            }
+        }
+        return entityFactory;
+    }
+
+    public boolean isMultiThreaded() {
+        String mt = modelMgrResourceBundle.getString("MultiThreadedServerCalls");
+        return mt != null && mt.equalsIgnoreCase("TRUE");
+    }
 
 
-  public ActiveThreadModel getActiveThreadModel() {
-     return ActiveThreadModel.getActiveThreadModel();
-  }
+    public void registerFacadeManagerForProtocol(String protocol, Class facadeClass, String displayName) {
+        FacadeManager.registerFacade(protocol, facadeClass, displayName);
+    }
 
-  public void handleException (Throwable throwable) {
-     if (throwable instanceof NoData) return;
-     FacadeManager.handleException(throwable);
-  }
+    public ThreadQueue getLoaderThreadQueue() {
+        if (threadQueue == null)
+            if (isMultiThreaded()) threadQueue = new ThreadQueue(6, "LoaderGroup", Thread.MIN_PRIORITY, true);
+            else threadQueue = new ThreadQueue(0, "LoaderGroup", Thread.NORM_PRIORITY, true);
+        return threadQueue;
+    }
 
-  public void removeAllOntologies() {
-     ontologies=null;
-  }
+    public ThreadQueue getNotificationQueue() {
+        if (notificationQueue == null) if (isMultiThreaded())
+            notificationQueue = new ThreadQueue(1, "NotificationThreads", Thread.MIN_PRIORITY, false);
+        else notificationQueue = new ThreadQueue(0, "NotificationThreads", Thread.NORM_PRIORITY, false);
+        return notificationQueue;
+    }
 
-  public Set<Entity> getOntologies() {
-     if (ontologyLookupNeeded) {
-       OntologyLoader locator;
-       try{
-         locator = FacadeManager.getFacadeManager().getOntologies();
-       }
-       catch (Exception ex) {
-          handleException(ex);
-          return new HashSet<Entity>(0);
-       }
-       Entity[] versions=locator.getOntologies();
-       Set<Entity> localGenomeVersions=new HashSet<Entity>(versions.length);
-         for (Entity ontology : versions) {
+
+    public ActiveThreadModel getActiveThreadModel() {
+        return ActiveThreadModel.getActiveThreadModel();
+    }
+
+    public void handleException(Throwable throwable) {
+        if (throwable instanceof NoDataException) return;
+        FacadeManager.handleException(throwable);
+    }
+
+    public void removeAllOntologies() {
+        ontologies = null;
+    }
+
+    public Set<Entity> getOntologies() {
+        if (ontologyLookupNeeded) {
+            OntologyFacade locator;
+            try {
+                locator = FacadeManager.getFacadeManager().getOntologyFacade();
+            }
+            catch (Exception ex) {
+                handleException(ex);
+                return new HashSet<Entity>(0);
+            }
+            List<Entity> ontologies = locator.getOntologies();
+            for (Entity ontology : ontologies) {
 //             if (readOnly && !ontology.isReadOnly()) ontology.makeReadOnly();
-             localGenomeVersions.add(ontology);
-             if (modelMgrObservers != null) {
-                 Object[] listeners = modelMgrObservers.toArray();
-                 for (Object listener : listeners) {
-                     ((ModelMgrObserver) listener).ontologyAdded(ontology);
-                 }
-             }
-         }
-       ontologies.addAll(localGenomeVersions);
-       ontologyLookupNeeded =false;
-     }
-     return new HashSet<Entity>(ontologies);
-  }
+                this.ontologies.add(ontology);
+                if (modelMgrObservers != null) {
+                    Object[] listeners = modelMgrObservers.toArray();
+                    for (Object listener : listeners) {
+                        ((ModelMgrObserver) listener).ontologyAdded(ontology);
+                    }
+                }
+            }
+            ontologyLookupNeeded = false;
+        }
+        return new HashSet<Entity>(ontologies);
+    }
 
-  /**
-  * Will NOT Force load of Ontologies
-  */
-  public int getNumberOfLoadedOntologies() {
-    if (ontologies==null) { return 0; }
-    return ontologies.size();
-  }
+    /**
+     * Will NOT Force load of Ontologies
+     */
+    public int getNumberOfLoadedOntologies() {
+        if (ontologies == null) {
+            return 0;
+        }
+        return ontologies.size();
+    }
 
 
-  public Entity getOntologyById(int entityId) {
-      Collection gvCollection=getOntologies();
-      Entity[] gvArray=(Entity[])gvCollection.toArray(new Entity[0]);
-      for (Entity aGvArray : gvArray) {
-          if (aGvArray.getId() == entityId) return aGvArray;
-      }
-      return null;  //none found
-  }
-
-  public Entity getOntologyContaining(Entity nodeInModel) {
-      Collection gvCollection=getOntologies();
-      Entity[] gvArray=(Entity[])gvCollection.toArray(new Entity[0]);
-      long genomeVersionID=nodeInModel.getId();
-      for (Entity aGvArray : gvArray) {
-          if (((Entity) aGvArray).getId() == genomeVersionID) return aGvArray;
-      }
-      return null;  //none found
-  }
+//    public Entity getOntologyById(int entityId) {
+//        Collection gvCollection = getOntologyFacade();
+//        Entity[] gvArray = (Entity[]) gvCollection.toArray(new Entity[0]);
+//        for (Entity aGvArray : gvArray) {
+//            if (aGvArray.getId() == entityId) return aGvArray;
+//        }
+//        return null;  //none found
+//    }
+//
+//    public Entity getOntologyContaining(Entity nodeInModel) {
+//        Collection gvCollection = getOntologyFacade();
+//        Entity[] gvArray = (Entity[]) gvCollection.toArray(new Entity[0]);
+//        long genomeVersionID = nodeInModel.getId();
+//        for (Entity aGvArray : gvArray) {
+//            if ((aGvArray).getId() == genomeVersionID) return aGvArray;
+//        }
+//        return null;  //none found
+//    }
 
     public Task getCurrentAnnotationSessionTask() {
         return annotationSesisonTask;
@@ -195,54 +200,190 @@ public class ModelMgr {
         this.annotationSesisonTask = annotationSesisonTask;
     }
 
-  public Entity getSelectedOntology() {
-     return selectedOntology;
-  }
+    public Entity getSelectedOntology() {
+        return selectedOntology;
+    }
 
-  public void setSelectedOntology(Entity ontology) {
-     if (selectedOntology==null || !selectedOntology.equals(ontology)) {
-       modelAvailable=true;
-         selectedOntology=ontology;
-         if (modelMgrObservers!=null) {
-         Object[] listeners=modelMgrObservers.toArray();
-           for (Object listener : listeners) {
-               ((ModelMgrObserver) listener).ontologySelected(ontology);
-           }
-       }
-     }
-  }
+    public void setSelectedOntology(Entity ontology) {
+        if (selectedOntology == null || !selectedOntology.equals(ontology)) {
+            modelAvailable = true;
+            selectedOntology = ontology;
+            if (modelMgrObservers != null) {
+                Object[] listeners = modelMgrObservers.toArray();
+                for (Object listener : listeners) {
+                    ((ModelMgrObserver) listener).ontologySelected(ontology);
+                }
+            }
+        }
+    }
 
-  public void unSelectOntology(Entity ontology) {
-      selectedOntology = null;
-       if (modelMgrObservers!=null) {
-         Object[] listeners=modelMgrObservers.toArray();
-           for (Object listener : listeners) {
-               ((ModelMgrObserver) listener).ontologyUnselected(ontology);
-           }
-     }
-    if (null==selectedOntology) modelAvailable=false;
-  }
+    public void unSelectOntology(Entity ontology) {
+        selectedOntology = null;
+        if (modelMgrObservers != null) {
+            Object[] listeners = modelMgrObservers.toArray();
+            for (Object listener : listeners) {
+                ((ModelMgrObserver) listener).ontologyUnselected(ontology);
+            }
+        }
+        if (null == selectedOntology) modelAvailable = false;
+    }
 
-  public void deleteAnnotation(String userlogin, Long annotatedEntityId, String tag) {
-      EJBFactory.getRemoteAnnotationBean().deleteAnnotation(userlogin, annotatedEntityId.toString(), tag);
-  }
+    public void deleteAnnotation(String userlogin, Long annotatedEntityId, String tag) {
+        FacadeManager.getFacadeManager().getAnnotationFacade().deleteAnnotation(userlogin, annotatedEntityId, tag);
+    }
 
-  public void prepareForSystemExit() {
-     FacadeManager.getFacadeManager().prepareForSystemExit();
-  }
+    public void prepareForSystemExit() {
+        FacadeManager.getFacadeManager().prepareForSystemExit();
+    }
 
 
-  public boolean modelsDoUniquenessChecking() {
-     String uc = modelMgrResourceBundle.getString("UniquenessCheckingOfEntities");
-     if (uc!=null && uc.equalsIgnoreCase("TRUE")) return true;
-     else return false;
-  }
+    public boolean modelsDoUniquenessChecking() {
+        String uc = modelMgrResourceBundle.getString("UniquenessCheckingOfEntities");
+        return uc != null && uc.equalsIgnoreCase("TRUE");
+    }
 
- public boolean isModelAvailable() {
-    return modelAvailable;
- }
+    public boolean isModelAvailable() {
+        return modelAvailable;
+    }
 
-//  private void workSpaceWasCreated(GenomeVersion genomeVersion) {
+    public List<EntityType> getEntityTypes() {
+        return FacadeManager.getFacadeManager().getEntityFacade().getEntityTypes();
+    }
+
+    public Entity getEntityById(String entityId) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().getEntityById(entityId);
+    }
+
+    public List<Entity> getEntitiesByName(String entityName) {
+        return FacadeManager.getFacadeManager().getEntityFacade().getEntitiesByName(entityName);
+    }
+
+    public List<EntityData> getParentEntityDatas(Long childEntityId) {
+        return FacadeManager.getFacadeManager().getEntityFacade().getParentEntityDatas(childEntityId);
+    }
+
+    public List<Entity> getEntitiesByType(Long entityTypeId) {
+        return FacadeManager.getFacadeManager().getEntityFacade().getEntitiesByType(entityTypeId);
+    }
+
+    public boolean deleteEntityById(Long entityId) {
+        return FacadeManager.getFacadeManager().getEntityFacade().deleteEntityById(entityId);
+    }
+
+    public void deleteEntityTree(String userLogin, Long id) {
+        try {
+            FacadeManager.getFacadeManager().getEntityFacade().deleteEntityTree(userLogin, id);
+        }
+        catch (Exception e) {
+            handleException(e);
+        }
+    }
+
+    public Entity createOntologyAnnotation(String username, String sessionId, String targetEntityId, String keyEntityId, String keyString, String valueEntityId, String valueString, String tag) throws Exception {
+        return FacadeManager.getFacadeManager().getOntologyFacade().createOntologyAnnotation(username, sessionId, targetEntityId, keyEntityId, keyString, valueEntityId, valueString, tag);
+    }
+
+    public Entity createOntologyRoot(String username, String ontologyName) throws Exception {
+        return FacadeManager.getFacadeManager().getOntologyFacade().createOntologyRoot(username, ontologyName);
+    }
+
+    public EntityData createOntologyTerm(String username, Long id, String label, OntologyElementType type, Integer orderIndex) throws Exception {
+        return FacadeManager.getFacadeManager().getOntologyFacade().createOntologyTerm(username, id, label, type, orderIndex);
+    }
+
+    public Entity getOntologyTree(String username, Long rootEntityId) throws Exception {
+        return FacadeManager.getFacadeManager().getOntologyFacade().getOntologyTree(username, rootEntityId);
+    }
+
+    public List<Entity> getCommonRootEntitiesByType(long entityTypeId) {
+        return FacadeManager.getFacadeManager().getEntityFacade().getCommonRootEntitiesByType(entityTypeId);
+    }
+
+    public Entity getEntityTree(long entityId) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().getEntityTree(entityId);
+    }
+
+    public Entity getCachedEntityTree(Long entityId) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().getCachedEntityTree(entityId);
+    }
+
+    public Set<Entity> getChildEntities(Long parentEntityId) {
+        return FacadeManager.getFacadeManager().getEntityFacade().getChildEntities(parentEntityId);
+    }
+
+    public List<Entity> getPrivateOntologies(String username) throws Exception {
+        return FacadeManager.getFacadeManager().getOntologyFacade().getPrivateOntologies(username);
+    }
+
+    public List<Entity> getPublicOntologies() throws Exception {
+        return FacadeManager.getFacadeManager().getOntologyFacade().getPublicOntologies();
+    }
+
+    public Entity publishOntology(Long ontologyEntityId, String rootName) throws Exception {
+        return FacadeManager.getFacadeManager().getOntologyFacade().publishOntology(ontologyEntityId, rootName);
+    }
+
+    public void removeOntologyTerm(String username, Long termEntityId) throws Exception {
+        FacadeManager.getFacadeManager().getOntologyFacade().removeOntologyTerm(username, termEntityId);
+    }
+
+    public Entity cloneEntityTree(Long entityId, String username, String rootName) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().cloneEntityTree(entityId, username, rootName);
+    }
+
+    public List<Entity> getAnnotationsForEntity(String username, Long entityId) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().getAnnotationsForEntity(username, entityId);
+    }
+
+    public List<Entity> getAnnotationsForEntities(String username, List<Long> entityIds) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().getAnnotationsForEntities(username, entityIds);
+    }
+
+    public void removeAllOntologyAnnotationsForSession(String username, Long annotationSessionId) throws Exception {
+        FacadeManager.getFacadeManager().getAnnotationFacade().removeAllOntologyAnnotationsForSession(username, annotationSessionId);
+    }
+
+    public List<Entity> getEntitiesForAnnotationSession(String username, Long annotationSessionId) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().getEntitiesForAnnotationSession(username, annotationSessionId);
+    }
+
+    public List<Entity> getCategoriesForAnnotationSession(String username, Long annotationSessionId) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().getCategoriesForAnnotationSession(username, annotationSessionId);
+    }
+
+    public List<Entity> getAnnotationsForSession(String username, Long annotationSessionId) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().getAnnotationsForSession(username, annotationSessionId);
+    }
+
+    public EntityData saveOrUpdateEntityData(EntityData newEntityData) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().saveEntityDataForEntity(newEntityData);
+    }
+
+    public Task saveOrUpdateTask(Task task) throws Exception {
+        return FacadeManager.getFacadeManager().getComputeFacade().saveOrUpdateTask(task);
+    }
+
+    public void deleteTaskById(Long taskId) throws Exception {
+        FacadeManager.getFacadeManager().getComputeFacade().deleteTaskById(taskId);
+    }
+
+    public List<Task> getUserTasksByType(String taskName, String username) throws Exception {
+        return FacadeManager.getFacadeManager().getComputeFacade().getUserTasksByType(taskName, username);
+    }
+
+    public User getUser(String username) throws Exception {
+        return FacadeManager.getFacadeManager().getComputeFacade().getUser(username);
+    }
+
+    public User saveOrUpdateUser(User user) throws Exception {
+        return FacadeManager.getFacadeManager().getComputeFacade().saveOrUpdateUser(user);
+    }
+
+    public void removePreferenceCategory(String category) throws Exception {
+        FacadeManager.getFacadeManager().getComputeFacade().removePreferenceCategory(category);
+    }
+
+    //  private void workSpaceWasCreated(GenomeVersion genomeVersion) {
 //    Set genomeVersions=getGenomeVersions();
 //    GenomeVersion gv;
 //      for (Object genomeVersion1 : genomeVersions) {
@@ -286,14 +427,15 @@ public class ModelMgr {
 //       }
 //    }
 //
-  class MyInUseProtocolListener implements InUseProtocolListener {
-     public void protocolAddedToInUseList(String protocol){
-       ontologyLookupNeeded =true;
-     }
-     public void protocolRemovedFromInUseList(String protocol){
+    class MyInUseProtocolListener implements InUseProtocolListener {
+        public void protocolAddedToInUseList(String protocol) {
+            ontologyLookupNeeded = true;
+        }
 
-     }
-  }
+        public void protocolRemovedFromInUseList(String protocol) {
+
+        }
+    }
 
 
 }

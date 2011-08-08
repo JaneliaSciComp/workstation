@@ -8,7 +8,8 @@ package org.janelia.it.FlyWorkstation.gui.framework.outline;
 public interface DataAvailabilityListener extends java.util.EventListener {
     /**
      * This method gets called when data becomes available.
-     * <p>
+     * <p/>
+     *
      * @param evt A DataReadyEvent object describing the event source.
      */
     void dataReady(DataReadyEvent evt);

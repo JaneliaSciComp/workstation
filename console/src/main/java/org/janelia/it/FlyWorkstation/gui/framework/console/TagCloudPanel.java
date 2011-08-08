@@ -1,7 +1,10 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import java.awt.Color;
-import java.awt.Font;
+import org.janelia.it.FlyWorkstation.gui.util.WrapLayout;
+
+import javax.swing.*;
+import javax.swing.border.Border;
+import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -10,66 +13,59 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.BorderFactory;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.border.Border;
-
-import org.janelia.it.FlyWorkstation.gui.util.WrapLayout;
-
 /**
  * A panel that shows a bunch of tags in a loose wrapping fashion.
- * 
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class TagCloudPanel<T> extends JPanel {
 
     private List<T> tags = new ArrayList<T>();
-    private Map<T,JLabel> tagLabels = new HashMap<T,JLabel>();
-    
-	public TagCloudPanel() {
-		setLayout(new WrapLayout());
-        setOpaque(false);
-	}
+    private Map<T, JLabel> tagLabels = new HashMap<T, JLabel>();
 
-	public List<T> getTags() {
+    public TagCloudPanel() {
+        setLayout(new WrapLayout());
+        setOpaque(false);
+    }
+
+    public List<T> getTags() {
         return tags;
     }
 
     public void setTags(List<T> tags) {
-    	if (tags == null) {
-    		this.tags = new ArrayList<T>();
-    	}
-    	else {
-    		this.tags = tags;	
-    	}
+        if (tags == null) {
+            this.tags = new ArrayList<T>();
+        }
+        else {
+            this.tags = tags;
+        }
         refresh();
-	}
+    }
 
     public void removeTag(T tag) {
-    	tags.remove(tag);
-    	refresh();
+        tags.remove(tag);
+        refresh();
     }
-    
+
     public void addTag(T tag) {
-    	tags.add(tag);
-    	refresh();
+        tags.add(tag);
+        refresh();
     }
-    
-	public Map<T, JLabel> getTagLabels() {
-		return tagLabels;
-	}
-    
+
+    public Map<T, JLabel> getTagLabels() {
+        return tagLabels;
+    }
+
     private void refresh() {
 
-    	tagLabels = new HashMap<T,JLabel>();
+        tagLabels = new HashMap<T, JLabel>();
         removeAll();
-        
-        Border paddingBorder = BorderFactory.createEmptyBorder(5,5,5,5);
+
+        Border paddingBorder = BorderFactory.createEmptyBorder(5, 5, 5, 5);
         Border lineBorder = BorderFactory.createLineBorder(Color.black, 1);
         Border border = BorderFactory.createCompoundBorder(lineBorder, paddingBorder);
-        
-        for(final T tag : getTags()) {
+
+        for (final T tag : getTags()) {
             JLabel tagLabel = new JLabel(tag.toString());
             tagLabel.setBorder(border);
             tagLabel.setFont(new Font("Sans Serif", Font.BOLD, 12));
@@ -78,7 +74,7 @@ public class TagCloudPanel<T> extends JPanel {
             tagLabel.setForeground(Color.black);
             add(tagLabel);
             tagLabels.put(tag, tagLabel);
-            
+
             tagLabel.addMouseListener(new MouseAdapter() {
                 public void mouseReleased(MouseEvent e) {
 
@@ -86,16 +82,14 @@ public class TagCloudPanel<T> extends JPanel {
                         showPopupMenu(e, tag);
                     }
                     // This masking is to make sure that the right button is being double clicked, not left and then right or right and then left
-                    else if (e.getClickCount()==2 
-                    		&& e.getButton()==MouseEvent.BUTTON1 
-                    		&& (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
-                    	tagDoubleClicked(e, tag);
+                    else if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1 && (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
+                        tagDoubleClicked(e, tag);
                     }
-                    else if (e.getClickCount()==1
-                    		&& e.getButton()==MouseEvent.BUTTON1) {
-                    	tagClicked(e, tag);
+                    else if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
+                        tagClicked(e, tag);
                     }
                 }
+
                 public void mousePressed(MouseEvent e) {
                     // We have to also listen for mousePressed because OSX generates the popup trigger here
                     // instead of mouseReleased like any sane OS.
@@ -105,14 +99,14 @@ public class TagCloudPanel<T> extends JPanel {
                 }
             });
         }
-        
+
         revalidate();
         repaint();
     }
-	
+
     protected void showPopupMenu(MouseEvent e, T tag) {
     }
-    
+
     protected void tagDoubleClicked(MouseEvent e, T tag) {
     }
 

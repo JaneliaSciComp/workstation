@@ -47,12 +47,12 @@ public class DataTransferMouseListener extends MouseAdapter {
         SELECTALL_ACTION = new SelectAllAction();
     } // End initializer static block
 
-    /** Constructor sets itself as a listener on the widget. */
+    /**
+     * Constructor sets itself as a listener on the widget.
+     */
     public DataTransferMouseListener(JTextComponent lTextComponent) {
         if (lTextComponent == null) {
-            throw new IllegalArgumentException(
-                    "Restriction violated in constructing " + 
-                    this.getClass().getName() + ": null text component");
+            throw new IllegalArgumentException("Restriction violated in constructing " + this.getClass().getName() + ": null text component");
         }
 
         lTextComponent.addMouseListener(this);
@@ -60,7 +60,9 @@ public class DataTransferMouseListener extends MouseAdapter {
 
     //------------------------------------------IMPLEMENTATION OF MouseListener
 
-    /** Override of mouseReleased.  Here: to popup a menu, and nothing else. */
+    /**
+     * Override of mouseReleased.  Here: to popup a menu, and nothing else.
+     */
     public void mouseReleased(MouseEvent e) {
         if (e.isPopupTrigger() && (e.getSource() instanceof JTextComponent)) {
             JTextComponent component = (JTextComponent) e.getSource();
@@ -68,7 +70,9 @@ public class DataTransferMouseListener extends MouseAdapter {
         } // Will present the menu.
     } // End method: mouseReleased
 
-    /** Override of mousePressed.  Here: to popup a menu, and nothing else. */
+    /**
+     * Override of mousePressed.  Here: to popup a menu, and nothing else.
+     */
     public void mousePressed(MouseEvent e) {
         if (e.isPopupTrigger() && (e.getSource() instanceof JTextComponent)) {
             JTextComponent lComponent = (JTextComponent) e.getSource();
@@ -78,21 +82,27 @@ public class DataTransferMouseListener extends MouseAdapter {
 
     //------------------------------------------HELPER METHODS
 
-    /** Shows the popup menu where user specified with click. */
+    /**
+     * Shows the popup menu where user specified with click.
+     */
     private void displayMenuAt(Point lPoint, JTextComponent lSource) {
         updateActions(lSource);
         lSource.grabFocus();
         createMenu(lSource).show(lSource, lPoint.x, lPoint.y);
     } // End method: displayMenuAt
 
-    /** Sets enablement of actions on menu according to state of widget. */
+    /**
+     * Sets enablement of actions on menu according to state of widget.
+     */
     private void updateActions(JTextComponent lSource) {
         CLEARALL_ACTION.setEnabled(lSource.isEditable());
         CUT_ACTION.setEnabled(lSource.isEditable());
         PASTE_ACTION.setEnabled(lSource.isEditable());
     } // End method: enableActions
 
-    /** Makes a menu, adding only meaningful items. */
+    /**
+     * Makes a menu, adding only meaningful items.
+     */
     private JPopupMenu createMenu(JTextComponent lSource) {
         JPopupMenu lPopupMenu = new JPopupMenu();
 
@@ -108,16 +118,13 @@ public class DataTransferMouseListener extends MouseAdapter {
         // Cache a flag for selected text in text component.
         boolean lTextIsSelected = false;
 
-        if ((lSource.getSelectedText() != null) && 
-                (lSource.getSelectedText().length() > 0)) {
+        if ((lSource.getSelectedText() != null) && (lSource.getSelectedText().length() > 0)) {
             lTextIsSelected = true;
         }
 
         // Cache a flag for whether anything exists in the clipboard.
         boolean lDataInClipboard = false;
-        Object lClipboardContents = Toolkit.getDefaultToolkit()
-                                           .getSystemClipboard()
-                                           .getContents(this);
+        Object lClipboardContents = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(this);
 
         if (lClipboardContents != null) {
             lDataInClipboard = true;
@@ -171,7 +178,9 @@ public class DataTransferMouseListener extends MouseAdapter {
         return lPopupMenu;
     } // End method: createMenu
 
-    /** Actions to clear text or select all text in the text component. */
+    /**
+     * Actions to clear text or select all text in the text component.
+     */
     public static class ClearAllAction extends TextAction {
         public ClearAllAction() {
             super("Clear All");
@@ -183,8 +192,7 @@ public class DataTransferMouseListener extends MouseAdapter {
 
             if ((lTarget != null) && lTarget.isEditable()) {
                 try {
-                    lTarget.getDocument()
-                           .remove(0, lTarget.getDocument().getLength());
+                    lTarget.getDocument().remove(0, lTarget.getDocument().getLength());
                 } // End try block
                 catch (BadLocationException ex) {
                     // if this happens, then something is wrong internally with

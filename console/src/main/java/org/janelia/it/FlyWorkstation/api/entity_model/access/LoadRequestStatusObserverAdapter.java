@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.api.entity_model.access;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.*;
+import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestState;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestStatus;
 
 /**
@@ -11,10 +11,16 @@ import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestStatus
  */
 public abstract class LoadRequestStatusObserverAdapter implements LoadRequestStatusObserver {
 
-  protected LoadRequestStatusObserverAdapter() {}//Constructor Protected to force subclassing
+    protected LoadRequestStatusObserverAdapter() {
+    }//Constructor Protected to force subclassing
 
-  public void stateChanged(LoadRequestStatus loadRequestStatus, LoadRequestState newState){}
-  public void loadedPercentageChanged(LoadRequestStatus loadRequestStatus,  int newPercent){}
-    public void notifiedPercentageChanged(LoadRequestStatus loadRequestStatus,  int newPercent){}
+    public void stateChanged(LoadRequestStatus loadRequestStatus, LoadRequestState newState) {
+    }
+
+    public void loadedPercentageChanged(LoadRequestStatus loadRequestStatus, int newPercent) {
+    }
+
+    public void notifiedPercentageChanged(LoadRequestStatus loadRequestStatus, int newPercent) {
+    }
 //  public void alignedPercentageChanged(LoadRequestStatus loadRequestStatus,  int newPercent){}
 }

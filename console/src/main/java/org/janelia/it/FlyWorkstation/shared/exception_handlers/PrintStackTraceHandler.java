@@ -6,8 +6,7 @@ import org.janelia.it.FlyWorkstation.api.facade.roles.ExceptionHandler;
 
 public class PrintStackTraceHandler implements ExceptionHandler {
     public void handleException(Throwable throwable) {
-        if (!(throwable instanceof ConnectionStatusException ||
-                    throwable instanceof XMLSecurityException)) {
+        if (!(throwable instanceof ConnectionStatusException || throwable instanceof XMLSecurityException)) {
             throwable.printStackTrace();
         }
 

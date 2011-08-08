@@ -8,7 +8,8 @@ package org.janelia.it.FlyWorkstation.api.facade.facade_mgr;
  */
 public interface InUseProtocolListener {
 
-   void protocolAddedToInUseList(String protocol);
-   void protocolRemovedFromInUseList(String protocol);
+    void protocolAddedToInUseList(String protocol);
+
+    void protocolRemovedFromInUseList(String protocol);
 
 }

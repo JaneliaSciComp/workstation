@@ -6,7 +6,6 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.keybind;
 
-import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -32,8 +31,8 @@ public class KeyBindFrame extends JDialog implements ActionListener {
 
     public KeyBindFrame(OntologyOutline ontologyOutline) {
 
-    	this.ontologyOutline = ontologyOutline;
-    	
+        this.ontologyOutline = ontologyOutline;
+
         setTitle("Enter Keyboard Shortcut");
         setSize(200, 200);
         getContentPane().setLayout(new BorderLayout());
@@ -44,14 +43,14 @@ public class KeyBindFrame extends JDialog implements ActionListener {
             protected void updateCurrentKeyStrokeInfo() {
 
                 KeyboardShortcut keyboardShortcut = getKeyboardShortcut();
-                if (keyboardShortcut == null){
+                if (keyboardShortcut == null) {
                     return;
                 }
 
-                Action conflictingAction = ConsoleApp.getKeyBindings().getConflict(keyboardShortcut);
+                Action conflictingAction = SessionMgr.getKeyBindings().getConflict(keyboardShortcut);
                 if (conflictingAction != null && !conflictingAction.equals(actionToBind)) {
                     conflictInfoArea.setForeground(Color.red);
-                    conflictInfoArea.setText("Will replace key binding for '"+conflictingAction.getName()+"'");
+                    conflictInfoArea.setText("Will replace key binding for '" + conflictingAction.getName() + "'");
                 }
                 else {
                     conflictInfoArea.setForeground(Color.black);
@@ -63,9 +62,7 @@ public class KeyBindFrame extends JDialog implements ActionListener {
 
         JPanel inputPane = new JPanel(new BorderLayout());
         inputPane.add(shortcutField, BorderLayout.CENTER);
-        inputPane.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder("Key Stroke"),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        inputPane.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Key Stroke"), BorderFactory.createEmptyBorder(5, 5, 5, 5)));
         add(inputPane, BorderLayout.NORTH);
 
         conflictInfoArea = new JTextArea(5, 20);
@@ -76,9 +73,7 @@ public class KeyBindFrame extends JDialog implements ActionListener {
 
         JPanel conflictPane = new JPanel(new BorderLayout());
         conflictPane.add(scrollPane, BorderLayout.CENTER);
-        conflictPane.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder("Conflicts"),
-                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
+        conflictPane.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createTitledBorder("Conflicts"), BorderFactory.createEmptyBorder(5, 5, 5, 5)));
         add(conflictPane, BorderLayout.CENTER);
 
         JButton okButton = new JButton("OK");
@@ -106,8 +101,7 @@ public class KeyBindFrame extends JDialog implements ActionListener {
             }
         });
 
-        setDefaultCloseOperation(
-                JDialog.DO_NOTHING_ON_CLOSE);
+        setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent we) {
                 setVisible(false);
@@ -124,8 +118,8 @@ public class KeyBindFrame extends JDialog implements ActionListener {
             }
 
             KeyboardShortcut keyboardShortcut = getKeyboardShortcut();
-            ConsoleApp.getKeyBindings().setBinding(keyboardShortcut, actionToBind);
-            ConsoleApp.getKeyBindings().saveOntologyKeybinds(ontologyOutline.getCurrentOntology());
+            SessionMgr.getKeyBindings().setBinding(keyboardShortcut, actionToBind);
+            SessionMgr.getKeyBindings().saveOntologyKeybinds(ontologyOutline.getCurrentOntology());
             setVisible(false);
         }
         else if (CLICKED_CANCEL.equals(cmd)) {
@@ -140,7 +134,7 @@ public class KeyBindFrame extends JDialog implements ActionListener {
 
     public void setActionToBind(Action action) {
         this.actionToBind = action;
-        KeyboardShortcut shortcut = ConsoleApp.getKeyBindings().getBinding(action);
+        KeyboardShortcut shortcut = SessionMgr.getKeyBindings().getBinding(action);
         if (shortcut != null) {
             shortcutField.setKeyStroke(shortcut.getFirstKeyStroke());
         }
@@ -151,11 +145,11 @@ public class KeyBindFrame extends JDialog implements ActionListener {
     }
 
     public KeyboardShortcut getKeyboardShortcut() {
-      KeyStroke firstStroke = shortcutField.getKeyStroke();
-      if (firstStroke == null) {
-        return null;
-      }
-      return new KeyboardShortcut(firstStroke);
+        KeyStroke firstStroke = shortcutField.getKeyStroke();
+        if (firstStroke == null) {
+            return null;
+        }
+        return new KeyboardShortcut(firstStroke);
     }
 
 }

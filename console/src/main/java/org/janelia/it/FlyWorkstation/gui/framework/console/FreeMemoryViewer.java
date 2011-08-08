@@ -38,11 +38,9 @@ public class FreeMemoryViewer extends JPanel implements Observer {
     private JDialog errorDialog;
 
     public FreeMemoryViewer() {
-        warningPane = new JOptionPane("Available memory is currently at x percent.",
-            JOptionPane.WARNING_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
+        warningPane = new JOptionPane("Available memory is currently at x percent.", JOptionPane.WARNING_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
         warningDialog = warningPane.createDialog(this.getParent(), "Warning: Low Available Memory");
-        errorPane = new JOptionPane("Available memory is currently at x and is critically low!",
-            JOptionPane.ERROR_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
+        errorPane = new JOptionPane("Available memory is currently at x and is critically low!", JOptionPane.ERROR_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
         errorDialog = errorPane.createDialog(this.getParent(), "Error: Critically Low Available Memory");
 
         bar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 100);
@@ -74,16 +72,12 @@ public class FreeMemoryViewer extends JPanel implements Observer {
     }
 
     public void update(Observable observable, Object obj) {
-        if (observable instanceof FreeMemoryWatcher &&
-                obj instanceof Integer) {
+        if (observable instanceof FreeMemoryWatcher && obj instanceof Integer) {
             int value = ((Integer) obj).intValue();
-            if (value >= YELLOW_BAR)
-                bar.setForeground(Color.green);
-            if (value >= RED_BAR && value < YELLOW_BAR)
-                bar.setForeground(Color.yellow);
+            if (value >= YELLOW_BAR) bar.setForeground(Color.green);
+            if (value >= RED_BAR && value < YELLOW_BAR) bar.setForeground(Color.yellow);
             //   System.out.println("yello reached");
-            if (value < RED_BAR)
-                bar.setForeground(Color.red);
+            if (value < RED_BAR) bar.setForeground(Color.red);
             bar.setValue(100 - value);
             checkWarning(value);
         }
@@ -113,18 +107,14 @@ public class FreeMemoryViewer extends JPanel implements Observer {
             return;
         }
 
-        if (percentRemaining <= FIRST_WARNING_PERCENT &&
-                percentRemaining > SECOND_WARNING_PERCENT &&
-                !reachedFirstWarningPercent) {
+        if (percentRemaining <= FIRST_WARNING_PERCENT && percentRemaining > SECOND_WARNING_PERCENT && !reachedFirstWarningPercent) {
 
             showMemWarningDialog(percentRemaining);
             reachedFirstWarningPercent = true;
             reachedFinalWarningPercent = false;
         }
 
-        if (percentRemaining <= SECOND_WARNING_PERCENT &&
-                percentRemaining > FINAL_WARNING_PERCENT &&
-                !reachedSecondWarningPercent) {
+        if (percentRemaining <= SECOND_WARNING_PERCENT && percentRemaining > FINAL_WARNING_PERCENT && !reachedSecondWarningPercent) {
 
             showMemWarningDialog(percentRemaining);
             reachedFirstWarningPercent = true;
@@ -152,7 +142,9 @@ public class FreeMemoryViewer extends JPanel implements Observer {
 
     private void showMemErrorDialog(int percentAvailable) {
         // If we are critical, hide the warning message
-        if (warningDialog.isShowing()) {warningDialog.setVisible(false);}
+        if (warningDialog.isShowing()) {
+            warningDialog.setVisible(false);
+        }
         errorPane.setMessage("Available memory is " + percentAvailable + " and is critically low!");
         errorPane.updateUI();
         if (!errorDialog.isShowing()) {

@@ -4,7 +4,8 @@ import org.janelia.it.jacs.model.entity.Entity;
 
 public class BrowserModelListenerAdapter implements BrowserModelListener {
 
-  public void browserMasterEditorEntityChanged(Entity masterEditorEntity) {}
+    public void browserMasterEditorEntityChanged(Entity masterEditorEntity) {
+    }
 //
 //  public void browserMasterEditorSelectedRangeChanged(Range masterEditorSelectedRange) {}
 //
@@ -12,9 +13,12 @@ public class BrowserModelListenerAdapter implements BrowserModelListener {
 //
 //  public void browserSubViewVisibleRangeChanged(Range subViewVisibleRange){}
 
-  public void browserCurrentSelectionChanged(Entity newSelection) {}
+    public void browserCurrentSelectionChanged(Entity newSelection) {
+    }
 
-  public void browserClosing() {}
+    public void browserClosing() {
+    }
 
-  public void modelPropertyChanged(Object key, Object oldValue, Object newValue){}
+    public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
+    }
 }

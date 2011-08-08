@@ -6,19 +6,19 @@ package org.janelia.it.FlyWorkstation.api.entity_model.fundtype;
  * Date: 7/22/11
  * Time: 4:00 PM
  */
-public class LoadRequest implements java.io.Serializable{
+public class LoadRequest implements java.io.Serializable {
 
-//  private RangeSet ranges;
+    //  private RangeSet ranges;
 //  private Bin bin;
-  private LoadFilter loadFilter;
-  private LoadRequestStatus loadRequestStatus;
-  private boolean isUnloadRequest;
+    private LoadFilter loadFilter;
+    private LoadRequestStatus loadRequestStatus;
+    private boolean isUnloadRequest;
 
 
-  public LoadRequest(LoadFilter loadFilter) {
-    this.loadFilter=loadFilter;
-    loadRequestStatus=new LoadRequestStatus(loadFilter);
-  }
+    public LoadRequest(LoadFilter loadFilter) {
+        this.loadFilter = loadFilter;
+        loadRequestStatus = new LoadRequestStatus(loadFilter);
+    }
 
 //  public LoadRequest(Range range,LoadFilter loadFilter) {
 //     this(range,loadFilter,false);
@@ -47,9 +47,9 @@ public class LoadRequest implements java.io.Serializable{
 //     return ranges!=null;
 //  }
 
-  public boolean isUnloadRequest() {
-    return isUnloadRequest;
-  }
+    public boolean isUnloadRequest() {
+        return isUnloadRequest;
+    }
 
 //  public boolean isBinRequest() {
 //     return bin!=null;
@@ -64,11 +64,11 @@ public class LoadRequest implements java.io.Serializable{
 //    return Collections.unmodifiableSet(ranges);
 //  }
 
-  public LoadFilter getLoadFilter() {
-     return loadFilter;
-  }
+    public LoadFilter getLoadFilter() {
+        return loadFilter;
+    }
 
-  public LoadRequestStatus getLoadRequestStatus() {
-     return loadRequestStatus;
-  }
+    public LoadRequestStatus getLoadRequestStatus() {
+        return loadRequestStatus;
+    }
 }

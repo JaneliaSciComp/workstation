@@ -1,29 +1,23 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.FlowLayout;
-
-import javax.swing.BorderFactory;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTree;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.TreeCellRenderer;
-
-import org.janelia.it.FlyWorkstation.gui.application.ConsoleApp;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.types.*;
 
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.TreeCellRenderer;
+import java.awt.*;
+
 /**
  * Special tree cell renderer for OntologyTerms which displays the term, its type, and its key binding. The icon
  * is customized based on the term type.
- * 
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements TreeCellRenderer {
@@ -42,13 +36,13 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
     private OntologyOutline ontologyOutline;
 
     public OntologyTreeCellRenderer() {
-    	this(null);
+        this(null);
     }
-    
+
     public OntologyTreeCellRenderer(OntologyOutline ontologyOutline) {
 
-    	this.ontologyOutline = ontologyOutline;
-    	
+        this.ontologyOutline = ontologyOutline;
+
         cellPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
         titleLabel = new JLabel(" ");
@@ -76,10 +70,10 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
     public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
         Component returnValue = null;
         if ((value != null) && (value instanceof DefaultMutableTreeNode)) {
-        	DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
             Object userObject = node.getUserObject();
             if (userObject instanceof OntologyElement) {
-            	OntologyElement element = (OntologyElement) userObject;
+                OntologyElement element = (OntologyElement) userObject;
 
                 // Set the labels
 
@@ -99,24 +93,24 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
                     typeLabel.setText("[Unknown]");
                 }
 
-                
+
                 // Set the key bind hint
 
                 keybindLabel.setText(" ");
-                
+
                 if (ontologyOutline != null) {
                     Action action = ontologyOutline.getActionForNode(node);
                     if (action != null) {
-                    	KeyboardShortcut bind = ConsoleApp.getKeyBindings().getBinding(action);
-                    	if (bind != null) {
-                    		keybindLabel.setText("(" + KeymapUtil.getShortcutText(bind) + ")");
-                    	}
+                        KeyboardShortcut bind = SessionMgr.getKeyBindings().getBinding(action);
+                        if (bind != null) {
+                            keybindLabel.setText("(" + KeymapUtil.getShortcutText(bind) + ")");
+                        }
                     }
                     else {
-                    	System.out.println("Node has a null action: "+element.getName());
+                        System.out.println("Node has a null action: " + element.getName());
                     }
                 }
-                
+
                 // Set the colors
 
                 if (selected) {

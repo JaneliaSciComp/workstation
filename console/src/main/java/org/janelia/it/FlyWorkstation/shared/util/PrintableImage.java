@@ -16,15 +16,16 @@ import java.awt.print.PrinterException;
 public class PrintableImage extends JComponent implements Printable {
     //---------------------------------------MEMBER VARIABLES
     private Image mImage;
-    private Dimension mPreferredSize = new Dimension(0,0); //Nvr a null moment!
+    private Dimension mPreferredSize = new Dimension(0, 0); //Nvr a null moment!
 
     //---------------------------------------CONSTRUCTORS
+
     /**
      * Constructor takes the name of an image file to read.
      *
      * @param lFileName the name of the file. (full path)
      */
-    public PrintableImage (String lFileName) {
+    public PrintableImage(String lFileName) {
         // readToBuffer(lFileName);
         ImageIcon lImageIcon = new ImageIcon(lFileName);
         setup(lImageIcon);
@@ -35,7 +36,7 @@ public class PrintableImage extends JComponent implements Printable {
      *
      * @param lBufferedImage the name of the file. (full path)
      */
-    public PrintableImage (BufferedImage lBufferedImage) {
+    public PrintableImage(BufferedImage lBufferedImage) {
         setup(lBufferedImage);
     } // End constructor
 
@@ -44,12 +45,13 @@ public class PrintableImage extends JComponent implements Printable {
      *
      * @param lJPEGBuffer the name of the file. (full path)
      */
-    public PrintableImage (byte[] lJPEGBuffer) {
+    public PrintableImage(byte[] lJPEGBuffer) {
         ImageIcon lImageIcon = new ImageIcon(lJPEGBuffer);
         setup(lImageIcon);
     } // End constructor
 
     //---------------------------------------OVERRIDES FOR JComponent
+
     /**
      * Overrides the paint method so the image may be drawn.
      *
@@ -88,38 +90,45 @@ public class PrintableImage extends JComponent implements Printable {
         return mPreferredSize.height;
     } // End method: getHeight
 
-    /** Overrides so size never changes. */
-    public Dimension getMaximumSize() { return getPreferredSize(); }
-    public Dimension getMinimumSize() { return getPreferredSize(); }
+    /**
+     * Overrides so size never changes.
+     */
+    public Dimension getMaximumSize() {
+        return getPreferredSize();
+    }
+
+    public Dimension getMinimumSize() {
+        return getPreferredSize();
+    }
 
     //----------------------------------------IMPLEMENTATION OF Printable
+
     /**
      * Used to print the contents of the screen.
      *
      * @param graphics the context onto which to print.
      * @return int 0
      */
-    public int print(Graphics graphics, PageFormat pageFormat, int pageIndex)
-            throws PrinterException {
+    public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
 
-        double scaleFactorX=0.0;
-        double scaleFactorY=0.0;
-        scaleFactorX=pageFormat.getImageableWidth()/getPreferredSize().getWidth();
-        scaleFactorY=pageFormat.getImageableHeight()/getPreferredSize().getHeight();
+        double scaleFactorX = 0.0;
+        double scaleFactorY = 0.0;
+        scaleFactorX = pageFormat.getImageableWidth() / getPreferredSize().getWidth();
+        scaleFactorY = pageFormat.getImageableHeight() / getPreferredSize().getHeight();
 
-        graphics.translate((int)pageFormat.getImageableX(),(int)pageFormat.getImageableY());
+        graphics.translate((int) pageFormat.getImageableX(), (int) pageFormat.getImageableY());
 
         if (graphics instanceof Graphics2D) {
-           ((Graphics2D)graphics).scale(scaleFactorX,scaleFactorY);
+            ((Graphics2D) graphics).scale(scaleFactorX, scaleFactorY);
         } // 2D Graphics Available.
 
         paint(graphics);
-        if (pageIndex>=1)
-            return NO_SUCH_PAGE;
+        if (pageIndex >= 1) return NO_SUCH_PAGE;
         return PAGE_EXISTS;
 
     } // End method: print
     //---------------------------------------HELPER METHODS
+
     /**
      * Sets up the characteristics of the component, given the image icon.
      *

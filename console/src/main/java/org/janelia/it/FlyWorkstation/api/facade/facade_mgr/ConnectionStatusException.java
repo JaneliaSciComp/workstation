@@ -8,14 +8,14 @@ package org.janelia.it.FlyWorkstation.api.facade.facade_mgr;
  */
 public class ConnectionStatusException extends Exception {
 
-  private boolean notifyUser;
+    private boolean notifyUser;
 
-  ConnectionStatusException(String msg, boolean notifyUser) {
-      super(msg);
-      this.notifyUser=notifyUser;
-  }
+    ConnectionStatusException(String msg, boolean notifyUser) {
+        super(msg);
+        this.notifyUser = notifyUser;
+    }
 
-  public boolean notifyUser() {
-    return notifyUser;
-  }
+    public boolean notifyUser() {
+        return notifyUser;
+    }
 }

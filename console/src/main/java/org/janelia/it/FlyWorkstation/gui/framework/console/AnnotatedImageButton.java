@@ -1,5 +1,13 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.jacs.model.entity.Entity;
+
+import javax.swing.*;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -7,36 +15,27 @@ import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import javax.swing.*;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
-
-import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.jacs.model.entity.Entity;
-
 /**
  * A lazy-loading image with a title on top and optional annotation tags underneath.
  */
 public class AnnotatedImageButton extends JToggleButton {
-	
+
     private JTextPane imageCaption;
     private final EntityTagCloudPanel tagPanel;
     private final JLabel imageLabel;
     private final String title;
     private final String imageFilename;
-	private BufferedImage maxSizeImage;
-	private BufferedImage invertedMaxSizeImage;
-	private int displaySize;
-	private boolean inverted = false;
+    private BufferedImage maxSizeImage;
+    private BufferedImage invertedMaxSizeImage;
+    private int displaySize;
+    private boolean inverted = false;
     private Entity entity;
-    
+
     public AnnotatedImageButton(String title, String imageFilename, final int index, Entity entity) {
-    	this.entity = entity;
-    	this.title = title;
+        this.entity = entity;
+        this.title = title;
         this.imageFilename = imageFilename;
-        
+
         GridBagConstraints c = new GridBagConstraints();
         final JPanel imagePanel = new JPanel(new GridBagLayout());
         imagePanel.setOpaque(false);
@@ -56,28 +55,28 @@ public class AnnotatedImageButton extends JToggleButton {
 
         c.gridx = 0;
         c.gridy = 0;
-        c.insets = new Insets(0,0,5,0);
+        c.insets = new Insets(0, 0, 5, 0);
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.PAGE_START;
         c.weighty = 0;
-        imagePanel.add(imageCaption,c);
+        imagePanel.add(imageCaption, c);
 
         imageLabel = new JLabel();
         imageLabel.setSize(300, 300);
         imageLabel.setIcon(Icons.loadingIcon);
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
         imageLabel.setVerticalAlignment(SwingConstants.TOP);
-        
+
         c.gridx = 0;
         c.gridy = 1;
-        c.insets = new Insets(0,0,5,0);
+        c.insets = new Insets(0, 0, 5, 0);
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.PAGE_START;
         c.weighty = 0;
-        imagePanel.add(imageLabel,c);
+        imagePanel.add(imageLabel, c);
 
         tagPanel = new EntityTagCloudPanel();
-        
+
         c.gridx = 0;
         c.gridy = 2;
         c.fill = GridBagConstraints.BOTH;
@@ -94,93 +93,93 @@ public class AnnotatedImageButton extends JToggleButton {
                 AnnotatedImageButton.this.dispatchEvent(e);
             }
         });
-        
+
         this.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-            	setSelected(!isSelected());
+                setSelected(!isSelected());
             }
         });
-        
+
     }
 
     public void setTitleVisible(boolean visible) {
-    	imageCaption.setVisible(visible);
+        imageCaption.setVisible(visible);
     }
-    
+
     public void setTagsVisible(boolean visible) {
-    	tagPanel.setVisible(visible);
+        tagPanel.setVisible(visible);
     }
-    
+
     public void loadImage(int imageSize) {
-    	
-    	try {
-    		this.displaySize = imageSize;
-    		maxSizeImage = Utils.getScaledImageIcon(Utils.readImage(imageFilename), imageSize);
-        	if (displaySize != imageSize) {
-        		rescaleImage(displaySize);
-        	}
-        	else {
-            	imageLabel.setIcon(new ImageIcon(maxSizeImage));
-        	}
-    	}
-    	catch (IOException e) {
-    		
-	    	imageLabel.setForeground(Color.red);
-        	imageLabel.setIcon(Icons.missingIcon);
-        	imageLabel.setVerticalTextPosition(JLabel.BOTTOM);
-        	imageLabel.setHorizontalTextPosition(JLabel.CENTER);
-        	
-    		if (e instanceof FileNotFoundException) {
-    	    	imageLabel.setText("File not found");
-    		}
-    		else {
-    			e.printStackTrace();
-    	    	imageLabel.setText("Image could not be loaded");
-    		}
-    	}
+
+        try {
+            this.displaySize = imageSize;
+            maxSizeImage = Utils.getScaledImageIcon(Utils.readImage(imageFilename), imageSize);
+            if (displaySize != imageSize) {
+                rescaleImage(displaySize);
+            }
+            else {
+                imageLabel.setIcon(new ImageIcon(maxSizeImage));
+            }
+        }
+        catch (IOException e) {
+
+            imageLabel.setForeground(Color.red);
+            imageLabel.setIcon(Icons.missingIcon);
+            imageLabel.setVerticalTextPosition(JLabel.BOTTOM);
+            imageLabel.setHorizontalTextPosition(JLabel.CENTER);
+
+            if (e instanceof FileNotFoundException) {
+                imageLabel.setText("File not found");
+            }
+            else {
+                e.printStackTrace();
+                imageLabel.setText("Image could not be loaded");
+            }
+        }
     }
-    
+
     public void rescaleImage(int imageSize) {
-    	if (maxSizeImage == null) return;
-    	BufferedImage image = Utils.getScaledImageIcon(inverted ? invertedMaxSizeImage : maxSizeImage, imageSize);
-    	imageLabel.setIcon(new ImageIcon(image));
-    	this.displaySize = imageSize;
+        if (maxSizeImage == null) return;
+        BufferedImage image = Utils.getScaledImageIcon(inverted ? invertedMaxSizeImage : maxSizeImage, imageSize);
+        imageLabel.setIcon(new ImageIcon(image));
+        this.displaySize = imageSize;
     }
 
-	public void setInvertedColors(boolean inverted) {
-		
-		this.inverted = inverted;
-		if (inverted == true) {
-			invertedMaxSizeImage = Utils.invertImage(maxSizeImage);	
-		}
-		else {
-			// Free up memory when we don't need inverted images
-			invertedMaxSizeImage = null;
-		}
-		
-    	rescaleImage(displaySize);
-	}
-	
+    public void setInvertedColors(boolean inverted) {
+
+        this.inverted = inverted;
+        if (inverted == true) {
+            invertedMaxSizeImage = Utils.invertImage(maxSizeImage);
+        }
+        else {
+            // Free up memory when we don't need inverted images
+            invertedMaxSizeImage = null;
+        }
+
+        rescaleImage(displaySize);
+    }
+
     public int getDisplaySize() {
-		return displaySize;
-	}
-
-	public Icon getImage() {
-    	return imageLabel.getIcon();
+        return displaySize;
     }
-    
-	public String getTitle() {
-		return title;
-	}
 
-	public EntityTagCloudPanel getTagPanel() {
-		return tagPanel;
-	}
+    public Icon getImage() {
+        return imageLabel.getIcon();
+    }
 
-	public String getImageFilename() {
-		return imageFilename;
-	}
+    public String getTitle() {
+        return title;
+    }
+
+    public EntityTagCloudPanel getTagPanel() {
+        return tagPanel;
+    }
+
+    public String getImageFilename() {
+        return imageFilename;
+    }
 
     public Entity getEntity() {
         return entity;

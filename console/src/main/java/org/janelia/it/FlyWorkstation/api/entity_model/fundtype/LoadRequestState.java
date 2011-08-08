@@ -8,25 +8,25 @@ package org.janelia.it.FlyWorkstation.api.entity_model.fundtype;
  */
 public class LoadRequestState implements java.io.Serializable {
 
-  private String stateName;
+    private String stateName;
 
-  LoadRequestState(String stateName) {
-     this.stateName=stateName;
-  }
-
-  public String toString() {
-    return stateName;
-  }
-  public boolean equals(Object targetStatus) {
-    if (targetStatus instanceof LoadRequestState) {
-      if (((LoadRequestState)targetStatus).stateName.equals(this.stateName))
-        return true;
+    LoadRequestState(String stateName) {
+        this.stateName = stateName;
     }
-    return false;
-  }
 
-  public int hashCode() {
-    return stateName.hashCode();
-  }
+    public String toString() {
+        return stateName;
+    }
+
+    public boolean equals(Object targetStatus) {
+        if (targetStatus instanceof LoadRequestState) {
+            if (((LoadRequestState) targetStatus).stateName.equals(this.stateName)) return true;
+        }
+        return false;
+    }
+
+    public int hashCode() {
+        return stateName.hashCode();
+    }
 
 }

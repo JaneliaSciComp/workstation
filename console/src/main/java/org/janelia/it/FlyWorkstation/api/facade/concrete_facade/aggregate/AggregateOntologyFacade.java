@@ -1,12 +1,15 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.aggregate;
 
-import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.OntologyLoader;
-import org.janelia.it.FlyWorkstation.api.stub.data.NoData;
+import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.OntologyFacade;
+import org.janelia.it.FlyWorkstation.api.stub.data.DuplicateDataException;
+import org.janelia.it.FlyWorkstation.api.stub.data.NoDataException;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.entity.EntityType;
+import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -14,103 +17,174 @@ import java.util.ArrayList;
  * Date: 7/22/11
  * Time: 4:50 PM
  */
-public class AggregateOntologyFacade extends AggregateFacadeBase implements OntologyLoader {
-    Entity ontology;
+public class AggregateOntologyFacade extends AggregateEntityFacade implements OntologyFacade {
+
+    static private Object[] parameters = new Object[]{EntityConstants.TYPE_ONTOLOGY_ELEMENT};
 
     protected String getMethodNameForAggregates() {
-       return ("getOntology");
+        return ("getFacade");
     }
 
     protected Class[] getParameterTypesForAggregates() {
-       return (new Class[0]);
+        return new Class[]{String.class};
     }
 
-    protected  Object[] getParametersForAggregates() {
-       return (new Object[0]);
-    }
-
-    @Override
-    public Entity[] getOntologies() {
-        Object[] aggregates=getAggregates();
-        ArrayList rtnList = new ArrayList(aggregates.length);
-        Entity[] tmpArray;
-        int finalSize = 0;
-        for (Object aggregate : aggregates) {
-            tmpArray = ((OntologyLoader) aggregate).getOntologies();
-            if (tmpArray != null) {
-                rtnList.add(tmpArray);
-                finalSize += tmpArray.length;
-                tmpArray = null;
-            }
-        }
-      //  if (finalSize==0) throw new NoData(); //if all facades return NoData, throw it
-        tmpArray = new Entity[finalSize];
-        int offset = 0;
-        rtnList.trimToSize();
-        for (Object aRtnList : rtnList) {
-            System.arraycopy(aRtnList, 0, tmpArray, offset, ((EntityData[]) aRtnList).length);
-            offset += ((EntityData[]) aRtnList).length;
-        }
-        return tmpArray;
+    protected Object[] getParametersForAggregates() {
+        return parameters;
     }
 
     @Override
-    public EntityData[] getData(Long entityId) {
-        return new EntityData[0];
+    public List<Entity> getOntologies() {
+        Object[] aggregates = getAggregates();
+        List<Entity> returnList = new ArrayList<Entity>();
+        List<Entity> tmpList;
+        for (Object aggregate : aggregates) {
+            tmpList = ((OntologyFacade) aggregate).getOntologies();
+            if (tmpList != null) {
+                returnList.addAll(tmpList);
+            }
+        }
+        return returnList;
     }
 
-    public EntityData[] getProperties(Long genomicOID, EntityType dynamicType, boolean deepLoad) {
-        Object[] aggregates=getAggregates();
-        ArrayList rtnList = new ArrayList(aggregates.length);
-        EntityData[] tmpArray;
-        int finalSize = 0;
+    @Override
+    public Entity createOntologyAnnotation(String username, String sessionId, String targetEntityId, String keyEntityId, String keyString, String valueEntityId, String valueString, String tag) throws Exception {
+        Object[] aggregates = getAggregates();
+        List<Entity> returnList = new ArrayList<Entity>();
+        Entity tmpEntity;
         for (Object aggregate : aggregates) {
-
-            tmpArray = ((OntologyLoader) aggregate).getProperties(genomicOID, dynamicType, deepLoad);
-            if (tmpArray != null) {
-                rtnList.add(tmpArray);
-                finalSize += tmpArray.length;
-                tmpArray = null;
+            tmpEntity = ((OntologyFacade) aggregate).createOntologyAnnotation(username, sessionId, targetEntityId, keyEntityId, keyString, valueEntityId, valueString, tag);
+            if (tmpEntity != null) {
+                returnList.add(tmpEntity);
             }
         }
-      //  if (finalSize==0) throw new NoData(); //if all facades return NoData, throw it
-        tmpArray = new EntityData[finalSize];
-        int offset = 0;
-        rtnList.trimToSize();
-        for (Object aRtnList : rtnList) {
-            System.arraycopy(aRtnList, 0, tmpArray, offset, ((EntityData[]) aRtnList).length);
-            offset += ((EntityData[]) aRtnList).length;
+        // Only one facade should be allowing saves of data; therefore, only one item should be returned
+        if (1 < returnList.size()) {
+            throw new DuplicateDataException();
         }
-        return tmpArray;
+        if (1 == returnList.size()) {
+            return returnList.get(0);
+        }
+        throw new NoDataException();
     }
 
-    public EntityData[] expandProperty(Long genomicOID, String propertyName, EntityType dynamicType, boolean deepLoad) throws NoData {
-        Object[] aggregates=getAggregates();
-        ArrayList rtnList = new ArrayList(aggregates.length);
-        EntityData[] tmpArray = null;
-        int finalSize = 0;
+    @Override
+    public Entity createOntologyRoot(String username, String ontologyName) throws Exception {
+        Object[] aggregates = getAggregates();
+        List<Entity> returnList = new ArrayList<Entity>();
+        Entity tmpEntity;
         for (Object aggregate : aggregates) {
-            try {
-                tmpArray = ((OntologyLoader) aggregate).expandProperty(genomicOID, propertyName, dynamicType, deepLoad);
-            }
-            catch (NoData ndEx) {
-                tmpArray = null;
-                //do nothing here as any 1 facade might throw a NoData
-            }
-            if (tmpArray != null) {
-                rtnList.add(tmpArray);
-                finalSize += tmpArray.length;
+            tmpEntity = ((OntologyFacade) aggregate).createOntologyRoot(username, ontologyName);
+            if (tmpEntity != null) {
+                returnList.add(tmpEntity);
             }
         }
-        if (finalSize==0) throw new NoData(); //if all facades return NoData, throw it
-        tmpArray = new EntityData[finalSize];
-        int offset = 0;
-        rtnList.trimToSize();
-        for (Object aRtnList : rtnList) {
-            System.arraycopy(aRtnList, 0, tmpArray, offset, ((EntityData[]) aRtnList).length);
-            offset += ((EntityData[]) aRtnList).length;
+        // Only one facade should be allowing saves of data; therefore, only one item should be returned
+        if (1 < returnList.size()) {
+            throw new DuplicateDataException();
         }
-        return tmpArray;
+        if (1 == returnList.size()) {
+            return returnList.get(0);
+        }
+        throw new NoDataException();
+    }
+
+    @Override
+    public EntityData createOntologyTerm(String username, Long parentEntityId, String label, OntologyElementType type, Integer orderIndex) throws Exception {
+        Object[] aggregates = getAggregates();
+        List<EntityData> returnList = new ArrayList<EntityData>();
+        EntityData tmpEntityData;
+        for (Object aggregate : aggregates) {
+            tmpEntityData = ((OntologyFacade) aggregate).createOntologyTerm(username, parentEntityId, label, type, orderIndex);
+            if (tmpEntityData != null) {
+                returnList.add(tmpEntityData);
+            }
+        }
+        // Only one facade should be allowing saves of data; therefore, only one item should be returned
+        if (1 < returnList.size()) {
+            throw new DuplicateDataException();
+        }
+        if (1 == returnList.size()) {
+            return returnList.get(0);
+        }
+        throw new NoDataException();
+    }
+
+    @Override
+    public Entity getOntologyTree(String username, Long rootEntityId) throws Exception {
+        Object[] aggregates = getAggregates();
+        List<Entity> returnList = new ArrayList<Entity>();
+        Entity tmpEntityData;
+        for (Object aggregate : aggregates) {
+            tmpEntityData = ((OntologyFacade) aggregate).getOntologyTree(username, rootEntityId);
+            if (tmpEntityData != null) {
+                returnList.add(tmpEntityData);
+            }
+        }
+        if (1 < returnList.size()) {
+            throw new DuplicateDataException();
+        }
+        if (1 == returnList.size()) {
+            return returnList.get(0);
+        }
+        return null;
+    }
+
+    @Override
+    public List<Entity> getPrivateOntologies(String username) throws Exception {
+        Object[] aggregates = getAggregates();
+        List<Entity> returnList = new ArrayList<Entity>();
+        List<Entity> tmpList;
+        for (Object aggregate : aggregates) {
+            tmpList = ((OntologyFacade) aggregate).getPrivateOntologies(username);
+            if (tmpList != null) {
+                returnList.addAll(tmpList);
+            }
+        }
+        return returnList;
+    }
+
+    @Override
+    public List<Entity> getPublicOntologies() throws Exception {
+        Object[] aggregates = getAggregates();
+        List<Entity> returnList = new ArrayList<Entity>();
+        List<Entity> tmpList;
+        for (Object aggregate : aggregates) {
+            tmpList = ((OntologyFacade) aggregate).getPublicOntologies();
+            if (tmpList != null) {
+                returnList.addAll(tmpList);
+            }
+        }
+        return returnList;
+    }
+
+    @Override
+    public Entity publishOntology(Long ontologyEntityId, String rootName) throws Exception {
+        Object[] aggregates = getAggregates();
+        List<Entity> returnList = new ArrayList<Entity>();
+        Entity tmpEntity;
+        for (Object aggregate : aggregates) {
+            tmpEntity = ((OntologyFacade) aggregate).publishOntology(ontologyEntityId, rootName);
+            if (tmpEntity != null) {
+                returnList.add(tmpEntity);
+            }
+        }
+        // Only one facade should be allowing saves of data; therefore, only one item should be returned
+        if (1 < returnList.size()) {
+            throw new DuplicateDataException();
+        }
+        if (1 == returnList.size()) {
+            return returnList.get(0);
+        }
+        throw new NoDataException();
+    }
+
+    @Override
+    public void removeOntologyTerm(String username, Long termEntityId) throws Exception {
+        Object[] aggregates = getAggregates();
+        for (Object aggregate : aggregates) {
+            ((OntologyFacade) aggregate).removeOntologyTerm(username, termEntityId);
+        }
     }
 
 }

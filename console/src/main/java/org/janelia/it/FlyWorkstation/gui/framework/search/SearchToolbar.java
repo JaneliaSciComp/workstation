@@ -53,21 +53,15 @@ public class SearchToolbar extends JPanel implements ActionListener {
         JButton button = null;
 
         //first button
-        button = makeNavigationButton("arrow_left", PREVIOUS,
-                                      "Back to previous Search",
-                                      "Previous");
+        button = makeNavigationButton("arrow_left", PREVIOUS, "Back to previous Search", "Previous");
         toolBar.add(button);
 
         //second button
-        button = makeNavigationButton("arrow_right", NEXT,
-                                      "Forward to following Search",
-                                      "Next");
+        button = makeNavigationButton("arrow_right", NEXT, "Forward to following Search", "Next");
         toolBar.add(button);
 
         //third button
-        button = makeNavigationButton("table_save", SAVE,
-                                      "Save the Search and results",
-                                      "Save");
+        button = makeNavigationButton("table_save", SAVE, "Save the Search and results", "Save");
         toolBar.add(button);
 
         //separator
@@ -88,17 +82,14 @@ public class SearchToolbar extends JPanel implements ActionListener {
         toolBar.add(textField);
     }
 
-    protected JButton makeNavigationButton(String imageName,
-                                           String actionCommand,
-                                           String toolTipText,
-                                           String altText) throws FileNotFoundException {
+    protected JButton makeNavigationButton(String imageName, String actionCommand, String toolTipText, String altText) throws FileNotFoundException {
         //Create and initialize the button.
         JButton button = new JButton();
         button.setActionCommand(actionCommand);
         button.setToolTipText(toolTipText);
         button.addActionListener(this);
-        button.setIcon(Utils.getClasspathImage(imageName+".png"));
-        ((ImageIcon)button.getIcon()).setDescription(altText);
+        button.setIcon(Utils.getClasspathImage(imageName + ".png"));
+        ((ImageIcon) button.getIcon()).setDescription(altText);
 
         return button;
     }
@@ -110,23 +101,24 @@ public class SearchToolbar extends JPanel implements ActionListener {
         // Handle each button.
         if (PREVIOUS.equals(cmd)) { //first button clicked
             description = "taken you to the previous Search terms.";
-        } else if (SAVE.equals(cmd)) { // second button clicked
+        }
+        else if (SAVE.equals(cmd)) { // second button clicked
             description = "saved the Search result set.";
-        } else if (NEXT.equals(cmd)) { // third button clicked
+        }
+        else if (NEXT.equals(cmd)) { // third button clicked
             description = "taken you to the next Search terms.";
-        } else if (SEARCH.equals(cmd)) { // fourth button clicked
+        }
+        else if (SEARCH.equals(cmd)) { // fourth button clicked
             description = "Searches the database for entites that match your Search terms.";
-        } else if (TEXT_ENTERED.equals(cmd)) { // text field
-            JTextField tf = (JTextField)e.getSource();
+        }
+        else if (TEXT_ENTERED.equals(cmd)) { // text field
+            JTextField tf = (JTextField) e.getSource();
             String text = tf.getText();
             tf.setText("");
-            description = "done something with this text: "
-                          + newline + "  \""
-                          + text + "\"";
+            description = "done something with this text: " + newline + "  \"" + text + "\"";
         }
 
-        displayResult("If this were fully functional, it would have "
-                        + description);
+        displayResult("If this were fully functional, it would have " + description);
     }
 
     protected void displayResult(String actionDescription) {

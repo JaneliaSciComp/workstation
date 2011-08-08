@@ -252,10 +252,8 @@ public class ConsoleProperties extends Properties {
         String path = getString(pathProperty);
         String filename = getString(filenameProperty);
         // concatinate
-        if (path.endsWith(File.separator))
-            return path + filename;
-        else
-            return path + File.separator + filename;
+        if (path.endsWith(File.separator)) return path + filename;
+        else return path + File.separator + filename;
     }
 
 

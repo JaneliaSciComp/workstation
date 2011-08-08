@@ -59,7 +59,8 @@ public class StatusBar extends JPanel {
             FreeMemoryWatcher.getFreeMemoryWatcher().addObserver(freeMemoryViewer);
             add(freeMemoryViewer);
             validate();
-        } else {
+        }
+        else {
             if (freeMemoryViewer != null) {
                 remove(freeMemoryViewer);
                 FreeMemoryWatcher.getFreeMemoryWatcher().deleteObserver(freeMemoryViewer);

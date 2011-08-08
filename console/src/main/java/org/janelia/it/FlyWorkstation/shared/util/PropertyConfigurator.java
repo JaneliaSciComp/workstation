@@ -27,35 +27,40 @@ public class PropertyConfigurator {
             // Get the Default properties
             try {
                 PropertyConfigurator.add(DEFAULT_PROPS_FILE);
-            } catch (MissingResourceException ex) {
+            }
+            catch (MissingResourceException ex) {
                 ex.printStackTrace();
             }
 
             // Get the EJB server connection props
             try {
                 PropertyConfigurator.add(EJB_SRV_CONN_FILE);
-            } catch (MissingResourceException ex) {
+            }
+            catch (MissingResourceException ex) {
                 ex.printStackTrace();
             }
 
             // Get the Deployment Properties
             try {
                 PropertyConfigurator.add(DEPLOYMENT_PROPS_FILE);
-            } catch (MissingResourceException ex) {
+            }
+            catch (MissingResourceException ex) {
                 // Do not report, this file optionally exists
             }
 
             //Last Override
             try {
                 PropertyConfigurator.add(override);
-            } catch (MissingResourceException ex) {
+            }
+            catch (MissingResourceException ex) {
                 ex.printStackTrace();
             }
 
             // Get Post-Deployment properties (See jsp.PostDeployConfig.jsp)
             try {
                 PropertyConfigurator.add(POST_DEPLOY_PROP_FILE);
-            } catch (MissingResourceException ex) {
+            }
+            catch (MissingResourceException ex) {
                 // Do not report, this file optionally exists
             }
 
@@ -65,12 +70,8 @@ public class PropertyConfigurator {
 
             //System.out.println(PropertyConfigurator.getProperties().toString()); // DEBUG
             // Be sure that the server is in the correct timezone
-            if (PropertyConfigurator.getProperties()
-                                    .getProperty(SET_TIMEZONE_PROP, "false")
-                                    .equalsIgnoreCase("true")) {
-                String timezoneSetting = PropertyConfigurator.getProperties()
-                                                             .getProperty(TIMEZONE_PROP, 
-                                                                          "EST");
+            if (PropertyConfigurator.getProperties().getProperty(SET_TIMEZONE_PROP, "false").equalsIgnoreCase("true")) {
+                String timezoneSetting = PropertyConfigurator.getProperties().getProperty(TIMEZONE_PROP, "EST");
                 TimeZone.setDefault(TimeZone.getTimeZone(timezoneSetting));
             }
         }
@@ -83,14 +84,13 @@ public class PropertyConfigurator {
         return props;
     }
 
-    public static void add(String resourceBundleName)
-                    throws MissingResourceException {
+    public static void add(String resourceBundleName) throws MissingResourceException {
         ResourceBundle rbundle = ResourceBundle.getBundle(resourceBundleName);
         PropertyConfigurator.add(rbundle);
     }
 
     public static void add(ResourceBundle rbundle) {
-        for (Enumeration e = rbundle.getKeys(); e.hasMoreElements();) {
+        for (Enumeration e = rbundle.getKeys(); e.hasMoreElements(); ) {
             String key = (String) e.nextElement();
             String val = rbundle.getString(key);
 

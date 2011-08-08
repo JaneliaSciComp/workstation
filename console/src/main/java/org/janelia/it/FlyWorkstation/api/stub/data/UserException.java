@@ -7,11 +7,10 @@ package org.janelia.it.FlyWorkstation.api.stub.data;
  * Time: 3:29 PM
  */
 public class UserException extends Exception {
-  public UserException() {}
+    public UserException() {
+    }
 
-  public UserException
-    (String msg)
-  {
-    super(msg);
-  }
+    public UserException(String msg) {
+        super(msg);
+    }
 }

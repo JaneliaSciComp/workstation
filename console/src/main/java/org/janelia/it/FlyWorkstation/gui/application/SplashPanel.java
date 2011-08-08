@@ -17,11 +17,13 @@ public class SplashPanel extends JPanel {
     public SplashPanel() {
         try {
             jbInit();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             try {
 //                client.gui.framework.session_mgr.SessionMgr.getSessionMgr()
 //                                                      .handleException(e);
-            } catch (Exception ex1) {
+            }
+            catch (Exception ex1) {
                 e.printStackTrace();
             }
         }
@@ -36,8 +38,7 @@ public class SplashPanel extends JPanel {
     protected void paintComponent(Graphics graphics) {
         try {
             ImageIcon bkgdImageIcon = Utils.getClasspathImage("jfrc-bg4.jpg");
-            graphics.drawImage(bkgdImageIcon.getImage(),  (this.getWidth()-bkgdImageIcon.getIconWidth()) / 2,
-                        (this.getHeight()-bkgdImageIcon.getIconHeight()) / 2, null);
+            graphics.drawImage(bkgdImageIcon.getImage(), (this.getWidth() - bkgdImageIcon.getIconWidth()) / 2, (this.getHeight() - bkgdImageIcon.getIconHeight()) / 2, null);
         }
         catch (FileNotFoundException e) {
             e.printStackTrace();

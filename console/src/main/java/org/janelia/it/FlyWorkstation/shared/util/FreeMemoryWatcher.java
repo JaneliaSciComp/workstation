@@ -25,8 +25,8 @@ public class FreeMemoryWatcher extends MTObservable {
     }
 
     static public FreeMemoryWatcher getFreeMemoryWatcher() {
-        if (freeMemoryWatcher == null) freeMemoryWatcher = new FreeMemoryWatcher(ConsoleProperties.getInt("console.memory.updateSeconds"),
-                true);
+        if (freeMemoryWatcher == null)
+            freeMemoryWatcher = new FreeMemoryWatcher(ConsoleProperties.getInt("console.memory.updateSeconds"), true);
         return freeMemoryWatcher;
     }
 
@@ -90,7 +90,8 @@ public class FreeMemoryWatcher extends MTObservable {
                 update();
                 try {
                     Thread.sleep(numSecondsToUpdate * 1000);
-                } catch (InterruptedException ie) {
+                }
+                catch (InterruptedException ie) {
                     System.err.println("Memory Watcher Threads Sleep was interrupted");
                 }
             }

@@ -19,16 +19,16 @@ public class MissingIcon implements Icon {
         Graphics2D g2d = (Graphics2D) g.create();
 
         g2d.setColor(Color.WHITE);
-        g2d.fillRect(x +1 ,y + 1,width -2 ,height -2);
+        g2d.fillRect(x + 1, y + 1, width - 2, height - 2);
 
         g2d.setColor(Color.BLACK);
-        g2d.drawRect(x +1 ,y + 1,width -2 ,height -2);
+        g2d.drawRect(x + 1, y + 1, width - 2, height - 2);
 
         g2d.setColor(Color.RED);
 
         g2d.setStroke(stroke);
-        g2d.drawLine(x +10, y + 10, x + width -10, y + height -10);
-        g2d.drawLine(x +10, y + height -10, x + width -10, y + 10);
+        g2d.drawLine(x + 10, y + 10, x + width - 10, y + height - 10);
+        g2d.drawLine(x + 10, y + height - 10, x + width - 10, y + 10);
 
         g2d.dispose();
     }
@@ -39,4 +39,5 @@ public class MissingIcon implements Icon {
 
     public int getIconHeight() {
         return height;
-    }}
+    }
+}

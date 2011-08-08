@@ -39,7 +39,8 @@ public class ServerStatusReportChecker implements Runnable {
         //Sleep for 5 seconds to let the user see the message pop up after the browser is up
         try {
             Thread.sleep(5000);
-        } catch (InterruptedException ie) {
+        }
+        catch (InterruptedException ie) {
         }
 
         while (!stop) {
@@ -49,7 +50,8 @@ public class ServerStatusReportChecker implements Runnable {
 
             try {
                 Thread.currentThread().sleep(intervalInMinutes * 1000 * 60);
-            } catch (InterruptedException inEx) {
+            }
+            catch (InterruptedException inEx) {
             } //do nothing here, it is expected l
         }
     }
@@ -72,8 +74,7 @@ public class ServerStatusReportChecker implements Runnable {
             responseCode = connection.getResponseCode();
 
             if (responseCode != HttpURLConnection.HTTP_OK) {
-                throw new Exception("Ignoring HTTP response code: " + 
-                                    String.valueOf(responseCode));
+                throw new Exception("Ignoring HTTP response code: " + String.valueOf(responseCode));
 
                 //?? ignore error codes ??
             }
@@ -89,19 +90,16 @@ public class ServerStatusReportChecker implements Runnable {
 
             String message = buffer.toString().trim();
 
-            if ((lastReport != null) && 
-                    (message.hashCode() == lastReport.hashCode() || 
-                        message.length() == 0)) {
+            if ((lastReport != null) && (message.hashCode() == lastReport.hashCode() || message.length() == 0)) {
                 return;
             }
 
             JFrame mainFrame = SessionMgr.getSessionMgr().getActiveBrowser();
             JOptionPane optionPane = new JOptionPane();
-            optionPane.showMessageDialog(mainFrame, message, 
-                                         "New Server Status Message", 
-                                         JOptionPane.INFORMATION_MESSAGE);
+            optionPane.showMessageDialog(mainFrame, message, "New Server Status Message", JOptionPane.INFORMATION_MESSAGE);
             lastReport = message;
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             //do nothing because it wasn't found?
         }
     }
@@ -120,7 +118,8 @@ public class ServerStatusReportChecker implements Runnable {
                 reportURL = new URL(appServer + "/broadcast/Status.jsp");
 
                 return reportURL;
-            } catch (Exception ex) {
+            }
+            catch (Exception ex) {
                 return null;
             } //cannot determine emailServer URL
         }

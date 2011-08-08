@@ -43,7 +43,7 @@ public class KeymapUtil {
     }
 
     public static String getTextByKeyStroke(KeyStroke keyStroke) {
-        if(keyStroke == null) {
+        if (keyStroke == null) {
             return "";
         }
         return getKeystrokeText(keyStroke);
@@ -59,11 +59,7 @@ public class KeymapUtil {
 
     public static boolean isModifier(KeyEvent e) {
         int keyCode = e.getKeyCode();
-        return (keyCode == KeyEvent.VK_SHIFT ||
-                                    keyCode == KeyEvent.VK_ALT ||
-                                    keyCode == KeyEvent.VK_CONTROL ||
-                                    keyCode == KeyEvent.VK_ALT_GRAPH ||
-                                    keyCode == KeyEvent.VK_META);
+        return (keyCode == KeyEvent.VK_SHIFT || keyCode == KeyEvent.VK_ALT || keyCode == KeyEvent.VK_CONTROL || keyCode == KeyEvent.VK_ALT_GRAPH || keyCode == KeyEvent.VK_META);
     }
 
     public static String getKeystrokeText(KeyStroke accelerator) {
@@ -75,7 +71,7 @@ public class KeymapUtil {
         }
 
         String keyText = KeyEvent.getKeyText(accelerator.getKeyCode());
-        if(CANCEL_KEY_TEXT.equals(keyText)){
+        if (CANCEL_KEY_TEXT.equals(keyText)) {
             keyText = BREAK_KEY_TEXT;
         }
 
@@ -88,7 +84,7 @@ public class KeymapUtil {
             try {
                 Class appleLaf = Class.forName(APPLE_LAF_AQUA_LOOK_AND_FEEL_CLASS_NAME);
                 Method getModifiers = appleLaf.getMethod(GET_KEY_MODIFIERS_TEXT_METHOD, int.class, boolean.class);
-                return (String)getModifiers.invoke(appleLaf, modifiers, Boolean.FALSE);
+                return (String) getModifiers.invoke(appleLaf, modifiers, Boolean.FALSE);
             }
             catch (Exception e) {
                 if (SystemInfo.isMacOSLeopard) {
@@ -102,7 +98,8 @@ public class KeymapUtil {
         final String keyModifiersText = KeyEvent.getKeyModifiersText(modifiers);
         if (keyModifiersText.length() > 0) {
             return keyModifiersText + "+";
-        } else {
+        }
+        else {
             return keyModifiersText;
         }
     }
