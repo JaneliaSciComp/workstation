@@ -163,7 +163,10 @@ public class EntityOutline extends EntityTree implements Cloneable {
             }
         }
 
-        SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(new GlobalSession(entities));
+    	if (entities.isEmpty()) return;
+    	
+    	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(new GlobalSession(entities));
+
     }
 
     /**
