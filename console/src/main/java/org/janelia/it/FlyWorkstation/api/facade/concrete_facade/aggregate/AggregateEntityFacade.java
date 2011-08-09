@@ -72,7 +72,7 @@ public class AggregateEntityFacade extends AggregateFacadeBase implements Entity
     }
 
     @Override
-    public Entity getEntityTree(Long entityId) throws DuplicateDataException {
+    public Entity getEntityTree(Long entityId) throws Exception {
         Object[] aggregates = getAggregates();
         List<Entity> returnList = new ArrayList<Entity>();
         Entity tmpEntity;
@@ -92,7 +92,7 @@ public class AggregateEntityFacade extends AggregateFacadeBase implements Entity
     }
 
     @Override
-    public Entity getCachedEntityTree(Long entityId) throws DuplicateDataException {
+    public Entity getCachedEntityTree(Long entityId) throws Exception {
         Object[] aggregates = getAggregates();
         List<Entity> returnList = new ArrayList<Entity>();
         Entity tmpEntity;
@@ -168,12 +168,12 @@ public class AggregateEntityFacade extends AggregateFacadeBase implements Entity
     }
 
     @Override
-    public Entity cloneEntityTree(Long entityId, String username, String rootName) throws Exception {
+    public Entity cloneEntityTree(Long entityId, String rootName) throws Exception {
         Object[] aggregates = getAggregates();
         List<Entity> returnList = new ArrayList<Entity>();
         Entity tmpEntity;
         for (Object aggregate : aggregates) {
-            tmpEntity = ((EntityFacade) aggregate).cloneEntityTree(entityId, username, rootName);
+            tmpEntity = ((EntityFacade) aggregate).cloneEntityTree(entityId, rootName);
             if (null != tmpEntity) {
                 returnList.add(tmpEntity);
             }
@@ -220,10 +220,10 @@ public class AggregateEntityFacade extends AggregateFacadeBase implements Entity
     }
 
     @Override
-    public void deleteEntityTree(String userLogin, Long entityId) throws Exception {
+    public void deleteEntityTree(Long entityId) throws Exception {
         Object[] aggregates = getAggregates();
         for (Object aggregate : aggregates) {
-            ((EntityFacade) aggregate).deleteEntityTree(userLogin, entityId);
+            ((EntityFacade) aggregate).deleteEntityTree(entityId);
         }
     }
 

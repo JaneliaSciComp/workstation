@@ -17,9 +17,9 @@ public interface ComputeFacade {
 
     public void deleteTaskById(Long taskId) throws Exception;
 
-    public List<Task> getUserTasksByType(String taskName, String username) throws Exception;
+    public List<Task> getUserTasksByType(String taskName) throws Exception;
 
-    public User getUser(String username) throws Exception;
+    public User getUser() throws Exception;
 
     public User saveOrUpdateUser(User user) throws Exception;
 

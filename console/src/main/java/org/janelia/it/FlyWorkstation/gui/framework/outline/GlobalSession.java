@@ -49,7 +49,7 @@ public class GlobalSession extends AnnotationSession {
                 entityIds.add(entity.getId());
             }
             try {
-                annotations = ModelMgr.getModelMgr().getAnnotationsForEntities(SessionMgr.getUsername(), entityIds);
+                annotations = ModelMgr.getModelMgr().getAnnotationsForEntities(entityIds);
             }
             catch (Exception e) {
                 SessionMgr.getSessionMgr().handleException(e);

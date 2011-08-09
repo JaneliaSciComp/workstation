@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.OntologyFacade;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
@@ -23,28 +24,32 @@ public class EJBOntologyFacade extends EJBEntityFacade implements OntologyFacade
     }
 
     @Override
-    public Entity createOntologyAnnotation(String username, String sessionId, String targetEntityId, String keyEntityId, String keyString, String valueEntityId, String valueString, String tag) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().createOntologyAnnotation(username, sessionId, targetEntityId, keyEntityId, keyString, valueEntityId, valueString, tag);
+    public Entity createOntologyAnnotation(String sessionId, String targetEntityId, String keyEntityId, String keyString, String valueEntityId, String valueString, String tag) throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().createOntologyAnnotation(SessionMgr.getUsername(),
+                sessionId, targetEntityId, keyEntityId, keyString, valueEntityId, valueString, tag);
     }
 
     @Override
-    public Entity createOntologyRoot(String username, String ontologyName) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().createOntologyRoot(username, ontologyName);
+    public Entity createOntologyRoot(String ontologyName) throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().createOntologyRoot(SessionMgr.getUsername(),
+                ontologyName);
     }
 
     @Override
-    public EntityData createOntologyTerm(String username, Long parentEntityId, String label, OntologyElementType type, Integer orderIndex) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().createOntologyTerm(username, parentEntityId, label, type, orderIndex);
+    public EntityData createOntologyTerm(Long parentEntityId, String label, OntologyElementType type, Integer orderIndex) throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().createOntologyTerm(SessionMgr.getUsername(),
+                parentEntityId, label, type, orderIndex);
     }
 
     @Override
-    public Entity getOntologyTree(String username, Long rootEntityId) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getOntologyTree(username, rootEntityId);
+    public Entity getOntologyTree(Long rootEntityId) throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().getOntologyTree(SessionMgr.getUsername(),
+                rootEntityId);
     }
 
     @Override
-    public List<Entity> getPrivateOntologies(String username) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getPrivateOntologies(username);
+    public List<Entity> getPrivateOntologies() throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().getPrivateOntologies(SessionMgr.getUsername());
     }
 
     @Override
@@ -58,7 +63,7 @@ public class EJBOntologyFacade extends EJBEntityFacade implements OntologyFacade
     }
 
     @Override
-    public void removeOntologyTerm(String username, Long termEntityId) throws Exception {
-        EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(username, termEntityId);
+    public void removeOntologyTerm(Long termEntityId) throws Exception {
+        EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(SessionMgr.getUsername(), termEntityId);
     }
 }

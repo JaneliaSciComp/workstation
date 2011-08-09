@@ -1,6 +1,5 @@
 package org.janelia.it.FlyWorkstation.api.facade.abstract_facade;
 
-import org.janelia.it.FlyWorkstation.api.stub.data.DuplicateDataException;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
@@ -19,9 +18,9 @@ public interface EntityFacade {
 
     public Entity getEntityById(String entityId) throws Exception;
 
-    public Entity getEntityTree(Long entityId) throws DuplicateDataException;
+    public Entity getEntityTree(Long entityId) throws Exception;
 
-    public Entity getCachedEntityTree(Long entityId) throws DuplicateDataException;
+    public Entity getCachedEntityTree(Long entityId) throws Exception;
 
     public List<Entity> getEntitiesByName(String entityName);
 
@@ -37,7 +36,7 @@ public interface EntityFacade {
 
     public boolean deleteEntityById(Long entityId);
 
-    public void deleteEntityTree(String userLogin, Long entityId) throws Exception;
+    public void deleteEntityTree(Long entityId) throws Exception;
 
-    public Entity cloneEntityTree(Long entityId, String username, String rootName) throws Exception;
+    public Entity cloneEntityTree(Long entityId, String rootName) throws Exception;
 }

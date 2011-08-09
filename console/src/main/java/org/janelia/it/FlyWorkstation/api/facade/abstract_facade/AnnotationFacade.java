@@ -11,17 +11,17 @@ import java.util.List;
  * Time: 9:33 AM
  */
 public interface AnnotationFacade extends EntityFacade {
-    public List<Entity> getAnnotationsForEntity(String username, Long entityId) throws Exception;
+    public List<Entity> getAnnotationsForEntity(Long entityId) throws Exception;
 
-    public List<Entity> getAnnotationsForEntities(String username, List<Long> entityIds) throws Exception;
+    public List<Entity> getAnnotationsForEntities(List<Long> entityIds) throws Exception;
 
-    public List<Entity> getEntitiesForAnnotationSession(String username, Long annotationSessionId) throws Exception;
+    public List<Entity> getEntitiesForAnnotationSession(Long annotationSessionId) throws Exception;
 
-    public List<Entity> getAnnotationsForSession(String username, Long annotationSessionId) throws Exception;
+    public List<Entity> getAnnotationsForSession(Long annotationSessionId) throws Exception;
 
-    public List<Entity> getCategoriesForAnnotationSession(String username, Long annotationSessionId) throws Exception;
+    public List<Entity> getCategoriesForAnnotationSession(Long annotationSessionId) throws Exception;
 
-    public void deleteAnnotation(String userlogin, Long annotatedEntityId, String tag);
+    public void deleteAnnotation(Long annotatedEntityId, String tag);
 
-    public void removeAllOntologyAnnotationsForSession(String username, Long annotationSessionId) throws Exception;
+    public void removeAllOntologyAnnotationsForSession(Long annotationSessionId) throws Exception;
 }

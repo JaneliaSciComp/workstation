@@ -305,7 +305,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Dat
                 parent.removeChild(element);
 
                 // Update database
-                ModelMgr.getModelMgr().removeOntologyTerm(SessionMgr.getUsername(), element.getId());
+                ModelMgr.getModelMgr().removeOntologyTerm(element.getId());
 
                 // Update Tree UI
                 selectedTree.removeNode(selectedTree.getCurrentNode());
@@ -378,7 +378,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Dat
 
             try {
                 // Update database
-                EntityData newData = ModelMgr.getModelMgr().createOntologyTerm((String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME), element.getId(), termName, childType, null);
+                EntityData newData = ModelMgr.getModelMgr().createOntologyTerm(element.getId(), termName, childType, null);
 
                 if (parentType instanceof Tag) {
                     // Adding a child to a Tag, so it must be coerced into a Category

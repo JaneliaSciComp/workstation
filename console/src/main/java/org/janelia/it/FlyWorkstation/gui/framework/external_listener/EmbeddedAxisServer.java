@@ -15,7 +15,7 @@ public class EmbeddedAxisServer {
     public EmbeddedAxisServer(int port) {
         try {
             ConfigurationContext context = ConfigurationContextFactory.createConfigurationContextFromFileSystem(null, null);
-            AxisService service = AxisService.createService(Echo.class.getName(), context.getAxisConfiguration());//, RPCMessageReceiver.class, "", "http://samples");
+            AxisService service = AxisService.createService(ClientInterface.class.getName(), context.getAxisConfiguration());//, RPCMessageReceiver.class, "", "http://samples");
             context.getAxisConfiguration().addService(service);
             server = new SimpleHTTPServer(context, port);
         }

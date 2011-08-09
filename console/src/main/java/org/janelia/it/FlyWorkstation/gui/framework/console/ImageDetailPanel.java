@@ -1,7 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -329,7 +328,7 @@ public class ImageDetailPanel extends JPanel {
 
         @Override
         protected void doStuff() throws Exception {
-            annotations = ModelMgr.getModelMgr().getAnnotationsForEntity(SessionMgr.getUsername(), entity.getId());
+            annotations = ModelMgr.getModelMgr().getAnnotationsForEntity(entity.getId());
         }
 
         @Override

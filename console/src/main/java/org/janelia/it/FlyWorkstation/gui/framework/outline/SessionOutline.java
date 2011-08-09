@@ -68,7 +68,7 @@ public class SessionOutline extends JPanel {
             private List<Task> tasks;
 
             protected void doStuff() throws Exception {
-                tasks = ModelMgr.getModelMgr().getUserTasksByType(AnnotationSessionTask.TASK_NAME, SessionMgr.getUsername());
+                tasks = ModelMgr.getModelMgr().getUserTasksByType(AnnotationSessionTask.TASK_NAME);
             }
 
             protected void hadSuccess() {
@@ -209,7 +209,7 @@ public class SessionOutline extends JPanel {
 
         try {
             // Remove all annotations
-            ModelMgr.getModelMgr().removeAllOntologyAnnotationsForSession(SessionMgr.getUsername(), session.getTask().getObjectId());
+            ModelMgr.getModelMgr().removeAllOntologyAnnotationsForSession(session.getTask().getObjectId());
 
             // Remove the task
             ModelMgr.getModelMgr().deleteTaskById(session.getTask().getObjectId());

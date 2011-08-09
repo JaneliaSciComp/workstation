@@ -64,7 +64,7 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 
         privateTable = new AbstractOntologyTable() {
             protected List<Entity> load() throws Exception {
-                return ModelMgr.getModelMgr().getPrivateOntologies(SessionMgr.getUsername());
+                return ModelMgr.getModelMgr().getPrivateOntologies();
             }
 
             protected void doubleClick(Entity entity, MouseEvent e) {
@@ -240,7 +240,7 @@ public class OntologyManager extends JDialog implements ActionListener, Property
             private Entity newRoot;
 
             protected void doStuff() throws Exception {
-                newRoot = ModelMgr.getModelMgr().createOntologyRoot(SessionMgr.getUsername(), rootName);
+                newRoot = ModelMgr.getModelMgr().createOntologyRoot(rootName);
             }
 
             protected void hadSuccess() {
@@ -395,7 +395,7 @@ public class OntologyManager extends JDialog implements ActionListener, Property
             SimpleWorker worker = new SimpleWorker() {
 
                 protected void doStuff() throws Exception {
-                    ModelMgr.getModelMgr().removeOntologyTerm(SessionMgr.getUsername(), root.getId());
+                    ModelMgr.getModelMgr().removeOntologyTerm(root.getId());
                     SessionMgr.getKeyBindings().removeOntologyKeybinds(root);
                 }
 
@@ -439,7 +439,7 @@ public class OntologyManager extends JDialog implements ActionListener, Property
                 private Entity newRoot;
 
                 protected void doStuff() throws Exception {
-                    newRoot = ModelMgr.getModelMgr().cloneEntityTree(root.getId(), SessionMgr.getUsername(), rootName);
+                    newRoot = ModelMgr.getModelMgr().cloneEntityTree(root.getId(), rootName);
                 }
 
                 protected void hadSuccess() {

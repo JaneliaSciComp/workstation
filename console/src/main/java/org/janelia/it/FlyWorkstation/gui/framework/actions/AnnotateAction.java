@@ -110,7 +110,7 @@ public class AnnotateAction extends OntologyElementAction {
 
             protected void doStuff() throws Exception {
                 // TODO: check if annotation exists already
-                annotation = ModelMgr.getModelMgr().createOntologyAnnotation(SessionMgr.getUsername(), sessionId, targetEntity.getId().toString(), keyEntityId, keyString, valueEntityId, valueString, tag);
+                annotation = ModelMgr.getModelMgr().createOntologyAnnotation(sessionId, targetEntity.getId().toString(), keyEntityId, keyString, valueEntityId, valueString, tag);
             }
 
             protected void hadSuccess() {

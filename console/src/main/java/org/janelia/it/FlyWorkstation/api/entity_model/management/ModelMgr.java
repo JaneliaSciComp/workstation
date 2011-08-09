@@ -228,8 +228,8 @@ public class ModelMgr {
         if (null == selectedOntology) modelAvailable = false;
     }
 
-    public void deleteAnnotation(String userlogin, Long annotatedEntityId, String tag) {
-        FacadeManager.getFacadeManager().getAnnotationFacade().deleteAnnotation(userlogin, annotatedEntityId, tag);
+    public void deleteAnnotation(Long annotatedEntityId, String tag) {
+        FacadeManager.getFacadeManager().getAnnotationFacade().deleteAnnotation(annotatedEntityId, tag);
     }
 
     public void prepareForSystemExit() {
@@ -270,29 +270,29 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().deleteEntityById(entityId);
     }
 
-    public void deleteEntityTree(String userLogin, Long id) {
+    public void deleteEntityTree(Long id) {
         try {
-            FacadeManager.getFacadeManager().getEntityFacade().deleteEntityTree(userLogin, id);
+            FacadeManager.getFacadeManager().getEntityFacade().deleteEntityTree(id);
         }
         catch (Exception e) {
             handleException(e);
         }
     }
 
-    public Entity createOntologyAnnotation(String username, String sessionId, String targetEntityId, String keyEntityId, String keyString, String valueEntityId, String valueString, String tag) throws Exception {
-        return FacadeManager.getFacadeManager().getOntologyFacade().createOntologyAnnotation(username, sessionId, targetEntityId, keyEntityId, keyString, valueEntityId, valueString, tag);
+    public Entity createOntologyAnnotation(String sessionId, String targetEntityId, String keyEntityId, String keyString, String valueEntityId, String valueString, String tag) throws Exception {
+        return FacadeManager.getFacadeManager().getOntologyFacade().createOntologyAnnotation(sessionId, targetEntityId, keyEntityId, keyString, valueEntityId, valueString, tag);
     }
 
-    public Entity createOntologyRoot(String username, String ontologyName) throws Exception {
-        return FacadeManager.getFacadeManager().getOntologyFacade().createOntologyRoot(username, ontologyName);
+    public Entity createOntologyRoot(String ontologyName) throws Exception {
+        return FacadeManager.getFacadeManager().getOntologyFacade().createOntologyRoot(ontologyName);
     }
 
-    public EntityData createOntologyTerm(String username, Long id, String label, OntologyElementType type, Integer orderIndex) throws Exception {
-        return FacadeManager.getFacadeManager().getOntologyFacade().createOntologyTerm(username, id, label, type, orderIndex);
+    public EntityData createOntologyTerm(Long id, String label, OntologyElementType type, Integer orderIndex) throws Exception {
+        return FacadeManager.getFacadeManager().getOntologyFacade().createOntologyTerm(id, label, type, orderIndex);
     }
 
-    public Entity getOntologyTree(String username, Long rootEntityId) throws Exception {
-        return FacadeManager.getFacadeManager().getOntologyFacade().getOntologyTree(username, rootEntityId);
+    public Entity getOntologyTree(Long rootEntityId) throws Exception {
+        return FacadeManager.getFacadeManager().getOntologyFacade().getOntologyTree(rootEntityId);
     }
 
     public List<Entity> getCommonRootEntitiesByType(long entityTypeId) {
@@ -311,8 +311,8 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().getChildEntities(parentEntityId);
     }
 
-    public List<Entity> getPrivateOntologies(String username) throws Exception {
-        return FacadeManager.getFacadeManager().getOntologyFacade().getPrivateOntologies(username);
+    public List<Entity> getPrivateOntologies() throws Exception {
+        return FacadeManager.getFacadeManager().getOntologyFacade().getPrivateOntologies();
     }
 
     public List<Entity> getPublicOntologies() throws Exception {
@@ -323,36 +323,36 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getOntologyFacade().publishOntology(ontologyEntityId, rootName);
     }
 
-    public void removeOntologyTerm(String username, Long termEntityId) throws Exception {
-        FacadeManager.getFacadeManager().getOntologyFacade().removeOntologyTerm(username, termEntityId);
+    public void removeOntologyTerm(Long termEntityId) throws Exception {
+        FacadeManager.getFacadeManager().getOntologyFacade().removeOntologyTerm(termEntityId);
     }
 
-    public Entity cloneEntityTree(Long entityId, String username, String rootName) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().cloneEntityTree(entityId, username, rootName);
+    public Entity cloneEntityTree(Long entityId, String rootName) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().cloneEntityTree(entityId, rootName);
     }
 
-    public List<Entity> getAnnotationsForEntity(String username, Long entityId) throws Exception {
-        return FacadeManager.getFacadeManager().getAnnotationFacade().getAnnotationsForEntity(username, entityId);
+    public List<Entity> getAnnotationsForEntity(Long entityId) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().getAnnotationsForEntity(entityId);
     }
 
-    public List<Entity> getAnnotationsForEntities(String username, List<Long> entityIds) throws Exception {
-        return FacadeManager.getFacadeManager().getAnnotationFacade().getAnnotationsForEntities(username, entityIds);
+    public List<Entity> getAnnotationsForEntities(List<Long> entityIds) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().getAnnotationsForEntities(entityIds);
     }
 
-    public void removeAllOntologyAnnotationsForSession(String username, Long annotationSessionId) throws Exception {
-        FacadeManager.getFacadeManager().getAnnotationFacade().removeAllOntologyAnnotationsForSession(username, annotationSessionId);
+    public void removeAllOntologyAnnotationsForSession(Long annotationSessionId) throws Exception {
+        FacadeManager.getFacadeManager().getAnnotationFacade().removeAllOntologyAnnotationsForSession(annotationSessionId);
     }
 
-    public List<Entity> getEntitiesForAnnotationSession(String username, Long annotationSessionId) throws Exception {
-        return FacadeManager.getFacadeManager().getAnnotationFacade().getEntitiesForAnnotationSession(username, annotationSessionId);
+    public List<Entity> getEntitiesForAnnotationSession(Long annotationSessionId) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().getEntitiesForAnnotationSession(annotationSessionId);
     }
 
-    public List<Entity> getCategoriesForAnnotationSession(String username, Long annotationSessionId) throws Exception {
-        return FacadeManager.getFacadeManager().getAnnotationFacade().getCategoriesForAnnotationSession(username, annotationSessionId);
+    public List<Entity> getCategoriesForAnnotationSession(Long annotationSessionId) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().getCategoriesForAnnotationSession(annotationSessionId);
     }
 
-    public List<Entity> getAnnotationsForSession(String username, Long annotationSessionId) throws Exception {
-        return FacadeManager.getFacadeManager().getAnnotationFacade().getAnnotationsForSession(username, annotationSessionId);
+    public List<Entity> getAnnotationsForSession(Long annotationSessionId) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().getAnnotationsForSession(annotationSessionId);
     }
 
     public EntityData saveOrUpdateEntityData(EntityData newEntityData) throws Exception {
@@ -367,12 +367,12 @@ public class ModelMgr {
         FacadeManager.getFacadeManager().getComputeFacade().deleteTaskById(taskId);
     }
 
-    public List<Task> getUserTasksByType(String taskName, String username) throws Exception {
-        return FacadeManager.getFacadeManager().getComputeFacade().getUserTasksByType(taskName, username);
+    public List<Task> getUserTasksByType(String taskName) throws Exception {
+        return FacadeManager.getFacadeManager().getComputeFacade().getUserTasksByType(taskName);
     }
 
-    public User getUser(String username) throws Exception {
-        return FacadeManager.getFacadeManager().getComputeFacade().getUser(username);
+    public User getUser() throws Exception {
+        return FacadeManager.getFacadeManager().getComputeFacade().getUser();
     }
 
     public User saveOrUpdateUser(User user) throws Exception {

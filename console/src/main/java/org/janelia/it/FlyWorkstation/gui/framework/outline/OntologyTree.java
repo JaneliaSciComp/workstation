@@ -1,7 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.DynamicTree;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
@@ -61,7 +60,7 @@ public class OntologyTree extends JPanel {
             private Entity rootEntity;
 
             protected void doStuff() throws Exception {
-                rootEntity = ModelMgr.getModelMgr().getOntologyTree(SessionMgr.getUsername(), rootId);
+                rootEntity = ModelMgr.getModelMgr().getOntologyTree(rootId);
             }
 
             protected void hadSuccess() {

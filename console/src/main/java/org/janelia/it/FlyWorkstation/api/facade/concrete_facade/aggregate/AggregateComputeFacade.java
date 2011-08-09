@@ -62,12 +62,12 @@ public class AggregateComputeFacade extends AggregateFacadeBase implements Compu
     }
 
     @Override
-    public List<Task> getUserTasksByType(String taskName, String username) throws Exception {
+    public List<Task> getUserTasksByType(String taskName) throws Exception {
         Object[] aggregates = getAggregates();
         List<Task> returnList = new ArrayList<Task>();
         List<Task> tmpTasks;
         for (Object aggregate : aggregates) {
-            tmpTasks = ((ComputeFacade) aggregate).getUserTasksByType(taskName, username);
+            tmpTasks = ((ComputeFacade) aggregate).getUserTasksByType(taskName);
             if (tmpTasks != null) {
                 returnList.addAll(tmpTasks);
             }
@@ -76,12 +76,12 @@ public class AggregateComputeFacade extends AggregateFacadeBase implements Compu
     }
 
     @Override
-    public User getUser(String username) throws Exception {
+    public User getUser() throws Exception {
         Object[] aggregates = getAggregates();
         List<User> returnList = new ArrayList<User>();
         User tmpUser;
         for (Object aggregate : aggregates) {
-            tmpUser = ((ComputeFacade) aggregate).getUser(username);
+            tmpUser = ((ComputeFacade) aggregate).getUser();
             if (tmpUser != null) {
                 returnList.add(tmpUser);
             }

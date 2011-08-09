@@ -362,7 +362,7 @@ public class EntityListPane extends JPanel implements ActionListener {
             for (Entity entity : toDelete) {
                 try {
                     // TODO: allow dataviewer user to override owner?
-                    ModelMgr.getModelMgr().deleteEntityTree(entity.getUser().getUserLogin(), entity.getId());
+                    ModelMgr.getModelMgr().deleteEntityTree(entity.getId());
                 }
                 catch (Exception ex) {
                     ex.printStackTrace();

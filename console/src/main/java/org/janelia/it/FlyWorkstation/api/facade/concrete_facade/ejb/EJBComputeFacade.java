@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.ComputeFacade;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.user_data.User;
 
@@ -25,13 +26,13 @@ public class EJBComputeFacade implements ComputeFacade {
     }
 
     @Override
-    public List<Task> getUserTasksByType(String taskName, String username) throws Exception {
-        return EJBFactory.getRemoteComputeBean().getUserTasksByType(taskName, username);
+    public List<Task> getUserTasksByType(String taskName) throws Exception {
+        return EJBFactory.getRemoteComputeBean().getUserTasksByType(taskName, SessionMgr.getUsername());
     }
 
     @Override
-    public User getUser(String username) throws Exception {
-        return EJBFactory.getRemoteComputeBean().getUserByName(username);
+    public User getUser() throws Exception {
+        return EJBFactory.getRemoteComputeBean().getUserByName(SessionMgr.getUsername());
     }
 
     @Override

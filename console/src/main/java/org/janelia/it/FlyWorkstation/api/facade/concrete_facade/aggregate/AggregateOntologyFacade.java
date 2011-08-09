@@ -48,12 +48,12 @@ public class AggregateOntologyFacade extends AggregateEntityFacade implements On
     }
 
     @Override
-    public Entity createOntologyAnnotation(String username, String sessionId, String targetEntityId, String keyEntityId, String keyString, String valueEntityId, String valueString, String tag) throws Exception {
+    public Entity createOntologyAnnotation(String sessionId, String targetEntityId, String keyEntityId, String keyString, String valueEntityId, String valueString, String tag) throws Exception {
         Object[] aggregates = getAggregates();
         List<Entity> returnList = new ArrayList<Entity>();
         Entity tmpEntity;
         for (Object aggregate : aggregates) {
-            tmpEntity = ((OntologyFacade) aggregate).createOntologyAnnotation(username, sessionId, targetEntityId, keyEntityId, keyString, valueEntityId, valueString, tag);
+            tmpEntity = ((OntologyFacade) aggregate).createOntologyAnnotation(sessionId, targetEntityId, keyEntityId, keyString, valueEntityId, valueString, tag);
             if (tmpEntity != null) {
                 returnList.add(tmpEntity);
             }
@@ -69,12 +69,12 @@ public class AggregateOntologyFacade extends AggregateEntityFacade implements On
     }
 
     @Override
-    public Entity createOntologyRoot(String username, String ontologyName) throws Exception {
+    public Entity createOntologyRoot(String ontologyName) throws Exception {
         Object[] aggregates = getAggregates();
         List<Entity> returnList = new ArrayList<Entity>();
         Entity tmpEntity;
         for (Object aggregate : aggregates) {
-            tmpEntity = ((OntologyFacade) aggregate).createOntologyRoot(username, ontologyName);
+            tmpEntity = ((OntologyFacade) aggregate).createOntologyRoot(ontologyName);
             if (tmpEntity != null) {
                 returnList.add(tmpEntity);
             }
@@ -90,12 +90,12 @@ public class AggregateOntologyFacade extends AggregateEntityFacade implements On
     }
 
     @Override
-    public EntityData createOntologyTerm(String username, Long parentEntityId, String label, OntologyElementType type, Integer orderIndex) throws Exception {
+    public EntityData createOntologyTerm(Long parentEntityId, String label, OntologyElementType type, Integer orderIndex) throws Exception {
         Object[] aggregates = getAggregates();
         List<EntityData> returnList = new ArrayList<EntityData>();
         EntityData tmpEntityData;
         for (Object aggregate : aggregates) {
-            tmpEntityData = ((OntologyFacade) aggregate).createOntologyTerm(username, parentEntityId, label, type, orderIndex);
+            tmpEntityData = ((OntologyFacade) aggregate).createOntologyTerm(parentEntityId, label, type, orderIndex);
             if (tmpEntityData != null) {
                 returnList.add(tmpEntityData);
             }
@@ -111,12 +111,12 @@ public class AggregateOntologyFacade extends AggregateEntityFacade implements On
     }
 
     @Override
-    public Entity getOntologyTree(String username, Long rootEntityId) throws Exception {
+    public Entity getOntologyTree(Long rootEntityId) throws Exception {
         Object[] aggregates = getAggregates();
         List<Entity> returnList = new ArrayList<Entity>();
         Entity tmpEntityData;
         for (Object aggregate : aggregates) {
-            tmpEntityData = ((OntologyFacade) aggregate).getOntologyTree(username, rootEntityId);
+            tmpEntityData = ((OntologyFacade) aggregate).getOntologyTree(rootEntityId);
             if (tmpEntityData != null) {
                 returnList.add(tmpEntityData);
             }
@@ -131,12 +131,12 @@ public class AggregateOntologyFacade extends AggregateEntityFacade implements On
     }
 
     @Override
-    public List<Entity> getPrivateOntologies(String username) throws Exception {
+    public List<Entity> getPrivateOntologies() throws Exception {
         Object[] aggregates = getAggregates();
         List<Entity> returnList = new ArrayList<Entity>();
         List<Entity> tmpList;
         for (Object aggregate : aggregates) {
-            tmpList = ((OntologyFacade) aggregate).getPrivateOntologies(username);
+            tmpList = ((OntologyFacade) aggregate).getPrivateOntologies();
             if (tmpList != null) {
                 returnList.addAll(tmpList);
             }
@@ -180,10 +180,10 @@ public class AggregateOntologyFacade extends AggregateEntityFacade implements On
     }
 
     @Override
-    public void removeOntologyTerm(String username, Long termEntityId) throws Exception {
+    public void removeOntologyTerm(Long termEntityId) throws Exception {
         Object[] aggregates = getAggregates();
         for (Object aggregate : aggregates) {
-            ((OntologyFacade) aggregate).removeOntologyTerm(username, termEntityId);
+            ((OntologyFacade) aggregate).removeOntologyTerm(termEntityId);
         }
     }
 

@@ -2,7 +2,9 @@ package org.janelia.it.FlyWorkstation.gui.framework.session_mgr;
 
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyBindings;
 
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Vector;
 
 /**
@@ -18,6 +20,8 @@ public class SessionModel extends GenericModel {
     private static SessionModel sessionModel = new SessionModel();
     private Vector browserModels = new Vector(10);
     private static KeyBindings bindings;
+    private List<ExternalClient> externalClients = new ArrayList<ExternalClient>();
+    private int portCounter = 30001;
 
     private SessionModel() {
         super();
@@ -77,6 +81,46 @@ public class SessionModel extends GenericModel {
 
     public int getNumberOfBrowserModels() {
         return this.browserModels.size();
+    }
+
+    /**
+     * Since there can be more than one external client of a given tool add them all as listeners and the
+     * instantiation of ExternalClients will add the unique timestamp id
+     * @param newClientName the external tool to add
+     */
+    public int addExternalClient(String newClientName) {
+        ExternalClient newClient = new ExternalClient(++portCounter,newClientName);
+        externalClients.add(newClient);
+        return newClient.getClientPort();
+    }
+
+    public List<ExternalClient> getExternalClientsByName(String clientName){
+        List<ExternalClient> returnList = new ArrayList<ExternalClient>();
+        for (ExternalClient externalClient : externalClients) {
+            if (externalClient.getName().equals(clientName)) { returnList.add(externalClient); }
+        }
+        return returnList;
+    }
+
+    public ExternalClient getExternalClientByPort(int targetPort) {
+        for (ExternalClient externalClient : externalClients) {
+            // There can be only one - client-to-port that is...
+            if (externalClient.getClientPort()==targetPort) {
+                return externalClient;
+            }
+        }
+        return null;
+    }
+
+    public void removeExternalClientByPort(int targetPort){
+        ExternalClient targetClient=null;
+        for (ExternalClient externalClient : externalClients) {
+            if (externalClient.getClientPort()==targetPort){
+                targetClient = externalClient;
+                break;
+            }
+        }
+        if (null!=targetClient) { externalClients.remove(targetClient); }
     }
 
     public void systemWillExit() {

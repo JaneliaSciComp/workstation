@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.EntityFacade;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
@@ -72,12 +73,13 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
-    public void deleteEntityTree(String userLogin, Long entityId) throws Exception {
-        EJBFactory.getRemoteAnnotationBean().deleteEntityTree(userLogin, entityId);
+    public void deleteEntityTree(Long entityId) throws Exception {
+        EJBFactory.getRemoteAnnotationBean().deleteEntityTree(SessionMgr.getUsername(), entityId);
     }
 
     @Override
-    public Entity cloneEntityTree(Long entityId, String username, String rootName) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().cloneEntityTree(entityId, username, rootName);
+    public Entity cloneEntityTree(Long entityId, String rootName) throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().cloneEntityTree(entityId, SessionMgr.getUsername()
+                , rootName);
     }
 }

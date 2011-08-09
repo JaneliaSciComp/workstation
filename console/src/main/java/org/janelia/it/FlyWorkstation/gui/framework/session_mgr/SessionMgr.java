@@ -147,6 +147,22 @@ public class SessionMgr {
         return sessionModel.setModelProperty(key, value);
     }
 
+    public int addExternalClient(String newClientName) {
+        return sessionModel.addExternalClient(newClientName);
+    }
+
+    public List<ExternalClient> getExternalClientsByName(String clientName){
+        return sessionModel.getExternalClientsByName(clientName);
+    }
+
+    public ExternalClient getExternalClientByPort(int targetPort) {
+        return sessionModel.getExternalClientByPort(targetPort);
+    }
+
+    public void removeExternalClientByPort(int targetPort){
+        sessionModel.removeExternalClientByPort(targetPort);
+    }
+
     public static KeyBindings getKeyBindings() {
         return SessionModel.getKeyBindings();
     }
@@ -435,7 +451,7 @@ public class SessionMgr {
 
     public User getUser() {
         try {
-            return ModelMgr.getModelMgr().getUser(getUsername());
+            return ModelMgr.getModelMgr().getUser();
         }
         catch (Exception e) {
             handleException(e);

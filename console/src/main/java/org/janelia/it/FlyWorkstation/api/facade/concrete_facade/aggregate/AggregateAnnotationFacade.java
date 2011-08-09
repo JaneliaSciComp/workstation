@@ -30,12 +30,12 @@ public class AggregateAnnotationFacade extends AggregateEntityFacade implements 
     }
 
     @Override
-    public List<Entity> getAnnotationsForEntity(String username, Long entityId) throws Exception {
+    public List<Entity> getAnnotationsForEntity(Long entityId) throws Exception {
         Object[] aggregates = getAggregates();
         List<Entity> returnList = new ArrayList<Entity>();
         List<Entity> tmpAnnotations;
         for (Object aggregate : aggregates) {
-            tmpAnnotations = ((AnnotationFacade) aggregate).getAnnotationsForEntity(username, entityId);
+            tmpAnnotations = ((AnnotationFacade) aggregate).getAnnotationsForEntity(entityId);
             if (null != tmpAnnotations) {
                 returnList.addAll(tmpAnnotations);
             }
@@ -44,12 +44,12 @@ public class AggregateAnnotationFacade extends AggregateEntityFacade implements 
     }
 
     @Override
-    public List<Entity> getAnnotationsForEntities(String username, List<Long> entityIds) throws Exception {
+    public List<Entity> getAnnotationsForEntities(List<Long> entityIds) throws Exception {
         Object[] aggregates = getAggregates();
         List<Entity> returnList = new ArrayList<Entity>();
         List<Entity> tmpAnnotations;
         for (Object aggregate : aggregates) {
-            tmpAnnotations = ((AnnotationFacade) aggregate).getAnnotationsForEntities(username, entityIds);
+            tmpAnnotations = ((AnnotationFacade) aggregate).getAnnotationsForEntities(entityIds);
             if (null != tmpAnnotations) {
                 returnList.addAll(tmpAnnotations);
             }
@@ -58,12 +58,12 @@ public class AggregateAnnotationFacade extends AggregateEntityFacade implements 
     }
 
     @Override
-    public List<Entity> getEntitiesForAnnotationSession(String username, Long annotationSessionId) throws Exception {
+    public List<Entity> getEntitiesForAnnotationSession(Long annotationSessionId) throws Exception {
         Object[] aggregates = getAggregates();
         List<Entity> returnList = new ArrayList<Entity>();
         List<Entity> tmpEntities;
         for (Object aggregate : aggregates) {
-            tmpEntities = ((AnnotationFacade) aggregate).getEntitiesForAnnotationSession(username, annotationSessionId);
+            tmpEntities = ((AnnotationFacade) aggregate).getEntitiesForAnnotationSession(annotationSessionId);
             if (null != tmpEntities) {
                 returnList.addAll(tmpEntities);
             }
@@ -72,12 +72,12 @@ public class AggregateAnnotationFacade extends AggregateEntityFacade implements 
     }
 
     @Override
-    public List<Entity> getAnnotationsForSession(String username, Long annotationSessionId) throws Exception {
+    public List<Entity> getAnnotationsForSession(Long annotationSessionId) throws Exception {
         Object[] aggregates = getAggregates();
         List<Entity> returnList = new ArrayList<Entity>();
         List<Entity> tmpEntities;
         for (Object aggregate : aggregates) {
-            tmpEntities = ((AnnotationFacade) aggregate).getAnnotationsForSession(username, annotationSessionId);
+            tmpEntities = ((AnnotationFacade) aggregate).getAnnotationsForSession(annotationSessionId);
             if (null != tmpEntities) {
                 returnList.addAll(tmpEntities);
             }
@@ -86,12 +86,12 @@ public class AggregateAnnotationFacade extends AggregateEntityFacade implements 
     }
 
     @Override
-    public List<Entity> getCategoriesForAnnotationSession(String username, Long annotationSessionId) throws Exception {
+    public List<Entity> getCategoriesForAnnotationSession(Long annotationSessionId) throws Exception {
         Object[] aggregates = getAggregates();
         List<Entity> returnList = new ArrayList<Entity>();
         List<Entity> tmpCategories;
         for (Object aggregate : aggregates) {
-            tmpCategories = ((AnnotationFacade) aggregate).getCategoriesForAnnotationSession(username, annotationSessionId);
+            tmpCategories = ((AnnotationFacade) aggregate).getCategoriesForAnnotationSession(annotationSessionId);
             if (null != tmpCategories) {
                 returnList.addAll(tmpCategories);
             }
@@ -100,18 +100,18 @@ public class AggregateAnnotationFacade extends AggregateEntityFacade implements 
     }
 
     @Override
-    public void deleteAnnotation(String userlogin, Long annotatedEntityId, String tag) {
+    public void deleteAnnotation(Long annotatedEntityId, String tag) {
         Object[] aggregates = getAggregates();
         for (Object aggregate : aggregates) {
-            ((AnnotationFacade) aggregate).deleteAnnotation(userlogin, annotatedEntityId, tag);
+            ((AnnotationFacade) aggregate).deleteAnnotation(annotatedEntityId, tag);
         }
     }
 
     @Override
-    public void removeAllOntologyAnnotationsForSession(String username, Long annotationSessionId) throws Exception {
+    public void removeAllOntologyAnnotationsForSession(Long annotationSessionId) throws Exception {
         Object[] aggregates = getAggregates();
         for (Object aggregate : aggregates) {
-            ((AnnotationFacade) aggregate).removeAllOntologyAnnotationsForSession(username, annotationSessionId);
+            ((AnnotationFacade) aggregate).removeAllOntologyAnnotationsForSession(annotationSessionId);
         }
     }
 }

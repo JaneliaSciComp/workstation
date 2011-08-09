@@ -1,7 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.ontology;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -152,7 +151,7 @@ public class OWLDataLoader extends SimpleWorker {
         IRI classIRI = OWLRDFVocabulary.OWL_THING.getIRI();
         OWLClass clazz = manager.getOWLDataFactory().getOWLClass(classIRI);
 
-        root = saveObjects ? ModelMgr.getModelMgr().createOntologyRoot(SessionMgr.getUsername(), ontologyName) : new Entity();
+        root = saveObjects ? ModelMgr.getModelMgr().createOntologyRoot(ontologyName) : new Entity();
         incrementProgress();
 
         if (out != null) out.println(ontologyName + " (Category saved as " + root.getId() + ")");
@@ -199,7 +198,7 @@ public class OWLDataLoader extends SimpleWorker {
         }
 
         OntologyElementType type = hasChildren ? new Category() : new Tag();
-        EntityData newData = saveObjects ? ModelMgr.getModelMgr().createOntologyTerm(SessionMgr.getUsername(), parentEntity.getId(), label, type, orderIndex) : new EntityData();
+        EntityData newData = saveObjects ? ModelMgr.getModelMgr().createOntologyTerm(parentEntity.getId(), label, type, orderIndex) : new EntityData();
         incrementProgress();
 
         if (out != null) out.println(label + " (" + type.getName() + " saved as " + newData.getId() + ")");

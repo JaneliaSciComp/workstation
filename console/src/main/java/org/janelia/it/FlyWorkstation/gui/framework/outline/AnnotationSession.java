@@ -1,7 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -69,7 +68,7 @@ public class AnnotationSession {
     public List<Entity> getEntities() {
         if (entities == null) {
             try {
-                entities = ModelMgr.getModelMgr().getEntitiesForAnnotationSession(SessionMgr.getUsername(), task.getObjectId());
+                entities = ModelMgr.getModelMgr().getEntitiesForAnnotationSession(task.getObjectId());
             }
             catch (Exception e) {
                 e.printStackTrace();
@@ -83,7 +82,7 @@ public class AnnotationSession {
         if (categories == null) {
             try {
                 categories = new ArrayList<OntologyElement>();
-                List<Entity> tmps = ModelMgr.getModelMgr().getCategoriesForAnnotationSession(SessionMgr.getUsername(), task.getObjectId());
+                List<Entity> tmps = ModelMgr.getModelMgr().getCategoriesForAnnotationSession(task.getObjectId());
                 for (Entity tmp : tmps) {
                     categories.add(new OntologyElement(tmp, null));
                 }
@@ -99,7 +98,7 @@ public class AnnotationSession {
     public List<Entity> getAnnotations() {
         if (annotations == null) {
             try {
-                annotations = ModelMgr.getModelMgr().getAnnotationsForSession(SessionMgr.getUsername(), task.getObjectId());
+                annotations = ModelMgr.getModelMgr().getAnnotationsForSession(task.getObjectId());
             }
             catch (Exception e) {
                 e.printStackTrace();
