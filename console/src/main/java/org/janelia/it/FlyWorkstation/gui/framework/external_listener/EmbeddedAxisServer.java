@@ -5,9 +5,13 @@ import org.apache.axis2.context.ConfigurationContext;
 import org.apache.axis2.context.ConfigurationContextFactory;
 import org.apache.axis2.description.AxisService;
 import org.apache.axis2.transport.http.SimpleHTTPServer;
+import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.ExternalClient;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.tasks.Task;
 
-public class EmbeddedAxisServer {
+public class EmbeddedAxisServer implements ModelMgrObserver{
 
     AxisService service;
     SimpleHTTPServer server;
@@ -38,4 +42,53 @@ public class EmbeddedAxisServer {
         server.stop();
     }
 
+    @Override
+    public void ontologyAdded(Entity ontology) {
+        sendOntologyMessage("ontology added", ontology);
+    }
+
+    @Override
+    public void ontologyRemoved(Entity ontology) {
+        
+    }
+
+    @Override
+    public void ontologySelected(Entity ontology) {
+        
+    }
+
+    @Override
+    public void ontologyUnselected(Entity ontology) {
+        
+    }
+
+    private void sendOntologyMessage(String s, Entity ontology) {
+        for (ExternalClient externalClient : SessionMgr.getSessionMgr().getExternalClients()) {
+        }
+    }
+
+    @Override
+    public void annotationSessionCreated(Task annotationSession) {
+        
+    }
+
+    @Override
+    public void annotationSessionRemoved(Task annotationSession) {
+        
+    }
+
+    @Override
+    public void annotationSessionSelected(Task annotationSession) {
+        
+    }
+
+    @Override
+    public void annotationSessionUnselected(Task annotationSession) {
+        
+    }
+
+    @Override
+    public void annotationSessionCriteriaChanged(Task annotationSession) {
+        
+    }
 }

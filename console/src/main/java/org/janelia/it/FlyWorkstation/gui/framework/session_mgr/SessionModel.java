@@ -123,6 +123,10 @@ public class SessionModel extends GenericModel {
         if (null!=targetClient) { externalClients.remove(targetClient); }
     }
 
+    public List<ExternalClient> getExternalClients() {
+        return externalClients;
+    }
+
     public void systemWillExit() {
         removeAllBrowserModels();
         fireSystemExit();

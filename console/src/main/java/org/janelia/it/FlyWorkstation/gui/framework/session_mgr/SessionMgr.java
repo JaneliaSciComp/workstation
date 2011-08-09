@@ -151,6 +151,10 @@ public class SessionMgr {
         return sessionModel.addExternalClient(newClientName);
     }
 
+    public List<ExternalClient> getExternalClients() {
+        return sessionModel.getExternalClients();
+    }
+
     public List<ExternalClient> getExternalClientsByName(String clientName){
         return sessionModel.getExternalClientsByName(clientName);
     }
