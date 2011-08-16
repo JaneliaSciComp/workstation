@@ -10,6 +10,8 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeCellRenderer;
 import java.awt.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 /**
  * Special tree cell renderer for generic Entity trees.
@@ -19,6 +21,7 @@ import java.awt.*;
 public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements TreeCellRenderer {
     protected static final Color typeLabelColor = new Color(149, 125, 71);
     protected static final Color keybindLabelColor = new Color(128, 128, 128);
+    protected static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm");
 
     protected JLabel titleLabel;
     protected JLabel typeLabel;
@@ -103,9 +106,14 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
                         titleLabel.setIcon(Utils.getClasspathImage("folder.png"));
                         titleLabel.setToolTipText("Folder");
                     }
-                    else if (entityTypeName.equals(EntityConstants.TYPE_LSM_STACK_PAIR) || entityTypeName.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
+                    else if (entityTypeName.equals(EntityConstants.TYPE_LSM_STACK_PAIR)) {
                         titleLabel.setIcon(Utils.getClasspathImage("folder_image.png"));
                         titleLabel.setToolTipText("LSM Stack Pair");
+                    }
+                    else if (entityTypeName.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
+                        titleLabel.setIcon(Utils.getClasspathImage("folder_image.png"));
+                        titleLabel.setToolTipText("LSM Stack Pair");
+                        typeLabel.setText("("+df.format(entity.getCreationDate())+")");
                     }
                     else if (entityTypeName.equals(EntityConstants.TYPE_SAMPLE)) {
                         titleLabel.setIcon(Utils.getClasspathImage("beaker.png"));

@@ -352,7 +352,7 @@ public class DynamicTree extends JPanel {
     }
 
     protected void expandAll(TreePath path, boolean expand) {
-
+    	
         // Traverse children
         TreeNode node = (TreeNode) path.getLastPathComponent();
         if (node.getChildCount() >= 0) {

@@ -151,7 +151,7 @@ public class OntologyTree extends JPanel {
 
     protected void createNewTree(OntologyRoot root) {
 
-        selectedTree = new DynamicTree(root, true, true) {
+        selectedTree = new DynamicTree(root, true, false) {
 
             protected void showPopupMenu(MouseEvent e) {
                 OntologyTree.this.showPopupMenu(e);

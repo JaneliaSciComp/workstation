@@ -265,19 +265,6 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 
         try {
             File file = fc.getSelectedFile();
-            owlLoader = new OWLDataLoader(file) {
-
-                protected void hadSuccess() {
-                    privateTable.reloadData(getResult());
-                }
-
-                protected void hadError(Throwable error) {
-                    error.printStackTrace();
-                    JOptionPane.showMessageDialog(OntologyManager.this, "Error loading ontology", "Ontology Import Error", JOptionPane.ERROR_MESSAGE);
-                    privateTable.reloadData(null);
-                }
-            };
-
             String rootName = (String) JOptionPane.showInputDialog(this, "New Ontology Name:\n", "Import Ontology", JOptionPane.PLAIN_MESSAGE, null, null, owlLoader.getOntologyName());
 
             if ((rootName == null) || (rootName.length() <= 0)) {
@@ -290,6 +277,19 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 
             progressMonitor = new ProgressMonitor(this, "Importing OWL", "", 0, 100);
             progressMonitor.setProgress(0);
+
+            owlLoader = new OWLDataLoader(file) {
+
+                protected void hadSuccess() {
+                    privateTable.reloadData(getResult());
+                }
+
+                protected void hadError(Throwable error) {
+                    error.printStackTrace();
+                    JOptionPane.showMessageDialog(OntologyManager.this, "Error loading ontology", "Ontology Import Error", JOptionPane.ERROR_MESSAGE);
+                    privateTable.reloadData(null);
+                }
+            };
 
             owlLoader.addPropertyChangeListener(this);
             owlLoader.setOntologyName(rootName);

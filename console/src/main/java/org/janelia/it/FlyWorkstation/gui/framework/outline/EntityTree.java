@@ -1,23 +1,28 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import java.awt.BorderLayout;
+import java.awt.Cursor;
+import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.*;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
+
 import org.hibernate.Hibernate;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.DynamicTree;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNode;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeExpansionWorker;
+import org.janelia.it.FlyWorkstation.gui.util.FakeProgressWorker;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
-
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreePath;
-import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.util.*;
-import java.util.List;
 
 /**
  * A tree of Entities that may load lazily. Manages all the asynchronous loading and tree updating that happens in the
@@ -25,12 +30,15 @@ import java.util.List;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class EntityTree extends JPanel {
+public class EntityTree extends JPanel implements PropertyChangeListener  {
 
     protected final JPanel treesPanel;
     protected DynamicTree selectedTree;
     protected boolean lazy;
-
+    
+    private FakeProgressWorker loadingWorker;
+    private ProgressMonitor progressMonitor;
+    
     public EntityTree() {
         this(false);
     }
@@ -69,7 +77,6 @@ public class EntityTree extends JPanel {
                     rootEntity = ModelMgr.getModelMgr().getEntityById(rootId.toString());
                 }
                 else {
-                    // TODO: do we want to be loading a cached tree?
                     rootEntity = ModelMgr.getModelMgr().getCachedEntityTree(rootId);
                 }
             }
@@ -241,30 +248,39 @@ public class EntityTree extends JPanel {
                     return;
                 }
 
+                if (loadingWorker != null && !loadingWorker.isDone()) {
+                	loadingWorker.cancel(true);
+                }
+                
                 // Expanding a lazy tree is hard. Let's eager load the entire thing first.
 
-                getDynamicTree().setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-
-                final SimpleWorker loadingWorker = new SimpleWorker() {
+                progressMonitor = new ProgressMonitor(SessionMgr.getSessionMgr().getActiveBrowser(), "Loading tree...", "", 0, 100);
+                progressMonitor.setProgress(0);
+                progressMonitor.setMillisToDecideToPopup(0);
+                
+                loadingWorker = new FakeProgressWorker() {
 
                     private Entity rootEntity;
 
                     @Override
                     protected void doStuff() throws Exception {
+                    	progressMonitor.setProgress(1);
                         long rootId = ((Entity) getRootNode().getUserObject()).getId();
                         rootEntity = ModelMgr.getModelMgr().getEntityTree(rootId);
                     }
 
                     @Override
                     protected void hadSuccess() {
+                    	if (isCancelled()) return;
+                    	if (getProgress() < 90) setProgress(90);
                         // The tree is no longer lazy
                         setLazyLoading(false);
-                        getDynamicTree().setCursor(Cursor.getDefaultCursor());
                         DefaultMutableTreeNode rootNode = getRootNode();
                         rootNode.setUserObject(rootEntity);
                         recreateChildNodes(rootNode, true);
                         expandAll(new TreePath(rootNode), expand);
                         SwingUtilities.updateComponentTreeUI(EntityTree.this);
+                        if (getProgress() < 100) setProgress(100);
                     }
 
                     @Override
@@ -273,16 +289,33 @@ public class EntityTree extends JPanel {
                         JOptionPane.showMessageDialog(EntityTree.this, "Error loading tree", "Internal Error", JOptionPane.ERROR_MESSAGE);
                     }
                 };
-
-                loadingWorker.execute();
+                
+                loadingWorker.addPropertyChangeListener(EntityTree.this);
+                loadingWorker.executeWithProgress();
             }
+            
         };
 
         // Replace the cell renderer
 
         selectedTree.setCellRenderer(new EntityTreeCellRenderer());
     }
-
+    
+    /**
+     * Invoked when the loader's progress property changes.
+     */
+    public void propertyChange(PropertyChangeEvent e) {
+        if ("progress".equals(e.getPropertyName())) {
+            int progress = (Integer) e.getNewValue();
+            progressMonitor.setProgress(progress);
+            String message = String.format("Completed %d%%", progress);
+            progressMonitor.setNote(message);
+            if (progressMonitor.isCanceled()) {
+            	loadingWorker.cancel(true);
+            }
+        }
+    }
+    
     private void loadLazyEntity(Entity entity, boolean recurse) {
 
         if (!areLoaded(entity.getEntityData())) {
@@ -357,12 +390,15 @@ public class EntityTree extends JPanel {
         Collections.sort(dataList, new Comparator<EntityData>() {
             @Override
             public int compare(EntityData o1, EntityData o2) {
+            	// Attempt to order by the prescribed ordering
                 if (o1.getOrderIndex() == null) {
                     if (o2.getOrderIndex() == null) {
+                    	// No ordering exists, try using the child entity names
                         Entity child1 = o1.getChildEntity();
                         Entity child2 = o2.getChildEntity();
                         if (child1 == null) {
                             if (child2 == null) {
+                            	// No children, fall back on data id
                                 return o1.getId().compareTo(o2.getId());
                             }
                             else {
@@ -372,8 +408,24 @@ public class EntityTree extends JPanel {
                         else if (child2 == null) {
                             return 1;
                         }
-                        return child1.getName().compareTo(child2.getName());
-
+                        int c = child1.getName().compareTo(child2.getName());
+                        if (c == 0) {
+                        	// If the names are the same, order by creation date
+                        	if (child1.getCreationDate() == null) {
+                        		if (child2.getCreationDate() == null) {
+                        			// No creation date, fall back on entity id
+                                    return child1.getId().compareTo(child2.getId());
+                        		}
+                        		else {
+                        			return -1;
+                        		}
+                        	}
+                        	else if (child2.getCreationDate() == null) {
+                        		return 1;
+                        	}
+                        	return o1.getCreationDate().compareTo(o2.getCreationDate());
+                    	}	
+                    	return c;
                     }
                     return -1;
                 }

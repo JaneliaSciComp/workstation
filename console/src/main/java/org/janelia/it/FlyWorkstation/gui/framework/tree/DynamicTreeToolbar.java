@@ -1,14 +1,17 @@
 package org.janelia.it.FlyWorkstation.gui.framework.tree;
 
-import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.Position.Bias;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
 
 /**
  * A toolbar which sits on top of a DynamicTree and provides generic tree-related functions such as
@@ -95,6 +98,14 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         String cmd = e.getActionCommand();
         if (EXPAND_ALL.equals(cmd)) {
+        	if (tree.isLazyLoading()) {
+                int deleteConfirmation = JOptionPane.showConfirmDialog(SessionMgr.getSessionMgr().getActiveBrowser(), 
+                		"Expanding the entire tree may take a long time. Are you sure you want to do this?", 
+                		"Expand All", JOptionPane.YES_NO_OPTION);
+                if (deleteConfirmation != 0) {
+                    return;
+                }
+        	}
             expandAllButton.setEnabled(false);
             collapseAllButton.setEnabled(false);
             tree.expandAll(true);

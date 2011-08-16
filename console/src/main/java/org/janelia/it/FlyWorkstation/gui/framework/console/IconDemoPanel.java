@@ -40,6 +40,8 @@ public class IconDemoPanel extends JPanel {
 
     private SplashPanel splashPanel;
     private JToolBar toolbar;
+    private JToggleButton showTitlesButton;
+    private JToggleButton showTagsButton;
     private JSlider slider;
     private JToggleButton invertButton;
     private ImagesPanel imagesPanel;
@@ -112,6 +114,18 @@ public class IconDemoPanel extends JPanel {
         this.addKeyListener(getKeyListener());
     }
 
+    private void setTitleVisbility() {
+        for (AnnotatedImageButton button : getImagesPanel().getButtons().values()) {
+            button.setTitleVisible(showTitlesButton.isSelected());
+        }
+    }
+
+    private void setTagVisbility() {
+        for (AnnotatedImageButton button : getImagesPanel().getButtons().values()) {
+            button.setTagsVisible(showTagsButton.isSelected());
+        }
+    }
+    
     private JToolBar createToolbar() {
 
         JToolBar toolBar = new JToolBar("Still draggable");
@@ -120,29 +134,25 @@ public class IconDemoPanel extends JPanel {
 
         toolBar.add(new JLabel("Show:"));
 
-        final JToggleButton showTitlesButton = new JToggleButton("Titles");
+        showTitlesButton = new JToggleButton("Titles");
         showTitlesButton.setSelected(true);
         showTitlesButton.setToolTipText("Show the image title above each image.");
         showTitlesButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                for (AnnotatedImageButton button : getImagesPanel().getButtons().values()) {
-                    button.setTitleVisible(showTitlesButton.isSelected());
-                }
+            	setTitleVisbility();
                 getImagesPanel().recalculateGrid();
             }
         });
         toolBar.add(showTitlesButton);
 
-        final JToggleButton showTagsButton = new JToggleButton("Tags");
+        showTagsButton = new JToggleButton("Tags");
         showTagsButton.setSelected(true);
         showTagsButton.setToolTipText("Show tags below each images");
         showTagsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                for (AnnotatedImageButton button : getImagesPanel().getButtons().values()) {
-                    button.setTagsVisible(showTagsButton.isSelected());
-                }
+            	setTagVisbility();
                 getImagesPanel().recalculateGrid();
             }
         });
@@ -223,6 +233,8 @@ public class IconDemoPanel extends JPanel {
             protected void hadSuccess() {
                 imagesPanel.load(getEntities());
                 imagesPanel.loadAnnotations(annotationMap);
+                setTitleVisbility();
+                setTagVisbility();
                 showAllEntities();
             }
 

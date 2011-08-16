@@ -35,6 +35,7 @@ public class EntityOutline extends EntityTree implements Cloneable {
     private static final String JACS_DATA_PATH_LINUX = ConsoleProperties.getString("remote.defaultLinuxPath");
 
     public EntityOutline() {
+    	super(true);
         this.setMinimumSize(new Dimension(400, 400));
 
         showLoadingIndicator();
