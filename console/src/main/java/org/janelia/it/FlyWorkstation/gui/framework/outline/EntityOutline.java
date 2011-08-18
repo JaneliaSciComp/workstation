@@ -95,8 +95,9 @@ public class EntityOutline extends EntityTree implements Cloneable {
 
                         @Override
                         protected void hadError(Throwable error) {
+                        	error.printStackTrace();
                             Utils.setDefaultCursor(EntityOutline.this);
-                            JOptionPane.showMessageDialog(EntityOutline.this, "Error expanding tree", "Internal Error", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(EntityOutline.this, "Error loading nodes", "Internal Error", JOptionPane.ERROR_MESSAGE);
                         }
                     };
 
@@ -146,28 +147,40 @@ public class EntityOutline extends EntityTree implements Cloneable {
         DefaultMutableTreeNode node = selectedTree.getCurrentNode();
         if (node instanceof LazyTreeNode) return;
 
-        Entity entity = (Entity) node.getUserObject();
+        final Entity entity = (Entity) node.getUserObject();
+        ModelMgr.getModelMgr().notifyEntitySelected(entity);
+        
         String type = entity.getEntityType().getName();
         List<Entity> entities = new ArrayList<Entity>();
 
         if (type.equals(EntityConstants.TYPE_TIF_2D)) {
             entities.add(entity);
+        	if (entities.isEmpty()) return;
+        	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(new GlobalSession(entities));
         }
         else if (type.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
-            // Get all the 2d TIFFs that are children of this result
-            for (EntityData ed : entity.getOrderedEntityData()) {
-                Entity child = ed.getChildEntity();
-                if (child == null) continue;
-                String childType = child.getEntityType().getName();
-                if (!childType.equals(EntityConstants.TYPE_TIF_2D)) continue;
-                entities.add(child);
-            }
+
+            Utils.setWaitingCursor(EntityOutline.this);
+
+            SimpleWorker loadingWorker = new LazyTreeNodeExpansionWorker(selectedTree, node, true) {
+
+                protected void doneExpanding() {
+                    Utils.setDefaultCursor(EntityOutline.this);
+                    List<Entity> entities = getDescendantsOfType(entity, EntityConstants.TYPE_TIF_2D);
+                	if (entities.isEmpty()) return;
+                	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(new GlobalSession(entities));
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                	error.printStackTrace();
+                    Utils.setDefaultCursor(EntityOutline.this);
+                    JOptionPane.showMessageDialog(EntityOutline.this, "Error loading nodes", "Internal Error", JOptionPane.ERROR_MESSAGE);
+                }
+            };
+
+            loadingWorker.execute();
         }
-
-    	if (entities.isEmpty()) return;
-    	
-    	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(new GlobalSession(entities));
-
     }
 
     /**
