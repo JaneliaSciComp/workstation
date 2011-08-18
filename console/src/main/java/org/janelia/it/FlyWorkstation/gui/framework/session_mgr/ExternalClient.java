@@ -49,17 +49,6 @@ public class ExternalClient {
     		throw new Exception("Endpoint's port does not match the reserved port for this client");
     	}
     	
-    	// Extract necessary info from the prototypical client service so that we don't have to parse each client's WSDL
-//    	AxisService clientService = SessionMgr.getSessionMgr().getAxisServer().getClientService();
-//        
-//        String ns = "";
-//        for(Object k : clientService.getNamespaceMap().keySet()) {
-//        	if ("ns".equals(k)) {
-//        		ns = clientService.getNamespaceMap().get(k).toString();
-//        	}
-//        }
-//        this.namespace = ns;
-        
 		targetEPR = new EndpointReference(endpointUrl);
 		
         Options options = new Options();
@@ -76,6 +65,7 @@ public class ExternalClient {
     	if (targetEPR == null){
     		throw new IllegalStateException("init(String endpointUrl) must be called on the ExternalClient before any other methods.");
     	}
+    	
         OMFactory fac = OMAbstractFactory.getOMFactory();
         OMNamespace ns = fac.createOMNamespace(namespace, "ns");
         final OMElement operation = fac.createOMElement(operationName, ns);
