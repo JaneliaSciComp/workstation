@@ -33,7 +33,6 @@ public class LazyTreeNodeExpansionWorker extends SimpleWorker {
     @Override
     protected void hadError(Throwable error) {
         error.printStackTrace();
-//		JOptionPane.showMessageDialog(EntityTree.this, "Error expanding tree", "Internal Error", JOptionPane.ERROR_MESSAGE);
     }
 
     /**

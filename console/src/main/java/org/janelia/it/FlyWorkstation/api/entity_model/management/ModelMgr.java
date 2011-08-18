@@ -22,7 +22,7 @@ import java.util.*;
 public class ModelMgr {
     private static ModelMgr modelManager = new ModelMgr();
     private boolean readOnly;
-    private List<ModelMgrObserver> modelMgrObservers;
+    private final List<ModelMgrObserver> modelMgrObservers = new ArrayList<ModelMgrObserver>();
     private boolean modelAvailable;
     private Set<Entity> ontologies = new HashSet<Entity>();
     private ThreadQueue threadQueue;
@@ -59,12 +59,10 @@ public class ModelMgr {
     }
 
     public void addModelMgrObserver(ModelMgrObserver mml) {
-        if (modelMgrObservers == null) modelMgrObservers = new ArrayList<ModelMgrObserver>();
         modelMgrObservers.add(mml);
     }
 
     public void removeModelMgrObserver(ModelMgrObserver mml) {
-        if (modelMgrObservers == null) return;
         modelMgrObservers.remove(mml);
     }
 
@@ -150,12 +148,12 @@ public class ModelMgr {
             for (Entity ontology : ontologies) {
 //             if (readOnly && !ontology.isReadOnly()) ontology.makeReadOnly();
                 this.ontologies.add(ontology);
-                if (modelMgrObservers != null) {
-                    Object[] listeners = modelMgrObservers.toArray();
-                    for (Object listener : listeners) {
-                        ((ModelMgrObserver) listener).ontologyAdded(ontology);
-                    }
-                }
+//                if (modelMgrObservers != null) {
+//                    Object[] listeners = modelMgrObservers.toArray();
+//                    for (Object listener : listeners) {
+//                        ((ModelMgrObserver) listener).ontologyAdded(ontology);
+//                    }
+//                }
             }
             ontologyLookupNeeded = false;
         }
@@ -205,28 +203,41 @@ public class ModelMgr {
     }
 
     public void setSelectedOntology(Entity ontology) {
-        if (selectedOntology == null || !selectedOntology.equals(ontology)) {
+        if (selectedOntology == null || !selectedOntology.getId().equals(ontology.getId())) {
             modelAvailable = true;
             selectedOntology = ontology;
-            if (modelMgrObservers != null) {
-                Object[] listeners = modelMgrObservers.toArray();
-                for (Object listener : listeners) {
-                    ((ModelMgrObserver) listener).ontologySelected(ontology);
-                }
-            }
+            notifyOntologySelected(ontology);
         }
     }
 
-    public void unSelectOntology(Entity ontology) {
-        selectedOntology = null;
-        if (modelMgrObservers != null) {
-            Object[] listeners = modelMgrObservers.toArray();
-            for (Object listener : listeners) {
-                ((ModelMgrObserver) listener).ontologyUnselected(ontology);
-            }
+    public void notifyOntologySelected(Entity ontology) {
+        for (ModelMgrObserver listener : modelMgrObservers) {
+        	listener.ontologySelected(ontology.getId());
         }
-        if (null == selectedOntology) modelAvailable = false;
     }
+    
+    public void notifyEntitySelected(Entity entity) {
+        for (ModelMgrObserver listener : modelMgrObservers) {
+        	listener.entitySelected(entity.getId());
+        }
+    }
+
+    public void notifyAnnotationsChanged(Entity entity) {
+        for (ModelMgrObserver listener : modelMgrObservers) {
+        	listener.annotationsChanged(entity.getId());
+        }
+    }
+
+//    public void unSelectOntology(Entity ontology) {
+//        selectedOntology = null;
+//        if (modelMgrObservers != null) {
+//            Object[] listeners = modelMgrObservers.toArray();
+//            for (Object listener : listeners) {
+//                ((ModelMgrObserver) listener).ontologyUnselected(ontology);
+//            }
+//        }
+//        if (null == selectedOntology) modelAvailable = false;
+//    }
 
     public void deleteAnnotation(Long annotatedEntityId, String tag) {
         FacadeManager.getFacadeManager().getAnnotationFacade().deleteAnnotation(annotatedEntityId, tag);

@@ -2,10 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.session_mgr;
 
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyBindings;
 
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Vector;
+import java.util.*;
 
 /**
  * The SessionModel manages BrowserModels, as well as providing the API
@@ -21,7 +18,7 @@ public class SessionModel extends GenericModel {
     private Vector browserModels = new Vector(10);
     private static KeyBindings bindings;
     private List<ExternalClient> externalClients = new ArrayList<ExternalClient>();
-    private int portCounter = 30001;
+    private int portCounter = 30020;
 
     private SessionModel() {
         super();
@@ -125,6 +122,17 @@ public class SessionModel extends GenericModel {
 
     public List<ExternalClient> getExternalClients() {
         return externalClients;
+    }
+    
+    public void sendMessageToExternalClients(String operationName, Map<String,Object> parameters) {
+        for (ExternalClient externalClient : externalClients) {
+        	try {
+        		externalClient.sendMessage(operationName, parameters);
+        	}
+        	catch (Exception e) {
+        		e.printStackTrace();
+        	}
+        }
     }
 
     public void systemWillExit() {

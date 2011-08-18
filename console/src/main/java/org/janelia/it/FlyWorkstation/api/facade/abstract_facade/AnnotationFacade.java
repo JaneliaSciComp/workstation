@@ -11,6 +11,7 @@ import java.util.List;
  * Time: 9:33 AM
  */
 public interface AnnotationFacade extends EntityFacade {
+	
     public List<Entity> getAnnotationsForEntity(Long entityId) throws Exception;
 
     public List<Entity> getAnnotationsForEntities(List<Long> entityIds) throws Exception;

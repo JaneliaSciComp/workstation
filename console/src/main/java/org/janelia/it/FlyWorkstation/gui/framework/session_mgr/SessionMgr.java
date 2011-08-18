@@ -4,12 +4,12 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
-import org.janelia.it.FlyWorkstation.gui.framework.external_listener.EmbeddedAxisServer;
 import org.janelia.it.FlyWorkstation.gui.framework.external_listener.ExternalListener;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyBindings;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.FlyWorkstation.ws.EmbeddedAxisServer;
 import org.janelia.it.jacs.model.user_data.User;
 
 import javax.swing.*;
@@ -167,6 +167,10 @@ public class SessionMgr {
         sessionModel.removeExternalClientByPort(targetPort);
     }
 
+    public void sendMessageToExternalClients(String operationName, Map<String,Object> parameters) {
+    	sessionModel.sendMessageToExternalClients(operationName, parameters);
+    }
+    
     public static KeyBindings getKeyBindings() {
         return SessionModel.getKeyBindings();
     }
@@ -381,8 +385,13 @@ public class SessionMgr {
     }
 
     public void startAxisServer(int port) {
-        if (axisServer == null) axisServer = new EmbeddedAxisServer(port);
-        axisServer.start();
+    	try {
+	        if (axisServer == null) axisServer = new EmbeddedAxisServer(port);
+	        axisServer.start();
+    	}
+    	catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+    	}
     }
 
     public void stopAxisServer() {
@@ -391,8 +400,12 @@ public class SessionMgr {
             axisServer = null;
         }
     }
+    
+    public EmbeddedAxisServer getAxisServer() {
+		return axisServer;
+	}
 
-    public void resetSession() {
+	public void resetSession() {
         Set keys = browserModelsToBrowser.keySet();
         List browserList = new ArrayList(keys.size());
         for (Object key : keys) {

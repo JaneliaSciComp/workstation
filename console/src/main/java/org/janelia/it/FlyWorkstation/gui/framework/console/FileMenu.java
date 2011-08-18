@@ -1,19 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserverAdapter;
-import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.DataSourceSelector;
-import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
-import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManagerBase;
-import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
-import org.janelia.it.FlyWorkstation.gui.util.panels.DataSourceSettings;
-import org.janelia.it.jacs.model.entity.Entity;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
@@ -23,6 +11,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.StringTokenizer;
+
+import javax.swing.*;
+
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.DataSourceSelector;
+import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManagerBase;
+import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
+import org.janelia.it.FlyWorkstation.gui.util.panels.DataSourceSettings;
 
 /**
  * Created by IntelliJ IDEA.
@@ -94,7 +94,7 @@ public class FileMenu extends JMenu {
 
         addMenuItems();
 
-        ModelMgr.getModelMgr().addModelMgrObserver(new MyModelManagerObserver());
+//        ModelMgr.getModelMgr().addModelMgrObserver(new MyModelManagerObserver());
 //        ModifyManager.getModifyMgr().addObserver(new MyModifyManagerObserver());
 //        browser.getBrowserModel().addBrowserModelListener(new MyBrowserModelListenerAdapter());
 
@@ -155,10 +155,10 @@ public class FileMenu extends JMenu {
          * and going through each feature in the data model is probably the most accurate
          * but not the best way to get this information.
          */
-        Entity ontology = ModelMgr.getModelMgr().getSelectedOntology();
+//        Entity ontology = ModelMgr.getModelMgr().getSelectedOntology();
         ArrayList allDataSources = new ArrayList(Arrays.asList(FacadeManager.getFacadeManager().getOpenDataSources()));
         ArrayList<String> finalDataSources = new ArrayList<String>();
-        finalDataSources.add(ontology.getName());
+//        finalDataSources.add(ontology.getName());
         Collections.sort(finalDataSources);
         for (Object allDataSource : allDataSources) {
             String tmpSource = ((String) allDataSource).trim();
@@ -214,13 +214,13 @@ public class FileMenu extends JMenu {
         openDataSourceDialog.setVisible(true);
     }
 
-    class MyModelManagerObserver extends ModelMgrObserverAdapter {
-        @Override
-        public void ontologySelected(Entity ontology) {
-            super.ontologySelected(ontology);
-        }
-
-    }
+//    class MyModelManagerObserver extends ModelMgrObserverAdapter {
+//        @Override
+//        public void ontologySelected(Entity ontology) {
+//            super.ontologySelected(ontology);
+//        }
+//
+//    }
 
     class MySessionModelListener implements SessionModelListener {
         public void browserAdded(BrowserModel browserModel) {

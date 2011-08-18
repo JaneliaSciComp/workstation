@@ -67,7 +67,10 @@ public class ConsoleApp {
             // Protocol Registration - Adding more than one type should automatically switch over to the Aggregate Facade
             final ModelMgr modelMgr = ModelMgr.getModelMgr();
             modelMgr.registerFacadeManagerForProtocol(FacadeManager.getEJBProtocolString(), EJBFacadeManager.class, "JACS EJB Facade Manager");
-
+            
+            // Model Observers
+            modelMgr.addModelMgrObserver(sessionMgr.getAxisServer());
+            
             // Editor Registration
             //      sessionMgr.registerEditorForType(api.entity_model.model.genetics.Species.class,
             //        client.gui.components.assembly.genome_view.GenomeView.class,"Genome View", "ejb");
@@ -126,6 +129,7 @@ public class ConsoleApp {
                 }
             }
 //            splash.setStatusText("Connected.");
+            
         }
         catch (Exception ex) {
             SessionMgr.getSessionMgr().handleException(ex);
