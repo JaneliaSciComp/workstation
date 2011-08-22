@@ -7,6 +7,7 @@ import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.InUseProtocolListener;
 import org.janelia.it.FlyWorkstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.FlyWorkstation.api.stub.data.NoDataException;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.exception_handlers.PrintStackTraceHandler;
 import org.janelia.it.FlyWorkstation.shared.util.ThreadQueue;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -204,6 +205,7 @@ public class ModelMgr {
 
     public void setSelectedOntology(Entity ontology) {
         if (selectedOntology == null || !selectedOntology.getId().equals(ontology.getId())) {
+            SessionMgr.getSessionMgr().setModelProperty("lastSelectedOntology", ontology.getId().toString());
             modelAvailable = true;
             selectedOntology = ontology;
             notifyOntologySelected(ontology);

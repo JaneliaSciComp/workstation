@@ -8,22 +8,30 @@ import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
 
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityData;
 
-@SOAPBinding(style = SOAPBinding.Style.RPC)
 @WebService
+@SOAPBinding(style = SOAPBinding.Style.RPC)
 public interface ConsoleDataService extends Remote {
 
-	public abstract int reservePort(
+	public int reservePort(
 			@WebParam(name = "clientName") String clientName) 
 			throws RemoteException;
 
-	public abstract void registerClient(
+	public void registerClient(
 			@WebParam(name = "port") int port, 
 			@WebParam(name = "endpointUrl") String endpointUrl) 
 			throws RemoteException;
 
-	public abstract Entity getEntityTree(
-			@WebParam(name = "entityId") Long entityId) 
+	public Entity getCurrentOntology();
+	
+    public Entity getEntityById(
+    		@WebParam(name = "entityId") long entityId);
+
+	public Entity getEntityTree(
+			@WebParam(name = "entityId") long entityId) 
 			throws RemoteException;
 
+    public EntityData[] getParentEntityDataArray(
+    		@WebParam(name = "childEntityId") long childEntityId);
 }

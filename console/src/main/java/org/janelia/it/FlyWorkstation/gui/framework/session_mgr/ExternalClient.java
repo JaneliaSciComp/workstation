@@ -76,6 +76,8 @@ public class ExternalClient {
             operation.addChild(param);
         }
         
+        // We have to use a worker thread because even though it doesn't wait for a reply, fireAndForget blocks until 
+        // it connects and sends. 
         SimpleWorker worker = new SimpleWorker() {
 
 			@Override
@@ -85,7 +87,7 @@ public class ExternalClient {
 			
 			@Override
 			protected void hadSuccess() {
-				System.out.println("Delivered message to "+targetEPR.getAddress());
+				// Do nothing
 			}
 			
 			@Override

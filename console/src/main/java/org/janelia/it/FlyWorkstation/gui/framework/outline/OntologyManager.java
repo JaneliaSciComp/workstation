@@ -324,8 +324,6 @@ public class OntologyManager extends JDialog implements ActionListener, Property
         if (root != null) {
             ontologyOutline.initializeTree(root.getId());
             setVisible(false);
-            ModelMgr.getModelMgr().setSelectedOntology(root.getEntity());
-            SessionMgr.getSessionMgr().setModelProperty("lastSelectedOntology", root.getEntity().getId().toString());
         }
         else {
             JOptionPane.showMessageDialog(this, "Please select an ontology to load", "Ontology Error", JOptionPane.WARNING_MESSAGE);

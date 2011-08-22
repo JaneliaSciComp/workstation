@@ -71,6 +71,8 @@ public class OntologyTree extends JPanel {
                 catch (Exception e) {
                     hadError(e);
                 }
+
+                ModelMgr.getModelMgr().setSelectedOntology(rootEntity);
             }
 
             protected void hadError(Throwable error) {
