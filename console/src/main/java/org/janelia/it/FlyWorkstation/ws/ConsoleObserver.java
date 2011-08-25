@@ -12,6 +12,8 @@ public interface ConsoleObserver {
 
     public void entitySelected(@WebParam(name = "entityId") long entityId);
 
+    public void entityViewRequested(@WebParam(name = "entityId") long entityId);
+    
     public void annotationsChanged(@WebParam(name = "entityId") long entityId);
     
 }

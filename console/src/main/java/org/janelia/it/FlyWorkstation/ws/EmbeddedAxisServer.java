@@ -51,6 +51,13 @@ public class EmbeddedAxisServer implements ModelMgrObserver {
 	}
 
 	@Override
+	public void entityViewRequested( long entityId) {
+		Map<String,Object> parameters = new HashMap<String,Object>();
+		parameters.put("entityId",entityId);
+		SessionMgr.getSessionMgr().sendMessageToExternalClients("entityViewRequested", parameters);		
+	}
+
+	@Override
 	public void annotationsChanged(long entityId) {
 		Map<String,Object> parameters = new HashMap<String,Object>();
 		parameters.put("entityId",entityId);

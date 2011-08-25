@@ -113,10 +113,16 @@ public class EntityOutline extends EntityTree implements Cloneable {
         String filepath = entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
         filepath = convertPath(filepath);
         final File file = new File(filepath);
-        if (file.isFile() && (file.getAbsolutePath().toLowerCase().endsWith(".tif") || file.getAbsolutePath().toLowerCase().endsWith(".lsm"))) {
-            JMenuItem v3dMenuItem = new JMenuItem("Show in V3D");
+        if (entity.getEntityType().getName().equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
+            JMenuItem v3dMenuItem = new JMenuItem("View in V3D (Neuron Annotator)");
             v3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
+                    if (ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(entity)) {
+                    	// Success
+                    	return;
+                    }
+                	// Launch V3D if it isn't running
+                    // TODO: this should be redone to use the "Tools" configuration
                     String tmpCmd = "/Users/" + (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME) + "/Dev/v3d/v3d/v3d64.app/Contents/MacOS/v3d64 -i " + file.getAbsolutePath();
                     System.out.println("DEBUG: " + tmpCmd);
                     try {

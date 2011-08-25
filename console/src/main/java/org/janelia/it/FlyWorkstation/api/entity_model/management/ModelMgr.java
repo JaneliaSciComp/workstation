@@ -20,7 +20,13 @@ import org.janelia.it.jacs.model.user_data.User;
 import java.lang.reflect.Constructor;
 import java.util.*;
 
+import javax.swing.JOptionPane;
+
 public class ModelMgr {
+	
+	// TODO: externalize this property
+	private static final String NEURON_ANNOTATOR_CLIENT_NAME = "NeuronAnnotator";
+	
     private static ModelMgr modelManager = new ModelMgr();
     private boolean readOnly;
     private final List<ModelMgrObserver> modelMgrObservers = new ArrayList<ModelMgrObserver>();
@@ -224,22 +230,21 @@ public class ModelMgr {
         }
     }
 
+    public boolean notifyEntityViewRequestedInNeuronAnnotator(Entity entity) {
+    	if (SessionMgr.getSessionMgr().getExternalClientsByName(NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
+    		return false;
+    	}
+        for (ModelMgrObserver listener : modelMgrObservers) {
+        	listener.entityViewRequested(entity.getId());
+        }
+        return true;
+    }
+    
     public void notifyAnnotationsChanged(Entity entity) {
         for (ModelMgrObserver listener : modelMgrObservers) {
         	listener.annotationsChanged(entity.getId());
         }
     }
-
-//    public void unSelectOntology(Entity ontology) {
-//        selectedOntology = null;
-//        if (modelMgrObservers != null) {
-//            Object[] listeners = modelMgrObservers.toArray();
-//            for (Object listener : listeners) {
-//                ((ModelMgrObserver) listener).ontologyUnselected(ontology);
-//            }
-//        }
-//        if (null == selectedOntology) modelAvailable = false;
-//    }
 
     public void deleteAnnotation(Long annotatedEntityId, String tag) {
         FacadeManager.getFacadeManager().getAnnotationFacade().deleteAnnotation(annotatedEntityId, tag);

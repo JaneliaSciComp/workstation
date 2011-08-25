@@ -13,6 +13,7 @@ import org.apache.axiom.om.OMAbstractFactory;
 import org.apache.axiom.om.OMElement;
 import org.apache.axiom.om.OMFactory;
 import org.apache.axiom.om.OMNamespace;
+import org.apache.axis2.AxisFault;
 import org.apache.axis2.addressing.EndpointReference;
 import org.apache.axis2.client.Options;
 import org.apache.axis2.client.ServiceClient;
@@ -29,12 +30,14 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
  */
 public class ExternalClient {
 	
-    private final String name;
+    protected static final int MAX_CONSECUTIVE_FAILURES = 2;
+	private final String name;
     private final int clientPort;
     
     private String namespace = "http://ws.FlyWorkstation.it.janelia.org/";
     private EndpointReference targetEPR;
     private ServiceClient client;
+    private int failures = 0;
     
     public ExternalClient(int clientPort, String name) {
         this.clientPort = clientPort;
@@ -87,12 +90,22 @@ public class ExternalClient {
 			
 			@Override
 			protected void hadSuccess() {
-				// Do nothing
+				failures = 0;
 			}
 			
 			@Override
 			protected void hadError(Throwable error) {
-				System.out.println("Error sending message to "+targetEPR.getAddress()+" : "+error.getClass().getName()+"/"+error.getMessage());
+				System.out.println("Error sending message to "+targetEPR.getAddress()+
+						" : "+error.getClass().getName()+"/"+error.getMessage());
+				if (!(error instanceof AxisFault)) {
+					error.printStackTrace();
+				}
+				failures++;
+				if (failures > MAX_CONSECUTIVE_FAILURES) {
+					System.out.println("Removing client "+targetEPR.getAddress()+
+							" because it exceeded max number of consecutive failures ("+MAX_CONSECUTIVE_FAILURES+")");
+					SessionMgr.getSessionMgr().removeExternalClientByPort(clientPort);
+				}
 			}
 			
 		};
