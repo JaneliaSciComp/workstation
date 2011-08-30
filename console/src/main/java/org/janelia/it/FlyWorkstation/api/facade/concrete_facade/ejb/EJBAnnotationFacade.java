@@ -44,9 +44,8 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
     }
 
     @Override
-    public void deleteAnnotation(Long annotatedEntityId, String tag) {
-        EJBFactory.getRemoteAnnotationBean().deleteAnnotation(SessionMgr.getUsername(),
-                annotatedEntityId.toString(), tag);
+    public void removeAnnotation(Long annotationId) throws Exception {
+        EJBFactory.getRemoteAnnotationBean().removeOntologyAnnotation(SessionMgr.getUsername(), annotationId);
     }
 
     @Override

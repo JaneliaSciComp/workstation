@@ -263,7 +263,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Dat
      * @param element
      */
     private void populateActionMap(OntologyElement element) {
-
+    	
         // Define an action for this node
         OntologyElementType type = element.getType();
         OntologyElementAction action = null;

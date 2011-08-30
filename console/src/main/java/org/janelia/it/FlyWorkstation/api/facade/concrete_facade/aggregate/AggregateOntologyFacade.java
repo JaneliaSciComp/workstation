@@ -6,6 +6,7 @@ import org.janelia.it.FlyWorkstation.api.stub.data.NoDataException;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
 
 import java.util.ArrayList;
@@ -48,12 +49,12 @@ public class AggregateOntologyFacade extends AggregateEntityFacade implements On
     }
 
     @Override
-    public Entity createOntologyAnnotation(String sessionId, String targetEntityId, String keyEntityId, String keyString, String valueEntityId, String valueString, String tag) throws Exception {
+    public Entity createOntologyAnnotation(OntologyAnnotation annotation) throws Exception {
         Object[] aggregates = getAggregates();
         List<Entity> returnList = new ArrayList<Entity>();
         Entity tmpEntity;
         for (Object aggregate : aggregates) {
-            tmpEntity = ((OntologyFacade) aggregate).createOntologyAnnotation(sessionId, targetEntityId, keyEntityId, keyString, valueEntityId, valueString, tag);
+            tmpEntity = ((OntologyFacade) aggregate).createOntologyAnnotation(annotation);
             if (tmpEntity != null) {
                 returnList.add(tmpEntity);
             }
@@ -68,6 +69,13 @@ public class AggregateOntologyFacade extends AggregateEntityFacade implements On
         throw new NoDataException();
     }
 
+    @Override
+    public void removeOntologyAnnotation(Long annotationId) throws Exception {
+        for (Object aggregate : getAggregates()) {
+            ((OntologyFacade) aggregate).removeOntologyAnnotation(annotationId);
+        }
+    }
+    
     @Override
     public Entity createOntologyRoot(String ontologyName) throws Exception {
         Object[] aggregates = getAggregates();

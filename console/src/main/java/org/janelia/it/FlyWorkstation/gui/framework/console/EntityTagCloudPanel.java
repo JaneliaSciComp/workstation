@@ -26,9 +26,7 @@ public class EntityTagCloudPanel extends TagCloudPanel<Entity> {
 
             @Override
             protected void doStuff() throws Exception {
-                if (!ModelMgr.getModelMgr().deleteEntityById(tag.getId())) {
-                    throw new Exception("Could not delete annotation");
-                }
+            	ModelMgr.getModelMgr().removeAnnotation(tag.getId());
             }
 
             @Override

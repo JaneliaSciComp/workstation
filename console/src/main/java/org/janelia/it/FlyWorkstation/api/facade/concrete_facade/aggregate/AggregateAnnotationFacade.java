@@ -100,10 +100,10 @@ public class AggregateAnnotationFacade extends AggregateEntityFacade implements 
     }
 
     @Override
-    public void deleteAnnotation(Long annotatedEntityId, String tag) {
+    public void removeAnnotation(Long annotationId) throws Exception {
         Object[] aggregates = getAggregates();
         for (Object aggregate : aggregates) {
-            ((AnnotationFacade) aggregate).deleteAnnotation(annotatedEntityId, tag);
+            ((AnnotationFacade) aggregate).removeAnnotation(annotationId);
         }
     }
 

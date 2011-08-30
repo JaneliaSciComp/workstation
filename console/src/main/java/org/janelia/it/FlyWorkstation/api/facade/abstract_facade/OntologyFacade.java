@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.api.facade.abstract_facade;
 
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
 
 import java.util.List;
@@ -15,8 +16,10 @@ import java.util.List;
 public interface OntologyFacade extends EntityFacade {
     List<Entity> getOntologies();
 
-    public Entity createOntologyAnnotation(String sessionId, String targetEntityId, String keyEntityId, String keyString, String valueEntityId, String valueString, String tag) throws Exception;
+    public Entity createOntologyAnnotation(OntologyAnnotation annotation) throws Exception;
 
+    public void removeOntologyAnnotation(Long annotationId) throws Exception;
+    
     public Entity createOntologyRoot(String ontologyName) throws Exception;
 
     public EntityData createOntologyTerm(Long parentEntityId, String label, OntologyElementType type, Integer orderIndex) throws Exception;

@@ -6,6 +6,8 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
+import javax.swing.JOptionPane;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.AnnotatedImageButton;
 import org.janelia.it.FlyWorkstation.gui.framework.console.IconDemoPanel;
@@ -14,12 +16,11 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.types.*;
 import org.janelia.it.jacs.model.ontology.types.Enum;
 import org.janelia.it.jacs.model.tasks.Task;
-
-import javax.swing.*;
 
 /**
  * This action creates and saves an annotation, and adds a corresponding tag to the currently selected item in an IconDemoPanel.
@@ -79,18 +80,17 @@ public class AnnotateAction extends OntologyElementAction {
             valueString = valueEntity.getName();
         }
 
-        Task sessionId = ModelMgr.getModelMgr().getCurrentAnnotationSessionTask();
-        String sessionIdString = (null != sessionId) ? sessionId.getObjectId().toString() : null;
+        Task session = ModelMgr.getModelMgr().getCurrentAnnotationSessionTask();
+        Long sessionId = (null != session) ? session.getObjectId() : null;
 
-        String tag = (valueString == null) ? keyString : keyString + " = " + valueString;
-        String keyEntityId = (keyEntity == null) ? null : keyEntity.getId().toString();
-        String valueEntityId = (valueEntity == null) ? null : valueEntity.getId().toString();
+        Long keyEntityId = (keyEntity == null) ? null : keyEntity.getId();
+        Long valueEntityId = (valueEntity == null) ? null : valueEntity.getId();
 
-        saveAnnotation(sessionIdString, targetEntity, keyEntityId, keyString, valueEntityId, valueString, tag);
+        saveAnnotation(sessionId, targetEntity, keyEntityId, keyString, valueEntityId, valueString);
 
     }
 
-    private void saveAnnotation(final String sessionId, final Entity targetEntity, final String keyEntityId, final String keyString, final String valueEntityId, final String valueString, final String tag) {
+    private void saveAnnotation(final Long sessionId, final Entity targetEntity, final Long keyEntityId, final String keyString, final Long valueEntityId, final String valueString) {
 
         final IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
         final AnnotatedImageButton button = iconDemoPanel.getImagesPanel().getSelectedButton();
@@ -104,21 +104,23 @@ public class AnnotateAction extends OntologyElementAction {
 
         Utils.setWaitingCursor(SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel());
 
+        final OntologyAnnotation annotation = new OntologyAnnotation(sessionId, targetEntity.getId(), keyEntityId, keyString, valueEntityId, valueString);
+        
         SimpleWorker worker = new SimpleWorker() {
 
-            private Entity annotation;
+            private Entity annotationEntity;
 
             protected void doStuff() throws Exception {
                 // TODO: check if annotation exists already
-                annotation = ModelMgr.getModelMgr().createOntologyAnnotation(sessionId, targetEntity.getId().toString(), keyEntityId, keyString, valueEntityId, valueString, tag);
+            	annotationEntity = ModelMgr.getModelMgr().createOntologyAnnotation(annotation);
             }
 
             protected void hadSuccess() {
                 Utils.setDefaultCursor(SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel());
-                System.out.println("Saved annotation " + tag);
-                button.getTagPanel().addTag(annotation);
+                System.out.println("Saved annotation as " + annotationEntity.getId());
+                button.getTagPanel().addTag(annotationEntity);
                 if (imageDetailPanel != null) {
-                    imageDetailPanel.getTagPanel().addTag(annotation);
+                    imageDetailPanel.getTagPanel().addTag(annotationEntity);
                 }
             }
 

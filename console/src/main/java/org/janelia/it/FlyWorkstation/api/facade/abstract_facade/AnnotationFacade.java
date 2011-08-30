@@ -22,7 +22,7 @@ public interface AnnotationFacade extends EntityFacade {
 
     public List<Entity> getCategoriesForAnnotationSession(Long annotationSessionId) throws Exception;
 
-    public void deleteAnnotation(Long annotatedEntityId, String tag);
+    public void removeAnnotation(Long annotationId) throws Exception;
 
     public void removeAllOntologyAnnotationsForSession(Long annotationSessionId) throws Exception;
 }

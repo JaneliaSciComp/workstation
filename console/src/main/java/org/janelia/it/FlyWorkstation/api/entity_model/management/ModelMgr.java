@@ -1,5 +1,8 @@
 package org.janelia.it.FlyWorkstation.api.entity_model.management;
 
+import java.lang.reflect.Constructor;
+import java.util.*;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.ActiveThreadModel;
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.OntologyFacade;
@@ -7,24 +10,27 @@ import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.InUseProtocolListener;
 import org.janelia.it.FlyWorkstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.FlyWorkstation.api.stub.data.NoDataException;
+import org.janelia.it.FlyWorkstation.gui.framework.keybind.OntologyKeyBind;
+import org.janelia.it.FlyWorkstation.gui.framework.keybind.OntologyKeyBindings;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.exception_handlers.PrintStackTraceHandler;
 import org.janelia.it.FlyWorkstation.shared.util.ThreadQueue;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
+import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.user_data.User;
-
-import java.lang.reflect.Constructor;
-import java.util.*;
+import org.janelia.it.jacs.model.user_data.prefs.UserPreference;
 
 public class ModelMgr {
 	
-	// TODO: externalize this property
+	// TODO: externalize these properties
 	private static final String NEURON_ANNOTATOR_CLIENT_NAME = "NeuronAnnotator";
-	
+	public static final String CATEGORY_KEYBINDS_GENERAL = "Keybind:General";
+    public static final String CATEGORY_KEYBINDS_ONTOLOGY = "Keybind:Ontology:";
+    
     private static ModelMgr modelManager = new ModelMgr();
     private boolean readOnly;
     private final List<ModelMgrObserver> modelMgrObservers = new ArrayList<ModelMgrObserver>();
@@ -35,6 +41,7 @@ public class ModelMgr {
     private ResourceBundle modelMgrResourceBundle;
     private EntityFactory entityFactory;
     private Entity selectedOntology;
+    private OntologyKeyBindings ontologyKeyBindings;
     private Task annotationSesisonTask;
     private Class factoryClass;
     private boolean ontologyLookupNeeded = true;
@@ -216,6 +223,55 @@ public class ModelMgr {
         }
     }
 
+    private OntologyKeyBindings loadOntologyKeyBindings(long ontologyId) {
+    	if (selectedOntology == null) {
+    		throw new IllegalStateException("Cannot load keybindings for null ontology.");
+    	}
+    	
+    	String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyId;
+    	User user = SessionMgr.getSessionMgr().getUser();
+        Map<String, UserPreference> prefs = user.getCategoryPreferences(category);
+
+        OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(user.getUserLogin(), ontologyId);
+        for (UserPreference pref : prefs.values()) {
+            ontologyKeyBindings.addBinding(pref.getName(), Long.parseLong(pref.getValue()));
+        }
+        
+        return ontologyKeyBindings;
+    }
+    
+	public OntologyKeyBindings getKeyBindings(long ontologyId) {
+		if (selectedOntology != null && ontologyId == selectedOntology.getId()) {
+			if (ontologyKeyBindings == null || selectedOntology.getId() != ontologyKeyBindings.getOntologyId()) {
+				ontologyKeyBindings = loadOntologyKeyBindings(ontologyId);
+			}
+			return ontologyKeyBindings;
+		}
+		return loadOntologyKeyBindings(ontologyId);
+	}
+	
+    public void saveOntologyKeyBindings(OntologyKeyBindings ontologyKeyBindings) throws Exception {
+
+        String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyKeyBindings.getOntologyId();
+        User user = SessionMgr.getSessionMgr().getUser();
+
+        // Delete all keybinds first, to maintain one key per entity
+        for (String key : user.getCategoryPreferences(category).keySet()) {
+            user.getPreferenceMap().remove(category + ":" + key);
+        }
+
+    	Set<OntologyKeyBind> keybinds = ontologyKeyBindings.getKeybinds();
+        for (OntologyKeyBind bind : keybinds) {
+            user.setPreference(new UserPreference(bind.getKey(), category, bind.getOntologyTermId().toString()));
+        }
+
+        ModelMgr.getModelMgr().saveOrUpdateUser(user);
+    }
+
+    public void removeOntologyKeyBindings(long ontologyId) throws Exception {
+        ModelMgr.getModelMgr().removePreferenceCategory(CATEGORY_KEYBINDS_ONTOLOGY + ontologyId);
+    }
+    
     public void notifyOntologySelected(Entity ontology) {
         if (null==ontology) {return;}
         for (ModelMgrObserver listener : modelMgrObservers) {
@@ -246,8 +302,8 @@ public class ModelMgr {
         }
     }
 
-    public void deleteAnnotation(Long annotatedEntityId, String tag) {
-        FacadeManager.getFacadeManager().getAnnotationFacade().deleteAnnotation(annotatedEntityId, tag);
+    public void removeAnnotation(Long annotationId) throws Exception {
+        FacadeManager.getFacadeManager().getAnnotationFacade().removeAnnotation(annotationId);
     }
 
     public void prepareForSystemExit() {
@@ -297,8 +353,8 @@ public class ModelMgr {
         }
     }
 
-    public Entity createOntologyAnnotation(String sessionId, String targetEntityId, String keyEntityId, String keyString, String valueEntityId, String valueString, String tag) throws Exception {
-        return FacadeManager.getFacadeManager().getOntologyFacade().createOntologyAnnotation(sessionId, targetEntityId, keyEntityId, keyString, valueEntityId, valueString, tag);
+    public Entity createOntologyAnnotation(OntologyAnnotation annotation) throws Exception {
+        return FacadeManager.getFacadeManager().getOntologyFacade().createOntologyAnnotation(annotation);
     }
 
     public Entity createOntologyRoot(String ontologyName) throws Exception {
@@ -454,7 +510,6 @@ public class ModelMgr {
 
         }
     }
-
 
 }
 

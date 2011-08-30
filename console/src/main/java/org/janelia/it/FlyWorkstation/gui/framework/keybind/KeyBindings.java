@@ -6,17 +6,16 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.keybind;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OntologyElementAction;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
-import org.janelia.it.jacs.model.user_data.User;
-import org.janelia.it.jacs.model.user_data.prefs.UserPreference;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Maintains a set of key bindings for the user. Maps KeyboardShortcuts to Actions. Enforces a one-to-one mapping,
@@ -25,9 +24,6 @@ import java.util.Map;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class KeyBindings {
-
-    private static final String CATEGORY_KEYBINDS_GENERAL = "Keybind:General";
-    private static final String CATEGORY_KEYBINDS_ONTOLOGY = "Keybind:Ontology:";
 
     private Map<KeyboardShortcut, Action> generalBindings;
     private Map<KeyboardShortcut, Action> ontologyBindings;
@@ -110,20 +106,19 @@ public class KeyBindings {
      */
     public void loadOntologyKeybinds(OntologyRoot root, Map<Long, Action> entityActionMap) {
 
-        System.out.println("Loading key bindings for ontology " + root.getName());
+        System.out.println("Loading key bindings for ontology "+root.getId());
 
         ontologyBindings.clear();
 
         try {
-            String category = CATEGORY_KEYBINDS_ONTOLOGY + root.getId();
-            User user = SessionMgr.getSessionMgr().getUser();
-            Map<String, UserPreference> prefs = user.getCategoryPreferences(category);
-
-            for (UserPreference pref : prefs.values()) {
-                KeyboardShortcut shortcut = KeyboardShortcut.fromString(pref.getName());
+        	OntologyKeyBindings ontologyKeyBindings = ModelMgr.getModelMgr().getKeyBindings(root.getId());
+        	Set<OntologyKeyBind> keybinds = ontologyKeyBindings.getKeybinds();
+        	
+        	for (OntologyKeyBind bind : keybinds) {
+                KeyboardShortcut shortcut = KeyboardShortcut.fromString(bind.getKey());
 
                 try {
-                    long entityId = Long.parseLong(pref.getValue());
+                    long entityId = bind.getOntologyTermId();
                     Action action = entityActionMap.get(entityId);
                     if (action == null) {
                         System.out.println("Ontology does not have an action for element " + entityId);
@@ -133,14 +128,14 @@ public class KeyBindings {
                     }
                 }
                 catch (Exception e) {
-                    System.out.println("Could not load key binding from user preference '" + pref.getValue() + "'.");
-                    SessionMgr.getSessionMgr().handleException(e);
+                    System.out.println("Could not load key binding from user preference '" + bind.getKey() + "'.");
+                    e.printStackTrace();
                 }
             }
         }
         catch (Exception e) {
             System.out.println("Could not load user's key binding preferences");
-            e.printStackTrace();
+            SessionMgr.getSessionMgr().handleException(e);
         }
     }
 
@@ -149,26 +144,19 @@ public class KeyBindings {
      */
     public void saveOntologyKeybinds(OntologyRoot root) {
 
-        System.out.println("Saving key bindings");
+        System.out.println("Saving key bindings for ontology "+root.getId());
 
+        OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(SessionMgr.getUsername(), root.getId());
         try {
-            String category = CATEGORY_KEYBINDS_ONTOLOGY + root.getId();
-            User user = SessionMgr.getSessionMgr().getUser();
-
-            // Delete all keybinds first, to maintain one key per entity
-            for (String key : user.getCategoryPreferences(category).keySet()) {
-                user.getPreferenceMap().remove(category + ":" + key);
-            }
-
             for (Map.Entry<KeyboardShortcut, Action> entry : ontologyBindings.entrySet()) {
                 if (entry.getValue() instanceof OntologyElementAction) {
                     KeyboardShortcut shortcut = entry.getKey();
                     OntologyElementAction action = (OntologyElementAction) entry.getValue();
-                    user.setPreference(new UserPreference(shortcut.toString(), category, action.getOntologyElement().getId().toString()));
+                    ontologyKeyBindings.addBinding(shortcut.toString(), action.getOntologyElement().getId());
                 }
             }
 
-            ModelMgr.getModelMgr().saveOrUpdateUser(user);
+            ModelMgr.getModelMgr().saveOntologyKeyBindings(ontologyKeyBindings);
         }
         catch (Exception e) {
             System.out.println("Could not save user's key binding preferences");
@@ -182,7 +170,7 @@ public class KeyBindings {
     public void removeOntologyKeybinds(OntologyRoot root) {
 
         try {
-            ModelMgr.getModelMgr().removePreferenceCategory(CATEGORY_KEYBINDS_ONTOLOGY + root.getId());
+            ModelMgr.getModelMgr().removeOntologyKeyBindings(root.getId());
         }
         catch (Exception e) {
             System.out.println("Could not delete key binding preferences for defunct ontology " + root.getName());

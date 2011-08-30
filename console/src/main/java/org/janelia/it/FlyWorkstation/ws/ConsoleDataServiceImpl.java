@@ -6,20 +6,24 @@
  */
 package org.janelia.it.FlyWorkstation.ws;
 
+import java.util.Arrays;
 import java.util.List;
 
 import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.FlyWorkstation.gui.framework.keybind.OntologyKeyBindings;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.ExternalClient;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 
 
 /**
- * The Console server interface for clients to call in order to request data. 
+ * The implementation of the Console server interface. 
  * 
  * @author saffordt
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
@@ -42,18 +46,22 @@ public class ConsoleDataServiceImpl {
 		System.out.println("Initialized client on port "+port+" with endpoint "+endpointUrl);
     }
 
-//    public void deleteAnnotation(Long annotatedEntityId, String tag) {
-//        ModelMgr.getModelMgr().deleteAnnotation(annotatedEntityId, tag);
-//    }
-//
-//    public List<Entity> getAnnotationsForEntities(List<Long> entityIds) throws Exception {
-//        return ModelMgr.getModelMgr().getAnnotationsForEntities(entityIds);  
-//    }
-//
-//    public List<Entity> getAnnotationsForEntity(Long entityId) throws Exception {
-//        return ModelMgr.getModelMgr().getAnnotationsForEntity(entityId);  
-//    }
-//
+    public Entity createAnnotation(OntologyAnnotation annotation) throws Exception {
+        return FacadeManager.getFacadeManager().getOntologyFacade().createOntologyAnnotation(annotation);
+    }
+    
+    public void removeAnnotation(long annotationId) throws Exception {
+    	FacadeManager.getFacadeManager().getOntologyFacade().removeOntologyAnnotation(annotationId);
+    }
+    
+    public Entity[] getAnnotationsForEntity(long entityId) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().getAnnotationsForEntity(entityId).toArray(new Entity[0]);
+    }
+
+    public Entity[] getAnnotationsForEntities(Long[] entityIds) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().getAnnotationsForEntities(Arrays.asList(entityIds)).toArray(new Entity[0]);
+    }
+	
 //    public List<Entity> getAnnotationsForSession(Long annotationSessionId) throws Exception {
 //        return ModelMgr.getModelMgr().getAnnotationsForSession(annotationSessionId);
 //    }
@@ -106,7 +114,11 @@ public class ConsoleDataServiceImpl {
 	public Entity getCurrentOntology() {
 		return ModelMgr.getModelMgr().getSelectedOntology();
 	}
-
+	
+	public OntologyKeyBindings getKeybindings(long ontologyId) {
+		return ModelMgr.getModelMgr().getKeyBindings(ontologyId);
+	}
+	
     public Entity getEntityById(long entityId) throws Exception {
         return ModelMgr.getModelMgr().getEntityById(""+entityId);
     }
