@@ -11,15 +11,8 @@
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../compute/build/jars/compute-client.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
+    <orderEntry type="module" module-name="Model" />
+    <orderEntry type="library" name="JBoss" level="project" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>
@@ -39,14 +32,13 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="JUnit" level="project" />
-    <orderEntry type="library" name="JBoss" level="project" />
     <orderEntry type="library" name="Axis2" level="project" />
     <orderEntry type="library" name="LOCI" level="project" />
     <orderEntry type="library" name="Hibernate" level="project" />
     <orderEntry type="library" name="SAAJ" level="project" />
-    <orderEntry type="module" module-name="Model" />
     <orderEntry type="module" module-name="Shared" />
     <orderEntry type="inheritedJdk" />
+    <orderEntry type="module" module-name="Compute" />
   </component>
   <component name="org.twodividedbyzero.idea.findbugs">
     <option name="_basePreferences">
