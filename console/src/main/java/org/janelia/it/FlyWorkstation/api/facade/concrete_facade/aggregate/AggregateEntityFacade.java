@@ -126,12 +126,12 @@ public class AggregateEntityFacade extends AggregateFacadeBase implements Entity
     }
 
     @Override
-    public List<Entity> getCommonRootEntitiesByType(Long entityTypeId) {
+    public List<Entity> getCommonRootEntitiesByTypeName(String entityTypeName) {
         Object[] aggregates = getAggregates();
         List<Entity> returnList = new ArrayList<Entity>();
         List<Entity> tmpEntities;
         for (Object aggregate : aggregates) {
-            tmpEntities = ((EntityFacade) aggregate).getCommonRootEntitiesByType(entityTypeId);
+            tmpEntities = ((EntityFacade) aggregate).getCommonRootEntitiesByTypeName(entityTypeName);
             if (null != tmpEntities) {
                 returnList.addAll(tmpEntities);
             }
@@ -188,12 +188,12 @@ public class AggregateEntityFacade extends AggregateFacadeBase implements Entity
     }
 
     @Override
-    public List<Entity> getEntitiesByType(Long entityTypeId) {
+    public List<Entity> getEntitiesByTypeName(String entityTypeName) {
         Object[] aggregates = getAggregates();
         List<Entity> returnList = new ArrayList<Entity>();
         List<Entity> tmpEntityData;
         for (Object aggregate : aggregates) {
-            tmpEntityData = ((EntityFacade) aggregate).getEntitiesByType(entityTypeId);
+            tmpEntityData = ((EntityFacade) aggregate).getEntitiesByTypeName(entityTypeName);
             if (null != tmpEntityData) {
                 returnList.addAll(tmpEntityData);
             }

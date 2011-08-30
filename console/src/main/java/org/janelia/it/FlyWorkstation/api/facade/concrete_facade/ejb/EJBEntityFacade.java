@@ -43,8 +43,8 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
-    public List<Entity> getCommonRootEntitiesByType(Long entityTypeId) {
-        return EJBFactory.getRemoteAnnotationBean().getCommonRootEntitiesByType(entityTypeId);
+    public List<Entity> getCommonRootEntitiesByTypeName(String entityTypeName) {
+        return EJBFactory.getRemoteAnnotationBean().getCommonRootEntitiesByTypeName(entityTypeName);
     }
 
     @Override
@@ -58,8 +58,8 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
-    public List<Entity> getEntitiesByType(Long entityTypeId) {
-        return EJBFactory.getRemoteAnnotationBean().getEntitiesByType(entityTypeId);
+    public List<Entity> getEntitiesByTypeName(String entityTypeName) {
+        return EJBFactory.getRemoteAnnotationBean().getEntitiesByTypeName(entityTypeName);
     }
 
     @Override

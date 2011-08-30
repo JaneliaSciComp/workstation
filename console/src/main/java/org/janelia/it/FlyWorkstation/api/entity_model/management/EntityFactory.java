@@ -2,12 +2,7 @@ package org.janelia.it.FlyWorkstation.api.entity_model.management;
 
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
-
-import java.util.Date;
-import java.util.HashSet;
 
 /**
  * Factory interface for creating specific Genomic Entity subtypes using
@@ -30,9 +25,9 @@ public class EntityFactory {
 
         Entity parent = null;
         try {
-            if (EntityConstants.TYPE_FOLDER_ID == entityTypeValue) {
-                newEntity = new Entity(oid, displayName, null, null, type, new Date(), new Date(), new HashSet<EntityData>());
-            }
+//            if (EntityConstants.TYPE_FOLDER_ID == entityTypeValue) {
+//                newEntity = new Entity(oid, displayName, null, null, type, new Date(), new Date(), new HashSet<EntityData>());
+//            }
         }
         catch (Exception fcEx) {
             FacadeManager.handleException(fcEx);

@@ -20,8 +20,6 @@ import org.janelia.it.jacs.model.user_data.User;
 import java.lang.reflect.Constructor;
 import java.util.*;
 
-import javax.swing.JOptionPane;
-
 public class ModelMgr {
 	
 	// TODO: externalize this property
@@ -66,11 +64,11 @@ public class ModelMgr {
     }
 
     public void addModelMgrObserver(ModelMgrObserver mml) {
-        modelMgrObservers.add(mml);
+        if (null!=mml) {modelMgrObservers.add(mml);}
     }
 
     public void removeModelMgrObserver(ModelMgrObserver mml) {
-        modelMgrObservers.remove(mml);
+        if (null!=mml && modelMgrObservers.contains(mml)) {modelMgrObservers.remove(mml);}
     }
 
 
@@ -219,12 +217,14 @@ public class ModelMgr {
     }
 
     public void notifyOntologySelected(Entity ontology) {
+        if (null==ontology) {return;}
         for (ModelMgrObserver listener : modelMgrObservers) {
         	listener.ontologySelected(ontology.getId());
         }
     }
     
     public void notifyEntitySelected(Entity entity) {
+        if (null==entity) {return;}
         for (ModelMgrObserver listener : modelMgrObservers) {
         	listener.entitySelected(entity.getId());
         }
@@ -280,8 +280,8 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().getParentEntityDatas(childEntityId);
     }
 
-    public List<Entity> getEntitiesByType(Long entityTypeId) {
-        return FacadeManager.getFacadeManager().getEntityFacade().getEntitiesByType(entityTypeId);
+    public List<Entity> getEntitiesByTypeName(String entityTypeName) {
+        return FacadeManager.getFacadeManager().getEntityFacade().getEntitiesByTypeName(entityTypeName);
     }
 
     public boolean deleteEntityById(Long entityId) {
@@ -313,8 +313,8 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getOntologyFacade().getOntologyTree(rootEntityId);
     }
 
-    public List<Entity> getCommonRootEntitiesByType(long entityTypeId) {
-        return FacadeManager.getFacadeManager().getEntityFacade().getCommonRootEntitiesByType(entityTypeId);
+    public List<Entity> getCommonRootEntitiesByTypeName(String entityTypeName) {
+        return FacadeManager.getFacadeManager().getEntityFacade().getCommonRootEntitiesByTypeName(entityTypeName);
     }
 
     public Entity getEntityTree(long entityId) throws Exception {

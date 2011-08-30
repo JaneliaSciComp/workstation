@@ -9,7 +9,6 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.entity.EntityData;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -45,7 +44,7 @@ public class EntityOutline extends EntityTree implements Cloneable {
             private List<Entity> entityRootList;
 
             protected void doStuff() throws Exception {
-                entityRootList = ModelMgr.getModelMgr().getCommonRootEntitiesByType(EntityConstants.TYPE_FOLDER_ID);
+                entityRootList = ModelMgr.getModelMgr().getCommonRootEntitiesByTypeName(EntityConstants.TYPE_FOLDER);
             }
 
             protected void hadSuccess() {

@@ -24,13 +24,13 @@ public interface EntityFacade {
 
     public List<Entity> getEntitiesByName(String entityName);
 
-    public List<Entity> getCommonRootEntitiesByType(Long entityTypeId);
+    public List<Entity> getCommonRootEntitiesByTypeName(String entityTypeName);
 
     public Set<Entity> getChildEntities(Long parentEntityId);
 
     public List<EntityData> getParentEntityDatas(Long childEntityId);
 
-    public List<Entity> getEntitiesByType(Long entityTypeId);
+    public List<Entity> getEntitiesByTypeName(String entityTypeName);
 
     public EntityData saveEntityDataForEntity(EntityData newData) throws Exception;
 

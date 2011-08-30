@@ -174,7 +174,7 @@ public class EntityListPane extends JPanel implements ActionListener {
 
             @Override
             protected void doStuff() throws Exception {
-                List<Entity> entities = ModelMgr.getModelMgr().getEntitiesByType(entityType.getId());
+                List<Entity> entities = ModelMgr.getModelMgr().getEntitiesByTypeName(entityType.getName());
                 if (isCancelled()) return;
                 updateTableModel(entities);
             }
