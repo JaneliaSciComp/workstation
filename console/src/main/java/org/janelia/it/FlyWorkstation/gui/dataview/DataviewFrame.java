@@ -6,22 +6,24 @@
  */
 package org.janelia.it.FlyWorkstation.gui.dataview;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.jacs.model.entity.EntityAttribute;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.entity.EntityType;
+import java.awt.*;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.*;
+import java.util.List;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
-import java.awt.*;
-import java.awt.event.InputEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.List;
+
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
+import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.jacs.model.entity.EntityAttribute;
+import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.entity.EntityType;
 
 /**
  * The main frame for the dataviewer assembles all the subcomponents.
@@ -120,36 +122,56 @@ public class DataviewFrame extends JFrame {
             tree = new JTree(new DefaultMutableTreeNode("Loading..."));
             setViewportView(tree);
 
-            tree.addMouseListener(new MouseAdapter() {
-                public void mouseReleased(MouseEvent e) {
-
-                    int row = tree.getRowForLocation(e.getX(), e.getY());
-                    if (row >= 0) {
-                        if (e.isPopupTrigger()) {
-                            // Right click
-                        }
-                        else if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1 && (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
-                            // Double click
-                        }
-                        else if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
-                            // Single click
-                            TreePath path = tree.getClosestPathForLocation(e.getX(), e.getY());
-                            DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
-                            if (node.getUserObject() instanceof EntityType) {
-                                entityListPane.showEntities((EntityType) node.getUserObject());
-                                tree.setSelectionPath(path);
-                            }
-                            else if (node.getUserObject() instanceof EntityAttribute) {
-                                DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
-                                entityListPane.showEntities((EntityType) parent.getUserObject());
-                                tree.setSelectionPath(path.getParentPath());
-                            }
-                        }
+            tree.addMouseListener(new MouseHandler() {
+    			@Override
+    			protected void popupTriggered(MouseEvent e) {
+    				showPopupMenu(e);
+    			}
+    			@Override
+    			protected void singleLeftClicked(MouseEvent e) {
+                    TreePath path = tree.getClosestPathForLocation(e.getX(), e.getY());
+                    DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+                    if (node.getUserObject() instanceof EntityType) {
+                        entityListPane.showEntities((EntityType) node.getUserObject());
+                        tree.setSelectionPath(path);
                     }
-                }
+                    else if (node.getUserObject() instanceof EntityAttribute) {
+                        DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
+                        entityListPane.showEntities((EntityType) parent.getUserObject());
+                        tree.setSelectionPath(path.getParentPath());
+                    }
+    			}
             });
         }
+        
+        private void showPopupMenu(MouseEvent e) {
 
+            TreePath path = tree.getClosestPathForLocation(e.getX(), e.getY());
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+
+            final JPopupMenu popupMenu = new JPopupMenu();
+            popupMenu.setLightWeightPopupEnabled(true);
+
+            if (node.getUserObject() instanceof EntityType) {
+
+                JMenuItem addAttrMenuItem = new JMenuItem("Add attribute");
+                addAttrMenuItem.addActionListener(new ActionListener() {
+        			@Override
+        			public void actionPerformed(ActionEvent e) {
+        				
+        				
+        				
+        			}
+        		});
+                popupMenu.add(addAttrMenuItem);
+            }
+            else if (node.getUserObject() instanceof EntityAttribute) {
+
+            }
+            
+            popupMenu.show((JComponent) e.getSource(), e.getX(), e.getY());
+        }
+        
         public void refresh() {
 
             loadTask = new SimpleWorker() {

@@ -1,22 +1,25 @@
 package org.janelia.it.FlyWorkstation.gui.dataview;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityData;
+import java.awt.BorderLayout;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Vector;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
-import java.awt.*;
-import java.awt.event.InputEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Vector;
+
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
+import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityData;
 
 public class EntityDataPane extends JPanel {
 
@@ -56,23 +59,30 @@ public class EntityDataPane extends JPanel {
         table.setColumnSelectionAllowed(false);
         table.setRowSelectionAllowed(true);
 
-        table.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-                JTable target = (JTable) e.getSource();
-                int row = target.getSelectedRow();
-                if (row >= 0 && row < datas.size()) {
-                    if (e.isPopupTrigger()) {
-                        // Right click
-                    }
-                    else if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1 && (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
-                        // Double click
-                        doubleClick(datas.get(row));
-                    }
-                    else if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
-                        // Single click
-                    }
-                }
-            }
+        table.addMouseListener(new MouseHandler() {
+			@Override
+			protected void popupTriggered(MouseEvent e) {
+                table.setColumnSelectionAllowed(true);
+                int row = table.rowAtPoint(e.getPoint());
+                int col = table.columnAtPoint(e.getPoint());
+                table.getSelectionModel().setSelectionInterval(row, row);
+                table.getColumnModel().getSelectionModel().setSelectionInterval(col, col);
+				showPopupMenu(e);
+			}
+
+			@Override
+			protected void doubleLeftClicked(MouseEvent e) {
+                table.setColumnSelectionAllowed(false);
+                doubleClick(datas.get(table.getSelectedRow()));
+			}
+
+			@Override
+			protected void singleLeftClicked(MouseEvent e) {
+                table.setColumnSelectionAllowed(false);
+                table.getColumnModel().getSelectionModel().setSelectionInterval(0, table.getColumnCount());
+			}
+			
+			
         });
 
         scrollPane = new JScrollPane();
@@ -85,6 +95,27 @@ public class EntityDataPane extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
     }
 
+    private void showPopupMenu(MouseEvent e) {
+
+        JTable target = (JTable) e.getSource();
+        final String value = target.getValueAt(target.getSelectedRow(), target.getSelectedColumn()).toString();
+    	
+        final JPopupMenu popupMenu = new JPopupMenu();
+        popupMenu.setLightWeightPopupEnabled(true);
+
+        JMenuItem copyMenuItem = new JMenuItem("Copy to clipboard");
+        copyMenuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+	            Transferable t = new StringSelection(value);
+	            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
+			}
+		});
+        popupMenu.add(copyMenuItem);
+
+        popupMenu.show((JComponent) e.getSource(), e.getX(), e.getY());
+    }
+    
     /**
      * Override this method to provide double click behavior.
      *
@@ -94,15 +125,17 @@ public class EntityDataPane extends JPanel {
     }
 
     public void showLoading() {
-        remove(scrollPane);
-        add(loadingView, BorderLayout.CENTER);
-        repaint();
+	    remove(scrollPane);
+	    remove(loadingView);
+	    add(loadingView, BorderLayout.CENTER);
+	    updateUI();
     }
 
     public void showEmpty() {
         titleLabel.setText(title);
+	    remove(loadingView);
         remove(scrollPane);
-        repaint();
+        updateUI();
     }
 
     /**

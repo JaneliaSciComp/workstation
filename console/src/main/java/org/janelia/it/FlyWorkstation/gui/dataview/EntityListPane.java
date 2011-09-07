@@ -1,25 +1,26 @@
 package org.janelia.it.FlyWorkstation.gui.dataview;
 
+import java.awt.BorderLayout;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.*;
+import java.util.*;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
 
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
-import java.util.List;
-
-public class EntityListPane extends JPanel implements ActionListener {
-
-    private static final String DELETE_ENTITY_COMMAND = "delete_entity";
-    private static final String DELETE_TREE_COMMAND = "delete_tree";
+public class EntityListPane extends JPanel {
 
     private final EntityDataPane entityParentsPane;
     private final EntityDataPane entityChildrenPane;
@@ -42,59 +43,32 @@ public class EntityListPane extends JPanel implements ActionListener {
 
         staticColumns.add("Id");
         staticColumns.add("User");
-        //staticColumns.add("Status");
         staticColumns.add("Creation Date");
         staticColumns.add("Updated Date");
         staticColumns.add("Name");
-
-
-        final JPopupMenu popupMenu = new JPopupMenu();
-        popupMenu.setLightWeightPopupEnabled(true);
-
-        JMenuItem deleteEntityMenuItem = new JMenuItem("Delete entity");
-        deleteEntityMenuItem.addActionListener(this);
-        deleteEntityMenuItem.setActionCommand(DELETE_ENTITY_COMMAND);
-        popupMenu.add(deleteEntityMenuItem);
-
-        JMenuItem deleteTreeMenuItem = new JMenuItem("Delete tree");
-        deleteTreeMenuItem.addActionListener(this);
-        deleteTreeMenuItem.setActionCommand(DELETE_TREE_COMMAND);
-        popupMenu.add(deleteTreeMenuItem);
 
         table = new JTable();
         table.setFillsViewportHeight(true);
         table.setColumnSelectionAllowed(false);
         table.setRowSelectionAllowed(true);
 
-        table.addMouseListener(new MouseAdapter() {
-            public void mousePressed(MouseEvent e) {
-                JTable target = (JTable) e.getSource();
-                int row = target.getSelectedRow();
-                if (row >= 0 && row < entities.size()) {
-                    if (e.isPopupTrigger()) {
-                        // Right click
-                        popupMenu.show((JComponent) e.getSource(), e.getX(), e.getY());
-                    }
-                }
-            }
-
-            public void mouseReleased(MouseEvent e) {
-                JTable target = (JTable) e.getSource();
-                int row = target.getSelectedRow();
-                if (row >= 0 && row < entities.size()) {
-                    if (e.isPopupTrigger()) {
-                        // Right click
-                        popupMenu.show((JComponent) e.getSource(), e.getX(), e.getY());
-                    }
-                    else if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1 && (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
-                        // Double click
-                    }
-                    else if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
-                        // Single click
-                        populateEntityDataPanes(entities.get(row));
-                    }
-                }
-            }
+        table.addMouseListener(new MouseHandler() {	
+			@Override
+			protected void popupTriggered(MouseEvent e) {
+                table.setColumnSelectionAllowed(true);
+                int row = table.rowAtPoint(e.getPoint());
+                int col = table.columnAtPoint(e.getPoint());
+                table.getSelectionModel().setSelectionInterval(row, row);
+                table.getColumnModel().getSelectionModel().setSelectionInterval(col, col);
+				showPopupMenu(e);
+			}
+			@Override
+			protected void singleLeftClicked(MouseEvent e) {
+                table.setColumnSelectionAllowed(false);
+                table.getColumnModel().getSelectionModel().setSelectionInterval(0, table.getColumnCount());
+                int row = table.getSelectedRow();
+                populateEntityDataPanes(entities.get(row));
+			}
         });
 
         scrollPane = new JScrollPane();
@@ -106,13 +80,97 @@ public class EntityListPane extends JPanel implements ActionListener {
         add(titleLabel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
     }
+    
+    private void showPopupMenu(MouseEvent e) {
 
+        final int num = table.getSelectedRows().length;
+        JTable target = (JTable) e.getSource();
+        final String value = target.getValueAt(target.getSelectedRow(), target.getSelectedColumn()).toString();
+    	
+        final JPopupMenu popupMenu = new JPopupMenu();
+        popupMenu.setLightWeightPopupEnabled(true);
+
+        JMenuItem copyMenuItem = new JMenuItem("Copy to clipboard");
+        copyMenuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+	            Transferable t = new StringSelection(value);
+	            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
+			}
+		});
+        popupMenu.add(copyMenuItem);
+
+        JMenuItem deleteTreeMenuItem = new JMenuItem("Delete tree");
+        deleteTreeMenuItem.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+	            int deleteConfirmation = confirm("Are you sure you want to delete " + num + " entities and all their descendants?");
+	            if (deleteConfirmation != 0) {
+	                return;
+	            }
+
+	            List<Entity> toDelete = new ArrayList<Entity>();
+	            for (int i : table.getSelectedRows()) {
+	                toDelete.add(entities.get(i));
+	            }
+
+	            // Update database
+	            // TODO: do this in a worker thread and show a spinner, because it may take a long time
+	            for (Entity entity : toDelete) {
+	                try {
+	                    // TODO: allow dataviewer user to override owner?
+	                    ModelMgr.getModelMgr().deleteEntityTree(entity.getId());
+	                }
+	                catch (Exception ex) {
+	                    ex.printStackTrace();
+	                    error("Error deleting entity with id=" + entity.getId());
+	                }
+	            }
+
+	            reshow();
+			}
+		});
+        popupMenu.add(deleteTreeMenuItem);
+        
+        JMenuItem deleteEntityMenuItem = new JMenuItem("Delete entity");
+        deleteEntityMenuItem.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+	            int deleteConfirmation = confirm("Are you sure you want to delete " + num + " entities?");
+	            if (deleteConfirmation != 0) {
+	                return;
+	            }
+
+	            List<Entity> toDelete = new ArrayList<Entity>();
+	            for (int i : table.getSelectedRows()) {
+	                toDelete.add(entities.get(i));
+	            }
+
+	            // Update database
+	            // TODO: do this in a worker thread and show a spinner, because it may take a long time
+	            for (Entity entity : toDelete) {
+	                boolean success = ModelMgr.getModelMgr().deleteEntityById(entity.getId());
+	                if (!success) {
+	                    error("Error deleting entity with id=" + entity.getId());
+	                }
+	            }
+
+	            reshow();
+			}
+		});
+        popupMenu.add(deleteEntityMenuItem);
+        popupMenu.show((JComponent) e.getSource(), e.getX(), e.getY());
+    }
+    
     private void populateEntityDataPanes(final Entity entity) {
 
         System.out.println("Populate data panes with " + entity);
 
         entityChildrenPane.showEntityData(entity.getOrderedEntityData());
-
+        entityParentsPane.showLoading();
+        
         loadTask = new SimpleWorker() {
 
             List<EntityData> eds;
@@ -140,7 +198,7 @@ public class EntityListPane extends JPanel implements ActionListener {
     public void showLoading() {
         remove(scrollPane);
         add(loadingView, BorderLayout.CENTER);
-        repaint();
+	    updateUI();
     }
 
     public void reshow() {
@@ -305,7 +363,6 @@ public class EntityListPane extends JPanel implements ActionListener {
             Vector<String> rowData = new Vector<String>();
             rowData.add(entity.getId().toString());
             rowData.add((entity.getUser() == null) ? "" : entity.getUser().getUserLogin());
-            //rowData.add((entity.getEntityStatus() == null) ? "" : entity.getEntityStatus().getName());
             rowData.add((entity.getCreationDate() == null) ? "" : entity.getCreationDate().toString());
             rowData.add((entity.getUpdatedDate() == null) ? "" : entity.getUpdatedDate().toString());
             rowData.add((entity.getName() == null) ? "(unnamed)" : entity.getName().toString());
@@ -319,58 +376,12 @@ public class EntityListPane extends JPanel implements ActionListener {
         };
     }
 
-    public void actionPerformed(ActionEvent e) {
-        String command = e.getActionCommand();
-        int num = table.getSelectedRows().length;
-
-        if (DELETE_ENTITY_COMMAND.equals(command)) {
-
-            int deleteConfirmation = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete " + num + " entities?", "Delete Term", JOptionPane.YES_NO_OPTION);
-            if (deleteConfirmation != 0) {
-                return;
-            }
-
-            List<Entity> toDelete = new ArrayList<Entity>();
-            for (int i : table.getSelectedRows()) {
-                toDelete.add(entities.get(i));
-            }
-
-            // Update database
-            // TODO: do this in a worker thread and show a spinner, because it may take a long time
-            for (Entity entity : toDelete) {
-                boolean success = ModelMgr.getModelMgr().deleteEntityById(entity.getId());
-                if (!success) {
-                    JOptionPane.showMessageDialog(this, "Error deleting entity with id=" + entity.getId(), "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-
-            reshow();
-        }
-        else if (DELETE_TREE_COMMAND.equals(command)) {
-            int deleteConfirmation = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete " + num + " entities and all their descendants?", "Delete Term", JOptionPane.YES_NO_OPTION);
-            if (deleteConfirmation != 0) {
-                return;
-            }
-
-            List<Entity> toDelete = new ArrayList<Entity>();
-            for (int i : table.getSelectedRows()) {
-                toDelete.add(entities.get(i));
-            }
-
-            // Update database
-            // TODO: do this in a worker thread and show a spinner, because it may take a long time
-            for (Entity entity : toDelete) {
-                try {
-                    // TODO: allow dataviewer user to override owner?
-                    ModelMgr.getModelMgr().deleteEntityTree(entity.getId());
-                }
-                catch (Exception ex) {
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(this, "Error deleting entity with id=" + entity.getId(), "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-
-            reshow();
-        }
+    private int confirm(String message) {
+    	return JOptionPane.showConfirmDialog(EntityListPane.this, message, "Are you sure?", JOptionPane.YES_NO_OPTION);
     }
+
+    private void error(String message) {
+        JOptionPane.showMessageDialog(EntityListPane.this, message, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+    
 }
