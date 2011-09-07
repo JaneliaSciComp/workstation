@@ -7,8 +7,6 @@
 package org.janelia.it.FlyWorkstation.gui.dataview;
 
 import java.awt.*;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
 import java.awt.event.*;
 import java.util.List;
 
