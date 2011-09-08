@@ -309,6 +309,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Dat
 
                 // Update Tree UI
                 selectedTree.removeNode(selectedTree.getCurrentNode());
+
             }
             catch (Exception ex) {
                 ex.printStackTrace();
@@ -380,6 +381,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Dat
                 // Update database
                 EntityData newData = ModelMgr.getModelMgr().createOntologyTerm(element.getId(), termName, childType, null);
 
+                // TODO: move this into createOntologyTerm 
                 if (parentType instanceof Tag) {
                     // Adding a child to a Tag, so it must be coerced into a Category
                     EntityData ed = element.getEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_ONTOLOGY_TERM_TYPE);
@@ -404,7 +406,6 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Dat
                 populateActionMap(newElement);
 
                 selectedTree.expand(treeNode, true);
-
             }
             catch (Exception ex) {
                 ex.printStackTrace();

@@ -9,6 +9,8 @@ import javax.jws.soap.SOAPBinding;
 public interface ConsoleObserver {
 
     public void ontologySelected(@WebParam(name = "rootId") long rootId);
+    
+    public void ontologyChanged(@WebParam(name = "rootId") long rootId);
 
     public void entitySelected(@WebParam(name = "entityId") long entityId);
 

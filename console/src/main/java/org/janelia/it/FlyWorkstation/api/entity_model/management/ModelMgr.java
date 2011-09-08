@@ -219,7 +219,7 @@ public class ModelMgr {
             SessionMgr.getSessionMgr().setModelProperty("lastSelectedOntology", ontology.getId().toString());
             modelAvailable = true;
             selectedOntology = ontology;
-            notifyOntologySelected(ontology);
+            notifyOntologySelected(ontology.getId());
         }
     }
 
@@ -266,39 +266,45 @@ public class ModelMgr {
         }
 
         ModelMgr.getModelMgr().saveOrUpdateUser(user);
+        
+        if (selectedOntology!=null) notifyOntologyChanged(selectedOntology.getId()); // See note in createOntologyTerm
     }
 
     public void removeOntologyKeyBindings(long ontologyId) throws Exception {
         ModelMgr.getModelMgr().removePreferenceCategory(CATEGORY_KEYBINDS_ONTOLOGY + ontologyId);
     }
     
-    public void notifyOntologySelected(Entity ontology) {
-        if (null==ontology) {return;}
+    public void notifyOntologySelected(Long ontologyId) {
         for (ModelMgrObserver listener : modelMgrObservers) {
-        	listener.ontologySelected(ontology.getId());
-        }
-    }
-    
-    public void notifyEntitySelected(Entity entity) {
-        if (null==entity) {return;}
-        for (ModelMgrObserver listener : modelMgrObservers) {
-        	listener.entitySelected(entity.getId());
+        	listener.ontologySelected(ontologyId);
         }
     }
 
-    public boolean notifyEntityViewRequestedInNeuronAnnotator(Entity entity) {
+    public void notifyOntologyChanged(Long entityId) {
+        for (ModelMgrObserver listener : modelMgrObservers) {
+        	listener.ontologyChanged(entityId);
+        }
+    }
+    
+    public void notifyEntitySelected(Long entityId) {
+        for (ModelMgrObserver listener : modelMgrObservers) {
+        	listener.entitySelected(entityId);
+        }
+    }
+
+    public boolean notifyEntityViewRequestedInNeuronAnnotator(Long entityId) {
     	if (SessionMgr.getSessionMgr().getExternalClientsByName(NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
     		return false;
     	}
         for (ModelMgrObserver listener : modelMgrObservers) {
-        	listener.entityViewRequested(entity.getId());
+        	listener.entityViewRequested(entityId);
         }
         return true;
     }
     
-    public void notifyAnnotationsChanged(Entity entity) {
+    public void notifyAnnotationsChanged(Long entityId) {
         for (ModelMgrObserver listener : modelMgrObservers) {
-        	listener.annotationsChanged(entity.getId());
+        	listener.annotationsChanged(entityId);
         }
     }
 
@@ -354,7 +360,9 @@ public class ModelMgr {
     }
 
     public Entity createOntologyAnnotation(OntologyAnnotation annotation) throws Exception {
-        return FacadeManager.getFacadeManager().getOntologyFacade().createOntologyAnnotation(annotation);
+        Entity annotationEntity = FacadeManager.getFacadeManager().getOntologyFacade().createOntologyAnnotation(annotation);
+        notifyAnnotationsChanged(annotation.getTargetEntityId());
+        return annotationEntity;
     }
 
     public Entity createOntologyRoot(String ontologyName) throws Exception {
@@ -362,7 +370,11 @@ public class ModelMgr {
     }
 
     public EntityData createOntologyTerm(Long id, String label, OntologyElementType type, Integer orderIndex) throws Exception {
-        return FacadeManager.getFacadeManager().getOntologyFacade().createOntologyTerm(id, label, type, orderIndex);
+    	EntityData ed = FacadeManager.getFacadeManager().getOntologyFacade().createOntologyTerm(id, label, type, orderIndex);
+        // Note: here we are assuming that the affected term is in the selected ontology, which is not necessarily true,
+        // but it doesn't hurt to refresh the clients even if another ontology is being changed.
+        if (selectedOntology!=null) notifyOntologyChanged(selectedOntology.getId());
+        return ed;
     }
 
     public Entity getOntologyTree(Long rootEntityId) throws Exception {
@@ -399,6 +411,7 @@ public class ModelMgr {
 
     public void removeOntologyTerm(Long termEntityId) throws Exception {
         FacadeManager.getFacadeManager().getOntologyFacade().removeOntologyTerm(termEntityId);
+        if (selectedOntology!=null) notifyOntologyChanged(selectedOntology.getId()); // See note in createOntologyTerm
     }
 
     public Entity cloneEntityTree(Long entityId, String rootName) throws Exception {

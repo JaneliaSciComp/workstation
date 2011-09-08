@@ -116,7 +116,7 @@ public class EntityOutline extends EntityTree implements Cloneable {
             JMenuItem v3dMenuItem = new JMenuItem("View in V3D (Neuron Annotator)");
             v3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
-                    if (ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(entity)) {
+                    if (ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(entity.getId())) {
                     	// Success
                     	return;
                     }
@@ -153,7 +153,7 @@ public class EntityOutline extends EntityTree implements Cloneable {
         if (node instanceof LazyTreeNode) return;
 
         final Entity entity = (Entity) node.getUserObject();
-        ModelMgr.getModelMgr().notifyEntitySelected(entity);
+        ModelMgr.getModelMgr().notifyEntitySelected(entity.getId());
         
         String type = entity.getEntityType().getName();
         List<Entity> entities = new ArrayList<Entity>();

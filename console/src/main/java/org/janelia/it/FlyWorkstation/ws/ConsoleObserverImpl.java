@@ -33,6 +33,11 @@ public class ConsoleObserverImpl implements ModelMgrObserver  {
 	}
 
 	@Override
+	public void ontologyChanged(long rootId) {
+		throw e;
+	}
+
+	@Override
 	public void entitySelected(long entityId) {
 		throw e;
 	}
