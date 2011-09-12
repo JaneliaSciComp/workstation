@@ -187,7 +187,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
     protected void nodeDoubleClicked(MouseEvent e) {
     }
 
-    private void createNewTree(Entity root) {
+    protected void createNewTree(Entity root) {
 
         selectedTree = new DynamicTree(root, true, lazy) {
 

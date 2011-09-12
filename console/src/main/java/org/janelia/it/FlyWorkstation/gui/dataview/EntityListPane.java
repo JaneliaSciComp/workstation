@@ -12,6 +12,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
@@ -110,25 +111,53 @@ public class EntityListPane extends JPanel {
 	                return;
 	            }
 
-	            List<Entity> toDelete = new ArrayList<Entity>();
+	            final List<Entity> toDelete = new ArrayList<Entity>();
 	            for (int i : table.getSelectedRows()) {
 	                toDelete.add(entities.get(i));
 	            }
 
-	            // Update database
-	            // TODO: do this in a worker thread and show a spinner, because it may take a long time
-	            for (Entity entity : toDelete) {
-	                try {
-	                    // TODO: allow dataviewer user to override owner?
-	                    ModelMgr.getModelMgr().deleteEntityTree(entity.getId());
-	                }
-	                catch (Exception ex) {
-	                    ex.printStackTrace();
-	                    error("Error deleting entity with id=" + entity.getId());
-	                }
-	            }
+	            Utils.setWaitingCursor(DataviewApp.getMainFrame());
+	            
+	            SimpleWorker loadTask = new SimpleWorker() {
 
-	            reshow();
+	                @Override
+	                protected void doStuff() throws Exception {
+	    	            // Update database
+	    	            for (Entity entity : toDelete) {
+    	                	boolean su = false;
+    	                	String realUsername = SessionMgr.getUsername();
+    	                	if (!SessionMgr.getUsername().equals(entity.getUser().getUserLogin())) {
+    	        	            int overrideConfirmation = confirm("Override owner "+entity.getUser().getUserLogin()+" to delete "+entity.getName()+"?");
+    	        	            if (overrideConfirmation != 0) {
+    	        	                continue;
+    	        	            }
+    	        	            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, entity.getUser().getUserLogin());
+    	        	            su = true;
+    	                	}
+    	                	
+    	                    ModelMgr.getModelMgr().deleteEntityTree(entity.getId());
+    	                    
+    	                    if (su) {
+    	        	            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, realUsername);
+    	                    }
+	    	            }
+	                }
+
+	                @Override
+	                protected void hadSuccess() {
+	                	Utils.setDefaultCursor(DataviewApp.getMainFrame());
+	    	            reshow();
+	                }
+
+	                @Override
+	                protected void hadError(Throwable error) {
+	                    error.printStackTrace();
+	                    error("Error deleting entity tree: "+error.getMessage());
+	                }
+
+	            };
+
+	            loadTask.execute();
 			}
 		});
         popupMenu.add(deleteTreeMenuItem);
@@ -138,26 +167,45 @@ public class EntityListPane extends JPanel {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-	            int deleteConfirmation = confirm("Are you sure you want to delete " + num + " entities?");
-	            if (deleteConfirmation != 0) {
-	                return;
-	            }
+	            int deleteConfirmation = confirm("Are you sure you want to delete " + num + 
+	            		" entities? This can potentially orphan their children, if they have any.");
+	            if (deleteConfirmation != 0) return;
 
-	            List<Entity> toDelete = new ArrayList<Entity>();
+	            final List<Entity> toDelete = new ArrayList<Entity>();
 	            for (int i : table.getSelectedRows()) {
 	                toDelete.add(entities.get(i));
 	            }
 
-	            // Update database
-	            // TODO: do this in a worker thread and show a spinner, because it may take a long time
-	            for (Entity entity : toDelete) {
-	                boolean success = ModelMgr.getModelMgr().deleteEntityById(entity.getId());
-	                if (!success) {
-	                    error("Error deleting entity with id=" + entity.getId());
-	                }
-	            }
+	            Utils.setWaitingCursor(DataviewApp.getMainFrame());
+	            
+	            SimpleWorker loadTask = new SimpleWorker() {
 
-	            reshow();
+	                @Override
+	                protected void doStuff() throws Exception {
+    		            // Update database
+    		            for (Entity entity : toDelete) {
+    		                boolean success = ModelMgr.getModelMgr().deleteEntityById(entity.getId());
+    		                if (!success) {
+    		                    error("Error deleting entity with id=" + entity.getId());
+    		                }
+    		            }
+	                }
+
+	                @Override
+	                protected void hadSuccess() {
+	                	Utils.setDefaultCursor(DataviewApp.getMainFrame());
+	    	            reshow();
+	                }
+
+	                @Override
+	                protected void hadError(Throwable error) {
+	                    error.printStackTrace();
+	                    error("Error deleting entity: "+error.getMessage());
+	                }
+
+	            };
+
+	            loadTask.execute();
 			}
 		});
         popupMenu.add(deleteEntityMenuItem);

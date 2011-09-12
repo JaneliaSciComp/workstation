@@ -15,6 +15,9 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
+
+import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
@@ -29,6 +32,9 @@ import java.net.URL;
  */
 public class Utils {
 
+    private static final String JACS_DATA_PATH_MAC = ConsoleProperties.getString("remote.defaultMacPath");
+    private static final String JACS_DATA_PATH_LINUX = ConsoleProperties.getString("remote.defaultLinuxPath");
+    
     public static ImageIcon grabOpenedIcon;
     public static ImageIcon grabClosedIcon;
 
@@ -46,6 +52,10 @@ public class Utils {
         return (str == null || "".equals(str));
     }
 
+    public static String convertJacsPathLinuxToMac(String filepath) {
+        return filepath.replace(JACS_DATA_PATH_LINUX, JACS_DATA_PATH_MAC);
+    }
+    
     /**
      * Borrowed from http://www.pikopong.com/blog/2008/08/13/auto-resize-jtable-column-width/
      *

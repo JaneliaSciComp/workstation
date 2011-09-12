@@ -1,18 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNode;
-import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeExpansionWorker;
-import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import java.awt.*;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -20,6 +8,18 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNode;
+import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeExpansionWorker;
+import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 
 /**
  * Created by IntelliJ IDEA.
@@ -29,10 +29,9 @@ import java.util.List;
  * This class is the initial outline of the data file tree
  */
 public class EntityOutline extends EntityTree implements Cloneable {
-
-    private static final String JACS_DATA_PATH_MAC = ConsoleProperties.getString("remote.defaultMacPath");
-    private static final String JACS_DATA_PATH_LINUX = ConsoleProperties.getString("remote.defaultLinuxPath");
-
+    
+    private List<Entity> entityRootList;
+    
     public EntityOutline() {
     	super(true);
         this.setMinimumSize(new Dimension(400, 400));
@@ -40,8 +39,6 @@ public class EntityOutline extends EntityTree implements Cloneable {
         showLoadingIndicator();
 
         SimpleWorker loadingWorker = new SimpleWorker() {
-
-            private List<Entity> entityRootList;
 
             protected void doStuff() throws Exception {
                 entityRootList = ModelMgr.getModelMgr().getCommonRootEntitiesByTypeName(EntityConstants.TYPE_FOLDER);
@@ -71,8 +68,33 @@ public class EntityOutline extends EntityTree implements Cloneable {
      * @param e
      */
     protected void showPopupMenu(MouseEvent e) {
+
+    	// Clicked on what node?
+        DefaultMutableTreeNode node = selectedTree.getCurrentNode();
+        final Entity entity = (Entity) node.getUserObject();
+    	
         // Create context menus
         JPopupMenu popupMenu = new JPopupMenu();
+
+    	if (node.isRoot()) {
+            JMenu changeDataSourceMenu = new JMenu("Change data source...");
+
+        	for(final Entity commonRoot : entityRootList) {
+        		if (!"system".equals(commonRoot.getUser().getUserLogin()) && !SessionMgr.getUsername().equals(commonRoot.getUser().getUserLogin())) continue;
+
+                JMenuItem dataSourceItem = new JMenuItem(commonRoot.getName() +" ("+commonRoot.getUser().getUserLogin()+")");
+                dataSourceItem.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent actionEvent) {
+                    	initializeTree(commonRoot.getId());
+                    }
+                });
+                changeDataSourceMenu.add(dataSourceItem);
+        	}
+        	
+            popupMenu.add(changeDataSourceMenu);
+        	
+    	}
+    	    	
         JMenuItem newSessionItem = new JMenuItem("Create Annotation Session for 2D Images");
         newSessionItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
@@ -107,11 +129,9 @@ public class EntityOutline extends EntityTree implements Cloneable {
                 }
             }
         });
-        DefaultMutableTreeNode node = selectedTree.getCurrentNode();
-        final Entity entity = (Entity) node.getUserObject();
-        String filepath = entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
-        filepath = convertPath(filepath);
-        final File file = new File(filepath);
+        popupMenu.add(newSessionItem);
+
+    	
         if (entity.getEntityType().getName().equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
             JMenuItem v3dMenuItem = new JMenuItem("View in V3D (Neuron Annotator)");
             v3dMenuItem.addActionListener(new ActionListener() {
@@ -122,6 +142,9 @@ public class EntityOutline extends EntityTree implements Cloneable {
                     }
                 	// Launch V3D if it isn't running
                     // TODO: this should be redone to use the "Tools" configuration
+                    String filepath = entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
+                    filepath = Utils.convertJacsPathLinuxToMac(filepath);
+                    final File file = new File(filepath);
                     String tmpCmd = "/Users/" + (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME) + "/Dev/v3d/v3d/v3d64.app/Contents/MacOS/v3d64 -i " + file.getAbsolutePath();
                     System.out.println("DEBUG: " + tmpCmd);
                     try {
@@ -135,14 +158,9 @@ public class EntityOutline extends EntityTree implements Cloneable {
             popupMenu.add(v3dMenuItem);
         }
 
-        popupMenu.add(newSessionItem);
         popupMenu.show(selectedTree.getTree(), e.getX(), e.getY());
     }
-
-    public String convertPath(String filepath) {
-        return filepath.replace(JACS_DATA_PATH_LINUX, JACS_DATA_PATH_MAC);
-    }
-
+    
     /**
      * Override this method to do something when the user left clicks a node.
      *

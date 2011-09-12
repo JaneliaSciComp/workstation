@@ -114,4 +114,20 @@ public class AggregateAnnotationFacade extends AggregateEntityFacade implements 
             ((AnnotationFacade) aggregate).removeAllOntologyAnnotationsForSession(annotationSessionId);
         }
     }
+
+	@Override
+	public void createEntityType(String typeName) throws Exception {
+        Object[] aggregates = getAggregates();
+        for (Object aggregate : aggregates) {
+            ((AnnotationFacade) aggregate).createEntityType(typeName);
+        }
+	}
+
+	@Override
+	public void createEntityAttribute(String typeName, String attrName) throws Exception {
+        Object[] aggregates = getAggregates();
+        for (Object aggregate : aggregates) {
+            ((AnnotationFacade) aggregate).createEntityAttribute(typeName, attrName);
+        }
+	}
 }

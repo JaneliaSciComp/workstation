@@ -1,10 +1,10 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 
+import java.util.List;
+
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.AnnotationFacade;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
-
-import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -54,5 +54,13 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
                 annotationSessionId);
     }
 
+    public void createEntityType(String typeName) throws Exception {
+    	EJBFactory.getRemoteAnnotationBean().createNewEntityType(typeName);
+    }
+    
+    public void createEntityAttribute(String typeName, String attrName) throws Exception {
+    	EJBFactory.getRemoteAnnotationBean().createNewEntityAttr(typeName, attrName);
+    	
+    }
 
 }

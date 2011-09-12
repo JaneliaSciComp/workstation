@@ -376,7 +376,7 @@ public class ModelMgr {
         if (selectedOntology!=null) notifyOntologyChanged(selectedOntology.getId());
         return ed;
     }
-
+    
     public Entity getOntologyTree(Long rootEntityId) throws Exception {
         return FacadeManager.getFacadeManager().getOntologyFacade().getOntologyTree(rootEntityId);
     }
@@ -430,6 +430,14 @@ public class ModelMgr {
         FacadeManager.getFacadeManager().getAnnotationFacade().removeAllOntologyAnnotationsForSession(annotationSessionId);
     }
 
+    public void createEntityType(String typeName) throws Exception {
+    	FacadeManager.getFacadeManager().getAnnotationFacade().createEntityType(typeName);
+    }
+    
+    public void createEntityAttribute(String typeName, String attrName) throws Exception {
+    	FacadeManager.getFacadeManager().getAnnotationFacade().createEntityAttribute(typeName, attrName);
+    }
+    
     public List<Entity> getEntitiesForAnnotationSession(Long annotationSessionId) throws Exception {
         return FacadeManager.getFacadeManager().getAnnotationFacade().getEntitiesForAnnotationSession(annotationSessionId);
     }
