@@ -63,12 +63,12 @@ public class ExternalClient {
     
     public void sendMessage(String operationName, Map<String,Object> parameters) throws Exception {
 
-        System.out.println("Sending "+operationName+" message to: "+ targetEPR.getAddress());
-        
-    	if (targetEPR == null){
+    	if (targetEPR == null) {
     		throw new IllegalStateException("init(String endpointUrl) must be called on the ExternalClient before any other methods.");
     	}
-    	
+
+        System.out.println("Sending "+operationName+" message to: "+ targetEPR.getAddress());
+        
         OMFactory fac = OMAbstractFactory.getOMFactory();
         OMNamespace ns = fac.createOMNamespace(namespace, "ns");
         final OMElement operation = fac.createOMElement(operationName, ns);

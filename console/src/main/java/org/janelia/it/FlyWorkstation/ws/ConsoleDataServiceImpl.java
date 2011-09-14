@@ -13,7 +13,6 @@ import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.OntologyKeyBindings;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.ExternalClient;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -47,19 +46,19 @@ public class ConsoleDataServiceImpl {
     }
 
     public Entity createAnnotation(OntologyAnnotation annotation) throws Exception {
-        return FacadeManager.getFacadeManager().getOntologyFacade().createOntologyAnnotation(annotation);
+        return ModelMgr.getModelMgr().createOntologyAnnotation(annotation);
     }
     
     public void removeAnnotation(long annotationId) throws Exception {
-    	FacadeManager.getFacadeManager().getOntologyFacade().removeOntologyAnnotation(annotationId);
+        ModelMgr.getModelMgr().removeAnnotation(annotationId);
     }
     
     public Entity[] getAnnotationsForEntity(long entityId) throws Exception {
-        return FacadeManager.getFacadeManager().getAnnotationFacade().getAnnotationsForEntity(entityId).toArray(new Entity[0]);
+        return ModelMgr.getModelMgr().getAnnotationsForEntity(entityId).toArray(new Entity[0]);
     }
 
     public Entity[] getAnnotationsForEntities(Long[] entityIds) throws Exception {
-        return FacadeManager.getFacadeManager().getAnnotationFacade().getAnnotationsForEntities(Arrays.asList(entityIds)).toArray(new Entity[0]);
+        return ModelMgr.getModelMgr().getAnnotationsForEntities(Arrays.asList(entityIds)).toArray(new Entity[0]);
     }
 	
 //    public List<Entity> getAnnotationsForSession(Long annotationSessionId) throws Exception {

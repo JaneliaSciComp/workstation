@@ -308,10 +308,6 @@ public class ModelMgr {
         }
     }
 
-    public void removeAnnotation(Long annotationId) throws Exception {
-        FacadeManager.getFacadeManager().getAnnotationFacade().removeAnnotation(annotationId);
-    }
-
     public void prepareForSystemExit() {
         FacadeManager.getFacadeManager().prepareForSystemExit();
     }
@@ -358,13 +354,7 @@ public class ModelMgr {
             handleException(e);
         }
     }
-
-    public Entity createOntologyAnnotation(OntologyAnnotation annotation) throws Exception {
-        Entity annotationEntity = FacadeManager.getFacadeManager().getOntologyFacade().createOntologyAnnotation(annotation);
-        notifyAnnotationsChanged(annotation.getTargetEntityId());
-        return annotationEntity;
-    }
-
+    
     public Entity createOntologyRoot(String ontologyName) throws Exception {
         return FacadeManager.getFacadeManager().getOntologyFacade().createOntologyRoot(ontologyName);
     }
@@ -375,6 +365,22 @@ public class ModelMgr {
         // but it doesn't hurt to refresh the clients even if another ontology is being changed.
         if (selectedOntology!=null) notifyOntologyChanged(selectedOntology.getId());
         return ed;
+    }
+
+    public Entity createOntologyAnnotation(OntologyAnnotation annotation) throws Exception {
+        System.out.println("creating "+annotation);
+        Entity annotationEntity = FacadeManager.getFacadeManager().getOntologyFacade().createOntologyAnnotation(annotation);
+        notifyAnnotationsChanged(annotation.getTargetEntityId());
+        return annotationEntity;
+    }
+
+
+    public void removeAnnotation(Long annotationId) throws Exception {
+    	Entity annotationEntity = FacadeManager.getFacadeManager().getEntityFacade().getEntityById(annotationId.toString());
+    	OntologyAnnotation annotation = new OntologyAnnotation();
+    	annotation.init(annotationEntity);
+        FacadeManager.getFacadeManager().getAnnotationFacade().removeAnnotation(annotationEntity.getId());
+        notifyAnnotationsChanged(annotation.getTargetEntityId());
     }
     
     public Entity getOntologyTree(Long rootEntityId) throws Exception {

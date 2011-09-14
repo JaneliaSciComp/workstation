@@ -31,8 +31,6 @@ public class EntityTagCloudPanel extends TagCloudPanel<Entity> {
 
             @Override
             protected void hadSuccess() {
-                removeTag(tag);
-                updateUI();
                 Utils.setDefaultCursor(SessionMgr.getSessionMgr().getActiveBrowser());
             }
 
@@ -60,15 +58,6 @@ public class EntityTagCloudPanel extends TagCloudPanel<Entity> {
             }
         });
         popupMenu.add(deleteItem);
-
-//        JMenuItem showDetailsItem = new JMenuItem("View Details");
-//        showDetailsItem.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent actionEvent) {
-//                // TODO: implement this
-//                System.out.println("NOT IMPLEMENTED");
-//            }
-//        });
-//        popupMenu.add(showDetailsItem);
 
         popupMenu.show((Component) e.getSource(), e.getX(), e.getY());
     }

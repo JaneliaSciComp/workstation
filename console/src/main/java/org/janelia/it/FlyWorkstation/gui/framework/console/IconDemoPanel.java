@@ -6,6 +6,9 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
+import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
+import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.application.SplashPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
@@ -112,6 +115,14 @@ public class IconDemoPanel extends JPanel {
         });
 
         this.addKeyListener(getKeyListener());
+        ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
+
+			@Override
+			public void annotationsChanged(long entityId) {
+				reloadAnnotations();
+			}
+        	
+        });
     }
 
     private void setTitleVisbility() {
@@ -269,6 +280,8 @@ public class IconDemoPanel extends JPanel {
 
             protected void hadSuccess() {
                 imagesPanel.loadAnnotations(annotationMap);
+                if (currentEntity != null)
+                	imageDetailPanel.loadAnnotations(annotationMap.get(currentEntity.getId()));
             }
 
             protected void hadError(Throwable error) {
@@ -291,7 +304,9 @@ public class IconDemoPanel extends JPanel {
     }
 
     public synchronized void showCurrentEntityDetails() {
-        imageDetailPanel.load(currentEntity, null);
+    	if (currentEntity == null) return;
+        imageDetailPanel.load(currentEntity);
+    	imageDetailPanel.loadAnnotations(session.getAnnotationMap().get(currentEntity.getId()));
         if (!viewingSingleImage) {
             viewingSingleImage = true;
             removeAll();

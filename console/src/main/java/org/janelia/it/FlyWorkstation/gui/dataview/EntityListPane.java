@@ -56,11 +56,15 @@ public class EntityListPane extends JPanel {
         table.addMouseListener(new MouseHandler() {	
 			@Override
 			protected void popupTriggered(MouseEvent e) {
-                table.setColumnSelectionAllowed(true);
-                int row = table.rowAtPoint(e.getPoint());
-                int col = table.columnAtPoint(e.getPoint());
-                table.getSelectionModel().setSelectionInterval(row, row);
-                table.getColumnModel().getSelectionModel().setSelectionInterval(col, col);
+				ListSelectionModel lsm = table.getSelectionModel();
+				if (lsm.getAnchorSelectionIndex() == lsm.getLeadSelectionIndex()) {
+					// User is not selecting multiple rows, so we can select the cell they right clicked on
+	                table.setColumnSelectionAllowed(true);
+	                int row = table.rowAtPoint(e.getPoint());
+	                int col = table.columnAtPoint(e.getPoint());
+	                table.getSelectionModel().setSelectionInterval(row, row);
+	                table.getColumnModel().getSelectionModel().setSelectionInterval(col, col);
+				}
 				showPopupMenu(e);
 			}
 			@Override
@@ -91,15 +95,19 @@ public class EntityListPane extends JPanel {
         final JPopupMenu popupMenu = new JPopupMenu();
         popupMenu.setLightWeightPopupEnabled(true);
 
-        JMenuItem copyMenuItem = new JMenuItem("Copy to clipboard");
-        copyMenuItem.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-	            Transferable t = new StringSelection(value);
-	            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
-			}
-		});
-        popupMenu.add(copyMenuItem);
+        ListSelectionModel lsm = table.getSelectionModel();
+		if (lsm.getAnchorSelectionIndex() == lsm.getLeadSelectionIndex()) {
+			// Copy action is only available when selecting a single cell
+	        JMenuItem copyMenuItem = new JMenuItem("Copy to clipboard");
+	        copyMenuItem.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+		            Transferable t = new StringSelection(value);
+		            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
+				}
+			});
+	        popupMenu.add(copyMenuItem);
+	    }
 
         JMenuItem deleteTreeMenuItem = new JMenuItem("Delete tree");
         deleteTreeMenuItem.addActionListener(new ActionListener() {

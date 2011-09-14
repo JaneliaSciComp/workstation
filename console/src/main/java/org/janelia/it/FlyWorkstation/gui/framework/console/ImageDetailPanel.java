@@ -1,20 +1,22 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Point;
+import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.io.FileNotFoundException;
+import java.util.List;
+
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
-
-import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.BufferedImage;
-import java.io.FileNotFoundException;
-import java.util.List;
 
 /**
  * A panel which displays a single image entity with information about it.
@@ -230,7 +232,7 @@ public class ImageDetailPanel extends JPanel {
         return tagPanel;
     }
 
-    public void load(Entity entity, List<Entity> annotations) {
+    public void load(Entity entity) {
 
         if (imageWorker != null && !imageWorker.isDone()) {
             imageWorker.cancel(true);
@@ -250,9 +252,15 @@ public class ImageDetailPanel extends JPanel {
 
         imageWorker = new LoadImageWorker();
         imageWorker.execute();
+    }
 
-        dataWorker = new LoadDataWorker();
-        dataWorker.execute();
+    /**
+     * Show the given annotations on the appropriate images.
+     */
+    public void loadAnnotations(List<Entity> annotations) {
+    	tagPanel.setTags(annotations);
+        southernPanel.removeAll();
+        southernPanel.add(tagPanel, BorderLayout.CENTER);
     }
 
     public void rescaleImage(double scale) {
@@ -315,38 +323,6 @@ public class ImageDetailPanel extends JPanel {
                 imageLabel.setText("Image could not be loaded");
             }
 
-            // TODO: set read-only mode
-        }
-    }
-
-    /**
-     * SwingWorker class that loads the supporting data.  This thread supports being canceled.
-     */
-    private class LoadDataWorker extends SimpleWorker {
-
-        List<Entity> annotations;
-
-        @Override
-        protected void doStuff() throws Exception {
-            annotations = ModelMgr.getModelMgr().getAnnotationsForEntity(entity.getId());
-        }
-
-        @Override
-        protected void hadSuccess() {
-            if (isCancelled()) return;
-            tagPanel.setTags(annotations);
-            southernPanel.removeAll();
-            southernPanel.add(tagPanel, BorderLayout.CENTER);
-            southernPanel.updateUI();
-        }
-
-        @Override
-        protected void hadError(Throwable error) {
-            JLabel errorLabel = new JLabel("Annotations could not be loaded");
-            errorLabel.setForeground(Color.red);
-            southernPanel.removeAll();
-            southernPanel.add(errorLabel);
-            southernPanel.updateUI();
             // TODO: set read-only mode
         }
     }

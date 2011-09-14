@@ -94,7 +94,6 @@ public class AnnotateAction extends OntologyElementAction {
 
         final IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
         final AnnotatedImageButton button = iconDemoPanel.getImagesPanel().getSelectedButton();
-        final ImageDetailPanel imageDetailPanel = iconDemoPanel.getImageDetailPanel();
 
         if (button == null) {
             // Cannot annotate nothing
@@ -111,17 +110,12 @@ public class AnnotateAction extends OntologyElementAction {
             private Entity annotationEntity;
 
             protected void doStuff() throws Exception {
-                // TODO: check if annotation exists already
             	annotationEntity = ModelMgr.getModelMgr().createOntologyAnnotation(annotation);
             }
 
             protected void hadSuccess() {
                 Utils.setDefaultCursor(SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel());
                 System.out.println("Saved annotation as " + annotationEntity.getId());
-                button.getTagPanel().addTag(annotationEntity);
-                if (imageDetailPanel != null) {
-                    imageDetailPanel.getTagPanel().addTag(annotationEntity);
-                }
             }
 
             protected void hadError(Throwable error) {
