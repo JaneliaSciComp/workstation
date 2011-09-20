@@ -32,6 +32,8 @@ public interface EntityFacade {
 
     public List<Entity> getEntitiesByTypeName(String entityTypeName);
 
+    public Entity saveEntity(Entity entity) throws Exception;
+    
     public EntityData saveEntityDataForEntity(EntityData newData) throws Exception;
 
     public boolean deleteEntityById(Long entityId);

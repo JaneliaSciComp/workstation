@@ -97,7 +97,9 @@ public class EntityListPane extends JPanel {
 
         ListSelectionModel lsm = table.getSelectionModel();
 		if (lsm.getAnchorSelectionIndex() == lsm.getLeadSelectionIndex()) {
-			// Copy action is only available when selecting a single cell
+			
+			// Items which are  only available when selecting a single cell
+			
 	        JMenuItem copyMenuItem = new JMenuItem("Copy to clipboard");
 	        copyMenuItem.addActionListener(new ActionListener() {
 				@Override
@@ -107,6 +109,36 @@ public class EntityListPane extends JPanel {
 				}
 			});
 	        popupMenu.add(copyMenuItem);
+	        
+	        JMenuItem renameMenuItem = new JMenuItem("Rename...");
+	        renameMenuItem.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					Entity toRename = entities.get(table.getSelectedRow());
+					
+		            String newName = (String) JOptionPane.showInputDialog(EntityListPane.this, "Name:\n", "Rename entity", 
+		            		JOptionPane.PLAIN_MESSAGE, null, null, toRename.getName());
+
+		            if ((newName == null) || (newName.length() <= 0)) {
+		                return;
+		            }
+
+		            Utils.setWaitingCursor(DataviewApp.getMainFrame());
+		            
+		            try {
+		            	toRename.setName(newName);
+		            	ModelMgr.getModelMgr().saveOrUpdateEntity(toRename);
+	    	            reshow();
+	    	            Utils.setDefaultCursor(DataviewApp.getMainFrame());
+		            }
+					catch (Exception x) {
+						x.printStackTrace();
+	                    error("Error renaming entity: "+x.getMessage());
+					}
+					
+				}
+			});
+	        popupMenu.add(renameMenuItem);
 	    }
 
         JMenuItem deleteTreeMenuItem = new JMenuItem("Delete tree");

@@ -456,6 +456,10 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getAnnotationFacade().getAnnotationsForSession(annotationSessionId);
     }
 
+    public Entity saveOrUpdateEntity(Entity entity) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().saveEntity(entity);
+    }
+    
     public EntityData saveOrUpdateEntityData(EntityData newEntityData) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().saveEntityDataForEntity(newEntityData);
     }

@@ -228,6 +228,27 @@ public class AggregateEntityFacade extends AggregateFacadeBase implements Entity
     }
 
     @Override
+    public Entity saveEntity(Entity entity) throws Exception {
+        Object[] aggregates = getAggregates();
+        List<Entity> returnList = new ArrayList<Entity>();
+        Entity tmpEntity;
+        for (Object aggregate : aggregates) {
+        	tmpEntity = ((OntologyFacade) aggregate).saveEntity(entity);
+            if (tmpEntity != null) {
+                returnList.add(tmpEntity);
+            }
+        }
+        // Only one facade should be allowing saves of data; therefore, only one item should be returned
+        if (1 < returnList.size()) {
+            throw new DuplicateDataException();
+        }
+        if (1 == returnList.size()) {
+            return returnList.get(0);
+        }
+        throw new NoDataException();
+    }
+    
+    @Override
     public EntityData saveEntityDataForEntity(EntityData newData) throws Exception {
         Object[] aggregates = getAggregates();
         List<EntityData> returnList = new ArrayList<EntityData>();

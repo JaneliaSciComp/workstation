@@ -63,6 +63,11 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
+    public Entity saveEntity(Entity entity) throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().saveOrUpdateEntity(entity);
+    }
+    
+    @Override
     public EntityData saveEntityDataForEntity(EntityData newData) throws Exception {
         return EJBFactory.getRemoteAnnotationBean().saveOrUpdateEntityData(newData);
     }
