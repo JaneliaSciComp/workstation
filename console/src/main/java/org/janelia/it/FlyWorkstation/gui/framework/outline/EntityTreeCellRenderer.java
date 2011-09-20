@@ -127,11 +127,27 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
                         titleLabel.setIcon(Utils.getClasspathImage("images.png"));
                         titleLabel.setToolTipText("TIF 3D Stack");
                     }
+                    else if (entityTypeName.equals(EntityConstants.TYPE_STITCHED_V3D_RAW)) {
+                        titleLabel.setIcon(Utils.getClasspathImage("images.png"));
+                        titleLabel.setToolTipText("Stitched V3D Raw Image");
+                    }
+                    else if (entityTypeName.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
+                        titleLabel.setIcon(Utils.getClasspathImage("brick.png"));
+                        titleLabel.setToolTipText("Neuron Fragment");
+                    }
+                    else if (entityTypeName.equals(EntityConstants.TYPE_SUPPORTING_DATA)) {
+                        titleLabel.setIcon(Utils.getClasspathImage("folder_image.png"));
+                        titleLabel.setToolTipText("Supporting data");
+                    }
                     else {
                         titleLabel.setIcon(Utils.getClasspathImage("page.png"));
                         titleLabel.setToolTipText("Page");
                     }
 
+                    if (entity.getName().equals("Neuron Fragments") && !entity.getEntityData().isEmpty()) {
+                    	typeLabel.setText("("+entity.getEntityData().size()+")");
+                    }
+                    
                 }
                 catch (Throwable r) {
                     r.printStackTrace();

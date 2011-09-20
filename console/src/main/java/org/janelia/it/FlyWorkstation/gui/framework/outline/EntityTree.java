@@ -366,9 +366,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
         List<EntityData> childDataList = new ArrayList<EntityData>();
 
         for (EntityData ed : dataSet) {
-            if (ed.getEntityAttribute().getName().equals(EntityConstants.ATTRIBUTE_ENTITY)) {
-                childDataList.add(ed);
-            }
+            childDataList.add(ed);
         }
 
         if (childDataList.isEmpty()) return;

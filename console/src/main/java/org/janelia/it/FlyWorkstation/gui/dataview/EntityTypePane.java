@@ -77,6 +77,7 @@ public class EntityTypePane extends JScrollPane {
     	            	refresh();
     	            }
     				catch (Exception x) {
+    					x.printStackTrace();
                         JOptionPane.showMessageDialog(DataviewApp.getMainFrame(), "Error adding type "+x.getMessage());
     				}
     			}
@@ -99,6 +100,7 @@ public class EntityTypePane extends JScrollPane {
     	            	refresh();
     	            }
     				catch (Exception x) {
+    					x.printStackTrace();
                         JOptionPane.showMessageDialog(DataviewApp.getMainFrame(), "Error adding attribute "+x.getMessage());
     				}
     			}
