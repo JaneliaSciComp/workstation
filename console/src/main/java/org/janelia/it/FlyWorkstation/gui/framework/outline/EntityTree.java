@@ -16,12 +16,11 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.DynamicTree;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNode;
-import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeExpansionWorker;
+import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
 import org.janelia.it.FlyWorkstation.gui.util.FakeProgressWorker;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 
 /**
@@ -210,8 +209,8 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
             @Override
             public void expandNodeWithLazyChildren(final DefaultMutableTreeNode node) {
 
-                SimpleWorker loadingWorker = new LazyTreeNodeExpansionWorker(selectedTree, node, false) {
-                    protected void doneExpanding() {
+                SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node, false) {
+                    protected void doneLoading() {
                         // Re-expand the node because the model was updated
                         expand(node, true);
                         SwingUtilities.updateComponentTreeUI(EntityTree.this);
@@ -222,8 +221,31 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
             }
 
             @Override
-            public void loadLazyNodeData(DefaultMutableTreeNode node, boolean recurse) {
+            public void loadLazyNodeData(DefaultMutableTreeNode node, boolean recurse) throws Exception {
                 Entity entity = (Entity) node.getUserObject();
+                
+                if (recurse == true) {
+                	// It's much faster to load the entire subtree in one go
+            	
+                	Entity fullEntity = ModelMgr.getModelMgr().getEntityTree(entity.getId());	
+
+                    Map<Long, Entity> childEntityMap = new HashMap<Long, Entity>();
+                    for (EntityData ed : fullEntity.getEntityData()) {
+                    	Entity childEntity = ed.getChildEntity();
+                    	if (childEntity == null) continue;
+                        childEntityMap.put(childEntity.getId(), childEntity);
+                    }
+
+                    // Replace the entity data with real objects
+                    for (EntityData ed : entity.getEntityData()) {
+                        if (ed.getChildEntity() != null) {
+                            ed.setChildEntity(childEntityMap.get(ed.getChildEntity().getId()));
+                        }
+                    }
+            	
+                	return;
+                }
+                
                 loadLazyEntity(entity, recurse);
             }
 

@@ -119,7 +119,7 @@ public class DynamicTree extends JPanel {
     }
 
     /**
-     * Returns true if the children of the given node have been loaded. Always returns true if the tree is lazy.
+     * Returns true if the children of the given node have been loaded. Always returns true if the tree is not lazy.
      *
      * @param node
      * @return
@@ -132,6 +132,27 @@ public class DynamicTree extends JPanel {
         for (int i = 0; i < node.getChildCount(); i++) {
             DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) node.getChildAt(i);
             if (childNode instanceof LazyTreeNode) {
+                allLoaded = false;
+                break;
+            }
+        }
+        return allLoaded;
+    }
+    
+    /**
+     * Returns true if all of the descendants of the given node have been loaded. Always returns true if the tree is not lazy.
+     *
+     * @param node
+     * @return
+     */
+    public boolean descendantsAreLoaded(DefaultMutableTreeNode node) {
+
+        if (!isLazyLoading()) return true;
+
+        boolean allLoaded = true;
+        for (int i = 0; i < node.getChildCount(); i++) {
+            DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) node.getChildAt(i);
+            if (childNode instanceof LazyTreeNode || !descendantsAreLoaded(childNode)) {
                 allLoaded = false;
                 break;
             }
@@ -168,7 +189,7 @@ public class DynamicTree extends JPanel {
      * @param node
      * @param recurse
      */
-    public void loadLazyNodeData(DefaultMutableTreeNode node, boolean recurse) {
+    public void loadLazyNodeData(DefaultMutableTreeNode node, boolean recurse) throws Exception {
         throw new UnsupportedOperationException("This tree does not support lazy loading");
     }
 

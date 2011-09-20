@@ -136,7 +136,7 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
                         titleLabel.setToolTipText("Neuron Fragment");
                     }
                     else if (entityTypeName.equals(EntityConstants.TYPE_SUPPORTING_DATA)) {
-                        titleLabel.setIcon(Utils.getClasspathImage("folder_image.png"));
+                        titleLabel.setIcon(Utils.getClasspathImage("folder_page.png"));
                         titleLabel.setToolTipText("Supporting data");
                     }
                     else {

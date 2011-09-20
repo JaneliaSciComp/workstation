@@ -15,7 +15,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNode;
-import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeExpansionWorker;
+import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -105,9 +105,9 @@ public class EntityOutline extends EntityTree implements Cloneable {
                 try {
                     Utils.setWaitingCursor(EntityOutline.this);
 
-                    SimpleWorker loadingWorker = new LazyTreeNodeExpansionWorker(selectedTree, node, true) {
+                    SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node, true) {
 
-                        protected void doneExpanding() {
+                        protected void doneLoading() {
                             Utils.setDefaultCursor(EntityOutline.this);
                             List<Entity> entities = getDescendantsOfType(entity, EntityConstants.TYPE_TIF_2D);
                             SessionMgr.getSessionMgr().getActiveBrowser().getAnnotationSessionPropertyPanel().showForNewSession(entity.getName(), entities);
@@ -182,17 +182,17 @@ public class EntityOutline extends EntityTree implements Cloneable {
         	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(new GlobalSession(entities));
         }
         else if (type.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
-
-            if (selectedTree.childrenAreLoaded(node)) {
-                viewImageEntities(entity);
-            	return;
-            }
             
+        	if (getDynamicTree().descendantsAreLoaded(node)) {
+        		viewImageEntities(entity);
+        		return;
+        	}
+        	
             Utils.setWaitingCursor(EntityOutline.this);
             
-            SimpleWorker loadingWorker = new LazyTreeNodeExpansionWorker(selectedTree, node, true) {
+            SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node, true) {
 
-                protected void doneExpanding() {
+                protected void doneLoading() {
                     Utils.setDefaultCursor(EntityOutline.this);
                     viewImageEntities(entity);
                 }
