@@ -183,15 +183,18 @@ public class EntityOutline extends EntityTree implements Cloneable {
         }
         else if (type.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
 
+            if (selectedTree.childrenAreLoaded(node)) {
+                viewImageEntities(entity);
+            	return;
+            }
+            
             Utils.setWaitingCursor(EntityOutline.this);
-
+            
             SimpleWorker loadingWorker = new LazyTreeNodeExpansionWorker(selectedTree, node, true) {
 
                 protected void doneExpanding() {
                     Utils.setDefaultCursor(EntityOutline.this);
-                    List<Entity> entities = getDescendantsOfType(entity, EntityConstants.TYPE_TIF_2D);
-                	if (entities.isEmpty()) return;
-                	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(new GlobalSession(entities));
+                    viewImageEntities(entity);
                 }
 
                 @Override
@@ -204,6 +207,12 @@ public class EntityOutline extends EntityTree implements Cloneable {
 
             loadingWorker.execute();
         }
+    }
+    
+    private void viewImageEntities(Entity entity) {
+        List<Entity> entities = getDescendantsOfType(entity, EntityConstants.TYPE_TIF_2D);
+    	if (entities.isEmpty()) return;
+    	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(new GlobalSession(entities));
     }
 
     /**
