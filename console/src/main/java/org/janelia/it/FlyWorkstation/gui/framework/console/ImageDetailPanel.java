@@ -60,7 +60,7 @@ public class ImageDetailPanel extends JPanel {
         imageCaption.setHorizontalAlignment(SwingConstants.CENTER);
         imageViewer.add(imageCaption, BorderLayout.NORTH);
 
-        this.imageLabel = new JLabel((ImageIcon) Icons.loadingIcon);
+        this.imageLabel = new JLabel((ImageIcon) Icons.getLoadingIcon());
         JPanel imagePanel = new JPanel(new BorderLayout());
         imagePanel.add(imageLabel, BorderLayout.CENTER);
 
@@ -246,9 +246,9 @@ public class ImageDetailPanel extends JPanel {
 
         imageCaption.setText(entity.getName());
         southernPanel.removeAll();
-        southernPanel.add(new JLabel(Icons.loadingIcon));
+        southernPanel.add(new JLabel(Icons.getLoadingIcon()));
 
-        imageLabel.setIcon(Icons.loadingIcon);
+        imageLabel.setIcon(Icons.getLoadingIcon());
 
         imageWorker = new LoadImageWorker();
         imageWorker.execute();
@@ -311,7 +311,7 @@ public class ImageDetailPanel extends JPanel {
         protected void hadError(Throwable error) {
 
             imageLabel.setForeground(Color.red);
-            imageLabel.setIcon(Icons.missingIcon);
+            imageLabel.setIcon(Icons.getMissingIcon());
             imageLabel.setVerticalTextPosition(JLabel.BOTTOM);
             imageLabel.setHorizontalTextPosition(JLabel.CENTER);
 

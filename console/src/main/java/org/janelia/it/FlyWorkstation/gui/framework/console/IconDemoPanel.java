@@ -269,7 +269,8 @@ public class IconDemoPanel extends JPanel {
 
     public void reloadAnnotations() {
 
-        session.clearDerivedProperties();
+        if (session == null) return;
+    	session.clearDerivedProperties();
 
         SimpleWorker loadingWorker = new SimpleWorker() {
 

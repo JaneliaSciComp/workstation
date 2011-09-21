@@ -63,7 +63,7 @@ public class AnnotatedImageButton extends JToggleButton {
 
         imageLabel = new JLabel();
         imageLabel.setSize(300, 300);
-        imageLabel.setIcon(Icons.loadingIcon);
+        imageLabel.setIcon(Icons.getLoadingIcon());
         imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
         imageLabel.setVerticalAlignment(SwingConstants.TOP);
 
@@ -126,7 +126,7 @@ public class AnnotatedImageButton extends JToggleButton {
         catch (IOException e) {
 
             imageLabel.setForeground(Color.red);
-            imageLabel.setIcon(Icons.missingIcon);
+            imageLabel.setIcon(Icons.getMissingIcon());
             imageLabel.setVerticalTextPosition(JLabel.BOTTOM);
             imageLabel.setHorizontalTextPosition(JLabel.CENTER);
 

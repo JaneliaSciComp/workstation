@@ -33,7 +33,7 @@ public class EntityDataPane extends JPanel {
     private final JScrollPane scrollPane;
     private List<EntityData> datas;
     private TableModel tableModel;
-    private JComponent loadingView = new JLabel(Icons.loadingIcon);
+    private JComponent loadingView = new JLabel(Icons.getLoadingIcon());
 
     private SimpleWorker loadTask;
 

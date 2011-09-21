@@ -51,7 +51,7 @@ public class SessionOutline extends JPanel {
 
     public void showLoadingIndicator() {
         treesPanel.removeAll();
-        treesPanel.add(new JLabel(Icons.loadingIcon));
+        treesPanel.add(new JLabel(Icons.getLoadingIcon()));
     }
 
     public void initializeTree() {

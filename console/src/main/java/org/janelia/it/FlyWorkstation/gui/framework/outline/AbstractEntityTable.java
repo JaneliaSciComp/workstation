@@ -28,7 +28,7 @@ public abstract class AbstractEntityTable extends JScrollPane {
 
     public AbstractEntityTable() {
 
-        loadingView = new JLabel(Icons.loadingIcon);
+        loadingView = new JLabel(Icons.getLoadingIcon());
 
         table = new JTable();
         table.setFillsViewportHeight(true);

@@ -121,7 +121,7 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
                     }
                     else if (entityTypeName.equals(EntityConstants.TYPE_TIF_2D)) {
                         titleLabel.setIcon(Utils.getClasspathImage("image.png"));
-                        titleLabel.setToolTipText("TIF 2D Images");
+                        titleLabel.setToolTipText("TIF 2D Image");
                     }
                     else if (entityTypeName.equals(EntityConstants.TYPE_TIF_3D) || entityTypeName.equals(EntityConstants.TYPE_LSM_STACK) || entityTypeName.equals(EntityConstants.TYPE_TIF_3D_LABEL_MASK)) {
                         titleLabel.setIcon(Utils.getClasspathImage("images.png"));

@@ -32,7 +32,7 @@ public class EntityListPane extends JPanel {
     private List<Entity> entities;
     private TableModel tableModel;
     private SimpleWorker loadTask;
-    private JComponent loadingView = new JLabel(Icons.loadingIcon);
+    private JComponent loadingView = new JLabel(Icons.getLoadingIcon());
 
     private EntityType shownEntityType;
     private Entity shownEntity;

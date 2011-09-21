@@ -52,7 +52,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
 
     public void showLoadingIndicator() {
         treesPanel.removeAll();
-        treesPanel.add(new JLabel(Icons.loadingIcon));
+        treesPanel.add(new JLabel(Icons.getLoadingIcon()));
     }
 
     public void initializeTree(final Long rootId) {
@@ -64,7 +64,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
 
         if (rootId == null) return;
 
-        treesPanel.add(new JLabel(Icons.loadingIcon));
+        treesPanel.add(new JLabel(Icons.getLoadingIcon()));
         this.updateUI();
 
         SimpleWorker loadingWorker = new SimpleWorker() {
