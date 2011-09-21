@@ -89,25 +89,25 @@ public class Icons {
      * @return
      */
     public static ImageIcon getOntologyIcon(Entity entity) {
-        String termType = entity.getValueByAttributeName("Ontology Term Type");
+        String type = entity.getValueByAttributeName("Ontology Term Type");
 
         try {
-            if (termType=="Category")
+            if ("Category".equals(type))
                 return getIcon("folder.png");
 
-            else if (termType=="Enum")
+            else if ("Enum".equals(type))
                 return getIcon("folder_page.png");
 
-            else if (termType=="Interval")
+            else if ("Interval".equals(type))
                 return getIcon("page_white_code.png");
 
-            else if (termType=="Tag")
+            else if ("Tag".equals(type))
                 return getIcon("page_white.png");
 
-            else if (termType=="Text")
+            else if ("Text".equals(type))
                 return getIcon("page_white_text.png");
 
-            else if (termType=="EnumItem")
+            else if ("EnumItem".equals(type))
                 return getIcon("page.png");
         }
         catch (FileNotFoundException e) {
@@ -126,36 +126,36 @@ public class Icons {
      */
     public static ImageIcon getIcon(Entity entity) {
         String type = entity.getEntityType().getName();
-
+        
         try {
-	        if (type=="Folder") {
+	        if ("Folder".equals(type)) {
 	            return getIcon("folder.png");
 	        }
-	        else if (type=="LSM Stack Pair") {
+	        else if ("LSM Stack Pair".equals(type)) {
 	            return getIcon("folder_image.png");
 	        }
-	        else if (type=="Neuron Separator Pipeline Result") {
+	        else if ("Neuron Separator Pipeline Result".equals(type)) {
 	            return getIcon("folder_image.png");
 	        }
-	        else if (type=="Sample") {
+	        else if ("Sample".equals(type)) {
 	            return getIcon("beaker.png");
 	        }
-	        else if (type=="Tif 2D Image") {
+	        else if ("Tif 2D Image".equals(type)) {
 	            return getIcon("image.png");
 	        }
-	        else if (type=="Tif 3D Image" || type=="LSM Stack" || type=="Tif 3D Label Mask" || type=="Stitched V3D Raw Stack") {
+	        else if ("Tif 3D Image".equals(type) || "LSM Stack".equals(type) || "Tif 3D Label Mask".equals(type) || "Stitched V3D Raw Stack".equals(type)) {
 	            return getIcon("images.png");
 	        }
-	        else if (type=="Neuron Fragment") {
+	        else if ("Neuron Fragment".equals(type)) {
 	            return getIcon("brick.png");
 	        }
-	        else if (type=="Supporting Data") {
+	        else if ("Supporting Data".equals(type)) {
 	            return getIcon("folder_page.png");
 	        }
-	        else if (type=="Ontology Element" || type=="Ontology Root") {
+	        else if ("Ontology Element".equals(type) || "Ontology Root".equals(type)) {
 	            return getOntologyIcon(entity);
 	        }
-	        else if (type=="Annotation") {
+	        else if ("Annotation".equals(type)) {
 	            return getIcon("page_white_edit.png");
 	        }
         }

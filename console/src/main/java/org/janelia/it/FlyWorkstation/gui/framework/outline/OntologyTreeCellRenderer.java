@@ -1,18 +1,23 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
-import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
-import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.jacs.model.ontology.OntologyElement;
-import org.janelia.it.jacs.model.ontology.types.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.FlowLayout;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeCellRenderer;
-import java.awt.*;
+
+import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
+import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
+import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.ontology.OntologyElement;
+import org.janelia.it.jacs.model.ontology.types.Interval;
+import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
 
 /**
  * Special tree cell renderer for OntologyTerms which displays the term, its type, and its key binding. The icon
@@ -74,9 +79,14 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
             Object userObject = node.getUserObject();
             if (userObject instanceof OntologyElement) {
                 OntologyElement element = (OntologyElement) userObject;
+                Entity entity = element.getEntity();
 
+                // Enable panel?
+                
+                cellPanel.setEnabled(tree.isEnabled());
+                
                 // Set the labels
-
+                
                 titleLabel.setText(element.getEntity().getName());
 
                 OntologyElementType type = element.getType();
@@ -123,38 +133,13 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
                 }
 
                 // Set the icon
-
-                cellPanel.setEnabled(tree.isEnabled());
+                
                 if (leaf) titleLabel.setIcon(getLeafIcon());
                 else if (expanded) titleLabel.setIcon(getOpenIcon());
                 else titleLabel.setIcon(getClosedIcon());
-
-                try {
-                    // Icons from http://www.famfamfam.com/lab/icons/silk/
-
-                    if (type instanceof Category) {
-                        titleLabel.setIcon(Utils.getClasspathImage("folder.png"));
-                    }
-                    else if (type instanceof org.janelia.it.jacs.model.ontology.types.Enum) {
-                        titleLabel.setIcon(Utils.getClasspathImage("folder_page.png"));
-                    }
-                    else if (type instanceof Interval) {
-                        titleLabel.setIcon(Utils.getClasspathImage("page_white_code.png"));
-                    }
-                    else if (type instanceof Tag) {
-                        titleLabel.setIcon(Utils.getClasspathImage("page_white.png"));
-                    }
-                    else if (type instanceof Text) {
-                        titleLabel.setIcon(Utils.getClasspathImage("page_white_text.png"));
-                    }
-                    else if (type instanceof EnumItem) {
-                        titleLabel.setIcon(Utils.getClasspathImage("page.png"));
-                    }
-
-                }
-                catch (Throwable r) {
-                    r.printStackTrace();
-                }
+                ImageIcon ontologyIcon = Icons.getOntologyIcon(entity);
+                if (ontologyIcon != null) titleLabel.setIcon(ontologyIcon);
+                
                 returnValue = cellPanel;
             }
         }
