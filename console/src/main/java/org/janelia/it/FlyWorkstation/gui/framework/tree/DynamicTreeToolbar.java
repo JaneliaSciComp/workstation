@@ -30,6 +30,7 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
     private JTextField textField;
     private JButton expandAllButton;
     private JButton collapseAllButton;
+    private JLabel spinner;
 
     public DynamicTreeToolbar(final DynamicTree tree) {
         super(new BorderLayout());
@@ -58,7 +59,7 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
         JLabel label = new JLabel("Find:");
         toolBar.add(label);
 
-        textField = new JTextField();
+        textField = new JTextField(); 
         textField.setColumns(10);
         textField.addActionListener(this);
         JPanel innerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -67,7 +68,7 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
 
         textField.getDocument().addDocumentListener(new DocumentListener() {
             public void changedUpdate(DocumentEvent e) {
-                tree.navigateToNodeStartingWith(textField.getText(), null);
+                tree.navigateToNodeStartingWith(textField.getText(), Bias.Forward, false);
             }
 
             public void removeUpdate(DocumentEvent e) {
@@ -78,13 +79,12 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
                 changedUpdate(e);
             }
         });
-
+        
         JButton button = new JButton("Next");
         button.setActionCommand(NEXT_MATCH);
         button.setToolTipText("Find the next occurence of the phrase.");
         button.addActionListener(this);
         innerPanel.add(button);
-
 
         button = new JButton("Previous");
         button.setActionCommand(PREVIOUS_MATCH);
@@ -92,6 +92,9 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
         button.addActionListener(this);
         innerPanel.add(button);
 
+        spinner = new JLabel();
+        innerPanel.add(spinner);
+        
         add(toolBar, BorderLayout.PAGE_START);
     }
 
@@ -120,12 +123,19 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
             expandAllButton.setEnabled(true);
         }
         else if (NEXT_MATCH.equals(cmd)) {
-            tree.navigateToNodeStartingWith(textField.getText(), Bias.Forward);
+            tree.navigateToNodeStartingWith(textField.getText(), Bias.Forward, true);
 
         }
         else if (PREVIOUS_MATCH.equals(cmd)) {
-            tree.navigateToNodeStartingWith(textField.getText(), Bias.Backward);
+            tree.navigateToNodeStartingWith(textField.getText(), Bias.Backward, true);
         }
     }
 
+	public JTextField getTextField() {
+		return textField;
+	}
+	
+	public void setSpinning(boolean spin) {
+        spinner.setIcon(spin ? Icons.getLoadingIcon() : null);
+	}
 }

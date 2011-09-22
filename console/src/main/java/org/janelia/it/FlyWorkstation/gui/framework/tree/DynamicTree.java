@@ -6,17 +6,25 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.tree;
 
-import javax.swing.*;
-import javax.swing.event.TreeExpansionEvent;
-import javax.swing.event.TreeWillExpandListener;
-import javax.swing.text.Position;
-import javax.swing.tree.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.concurrent.CancellationException;
+
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTree;
+import javax.swing.event.TreeExpansionEvent;
+import javax.swing.event.TreeWillExpandListener;
+import javax.swing.text.Position;
+import javax.swing.tree.*;
+
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 
 /**
  * A reusable tree component with toolbar features.
@@ -28,7 +36,9 @@ public class DynamicTree extends JPanel {
 
     protected final JTree tree;
     protected boolean lazyLoading;
-
+    protected DynamicTreeToolbar toolbar;
+    protected DynamicTreeSearcher searcher;
+    
     public DynamicTree(Object userObject) {
         this(userObject, true, false);
     }
@@ -101,7 +111,7 @@ public class DynamicTree extends JPanel {
         });
 
         if (showToolbar) {
-            DynamicTreeToolbar toolbar = new DynamicTreeToolbar(this);
+            toolbar = new DynamicTreeToolbar(this);
             add(toolbar, BorderLayout.PAGE_START);
         }
 
@@ -462,11 +472,9 @@ public class DynamicTree extends JPanel {
         tree.setSelectionPath(null);
         if (node == null) return;
         TreePath treePath = new TreePath(node.getPath());
-        tree.expandPath(treePath);
         tree.setSelectionPath(treePath);
         tree.scrollPathToVisible(treePath);
     }
-
 
     /**
      * Select the given nodes and scroll to ensure the first one is displayed.
@@ -495,14 +503,70 @@ public class DynamicTree extends JPanel {
      * @param searchString
      * @param bias
      */
-    public void navigateToNodeStartingWith(String searchString, Position.Bias bias) {
-
+    public void navigateToNodeStartingWith(String searchString, Position.Bias bias, boolean skipStartingNode) {
+		
         TreePath selectionPath = tree.getSelectionPath();
         DefaultMutableTreeNode startingNode = (selectionPath == null) ? null : (DefaultMutableTreeNode) selectionPath.getLastPathComponent();
-        DynamicTreeSearcher searcher = new DynamicTreeSearcher(this, searchString, startingNode, bias);
-        DefaultMutableTreeNode node = searcher.find();
-        if (node != null) {
-            navigateToNode(node);
+        
+        if (startingNode == null) {
+        	// Nothing is selected, so start with the root, but don't skip it
+        	startingNode = getRootNode();
+        	skipStartingNode = false;
         }
+        
+        if (searcher != null && !searcher.isDone()) {
+        	searcher.cancel(true);
+        	// Wait for it to actually finish, since we don't want to have multiple threads modifying the tree 
+        	try {
+        		searcher.get();
+        	} catch (CancellationException e) {
+        		// Expected
+        	} catch (Exception e) {
+        		e.printStackTrace();
+        	}
+        }
+        
+        searcher = new DynamicTreeSearcher(this, searchString, startingNode, bias, skipStartingNode) {
+
+			@Override
+        	protected void foundNode(DefaultMutableTreeNode matchingNode) {
+        		if (isCancelled()) return;
+	            navigateToNode(matchingNode);
+	            setNotSearching();
+			}
+
+			@Override
+        	protected void noMatches() {
+        		if (isCancelled()) return;
+        		setNotSearching();
+        	}
+        	
+			@Override
+			protected void hadError(Throwable error) {
+				error.printStackTrace();
+				if (isCancelled()) return;
+				JOptionPane.showMessageDialog(DynamicTree.this, "Error searching tree", "Error", JOptionPane.ERROR_MESSAGE);
+				setNotSearching();
+			}
+        	
+        };
+        
+        setSearching();
+        searcher.execute();
     }
+    
+    private void setSearching() {
+        if (!isLazyLoading()) return;
+    	Utils.setWaitingCursor(DynamicTree.this);
+        toolbar.setSpinning(true);
+    }
+    
+    private void setNotSearching() {
+    	if (!isLazyLoading()) return;
+    	Utils.setDefaultCursor(DynamicTree.this);
+		toolbar.setSpinning(false);
+    }
+    
 }
+
+

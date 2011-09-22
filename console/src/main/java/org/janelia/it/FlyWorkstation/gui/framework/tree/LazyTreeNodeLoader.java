@@ -18,7 +18,6 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 public class LazyTreeNodeLoader extends SimpleWorker {
 
 	private final Set<String> expanded = new HashSet<String>();
-	
     private final DynamicTree dynamicTree;
     private final DefaultMutableTreeNode node;
     private final boolean recurse;
@@ -30,6 +29,18 @@ public class LazyTreeNodeLoader extends SimpleWorker {
         storeExpansionState(node);
     }
 
+    /**
+     * This is an alternate way of invoking the loader without spawning a new thread. This method should be used instead
+     * of execute if the caller is already running in a worker thread. The doneLoading() callback will still get called.
+     * @throws Exception
+     */
+    public void loadSynchronously() throws Exception {
+        dynamicTree.loadLazyNodeData(node, recurse);
+        dynamicTree.recreateChildNodes(node, recurse);
+        restoreExpansionState(node);
+        doneLoading();
+    }
+    
     @Override
     protected void doStuff() throws Exception {
         dynamicTree.loadLazyNodeData(node, recurse);
