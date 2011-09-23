@@ -196,13 +196,29 @@ public class OWLDataLoader extends SimpleWorker {
                 }
             }
         }
-
+        
         OntologyElementType type = hasChildren ? new Category() : new Tag();
         EntityData newData = saveObjects ? ModelMgr.getModelMgr().createOntologyTerm(parentEntity.getId(), label, type, orderIndex) : new EntityData();
         incrementProgress();
 
         if (out != null) out.println(label + " (" + type.getName() + " saved as " + newData.getId() + ")");
 
+        // TODO: below is a code snippet showing how to get all relationships.. this should be loaded in the future
+//        if (label.equals("median bundle")) {
+//	        for(OWLAxiom p : clazz.getReferencingAxioms(ontology)) {
+//	        	if (p.isOfType(AxiomType.SUBCLASS_OF)) {
+//	        		OWLSubClassOfAxiom a = (OWLSubClassOfAxiom)p;
+//	        		if (a.getSuperClass() instanceof OWLObjectSomeValuesFrom) {
+//	        			OWLObjectSomeValuesFrom objectSomeValuesFrom = (OWLObjectSomeValuesFrom)a.getSuperClass();
+//	        			
+//	        			System.out.println("::"+objectSomeValuesFrom.getProperty().asOWLObjectProperty().getIRI().getFragment());
+//	        			System.out.println("  sub:"+labelFor(a.getSubClass().asOWLClass()));
+//	        			System.out.println("  super:"+labelFor(objectSomeValuesFrom.getFiller().asOWLClass()));
+//	        		}
+//	        	}
+//	        }
+//        }
+        
         // Find the children and recurse
         int childOrder = 0;
         for (OWLClass child : reasoner.getSubClasses(clazz, true).getFlattened()) {
@@ -295,7 +311,8 @@ public class OWLDataLoader extends SimpleWorker {
             // 83 - Phylogenetic = http://rest.bioontology.org/bioportal/ontologies/download/45588?applicationid=4ea81d74-8960-4525-810b-fa1baab576ff
             // 132 - Drosophila dev = http://www.berkeleybop.org/ontologies/owl/FBdv
             // 743 - FlyBase CV = http://www.berkeleybop.org/ontologies/owl/FBcv
-            // 6599 - Flybase taxa = http://www.berkeleybop.org/ontologies/owl/FBsp
+            // 6599 - Flybase taxonomy = http://www.berkeleybop.org/ontologies/owl/FBsp
+        	// 7339 - Flybase anatomy = http://www.berkeleybop.org/ontologies/owl/FBbt
 
             OWLDataLoader loader = new OWLDataLoader("http://www.berkeleybop.org/ontologies/owl/FBdv");
             loader.setOutput(System.out);
