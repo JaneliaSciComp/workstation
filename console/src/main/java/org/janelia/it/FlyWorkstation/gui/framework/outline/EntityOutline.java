@@ -130,7 +130,42 @@ public class EntityOutline extends EntityTree implements Cloneable {
             }
         });
         popupMenu.add(newSessionItem);
+    	
+        JMenuItem newFragSessionItem = new JMenuItem("Create Annotation Session for Neuron Fragments");
+        newFragSessionItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
 
+                DefaultMutableTreeNode node = selectedTree.getCurrentNode();
+                final Entity entity = (Entity) node.getUserObject();
+
+                try {
+                    Utils.setWaitingCursor(EntityOutline.this);
+
+                    SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node, true) {
+
+                        protected void doneLoading() {
+                            Utils.setDefaultCursor(EntityOutline.this);
+                            List<Entity> entities = getDescendantsOfType(entity, EntityConstants.TYPE_NEURON_FRAGMENT);
+                            SessionMgr.getSessionMgr().getActiveBrowser().getAnnotationSessionPropertyPanel().showForNewSession(entity.getName(), entities);
+                            SwingUtilities.updateComponentTreeUI(EntityOutline.this);
+                        }
+
+                        @Override
+                        protected void hadError(Throwable error) {
+                        	error.printStackTrace();
+                            Utils.setDefaultCursor(EntityOutline.this);
+                            JOptionPane.showMessageDialog(EntityOutline.this, "Error loading nodes", "Internal Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    };
+
+                    loadingWorker.execute();
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        popupMenu.add(newFragSessionItem);
     	
         if (entity.getEntityType().getName().equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
             JMenuItem v3dMenuItem = new JMenuItem("View in V3D (Neuron Annotator)");

@@ -220,6 +220,20 @@ public class IconDemoPanel extends JPanel {
         return filepath.replace(JACS_DATA_PATH_LINUX, JACS_DATA_PATH_MAC);
     }
 
+    public String getFilePath(Entity entity) {
+    	if (entity.getEntityType().getName().equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
+    		for(Entity childEntity : entity.getChildren()) {
+    			if (childEntity.getEntityType().getName().equals(EntityConstants.TYPE_TIF_2D)) {
+    	    		return childEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
+    			}
+    		}
+    		return null;
+    	}
+    	else {
+    		return entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
+    	}
+    }
+    
     public void loadImageEntities(final AnnotationSession session) {
 
         this.session = session;
@@ -232,7 +246,8 @@ public class IconDemoPanel extends JPanel {
                 List<Entity> loadedEntities = new ArrayList<Entity>();
                 List<Entity> allEntities = session.getEntities();
                 for (Entity entity : allEntities) {
-                    if (!entity.getEntityType().getName().equals(EntityConstants.TYPE_TIF_2D)) {
+                    if (!entity.getEntityType().getName().equals(EntityConstants.TYPE_TIF_2D) 
+                    		&& !entity.getEntityType().getName().equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
                         // Ignore things we can't display
                         continue;
                     }

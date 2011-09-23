@@ -106,8 +106,11 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
 
                     protected void doStuff() throws Exception {
                         for (Entity entity : entityChooser.getChosenEntities()) {
-                            if (!entity.getEntityType().getName().equals(EntityConstants.TYPE_TIF_2D)) {
-                                List<Entity> descs = entityChooser.getEntityTree().getDescendantsOfType(entity, EntityConstants.TYPE_TIF_2D);
+                            if (!entity.getEntityType().getName().equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
+                                List<Entity> descs = entityChooser.getEntityTree().getDescendantsOfType(entity, EntityConstants.TYPE_NEURON_FRAGMENT);
+                                if (descs.isEmpty()) {
+                                	descs = entityChooser.getEntityTree().getDescendantsOfType(entity, EntityConstants.TYPE_TIF_2D);
+                                }
                                 entities.addAll(descs);
                             }
                             else {
