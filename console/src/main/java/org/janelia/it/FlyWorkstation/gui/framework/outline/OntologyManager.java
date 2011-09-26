@@ -322,7 +322,7 @@ public class OntologyManager extends JDialog implements ActionListener, Property
 
         final OntologyRoot root = getSelectedOntology();
         if (root != null) {
-            ontologyOutline.initializeTree(root.getId());
+            ontologyOutline.loadOntology(root.getId());
             setVisible(false);
         }
         else {
@@ -483,5 +483,18 @@ public class OntologyManager extends JDialog implements ActionListener, Property
         else if (ONTOLOGY_DELETE_COMMAND.equals(cmd)) {
             deleteSelected();
         }
+    }
+    
+    public OntologyRoot getOntologyById(long rootId) {
+    	
+    	for (OntologyRoot root : privateTable.getOntologyRoots()) {
+    		if (root.getId().equals(rootId)) return root;
+    	}
+
+    	for (OntologyRoot root : publicTable.getOntologyRoots()) {
+    		if (root.getId().equals(rootId)) return root;
+    	}
+    	
+    	return null;
     }
 }

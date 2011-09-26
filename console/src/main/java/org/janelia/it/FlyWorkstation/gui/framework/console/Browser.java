@@ -1165,13 +1165,13 @@ public class Browser extends JFrame implements Cloneable {
         return files;
     }
 
-    public void setAnnotationSessionChanged(String returnSessionTask) {
+//    public void setAnnotationSessionChanged(String returnSessionTask) {
 //        currentAnnotationSessionTaskId = returnSessionTask;
 //        this.mostRecentFileOutlinePath = null;
 ////        fileOutline.clearSelection();
 //        sessionOutline.rebuildDataModel();
 //        sessionOutline.selectSession(currentAnnotationSessionTaskId);
-    }
+//    }
 
     public BrowserPosition getNewBrowserPosition() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();

@@ -22,4 +22,7 @@ public class ModelMgrAdapter implements ModelMgrObserver {
 	public void annotationsChanged(long entityId) {
 	}
 
+	@Override
+	public void sessionSelected(long sessionId) {
+	}
 }

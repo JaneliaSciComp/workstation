@@ -70,7 +70,12 @@ public class EmbeddedAxisServer implements ModelMgrObserver {
 		parameters.put("entityId",entityId);
 		SessionMgr.getSessionMgr().sendMessageToExternalClients("annotationsChanged", parameters);
 	}
-    
-    
+
+	@Override
+	public void sessionSelected(long sessionId) {
+		Map<String,Object> parameters = new HashMap<String,Object>();
+		parameters.put("sessionId",sessionId);
+		SessionMgr.getSessionMgr().sendMessageToExternalClients("sessionSelected", parameters);
+	}
 
 }

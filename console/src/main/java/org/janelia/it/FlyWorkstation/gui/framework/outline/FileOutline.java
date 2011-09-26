@@ -174,7 +174,7 @@ public class FileOutline extends JScrollPane implements Cloneable {
 //                    newSessionTask.setParameter(AnnotationSessionTask.PARAM_annotationValues, "good, partially good, low quality, trash");
 //                    newSessionTask.setParameter(AnnotationSessionTask.PARAM_annotationCategories, "quality");
                     AnnotationSessionTask returnSessionTask = (AnnotationSessionTask) ModelMgr.getModelMgr().saveOrUpdateTask(newSessionTask);
-                    FileOutline.this.consoleFrame.setAnnotationSessionChanged(returnSessionTask.getObjectId().toString());
+//                    FileOutline.this.consoleFrame.setAnnotationSessionChanged(returnSessionTask.getObjectId().toString());
                 }
                 catch (Exception e) {
                     e.printStackTrace();

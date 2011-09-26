@@ -1,5 +1,15 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import java.awt.BorderLayout;
+import java.awt.event.MouseEvent;
+import java.util.concurrent.Callable;
+
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTree;
+import javax.swing.tree.DefaultMutableTreeNode;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.DynamicTree;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
@@ -7,11 +17,6 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
-
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import java.awt.*;
-import java.awt.event.MouseEvent;
 
 
 /**
@@ -40,6 +45,7 @@ public class OntologyTree extends JPanel {
     }
 
     public OntologyRoot getCurrentOntology() {
+    	if (selectedTree == null) return null;
         return (OntologyRoot) selectedTree.getRootNode().getUserObject();
     }
 
@@ -47,7 +53,7 @@ public class OntologyTree extends JPanel {
         treesPanel.removeAll();
     }
 
-    public void initializeTree(final Long rootId) {
+    public void initializeTree(final Long rootId, final Callable<Void> success) {
 
         treesPanel.removeAll();
 
@@ -64,11 +70,9 @@ public class OntologyTree extends JPanel {
             }
 
             protected void hadSuccess() {
-
-                ModelMgr.getModelMgr().setSelectedOntology(rootEntity);
-                
                 try {
                     initializeTree(rootEntity);
+                    success.call();
                 }
                 catch (Exception e) {
                     hadError(e);

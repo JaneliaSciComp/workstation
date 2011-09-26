@@ -12,25 +12,32 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlTransient;
+
 /**
  * Wrapper for AnnotationSessionTask which keeps track of associated entities.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
+@XmlAccessorType(XmlAccessType.PROPERTY)
 public class AnnotationSession {
 
     protected final AnnotationSessionTask task;
 
     // Derived properties
-    protected String name;
-    protected String owner;
     protected List<Entity> entities;
     protected List<OntologyElement> categories;
     protected List<Entity> annotations;
     protected Map<Long, List<Entity>> annotationMap;
 
+    public AnnotationSession() {
+    	this.task = null;
+    }
+    
     public AnnotationSession(AnnotationSessionTask task) {
-        super();
         this.task = task;
     }
 
@@ -45,18 +52,22 @@ public class AnnotationSession {
         return task;
     }
 
+	@XmlAttribute
     public Long getId() {
         return task.getObjectId();
     }
-    
+
+	@XmlAttribute
     public String getName() {
         return task.getParameter(AnnotationSessionTask.PARAM_sessionName);
     }
 
+	@XmlAttribute
     public String getOwner() {
         return task.getOwner();
     }
 
+    @XmlTransient
     public List<Entity> getEntities() {
         if (entities == null) {
             try {
@@ -70,6 +81,7 @@ public class AnnotationSession {
         return entities;
     }
 
+    @XmlTransient
     public List<OntologyElement> getCategories() {
         if (categories == null) {
             try {
@@ -87,6 +99,7 @@ public class AnnotationSession {
         return categories;
     }
 
+    @XmlTransient
     public List<Entity> getAnnotations() {
         if (annotations == null) {
             try {
@@ -100,6 +113,7 @@ public class AnnotationSession {
         return annotations;
     }
 
+    @XmlTransient
     public Map<Long, List<Entity>> getAnnotationMap() {
         if (annotationMap == null) {
             annotationMap = mapAnnotations(getEntities(), getAnnotations());

@@ -1,5 +1,19 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.concurrent.Callable;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+
+import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -9,16 +23,6 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
-
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.util.Enumeration;
-import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -37,7 +41,8 @@ public class SessionOutline extends JPanel {
 
     protected final JPanel treesPanel;
     private DynamicTree dynamicTree;
-
+    private SimpleWorker loadingWorker;
+    	
     public SessionOutline(Browser consoleFrame) {
         super(new BorderLayout());
 
@@ -45,8 +50,24 @@ public class SessionOutline extends JPanel {
 
         treesPanel = new JPanel(new BorderLayout());
         add(treesPanel, BorderLayout.CENTER);
+        
+        ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
 
-        initializeTree();
+			@Override
+			public void sessionSelected(long sessionId) {
+				try {
+					// Wait until any loading is complete
+					if (loadingWorker != null) loadingWorker.get();
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+				}
+				selectSessionById(sessionId);
+			}
+        	
+        });
+        
+        loadAnnotationSessions(null);
     }
 
     public void showLoadingIndicator() {
@@ -54,16 +75,12 @@ public class SessionOutline extends JPanel {
         treesPanel.add(new JLabel(Icons.getLoadingIcon()));
     }
 
-    public void initializeTree() {
-        initializeTree((Long) null);
-    }
-
-    public void initializeTree(final Long taskIdToSelect) {
+    public void loadAnnotationSessions(final Callable success) {
 
         showLoadingIndicator();
         this.updateUI();
 
-        SimpleWorker loadingWorker = new SimpleWorker() {
+        loadingWorker = new SimpleWorker() {
 
             private List<Task> tasks;
 
@@ -74,16 +91,19 @@ public class SessionOutline extends JPanel {
             protected void hadSuccess() {
                 try {
                     initializeTree(tasks);
-                    if (taskIdToSelect != null) selectSession(taskIdToSelect);
+                    if (success!=null) success.call();
                 }
                 catch (Exception e) {
                     hadError(e);
                 }
+                loadingWorker = null;
             }
 
             protected void hadError(Throwable error) {
                 error.printStackTrace();
+                treesPanel.removeAll();
                 SessionOutline.this.updateUI();
+                loadingWorker = null;
             }
 
         };
@@ -147,8 +167,7 @@ public class SessionOutline extends JPanel {
                 if (o instanceof AnnotationSession) {
                     final AnnotationSession session = (AnnotationSession) o;
                     session.clearDerivedProperties();
-                    SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(session);
-                    ModelMgr.getModelMgr().setCurrentAnnotationSesisonTask(session.getTask());
+                    ModelMgr.getModelMgr().setCurrentAnnotationSession(session);
                 }
             }
 
@@ -164,7 +183,6 @@ public class SessionOutline extends JPanel {
         try {
             DefaultMutableTreeNode top = new DefaultMutableTreeNode();
             try {
-
                 if (null == tasks || tasks.size() <= 0) {
                     return nullNode;
                 }
@@ -236,13 +254,17 @@ public class SessionOutline extends JPanel {
         return null;
     }
 
-    public void selectSession(long taskId) {
+    public void selectSessionById(long taskId) {
         AnnotationSession session = getSessionById(taskId);
-        dynamicTree.navigateToNodeWithObject(session);
-        SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(session);
-        ModelMgr.getModelMgr().setCurrentAnnotationSesisonTask(session.getTask());
+        selectSession(session);
     }
 
+    public void selectSession(AnnotationSession session) {
+        dynamicTree.navigateToNodeWithObject(session);
+        SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(session);
+        ModelMgr.getModelMgr().setCurrentAnnotationSession(session);
+    }
+    
     public DynamicTree getDynamicTree() {
         return dynamicTree;
     }

@@ -5,13 +5,13 @@ import java.util.*;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.ActiveThreadModel;
-import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.OntologyFacade;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.InUseProtocolListener;
 import org.janelia.it.FlyWorkstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.FlyWorkstation.api.stub.data.NoDataException;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.OntologyKeyBind;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.OntologyKeyBindings;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.exception_handlers.PrintStackTraceHandler;
 import org.janelia.it.FlyWorkstation.shared.util.ThreadQueue;
@@ -19,6 +19,7 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.janelia.it.jacs.model.ontology.OntologyRoot;
 import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.user_data.User;
@@ -40,9 +41,12 @@ public class ModelMgr {
     private ThreadQueue notificationQueue;
     private ResourceBundle modelMgrResourceBundle;
     private EntityFactory entityFactory;
-    private Entity selectedOntology;
+    
+    
+    private OntologyRoot selectedOntology;
     private OntologyKeyBindings ontologyKeyBindings;
-    private Task annotationSesisonTask;
+    private AnnotationSession annotationSession;
+    
     private Class factoryClass;
     private boolean ontologyLookupNeeded = true;
 
@@ -145,32 +149,31 @@ public class ModelMgr {
     public void removeAllOntologies() {
         ontologies = null;
     }
-
-    public Set<Entity> getOntologies() {
-        if (ontologyLookupNeeded) {
-            OntologyFacade locator;
-            try {
-                locator = FacadeManager.getFacadeManager().getOntologyFacade();
-            }
-            catch (Exception ex) {
-                handleException(ex);
-                return new HashSet<Entity>(0);
-            }
-            List<Entity> ontologies = locator.getOntologies();
-            for (Entity ontology : ontologies) {
-//             if (readOnly && !ontology.isReadOnly()) ontology.makeReadOnly();
-                this.ontologies.add(ontology);
-//                if (modelMgrObservers != null) {
-//                    Object[] listeners = modelMgrObservers.toArray();
-//                    for (Object listener : listeners) {
-//                        ((ModelMgrObserver) listener).ontologyAdded(ontology);
-//                    }
-//                }
-            }
-            ontologyLookupNeeded = false;
-        }
-        return new HashSet<Entity>(ontologies);
-    }
+//    public Set<Entity> getOntologies() {
+//        if (ontologyLookupNeeded) {
+//            OntologyFacade locator;
+//            try {
+//                locator = FacadeManager.getFacadeManager().getOntologyFacade();
+//            }
+//            catch (Exception ex) {
+//                handleException(ex);
+//                return new HashSet<Entity>(0);
+//            }
+//            List<Entity> ontologies = locator.getOntologies();
+//            for (Entity ontology : ontologies) {
+////             if (readOnly && !ontology.isReadOnly()) ontology.makeReadOnly();
+//                this.ontologies.add(ontology);
+////                if (modelMgrObservers != null) {
+////                    Object[] listeners = modelMgrObservers.toArray();
+////                    for (Object listener : listeners) {
+////                        ((ModelMgrObserver) listener).ontologyAdded(ontology);
+////                    }
+////                }
+//            }
+//            ontologyLookupNeeded = false;
+//        }
+//        return new HashSet<Entity>(ontologies);
+//    }
 
     /**
      * Will NOT Force load of Ontologies
@@ -182,40 +185,23 @@ public class ModelMgr {
         return ontologies.size();
     }
 
-
-//    public Entity getOntologyById(int entityId) {
-//        Collection gvCollection = getOntologyFacade();
-//        Entity[] gvArray = (Entity[]) gvCollection.toArray(new Entity[0]);
-//        for (Entity aGvArray : gvArray) {
-//            if (aGvArray.getId() == entityId) return aGvArray;
-//        }
-//        return null;  //none found
-//    }
-//
-//    public Entity getOntologyContaining(Entity nodeInModel) {
-//        Collection gvCollection = getOntologyFacade();
-//        Entity[] gvArray = (Entity[]) gvCollection.toArray(new Entity[0]);
-//        long genomeVersionID = nodeInModel.getId();
-//        for (Entity aGvArray : gvArray) {
-//            if ((aGvArray).getId() == genomeVersionID) return aGvArray;
-//        }
-//        return null;  //none found
-//    }
-
-    public Task getCurrentAnnotationSessionTask() {
-        return annotationSesisonTask;
+    public AnnotationSession getCurrentAnnotationSession() {
+        return annotationSession;
     }
 
-    public void setCurrentAnnotationSesisonTask(Task annotationSesisonTask) {
-        this.annotationSesisonTask = annotationSesisonTask;
+    public void setCurrentAnnotationSession(AnnotationSession session) {
+        if (annotationSession == null || session == null || !annotationSession.getId().equals(session.getId())) {
+		    this.annotationSession = session;
+		    notifyAnnotationSessionSelected(annotationSession.getId());
+        }
     }
 
-    public Entity getSelectedOntology() {
+    public OntologyRoot getCurrentOntology() {
         return selectedOntology;
     }
 
-    public void setSelectedOntology(Entity ontology) {
-        if (selectedOntology == null || !selectedOntology.getId().equals(ontology.getId())) {
+    public void setCurrentOntology(OntologyRoot ontology) {
+        if (selectedOntology == null || ontology == null || !selectedOntology.getId().equals(ontology.getId())) {
             SessionMgr.getSessionMgr().setModelProperty("lastSelectedOntology", ontology.getId().toString());
             modelAvailable = true;
             selectedOntology = ontology;
@@ -308,6 +294,12 @@ public class ModelMgr {
         }
     }
 
+    public void notifyAnnotationSessionSelected(Long sessionId) {
+        for (ModelMgrObserver listener : modelMgrObservers) {
+        	listener.sessionSelected(sessionId);
+        }
+    }
+    
     public void prepareForSystemExit() {
         FacadeManager.getFacadeManager().prepareForSystemExit();
     }
@@ -368,7 +360,6 @@ public class ModelMgr {
     }
 
     public Entity createOntologyAnnotation(OntologyAnnotation annotation) throws Exception {
-        System.out.println("creating "+annotation);
         Entity annotationEntity = FacadeManager.getFacadeManager().getOntologyFacade().createOntologyAnnotation(annotation);
         notifyAnnotationsChanged(annotation.getTargetEntityId());
         return annotationEntity;
@@ -383,10 +374,29 @@ public class ModelMgr {
         notifyAnnotationsChanged(annotation.getTargetEntityId());
     }
     
-    public Entity getOntologyTree(Long rootEntityId) throws Exception {
-        return FacadeManager.getFacadeManager().getOntologyFacade().getOntologyTree(rootEntityId);
+    public Entity getOntologyTree(Long rootId) throws Exception {
+        return FacadeManager.getFacadeManager().getOntologyFacade().getOntologyTree(rootId);
     }
 
+    public OntologyRoot getOntology(Long rootId) {
+    	if (selectedOntology.getId().equals(rootId)) return selectedOntology;
+    	try {
+    		return new OntologyRoot(getOntologyTree(rootId));
+    	}
+    	catch (Exception e) {
+    		e.printStackTrace();
+    	}
+    	return null;
+    }
+    
+    public AnnotationSession getAnnotationSession(Long sessionId) throws Exception {
+    	if (annotationSession.getId().equals(sessionId)) {
+    		return annotationSession;
+    	}
+        // TODO: implement this for completeness, although it's not really needed right now
+    	throw new UnsupportedOperationException();
+    }
+    
     public List<Entity> getCommonRootEntitiesByTypeName(String entityTypeName) {
         return FacadeManager.getFacadeManager().getEntityFacade().getCommonRootEntitiesByTypeName(entityTypeName);
     }

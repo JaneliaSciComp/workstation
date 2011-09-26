@@ -1,6 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -76,6 +79,18 @@ public class EntityOutline extends EntityTree implements Cloneable {
         // Create context menus
         JPopupMenu popupMenu = new JPopupMenu();
 
+        // Copy to clipboard
+        JMenuItem copyMenuItem = new JMenuItem("Copy to clipboard");
+        copyMenuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+	            Transferable t = new StringSelection(entity.getName());
+	            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
+			}
+		});
+        popupMenu.add(copyMenuItem);
+        
+        // Change data source (root only)
     	if (node.isRoot()) {
             JMenu changeDataSourceMenu = new JMenu("Change data source...");
 
@@ -95,6 +110,8 @@ public class EntityOutline extends EntityTree implements Cloneable {
         	
     	}
     	    	
+    	// Create annotation session (2d images)
+    	// TODO: this is deprecated and should be removed once we normalize all the results to use Neuron Fragments
         JMenuItem newSessionItem = new JMenuItem("Create Annotation Session for 2D Images");
         newSessionItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
@@ -131,6 +148,7 @@ public class EntityOutline extends EntityTree implements Cloneable {
         });
         popupMenu.add(newSessionItem);
     	
+        // Create annotation session (neuron fragments)
         JMenuItem newFragSessionItem = new JMenuItem("Create Annotation Session for Neuron Fragments");
         newFragSessionItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {

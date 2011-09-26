@@ -51,4 +51,10 @@ public class ConsoleObserverImpl implements ModelMgrObserver  {
 	public void annotationsChanged(long entityId) {
 		throw e;
 	}
+	
+	@Override
+	public void sessionSelected(long sessionId) {
+		throw e;
+	}
+	
 }

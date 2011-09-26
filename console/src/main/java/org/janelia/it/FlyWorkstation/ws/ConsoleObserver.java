@@ -18,4 +18,6 @@ public interface ConsoleObserver {
     
     public void annotationsChanged(@WebParam(name = "entityId") long entityId);
     
+    public void sessionSelected(@WebParam(name = "sessionId") long entityId);
+    
 }

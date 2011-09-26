@@ -7,13 +7,16 @@
 package org.janelia.it.FlyWorkstation.ws;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.OntologyKeyBindings;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.ExternalClient;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -43,6 +46,20 @@ public class ConsoleDataServiceImpl {
     	ExternalClient client = SessionMgr.getSessionMgr().getExternalClientByPort(port);
     	client.init(endpointUrl);
 		System.out.println("Initialized client on port "+port+" with endpoint "+endpointUrl);
+
+		Map<String,Object> parameters = new HashMap<String,Object>();
+		
+		if (ModelMgr.getModelMgr().getCurrentOntology() != null) {
+			parameters.clear();
+			parameters.put("rootId",ModelMgr.getModelMgr().getCurrentOntology().getId());
+			client.sendMessage("ontologySelected", parameters);
+		}
+		
+		if (ModelMgr.getModelMgr().getCurrentAnnotationSession() != null) {
+			parameters.clear();
+			parameters.put("sessionId",ModelMgr.getModelMgr().getCurrentAnnotationSession().getId());
+			client.sendMessage("sessionSelected", parameters);
+		}
     }
 
     public Entity createAnnotation(OntologyAnnotation annotation) throws Exception {
@@ -110,8 +127,12 @@ public class ConsoleDataServiceImpl {
 //        return ModelMgr.getModelMgr().getEntitiesByType(entityTypeId);
 //    }
 	
-	public Entity getCurrentOntology() {
-		return ModelMgr.getModelMgr().getSelectedOntology();
+	public Entity getOntology(long rootId) throws Exception {
+		return ModelMgr.getModelMgr().getOntologyTree(rootId);
+	}
+
+	public AnnotationSession getAnnotationSession(long sessionId) throws Exception {
+		return ModelMgr.getModelMgr().getAnnotationSession(sessionId);
 	}
 	
 	public OntologyKeyBindings getKeybindings(long ontologyId) {

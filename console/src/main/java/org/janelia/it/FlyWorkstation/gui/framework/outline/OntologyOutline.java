@@ -6,6 +6,18 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.event.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Callable;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+
+import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.AnnotateAction;
@@ -16,20 +28,13 @@ import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.compute.api.ComputeException;
+import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
 import org.janelia.it.jacs.model.ontology.types.*;
 import org.janelia.it.jacs.model.ontology.types.Enum;
-
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.HashMap;
-import java.util.Map;
 
 
 /**
@@ -38,7 +43,7 @@ import java.util.Map;
  * @author saffordt
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class OntologyOutline extends OntologyTree implements ActionListener, DataAvailabilityListener {
+public class OntologyOutline extends OntologyTree implements ActionListener {
 
     private static final String ADD_COMMAND = "add";
     private static final String REMOVE_COMMAND = "remove";
@@ -168,12 +173,66 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Dat
             }
         });
 
+        // Listen for changes to the model
+        
+        ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
+
+			@Override
+			public void ontologySelected(long rootId) {
+				try {
+        			loadOntology(rootId);	
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+        });
+        
         // Prepare the ontology manager and start preloading ontologies
 
         this.ontologyManager = new OntologyManager(this);
         ontologyManager.pack();
-        ontologyManager.getPrivateTable().addDataListener(this);
+        ontologyManager.getPrivateTable().addDataListener(new DataAvailabilityListener() {
+
+            @Override
+            public void dataReady(DataReadyEvent evt) {
+                AbstractOntologyTable privateTable = ontologyManager.getPrivateTable();
+                if (evt.getSource() != privateTable) return;
+                if (selectedTree == null) {
+                    String lastSessionId = (String) SessionMgr.getSessionMgr().getModelProperty("lastSelectedOntology");
+                    if (null == lastSessionId) {
+                        java.util.List<OntologyRoot> roots = privateTable.getOntologyRoots();
+                        if (roots != null && !roots.isEmpty()) {
+                        	System.out.println("Loading the user's first private ontology");
+                        	ModelMgr.getModelMgr().setCurrentOntology(roots.get(0));
+                        }
+                    }
+                    else {
+                    	System.out.println("Loading last used ontology "+lastSessionId);
+                    	try {
+	                    	Entity ontology = ModelMgr.getModelMgr().getOntologyTree(Long.valueOf(lastSessionId));
+	                    	ModelMgr.getModelMgr().setCurrentOntology(new OntologyRoot(ontology));
+                    	}
+                    	catch (Exception e) {
+                    		e.printStackTrace();
+                    	}
+                    }
+                }
+                // We got the data, no need to listen any longer
+                privateTable.removeDataListener(this);
+            }
+		});
         ontologyManager.preload();
+    }
+    
+    public void loadOntology(long rootId) {
+    	if (getCurrentOntology()!=null && getCurrentOntology().getId().equals(rootId)) return;
+    	initializeTree(rootId, new Callable<Void>() {
+			public Void call() throws Exception {
+				ModelMgr.getModelMgr().setCurrentOntology(getCurrentOntology());
+				return null;
+			}
+        });
     }
 
     /**
@@ -414,25 +473,6 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Dat
         }
     }
 
-    @Override
-    public void dataReady(DataReadyEvent evt) {
-        AbstractOntologyTable privateTable = ontologyManager.getPrivateTable();
-        if (evt.getSource() != privateTable) return;
-        if (selectedTree == null) {
-            String lastSessionId = (String) SessionMgr.getSessionMgr().getModelProperty("lastSelectedOntology");
-            if (null == lastSessionId) {
-                java.util.List<OntologyRoot> roots = privateTable.getOntologyRoots();
-                if (roots != null && !roots.isEmpty()) {
-                    initializeTree(roots.get(0).getId());
-                }
-            }
-            else {
-                initializeTree(Long.valueOf(lastSessionId));
-            }
-        }
-        // We got the data, no need to listen any longer
-        privateTable.removeDataListener(this);
-    }
 
 
 }

@@ -8,6 +8,7 @@ import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
 
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.OntologyKeyBindings;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
@@ -47,7 +48,13 @@ public interface ConsoleDataService extends Remote {
 			@WebParam(name = "entityIds") Long[] entityIds)
     		throws RemoteException;
 
-	public Entity getCurrentOntology();
+	public Entity getOntology(
+			@WebParam(name = "rootId") long rootId)
+			throws RemoteException;
+
+	public AnnotationSession getAnnotationSession(
+			@WebParam(name = "sessionId") long sessionId)
+		throws RemoteException;
 	
 	public OntologyKeyBindings getKeybindings(
 			@WebParam(name = "ontologyId") long ontologyId);

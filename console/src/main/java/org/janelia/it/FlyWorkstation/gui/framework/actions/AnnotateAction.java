@@ -11,7 +11,7 @@ import javax.swing.JOptionPane;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.AnnotatedImageButton;
 import org.janelia.it.FlyWorkstation.gui.framework.console.IconDemoPanel;
-import org.janelia.it.FlyWorkstation.gui.framework.console.ImageDetailPanel;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -20,7 +20,6 @@ import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.types.*;
 import org.janelia.it.jacs.model.ontology.types.Enum;
-import org.janelia.it.jacs.model.tasks.Task;
 
 /**
  * This action creates and saves an annotation, and adds a corresponding tag to the currently selected item in an IconDemoPanel.
@@ -80,8 +79,8 @@ public class AnnotateAction extends OntologyElementAction {
             valueString = valueEntity.getName();
         }
 
-        Task session = ModelMgr.getModelMgr().getCurrentAnnotationSessionTask();
-        Long sessionId = (null != session) ? session.getObjectId() : null;
+        AnnotationSession session = ModelMgr.getModelMgr().getCurrentAnnotationSession();
+        Long sessionId = (null != session) ? session.getId() : null;
 
         Long keyEntityId = (keyEntity == null) ? null : keyEntity.getId();
         Long valueEntityId = (valueEntity == null) ? null : valueEntity.getId();

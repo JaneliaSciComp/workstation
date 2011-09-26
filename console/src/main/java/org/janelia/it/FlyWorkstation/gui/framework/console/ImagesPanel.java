@@ -1,16 +1,22 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.Rectangle;
 import java.awt.event.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.swing.ButtonGroup;
+import javax.swing.JPanel;
+import javax.swing.Scrollable;
+import javax.swing.SwingWorker;
+
+import org.janelia.it.jacs.model.entity.Entity;
 
 /**
  * Self-adjusting grid of images which may be resized together.
@@ -51,6 +57,7 @@ public class ImagesPanel extends JPanel implements Scrollable {
 
         for (SwingWorker worker : workers) {
             if (worker != null && !worker.isDone()) {
+            	System.out.println("Cancel previous load");
                 worker.cancel(true);
             }
         }

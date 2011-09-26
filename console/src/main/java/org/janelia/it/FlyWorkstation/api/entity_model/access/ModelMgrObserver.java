@@ -11,4 +11,6 @@ public interface ModelMgrObserver {
     public void entityViewRequested(long entityId);
     
     public void annotationsChanged(long entityId);    
+    
+    public void sessionSelected(long sessionId);
 }
