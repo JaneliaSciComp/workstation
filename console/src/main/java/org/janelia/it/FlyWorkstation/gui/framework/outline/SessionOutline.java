@@ -169,6 +169,9 @@ public class SessionOutline extends JPanel {
                     session.clearDerivedProperties();
                     ModelMgr.getModelMgr().setCurrentAnnotationSession(session);
                 }
+                else {
+                    ModelMgr.getModelMgr().setCurrentAnnotationSession(null);
+                }
             }
 
         };
@@ -180,12 +183,15 @@ public class SessionOutline extends JPanel {
         DefaultMutableTreeNode nullNode = new DefaultMutableTreeNode(NO_DATASOURCE);
         nullNode.setUserObject(NO_DATASOURCE);
         nullNode.setAllowsChildren(false);
+        
+        if (null == tasks || tasks.size() <= 0) {
+            return nullNode;
+        }
+        
         try {
             DefaultMutableTreeNode top = new DefaultMutableTreeNode();
+            
             try {
-                if (null == tasks || tasks.size() <= 0) {
-                    return nullNode;
-                }
                 top.setUserObject(ANNOTATION_SESSIONS);
                 for (Task task : tasks) {
                     if (task.isTaskDeleted()) continue;
@@ -204,6 +210,7 @@ public class SessionOutline extends JPanel {
             catch (Exception e) {
                 e.printStackTrace();
             }
+            
             return top;
         }
         catch (Exception e) {
@@ -255,14 +262,16 @@ public class SessionOutline extends JPanel {
     }
 
     public void selectSessionById(long taskId) {
-        AnnotationSession session = getSessionById(taskId);
-        selectSession(session);
+        selectSession(getSessionById(taskId));
     }
 
     public void selectSession(AnnotationSession session) {
-        dynamicTree.navigateToNodeWithObject(session);
-        SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(session);
-        ModelMgr.getModelMgr().setCurrentAnnotationSession(session);
+    	if (session != null) {
+    		dynamicTree.navigateToNodeWithObject(session);
+    	}
+    	else {
+    		dynamicTree.navigateToNodeWithObject(ANNOTATION_SESSIONS);
+    	}
     }
     
     public DynamicTree getDynamicTree() {
