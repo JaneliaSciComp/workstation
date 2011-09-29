@@ -73,14 +73,19 @@ public class EntityOutline extends EntityTree implements Cloneable {
     protected void showPopupMenu(MouseEvent e) {
 
     	// Clicked on what node?
-        DefaultMutableTreeNode node = selectedTree.getCurrentNode();
+        final DefaultMutableTreeNode node = selectedTree.getCurrentNode();
         final Entity entity = (Entity) node.getUserObject();
+    	if (entity == null) return;
     	
         // Create context menus
         JPopupMenu popupMenu = new JPopupMenu();
-
+        
+        JMenuItem titleItem = new JMenuItem(entity.getName());
+        titleItem.setEnabled(false);
+        popupMenu.add(titleItem);
+        
         // Copy to clipboard
-        JMenuItem copyMenuItem = new JMenuItem("Copy to clipboard");
+        JMenuItem copyMenuItem = new JMenuItem("  Copy to clipboard");
         copyMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -92,7 +97,7 @@ public class EntityOutline extends EntityTree implements Cloneable {
         
         // Change data source (root only)
     	if (node.isRoot()) {
-            JMenu changeDataSourceMenu = new JMenu("Change data source...");
+            JMenu changeDataSourceMenu = new JMenu("  Change data source...");
 
         	for(final Entity commonRoot : entityRootList) {
         		if (!"system".equals(commonRoot.getUser().getUserLogin()) && !SessionMgr.getUsername().equals(commonRoot.getUser().getUserLogin())) continue;
@@ -112,7 +117,7 @@ public class EntityOutline extends EntityTree implements Cloneable {
     	    	
     	// Create annotation session (2d images)
     	// TODO: this is deprecated and should be removed once we normalize all the results to use Neuron Fragments
-        JMenuItem newSessionItem = new JMenuItem("Create Annotation Session for 2D Images");
+        JMenuItem newSessionItem = new JMenuItem("  Create Annotation Session for 2D Images");
         newSessionItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
@@ -149,7 +154,7 @@ public class EntityOutline extends EntityTree implements Cloneable {
         popupMenu.add(newSessionItem);
     	
         // Create annotation session (neuron fragments)
-        JMenuItem newFragSessionItem = new JMenuItem("Create Annotation Session for Neuron Fragments");
+        JMenuItem newFragSessionItem = new JMenuItem("  Create Annotation Session for Neuron Fragments");
         newFragSessionItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
@@ -186,26 +191,27 @@ public class EntityOutline extends EntityTree implements Cloneable {
         popupMenu.add(newFragSessionItem);
     	
         if (entity.getEntityType().getName().equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
-            JMenuItem v3dMenuItem = new JMenuItem("View in V3D (Neuron Annotator)");
+            JMenuItem v3dMenuItem = new JMenuItem("  View in V3D (Neuron Annotator)");
             v3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
+                    selectNode(node);
                     if (ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(entity.getId())) {
                     	// Success
                     	return;
                     }
                 	// Launch V3D if it isn't running
                     // TODO: this should be redone to use the "Tools" configuration
-                    String filepath = entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
-                    filepath = Utils.convertJacsPathLinuxToMac(filepath);
-                    final File file = new File(filepath);
-                    String tmpCmd = "/Users/" + (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME) + "/Dev/v3d/v3d/v3d64.app/Contents/MacOS/v3d64 -i " + file.getAbsolutePath();
-                    System.out.println("DEBUG: " + tmpCmd);
-                    try {
-                        Runtime.getRuntime().exec(tmpCmd);
-                    }
-                    catch (IOException e) {
-                        e.printStackTrace();
-                    }
+//                    String filepath = entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
+//                    filepath = Utils.convertJacsPathLinuxToMac(filepath);
+//                    final File file = new File(filepath);
+//                    String tmpCmd = "/Users/" + (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME) + "/Dev/v3d/v3d/v3d64.app/Contents/MacOS/v3d64 -i " + file.getAbsolutePath();
+//                    System.out.println("DEBUG: " + tmpCmd);
+//                    try {
+//                        Runtime.getRuntime().exec(tmpCmd);
+//                    }
+//                    catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
                 }
             });
             popupMenu.add(v3dMenuItem);
@@ -220,10 +226,36 @@ public class EntityOutline extends EntityTree implements Cloneable {
      * @param e
      */
     protected void nodeClicked(MouseEvent e) {
-        DefaultMutableTreeNode node = selectedTree.getCurrentNode();
-        if (node instanceof LazyTreeNode) return;
+        selectNode(selectedTree.getCurrentNode());
+    }
+    
+    private void viewImageEntities(Entity entity) {
+        List<Entity> entities = getDescendantsOfType(entity, EntityConstants.TYPE_TIF_2D);
+    	if (entities.isEmpty()) return;
+    	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(entities);
+    }
 
-        final Entity entity = (Entity) node.getUserObject();
+    /**
+     * Override this method to do something when the user presses down on a node.
+     *
+     * @param e
+     */
+    protected void nodePressed(MouseEvent e) {
+    }
+
+    /**
+     * Override this method to do something when the user double clicks a node.
+     *
+     * @param e
+     */
+    protected void nodeDoubleClicked(MouseEvent e) {
+    }
+    
+
+    private void selectNode(DefaultMutableTreeNode node) {
+
+        if (node instanceof LazyTreeNode) return;
+    	final Entity entity = (Entity) node.getUserObject();
         ModelMgr.getModelMgr().notifyEntitySelected(entity.getId());
         
         String type = entity.getEntityType().getName();
@@ -232,7 +264,7 @@ public class EntityOutline extends EntityTree implements Cloneable {
         if (type.equals(EntityConstants.TYPE_TIF_2D)) {
             entities.add(entity);
         	if (entities.isEmpty()) return;
-        	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(new GlobalSession(entities));
+        	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(entities);
         }
         else if (type.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
             
@@ -261,27 +293,4 @@ public class EntityOutline extends EntityTree implements Cloneable {
             loadingWorker.execute();
         }
     }
-    
-    private void viewImageEntities(Entity entity) {
-        List<Entity> entities = getDescendantsOfType(entity, EntityConstants.TYPE_TIF_2D);
-    	if (entities.isEmpty()) return;
-    	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(new GlobalSession(entities));
-    }
-
-    /**
-     * Override this method to do something when the user presses down on a node.
-     *
-     * @param e
-     */
-    protected void nodePressed(MouseEvent e) {
-    }
-
-    /**
-     * Override this method to do something when the user double clicks a node.
-     *
-     * @param e
-     */
-    protected void nodeDoubleClicked(MouseEvent e) {
-    }
-
 }
