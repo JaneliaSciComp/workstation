@@ -57,11 +57,6 @@ public class OntologyOutline extends OntologyTree implements ActionListener {
     private final JToggleButton keyBindButton;
     private final JButton manageButton;
     private final OntologyManager ontologyManager;
-    private final JPopupMenu popupMenu;
-    private final JMenuItem assignShortcutMenuItem;
-    private final JMenuItem removeNodeMenuItem;
-    private final JMenu addMenuPopup;
-    private final JMenu addItemPopup;
 
     private final Map<Long, Action> ontologyActionMap = new HashMap<Long, Action>();
 
@@ -80,41 +75,6 @@ public class OntologyOutline extends OntologyTree implements ActionListener {
         keyBindButton = new JToggleButton("Set Shortcuts");
         keyBindButton.setActionCommand(BIND_MODE_COMMAND);
         keyBindButton.addActionListener(this);
-
-        // Create context menus
-
-        popupMenu = new JPopupMenu();
-        popupMenu.setLightWeightPopupEnabled(true);
-
-        assignShortcutMenuItem = new JMenuItem("Assign shortcut...");
-        assignShortcutMenuItem.addActionListener(this);
-        assignShortcutMenuItem.setActionCommand(BIND_EDIT_COMMAND);
-
-        addMenuPopup = new JMenu("Add...");
-
-        Class[] nodeTypes = {Category.class, Tag.class, Enum.class, Interval.class, Text.class};
-        for (Class<? extends OntologyElementType> nodeType : nodeTypes) {
-            try {
-                JMenuItem smi = new JMenuItem(nodeType.newInstance().getName());
-                smi.addActionListener(this);
-                smi.setActionCommand(ADD_COMMAND + DELIMITER + nodeType.getSimpleName());
-                addMenuPopup.add(smi);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-
-        // Alternative "Add" menu for enumeration nodes
-        addItemPopup = new JMenu("Add...");
-        JMenuItem smi = new JMenuItem("Item");
-        smi.addActionListener(this);
-        smi.setActionCommand(ADD_COMMAND + DELIMITER + EnumItem.class.getSimpleName());
-        addItemPopup.add(smi);
-
-        removeNodeMenuItem = new JMenuItem("Remove this node");
-        removeNodeMenuItem.addActionListener(this);
-        removeNodeMenuItem.setActionCommand(REMOVE_COMMAND);
 
         // Create input listeners which will be added to the DynamicTree later
 
@@ -252,25 +212,61 @@ public class OntologyOutline extends OntologyTree implements ActionListener {
      * @param e
      */
     protected void showPopupMenu(MouseEvent e) {
-        popupMenu.removeAll();
+
+        DefaultMutableTreeNode node = getDynamicTree().getCurrentNode();
+        if (node == null) return;
+        OntologyElement curr = getOntologyElement(node);
+        
+        // Create context menus
+
+    	JPopupMenu popupMenu = new JPopupMenu();
+        popupMenu.setLightWeightPopupEnabled(true);
+
+        JMenuItem titleMenuItem = new JMenuItem(curr.getName());
+        titleMenuItem.setEnabled(false);
+        popupMenu.add(titleMenuItem);
+        
+        JMenuItem assignShortcutMenuItem = new JMenuItem("  Assign shortcut...");
+        assignShortcutMenuItem.addActionListener(this);
+        assignShortcutMenuItem.setActionCommand(BIND_EDIT_COMMAND);
         popupMenu.add(assignShortcutMenuItem);
 
         if (isEditable()) {
 
-            DefaultMutableTreeNode node = getDynamicTree().getCurrentNode();
-            if (node == null) return;
-            OntologyElement curr = getOntologyElement(node);
             OntologyElementType type = curr.getType();
 
+            JMenu addMenuPopup = new JMenu("  Add...");
+            
             if (type instanceof Enum) {
-                popupMenu.add(addItemPopup);
+                // Alternative "Add" menu for enumeration nodes
+                JMenuItem smi = new JMenuItem("Item");
+                smi.addActionListener(this);
+                smi.setActionCommand(ADD_COMMAND + DELIMITER + EnumItem.class.getSimpleName());
+                addMenuPopup.add(smi);
+                popupMenu.add(addMenuPopup);
             }
             else if (type.allowsChildren() || type instanceof Tag) {
+
+                Class[] nodeTypes = {Category.class, Tag.class, Enum.class, Interval.class, Text.class};
+                for (Class<? extends OntologyElementType> nodeType : nodeTypes) {
+                    try {
+                        JMenuItem smi = new JMenuItem(nodeType.newInstance().getName());
+                        smi.addActionListener(this);
+                        smi.setActionCommand(ADD_COMMAND + DELIMITER + nodeType.getSimpleName());
+                        addMenuPopup.add(smi);
+                    }
+                    catch (Exception x) {
+                        x.printStackTrace();
+                    }
+                }
                 popupMenu.add(addMenuPopup);
             }
 
             // Disallow deletion of root nodes. You've gotta use the OntologyManager for that.
             if (curr.getParent() != null) {
+            	JMenuItem removeNodeMenuItem = new JMenuItem("  Remove this node");
+                removeNodeMenuItem.addActionListener(this);
+                removeNodeMenuItem.setActionCommand(REMOVE_COMMAND);
                 popupMenu.add(removeNodeMenuItem);
             }
         }
