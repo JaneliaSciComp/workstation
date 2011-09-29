@@ -6,6 +6,7 @@
  */
 package org.janelia.it.FlyWorkstation.ws;
 
+import java.awt.Color;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -159,4 +160,10 @@ public class ConsoleDataServiceImpl {
 //    public EntityData saveEntityDataForEntity(EntityData newData) throws Exception {
 //        return ModelMgr.getModelMgr().saveOrUpdateEntityData(newData);
 //    }
+    
+    public String getUserAnnotationColor(String username) throws Exception {
+        Color color = ModelMgr.getModelMgr().getUserAnnotationColor(username);
+        String rgb = Integer.toHexString((color.getRGB() & 0xffffff) | 0x1000000).substring(1);
+        return rgb;
+    }
 }

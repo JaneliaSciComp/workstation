@@ -54,19 +54,26 @@ public interface ConsoleDataService extends Remote {
 
 	public AnnotationSession getAnnotationSession(
 			@WebParam(name = "sessionId") long sessionId)
-		throws RemoteException;
+			throws RemoteException;
 	
 	public OntologyKeyBindings getKeybindings(
-			@WebParam(name = "ontologyId") long ontologyId);
+			@WebParam(name = "ontologyId") long ontologyId)
+			throws RemoteException;
 	
     public Entity getEntityById(
-    		@WebParam(name = "entityId") long entityId);
+    		@WebParam(name = "entityId") long entityId)
+    		throws RemoteException;
 
 	public Entity getEntityTree(
 			@WebParam(name = "entityId") long entityId) 
 			throws RemoteException;
 
     public EntityData[] getParentEntityDataArray(
-    		@WebParam(name = "childEntityId") long childEntityId);
+    		@WebParam(name = "childEntityId") long childEntityId)
+    		throws RemoteException;
+    
+    public String getUserAnnotationColor(
+    		@WebParam(name = "username") String username)
+    		throws RemoteException;
     
 }
