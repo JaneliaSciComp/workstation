@@ -25,4 +25,8 @@ public class ModelMgrAdapter implements ModelMgrObserver {
 	@Override
 	public void sessionSelected(long sessionId) {
 	}
+	
+	@Override
+	public void sessionDeselected() {
+	}
 }

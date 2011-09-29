@@ -29,4 +29,6 @@ public interface AnnotationFacade extends EntityFacade {
     public void createEntityType(String typeName) throws Exception;
     
     public void createEntityAttribute(String typeName, String attrName) throws Exception;
+    
+    public Entity getAncestorWithType(Entity entity, String typeName) throws Exception;
 }

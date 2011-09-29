@@ -72,7 +72,7 @@ public class EntityListPane extends JPanel {
                 table.setColumnSelectionAllowed(false);
                 table.getColumnModel().getSelectionModel().setSelectionInterval(0, table.getColumnCount());
                 int row = table.getSelectedRow();
-                populateEntityDataPanes(entities.get(row));
+                if (row>=0) populateEntityDataPanes(entities.get(row));
 			}
         });
 

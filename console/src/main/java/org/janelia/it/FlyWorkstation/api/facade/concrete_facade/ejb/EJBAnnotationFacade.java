@@ -60,7 +60,9 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
     
     public void createEntityAttribute(String typeName, String attrName) throws Exception {
     	EJBFactory.getRemoteAnnotationBean().createNewEntityAttr(typeName, attrName);
-    	
     }
-
+    
+    public Entity getAncestorWithType(Entity entity, String typeName) throws Exception {
+    	return EJBFactory.getRemoteAnnotationBean().getAncestorWithType(entity, typeName);
+    }
 }

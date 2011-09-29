@@ -117,17 +117,15 @@ public class AggregateAnnotationFacade extends AggregateEntityFacade implements 
 
 	@Override
 	public void createEntityType(String typeName) throws Exception {
-        Object[] aggregates = getAggregates();
-        for (Object aggregate : aggregates) {
-            ((AnnotationFacade) aggregate).createEntityType(typeName);
-        }
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public void createEntityAttribute(String typeName, String attrName) throws Exception {
-        Object[] aggregates = getAggregates();
-        for (Object aggregate : aggregates) {
-            ((AnnotationFacade) aggregate).createEntityAttribute(typeName, attrName);
-        }
+		throw new UnsupportedOperationException();
+	}
+	
+	public Entity getAncestorWithType(Entity entity, String typeName) throws Exception {
+		throw new UnsupportedOperationException();
 	}
 }

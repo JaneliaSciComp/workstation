@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.api.entity_model.management;
 
+import java.awt.Color;
 import java.lang.reflect.Constructor;
 import java.util.*;
 
@@ -42,7 +43,7 @@ public class ModelMgr {
     private ResourceBundle modelMgrResourceBundle;
     private EntityFactory entityFactory;
     
-    
+    private UserColorMapping userColorMapping = new UserColorMapping();
     private OntologyRoot selectedOntology;
     private OntologyKeyBindings ontologyKeyBindings;
     private AnnotationSession annotationSession;
@@ -146,7 +147,11 @@ public class ModelMgr {
         FacadeManager.handleException(throwable);
     }
 
-    public void removeAllOntologies() {
+    public UserColorMapping getUserColorMapping() {
+		return userColorMapping;
+	}
+
+	public void removeAllOntologies() {
         ontologies = null;
     }
 //    public Set<Entity> getOntologies() {
@@ -192,7 +197,10 @@ public class ModelMgr {
     public void setCurrentAnnotationSession(AnnotationSession session) {
         if (annotationSession == null || session == null || !annotationSession.getId().equals(session.getId())) {
 		    this.annotationSession = session;
-		    notifyAnnotationSessionSelected(annotationSession.getId());
+		    if (annotationSession == null)
+			    notifyAnnotationSessionDeselected();
+		    else
+		    	notifyAnnotationSessionSelected(annotationSession.getId());
         }
     }
 
@@ -297,6 +305,12 @@ public class ModelMgr {
     public void notifyAnnotationSessionSelected(Long sessionId) {
         for (ModelMgrObserver listener : modelMgrObservers) {
         	listener.sessionSelected(sessionId);
+        }
+    }
+
+    public void notifyAnnotationSessionDeselected() {
+        for (ModelMgrObserver listener : modelMgrObservers) {
+        	listener.sessionDeselected();
         }
     }
     
@@ -466,6 +480,10 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getAnnotationFacade().getAnnotationsForSession(annotationSessionId);
     }
 
+    public Entity getAncestorWithType(Entity entity, String type) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().getAncestorWithType(entity, type);
+    }
+    
     public Entity saveOrUpdateEntity(Entity entity) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().saveEntity(entity);
     }
@@ -552,6 +570,9 @@ public class ModelMgr {
         }
     }
 
+	public Color getUserAnnotationColor(String username) {
+		return userColorMapping.getColor(username);
+	}
 }
 
 
