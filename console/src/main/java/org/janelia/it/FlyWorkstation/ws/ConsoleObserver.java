@@ -20,4 +20,6 @@ public interface ConsoleObserver {
     
     public void sessionSelected(@WebParam(name = "sessionId") long entityId);
     
+    public void sessionDeselected();
+    
 }

@@ -57,4 +57,9 @@ public class ConsoleObserverImpl implements ModelMgrObserver  {
 		throw e;
 	}
 	
+	@Override
+	public void sessionDeselected() {
+		throw e;
+	}
+	
 }

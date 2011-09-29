@@ -78,4 +78,10 @@ public class EmbeddedAxisServer implements ModelMgrObserver {
 		SessionMgr.getSessionMgr().sendMessageToExternalClients("sessionSelected", parameters);
 	}
 
+	@Override
+	public void sessionDeselected() {
+		Map<String,Object> parameters = new HashMap<String,Object>();
+		SessionMgr.getSessionMgr().sendMessageToExternalClients("sessionDeselected", parameters);
+	}
+
 }
