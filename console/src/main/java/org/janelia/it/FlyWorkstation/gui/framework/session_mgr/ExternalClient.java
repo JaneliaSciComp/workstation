@@ -17,6 +17,10 @@ import org.apache.axis2.AxisFault;
 import org.apache.axis2.addressing.EndpointReference;
 import org.apache.axis2.client.Options;
 import org.apache.axis2.client.ServiceClient;
+import org.apache.axis2.transport.http.HTTPConstants;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
+import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 
 /**
@@ -30,13 +34,25 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
  */
 public class ExternalClient {
 	
+	private static HttpClient httpClient;
+	static {
+		// Strange threading/connection issues were resolved by reusing a single HTTP Client with a high connection count.
+		// The solution was found here:
+		// http://amilachinthaka.blogspot.com/2010/01/improving-axis2-http-transport-client.html
+	    MultiThreadedHttpConnectionManager multiThreadedHttpConnectionManager = new MultiThreadedHttpConnectionManager();
+	    HttpConnectionManagerParams params = new HttpConnectionManagerParams();
+	    params.setDefaultMaxConnectionsPerHost(20);
+	    multiThreadedHttpConnectionManager.setParams(params);
+	    httpClient = new HttpClient(multiThreadedHttpConnectionManager);
+	}
+	
+	protected static final int CONNECTION_TIME_OUT_MILLIS = 5000;
     protected static final int MAX_CONSECUTIVE_FAILURES = 2;
 	private final String name;
     private final int clientPort;
     
     private String namespace = "http://ws.FlyWorkstation.it.janelia.org/";
     private EndpointReference targetEPR;
-    private ServiceClient client;
     private int failures = 0;
     
     public ExternalClient(int clientPort, String name) {
@@ -45,29 +61,39 @@ public class ExternalClient {
     }
     
     public void init(String endpointUrl) throws Exception {
-        
-    	URL endpointURL = new URL(endpointUrl);
-
-    	if (endpointURL.getPort() != clientPort) {
+    	if ((new URL(endpointUrl)).getPort() != clientPort) {
     		throw new Exception("Endpoint's port does not match the reserved port for this client");
     	}
+		this.targetEPR = new EndpointReference(endpointUrl);
+    }
+
+    public ServiceClient getNewClient() throws Exception {
     	
-		targetEPR = new EndpointReference(endpointUrl);
-		
         Options options = new Options();
         options.setTo(targetEPR);
+        options.setTimeOutInMilliSeconds(CONNECTION_TIME_OUT_MILLIS);
         
-        client = new ServiceClient();
+        ServiceClient client = new ServiceClient();
         client.setOptions(options); 
+    	client.getServiceContext().getConfigurationContext().setProperty(HTTPConstants.CACHED_HTTP_CLIENT, httpClient);
+    	
+    	((MultiThreadedHttpConnectionManager)httpClient.getHttpConnectionManager()).closeIdleConnections(0);
+    	
+        return client;
     }
     
     public void sendMessage(String operationName, Map<String,Object> parameters) throws Exception {
 
+    	final ServiceClient client = getNewClient();
+    	
+        System.out.print("Sending "+operationName+" message to "+ name+" ... ");
+        
     	if (targetEPR == null) {
+            System.out.println("no end point!");
     		throw new IllegalStateException("init(String endpointUrl) must be called on the ExternalClient before any other methods.");
     	}
-
-        System.out.println("Sending "+operationName+" message to: "+ targetEPR.getAddress());
+    	
+        System.out.println("at "+ targetEPR.getAddress());
         
         OMFactory fac = OMAbstractFactory.getOMFactory();
         OMNamespace ns = fac.createOMNamespace(namespace, "ns");
@@ -86,6 +112,7 @@ public class ExternalClient {
 			@Override
 			protected void doStuff() throws Exception {
 		        client.fireAndForget(operation);
+		        client.cleanupTransport();
 			}
 			
 			@Override
@@ -101,9 +128,9 @@ public class ExternalClient {
 					error.printStackTrace();
 				}
 				failures++;
-				if (failures > MAX_CONSECUTIVE_FAILURES) {
+				if (failures >= MAX_CONSECUTIVE_FAILURES) {
 					System.out.println("Removing client "+targetEPR.getAddress()+
-							" because it exceeded max number of consecutive failures ("+MAX_CONSECUTIVE_FAILURES+")");
+							" because it exceeded max number of consecutive failures ("+failures+">"+MAX_CONSECUTIVE_FAILURES+")");
 					SessionMgr.getSessionMgr().removeExternalClientByPort(clientPort);
 				}
 			}
