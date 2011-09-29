@@ -20,9 +20,13 @@ import java.util.Map;
  */
 public class TagCloudPanel<T> extends JPanel {
 
+    private static final Border paddingBorder = BorderFactory.createEmptyBorder(5, 5, 5, 5);
+    private static final Border lineBorder = BorderFactory.createLineBorder(Color.black, 1);
+    private static final Border border = BorderFactory.createCompoundBorder(lineBorder, paddingBorder);
+
     private List<T> tags = new ArrayList<T>();
     private Map<T, JLabel> tagLabels = new HashMap<T, JLabel>();
-
+    
     public TagCloudPanel() {
         setLayout(new WrapLayout());
         setOpaque(false);
@@ -56,22 +60,24 @@ public class TagCloudPanel<T> extends JPanel {
         return tagLabels;
     }
 
+    protected JLabel createTagLabel(T tag) {
+        JLabel tagLabel = new JLabel(tag.toString());
+        tagLabel.setBorder(border);
+        tagLabel.setFont(new Font("Sans Serif", Font.BOLD, 12));
+        tagLabel.setOpaque(true);
+        tagLabel.setBackground(Color.white);
+        tagLabel.setForeground(Color.black);
+        return tagLabel;
+    }
+    
     private void refresh() {
 
         tagLabels = new HashMap<T, JLabel>();
         removeAll();
 
-        Border paddingBorder = BorderFactory.createEmptyBorder(5, 5, 5, 5);
-        Border lineBorder = BorderFactory.createLineBorder(Color.black, 1);
-        Border border = BorderFactory.createCompoundBorder(lineBorder, paddingBorder);
-
         for (final T tag : getTags()) {
-            JLabel tagLabel = new JLabel(tag.toString());
-            tagLabel.setBorder(border);
-            tagLabel.setFont(new Font("Sans Serif", Font.BOLD, 12));
-            tagLabel.setOpaque(true);
-            tagLabel.setBackground(Color.white);
-            tagLabel.setForeground(Color.black);
+            
+        	JLabel tagLabel = createTagLabel(tag);
             add(tagLabel);
             tagLabels.put(tag, tagLabel);
 

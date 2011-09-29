@@ -448,8 +448,8 @@ public class DynamicTree extends JPanel {
         navigateToNode(node);
     }
 
-    private DefaultMutableTreeNode getNodeForUserObject(Object targetUserObject, DefaultMutableTreeNode currentNode) {
-        if (currentNode.getUserObject().equals(targetUserObject)) {
+    public DefaultMutableTreeNode getNodeForUserObject(Object targetUserObject, DefaultMutableTreeNode currentNode) {
+        if (currentNode.getUserObject() != null && currentNode.getUserObject().equals(targetUserObject)) {
             return currentNode;
         }
 

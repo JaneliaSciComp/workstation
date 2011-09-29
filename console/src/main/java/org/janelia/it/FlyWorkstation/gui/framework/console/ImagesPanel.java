@@ -9,14 +9,15 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JPanel;
 import javax.swing.Scrollable;
 import javax.swing.SwingWorker;
 
+import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 
 /**
  * Self-adjusting grid of images which may be resized together.
@@ -93,16 +94,6 @@ public class ImagesPanel extends JPanel implements Scrollable {
                 }
             });
 
-            button.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1 && (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
-                        iconDemoPanel.setCurrentEntity(entity);
-                        iconDemoPanel.showCurrentEntityDetails();
-                    }
-                }
-            });
-
             buttons.put(entity.getId().toString(), button);
             buttonGroup.add(button);
             add(button);
@@ -118,10 +109,10 @@ public class ImagesPanel extends JPanel implements Scrollable {
     /**
      * Show the given annotations on the appropriate images.
      */
-    public void loadAnnotations(Map<Long, List<Entity>> annotationMap) {
+    public void loadAnnotations(Annotations annotations) {
         for (AnnotatedImageButton button : buttons.values()) {
-            List<Entity> annotations = annotationMap.get(button.getEntity().getId());
-            button.getTagPanel().setTags(annotations);
+            List<OntologyAnnotation> entityAnnotations = annotations.getAnnotationMap().get(button.getEntity().getId());
+            button.getTagPanel().setTags(entityAnnotations);
         }
     }
 
@@ -167,8 +158,10 @@ public class ImagesPanel extends JPanel implements Scrollable {
 
     public void setSelectedImage(Entity entity) {
         AnnotatedImageButton button = buttons.get(entity.getId().toString());
-        button.setSelected(true);
-        button.requestFocusInWindow();
+        if (button != null) {
+	        button.setSelected(true);
+	        button.requestFocusInWindow();
+        }
     }
 
     /**

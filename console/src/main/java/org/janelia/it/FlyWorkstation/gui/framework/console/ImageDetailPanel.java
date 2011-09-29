@@ -12,11 +12,12 @@ import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 
 /**
  * A panel which displays a single image entity with information about it.
@@ -32,7 +33,7 @@ public class ImageDetailPanel extends JPanel {
     private final JLabel imageCaption;
     private final JLabel imageLabel;
     private final JPanel southernPanel;
-    private final EntityTagCloudPanel tagPanel;
+    private final AnnotationTagCloudPanel tagPanel;
 
     private SimpleWorker imageWorker;
     private SimpleWorker dataWorker;
@@ -80,7 +81,7 @@ public class ImageDetailPanel extends JPanel {
         splitPane.setResizeWeight(0.85);
         add(splitPane, BorderLayout.CENTER);
 
-        this.tagPanel = new EntityTagCloudPanel();
+        this.tagPanel = new AnnotationTagCloudPanel();
 
         // Remove the scrollpane's listeners so that mouse wheel events get propagated up
         for (MouseWheelListener l : scrollPane.getMouseWheelListeners()) {
@@ -228,7 +229,7 @@ public class ImageDetailPanel extends JPanel {
         return toolBar;
     }
 
-    public EntityTagCloudPanel getTagPanel() {
+    public AnnotationTagCloudPanel getTagPanel() {
         return tagPanel;
     }
 
@@ -257,8 +258,11 @@ public class ImageDetailPanel extends JPanel {
     /**
      * Show the given annotations on the appropriate images.
      */
-    public void loadAnnotations(List<Entity> annotations) {
-    	tagPanel.setTags(annotations);
+    public void loadAnnotations(Annotations annotations) {
+    	if (entity == null) return;
+    	List<OntologyAnnotation> tags = annotations.getAnnotationMap().get(entity.getId());
+    	// TODO: filter the tags
+    	tagPanel.setTags(tags);
         southernPanel.removeAll();
         southernPanel.add(tagPanel, BorderLayout.CENTER);
     }

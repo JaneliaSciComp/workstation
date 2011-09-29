@@ -11,7 +11,6 @@ import java.awt.Color;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -22,7 +21,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.application.SplashPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
@@ -40,8 +39,6 @@ public class IconDemoPanel extends JPanel {
     private static final String JACS_DATA_PATH_MAC = ConsoleProperties.getString("remote.defaultMacPath");
     private static final String JACS_DATA_PATH_LINUX = ConsoleProperties.getString("remote.defaultLinuxPath");
 
-    private AnnotationSession session;
-
     private SplashPanel splashPanel;
     private JToolBar toolbar;
     private JToggleButton showTitlesButton;
@@ -55,6 +52,9 @@ public class IconDemoPanel extends JPanel {
     private List<Entity> entities;
     private Entity currentEntity;
     private boolean viewingSingleImage = true;
+    
+    private Annotations annotations;
+    
 
     // Listen for key strokes and execute the appropriate key bindings
     private KeyListener keyListener = new KeyAdapter() {
@@ -122,7 +122,17 @@ public class IconDemoPanel extends JPanel {
 			public void annotationsChanged(long entityId) {
 				reloadAnnotations();
 			}
-        	
+
+			@Override
+			public void sessionSelected(long sessionId) {
+	        	loadImageEntities(ModelMgr.getModelMgr().getCurrentAnnotationSession().getEntities());
+			}
+
+			@Override
+			public void sessionDeselected() {
+	        	clear();
+			}
+			
         });
     }
 
@@ -234,18 +244,22 @@ public class IconDemoPanel extends JPanel {
     	}
     }
     
-    public void loadImageEntities(final AnnotationSession session) {
-
-        this.session = session;
-
+    public void clear() {
+    	this.entities = null;
+    	this.currentEntity = null;
+    	this.viewingSingleImage = false;
+        removeAll();
+    	add(splashPanel);
+        updateUI();
+    }
+    
+    public void loadImageEntities(final List<Entity> entities) {
+    	
         SimpleWorker loadingWorker = new SimpleWorker() {
-
-            private Map<Long, List<Entity>> annotationMap;
 
             protected void doStuff() throws Exception {
                 List<Entity> loadedEntities = new ArrayList<Entity>();
-                List<Entity> allEntities = session.getEntities();
-                for (Entity entity : allEntities) {
+                for (Entity entity : entities) {
                     if (!entity.getEntityType().getName().equals(EntityConstants.TYPE_TIF_2D) 
                     		&& !entity.getEntityType().getName().equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
                         // Ignore things we can't display
@@ -254,12 +268,13 @@ public class IconDemoPanel extends JPanel {
                     loadedEntities.add(entity);
                 }
                 setEntities(loadedEntities);
-                annotationMap = session.getAnnotationMap();
+                annotations = new Annotations(loadedEntities);
+                annotations.init();
             }
 
             protected void hadSuccess() {
                 imagesPanel.load(getEntities());
-                imagesPanel.loadAnnotations(annotationMap);
+                imagesPanel.loadAnnotations(annotations);
                 setTitleVisbility();
                 setTagVisbility();
                 showAllEntities();
@@ -284,21 +299,19 @@ public class IconDemoPanel extends JPanel {
 
     public void reloadAnnotations() {
 
-        if (session == null) return;
-    	session.clearDerivedProperties();
+        if (annotations == null) return;
+        annotations = new Annotations(entities);
 
         SimpleWorker loadingWorker = new SimpleWorker() {
 
-            private Map<Long, List<Entity>> annotationMap;
-
             protected void doStuff() throws Exception {
-                annotationMap = session.getAnnotationMap();
+                annotations.init();
             }
 
             protected void hadSuccess() {
-                imagesPanel.loadAnnotations(annotationMap);
+                imagesPanel.loadAnnotations(annotations);
                 if (currentEntity != null)
-                	imageDetailPanel.loadAnnotations(annotationMap.get(currentEntity.getId()));
+                	imageDetailPanel.loadAnnotations(annotations);
             }
 
             protected void hadError(Throwable error) {
@@ -311,25 +324,28 @@ public class IconDemoPanel extends JPanel {
     }
 
     public synchronized void showAllEntities() {
-        if (viewingSingleImage) {
-            viewingSingleImage = false;
-            removeAll();
-            add(toolbar, BorderLayout.NORTH);
-            add(scrollPane, BorderLayout.CENTER);
-        }
+        viewingSingleImage = false;
+        removeAll();
+        add(toolbar, BorderLayout.NORTH);
+        add(scrollPane, BorderLayout.CENTER);
         updateUI();
     }
 
     public synchronized void showCurrentEntityDetails() {
     	if (currentEntity == null) return;
-        imageDetailPanel.load(currentEntity);
-    	imageDetailPanel.loadAnnotations(session.getAnnotationMap().get(currentEntity.getId()));
-        if (!viewingSingleImage) {
+        
+    	imageDetailPanel.load(currentEntity);
+    	if (annotations != null) {
+        	imageDetailPanel.loadAnnotations(annotations);
+        }
+        
+    	if (!viewingSingleImage) {
             viewingSingleImage = true;
             removeAll();
             add(imageDetailPanel);
         }
-        updateUI();
+        
+    	updateUI();
 
         // Focus on the panel so that it can receive keyboard input
         requestFocusInWindow();
@@ -376,6 +392,9 @@ public class IconDemoPanel extends JPanel {
     }
 
     public synchronized void setCurrentEntity(Entity entity) {
+        if (entity != null && (currentEntity == null || !entity.getId().equals(currentEntity.getId()))) {
+        	ModelMgr.getModelMgr().notifyEntitySelected(entity.getId());
+        }
         this.currentEntity = entity;
         imagesPanel.setSelectedImage(currentEntity);
     }

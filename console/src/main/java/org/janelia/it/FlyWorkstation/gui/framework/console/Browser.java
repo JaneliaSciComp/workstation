@@ -1098,6 +1098,10 @@ public class Browser extends JFrame implements Cloneable {
         return viewerPanel;
     }
 
+    public EntityOutline getEntityOutline() {
+        return entityOutline;
+    }
+    
     public OntologyOutline getOntologyOutline() {
         return ontologyOutline;
     }
