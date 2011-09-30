@@ -111,7 +111,7 @@ public class ImagesPanel extends JPanel implements Scrollable {
      */
     public void loadAnnotations(Annotations annotations) {
         for (AnnotatedImageButton button : buttons.values()) {
-            List<OntologyAnnotation> entityAnnotations = annotations.getAnnotationMap().get(button.getEntity().getId());
+        	List<OntologyAnnotation> entityAnnotations = annotations.getFilteredAnnotationMap().get(button.getEntity().getId());
             button.getTagPanel().setTags(entityAnnotations);
         }
     }

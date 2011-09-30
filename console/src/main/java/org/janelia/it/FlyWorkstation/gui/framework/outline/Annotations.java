@@ -19,73 +19,71 @@ public class Annotations {
 	
     protected List<Entity> entities;
     protected List<OntologyAnnotation> annotations;
-    protected Map<Long, List<OntologyAnnotation>> annotationMap;
+    protected AnnotationFilter filter;
     
-	public Annotations(List<Entity> entities) {
-		this.entities = entities;
+	public Annotations() {
 	}
 
     public List<Entity> getEntities() {
 		return entities;
 	}
 	
-    public void init() {
-    	getAnnotationMap();
+    public void init(List<Entity> entities) {
+		this.entities = entities;
+		this.annotations = new ArrayList<OntologyAnnotation>();
+		
+        List<Long> entityIds = new ArrayList<Long>();
+        for (Entity entity : entities) {
+            entityIds.add(entity.getId());
+        }
+        try {
+            for(Entity entityAnnot : ModelMgr.getModelMgr().getAnnotationsForEntities(entityIds)) {
+            	OntologyAnnotation annotation = new OntologyAnnotation();
+            	annotation.init(entityAnnot);
+            	annotations.add(annotation);
+            }
+        }
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
     }
     
-    public List<OntologyAnnotation> getAnnotations() {
-    	if (entities == null) return new ArrayList<OntologyAnnotation>();
-        if (annotations == null) {
-            List<Long> entityIds = new ArrayList<Long>();
-            for (Entity entity : entities) {
-                entityIds.add(entity.getId());
-            }
-            try {
-                annotations = new ArrayList<OntologyAnnotation>();
-                for(Entity entityAnnot : ModelMgr.getModelMgr().getAnnotationsForEntities(entityIds)) {
-                	OntologyAnnotation oa = new OntologyAnnotation();
-                	oa.init(entityAnnot);
-                	annotations.add(oa);
-                }
-            }
-            catch (Exception e) {
-                SessionMgr.getSessionMgr().handleException(e);
-                return new ArrayList<OntologyAnnotation>();
-            }
+    public void setFilter(AnnotationFilter filter) {
+		this.filter = filter;
+	}
+    
+	public List<OntologyAnnotation> getAnnotations() {
+		return annotations;
+	}
+    
+	public List<OntologyAnnotation> getFilteredAnnotations() {
+    	List<OntologyAnnotation> filtered = new ArrayList<OntologyAnnotation>();
+        for(OntologyAnnotation annotation : annotations) {
+        	if (filter!=null && !filter.accept(annotation)) continue;
+        	filtered.add(annotation);
         }
-        
-        return annotations;
+        return filtered;
     }
 
-    public Map<Long, List<OntologyAnnotation>> getAnnotationMap() {
-        if (annotationMap == null) {
-            annotationMap = mapAnnotations(entities, getAnnotations());
-        }
-        return annotationMap;
-    }
-
-    private Map<Long, List<OntologyAnnotation>> mapAnnotations(List<Entity> entities, List<OntologyAnnotation> annotations) {
-
+    public Map<Long, List<OntologyAnnotation>> getFilteredAnnotationMap() {
+    	Map<Long, List<OntologyAnnotation>> filteredMap = new HashMap<Long, List<OntologyAnnotation>>();
+    	
         Map<Long, Entity> entityMap = new HashMap<Long, Entity>();
-        Map<Long, List<OntologyAnnotation>> map = new HashMap<Long, List<OntologyAnnotation>>();
-
-        if (entities == null) return map;
-        
         for (Entity entity : entities) {
             entityMap.put(entity.getId(), entity);
         }
 
-        for (OntologyAnnotation oa : annotations) {
-            Entity entity = entityMap.get(oa.getTargetEntityId());
+        for (OntologyAnnotation annotation : getFilteredAnnotations()) {
+            Entity entity = entityMap.get(annotation.getTargetEntityId());
             if (entity == null) continue;
-            List<OntologyAnnotation> oas = map.get(entity.getId());
+            List<OntologyAnnotation> oas = filteredMap.get(entity.getId());
             if (oas == null) {
                 oas = new ArrayList<OntologyAnnotation>();
-                map.put(entity.getId(), oas);
+                filteredMap.put(entity.getId(), oas);
             }
-            oas.add(oa);
+            oas.add(annotation);
         }
-
-        return map;
+        
+        return filteredMap;
     }
 }

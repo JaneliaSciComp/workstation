@@ -260,8 +260,7 @@ public class ImageDetailPanel extends JPanel {
      */
     public void loadAnnotations(Annotations annotations) {
     	if (entity == null) return;
-    	List<OntologyAnnotation> tags = annotations.getAnnotationMap().get(entity.getId());
-    	// TODO: filter the tags
+    	List<OntologyAnnotation> tags = annotations.getFilteredAnnotationMap().get(entity.getId());
     	tagPanel.setTags(tags);
         southernPanel.removeAll();
         southernPanel.add(tagPanel, BorderLayout.CENTER);

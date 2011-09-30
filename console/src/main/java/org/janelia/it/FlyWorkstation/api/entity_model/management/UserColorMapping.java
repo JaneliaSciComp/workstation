@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.api.entity_model.management;
 import java.awt.Color;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 
@@ -13,6 +14,8 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
  */
 public class UserColorMapping {
 
+	private static final Color currentUserColor = Color.white;
+	
 	private static final String[] colorCycle = { 
 			"CBBEF7", // blue
 			"BEF7DB", // mint
@@ -45,12 +48,18 @@ public class UserColorMapping {
 	 * @return
 	 */
     public Color getColor(String username) {
-    	if (username.equals(SessionMgr.getUsername())) {
-    		return Color.white;
-    	}
     	if (!userColors.containsKey(username)) {
-    		userColors.put(username, nextColor());
+    		Color color = username.equals(SessionMgr.getUsername()) ? currentUserColor : nextColor();
+    		userColors.put(username, color);
     	}
     	return userColors.get(username);
+    }
+    
+    /**
+     * Returns the set of usernames which have been registered and assigned a unique color. 
+     * @return
+     */
+    public Set<String> getUsernames() {
+    	return userColors.keySet();
     }
 }
