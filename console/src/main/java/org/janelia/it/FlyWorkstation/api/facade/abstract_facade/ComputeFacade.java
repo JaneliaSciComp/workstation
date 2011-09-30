@@ -15,6 +15,8 @@ public interface ComputeFacade {
 
     public Task saveOrUpdateTask(Task task) throws Exception;
 
+    public Task getTaskById(Long taskId) throws Exception;
+    
     public void deleteTaskById(Long taskId) throws Exception;
 
     public List<Task> getUserTasksByType(String taskName) throws Exception;

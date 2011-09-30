@@ -74,7 +74,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> {
         JMenuItem detailsItem = new JMenuItem("  View details");
         detailsItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-            	
+            	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().viewAnnotationDetails(tag);
             }
         });
         popupMenu.add(detailsItem);

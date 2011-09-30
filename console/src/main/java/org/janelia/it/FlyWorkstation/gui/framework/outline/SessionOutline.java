@@ -37,7 +37,6 @@ public class SessionOutline extends JPanel {
     private static final String ANNOTATION_SESSIONS = "Annotation Sessions";
 
     private Browser consoleFrame;
-    private JPopupMenu popupMenu;
 
     protected final JPanel treesPanel;
     private DynamicTree dynamicTree;
@@ -137,9 +136,13 @@ public class SessionOutline extends JPanel {
                 if (o instanceof AnnotationSession) {
                     final AnnotationSession session = (AnnotationSession) o;
 
-                    popupMenu = new JPopupMenu();
+                    JPopupMenu popupMenu = new JPopupMenu();
 
-                    JMenuItem editMenuItem = new JMenuItem("Edit");
+                    JMenuItem titleMenuItem = new JMenuItem(session.getName());
+                    titleMenuItem.setEnabled(false);
+                    popupMenu.add(titleMenuItem);
+                    
+                    JMenuItem editMenuItem = new JMenuItem("  Edit");
                     editMenuItem.addActionListener(new ActionListener() {
                         public void actionPerformed(ActionEvent actionEvent) {
                             SessionMgr.getSessionMgr().getActiveBrowser().getAnnotationSessionPropertyPanel().showForSession(session);
@@ -148,7 +151,7 @@ public class SessionOutline extends JPanel {
                     popupMenu.add(editMenuItem);
 
                     if (session.getTask().getOwner().equals(SessionMgr.getUsername())) {
-                        JMenuItem deleteMenuItem = new JMenuItem("Delete");
+                        JMenuItem deleteMenuItem = new JMenuItem("  Delete");
                         deleteMenuItem.addActionListener(new ActionListener() {
                             public void actionPerformed(ActionEvent actionEvent) {
                                 deleteSession(session);

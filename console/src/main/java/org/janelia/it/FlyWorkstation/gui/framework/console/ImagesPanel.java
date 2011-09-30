@@ -78,7 +78,7 @@ public class ImagesPanel extends JPanel implements Scrollable {
             String filepath = iconDemoPanel.getFilePath(entity);
             File file = new File(iconDemoPanel.convertImagePath(filepath));
 
-            final AnnotatedImageButton button = new AnnotatedImageButton(file.getName(), file.getAbsolutePath(), i, entity);
+            final AnnotatedImageButton button = new AnnotatedImageButton(entity.getName(), file.getAbsolutePath(), i, entity);
 
             button.addKeyListener(iconDemoPanel.getKeyListener());
 

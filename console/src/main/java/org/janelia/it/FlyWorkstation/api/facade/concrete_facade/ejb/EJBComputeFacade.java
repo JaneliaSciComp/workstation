@@ -21,6 +21,12 @@ public class EJBComputeFacade implements ComputeFacade {
     }
 
     @Override
+    public Task getTaskById(Long taskId) throws Exception {
+    	if (taskId == null) return null;
+        return EJBFactory.getRemoteComputeBean().getTaskById(taskId);
+    }
+
+    @Override
     public void deleteTaskById(Long taskId) throws Exception {
         EJBFactory.getRemoteComputeBean().deleteTaskById(taskId);
     }

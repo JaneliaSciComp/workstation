@@ -54,13 +54,17 @@ public class AggregateComputeFacade extends AggregateFacadeBase implements Compu
     }
 
     @Override
+    public Task getTaskById(Long taskId) throws Exception {
+		throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void deleteTaskById(Long taskId) throws Exception {
         Object[] aggregates = getAggregates();
         for (Object aggregate : aggregates) {
             ((ComputeFacade) aggregate).deleteTaskById(taskId);
         }
     }
-
     @Override
     public List<Task> getUserTasksByType(String taskName) throws Exception {
         Object[] aggregates = getAggregates();

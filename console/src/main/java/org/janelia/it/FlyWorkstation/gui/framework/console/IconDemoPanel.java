@@ -26,6 +26,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -50,9 +51,12 @@ public class IconDemoPanel extends JPanel {
     private JSlider slider;
     private JToggleButton invertButton;
     private JToggleButton onlySessionButton;
+    private JToggleButton hideCompletedButton; 
+    
     private ImagesPanel imagesPanel;
     private JScrollPane scrollPane;
     private ImageDetailPanel imageDetailPanel;
+    private AnnotationDetailsDialog annotationDetailsDialog;
 
     private List<Entity> entities;
     private Entity currentEntity;
@@ -97,7 +101,8 @@ public class IconDemoPanel extends JPanel {
         toolbar = createToolbar();
         imagesPanel = new ImagesPanel(this);
         imageDetailPanel = new ImageDetailPanel(this);
-
+        annotationDetailsDialog = new AnnotationDetailsDialog();
+        
         scrollPane = new JScrollPane();
         scrollPane.setViewportView(imagesPanel);
 
@@ -175,56 +180,9 @@ public class IconDemoPanel extends JPanel {
         toolBar.setFloatable(true);
         toolBar.setRollover(true);
 
-        toolBar.add(new JLabel("Show:"));
-
-        showTitlesButton = new JToggleButton("Titles");
-        showTitlesButton.setSelected(true);
-        showTitlesButton.setToolTipText("Show the image title above each image.");
-        showTitlesButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-            	setTitleVisbility();
-                getImagesPanel().recalculateGrid();
-            }
-        });
-        toolBar.add(showTitlesButton);
-
-        showTagsButton = new JToggleButton("Tags");
-        showTagsButton.setSelected(true);
-        showTagsButton.setToolTipText("Show tags below each images");
-        showTagsButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-            	setTagVisbility();
-                getImagesPanel().recalculateGrid();
-            }
-        });
-        toolBar.add(showTagsButton);
-
-        toolBar.addSeparator();
-
-        userButton = new JButton("Show annotations by...");
-        userButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-            	showPopupUserMenu();
-            }
-        });
-        toolBar.add(userButton);
-        
-        toolBar.addSeparator();
-
-        onlySessionButton = new JToggleButton("Current session only");
-        onlySessionButton.setToolTipText("Only show annotations within the current annotation session");
-        onlySessionButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-            	refreshAnnotations();
-            }
-        });
-        toolBar.add(onlySessionButton);
-        
-        invertButton = new JToggleButton("Invert colors");
+        invertButton = new JToggleButton();
+        invertButton.setIcon(Icons.getIcon("invert.png"));
+        invertButton.setFocusable(false);
         invertButton.setToolTipText("Invert the color space on all images");
         invertButton.addActionListener(new ActionListener() {
             @Override
@@ -242,8 +200,51 @@ public class IconDemoPanel extends JPanel {
             }
         });
         toolBar.add(invertButton);
+        
+        showTitlesButton = new JToggleButton();
+        showTitlesButton.setIcon(Icons.getIcon("text_smallcaps.png"));
+        showTitlesButton.setFocusable(false);
+        showTitlesButton.setSelected(true);
+        showTitlesButton.setToolTipText("Show the image title above each image.");
+        showTitlesButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+            	setTitleVisbility();
+                getImagesPanel().recalculateGrid();
+            }
+        });
+        toolBar.add(showTitlesButton);
 
-        final JToggleButton hideCompletedButton = new JToggleButton("Hide completed");
+        showTagsButton = new JToggleButton();
+        showTagsButton.setIcon(Icons.getIcon("page_white_stack.png"));
+        showTagsButton.setFocusable(false);
+        showTagsButton.setSelected(true);
+        showTagsButton.setToolTipText("Show annotations below each image");
+        showTagsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+            	setTagVisbility();
+                getImagesPanel().recalculateGrid();
+            }
+        });
+        toolBar.add(showTagsButton);
+
+        onlySessionButton = new JToggleButton();
+        onlySessionButton.setIcon(Icons.getIcon("cart.png"));
+        onlySessionButton.setFocusable(false);
+        onlySessionButton.setToolTipText("Only show annotations within the current annotation session");
+        onlySessionButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+            	refreshAnnotations();
+            }
+        });
+        toolBar.add(onlySessionButton);
+        
+
+        hideCompletedButton = new JToggleButton();
+        hideCompletedButton.setIcon(Icons.getIcon("page_white_go.png"));
+        hideCompletedButton.setFocusable(false);
         hideCompletedButton.setToolTipText("Hide images which have been annotated completely according to the annotation session's ruleset.");
         hideCompletedButton.addActionListener(new ActionListener() {
             @Override
@@ -253,6 +254,19 @@ public class IconDemoPanel extends JPanel {
         });
         toolBar.add(hideCompletedButton);
 
+        toolBar.addSeparator();
+
+        userButton = new JButton("Annotations from...");
+        userButton.setIcon(Icons.getIcon("group.png"));
+        userButton.setFocusable(false);
+        userButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+            	showPopupUserMenu();
+            }
+        });
+        toolBar.add(userButton);
+        
         toolBar.addSeparator();
 
         slider = new JSlider(1, 100, 100);
@@ -303,6 +317,7 @@ public class IconDemoPanel extends JPanel {
                 	refreshAnnotations();
                 }
             });
+            userMenuItem.setIcon(Icons.getIcon("user.png"));
             userListMenu.add(userMenuItem);
         }
         
@@ -497,11 +512,16 @@ public class IconDemoPanel extends JPanel {
         return invertButton.isSelected();
     }
 
+	public void viewAnnotationDetails(OntologyAnnotation tag) {
+		annotationDetailsDialog.showForAnnotation(tag);
+	}
+	
     // TODO: need a more general way of doing this
     public String convertImagePath(String filepath) {
         return filepath.replace(JACS_DATA_PATH_LINUX, JACS_DATA_PATH_MAC);
     }
 
+    // TODO: should this go in some kind of utility class?
     public String getFilePath(Entity entity) {
     	if (entity.getEntityType().getName().equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
     		for(Entity childEntity : entity.getChildren()) {

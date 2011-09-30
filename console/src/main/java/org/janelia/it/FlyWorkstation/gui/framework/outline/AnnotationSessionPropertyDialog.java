@@ -56,7 +56,8 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
         GridBagConstraints c = new GridBagConstraints();
 
         JPanel attrPanel = new JPanel(new GridBagLayout());
-        attrPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10), BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Session Properties")));
+        attrPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10), 
+        		BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Session Properties")));
 
 
         JLabel nameLabel = new JLabel("Name: ");

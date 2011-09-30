@@ -35,12 +35,7 @@ public class Icons {
      * @return
      */
     public static Icon getLoadingIcon() {
-    	try {
-    		return getIcon("spinner.gif");
-    	}
-    	catch (FileNotFoundException e) {
-    		return null;
-    	}
+    	return getIcon("spinner.gif");
     }
 
     /**
@@ -48,12 +43,7 @@ public class Icons {
      * @return
      */
     public static Icon getExpandAllIcon() {
-    	try {
-        	return getIcon("expand_all.png");
-    	}
-    	catch (FileNotFoundException e) {
-    		return null;
-    	}
+    	return getIcon("expand_all.png");
     }
 
     /**
@@ -61,12 +51,7 @@ public class Icons {
      * @return
      */
     public static Icon getCollapseAllIcon() {
-    	try {
-        	return getIcon("collapse_all.png");
-    	}
-    	catch (FileNotFoundException e) {
-    		return null;
-    	}
+    	return getIcon("collapse_all.png");
     }
     
     /**
@@ -76,11 +61,16 @@ public class Icons {
      * @return
      * @throws FileNotFoundException
      */
-    public static ImageIcon getIcon(String filename) throws FileNotFoundException {
+    public static ImageIcon getIcon(String filename) {
     	if (cache.containsKey(filename)) return cache.get(filename);
-    	ImageIcon icon = Utils.getClasspathImage(filename);
-    	cache.put(filename, icon);
-    	return icon;
+    	try {
+	    	ImageIcon icon = Utils.getClasspathImage(filename);
+	    	cache.put(filename, icon);
+	    	return icon;
+    	} 
+    	catch (FileNotFoundException e) {
+    		return null;
+    	}
     }
     
     /**
@@ -91,28 +81,23 @@ public class Icons {
     public static ImageIcon getOntologyIcon(Entity entity) {
         String type = entity.getValueByAttributeName("Ontology Term Type");
 
-        try {
-            if ("Category".equals(type))
-                return getIcon("folder.png");
+        if ("Category".equals(type))
+            return getIcon("folder.png");
 
-            else if ("Enum".equals(type))
-                return getIcon("folder_page.png");
+        else if ("Enum".equals(type))
+            return getIcon("folder_page.png");
 
-            else if ("Interval".equals(type))
-                return getIcon("page_white_code.png");
+        else if ("Interval".equals(type))
+            return getIcon("page_white_code.png");
 
-            else if ("Tag".equals(type))
-                return getIcon("page_white.png");
+        else if ("Tag".equals(type))
+            return getIcon("page_white.png");
 
-            else if ("Text".equals(type))
-                return getIcon("page_white_text.png");
+        else if ("Text".equals(type))
+            return getIcon("page_white_text.png");
 
-            else if ("EnumItem".equals(type))
-                return getIcon("page.png");
-        }
-        catch (FileNotFoundException e) {
-        	e.printStackTrace();
-        }
+        else if ("EnumItem".equals(type))
+            return getIcon("page.png");
 
         return null;
     }
@@ -127,40 +112,35 @@ public class Icons {
     public static ImageIcon getIcon(Entity entity) {
         String type = entity.getEntityType().getName();
         
-        try {
-	        if ("Folder".equals(type)) {
-	            return getIcon("folder.png");
-	        }
-	        else if ("LSM Stack Pair".equals(type)) {
-	            return getIcon("folder_image.png");
-	        }
-	        else if ("Neuron Separator Pipeline Result".equals(type)) {
-	            return getIcon("folder_image.png");
-	        }
-	        else if ("Sample".equals(type)) {
-	            return getIcon("beaker.png");
-	        }
-	        else if ("Tif 2D Image".equals(type)) {
-	            return getIcon("image.png");
-	        }
-	        else if ("Tif 3D Image".equals(type) || "LSM Stack".equals(type) || "Tif 3D Label Mask".equals(type) || "Stitched V3D Raw Stack".equals(type)) {
-	            return getIcon("images.png");
-	        }
-	        else if ("Neuron Fragment".equals(type)) {
-	            return getIcon("brick.png");
-	        }
-	        else if ("Supporting Data".equals(type)) {
-	            return getIcon("folder_page.png");
-	        }
-	        else if ("Ontology Element".equals(type) || "Ontology Root".equals(type)) {
-	            return getOntologyIcon(entity);
-	        }
-	        else if ("Annotation".equals(type)) {
-	            return getIcon("page_white_edit.png");
-	        }
+        if ("Folder".equals(type)) {
+            return getIcon("folder.png");
         }
-        catch (FileNotFoundException e) {
-        	e.printStackTrace();
+        else if ("LSM Stack Pair".equals(type)) {
+            return getIcon("folder_image.png");
+        }
+        else if ("Neuron Separator Pipeline Result".equals(type)) {
+            return getIcon("folder_image.png");
+        }
+        else if ("Sample".equals(type)) {
+            return getIcon("beaker.png");
+        }
+        else if ("Tif 2D Image".equals(type)) {
+            return getIcon("image.png");
+        }
+        else if ("Tif 3D Image".equals(type) || "LSM Stack".equals(type) || "Tif 3D Label Mask".equals(type) || "Stitched V3D Raw Stack".equals(type)) {
+            return getIcon("images.png");
+        }
+        else if ("Neuron Fragment".equals(type)) {
+            return getIcon("brick.png");
+        }
+        else if ("Supporting Data".equals(type)) {
+            return getIcon("folder_page.png");
+        }
+        else if ("Ontology Element".equals(type) || "Ontology Root".equals(type)) {
+            return getOntologyIcon(entity);
+        }
+        else if ("Annotation".equals(type)) {
+            return getIcon("page_white_edit.png");
         }
 
         return null;

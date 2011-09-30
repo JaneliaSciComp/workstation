@@ -23,6 +23,7 @@ import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
 import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
 import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 import org.janelia.it.jacs.model.user_data.User;
 import org.janelia.it.jacs.model.user_data.prefs.UserPreference;
 
@@ -407,8 +408,16 @@ public class ModelMgr {
     	if (annotationSession.getId().equals(sessionId)) {
     		return annotationSession;
     	}
-        // TODO: implement this for completeness, although it's not really needed right now
-    	throw new UnsupportedOperationException();
+        
+    	Task task = getTaskById(sessionId);
+    	if (task == null) return null;
+    	if (task instanceof AnnotationSessionTask) {
+    		AnnotationSessionTask ast = (AnnotationSessionTask)task;
+    		return new AnnotationSession(ast);
+    	}
+    	
+    	return null;
+    	
     }
     
     public List<Entity> getCommonRootEntitiesByTypeName(String entityTypeName) {
@@ -494,6 +503,10 @@ public class ModelMgr {
 
     public Task saveOrUpdateTask(Task task) throws Exception {
         return FacadeManager.getFacadeManager().getComputeFacade().saveOrUpdateTask(task);
+    }
+
+    public Task getTaskById(Long taskId) throws Exception {
+        return FacadeManager.getFacadeManager().getComputeFacade().getTaskById(taskId);
     }
 
     public void deleteTaskById(Long taskId) throws Exception {
