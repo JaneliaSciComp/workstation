@@ -261,7 +261,9 @@ public class EntityOutline extends EntityTree implements Cloneable {
         
         String type = entity.getEntityType().getName();
 
-        if (type.equals(EntityConstants.TYPE_TIF_2D) || type.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
+        if (type.equals(EntityConstants.TYPE_TIF_2D) 
+        		|| type.equals(EntityConstants.TYPE_NEURON_FRAGMENT) 
+        		|| type.equals(EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION)) {
         	List<Entity> entities = entity.getDescendantsOfType(type);
         	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(entities);
         }
