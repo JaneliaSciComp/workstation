@@ -7,7 +7,6 @@ import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.*;
@@ -32,6 +31,7 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 public class EntityOutline extends EntityTree implements Cloneable {
     
     private List<Entity> entityRootList;
+    private Entity selectedEntity;
     
     public EntityOutline() {
     	super(true);
@@ -74,7 +74,9 @@ public class EntityOutline extends EntityTree implements Cloneable {
         final DefaultMutableTreeNode node = selectedTree.getCurrentNode();
         final Entity entity = (Entity) node.getUserObject();
     	if (entity == null) return;
-    	
+
+        selectNode(node);
+        
         // Create context menus
         JPopupMenu popupMenu = new JPopupMenu();
         
@@ -129,7 +131,7 @@ public class EntityOutline extends EntityTree implements Cloneable {
 
                         protected void doneLoading() {
                             Utils.setDefaultCursor(EntityOutline.this);
-                            List<Entity> entities = getDescendantsOfType(entity, EntityConstants.TYPE_TIF_2D);
+                            List<Entity> entities = entity.getDescendantsOfType(EntityConstants.TYPE_TIF_2D);
                             SessionMgr.getSessionMgr().getActiveBrowser().getAnnotationSessionPropertyPanel().showForNewSession(entity.getName(), entities);
                             SwingUtilities.updateComponentTreeUI(EntityOutline.this);
                         }
@@ -166,7 +168,7 @@ public class EntityOutline extends EntityTree implements Cloneable {
 
                         protected void doneLoading() {
                             Utils.setDefaultCursor(EntityOutline.this);
-                            List<Entity> entities = getDescendantsOfType(entity, EntityConstants.TYPE_NEURON_FRAGMENT);
+                            List<Entity> entities = entity.getDescendantsOfType(EntityConstants.TYPE_NEURON_FRAGMENT);
                             SessionMgr.getSessionMgr().getActiveBrowser().getAnnotationSessionPropertyPanel().showForNewSession(entity.getName(), entities);
                             SwingUtilities.updateComponentTreeUI(EntityOutline.this);
                         }
@@ -192,7 +194,6 @@ public class EntityOutline extends EntityTree implements Cloneable {
             JMenuItem v3dMenuItem = new JMenuItem("  View in V3D (Neuron Annotator)");
             v3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
-                    selectNode(node);
                     if (ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(entity.getId())) {
                     	// Success
                     	return;
@@ -228,7 +229,7 @@ public class EntityOutline extends EntityTree implements Cloneable {
     }
     
     private void viewImageEntities(Entity entity) {
-        List<Entity> entities = getDescendantsOfType(entity, EntityConstants.TYPE_TIF_2D);
+        List<Entity> entities = entity.getDescendantsOfType(EntityConstants.TYPE_TIF_2D);
     	if (entities.isEmpty()) return;
     	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(entities);
     }
@@ -248,20 +249,20 @@ public class EntityOutline extends EntityTree implements Cloneable {
      */
     protected void nodeDoubleClicked(MouseEvent e) {
     }
-    
 
     private void selectNode(DefaultMutableTreeNode node) {
-
         if (node instanceof LazyTreeNode) return;
     	final Entity entity = (Entity) node.getUserObject();
+    	
+    	if (selectedEntity == entity) return;
+    	selectedEntity = entity;
+    	
         ModelMgr.getModelMgr().notifyEntitySelected(entity.getId());
         
         String type = entity.getEntityType().getName();
-        List<Entity> entities = new ArrayList<Entity>();
 
-        if (type.equals(EntityConstants.TYPE_TIF_2D)) {
-            entities.add(entity);
-        	if (entities.isEmpty()) return;
+        if (type.equals(EntityConstants.TYPE_TIF_2D) || type.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
+        	List<Entity> entities = entity.getDescendantsOfType(type);
         	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(entities);
         }
         else if (type.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
@@ -289,6 +290,9 @@ public class EntityOutline extends EntityTree implements Cloneable {
             };
 
             loadingWorker.execute();
+        }
+        else {
+        	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().clear();
         }
     }
 }

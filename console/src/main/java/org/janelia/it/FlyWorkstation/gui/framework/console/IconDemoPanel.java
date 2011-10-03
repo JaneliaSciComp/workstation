@@ -79,12 +79,13 @@ public class IconDemoPanel extends JPanel {
 
                 if (e.getKeyCode() == KeyEvent.VK_LEFT) {
                     previousEntity();
-                    updateUI();
                 }
                 else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
                     nextEntity();
-                    updateUI();
                 }
+                
+                revalidate();
+                repaint();
             }
         }
     };
@@ -324,15 +325,6 @@ public class IconDemoPanel extends JPanel {
     	userListMenu.show(userButton, 0, userButton.getHeight());
     }
     
-    public synchronized void clear() {
-    	this.entities = null;
-    	this.currentEntity = null;
-    	this.viewingSingleImage = false;
-        removeAll();
-    	add(splashPanel);
-        updateUI();
-    }
-    
     public synchronized void loadImageEntities(final List<Entity> entities) {
     	
         SimpleWorker loadingWorker = new SimpleWorker() {
@@ -419,13 +411,26 @@ public class IconDemoPanel extends JPanel {
 
         loadingWorker.execute();
     }
+    
+    public synchronized void clear() {
+    	this.entities = null;
+    	this.currentEntity = null;
+    	this.viewingSingleImage = false;
+        removeAll();
+        add(splashPanel, BorderLayout.CENTER);
+        
+        revalidate();
+        repaint();
+    }
 
     public synchronized void showAllEntities() {
         viewingSingleImage = false;
         removeAll();
         add(toolbar, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
-        updateUI();
+        
+        revalidate();
+        repaint();
     }
 
     public synchronized void showCurrentEntityDetails() {
@@ -441,8 +446,9 @@ public class IconDemoPanel extends JPanel {
             removeAll();
             add(imageDetailPanel);
         }
-        
-    	updateUI();
+
+        revalidate();
+        repaint();
 
         // Focus on the panel so that it can receive keyboard input
         requestFocusInWindow();

@@ -117,31 +117,6 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
         EntityTree.this.updateUI();
     }
 
-    /**
-     * Get all the descendants of the given entity which are of a certain type.
-     * TODO: move this to Entity class
-     *
-     * @param entity
-     * @param typeName
-     * @return
-     */
-    public List<Entity> getDescendantsOfType(Entity entity, String typeName) {
-
-        List<Entity> items = new ArrayList<Entity>();
-        if (typeName.equals(entity.getEntityType().getName())) {
-            items.add(entity);
-        }
-
-        for (EntityData entityData : entity.getOrderedEntityData()) {
-            Entity child = entityData.getChildEntity();
-            if (child != null) {
-                items.addAll(getDescendantsOfType(child, typeName));
-            }
-        }
-
-        return items;
-    }
-
     public DynamicTree getDynamicTree() {
         return selectedTree;
     }

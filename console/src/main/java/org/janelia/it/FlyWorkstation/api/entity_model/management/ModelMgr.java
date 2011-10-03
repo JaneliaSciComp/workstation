@@ -405,7 +405,7 @@ public class ModelMgr {
     }
     
     public AnnotationSession getAnnotationSession(Long sessionId) throws Exception {
-    	if (annotationSession.getId().equals(sessionId)) {
+    	if (annotationSession != null && annotationSession.getId().equals(sessionId)) {
     		return annotationSession;
     	}
         
