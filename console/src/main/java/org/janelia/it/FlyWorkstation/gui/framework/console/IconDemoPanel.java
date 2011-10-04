@@ -8,6 +8,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.console;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Rectangle;
 import java.awt.event.*;
 import java.util.*;
 
@@ -53,6 +54,7 @@ public class IconDemoPanel extends JPanel {
     private JToggleButton onlySessionButton;
     private JToggleButton hideCompletedButton; 
     
+    
     private ImagesPanel imagesPanel;
     private JScrollPane scrollPane;
     private ImageDetailPanel imageDetailPanel;
@@ -61,14 +63,17 @@ public class IconDemoPanel extends JPanel {
     private List<Entity> entities;
     private Entity currentEntity;
     private boolean viewingSingleImage = true;
-
+    private double currImageSizePercent = 1.0;
+    
     private final List<String> allUsers = new ArrayList<String>();
     private final Set<String> hiddenUsers = new HashSet<String>();
     private final Annotations annotations = new Annotations();
-    
 
+    private SimpleWorker entityLoadingWorker;
+    private SimpleWorker annotationLoadingWorker;
+    
     // Listen for key strokes and execute the appropriate key bindings
-    private KeyListener keyListener = new KeyAdapter() {
+    private final KeyListener keyListener = new KeyAdapter() {
         @Override
         public void keyPressed(KeyEvent e) {
             if (e.getID() == KeyEvent.KEY_PRESSED) {
@@ -90,6 +95,19 @@ public class IconDemoPanel extends JPanel {
         }
     };
 
+    // Listen for scroll events
+    private final AdjustmentListener scrollListener = new AdjustmentListener() {
+        @Override
+        public void adjustmentValueChanged(AdjustmentEvent e) {
+            SwingUtilities.invokeLater(new Runnable() {
+    			@Override
+    			public void run() {
+    	        	loadUnloadImages();
+    			}
+    		});
+        }
+    };
+    
     public IconDemoPanel() {
 
         setBackground(Color.white);
@@ -106,34 +124,39 @@ public class IconDemoPanel extends JPanel {
         
         scrollPane = new JScrollPane();
         scrollPane.setViewportView(imagesPanel);
-
+        
         slider.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
                 JSlider source = (JSlider) e.getSource();
                 double imageSizePercent = (double) source.getValue() / (double) 100;
+                if (currImageSizePercent == imageSizePercent) return;
+                currImageSizePercent = imageSizePercent;
+                
                 imagesPanel.rescaleImages(imageSizePercent);
-                imagesPanel.recalculateGrid();
+	            imagesPanel.recalculateGrid();
+
+	            // Only load images once we know how the layout will look 
+	            // (i.e. after the above operations are completed and the panel is repainted)
+                SwingUtilities.invokeLater(new Runnable() {
+        			@Override
+        			public void run() {
+        	        	loadUnloadImages();
+        			}
+        		});
             }
         });
-
-        scrollPane.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
-
-            @Override
-            public void adjustmentValueChanged(AdjustmentEvent e) {
-
-                int value = e.getValue();
-                // TODO: load/unload images as they move out of the viewport?
-
-            }
-        });
-
+        
         this.addKeyListener(getKeyListener());
+        
         ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
 
 			@Override
 			public void annotationsChanged(long entityId) {
-				reloadAnnotations();
+				AnnotatedImageButton button = imagesPanel.getButtonByEntityId(entityId);
+				if (button != null) {
+					reloadAnnotations(button.getEntity());
+				}
 			}
 
 			@Override
@@ -146,6 +169,13 @@ public class IconDemoPanel extends JPanel {
 	        	clear();
 			}
 			
+        });
+
+        this.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                imagesPanel.recalculateGrid();
+            }
         });
         
     	annotations.setFilter(new AnnotationFilter() {
@@ -237,7 +267,7 @@ public class IconDemoPanel extends JPanel {
         onlySessionButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-            	refreshAnnotations();
+            	refreshAnnotations(null);
             }
         });
         toolBar.add(onlySessionButton);
@@ -270,7 +300,7 @@ public class IconDemoPanel extends JPanel {
         
         toolBar.addSeparator();
 
-        slider = new JSlider(1, 100, 100);
+        slider = new JSlider(10, 100, 100);
         slider.setFocusable(false);
         slider.setToolTipText("Image size percentage");
         toolBar.add(slider);
@@ -299,7 +329,7 @@ public class IconDemoPanel extends JPanel {
             	else {
             		hiddenUsers.clear();
             	}
-            	refreshAnnotations();
+            	refreshAnnotations(null);
             }
         });
         userListMenu.add(allUsersMenuItem);
@@ -315,7 +345,7 @@ public class IconDemoPanel extends JPanel {
                 		hiddenUsers.remove(username);
                 	else
                 		hiddenUsers.add(username);
-                	refreshAnnotations();
+                	refreshAnnotations(null);
                 }
             });
             userMenuItem.setIcon(Icons.getIcon("user.png"));
@@ -326,8 +356,16 @@ public class IconDemoPanel extends JPanel {
     }
     
     public synchronized void loadImageEntities(final List<Entity> entities) {
-    	
-        SimpleWorker loadingWorker = new SimpleWorker() {
+
+    	// Remove the scroll listener so that we don't get a bunch of bogus events as things are added to the imagesPanel
+    	scrollPane.getVerticalScrollBar().removeAdjustmentListener(scrollListener);
+
+        if (entityLoadingWorker != null && !entityLoadingWorker.isDone()) {
+        	System.out.println("Cancel previous image load");
+        	entityLoadingWorker.disregard();
+        }
+        
+    	entityLoadingWorker = new SimpleWorker() {
 
             protected void doStuff() throws Exception {
                 List<Entity> loadedEntities = new ArrayList<Entity>();
@@ -344,34 +382,113 @@ public class IconDemoPanel extends JPanel {
             }
 
             protected void hadSuccess() {
-                setTitleVisbility();
-                setTagVisbility();
-                imagesPanel.load(getEntities());
-                refreshAnnotations();
-                showAllEntities();
+            	entityLoadDone();
+            }
+
+            protected void hadError(Throwable error) {
+            	entityLoadError(error);
+            }
+        };
+
+        entityLoadingWorker.execute();
+    }
+    
+    public synchronized void entityLoadDone() {
+
+        setTitleVisbility();
+        setTagVisbility();
+        
+        imagesPanel.setEntities(getEntities());
+        refreshAnnotations(null);
+        showAllEntities();
+
+        // Since the images are not loaded yet, this will just resize the empty buttons so that we can calculate the grid correctly
+        imagesPanel.rescaleImages(currImageSizePercent); 
+        imagesPanel.recalculateGrid();
+        
+        // Wait until everything is recomputed
+        SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				// Reset scrollbar and re-add the listener
+				scrollPane.getVerticalScrollBar().setValue(0); 
+		        scrollPane.getVerticalScrollBar().addAdjustmentListener(scrollListener);
+		        // Allow the images to load as needed, based on the viewport
+				loadUnloadImages();
+			}
+		});
+    }
+
+    public synchronized void entityLoadError(Throwable error) {
+
+        error.printStackTrace();
+        if (getEntities() != null) {
+            JOptionPane.showMessageDialog(IconDemoPanel.this, "Error loading annotations", "Data Loading Error", JOptionPane.ERROR_MESSAGE);
+            imagesPanel.setEntities(getEntities());
+            showAllEntities();
+            // TODO: set read-only mode
+        }
+        else {
+            JOptionPane.showMessageDialog(IconDemoPanel.this, "Error loading session", "Data Loading Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /**
+     * Reload the annotations from the database and then refresh the UI.
+     */
+    public synchronized void reloadAnnotations() {
+
+        if (annotations == null || entities == null) return;
+
+        annotationLoadingWorker = new SimpleWorker() {
+
+            protected void doStuff() throws Exception {
+                annotations.init(entities);
+            }
+
+            protected void hadSuccess() {
+            	refreshAnnotations(null);
             }
 
             protected void hadError(Throwable error) {
                 error.printStackTrace();
-                if (getEntities() != null) {
-                    JOptionPane.showMessageDialog(IconDemoPanel.this, "Error loading annotations", "Data Loading Error", JOptionPane.ERROR_MESSAGE);
-                    imagesPanel.load(getEntities());
-                    showAllEntities();
-                    // TODO: set read-only mode
-                }
-                else {
-                    JOptionPane.showMessageDialog(IconDemoPanel.this, "Error loading session", "Data Loading Error", JOptionPane.ERROR_MESSAGE);
-                }
+                JOptionPane.showMessageDialog(IconDemoPanel.this, "Error loading annotations", "Data Loading Error", JOptionPane.ERROR_MESSAGE);
             }
         };
 
-        loadingWorker.execute();
+        annotationLoadingWorker.execute();
+    }
+
+    /**
+     * Reload the annotations from the database and then refresh the UI.
+     */
+    public synchronized void reloadAnnotations(final Entity entity) {
+
+        if (annotations == null || entities == null) return;
+
+        annotationLoadingWorker = new SimpleWorker() {
+
+            protected void doStuff() throws Exception {
+                annotations.init(entities);
+            }
+
+            protected void hadSuccess() {
+            	refreshAnnotations(entity);
+            }
+
+            protected void hadError(Throwable error) {
+                error.printStackTrace();
+                JOptionPane.showMessageDialog(IconDemoPanel.this, "Error loading annotations", "Data Loading Error", JOptionPane.ERROR_MESSAGE);
+            }
+        };
+
+        annotationLoadingWorker.execute();
     }
 
     /**
      * Refresh the annotation display in the UI, but do not reload anything from the database.
      */
-    public synchronized void refreshAnnotations() {
+    private synchronized void refreshAnnotations(Entity entity) {
 
     	// Refresh all user list
     	allUsers.clear();
@@ -381,35 +498,15 @@ public class IconDemoPanel extends JPanel {
     	Collections.sort(allUsers);
     	
     	// Refresh the UI
-        imagesPanel.loadAnnotations(annotations);
-        if (currentEntity != null)
-        	imageDetailPanel.loadAnnotations(annotations);
-    }
-    
-    /**
-     * Reload the annotations from the database and then refresh the UI.
-     */
-    public synchronized void reloadAnnotations() {
-
-        if (annotations == null || entities == null) return;
-
-        SimpleWorker loadingWorker = new SimpleWorker() {
-
-            protected void doStuff() throws Exception {
-                annotations.init(entities);
-            }
-
-            protected void hadSuccess() {
-            	refreshAnnotations();
-            }
-
-            protected void hadError(Throwable error) {
-                error.printStackTrace();
-                JOptionPane.showMessageDialog(IconDemoPanel.this, "Error loading annotations", "Data Loading Error", JOptionPane.ERROR_MESSAGE);
-            }
-        };
-
-        loadingWorker.execute();
+        if (viewingSingleImage) imageDetailPanel.loadAnnotations(annotations);
+        
+    	if (entity == null) {
+	        imagesPanel.loadAnnotations(annotations);
+    	}
+    	else {
+	        imagesPanel.loadAnnotations(annotations, entity);
+    	}
+        
     }
     
     public synchronized void clear() {
@@ -424,13 +521,28 @@ public class IconDemoPanel extends JPanel {
     }
 
     public synchronized void showAllEntities() {
+    	
         viewingSingleImage = false;
         removeAll();
         add(toolbar, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
+
         
         revalidate();
         repaint();
+
+        // Wait until everything is recomputed
+        SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+		        if (imagesPanel.getSelectedButton() != null) {
+		        	imagesPanel.scrollRectToVisible(imagesPanel.getSelectedButton().getBounds());
+		        }
+			}
+        });
+        
+        // Focus on the panel so that it can receive keyboard input
+        requestFocusInWindow();
     }
 
     public synchronized void showCurrentEntityDetails() {
@@ -454,7 +566,7 @@ public class IconDemoPanel extends JPanel {
         requestFocusInWindow();
     }
 
-    public boolean previousEntity() {
+    public synchronized boolean previousEntity() {
         List<Entity> entities = getEntities();
         int i = entities.indexOf(currentEntity);
         if (i < 1) {
@@ -468,7 +580,7 @@ public class IconDemoPanel extends JPanel {
         return true;
     }
 
-    public boolean nextEntity() {
+    public synchronized boolean nextEntity() {
         List<Entity> entities = getEntities();
         int i = entities.indexOf(currentEntity);
         if (i > entities.size() - 2) {
@@ -540,5 +652,20 @@ public class IconDemoPanel extends JPanel {
     	else {
     		return entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
     	}
+    }
+
+    private void loadUnloadImages() {
+
+        final JViewport viewPort = scrollPane.getViewport();
+    	Rectangle viewRect = viewPort.getViewRect();
+		
+        for(AnnotatedImageButton button : imagesPanel.getButtons().values()) {
+        	try {
+        		button.setViewable(viewRect.intersects(button.getBounds()));
+        	}
+        	catch (Exception e) {
+        		e.printStackTrace();
+        	}
+        }
     }
 }

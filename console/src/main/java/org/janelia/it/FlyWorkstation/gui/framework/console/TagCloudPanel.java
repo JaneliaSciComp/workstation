@@ -1,12 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
+import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.util.WrapLayout;
 
 import javax.swing.*;
 import javax.swing.border.Border;
 import java.awt.*;
-import java.awt.event.InputEvent;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -81,28 +80,22 @@ public class TagCloudPanel<T> extends JPanel {
             add(tagLabel);
             tagLabels.put(tag, tagLabel);
 
-            tagLabel.addMouseListener(new MouseAdapter() {
-                public void mouseReleased(MouseEvent e) {
+            tagLabel.addMouseListener(new MouseHandler() {
 
-                    if (e.isPopupTrigger()) {
-                        showPopupMenu(e, tag);
-                    }
-                    // This masking is to make sure that the right button is being double clicked, not left and then right or right and then left
-                    else if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1 && (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
-                        tagDoubleClicked(e, tag);
-                    }
-                    else if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
-                        tagClicked(e, tag);
-                    }
-                }
+				@Override
+				protected void popupTriggered(MouseEvent e) {
+                    showPopupMenu(e, tag);
+				}
 
-                public void mousePressed(MouseEvent e) {
-                    // We have to also listen for mousePressed because OSX generates the popup trigger here
-                    // instead of mouseReleased like any sane OS.
-                    if (e.isPopupTrigger()) {
-                        showPopupMenu(e, tag);
-                    }
-                }
+				@Override
+				protected void singleLeftClicked(MouseEvent e) {
+                    tagClicked(e, tag);
+				}
+
+				@Override
+				protected void doubleLeftClicked(MouseEvent e) {
+                    tagDoubleClicked(e, tag);
+				}
             });
         }
 

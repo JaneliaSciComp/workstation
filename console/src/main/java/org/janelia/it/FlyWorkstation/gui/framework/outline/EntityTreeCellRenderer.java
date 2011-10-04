@@ -102,59 +102,12 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
                 titleLabel.setToolTipText(entityTypeName);
 
                 typeLabel.setText("");
-                if (entity.getName().equals("Neuron Fragments") && !entity.getEntityData().isEmpty()) {
+                if (entityTypeName.equals(EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION)) {
                 	typeLabel.setText("("+entity.getEntityData().size()+")");
                 }
                 else if (entityTypeName.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
                 	typeLabel.setText("("+df.format(entity.getCreationDate())+")");
                 }
-                
-//                try {
-//                    if (entityTypeName.equals(EntityConstants.TYPE_FOLDER)) {
-//                        titleLabel.setIcon(Icons.getIcon("folder.png"));
-//                        titleLabel.setToolTipText("Folder");
-//                    }
-//                    else if (entityTypeName.equals(EntityConstants.TYPE_LSM_STACK_PAIR)) {
-//                        titleLabel.setIcon(Utils.getClasspathImage("folder_image.png"));
-//                        titleLabel.setToolTipText("LSM Stack Pair");
-//                    }
-//                    else if (entityTypeName.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
-//                        titleLabel.setIcon(Utils.getClasspathImage("folder_image.png"));
-//                        titleLabel.setToolTipText("LSM Stack Pair");
-//                    }
-//                    else if (entityTypeName.equals(EntityConstants.TYPE_SAMPLE)) {
-//                        titleLabel.setIcon(Utils.getClasspathImage("beaker.png"));
-//                        titleLabel.setToolTipText("Sample");
-//                    }
-//                    else if (entityTypeName.equals(EntityConstants.TYPE_TIF_2D)) {
-//                        titleLabel.setIcon(Utils.getClasspathImage("image.png"));
-//                        titleLabel.setToolTipText("TIF 2D Image");
-//                    }
-//                    else if (entityTypeName.equals(EntityConstants.TYPE_TIF_3D) || entityTypeName.equals(EntityConstants.TYPE_LSM_STACK) || entityTypeName.equals(EntityConstants.TYPE_TIF_3D_LABEL_MASK)) {
-//                        titleLabel.setIcon(Utils.getClasspathImage("images.png"));
-//                        titleLabel.setToolTipText("TIF 3D Stack");
-//                    }
-//                    else if (entityTypeName.equals(EntityConstants.TYPE_STITCHED_V3D_RAW)) {
-//                        titleLabel.setIcon(Utils.getClasspathImage("images.png"));
-//                        titleLabel.setToolTipText("Stitched V3D Raw Image");
-//                    }
-//                    else if (entityTypeName.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
-//                        titleLabel.setIcon(Utils.getClasspathImage("brick.png"));
-//                        titleLabel.setToolTipText("Neuron Fragment");
-//                    }
-//                    else if (entityTypeName.equals(EntityConstants.TYPE_SUPPORTING_DATA)) {
-//                        titleLabel.setIcon(Utils.getClasspathImage("folder_page.png"));
-//                        titleLabel.setToolTipText("Supporting data");
-//                    }
-//                    else {
-//                        titleLabel.setIcon(Utils.getClasspathImage("page.png"));
-//                        titleLabel.setToolTipText("Page");
-//                    }
-//                    
-//                }
-//                catch (Throwable r) {
-//                    r.printStackTrace();
-//                }
             }
 
             returnValue = cellPanel;

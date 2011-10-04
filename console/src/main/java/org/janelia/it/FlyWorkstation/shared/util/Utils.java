@@ -160,7 +160,7 @@ public class Utils {
      * Create an image from the source image, scaled with the larger dimension.
      *
      * @param sourceImage image to work against
-     * @param scale       percentage to change the image
+     * @param size pixel size that the larger dimension should be
      * @return returns a BufferedImage to work with
      */
     public static BufferedImage getScaledImageIcon(BufferedImage sourceImage, int size) {

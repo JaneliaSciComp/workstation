@@ -4,18 +4,18 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Rectangle;
-import java.awt.event.*;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import javax.swing.ButtonGroup;
 import javax.swing.JPanel;
 import javax.swing.Scrollable;
-import javax.swing.SwingWorker;
 
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
+import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 
@@ -27,43 +27,33 @@ import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 public class ImagesPanel extends JPanel implements Scrollable {
 
     private static final int MIN_THUMBNAIL_SIZE = 64;
-    private static final int MAX_THUMBNAIL_SIZE = 300;
+    public static final int MAX_THUMBNAIL_SIZE = 300;
 
     private final HashMap<String, AnnotatedImageButton> buttons = new HashMap<String, AnnotatedImageButton>();
 
     private IconDemoPanel iconDemoPanel;
     private ButtonGroup buttonGroup;
     private int imageSize = MAX_THUMBNAIL_SIZE;
-    private List<SwingWorker> workers = new ArrayList<SwingWorker>();
-
 
     public ImagesPanel(IconDemoPanel iconDemoPanel) {
         setLayout(new GridLayout(0, 2));
         setOpaque(false);
         this.iconDemoPanel = iconDemoPanel;
-
-        addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                recalculateGrid();
-            }
-        });
     }
 
     /**
-     * Load in some new images asynchronously. In the meantime, show the filenames with a "loading" spinner for
-     * each image to be loaded.
+     * Create the image buttons, but leave the images unloaded for now.
      */
-    public void load(List<Entity> entities) {
+    public void setEntities(List<Entity> entities) {
 
-        for (SwingWorker worker : workers) {
+    	// Cancel all loading images
+        for (AnnotatedImageButton button : buttons.values()) {
+        	SimpleWorker worker = button.getLoadWorker();
             if (worker != null && !worker.isDone()) {
             	System.out.println("Cancel previous load");
                 worker.cancel(true);
             }
         }
-
-        ((GridLayout) getLayout()).setColumns(10);
 
         buttons.clear();
         buttonGroup = new ButtonGroup();
@@ -98,12 +88,6 @@ public class ImagesPanel extends JPanel implements Scrollable {
             buttonGroup.add(button);
             add(button);
         }
-
-        for (AnnotatedImageButton button : buttons.values()) {
-            SwingWorker worker = new LoadImageWorker(button);
-            worker.execute();
-            workers.add(worker);
-        }
     }
 
     /**
@@ -111,11 +95,19 @@ public class ImagesPanel extends JPanel implements Scrollable {
      */
     public void loadAnnotations(Annotations annotations) {
         for (AnnotatedImageButton button : buttons.values()) {
-        	List<OntologyAnnotation> entityAnnotations = annotations.getFilteredAnnotationMap().get(button.getEntity().getId());
-            button.getTagPanel().setTags(entityAnnotations);
+        	loadAnnotations(annotations, button.getEntity());
         }
     }
 
+    /**
+     * Show the given annotations on the appropriate images.
+     */
+    public void loadAnnotations(Annotations annotations, Entity entity) {
+    	AnnotatedImageButton button = getButtonByEntityId(entity.getId());
+    	List<OntologyAnnotation> entityAnnotations = annotations.getFilteredAnnotationMap().get(entity.getId());
+        button.getTagPanel().setTags(entityAnnotations);
+    }
+    
     /**
      * Scale all the images to the desired percent of their true size.
      *
@@ -135,16 +127,27 @@ public class ImagesPanel extends JPanel implements Scrollable {
      * @param imageSize
      */
     public void rescaleImages(int imageSize) {
-        if (imageSize < MIN_THUMBNAIL_SIZE || imageSize > MAX_THUMBNAIL_SIZE || imageSize == this.imageSize) {
+        if (imageSize < MIN_THUMBNAIL_SIZE || imageSize > MAX_THUMBNAIL_SIZE) {
             return;
         }
         this.imageSize = imageSize;
         for (AnnotatedImageButton button : buttons.values()) {
-            button.rescaleImage(imageSize);
+        	try {
+                button.rescaleImage(imageSize);
+	    	}
+	    	catch (Exception e) {
+	    		e.printStackTrace();
+	    	}
         }
+		revalidate();
+		repaint();
     }
 
-    /**
+    public int getImageSize() {
+		return imageSize;
+	}
+
+	/**
      * Returns the currently selected image button in the panel.
      *
      * @return
@@ -153,9 +156,18 @@ public class ImagesPanel extends JPanel implements Scrollable {
         if (iconDemoPanel.getCurrentEntity() == null) {
             return null;
         }
-        return buttons.get(iconDemoPanel.getCurrentEntity().getId().toString());
+        return getButtonByEntityId(iconDemoPanel.getCurrentEntity().getId());
     }
 
+	/**
+     * Returns the button with the given entity.
+     *
+     * @return
+     */
+    public AnnotatedImageButton getButtonByEntityId(long entityId) {
+        return buttons.get(entityId+"");
+    }
+    
     public void setSelectedImage(Entity entity) {
         AnnotatedImageButton button = buttons.get(entity.getId().toString());
         if (button != null) {
@@ -216,46 +228,4 @@ public class ImagesPanel extends JPanel implements Scrollable {
         return false;
     }
 
-    /**
-     * SwingWorker class that loads the images and rescales them to the current imageSizePercent sizing.  This
-     * thread supports being canceled.
-     */
-    private class LoadImageWorker extends SwingWorker<Void, AnnotatedImageButton> {
-
-        private AnnotatedImageButton button;
-
-        public LoadImageWorker(AnnotatedImageButton button) {
-            this.button = button;
-        }
-
-        @Override
-        protected Void doInBackground() throws Exception {
-            try {
-                if (isCancelled()) return null;
-                button.loadImage(MAX_THUMBNAIL_SIZE);
-                if (isCancelled()) return null;
-                publish(button);
-                if (isCancelled()) return null;
-            }
-            catch (Throwable e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        @Override
-        protected void process(List<AnnotatedImageButton> buttons) {
-            // If the scale has changed since the image began loading then we have to rescale it
-            for (AnnotatedImageButton button : buttons) {
-                if (iconDemoPanel.isInverted()) {
-                    button.setInvertedColors(iconDemoPanel.isInverted());
-                }
-                else if (button.getDisplaySize() != imageSize) {
-                    button.rescaleImage(imageSize);
-                }
-            }
-            recalculateGrid();
-        }
-
-    }
 }

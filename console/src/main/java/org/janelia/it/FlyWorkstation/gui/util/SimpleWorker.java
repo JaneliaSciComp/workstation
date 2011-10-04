@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.util;
 
-import javax.swing.*;
+import javax.swing.SwingWorker;
 
 /**
  * A simple worker class that handles exceptions.
@@ -10,6 +10,7 @@ import javax.swing.*;
 public abstract class SimpleWorker extends SwingWorker<Void, Void> {
 
     private Throwable error;
+    private boolean disregard;
 
     @Override
     protected Void doInBackground() throws Exception {
@@ -24,7 +25,7 @@ public abstract class SimpleWorker extends SwingWorker<Void, Void> {
 
     @Override
     protected void done() {
-        if (isCancelled()) {
+        if (isCancelled() || isDisregarded()) {
             return;
         }
         if (error == null) {
@@ -35,6 +36,18 @@ public abstract class SimpleWorker extends SwingWorker<Void, Void> {
         }
     }
 
+    public synchronized boolean isDisregarded() {
+    	return disregard;
+    }
+    
+    /**
+     * A little different from cancel() because it doesn't interrupt the thread, it just ensures that hadSuccess or 
+     * hadError is never called. 
+     */
+    public synchronized void disregard() {
+    	this.disregard = true;
+    }
+    
     /**
      * Implement this to do stuff in another (non-EDT) thread so that it doesn't affect the GUI.
      *

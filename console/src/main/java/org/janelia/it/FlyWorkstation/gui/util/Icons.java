@@ -10,6 +10,7 @@ import javax.swing.ImageIcon;
 import org.janelia.it.FlyWorkstation.gui.framework.console.MissingIcon;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 
 /**
  * Retrieve icons in the classpath by filename. 
@@ -112,34 +113,40 @@ public class Icons {
     public static ImageIcon getIcon(Entity entity) {
         String type = entity.getEntityType().getName();
         
-        if ("Folder".equals(type)) {
+        if (EntityConstants.TYPE_FOLDER.equals(type)) {
             return getIcon("folder.png");
         }
-        else if ("LSM Stack Pair".equals(type)) {
+        else if (EntityConstants.TYPE_LSM_STACK_PAIR.equals(type)) {
             return getIcon("folder_image.png");
         }
-        else if ("Neuron Separator Pipeline Result".equals(type)) {
+        else if (EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT.equals(type)) {
             return getIcon("folder_image.png");
         }
-        else if ("Sample".equals(type)) {
+        else if (EntityConstants.TYPE_SAMPLE.equals(type)) {
             return getIcon("beaker.png");
         }
-        else if ("Tif 2D Image".equals(type)) {
+        else if (EntityConstants.TYPE_TIF_2D.equals(type)) {
             return getIcon("image.png");
         }
-        else if ("Tif 3D Image".equals(type) || "LSM Stack".equals(type) || "Tif 3D Label Mask".equals(type) || "Stitched V3D Raw Stack".equals(type)) {
+        else if (EntityConstants.TYPE_TIF_3D.equals(type) 
+        		|| EntityConstants.TYPE_LSM_STACK.equals(type) 
+        		|| EntityConstants.TYPE_TIF_3D_LABEL_MASK.equals(type) 
+        		|| EntityConstants.TYPE_STITCHED_V3D_RAW.equals(type)) {
             return getIcon("images.png");
         }
-        else if ("Neuron Fragment".equals(type)) {
+        else if (EntityConstants.TYPE_NEURON_FRAGMENT.equals(type)) {
             return getIcon("brick.png");
         }
-        else if ("Supporting Data".equals(type)) {
+        else if (EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION.equals(type)) {
+            return getIcon("folder.png");
+        }
+        else if (EntityConstants.TYPE_SUPPORTING_DATA.equals(type)) {
             return getIcon("folder_page.png");
         }
-        else if ("Ontology Element".equals(type) || "Ontology Root".equals(type)) {
+        else if (EntityConstants.TYPE_ONTOLOGY_ELEMENT.equals(type) || EntityConstants.TYPE_ONTOLOGY_ROOT.equals(type)) {
             return getOntologyIcon(entity);
         }
-        else if ("Annotation".equals(type)) {
+        else if (EntityConstants.TYPE_ANNOTATION.equals(type)) {
             return getIcon("page_white_edit.png");
         }
 

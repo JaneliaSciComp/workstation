@@ -24,11 +24,11 @@ public class Annotations {
 	public Annotations() {
 	}
 
-    public List<Entity> getEntities() {
+    public synchronized List<Entity> getEntities() {
 		return entities;
 	}
 	
-    public void init(List<Entity> entities) {
+    public synchronized void init(List<Entity> entities) {
 		this.entities = entities;
 		this.annotations = new ArrayList<OntologyAnnotation>();
 		
@@ -47,16 +47,39 @@ public class Annotations {
             SessionMgr.getSessionMgr().handleException(e);
         }
     }
+
+    public synchronized void reload(Entity entity) {
+		
+    	// Remove all the annotations for this entity
+    	List<OntologyAnnotation> copy = new ArrayList<OntologyAnnotation>(annotations);
+    	for(OntologyAnnotation annotation : copy) {
+    		if (annotation.getEntity().getId().equals(entity.getId())) {
+    			annotations.remove(annotation);
+    		}
+    	}
+    	
+    	// Reload them
+        try {
+            for(Entity entityAnnot : ModelMgr.getModelMgr().getAnnotationsForEntity(entity.getId())) {
+            	OntologyAnnotation annotation = new OntologyAnnotation();
+            	annotation.init(entityAnnot);
+            	annotations.add(annotation);
+            }
+        }
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
+    }
     
-    public void setFilter(AnnotationFilter filter) {
+    public synchronized void setFilter(AnnotationFilter filter) {
 		this.filter = filter;
 	}
     
-	public List<OntologyAnnotation> getAnnotations() {
+	public synchronized List<OntologyAnnotation> getAnnotations() {
 		return annotations;
 	}
     
-	public List<OntologyAnnotation> getFilteredAnnotations() {
+	public synchronized List<OntologyAnnotation> getFilteredAnnotations() {
     	List<OntologyAnnotation> filtered = new ArrayList<OntologyAnnotation>();
         for(OntologyAnnotation annotation : annotations) {
         	if (filter!=null && !filter.accept(annotation)) continue;
@@ -65,7 +88,7 @@ public class Annotations {
         return filtered;
     }
 
-    public Map<Long, List<OntologyAnnotation>> getFilteredAnnotationMap() {
+    public synchronized Map<Long, List<OntologyAnnotation>> getFilteredAnnotationMap() {
     	Map<Long, List<OntologyAnnotation>> filteredMap = new HashMap<Long, List<OntologyAnnotation>>();
     	
         Map<Long, Entity> entityMap = new HashMap<Long, Entity>();
