@@ -98,5 +98,10 @@ public class AnnotationSession {
         categories = null;
     }
 
+	public double getPercentComplete() {
+		// TODO: implement this
+		return .5f;
+	}
+
 
 }

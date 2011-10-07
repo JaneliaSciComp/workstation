@@ -42,6 +42,7 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
         titleLabel.setOpaque(true);
         titleLabel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 0));
         titleLabel.setForeground(Color.black);
+        
         cellPanel.add(titleLabel);
 
         typeLabel = new JLabel(" ");

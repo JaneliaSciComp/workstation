@@ -229,8 +229,13 @@ public class EntityOutline extends EntityTree implements Cloneable {
     }
     
     private void viewImageEntities(Entity entity) {
-        List<Entity> entities = entity.getDescendantsOfType(EntityConstants.TYPE_TIF_2D);
-    	if (entities.isEmpty()) return;
+    	// Try to get neuron fragments
+        List<Entity> entities = entity.getDescendantsOfType(EntityConstants.TYPE_NEURON_FRAGMENT);
+        // Settle for 2d tifs
+        if (entities.isEmpty()) {
+        	entities.addAll(entity.getDescendantsOfType(EntityConstants.TYPE_TIF_2D));
+        }
+    	if (entities.isEmpty()) return; // Nothing found
     	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(entities);
     }
 
@@ -259,15 +264,18 @@ public class EntityOutline extends EntityTree implements Cloneable {
     	
         ModelMgr.getModelMgr().notifyEntitySelected(entity.getId());
         
+        // TODO: eventually, everything below here should be moved into a listener on the viewer panel which 
+        // listens to the entitySelected event
+        
         String type = entity.getEntityType().getName();
 
         if (type.equals(EntityConstants.TYPE_TIF_2D) 
-        		|| type.equals(EntityConstants.TYPE_NEURON_FRAGMENT) 
-        		|| type.equals(EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION)) {
+        		|| type.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
         	List<Entity> entities = entity.getDescendantsOfType(type);
         	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(entities);
         }
-        else if (type.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
+        else if (type.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT) 
+        		|| type.equals(EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION)) {
             
         	if (getDynamicTree().descendantsAreLoaded(node)) {
         		viewImageEntities(entity);

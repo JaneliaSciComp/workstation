@@ -63,7 +63,7 @@ public class MouseHandler implements MouseListener {
 	 */
 	protected void popupTriggered(MouseEvent e) {
 	}
-	
+    
     /**
      * Override this method to do something when the user left clicks.
      *

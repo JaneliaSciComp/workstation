@@ -59,6 +59,7 @@ public class Utils {
     /**
      * Borrowed from http://www.pikopong.com/blog/2008/08/13/auto-resize-jtable-column-width/
      *
+     * @deprecated this is now part of DynamicTable, which should be used instead
      * @param table table to work against
      */
     public static void autoResizeColWidth(JTable table) {

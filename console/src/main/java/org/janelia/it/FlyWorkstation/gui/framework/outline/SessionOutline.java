@@ -1,45 +1,50 @@
+/*
+ * Created by IntelliJ IDEA.
+ * User: saffordt
+ * Date: 2/8/11
+ * Time: 2:09 PM
+ */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
+import javax.swing.table.TableCellRenderer;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.tree.DynamicTree;
+import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicColumn;
+import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicRow;
+import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicTable;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.tasks.Task;
-import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 
 /**
- * Created by IntelliJ IDEA.
- * User: saffordt
- * Date: 2/8/11
- * Time: 2:09 PM
- * This class is the initial outline of the data file tree
+ * Provides a list of Annotation Sessions and allows for their selection, deselection, editing, and deletion. 
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class SessionOutline extends JPanel {
 
-    private static final String NO_DATASOURCE = "No Tasks Available";
-    private static final String ANNOTATION_SESSIONS = "Annotation Sessions";
+    private static final String COLUMN_NAME = "Name";
+    private static final String COLUMN_PCT_COMPLETE = "% Complete";
+    private static final String COLUMN_DATE_START = "Data Started";
 
+    private AnnotationSession currSession;
     private Browser consoleFrame;
-
-    protected final JPanel treesPanel;
-    private DynamicTree dynamicTree;
+    protected final JPanel tablePanel;
+    private DynamicTable dynamicTable;
     private SimpleWorker loadingWorker;
     	
     public SessionOutline(Browser consoleFrame) {
@@ -47,8 +52,8 @@ public class SessionOutline extends JPanel {
 
         this.consoleFrame = consoleFrame;
 
-        treesPanel = new JPanel(new BorderLayout());
-        add(treesPanel, BorderLayout.CENTER);
+        tablePanel = new JPanel(new BorderLayout());
+        add(tablePanel, BorderLayout.CENTER);
         
         ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
 
@@ -63,15 +68,21 @@ public class SessionOutline extends JPanel {
 				}
 				selectSessionById(sessionId);
 			}
+
+			@Override
+			public void sessionDeselected() {
+				selectSession(null);
+			}
         	
+			
         });
         
         loadAnnotationSessions(null);
     }
 
     public void showLoadingIndicator() {
-        treesPanel.removeAll();
-        treesPanel.add(new JLabel(Icons.getLoadingIcon()));
+        tablePanel.removeAll();
+        tablePanel.add(new JLabel(Icons.getLoadingIcon()));
     }
 
     public void loadAnnotationSessions(final Callable success) {
@@ -89,7 +100,7 @@ public class SessionOutline extends JPanel {
 
             protected void hadSuccess() {
                 try {
-                    initializeTree(tasks);
+                    initializeTable(tasks);
                     if (success!=null) success.call();
                 }
                 catch (Exception e) {
@@ -100,7 +111,7 @@ public class SessionOutline extends JPanel {
 
             protected void hadError(Throwable error) {
                 error.printStackTrace();
-                treesPanel.removeAll();
+                tablePanel.removeAll();
                 SessionOutline.this.updateUI();
                 loadingWorker = null;
             }
@@ -109,38 +120,40 @@ public class SessionOutline extends JPanel {
 
         loadingWorker.execute();
     }
-
-    public void initializeTree(List<Task> tasks) {
-
-        createNewTree();
-
-        DefaultMutableTreeNode newRootNode = buildTreeModel(tasks);
-        DefaultTreeModel newModel = new DefaultTreeModel(newRootNode);
-        dynamicTree.getTree().setModel(newModel);
-
-        dynamicTree.expand(dynamicTree.getRootNode(), true);
-
-        treesPanel.removeAll();
-        treesPanel.add(dynamicTree);
-
-        SessionOutline.this.updateUI();
-    }
-
-    private void createNewTree() {
-
-        dynamicTree = new DynamicTree(ANNOTATION_SESSIONS) {
+    
+	public void initializeTable(List<Task> tasks) {
+		
+        dynamicTable = new DynamicTable() {
+        	
             @Override
-            protected void showPopupMenu(MouseEvent e) {
-                Object o = dynamicTree.getCurrentNode().getUserObject();
+			public Object getValue(Object userObject, DynamicColumn column) {
+
+            	AnnotationSession session = (AnnotationSession)userObject;
+            	if (column.getName().equals(COLUMN_NAME)) {
+            		return session.getName();
+            	}
+            	else if (column.getName().equals(COLUMN_PCT_COMPLETE)) {
+            		return Math.round(session.getPercentComplete()*100)+"%";
+            	}
+            	else if (column.getName().equals(COLUMN_DATE_START)) {
+            		// TODO:
+            		return null;
+            	}
+            	
+				return null;
+			}
+
+			@Override
+            protected JPopupMenu createPopupMenu(MouseEvent e) {
+            	JPopupMenu popupMenu = super.createPopupMenu(e);
+            	
+            	if (dynamicTable.getCurrentRow() == null) return popupMenu;
+            	
+                Object o = dynamicTable.getCurrentRow().getUserObject();
 
                 if (o instanceof AnnotationSession) {
                     final AnnotationSession session = (AnnotationSession) o;
-
-                    JPopupMenu popupMenu = new JPopupMenu();
-
-                    JMenuItem titleMenuItem = new JMenuItem(session.getName());
-                    titleMenuItem.setEnabled(false);
-                    popupMenu.add(titleMenuItem);
+                	selectSession(session);
                     
                     JMenuItem editMenuItem = new JMenuItem("  Edit");
                     editMenuItem.addActionListener(new ActionListener() {
@@ -160,68 +173,69 @@ public class SessionOutline extends JPanel {
                         popupMenu.add(deleteMenuItem);
                     }
 
-                    popupMenu.show((Component) e.getSource(), e.getX(), e.getY());
                 }
+                
+                return popupMenu;
             }
 
             @Override
-            protected void nodeClicked(MouseEvent e) {
-                Object o = dynamicTree.getCurrentNode().getUserObject();
+			protected void rowClicked(int row) {
+                Object o = dynamicTable.getCurrentRow().getUserObject();
                 if (o instanceof AnnotationSession) {
                     final AnnotationSession session = (AnnotationSession) o;
                     session.clearDerivedProperties();
-                    ModelMgr.getModelMgr().setCurrentAnnotationSession(session);
+                    selectSession(session);
                 }
                 else {
-                    ModelMgr.getModelMgr().setCurrentAnnotationSession(null);
+                	selectSession(null);
                 }
-            }
+			}
 
+			@Override
+			protected void backgroundClicked() {
+				selectSession(null);
+			}
         };
-    }
 
-    private DefaultMutableTreeNode buildTreeModel(List<Task> tasks) {
-
-        // Prep the null node, just in case
-        DefaultMutableTreeNode nullNode = new DefaultMutableTreeNode(NO_DATASOURCE);
-        nullNode.setUserObject(NO_DATASOURCE);
-        nullNode.setAllowsChildren(false);
+        DynamicColumn nameCol = dynamicTable.addColumn(COLUMN_NAME, true, false, false);
+        DynamicColumn pctCompCol = dynamicTable.addColumn(COLUMN_PCT_COMPLETE, true, false, true);
         
-        if (null == tasks || tasks.size() <= 0) {
-            return nullNode;
+        dynamicTable.setColumnRenderer(pctCompCol, new ProgressCellRenderer());
+
+        if (null == tasks || tasks.size() <= 0) return;
+        
+        for (Task task : tasks) {
+            if (task.isTaskDeleted()) continue;
+            AnnotationSession session = new AnnotationSession((AnnotationSessionTask) task);
+            dynamicTable.addRow(session);
         }
         
-        try {
-            DefaultMutableTreeNode top = new DefaultMutableTreeNode();
-            
-            try {
-                top.setUserObject(ANNOTATION_SESSIONS);
-                for (Task task : tasks) {
-                    if (task.isTaskDeleted()) continue;
-                    AnnotationSessionTask asTask = (AnnotationSessionTask) task;
-                    AnnotationSession session = new AnnotationSession(asTask);
-                    DefaultMutableTreeNode tmpNode = new DefaultMutableTreeNode(session);
-                    top.add(tmpNode);
-                    // Add the properties under the items
-                    int paramCount = 0;
-                    for (TaskParameter tmpParam : task.getTaskParameterSet()) {
-                        tmpNode.insert(new DefaultMutableTreeNode(tmpParam.getName() + ":" + tmpParam.getValue()), paramCount);
-                        paramCount++;
-                    }
-                }
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-            
-            return top;
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-        return nullNode;
+        dynamicTable.updateTableModel();
+        dynamicTable.autoResizeColWidth();
+        
+        tablePanel.removeAll();
+        tablePanel.add(dynamicTable);
     }
+	
+	private class ProgressCellRenderer extends JProgressBar implements TableCellRenderer {
 
+		ProgressCellRenderer() {
+			setPreferredSize(new Dimension(100, 16));
+			setMinimum(0);
+			setMaximum(100);
+			setIndeterminate(false);
+		}
+		
+		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+				boolean hasFocus, int rowIndex, int colIndex) {
+			
+			DynamicRow row = dynamicTable.getRows().get(rowIndex);
+			AnnotationSession session = (AnnotationSession)row.getUserObject();
+			setValue((int)Math.round(session.getPercentComplete()*100));
+			return this;
+		}
+	}
+	
     private void deleteSession(AnnotationSession session) {
 
         if (!session.getTask().getOwner().equals(SessionMgr.getUsername())) {
@@ -243,8 +257,8 @@ public class SessionOutline extends JPanel {
             ModelMgr.getModelMgr().deleteTaskById(session.getTask().getObjectId());
 
             // Update Tree UI
-            dynamicTree.removeNode(dynamicTree.getCurrentNode());
-            SwingUtilities.updateComponentTreeUI(dynamicTree);
+            dynamicTable.removeRow(dynamicTable.getCurrentRow());
+            SwingUtilities.updateComponentTreeUI(dynamicTable);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -253,10 +267,8 @@ public class SessionOutline extends JPanel {
     }
 
     public AnnotationSession getSessionById(long taskId) {
-        DefaultMutableTreeNode rootNode = getDynamicTree().getRootNode();
-        for (Enumeration e = rootNode.children(); e.hasMoreElements(); ) {
-            DefaultMutableTreeNode node = (DefaultMutableTreeNode) e.nextElement();
-            AnnotationSession session = (AnnotationSession) node.getUserObject();
+    	for(DynamicRow row : dynamicTable.getRows()) {
+            AnnotationSession session = (AnnotationSession) row.getUserObject();
             if (session.getTask().getObjectId().equals(taskId)) {
                 return session;
             }
@@ -269,15 +281,9 @@ public class SessionOutline extends JPanel {
     }
 
     public void selectSession(AnnotationSession session) {
-    	if (session != null) {
-    		dynamicTree.navigateToNodeWithObject(session);
-    	}
-    	else {
-    		dynamicTree.navigateToNodeWithObject(ANNOTATION_SESSIONS);
-    	}
-    }
-    
-    public DynamicTree getDynamicTree() {
-        return dynamicTree;
+    	if (currSession == session) return;
+    	currSession = session;
+		dynamicTable.navigateToRowWithObject(session);
+		ModelMgr.getModelMgr().setCurrentAnnotationSession(session);
     }
 }
