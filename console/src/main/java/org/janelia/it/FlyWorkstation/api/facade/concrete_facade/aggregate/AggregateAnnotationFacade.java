@@ -6,6 +6,7 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by IntelliJ IDEA.
@@ -99,6 +100,11 @@ public class AggregateAnnotationFacade extends AggregateEntityFacade implements 
         return returnList;
     }
 
+    @Override
+    public Set<Long> getCompletedEntityIds(Long annotationSessionId) throws Exception {
+		throw new UnsupportedOperationException();
+    }
+    
     @Override
     public void removeAnnotation(Long annotationId) throws Exception {
         Object[] aggregates = getAggregates();

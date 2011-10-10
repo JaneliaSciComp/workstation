@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.api.facade.abstract_facade;
 import org.janelia.it.jacs.model.entity.Entity;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by IntelliJ IDEA.
@@ -22,6 +23,8 @@ public interface AnnotationFacade extends EntityFacade {
 
     public List<Entity> getCategoriesForAnnotationSession(Long annotationSessionId) throws Exception;
 
+    public Set<Long> getCompletedEntityIds(Long annotationSessionId) throws Exception;
+    
     public void removeAnnotation(Long annotationId) throws Exception;
 
     public void removeAllOntologyAnnotationsForSession(Long annotationSessionId) throws Exception;

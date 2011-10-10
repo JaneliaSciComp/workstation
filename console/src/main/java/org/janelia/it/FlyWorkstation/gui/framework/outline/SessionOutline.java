@@ -12,6 +12,7 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
@@ -39,8 +40,8 @@ public class SessionOutline extends JPanel {
 
     private static final String COLUMN_NAME = "Name";
     private static final String COLUMN_PCT_COMPLETE = "% Complete";
-    private static final String COLUMN_DATE_START = "Data Started";
 
+    private List<AnnotationSession> sessions = new ArrayList<AnnotationSession>();
     private AnnotationSession currSession;
     private Browser consoleFrame;
     protected final JPanel tablePanel;
@@ -73,7 +74,15 @@ public class SessionOutline extends JPanel {
 			public void sessionDeselected() {
 				selectSession(null);
 			}
-        	
+
+			@Override
+			public void annotationsChanged(long entityId) {
+				for(AnnotationSession session : sessions) {
+					session.clearCompletedIds();
+				}
+				dynamicTable.updateTableModel();
+				dynamicTable.navigateToRowWithObject(currSession);
+			}
 			
         });
         
@@ -89,6 +98,7 @@ public class SessionOutline extends JPanel {
 
         showLoadingIndicator();
         this.updateUI();
+        sessions.clear();
 
         loadingWorker = new SimpleWorker() {
 
@@ -134,10 +144,6 @@ public class SessionOutline extends JPanel {
             	}
             	else if (column.getName().equals(COLUMN_PCT_COMPLETE)) {
             		return Math.round(session.getPercentComplete()*100)+"%";
-            	}
-            	else if (column.getName().equals(COLUMN_DATE_START)) {
-            		// TODO:
-            		return null;
             	}
             	
 				return null;
@@ -207,11 +213,11 @@ public class SessionOutline extends JPanel {
         for (Task task : tasks) {
             if (task.isTaskDeleted()) continue;
             AnnotationSession session = new AnnotationSession((AnnotationSessionTask) task);
+            sessions.add(session);
             dynamicTable.addRow(session);
         }
         
         dynamicTable.updateTableModel();
-        dynamicTable.autoResizeColWidth();
         
         tablePanel.removeAll();
         tablePanel.add(dynamicTable);

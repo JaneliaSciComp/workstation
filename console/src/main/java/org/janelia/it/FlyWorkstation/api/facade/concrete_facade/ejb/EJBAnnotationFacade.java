@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 
 import java.util.List;
+import java.util.Set;
 
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.AnnotationFacade;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -43,6 +44,11 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
                 annotationSessionId);
     }
 
+    @Override
+    public Set<Long> getCompletedEntityIds(Long annotationSessionId) throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().getCompletedEntityIds(annotationSessionId);
+    }
+    
     @Override
     public void removeAnnotation(Long annotationId) throws Exception {
         EJBFactory.getRemoteAnnotationBean().removeOntologyAnnotation(SessionMgr.getUsername(), annotationId);

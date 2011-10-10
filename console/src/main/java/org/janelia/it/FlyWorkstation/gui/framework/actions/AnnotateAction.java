@@ -86,7 +86,6 @@ public class AnnotateAction extends OntologyElementAction {
         Long valueEntityId = (valueEntity == null) ? null : valueEntity.getId();
 
         saveAnnotation(sessionId, targetEntity, keyEntityId, keyString, valueEntityId, valueString);
-
     }
 
     private void saveAnnotation(final Long sessionId, final Entity targetEntity, final Long keyEntityId, final String keyString, final Long valueEntityId, final String valueString) {

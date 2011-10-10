@@ -315,11 +315,11 @@ public abstract class DynamicTable extends JPanel {
         	if (renderer == null) continue;
         	int c = displayedColumns.indexOf(column);
     		if (c>=0) {
-    			System.out.println("set custom renderer for "+c+" "+displayedColumns+" "+column);
     	  		colModel.getColumn(c).setCellRenderer(renderer);
     		}
         }
 
+        autoResizeColWidth();
     }
     
     public void setColumnRenderer(DynamicColumn column, TableCellRenderer renderer) {

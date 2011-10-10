@@ -485,6 +485,10 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getAnnotationFacade().getCategoriesForAnnotationSession(annotationSessionId);
     }
 
+    public Set<Long> getCompletedEntityIds(Long annotationSessionId) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().getCompletedEntityIds(annotationSessionId);
+    }
+    
     public List<Entity> getAnnotationsForSession(Long annotationSessionId) throws Exception {
         return FacadeManager.getFacadeManager().getAnnotationFacade().getAnnotationsForSession(annotationSessionId);
     }

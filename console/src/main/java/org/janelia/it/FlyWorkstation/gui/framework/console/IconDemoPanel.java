@@ -157,6 +157,7 @@ public class IconDemoPanel extends JPanel {
 				if (button != null) {
 					reloadAnnotations(button.getEntity());
 				}
+				filterEntities();
 			}
 
 			@Override
@@ -280,7 +281,7 @@ public class IconDemoPanel extends JPanel {
         hideCompletedButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // TODO: implement this
+        		filterEntities();
             }
         });
         toolBar.add(hideCompletedButton);
@@ -401,10 +402,12 @@ public class IconDemoPanel extends JPanel {
         imagesPanel.setEntities(getEntities());
         refreshAnnotations(null);
         showAllEntities();
-
+        filterEntities();
+        
         // Since the images are not loaded yet, this will just resize the empty buttons so that we can calculate the grid correctly
         imagesPanel.rescaleImages(currImageSizePercent); 
         imagesPanel.recalculateGrid();
+		
         
         // Wait until everything is recomputed
         SwingUtilities.invokeLater(new Runnable() {
@@ -433,6 +436,29 @@ public class IconDemoPanel extends JPanel {
         }
     }
 
+	private void filterEntities() {
+		
+		AnnotationSession session = ModelMgr.getModelMgr().getCurrentAnnotationSession();
+		session.clearCompletedIds();
+		Set<Long> completed = session.getCompletedEntityIds();
+		List<Entity> filtered = new ArrayList<Entity>();
+		for(Entity entity : getEntities()) {
+			if (completed.contains(entity.getId())) filtered.add(entity);
+		}
+		
+		for(AnnotatedImageButton button : imagesPanel.getButtons().values()) {
+			if (hideCompletedButton.isSelected() && completed.contains(button.getEntity().getId())) {
+				button.setVisible(false);
+			}
+			else {
+				button.setVisible(true);
+			}
+		}
+		
+		imagesPanel.revalidate();
+		imagesPanel.repaint();
+	}
+	
     /**
      * Reload the annotations from the database and then refresh the UI.
      */
@@ -527,7 +553,6 @@ public class IconDemoPanel extends JPanel {
         add(toolbar, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
 
-        
         revalidate();
         repaint();
 

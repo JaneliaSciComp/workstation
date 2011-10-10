@@ -436,20 +436,6 @@ public class OntologyOutline extends OntologyTree implements ActionListener {
                 // Update database
                 EntityData newData = ModelMgr.getModelMgr().createOntologyTerm(element.getId(), termName, childType, null);
 
-                // TODO: move this into createOntologyTerm 
-                if (parentType instanceof Tag) {
-                    // Adding a child to a Tag, so it must be coerced into a Category
-                    EntityData ed = element.getEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_ONTOLOGY_TERM_TYPE);
-                    ed.setValue(Category.class.getSimpleName());
-
-                    try {
-                        ModelMgr.getModelMgr().saveOrUpdateEntityData(ed);
-                    }
-                    catch (Exception ex) {
-                        throw new ComputeException("Error coercing term type", ex);
-                    }
-                }
-
                 // Update object model
                 element.getEntity().getEntityData().add(newData);
                 element.init();

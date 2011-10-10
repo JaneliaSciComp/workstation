@@ -1,17 +1,19 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.ontology.OntologyElement;
-import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
-
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlTransient;
+
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.ontology.OntologyElement;
+import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 
 /**
  * Wrapper for AnnotationSessionTask which keeps track of associated entities.
@@ -26,6 +28,7 @@ public class AnnotationSession {
     // Derived properties
     protected List<Entity> entities;
     protected List<OntologyElement> categories;
+    protected Set<Long> completedEntityIds;
 
     public AnnotationSession() {
     	this.task = null;
@@ -62,7 +65,7 @@ public class AnnotationSession {
     }
 
     @XmlTransient
-    public List<Entity> getEntities() {
+    public synchronized List<Entity> getEntities() {
         if (entities == null) {
             try {
                 entities = ModelMgr.getModelMgr().getEntitiesForAnnotationSession(task.getObjectId());
@@ -76,7 +79,7 @@ public class AnnotationSession {
     }
 
     @XmlTransient
-    public List<OntologyElement> getCategories() {
+    public synchronized List<OntologyElement> getCategories() {
         if (categories == null) {
             try {
                 categories = new ArrayList<OntologyElement>();
@@ -93,14 +96,46 @@ public class AnnotationSession {
         return categories;
     }
 
+    @XmlTransient
+    public synchronized Set<Long> getCompletedEntityIds() {
+        if (completedEntityIds == null) {
+            try {
+            	completedEntityIds = ModelMgr.getModelMgr().getCompletedEntityIds(task.getObjectId());
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                return new HashSet<Long>();
+            }
+        }
+    	return completedEntityIds;
+    }
+
+    public synchronized void clearCompletedIds() {
+        completedEntityIds = null;
+    }
+    
     public void clearDerivedProperties() {
         entities = null;
         categories = null;
+        completedEntityIds = null;
     }
-
-	public double getPercentComplete() {
-		// TODO: implement this
-		return .5f;
+    
+    /**
+     * Returns true if all of the categories have been completed for the given entity id.
+     * @param entityId
+     * @return
+     */
+    public synchronized boolean isCompleted(Long entityId) {
+    	return getCompletedEntityIds().contains(entityId);
+    }
+    
+    /**
+     * Returns the percentage of entities (targets) which have been annotated with the required categories. 
+     * @return percentage as a real number
+     */
+    @XmlTransient
+	public synchronized double getPercentComplete() {
+		return (double)getCompletedEntityIds().size() / (double)getEntities().size();
 	}
 
 
