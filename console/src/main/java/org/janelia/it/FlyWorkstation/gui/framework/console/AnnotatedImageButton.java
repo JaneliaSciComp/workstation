@@ -7,6 +7,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
+import java.util.Collections;
+import java.util.Map;
 
 import javax.swing.*;
 import javax.swing.text.SimpleAttributeSet;
@@ -18,15 +20,20 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.util.LRUCache;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+
 
 /**
  * A lazy-loading image with a title on top and optional annotation tags underneath.
  */
 public class AnnotatedImageButton extends JToggleButton {
 
+	private static final Map<String, BufferedImage> imageCache = 
+		Collections.synchronizedMap(new LRUCache<String, BufferedImage>(50));
+	
     private final Entity entity;
     private final JTextPane imageCaption;
     private final AnnotationTagCloudPanel tagPanel;
@@ -55,7 +62,7 @@ public class AnnotatedImageButton extends JToggleButton {
         buttonPanel = new JPanel(new GridBagLayout());
         buttonPanel.setOpaque(false);
         add(buttonPanel);
-
+    	
         imageCaption = new JTextPane();
         imageCaption.setFocusable(false);
         imageCaption.setText(title);
@@ -301,7 +308,12 @@ public class AnnotatedImageButton extends JToggleButton {
         @Override
 		protected void doStuff() throws Exception {
             int size = ImagesPanel.MAX_THUMBNAIL_SIZE;
-            BufferedImage maxSizeImage = Utils.getScaledImageIcon(Utils.readImage(imageFilename), size);
+            
+            BufferedImage maxSizeImage = imageCache.containsKey(imageFilename) ? 
+            		imageCache.get(imageFilename) : 
+        			Utils.getScaledImageIcon(Utils.readImage(imageFilename), size);
+    		imageCache.put(imageFilename, maxSizeImage);
+            		
             if (isCancelled()) return;
             setMaxSizeImage(maxSizeImage);
 		}
