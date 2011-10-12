@@ -208,19 +208,22 @@ public class SessionOutline extends JPanel {
         
         dynamicTable.setColumnRenderer(pctCompCol, new ProgressCellRenderer());
 
-        if (null == tasks || tasks.size() <= 0) return;
-        
-        for (Task task : tasks) {
-            if (task.isTaskDeleted()) continue;
-            AnnotationSession session = new AnnotationSession((AnnotationSessionTask) task);
-            sessions.add(session);
-            dynamicTable.addRow(session);
+        if (null != tasks) {
+	        for (Task task : tasks) {
+	            if (task.isTaskDeleted()) continue;
+	            AnnotationSession session = new AnnotationSession((AnnotationSessionTask) task);
+	            sessions.add(session);
+	            dynamicTable.addRow(session);
+	        }
+	        
         }
-        
+
         dynamicTable.updateTableModel();
-        
         tablePanel.removeAll();
         tablePanel.add(dynamicTable);
+        
+        revalidate();
+        repaint();
     }
 	
 	private class ProgressCellRenderer extends JProgressBar implements TableCellRenderer {
