@@ -1,7 +1,6 @@
 package org.janelia.it.FlyWorkstation.api.entity_model.management;
 
 import java.awt.Color;
-import java.lang.reflect.Constructor;
 import java.util.*;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
@@ -16,6 +15,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.exception_handlers.PrintStackTraceHandler;
 import org.janelia.it.FlyWorkstation.shared.util.ThreadQueue;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
@@ -38,19 +38,18 @@ public class ModelMgr {
     private boolean readOnly;
     private final List<ModelMgrObserver> modelMgrObservers = new ArrayList<ModelMgrObserver>();
     private boolean modelAvailable;
+    
     private Set<Entity> ontologies = new HashSet<Entity>();
     private ThreadQueue threadQueue;
     private ThreadQueue notificationQueue;
     private ResourceBundle modelMgrResourceBundle;
-    private EntityFactory entityFactory;
     
     private UserColorMapping userColorMapping = new UserColorMapping();
     private OntologyRoot selectedOntology;
     private OntologyKeyBindings ontologyKeyBindings;
     private AnnotationSession annotationSession;
-    
-    private Class factoryClass;
-    private boolean ontologyLookupNeeded = true;
+    private Long selectedEntityId;
+   
 
     static {
         // Register an exception handler.
@@ -99,19 +98,6 @@ public class ModelMgr {
 
     public void makeReadOnly() {
         readOnly = true;
-    }
-
-    public EntityFactory getEntityFactory() {
-        if (entityFactory == null) {
-            try {
-                Constructor cons = factoryClass.getConstructor(new Class[]{Integer.class});
-                entityFactory = (EntityFactory) cons.newInstance(new Object[]{new Integer(this.hashCode())});
-            }
-            catch (Exception ex) {
-                handleException(ex);
-            }
-        }
-        return entityFactory;
     }
 
     public boolean isMultiThreaded() {
@@ -219,10 +205,6 @@ public class ModelMgr {
     }
 
     private OntologyKeyBindings loadOntologyKeyBindings(long ontologyId) {
-    	if (selectedOntology == null) {
-    		throw new IllegalStateException("Cannot load keybindings for null ontology.");
-    	}
-    	
     	String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyId;
     	User user = SessionMgr.getSessionMgr().getUser();
         Map<String, UserPreference> prefs = user.getCategoryPreferences(category);
@@ -269,7 +251,7 @@ public class ModelMgr {
         ModelMgr.getModelMgr().removePreferenceCategory(CATEGORY_KEYBINDS_ONTOLOGY + ontologyId);
     }
     
-    public void notifyOntologySelected(Long ontologyId) {
+    private void notifyOntologySelected(Long ontologyId) {
         for (ModelMgrObserver listener : modelMgrObservers) {
         	listener.ontologySelected(ontologyId);
         }
@@ -281,7 +263,7 @@ public class ModelMgr {
         }
     }
     
-    public void notifyEntitySelected(Long entityId) {
+    private void notifyEntitySelected(Long entityId) {
         for (ModelMgrObserver listener : modelMgrObservers) {
         	listener.entitySelected(entityId);
         }
@@ -303,13 +285,13 @@ public class ModelMgr {
         }
     }
 
-    public void notifyAnnotationSessionSelected(Long sessionId) {
+    private void notifyAnnotationSessionSelected(Long sessionId) {
         for (ModelMgrObserver listener : modelMgrObservers) {
         	listener.sessionSelected(sessionId);
         }
     }
 
-    public void notifyAnnotationSessionDeselected() {
+    private void notifyAnnotationSessionDeselected() {
         for (ModelMgrObserver listener : modelMgrObservers) {
         	listener.sessionDeselected();
         }
@@ -329,6 +311,12 @@ public class ModelMgr {
         return modelAvailable;
     }
 
+	public void selectEntity(Long entityId) {
+        if (Utils.areSame(entityId, selectedEntityId)) return;
+    	selectedEntityId = entityId;
+		notifyEntitySelected(entityId);
+	}
+	
     public List<EntityType> getEntityTypes() {
         return FacadeManager.getFacadeManager().getEntityFacade().getEntityTypes();
     }
@@ -579,11 +567,9 @@ public class ModelMgr {
 //
     class MyInUseProtocolListener implements InUseProtocolListener {
         public void protocolAddedToInUseList(String protocol) {
-            ontologyLookupNeeded = true;
         }
 
         public void protocolRemovedFromInUseList(String protocol) {
-
         }
     }
 

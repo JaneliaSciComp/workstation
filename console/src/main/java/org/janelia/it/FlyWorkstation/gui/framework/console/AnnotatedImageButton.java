@@ -134,13 +134,14 @@ public class AnnotatedImageButton extends JToggleButton {
         });
         
         // Mouse events
-        
+
+		final IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
+		
         this.addMouseListener(new MouseHandler() {
 
 			@Override
 			protected void popupTriggered(MouseEvent e) {
-				
-				IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
+
                 iconDemoPanel.setCurrentEntity(entity);
                 
 	            JPopupMenu popupMenu = new JPopupMenu();
@@ -181,7 +182,6 @@ public class AnnotatedImageButton extends JToggleButton {
 
 			@Override
 			protected void doubleLeftClicked(MouseEvent e) {
-				IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
                 iconDemoPanel.setCurrentEntity(entity);
                 iconDemoPanel.showCurrentEntityDetails();
 			}

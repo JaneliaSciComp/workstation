@@ -32,6 +32,10 @@ public interface ConsoleDataService extends Remote {
 			@WebParam(name = "endpointUrl") String endpointUrl) 
 			throws RemoteException;
 
+    public void selectEntity(
+			@WebParam(name = "entityId") long entityId)
+    		throws RemoteException;
+    
     public void createAnnotation(
     		@WebParam(name = "annotation") OntologyAnnotation annotation) 
     		throws RemoteException;

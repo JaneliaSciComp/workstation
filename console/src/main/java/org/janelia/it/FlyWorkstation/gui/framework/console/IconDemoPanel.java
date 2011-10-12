@@ -169,7 +169,13 @@ public class IconDemoPanel extends JPanel {
 			public void sessionDeselected() {
 	        	clear();
 			}
-			
+
+			@Override
+			public void entitySelected(long entityId) {
+				AnnotatedImageButton button = imagesPanel.getButtonByEntityId(entityId);
+				if (button==null) return;
+				setCurrentEntity(button.getEntity());
+			}
         });
 
         this.addComponentListener(new ComponentAdapter() {
@@ -439,6 +445,7 @@ public class IconDemoPanel extends JPanel {
 	private void filterEntities() {
 		
 		AnnotationSession session = ModelMgr.getModelMgr().getCurrentAnnotationSession();
+		if (session == null) return;
 		session.clearCompletedIds();
 		Set<Long> completed = session.getCompletedEntityIds();
 		List<Entity> filtered = new ArrayList<Entity>();
@@ -632,11 +639,10 @@ public class IconDemoPanel extends JPanel {
     }
 
     public synchronized void setCurrentEntity(Entity entity) {
-        if (entity != null && (currentEntity == null || !entity.getId().equals(currentEntity.getId()))) {
-        	ModelMgr.getModelMgr().notifyEntitySelected(entity.getId());
-        }
+        if (Utils.areSameEntity(entity, currentEntity)) return;
         this.currentEntity = entity;
         imagesPanel.setSelectedImage(currentEntity);
+    	ModelMgr.getModelMgr().selectEntity(entity.getId());
     }
 
     public ImagesPanel getImagesPanel() {

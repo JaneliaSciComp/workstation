@@ -6,24 +6,27 @@
  */
 package org.janelia.it.FlyWorkstation.shared.util;
 
-import loci.formats.gui.BufferedImageReader;
-import loci.formats.in.TiffReader;
-
-import javax.media.jai.operator.InvertDescriptor;
-import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableColumnModel;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableColumn;
-
-import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
-
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+
+import javax.media.jai.operator.InvertDescriptor;
+import javax.swing.ImageIcon;
+import javax.swing.JTable;
+import javax.swing.SwingConstants;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableColumnModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
+
+import loci.formats.gui.BufferedImageReader;
+import loci.formats.in.TiffReader;
+
+import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
+import org.janelia.it.jacs.model.entity.Entity;
 
 /**
  * Common utilities for loading images, testing strings, etc.
@@ -48,6 +51,14 @@ public class Utils {
         }
     }
 
+    public static boolean areSame(Object obj1, Object obj2) {
+    	return (obj1 == obj2) || (obj1!=null && obj2!=null && obj1.equals(obj2));
+    }
+    
+    public static boolean areSameEntity(Entity entity1, Entity entity2) {
+    	return areSame(entity1, entity2) || (entity1!=null && entity2!=null && entity1.getId().equals(entity2.getId()));
+    }
+    
     public static boolean isEmpty(String str) {
         return (str == null || "".equals(str));
     }

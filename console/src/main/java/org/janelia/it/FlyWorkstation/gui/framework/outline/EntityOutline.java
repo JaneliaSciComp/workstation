@@ -259,10 +259,10 @@ public class EntityOutline extends EntityTree implements Cloneable {
         if (node instanceof LazyTreeNode) return;
     	final Entity entity = (Entity) node.getUserObject();
     	
-    	if (selectedEntity == entity) return;
+    	if (Utils.areSame(entity, selectedEntity)) return;
     	selectedEntity = entity;
     	
-        ModelMgr.getModelMgr().notifyEntitySelected(entity.getId());
+        ModelMgr.getModelMgr().selectEntity(entity.getId());
         
         // TODO: eventually, everything below here should be moved into a listener on the viewer panel which 
         // listens to the entitySelected event
