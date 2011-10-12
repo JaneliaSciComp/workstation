@@ -71,8 +71,8 @@ public class OntologyTree extends JPanel {
 
             protected void hadSuccess() {
                 try {
-                    initializeTree(rootEntity);
-                    success.call();
+                    initializeTree(new OntologyRoot(rootEntity));
+//                    success.call();
                 }
                 catch (Exception e) {
                     hadError(e);
@@ -89,12 +89,6 @@ public class OntologyTree extends JPanel {
         };
 
         loadingWorker.execute();
-    }
-
-    public void initializeTree(final Entity rootEntity) {
-
-        OntologyRoot root = new OntologyRoot(rootEntity);
-        initializeTree(root);
     }
 
     public void initializeTree(final OntologyRoot root) {

@@ -1,15 +1,16 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline.choose;
 
-import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyTree;
-import org.janelia.it.jacs.model.ontology.OntologyElement;
-import org.janelia.it.jacs.model.ontology.OntologyRoot;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
-import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.List;
+
+import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyTree;
+import org.janelia.it.jacs.model.ontology.OntologyElement;
+import org.janelia.it.jacs.model.ontology.OntologyRoot;
 
 /**
  * An ontology term chooser that can display an ontology specified by an OntologyRoot and allows the user to select

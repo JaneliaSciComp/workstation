@@ -187,12 +187,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener {
     
     public void loadOntology(long rootId) {
     	if (getCurrentOntology()!=null && getCurrentOntology().getId().equals(rootId)) return;
-    	initializeTree(rootId, new Callable<Void>() {
-			public Void call() throws Exception {
-				ModelMgr.getModelMgr().setCurrentOntology(getCurrentOntology());
-				return null;
-			}
-        });
+    	initializeTree(rootId, null);
     }
 
     /**
@@ -308,6 +303,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener {
 
         // Load key bind preferences and bind keys to actions 
 
+        ModelMgr.getModelMgr().setCurrentOntology(getCurrentOntology());
         SessionMgr.getKeyBindings().loadOntologyKeybinds(root, ontologyActionMap);
     }
 
