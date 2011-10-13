@@ -310,7 +310,7 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
             System.out.println("Saved annotation session with taskId=" + task.getObjectId());
 
             Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
-            browser.getOutlookBar().setVisibleBarByName(Browser.BAR_SESSION);
+            browser.getOutlookBar().setVisibleBarByName(Browser.BAR_SESSIONS);
             final SessionOutline sessionOutline = browser.getAnnotationSessionOutline();
             sessionOutline.loadAnnotationSessions(new Callable<Void>() {
 				public Void call() throws Exception {

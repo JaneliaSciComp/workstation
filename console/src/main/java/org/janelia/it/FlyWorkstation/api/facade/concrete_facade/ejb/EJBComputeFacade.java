@@ -32,6 +32,11 @@ public class EJBComputeFacade implements ComputeFacade {
     }
 
     @Override
+    public List<Task> getUserTasks() throws Exception {
+        return EJBFactory.getRemoteComputeBean().getUserTasks(SessionMgr.getUsername());
+    }
+    
+    @Override
     public List<Task> getUserTasksByType(String taskName) throws Exception {
         return EJBFactory.getRemoteComputeBean().getUserTasksByType(taskName, SessionMgr.getUsername());
     }

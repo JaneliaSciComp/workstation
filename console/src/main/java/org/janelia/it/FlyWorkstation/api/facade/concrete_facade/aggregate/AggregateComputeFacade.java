@@ -66,6 +66,10 @@ public class AggregateComputeFacade extends AggregateFacadeBase implements Compu
         }
     }
     @Override
+    public List<Task> getUserTasks() throws Exception {
+		throw new UnsupportedOperationException();
+    }
+    @Override
     public List<Task> getUserTasksByType(String taskName) throws Exception {
         Object[] aggregates = getAggregates();
         List<Task> returnList = new ArrayList<Task>();

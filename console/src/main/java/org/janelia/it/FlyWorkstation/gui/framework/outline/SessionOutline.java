@@ -7,8 +7,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -17,7 +15,6 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
-import javax.swing.table.TableCellRenderer;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
@@ -26,6 +23,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicRow;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicTable;
+import org.janelia.it.FlyWorkstation.gui.framework.table.ProgressCellRenderer;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.tasks.Task;
@@ -203,10 +201,19 @@ public class SessionOutline extends JPanel {
 			}
         };
 
+        dynamicTable.getTable().getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        
         DynamicColumn nameCol = dynamicTable.addColumn(COLUMN_NAME, true, false, false);
         DynamicColumn pctCompCol = dynamicTable.addColumn(COLUMN_PCT_COMPLETE, true, false, true);
         
-        dynamicTable.setColumnRenderer(pctCompCol, new ProgressCellRenderer());
+        dynamicTable.setColumnRenderer(pctCompCol, new ProgressCellRenderer() {
+			@Override
+			protected int getValueAtRowIndex(int rowIndex) {
+				DynamicRow row = dynamicTable.getRows().get(rowIndex);
+				AnnotationSession session = (AnnotationSession)row.getUserObject();
+				return (int)Math.round(session.getPercentComplete()*100);
+			}
+		});
 
         if (null != tasks) {
 	        for (Task task : tasks) {
@@ -226,24 +233,7 @@ public class SessionOutline extends JPanel {
         repaint();
     }
 	
-	private class ProgressCellRenderer extends JProgressBar implements TableCellRenderer {
 
-		ProgressCellRenderer() {
-			setPreferredSize(new Dimension(100, 16));
-			setMinimum(0);
-			setMaximum(100);
-			setIndeterminate(false);
-		}
-		
-		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
-				boolean hasFocus, int rowIndex, int colIndex) {
-			
-			DynamicRow row = dynamicTable.getRows().get(rowIndex);
-			AnnotationSession session = (AnnotationSession)row.getUserObject();
-			setValue((int)Math.round(session.getPercentComplete()*100));
-			return this;
-		}
-	}
 	
     private void deleteSession(AnnotationSession session) {
 

@@ -45,15 +45,17 @@ public abstract class DynamicTable extends JPanel {
 			@Override
 			protected void popupTriggered(MouseEvent e) {
 				ListSelectionModel lsm = table.getSelectionModel();
-				if (allowRightClickCellSelection && lsm.getAnchorSelectionIndex() == lsm.getLeadSelectionIndex()) {
+				if (lsm.getAnchorSelectionIndex() == lsm.getLeadSelectionIndex()) { 
 					// User is not selecting multiple rows, so we can select the cell they right clicked on
-	                table.setColumnSelectionAllowed(true);
-	                int col = table.columnAtPoint(e.getPoint());
-	                table.getColumnModel().getSelectionModel().setSelectionInterval(col, col);
+					if (allowRightClickCellSelection) {
+		                table.setColumnSelectionAllowed(true);
+		                int col = table.columnAtPoint(e.getPoint());
+		                table.getColumnModel().getSelectionModel().setSelectionInterval(col, col);
+					}
+					// Select the row being clicked
+	                int row = table.rowAtPoint(e.getPoint());
+	                table.getSelectionModel().setSelectionInterval(row, row);
 				}
-				// Select the row being clicked
-                int row = table.rowAtPoint(e.getPoint());
-                table.getSelectionModel().setSelectionInterval(row, row);
 				showPopupMenu(e);
 			}
 			@Override
@@ -63,7 +65,6 @@ public abstract class DynamicTable extends JPanel {
 	                table.getColumnModel().getSelectionModel().setSelectionInterval(0, table.getColumnCount());
 				}
                 int row = table.rowAtPoint(e.getPoint());
-                table.getSelectionModel().setSelectionInterval(row, row);
                 if (row>=0) {
                 	rowClicked(row);
                 }
@@ -128,29 +129,36 @@ public abstract class DynamicTable extends JPanel {
 
         JTable target = (JTable) e.getSource();
         if (target.getSelectedRow() <0 || target.getSelectedColumn()<0) return null;
-        final String value = target.getValueAt(target.getSelectedRow(), target.getSelectedColumn()).toString();
 
         final JPopupMenu popupMenu = new JPopupMenu();
         popupMenu.setLightWeightPopupEnabled(true);
-            	
-        JMenuItem titleMenuItem = new JMenuItem(value);
-        titleMenuItem.setEnabled(false);
-        popupMenu.add(titleMenuItem);
-        
-        ListSelectionModel lsm = table.getSelectionModel();
-		if (allowRightClickCellSelection && lsm.getAnchorSelectionIndex() == lsm.getLeadSelectionIndex()) {
-			
+
+		ListSelectionModel lsm = table.getSelectionModel();
+		if (lsm.getAnchorSelectionIndex() == lsm.getLeadSelectionIndex()) { 
+
+	        final String value = target.getValueAt(target.getSelectedRow(), target.getSelectedColumn()).toString();
+	        
+	        JMenuItem titleMenuItem = new JMenuItem(value);
+	        titleMenuItem.setEnabled(false);
+	        popupMenu.add(titleMenuItem);
+	        
 			// Items which are  only available when selecting a single cell
-			
-	        JMenuItem copyMenuItem = new JMenuItem("  Copy to clipboard");
-	        copyMenuItem.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-		            Transferable t = new StringSelection(value);
-		            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
-				}
-			});
-	        popupMenu.add(copyMenuItem);
+			if (allowRightClickCellSelection) {
+		        JMenuItem copyMenuItem = new JMenuItem("  Copy to clipboard");
+		        copyMenuItem.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+			            Transferable t = new StringSelection(value);
+			            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
+					}
+				});
+		        popupMenu.add(copyMenuItem);
+			}
+		}
+		else {
+	        JMenuItem titleMenuItem = new JMenuItem("(Multiple items selected)");
+	        titleMenuItem.setEnabled(false);
+	        popupMenu.add(titleMenuItem);
 		}
 		
 		return popupMenu;
