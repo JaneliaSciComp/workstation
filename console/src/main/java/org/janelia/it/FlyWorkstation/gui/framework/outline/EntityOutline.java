@@ -44,6 +44,10 @@ public class EntityOutline extends EntityTree implements Cloneable {
         if (null != entityRootList && entityRootList.size() >= 1) {
             initializeTree(entityRootList.get(0).getId());
         }
+        else {
+        	showNothing();
+        }
+        updateUI();
     }
     
     /**
