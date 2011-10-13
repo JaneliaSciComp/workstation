@@ -39,6 +39,15 @@
     <orderEntry type="module" module-name="Shared" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="module" module-name="Compute" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../common/LOCI/loci_tools.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
   <component name="org.twodividedbyzero.idea.findbugs">
     <option name="_basePreferences">
