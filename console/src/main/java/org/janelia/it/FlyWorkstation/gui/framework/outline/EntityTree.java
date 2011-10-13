@@ -50,6 +50,10 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
         add(treesPanel, BorderLayout.CENTER);
     }
 
+    public void showNothing() {
+        treesPanel.removeAll();
+    }
+    
     public void showLoadingIndicator() {
         treesPanel.removeAll();
         treesPanel.add(new JLabel(Icons.getLoadingIcon()));

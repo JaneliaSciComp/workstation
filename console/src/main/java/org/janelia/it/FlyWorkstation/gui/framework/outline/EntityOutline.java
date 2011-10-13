@@ -36,33 +36,16 @@ public class EntityOutline extends EntityTree implements Cloneable {
     public EntityOutline() {
     	super(true);
         this.setMinimumSize(new Dimension(400, 400));
-
         showLoadingIndicator();
-
-        SimpleWorker loadingWorker = new SimpleWorker() {
-
-            protected void doStuff() throws Exception {
-                entityRootList = ModelMgr.getModelMgr().getCommonRootEntitiesByTypeName(EntityConstants.TYPE_FOLDER);
-            }
-
-            protected void hadSuccess() {
-                if (null != entityRootList && entityRootList.size() >= 1) {
-                    initializeTree(entityRootList.get(0).getId());
-                }
-            }
-
-            protected void hadError(Throwable error) {
-                error.printStackTrace();
-                JOptionPane.showMessageDialog(EntityOutline.this, "Error loading folders", "Folder Load Error", JOptionPane.ERROR_MESSAGE);
-                treesPanel.removeAll();
-                EntityOutline.this.updateUI();
-            }
-
-        };
-
-        loadingWorker.execute();
     }
 
+    public void init(List<Entity> entityRootList) {
+    	this.entityRootList = entityRootList;
+        if (null != entityRootList && entityRootList.size() >= 1) {
+            initializeTree(entityRootList.get(0).getId());
+        }
+    }
+    
     /**
      * Override this method to show a popup menu when the user right clicks a node in the tree.
      *
@@ -97,7 +80,7 @@ public class EntityOutline extends EntityTree implements Cloneable {
         
         // Change data source (root only)
     	if (node.isRoot()) {
-            JMenu changeDataSourceMenu = new JMenu("  Change data source...");
+            JMenu changeDataSourceMenu = new JMenu("  Change data root...");
 
         	for(final Entity commonRoot : entityRootList) {
         		if (!"system".equals(commonRoot.getUser().getUserLogin()) && !SessionMgr.getUsername().equals(commonRoot.getUser().getUserLogin())) continue;

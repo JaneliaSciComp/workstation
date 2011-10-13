@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.console;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.LoadRequestStatusObserverAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestState;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestStatus;
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSessionPropertyDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
@@ -13,13 +14,18 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModelListe
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.FlyWorkstation.gui.util.JOutlookBar;
+import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableImage;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 
 import javax.swing.*;
+
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.print.PageFormat;
 import java.awt.print.PrinterJob;
@@ -52,7 +58,9 @@ public class Browser extends JFrame implements Cloneable {
     public static final String VIEW_OUTLINES = "Outlines Section";
     public static final String VIEW_ONTOLOGY = "Ontology Section";
     public static final String BAR_SESSION = "Annotation Sessions";
-    public static final String BAR_DATA = "Data";
+    public static final String BAR_PUBLIC_DATA = "Public Data";
+    public static final String BAR_PRIVATE_DATA = "My Data";
+    public static final String BAR_TASKS = "Tasks";
 
     private static String MEMORY_EXCEEDED_PRT_SCR_MSG = "Insufficient memory to print screen";
     private static String MEMORY_EXCEEDED_ADVISORY = "Low Memory";
@@ -84,7 +92,8 @@ public class Browser extends JFrame implements Cloneable {
     private JOutlookBar outlookBar;
     //    private FileOutline fileOutline;
     private SessionOutline sessionOutline;
-    private EntityOutline entityOutline;
+    private EntityOutline publicEntityOutline;
+    private EntityOutline privateEntityOutline;
     private OntologyOutline ontologyOutline;
     private AnnotationSessionPropertyDialog annotationSessionPropertyPanel;
     private String mostRecentFileOutlinePath;
@@ -197,15 +206,18 @@ public class Browser extends JFrame implements Cloneable {
 //        subBrowserTabPane = new SubBrowser(browserModel);
 //        fileOutline = new FileOutline(this);
         sessionOutline = new SessionOutline(this);
-        entityOutline = new EntityOutline();
+        publicEntityOutline = new EntityOutline();
+        privateEntityOutline = new EntityOutline();
+        
         ontologyOutline = new OntologyOutline();
-        annotationSessionPropertyPanel = new AnnotationSessionPropertyDialog(entityOutline, ontologyOutline);
+        annotationSessionPropertyPanel = new AnnotationSessionPropertyDialog(publicEntityOutline, ontologyOutline);
         annotationSessionPropertyPanel.pack();
         ontologyOutline.setPreferredSize(new Dimension());
 //        icsTabPane = new ICSTabPane(this);
 
         outlookBar = new JOutlookBar();
-        outlookBar.addBar(BAR_DATA, entityOutline);
+        outlookBar.addBar(BAR_PRIVATE_DATA, privateEntityOutline);
+        outlookBar.addBar(BAR_PUBLIC_DATA, publicEntityOutline);
         outlookBar.addBar(BAR_SESSION, sessionOutline);
 //        outlookBar.addBar("Files", fileOutline);
 //        outlookBar.setVisibleBarByName(Browser.BAR_SESSION);
@@ -242,6 +254,48 @@ public class Browser extends JFrame implements Cloneable {
         collapsedOutlineView.setLayout(new BorderLayout());
         mainPanel.add(collapsedOutlineView, "Collapsed FileOutline");
         getContentPane().add(mainPanel, BorderLayout.CENTER);
+
+        // Populate the data outlines
+
+        publicEntityOutline.showLoadingIndicator();
+        privateEntityOutline.showLoadingIndicator();
+        
+        SimpleWorker loadingWorker = new SimpleWorker() {
+
+            private List<Entity> entityRootList;
+        	
+            protected void doStuff() throws Exception {
+                entityRootList = ModelMgr.getModelMgr().getCommonRootEntitiesByTypeName(EntityConstants.TYPE_FOLDER);
+            }
+
+            protected void hadSuccess() {
+                List<Entity> privateRootList = new ArrayList<Entity>();
+                List<Entity> publicRootList = new ArrayList<Entity>();
+                
+            	for(final Entity commonRoot : entityRootList) {
+            		if ("system".equals(commonRoot.getUser().getUserLogin())) {
+            			publicRootList.add(commonRoot);
+            		}
+            		else if (SessionMgr.getUsername().equals(commonRoot.getUser().getUserLogin())) {
+            			privateRootList.add(commonRoot);
+            		}
+            	}
+            	
+            	publicEntityOutline.init(publicRootList);
+                privateEntityOutline.init(privateRootList);
+            }
+
+            protected void hadError(Throwable error) {
+                error.printStackTrace();
+                JOptionPane.showMessageDialog(mainPanel, "Error loading data outlines", "Data Load Error", JOptionPane.ERROR_MESSAGE);
+                publicEntityOutline.showNothing();
+                privateEntityOutline.showNothing();
+            }
+
+        };
+
+        loadingWorker.execute();
+        
     }
 
     ///////// Browser Controller section////////////
@@ -1099,7 +1153,11 @@ public class Browser extends JFrame implements Cloneable {
     }
 
     public EntityOutline getEntityOutline() {
-        return entityOutline;
+        return publicEntityOutline;
+    }
+
+    public EntityOutline getPrivateEntityOutline() {
+        return privateEntityOutline;
     }
     
     public OntologyOutline getOntologyOutline() {
