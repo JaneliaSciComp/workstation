@@ -1,15 +1,16 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.prefs.BackingStoreException;
+
+import javax.swing.*;
+
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 
 /**
  * Created by IntelliJ IDEA.
@@ -22,6 +23,7 @@ public class ToolsMenu extends JMenu {
     private JMenuItem fijiMenuItem;
     private JMenuItem toolsConfiguration;
     private JFrame parentFrame;
+    private RunNeuronSeparationDialog runNeuronSeparationDialog = new RunNeuronSeparationDialog();
 
     public ToolsMenu(Browser console) {
         super("Tools");
@@ -57,7 +59,16 @@ public class ToolsMenu extends JMenu {
                     }
                 }
             });
+            
 
+
+            fijiMenuItem = new JMenuItem("Neuron Separation...");
+            fijiMenuItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
+                	runNeuronSeparationDialog.showDialog();
+                }
+            });
+            
             toolsConfiguration = new JMenuItem("Configure Tools...");
             toolsConfiguration.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {

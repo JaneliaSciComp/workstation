@@ -45,7 +45,7 @@ public abstract class DynamicTable extends JPanel {
 			@Override
 			protected void popupTriggered(MouseEvent e) {
 				ListSelectionModel lsm = table.getSelectionModel();
-				if (lsm.getAnchorSelectionIndex() == lsm.getLeadSelectionIndex()) { 
+				if (lsm.getMinSelectionIndex() == lsm.getMaxSelectionIndex()) { 
 					// User is not selecting multiple rows, so we can select the cell they right clicked on
 					if (allowRightClickCellSelection) {
 		                table.setColumnSelectionAllowed(true);

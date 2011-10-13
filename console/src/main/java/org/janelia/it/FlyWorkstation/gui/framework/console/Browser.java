@@ -1166,7 +1166,11 @@ public class Browser extends JFrame implements Cloneable {
         return sessionOutline;
     }
 
-    public AnnotationSessionPropertyDialog getAnnotationSessionPropertyPanel() {
+    public TaskOutline getTaskOutline() {
+		return taskOutline;
+	}
+
+	public AnnotationSessionPropertyDialog getAnnotationSessionPropertyDialog() {
         return annotationSessionPropertyPanel;
     }
 

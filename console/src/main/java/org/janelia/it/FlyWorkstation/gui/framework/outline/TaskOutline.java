@@ -19,6 +19,7 @@ import java.util.List;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
@@ -28,6 +29,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicRow;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicTable;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 
@@ -39,14 +41,32 @@ import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 public class TaskOutline extends JPanel {
 
     private static final String COLUMN_NAME = "Name";
-    private static final String COLUMN_DATE = "Date";
+    private static final String COLUMN_STATUS = "Status";
 
     private List<Task> tasks = new ArrayList<Task>();
     private Browser consoleFrame;
     protected final JPanel tablePanel;
     private DynamicTable dynamicTable;
     private SimpleWorker loadingWorker;
-    	
+
+    private TableCellRenderer taskTableCellRenderer = new DefaultTableCellRenderer() {
+
+		@Override
+		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+				boolean hasFocus, int rowIndex, int columnIndex) {
+			JLabel label = (JLabel)super.getTableCellRendererComponent(table, value, isSelected, hasFocus, rowIndex, columnIndex);
+			DynamicRow row = dynamicTable.getRows().get(rowIndex);
+			Task task = (Task)row.getUserObject();
+			if (task.isDone()) {
+				label.setForeground(Color.gray);
+			}
+			else {
+				label.setForeground(Color.black);
+			}
+			return label;
+		}
+    };
+    
     public TaskOutline(Browser consoleFrame) {
         super(new BorderLayout());
 
@@ -71,13 +91,15 @@ public class TaskOutline extends JPanel {
 
         loadingWorker = new SimpleWorker() {
 
+        	List<Task> myTasks;
+        	
             protected void doStuff() throws Exception {
-                tasks.addAll(ModelMgr.getModelMgr().getUserTasks());
+            	myTasks = ModelMgr.getModelMgr().getUserParentTasks();
             }
 
             protected void hadSuccess() {
                 try {
-                    initializeTable(tasks);
+                    initializeTable(myTasks);
                 }
                 catch (Exception e) {
                     hadError(e);
@@ -97,7 +119,7 @@ public class TaskOutline extends JPanel {
         loadingWorker.execute();
     }
     
-	public void initializeTable(List<Task> tasks) {
+	public void initializeTable(List<Task> myTasks) {
 		
         dynamicTable = new DynamicTable() {
         	
@@ -106,7 +128,10 @@ public class TaskOutline extends JPanel {
 
             	Task task = (Task)userObject;
             	if (column.getName().equals(COLUMN_NAME)) {
-            		return task.getDisplayName();
+            		return task.getObjectId();
+            	}
+            	if (column.getName().equals(COLUMN_STATUS)) {
+            		return task.getLastEvent().getEventType();
             	}
 				return null;
 			}
@@ -117,8 +142,8 @@ public class TaskOutline extends JPanel {
             	
             	if (dynamicTable.getCurrentRow() == null) return popupMenu;
             	
-//                Object o = dynamicTable.getCurrentRow().getUserObject();
-//                final Task task = (Task)o;
+                Object o = dynamicTable.getCurrentRow().getUserObject();
+                final Task task = (Task)o;
 //
 //                JMenuItem editMenuItem = new JMenuItem("  View details");
 //                editMenuItem.addActionListener(new ActionListener() {
@@ -128,6 +153,17 @@ public class TaskOutline extends JPanel {
 //                });
 //                popupMenu.add(editMenuItem);
 
+        		ListSelectionModel lsm = dynamicTable.getTable().getSelectionModel();
+        		if (lsm.getMinSelectionIndex() != lsm.getMaxSelectionIndex() || !task.isDone()) {
+	                JMenuItem deleteMenuItem = new JMenuItem("  Cancel");
+	                deleteMenuItem.addActionListener(new ActionListener() {
+	                    public void actionPerformed(ActionEvent actionEvent) {
+	                        cancelTasks();
+	                    }
+	                });
+	                popupMenu.add(deleteMenuItem);
+            	}
+                
                 JMenuItem deleteMenuItem = new JMenuItem("  Delete");
                 deleteMenuItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
@@ -141,36 +177,25 @@ public class TaskOutline extends JPanel {
         };
 
         DynamicColumn nameCol = dynamicTable.addColumn(COLUMN_NAME, true, false, false);
-
-        dynamicTable.setColumnRenderer(nameCol, new DefaultTableCellRenderer() {
-
-			@Override
-			public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
-					boolean hasFocus, int rowIndex, int columnIndex) {
-				JLabel label = (JLabel)super.getTableCellRendererComponent(table, value, isSelected, hasFocus, rowIndex, columnIndex);
-				DynamicRow row = dynamicTable.getRows().get(rowIndex);
-				Task task = (Task)row.getUserObject();
-				if (task.isDone()) {
-					label.setForeground(Color.gray);
-				}
-				return label;
-			}
-        });
+        DynamicColumn statusCol = dynamicTable.addColumn(COLUMN_STATUS, true, false, false);
         
-        if (null != tasks) {
+        
+        dynamicTable.setColumnRenderer(nameCol, taskTableCellRenderer);
+        dynamicTable.setColumnRenderer(statusCol, taskTableCellRenderer);
+        
+        if (null != myTasks) {
         	// Reverse id order (basically reverse chronological order since the ids are time-based)
-            Collections.sort(tasks, new Comparator<Task>() {
+            Collections.sort(myTasks, new Comparator<Task>() {
     			@Override
     			public int compare(Task o1, Task o2) {
     				return o2.getObjectId().compareTo(o1.getObjectId());
     			}
     		});
-	        for (Task task : tasks) {
-	            if (task.isTaskDeleted()) continue;
+	        for (Task task : myTasks) {
 	            if (AnnotationSessionTask.TASK_NAME.equals(task.getTaskName())) continue;
 	            dynamicTable.addRow(task);
+	            tasks.add(task);
 	        }
-	        
         }
 
         dynamicTable.updateTableModel();
@@ -181,33 +206,68 @@ public class TaskOutline extends JPanel {
         repaint();
     }
 	
+	private void cancelTasks() {
+
+        final List<Task> toCancel = new ArrayList<Task>();
+        for (int i : dynamicTable.getTable().getSelectedRows()) {
+        	Task task = tasks.get(i);
+            if (!task.getOwner().equals(SessionMgr.getUsername())) {
+                JOptionPane.showMessageDialog(consoleFrame, 
+                		"Only the owner may delete a task", "Cannot Delete", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            toCancel.add(task);
+        }
+
+
+        int deleteConfirmation = JOptionPane.showConfirmDialog(consoleFrame, 
+        		"Are you sure you want to cancel the selected tasks? ", "Delete Tasks", JOptionPane.YES_NO_OPTION);
+        if (deleteConfirmation != 0) return;
+
+        try {
+            for (Task task : toCancel) {
+                ModelMgr.getModelMgr().cancelTaskById(task.getObjectId());
+            }
+            
+            loadTasks();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(consoleFrame, 
+            		"Error canceling session", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+		
+	}
+	
     private void deleteTasks() {
     	
         final List<Task> toDelete = new ArrayList<Task>();
         for (int i : dynamicTable.getTable().getSelectedRows()) {
         	Task task = tasks.get(i);
             if (!task.getOwner().equals(SessionMgr.getUsername())) {
-                JOptionPane.showMessageDialog(consoleFrame, "Only the owner may delete a task", "Cannot Delete", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(consoleFrame, 
+                		"Only the owner may delete a task", "Cannot Delete", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             toDelete.add(task);
         }
 
-        int deleteConfirmation = JOptionPane.showConfirmDialog(consoleFrame, "Are you sure you want to delete the selected tasks? ", "Delete Tasks", JOptionPane.YES_NO_OPTION);
+        int deleteConfirmation = JOptionPane.showConfirmDialog(consoleFrame, 
+        		"Are you sure you want to delete the selected tasks? ", "Delete Tasks", JOptionPane.YES_NO_OPTION);
         if (deleteConfirmation != 0) return;
 
         try {
             for (Task task : toDelete) {
                 ModelMgr.getModelMgr().deleteTaskById(task.getObjectId());
+                dynamicTable.removeRow(dynamicTable.getRowForUserObject(task));
+                tasks.remove(task);
             }
-            
-            // Update Tree UI
-            dynamicTable.removeRow(dynamicTable.getCurrentRow());
             SwingUtilities.updateComponentTreeUI(dynamicTable);
         }
         catch (Exception e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(consoleFrame, "Error deleting session", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(consoleFrame, 
+            		"Error deleting session", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 

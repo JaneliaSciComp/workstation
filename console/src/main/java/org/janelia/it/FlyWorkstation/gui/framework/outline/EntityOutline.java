@@ -119,7 +119,7 @@ public class EntityOutline extends EntityTree implements Cloneable {
                         protected void doneLoading() {
                             Utils.setDefaultCursor(EntityOutline.this);
                             List<Entity> entities = entity.getDescendantsOfType(EntityConstants.TYPE_TIF_2D);
-                            SessionMgr.getSessionMgr().getActiveBrowser().getAnnotationSessionPropertyPanel().showForNewSession(entity.getName(), entities);
+                            SessionMgr.getSessionMgr().getActiveBrowser().getAnnotationSessionPropertyDialog().showForNewSession(entity.getName(), entities);
                             SwingUtilities.updateComponentTreeUI(EntityOutline.this);
                         }
 
@@ -156,7 +156,7 @@ public class EntityOutline extends EntityTree implements Cloneable {
                         protected void doneLoading() {
                             Utils.setDefaultCursor(EntityOutline.this);
                             List<Entity> entities = entity.getDescendantsOfType(EntityConstants.TYPE_NEURON_FRAGMENT);
-                            SessionMgr.getSessionMgr().getActiveBrowser().getAnnotationSessionPropertyPanel().showForNewSession(entity.getName(), entities);
+                            SessionMgr.getSessionMgr().getActiveBrowser().getAnnotationSessionPropertyDialog().showForNewSession(entity.getName(), entities);
                             SwingUtilities.updateComponentTreeUI(EntityOutline.this);
                         }
 

@@ -162,7 +162,7 @@ public class SessionOutline extends JPanel {
                     JMenuItem editMenuItem = new JMenuItem("  Edit");
                     editMenuItem.addActionListener(new ActionListener() {
                         public void actionPerformed(ActionEvent actionEvent) {
-                            SessionMgr.getSessionMgr().getActiveBrowser().getAnnotationSessionPropertyPanel().showForSession(session);
+                            SessionMgr.getSessionMgr().getActiveBrowser().getAnnotationSessionPropertyDialog().showForSession(session);
                         }
                     });
                     popupMenu.add(editMenuItem);
@@ -233,8 +233,6 @@ public class SessionOutline extends JPanel {
         repaint();
     }
 	
-
-	
     private void deleteSession(AnnotationSession session) {
 
         if (!session.getTask().getOwner().equals(SessionMgr.getUsername())) {
@@ -243,10 +241,7 @@ public class SessionOutline extends JPanel {
         }
 
         int deleteConfirmation = JOptionPane.showConfirmDialog(consoleFrame, "Are you sure you want to delete this session? All annotations made in this session will be lost.", "Delete Session", JOptionPane.YES_NO_OPTION);
-
-        if (deleteConfirmation != 0) {
-            return;
-        }
+        if (deleteConfirmation != 0) return;
 
         try {
             // Remove all annotations
