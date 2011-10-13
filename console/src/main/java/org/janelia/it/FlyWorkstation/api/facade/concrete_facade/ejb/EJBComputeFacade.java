@@ -27,6 +27,11 @@ public class EJBComputeFacade implements ComputeFacade {
     }
 
     @Override
+    public void cancelTaskById(Long taskId) throws Exception {
+        EJBFactory.getRemoteComputeBean().cancelTaskById(taskId);
+    }
+
+    @Override
     public void deleteTaskById(Long taskId) throws Exception {
         EJBFactory.getRemoteComputeBean().deleteTaskById(taskId);
     }
@@ -34,6 +39,11 @@ public class EJBComputeFacade implements ComputeFacade {
     @Override
     public List<Task> getUserTasks() throws Exception {
         return EJBFactory.getRemoteComputeBean().getUserTasks(SessionMgr.getUsername());
+    }
+
+    @Override
+    public List<Task> getUserParentTasks() throws Exception {
+        return EJBFactory.getRemoteComputeBean().getUserParentTasks(SessionMgr.getUsername());
     }
     
     @Override

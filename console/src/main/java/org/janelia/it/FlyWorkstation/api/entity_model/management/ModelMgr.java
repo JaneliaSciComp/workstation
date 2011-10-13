@@ -505,6 +505,14 @@ public class ModelMgr {
         FacadeManager.getFacadeManager().getComputeFacade().deleteTaskById(taskId);
     }
     
+    public void cancelTaskById(Long taskId) throws Exception {
+        FacadeManager.getFacadeManager().getComputeFacade().cancelTaskById(taskId);
+    }
+    
+    public List<Task> getUserParentTasks() throws Exception {
+        return FacadeManager.getFacadeManager().getComputeFacade().getUserParentTasks();
+    }
+    
     public List<Task> getUserTasks() throws Exception {
         return FacadeManager.getFacadeManager().getComputeFacade().getUserTasks();
     }
