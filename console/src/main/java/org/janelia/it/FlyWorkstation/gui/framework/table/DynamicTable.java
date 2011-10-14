@@ -58,6 +58,7 @@ public abstract class DynamicTable extends JPanel {
 				}
 				showPopupMenu(e);
 			}
+			
 			@Override
 			protected void singleLeftClicked(MouseEvent e) {
 				if (allowRightClickCellSelection) {
@@ -73,7 +74,16 @@ public abstract class DynamicTable extends JPanel {
                 }
 			}
 			
-			
+			@Override
+			protected void doubleLeftClicked(MouseEvent e) {
+                int row = table.rowAtPoint(e.getPoint());
+                if (row>=0) {
+                	rowDoubleClicked(row);
+                }
+                else {
+                	backgroundClicked();
+                }
+			}
         });
 
         JTableHeader header = table.getTableHeader();
@@ -134,7 +144,7 @@ public abstract class DynamicTable extends JPanel {
         popupMenu.setLightWeightPopupEnabled(true);
 
 		ListSelectionModel lsm = table.getSelectionModel();
-		if (lsm.getAnchorSelectionIndex() == lsm.getLeadSelectionIndex()) { 
+		if (lsm.getMinSelectionIndex() == lsm.getMaxSelectionIndex()) { 
 
 	        final String value = target.getValueAt(target.getSelectedRow(), target.getSelectedColumn()).toString();
 	        
@@ -170,12 +180,19 @@ public abstract class DynamicTable extends JPanel {
     }   
 
     /**
-     * Override this method to provide custom functionality for row selection.
+     * Override this method to provide custom functionality for row left clicking.
      * @param row
      */
     protected void rowClicked(int row) {
     }
 
+	/**
+	 * Override this method to provide custom functionality for row double left clicking. 
+	 * @param row
+	 */
+	protected void rowDoubleClicked(int row) {
+	}
+	
     /**
      * Override this method to provide custom functionality for background clicking.
      */
