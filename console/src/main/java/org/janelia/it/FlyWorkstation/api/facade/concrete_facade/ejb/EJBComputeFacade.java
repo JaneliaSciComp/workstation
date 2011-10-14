@@ -1,11 +1,11 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 
+import java.util.List;
+
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.ComputeFacade;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.user_data.User;
-
-import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -22,20 +22,28 @@ public class EJBComputeFacade implements ComputeFacade {
 
     @Override
     public Task getTaskById(Long taskId) throws Exception {
-    	if (taskId == null) return null;
+    	if (taskId == null) throw new IllegalArgumentException("Task id may not be null");
         return EJBFactory.getRemoteComputeBean().getTaskById(taskId);
     }
 
     @Override
     public void cancelTaskById(Long taskId) throws Exception {
+    	if (taskId == null) throw new IllegalArgumentException("Task id may not be null");
         EJBFactory.getRemoteComputeBean().cancelTaskById(taskId);
     }
 
     @Override
     public void deleteTaskById(Long taskId) throws Exception {
+    	if (taskId == null) throw new IllegalArgumentException("Task id may not be null");
         EJBFactory.getRemoteComputeBean().deleteTaskById(taskId);
     }
 
+    @Override
+    public void submitJob(String processDefName, Long taskId) throws Exception {
+    	if (taskId == null) throw new IllegalArgumentException("Task id may not be null");
+        EJBFactory.getRemoteComputeBean().submitJob(processDefName, taskId);
+    }
+    
     @Override
     public List<Task> getUserTasks() throws Exception {
         return EJBFactory.getRemoteComputeBean().getUserTasks(SessionMgr.getUsername());

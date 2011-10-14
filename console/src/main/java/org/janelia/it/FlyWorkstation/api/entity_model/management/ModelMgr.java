@@ -508,6 +508,10 @@ public class ModelMgr {
     public void cancelTaskById(Long taskId) throws Exception {
         FacadeManager.getFacadeManager().getComputeFacade().cancelTaskById(taskId);
     }
+
+    public void submitJob(String processDefName, Long taskId) throws Exception {
+        FacadeManager.getFacadeManager().getComputeFacade().submitJob(processDefName, taskId);
+    }
     
     public List<Task> getUserParentTasks() throws Exception {
         return FacadeManager.getFacadeManager().getComputeFacade().getUserParentTasks();
