@@ -13,6 +13,8 @@ import java.util.concurrent.Callable;
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 
+import loci.plugins.config.SpringUtilities;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.choose.EntityChooser;
@@ -37,9 +39,10 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
     private static final String CANCEL_COMMAND = "cancel";
     private static final String SESSION_SAVE_COMMAND = "session_save";
 
+    private JPanel attrPanel;
     private JButton okButton;
     private JButton cancelButton;
-    private TextField nameValueField;
+    private JTextField nameValueField;
     private JLabel ownerValueLabel;
 
     private SelectionTreePanel<Entity> entityTreePanel;
@@ -50,47 +53,28 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
     public AnnotationSessionPropertyDialog(final EntityOutline entityOutline, final OntologyOutline ontologyOutline) {
 
         setModalityType(ModalityType.APPLICATION_MODAL);
-        setPreferredSize(new Dimension(800, 600));
         getContentPane().setLayout(new BorderLayout());
 
         GridBagConstraints c = new GridBagConstraints();
 
-        JPanel attrPanel = new JPanel(new GridBagLayout());
+        attrPanel = new JPanel(new SpringLayout());
         attrPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10), 
         		BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Session Properties")));
 
-
-        JLabel nameLabel = new JLabel("Name: ");
-        nameLabel.setAlignmentX(RIGHT_ALIGNMENT);
-        c.gridx = 0;
-        c.gridy = 0;
-        c.insets = new Insets(0, 0, 10, 0);
-        attrPanel.add(nameLabel, c);
-
-        nameValueField = new TextField();
-        nameValueField.setColumns(60);
-        c.gridx = 1;
-        c.gridy = 0;
-        c.insets = new Insets(0, 0, 10, 0);
-        c.fill = GridBagConstraints.HORIZONTAL;
-        attrPanel.add(nameValueField, c);
-
-        JLabel ownerLabel = new JLabel("Owner: ");
-        nameLabel.setAlignmentX(RIGHT_ALIGNMENT);
-        c.gridx = 0;
-        c.gridy = 1;
-        c.insets = new Insets(0, 0, 10, 0);
-        attrPanel.add(ownerLabel, c);
-
-        ownerValueLabel = new JLabel("");
-        c.gridx = 1;
-        c.gridy = 1;
-        c.insets = new Insets(0, 0, 10, 0);
-        c.fill = GridBagConstraints.HORIZONTAL;
-        attrPanel.add(ownerValueLabel, c);
-
+        JLabel nameLabel = new JLabel("Name:");
+        nameValueField = new JTextField(40);
+        nameLabel.setLabelFor(nameValueField);
+        attrPanel.add(nameLabel);
+        attrPanel.add(nameValueField);
+        
+        JLabel ownerLabel = new JLabel("Owner:");
+        ownerValueLabel = new JLabel();
+        nameLabel.setLabelFor(ownerValueLabel);
+        attrPanel.add(ownerLabel);
+        attrPanel.add(ownerValueLabel);
+        
         add(attrPanel, BorderLayout.NORTH);
-
+        SpringUtilities.makeCompactGrid(attrPanel, attrPanel.getComponentCount()/2, 2, 6, 6, 6, 6);
 
         JPanel treesPanel = new JPanel(new GridLayout(1, 2));
 
@@ -158,6 +142,7 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
         };
         c.gridx = 0;
         c.gridy = 0;
+        entityTreePanel.setPreferredSize(new Dimension(500, 500));
         treesPanel.add(entityTreePanel);
 
         categoryTreePanel = new SelectionTreePanel<OntologyElement>("Annotations to complete") {
@@ -193,6 +178,7 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
 
         c.gridx = 1;
         c.gridy = 0;
+        categoryTreePanel.setPreferredSize(new Dimension(500, 500));
         treesPanel.add(categoryTreePanel);
 
         add(treesPanel, BorderLayout.CENTER);
@@ -228,12 +214,11 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
                 nameValueField.selectAll();
             }
         });
+        
+        pack();
     }
 
     private void init() {
-        if (entityTreePanel.getDynamicTree() == null)
-            setLocationRelativeTo(SessionMgr.getSessionMgr().getActiveBrowser());
-
         entityTreePanel.createNewTree();
         entityTreePanel.getDynamicTree().setCellRenderer(new EntityTreeCellRenderer());
 
@@ -258,6 +243,8 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
             entityTreePanel.addItem(entity);
         }
 
+        pack();
+        setLocationRelativeTo(SessionMgr.getSessionMgr().getActiveBrowser());
         SwingUtilities.updateComponentTreeUI(this);
         setVisible(true);
     }
@@ -280,6 +267,8 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
             categoryTreePanel.addItem(element);
         }
 
+        pack();
+        setLocationRelativeTo(SessionMgr.getSessionMgr().getActiveBrowser());
         SwingUtilities.updateComponentTreeUI(this);
         setVisible(true);
     }

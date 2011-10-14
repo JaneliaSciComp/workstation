@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.console;
+package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
@@ -12,17 +12,15 @@ import javax.swing.*;
 
 import loci.plugins.config.SpringUtilities;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.janelia.it.jacs.model.tasks.Task;
 
 /**
- * A dialog for viewing details about an ontological annotation.
+ * A dialog for viewing details about a task.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class AnnotationDetailsDialog extends JDialog {
+public class TaskDetailsDialog extends JDialog {
 
     private static final String CLICKED_OK = "clicked_ok";
     
@@ -30,12 +28,9 @@ public class AnnotationDetailsDialog extends JDialog {
     
     private JPanel attrPanel;
     
-    private JLabel sessionLabel;
-    private JLabel sessionOwnerLabel;
-    private JLabel keyLabel;
-    private JLabel valueLabel;
+    private JLabel nameLabel;
     private JLabel ownerLabel;
-    private JLabel creationDateLabel;
+    private JLabel lastStatusLabel;
 
     private JLabel addAttribute(String name) {
         JLabel nameLabel = new JLabel(name);
@@ -46,23 +41,20 @@ public class AnnotationDetailsDialog extends JDialog {
         return valueLabel;
     }
     
-    public AnnotationDetailsDialog() {
+    public TaskDetailsDialog() {
 
     	setModalityType(ModalityType.APPLICATION_MODAL);
-        setTitle("Annotation Details");
+        setTitle("Task Details");
         getContentPane().setLayout(new BorderLayout());
 
         attrPanel = new JPanel(new SpringLayout());
         attrPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10), 
-        		BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Annotation Properties")));
+        		BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Task Properties")));
 
-        sessionLabel = addAttribute("Session: ");
-        sessionOwnerLabel = addAttribute("Session Owner: ");
-        keyLabel = addAttribute("Annotation Key: ");
-        valueLabel = addAttribute("Annotation Value: ");
-        ownerLabel = addAttribute("Annotation Owner: ");
-        creationDateLabel = addAttribute("Creation Date: ");
-
+        nameLabel = addAttribute("Name: ");
+        ownerLabel = addAttribute("Task Owner: ");
+        lastStatusLabel = addAttribute("Last Status: ");
+        
         add(attrPanel, BorderLayout.CENTER);
         SpringUtilities.makeCompactGrid(attrPanel, attrPanel.getComponentCount()/2, 2, 6, 6, 6, 6);
 
@@ -92,22 +84,12 @@ public class AnnotationDetailsDialog extends JDialog {
         });
     }
     
-    public void showForAnnotation(OntologyAnnotation annotation) {
+    public void showForTask(Task task) {
 
-    	keyLabel.setText(annotation.getKeyString());
-    	valueLabel.setText(annotation.getValueString());
-        ownerLabel.setText(annotation.getOwner());
-        creationDateLabel.setText(df.format(annotation.getEntity().getCreationDate()));
+    	nameLabel.setText(task.getDisplayName());
+    	ownerLabel.setText(task.getOwner());
+    	lastStatusLabel.setText(task.getLastEvent().getDescription());
         
-    	try {
-    		AnnotationSession session = ModelMgr.getModelMgr().getAnnotationSession(annotation.getSessionId());	
-    		sessionLabel.setText(session == null ? "None": session.getName());
-    		sessionOwnerLabel.setText(session == null ? "": session.getOwner());
-    	}
-    	catch (Exception e) {
-    		SessionMgr.getSessionMgr().handleException(e);
-    	}
-
         pack();
 
         setLocationRelativeTo(SessionMgr.getSessionMgr().getActiveBrowser());
