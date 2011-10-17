@@ -4,9 +4,11 @@
  * Date: 6/16/11
  * Time: 9:20 AM
  */
-package org.janelia.it.FlyWorkstation.gui.framework.keybind;
+package org.janelia.it.FlyWorkstation.gui.dialogs;
 
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
+import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
+import org.janelia.it.FlyWorkstation.gui.framework.keybind.ShortcutTextField;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 
@@ -19,25 +21,15 @@ import java.awt.event.*;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class KeyBindFrame extends JDialog implements ActionListener {
+public class KeyBindDialog extends ModalDialog {
 
-    private static final String CLICKED_OK = "clicked_ok";
-    private static final String CLICKED_CANCEL = "clicked_cancel";
-
-    private OntologyOutline ontologyOutline;
     private JTextArea conflictInfoArea;
     private ShortcutTextField shortcutField;
     private Action actionToBind;
 
-    public KeyBindFrame(OntologyOutline ontologyOutline) {
-
-        this.ontologyOutline = ontologyOutline;
+    public KeyBindDialog(final OntologyOutline ontologyOutline) {
 
         setTitle("Enter Keyboard Shortcut");
-        setSize(200, 200);
-        getContentPane().setLayout(new BorderLayout());
-
-        setLocationRelativeTo(SessionMgr.getSessionMgr().getActiveBrowser());
 
         shortcutField = new ShortcutTextField() {
             protected void updateCurrentKeyStrokeInfo() {
@@ -77,14 +69,29 @@ public class KeyBindFrame extends JDialog implements ActionListener {
         add(conflictPane, BorderLayout.CENTER);
 
         JButton okButton = new JButton("OK");
-        okButton.setActionCommand(CLICKED_OK);
         okButton.setToolTipText("Close and save changes");
-        okButton.addActionListener(this);
+        okButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+	            if (actionToBind == null) {
+	                throw new IllegalStateException("No action to bind");
+	            }
+
+	            KeyboardShortcut keyboardShortcut = getKeyboardShortcut();
+	            SessionMgr.getKeyBindings().setBinding(keyboardShortcut, actionToBind);
+	            SessionMgr.getKeyBindings().saveOntologyKeybinds(ontologyOutline.getCurrentOntology());
+	            setVisible(false);
+			}
+		});
 
         JButton cancelButton = new JButton("Cancel");
-        cancelButton.setActionCommand(CLICKED_CANCEL);
         cancelButton.setToolTipText("Close without saving changes");
-        cancelButton.addActionListener(this);
+        cancelButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+	            setVisible(false);
+			}
+		});
 
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
@@ -100,36 +107,11 @@ public class KeyBindFrame extends JDialog implements ActionListener {
                 shortcutField.requestFocusInWindow();
             }
         });
-
-        setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-        addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent we) {
-                setVisible(false);
-            }
-        });
-    }
-
-    public void actionPerformed(ActionEvent e) {
-        String cmd = e.getActionCommand();
-
-        if (CLICKED_OK.equals(cmd)) {
-            if (actionToBind == null) {
-                throw new IllegalStateException("No action to bind");
-            }
-
-            KeyboardShortcut keyboardShortcut = getKeyboardShortcut();
-            SessionMgr.getKeyBindings().setBinding(keyboardShortcut, actionToBind);
-            SessionMgr.getKeyBindings().saveOntologyKeybinds(ontologyOutline.getCurrentOntology());
-            setVisible(false);
-        }
-        else if (CLICKED_CANCEL.equals(cmd)) {
-            setVisible(false);
-        }
     }
 
     public void showForAction(Action action) {
         setActionToBind(action);
-        setVisible(true);
+        packAndShow();
     }
 
     public void setActionToBind(Action action) {

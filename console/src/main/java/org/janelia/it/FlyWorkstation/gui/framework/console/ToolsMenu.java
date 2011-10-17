@@ -9,6 +9,7 @@ import java.util.prefs.BackingStoreException;
 
 import javax.swing.*;
 
+import org.janelia.it.FlyWorkstation.gui.dialogs.RunNeuronSeparationDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 

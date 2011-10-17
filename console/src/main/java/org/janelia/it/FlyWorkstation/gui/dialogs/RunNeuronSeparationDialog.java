@@ -1,10 +1,8 @@
-package org.janelia.it.FlyWorkstation.gui.framework.console;
+package org.janelia.it.FlyWorkstation.gui.dialogs;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -15,6 +13,7 @@ import javax.swing.*;
 import loci.plugins.config.SpringUtilities;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -31,7 +30,7 @@ import org.janelia.it.jacs.model.user_data.Node;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class RunNeuronSeparationDialog extends JDialog {
+public class RunNeuronSeparationDialog extends ModalDialog {
 
 	private static final String INPUT_DIR = "/groups/flylight/flylight/%USER%/data";
 	private static final String TOP_LEVEL_FOLDER_NAME = "%USER%'s Single Neuron Data";
@@ -56,9 +55,7 @@ public class RunNeuronSeparationDialog extends JDialog {
     
     public RunNeuronSeparationDialog() {
     	
-    	setModalityType(ModalityType.APPLICATION_MODAL);
         setTitle("Launch Periodic Neuron Separation Task");
-        getContentPane().setLayout(new BorderLayout());
         
         attrPanel = new JPanel(new SpringLayout());
         attrPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10), 
@@ -145,13 +142,6 @@ public class RunNeuronSeparationDialog extends JDialog {
         buttonPane.add(cancelButton);
         
         add(buttonPane, BorderLayout.SOUTH);
-
-        setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-        addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent we) {
-                setVisible(false);
-            }
-        });
     }
      
     public void runNeuronSeparation() {
@@ -204,10 +194,7 @@ public class RunNeuronSeparationDialog extends JDialog {
     }
     
     public void showDialog() {
-    	pack();
-        setLocationRelativeTo(SessionMgr.getSessionMgr().getActiveBrowser());
-        SwingUtilities.updateComponentTreeUI(this);
-        setVisible(true);
+        packAndShow();
     }
 
     /**

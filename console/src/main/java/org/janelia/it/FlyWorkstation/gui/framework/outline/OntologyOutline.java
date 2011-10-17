@@ -19,11 +19,11 @@ import javax.swing.tree.DefaultTreeModel;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.dialogs.KeyBindDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.AnnotateAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.NavigateToNodeAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OntologyElementAction;
-import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyBindFrame;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -53,7 +53,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener {
     private static final String DELIMITER = "#";
 
     private final KeyListener keyListener;
-    private final KeyBindFrame keyBindDialog;
+    private final KeyBindDialog keyBindDialog;
     private final JToggleButton keyBindButton;
     private final JButton manageButton;
     private final OntologyManager ontologyManager;
@@ -121,7 +121,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener {
 
         // Prepare the key binding dialog box
 
-        this.keyBindDialog = new KeyBindFrame(this);
+        this.keyBindDialog = new KeyBindDialog(this);
         keyBindDialog.pack();
 
         keyBindDialog.addComponentListener(new ComponentAdapter() {

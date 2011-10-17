@@ -262,16 +262,17 @@ public abstract class DynamicTable extends JPanel {
     	return null;
     }
     
-    public void navigateToRowWithObject(Object userObject) {
+    public boolean navigateToRowWithObject(Object userObject) {
     	int i = 0;
     	for(DynamicRow row : rows) {
     		if (row.getUserObject().equals(userObject)) {
     			table.getSelectionModel().setSelectionInterval(i, i);
-    			return;
+    			return true;
     		}
     		i++;
     	}
     	table.getSelectionModel().clearSelection();
+    	return false;
     }
 
     public DynamicRow getRowForUserObject(Object userObject) {

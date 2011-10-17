@@ -20,6 +20,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.UserColorMapping;
 import org.janelia.it.FlyWorkstation.gui.application.SplashPanel;
+import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationFilter;

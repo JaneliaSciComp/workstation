@@ -10,6 +10,7 @@ import java.awt.event.WindowEvent;
 
 /**
  * A chooser for arbitrary objects. This class follows the pattern set by JFileChooser.
+ * TODO: refactor as a ModalDialog subclass and move to the org.janelia.it.FlyWorkstation.gui.dialogs package.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */

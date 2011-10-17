@@ -17,6 +17,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.access.LoadRequestStatusOb
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestState;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestStatus;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationSessionPropertyDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.*;
 import org.janelia.it.FlyWorkstation.gui.framework.search.SearchToolbar;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;

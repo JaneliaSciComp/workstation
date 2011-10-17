@@ -20,6 +20,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.dialogs.TaskDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicColumn;
@@ -112,7 +113,8 @@ public class TaskOutline extends JPanel {
             protected void hadSuccess() {
                 try {
                     initializeTable(myTasks);
-                    if (selectedTask != null) dynamicTable.navigateToRowWithObject(selectedTask);
+                    // Must selectTaskById because the objects have changed
+                    if (selectedTask != null) selectTaskById(selectedTask.getObjectId());
                 }
                 catch (Exception e) {
                     hadError(e);
@@ -369,7 +371,8 @@ public class TaskOutline extends JPanel {
     }
 
     public synchronized void selectTask(Task task) {
-    	this.selectedTask = task;
-		dynamicTable.navigateToRowWithObject(task);
+		if (dynamicTable.navigateToRowWithObject(task)) {
+			this.selectedTask = task;	
+		}
     }
 }

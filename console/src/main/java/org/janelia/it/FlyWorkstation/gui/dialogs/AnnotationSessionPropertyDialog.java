@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.outline;
+package org.janelia.it.FlyWorkstation.gui.dialogs;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -17,6 +17,7 @@ import loci.plugins.config.SpringUtilities;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.*;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.choose.EntityChooser;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.choose.OntologyElementChooser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -34,10 +35,7 @@ import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class AnnotationSessionPropertyDialog extends JDialog implements ActionListener {
-
-    private static final String CANCEL_COMMAND = "cancel";
-    private static final String SESSION_SAVE_COMMAND = "session_save";
+public class AnnotationSessionPropertyDialog extends ModalDialog {
 
     private JPanel attrPanel;
     private JButton okButton;
@@ -51,9 +49,6 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
     private AnnotationSessionTask task;
 
     public AnnotationSessionPropertyDialog(final EntityOutline entityOutline, final OntologyOutline ontologyOutline) {
-
-        setModalityType(ModalityType.APPLICATION_MODAL);
-        getContentPane().setLayout(new BorderLayout());
 
         GridBagConstraints c = new GridBagConstraints();
 
@@ -184,14 +179,23 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
         add(treesPanel, BorderLayout.CENTER);
 
         okButton = new JButton("Save");
-        okButton.setActionCommand(SESSION_SAVE_COMMAND);
         okButton.setToolTipText("Save this annotation session");
-        okButton.addActionListener(this);
+        okButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+	            setVisible(false);
+			}
+		});
 
         cancelButton = new JButton("Cancel");
-        cancelButton.setActionCommand(CANCEL_COMMAND);
         cancelButton.setToolTipText("Close without saving changes");
-        cancelButton.addActionListener(this);
+        cancelButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+	            save();
+	            setVisible(false);
+			}
+		});
 
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
@@ -202,20 +206,13 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
         buttonPane.add(cancelButton);
         add(buttonPane, BorderLayout.SOUTH);
 
-        setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent we) {
-                setVisible(false);
-            }
-
             @Override
             public void windowActivated(WindowEvent e) {
                 nameValueField.requestFocus();
                 nameValueField.selectAll();
             }
         });
-        
-        pack();
     }
 
     private void init() {
@@ -243,10 +240,7 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
             entityTreePanel.addItem(entity);
         }
 
-        pack();
-        setLocationRelativeTo(SessionMgr.getSessionMgr().getActiveBrowser());
-        SwingUtilities.updateComponentTreeUI(this);
-        setVisible(true);
+        packAndShow();
     }
 
     public void showForSession(AnnotationSession session) {
@@ -267,10 +261,7 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
             categoryTreePanel.addItem(element);
         }
 
-        pack();
-        setLocationRelativeTo(SessionMgr.getSessionMgr().getActiveBrowser());
-        SwingUtilities.updateComponentTreeUI(this);
-        setVisible(true);
+        packAndShow();
     }
 
     protected void save() {
@@ -313,18 +304,6 @@ public class AnnotationSessionPropertyDialog extends JDialog implements ActionLi
         catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(AnnotationSessionPropertyDialog.this, "Error creating new session", "Session Save Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    public void actionPerformed(ActionEvent e) {
-        String cmd = e.getActionCommand();
-
-        if (CANCEL_COMMAND.equals(cmd)) {
-            setVisible(false);
-        }
-        else if (SESSION_SAVE_COMMAND.equals(cmd)) {
-            save();
-            setVisible(false);
         }
     }
 }
