@@ -23,6 +23,7 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
 
     private static final String EXPAND_ALL = "expand_all";
     private static final String COLLAPSE_ALL = "collapse_all";
+    private static final String REFRESH = "refresh";
     private static final String NEXT_MATCH = "next_match";
     private static final String PREVIOUS_MATCH = "previous_match";
 
@@ -30,6 +31,7 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
     private JTextField textField;
     private JButton expandAllButton;
     private JButton collapseAllButton;
+    private JButton refreshButton;
     private JLabel spinner;
 
     public DynamicTreeToolbar(final DynamicTree tree) {
@@ -54,6 +56,13 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
         collapseAllButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
         toolBar.add(collapseAllButton);
 
+        refreshButton = new JButton(Icons.getRefreshIcon());
+        refreshButton.setActionCommand(REFRESH);
+        refreshButton.setToolTipText("Refresh the data in the tree.");
+        refreshButton.addActionListener(this);
+        refreshButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
+        toolBar.add(refreshButton);
+        
         toolBar.addSeparator();
 
         JLabel label = new JLabel("Find:");
@@ -121,6 +130,9 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
             tree.expandAll(false);
             collapseAllButton.setEnabled(true);
             expandAllButton.setEnabled(true);
+        }
+        else if (REFRESH.equals(cmd)) {
+        	tree.refresh();
         }
         else if (NEXT_MATCH.equals(cmd)) {
             tree.navigateToNodeStartingWith(textField.getText(), Bias.Forward, true);

@@ -6,6 +6,7 @@ import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.*;
+import java.util.concurrent.Callable;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -37,6 +38,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
     
     private FakeProgressWorker loadingWorker;
     private ProgressMonitor progressMonitor;
+	private Entity rootEntity;
     
     public EntityTree() {
         this(false);
@@ -50,7 +52,11 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
         add(treesPanel, BorderLayout.CENTER);
     }
 
-    public void showNothing() {
+    public Entity getRootEntity() {
+		return rootEntity;
+	}
+
+	public void showNothing() {
         treesPanel.removeAll();
     }
     
@@ -59,7 +65,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
         treesPanel.add(new JLabel(Icons.getLoadingIcon()));
     }
 
-    public void initializeTree(final Long rootId) {
+    public void initializeTree(final Long rootId, final Callable<Void> success) {
         if (null != selectedTree) {
             ToolTipManager.sharedInstance().unregisterComponent(selectedTree);
         }
@@ -90,6 +96,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
                     if (null != selectedTree) {
                         ToolTipManager.sharedInstance().registerComponent(selectedTree);
                     }
+                    if (success!=null) success.call();
                 }
                 catch (Exception e) {
                     hadError(e);
@@ -167,6 +174,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
 
     protected void createNewTree(Entity root) {
 
+    	this.rootEntity = root;
         selectedTree = new DynamicTree(root, true, lazy) {
 
             protected void showPopupMenu(MouseEvent e) {
@@ -294,12 +302,19 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
                 loadingWorker.addPropertyChangeListener(EntityTree.this);
                 loadingWorker.executeWithProgress();
             }
-            
+
+			@Override
+			public void refresh() {
+				EntityTree.this.refresh();
+			}
         };
 
         // Replace the cell renderer
 
         selectedTree.setCellRenderer(new EntityTreeCellRenderer());
+    }
+    
+    protected void refresh() {
     }
     
     /**

@@ -56,6 +56,14 @@ public class Icons {
     }
     
     /**
+     * Returns an icon for representing the "refresh" operation.
+     * @return
+     */
+    public static Icon getRefreshIcon() {
+    	return getIcon("arrow_refresh.png");
+    }
+    
+    /**
      * Returns the icon with the given filename. This method caches icons locally, so successive calls will 
      * return the cached image.
      * @param filename

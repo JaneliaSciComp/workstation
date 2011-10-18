@@ -30,6 +30,7 @@ public class OntologyTree extends JPanel {
 
     protected final JPanel treesPanel;
     protected DynamicTree selectedTree;
+	private Entity rootEntity;
 
     public OntologyTree() {
         super(new BorderLayout());
@@ -38,6 +39,10 @@ public class OntologyTree extends JPanel {
         add(treesPanel, BorderLayout.CENTER);
     }
 
+    public Entity getRootEntity() {
+		return rootEntity;
+	}
+    
     public void showLoadingIndicator() {
         treesPanel.removeAll();
         treesPanel.add(new JLabel(Icons.getLoadingIcon()));
@@ -72,7 +77,7 @@ public class OntologyTree extends JPanel {
             protected void hadSuccess() {
                 try {
                     initializeTree(new OntologyRoot(rootEntity));
-//                    success.call();
+                    if (success!=null) success.call();
                 }
                 catch (Exception e) {
                     hadError(e);
@@ -151,6 +156,7 @@ public class OntologyTree extends JPanel {
 
     protected void createNewTree(OntologyRoot root) {
 
+    	this.rootEntity = root.getEntity();
         selectedTree = new DynamicTree(root, true, false) {
 
             protected void showPopupMenu(MouseEvent e) {
@@ -169,6 +175,10 @@ public class OntologyTree extends JPanel {
                 OntologyTree.this.nodeDoubleClicked(e);
             }
 
+			@Override
+			public void refresh() {
+				OntologyTree.this.refresh();
+			}
         };
 
         // Replace the cell renderer
@@ -176,6 +186,9 @@ public class OntologyTree extends JPanel {
         selectedTree.setCellRenderer(new OntologyTreeCellRenderer());
     }
 
+    protected void refresh() {
+    }
+    
     protected void addNodes(DefaultMutableTreeNode parentNode, OntologyElement element) {
 
         // Add the node to the tree

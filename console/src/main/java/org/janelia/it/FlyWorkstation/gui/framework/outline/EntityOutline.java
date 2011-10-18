@@ -8,12 +8,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import javax.swing.*;
+import javax.swing.event.MenuEvent;
+import javax.swing.event.MenuListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNode;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
@@ -28,7 +32,7 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
  * Time: 2:09 PM
  * This class is the initial outline of the data file tree
  */
-public class EntityOutline extends EntityTree implements Cloneable {
+public abstract class EntityOutline extends EntityTree implements Cloneable {
     
     private List<Entity> entityRootList;
     private Entity selectedEntity;
@@ -42,13 +46,19 @@ public class EntityOutline extends EntityTree implements Cloneable {
     public void init(List<Entity> entityRootList) {
     	this.entityRootList = entityRootList;
         if (null != entityRootList && entityRootList.size() >= 1) {
-            initializeTree(entityRootList.get(0).getId());
+            initializeTree(entityRootList.get(0).getId(), null);
         }
         else {
         	showNothing();
+            updateUI();
         }
-        updateUI();
     }
+    
+    /**
+     * Override this method to load the root list. This method will be called in a worker thread.
+     * @return
+     */
+    public abstract List<Entity> loadRootList();
     
     /**
      * Override this method to show a popup menu when the user right clicks a node in the tree.
@@ -65,7 +75,7 @@ public class EntityOutline extends EntityTree implements Cloneable {
         selectNode(node);
         
         // Create context menus
-        JPopupMenu popupMenu = new JPopupMenu();
+        final JPopupMenu popupMenu = new JPopupMenu();
         
         JMenuItem titleItem = new JMenuItem(entity.getName());
         titleItem.setEnabled(false);
@@ -81,66 +91,73 @@ public class EntityOutline extends EntityTree implements Cloneable {
 			}
 		});
         popupMenu.add(copyMenuItem);
+
         
         // Change data source (root only)
     	if (node.isRoot()) {
-            JMenu changeDataSourceMenu = new JMenu("  Change data root...");
+            final JMenu changeDataSourceMenu = new JMenu("  Change data root...");
 
-        	for(final Entity commonRoot : entityRootList) {
-        		if (!"system".equals(commonRoot.getUser().getUserLogin()) && !SessionMgr.getUsername().equals(commonRoot.getUser().getUserLogin())) continue;
+            changeDataSourceMenu.addMenuListener(new MenuListener() {
+    			
+    			@Override
+    			public void menuSelected(MenuEvent e) {
 
-                JMenuItem dataSourceItem = new JMenuItem(commonRoot.getName() +" ("+commonRoot.getUser().getUserLogin()+")");
-                dataSourceItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent actionEvent) {
-                    	initializeTree(commonRoot.getId());
-                    }
-                });
-                changeDataSourceMenu.add(dataSourceItem);
-        	}
-        	
+    				changeDataSourceMenu.removeAll();
+    				JMenuItem loadingItem = new JMenuItem("Loading...");
+    				loadingItem.setEnabled(false);
+	                changeDataSourceMenu.add(loadingItem);
+	                
+    				SimpleWorker menuWorker = new SimpleWorker() {
+						
+						@Override
+						protected void doStuff() throws Exception {
+							entityRootList = loadRootList();
+						}
+						
+						@Override
+						protected void hadSuccess() {
+							changeDataSourceMenu.removeAll();
+				        	for(final Entity commonRoot : entityRootList) {
+				                final JMenuItem dataSourceItem = new JCheckBoxMenuItem(
+				                		commonRoot.getName() +" ("+commonRoot.getUser().getUserLogin()+")", 
+				                		commonRoot.getId().equals(selectedEntity.getId()));
+				                dataSourceItem.addActionListener(new ActionListener() {
+				                    public void actionPerformed(ActionEvent actionEvent) {
+				                    	initializeTree(commonRoot.getId(), null);
+				                    }
+				                });
+				                changeDataSourceMenu.add(dataSourceItem);
+				        	}
+
+				        	// A little hack to refresh the submenu. Just calling revalidate/repaint will show the new
+				        	// contents but not resize the menu to fit. 
+				        	changeDataSourceMenu.setPopupMenuVisible(false);
+				        	changeDataSourceMenu.setPopupMenuVisible(true);
+						}
+						
+						@Override
+						protected void hadError(Throwable error) {
+							error.printStackTrace();
+						}
+					};
+					
+					menuWorker.execute();
+    			}
+    			
+    			@Override
+    			public void menuDeselected(MenuEvent e) {
+    			}
+    			
+    			@Override
+    			public void menuCanceled(MenuEvent e) {
+    			}
+    		});
+            
             popupMenu.add(changeDataSourceMenu);
         	
     	}
-    	    	
-    	// Create annotation session (2d images)
-    	// TODO: this is deprecated and should be removed once we normalize all the results to use Neuron Fragments
-        JMenuItem newSessionItem = new JMenuItem("  Create Annotation Session for 2D Images");
-        newSessionItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-
-                DefaultMutableTreeNode node = selectedTree.getCurrentNode();
-                final Entity entity = (Entity) node.getUserObject();
-
-                try {
-                    Utils.setWaitingCursor(EntityOutline.this);
-
-                    SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node, true) {
-
-                        protected void doneLoading() {
-                            Utils.setDefaultCursor(EntityOutline.this);
-                            List<Entity> entities = entity.getDescendantsOfType(EntityConstants.TYPE_TIF_2D);
-                            SessionMgr.getSessionMgr().getActiveBrowser().getAnnotationSessionPropertyDialog().showForNewSession(entity.getName(), entities);
-                            SwingUtilities.updateComponentTreeUI(EntityOutline.this);
-                        }
-
-                        @Override
-                        protected void hadError(Throwable error) {
-                        	error.printStackTrace();
-                            Utils.setDefaultCursor(EntityOutline.this);
-                            JOptionPane.showMessageDialog(EntityOutline.this, "Error loading nodes", "Internal Error", JOptionPane.ERROR_MESSAGE);
-                        }
-                    };
-
-                    loadingWorker.execute();
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        popupMenu.add(newSessionItem);
-    	
-        // Create annotation session (neuron fragments)
+    
+        // Create annotation session
         JMenuItem newFragSessionItem = new JMenuItem("  Create Annotation Session for Neuron Fragments");
         newFragSessionItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
@@ -242,6 +259,25 @@ public class EntityOutline extends EntityTree implements Cloneable {
     protected void nodeDoubleClicked(MouseEvent e) {
     }
 
+    /**
+     * Reload the data for the current tree.
+     */
+    protected void refresh() {
+    	if (getRootEntity()!=null) {
+	        Utils.setWaitingCursor(EntityOutline.this);
+	    	final ExpansionState expansionState = new ExpansionState();
+	    	expansionState.storeExpansionState(getDynamicTree());
+	    	initializeTree(getRootEntity().getId(), new Callable<Void>() {
+				@Override
+				public Void call() throws Exception {
+			    	expansionState.restoreExpansionState(getDynamicTree());
+	                Utils.setDefaultCursor(EntityOutline.this);
+					return null;
+				}
+			});
+    	}
+    }
+    
     private void selectNode(DefaultMutableTreeNode node) {
         if (node instanceof LazyTreeNode) return;
     	final Entity entity = (Entity) node.getUserObject();

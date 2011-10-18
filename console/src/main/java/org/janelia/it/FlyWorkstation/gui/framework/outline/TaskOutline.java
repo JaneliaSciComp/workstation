@@ -86,7 +86,6 @@ public class TaskOutline extends JPanel {
         TimerTask refreshTask = new TimerTask() {
 			@Override
 			public void run() {
-				System.out.println("Reloading task outline");
 		        loadTasks();
 			}
 		};
@@ -145,7 +144,7 @@ public class TaskOutline extends JPanel {
 
             	Task task = (Task)userObject;
             	if (column.getName().equals(COLUMN_NAME)) {
-            		return task.getDisplayName();
+            		return task.getJobName();
             	}
             	if (column.getName().equals(COLUMN_STATUS)) {
             		return task.getLastEvent().getEventType();
@@ -162,14 +161,6 @@ public class TaskOutline extends JPanel {
 
                 Object o = dynamicTable.getCurrentRow().getUserObject();
                 final Task task = (Task)o;
-
-//                JMenuItem editMenuItem = new JMenuItem("  View details");
-//                editMenuItem.addActionListener(new ActionListener() {
-//                    public void actionPerformed(ActionEvent actionEvent) {
-//                    	// TODO: view details
-//                    }
-//                });
-//                popupMenu.add(editMenuItem);
 
         		final ListSelectionModel lsm = dynamicTable.getTable().getSelectionModel();
         		if (lsm.getMinSelectionIndex() == lsm.getMaxSelectionIndex()) { 
@@ -191,13 +182,9 @@ public class TaskOutline extends JPanel {
 			                deleteMenuItem.addActionListener(new ActionListener() {
 			                    public void actionPerformed(ActionEvent actionEvent) {
 			                    	try {
-			                    		// TODO: this two lines should probably be done atomically on the server side
-				                    	cet.setEnabled(false);
-				                    	ContinuousExecutionTask updated = (ContinuousExecutionTask)ModelMgr.getModelMgr().saveOrUpdateTask(task);
-				                    	System.out.println("Updated task "+updated.getObjectId()+" enabled?="+updated.isStillEnabled());
-
+				                    	ModelMgr.getModelMgr().stopContinuousExecution(cet);
 				                        JOptionPane.showMessageDialog(consoleFrame, 
-				                        		"Continuous execution will be stopped before the next run begins.", 
+				                        		"Continuous execution will end after the current execution is complete", 
 				                        		"Stopped", JOptionPane.INFORMATION_MESSAGE);
 			                    	} 
 			                    	catch (Exception e) {

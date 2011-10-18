@@ -27,9 +27,9 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.OntologyElementAction
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.jacs.compute.api.ComputeException;
+import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
@@ -281,6 +281,26 @@ public class OntologyOutline extends OntologyTree implements ActionListener {
         }
     }
 
+
+    /**
+     * Reload the data for the current tree.
+     */
+    protected void refresh() {
+    	if (getRootEntity()!=null) {
+            Utils.setWaitingCursor(OntologyOutline.this);
+        	final ExpansionState expansionState = new ExpansionState();
+        	expansionState.storeExpansionState(getDynamicTree());
+	    		initializeTree(getRootEntity().getId(), new Callable<Void>() {
+				@Override
+				public Void call() throws Exception {
+			    	expansionState.restoreExpansionState(getDynamicTree());
+	                Utils.setDefaultCursor(OntologyOutline.this);
+					return null;
+				}
+			});
+    	}
+    }
+    
     protected void createNewTree(OntologyRoot root) {
 
         super.createNewTree(root);
@@ -400,7 +420,6 @@ public class OntologyOutline extends OntologyTree implements ActionListener {
 
             DefaultMutableTreeNode treeNode = selectedTree.getCurrentNode();
             OntologyElement element = getOntologyElement(treeNode);
-            OntologyElementType parentType = element.getType();
 
             String className = command.split(DELIMITER)[1];
             OntologyElementType childType = OntologyElementType.createTypeByName(className);
@@ -450,7 +469,4 @@ public class OntologyOutline extends OntologyTree implements ActionListener {
             }
         }
     }
-
-
-
 }

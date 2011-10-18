@@ -196,15 +196,42 @@ public class Browser extends JFrame implements Cloneable {
         }
 
         setJMenuBar(menuBar);
-
+        
+        
         viewerPanel.setBorder(BorderFactory.createLineBorder(Color.black));
         searchToolbar = new SearchToolbar();
         usingSplashPanel = true;
 //        subBrowserTabPane = new SubBrowser(browserModel);
 //        fileOutline = new FileOutline(this);
         sessionOutline = new SessionOutline(this);
-        publicEntityOutline = new EntityOutline();
-        privateEntityOutline = new EntityOutline();
+        publicEntityOutline = new EntityOutline() {
+			@Override
+			public List<Entity> loadRootList() {
+				List<Entity> filtered = new ArrayList<Entity>();
+				List<Entity> entityRootList = ModelMgr.getModelMgr().getCommonRootEntitiesByTypeName(EntityConstants.TYPE_FOLDER);
+            	for(final Entity commonRoot : entityRootList) {
+            		if ("system".equals(commonRoot.getUser().getUserLogin())) {
+            			filtered.add(commonRoot);
+            		}
+            	}
+            	return filtered;
+			}
+		};
+		
+        privateEntityOutline = new EntityOutline() {
+			@Override
+			public List<Entity> loadRootList() {
+				List<Entity> filtered = new ArrayList<Entity>();
+				List<Entity> entityRootList = ModelMgr.getModelMgr().getCommonRootEntitiesByTypeName(EntityConstants.TYPE_FOLDER);
+            	for(final Entity commonRoot : entityRootList) {
+            		if (SessionMgr.getUsername().equals(commonRoot.getUser().getUserLogin())) {
+            			filtered.add(commonRoot);
+            		}
+            	}
+            	return filtered;
+			}
+		};
+		
         taskOutline = new TaskOutline(this);
         
         ontologyOutline = new OntologyOutline();
@@ -258,28 +285,18 @@ public class Browser extends JFrame implements Cloneable {
 
         publicEntityOutline.showLoadingIndicator();
         privateEntityOutline.showLoadingIndicator();
-        
-        SimpleWorker loadingWorker = new SimpleWorker() {
 
-            private List<Entity> entityRootList;
+        SimpleWorker entityOutlineLoadingWorker = new SimpleWorker() {
+
+            private List<Entity> privateRootList;
+            private List<Entity> publicRootList;
         	
             protected void doStuff() throws Exception {
-                entityRootList = ModelMgr.getModelMgr().getCommonRootEntitiesByTypeName(EntityConstants.TYPE_FOLDER);
+            	publicRootList = publicEntityOutline.loadRootList();
+            	privateRootList = privateEntityOutline.loadRootList();
             }
 
             protected void hadSuccess() {
-                List<Entity> privateRootList = new ArrayList<Entity>();
-                List<Entity> publicRootList = new ArrayList<Entity>();
-                
-            	for(final Entity commonRoot : entityRootList) {
-            		if ("system".equals(commonRoot.getUser().getUserLogin())) {
-            			publicRootList.add(commonRoot);
-            		}
-            		else if (SessionMgr.getUsername().equals(commonRoot.getUser().getUserLogin())) {
-            			privateRootList.add(commonRoot);
-            		}
-            	}
-            	
             	publicEntityOutline.init(publicRootList);
                 privateEntityOutline.init(privateRootList);
             }
@@ -292,9 +309,8 @@ public class Browser extends JFrame implements Cloneable {
             }
 
         };
-
-        loadingWorker.execute();
         
+        entityOutlineLoadingWorker.execute();
     }
 
     ///////// Browser Controller section////////////

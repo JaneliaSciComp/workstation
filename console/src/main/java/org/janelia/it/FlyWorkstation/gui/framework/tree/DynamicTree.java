@@ -566,6 +566,12 @@ public class DynamicTree extends JPanel {
     	Utils.setDefaultCursor(DynamicTree.this);
 		toolbar.setSpinning(false);
     }
+
+    /**
+     * Override this method to provide refresh behavior. The default implementation does nothing. 
+     */
+	protected void refresh() {
+	}
     
 }
 
