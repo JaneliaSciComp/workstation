@@ -35,8 +35,8 @@ public class RunNeuronSeparationDialog extends ModalDialog {
 	private static final String INPUT_DIR = "/groups/flylight/flylight/%USER%/data";
 	private static final String TOP_LEVEL_FOLDER_NAME = "%USER%'s Single Neuron Data";
 	private static final String LINKING_DIR_TEMPLATE = "/groups/scicomp/jacsData/flylight/%USER%/MySeparationResultLinks";
-	private static final int DEFAULT_RERUN_INTERVAL = 60;
-	private static final int DEFAULT_STATUS_CHECK_INTERVAL = 30;
+	private static final int DEFAULT_RERUN_INTERVAL_MINS = 60;
+	private static final int DEFAULT_STATUS_CHECK_INTERVAL_SECS = 30;
 	
 	private static final String TOOLTIP_INPUT_DIR = "Root directory of the tree that should be loaded into the database";
 	private static final String TOOLTIP_LINKING_DIR = "Directory where symbolic links to the results should be created";
@@ -91,7 +91,7 @@ public class RunNeuronSeparationDialog extends ModalDialog {
         JLabel nameLabel2 = new JLabel("Re-run Interval (minutes)");
         nameLabel2.setToolTipText(TOOLTIP_RERUN_INTERVAL);
         rerunIntervalField = new JTextField(10);
-        rerunIntervalField.setText(DEFAULT_RERUN_INTERVAL+"");
+        rerunIntervalField.setText(DEFAULT_RERUN_INTERVAL_MINS+"");
         rerunIntervalField.setToolTipText(TOOLTIP_RERUN_INTERVAL);
         nameLabel2.setLabelFor(rerunIntervalField);
         attrPanel.add(nameLabel2);
@@ -235,11 +235,11 @@ public class RunNeuronSeparationDialog extends ModalDialog {
         	
     		Task ceTask = new ContinuousExecutionTask(new HashSet<Node>(), 
     				owner, new ArrayList<Event>(), new HashSet<TaskParameter>(), loopTimerInMinutes, 
-            		true, task.getObjectId(), process, DEFAULT_STATUS_CHECK_INTERVAL);
+            		true, task.getObjectId(), process, DEFAULT_STATUS_CHECK_INTERVAL_SECS);
 
+    		ceTask.setJobName("Continuous Neuron Separation Service");
     		ceTask = ModelMgr.getModelMgr().saveOrUpdateTask(ceTask);
 
-            ceTask.setJobName("ContinuousExecutionTask for "+process);
             ModelMgr.getModelMgr().submitJob("ContinuousExecution", ceTask.getObjectId());
     	}
     	catch (Exception e) {

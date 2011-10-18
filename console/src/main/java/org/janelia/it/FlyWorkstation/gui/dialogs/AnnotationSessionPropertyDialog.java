@@ -88,16 +88,8 @@ public class AnnotationSessionPropertyDialog extends ModalDialog {
 
                     protected void doStuff() throws Exception {
                         for (Entity entity : entityChooser.getChosenEntities()) {
-                            if (!entity.getEntityType().getName().equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
-                                List<Entity> descs = entity.getDescendantsOfType(EntityConstants.TYPE_NEURON_FRAGMENT);
-                                if (descs.isEmpty()) {
-                                	descs = entity.getDescendantsOfType(EntityConstants.TYPE_TIF_2D);
-                                }
-                                entities.addAll(descs);
-                            }
-                            else {
-                                entities.add(entity);
-                            }
+                            List<Entity> descs = entity.getDescendantsOfType(EntityConstants.TYPE_NEURON_FRAGMENT);
+                            entities.addAll(descs);
                         }
                     }
 
