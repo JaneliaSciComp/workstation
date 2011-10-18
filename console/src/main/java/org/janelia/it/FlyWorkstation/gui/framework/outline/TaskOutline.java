@@ -217,13 +217,13 @@ public class TaskOutline extends JPanel {
 //	                popupMenu.add(deleteMenuItem);
 //            	}
                 
-                JMenuItem deleteMenuItem = new JMenuItem("  Delete");
-                deleteMenuItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent actionEvent) {
-                        deleteTasks();
-                    }
-                });
-                popupMenu.add(deleteMenuItem);
+//                JMenuItem deleteMenuItem = new JMenuItem("  Delete");
+//                deleteMenuItem.addActionListener(new ActionListener() {
+//                    public void actionPerformed(ActionEvent actionEvent) {
+//                        deleteTasks();
+//                    }
+//                });
+//                popupMenu.add(deleteMenuItem);
 
                 return popupMenu;
             }

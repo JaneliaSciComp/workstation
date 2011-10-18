@@ -20,13 +20,13 @@ import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.jacs.model.tasks.fileDiscovery.MCFOStitchedFileDiscoveryTask;
-import org.janelia.it.jacs.model.tasks.fileDiscovery.MultiColorFlipOutFileDiscoveryTask;
+import org.janelia.it.jacs.model.tasks.fileDiscovery.MCFOUnifiedFileDiscoveryTask;
 import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
 import org.janelia.it.jacs.model.user_data.Node;
 
 /**
- * A dialog for starting a continuous neuron separation pipeline. 
+ * A dialog for starting a continuous neuron separation pipeline task which runs every N minutes and discovers new files
+ * to run neuron separation on. Once the task is started, it can be managed with the TaskOutline. 
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -43,7 +43,6 @@ public class RunNeuronSeparationDialog extends ModalDialog {
 	private static final String TOOLTIP_TOP_LEVEL_ENTITY = "Name of the database entity which should be loaded with the data";
 	private static final String TOOLTIP_RERUN_INTERVAL = "Once a run is complete, how soon should we re-run it?";
 	private static final String TOOLTIP_REFRESH = "Run a new separation for samples that already have a separation result?";
-	private static final String TOOLTIP_STITCHED = "Has the data been processed by the stitcher (e.g. are there 'v3draw' files)?";
 	
     private final JPanel attrPanel;    
     private final JTextField inputDirectoryField;
@@ -51,7 +50,6 @@ public class RunNeuronSeparationDialog extends ModalDialog {
     private final JTextField topLevelFolderField;
     private final JTextField rerunIntervalField;
     private final JCheckBox refreshCheckbox;
-    private final JCheckBox stitchedCheckbox;
     
     public RunNeuronSeparationDialog() {
     	
@@ -104,14 +102,6 @@ public class RunNeuronSeparationDialog extends ModalDialog {
         nameLabel3.setLabelFor(refreshCheckbox);
         attrPanel.add(nameLabel3);
         attrPanel.add(refreshCheckbox);
-
-        JLabel nameLabel4 = new JLabel("Run stitched pipeline?");
-        nameLabel4.setToolTipText(TOOLTIP_STITCHED);
-        stitchedCheckbox = new JCheckBox();
-        stitchedCheckbox.setToolTipText(TOOLTIP_STITCHED);
-        nameLabel4.setLabelFor(stitchedCheckbox);
-        attrPanel.add(nameLabel4);
-        attrPanel.add(stitchedCheckbox);
         
         add(attrPanel, BorderLayout.CENTER);
         SpringUtilities.makeCompactGrid(attrPanel, attrPanel.getComponentCount()/2, 2, 6, 6, 6, 6);
@@ -149,7 +139,6 @@ public class RunNeuronSeparationDialog extends ModalDialog {
     	Utils.setWaitingCursor(this);
     	
     	final boolean refresh = refreshCheckbox.isSelected();
-    	final boolean stitched = stitchedCheckbox.isSelected();
     	final String inputDirPath = inputDirectoryField.getText();
     	final String linkingDirName = linkingDirectoryField.getText();
     	final String topLevelFolderName = topLevelFolderField.getText();
@@ -169,7 +158,7 @@ public class RunNeuronSeparationDialog extends ModalDialog {
 
 			@Override
 			protected void doStuff() throws Exception {
-				startSeparation(inputDirPath, linkingDirName, topLevelFolderName, loopTimerInMinutes, stitched, refresh);
+				startSeparation(inputDirPath, linkingDirName, topLevelFolderName, loopTimerInMinutes, refresh);
 			}
 			
 			@Override
@@ -205,7 +194,7 @@ public class RunNeuronSeparationDialog extends ModalDialog {
      * @param refresh refresh entities which were already created?
      */
     private void startSeparation(String path, String linkingDirName, String topLevelFolderName,
-    		int loopTimerInMinutes, boolean stitched, boolean refresh) {
+    		int loopTimerInMinutes, boolean refresh) {
 
     	try {
     		String inputDirList = path;
@@ -215,24 +204,14 @@ public class RunNeuronSeparationDialog extends ModalDialog {
         	String owner = SessionMgr.getUsername();
         	List<Event> events = new ArrayList<Event>();
     		Set<TaskParameter> taskParameterSet = new HashSet<TaskParameter>();
-    		
-        	if (stitched) {
-    	        process = "MCFOStitchedFileDiscovery";
-                task = new MCFOStitchedFileDiscoveryTask(inputNodes, owner, events, taskParameterSet, 
-                		inputDirList, topLevelFolderName, linkingDirName, refresh);
-                task.setParameter(MCFOStitchedFileDiscoveryTask.PARAM_inputDirectoryList, inputDirList);
-    	        task.setJobName("MultiColor FlipOut Stitched File Discovery Task");
-    	        task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
-        	}
-        	else {
-                process = "MultiColorFlipOutFileDiscovery";
-                task = new MultiColorFlipOutFileDiscoveryTask(inputNodes, owner, events, taskParameterSet, 
-                		inputDirList, topLevelFolderName, linkingDirName, refresh);
-                task.setParameter(MCFOStitchedFileDiscoveryTask.PARAM_inputDirectoryList, inputDirList);
-                task.setJobName("MultiColor FlipOut File Discovery Task");
-                task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
-        	}
-        	
+
+            process = "MCFOUnifiedFileDiscovery";
+            task = new MCFOUnifiedFileDiscoveryTask(inputNodes, owner, events, taskParameterSet, 
+            		inputDirList, topLevelFolderName, linkingDirName, refresh);
+            task.setParameter(MCFOUnifiedFileDiscoveryTask.PARAM_inputDirectoryList, inputDirList);
+            task.setJobName("MultiColor FlipOut File Discovery Task");
+            task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
+            
     		Task ceTask = new ContinuousExecutionTask(new HashSet<Node>(), 
     				owner, new ArrayList<Event>(), new HashSet<TaskParameter>(), loopTimerInMinutes, 
             		true, task.getObjectId(), process, DEFAULT_STATUS_CHECK_INTERVAL_SECS);
