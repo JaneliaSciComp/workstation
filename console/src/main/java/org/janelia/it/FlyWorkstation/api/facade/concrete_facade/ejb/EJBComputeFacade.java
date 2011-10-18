@@ -17,7 +17,14 @@ public class EJBComputeFacade implements ComputeFacade {
 
     @Override
     public Task saveOrUpdateTask(Task task) throws Exception {
+    	if (task == null) throw new IllegalArgumentException("Task may not be null");
         return EJBFactory.getRemoteComputeBean().saveOrUpdateTask(task);
+    }
+
+    @Override
+    public void stopContinuousExecution(Long taskId) throws Exception {
+    	if (taskId == null) throw new IllegalArgumentException("Task id may not be null");
+        EJBFactory.getRemoteComputeBean().stopContinuousExecution(taskId);
     }
 
     @Override

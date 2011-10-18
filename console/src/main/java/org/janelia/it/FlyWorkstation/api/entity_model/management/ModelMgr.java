@@ -24,6 +24,7 @@ import org.janelia.it.jacs.model.ontology.OntologyRoot;
 import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
+import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
 import org.janelia.it.jacs.model.user_data.User;
 import org.janelia.it.jacs.model.user_data.prefs.UserPreference;
 
@@ -495,6 +496,11 @@ public class ModelMgr {
 
     public Task saveOrUpdateTask(Task task) throws Exception {
         return FacadeManager.getFacadeManager().getComputeFacade().saveOrUpdateTask(task);
+    }
+
+    public void stopContinuousExecution(ContinuousExecutionTask task) throws Exception {
+    	if (task == null) throw new IllegalArgumentException("Task may not be null");
+        FacadeManager.getFacadeManager().getComputeFacade().stopContinuousExecution(task.getObjectId());
     }
 
     public Task getTaskById(Long taskId) throws Exception {
