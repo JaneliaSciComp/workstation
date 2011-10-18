@@ -24,6 +24,7 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityType;
 
 /**
  * Created by IntelliJ IDEA.
@@ -49,8 +50,12 @@ public abstract class EntityOutline extends EntityTree implements Cloneable {
             initializeTree(entityRootList.get(0).getId(), null);
         }
         else {
-        	showNothing();
-            updateUI();
+        	Entity noDataEntity = new Entity();
+        	EntityType type = new EntityType();
+        	type.setName("");
+        	noDataEntity.setEntityType(type);
+        	noDataEntity.setName("No data");
+        	initializeTree(noDataEntity);
         }
     }
     
@@ -131,8 +136,10 @@ public abstract class EntityOutline extends EntityTree implements Cloneable {
 
 				        	// A little hack to refresh the submenu. Just calling revalidate/repaint will show the new
 				        	// contents but not resize the menu to fit. 
-				        	changeDataSourceMenu.setPopupMenuVisible(false);
-				        	changeDataSourceMenu.setPopupMenuVisible(true);
+				        	if (changeDataSourceMenu.isSelected()) {
+					        	changeDataSourceMenu.setPopupMenuVisible(false);
+				        		changeDataSourceMenu.setPopupMenuVisible(true);
+				        	}
 						}
 						
 						@Override
@@ -263,7 +270,30 @@ public abstract class EntityOutline extends EntityTree implements Cloneable {
      * Reload the data for the current tree.
      */
     protected void refresh() {
-    	if (getRootEntity()!=null) {
+    	if (entityRootList == null || entityRootList.isEmpty()) {
+            SimpleWorker entityOutlineLoadingWorker = new SimpleWorker() {
+
+                private List<Entity> rootList;
+            	
+                protected void doStuff() throws Exception {
+                	rootList = loadRootList();
+                }
+
+                protected void hadSuccess() {
+                	init(rootList);
+                }
+
+                protected void hadError(Throwable error) {
+                    error.printStackTrace();
+                    JOptionPane.showMessageDialog(EntityOutline.this, 
+                    		"Error loading data outline", "Data Load Error", JOptionPane.ERROR_MESSAGE);
+                    init(null);
+                }
+            };
+            
+            entityOutlineLoadingWorker.execute();
+    	}
+    	else if (getRootEntity()!=null) {
 	        Utils.setWaitingCursor(EntityOutline.this);
 	    	final ExpansionState expansionState = new ExpansionState();
 	    	expansionState.storeExpansionState(getDynamicTree());
