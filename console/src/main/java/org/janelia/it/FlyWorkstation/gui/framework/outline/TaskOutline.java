@@ -44,14 +44,17 @@ public class TaskOutline extends JPanel {
 
     private static final int REFRESH_SECS = 10;
     
+    private Browser consoleFrame;
+    private JToggleButton hideCompletedButton;
+    private final JPanel tablePanel;
+    private final TaskDetailsDialog detailsDialog = new TaskDetailsDialog();
+    private final JToolBar toolBar;
+
     private List<Task> tasks = new ArrayList<Task>();
     private Task selectedTask;
-    private Browser consoleFrame;
-    protected final JPanel tablePanel;
     private DynamicTable dynamicTable;
     private SimpleWorker loadingWorker;
     private Timer refreshTimer;
-    private TaskDetailsDialog detailsDialog = new TaskDetailsDialog();
 
     private TableCellRenderer taskTableCellRenderer = new DefaultTableCellRenderer() {
 
@@ -79,6 +82,8 @@ public class TaskOutline extends JPanel {
         tablePanel = new JPanel(new BorderLayout());
         add(tablePanel, BorderLayout.CENTER);
 
+        toolBar = createToolBar();
+        
         showLoadingIndicator();
         this.updateUI();
         loadTasks();
@@ -152,7 +157,6 @@ public class TaskOutline extends JPanel {
 				return null;
 			}
 
-            
 			@Override
             protected JPopupMenu createPopupMenu(MouseEvent e) {
             	JPopupMenu popupMenu = super.createPopupMenu(e);
@@ -189,6 +193,9 @@ public class TaskOutline extends JPanel {
 			                    	} 
 			                    	catch (Exception e) {
 			                    		e.printStackTrace();
+				                        JOptionPane.showMessageDialog(consoleFrame, 
+				                        		"Error stopping continuous execution "+e.getMessage(), 
+				                        		"Error", JOptionPane.ERROR_MESSAGE);
 			                    	}
 			                    }
 			                });
@@ -266,6 +273,7 @@ public class TaskOutline extends JPanel {
     		});
 	        for (Task task : myTasks) {
 	            if (AnnotationSessionTask.TASK_NAME.equals(task.getTaskName())) continue;
+	            if (hideCompletedButton.isSelected() && task.isDone()) continue;
 	            dynamicTable.addRow(task);
 	            tasks.add(task);
 	        }
@@ -273,11 +281,34 @@ public class TaskOutline extends JPanel {
 
         dynamicTable.updateTableModel();
         tablePanel.removeAll();
-        tablePanel.add(dynamicTable);
+        tablePanel.add(toolBar, BorderLayout.NORTH);
+        tablePanel.add(dynamicTable, BorderLayout.CENTER);
         
         revalidate();
         repaint();
     }
+	
+	private JToolBar createToolBar() {
+
+        JToolBar toolBar = new JToolBar();
+        toolBar.setFloatable(false);
+        toolBar.setRollover(false);
+
+        hideCompletedButton = new JToggleButton();
+        hideCompletedButton.setSelected(true); // selected by default
+        hideCompletedButton.setIcon(Icons.getIcon("page_white_go.png"));
+        hideCompletedButton.setFocusable(false);
+        hideCompletedButton.setToolTipText("Hide all tasks which are completed.");
+        hideCompletedButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+		        loadTasks();
+			}
+		});
+        toolBar.add(hideCompletedButton);
+
+        return toolBar;
+	}
 	
 //	private synchronized void cancelTasks() {
 //
@@ -330,6 +361,14 @@ public class TaskOutline extends JPanel {
 
         try {
             for (Task task : toDelete) {
+                if (task instanceof ContinuousExecutionTask) {
+                	final ContinuousExecutionTask cet = (ContinuousExecutionTask)task;
+                	if (cet.isStillEnabled()) {
+                        JOptionPane.showMessageDialog(consoleFrame, 
+                        		"Cannot delete active task "+task.getJobName(), "Error", JOptionPane.ERROR_MESSAGE);
+                		continue;
+                	}
+                }
                 ModelMgr.getModelMgr().deleteTaskById(task.getObjectId());
                 dynamicTable.removeRow(dynamicTable.getRowForUserObject(task));
                 tasks.remove(task);
