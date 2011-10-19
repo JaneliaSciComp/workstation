@@ -23,10 +23,6 @@ public class TaskDetailsDialog extends ModalDialog {
     
     private JPanel attrPanel;
     
-    private JLabel nameLabel;
-    private JLabel ownerLabel;
-    private JLabel lastStatusLabel;
-
     private JLabel addAttribute(String name) {
         JLabel nameLabel = new JLabel(name);
         JLabel valueLabel = new JLabel();
@@ -44,12 +40,7 @@ public class TaskDetailsDialog extends ModalDialog {
         attrPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10), 
         		BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Task Properties")));
 
-        nameLabel = addAttribute("Name: ");
-        ownerLabel = addAttribute("Task Owner: ");
-        lastStatusLabel = addAttribute("Last Status: ");
-        
         add(attrPanel, BorderLayout.CENTER);
-        SpringUtilities.makeCompactGrid(attrPanel, attrPanel.getComponentCount()/2, 2, 6, 6, 6, 6);
 
         JButton okButton = new JButton("OK");
         okButton.setToolTipText("Close and save changes");
@@ -71,10 +62,17 @@ public class TaskDetailsDialog extends ModalDialog {
     
     public void showForTask(Task task) {
 
-    	nameLabel.setText(task.getDisplayName());
-    	ownerLabel.setText(task.getOwner());
-    	lastStatusLabel.setText(task.getLastEvent().getDescription());
+    	attrPanel.removeAll();
+        addAttribute("Name: ").setText(task.getDisplayName());
+        addAttribute("Task Owner: ").setText(task.getOwner());
+        addAttribute("Last Status: ").setText(task.getLastEvent().getDescription());
+        
+        for(String key : task.getParameterKeySet()) {
+        	String value = task.getParameter(key);
+        	addAttribute(key).setText(value);
+        }
 
+        SpringUtilities.makeCompactGrid(attrPanel, attrPanel.getComponentCount()/2, 2, 6, 6, 6, 6);
         packAndShow();
     }
 }
