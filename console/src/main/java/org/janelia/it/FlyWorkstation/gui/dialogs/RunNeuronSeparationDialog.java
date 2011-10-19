@@ -59,48 +59,48 @@ public class RunNeuronSeparationDialog extends ModalDialog {
         attrPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10), 
         		BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Task Parameters")));
 
-        JLabel nameLabel = new JLabel("Input Directory (Linux mounted)");
-        nameLabel.setToolTipText(TOOLTIP_INPUT_DIR);
+        JLabel inputDirectoryLabel = new JLabel("Input Directory (Linux mounted)");
+        inputDirectoryLabel.setToolTipText(TOOLTIP_INPUT_DIR);
         inputDirectoryField = new JTextField(40);
         inputDirectoryField.setText(filter(INPUT_DIR));
         inputDirectoryField.setToolTipText(TOOLTIP_INPUT_DIR);
-        nameLabel.setLabelFor(inputDirectoryField);
-        attrPanel.add(nameLabel);
+        inputDirectoryLabel.setLabelFor(inputDirectoryField);
+        attrPanel.add(inputDirectoryLabel);
         attrPanel.add(inputDirectoryField);
 
-        JLabel nameLabel5 = new JLabel("Linking Directory (Linux mounted)");
-        nameLabel5.setToolTipText(TOOLTIP_LINKING_DIR);
+        JLabel linkingDirectoryLabel = new JLabel("Linking Directory (Linux mounted)");
+        linkingDirectoryLabel.setToolTipText(TOOLTIP_LINKING_DIR);
         linkingDirectoryField = new JTextField(40);
         linkingDirectoryField.setText(filter(LINKING_DIR_TEMPLATE));
         linkingDirectoryField.setToolTipText(TOOLTIP_LINKING_DIR);
-        nameLabel5.setLabelFor(linkingDirectoryField);
-        attrPanel.add(nameLabel5);
+        linkingDirectoryLabel.setLabelFor(linkingDirectoryField);
+        attrPanel.add(linkingDirectoryLabel);
         attrPanel.add(linkingDirectoryField);
 
-        JLabel nameLabel6 = new JLabel("Top Level Entity Name");
-        nameLabel6.setToolTipText(TOOLTIP_TOP_LEVEL_ENTITY);
+        JLabel topLevelFolderLabel = new JLabel("Top Level Entity Name");
+        topLevelFolderLabel.setToolTipText(TOOLTIP_TOP_LEVEL_ENTITY);
         topLevelFolderField = new JTextField(40);
         topLevelFolderField.setText(filter(TOP_LEVEL_FOLDER_NAME));
         topLevelFolderField.setToolTipText(TOOLTIP_TOP_LEVEL_ENTITY);
-        nameLabel6.setLabelFor(topLevelFolderField);
-        attrPanel.add(nameLabel6);
+        topLevelFolderLabel.setLabelFor(topLevelFolderField);
+        attrPanel.add(topLevelFolderLabel);
         attrPanel.add(topLevelFolderField);
         
-        JLabel nameLabel2 = new JLabel("Re-run Interval (minutes)");
-        nameLabel2.setToolTipText(TOOLTIP_RERUN_INTERVAL);
+        JLabel rerunIntervalLabel = new JLabel("Re-run Interval (minutes)");
+        rerunIntervalLabel.setToolTipText(TOOLTIP_RERUN_INTERVAL);
         rerunIntervalField = new JTextField(10);
         rerunIntervalField.setText(DEFAULT_RERUN_INTERVAL_MINS+"");
         rerunIntervalField.setToolTipText(TOOLTIP_RERUN_INTERVAL);
-        nameLabel2.setLabelFor(rerunIntervalField);
-        attrPanel.add(nameLabel2);
+        rerunIntervalLabel.setLabelFor(rerunIntervalField);
+        attrPanel.add(rerunIntervalLabel);
         attrPanel.add(rerunIntervalField);
 
-        JLabel nameLabel3 = new JLabel("Re-run samples with existing results?");
-        nameLabel3.setToolTipText(TOOLTIP_REFRESH);
+        JLabel refreshLabel = new JLabel("Re-run samples with existing results?");
+        refreshLabel.setToolTipText(TOOLTIP_REFRESH);
         refreshCheckbox = new JCheckBox();
         refreshCheckbox.setToolTipText(TOOLTIP_REFRESH);
-        nameLabel3.setLabelFor(refreshCheckbox);
-        attrPanel.add(nameLabel3);
+        refreshLabel.setLabelFor(refreshCheckbox);
+        attrPanel.add(refreshLabel);
         attrPanel.add(refreshCheckbox);
         
         add(attrPanel, BorderLayout.CENTER);
