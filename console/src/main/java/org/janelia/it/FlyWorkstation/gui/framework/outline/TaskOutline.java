@@ -57,18 +57,23 @@ public class TaskOutline extends JPanel {
     private Timer refreshTimer;
 
     private TableCellRenderer taskTableCellRenderer = new DefaultTableCellRenderer() {
-
+        
 		@Override
 		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
 				boolean hasFocus, int rowIndex, int columnIndex) {
 			JLabel label = (JLabel)super.getTableCellRendererComponent(table, value, isSelected, hasFocus, rowIndex, columnIndex);
 			DynamicRow row = dynamicTable.getRows().get(rowIndex);
 			Task task = (Task)row.getUserObject();
-			if (task.isDone()) {
-				label.setForeground(Color.gray);
+			if (isSelected) {
+				label.setForeground(table.getSelectionForeground());
 			}
 			else {
-				label.setForeground(Color.black);
+				if (task.isDone()) {
+					label.setForeground(Color.gray);
+				}
+				else {
+					label.setForeground(table.getForeground());
+				}
 			}
 			return label;
 		}
