@@ -1,24 +1,14 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import java.awt.*;
-import java.awt.event.WindowEvent;
-import java.awt.print.PageFormat;
-import java.awt.print.PrinterJob;
-import java.io.File;
-import java.io.FilenameFilter;
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import javax.swing.*;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.access.LoadRequestStatusObserverAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestState;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestStatus;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationSessionPropertyDialog;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.*;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.SessionOutline;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.TaskOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.search.SearchToolbar;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModelListenerAdapter;
@@ -31,6 +21,18 @@ import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableImage;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.WindowEvent;
+import java.awt.print.PageFormat;
+import java.awt.print.PrinterJob;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -56,7 +58,7 @@ public class Browser extends JFrame implements Cloneable {
     public static final String BAR_PRIVATE_DATA = "My Data";
     public static final String BAR_PUBLIC_DATA = "Public Data";
     public static final String BAR_SESSIONS = "Annotation Sessions";
-    public static final String BAR_TASKS = "Tasks";
+    public static final String BAR_TASKS = "Services";
 
     private static String MEMORY_EXCEEDED_PRT_SCR_MSG = "Insufficient memory to print screen";
     private static String MEMORY_EXCEEDED_ADVISORY = "Low Memory";

@@ -35,7 +35,7 @@ public class RunNeuronSeparationDialog extends ModalDialog {
 	private static final String INPUT_DIR = "/groups/flylight/flylight/%USER%/data";
 	private static final String TOP_LEVEL_FOLDER_NAME = "%USER%'s Single Neuron Data";
 	private static final String LINKING_DIR_TEMPLATE = "/groups/scicomp/jacsData/flylight/%USER%/MySeparationResultLinks";
-	private static final int DEFAULT_RERUN_INTERVAL_MINS = 60;
+	private static final int DEFAULT_RERUN_INTERVAL_MINS = 1;
 	private static final int DEFAULT_STATUS_CHECK_INTERVAL_SECS = 30;
 	
 	private static final String TOOLTIP_INPUT_DIR = "Root directory of the tree that should be loaded into the database";

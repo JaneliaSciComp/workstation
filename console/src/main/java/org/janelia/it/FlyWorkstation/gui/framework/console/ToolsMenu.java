@@ -1,17 +1,15 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import java.awt.Image;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.prefs.BackingStoreException;
-
-import javax.swing.*;
-
-import org.janelia.it.FlyWorkstation.gui.dialogs.RunNeuronSeparationDialog;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
 
 /**
  * Created by IntelliJ IDEA.
@@ -22,9 +20,7 @@ import org.janelia.it.FlyWorkstation.shared.util.Utils;
 public class ToolsMenu extends JMenu {
     private JMenuItem v3dMenuItem;
     private JMenuItem fijiMenuItem;
-    private JMenuItem toolsConfiguration;
     private JFrame parentFrame;
-    private RunNeuronSeparationDialog runNeuronSeparationDialog = new RunNeuronSeparationDialog();
 
     public ToolsMenu(Browser console) {
         super("Tools");
@@ -36,7 +32,7 @@ public class ToolsMenu extends JMenu {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
                         // todo This needs to be a custom user setting.
-                        Runtime.getRuntime().exec("/Users/" + (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME) + "/Dev/v3d/v3d/v3d64.app/Contents/MacOS/v3d64");
+                        Runtime.getRuntime().exec("/Users/" + SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME) + "/Dev/v3d/v3d/v3d64.app/Contents/MacOS/v3d64");
                     }
                     catch (IOException e) {
                         JOptionPane.showMessageDialog(v3dMenuItem.getParent(), "Could not launch V3D - NeuroAnnotator", "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
@@ -60,17 +56,8 @@ public class ToolsMenu extends JMenu {
                     }
                 }
             });
-            
 
-
-            fijiMenuItem = new JMenuItem("Neuron Separation...");
-            fijiMenuItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent actionEvent) {
-                	runNeuronSeparationDialog.showDialog();
-                }
-            });
-            
-            toolsConfiguration = new JMenuItem("Configure Tools...");
+            JMenuItem toolsConfiguration = new JMenuItem("Configure Tools...");
             toolsConfiguration.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
