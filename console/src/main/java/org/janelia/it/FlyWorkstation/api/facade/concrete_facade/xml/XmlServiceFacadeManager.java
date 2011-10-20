@@ -6,6 +6,7 @@ import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.EntityFacade;
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.OntologyFacade;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.ConnectionStatus;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -26,7 +27,7 @@ public class XmlServiceFacadeManager extends XmlFacadeManager {
 
     public static final String URL_SETTING_PREFIX = "XMLService.URL.".intern();
 
-    public static final File URLS_PREF_FILE = new File(System.getProperty("user.home") + fileSep + "x" + fileSep + "FlyWorkstation" + fileSep + LOCATION_PROP_NAME + ".properties");
+    public static final File URLS_PREF_FILE = new File(System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path") + LOCATION_PROP_NAME + ".properties");
 
     //-------------------------------------------MEMBER VARIABLES
     private OntologyFacade ontology = null;

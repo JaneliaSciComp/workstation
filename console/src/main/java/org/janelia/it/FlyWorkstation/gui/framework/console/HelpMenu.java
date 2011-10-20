@@ -11,6 +11,8 @@ import javax.swing.*;
 public class HelpMenu extends JMenu {
     public HelpMenu(Browser console) {
         super("Help");
-        add(new JMenuItem("TBD"));
+        add(new JMenuItem("Call Konrad - x4242"));
+        add(new JMenuItem("Call Sean   - x4324"));
+        add(new JMenuItem("Call Todd   - x4696"));
     }
 }

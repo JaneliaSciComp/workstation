@@ -15,7 +15,7 @@ import java.awt.event.ActionListener;
 public class ServicesMenu extends JMenu {
     private JMenuItem neuronSeparationMenuItem;
     private JFrame parentFrame;
-    private RunNeuronSeparationDialog runNeuronSeparationDialog = new RunNeuronSeparationDialog();
+    private static RunNeuronSeparationDialog runNeuronSeparationDialog = new RunNeuronSeparationDialog();
 
     public ServicesMenu(Browser console) {
         super("Services");

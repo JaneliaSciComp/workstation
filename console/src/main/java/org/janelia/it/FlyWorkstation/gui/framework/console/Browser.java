@@ -226,7 +226,7 @@ public class Browser extends JFrame implements Cloneable {
 				List<Entity> filtered = new ArrayList<Entity>();
 				List<Entity> entityRootList = ModelMgr.getModelMgr().getCommonRootEntitiesByTypeName(EntityConstants.TYPE_FOLDER);
             	for(final Entity commonRoot : entityRootList) {
-            		if (SessionMgr.getUsername().equals(commonRoot.getUser().getUserLogin())) {
+            		if (SessionMgr.getUsername()!=null&&SessionMgr.getUsername().equals(commonRoot.getUser().getUserLogin())) {
             			filtered.add(commonRoot);
             		}
             	}

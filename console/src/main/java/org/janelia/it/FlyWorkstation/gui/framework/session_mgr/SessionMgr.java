@@ -7,6 +7,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.external_listener.ExternalListener;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyBindings;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
+import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.ws.EmbeddedAxisServer;
@@ -45,8 +46,8 @@ public class SessionMgr {
     private EmbeddedAxisServer axisServer;
     private File settingsFile;
     private String fileSep = File.separator;
-    private String prefsDir = System.getProperty("user.home") + fileSep + "x" + fileSep + "FlyWorkstation" + fileSep;
-    private String prefsFile = prefsDir + "FW_Settings0.1";
+    private String prefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
+    private String prefsFile = prefsDir + ".FW_Settings";
     private Map browserModelsToBrowser = new HashMap();
     private String backupFileName = null;
     private WindowListener myBrowserWindowListener = new MyBrowserListener();

@@ -284,7 +284,7 @@ public class PrefController {
         }
         orderedEditorMap = new TreeMap<String, Component>(new MyComparator());
         mainDialog.setVisible(false);
-        parentFrame.repaint();
+        if (null!=parentFrame) {parentFrame.repaint();}
     }
 
 

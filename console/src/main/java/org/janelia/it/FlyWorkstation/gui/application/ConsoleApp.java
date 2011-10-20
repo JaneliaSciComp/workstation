@@ -43,6 +43,8 @@ public class ConsoleApp {
 //        splash.setStatusText("Initializing Application...");
 //        splash.setVisible(true);
 
+        // Prime the tool-specific properties before the Session is invoked
+        ConsoleProperties.load();
         final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
         try {
             //Browser Setup
@@ -118,16 +120,16 @@ public class ConsoleApp {
             FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
 //            FacadeManager.addProtocolToUseList("sage");
 
-            //Start First Browser
-            final Browser mainBrowser = sessionMgr.newBrowser();
 //            splash.setVisible(false);
-            if (sessionMgr.getModelProperty(SessionMgr.USER_NAME) == null || sessionMgr.getModelProperty(SessionMgr.USER_NAME).equals("")
+            if (null==sessionMgr.getModelProperty(SessionMgr.USER_NAME)  || "".equals(sessionMgr.getModelProperty(SessionMgr.USER_NAME))
                 /*&& modelMgr.getNumberOfLoadedGenomeVersions() == 0*/) {
-                final int answer = JOptionPane.showConfirmDialog(mainBrowser, "Please enter your login information.", "Information Required", JOptionPane.OK_CANCEL_OPTION);
+                final int answer = JOptionPane.showConfirmDialog(null, "Please enter your login information.", "Information Required", JOptionPane.OK_CANCEL_OPTION);
                 if (answer != JOptionPane.CANCEL_OPTION) {
-                    PrefController.getPrefController().getPrefInterface(DataSourceSettings.class, mainBrowser);
+                    PrefController.getPrefController().getPrefInterface(DataSourceSettings.class, null);
                 }
             }
+            //Start First Browser
+            final Browser mainBrowser = sessionMgr.newBrowser();
 //            splash.setStatusText("Connected.");
             
         }

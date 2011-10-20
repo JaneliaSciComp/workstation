@@ -56,7 +56,9 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
                 settingsChanged = true;
             }
         });
-        subEditors.setSelected((Boolean) sessionMgr.getModelProperty(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY));
+        if (null!=sessionMgr.getModelProperty(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY)) {
+            subEditors.setSelected((Boolean) sessionMgr.getModelProperty(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY));
+        }
 
         subviewFocusCheckBox.setText("Focus SubViews Upon Navigation");
         subviewFocusCheckBox.setBounds(new Rectangle(25, 199, 222, 19));
