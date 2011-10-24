@@ -206,6 +206,7 @@ public class Browser extends JFrame implements Cloneable {
 //        subBrowserTabPane = new SubBrowser(browserModel);
 //        fileOutline = new FileOutline(this);
         sessionOutline = new SessionOutline(this);
+        // todo We should probably pass the user info to the server rather than filter the complete list on the console.
         publicEntityOutline = new EntityOutline() {
 			@Override
 			public List<Entity> loadRootList() {
