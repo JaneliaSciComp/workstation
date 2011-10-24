@@ -1,17 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
-import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.swing.*;
-
 import loci.plugins.config.SpringUtilities;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -20,9 +9,18 @@ import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.jacs.model.tasks.fileDiscovery.MCFOUnifiedFileDiscoveryTask;
+import org.janelia.it.jacs.model.tasks.neuronSeparator.BulkNeuronSeparatorTask;
 import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
 import org.janelia.it.jacs.model.user_data.Node;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * A dialog for starting a continuous neuron separation pipeline task which runs every N minutes and discovers new files
@@ -190,7 +188,6 @@ public class RunNeuronSeparationDialog extends ModalDialog {
      * Begin the separation task, wrapped in a continuous execution task.
      * @param path root directory to use for file discovery
      * @param loopTimerInMinutes how long to wait before re-running
-     * @param stitched run the stitched version of the pipeline?
      * @param refresh refresh entities which were already created?
      */
     private void startSeparation(String path, String linkingDirName, String topLevelFolderName,
@@ -198,18 +195,17 @@ public class RunNeuronSeparationDialog extends ModalDialog {
 
     	try {
     		String inputDirList = path;
-        	String process = null;
-        	Task task = null;
+        	String process;
+        	Task task;
         	Set<Node> inputNodes = new HashSet<Node>();
         	String owner = SessionMgr.getUsername();
         	List<Event> events = new ArrayList<Event>();
     		Set<TaskParameter> taskParameterSet = new HashSet<TaskParameter>();
 
-            process = "MCFOUnifiedFileDiscovery";
-            task = new MCFOUnifiedFileDiscoveryTask(inputNodes, owner, events, taskParameterSet, 
-            		inputDirList, topLevelFolderName, linkingDirName, refresh);
-            task.setParameter(MCFOUnifiedFileDiscoveryTask.PARAM_inputDirectoryList, inputDirList);
-            task.setJobName("MultiColor FlipOut File Discovery Task");
+            process = "NeuronMergeSeparationPipeline";
+            task = new BulkNeuronSeparatorTask(inputNodes, owner, events, taskParameterSet);
+            task.setParameter(BulkNeuronSeparatorTask.PARAM_inputDirectoryList, inputDirList);
+            task.setJobName("Bulk Neuron Separation Run");
             task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
             
     		Task ceTask = new ContinuousExecutionTask(new HashSet<Node>(), 
