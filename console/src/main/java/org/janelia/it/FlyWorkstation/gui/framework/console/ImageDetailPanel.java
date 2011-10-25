@@ -271,12 +271,15 @@ public class ImageDetailPanel extends JPanel {
         BufferedImage image = Utils.getScaledImageIcon(inverted ? invertedMaxSizeImage : maxSizeImage, scale);
         imageLabel.setIcon(new ImageIcon(image));
         this.scale = scale;
+        
+		revalidate();
+		repaint();
     }
 
     public void setInvertedColors(boolean inverted) {
 
         this.inverted = inverted;
-        if (inverted == true) {
+        if (inverted == true && maxSizeImage != null) {
             invertedMaxSizeImage = Utils.invertImage(maxSizeImage);
         }
         else {
@@ -287,7 +290,15 @@ public class ImageDetailPanel extends JPanel {
         rescaleImage(scale);
     }
 
-    /**
+    public synchronized BufferedImage getMaxSizeImage() {
+		return maxSizeImage;
+	}
+
+	public synchronized void setMaxSizeImage(BufferedImage maxSizeImage) {
+		this.maxSizeImage = maxSizeImage;
+	}
+
+	/**
      * SwingWorker class that loads the image.  This thread supports being canceled.
      */
     private class LoadImageWorker extends SimpleWorker {
@@ -295,19 +306,13 @@ public class ImageDetailPanel extends JPanel {
         @Override
         protected void doStuff() throws Exception {
             String imageFilename = iconDemoPanel.getFilePath(entity);
-            maxSizeImage = Utils.readImage(iconDemoPanel.convertImagePath(imageFilename));
+            setMaxSizeImage(Utils.readImage(iconDemoPanel.convertImagePath(imageFilename)));
         }
 
         @Override
         protected void hadSuccess() {
             if (isCancelled()) return;
-
-            if (iconDemoPanel.isInverted()) {
-                setInvertedColors(iconDemoPanel.isInverted());
-            }
-            else {
-                rescaleImage(scale);
-            }
+            setInvertedColors(iconDemoPanel.isInverted());
         }
 
         @Override

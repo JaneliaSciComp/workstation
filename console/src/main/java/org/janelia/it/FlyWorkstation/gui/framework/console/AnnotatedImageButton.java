@@ -215,7 +215,7 @@ public class AnnotatedImageButton extends JToggleButton {
     	}
     	else {
     		if (maxSizeImage != null) {
-				System.out.println("WARNING: nonviewable image has a non-null maxSizeImage in memory");
+				System.out.println("Warning: nonviewable image has a non-null maxSizeImage in memory");
     		}
     		
     		if (imagePanel.getComponentCount() != 1) {
@@ -224,19 +224,10 @@ public class AnnotatedImageButton extends JToggleButton {
     		else {
 	    		if (imagePanel.getComponents()[0] != loadingLabel && imagePanel.getComponents()[0] != errorLabel) {
 	    			System.out.println("Warning: non-viewable image has a non loading label "+entity.getName());
-	    			if (imagePanel.getComponents()[0] == imageLabel) {
-	    				System.out.println("it's an image label!");
-	    			}
-	    			else if (imagePanel.getComponents()[0] == null) {
-	    				System.out.println("it's null!");
-	    			}
-	    			else {
-	    				System.out.println("WTF "+imagePanel.getComponents()[0]);
-	    			}
 	    		}
     		}
     		
-    		// Just in case.. this shouldn't happen, but very rarely it does due to some synchronization issue I can't track down.
+    		// Just in case.. but this should never happen.
     		setImageLabel(loadingLabel);
     	}
     	
