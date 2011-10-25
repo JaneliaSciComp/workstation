@@ -15,6 +15,7 @@ import javax.swing.JPanel;
 import javax.swing.Scrollable;
 
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
+import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
@@ -66,7 +67,7 @@ public class ImagesPanel extends JPanel implements Scrollable {
         for (int i = 0; i < entities.size(); i++) {
             final Entity entity = entities.get(i);
             String filepath = iconDemoPanel.getFilePath(entity);
-            File file = new File(iconDemoPanel.convertImagePath(filepath));
+            File file = new File(PathTranslator.convertImagePath(filepath));
 
             final AnnotatedImageButton button = new AnnotatedImageButton(entity.getName(), file.getAbsolutePath(), i, entity);
 

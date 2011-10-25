@@ -42,9 +42,6 @@ import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
  */
 public class IconDemoPanel extends JPanel {
 
-    private static final String JACS_DATA_PATH_MAC = ConsoleProperties.getString("remote.defaultMacPath");
-    private static final String JACS_DATA_PATH_LINUX = ConsoleProperties.getString("remote.defaultLinuxPath");
-
     private SplashPanel splashPanel;
     private JToolBar toolbar;
     private JToggleButton showTitlesButton;
@@ -54,7 +51,6 @@ public class IconDemoPanel extends JPanel {
     private JToggleButton invertButton;
     private JToggleButton onlySessionButton;
     private JToggleButton hideCompletedButton; 
-    
     
     private ImagesPanel imagesPanel;
     private JScrollPane scrollPane;
@@ -449,10 +445,6 @@ public class IconDemoPanel extends JPanel {
 		if (session == null) return;
 		session.clearCompletedIds();
 		Set<Long> completed = session.getCompletedEntityIds();
-		List<Entity> filtered = new ArrayList<Entity>();
-		for(Entity entity : getEntities()) {
-			if (completed.contains(entity.getId())) filtered.add(entity);
-		}
 		
 		for(AnnotatedImageButton button : imagesPanel.getButtons().values()) {
 			if (hideCompletedButton.isSelected() && completed.contains(button.getEntity().getId())) {
@@ -665,11 +657,6 @@ public class IconDemoPanel extends JPanel {
 	public void viewAnnotationDetails(OntologyAnnotation tag) {
 		annotationDetailsDialog.showForAnnotation(tag);
 	}
-	
-    // TODO: need a more general way of doing this
-    public String convertImagePath(String filepath) {
-        return filepath.replace(JACS_DATA_PATH_LINUX, JACS_DATA_PATH_MAC);
-    }
 
     // TODO: should this go in some kind of utility class?
     public String getFilePath(Entity entity) {

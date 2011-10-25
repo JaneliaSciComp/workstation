@@ -1,5 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.application;
 
+import java.util.MissingResourceException;
+
+import javax.swing.JOptionPane;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
@@ -10,13 +14,12 @@ import org.janelia.it.FlyWorkstation.gui.framework.exception_handlers.UserNotifi
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
+import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
+import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ApplicationSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.panels.DataSourceSettings;
 import org.janelia.it.FlyWorkstation.gui.util.server_status.ServerStatusReportManager;
-import org.janelia.it.FlyWorkstation.shared.exception_handlers.PrintStackTraceHandler;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
-
-import javax.swing.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -62,10 +65,10 @@ public class ConsoleApp {
             sessionMgr.setModelProperty("ShowInternalDataSourceInDialogs", new Boolean(internal));
 
             //Exception Handler Registration
-            sessionMgr.registerExceptionHandler(new PrintStackTraceHandler());
+//            sessionMgr.registerExceptionHandler(new PrintStackTraceHandler());
             sessionMgr.registerExceptionHandler(new UserNotificationExceptionHandler());
             sessionMgr.registerExceptionHandler(new ExitHandler()); //should be last so that other handlers can complete first.
-
+        	
             // Protocol Registration - Adding more than one type should automatically switch over to the Aggregate Facade
             final ModelMgr modelMgr = ModelMgr.getModelMgr();
             modelMgr.registerFacadeManagerForProtocol(FacadeManager.getEJBProtocolString(), EJBFacadeManager.class, "JACS EJB Facade Manager");
@@ -128,8 +131,19 @@ public class ConsoleApp {
                     PrefController.getPrefController().getPrefInterface(DataSourceSettings.class, null);
                 }
             }
+
+        	// Make sure we can access the data mount
+        	if (!PathTranslator.isMounted()) {
+        		String message = SystemInfo.isMac ? 
+        					"The jacsData volume is not mounted. From Finder choose 'Go' and 'Connect to Server' " +
+        					"then enter '"+PathTranslator.JACS_DATA_MOUNT_MAC+"' and press Connect."
+        				  : "The data is not mounted as "+PathTranslator.JACS_DATA_PATH_LINUX;
+        		throw new MissingResourceException(message, ConsoleApp.class.getName(), "Missing Data Mount");
+        	}
+        	
             //Start First Browser
-            final Browser mainBrowser = sessionMgr.newBrowser();
+            sessionMgr.newBrowser();
+            
 //            splash.setStatusText("Connected.");
             
         }

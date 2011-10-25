@@ -14,6 +14,7 @@ import javax.swing.event.ChangeListener;
 
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -306,7 +307,7 @@ public class ImageDetailPanel extends JPanel {
         @Override
         protected void doStuff() throws Exception {
             String imageFilename = iconDemoPanel.getFilePath(entity);
-            setMaxSizeImage(Utils.readImage(iconDemoPanel.convertImagePath(imageFilename)));
+            setMaxSizeImage(Utils.readImage(PathTranslator.convertImagePath(imageFilename)));
         }
 
         @Override
