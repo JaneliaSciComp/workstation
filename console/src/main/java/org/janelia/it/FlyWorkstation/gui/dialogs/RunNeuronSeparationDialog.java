@@ -205,6 +205,7 @@ public class RunNeuronSeparationDialog extends ModalDialog {
             process = "NeuronMergeSeparationPipeline";
             task = new BulkNeuronSeparatorTask(inputNodes, owner, events, taskParameterSet);
             task.setParameter(BulkNeuronSeparatorTask.PARAM_inputDirectoryList, inputDirList);
+            task.setParameter(BulkNeuronSeparatorTask.PARAM_topLevelFolderName, topLevelFolderName);
             task.setJobName("Bulk Neuron Separation Run");
             task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
             
