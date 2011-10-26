@@ -1,16 +1,14 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
-import java.awt.BorderLayout;
+import loci.plugins.config.SpringUtilities;
+import org.janelia.it.jacs.model.tasks.Task;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-
-import javax.swing.*;
-
-import loci.plugins.config.SpringUtilities;
-
-import org.janelia.it.jacs.model.tasks.Task;
 
 /**
  * A dialog for viewing details about a task.
@@ -65,6 +63,7 @@ public class TaskDetailsDialog extends ModalDialog {
     	attrPanel.removeAll();
         addAttribute("Name: ").setText(task.getDisplayName());
         addAttribute("Task Owner: ").setText(task.getOwner());
+        addAttribute("Task Id: ").setText(task.getObjectId().toString());
         addAttribute("Last Status: ").setText(task.getLastEvent().getDescription());
         
         for(String key : task.getParameterKeySet()) {

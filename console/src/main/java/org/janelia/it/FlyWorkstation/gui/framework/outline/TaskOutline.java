@@ -6,19 +6,6 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.util.*;
-import java.util.Timer;
-
-import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.TableCellRenderer;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.TaskDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
@@ -31,6 +18,17 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.util.*;
+import java.util.List;
+import java.util.Timer;
 
 /**
  * Provides a list of the user's Tasks and provides ways to manipulate and view them.
@@ -153,13 +151,15 @@ public class TaskOutline extends JPanel {
 			public Object getValue(Object userObject, DynamicColumn column) {
 
             	Task task = (Task)userObject;
-            	if (column.getName().equals(COLUMN_NAME)) {
-            		return task.getJobName();
-            	}
-            	if (column.getName().equals(COLUMN_STATUS)) {
-            		return task.getLastEvent().getEventType();
-            	}
-				return null;
+                if (null!=task) {
+                    if (column.getName().equals(COLUMN_NAME)) {
+                        return task.getJobName();
+                    }
+                    if (column.getName().equals(COLUMN_STATUS)) {
+                        return task.getLastEvent().getEventType();
+                    }
+                }
+                return null;
 			}
 
 			@Override
