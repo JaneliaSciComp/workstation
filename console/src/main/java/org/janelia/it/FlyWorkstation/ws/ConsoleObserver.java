@@ -12,7 +12,7 @@ public interface ConsoleObserver {
     
     public void ontologyChanged(@WebParam(name = "rootId") long rootId);
 
-    public void entitySelected(@WebParam(name = "entityId") long entityId);
+    public void entitySelected(@WebParam(name = "entityId") long entityId, @WebParam(name = "outline") boolean outline);
 
     public void entityViewRequested(@WebParam(name = "entityId") long entityId);
     

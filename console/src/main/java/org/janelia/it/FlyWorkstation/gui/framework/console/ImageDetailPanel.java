@@ -306,7 +306,7 @@ public class ImageDetailPanel extends JPanel {
 
         @Override
         protected void doStuff() throws Exception {
-            String imageFilename = iconDemoPanel.getFilePath(entity);
+            String imageFilename = Utils.getDefaultImageFilePath(entity);
             setMaxSizeImage(Utils.readImage(PathTranslator.convertImagePath(imageFilename)));
         }
 

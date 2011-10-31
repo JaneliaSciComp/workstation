@@ -6,7 +6,6 @@
  */
 package org.janelia.it.FlyWorkstation.ws;
 
-import javax.jws.WebParam;
 import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
 
@@ -38,7 +37,7 @@ public class ConsoleObserverImpl implements ModelMgrObserver  {
 	}
 
 	@Override
-	public void entitySelected(long entityId) {
+	public void entitySelected(long entityId, boolean outline) {
 		throw e;
 	}
 	

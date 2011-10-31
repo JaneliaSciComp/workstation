@@ -50,6 +50,7 @@ public class ModelMgr {
     private OntologyKeyBindings ontologyKeyBindings;
     private AnnotationSession annotationSession;
     private Long selectedEntityId;
+    private Long selectedOutlineEntityId;
    
 
     static {
@@ -264,9 +265,9 @@ public class ModelMgr {
         }
     }
     
-    private void notifyEntitySelected(Long entityId) {
+    private void notifyEntitySelected(Long entityId, boolean outline) {
         for (ModelMgrObserver listener : modelMgrObservers) {
-        	listener.entitySelected(entityId);
+        	listener.entitySelected(entityId, outline);
         }
     }
 
@@ -312,10 +313,16 @@ public class ModelMgr {
         return modelAvailable;
     }
 
-	public void selectEntity(Long entityId) {
-        if (Utils.areSame(entityId, selectedEntityId)) return;
-    	selectedEntityId = entityId;
-		notifyEntitySelected(entityId);
+	public void selectEntity(Long entityId, boolean outline) {
+		if (outline) {
+	        if (Utils.areSame(entityId, selectedEntityId)) return;
+	    	selectedEntityId = entityId;
+		}
+		else {
+	        if (Utils.areSame(entityId, selectedOutlineEntityId)) return;
+	        selectedOutlineEntityId = entityId;
+		}
+		notifyEntitySelected(entityId, outline);
 	}
 	
     public List<EntityType> getEntityTypes() {

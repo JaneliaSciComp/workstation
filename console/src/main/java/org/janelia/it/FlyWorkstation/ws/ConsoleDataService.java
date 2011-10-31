@@ -33,7 +33,8 @@ public interface ConsoleDataService extends Remote {
 			throws RemoteException;
 
     public void selectEntity(
-			@WebParam(name = "entityId") long entityId)
+			@WebParam(name = "entityId") long entityId,
+			@WebParam(name = "outline") boolean outline)
     		throws RemoteException;
     
     public void createAnnotation(

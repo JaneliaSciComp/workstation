@@ -17,6 +17,7 @@ import javax.swing.Scrollable;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 
@@ -66,10 +67,8 @@ public class ImagesPanel extends JPanel implements Scrollable {
 
         for (int i = 0; i < entities.size(); i++) {
             final Entity entity = entities.get(i);
-            String filepath = iconDemoPanel.getFilePath(entity);
-            File file = new File(PathTranslator.convertImagePath(filepath));
 
-            final AnnotatedImageButton button = new AnnotatedImageButton(entity.getName(), file.getAbsolutePath(), i, entity);
+            final AnnotatedImageButton button = new AnnotatedImageButton(entity.getName(), i, entity);
 
             button.addKeyListener(iconDemoPanel.getKeyListener());
 
@@ -169,12 +168,14 @@ public class ImagesPanel extends JPanel implements Scrollable {
         return buttons.get(entityId+"");
     }
     
-    public void setSelectedImage(Entity entity) {
+    public boolean setSelectedImage(Entity entity) {
         AnnotatedImageButton button = buttons.get(entity.getId().toString());
         if (button != null) {
 	        button.setSelected(true);
 	        button.requestFocusInWindow();
+	        return true;
         }
+        return false;
     }
 
     /**

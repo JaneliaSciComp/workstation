@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Collections;
 import java.util.Map;
@@ -19,6 +20,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
+import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.LRUCache;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -45,7 +47,7 @@ public class AnnotatedImageButton extends JToggleButton {
     private final JLabel errorLabel;
     
     private final String title;
-    private final String imageFilename;
+    private String imageFilename;
     private BufferedImage maxSizeImage;
     private BufferedImage invertedMaxSizeImage;
     private int displaySize;
@@ -53,11 +55,17 @@ public class AnnotatedImageButton extends JToggleButton {
     private boolean viewable = false;
     private LoadImageWorker loadWorker;
     
-    public AnnotatedImageButton(String title, String imageFilename, final int index, final Entity entity) {
-        this.entity = entity;
+    public AnnotatedImageButton(String title, final int index, final Entity entity) {
+    	
+    	this.entity = entity;
         this.title = title;
-        this.imageFilename = imageFilename;
-
+        
+        String filepath = Utils.getDefaultImageFilePath(entity);
+        if (filepath != null) {
+	        File file = new File(PathTranslator.convertImagePath(filepath));
+	        this.imageFilename = file.getAbsolutePath();
+        }
+        
         GridBagConstraints c = new GridBagConstraints();
         buttonPanel = new JPanel(new GridBagLayout());
         buttonPanel.setOpaque(false);
@@ -259,24 +267,26 @@ public class AnnotatedImageButton extends JToggleButton {
      */
 	public synchronized void setViewable(boolean wantViewable) {
 
-		if (wantViewable) {
-			if (!this.viewable) {
-				loadWorker = new LoadImageWorker();
-				loadWorker.execute();
+		if (imageFilename!=null) {
+			if (wantViewable) {
+				if (!this.viewable) {
+					loadWorker = new LoadImageWorker();
+					loadWorker.execute();
+				}
 			}
-		}
-		else {
-			if (loadWorker != null && !loadWorker.isDone()) {
-				loadWorker.cancel(true);
-				loadWorker = null;
+			else {
+				if (loadWorker != null && !loadWorker.isDone()) {
+					loadWorker.cancel(true);
+					loadWorker = null;
+				}
+		    	// Clear all references to the image data so that it can be cleared out of memory
+		    	maxSizeImage = null;
+		    	invertedMaxSizeImage = null;
+		    	imageLabel.setIcon(null);
+		    	// Show the loading label until the image needs to be loaded again
+		        setImageLabel(loadingLabel);
+				invalidate();
 			}
-	    	// Clear all references to the image data so that it can be cleared out of memory
-	    	maxSizeImage = null;
-	    	invertedMaxSizeImage = null;
-	    	imageLabel.setIcon(null);
-	    	// Show the loading label until the image needs to be loaded again
-	        setImageLabel(loadingLabel);
-			invalidate();
 		}
 		this.viewable = wantViewable;
 	}
@@ -298,8 +308,8 @@ public class AnnotatedImageButton extends JToggleButton {
     	
         @Override
 		protected void doStuff() throws Exception {
+        	
             int size = ImagesPanel.MAX_THUMBNAIL_SIZE;
-            
             BufferedImage maxSizeImage = imageCache.containsKey(imageFilename) ? 
             		imageCache.get(imageFilename) : 
         			Utils.getScaledImageIcon(Utils.readImage(imageFilename), size);
@@ -335,10 +345,6 @@ public class AnnotatedImageButton extends JToggleButton {
 
     public AnnotationTagCloudPanel getTagPanel() {
         return tagPanel;
-    }
-
-    public String getImageFilename() {
-        return imageFilename;
     }
 
     public Entity getEntity() {

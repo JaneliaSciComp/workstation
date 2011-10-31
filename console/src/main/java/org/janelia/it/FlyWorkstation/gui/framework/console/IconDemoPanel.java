@@ -1,4 +1,4 @@
-/**
+/*
  * Created by IntelliJ IDEA.
  * User: saffordt
  * Date: 5/6/11
@@ -26,13 +26,12 @@ import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationFilter;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 
 /**
@@ -168,10 +167,70 @@ public class IconDemoPanel extends JPanel {
 			}
 
 			@Override
-			public void entitySelected(long entityId) {
+			public void entitySelected(final long entityId, final boolean outline) {
+
+				Entity selectedEntity = null;
+				
 				AnnotatedImageButton button = imagesPanel.getButtonByEntityId(entityId);
-				if (button==null) return;
-				setCurrentEntity(button.getEntity());
+				if (button != null) {
+					selectedEntity = button.getEntity();
+				}
+				else {
+					EntityOutline publicEntityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline();
+					selectedEntity = publicEntityOutline.getEntityById(entityId);
+					if (selectedEntity == null) {
+						EntityOutline privateEntityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getPrivateEntityOutline();
+						selectedEntity = privateEntityOutline.getEntityById(entityId);
+						if (selectedEntity==null) {
+							System.out.println("Cannot find entity "+entityId+" in imagesPanel or either entity panel... falling back on DB.");
+						}
+					}
+				}
+
+				final Entity potentialEntity = selectedEntity;
+				SimpleWorker worker = new SimpleWorker() {
+
+					Entity entity;
+					
+					@Override
+					protected void doStuff() throws Exception {
+			        	if (potentialEntity!=null && Utils.areLoaded(potentialEntity.getOrderedEntityData())) {
+			        		entity = potentialEntity;
+			        	}
+			        	else {
+			        		if (entity==null) {
+			        			entity = ModelMgr.getModelMgr().getEntityById(entityId+"");
+			        		}
+			        		// Load children
+			                Utils.loadLazyEntity(entity, false);
+			        	}
+					}
+					
+					@Override
+					protected void hadSuccess() {
+				        if (outline) {
+				        	List<Entity> entities = new ArrayList<Entity>();
+				        	for(Entity child : entity.getOrderedChildren()) {
+			        			entities.add(child);
+				        	}
+				        	if (entities.isEmpty()) {
+				        		clear();
+				        		return; 
+				        	}
+				        	loadImageEntities(entities);
+				        }
+				        else {
+				        	setCurrentEntity(entity);
+				        }
+					}
+					
+					@Override
+					protected void hadError(Throwable error) {
+	                	SessionMgr.getSessionMgr().handleException(error);
+					}
+				};
+
+				worker.execute();
 			}
         });
 
@@ -196,7 +255,7 @@ public class IconDemoPanel extends JPanel {
 		});
     	
     }
-
+    
     private void setTitleVisbility() {
         for (AnnotatedImageButton button : getImagesPanel().getButtons().values()) {
             button.setTitleVisible(showTitlesButton.isSelected());
@@ -374,11 +433,6 @@ public class IconDemoPanel extends JPanel {
             protected void doStuff() throws Exception {
                 List<Entity> loadedEntities = new ArrayList<Entity>();
                 for (Entity entity : entities) {
-                    if (!entity.getEntityType().getName().equals(EntityConstants.TYPE_TIF_2D) 
-                    		&& !entity.getEntityType().getName().equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
-                        // Ignore things we can't display
-                        continue;
-                    }
                     loadedEntities.add(entity);
                 }
                 setEntities(loadedEntities);
@@ -573,6 +627,8 @@ public class IconDemoPanel extends JPanel {
     public synchronized void showCurrentEntityDetails() {
     	if (currentEntity == null) return;
         
+    	// TODO: if this is not an image (i.e. a Sample or Folder) then we want to drill down, not show the detailPanel
+    	
     	imageDetailPanel.load(currentEntity);
     	if (annotations != null) {
         	imageDetailPanel.loadAnnotations(annotations);
@@ -633,9 +689,9 @@ public class IconDemoPanel extends JPanel {
 
     public synchronized void setCurrentEntity(Entity entity) {
         if (Utils.areSameEntity(entity, currentEntity)) return;
+        if (imagesPanel.setSelectedImage(currentEntity)) return;
         this.currentEntity = entity;
-        imagesPanel.setSelectedImage(currentEntity);
-    	ModelMgr.getModelMgr().selectEntity(entity.getId());
+    	ModelMgr.getModelMgr().selectEntity(entity.getId(), false);
     }
 
     public ImagesPanel getImagesPanel() {
@@ -657,21 +713,6 @@ public class IconDemoPanel extends JPanel {
 	public void viewAnnotationDetails(OntologyAnnotation tag) {
 		annotationDetailsDialog.showForAnnotation(tag);
 	}
-
-    // TODO: should this go in some kind of utility class?
-    public String getFilePath(Entity entity) {
-    	if (entity.getEntityType().getName().equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
-    		for(Entity childEntity : entity.getChildren()) {
-    			if (childEntity.getEntityType().getName().equals(EntityConstants.TYPE_TIF_2D)) {
-    	    		return childEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
-    			}
-    		}
-    		return null;
-    	}
-    	else {
-    		return entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
-    	}
-    }
 
     private void loadUnloadImages() {
 

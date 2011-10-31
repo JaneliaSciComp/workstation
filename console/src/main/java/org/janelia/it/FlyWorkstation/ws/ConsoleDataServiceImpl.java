@@ -63,8 +63,8 @@ public class ConsoleDataServiceImpl {
 		}
     }
 
-    public void selectEntity(long entityId) throws Exception {
-        ModelMgr.getModelMgr().selectEntity(entityId);
+    public void selectEntity(long entityId, boolean outline) throws Exception {
+        ModelMgr.getModelMgr().selectEntity(entityId, outline);
     }
     
     public Entity createAnnotation(OntologyAnnotation annotation) throws Exception {

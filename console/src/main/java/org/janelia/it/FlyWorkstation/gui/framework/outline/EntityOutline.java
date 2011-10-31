@@ -239,17 +239,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable {
         selectNode(selectedTree.getCurrentNode());
     }
     
-    private void viewImageEntities(Entity entity) {
-    	// Try to get neuron fragments
-        List<Entity> entities = entity.getDescendantsOfType(EntityConstants.TYPE_NEURON_FRAGMENT);
-        // Settle for 2d tifs
-        if (entities.isEmpty()) {
-        	entities.addAll(entity.getDescendantsOfType(EntityConstants.TYPE_TIF_2D));
-        }
-    	if (entities.isEmpty()) return; // Nothing found
-    	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(entities);
-    }
-
     /**
      * Override this method to do something when the user presses down on a node.
      *
@@ -315,47 +304,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable {
     	if (Utils.areSame(entity, selectedEntity)) return;
     	selectedEntity = entity;
     	
-        ModelMgr.getModelMgr().selectEntity(entity.getId());
-        
-        // TODO: eventually, everything below here should be moved into a listener on the viewer panel which 
-        // listens to the entitySelected event
-        
-        String type = entity.getEntityType().getName();
-
-        if (type.equals(EntityConstants.TYPE_TIF_2D) 
-        		|| type.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
-        	List<Entity> entities = entity.getDescendantsOfType(type);
-        	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadImageEntities(entities);
-        }
-        else if (type.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT) 
-        		|| type.equals(EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION)) {
-            
-        	if (getDynamicTree().descendantsAreLoaded(node)) {
-        		viewImageEntities(entity);
-        		return;
-        	}
-        	
-            Utils.setWaitingCursor(EntityOutline.this);
-            
-            SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node, true) {
-
-                protected void doneLoading() {
-                    Utils.setDefaultCursor(EntityOutline.this);
-                    viewImageEntities(entity);
-                }
-
-                @Override
-                protected void hadError(Throwable error) {
-                	error.printStackTrace();
-                    Utils.setDefaultCursor(EntityOutline.this);
-                    JOptionPane.showMessageDialog(EntityOutline.this, "Error loading nodes", "Internal Error", JOptionPane.ERROR_MESSAGE);
-                }
-            };
-
-            loadingWorker.execute();
-        }
-        else {
-        	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().clear();
-        }
+        ModelMgr.getModelMgr().selectEntity(entity.getId(), true);
     }
 }

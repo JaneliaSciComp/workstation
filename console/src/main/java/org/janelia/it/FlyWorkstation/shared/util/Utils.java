@@ -12,6 +12,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 import javax.media.jai.operator.InvertDescriptor;
 import javax.swing.ImageIcon;
@@ -25,8 +29,12 @@ import javax.swing.table.TableColumn;
 import loci.formats.gui.BufferedImageReader;
 import loci.formats.in.TiffReader;
 
+import org.hibernate.Hibernate;
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
 
 /**
  * Common utilities for loading images, testing strings, etc.
@@ -51,6 +59,50 @@ public class Utils {
         }
     }
 
+    public static boolean areLoaded(Collection<EntityData> eds) {
+        for (EntityData entityData : eds) {
+            if (!Hibernate.isInitialized(entityData.getChildEntity())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static void loadLazyEntity(Entity entity, boolean recurse) {
+
+        if (!Utils.areLoaded(entity.getEntityData())) {
+            Set<Entity> childEntitySet = ModelMgr.getModelMgr().getChildEntities(entity.getId());
+            Map<Long, Entity> childEntityMap = new HashMap<Long, Entity>();
+            for (Entity childEntity : childEntitySet) {
+                childEntityMap.put(childEntity.getId(), childEntity);
+            }
+
+            // Replace the entity data with real objects
+            for (EntityData ed : entity.getEntityData()) {
+                if (ed.getChildEntity() != null) {
+                    ed.setChildEntity(childEntityMap.get(ed.getChildEntity().getId()));
+                }
+            }
+        }
+
+        if (recurse) {
+            for (EntityData ed : entity.getEntityData()) {
+                if (ed.getChildEntity() != null) {
+                    loadLazyEntity(ed.getChildEntity(), true);
+                }
+            }
+        }
+    }
+    
+    public static String getDefaultImageFilePath(Entity entity) {
+    	String path = entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE_FILE_PATH);
+    	if (path == null) {
+    		// TODO: this should return null, but for backwards compatability with old data, we return filepath for now
+    		return entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
+    	}
+    	return path;
+    }
+    
     public static boolean areSame(Object obj1, Object obj2) {
     	return (obj1 == obj2) || (obj1!=null && obj2!=null && obj1.equals(obj2));
     }

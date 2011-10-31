@@ -6,7 +6,7 @@ public interface ModelMgrObserver {
     
     public void ontologyChanged(long rootId);
 
-    public void entitySelected(long entityId);
+    public void entitySelected(long entityId, boolean outline);
 
     public void entityViewRequested(long entityId);
     

@@ -12,7 +12,6 @@ import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
-import org.hibernate.Hibernate;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.DynamicTree;
@@ -21,6 +20,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
 import org.janelia.it.FlyWorkstation.gui.util.FakeProgressWorker;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 
@@ -40,6 +40,8 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
     private ProgressMonitor progressMonitor;
 	private Entity rootEntity;
     
+	private Map<Long,DefaultMutableTreeNode> entityIdToNodeMap = new HashMap<Long,DefaultMutableTreeNode>();
+	
     public EntityTree() {
         this(false);
     }
@@ -69,7 +71,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
         if (null != selectedTree) {
             ToolTipManager.sharedInstance().unregisterComponent(selectedTree);
         }
-
+        
         treesPanel.removeAll();
 
         if (rootId == null) return;
@@ -117,6 +119,8 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
 
     public void initializeTree(final Entity rootEntity) {
 
+        entityIdToNodeMap.clear();
+        
         createNewTree(rootEntity);
         addNodes(null, rootEntity);
 
@@ -233,7 +237,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
                 	return;
                 }
                 
-                loadLazyEntity(entity, recurse);
+                Utils.loadLazyEntity(entity, recurse);
             }
 
             @Override
@@ -241,7 +245,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
                 Entity entity = (Entity) node.getUserObject();
                 ArrayList<EntityData> edList = new ArrayList<EntityData>(entity.getEntityData());
 
-                if (!areLoaded(edList)) {
+                if (!Utils.areLoaded(edList)) {
                     throw new IllegalStateException("replaceLazyChildren called on node whose children have not been loaded");
                 }
 
@@ -332,40 +336,16 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
         }
     }
     
-    private void loadLazyEntity(Entity entity, boolean recurse) {
-
-        if (!areLoaded(entity.getEntityData())) {
-            Set<Entity> childEntitySet = ModelMgr.getModelMgr().getChildEntities(entity.getId());
-            Map<Long, Entity> childEntityMap = new HashMap<Long, Entity>();
-            for (Entity childEntity : childEntitySet) {
-                childEntityMap.put(childEntity.getId(), childEntity);
-            }
-
-            // Replace the entity data with real objects
-            for (EntityData ed : entity.getEntityData()) {
-                if (ed.getChildEntity() != null) {
-                    ed.setChildEntity(childEntityMap.get(ed.getChildEntity().getId()));
-                }
-            }
-        }
-
-        if (recurse) {
-            for (EntityData ed : entity.getEntityData()) {
-                if (ed.getChildEntity() != null) {
-                    loadLazyEntity(ed.getChildEntity(), true);
-                }
-            }
-        }
+    public DefaultMutableTreeNode getNodeByEntityId(Long entityId) {
+    	return entityIdToNodeMap.get(entityId);
     }
 
-    private boolean areLoaded(Collection<EntityData> eds) {
-        for (EntityData entityData : eds) {
-            if (!Hibernate.isInitialized(entityData.getChildEntity())) {
-                return false;
-            }
-        }
-        return true;
+    public Entity getEntityById(Long entityId) {
+    	DefaultMutableTreeNode node = entityIdToNodeMap.get(entityId);
+    	if (node==null) return null;
+    	return (Entity)node.getUserObject();
     }
+    
 
     private void addNodes(DefaultMutableTreeNode parentNode, Entity newEntity) {
 
@@ -377,7 +357,9 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
             // If the parent node is null, then the node is already in the tree as the root
             newNode = selectedTree.getRootNode();
         }
-
+        
+        entityIdToNodeMap.put(newEntity.getId(), newNode);
+        
         Set<EntityData> dataSet = newEntity.getEntityData();
         List<EntityData> childDataList = new ArrayList<EntityData>();
 
@@ -388,7 +370,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
         if (childDataList.isEmpty()) return;
 
         // Test for proxies
-        boolean allLoaded = areLoaded(childDataList);
+        boolean allLoaded = Utils.areLoaded(childDataList);
 
         if (!allLoaded) {
             selectedTree.addObject(newNode, new LazyTreeNode());
