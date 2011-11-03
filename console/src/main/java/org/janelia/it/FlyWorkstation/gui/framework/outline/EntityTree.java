@@ -243,7 +243,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
             @Override
             public int recreateChildNodes(DefaultMutableTreeNode node) {
                 Entity entity = (Entity) node.getUserObject();
-                ArrayList<EntityData> edList = new ArrayList<EntityData>(entity.getEntityData());
+                ArrayList<EntityData> edList = new ArrayList<EntityData>(entity.getOrderedEntityData());
 
                 if (!Utils.areLoaded(edList)) {
                     throw new IllegalStateException("replaceLazyChildren called on node whose children have not been loaded");
@@ -360,11 +360,13 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
         
         entityIdToNodeMap.put(newEntity.getId(), newNode);
         
-        Set<EntityData> dataSet = newEntity.getEntityData();
+        List<EntityData> dataList = newEntity.getOrderedEntityData();
         List<EntityData> childDataList = new ArrayList<EntityData>();
 
-        for (EntityData ed : dataSet) {
-            childDataList.add(ed);
+        for (EntityData ed : dataList) {
+        	if (ed.getChildEntity()!=null) {
+        		childDataList.add(ed);
+        	}
         }
 
         if (childDataList.isEmpty()) return;
@@ -382,55 +384,6 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
     }
 
     private int addChildren(DefaultMutableTreeNode parentNode, List<EntityData> dataList) {
-
-        Collections.sort(dataList, new Comparator<EntityData>() {
-            @Override
-            public int compare(EntityData o1, EntityData o2) {
-            	// Attempt to order by the prescribed ordering
-                if (o1.getOrderIndex() == null) {
-                    if (o2.getOrderIndex() == null) {
-                    	// No ordering exists, try using the child entity names
-                        Entity child1 = o1.getChildEntity();
-                        Entity child2 = o2.getChildEntity();
-                        if (child1 == null) {
-                            if (child2 == null) {
-                            	// No children, fall back on data id
-                                return o1.getId().compareTo(o2.getId());
-                            }
-                            else {
-                                return -1;
-                            }
-                        }
-                        else if (child2 == null) {
-                            return 1;
-                        }
-                        int c = child1.getName().compareTo(child2.getName());
-                        if (c == 0) {
-                        	// If the names are the same, order by creation date
-                        	if (child1.getCreationDate() == null) {
-                        		if (child2.getCreationDate() == null) {
-                        			// No creation date, fall back on entity id
-                                    return child1.getId().compareTo(child2.getId());
-                        		}
-                        		else {
-                        			return -1;
-                        		}
-                        	}
-                        	else if (child2.getCreationDate() == null) {
-                        		return 1;
-                        	}
-                        	return o1.getCreationDate().compareTo(o2.getCreationDate());
-                    	}	
-                    	return c;
-                    }
-                    return -1;
-                }
-                else if (o2.getOrderIndex() == null) {
-                    return 1;
-                }
-                return o1.getOrderIndex().compareTo(o2.getOrderIndex());
-            }
-        });
 
         int c = 0;
         for (EntityData entityData : dataList) {

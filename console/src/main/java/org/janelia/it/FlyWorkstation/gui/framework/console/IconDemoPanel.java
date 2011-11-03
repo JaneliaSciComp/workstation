@@ -11,6 +11,7 @@ import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.event.*;
 import java.util.*;
+import java.util.concurrent.Callable;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -128,18 +129,9 @@ public class IconDemoPanel extends JPanel {
                 double imageSizePercent = (double) source.getValue() / (double) 100;
                 if (currImageSizePercent == imageSizePercent) return;
                 currImageSizePercent = imageSizePercent;
-                
                 imagesPanel.rescaleImages(imageSizePercent);
 	            imagesPanel.recalculateGrid();
-
-	            // Only load images once we know how the layout will look 
-	            // (i.e. after the above operations are completed and the panel is repainted)
-                SwingUtilities.invokeLater(new Runnable() {
-        			@Override
-        			public void run() {
-        	        	loadUnloadImages();
-        			}
-        		});
+	        	loadUnloadImages();
             }
         });
         
@@ -169,8 +161,8 @@ public class IconDemoPanel extends JPanel {
 			@Override
 			public void entitySelected(final long entityId, final boolean outline) {
 
+				// Find the entity object
 				Entity selectedEntity = null;
-				
 				AnnotatedImageButton button = imagesPanel.getButtonByEntityId(entityId);
 				if (button != null) {
 					selectedEntity = button.getEntity();
@@ -190,34 +182,47 @@ public class IconDemoPanel extends JPanel {
 				final Entity potentialEntity = selectedEntity;
 				SimpleWorker worker = new SimpleWorker() {
 
-					Entity entity;
+					Entity entity = potentialEntity;
 					
 					@Override
 					protected void doStuff() throws Exception {
-			        	if (potentialEntity!=null && Utils.areLoaded(potentialEntity.getOrderedEntityData())) {
-			        		entity = potentialEntity;
-			        	}
-			        	else {
-			        		if (entity==null) {
-			        			entity = ModelMgr.getModelMgr().getEntityById(entityId+"");
-			        		}
-			        		// Load children
+
+		        		// In case we couldn't find the entity above 
+						if (entity==null) {
+		        			entity = ModelMgr.getModelMgr().getEntityById(entityId+"");
+						}
+
+		        		// In case we have a lazy entity, lets load the children
+			        	if (!Utils.areLoaded(potentialEntity.getOrderedEntityData())) {
 			                Utils.loadLazyEntity(entity, false);
 			        	}
+			        	
 					}
 					
 					@Override
 					protected void hadSuccess() {
 				        if (outline) {
-				        	List<Entity> entities = new ArrayList<Entity>();
+				        	List<Entity> entitiesToLoad = new ArrayList<Entity>();
 				        	for(Entity child : entity.getOrderedChildren()) {
-			        			entities.add(child);
+			        			entitiesToLoad.add(child);
 				        	}
-				        	if (entities.isEmpty()) {
-				        		clear();
-				        		return; 
+				        	if (entitiesToLoad.isEmpty()) {
+				        		// No children, just show the leaf entity by itself
+				        		entitiesToLoad.add(entity);
+				        		loadImageEntities(entitiesToLoad, new Callable<Void>() {
+									@Override
+									public Void call() throws Exception {
+							        	setCurrentEntity(entity);
+						        		showCurrentEntityDetails();
+						        		imageDetailPanel.getIndexButton().setEnabled(false);
+						        		return null;
+									}
+								});
 				        	}
-				        	loadImageEntities(entities);
+				        	else {
+				        		// A bunch of children, show them all
+				        		loadImageEntities(entitiesToLoad);
+				        	}
 				        }
 				        else {
 				        	setCurrentEntity(entity);
@@ -417,8 +422,12 @@ public class IconDemoPanel extends JPanel {
         
     	userListMenu.show(userButton, 0, userButton.getHeight());
     }
+
+    public void loadImageEntities(final List<Entity> entities) {
+    	loadImageEntities(entities, null);
+    }
     
-    public synchronized void loadImageEntities(final List<Entity> entities) {
+    public synchronized void loadImageEntities(final List<Entity> entities, final Callable<Void> success) {
 
     	// Remove the scroll listener so that we don't get a bunch of bogus events as things are added to the imagesPanel
     	scrollPane.getVerticalScrollBar().removeAdjustmentListener(scrollListener);
@@ -441,6 +450,12 @@ public class IconDemoPanel extends JPanel {
 
             protected void hadSuccess() {
             	entityLoadDone();
+            	try {
+            		if (success!=null) success.call();
+            	}
+            	catch (Exception e) {
+            		SessionMgr.getSessionMgr().handleException(e);
+            	}
             }
 
             protected void hadError(Throwable error) {
@@ -625,24 +640,26 @@ public class IconDemoPanel extends JPanel {
     }
 
     public synchronized void showCurrentEntityDetails() {
-    	if (currentEntity == null) return;
         
-    	// TODO: if this is not an image (i.e. a Sample or Folder) then we want to drill down, not show the detailPanel
-    	
+    	if (currentEntity == null) return;
+
     	imageDetailPanel.load(currentEntity);
     	if (annotations != null) {
         	imageDetailPanel.loadAnnotations(annotations);
         }
-        
+    	
     	if (!viewingSingleImage) {
             viewingSingleImage = true;
             removeAll();
             add(imageDetailPanel);
+            imageDetailPanel.getIndexButton().setEnabled(true);
+            imageDetailPanel.getPrevButton().setEnabled(entities.size()>1);
+            imageDetailPanel.getNextButton().setEnabled(entities.size()>1);
         }
 
         revalidate();
         repaint();
-
+        
         // Focus on the panel so that it can receive keyboard input
         requestFocusInWindow();
     }
@@ -689,7 +706,9 @@ public class IconDemoPanel extends JPanel {
 
     public synchronized void setCurrentEntity(Entity entity) {
         if (Utils.areSameEntity(entity, currentEntity)) return;
-        if (imagesPanel.setSelectedImage(currentEntity)) return;
+        if (!imagesPanel.setSelectedImage(entity)) {
+        	return;
+        }
         this.currentEntity = entity;
     	ModelMgr.getModelMgr().selectEntity(entity.getId(), false);
     }

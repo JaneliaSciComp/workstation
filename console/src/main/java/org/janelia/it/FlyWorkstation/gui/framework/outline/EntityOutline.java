@@ -14,11 +14,12 @@ import javax.swing.*;
 import javax.swing.event.MenuEvent;
 import javax.swing.event.MenuListener;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
 
+import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
-import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNode;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -42,6 +43,15 @@ public abstract class EntityOutline extends EntityTree implements Cloneable {
     	super(true);
         this.setMinimumSize(new Dimension(400, 400));
         showLoadingIndicator();
+        
+
+        ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
+			@Override
+			public void entitySelected(final long entityId, final boolean outline) {
+				if (!outline) return;
+				selectEntityById(entityId);
+			}
+        });
     }
 
     public void init(List<Entity> entityRootList) {
@@ -298,12 +308,40 @@ public abstract class EntityOutline extends EntityTree implements Cloneable {
     }
     
     private void selectNode(DefaultMutableTreeNode node) {
-        if (node instanceof LazyTreeNode) return;
-    	final Entity entity = (Entity) node.getUserObject();
+    	selectEntity((Entity)node.getUserObject());
+    }
+    
+    private void selectEntity(Entity entity) {
+    	selectEntityById(entity.getId());
+    }
+    
+    private void selectEntityById(long entityId) {
     	
+    	DefaultMutableTreeNode node = getNodeByEntityId(entityId);
+    	if (node==null) return;
+    	
+    	Entity entity = (Entity)node.getUserObject();
+    	if (entity==null) return;
     	if (Utils.areSame(entity, selectedEntity)) return;
+    	
+    	DefaultMutableTreeNode parent = (DefaultMutableTreeNode)node.getParent();
+    	if (parent!=null && !getTree().isExpanded(new TreePath(parent.getPath()))) {
+    		getDynamicTree().expand(parent, true);
+    	}
+    	
+    	getDynamicTree().navigateToNode(node);
+    	
     	selectedEntity = entity;
     	
         ModelMgr.getModelMgr().selectEntity(entity.getId(), true);
+    	
+    	revalidate();
+    	repaint();
+    	
+    	// Load the children in the tree in case the user selects them in the gallery view
+    	// TODO: this should pause the UI because it could cause a desync in theory, if it loads slower then 
+    	// the user clicks.
+        SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node, false);
+        loadingWorker.execute();
     }
 }

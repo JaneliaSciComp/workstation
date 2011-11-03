@@ -28,7 +28,10 @@ import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 public class ImageDetailPanel extends JPanel {
 
     private final IconDemoPanel iconDemoPanel;
-
+    private JButton indexButton;
+    private JButton prevButton;
+    private JButton nextButton;
+    
     private JLabel zoomLabel;
     private final JPanel imageViewer;
     private final JLabel imageCaption;
@@ -168,13 +171,13 @@ public class ImageDetailPanel extends JPanel {
         });
     }
 
-    private JToolBar createToolbar() {
+	private JToolBar createToolbar() {
 
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(true);
         toolBar.setRollover(true);
 
-        final JButton indexButton = new JButton("Back to index");
+        indexButton = new JButton("Back to index");
         indexButton.setToolTipText("Return to the index of images.");
         indexButton.addActionListener(new ActionListener() {
             @Override
@@ -187,7 +190,7 @@ public class ImageDetailPanel extends JPanel {
 
         toolBar.addSeparator();
 
-        final JButton prevButton = new JButton("Previous");
+        prevButton = new JButton("Previous");
         prevButton.setToolTipText("Go to the previous image.");
         prevButton.addActionListener(new ActionListener() {
             @Override
@@ -197,7 +200,7 @@ public class ImageDetailPanel extends JPanel {
         });
         toolBar.add(prevButton);
 
-        final JButton nextButton = new JButton("Next");
+        nextButton = new JButton("Next");
         nextButton.setToolTipText("Go to the next image.");
         nextButton.addActionListener(new ActionListener() {
             @Override
@@ -251,6 +254,7 @@ public class ImageDetailPanel extends JPanel {
         southernPanel.add(new JLabel(Icons.getLoadingIcon()));
 
         imageLabel.setIcon(Icons.getLoadingIcon());
+        imageLabel.setText("");
 
         imageWorker = new LoadImageWorker();
         imageWorker.execute();
@@ -269,7 +273,7 @@ public class ImageDetailPanel extends JPanel {
 
     public void rescaleImage(double scale) {
         if (maxSizeImage == null) return;
-        BufferedImage image = Utils.getScaledImageIcon(inverted ? invertedMaxSizeImage : maxSizeImage, scale);
+        BufferedImage image = Utils.getScaledImage(inverted ? invertedMaxSizeImage : maxSizeImage, scale);
         imageLabel.setIcon(new ImageIcon(image));
         this.scale = scale;
         
@@ -297,6 +301,19 @@ public class ImageDetailPanel extends JPanel {
 
 	public synchronized void setMaxSizeImage(BufferedImage maxSizeImage) {
 		this.maxSizeImage = maxSizeImage;
+	}
+
+    
+    public JButton getIndexButton() {
+		return indexButton;
+	}
+
+	public JButton getPrevButton() {
+		return prevButton;
+	}
+
+	public JButton getNextButton() {
+		return nextButton;
 	}
 
 	/**

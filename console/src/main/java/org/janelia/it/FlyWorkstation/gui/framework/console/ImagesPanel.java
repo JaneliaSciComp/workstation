@@ -6,7 +6,6 @@ import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
-import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 
@@ -15,9 +14,7 @@ import javax.swing.JPanel;
 import javax.swing.Scrollable;
 
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
-import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 

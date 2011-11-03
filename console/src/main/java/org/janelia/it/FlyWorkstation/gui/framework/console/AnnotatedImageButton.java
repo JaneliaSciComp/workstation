@@ -16,6 +16,8 @@ import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
+import loci.formats.FormatException;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
@@ -47,6 +49,7 @@ public class AnnotatedImageButton extends JToggleButton {
     private final JLabel errorLabel;
     
     private final String title;
+    private ImageIcon staticIcon;
     private String imageFilename;
     private BufferedImage maxSizeImage;
     private BufferedImage invertedMaxSizeImage;
@@ -59,12 +62,6 @@ public class AnnotatedImageButton extends JToggleButton {
     	
     	this.entity = entity;
         this.title = title;
-        
-        String filepath = Utils.getDefaultImageFilePath(entity);
-        if (filepath != null) {
-	        File file = new File(PathTranslator.convertImagePath(filepath));
-	        this.imageFilename = file.getAbsolutePath();
-        }
         
         GridBagConstraints c = new GridBagConstraints();
         buttonPanel = new JPanel(new GridBagLayout());
@@ -112,7 +109,6 @@ public class AnnotatedImageButton extends JToggleButton {
         imagePanel = new JPanel(new GridBagLayout());
         imagePanel.setPreferredSize(new Dimension(ImagesPanel.MAX_THUMBNAIL_SIZE, ImagesPanel.MAX_THUMBNAIL_SIZE));
         imagePanel.setOpaque(false);
-        setImageLabel(loadingLabel);
         
         c.gridx = 0;
         c.gridy = 1;
@@ -131,6 +127,18 @@ public class AnnotatedImageButton extends JToggleButton {
         c.weighty = 1;
         buttonPanel.add(tagPanel, c);
 
+        // Set filepath to load
+        
+        String filepath = Utils.getDefaultImageFilePath(entity);
+        if (filepath != null) {
+	        File file = new File(PathTranslator.convertImagePath(filepath));
+	        this.imageFilename = file.getAbsolutePath();
+        }
+        else {
+        	this.staticIcon = Icons.getIcon(entity, true);
+        }
+        
+        setImageLabel(loadingLabel);
 
         // Fix event dispatching so that user can click on the title or the tags and still select the button
 
@@ -190,8 +198,8 @@ public class AnnotatedImageButton extends JToggleButton {
 
 			@Override
 			protected void doubleLeftClicked(MouseEvent e) {
-                iconDemoPanel.setCurrentEntity(entity);
-                iconDemoPanel.showCurrentEntityDetails();
+				// Double-clicking an image in gallery view triggers an outline selection
+				ModelMgr.getModelMgr().selectEntity(entity.getId(), true);
 			}
         	
         });
@@ -217,7 +225,7 @@ public class AnnotatedImageButton extends JToggleButton {
 	    		if (inverted && invertedMaxSizeImage == null) {
 	    			setInvertedColors(true);
 	    		}
-	            BufferedImage image = Utils.getScaledImageIcon(inverted ? invertedMaxSizeImage : maxSizeImage, imageSize);
+	            BufferedImage image = Utils.getScaledImage(inverted ? invertedMaxSizeImage : maxSizeImage, imageSize);
 	            imageLabel.setIcon(new ImageIcon(image));
     		}
     	}
@@ -225,18 +233,6 @@ public class AnnotatedImageButton extends JToggleButton {
     		if (maxSizeImage != null) {
 				System.out.println("Warning: nonviewable image has a non-null maxSizeImage in memory");
     		}
-    		
-    		if (imagePanel.getComponentCount() != 1) {
-    			System.out.println("Warning: image panel has "+imagePanel.getComponentCount()+" components "+entity.getName());
-    		}
-    		else {
-	    		if (imagePanel.getComponents()[0] != loadingLabel && imagePanel.getComponents()[0] != errorLabel) {
-	    			System.out.println("Warning: non-viewable image has a non loading label "+entity.getName());
-	    		}
-    		}
-    		
-    		// Just in case.. but this should never happen.
-    		setImageLabel(loadingLabel);
     	}
     	
 		imagePanel.setPreferredSize(new Dimension(imageSize, imageSize));
@@ -267,7 +263,7 @@ public class AnnotatedImageButton extends JToggleButton {
      */
 	public synchronized void setViewable(boolean wantViewable) {
 
-		if (imageFilename!=null) {
+		if (imageFilename!=null ||  staticIcon!=null) {
 			if (wantViewable) {
 				if (!this.viewable) {
 					loadWorker = new LoadImageWorker();
@@ -310,13 +306,18 @@ public class AnnotatedImageButton extends JToggleButton {
 		protected void doStuff() throws Exception {
         	
             int size = ImagesPanel.MAX_THUMBNAIL_SIZE;
-            BufferedImage maxSizeImage = imageCache.containsKey(imageFilename) ? 
-            		imageCache.get(imageFilename) : 
-        			Utils.getScaledImageIcon(Utils.readImage(imageFilename), size);
-    		imageCache.put(imageFilename, maxSizeImage);
-            		
-            if (isCancelled()) return;
-            setMaxSizeImage(maxSizeImage);
+            
+            if (staticIcon!=null) {
+            	BufferedImage maxSizeImage = Utils.toBufferedImage(staticIcon.getImage()); 
+            	setMaxSizeImage(maxSizeImage);	
+            }
+            else {
+                BufferedImage maxSizeImage = imageCache.containsKey(imageFilename) ? 
+                		imageCache.get(imageFilename) : 
+            			Utils.getScaledImage(Utils.readImage(imageFilename), size);
+        		imageCache.put(imageFilename, maxSizeImage);
+                setMaxSizeImage(maxSizeImage);
+            }
 		}
 
 		@Override
@@ -367,6 +368,9 @@ public class AnnotatedImageButton extends JToggleButton {
         IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
         if (error instanceof FileNotFoundException) {
         	errorLabel.setText("File not found");
+        }
+        else if (error.getCause()!=null && (error.getCause() instanceof FormatException)) {
+            errorLabel.setText("Image format not supported");
         }
         else {
         	error.printStackTrace();

@@ -112,44 +112,59 @@ public class Icons {
     }
 
     /**
-     * Returns an icon which represents the given entity. If the entity is an Ontology Element then this method
+     * Returns a small icon which represents the given entity. If the entity is an Ontology Element then this method
      * delegates to getOntologyIcon(). 
      * @param entity
      * @see getOntologyIcon()
      * @return
      */
     public static ImageIcon getIcon(Entity entity) {
+    	return getIcon(entity, false);
+    }
+    
+    /**
+     * Returns an icon which represents the given entity. If the entity is an Ontology Element then this method
+     * delegates to getOntologyIcon(). 
+     * @param entity
+     * @param large format icon?
+     * @see getOntologyIcon()
+     * @return
+     */
+    public static ImageIcon getIcon(Entity entity, boolean large) {
         String type = entity.getEntityType().getName();
         
         if (EntityConstants.TYPE_FOLDER.equals(type)) {
-            return getIcon("folder.png");
+            return getIcon(large ? "folder_large.png" : "folder.png");
         }
         else if (EntityConstants.TYPE_LSM_STACK_PAIR.equals(type)) {
-            return getIcon("folder_image.png");
+            return getIcon(large ? "folder_files_large.png" : "folder_image.png");
         }
         else if (EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT.equals(type)) {
-            return getIcon("folder_image.png");
+            return getIcon(large ? "folder_files_large.png" : "folder_image.png");
         }
         else if (EntityConstants.TYPE_SAMPLE.equals(type)) {
-            return getIcon("beaker.png");
+            return getIcon(large ? "folder_files_large.png" : "beaker.png");
         }
         else if (EntityConstants.TYPE_TIF_2D.equals(type)) {
-            return getIcon("image.png");
+            return getIcon(large ? "file_large.png" : "image.png");
+        }
+        else if (EntityConstants.TYPE_IMAGE_2D.equals(type)) {
+            return getIcon(large ? "file_large.png" : "image.png");
         }
         else if (EntityConstants.TYPE_TIF_3D.equals(type) 
         		|| EntityConstants.TYPE_LSM_STACK.equals(type) 
         		|| EntityConstants.TYPE_TIF_3D_LABEL_MASK.equals(type) 
         		|| EntityConstants.TYPE_STITCHED_V3D_RAW.equals(type)) {
-            return getIcon("images.png");
+            return getIcon(large ? "file_large.png" : "images.png");
         }
         else if (EntityConstants.TYPE_NEURON_FRAGMENT.equals(type)) {
-            return getIcon("brick.png");
+            return getIcon(large ? "file_large.png" : "brick.png");
         }
         else if (EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION.equals(type)) {
-            return getIcon("folder.png");
+            return getIcon(large ? "folder_files_large.png" : "folder.png");
         }
         else if (EntityConstants.TYPE_SUPPORTING_DATA.equals(type)) {
-            return getIcon("folder_page.png");
+            return getIcon(large ? "folder_files_large.png" : "folder_page.png");
         }
         else if (EntityConstants.TYPE_ONTOLOGY_ELEMENT.equals(type) || EntityConstants.TYPE_ONTOLOGY_ROOT.equals(type)) {
             return getOntologyIcon(entity);

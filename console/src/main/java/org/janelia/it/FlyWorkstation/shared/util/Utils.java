@@ -8,6 +8,8 @@ package org.janelia.it.FlyWorkstation.shared.util;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.PixelGrabber;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -26,7 +28,9 @@ import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
+import loci.formats.IFormatReader;
 import loci.formats.gui.BufferedImageReader;
+import loci.formats.in.APNGReader;
 import loci.formats.in.TiffReader;
 
 import org.hibernate.Hibernate;
@@ -97,8 +101,11 @@ public class Utils {
     public static String getDefaultImageFilePath(Entity entity) {
     	String path = entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE_FILE_PATH);
     	if (path == null) {
-    		// TODO: this should return null, but for backwards compatability with old data, we return filepath for now
-    		return entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
+    		// TODO: this should return null, but for backwards compatibility with old data, we return filepath for 
+    		// certain types
+    		String type = entity.getEntityType().getName();
+    		if (type.equals(EntityConstants.TYPE_TIF_2D) || type.equals(EntityConstants.TYPE_NEURON_FRAGMENT))
+    			return entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
     	}
     	return path;
     }
@@ -118,7 +125,7 @@ public class Utils {
     public static String convertJacsPathLinuxToMac(String filepath) {
         return filepath.replace(JACS_DATA_PATH_LINUX, JACS_DATA_PATH_MAC);
     }
-    
+
     /**
      * Borrowed from http://www.pikopong.com/blog/2008/08/13/auto-resize-jtable-column-width/
      *
@@ -157,7 +164,7 @@ public class Utils {
 
         defaultRenderer.setHorizontalAlignment(SwingConstants.LEFT);
     }
-
+    
     /**
      * Load an image that is found in the /images directory within the classpath.
      *
@@ -176,23 +183,34 @@ public class Utils {
     }
 
     /**
-     * Read an image using the ImageIO API. Supports TIFFs.
-     *
+     * Read an image using the ImageIO API. Currently supports TIFFs and PNGs.
+     * 
      * @param path
      * @return
      * @throws MalformedURLException
      */
     public static BufferedImage readImage(String path) throws IOException {
         try {
-            BufferedImageReader in = new BufferedImageReader(new TiffReader());
-            in.setId(path);
+        	String format = path.substring(path.lastIndexOf(".")+1);
+        	IFormatReader reader = null;
+        	if (format.equals("tif")) {
+        		reader = new TiffReader();
+        	}
+        	else if (format.equals("png")) {
+        		reader = new APNGReader();
+        	}
+        	else {
+        		throw new IllegalArgumentException("File format is not supported: "+format);
+        	}
+            BufferedImageReader in = new BufferedImageReader(reader);
+            in.setId(path);            
             BufferedImage image = in.openImage(0);
             in.close();
             return image;
         }
         catch (Exception e) {
             if (e instanceof IOException) throw (IOException) e;
-            throw new IOException("Error reading image", e);
+            throw new IOException("Error reading image: "+path, e);
         }
     }
 
@@ -214,7 +232,7 @@ public class Utils {
      * @param scale       percentage to change the image
      * @return returns a BufferedImage to work with
      */
-    public static BufferedImage getScaledImageIcon(BufferedImage sourceImage, double scale) {
+    public static BufferedImage getScaledImage(BufferedImage sourceImage, double scale) {
         int newWidth = (int) Math.round(scale * sourceImage.getWidth());
         int newHeight = (int) Math.round(scale * sourceImage.getHeight());
         return getScaledImage(sourceImage, newWidth, newHeight);
@@ -227,7 +245,7 @@ public class Utils {
      * @param size pixel size that the larger dimension should be
      * @return returns a BufferedImage to work with
      */
-    public static BufferedImage getScaledImageIcon(BufferedImage sourceImage, int size) {
+    public static BufferedImage getScaledImage(BufferedImage sourceImage, int size) {
         int width = sourceImage.getWidth();
         int height = sourceImage.getHeight();
         int newWidth = size;
@@ -252,14 +270,93 @@ public class Utils {
      * @return - the new resized image
      */
     public static BufferedImage getScaledImage(BufferedImage sourceImage, int w, int h) {
-        BufferedImage resizedImg = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+        BufferedImage resizedImg = new BufferedImage(w, h, sourceImage.getType());
         Graphics2D g2 = resizedImg.createGraphics();
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
         g2.drawImage(sourceImage, 0, 0, w, h, null);
         g2.dispose();
         return resizedImg;
     }
+    
+    /**
+     * This method returns true if the specified image has transparent pixels.
+     * From http://www.exampledepot.com/egs/java.awt.image/HasAlpha.html
+     */
+    public static boolean hasAlpha(Image image) {
+        // If buffered image, the color model is readily available
+        if (image instanceof BufferedImage) {
+            BufferedImage bimage = (BufferedImage)image;
+            return bimage.getColorModel().hasAlpha();
+        }
 
+        // Use a pixel grabber to retrieve the image's color model;
+        // grabbing a single pixel is usually sufficient
+        PixelGrabber pg = new PixelGrabber(image, 0, 0, 1, 1, false);
+        try {
+            pg.grabPixels();
+        } 
+        catch (InterruptedException e) {
+        }
+
+        // Get the image's color model
+        ColorModel cm = pg.getColorModel();
+        return cm.hasAlpha();
+    }
+    
+    /**
+     * This method returns a buffered image with the contents of an image.
+     * From http://www.exampledepot.com/egs/java.awt.image/Image2Buf.html
+     */
+    public static BufferedImage toBufferedImage(Image image) {
+        if (image instanceof BufferedImage) {
+            return (BufferedImage)image;
+        }
+
+        // This code ensures that all the pixels in the image are loaded
+        image = new ImageIcon(image).getImage();
+
+        // Determine if the image has transparent pixels; for this method's
+        // implementation, see Determining If an Image Has Transparent Pixels
+        boolean hasAlpha = hasAlpha(image);
+
+        // Create a buffered image with a format that's compatible with the screen
+        BufferedImage bimage = null;
+        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        try {
+            // Determine the type of transparency of the new buffered image
+            int transparency = Transparency.OPAQUE;
+            if (hasAlpha) {
+                transparency = Transparency.BITMASK;
+            }
+            
+            // Create the buffered image
+            GraphicsDevice gs = ge.getDefaultScreenDevice();
+            GraphicsConfiguration gc = gs.getDefaultConfiguration();
+            bimage = gc.createCompatibleImage(
+                image.getWidth(null), image.getHeight(null), transparency);
+        } catch (HeadlessException e) {
+            // The system does not have a screen
+        }
+
+        if (bimage == null) {
+            // Create a buffered image using the default color model
+            int type = BufferedImage.TYPE_INT_RGB;
+            if (hasAlpha) {
+                type = BufferedImage.TYPE_INT_ARGB;
+            }
+            bimage = new BufferedImage(image.getWidth(null), image.getHeight(null), type);
+        }
+
+        // Copy image to buffered image
+        Graphics g = bimage.createGraphics();
+
+        // Paint the image onto the buffered image
+        g.drawImage(image, 0, 0, null);
+        g.dispose();
+
+        return bimage;
+    }
+    
     public static void setWaitingCursor(Component component) {
         component.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
     }
@@ -274,7 +371,6 @@ public class Utils {
     }
 
     public static void setClosedHandCursor(Component component) {
-//    	component.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
         Cursor grabClosedCursor = Toolkit.getDefaultToolkit().createCustomCursor(grabClosedIcon.getImage(), new Point(0, 0), "img");
         component.setCursor(grabClosedCursor);
     }
