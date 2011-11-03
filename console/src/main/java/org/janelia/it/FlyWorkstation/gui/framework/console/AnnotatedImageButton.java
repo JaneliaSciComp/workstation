@@ -7,64 +7,60 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.Collections;
-import java.util.Map;
 
 import javax.swing.*;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
-import loci.formats.FormatException;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.shared.util.LRUCache;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 
 
 /**
- * A lazy-loading image with a title on top and optional annotation tags underneath.
+ * A DynamicImagePanel with a title on top and optional annotation tags underneath. Made to be aggregated in an 
+ * ImagesPanel.
+ * 
+ * TODO: this should be renamed "AnnotatedEntityButton" or something similar to indicate it is specific to displaying entities. 
  */
 public class AnnotatedImageButton extends JToggleButton {
 
-	private static final Map<String, BufferedImage> imageCache = 
-		Collections.synchronizedMap(new LRUCache<String, BufferedImage>(50));
-	
     private final Entity entity;
+//    private final String title;
+    private final BufferedImage staticIcon;
+    
     private final JTextPane imageCaption;
+    private final JComponent imageComponent;
     private final AnnotationTagCloudPanel tagPanel;
-    
-    private final JPanel buttonPanel;
-    private final JPanel imagePanel;
-    private final JLabel loadingLabel;
-    private final JLabel imageLabel;
-    private final JLabel errorLabel;
-    
-    private final String title;
-    private ImageIcon staticIcon;
-    private String imageFilename;
-    private BufferedImage maxSizeImage;
-    private BufferedImage invertedMaxSizeImage;
-    private int displaySize;
-    private boolean inverted = false;
-    private boolean viewable = false;
-    private LoadImageWorker loadWorker;
     
     public AnnotatedImageButton(String title, final int index, final Entity entity) {
     	
     	this.entity = entity;
-        this.title = title;
+
+        if (title.length()>30) {
+        	title = title.substring(0, 27) + "...";
+        }
+        
+        String filepath = Utils.getDefaultImageFilePath(entity);
+        if (filepath != null) {
+	        File file = new File(PathTranslator.convertImagePath(filepath));
+	        this.staticIcon = null;
+	        this.imageComponent = new DynamicImagePanel(file.getAbsolutePath(), ImagesPanel.MAX_THUMBNAIL_SIZE);
+        }
+        else {
+        	this.staticIcon = Utils.toBufferedImage(Icons.getIcon(entity, true).getImage());
+        	this.imageComponent = new JLabel(new ImageIcon(staticIcon));
+        	((JLabel)imageComponent).setPreferredSize(new Dimension(ImagesPanel.MAX_THUMBNAIL_SIZE, ImagesPanel.MAX_THUMBNAIL_SIZE));
+        }
         
         GridBagConstraints c = new GridBagConstraints();
-        buttonPanel = new JPanel(new GridBagLayout());
+        JPanel buttonPanel = new JPanel(new GridBagLayout());
         buttonPanel.setOpaque(false);
         add(buttonPanel);
     	
@@ -88,35 +84,13 @@ public class AnnotatedImageButton extends JToggleButton {
         c.weighty = 0;
         buttonPanel.add(imageCaption, c);
 
-        loadingLabel = new JLabel();
-        loadingLabel.setOpaque(false);
-        loadingLabel.setIcon(Icons.getLoadingIcon());
-        loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        loadingLabel.setVerticalAlignment(SwingConstants.CENTER);
-        
-        errorLabel = new JLabel();
-        errorLabel.setOpaque(false);
-        errorLabel.setForeground(Color.red);
-        errorLabel.setIcon(Icons.getMissingIcon());
-        errorLabel.setVerticalTextPosition(JLabel.BOTTOM);
-        errorLabel.setHorizontalTextPosition(JLabel.CENTER);
-        
-        imageLabel = new JLabel();
-        imageLabel.setOpaque(false);
-        imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        imageLabel.setVerticalAlignment(SwingConstants.CENTER);
-        
-        imagePanel = new JPanel(new GridBagLayout());
-        imagePanel.setPreferredSize(new Dimension(ImagesPanel.MAX_THUMBNAIL_SIZE, ImagesPanel.MAX_THUMBNAIL_SIZE));
-        imagePanel.setOpaque(false);
-        
         c.gridx = 0;
         c.gridy = 1;
         c.insets = new Insets(0, 0, 5, 0);
         c.fill = GridBagConstraints.HORIZONTAL;
-        c.anchor = GridBagConstraints.PAGE_START;
+        c.anchor = GridBagConstraints.CENTER;
         c.weighty = 0;
-        buttonPanel.add(imagePanel, c);
+        buttonPanel.add(imageComponent, c);
 
         tagPanel = new AnnotationTagCloudPanel();
 
@@ -127,18 +101,6 @@ public class AnnotatedImageButton extends JToggleButton {
         c.weighty = 1;
         buttonPanel.add(tagPanel, c);
 
-        // Set filepath to load
-        
-        String filepath = Utils.getDefaultImageFilePath(entity);
-        if (filepath != null) {
-	        File file = new File(PathTranslator.convertImagePath(filepath));
-	        this.imageFilename = file.getAbsolutePath();
-        }
-        else {
-        	this.staticIcon = Icons.getIcon(entity, true);
-        }
-        
-        setImageLabel(loadingLabel);
 
         // Fix event dispatching so that user can click on the title or the tags and still select the button
 
@@ -203,10 +165,9 @@ public class AnnotatedImageButton extends JToggleButton {
 			}
         	
         });
-
     }
-
-    public synchronized void setTitleVisible(boolean visible) {
+    
+	public synchronized void setTitleVisible(boolean visible) {
         imageCaption.setVisible(visible);
 		invalidate();
     }
@@ -214,134 +175,6 @@ public class AnnotatedImageButton extends JToggleButton {
     public synchronized void setTagsVisible(boolean visible) {
         tagPanel.setVisible(visible);
 		invalidate();
-    }
-    
-    public synchronized void rescaleImage(int imageSize) {
-    	if (viewable) {
-    		if (maxSizeImage == null) {
-    			// Must be currently loading, in which case this method will get called again when the loading is done
-    		}
-    		else {
-	    		if (inverted && invertedMaxSizeImage == null) {
-	    			setInvertedColors(true);
-	    		}
-	            BufferedImage image = Utils.getScaledImage(inverted ? invertedMaxSizeImage : maxSizeImage, imageSize);
-	            imageLabel.setIcon(new ImageIcon(image));
-    		}
-    	}
-    	else {
-    		if (maxSizeImage != null) {
-				System.out.println("Warning: nonviewable image has a non-null maxSizeImage in memory");
-    		}
-    	}
-    	
-		imagePanel.setPreferredSize(new Dimension(imageSize, imageSize));
-        this.displaySize = imageSize;
-        
-		revalidate();
-		repaint();
-    }
-
-    public synchronized void setInvertedColors(boolean inverted) {
-
-        this.inverted = inverted;
-        if (inverted == true && maxSizeImage != null) {
-            invertedMaxSizeImage = Utils.invertImage(maxSizeImage);
-        }
-        else {
-            // Free up memory when we don't need inverted images
-            invertedMaxSizeImage = null;
-        }
-
-        rescaleImage(displaySize);
-    }
-
-    /**
-     * Tell the button if its image should be viewable. When this is set to false, the images can be released from
-     * memory to save space. When it's set to true, the image will be reloaded from disk if necessary.
-     * @param wantViewable
-     */
-	public synchronized void setViewable(boolean wantViewable) {
-
-		if (imageFilename!=null ||  staticIcon!=null) {
-			if (wantViewable) {
-				if (!this.viewable) {
-					loadWorker = new LoadImageWorker();
-					loadWorker.execute();
-				}
-			}
-			else {
-				if (loadWorker != null && !loadWorker.isDone()) {
-					loadWorker.cancel(true);
-					loadWorker = null;
-				}
-		    	// Clear all references to the image data so that it can be cleared out of memory
-		    	maxSizeImage = null;
-		    	invertedMaxSizeImage = null;
-		    	imageLabel.setIcon(null);
-		    	// Show the loading label until the image needs to be loaded again
-		        setImageLabel(loadingLabel);
-				invalidate();
-			}
-		}
-		this.viewable = wantViewable;
-	}
-	
-	/**
-	 * Returns the thread that is loading this image, or null if it's not being loaded. This is useful for 
-	 * canceling the image load using the cancel() method.
-	 * @return
-	 */
-    public SimpleWorker getLoadWorker() {
-		return loadWorker;
-	}
-    
-	/**
-     * SwingWorker class that loads the image and rescales it to the current imageSizePercent sizing.  This
-     * thread supports being canceled.
-     */
-    private class LoadImageWorker extends SimpleWorker {
-    	
-        @Override
-		protected void doStuff() throws Exception {
-        	
-            int size = ImagesPanel.MAX_THUMBNAIL_SIZE;
-            
-            if (staticIcon!=null) {
-            	BufferedImage maxSizeImage = Utils.toBufferedImage(staticIcon.getImage()); 
-            	setMaxSizeImage(maxSizeImage);	
-            }
-            else {
-                BufferedImage maxSizeImage = imageCache.containsKey(imageFilename) ? 
-                		imageCache.get(imageFilename) : 
-            			Utils.getScaledImage(Utils.readImage(imageFilename), size);
-        		imageCache.put(imageFilename, maxSizeImage);
-                setMaxSizeImage(maxSizeImage);
-            }
-		}
-
-		@Override
-		protected void hadSuccess() {
-            loadDone();
-		}
-
-		@Override
-		protected void hadError(Throwable error) {
-            loadError(error);
-		}
-    }
-
-
-    public int getDisplaySize() {
-        return displaySize;
-    }
-
-    public Icon getImage() {
-        return imageLabel.getIcon();
-    }
-
-    public String getTitle() {
-        return title;
     }
 
     public AnnotationTagCloudPanel getTagPanel() {
@@ -352,40 +185,43 @@ public class AnnotatedImageButton extends JToggleButton {
         return entity;
     }
 
-    private synchronized void loadDone() {
-        IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
-        if (iconDemoPanel.isInverted()) {
-            setInvertedColors(iconDemoPanel.isInverted());
-        }
-        else {
-            rescaleImage(iconDemoPanel.getImagesPanel().getImageSize());
-        }
-        setImageLabel(imageLabel);
-        iconDemoPanel.getImagesPanel().recalculateGrid();
-    }
-    
-    private synchronized void loadError(Throwable error) {
-        IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
-        if (error instanceof FileNotFoundException) {
-        	errorLabel.setText("File not found");
-        }
-        else if (error.getCause()!=null && (error.getCause() instanceof FormatException)) {
-            errorLabel.setText("Image format not supported");
-        }
-        else {
-        	error.printStackTrace();
-            errorLabel.setText("Image could not be loaded");
-        }
-        setImageLabel(errorLabel);
-        iconDemoPanel.getImagesPanel().recalculateGrid();
-    }
-    
-	private synchronized void setMaxSizeImage(BufferedImage maxSizeImage) {
-		if (viewable) this.maxSizeImage = maxSizeImage;
+	public void cancelLoad() {
+		if (imageComponent instanceof DynamicImagePanel) {
+			((DynamicImagePanel)imageComponent).cancelLoad();
+		}
 	}
-	
-    private synchronized void setImageLabel(JLabel label) {
-        imagePanel.removeAll();
-        imagePanel.add(label);
-    }
+
+	public void setCache(ImageCache imageCache) {
+		if (imageComponent instanceof DynamicImagePanel) {
+			((DynamicImagePanel)imageComponent).setCache(imageCache);
+		}
+	}
+
+	public void rescaleImage(int imageSize) {
+		if (imageComponent instanceof DynamicImagePanel) {
+			((DynamicImagePanel)imageComponent).rescaleImage(imageSize);
+		}
+		else {
+			if (staticIcon==null) throw new AssertionError("Image component is not a DynamicImagePanel but there is no static icon");
+			if (imageSize<staticIcon.getHeight() || imageSize<staticIcon.getWidth()) { // Don't scale up icons
+				ImageIcon newIcon = new ImageIcon(Utils.getScaledImage(staticIcon, imageSize));
+	        	((JLabel)imageComponent).setIcon(newIcon);
+			}
+        	((JLabel)imageComponent).setPreferredSize(new Dimension(imageSize, imageSize));
+        	imageComponent.invalidate();
+		}
+	}
+
+	public void setInvertedColors(boolean inverted) {
+		if (imageComponent instanceof DynamicImagePanel) {
+			((DynamicImagePanel)imageComponent).setInvertedColors(inverted);
+		}
+	}
+
+	public void setViewable(boolean viewable) {
+		if (imageComponent instanceof DynamicImagePanel) {
+			((DynamicImagePanel)imageComponent).setViewable(viewable);
+		}
+	}
+
 }

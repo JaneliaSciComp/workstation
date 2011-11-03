@@ -4,17 +4,14 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Rectangle;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
+import java.awt.event.*;
 import java.util.HashMap;
 import java.util.List;
 
-import javax.swing.ButtonGroup;
-import javax.swing.JPanel;
-import javax.swing.Scrollable;
+import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 
@@ -23,42 +20,91 @@ import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ImagesPanel extends JPanel implements Scrollable {
+public class ImagesPanel extends JScrollPane {
 
     private static final int MIN_THUMBNAIL_SIZE = 64;
     public static final int MAX_THUMBNAIL_SIZE = 300;
 
     private final HashMap<String, AnnotatedImageButton> buttons = new HashMap<String, AnnotatedImageButton>();
 
-    private IconDemoPanel iconDemoPanel;
+    private final ImageCache imageCache = new ImageCache();
+    
+    private KeyListener buttonKeyListener;
+    private FocusListener buttonFocusListener;
+    
+    private JPanel buttonsPanel;
     private ButtonGroup buttonGroup;
-    private int imageSize = MAX_THUMBNAIL_SIZE;
 
-    public ImagesPanel(IconDemoPanel iconDemoPanel) {
-        setLayout(new GridLayout(0, 2));
-        setOpaque(false);
-        this.iconDemoPanel = iconDemoPanel;
+    // Listen for scroll events
+    private final AdjustmentListener scrollListener = new AdjustmentListener() {
+        @Override
+        public void adjustmentValueChanged(AdjustmentEvent e) {
+            SwingUtilities.invokeLater(new Runnable() {
+    			@Override
+    			public void run() {
+    	        	loadUnloadImages();
+    			}
+    		});
+        }
+    };
+    
+    public ImagesPanel() {
+    	buttonsPanel = new ScrollableGridPanel();
+        setViewportView(buttonsPanel);
     }
 
+
+	/**
+     * Returns the button with the given entity.
+     *
+     * @return
+     */
+    public AnnotatedImageButton getButtonByEntityId(long entityId) {
+        return buttons.get(entityId+"");
+    }
+    
     /**
+     * TODO: remove this after refactoring so that its not needed.
+     */
+    public HashMap<String, AnnotatedImageButton> getButtons() {
+        return buttons;
+    }
+    
+    public void setButtonKeyListener(KeyListener buttonKeyListener) {
+		this.buttonKeyListener = buttonKeyListener;
+	}
+
+	public void setButtonFocusListener(FocusListener buttonFocusListener) {
+		this.buttonFocusListener = buttonFocusListener;
+	}
+
+	public void setScrollLoadingEnabled(boolean enabled) {
+		if (enabled) {
+			// Reset scrollbar and re-add the listener
+			getVerticalScrollBar().setValue(0); 
+	        getVerticalScrollBar().addAdjustmentListener(scrollListener);
+		}
+		else {
+	    	// Remove the scroll listener so that we don't get a bunch of bogus events as things are added to the imagesPanel
+	    	getVerticalScrollBar().removeAdjustmentListener(scrollListener);
+		}
+	}
+	
+	/**
      * Create the image buttons, but leave the images unloaded for now.
      */
     public void setEntities(List<Entity> entities) {
-
+    	
     	// Cancel all loading images
         for (AnnotatedImageButton button : buttons.values()) {
-        	SimpleWorker worker = button.getLoadWorker();
-            if (worker != null && !worker.isDone()) {
-            	System.out.println("Cancel previous load");
-                worker.cancel(true);
-            }
+        	button.cancelLoad();
         }
 
         buttons.clear();
         buttonGroup = new ButtonGroup();
-        for (Component component : getComponents()) {
+        for (Component component : buttonsPanel.getComponents()) {
             if (component instanceof AnnotatedImageButton) {
-                remove(component);
+            	buttonsPanel.remove(component);
             }
         }
 
@@ -66,24 +112,12 @@ public class ImagesPanel extends JPanel implements Scrollable {
             final Entity entity = entities.get(i);
 
             final AnnotatedImageButton button = new AnnotatedImageButton(entity.getName(), i, entity);
-
-            button.addKeyListener(iconDemoPanel.getKeyListener());
-
-            button.addFocusListener(new FocusAdapter() {
-                @Override
-                public void focusGained(FocusEvent e) {
-                    iconDemoPanel.setCurrentEntity(entity);
-                    button.setSelected(true);
-
-                    // Scroll to the newly focused button
-                    ImagesPanel.this.scrollRectToVisible(button.getBounds());
-                    revalidate();
-                }
-            });
-
+            button.setCache(imageCache);
+            button.addKeyListener(buttonKeyListener);
+            button.addFocusListener(buttonFocusListener);
             buttons.put(entity.getId().toString(), button);
             buttonGroup.add(button);
-            add(button);
+            buttonsPanel.add(button);
         }
     }
 
@@ -127,42 +161,41 @@ public class ImagesPanel extends JPanel implements Scrollable {
         if (imageSize < MIN_THUMBNAIL_SIZE || imageSize > MAX_THUMBNAIL_SIZE) {
             return;
         }
-        this.imageSize = imageSize;
         for (AnnotatedImageButton button : buttons.values()) {
         	try {
                 button.rescaleImage(imageSize);
 	    	}
 	    	catch (Exception e) {
-	    		e.printStackTrace();
+	    		SessionMgr.getSessionMgr().handleException(e);
 	    	}
         }
-		revalidate();
-		repaint();
+		buttonsPanel.revalidate();
+		buttonsPanel.repaint();
     }
 
-    public int getImageSize() {
-		return imageSize;
-	}
-
-	/**
-     * Returns the currently selected image button in the panel.
-     *
-     * @return
-     */
-    public AnnotatedImageButton getSelectedButton() {
-        if (iconDemoPanel.getCurrentEntity() == null) {
-            return null;
+    public void scrollEntityToVisible(Entity entity) {
+    	AnnotatedImageButton selectedButton = getButtonByEntityId(entity.getId());
+    	if (selectedButton!=null) {
+    		buttonsPanel.scrollRectToVisible(selectedButton.getBounds());
+    	}
+    }
+    
+    public void setTitleVisbility(boolean visible) {
+        for (AnnotatedImageButton button : buttons.values()) {
+            button.setTitleVisible(visible);
         }
-        return getButtonByEntityId(iconDemoPanel.getCurrentEntity().getId());
     }
 
-	/**
-     * Returns the button with the given entity.
-     *
-     * @return
-     */
-    public AnnotatedImageButton getButtonByEntityId(long entityId) {
-        return buttons.get(entityId+"");
+    public void setTagVisbility(boolean visible) {
+        for (AnnotatedImageButton button : buttons.values()) {
+            button.setTagsVisible(visible);
+        }
+    }
+
+    public void setInvertedColors(boolean inverted) {
+        for (AnnotatedImageButton button : buttons.values()) {
+            button.setInvertedColors(inverted);
+        }
     }
     
     public boolean setSelectedImage(Entity entity) {
@@ -180,7 +213,8 @@ public class ImagesPanel extends JPanel implements Scrollable {
      * buttons.
      */
     public void recalculateGrid() {
-        double maxButtonWidth = 0;
+        
+    	double maxButtonWidth = 0;
         for (AnnotatedImageButton button : buttons.values()) {
             int w = button.getPreferredSize().width;
             if (w > maxButtonWidth) maxButtonWidth = w;
@@ -188,43 +222,64 @@ public class ImagesPanel extends JPanel implements Scrollable {
 
         // Should not be needed, but just in case, lets make sure we never divide by zero
         if (maxButtonWidth == 0) maxButtonWidth = 400;
-
-        int numCols = (int) Math.floor((double) getParent().getSize().width / maxButtonWidth);
+        
+        int fullWidth = getSize().width - getVerticalScrollBar().getWidth();
+        int numCols = (int) Math.floor((double)fullWidth / maxButtonWidth);
         if (numCols > 0) {
-            ((GridLayout) getLayout()).setColumns(numCols);
+            ((GridLayout)buttonsPanel.getLayout()).setColumns(numCols);
         }
 
-        revalidate();
-        repaint();
+        buttonsPanel.revalidate();
+        buttonsPanel.repaint();
     }
 
-    public HashMap<String, AnnotatedImageButton> getButtons() {
-        return buttons;
-    }
+    public void loadUnloadImages() {
 
-    @Override
-    public Dimension getPreferredScrollableViewportSize() {
-        return getPreferredSize();
+        final JViewport viewPort = getViewport();
+    	Rectangle viewRect = viewPort.getViewRect();
+		
+        for(AnnotatedImageButton button : buttons.values()) {
+        	try {
+        		button.setViewable(viewRect.intersects(button.getBounds()));
+        	}
+        	catch (Exception e) {
+        		SessionMgr.getSessionMgr().handleException(e);
+        	}
+        }
     }
+    
+    private class ScrollableGridPanel extends JPanel implements Scrollable  {
 
-    @Override
-    public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
-        return 10;
-    }
+		public ScrollableGridPanel() {
+			setLayout(new GridLayout(0, 2));
+			setOpaque(false);
+		}
+		
+        @Override
+        public Dimension getPreferredScrollableViewportSize() {
+            return getPreferredSize();
+        }
 
-    @Override
-    public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
-        return 100;
-    }
+        @Override
+        public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
+            return 30;
+        }
 
-    @Override
-    public boolean getScrollableTracksViewportWidth() {
-        return false;
-    }
+        @Override
+        public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
+            return 300;
+        }
 
-    @Override
-    public boolean getScrollableTracksViewportHeight() {
-        return false;
+        @Override
+        public boolean getScrollableTracksViewportWidth() {
+            return false;
+        }
+
+        @Override
+        public boolean getScrollableTracksViewportHeight() {
+            return false;
+        }
     }
+    
 
 }

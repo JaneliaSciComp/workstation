@@ -8,7 +8,6 @@ package org.janelia.it.FlyWorkstation.gui.framework.console;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Rectangle;
 import java.awt.event.*;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -53,7 +52,6 @@ public class IconDemoPanel extends JPanel {
     private JToggleButton hideCompletedButton; 
     
     private ImagesPanel imagesPanel;
-    private JScrollPane scrollPane;
     private ImageDetailPanel imageDetailPanel;
     private AnnotationDetailsDialog annotationDetailsDialog;
 
@@ -92,16 +90,16 @@ public class IconDemoPanel extends JPanel {
         }
     };
 
-    // Listen for scroll events
-    private final AdjustmentListener scrollListener = new AdjustmentListener() {
+    private final FocusListener buttonFocusListener = new FocusAdapter() {
         @Override
-        public void adjustmentValueChanged(AdjustmentEvent e) {
-            SwingUtilities.invokeLater(new Runnable() {
-    			@Override
-    			public void run() {
-    	        	loadUnloadImages();
-    			}
-    		});
+        public void focusGained(FocusEvent e) {
+        	AnnotatedImageButton button = (AnnotatedImageButton)e.getSource();
+            setCurrentEntity(button.getEntity());
+            button.setSelected(true);
+
+            // Scroll to the newly focused button
+            imagesPanel.scrollRectToVisible(button.getBounds());
+            imagesPanel.revalidate();
         }
     };
     
@@ -115,12 +113,13 @@ public class IconDemoPanel extends JPanel {
         add(splashPanel);
 
         toolbar = createToolbar();
-        imagesPanel = new ImagesPanel(this);
+        imagesPanel = new ImagesPanel();
+        imagesPanel.setButtonKeyListener(keyListener);
+        imagesPanel.setButtonFocusListener(buttonFocusListener);
+        
         imageDetailPanel = new ImageDetailPanel(this);
         annotationDetailsDialog = new AnnotationDetailsDialog();
         
-        scrollPane = new JScrollPane();
-        scrollPane.setViewportView(imagesPanel);
         
         slider.addChangeListener(new ChangeListener() {
             @Override
@@ -131,7 +130,7 @@ public class IconDemoPanel extends JPanel {
                 currImageSizePercent = imageSizePercent;
                 imagesPanel.rescaleImages(imageSizePercent);
 	            imagesPanel.recalculateGrid();
-	        	loadUnloadImages();
+	            imagesPanel.loadUnloadImages();
             }
         });
         
@@ -261,18 +260,6 @@ public class IconDemoPanel extends JPanel {
     	
     }
     
-    private void setTitleVisbility() {
-        for (AnnotatedImageButton button : getImagesPanel().getButtons().values()) {
-            button.setTitleVisible(showTitlesButton.isSelected());
-        }
-    }
-
-    private void setTagVisbility() {
-        for (AnnotatedImageButton button : getImagesPanel().getButtons().values()) {
-            button.setTagsVisible(showTagsButton.isSelected());
-        }
-    }
-    
     private JToolBar createToolbar() {
 
         JToolBar toolBar = new JToolBar("Still draggable");
@@ -288,10 +275,8 @@ public class IconDemoPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 Utils.setWaitingCursor(IconDemoPanel.this);
                 try {
-                    for (AnnotatedImageButton button : getImagesPanel().getButtons().values()) {
-                        button.setInvertedColors(invertButton.isSelected());
-                    }
-                    getImagesPanel().repaint();
+                    imagesPanel.setInvertedColors(invertButton.isSelected());
+                    imagesPanel.repaint();
                 }
                 finally {
                     Utils.setDefaultCursor(IconDemoPanel.this);
@@ -308,8 +293,8 @@ public class IconDemoPanel extends JPanel {
         showTitlesButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-            	setTitleVisbility();
-                getImagesPanel().recalculateGrid();
+            	imagesPanel.setTitleVisbility(showTitlesButton.isSelected());
+            	imagesPanel.recalculateGrid();
             }
         });
         toolBar.add(showTitlesButton);
@@ -322,8 +307,8 @@ public class IconDemoPanel extends JPanel {
         showTagsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-            	setTagVisbility();
-                getImagesPanel().recalculateGrid();
+            	imagesPanel.setTagVisbility(showTagsButton.isSelected());
+            	imagesPanel.recalculateGrid();
             }
         });
         toolBar.add(showTagsButton);
@@ -429,8 +414,8 @@ public class IconDemoPanel extends JPanel {
     
     public synchronized void loadImageEntities(final List<Entity> entities, final Callable<Void> success) {
 
-    	// Remove the scroll listener so that we don't get a bunch of bogus events as things are added to the imagesPanel
-    	scrollPane.getVerticalScrollBar().removeAdjustmentListener(scrollListener);
+    	// Temporarily disable scroll loading 
+		imagesPanel.setScrollLoadingEnabled(false);
 
         if (entityLoadingWorker != null && !entityLoadingWorker.isDone()) {
         	System.out.println("Cancel previous image load");
@@ -468,8 +453,8 @@ public class IconDemoPanel extends JPanel {
     
     public synchronized void entityLoadDone() {
 
-        setTitleVisbility();
-        setTagVisbility();
+    	imagesPanel.setTitleVisbility(showTitlesButton.isSelected());
+    	imagesPanel.setTagVisbility(showTagsButton.isSelected());
         
         imagesPanel.setEntities(getEntities());
         refreshAnnotations(null);
@@ -480,16 +465,12 @@ public class IconDemoPanel extends JPanel {
         imagesPanel.rescaleImages(currImageSizePercent); 
         imagesPanel.recalculateGrid();
 		
-        
         // Wait until everything is recomputed
         SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				// Reset scrollbar and re-add the listener
-				scrollPane.getVerticalScrollBar().setValue(0); 
-		        scrollPane.getVerticalScrollBar().addAdjustmentListener(scrollListener);
-		        // Allow the images to load as needed, based on the viewport
-				loadUnloadImages();
+				imagesPanel.setScrollLoadingEnabled(true);
+		        imagesPanel.loadUnloadImages();
 			}
 		});
     }
@@ -620,7 +601,7 @@ public class IconDemoPanel extends JPanel {
         viewingSingleImage = false;
         removeAll();
         add(toolbar, BorderLayout.NORTH);
-        add(scrollPane, BorderLayout.CENTER);
+        add(imagesPanel, BorderLayout.CENTER);
 
         revalidate();
         repaint();
@@ -629,16 +610,15 @@ public class IconDemoPanel extends JPanel {
         SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-		        if (imagesPanel.getSelectedButton() != null) {
-		        	imagesPanel.scrollRectToVisible(imagesPanel.getSelectedButton().getBounds());
-		        }
+		        if (getCurrentEntity() == null) return;
+		        imagesPanel.scrollEntityToVisible(getCurrentEntity());
 			}
         });
         
         // Focus on the panel so that it can receive keyboard input
         requestFocusInWindow();
     }
-
+	
     public synchronized void showCurrentEntityDetails() {
         
     	if (currentEntity == null) return;
@@ -732,19 +712,4 @@ public class IconDemoPanel extends JPanel {
 	public void viewAnnotationDetails(OntologyAnnotation tag) {
 		annotationDetailsDialog.showForAnnotation(tag);
 	}
-
-    private void loadUnloadImages() {
-
-        final JViewport viewPort = scrollPane.getViewport();
-    	Rectangle viewRect = viewPort.getViewRect();
-		
-        for(AnnotatedImageButton button : imagesPanel.getButtons().values()) {
-        	try {
-        		button.setViewable(viewRect.intersects(button.getBounds()));
-        	}
-        	catch (Exception e) {
-        		e.printStackTrace();
-        	}
-        }
-    }
 }

@@ -28,6 +28,7 @@ import javax.swing.table.DefaultTableColumnModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 
+import loci.formats.FormatException;
 import loci.formats.IFormatReader;
 import loci.formats.gui.BufferedImageReader;
 import loci.formats.in.APNGReader;
@@ -189,7 +190,7 @@ public class Utils {
      * @return
      * @throws MalformedURLException
      */
-    public static BufferedImage readImage(String path) throws IOException {
+    public static BufferedImage readImage(String path) throws Exception {
         try {
         	String format = path.substring(path.lastIndexOf(".")+1);
         	IFormatReader reader = null;
@@ -200,7 +201,7 @@ public class Utils {
         		reader = new APNGReader();
         	}
         	else {
-        		throw new IllegalArgumentException("File format is not supported: "+format);
+        		throw new FormatException("File format is not supported: "+format);
         	}
             BufferedImageReader in = new BufferedImageReader(reader);
             in.setId(path);            

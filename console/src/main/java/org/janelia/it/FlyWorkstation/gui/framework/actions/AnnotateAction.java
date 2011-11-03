@@ -9,8 +9,6 @@ package org.janelia.it.FlyWorkstation.gui.framework.actions;
 import javax.swing.JOptionPane;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.console.AnnotatedImageButton;
-import org.janelia.it.FlyWorkstation.gui.framework.console.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
@@ -52,18 +50,21 @@ public class AnnotateAction extends OntologyElementAction {
 
         String value = null;
         if (type instanceof Interval) {
-            value = (String) JOptionPane.showInputDialog(SessionMgr.getSessionMgr().getActiveBrowser(), "Value:\n", "Annotating with interval", JOptionPane.PLAIN_MESSAGE, null, null, null);
+            value = (String) JOptionPane.showInputDialog(SessionMgr.getSessionMgr().getActiveBrowser(), 
+            		"Value:\n", "Annotating with interval", JOptionPane.PLAIN_MESSAGE, null, null, null);
 
             Double dvalue = Double.parseDouble(value);
 
             Interval interval = (Interval) type;
             if (dvalue < interval.getLowerBound().doubleValue() || dvalue > interval.getUpperBound().doubleValue()) {
-                JOptionPane.showMessageDialog(SessionMgr.getSessionMgr().getActiveBrowser(), "Input out of range [" + interval.getLowerBound() + "," + interval.getUpperBound() + "]");
+                JOptionPane.showMessageDialog(SessionMgr.getSessionMgr().getActiveBrowser(), 
+                		"Input out of range [" + interval.getLowerBound() + "," + interval.getUpperBound() + "]");
                 return;
             }
         }
         else if (type instanceof Text) {
-            value = (String) JOptionPane.showInputDialog(SessionMgr.getSessionMgr().getActiveBrowser(), "Value:\n", "Annotating with text", JOptionPane.PLAIN_MESSAGE, null, null, null);
+            value = (String) JOptionPane.showInputDialog(SessionMgr.getSessionMgr().getActiveBrowser(), 
+            		"Value:\n", "Annotating with text", JOptionPane.PLAIN_MESSAGE, null, null, null);
         }
 
         // Save the annotation
@@ -88,20 +89,13 @@ public class AnnotateAction extends OntologyElementAction {
         saveAnnotation(sessionId, targetEntity, keyEntityId, keyString, valueEntityId, valueString);
     }
 
-    private void saveAnnotation(final Long sessionId, final Entity targetEntity, final Long keyEntityId, final String keyString, final Long valueEntityId, final String valueString) {
-
-        final IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
-        final AnnotatedImageButton button = iconDemoPanel.getImagesPanel().getSelectedButton();
-
-        if (button == null) {
-            // Cannot annotate nothing
-            System.out.println("AnnotateAction called without a button being selected");
-            return;
-        }
+    private void saveAnnotation(final Long sessionId, final Entity targetEntity, final Long keyEntityId, 
+    		final String keyString, final Long valueEntityId, final String valueString) {
 
         Utils.setWaitingCursor(SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel());
 
-        final OntologyAnnotation annotation = new OntologyAnnotation(sessionId, targetEntity.getId(), keyEntityId, keyString, valueEntityId, valueString);
+        final OntologyAnnotation annotation = new OntologyAnnotation(
+        		sessionId, targetEntity.getId(), keyEntityId, keyString, valueEntityId, valueString);
         
         SimpleWorker worker = new SimpleWorker() {
 
@@ -119,7 +113,8 @@ public class AnnotateAction extends OntologyElementAction {
             protected void hadError(Throwable error) {
                 Utils.setDefaultCursor(SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel());
                 error.printStackTrace();
-                JOptionPane.showMessageDialog(SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel(), "Error saving annotation", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel(), 
+                		"Error saving annotation", "Error", JOptionPane.ERROR_MESSAGE);
             }
 
         };

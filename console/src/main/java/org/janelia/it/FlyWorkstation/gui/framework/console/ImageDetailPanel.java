@@ -1,11 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Point;
+import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
-import java.io.FileNotFoundException;
 import java.util.List;
 
 import javax.swing.*;
@@ -35,19 +31,15 @@ public class ImageDetailPanel extends JPanel {
     private JLabel zoomLabel;
     private final JPanel imageViewer;
     private final JLabel imageCaption;
-    private final JLabel imageLabel;
+    private final JScrollPane scrollPane;
+    private final JPanel imagePanel;
+    private JComponent imageComponent;
     private final JPanel southernPanel;
     private final AnnotationTagCloudPanel tagPanel;
 
-    private SimpleWorker imageWorker;
     private SimpleWorker dataWorker;
     private Entity entity;
 
-    private BufferedImage maxSizeImage;
-    private BufferedImage invertedMaxSizeImage;
-
-    private boolean inverted;
-    private double scale = 1.0d;
 
     public ImageDetailPanel(final IconDemoPanel iconDemoPanel) {
 
@@ -64,15 +56,12 @@ public class ImageDetailPanel extends JPanel {
         imageCaption = new JLabel();
         imageCaption.setHorizontalAlignment(SwingConstants.CENTER);
         imageViewer.add(imageCaption, BorderLayout.NORTH);
-
-        this.imageLabel = new JLabel((ImageIcon) Icons.getLoadingIcon());
-        JPanel imagePanel = new JPanel(new BorderLayout());
-        imagePanel.add(imageLabel, BorderLayout.CENTER);
-
-        final JScrollPane scrollPane = new JScrollPane();
+        
+        imagePanel = new JPanel(new BorderLayout());
+        scrollPane = new JScrollPane();
         scrollPane.setViewportView(imagePanel);
-        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+//        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+//        scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
 
         imageViewer.add(scrollPane, BorderLayout.CENTER);
 
@@ -150,7 +139,7 @@ public class ImageDetailPanel extends JPanel {
                 if (vp.x < 0) vp.x = 0;
                 if (vp.y < 0) vp.y = 0;
                 scrollPane.getViewport().setViewPosition(vp);
-
+                
                 lastPoint = e.getPoint();
 
                 scrollPane.revalidate();
@@ -239,25 +228,37 @@ public class ImageDetailPanel extends JPanel {
 
     public void load(Entity entity) {
 
-        if (imageWorker != null && !imageWorker.isDone()) {
-            imageWorker.cancel(true);
+    	if (imageComponent!=null) {
+    		if (imageComponent instanceof DynamicImagePanel) {
+    			((DynamicImagePanel)imageComponent).cancelLoad();
+    		}
+    		imagePanel.remove(imageComponent);
+    	}
+
+        this.entity = entity;
+        
+        String imageFilename = Utils.getDefaultImageFilePath(entity);
+        if (imageFilename!=null) {
+            imageComponent = new DynamicImagePanel(PathTranslator.convertImagePath(imageFilename));
+            ((DynamicImagePanel)imageComponent).setViewable(true);
         }
+        else {
+        	imageComponent = new JLabel("No 2D image to display for "+entity.getName());
+        	((JLabel)imageComponent).setHorizontalAlignment(SwingConstants.CENTER);
+        }
+        
+        imagePanel.add(imageComponent, BorderLayout.CENTER);
 
         if (dataWorker != null && !dataWorker.isDone()) {
             dataWorker.cancel(true);
         }
 
-        this.entity = entity;
-
         imageCaption.setText(entity.getName());
         southernPanel.removeAll();
         southernPanel.add(new JLabel(Icons.getLoadingIcon()));
-
-        imageLabel.setIcon(Icons.getLoadingIcon());
-        imageLabel.setText("");
-
-        imageWorker = new LoadImageWorker();
-        imageWorker.execute();
+        
+        revalidate();
+        repaint();
     }
 
     /**
@@ -272,37 +273,16 @@ public class ImageDetailPanel extends JPanel {
     }
 
     public void rescaleImage(double scale) {
-        if (maxSizeImage == null) return;
-        BufferedImage image = Utils.getScaledImage(inverted ? invertedMaxSizeImage : maxSizeImage, scale);
-        imageLabel.setIcon(new ImageIcon(image));
-        this.scale = scale;
-        
-		revalidate();
-		repaint();
+		if (imageComponent instanceof DynamicImagePanel) {
+			((DynamicImagePanel)imageComponent).rescaleImage(scale);
+		}
     }
 
     public void setInvertedColors(boolean inverted) {
-
-        this.inverted = inverted;
-        if (inverted == true && maxSizeImage != null) {
-            invertedMaxSizeImage = Utils.invertImage(maxSizeImage);
-        }
-        else {
-            // Free up memory when we don't need inverted images
-            invertedMaxSizeImage = null;
-        }
-
-        rescaleImage(scale);
+		if (imageComponent instanceof DynamicImagePanel) {
+			((DynamicImagePanel)imageComponent).setInvertedColors(inverted);
+		}
     }
-
-    public synchronized BufferedImage getMaxSizeImage() {
-		return maxSizeImage;
-	}
-
-	public synchronized void setMaxSizeImage(BufferedImage maxSizeImage) {
-		this.maxSizeImage = maxSizeImage;
-	}
-
     
     public JButton getIndexButton() {
 		return indexButton;
@@ -315,41 +295,4 @@ public class ImageDetailPanel extends JPanel {
 	public JButton getNextButton() {
 		return nextButton;
 	}
-
-	/**
-     * SwingWorker class that loads the image.  This thread supports being canceled.
-     */
-    private class LoadImageWorker extends SimpleWorker {
-
-        @Override
-        protected void doStuff() throws Exception {
-            String imageFilename = Utils.getDefaultImageFilePath(entity);
-            setMaxSizeImage(Utils.readImage(PathTranslator.convertImagePath(imageFilename)));
-        }
-
-        @Override
-        protected void hadSuccess() {
-            if (isCancelled()) return;
-            setInvertedColors(iconDemoPanel.isInverted());
-        }
-
-        @Override
-        protected void hadError(Throwable error) {
-
-            imageLabel.setForeground(Color.red);
-            imageLabel.setIcon(Icons.getMissingIcon());
-            imageLabel.setVerticalTextPosition(JLabel.BOTTOM);
-            imageLabel.setHorizontalTextPosition(JLabel.CENTER);
-
-            if (error instanceof FileNotFoundException) {
-                imageLabel.setText("File not found");
-            }
-            else {
-                error.printStackTrace();
-                imageLabel.setText("Image could not be loaded");
-            }
-
-            // TODO: set read-only mode
-        }
-    }
 }
