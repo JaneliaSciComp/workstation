@@ -88,7 +88,7 @@ public class AnnotationDetailsDialog extends ModalDialog {
         creationDateLabel.setText(df.format(annotation.getEntity().getCreationDate()));
         
     	try {
-    		AnnotationSession session = ModelMgr.getModelMgr().getAnnotationSession(annotation.getSessionId());	
+    		AnnotationSession session = annotation.getSessionId()==null?null:ModelMgr.getModelMgr().getAnnotationSession(annotation.getSessionId());	
     		sessionLabel.setText(session == null ? "None": session.getName());
     		sessionOwnerLabel.setText(session == null ? "": session.getOwner());
     	}
