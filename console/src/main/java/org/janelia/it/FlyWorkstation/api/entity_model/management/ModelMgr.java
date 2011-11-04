@@ -415,9 +415,13 @@ public class ModelMgr {
     	return null;
     	
     }
+
+    public List<Entity> getUserCommonRootEntitiesByTypeName(String entityTypeName) {
+        return FacadeManager.getFacadeManager().getEntityFacade().getUserCommonRootEntitiesByTypeName(entityTypeName);
+    }
     
-    public List<Entity> getCommonRootEntitiesByTypeName(String entityTypeName) {
-        return FacadeManager.getFacadeManager().getEntityFacade().getCommonRootEntitiesByTypeName(entityTypeName);
+    public List<Entity> getSystemCommonRootEntitiesByTypeName(String entityTypeName) {
+        return FacadeManager.getFacadeManager().getEntityFacade().getSystemCommonRootEntitiesByTypeName(entityTypeName);
     }
 
     public Entity getEntityTree(long entityId) throws Exception {

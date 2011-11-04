@@ -207,31 +207,18 @@ public class Browser extends JFrame implements Cloneable {
 //        fileOutline = new FileOutline(this);
         sessionOutline = new SessionOutline(this);
         // todo We should probably pass the user info to the server rather than filter the complete list on the console.
+        
         publicEntityOutline = new EntityOutline() {
 			@Override
 			public List<Entity> loadRootList() {
-				List<Entity> filtered = new ArrayList<Entity>();
-				List<Entity> entityRootList = ModelMgr.getModelMgr().getCommonRootEntitiesByTypeName(EntityConstants.TYPE_FOLDER);
-            	for(final Entity commonRoot : entityRootList) {
-            		if ("system".equals(commonRoot.getUser().getUserLogin())) {
-            			filtered.add(commonRoot);
-            		}
-            	}
-            	return filtered;
+				return ModelMgr.getModelMgr().getSystemCommonRootEntitiesByTypeName(EntityConstants.TYPE_FOLDER);
 			}
 		};
 		
         privateEntityOutline = new EntityOutline() {
 			@Override
 			public List<Entity> loadRootList() {
-				List<Entity> filtered = new ArrayList<Entity>();
-				List<Entity> entityRootList = ModelMgr.getModelMgr().getCommonRootEntitiesByTypeName(EntityConstants.TYPE_FOLDER);
-            	for(final Entity commonRoot : entityRootList) {
-            		if (SessionMgr.getUsername()!=null&&SessionMgr.getUsername().equals(commonRoot.getUser().getUserLogin())) {
-            			filtered.add(commonRoot);
-            		}
-            	}
-            	return filtered;
+				return ModelMgr.getModelMgr().getUserCommonRootEntitiesByTypeName(EntityConstants.TYPE_FOLDER);
 			}
 		};
 		

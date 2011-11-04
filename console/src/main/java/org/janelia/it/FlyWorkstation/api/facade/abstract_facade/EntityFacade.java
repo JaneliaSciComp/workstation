@@ -24,8 +24,10 @@ public interface EntityFacade {
 
     public List<Entity> getEntitiesByName(String entityName);
 
-    public List<Entity> getCommonRootEntitiesByTypeName(String entityTypeName);
+    public List<Entity> getUserCommonRootEntitiesByTypeName(String entityTypeName);
 
+    public List<Entity> getSystemCommonRootEntitiesByTypeName(String entityTypeName);
+    
     public Set<Entity> getChildEntities(Long parentEntityId);
 
     public List<EntityData> getParentEntityDatas(Long childEntityId);

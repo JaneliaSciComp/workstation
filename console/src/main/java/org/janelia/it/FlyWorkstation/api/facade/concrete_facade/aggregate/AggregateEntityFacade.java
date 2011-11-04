@@ -126,12 +126,26 @@ public class AggregateEntityFacade extends AggregateFacadeBase implements Entity
     }
 
     @Override
-    public List<Entity> getCommonRootEntitiesByTypeName(String entityTypeName) {
+    public List<Entity> getUserCommonRootEntitiesByTypeName(String entityTypeName) {
         Object[] aggregates = getAggregates();
         List<Entity> returnList = new ArrayList<Entity>();
         List<Entity> tmpEntities;
         for (Object aggregate : aggregates) {
-            tmpEntities = ((EntityFacade) aggregate).getCommonRootEntitiesByTypeName(entityTypeName);
+            tmpEntities = ((EntityFacade) aggregate).getUserCommonRootEntitiesByTypeName(entityTypeName);
+            if (null != tmpEntities) {
+                returnList.addAll(tmpEntities);
+            }
+        }
+        return returnList;
+    }
+
+    @Override
+    public List<Entity> getSystemCommonRootEntitiesByTypeName(String entityTypeName) {
+        Object[] aggregates = getAggregates();
+        List<Entity> returnList = new ArrayList<Entity>();
+        List<Entity> tmpEntities;
+        for (Object aggregate : aggregates) {
+            tmpEntities = ((EntityFacade) aggregate).getSystemCommonRootEntitiesByTypeName(entityTypeName);
             if (null != tmpEntities) {
                 returnList.addAll(tmpEntities);
             }
