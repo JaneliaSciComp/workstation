@@ -14,7 +14,6 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
@@ -31,34 +30,18 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
  */
 public class AnnotatedImageButton extends JToggleButton {
 
-    private final Entity entity;
-//    private final String title;
-    private final BufferedImage staticIcon;
-    
-    private final JTextPane imageCaption;
-    private final JComponent imageComponent;
+	private final JTextPane imageCaption;
+    private final JPanel mainPanel;
     private final AnnotationTagCloudPanel tagPanel;
-    
-    public AnnotatedImageButton(String title, final int index, final Entity entity) {
-    	
-    	this.entity = entity;
 
-        if (title.length()>30) {
-        	title = title.substring(0, 27) + "...";
-        }
-        
-        String filepath = Utils.getDefaultImageFilePath(entity);
-        if (filepath != null) {
-	        File file = new File(PathTranslator.convertImagePath(filepath));
-	        this.staticIcon = null;
-	        this.imageComponent = new DynamicImagePanel(file.getAbsolutePath(), ImagesPanel.MAX_THUMBNAIL_SIZE);
-        }
-        else {
-        	this.staticIcon = Utils.toBufferedImage(Icons.getIcon(entity, true).getImage());
-        	this.imageComponent = new JLabel(new ImageIcon(staticIcon));
-        	((JLabel)imageComponent).setPreferredSize(new Dimension(ImagesPanel.MAX_THUMBNAIL_SIZE, ImagesPanel.MAX_THUMBNAIL_SIZE));
-        }
-        
+    // One of these goes in the mainPanel
+    private BufferedImage staticIcon;
+    private JComponent imageComponent;
+    
+    private Entity entity;
+    
+    public AnnotatedImageButton(final Entity entity) {
+    	
         GridBagConstraints c = new GridBagConstraints();
         JPanel buttonPanel = new JPanel(new GridBagLayout());
         buttonPanel.setOpaque(false);
@@ -66,7 +49,6 @@ public class AnnotatedImageButton extends JToggleButton {
     	
         imageCaption = new JTextPane();
         imageCaption.setFocusable(false);
-        imageCaption.setText(title);
         imageCaption.setFont(new Font("Sans Serif", Font.PLAIN, 12));
         imageCaption.setAlignmentX(Component.CENTER_ALIGNMENT);
         imageCaption.setEditable(false);
@@ -84,13 +66,16 @@ public class AnnotatedImageButton extends JToggleButton {
         c.weighty = 0;
         buttonPanel.add(imageCaption, c);
 
+        mainPanel = new JPanel();
+        mainPanel.setOpaque(false);
+        
         c.gridx = 0;
         c.gridy = 1;
         c.insets = new Insets(0, 0, 5, 0);
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.CENTER;
         c.weighty = 0;
-        buttonPanel.add(imageComponent, c);
+        buttonPanel.add(mainPanel, c);
 
         tagPanel = new AnnotationTagCloudPanel();
 
@@ -112,15 +97,13 @@ public class AnnotatedImageButton extends JToggleButton {
         });
         
         // Mouse events
-
-		final IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
 		
         this.addMouseListener(new MouseHandler() {
 
 			@Override
 			protected void popupTriggered(MouseEvent e) {
 
-                iconDemoPanel.setCurrentEntity(entity);
+				ModelMgr.getModelMgr().selectEntity(entity.getId(), false);
                 
 	            JPopupMenu popupMenu = new JPopupMenu();
 	            
@@ -148,9 +131,8 @@ public class AnnotatedImageButton extends JToggleButton {
 		        JMenuItem detailsMenuItem = new JMenuItem("  View details");
 	            detailsMenuItem.addActionListener(new ActionListener() {
 	                public void actionPerformed(ActionEvent actionEvent) {
-	    				IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
-	                    iconDemoPanel.setCurrentEntity(entity);
-	                    iconDemoPanel.showCurrentEntityDetails();
+	    				// "View details" triggers an outline selection
+	    				ModelMgr.getModelMgr().selectEntity(entity.getId(), true);
 	                }
 	            });
 	            popupMenu.add(detailsMenuItem);
@@ -165,16 +147,38 @@ public class AnnotatedImageButton extends JToggleButton {
 			}
         	
         });
+        
+        // Init
+    	
+    	this.entity = entity;
+    	
+    	String title = entity.getName();
+        if (title.length()>30) {
+        	title = title.substring(0, 27) + "...";
+        }
+        
+        String filepath = Utils.getDefaultImageFilePath(entity);
+        if (filepath != null) {
+	        File file = new File(PathTranslator.convertImagePath(filepath));
+	        this.staticIcon = null;
+	        this.imageComponent = new DynamicImagePanel(file.getAbsolutePath(), ImagesPanel.MAX_THUMBNAIL_SIZE);
+        }
+        else {
+        	this.staticIcon = Icons.getLargeIconAsBufferedImage(entity);
+        	this.imageComponent = new JLabel(new ImageIcon(staticIcon));
+        	((JLabel)imageComponent).setPreferredSize(new Dimension(ImagesPanel.MAX_THUMBNAIL_SIZE, ImagesPanel.MAX_THUMBNAIL_SIZE));
+        }
+        
+        imageCaption.setText(title);
+        mainPanel.add(imageComponent);
     }
     
 	public synchronized void setTitleVisible(boolean visible) {
         imageCaption.setVisible(visible);
-		invalidate();
     }
 
     public synchronized void setTagsVisible(boolean visible) {
         tagPanel.setVisible(visible);
-		invalidate();
     }
 
     public AnnotationTagCloudPanel getTagPanel() {
@@ -201,15 +205,13 @@ public class AnnotatedImageButton extends JToggleButton {
 		if (imageComponent instanceof DynamicImagePanel) {
 			((DynamicImagePanel)imageComponent).rescaleImage(imageSize);
 		}
-		else {
-			if (staticIcon==null) throw new AssertionError("Image component is not a DynamicImagePanel but there is no static icon");
+		else if (staticIcon!=null) {
 			if (imageSize<staticIcon.getHeight() || imageSize<staticIcon.getWidth()) { // Don't scale up icons
 				ImageIcon newIcon = new ImageIcon(Utils.getScaledImage(staticIcon, imageSize));
 	        	((JLabel)imageComponent).setIcon(newIcon);
 			}
-        	((JLabel)imageComponent).setPreferredSize(new Dimension(imageSize, imageSize));
-        	imageComponent.invalidate();
 		}
+    	imageComponent.setPreferredSize(new Dimension(imageSize, imageSize));
 	}
 
 	public void setInvertedColors(boolean inverted) {

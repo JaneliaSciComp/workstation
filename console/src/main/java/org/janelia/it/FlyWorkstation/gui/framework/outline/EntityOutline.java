@@ -57,7 +57,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable {
     public void init(List<Entity> entityRootList) {
     	this.entityRootList = entityRootList;
         if (null != entityRootList && entityRootList.size() >= 1) {
-            initializeTree(entityRootList.get(0).getId(), null);
+            initializeTree(entityRootList.get(entityRootList.size()-1).getId(), null);
         }
         else {
         	Entity noDataEntity = new Entity();

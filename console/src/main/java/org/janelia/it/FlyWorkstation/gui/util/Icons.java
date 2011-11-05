@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.util;
 
+import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,6 +23,7 @@ public class Icons {
     private static Icon missingIcon = new MissingIcon();
 
     public static Map<String,ImageIcon> cache = new HashMap<String,ImageIcon>();
+    public static Map<String,BufferedImage> imageCache = new HashMap<String,BufferedImage>();
 
     /**
      * Returns an animated icon for representing a missing image.
@@ -120,6 +122,21 @@ public class Icons {
      */
     public static ImageIcon getIcon(Entity entity) {
     	return getIcon(entity, false);
+    }
+
+    /**
+     * TODO: refactor this
+     * @param entity
+     * @return
+     */
+    public static BufferedImage getLargeIconAsBufferedImage(Entity entity) {
+        String type = entity.getEntityType().getName();
+    	if (imageCache.containsKey(type)) {
+    		return imageCache.get(type);
+    	}
+    	BufferedImage bi = Utils.toBufferedImage(getIcon(entity, true).getImage());
+    	imageCache.put(type, bi);
+    	return bi;
     }
     
     /**

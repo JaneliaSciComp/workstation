@@ -75,13 +75,13 @@ public class IconDemoPanel extends JPanel {
                 if (KeymapUtil.isModifier(e)) return;
 
                 KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
-                if (SessionMgr.getKeyBindings().executeBinding(shortcut)) return;
-
-                if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-                    previousEntity();
-                }
-                else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-                    nextEntity();
+                if (!SessionMgr.getKeyBindings().executeBinding(shortcut)) {
+	                if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+	                    previousEntity();
+	                }
+	                else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+	                    nextEntity();
+	                }
                 }
                 
                 revalidate();
@@ -94,8 +94,7 @@ public class IconDemoPanel extends JPanel {
         @Override
         public void focusGained(FocusEvent e) {
         	AnnotatedImageButton button = (AnnotatedImageButton)e.getSource();
-            setCurrentEntity(button.getEntity());
-            button.setSelected(true);
+			ModelMgr.getModelMgr().selectEntity(button.getEntity().getId(), false);
 
             // Scroll to the newly focused button
             imagesPanel.scrollRectToVisible(button.getBounds());
@@ -140,26 +139,41 @@ public class IconDemoPanel extends JPanel {
 
 			@Override
 			public void annotationsChanged(long entityId) {
-				AnnotatedImageButton button = imagesPanel.getButtonByEntityId(entityId);
-				if (button != null) {
-					reloadAnnotations(button.getEntity());
-				}
-				filterEntities();
+				final AnnotatedImageButton button = imagesPanel.getButtonByEntityId(entityId);
+		        SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						if (button != null) reloadAnnotations(button.getEntity());
+						filterEntities();
+					}
+				});
 			}
 
 			@Override
 			public void sessionSelected(long sessionId) {
-	        	loadImageEntities(ModelMgr.getModelMgr().getCurrentAnnotationSession().getEntities());
+		        SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+			        	loadImageEntities(ModelMgr.getModelMgr().getCurrentAnnotationSession().getEntities());
+					}
+				});
 			}
 
 			@Override
 			public void sessionDeselected() {
-	        	clear();
+		        SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+			        	clear();
+					}
+				});
 			}
 
 			@Override
 			public void entitySelected(final long entityId, final boolean outline) {
 
+				System.out.println("IconDemoPanel heard that entitySelected="+entityId+" outline?="+outline+ " edt?="+SwingUtilities.isEventDispatchThread());
+				
 				// Find the entity object
 				Entity selectedEntity = null;
 				AnnotatedImageButton button = imagesPanel.getButtonByEntityId(entityId);
@@ -177,7 +191,7 @@ public class IconDemoPanel extends JPanel {
 						}
 					}
 				}
-
+				
 				final Entity potentialEntity = selectedEntity;
 				SimpleWorker worker = new SimpleWorker() {
 
@@ -192,14 +206,16 @@ public class IconDemoPanel extends JPanel {
 						}
 
 		        		// In case we have a lazy entity, lets load the children
-			        	if (!Utils.areLoaded(potentialEntity.getOrderedEntityData())) {
+			        	if (!Utils.areLoaded(entity.getOrderedEntityData())) {
 			                Utils.loadLazyEntity(entity, false);
 			        	}
-			        	
 					}
 					
 					@Override
 					protected void hadSuccess() {
+						
+						// In the EDT...
+				        
 				        if (outline) {
 				        	List<Entity> entitiesToLoad = new ArrayList<Entity>();
 				        	for(Entity child : entity.getOrderedChildren()) {
@@ -411,9 +427,17 @@ public class IconDemoPanel extends JPanel {
     public void loadImageEntities(final List<Entity> entities) {
     	loadImageEntities(entities, null);
     }
+
+    public void showLoadingIndicator() {
+        removeAll();
+        add(new JLabel(Icons.getLoadingIcon()));
+        this.updateUI();
+    }
     
     public synchronized void loadImageEntities(final List<Entity> entities, final Callable<Void> success) {
 
+    	showLoadingIndicator();
+        
     	// Temporarily disable scroll loading 
 		imagesPanel.setScrollLoadingEnabled(false);
 
@@ -451,20 +475,26 @@ public class IconDemoPanel extends JPanel {
         entityLoadingWorker.execute();
     }
     
-    public synchronized void entityLoadDone() {
+    private synchronized void entityLoadDone() {
 
+    	if (!SwingUtilities.isEventDispatchThread()) throw new RuntimeException("IconDemoPanel.entityLoadDone called outside of EDT");
+    	
     	imagesPanel.setTitleVisbility(showTitlesButton.isSelected());
     	imagesPanel.setTagVisbility(showTagsButton.isSelected());
         
         imagesPanel.setEntities(getEntities());
         refreshAnnotations(null);
+
         showAllEntities();
         filterEntities();
         
         // Since the images are not loaded yet, this will just resize the empty buttons so that we can calculate the grid correctly
         imagesPanel.rescaleImages(currImageSizePercent); 
         imagesPanel.recalculateGrid();
-		
+    	
+		revalidate();
+    	repaint();
+
         // Wait until everything is recomputed
         SwingUtilities.invokeLater(new Runnable() {
 			@Override
@@ -475,7 +505,7 @@ public class IconDemoPanel extends JPanel {
 		});
     }
 
-    public synchronized void entityLoadError(Throwable error) {
+    private synchronized void entityLoadError(Throwable error) {
 
         error.printStackTrace();
         if (getEntities() != null) {
@@ -505,8 +535,8 @@ public class IconDemoPanel extends JPanel {
 			}
 		}
 		
-		imagesPanel.revalidate();
-		imagesPanel.repaint();
+//		imagesPanel.revalidate();
+//		imagesPanel.repaint();
 	}
 	
     /**
@@ -651,7 +681,7 @@ public class IconDemoPanel extends JPanel {
             // Already at the beginning
             return false;
         }
-        setCurrentEntity(entities.get(i - 1));
+        ModelMgr.getModelMgr().selectEntity(entities.get(i - 1).getId(), false);
         if (viewingSingleImage) {
             showCurrentEntityDetails();
         }
@@ -665,10 +695,7 @@ public class IconDemoPanel extends JPanel {
             // Already at the end
             return false;
         }
-        setCurrentEntity(entities.get(i + 1));
-        if (viewingSingleImage) {
-            showCurrentEntityDetails();
-        }
+		ModelMgr.getModelMgr().selectEntity(entities.get(i + 1).getId(), false);
         return true;
     }
 
@@ -708,6 +735,10 @@ public class IconDemoPanel extends JPanel {
     public boolean isInverted() {
         return invertButton.isSelected();
     }
+
+	public double getCurrImageSizePercent() {
+		return currImageSizePercent;
+	}
 
 	public void viewAnnotationDetails(OntologyAnnotation tag) {
 		annotationDetailsDialog.showForAnnotation(tag);

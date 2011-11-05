@@ -236,7 +236,7 @@ public class Browser extends JFrame implements Cloneable {
         outlookBar.addBar(BAR_SESSIONS, sessionOutline);
         outlookBar.addBar(BAR_TASKS, taskOutline);
 //        outlookBar.addBar("Files", fileOutline);
-//        outlookBar.setVisibleBarByName(Browser.BAR_SESSION);
+//        outlookBar.setVisibleBarByName(Browser.BAR_PUBLIC_DATA);
 
         BrowserPosition consolePosition = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
         if (null == consolePosition) {

@@ -45,6 +45,7 @@ public class DynamicImagePanel extends JPanel {
 	public DynamicImagePanel(String imageFilename, Integer maxSize) {
 
 		setLayout(new GridBagLayout());
+		setOpaque(false);
 
 		this.imageFilename = imageFilename;
 		this.maxSize = maxSize;
@@ -121,14 +122,6 @@ public class DynamicImagePanel extends JPanel {
 	}
 
 	public synchronized void rescaleImage(int imageSize) {
-		rescaleImage(imageSize, null);
-	}
-
-	public synchronized void rescaleImage(double scale) {
-		rescaleImage(null, scale);
-	}
-	
-	private synchronized void rescaleImage(Integer imageSize, Double scale) {
     	if (viewable) {
     		if (maxSizeImage == null) {
     			// Must be currently loading, in which case this method will get called again when the loading is done
@@ -138,11 +131,8 @@ public class DynamicImagePanel extends JPanel {
 	    			setInvertedColors(true);
 	    		}
 	    		BufferedImage orig = inverted ? invertedMaxSizeImage : maxSizeImage;
-	            BufferedImage image = imageSize==null 
-	            		? Utils.getScaledImage(orig, scale) 
-	            		: Utils.getScaledImage(orig, imageSize);
+	            BufferedImage image = Utils.getScaledImage(orig, imageSize);
 	            imageLabel.setIcon(new ImageIcon(image));
-	    		displaySize = Math.max(image.getWidth(), image.getHeight());
     		}
     	}
     	else {
@@ -151,14 +141,37 @@ public class DynamicImagePanel extends JPanel {
     		}
     	}
 
-    	if (imageSize!=null) {
-	        this.displaySize = imageSize;
+        this.displaySize = imageSize;
+		//this.setPreferredSize(new Dimension(displaySize, displaySize));
+//		revalidate();
+//		repaint();
+	}
+
+	public synchronized void rescaleImage(double scale) {
+    	if (viewable) {
+    		if (maxSizeImage == null) {
+    			// Must be currently loading, in which case this method will get called again when the loading is done
+    		}
+    		else {
+	    		if (inverted && invertedMaxSizeImage == null) {
+	    			setInvertedColors(true);
+	    		}
+	    		BufferedImage orig = inverted ? invertedMaxSizeImage : maxSizeImage;
+	            BufferedImage image = Utils.getScaledImage(orig, scale);
+	            imageLabel.setIcon(new ImageIcon(image));
+	    		displaySize = Math.max(image.getWidth(), image.getHeight());
+//	    		this.setPreferredSize(new Dimension(displaySize, displaySize));
+    		}
+    	}
+    	else {
+    		if (maxSizeImage != null) {
+				System.out.println("Warning: nonviewable image has a non-null maxSizeImage in memory");
+    		}
     	}
 
-		this.setPreferredSize(new Dimension(displaySize, displaySize));
 		revalidate();
 		repaint();
-    }
+	}
 
     public synchronized void setInvertedColors(boolean inverted) {
 
@@ -244,21 +257,21 @@ public class DynamicImagePanel extends JPanel {
 
 
     private synchronized void loadDone() {
+    	// TODO: this should use the "parent" viewer 
+        IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
         if (inverted) {
-            setInvertedColors(inverted);
+            setInvertedColors(iconDemoPanel.isInverted());
         }
         else {
-            rescaleImage(displaySize);
+            rescaleImage(iconDemoPanel.getCurrImageSizePercent());
         }
         setImageLabel(imageLabel);
         
         // TODO: refactor this to be event driven to maintain encapsulation
-        IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
         iconDemoPanel.getImagesPanel().recalculateGrid();
     }
     
     private synchronized void loadError(Throwable error) {
-        IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
         if (error instanceof FileNotFoundException) {
         	errorLabel.setText("File not found");
         }
@@ -270,6 +283,7 @@ public class DynamicImagePanel extends JPanel {
             errorLabel.setText("Image could not be loaded");
         }
         setImageLabel(errorLabel);
+        IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
         iconDemoPanel.getImagesPanel().recalculateGrid();
     }
     

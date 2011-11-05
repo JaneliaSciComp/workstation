@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.SwingUtilities;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -29,6 +31,9 @@ public class Annotations {
 	}
 	
     public synchronized void init(List<Entity> entities) {
+    	
+    	if (SwingUtilities.isEventDispatchThread()) throw new RuntimeException("Method must run outside of the EDT");
+    	
 		this.entities = entities;
 		this.annotations = new ArrayList<OntologyAnnotation>();
 		
@@ -50,6 +55,8 @@ public class Annotations {
 
     public synchronized void reload(Entity entity) {
 		
+    	if (SwingUtilities.isEventDispatchThread()) throw new RuntimeException("Method must run outside of the EDT");
+    	
     	// Remove all the annotations for this entity
     	List<OntologyAnnotation> copy = new ArrayList<OntologyAnnotation>(annotations);
     	for(OntologyAnnotation annotation : copy) {

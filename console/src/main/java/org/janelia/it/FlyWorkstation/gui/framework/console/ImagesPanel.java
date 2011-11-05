@@ -4,7 +4,10 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Rectangle;
-import java.awt.event.*;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
+import java.awt.event.FocusListener;
+import java.awt.event.KeyListener;
 import java.util.HashMap;
 import java.util.List;
 
@@ -38,7 +41,7 @@ public class ImagesPanel extends JScrollPane {
     // Listen for scroll events
     private final AdjustmentListener scrollListener = new AdjustmentListener() {
         @Override
-        public void adjustmentValueChanged(AdjustmentEvent e) {
+        public void adjustmentValueChanged(final AdjustmentEvent e) {
             SwingUtilities.invokeLater(new Runnable() {
     			@Override
     			public void run() {
@@ -81,8 +84,13 @@ public class ImagesPanel extends JScrollPane {
 	public void setScrollLoadingEnabled(boolean enabled) {
 		if (enabled) {
 			// Reset scrollbar and re-add the listener
-			getVerticalScrollBar().setValue(0); 
-	        getVerticalScrollBar().addAdjustmentListener(scrollListener);
+	        SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					getVerticalScrollBar().setValue(0); 
+			        getVerticalScrollBar().addAdjustmentListener(scrollListener);
+				}
+			});
 		}
 		else {
 	    	// Remove the scroll listener so that we don't get a bunch of bogus events as things are added to the imagesPanel
@@ -104,21 +112,24 @@ public class ImagesPanel extends JScrollPane {
         buttonGroup = new ButtonGroup();
         for (Component component : buttonsPanel.getComponents()) {
             if (component instanceof AnnotatedImageButton) {
-            	buttonsPanel.remove(component);
+            	AnnotatedImageButton button = (AnnotatedImageButton)component;
+            	buttonsPanel.remove(button);
             }
         }
 
         for (int i = 0; i < entities.size(); i++) {
             final Entity entity = entities.get(i);
 
-            final AnnotatedImageButton button = new AnnotatedImageButton(entity.getName(), i, entity);
+         	AnnotatedImageButton button = new AnnotatedImageButton(entity);
             button.setCache(imageCache);
-            button.addKeyListener(buttonKeyListener);
-            button.addFocusListener(buttonFocusListener);
+            if (buttonKeyListener!=null) button.addKeyListener(buttonKeyListener);
+            if (buttonFocusListener!=null) button.addFocusListener(buttonFocusListener);
+            
             buttons.put(entity.getId().toString(), button);
             buttonGroup.add(button);
             buttonsPanel.add(button);
         }
+        
     }
 
     /**
@@ -157,7 +168,7 @@ public class ImagesPanel extends JScrollPane {
      *
      * @param imageSize
      */
-    public void rescaleImages(int imageSize) {
+    public synchronized void rescaleImages(int imageSize) {
         if (imageSize < MIN_THUMBNAIL_SIZE || imageSize > MAX_THUMBNAIL_SIZE) {
             return;
         }
@@ -202,7 +213,12 @@ public class ImagesPanel extends JScrollPane {
         AnnotatedImageButton button = buttons.get(entity.getId().toString());
         if (button != null) {
 	        button.setSelected(true);
-	        button.requestFocusInWindow();
+	        if (!button.isFocusOwner()) {
+	        	button.requestFocusInWindow();
+	        }
+	        if (!button.isShowing()) {
+	        	scrollRectToVisible(button.getBounds());
+	        }
 	        return true;
         }
         return false;
@@ -212,8 +228,10 @@ public class ImagesPanel extends JScrollPane {
      * Set the number of columns in the grid layout based on the width of the parent component and the width of the
      * buttons.
      */
-    public void recalculateGrid() {
-        
+    public synchronized void recalculateGrid() {
+    	
+    	if (!SwingUtilities.isEventDispatchThread()) throw new RuntimeException("recalculateGrid called outside of EDT");
+    	
     	double maxButtonWidth = 0;
         for (AnnotatedImageButton button : buttons.values()) {
             int w = button.getPreferredSize().width;
@@ -233,8 +251,9 @@ public class ImagesPanel extends JScrollPane {
         buttonsPanel.repaint();
     }
 
-    public void loadUnloadImages() {
+    public synchronized void loadUnloadImages() {
 
+    	if (!SwingUtilities.isEventDispatchThread()) throw new RuntimeException("recalculateGrid called outside of EDT");
         final JViewport viewPort = getViewport();
     	Rectangle viewRect = viewPort.getViewRect();
 		
