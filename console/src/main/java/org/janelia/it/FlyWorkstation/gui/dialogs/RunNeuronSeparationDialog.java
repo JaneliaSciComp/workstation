@@ -208,14 +208,11 @@ public class RunNeuronSeparationDialog extends ModalDialog {
     		String inputDirList = path;
         	String process;
         	Task task;
-        	Set<Node> inputNodes = new HashSet<Node>();
         	String owner = SessionMgr.getUsername();
-        	List<Event> events = new ArrayList<Event>();
-    		Set<TaskParameter> taskParameterSet = new HashSet<TaskParameter>();
-
+        	
             process = "NMSDataPipeline";
             task = new MCFODataPipelineTask(new HashSet<Node>(),
-                    owner, new ArrayList<Event>(), new HashSet<TaskParameter>(), inputDirList, topLevelFolderName, refresh);
+                    owner, new ArrayList<Event>(), new HashSet<TaskParameter>(), inputDirList, topLevelFolderName, null, refresh);
             task.setJobName("Neuron Merge Separation Task");
             task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
 
