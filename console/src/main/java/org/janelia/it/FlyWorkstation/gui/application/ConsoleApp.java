@@ -1,13 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.application;
 
-import java.util.MissingResourceException;
-
-import javax.swing.JOptionPane;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
-import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.console.ConsoleMenuBar;
 import org.janelia.it.FlyWorkstation.gui.framework.exception_handlers.ExitHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.exception_handlers.UserNotificationExceptionHandler;
@@ -20,6 +15,9 @@ import org.janelia.it.FlyWorkstation.gui.util.panels.ApplicationSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.panels.DataSourceSettings;
 import org.janelia.it.FlyWorkstation.gui.util.server_status.ServerStatusReportManager;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+
+import javax.swing.*;
+import java.util.MissingResourceException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -34,6 +32,11 @@ public class ConsoleApp {
         System.out.println("Java version: " + System.getProperty("java.version"));
         java.security.ProtectionDomain pd = ConsoleApp.class.getProtectionDomain();
         System.out.println("Code Source: " + pd.getCodeSource().getLocation());
+        // Establish some OS-specific stuff
+        // Set these, Mac may use - // take the menu bar off the jframe
+        System.setProperty("apple.laf.useScreenMenuBar", "true");
+        // set the name of the application menu item
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", ConsoleProperties.getString("console.Title"));
     }
 
     public static void main(final String[] args) {

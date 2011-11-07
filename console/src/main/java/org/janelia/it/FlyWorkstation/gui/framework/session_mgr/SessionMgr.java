@@ -356,8 +356,8 @@ public class SessionMgr {
             UIManager.setLookAndFeel(lookAndFeelClassName);
             Set browserModels = browserModelsToBrowser.keySet();
             Object obj;
-            for (Iterator it = browserModels.iterator(); it.hasNext(); ) {
-                obj = browserModelsToBrowser.get(it.next());
+            for (Object browserModel : browserModels) {
+                obj = browserModelsToBrowser.get(browserModel);
                 if (obj != null) {
                     SwingUtilities.updateComponentTreeUI((JFrame) obj);
                     ((JFrame) obj).repaint();
