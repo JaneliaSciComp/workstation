@@ -9,7 +9,7 @@ import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.jacs.model.tasks.neuronSeparator.BulkNeuronSeparatorTask;
+import org.janelia.it.jacs.model.tasks.fileDiscovery.MCFODataPipelineTask;
 import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
 import org.janelia.it.jacs.model.user_data.Node;
 
@@ -32,22 +32,24 @@ public class RunNeuronSeparationDialog extends ModalDialog {
 
 	private static final String INPUT_DIR = "/groups/flylight/flylight/%USER%/data";
 	private static final String TOP_LEVEL_FOLDER_NAME = "%USER%'s Single Neuron Data";
-	private static final String LINKING_DIR_TEMPLATE = "/groups/scicomp/jacsData/flylight/%USER%/MySeparationResultLinks";
+//	private static final String LINKING_DIR_TEMPLATE = "/groups/scicomp/jacsData/flylight/%USER%/MySeparationResultLinks";
 	private static final int DEFAULT_RERUN_INTERVAL_MINS = 1;
 	private static final int DEFAULT_STATUS_CHECK_INTERVAL_SECS = 30;
 	
 	private static final String TOOLTIP_INPUT_DIR = "Root directory of the tree that should be loaded into the database";
-	private static final String TOOLTIP_LINKING_DIR = "Directory where symbolic links to the results should be created";
+//	private static final String TOOLTIP_LINKING_DIR = "Directory where symbolic links to the results should be created";
 	private static final String TOOLTIP_TOP_LEVEL_ENTITY = "Name of the database entity which should be loaded with the data";
 	private static final String TOOLTIP_RERUN_INTERVAL = "Once a run is complete, how soon should we re-run it?";
 	private static final String TOOLTIP_REFRESH = "Run a new separation for samples that already have a separation result?";
-	
+    private static final String TOOLTIP_CONTINUOUSLY = "Continuously look for new LSM Pairs until I say stop";
+
     private final JPanel attrPanel;    
     private final JTextField inputDirectoryField;
-    private final JTextField linkingDirectoryField;
+//    private final JTextField linkingDirectoryField;
     private final JTextField topLevelFolderField;
     private final JTextField rerunIntervalField;
     private final JCheckBox refreshCheckbox;
+    private final JCheckBox runContinuouslyCheckBox;
     
     public RunNeuronSeparationDialog() {
     	
@@ -66,14 +68,14 @@ public class RunNeuronSeparationDialog extends ModalDialog {
         attrPanel.add(inputDirectoryLabel);
         attrPanel.add(inputDirectoryField);
 
-        JLabel linkingDirectoryLabel = new JLabel("Linking Directory (Linux mounted)");
-        linkingDirectoryLabel.setToolTipText(TOOLTIP_LINKING_DIR);
-        linkingDirectoryField = new JTextField(40);
-        linkingDirectoryField.setText(filter(LINKING_DIR_TEMPLATE));
-        linkingDirectoryField.setToolTipText(TOOLTIP_LINKING_DIR);
-        linkingDirectoryLabel.setLabelFor(linkingDirectoryField);
-        attrPanel.add(linkingDirectoryLabel);
-        attrPanel.add(linkingDirectoryField);
+//        JLabel linkingDirectoryLabel = new JLabel("Linking Directory (Linux mounted)");
+//        linkingDirectoryLabel.setToolTipText(TOOLTIP_LINKING_DIR);
+//        linkingDirectoryField = new JTextField(40);
+//        linkingDirectoryField.setText(filter(LINKING_DIR_TEMPLATE));
+//        linkingDirectoryField.setToolTipText(TOOLTIP_LINKING_DIR);
+//        linkingDirectoryLabel.setLabelFor(linkingDirectoryField);
+//        attrPanel.add(linkingDirectoryLabel);
+//        attrPanel.add(linkingDirectoryField);
 
         JLabel topLevelFolderLabel = new JLabel("Top Level Entity Name");
         topLevelFolderLabel.setToolTipText(TOOLTIP_TOP_LEVEL_ENTITY);
@@ -101,6 +103,14 @@ public class RunNeuronSeparationDialog extends ModalDialog {
         attrPanel.add(refreshLabel);
         attrPanel.add(refreshCheckbox);
         
+        JLabel continuousLabel = new JLabel("Run Continuously");
+        continuousLabel.setToolTipText(TOOLTIP_CONTINUOUSLY);
+        runContinuouslyCheckBox = new JCheckBox();
+        runContinuouslyCheckBox.setToolTipText(TOOLTIP_CONTINUOUSLY);
+        continuousLabel.setLabelFor(runContinuouslyCheckBox);
+        attrPanel.add(continuousLabel);
+        attrPanel.add(runContinuouslyCheckBox);
+
         add(attrPanel, BorderLayout.CENTER);
         SpringUtilities.makeCompactGrid(attrPanel, attrPanel.getComponentCount()/2, 2, 6, 6, 6, 6);
         
@@ -138,9 +148,10 @@ public class RunNeuronSeparationDialog extends ModalDialog {
     	
     	final boolean refresh = refreshCheckbox.isSelected();
     	final String inputDirPath = inputDirectoryField.getText();
-    	final String linkingDirName = linkingDirectoryField.getText();
+//    	final String linkingDirName = linkingDirectoryField.getText();
     	final String topLevelFolderName = topLevelFolderField.getText();
-    	
+    	final boolean runContinously = runContinuouslyCheckBox.isSelected();
+
     	int rerunMins = 0;
     	try {
     		rerunMins = Integer.parseInt(rerunIntervalField.getText());
@@ -156,7 +167,7 @@ public class RunNeuronSeparationDialog extends ModalDialog {
 
 			@Override
 			protected void doStuff() throws Exception {
-				startSeparation(inputDirPath, linkingDirName, topLevelFolderName, loopTimerInMinutes, refresh);
+				startSeparation(inputDirPath, null, topLevelFolderName, loopTimerInMinutes, refresh, runContinously);
 			}
 			
 			@Override
@@ -191,7 +202,7 @@ public class RunNeuronSeparationDialog extends ModalDialog {
      * @param refresh refresh entities which were already created?
      */
     private void startSeparation(String path, String linkingDirName, String topLevelFolderName,
-    		int loopTimerInMinutes, boolean refresh) {
+    		int loopTimerInMinutes, boolean refresh, boolean runContinously) {
 
     	try {
     		String inputDirList = path;
@@ -202,22 +213,26 @@ public class RunNeuronSeparationDialog extends ModalDialog {
         	List<Event> events = new ArrayList<Event>();
     		Set<TaskParameter> taskParameterSet = new HashSet<TaskParameter>();
 
-            process = "NeuronMergeSeparationPipeline";
-            task = new BulkNeuronSeparatorTask(inputNodes, owner, events, taskParameterSet);
-            task.setParameter(BulkNeuronSeparatorTask.PARAM_inputDirectoryList, inputDirList);
-            task.setParameter(BulkNeuronSeparatorTask.PARAM_topLevelFolderName, topLevelFolderName);
-            task.setJobName("Bulk Neuron Separation Run");
+            process = "NMSDataPipeline";
+            task = new MCFODataPipelineTask(new HashSet<Node>(),
+                    owner, new ArrayList<Event>(), new HashSet<TaskParameter>(), inputDirList, topLevelFolderName, refresh);
+            task.setJobName("Neuron Merge Separation Task");
             task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
-            
-    		Task ceTask = new ContinuousExecutionTask(new HashSet<Node>(), 
-    				owner, new ArrayList<Event>(), new HashSet<TaskParameter>(), loopTimerInMinutes, 
-            		true, task.getObjectId(), process, DEFAULT_STATUS_CHECK_INTERVAL_SECS);
 
-    		ceTask.setJobName("Continuous Neuron Separation Service");
-    		ceTask = ModelMgr.getModelMgr().saveOrUpdateTask(ceTask);
+            if (runContinously) {
+                Task ceTask = new ContinuousExecutionTask(new HashSet<Node>(),
+                        owner, new ArrayList<Event>(), new HashSet<TaskParameter>(), loopTimerInMinutes,
+                        true, task.getObjectId(), process, DEFAULT_STATUS_CHECK_INTERVAL_SECS);
 
-            ModelMgr.getModelMgr().submitJob("ContinuousExecution", ceTask.getObjectId());
-    	}
+                ceTask.setJobName("Continuous Neuron Separation Service");
+                ceTask = ModelMgr.getModelMgr().saveOrUpdateTask(ceTask);
+
+                ModelMgr.getModelMgr().submitJob("ContinuousExecution", ceTask.getObjectId());
+            }
+            else {
+                ModelMgr.getModelMgr().submitJob(process, task.getObjectId());
+            }
+        }
     	catch (Exception e) {
     		SessionMgr.getSessionMgr().handleException(e);
     	}
