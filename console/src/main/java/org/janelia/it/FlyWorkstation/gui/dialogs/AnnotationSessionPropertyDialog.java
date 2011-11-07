@@ -1,20 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.concurrent.Callable;
-
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-
 import loci.plugins.config.SpringUtilities;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.*;
@@ -29,6 +15,18 @@ import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.types.Tag;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * A dialog for creating a new annotation session, or editing an existing one.
@@ -175,6 +173,7 @@ public class AnnotationSessionPropertyDialog extends ModalDialog {
         okButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+                save();
 	            setVisible(false);
 			}
 		});
@@ -184,7 +183,6 @@ public class AnnotationSessionPropertyDialog extends ModalDialog {
         cancelButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-	            save();
 	            setVisible(false);
 			}
 		});
