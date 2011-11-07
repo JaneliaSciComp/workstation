@@ -171,8 +171,6 @@ public class IconDemoPanel extends JPanel {
 
 			@Override
 			public void entitySelected(final long entityId, final boolean outline) {
-
-				System.out.println("IconDemoPanel heard that entitySelected="+entityId+" outline?="+outline+ " edt?="+SwingUtilities.isEventDispatchThread());
 				
 				// Find the entity object
 				Entity selectedEntity = null;
@@ -222,7 +220,7 @@ public class IconDemoPanel extends JPanel {
 			        			entitiesToLoad.add(child);
 				        	}
 				        	if (entitiesToLoad.isEmpty()) {
-				        		// No children, just show the leaf entity by itself
+				        		// No children, go straight to the leaf
 				        		entitiesToLoad.add(entity);
 				        		loadImageEntities(entitiesToLoad, new Callable<Void>() {
 									@Override
@@ -424,17 +422,17 @@ public class IconDemoPanel extends JPanel {
     	userListMenu.show(userButton, 0, userButton.getHeight());
     }
 
-    public void loadImageEntities(final List<Entity> entities) {
+    private void loadImageEntities(final List<Entity> entities) {
     	loadImageEntities(entities, null);
     }
 
-    public void showLoadingIndicator() {
+    private void showLoadingIndicator() {
         removeAll();
         add(new JLabel(Icons.getLoadingIcon()));
         this.updateUI();
     }
     
-    public synchronized void loadImageEntities(final List<Entity> entities, final Callable<Void> success) {
+    private synchronized void loadImageEntities(final List<Entity> entities, final Callable<Void> success) {
 
     	showLoadingIndicator();
         
