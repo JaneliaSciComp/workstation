@@ -143,8 +143,7 @@ public class DynamicImagePanel extends JPanel {
     	}
 
         this.displaySize = imageSize;
-		revalidate();
-		repaint();
+        invalidate();
 	}
 
 	public synchronized void rescaleImage(double scale) {

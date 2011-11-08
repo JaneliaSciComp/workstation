@@ -98,8 +98,6 @@ public class IconDemoPanel extends JPanel {
 
             // Scroll to the newly focused button
             imagesPanel.scrollEntityToCenter(button.getEntity());
-            imagesPanel.revalidate();
-            imagesPanel.repaint();
         }
     };
     
@@ -422,6 +420,14 @@ public class IconDemoPanel extends JPanel {
         removeAll();
         add(new JLabel(Icons.getLoadingIcon()));
         this.updateUI();
+    }
+    
+    public boolean areTitlesVisible() {
+    	return showTitlesButton.isSelected();
+    }
+    
+    public boolean areTagsVisible() {
+    	return showTagsButton.isSelected();
     }
     
     private synchronized void loadImageEntities(final List<Entity> entities, final Callable<Void> success) {

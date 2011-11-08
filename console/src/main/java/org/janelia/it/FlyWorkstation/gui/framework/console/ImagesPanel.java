@@ -130,6 +130,8 @@ public class ImagesPanel extends JScrollPane {
             }
         }
 
+		IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
+		
         for (int i = 0; i < entities.size(); i++) {
             final Entity entity = entities.get(i);
             AnnotatedImageButton button = null;
@@ -141,6 +143,9 @@ public class ImagesPanel extends JScrollPane {
             else {
             	button = new StaticImageButton(entity);
             }
+            
+            button.setTitleVisible(iconDemoPanel.areTitlesVisible());
+            button.setTagsVisible(iconDemoPanel.areTagsVisible());
             
             if (buttonKeyListener!=null) button.addKeyListener(buttonKeyListener);
             if (buttonFocusListener!=null) button.addFocusListener(buttonFocusListener);
@@ -168,19 +173,6 @@ public class ImagesPanel extends JScrollPane {
     	List<OntologyAnnotation> entityAnnotations = annotations.getFilteredAnnotationMap().get(entity.getId());
         button.getTagPanel().setTags(entityAnnotations);
     }
-    
-    /**
-     * Scale all the images to the desired percent of their true size.
-     *
-     * @param imageSizePercent
-     */
-//    public void rescaleImages(double imageSizePercent) {
-//        if (imageSizePercent < 0 || imageSizePercent > 1) {
-//            return;
-//        }
-//        double range = (double) (MAX_THUMBNAIL_SIZE - MIN_THUMBNAIL_SIZE);
-//        rescaleImages(MIN_THUMBNAIL_SIZE + (int) (range * imageSizePercent));
-//    }
 
     /**
      * Scale all the images to the given max size.
@@ -265,12 +257,6 @@ public class ImagesPanel extends JScrollPane {
         AnnotatedImageButton button = buttons.get(entity.getId().toString());
         if (button != null) {
 	        button.setSelected(true);
-	        if (!button.isFocusOwner()) {
-	        	button.requestFocusInWindow();
-	        }
-	        if (!button.isShowing()) {
-	        	scrollRectToVisible(button.getBounds());
-	        }
 	        return true;
         }
         return false;
@@ -357,6 +343,4 @@ public class ImagesPanel extends JScrollPane {
             return false;
         }
     }
-    
-
 }

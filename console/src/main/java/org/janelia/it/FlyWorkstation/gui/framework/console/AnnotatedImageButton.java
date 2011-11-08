@@ -23,7 +23,7 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
  */
 public abstract class AnnotatedImageButton extends JToggleButton {
 
-	private final JTextPane imageCaption;
+	private final JLabel titleLabel;
     private final JPanel mainPanel;
     private final AnnotationTagCloudPanel tagPanel;
 
@@ -37,25 +37,20 @@ public abstract class AnnotatedImageButton extends JToggleButton {
         JPanel buttonPanel = new JPanel(new GridBagLayout());
         buttonPanel.setOpaque(false);
         add(buttonPanel);
-    	
-        imageCaption = new JTextPane();
-        imageCaption.setFocusable(false);
-        imageCaption.setFont(new Font("Sans Serif", Font.PLAIN, 12));
-        imageCaption.setAlignmentX(Component.CENTER_ALIGNMENT);
-        imageCaption.setEditable(false);
-        imageCaption.setOpaque(false);
-        StyledDocument doc = imageCaption.getStyledDocument();
-        SimpleAttributeSet center = new SimpleAttributeSet();
-        StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
-        doc.setParagraphAttributes(0, doc.getLength(), center, false);
 
+        titleLabel = new JLabel();
+        titleLabel.setFocusable(false);
+        titleLabel.setFont(new Font("Sans Serif", Font.PLAIN, 12));
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        titleLabel.setOpaque(false);
+        
         c.gridx = 0;
         c.gridy = 0;
         c.insets = new Insets(0, 0, 5, 0);
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.PAGE_START;
         c.weighty = 0;
-        buttonPanel.add(imageCaption, c);
+        buttonPanel.add(titleLabel, c);
 
         mainPanel = new JPanel();
         mainPanel.setOpaque(false);
@@ -80,7 +75,7 @@ public abstract class AnnotatedImageButton extends JToggleButton {
 
         // Fix event dispatching so that user can click on the title or the tags and still select the button
 
-        imageCaption.addMouseListener(new MouseAdapter() {
+        titleLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 AnnotatedImageButton.this.dispatchEvent(e);
@@ -155,14 +150,14 @@ public abstract class AnnotatedImageButton extends JToggleButton {
         	title = title.substring(0, 27) + "...";
         }
         
-        imageCaption.setText(title);
+        titleLabel.setText(title);
         mainPanel.add(init(entity));
     }
     
     public abstract JComponent init(Entity entity);
     
 	public synchronized void setTitleVisible(boolean visible) {
-        imageCaption.setVisible(visible);
+        titleLabel.setVisible(visible);
     }
 
     public synchronized void setTagsVisible(boolean visible) {
