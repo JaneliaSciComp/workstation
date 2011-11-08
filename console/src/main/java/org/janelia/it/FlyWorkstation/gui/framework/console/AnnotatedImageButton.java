@@ -5,9 +5,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.util.concurrent.Callable;
 
 import javax.swing.*;
 import javax.swing.text.SimpleAttributeSet;
@@ -15,11 +12,7 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
-import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 
@@ -27,20 +20,16 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 /**
  * A DynamicImagePanel with a title on top and optional annotation tags underneath. Made to be aggregated in an 
  * ImagesPanel.
- * 
- * TODO: this should be renamed "AnnotatedEntityButton" or something similar to indicate it is specific to displaying entities. 
  */
-public class AnnotatedImageButton extends JToggleButton {
+public abstract class AnnotatedImageButton extends JToggleButton {
 
 	private final JTextPane imageCaption;
     private final JPanel mainPanel;
     private final AnnotationTagCloudPanel tagPanel;
 
     // One of these goes in the mainPanel
-    private BufferedImage staticIcon;
-    private JComponent imageComponent;
     
-    private Entity entity;
+    protected Entity entity;
     
     public AnnotatedImageButton(final Entity entity) {
     	
@@ -166,20 +155,11 @@ public class AnnotatedImageButton extends JToggleButton {
         	title = title.substring(0, 27) + "...";
         }
         
-        String filepath = Utils.getDefaultImageFilePath(entity);
-        if (filepath != null) {
-	        File file = new File(PathTranslator.convertImagePath(filepath));
-	        this.staticIcon = null;
-	        this.imageComponent = new DynamicImagePanel(file.getAbsolutePath(), ImagesPanel.MAX_THUMBNAIL_SIZE);
-        }
-        else {
-        	this.staticIcon = Icons.getLargeIconAsBufferedImage(entity);
-        	this.imageComponent = new JLabel(new ImageIcon(staticIcon));
-        }
-        
         imageCaption.setText(title);
-        mainPanel.add(imageComponent);
+        mainPanel.add(init(entity));
     }
+    
+    public abstract JComponent init(Entity entity);
     
 	public synchronized void setTitleVisible(boolean visible) {
         imageCaption.setVisible(visible);
@@ -197,60 +177,13 @@ public class AnnotatedImageButton extends JToggleButton {
         return entity;
     }
 
-	public void cancelLoad() {
-		if (imageComponent instanceof DynamicImagePanel) {
-			((DynamicImagePanel)imageComponent).cancelLoad();
-		}
-	}
-
-	public void setCache(ImageCache imageCache) {
-		if (imageComponent instanceof DynamicImagePanel) {
-			((DynamicImagePanel)imageComponent).setCache(imageCache);
-		}
-	}
-
 	public void rescaleImage(int imageSize) {
-		if (imageComponent instanceof DynamicImagePanel) {
-			((DynamicImagePanel)imageComponent).rescaleImage(imageSize);
-	    	imageComponent.setPreferredSize(new Dimension(imageSize, imageSize));
-		}
-		else if (staticIcon!=null) {
-			if (imageSize<staticIcon.getHeight() || imageSize<staticIcon.getWidth()) { // Don't scale up icons
-				ImageIcon newIcon = new ImageIcon(Utils.getScaledImage(staticIcon, imageSize));
-	        	((JLabel)imageComponent).setIcon(newIcon);
-			}
-	    	imageComponent.setPreferredSize(new Dimension(imageSize, imageSize));
-	    	revalidate();
-	    	repaint();
-		}
 	}
 
 	public void setInvertedColors(boolean inverted) {
-		if (imageComponent instanceof DynamicImagePanel) {
-			((DynamicImagePanel)imageComponent).setInvertedColors(inverted);
-		}
 	}
 
 	public void setViewable(boolean viewable) {
-		if (imageComponent instanceof DynamicImagePanel) {
-            final DynamicImagePanel dynamicImagePanel = ((DynamicImagePanel)imageComponent);
-            dynamicImagePanel.setViewable(viewable, new Callable<Void>() {
-				@Override
-				public Void call() throws Exception {
-					if (dynamicImagePanel.isViewable()) {
-						// TODO: refactor this so it doesn't need to do this kind of dependency access
-						IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
-				        if (iconDemoPanel.isInverted()) {
-				        	dynamicImagePanel.setInvertedColors(true);
-				        }
-				        else {
-				        	dynamicImagePanel.rescaleImage(iconDemoPanel.getImagesPanel().getCurrImageSize());
-				        }
-					}
-					return null;
-				}
-			});
-		}
 	}
 
 }

@@ -15,6 +15,7 @@ import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 
@@ -39,8 +40,9 @@ public class ImagesPanel extends JScrollPane {
     private JPanel buttonsPanel;
     private ButtonGroup buttonGroup;
 
-    private Rectangle currViewRect;
     private int currImageSize = DEFAULT_THUMBNAIL_SIZE;
+    private Rectangle currViewRect;
+	private int numCols;
     
     // Listen for scroll events
     private final AdjustmentListener scrollListener = new AdjustmentListener() {
@@ -49,7 +51,6 @@ public class ImagesPanel extends JScrollPane {
             SwingUtilities.invokeLater(new Runnable() {
     			@Override
     			public void run() {
-
     		    	final JViewport viewPort = getViewport();
     		    	Rectangle viewRect = viewPort.getViewRect();
     		    	if (viewRect.equals(currViewRect)) {
@@ -61,7 +62,6 @@ public class ImagesPanel extends JScrollPane {
     		});
         }
     };
-	private int numCols;
     
     public ImagesPanel() {
     	buttonsPanel = new ScrollableGridPanel();
@@ -117,7 +117,8 @@ public class ImagesPanel extends JScrollPane {
     	
     	// Cancel all loading images
         for (AnnotatedImageButton button : buttons.values()) {
-        	button.cancelLoad();
+        	if (button instanceof DynamicImageButton)
+        		((DynamicImageButton)button).cancelLoad();
         }
 
         buttons.clear();
@@ -131,9 +132,16 @@ public class ImagesPanel extends JScrollPane {
 
         for (int i = 0; i < entities.size(); i++) {
             final Entity entity = entities.get(i);
-
-         	AnnotatedImageButton button = new AnnotatedImageButton(entity);
-            button.setCache(imageCache);
+            AnnotatedImageButton button = null;
+            String filepath = Utils.getDefaultImageFilePath(entity);
+            if (filepath != null) {
+            	button = new DynamicImageButton(entity);
+                ((DynamicImageButton)button).setCache(imageCache);
+            }
+            else {
+            	button = new StaticImageButton(entity);
+            }
+            
             if (buttonKeyListener!=null) button.addKeyListener(buttonKeyListener);
             if (buttonFocusListener!=null) button.addFocusListener(buttonFocusListener);
             
@@ -166,13 +174,13 @@ public class ImagesPanel extends JScrollPane {
      *
      * @param imageSizePercent
      */
-    public void rescaleImages(double imageSizePercent) {
-        if (imageSizePercent < 0 || imageSizePercent > 1) {
-            return;
-        }
-        double range = (double) (MAX_THUMBNAIL_SIZE - MIN_THUMBNAIL_SIZE);
-        rescaleImages(MIN_THUMBNAIL_SIZE + (int) (range * imageSizePercent));
-    }
+//    public void rescaleImages(double imageSizePercent) {
+//        if (imageSizePercent < 0 || imageSizePercent > 1) {
+//            return;
+//        }
+//        double range = (double) (MAX_THUMBNAIL_SIZE - MIN_THUMBNAIL_SIZE);
+//        rescaleImages(MIN_THUMBNAIL_SIZE + (int) (range * imageSizePercent));
+//    }
 
     /**
      * Scale all the images to the given max size.
@@ -192,8 +200,6 @@ public class ImagesPanel extends JScrollPane {
 	    		SessionMgr.getSessionMgr().handleException(e);
 	    	}
         }
-		buttonsPanel.revalidate();
-		buttonsPanel.repaint();
     }
 
     
@@ -292,19 +298,13 @@ public class ImagesPanel extends JScrollPane {
         if (numCols > 0) {
             ((GridLayout)buttonsPanel.getLayout()).setColumns(numCols);
         }
-
-        buttonsPanel.revalidate();
-        buttonsPanel.repaint();
     }
 
     public synchronized void loadUnloadImages() {
-
-    	if (!SwingUtilities.isEventDispatchThread()) throw new RuntimeException("recalculateGrid called outside of EDT");
-
+    	
         SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-		
 		    	final JViewport viewPort = getViewport();
 		    	Rectangle viewRect = viewPort.getViewRect();
 		    	

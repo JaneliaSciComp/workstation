@@ -58,7 +58,7 @@ public class IconDemoPanel extends JPanel {
     private List<Entity> entities;
     private Entity currentEntity;
     private boolean viewingSingleImage = true;
-    private double currImageSizePercent = 1.0;
+    private double currImageSize = 1.0;
     
     private final List<String> allUsers = new ArrayList<String>();
     private final Set<String> hiddenUsers = new HashSet<String>();
@@ -124,12 +124,15 @@ public class IconDemoPanel extends JPanel {
             @Override
             public void stateChanged(ChangeEvent e) {
                 JSlider source = (JSlider) e.getSource();
-                double imageSizePercent = (double) source.getValue();// / (double) 100;
-                if (currImageSizePercent == imageSizePercent) return;
-                currImageSizePercent = imageSizePercent;
-                imagesPanel.rescaleImages((int)Math.round(imageSizePercent));
+                int imageSize = source.getValue();
+                if (currImageSize == imageSize) return;
+                currImageSize = imageSize;
+                imagesPanel.rescaleImages(imageSize);
 	            imagesPanel.recalculateGrid();
 	            imagesPanel.loadUnloadImages();
+
+	            imagesPanel.revalidate();
+	            imagesPanel.repaint();
             }
         });
         
@@ -429,6 +432,9 @@ public class IconDemoPanel extends JPanel {
     	// Temporarily disable scroll loading 
 		imagesPanel.setScrollLoadingEnabled(false);
 		
+		// Reset the zoom level
+		slider.setValue(ImagesPanel.DEFAULT_THUMBNAIL_SIZE);
+		
 		// Reset the current entity
 		currentEntity = null;
 
@@ -724,7 +730,7 @@ public class IconDemoPanel extends JPanel {
     }
 
 	public double getCurrImageSizePercent() {
-		return currImageSizePercent;
+		return currImageSize;
 	}
 
 	public void viewAnnotationDetails(OntologyAnnotation tag) {
