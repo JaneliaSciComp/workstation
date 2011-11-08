@@ -25,8 +25,9 @@ import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
  */
 public class ImagesPanel extends JScrollPane {
 
-    private static final int MIN_THUMBNAIL_SIZE = 64;
-    public static final int MAX_THUMBNAIL_SIZE = 300;
+    public static final int MIN_THUMBNAIL_SIZE = 100;
+    public static final int DEFAULT_THUMBNAIL_SIZE = 300;
+    public static final int MAX_THUMBNAIL_SIZE = 1000;
 
     private final HashMap<String, AnnotatedImageButton> buttons = new HashMap<String, AnnotatedImageButton>();
 
@@ -38,6 +39,9 @@ public class ImagesPanel extends JScrollPane {
     private JPanel buttonsPanel;
     private ButtonGroup buttonGroup;
 
+    private Rectangle currViewRect;
+    private int currImageSize = DEFAULT_THUMBNAIL_SIZE;
+    
     // Listen for scroll events
     private final AdjustmentListener scrollListener = new AdjustmentListener() {
         @Override
@@ -45,11 +49,19 @@ public class ImagesPanel extends JScrollPane {
             SwingUtilities.invokeLater(new Runnable() {
     			@Override
     			public void run() {
+
+    		    	final JViewport viewPort = getViewport();
+    		    	Rectangle viewRect = viewPort.getViewRect();
+    		    	if (viewRect.equals(currViewRect)) {
+    		    		return;
+    		    	}
+    		    	currViewRect = viewRect;
     	        	loadUnloadImages();
     			}
     		});
         }
     };
+	private int numCols;
     
     public ImagesPanel() {
     	buttonsPanel = new ScrollableGridPanel();
@@ -129,7 +141,6 @@ public class ImagesPanel extends JScrollPane {
             buttonGroup.add(button);
             buttonsPanel.add(button);
         }
-        
     }
 
     /**
@@ -172,6 +183,7 @@ public class ImagesPanel extends JScrollPane {
         if (imageSize < MIN_THUMBNAIL_SIZE || imageSize > MAX_THUMBNAIL_SIZE) {
             return;
         }
+        this.currImageSize = imageSize;
         for (AnnotatedImageButton button : buttons.values()) {
         	try {
                 button.rescaleImage(imageSize);
@@ -184,12 +196,46 @@ public class ImagesPanel extends JScrollPane {
 		buttonsPanel.repaint();
     }
 
-    public void scrollEntityToVisible(Entity entity) {
+    
+    public int getCurrImageSize() {
+		return currImageSize;
+	}
+	
+	public void scrollEntityToCenter(Entity entity) {
+	    
+	    JViewport viewport = getViewport();
     	AnnotatedImageButton selectedButton = getButtonByEntityId(entity.getId());
-    	if (selectedButton!=null) {
-    		buttonsPanel.scrollRectToVisible(selectedButton.getBounds());
-    	}
-    }
+    	if (selectedButton == null) return;
+    	
+	    // This rectangle is relative to the table where the
+	    // northwest corner of cell (0,0) is always (0,0).
+	    Rectangle rect = selectedButton.getBounds();
+
+	    // The location of the view relative to the table
+	    Rectangle viewRect = viewport.getViewRect();
+
+	    // Translate the cell location so that it is relative
+	    // to the view, assuming the northwest corner of the
+	    // view is (0,0).
+	    rect.setLocation(rect.x-viewRect.x, rect.y-viewRect.y);
+
+	    // Calculate location of rect if it were at the center of view
+	    int centerX = (viewRect.width-rect.width)/2;
+	    int centerY = (viewRect.height-rect.height)/2;
+
+	    // Fake the location of the cell so that scrollRectToVisible
+	    // will move the cell to the center
+	    if (rect.x < centerX) {
+	        centerX = -centerX;
+	    }
+	    if (rect.y < centerY) {
+	        centerY = -centerY;
+	    }
+	    rect.translate(centerX, centerY);
+
+	    // Scroll the area into view.
+	    viewport.scrollRectToVisible(rect);
+	}
     
     public void setTitleVisbility(boolean visible) {
         for (AnnotatedImageButton button : buttons.values()) {
@@ -242,7 +288,7 @@ public class ImagesPanel extends JScrollPane {
         if (maxButtonWidth == 0) maxButtonWidth = 400;
         
         int fullWidth = getSize().width - getVerticalScrollBar().getWidth();
-        int numCols = (int) Math.floor((double)fullWidth / maxButtonWidth);
+        this.numCols = (int) Math.floor((double)fullWidth / maxButtonWidth);
         if (numCols > 0) {
             ((GridLayout)buttonsPanel.getLayout()).setColumns(numCols);
         }
@@ -254,17 +300,29 @@ public class ImagesPanel extends JScrollPane {
     public synchronized void loadUnloadImages() {
 
     	if (!SwingUtilities.isEventDispatchThread()) throw new RuntimeException("recalculateGrid called outside of EDT");
-        final JViewport viewPort = getViewport();
-    	Rectangle viewRect = viewPort.getViewRect();
+
+        SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
 		
-        for(AnnotatedImageButton button : buttons.values()) {
-        	try {
-        		button.setViewable(viewRect.intersects(button.getBounds()));
-        	}
-        	catch (Exception e) {
-        		SessionMgr.getSessionMgr().handleException(e);
-        	}
-        }
+		    	final JViewport viewPort = getViewport();
+		    	Rectangle viewRect = viewPort.getViewRect();
+		    	
+		    	if (numCols == 1) {
+		    		viewRect.setSize(viewRect.width, viewRect.height+100);
+		    	}
+		    	
+		        for(AnnotatedImageButton button : buttons.values()) {
+		        	try {
+		        		button.setViewable(viewRect.intersects(button.getBounds()));
+		        	}
+		        	catch (Exception e) {
+		        		SessionMgr.getSessionMgr().handleException(e);
+		        	}
+		        }
+			}
+		});
+        
     }
     
     private class ScrollableGridPanel extends JPanel implements Scrollable  {

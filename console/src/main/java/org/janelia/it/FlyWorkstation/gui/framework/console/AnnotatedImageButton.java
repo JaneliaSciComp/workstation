@@ -7,6 +7,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.concurrent.Callable;
 
 import javax.swing.*;
 import javax.swing.text.SimpleAttributeSet;
@@ -14,6 +15,7 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
@@ -111,31 +113,40 @@ public class AnnotatedImageButton extends JToggleButton {
 	            titleMenuItem.setEnabled(false);
 	            popupMenu.add(titleMenuItem);
 	            
-	            JMenuItem v3dMenuItem = new JMenuItem("  View in V3D (Neuron Annotator)");
-	            v3dMenuItem.addActionListener(new ActionListener() {
-	                public void actionPerformed(ActionEvent actionEvent) {
-	    				try {
-	    					Entity result = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
-		                    if (result != null && ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(result.getId())) {
-		                    	// Success
-		                    	return;
-		                    }
-	    				} 
-	    				catch (Exception e) {
-	    					e.printStackTrace();
-	    				}
-	                }
-	            });
-	            popupMenu.add(v3dMenuItem);
-		        
-		        JMenuItem detailsMenuItem = new JMenuItem("  View details");
-	            detailsMenuItem.addActionListener(new ActionListener() {
-	                public void actionPerformed(ActionEvent actionEvent) {
-	    				// "View details" triggers an outline selection
-	    				ModelMgr.getModelMgr().selectEntity(entity.getId(), true);
-	                }
-	            });
-	            popupMenu.add(detailsMenuItem);
+	            final String entityType = entity.getEntityType().getName();
+	            if (entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT) || entityType.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
+		            JMenuItem v3dMenuItem = new JMenuItem("  View in V3D (Neuron Annotator)");
+		            v3dMenuItem.addActionListener(new ActionListener() {
+		                public void actionPerformed(ActionEvent actionEvent) {
+		    				try {
+		    					Entity result = entity;
+		    					if (!entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
+			    					result = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
+		    					}
+		    					
+			                    if (result != null && ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(result.getId())) {
+			                    	// Success
+			                    	return;
+			                    }
+		    				} 
+		    				catch (Exception e) {
+		    					e.printStackTrace();
+		    				}
+		                }
+		            });
+		            popupMenu.add(v3dMenuItem);
+	            }
+	            
+//	            if (!entity.hasChildren()) {
+//			        JMenuItem detailsMenuItem = new JMenuItem("  View details");
+//		            detailsMenuItem.addActionListener(new ActionListener() {
+//		                public void actionPerformed(ActionEvent actionEvent) {
+//		    				// "View details" triggers an outline selection
+//		    				ModelMgr.getModelMgr().selectEntity(entity.getId(), true);
+//		                }
+//		            });
+//		            popupMenu.add(detailsMenuItem);
+//	            }
 	            
 		        popupMenu.show(AnnotatedImageButton.this, e.getX(), e.getY());
 			}
@@ -148,8 +159,6 @@ public class AnnotatedImageButton extends JToggleButton {
         	
         });
         
-        // Init
-    	
     	this.entity = entity;
     	
     	String title = entity.getName();
@@ -166,7 +175,6 @@ public class AnnotatedImageButton extends JToggleButton {
         else {
         	this.staticIcon = Icons.getLargeIconAsBufferedImage(entity);
         	this.imageComponent = new JLabel(new ImageIcon(staticIcon));
-        	((JLabel)imageComponent).setPreferredSize(new Dimension(ImagesPanel.MAX_THUMBNAIL_SIZE, ImagesPanel.MAX_THUMBNAIL_SIZE));
         }
         
         imageCaption.setText(title);
@@ -204,14 +212,17 @@ public class AnnotatedImageButton extends JToggleButton {
 	public void rescaleImage(int imageSize) {
 		if (imageComponent instanceof DynamicImagePanel) {
 			((DynamicImagePanel)imageComponent).rescaleImage(imageSize);
+	    	imageComponent.setPreferredSize(new Dimension(imageSize, imageSize));
 		}
 		else if (staticIcon!=null) {
 			if (imageSize<staticIcon.getHeight() || imageSize<staticIcon.getWidth()) { // Don't scale up icons
 				ImageIcon newIcon = new ImageIcon(Utils.getScaledImage(staticIcon, imageSize));
 	        	((JLabel)imageComponent).setIcon(newIcon);
 			}
+	    	imageComponent.setPreferredSize(new Dimension(imageSize, imageSize));
+	    	revalidate();
+	    	repaint();
 		}
-    	imageComponent.setPreferredSize(new Dimension(imageSize, imageSize));
 	}
 
 	public void setInvertedColors(boolean inverted) {
@@ -222,7 +233,23 @@ public class AnnotatedImageButton extends JToggleButton {
 
 	public void setViewable(boolean viewable) {
 		if (imageComponent instanceof DynamicImagePanel) {
-			((DynamicImagePanel)imageComponent).setViewable(viewable);
+            final DynamicImagePanel dynamicImagePanel = ((DynamicImagePanel)imageComponent);
+            dynamicImagePanel.setViewable(viewable, new Callable<Void>() {
+				@Override
+				public Void call() throws Exception {
+					if (dynamicImagePanel.isViewable()) {
+						// TODO: refactor this so it doesn't need to do this kind of dependency access
+						IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
+				        if (iconDemoPanel.isInverted()) {
+				        	dynamicImagePanel.setInvertedColors(true);
+				        }
+				        else {
+				        	dynamicImagePanel.rescaleImage(iconDemoPanel.getImagesPanel().getCurrImageSize());
+				        }
+					}
+					return null;
+				}
+			});
 		}
 	}
 

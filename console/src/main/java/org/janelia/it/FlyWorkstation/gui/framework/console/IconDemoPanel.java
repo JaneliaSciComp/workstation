@@ -97,8 +97,9 @@ public class IconDemoPanel extends JPanel {
 			ModelMgr.getModelMgr().selectEntity(button.getEntity().getId(), false);
 
             // Scroll to the newly focused button
-            imagesPanel.scrollRectToVisible(button.getBounds());
+            imagesPanel.scrollEntityToCenter(button.getEntity());
             imagesPanel.revalidate();
+            imagesPanel.repaint();
         }
     };
     
@@ -119,15 +120,14 @@ public class IconDemoPanel extends JPanel {
         imageDetailPanel = new ImageDetailPanel(this);
         annotationDetailsDialog = new AnnotationDetailsDialog();
         
-        
         slider.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
                 JSlider source = (JSlider) e.getSource();
-                double imageSizePercent = (double) source.getValue() / (double) 100;
+                double imageSizePercent = (double) source.getValue();// / (double) 100;
                 if (currImageSizePercent == imageSizePercent) return;
                 currImageSizePercent = imageSizePercent;
-                imagesPanel.rescaleImages(imageSizePercent);
+                imagesPanel.rescaleImages((int)Math.round(imageSizePercent));
 	            imagesPanel.recalculateGrid();
 	            imagesPanel.loadUnloadImages();
             }
@@ -190,10 +190,16 @@ public class IconDemoPanel extends JPanel {
 					}
 				}
 				
+				if (!outline) {
+		        	setCurrentEntity(selectedEntity);
+					return;
+				}
+				
 				final Entity potentialEntity = selectedEntity;
 				SimpleWorker worker = new SimpleWorker() {
 
 					Entity entity = potentialEntity;
+					List<Entity> entitiesToLoad = new ArrayList<Entity>();
 					
 					@Override
 					protected void doStuff() throws Exception {
@@ -207,39 +213,20 @@ public class IconDemoPanel extends JPanel {
 			        	if (!Utils.areLoaded(entity.getOrderedEntityData())) {
 			                Utils.loadLazyEntity(entity, false);
 			        	}
+
+			        	for(Entity child : entity.getOrderedChildren()) {
+		        			entitiesToLoad.add(child);
+			        	}
+			        	
+			        	if (entitiesToLoad.isEmpty()) {
+			        		// No children, go straight to the leaf
+			        		entitiesToLoad.add(entity);
+			        	}
 					}
 					
 					@Override
 					protected void hadSuccess() {
-						
-						// In the EDT...
-				        
-				        if (outline) {
-				        	List<Entity> entitiesToLoad = new ArrayList<Entity>();
-				        	for(Entity child : entity.getOrderedChildren()) {
-			        			entitiesToLoad.add(child);
-				        	}
-				        	if (entitiesToLoad.isEmpty()) {
-				        		// No children, go straight to the leaf
-				        		entitiesToLoad.add(entity);
-				        		loadImageEntities(entitiesToLoad, new Callable<Void>() {
-									@Override
-									public Void call() throws Exception {
-							        	setCurrentEntity(entity);
-						        		showCurrentEntityDetails();
-						        		imageDetailPanel.getIndexButton().setEnabled(false);
-						        		return null;
-									}
-								});
-				        	}
-				        	else {
-				        		// A bunch of children, show them all
-				        		loadImageEntities(entitiesToLoad);
-				        	}
-				        }
-				        else {
-				        	setCurrentEntity(entity);
-				        }
+		        		loadImageEntities(entitiesToLoad);
 					}
 					
 					@Override
@@ -309,6 +296,7 @@ public class IconDemoPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
             	imagesPanel.setTitleVisbility(showTitlesButton.isSelected());
             	imagesPanel.recalculateGrid();
+            	imagesPanel.loadUnloadImages();
             }
         });
         toolBar.add(showTitlesButton);
@@ -323,6 +311,7 @@ public class IconDemoPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
             	imagesPanel.setTagVisbility(showTagsButton.isSelected());
             	imagesPanel.recalculateGrid();
+            	imagesPanel.loadUnloadImages();
             }
         });
         toolBar.add(showTagsButton);
@@ -367,7 +356,7 @@ public class IconDemoPanel extends JPanel {
         
         toolBar.addSeparator();
 
-        slider = new JSlider(10, 100, 100);
+        slider = new JSlider(ImagesPanel.MIN_THUMBNAIL_SIZE, ImagesPanel.MAX_THUMBNAIL_SIZE, ImagesPanel.DEFAULT_THUMBNAIL_SIZE);
         slider.setFocusable(false);
         slider.setToolTipText("Image size percentage");
         toolBar.add(slider);
@@ -434,10 +423,14 @@ public class IconDemoPanel extends JPanel {
     
     private synchronized void loadImageEntities(final List<Entity> entities, final Callable<Void> success) {
 
+    	// Indicate a load 
     	showLoadingIndicator();
         
     	// Temporarily disable scroll loading 
 		imagesPanel.setScrollLoadingEnabled(false);
+		
+		// Reset the current entity
+		currentEntity = null;
 
         if (entityLoadingWorker != null && !entityLoadingWorker.isDone()) {
         	System.out.println("Cancel previous image load");
@@ -487,7 +480,7 @@ public class IconDemoPanel extends JPanel {
         filterEntities();
         
         // Since the images are not loaded yet, this will just resize the empty buttons so that we can calculate the grid correctly
-        imagesPanel.rescaleImages(currImageSizePercent); 
+        imagesPanel.rescaleImages(imagesPanel.getCurrImageSize()); 
         imagesPanel.recalculateGrid();
     	
 		revalidate();
@@ -499,6 +492,8 @@ public class IconDemoPanel extends JPanel {
 			public void run() {
 				imagesPanel.setScrollLoadingEnabled(true);
 		        imagesPanel.loadUnloadImages();
+		        // Select the first entity
+				ModelMgr.getModelMgr().selectEntity(entities.get(0).getId(), false);
 			}
 		});
     }
@@ -532,9 +527,6 @@ public class IconDemoPanel extends JPanel {
 				button.setVisible(true);
 			}
 		}
-		
-//		imagesPanel.revalidate();
-//		imagesPanel.repaint();
 	}
 	
     /**
@@ -639,7 +631,7 @@ public class IconDemoPanel extends JPanel {
 			@Override
 			public void run() {
 		        if (getCurrentEntity() == null) return;
-		        imagesPanel.scrollEntityToVisible(getCurrentEntity());
+		        imagesPanel.scrollEntityToCenter(getCurrentEntity());
 			}
         });
         
@@ -680,9 +672,6 @@ public class IconDemoPanel extends JPanel {
             return false;
         }
         ModelMgr.getModelMgr().selectEntity(entities.get(i - 1).getId(), false);
-        if (viewingSingleImage) {
-            showCurrentEntityDetails();
-        }
         return true;
     }
 
