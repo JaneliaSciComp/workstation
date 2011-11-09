@@ -5,8 +5,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
-import java.io.File;
 
 import javax.swing.*;
 import javax.swing.text.SimpleAttributeSet;
@@ -14,10 +12,7 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
-import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 
@@ -25,20 +20,16 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 /**
  * A DynamicImagePanel with a title on top and optional annotation tags underneath. Made to be aggregated in an 
  * ImagesPanel.
- * 
- * TODO: this should be renamed "AnnotatedEntityButton" or something similar to indicate it is specific to displaying entities. 
  */
-public class AnnotatedImageButton extends JToggleButton {
+public abstract class AnnotatedImageButton extends JToggleButton {
 
-	private final JTextPane imageCaption;
+	private final JLabel titleLabel;
     private final JPanel mainPanel;
     private final AnnotationTagCloudPanel tagPanel;
 
     // One of these goes in the mainPanel
-    private BufferedImage staticIcon;
-    private JComponent imageComponent;
     
-    private Entity entity;
+    protected Entity entity;
     
     public AnnotatedImageButton(final Entity entity) {
     	
@@ -46,25 +37,20 @@ public class AnnotatedImageButton extends JToggleButton {
         JPanel buttonPanel = new JPanel(new GridBagLayout());
         buttonPanel.setOpaque(false);
         add(buttonPanel);
-    	
-        imageCaption = new JTextPane();
-        imageCaption.setFocusable(false);
-        imageCaption.setFont(new Font("Sans Serif", Font.PLAIN, 12));
-        imageCaption.setAlignmentX(Component.CENTER_ALIGNMENT);
-        imageCaption.setEditable(false);
-        imageCaption.setOpaque(false);
-        StyledDocument doc = imageCaption.getStyledDocument();
-        SimpleAttributeSet center = new SimpleAttributeSet();
-        StyleConstants.setAlignment(center, StyleConstants.ALIGN_CENTER);
-        doc.setParagraphAttributes(0, doc.getLength(), center, false);
 
+        titleLabel = new JLabel();
+        titleLabel.setFocusable(false);
+        titleLabel.setFont(new Font("Sans Serif", Font.PLAIN, 12));
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        titleLabel.setOpaque(false);
+        
         c.gridx = 0;
         c.gridy = 0;
         c.insets = new Insets(0, 0, 5, 0);
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.PAGE_START;
         c.weighty = 0;
-        buttonPanel.add(imageCaption, c);
+        buttonPanel.add(titleLabel, c);
 
         mainPanel = new JPanel();
         mainPanel.setOpaque(false);
@@ -89,7 +75,7 @@ public class AnnotatedImageButton extends JToggleButton {
 
         // Fix event dispatching so that user can click on the title or the tags and still select the button
 
-        imageCaption.addMouseListener(new MouseAdapter() {
+        titleLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 AnnotatedImageButton.this.dispatchEvent(e);
@@ -111,31 +97,40 @@ public class AnnotatedImageButton extends JToggleButton {
 	            titleMenuItem.setEnabled(false);
 	            popupMenu.add(titleMenuItem);
 	            
-	            JMenuItem v3dMenuItem = new JMenuItem("  View in V3D (Neuron Annotator)");
-	            v3dMenuItem.addActionListener(new ActionListener() {
-	                public void actionPerformed(ActionEvent actionEvent) {
-	    				try {
-	    					Entity result = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
-		                    if (result != null && ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(result.getId())) {
-		                    	// Success
-		                    	return;
-		                    }
-	    				} 
-	    				catch (Exception e) {
-	    					e.printStackTrace();
-	    				}
-	                }
-	            });
-	            popupMenu.add(v3dMenuItem);
-		        
-		        JMenuItem detailsMenuItem = new JMenuItem("  View details");
-	            detailsMenuItem.addActionListener(new ActionListener() {
-	                public void actionPerformed(ActionEvent actionEvent) {
-	    				// "View details" triggers an outline selection
-	    				ModelMgr.getModelMgr().selectEntity(entity.getId(), true);
-	                }
-	            });
-	            popupMenu.add(detailsMenuItem);
+	            final String entityType = entity.getEntityType().getName();
+	            if (entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT) || entityType.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
+		            JMenuItem v3dMenuItem = new JMenuItem("  View in V3D (Neuron Annotator)");
+		            v3dMenuItem.addActionListener(new ActionListener() {
+		                public void actionPerformed(ActionEvent actionEvent) {
+		    				try {
+		    					Entity result = entity;
+		    					if (!entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
+			    					result = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
+		    					}
+		    					
+			                    if (result != null && ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(result.getId())) {
+			                    	// Success
+			                    	return;
+			                    }
+		    				} 
+		    				catch (Exception e) {
+		    					e.printStackTrace();
+		    				}
+		                }
+		            });
+		            popupMenu.add(v3dMenuItem);
+	            }
+	            
+//	            if (!entity.hasChildren()) {
+//			        JMenuItem detailsMenuItem = new JMenuItem("  View details");
+//		            detailsMenuItem.addActionListener(new ActionListener() {
+//		                public void actionPerformed(ActionEvent actionEvent) {
+//		    				// "View details" triggers an outline selection
+//		    				ModelMgr.getModelMgr().selectEntity(entity.getId(), true);
+//		                }
+//		            });
+//		            popupMenu.add(detailsMenuItem);
+//	            }
 	            
 		        popupMenu.show(AnnotatedImageButton.this, e.getX(), e.getY());
 			}
@@ -148,8 +143,6 @@ public class AnnotatedImageButton extends JToggleButton {
         	
         });
         
-        // Init
-    	
     	this.entity = entity;
     	
     	String title = entity.getName();
@@ -157,24 +150,14 @@ public class AnnotatedImageButton extends JToggleButton {
         	title = title.substring(0, 27) + "...";
         }
         
-        String filepath = Utils.getDefaultImageFilePath(entity);
-        if (filepath != null) {
-	        File file = new File(PathTranslator.convertImagePath(filepath));
-	        this.staticIcon = null;
-	        this.imageComponent = new DynamicImagePanel(file.getAbsolutePath(), ImagesPanel.MAX_THUMBNAIL_SIZE);
-        }
-        else {
-        	this.staticIcon = Icons.getLargeIconAsBufferedImage(entity);
-        	this.imageComponent = new JLabel(new ImageIcon(staticIcon));
-        	((JLabel)imageComponent).setPreferredSize(new Dimension(ImagesPanel.MAX_THUMBNAIL_SIZE, ImagesPanel.MAX_THUMBNAIL_SIZE));
-        }
-        
-        imageCaption.setText(title);
-        mainPanel.add(imageComponent);
+        titleLabel.setText(title);
+        mainPanel.add(init(entity));
     }
     
+    public abstract JComponent init(Entity entity);
+    
 	public synchronized void setTitleVisible(boolean visible) {
-        imageCaption.setVisible(visible);
+        titleLabel.setVisible(visible);
     }
 
     public synchronized void setTagsVisible(boolean visible) {
@@ -189,41 +172,13 @@ public class AnnotatedImageButton extends JToggleButton {
         return entity;
     }
 
-	public void cancelLoad() {
-		if (imageComponent instanceof DynamicImagePanel) {
-			((DynamicImagePanel)imageComponent).cancelLoad();
-		}
-	}
-
-	public void setCache(ImageCache imageCache) {
-		if (imageComponent instanceof DynamicImagePanel) {
-			((DynamicImagePanel)imageComponent).setCache(imageCache);
-		}
-	}
-
 	public void rescaleImage(int imageSize) {
-		if (imageComponent instanceof DynamicImagePanel) {
-			((DynamicImagePanel)imageComponent).rescaleImage(imageSize);
-		}
-		else if (staticIcon!=null) {
-			if (imageSize<staticIcon.getHeight() || imageSize<staticIcon.getWidth()) { // Don't scale up icons
-				ImageIcon newIcon = new ImageIcon(Utils.getScaledImage(staticIcon, imageSize));
-	        	((JLabel)imageComponent).setIcon(newIcon);
-			}
-		}
-    	imageComponent.setPreferredSize(new Dimension(imageSize, imageSize));
 	}
 
 	public void setInvertedColors(boolean inverted) {
-		if (imageComponent instanceof DynamicImagePanel) {
-			((DynamicImagePanel)imageComponent).setInvertedColors(inverted);
-		}
 	}
 
 	public void setViewable(boolean viewable) {
-		if (imageComponent instanceof DynamicImagePanel) {
-			((DynamicImagePanel)imageComponent).setViewable(viewable);
-		}
 	}
 
 }

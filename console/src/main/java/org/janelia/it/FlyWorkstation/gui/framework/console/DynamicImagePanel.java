@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.GridBagLayout;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
+import java.util.concurrent.Callable;
 
 import javax.swing.*;
 
@@ -142,9 +143,7 @@ public class DynamicImagePanel extends JPanel {
     	}
 
         this.displaySize = imageSize;
-		//this.setPreferredSize(new Dimension(displaySize, displaySize));
-//		revalidate();
-//		repaint();
+        invalidate();
 	}
 
 	public synchronized void rescaleImage(double scale) {
@@ -160,7 +159,6 @@ public class DynamicImagePanel extends JPanel {
 	            BufferedImage image = Utils.getScaledImage(orig, scale);
 	            imageLabel.setIcon(new ImageIcon(image));
 	    		displaySize = Math.max(image.getWidth(), image.getHeight());
-//	    		this.setPreferredSize(new Dimension(displaySize, displaySize));
     		}
     	}
     	else {
@@ -168,7 +166,7 @@ public class DynamicImagePanel extends JPanel {
 				System.out.println("Warning: nonviewable image has a non-null maxSizeImage in memory");
     		}
     	}
-
+    	
 		revalidate();
 		repaint();
 	}
@@ -188,16 +186,16 @@ public class DynamicImagePanel extends JPanel {
     }
 
     /**
-     * Tell the button if its image should be viewable. When this is set to false, the images can be released from
+     * Tell the panel if its image should be viewable. When this is set to false, the images can be released from
      * memory to save space. When it's set to true, the image will be reloaded from disk if necessary.
      * @param wantViewable
      */
-	public synchronized void setViewable(boolean wantViewable) {
+	public synchronized void setViewable(boolean wantViewable, Callable success) {
 
 		if (imageFilename!=null) {
 			if (wantViewable) {
 				if (!this.viewable) {
-					loadWorker = new LoadImageWorker();
+					loadWorker = new LoadImageWorker(success);
 					loadWorker.execute();
 				}
 			}
@@ -213,6 +211,13 @@ public class DynamicImagePanel extends JPanel {
 		    	// Show the loading label until the image needs to be loaded again
 		        setImageLabel(loadingLabel);
 				invalidate();
+				// Call the callback
+				try {
+					success.call();
+				}
+				catch (Exception e) {
+					SessionMgr.getSessionMgr().handleException(e);
+				}
 			}
 		}
 		this.viewable = wantViewable;
@@ -224,6 +229,13 @@ public class DynamicImagePanel extends JPanel {
      * if an ImageCache has been set with setImageCache then this method will look there first.
      */
     private class LoadImageWorker extends SimpleWorker {
+    	
+    	private Callable success;
+    	
+    	public LoadImageWorker(Callable success) {
+    		this.success = success;
+    	}
+    	
     	
         @Override
 		protected void doStuff() throws Exception {
@@ -247,6 +259,12 @@ public class DynamicImagePanel extends JPanel {
 		@Override
 		protected void hadSuccess() {
             loadDone();
+            try {
+            	success.call();
+            }
+            catch (Exception e) {
+            	SessionMgr.getSessionMgr().handleException(e);
+            }
 		}
 
 		@Override
@@ -255,20 +273,10 @@ public class DynamicImagePanel extends JPanel {
 		}
     }
 
-
     private synchronized void loadDone() {
-    	// TODO: this should use the "parent" viewer 
-        IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
-        if (inverted) {
-            setInvertedColors(iconDemoPanel.isInverted());
-        }
-        else {
-            rescaleImage(iconDemoPanel.getCurrImageSizePercent());
-        }
         setImageLabel(imageLabel);
-        
-        // TODO: refactor this to be event driven to maintain encapsulation
-        iconDemoPanel.getImagesPanel().recalculateGrid();
+        revalidate();
+        repaint();
     }
     
     private synchronized void loadError(Throwable error) {
@@ -283,8 +291,8 @@ public class DynamicImagePanel extends JPanel {
             errorLabel.setText("Image could not be loaded");
         }
         setImageLabel(errorLabel);
-        IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
-        iconDemoPanel.getImagesPanel().recalculateGrid();
+        revalidate();
+        repaint();
     }
     
 	private synchronized void setMaxSizeImage(BufferedImage maxSizeImage) {

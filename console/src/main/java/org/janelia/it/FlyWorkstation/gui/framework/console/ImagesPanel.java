@@ -15,6 +15,7 @@ import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 
@@ -25,8 +26,9 @@ import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
  */
 public class ImagesPanel extends JScrollPane {
 
-    private static final int MIN_THUMBNAIL_SIZE = 64;
-    public static final int MAX_THUMBNAIL_SIZE = 300;
+    public static final int MIN_THUMBNAIL_SIZE = 100;
+    public static final int DEFAULT_THUMBNAIL_SIZE = 300;
+    public static final int MAX_THUMBNAIL_SIZE = 1000;
 
     private final HashMap<String, AnnotatedImageButton> buttons = new HashMap<String, AnnotatedImageButton>();
 
@@ -38,6 +40,10 @@ public class ImagesPanel extends JScrollPane {
     private JPanel buttonsPanel;
     private ButtonGroup buttonGroup;
 
+    private int currImageSize = DEFAULT_THUMBNAIL_SIZE;
+    private Rectangle currViewRect;
+	private int numCols;
+    
     // Listen for scroll events
     private final AdjustmentListener scrollListener = new AdjustmentListener() {
         @Override
@@ -45,6 +51,12 @@ public class ImagesPanel extends JScrollPane {
             SwingUtilities.invokeLater(new Runnable() {
     			@Override
     			public void run() {
+    		    	final JViewport viewPort = getViewport();
+    		    	Rectangle viewRect = viewPort.getViewRect();
+    		    	if (viewRect.equals(currViewRect)) {
+    		    		return;
+    		    	}
+    		    	currViewRect = viewRect;
     	        	loadUnloadImages();
     			}
     		});
@@ -105,7 +117,8 @@ public class ImagesPanel extends JScrollPane {
     	
     	// Cancel all loading images
         for (AnnotatedImageButton button : buttons.values()) {
-        	button.cancelLoad();
+        	if (button instanceof DynamicImageButton)
+        		((DynamicImageButton)button).cancelLoad();
         }
 
         buttons.clear();
@@ -117,11 +130,23 @@ public class ImagesPanel extends JScrollPane {
             }
         }
 
+		IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
+		
         for (int i = 0; i < entities.size(); i++) {
             final Entity entity = entities.get(i);
-
-         	AnnotatedImageButton button = new AnnotatedImageButton(entity);
-            button.setCache(imageCache);
+            AnnotatedImageButton button = null;
+            String filepath = Utils.getDefaultImageFilePath(entity);
+            if (filepath != null) {
+            	button = new DynamicImageButton(entity);
+                ((DynamicImageButton)button).setCache(imageCache);
+            }
+            else {
+            	button = new StaticImageButton(entity);
+            }
+            
+            button.setTitleVisible(iconDemoPanel.areTitlesVisible());
+            button.setTagsVisible(iconDemoPanel.areTagsVisible());
+            
             if (buttonKeyListener!=null) button.addKeyListener(buttonKeyListener);
             if (buttonFocusListener!=null) button.addFocusListener(buttonFocusListener);
             
@@ -129,7 +154,6 @@ public class ImagesPanel extends JScrollPane {
             buttonGroup.add(button);
             buttonsPanel.add(button);
         }
-        
     }
 
     /**
@@ -149,19 +173,6 @@ public class ImagesPanel extends JScrollPane {
     	List<OntologyAnnotation> entityAnnotations = annotations.getFilteredAnnotationMap().get(entity.getId());
         button.getTagPanel().setTags(entityAnnotations);
     }
-    
-    /**
-     * Scale all the images to the desired percent of their true size.
-     *
-     * @param imageSizePercent
-     */
-    public void rescaleImages(double imageSizePercent) {
-        if (imageSizePercent < 0 || imageSizePercent > 1) {
-            return;
-        }
-        double range = (double) (MAX_THUMBNAIL_SIZE - MIN_THUMBNAIL_SIZE);
-        rescaleImages(MIN_THUMBNAIL_SIZE + (int) (range * imageSizePercent));
-    }
 
     /**
      * Scale all the images to the given max size.
@@ -172,6 +183,7 @@ public class ImagesPanel extends JScrollPane {
         if (imageSize < MIN_THUMBNAIL_SIZE || imageSize > MAX_THUMBNAIL_SIZE) {
             return;
         }
+        this.currImageSize = imageSize;
         for (AnnotatedImageButton button : buttons.values()) {
         	try {
                 button.rescaleImage(imageSize);
@@ -180,16 +192,48 @@ public class ImagesPanel extends JScrollPane {
 	    		SessionMgr.getSessionMgr().handleException(e);
 	    	}
         }
-		buttonsPanel.revalidate();
-		buttonsPanel.repaint();
     }
 
-    public void scrollEntityToVisible(Entity entity) {
+    
+    public int getCurrImageSize() {
+		return currImageSize;
+	}
+	
+	public void scrollEntityToCenter(Entity entity) {
+	    
+	    JViewport viewport = getViewport();
     	AnnotatedImageButton selectedButton = getButtonByEntityId(entity.getId());
-    	if (selectedButton!=null) {
-    		buttonsPanel.scrollRectToVisible(selectedButton.getBounds());
-    	}
-    }
+    	if (selectedButton == null) return;
+    	
+	    // This rectangle is relative to the table where the
+	    // northwest corner of cell (0,0) is always (0,0).
+	    Rectangle rect = selectedButton.getBounds();
+
+	    // The location of the view relative to the table
+	    Rectangle viewRect = viewport.getViewRect();
+
+	    // Translate the cell location so that it is relative
+	    // to the view, assuming the northwest corner of the
+	    // view is (0,0).
+	    rect.setLocation(rect.x-viewRect.x, rect.y-viewRect.y);
+
+	    // Calculate location of rect if it were at the center of view
+	    int centerX = (viewRect.width-rect.width)/2;
+	    int centerY = (viewRect.height-rect.height)/2;
+
+	    // Fake the location of the cell so that scrollRectToVisible
+	    // will move the cell to the center
+	    if (rect.x < centerX) {
+	        centerX = -centerX;
+	    }
+	    if (rect.y < centerY) {
+	        centerY = -centerY;
+	    }
+	    rect.translate(centerX, centerY);
+
+	    // Scroll the area into view.
+	    viewport.scrollRectToVisible(rect);
+	}
     
     public void setTitleVisbility(boolean visible) {
         for (AnnotatedImageButton button : buttons.values()) {
@@ -213,12 +257,6 @@ public class ImagesPanel extends JScrollPane {
         AnnotatedImageButton button = buttons.get(entity.getId().toString());
         if (button != null) {
 	        button.setSelected(true);
-	        if (!button.isFocusOwner()) {
-	        	button.requestFocusInWindow();
-	        }
-	        if (!button.isShowing()) {
-	        	scrollRectToVisible(button.getBounds());
-	        }
 	        return true;
         }
         return false;
@@ -242,29 +280,35 @@ public class ImagesPanel extends JScrollPane {
         if (maxButtonWidth == 0) maxButtonWidth = 400;
         
         int fullWidth = getSize().width - getVerticalScrollBar().getWidth();
-        int numCols = (int) Math.floor((double)fullWidth / maxButtonWidth);
+        this.numCols = (int) Math.floor((double)fullWidth / maxButtonWidth);
         if (numCols > 0) {
             ((GridLayout)buttonsPanel.getLayout()).setColumns(numCols);
         }
-
-        buttonsPanel.revalidate();
-        buttonsPanel.repaint();
     }
 
     public synchronized void loadUnloadImages() {
-
-    	if (!SwingUtilities.isEventDispatchThread()) throw new RuntimeException("recalculateGrid called outside of EDT");
-        final JViewport viewPort = getViewport();
-    	Rectangle viewRect = viewPort.getViewRect();
-		
-        for(AnnotatedImageButton button : buttons.values()) {
-        	try {
-        		button.setViewable(viewRect.intersects(button.getBounds()));
-        	}
-        	catch (Exception e) {
-        		SessionMgr.getSessionMgr().handleException(e);
-        	}
-        }
+    	
+        SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+		    	final JViewport viewPort = getViewport();
+		    	Rectangle viewRect = viewPort.getViewRect();
+		    	
+		    	if (numCols == 1) {
+		    		viewRect.setSize(viewRect.width, viewRect.height+100);
+		    	}
+		    	
+		        for(AnnotatedImageButton button : buttons.values()) {
+		        	try {
+		        		button.setViewable(viewRect.intersects(button.getBounds()));
+		        	}
+		        	catch (Exception e) {
+		        		SessionMgr.getSessionMgr().handleException(e);
+		        	}
+		        }
+			}
+		});
+        
     }
     
     private class ScrollableGridPanel extends JPanel implements Scrollable  {
@@ -299,6 +343,4 @@ public class ImagesPanel extends JScrollPane {
             return false;
         }
     }
-    
-
 }

@@ -1,8 +1,10 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Point;
 import java.awt.event.*;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -37,6 +39,8 @@ public class ImageDetailPanel extends JPanel {
     private final JPanel southernPanel;
     private final AnnotationTagCloudPanel tagPanel;
 
+    private double currImageSizePercent = 1.0;
+    
     private SimpleWorker dataWorker;
     private Entity entity;
 
@@ -60,8 +64,6 @@ public class ImageDetailPanel extends JPanel {
         imagePanel = new JPanel(new BorderLayout());
         scrollPane = new JScrollPane();
         scrollPane.setViewportView(imagePanel);
-//        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-//        scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
 
         imageViewer.add(scrollPane, BorderLayout.CENTER);
 
@@ -209,6 +211,7 @@ public class ImageDetailPanel extends JPanel {
             public void stateChanged(ChangeEvent e) {
                 JSlider source = (JSlider) e.getSource();
                 double imageSizePercent = (double) source.getValue() / (double) 100;
+                currImageSizePercent = imageSizePercent;
                 rescaleImage(imageSizePercent);
                 zoomLabel.setText((int) source.getValue() + "%");
             }
@@ -240,7 +243,19 @@ public class ImageDetailPanel extends JPanel {
         String imageFilename = Utils.getDefaultImageFilePath(entity);
         if (imageFilename!=null) {
             imageComponent = new DynamicImagePanel(PathTranslator.convertImagePath(imageFilename));
-            ((DynamicImagePanel)imageComponent).setViewable(true);
+            final DynamicImagePanel dynamicImagePanel = ((DynamicImagePanel)imageComponent);
+            dynamicImagePanel.setViewable(true, new Callable<Void>() {
+				@Override
+				public Void call() throws Exception {
+			        if (iconDemoPanel.isInverted()) {
+			        	dynamicImagePanel.setInvertedColors(true);
+			        }
+			        else {
+			        	dynamicImagePanel.rescaleImage(currImageSizePercent);
+			        }
+					return null;
+				}
+			});
         }
         else {
         	imageComponent = new JLabel("No 2D image to display for "+entity.getName());
