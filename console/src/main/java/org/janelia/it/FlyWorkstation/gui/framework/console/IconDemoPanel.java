@@ -192,7 +192,7 @@ public class IconDemoPanel extends JPanel {
 				}
 				
 				if (!outline) {
-		        	setCurrentEntity(selectedEntity);
+					if (selectedEntity != null) setCurrentEntity(selectedEntity);
 					return;
 				}
 				
