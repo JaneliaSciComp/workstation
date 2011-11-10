@@ -308,7 +308,6 @@ public class ImagesPanel extends JScrollPane {
 		        }
 			}
 		});
-        
     }
     
     private class ScrollableGridPanel extends JPanel implements Scrollable  {

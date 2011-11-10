@@ -153,15 +153,24 @@ public class ImageDetailPanel extends JPanel {
             @Override
             public void mouseWheelMoved(MouseWheelEvent e) {
                 if (e.getWheelRotation() > 0) {
-                    iconDemoPanel.nextEntity();
+                	focusEntity(iconDemoPanel.getNextEntity());
                 }
                 else {
-                    iconDemoPanel.previousEntity();
+                	focusEntity(iconDemoPanel.getPreviousEntity());
                 }
             }
         });
     }
 
+    private void focusEntity(Entity entity) {
+        if (entity != null) {
+    		AnnotatedImageButton button = iconDemoPanel.getImagesPanel().getButtonByEntityId(entity.getId());
+            if (button != null) {
+            	button.requestFocus();
+            }
+        }
+    }
+    
 	private JToolBar createToolbar() {
 
         JToolBar toolBar = new JToolBar();
@@ -186,7 +195,7 @@ public class ImageDetailPanel extends JPanel {
         prevButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                iconDemoPanel.previousEntity();
+            	focusEntity(iconDemoPanel.getPreviousEntity());
             }
         });
         toolBar.add(prevButton);
@@ -196,7 +205,7 @@ public class ImageDetailPanel extends JPanel {
         nextButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                iconDemoPanel.nextEntity();
+            	focusEntity(iconDemoPanel.getNextEntity());
             }
         });
         toolBar.add(nextButton);

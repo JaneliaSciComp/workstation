@@ -98,6 +98,10 @@ public class Utils {
             }
         }
     }
+
+    public static String getFilePath(Entity entity) {
+    	return entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
+    }
     
     public static String getDefaultImageFilePath(Entity entity) {
     	String path = entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE_FILE_PATH);

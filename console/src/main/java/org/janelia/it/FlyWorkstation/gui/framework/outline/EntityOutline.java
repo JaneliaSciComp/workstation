@@ -1,9 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import java.awt.Dimension;
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -90,23 +87,9 @@ public abstract class EntityOutline extends EntityTree implements Cloneable {
         selectNode(node);
         
         // Create context menus
-        final JPopupMenu popupMenu = new JPopupMenu();
+        final JPopupMenu popupMenu = new EntityContextMenu(entity);
         
-        JMenuItem titleItem = new JMenuItem(entity.getName());
-        titleItem.setEnabled(false);
-        popupMenu.add(titleItem);
-        
-        // Copy to clipboard
-        JMenuItem copyMenuItem = new JMenuItem("  Copy to clipboard");
-        copyMenuItem.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-	            Transferable t = new StringSelection(entity.getName());
-	            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
-			}
-		});
-        popupMenu.add(copyMenuItem);
-
+        popupMenu.addSeparator();
         
         // Change data source (root only)
     	if (node.isRoot()) {
@@ -175,7 +158,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable {
     	}
     
         // Create annotation session
-        JMenuItem newFragSessionItem = new JMenuItem("  Create Annotation Session for Neuron Fragments");
+        JMenuItem newFragSessionItem = new JMenuItem("  Create Annotation Session for Neuron Fragments...");
         newFragSessionItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
@@ -210,32 +193,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable {
             }
         });
         popupMenu.add(newFragSessionItem);
-    	
-        if (entity.getEntityType().getName().equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
-            JMenuItem v3dMenuItem = new JMenuItem("  View in V3D (Neuron Annotator)");
-            v3dMenuItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent actionEvent) {
-                    if (ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(entity.getId())) {
-                    	// Success
-                    	return;
-                    }
-                	// Launch V3D if it isn't running
-                    // TODO: this should be redone to use the "Tools" configuration
-//                    String filepath = entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
-//                    filepath = Utils.convertJacsPathLinuxToMac(filepath);
-//                    final File file = new File(filepath);
-//                    String tmpCmd = "/Users/" + (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME) + "/Dev/v3d/v3d/v3d64.app/Contents/MacOS/v3d64 -i " + file.getAbsolutePath();
-//                    System.out.println("DEBUG: " + tmpCmd);
-//                    try {
-//                        Runtime.getRuntime().exec(tmpCmd);
-//                    }
-//                    catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-                }
-            });
-            popupMenu.add(v3dMenuItem);
-        }
 
         popupMenu.show(selectedTree.getTree(), e.getX(), e.getY());
     }

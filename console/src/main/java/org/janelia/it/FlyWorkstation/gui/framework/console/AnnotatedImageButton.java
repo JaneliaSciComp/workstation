@@ -1,20 +1,18 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import javax.swing.*;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityContextMenu;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
 
 
 /**
@@ -90,48 +88,7 @@ public abstract class AnnotatedImageButton extends JToggleButton {
 			protected void popupTriggered(MouseEvent e) {
 
 				ModelMgr.getModelMgr().selectEntity(entity.getId(), false);
-                
-	            JPopupMenu popupMenu = new JPopupMenu();
-	            
-	            JMenuItem titleMenuItem = new JMenuItem(entity.getName());
-	            titleMenuItem.setEnabled(false);
-	            popupMenu.add(titleMenuItem);
-	            
-	            final String entityType = entity.getEntityType().getName();
-	            if (entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT) || entityType.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
-		            JMenuItem v3dMenuItem = new JMenuItem("  View in V3D (Neuron Annotator)");
-		            v3dMenuItem.addActionListener(new ActionListener() {
-		                public void actionPerformed(ActionEvent actionEvent) {
-		    				try {
-		    					Entity result = entity;
-		    					if (!entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
-			    					result = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
-		    					}
-		    					
-			                    if (result != null && ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(result.getId())) {
-			                    	// Success
-			                    	return;
-			                    }
-		    				} 
-		    				catch (Exception e) {
-		    					e.printStackTrace();
-		    				}
-		                }
-		            });
-		            popupMenu.add(v3dMenuItem);
-	            }
-	            
-//	            if (!entity.hasChildren()) {
-//			        JMenuItem detailsMenuItem = new JMenuItem("  View details");
-//		            detailsMenuItem.addActionListener(new ActionListener() {
-//		                public void actionPerformed(ActionEvent actionEvent) {
-//		    				// "View details" triggers an outline selection
-//		    				ModelMgr.getModelMgr().selectEntity(entity.getId(), true);
-//		                }
-//		            });
-//		            popupMenu.add(detailsMenuItem);
-//	            }
-	            
+	            JPopupMenu popupMenu = new EntityContextMenu(entity);
 		        popupMenu.show(AnnotatedImageButton.this, e.getX(), e.getY());
 			}
 

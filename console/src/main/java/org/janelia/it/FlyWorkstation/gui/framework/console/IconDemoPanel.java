@@ -34,6 +34,9 @@ import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 
+import sun.awt.CausedFocusEvent;
+import sun.awt.CausedFocusEvent.Cause;
+
 /**
  * This panel shows images for annotation. It may show a bunch of images at once, or a single image.
  *
@@ -52,12 +55,10 @@ public class IconDemoPanel extends JPanel {
     private JToggleButton hideCompletedButton; 
     
     private ImagesPanel imagesPanel;
-    private ImageDetailPanel imageDetailPanel;
     private AnnotationDetailsDialog annotationDetailsDialog;
 
     private List<Entity> entities;
     private Entity currentEntity;
-    private boolean viewingSingleImage = true;
     private double currImageSize = 1.0;
     
     private final List<String> allUsers = new ArrayList<String>();
@@ -73,15 +74,25 @@ public class IconDemoPanel extends JPanel {
         public void keyPressed(KeyEvent e) {
             if (e.getID() == KeyEvent.KEY_PRESSED) {
                 if (KeymapUtil.isModifier(e)) return;
-
+                
+                Entity entity = null;
+                
                 KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
                 if (!SessionMgr.getKeyBindings().executeBinding(shortcut)) {
 	                if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-	                    previousEntity();
+	                	entity = getPreviousEntity();
 	                }
 	                else if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-	                    nextEntity();
+	                	entity = getNextEntity();
 	                }
+                }
+                
+                if (entity != null) {
+            		AnnotatedImageButton button = imagesPanel.getButtonByEntityId(entity.getId());
+                    if (button != null) {
+                    	button.requestFocus();
+                    	imagesPanel.scrollEntityToCenter(entity);
+                    }
                 }
                 
                 revalidate();
@@ -95,9 +106,13 @@ public class IconDemoPanel extends JPanel {
         public void focusGained(FocusEvent e) {
         	AnnotatedImageButton button = (AnnotatedImageButton)e.getSource();
 			ModelMgr.getModelMgr().selectEntity(button.getEntity().getId(), false);
-
-            // Scroll to the newly focused button
-            imagesPanel.scrollEntityToCenter(button.getEntity());
+        	if (e instanceof CausedFocusEvent) {
+        		CausedFocusEvent cfe = (CausedFocusEvent)e;
+        		if (cfe.getCause()==Cause.TRAVERSAL_FORWARD || cfe.getCause()==Cause.TRAVERSAL_BACKWARD) {
+        			imagesPanel.scrollEntityToCenter(getCurrentEntity());
+        		}
+        		
+        	}
         }
     };
     
@@ -115,7 +130,6 @@ public class IconDemoPanel extends JPanel {
         imagesPanel.setButtonKeyListener(keyListener);
         imagesPanel.setButtonFocusListener(buttonFocusListener);
         
-        imageDetailPanel = new ImageDetailPanel(this);
         annotationDetailsDialog = new AnnotationDetailsDialog();
         
         slider.addChangeListener(new ChangeListener() {
@@ -604,9 +618,6 @@ public class IconDemoPanel extends JPanel {
     		if (!allUsers.contains(annotation.getOwner())) allUsers.add(annotation.getOwner());
     	}
     	Collections.sort(allUsers);
-    	
-    	// Refresh the UI
-        if (viewingSingleImage) imageDetailPanel.loadAnnotations(annotations);
         
     	if (entity == null) {
 	        imagesPanel.loadAnnotations(annotations);
@@ -620,7 +631,6 @@ public class IconDemoPanel extends JPanel {
     public synchronized void clear() {
     	this.entities = null;
     	this.currentEntity = null;
-    	this.viewingSingleImage = false;
         removeAll();
         add(splashPanel, BorderLayout.CENTER);
         
@@ -630,7 +640,6 @@ public class IconDemoPanel extends JPanel {
 
     public synchronized void showAllEntities() {
     	
-        viewingSingleImage = false;
         removeAll();
         add(toolbar, BorderLayout.NORTH);
         add(imagesPanel, BorderLayout.CENTER);
@@ -650,54 +659,27 @@ public class IconDemoPanel extends JPanel {
         // Focus on the panel so that it can receive keyboard input
         requestFocusInWindow();
     }
-	
-    public synchronized void showCurrentEntityDetails() {
-        
-    	if (currentEntity == null) return;
 
-    	imageDetailPanel.load(currentEntity);
-    	if (annotations != null) {
-        	imageDetailPanel.loadAnnotations(annotations);
-        }
-    	
-    	if (!viewingSingleImage) {
-            viewingSingleImage = true;
-            removeAll();
-            add(imageDetailPanel);
-            imageDetailPanel.getIndexButton().setEnabled(true);
-            imageDetailPanel.getPrevButton().setEnabled(entities.size()>1);
-            imageDetailPanel.getNextButton().setEnabled(entities.size()>1);
-        }
-
-        revalidate();
-        repaint();
-        
-        // Focus on the panel so that it can receive keyboard input
-        requestFocusInWindow();
-    }
-
-    public synchronized boolean previousEntity() {
+    public Entity getPreviousEntity() {
         List<Entity> entities = getEntities();
         int i = entities.indexOf(currentEntity);
         if (i < 1) {
             // Already at the beginning
-            return false;
+            return null;
         }
-        ModelMgr.getModelMgr().selectEntity(entities.get(i - 1).getId(), false);
-        return true;
+        return entities.get(i - 1);
     }
 
-    public synchronized boolean nextEntity() {
+    public Entity getNextEntity() {
         List<Entity> entities = getEntities();
         int i = entities.indexOf(currentEntity);
         if (i > entities.size() - 2) {
             // Already at the end
-            return false;
+            return null;
         }
-		ModelMgr.getModelMgr().selectEntity(entities.get(i + 1).getId(), false);
-        return true;
+        return entities.get(i + 1);
     }
-
+    
     public synchronized List<Entity> getEntities() {
         return entities;
     }
@@ -722,11 +704,7 @@ public class IconDemoPanel extends JPanel {
     public ImagesPanel getImagesPanel() {
         return imagesPanel;
     }
-
-    public ImageDetailPanel getImageDetailPanel() {
-        return imageDetailPanel;
-    }
-
+    
     public KeyListener getKeyListener() {
         return keyListener;
     }
