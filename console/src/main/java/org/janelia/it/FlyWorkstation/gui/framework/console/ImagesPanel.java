@@ -201,6 +201,8 @@ public class ImagesPanel extends JScrollPane {
 	
 	public void scrollEntityToCenter(Entity entity) {
 	    
+		if (entity == null) return;
+		
 	    JViewport viewport = getViewport();
     	AnnotatedImageButton selectedButton = getButtonByEntityId(entity.getId());
     	if (selectedButton == null) return;

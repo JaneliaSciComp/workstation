@@ -281,12 +281,15 @@ public class DynamicImagePanel extends JPanel {
     
     private synchronized void loadError(Throwable error) {
         if (error instanceof FileNotFoundException) {
+        	System.out.println("File not found: "+imageFilename);
         	errorLabel.setText("File not found");
         }
         else if (error.getCause()!=null && (error.getCause() instanceof FormatException)) {
+        	System.out.println("File not found: "+imageFilename);
             errorLabel.setText("Image format not supported");
         }
         else {
+        	System.out.println("Image could not be loaded: "+imageFilename);
         	error.printStackTrace();
             errorLabel.setText("Image could not be loaded");
         }

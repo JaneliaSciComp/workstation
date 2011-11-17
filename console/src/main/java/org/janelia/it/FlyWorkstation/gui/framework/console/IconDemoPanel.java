@@ -46,13 +46,15 @@ public class IconDemoPanel extends JPanel {
 
     private SplashPanel splashPanel;
     private JToolBar toolbar;
+    private JButton prevButton;
+    private JButton nextButton;
     private JToggleButton showTitlesButton;
     private JToggleButton showTagsButton;
+    private JToggleButton invertButton;
+    private JToggleButton hideCompletedButton; 
+    private JToggleButton onlySessionButton;
     private JButton userButton;
     private JSlider slider;
-    private JToggleButton invertButton;
-    private JToggleButton onlySessionButton;
-    private JToggleButton hideCompletedButton; 
     
     private ImagesPanel imagesPanel;
     private AnnotationDetailsDialog annotationDetailsDialog;
@@ -67,6 +69,10 @@ public class IconDemoPanel extends JPanel {
 
     private SimpleWorker entityLoadingWorker;
     private SimpleWorker annotationLoadingWorker;
+    
+    private List<Long> history = new ArrayList<Long>();
+    private int historyPosition = -1;
+    private Long entityIdToView = null;
     
     // Listen for key strokes and execute the appropriate key bindings
     private final KeyListener keyListener = new KeyAdapter() {
@@ -241,6 +247,7 @@ public class IconDemoPanel extends JPanel {
 					
 					@Override
 					protected void hadSuccess() {
+						pushHistory(entity);
 		        		loadImageEntities(entitiesToLoad);
 					}
 					
@@ -276,12 +283,83 @@ public class IconDemoPanel extends JPanel {
     	
     }
     
+    private synchronized void goBack() {
+    	if (entityIdToView != null) {
+    		System.out.println("Warning: the Back button state is out of sync. This should never happen, but we'll attempt to recover.");
+    		entityIdToView = null;
+    		return;
+    	}
+    	if (historyPosition > 0) {
+    		historyPosition--;
+    		entityIdToView = history.get(historyPosition);
+    		prevButton.setEnabled(false);
+    		nextButton.setEnabled(false);
+    		ModelMgr.getModelMgr().selectEntity(entityIdToView, true);
+    	}    	
+    }
+
+    private synchronized void goForward() {
+    	if (entityIdToView != null) {
+    		System.out.println("Warning: the Forward button state is out of sync. This should never happen, but we'll attempt to recover.");
+    		entityIdToView = null;
+    		return;
+    	}
+    	if (historyPosition < history.size()-1) {
+    		historyPosition++;
+    		entityIdToView = history.get(historyPosition);
+    		prevButton.setEnabled(false);
+    		nextButton.setEnabled(false);
+    		ModelMgr.getModelMgr().selectEntity(entityIdToView, true);	
+    	}
+    }
+    
+    private synchronized void pushHistory(Entity entity) {
+    	if (entityIdToView != null && entityIdToView.equals(entity.getId())) {
+    		// Just going backwards, so the historyPosition has already been updated. 
+    		// Just clear out the marker and we're done.
+    		entityIdToView = null;
+    	}
+    	else {
+        	// Clear out history in the future direction
+        	history = history.subList(0, historyPosition+1);
+        	// Add the new entity to the end of the list
+        	history.add(entity.getId());
+        	historyPosition = history.size()-1;
+    	}
+		prevButton.setEnabled(historyPosition > 0);
+		nextButton.setEnabled(historyPosition < history.size()-1);
+    }
+    
     private JToolBar createToolbar() {
 
         JToolBar toolBar = new JToolBar("Still draggable");
         toolBar.setFloatable(true);
         toolBar.setRollover(true);
 
+        prevButton = new JButton();
+        prevButton.setIcon(Icons.getIcon("arrow_back.gif"));
+        prevButton.setToolTipText("Go back in your browsing history");
+        prevButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+            	goBack();
+            }
+        });
+        toolBar.add(prevButton);
+
+        nextButton = new JButton();
+        nextButton.setIcon(Icons.getIcon("arrow_forward.gif"));
+        nextButton.setToolTipText("Go forward in your browsing history");
+        nextButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+            	goForward();
+            }
+        });
+        toolBar.add(nextButton);
+
+        toolBar.addSeparator();
+        
         invertButton = new JToggleButton();
         invertButton.setIcon(Icons.getIcon("invert.png"));
         invertButton.setFocusable(false);
@@ -453,7 +531,8 @@ public class IconDemoPanel extends JPanel {
 		imagesPanel.setScrollLoadingEnabled(false);
 		
 		// Reset the zoom level
-		slider.setValue(ImagesPanel.DEFAULT_THUMBNAIL_SIZE);
+		// TODO: make this an option
+		//slider.setValue(ImagesPanel.DEFAULT_THUMBNAIL_SIZE);
 		
 		// Reset the current entity
 		currentEntity = null;
