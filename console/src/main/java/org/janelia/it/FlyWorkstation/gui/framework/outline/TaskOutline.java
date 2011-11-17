@@ -6,6 +6,21 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.TaskDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
@@ -19,30 +34,18 @@ import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
 
-import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.TableCellRenderer;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.util.*;
-import java.util.List;
-import java.util.Timer;
-
 /**
  * Provides a list of the user's Tasks and provides ways to manipulate and view them.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class TaskOutline extends JPanel {
+public class TaskOutline extends JPanel implements Outline {
 
     private static final String COLUMN_NAME = "Name";
     private static final String COLUMN_STATUS = "Status";
-
-    private static final int REFRESH_SECS = 10;
     
     private Browser consoleFrame;
+    private JButton refreshButton;
     private JToggleButton hideCompletedButton;
     private final JPanel tablePanel;
     private final TaskDetailsDialog detailsDialog = new TaskDetailsDialog();
@@ -52,7 +55,6 @@ public class TaskOutline extends JPanel {
     private Task selectedTask;
     private DynamicTable dynamicTable;
     private SimpleWorker loadingWorker;
-    private Timer refreshTimer;
 
     private TableCellRenderer taskTableCellRenderer = new DefaultTableCellRenderer() {
         
@@ -90,19 +92,14 @@ public class TaskOutline extends JPanel {
         showLoadingIndicator();
         this.updateUI();
         loadTasks();
-        
-        TimerTask refreshTask = new TimerTask() {
-			@Override
-			public void run() {
-		        loadTasks();
-			}
-		};
-		
-		refreshTimer = new Timer();
-        refreshTimer.schedule(refreshTask, REFRESH_SECS*1000, REFRESH_SECS*1000);
     }
 
-    public synchronized void showLoadingIndicator() {
+    @Override
+	public void refresh() {
+    	loadTasks();
+	}
+
+	public synchronized void showLoadingIndicator() {
         tablePanel.removeAll();
         tablePanel.add(new JLabel(Icons.getLoadingIcon()));
     }
@@ -299,6 +296,17 @@ public class TaskOutline extends JPanel {
         toolBar.setFloatable(false);
         toolBar.setRollover(false);
 
+        refreshButton = new JButton(Icons.getRefreshIcon());
+        refreshButton.setToolTipText("Refresh the data in this view.");
+        refreshButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+		        refresh();
+			}
+		});
+        refreshButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
+        toolBar.add(refreshButton);
+        
         hideCompletedButton = new JToggleButton();
         hideCompletedButton.setSelected(true); // selected by default
         hideCompletedButton.setIcon(Icons.getIcon("page_white_go.png"));

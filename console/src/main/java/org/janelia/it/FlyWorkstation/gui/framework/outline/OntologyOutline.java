@@ -43,7 +43,7 @@ import org.janelia.it.jacs.model.ontology.types.Enum;
  * @author saffordt
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class OntologyOutline extends OntologyTree implements ActionListener {
+public class OntologyOutline extends OntologyTree implements ActionListener, Outline {
 
     private static final String ADD_COMMAND = "add";
     private static final String REMOVE_COMMAND = "remove";
@@ -184,7 +184,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener {
 		});
         ontologyManager.preload();
     }
-    
+
     public void loadOntology(long rootId) {
     	if (getCurrentOntology()!=null && getCurrentOntology().getId().equals(rootId)) return;
     	initializeTree(rootId, null);
@@ -285,7 +285,8 @@ public class OntologyOutline extends OntologyTree implements ActionListener {
     /**
      * Reload the data for the current tree.
      */
-    protected void refresh() {
+    @Override
+	public void refresh() {
     	if (getRootEntity()!=null) {
             Utils.setWaitingCursor(OntologyOutline.this);
         	final ExpansionState expansionState = new ExpansionState();

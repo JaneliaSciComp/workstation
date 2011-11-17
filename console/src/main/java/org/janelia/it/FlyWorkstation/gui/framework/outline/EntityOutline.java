@@ -31,7 +31,7 @@ import org.janelia.it.jacs.model.entity.EntityType;
  * Time: 2:09 PM
  * This class is the initial outline of the data file tree
  */
-public abstract class EntityOutline extends EntityTree implements Cloneable {
+public abstract class EntityOutline extends EntityTree implements Cloneable, Outline {
     
     private List<Entity> entityRootList;
     private Entity selectedEntity;
@@ -225,7 +225,8 @@ public abstract class EntityOutline extends EntityTree implements Cloneable {
     /**
      * Reload the data for the current tree.
      */
-    protected void refresh() {
+    @Override
+	public void refresh() {
     	if (entityRootList == null || entityRootList.isEmpty()) {
             SimpleWorker entityOutlineLoadingWorker = new SimpleWorker() {
 

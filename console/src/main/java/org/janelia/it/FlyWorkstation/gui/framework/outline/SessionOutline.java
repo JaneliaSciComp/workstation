@@ -34,7 +34,7 @@ import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class SessionOutline extends JPanel {
+public class SessionOutline extends JPanel implements Outline {
 
     private static final String COLUMN_NAME = "Name";
     private static final String COLUMN_PCT_COMPLETE = "% Complete";
@@ -85,6 +85,20 @@ public class SessionOutline extends JPanel {
         });
         
         loadAnnotationSessions(null);
+    }
+    
+    @Override
+	public void refresh() {
+        loadAnnotationSessions(new Callable<Void>() {
+			public Void call() throws Exception {
+				// Wait until the sessions are loaded before getting the current one and reselecting it
+				AnnotationSession session = ModelMgr.getModelMgr().getCurrentAnnotationSession();
+				if (session != null) {
+					selectSessionById(session.getId());	
+				}
+				return null;
+			}
+        });
     }
 
     public void showLoadingIndicator() {

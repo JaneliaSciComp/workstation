@@ -62,6 +62,11 @@ public class JOutlookBar extends JPanel implements ActionListener {
         render();
     }
 
+    public JComponent getBar(String name) {
+        return bars.get(name).getComponent();
+    }
+    
+    
     /**
      * Adds the specified component to the JOutlookBar and sets the bar's name
      *
@@ -95,6 +100,17 @@ public class JOutlookBar extends JPanel implements ActionListener {
         return this.visibleBar;
     }
 
+    public String getVisibleBarName() {
+        int count = -1;
+        for (String bar : bars.keySet()) {
+            count++;
+            if (visibleBar == count) {
+            	return bar;
+            }
+        }
+        return null;
+    }
+    
     /**
      * Programmatically sets the currently visible bar; the visible bar
      * index must be in the range of 0 to size() - 1
@@ -102,9 +118,11 @@ public class JOutlookBar extends JPanel implements ActionListener {
      * @param visibleBar The zero-based index of the component to make visible
      */
     public void setVisibleBar(int visibleBar) {
-        if (visibleBar > 0 && visibleBar < this.bars.size() - 1) {
+        if (visibleBar >= 0 && visibleBar < this.bars.size()) {
+        	int oldValue = this.visibleBar;
             this.visibleBar = visibleBar;
             render();
+            firePropertyChange("visibleBar", oldValue, visibleBar);
         }
     }
 
@@ -119,8 +137,7 @@ public class JOutlookBar extends JPanel implements ActionListener {
         for (String bar : bars.keySet()) {
             count++;
             if (bar.equals(desiredBarName)) {
-                this.visibleBar = count;
-                render();
+            	setVisibleBar(count);
                 break;
             }
         }
@@ -194,8 +211,7 @@ public class JOutlookBar extends JPanel implements ActionListener {
             BarInfo barInfo = (BarInfo) this.bars.get(barName);
             if (barInfo.getButton() == e.getSource()) {
                 // Found the selected button
-                this.visibleBar = currentBar;
-                render();
+                setVisibleBar(currentBar);
                 return;
             }
             currentBar++;
