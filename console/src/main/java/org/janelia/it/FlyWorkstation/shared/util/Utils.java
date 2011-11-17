@@ -47,9 +47,6 @@ import org.janelia.it.jacs.model.entity.EntityData;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class Utils {
-
-    private static final String JACS_DATA_PATH_MAC = ConsoleProperties.getString("remote.defaultMacPath");
-    private static final String JACS_DATA_PATH_LINUX = ConsoleProperties.getString("remote.defaultLinuxPath");
     
     public static ImageIcon grabOpenedIcon;
     public static ImageIcon grabClosedIcon;
@@ -126,11 +123,7 @@ public class Utils {
     public static boolean isEmpty(String str) {
         return (str == null || "".equals(str));
     }
-
-    public static String convertJacsPathLinuxToMac(String filepath) {
-        return filepath.replace(JACS_DATA_PATH_LINUX, JACS_DATA_PATH_MAC);
-    }
-
+    
     /**
      * Borrowed from http://www.pikopong.com/blog/2008/08/13/auto-resize-jtable-column-width/
      *

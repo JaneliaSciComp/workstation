@@ -31,7 +31,7 @@ public class DynamicImageButton extends AnnotatedImageButton {
         	throw new IllegalStateException("Entity has no filepath");
         }
         
-        File file = new File(PathTranslator.convertImagePath(filepath));
+        File file = new File(PathTranslator.convertPath(filepath));
         this.dynamicImagePanel = new DynamicImagePanel(file.getAbsolutePath(), ImagesPanel.MAX_THUMBNAIL_SIZE);
         return dynamicImagePanel;
     }

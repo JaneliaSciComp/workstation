@@ -20,6 +20,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.keybind.OntologyKeyBindings;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.ExternalClient;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
@@ -145,11 +146,11 @@ public class ConsoleDataServiceImpl {
 	}
 	
     public Entity getEntityById(long entityId) throws Exception {
-        return ModelMgr.getModelMgr().getEntityById(""+entityId);
+        return PathTranslator.translatePathsToCurrentPlatform(ModelMgr.getModelMgr().getEntityById(""+entityId));
     }
 
 	public Entity getEntityTree(long entityId) throws Exception {
-        return ModelMgr.getModelMgr().getEntityTree(entityId);
+        return PathTranslator.translatePathsToCurrentPlatform(ModelMgr.getModelMgr().getEntityTree(entityId));
     }
 
 //    public List<EntityType> getEntityTypes() {

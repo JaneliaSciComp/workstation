@@ -251,7 +251,7 @@ public class ImageDetailPanel extends JPanel {
         
         String imageFilename = Utils.getDefaultImageFilePath(entity);
         if (imageFilename!=null) {
-            imageComponent = new DynamicImagePanel(PathTranslator.convertImagePath(imageFilename));
+            imageComponent = new DynamicImagePanel(PathTranslator.convertPath(imageFilename));
             final DynamicImagePanel dynamicImagePanel = ((DynamicImagePanel)imageComponent);
             dynamicImagePanel.setViewable(true, new Callable<Void>() {
 				@Override
