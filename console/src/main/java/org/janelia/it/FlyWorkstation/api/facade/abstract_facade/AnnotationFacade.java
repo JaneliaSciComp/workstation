@@ -34,4 +34,7 @@ public interface AnnotationFacade extends EntityFacade {
     public void createEntityAttribute(String typeName, String attrName) throws Exception;
     
     public Entity getAncestorWithType(Entity entity, String typeName) throws Exception;
+
+	public List<List<Long>> searchTreeForNameStartingWith(Long rootId, String searchString) throws Exception;
+
 }

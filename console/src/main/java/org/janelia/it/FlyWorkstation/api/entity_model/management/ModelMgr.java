@@ -496,6 +496,10 @@ public class ModelMgr {
     public Entity getAncestorWithType(Entity entity, String type) throws Exception {
         return FacadeManager.getFacadeManager().getAnnotationFacade().getAncestorWithType(entity, type);
     }
+
+    public List<List<Long>> searchTreeForNameStartingWith(Long rootId, String searchString) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().searchTreeForNameStartingWith(rootId, searchString);
+    }
     
     public Entity saveOrUpdateEntity(Entity entity) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().saveEntity(entity);

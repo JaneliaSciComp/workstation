@@ -37,7 +37,7 @@ public class DynamicTree extends JPanel {
     protected final JTree tree;
     protected boolean lazyLoading;
     protected DynamicTreeToolbar toolbar;
-    protected DynamicTreeSearcher searcher;
+    protected LazyTreeSearcher searcher;
     
     public DynamicTree(Object userObject) {
         this(userObject, true, false);
@@ -530,7 +530,12 @@ public class DynamicTree extends JPanel {
         	}
         }
         
-        searcher = new DynamicTreeSearcher(this, searchString, startingNode, bias, skipStartingNode) {
+//        searcher = new DynamicTreeSearcher(this, searchString, startingNode) {
+//
+//			@Override
+//			protected void foundPath(List<Long> finalMatch) {
+
+        searcher = new LazyTreeSearcher(this, searchString, startingNode, bias, skipStartingNode) {
 
 			@Override
         	protected void foundNode(DefaultMutableTreeNode matchingNode) {

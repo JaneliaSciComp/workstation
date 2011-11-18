@@ -3,17 +3,16 @@ package org.janelia.it.FlyWorkstation.gui.framework.tree;
 import java.util.Collections;
 import java.util.List;
 
-import javax.swing.text.Position.Bias;
 import javax.swing.tree.DefaultMutableTreeNode;
 
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.jacs.model.entity.Entity;
 
 
 /**
- * Searches a tree model forward or backward to find nodes matching some search string. This code runs as a background 
- * thread, allowing it to perform computation asynchronously, such as loading lazy nodes as needed. When creating an 
- * instance of this searchers you should implement foundNode() and probably override hadError() as well. Then simply 
- * call execute() and wait for your callbacks to be called.
+ * Searches a large entity tree model by mapping database query results onto the current tree.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -23,131 +22,136 @@ public abstract class DynamicTreeSearcher extends SimpleWorker {
     private final DynamicTree dynamicTree;
     private final String searchString;
     private final DefaultMutableTreeNode startingNode;
-    private final Bias bias;
 
     // Internal search state
-    private boolean skipStartingNode = false;
-    private DefaultMutableTreeNode firstMatch;
-    private boolean looking = false;
     private boolean hasRun = false;
-    
-    // Final result
-    private DefaultMutableTreeNode matchingNode;
+    private boolean looking = false;
+    private List<Long> firstMatch;
+    private List<Long> finalMatch;
     
     /**
      * Create a new searcher. Searchers are not reusable, you must create a new one for each search.
      * @param dynamicTree the tree to be searched
      * @param searchString the string to search for
      * @param startingNode the node at which to start searching
-     * @param bias Search backwards or forwards from the startingNode? Defaults to forwards.
      * @param skipStartingNode start matching with the starting node, or skip it?
      */
-    public DynamicTreeSearcher(DynamicTree dynamicTree, String searchString, DefaultMutableTreeNode startingNode, 
-    		Bias bias, boolean skipStartingNode) {
+    public DynamicTreeSearcher(DynamicTree dynamicTree, String searchString, DefaultMutableTreeNode startingNode) {
         this.dynamicTree = dynamicTree;
         this.searchString = searchString.toUpperCase();
         this.startingNode = startingNode;
-        this.bias = bias == null ? Bias.Forward : bias;
-        this.skipStartingNode = skipStartingNode;
     }
 
-    /**
-     * Execute the search and return the first matching node found. 
-     * @return
-     */
-    protected DefaultMutableTreeNode find() throws Exception {
+    protected List<Long> find() throws Exception {
         if (hasRun) throw new IllegalStateException("Cannot reuse TreeSearcher once it has been run.");
         hasRun = true;
-        DefaultMutableTreeNode foundNode = find((DefaultMutableTreeNode) dynamicTree.getRootNode());
-        if (foundNode != null) {
-            return foundNode;
+        
+        Entity rootEntity = (Entity)dynamicTree.getRootNode().getUserObject();
+        
+        List<List<Long>> matchingPaths = ModelMgr.getModelMgr().searchTreeForNameStartingWith(rootEntity.getId(), searchString);
+
+        if (matchingPaths.isEmpty()) {
+        	System.out.println("No matches");
+        	return null;
         }
+        
+    	for(List<Long> path : matchingPaths) {
+        	System.out.println("Potential path: "+Utils.join(path, ","));
+    	}
+    	
+        if (find(dynamicTree.getRootNode(), matchingPaths, 0) && finalMatch!=null) {
+			System.out.println("Got a final match "+Utils.join(finalMatch, ","));
+            return finalMatch;
+        }
+
+        if (firstMatch!=null)
+        	System.out.println("Going with first match "+Utils.join(firstMatch, ","));
+        else 
+        	System.out.println("No match");
+        
         return firstMatch;
     }
 
-    /**
-     * 
-     * @param currNode
-     * @return
-     */
-    protected DefaultMutableTreeNode find(DefaultMutableTreeNode currNode) throws Exception {
+    protected boolean find(DefaultMutableTreeNode currNode, List<List<Long>> paths, int level) throws Exception {
     	
-    	if (isCancelled()) return null;
+    	if (isCancelled()) return false;
     	
-    	// Searching background, so check the current node first (it comes before its children)
-        if (bias == Bias.Forward) {
-            DefaultMutableTreeNode found = checkCurrent(currNode);
-            if (found != null) return found;
-        }
+    	StringBuffer indent = new StringBuffer();
+    	for(int i=0; i<level; i++) {
+    		indent.append("  ");
+    	}
+    	
+    	if (startingNode.equals(currNode)) {
+			System.out.println(indent+">Found starting node, starting to look");
+    		looking = true;
+    	}
+    	
+        Entity entity = (Entity)currNode.getUserObject();
 
-        // Load children if necessary
-        if (!dynamicTree.childrenAreLoaded(currNode)) {
-        	// We're already running in a background thread, so we can load synchronously
-        	LazyTreeNodeLoader loader = new LazyTreeNodeLoader(dynamicTree, currNode, false);
-        	loader.loadSynchronously();
-        }
+    	System.out.println(indent+"Searching "+currNode+" ("+entity.getId()+")");
         
-        if (isCancelled()) return null;
-        
-        // Now we can retrieve the children
-        List<DefaultMutableTreeNode> children = Collections.list(currNode.children());
-        
-        // If we're searching backward then we have to walk the children in reverse order
-        if (bias == Bias.Backward) Collections.reverse(children);
-        
-        for (DefaultMutableTreeNode child : children) {
-            DefaultMutableTreeNode found = find(child);
-            if (found != null) return found;
-        }
+    	for(List<Long> path : paths) {
 
-        // Searching background, so check the current node last (it comes before its children)
-        if (bias == Bias.Backward) {
-            DefaultMutableTreeNode found = checkCurrent(currNode);
-            if (found != null) return found;
-        }
-
-        return null;
-    }
-
-    /**
-     * 
-     * @param currNode
-     * @return
-     */
-    protected DefaultMutableTreeNode checkCurrent(DefaultMutableTreeNode currNode) {
-
-    	// Begin actually looking only once we get to the starting node
-        if (currNode.equals(startingNode)) {
-            looking = true;
-        }
-
-        if (currNode.getUserObject().toString().toUpperCase().contains(searchString)) {
-            // Found a match
-        	
-            if (looking && (!skipStartingNode || (skipStartingNode && !currNode.equals(startingNode)))) {
-            	// This is a good match
-                return currNode;
-            }
-            else if (firstMatch == null) {
-            	// We need to use this match if we wrap around without finding anything past the starting node
-                firstMatch = currNode;
-            }
-        }
-        return null;
+    		if (!path.isEmpty() && path.get(level).equals(entity.getId())) {
+            	System.out.println(indent+">Matching path: "+Utils.join(path, ","));
+            	
+    			// This path matches so far
+    			if (level == path.size()-1) {
+    				System.out.println(indent+">Path matches completely");
+    				// We've reached the end of the road
+    				if (looking) {
+        				System.out.println(indent+">final match");
+    					finalMatch = path;
+        		    	return true;
+    				}
+    				else if (firstMatch==null) {
+    					System.out.println(indent+">first match");
+    					firstMatch = path;
+    				}
+    			}
+    			else {
+    				System.out.println(indent+">Path matches partially");
+    				if (dynamicTree.childrenAreLoaded(currNode)) {
+        				// We're on the right track, keep recursing
+        		        List<DefaultMutableTreeNode> children = Collections.list(currNode.children());
+        		        for (DefaultMutableTreeNode child : children) {        		            
+        		            if (find(child, paths, level+1)) {
+        		            	return true;
+        		            }
+        		        }
+    				}
+    				else {
+        				System.out.println(indent+">Lazy nodes encountered");
+    					// Blocked by lazy nodes. If we're looking, then this is our path. Otherwise, let's keep going.
+        				if (looking) {
+            				System.out.println(indent+">final match");
+        					finalMatch = path;
+            		    	return true;
+        				}
+        				else if (firstMatch==null) {
+        					System.out.println(indent+">first match");
+        					firstMatch = path;
+        				}
+    				}
+    			}
+    		}
+    	}
+    	
+        return false;
     }
 
 	@Override
 	protected void doStuff() throws Exception {
-		matchingNode = find();
+		finalMatch = find();
 	}
 
 	@Override
 	protected void hadSuccess() {
-		if (matchingNode != null) foundNode(matchingNode);
+		if (finalMatch != null) foundPath(finalMatch);
 		else noMatches();
 	}
 
-	protected abstract void foundNode(DefaultMutableTreeNode matchingNode);
+	protected abstract void foundPath(List<Long> finalMatch);
 
 	protected abstract void noMatches();
 	

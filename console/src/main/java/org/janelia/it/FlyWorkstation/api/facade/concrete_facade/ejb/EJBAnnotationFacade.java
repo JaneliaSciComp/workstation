@@ -71,4 +71,8 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
     public Entity getAncestorWithType(Entity entity, String typeName) throws Exception {
     	return EJBFactory.getRemoteAnnotationBean().getAncestorWithType(entity, typeName);
     }
+	public List<List<Long>> searchTreeForNameStartingWith(Long rootId, String searchString) throws Exception {
+    	return EJBFactory.getRemoteAnnotationBean().searchTreeForNameStartingWith(rootId, searchString);
+	}
+	
 }

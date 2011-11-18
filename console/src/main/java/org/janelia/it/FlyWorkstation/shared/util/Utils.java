@@ -14,10 +14,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.List;
 
 import javax.media.jai.operator.InvertDescriptor;
 import javax.swing.ImageIcon;
@@ -36,7 +34,6 @@ import loci.formats.in.TiffReader;
 
 import org.hibernate.Hibernate;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -122,6 +119,15 @@ public class Utils {
     
     public static boolean isEmpty(String str) {
         return (str == null || "".equals(str));
+    }
+    
+    public static String join(List list, String delim) {
+    	StringBuffer buf = new StringBuffer();
+    	for(Object obj : list) {
+    		if (buf.length()>0) buf.append(delim);
+    		buf.append(obj.toString());
+    	}	
+    	return buf.toString();
     }
     
     /**
