@@ -156,6 +156,22 @@ public class EntityListPane extends JPanel {
 	                toDelete.add(entities.get(i));
 	            }
 
+            	boolean su = false;
+	            for (Entity entity : toDelete) {
+                	if (!SessionMgr.getUsername().equals(entity.getUser().getUserLogin())) {
+        	            int overrideConfirmation = confirm("Override owner "+entity.getUser().getUserLogin()+" to delete "+entity.getName()+"?");
+        	            if (overrideConfirmation != 0) {
+        	                continue;
+        	            }
+        	            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, entity.getUser().getUserLogin());
+        	            su = true;
+        	            break;
+                	}
+	            }
+	            
+	            final boolean didSu = su;
+	            final String realUsername = SessionMgr.getUsername();
+	            
 	            Utils.setWaitingCursor(DataviewApp.getMainFrame());
 	            
 	            SimpleWorker loadTask = new SimpleWorker() {
@@ -164,27 +180,16 @@ public class EntityListPane extends JPanel {
 	                protected void doStuff() throws Exception {
 	    	            // Update database
 	    	            for (Entity entity : toDelete) {
-    	                	boolean su = false;
-    	                	String realUsername = SessionMgr.getUsername();
-    	                	if (!SessionMgr.getUsername().equals(entity.getUser().getUserLogin())) {
-    	        	            int overrideConfirmation = confirm("Override owner "+entity.getUser().getUserLogin()+" to delete "+entity.getName()+"?");
-    	        	            if (overrideConfirmation != 0) {
-    	        	                continue;
-    	        	            }
-    	        	            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, entity.getUser().getUserLogin());
-    	        	            su = true;
-    	                	}
-    	                	
+	    	            	System.out.println("Deleting "+entity.getId());
     	                    ModelMgr.getModelMgr().deleteEntityTree(entity.getId());
-    	                    
-    	                    if (su) {
-    	        	            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, realUsername);
-    	                    }
 	    	            }
 	                }
 
 	                @Override
 	                protected void hadSuccess() {
+	                    if (didSu) {
+	        	            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, realUsername);
+	                    }
 	                	Utils.setDefaultCursor(DataviewApp.getMainFrame());
 	    	            reshow();
 	                }
