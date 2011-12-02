@@ -171,6 +171,7 @@ public class Icons {
         else if (EntityConstants.TYPE_TIF_3D.equals(type) 
         		|| EntityConstants.TYPE_LSM_STACK.equals(type) 
         		|| EntityConstants.TYPE_TIF_3D_LABEL_MASK.equals(type) 
+        		|| EntityConstants.TYPE_IMAGE_3D.equals(type) 
         		|| EntityConstants.TYPE_STITCHED_V3D_RAW.equals(type)) {
             return getIcon(large ? "file_large.png" : "images.png");
         }
