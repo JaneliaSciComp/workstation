@@ -1,0 +1,31 @@
+<project>
+   <modelVersion>4.0.0</modelVersion>
+   <groupId>org.janelia.it.FlyWorkstation</groupId>
+   <version>1.0</version>
+   <artifactId>project</artifactId>
+   <packaging>pom</packaging>
+   <name>FlyWorkstation</name>
+   <modules>
+      <module>console</module>
+   </modules>
+   <build>
+      <pluginManagement>
+         <plugins>
+            <plugin>
+               <groupId>org.apache.maven.plugins</groupId>
+               <artifactId>maven-site-plugin</artifactId>
+               <configuration>
+                  <unzipCommand>/usr/bin/unzip -o > err.txt</unzipCommand>
+               </configuration>
+            </plugin>
+         </plugins>
+      </pluginManagement>
+   </build>
+   <distributionManagement>
+      <site>
+         <id>site</id>
+         <name>project website</name>
+         <url>scp://local.company.com/websites/project.company.com/</url>
+      </site>
+   </distributionManagement>
+</project>
