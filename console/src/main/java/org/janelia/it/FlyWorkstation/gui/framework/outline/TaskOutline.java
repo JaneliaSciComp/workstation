@@ -215,16 +215,15 @@ public class TaskOutline extends JPanel implements Outline {
 	                
                 }
                 
-//        		ListSelectionModel lsm = dynamicTable.getTable().getSelectionModel();
-//        		if (lsm.getMinSelectionIndex() != lsm.getMaxSelectionIndex() || !task.isDone()) {
-//	                JMenuItem deleteMenuItem = new JMenuItem("  Cancel");
-//	                deleteMenuItem.addActionListener(new ActionListener() {
-//	                    public void actionPerformed(ActionEvent actionEvent) {
-//	                        cancelTasks();
-//	                    }
-//	                });
-//	                popupMenu.add(deleteMenuItem);
-//            	}
+        		if (lsm.getMinSelectionIndex() != lsm.getMaxSelectionIndex() || !task.isDone()) {
+	                JMenuItem deleteMenuItem = new JMenuItem("  Cancel");
+	                deleteMenuItem.addActionListener(new ActionListener() {
+	                    public void actionPerformed(ActionEvent actionEvent) {
+	                        cancelTasks();
+	                    }
+	                });
+	                popupMenu.add(deleteMenuItem);
+            	}
                 
                 JMenuItem deleteMenuItem = new JMenuItem("  Delete");
                 deleteMenuItem.addActionListener(new ActionListener() {
@@ -323,37 +322,37 @@ public class TaskOutline extends JPanel implements Outline {
         return toolBar;
 	}
 	
-//	private synchronized void cancelTasks() {
-//
-//        final List<Task> toCancel = new ArrayList<Task>();
-//        for (int i : dynamicTable.getTable().getSelectedRows()) {
-//        	Task task = tasks.get(i);
-//            if (!task.getOwner().equals(SessionMgr.getUsername())) {
-//                JOptionPane.showMessageDialog(consoleFrame, 
-//                		"Only the owner may cancel a task", "Cannot Cancel", JOptionPane.ERROR_MESSAGE);
-//                return;
-//            }
-//            toCancel.add(task);
-//        }
-//
-//
-//        int deleteConfirmation = JOptionPane.showConfirmDialog(consoleFrame, 
-//        		"Are you sure you want to cancel the selected tasks? ", "Delete Tasks", JOptionPane.YES_NO_OPTION);
-//        if (deleteConfirmation != 0) return;
-//
-//        try {
-//            for (Task task : toCancel) {
-//                ModelMgr.getModelMgr().cancelTaskById(task.getObjectId());
-//            }
-//            
-//            loadTasks();
-//        }
-//        catch (Exception e) {
-//            e.printStackTrace();
-//            JOptionPane.showMessageDialog(consoleFrame, 
-//            		"Error canceling session", "Error", JOptionPane.ERROR_MESSAGE);
-//        }
-//	}
+	private synchronized void cancelTasks() {
+
+        final List<Task> toCancel = new ArrayList<Task>();
+        for (int i : dynamicTable.getTable().getSelectedRows()) {
+        	Task task = tasks.get(i);
+            if (!task.getOwner().equals(SessionMgr.getUsername())) {
+                JOptionPane.showMessageDialog(consoleFrame, 
+                		"Only the owner may cancel a task", "Cannot Cancel", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            toCancel.add(task);
+        }
+
+
+        int deleteConfirmation = JOptionPane.showConfirmDialog(consoleFrame, 
+        		"Are you sure you want to cancel the selected tasks? ", "Delete Tasks", JOptionPane.YES_NO_OPTION);
+        if (deleteConfirmation != 0) return;
+
+        try {
+            for (Task task : toCancel) {
+                ModelMgr.getModelMgr().cancelTaskById(task.getObjectId());
+            }
+            
+            loadTasks();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(consoleFrame, 
+            		"Error canceling session", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+	}
 	
     private synchronized void deleteTasks() {
     	
