@@ -6,8 +6,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.text.Position.Bias;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -75,19 +73,20 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
         innerPanel.add(textField);
         toolBar.add(innerPanel);
 
-        textField.getDocument().addDocumentListener(new DocumentListener() {
-            public void changedUpdate(DocumentEvent e) {
-                tree.navigateToNodeStartingWith(textField.getText(), Bias.Forward, false);
-            }
-
-            public void removeUpdate(DocumentEvent e) {
-                changedUpdate(e);
-            }
-
-            public void insertUpdate(DocumentEvent e) {
-                changedUpdate(e);
-            }
-        });
+        // Disabled search-as-you-type because it can generate many long running queries on large trees
+//        textField.getDocument().addDocumentListener(new DocumentListener() {
+//            public void changedUpdate(DocumentEvent e) {
+//                tree.navigateToNodeStartingWith(textField.getText(), Bias.Forward, false);
+//            }
+//
+//            public void removeUpdate(DocumentEvent e) {
+//                changedUpdate(e);
+//            }
+//
+//            public void insertUpdate(DocumentEvent e) {
+//                changedUpdate(e);
+//            }
+//        });
         
         JButton button = new JButton("Next");
         button.setActionCommand(NEXT_MATCH);
