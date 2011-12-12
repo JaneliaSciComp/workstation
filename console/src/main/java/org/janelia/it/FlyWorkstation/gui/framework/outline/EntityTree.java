@@ -345,6 +345,16 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
     	if (node==null) return null;
     	return (Entity)node.getUserObject();
     }
+
+    public Entity getParentEntityById(Long entityId) {
+    	DefaultMutableTreeNode node = getNodeByEntityId(entityId);
+    	if (node == null) return null;
+    	DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode)node.getParent();
+    	if (parentNode != null) {
+    		return (Entity)parentNode.getUserObject();
+    	}
+    	return null;
+    }
     
 
     private void addNodes(DefaultMutableTreeNode parentNode, Entity newEntity) {

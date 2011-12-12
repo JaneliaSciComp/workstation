@@ -11,5 +11,4 @@ public interface Outline {
 	 * Refreshes the outline's data and view. 
 	 */
 	public void refresh();
-	
 }

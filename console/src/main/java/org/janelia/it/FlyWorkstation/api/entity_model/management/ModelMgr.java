@@ -325,7 +325,15 @@ public class ModelMgr {
 		notifyEntitySelected(entityId, outline);
 	}
 	
-    public List<EntityType> getEntityTypes() {
+    public Long getSelectedEntityId() {
+		return selectedEntityId;
+	}
+
+	public Long getSelectedOutlineEntityId() {
+		return selectedOutlineEntityId;
+	}
+
+	public List<EntityType> getEntityTypes() {
         return FacadeManager.getFacadeManager().getEntityFacade().getEntityTypes();
     }
 

@@ -91,6 +91,10 @@ public class JOutlookBar extends JPanel implements ActionListener {
         render();
     }
 
+    public Component getVisibleBarComponent() {
+    	return getBar(getVisibleBarName());
+    }
+    
     /**
      * Returns the index of the currently visible bar (zero-based)
      *

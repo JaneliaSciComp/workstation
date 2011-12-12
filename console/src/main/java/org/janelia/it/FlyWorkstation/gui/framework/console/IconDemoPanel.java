@@ -23,10 +23,7 @@ import org.janelia.it.FlyWorkstation.gui.application.SplashPanel;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationFilter;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.*;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
@@ -48,6 +45,7 @@ public class IconDemoPanel extends JPanel {
     private JToolBar toolbar;
     private JButton prevButton;
     private JButton nextButton;
+    private JButton parentButton;
     private JToggleButton showTitlesButton;
     private JToggleButton showTagsButton;
     private JToggleButton invertButton;
@@ -312,6 +310,19 @@ public class IconDemoPanel extends JPanel {
     		ModelMgr.getModelMgr().selectEntity(entityIdToView, true);	
     	}
     }
+
+    private synchronized void goParent() {
+    	Long selectedEntityId = ModelMgr.getModelMgr().getSelectedEntityId();
+    	if (selectedEntityId==null) return;
+    	Outline currOutline = SessionMgr.getSessionMgr().getActiveBrowser().getActiveOutline();
+    	if (currOutline!=null && currOutline instanceof EntityOutline) {
+    		EntityOutline entityOutline = (EntityOutline)currOutline;
+    		Entity parentEntity = entityOutline.getParentEntityById(selectedEntityId);
+    		if (parentEntity != null) {
+    			ModelMgr.getModelMgr().selectEntity(parentEntity.getId(), true);	
+    		}
+    	}
+    }
     
     private synchronized void pushHistory(Entity entity) {
     	if (entityIdToView != null && entityIdToView.equals(entity.getId())) {
@@ -358,6 +369,17 @@ public class IconDemoPanel extends JPanel {
         });
         toolBar.add(nextButton);
 
+        parentButton = new JButton();
+        parentButton.setIcon(Icons.getIcon("parent.gif"));
+        parentButton.setToolTipText("Go to the parent entity");
+        parentButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+            	goParent();
+            }
+        });
+        toolBar.add(parentButton);
+        
         toolBar.addSeparator();
         
         invertButton = new JToggleButton();

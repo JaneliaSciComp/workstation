@@ -1166,6 +1166,10 @@ public class Browser extends JFrame implements Cloneable {
         return viewerPanel;
     }
 
+    public Outline getActiveOutline() {
+    	return (Outline)outlookBar.getVisibleBarComponent();
+    }
+
     public EntityOutline getEntityOutline() {
         return publicEntityOutline;
     }
