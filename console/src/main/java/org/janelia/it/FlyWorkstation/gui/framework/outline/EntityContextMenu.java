@@ -63,7 +63,7 @@ public class EntityContextMenu extends JPopupMenu {
 
         if (OpenWithDefaultAppAction.isSupported()) {
         	String filepath = Utils.getAnyFilePath(entity);
-	        if (!Utils.isEmpty(filepath) && new File(filepath).isFile()) {
+	        if (!Utils.isEmpty(filepath)) {
 	        	addAction(new OpenWithDefaultAppAction(entity));
 	        }
         }
