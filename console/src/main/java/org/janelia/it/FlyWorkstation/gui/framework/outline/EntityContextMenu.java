@@ -5,13 +5,15 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenInFinderAction;
-import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenWithDefaultAppAction;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -23,11 +25,19 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
  */
 public class EntityContextMenu extends JPopupMenu {
 
-	private Entity entity;
+	private void addAction(final Action action) {
+        JMenuItem revealMenuItem = new JMenuItem("  "+action.getName());
+        revealMenuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				action.doAction();
+			}
+		});
+        add(revealMenuItem);
+	}
 	
 	public EntityContextMenu(final Entity entity) {
 		super();
-		this.entity = entity;
 		
         JMenuItem titleMenuItem = new JMenuItem(entity.getName());
         titleMenuItem.setEnabled(false);
@@ -44,19 +54,18 @@ public class EntityContextMenu extends JPopupMenu {
 		});
         add(copyMenuItem);
         
-        // Mac-only 
-        if (SystemInfo.isMac) {
-            if (!Utils.isEmpty(Utils.getFilePath(entity)) || !Utils.isEmpty(Utils.getDefaultImageFilePath(entity))) {
-    	        // Reveal in finder (entities with File Path only)
-    	        JMenuItem revealMenuItem = new JMenuItem("  Reveal in Finder");
-    	        revealMenuItem.addActionListener(new ActionListener() {
-    				@Override
-    				public void actionPerformed(ActionEvent e) {
-    					new OpenInFinderAction(entity).doAction();
-    				}
-    			});
-    	        add(revealMenuItem);
-            }
+        if (OpenInFinderAction.isSupported()) {
+        	String filepath = Utils.getAnyFilePath(entity);
+	        if (!Utils.isEmpty(filepath)) {
+	        	addAction(new OpenInFinderAction(entity));
+	        }
+        }
+
+        if (OpenWithDefaultAppAction.isSupported()) {
+        	String filepath = Utils.getAnyFilePath(entity);
+	        if (!Utils.isEmpty(filepath) && new File(filepath).isFile()) {
+	        	addAction(new OpenWithDefaultAppAction(entity));
+	        }
         }
         
         final String entityType = entity.getEntityType().getName();

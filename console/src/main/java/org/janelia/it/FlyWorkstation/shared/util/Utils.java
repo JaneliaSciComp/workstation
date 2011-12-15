@@ -108,6 +108,14 @@ public class Utils {
     	}
     	return path;
     }
+
+    public static String getAnyFilePath(Entity entity) {
+    	String filePath = getFilePath(entity);
+    	if (filePath != null) {
+    		return filePath;
+    	}
+    	return getDefaultImageFilePath(entity);
+    }
     
     public static boolean areSame(Object obj1, Object obj2) {
     	return (obj1 == obj2) || (obj1!=null && obj2!=null && obj1.equals(obj2));

@@ -13,7 +13,7 @@ import org.janelia.it.jacs.model.entity.Entity;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class OpenInFinderAction implements Action {
+public class OpenWithDefaultAppAction implements Action {
 
 	private Entity entity;
 	
@@ -24,20 +24,14 @@ public class OpenInFinderAction implements Action {
 	public static boolean isSupported() {
 		return SystemInfo.isMac || SystemInfo.isLinux;
 	}
-	
-	public OpenInFinderAction(Entity entity) {
+
+	public OpenWithDefaultAppAction(Entity entity) {
 		this.entity = entity;
 	}
 	
 	@Override
 	public String getName() {
-		if (SystemInfo.isMac) {
-			return "Reveal in Finder";
-		}
-		else if (SystemInfo.isLinux) {
-			return "Reveal in File Manager";
-		}
-		return null;
+		return "Open file with default application";
 	}
 
 	@Override
@@ -61,17 +55,11 @@ public class OpenInFinderAction implements Action {
 			StringBuffer cmd = new StringBuffer();
 			if (SystemInfo.isMac) {
 				cmd.append("/usr/bin/open ");
-				if (file.isFile()) cmd.append("-R ");
 				cmd.append(file.getAbsolutePath());
 			}
 			else if (SystemInfo.isLinux) {
 				cmd.append("gnome-open ");
-				if (file.isFile()) {
-					cmd.append(file.getParentFile().getAbsolutePath());
-				}
-				else {
-					cmd.append(file.getAbsolutePath());
-				}
+				cmd.append(file.getAbsolutePath());
 			}
 			
 			if (Runtime.getRuntime().exec(cmd.toString()).waitFor() != 0) {
