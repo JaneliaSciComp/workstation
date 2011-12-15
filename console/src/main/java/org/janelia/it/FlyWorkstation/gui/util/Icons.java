@@ -159,6 +159,9 @@ public class Icons {
         else if (EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT.equals(type)) {
             return getIcon(large ? "folder_files_large.png" : "folder_image.png");
         }
+        else if (EntityConstants.TYPE_SAMPLE_PROCESSING_RESULT.equals(type)) {
+            return getIcon(large ? "folder_files_large.png" : "folder_image.png");
+        }
         else if (EntityConstants.TYPE_SAMPLE.equals(type)
                 || EntityConstants.TYPE_SCREEN_SAMPLE.equals(type)) {
             return getIcon(large ? "folder_files_large.png" : "beaker.png");
@@ -168,6 +171,9 @@ public class Icons {
         }
         else if (EntityConstants.TYPE_IMAGE_2D.equals(type)) {
             return getIcon(large ? "file_large.png" : "image.png");
+        }
+        else if (EntityConstants.TYPE_TEXT_FILE.equals(type)) {
+            return getIcon(large ? "file_large.png" : "page_white.png");
         }
         else if (EntityConstants.TYPE_TIF_3D.equals(type) 
         		|| EntityConstants.TYPE_LSM_STACK.equals(type) 
