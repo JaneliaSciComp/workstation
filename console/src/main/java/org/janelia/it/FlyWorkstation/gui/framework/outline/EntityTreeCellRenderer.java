@@ -107,7 +107,8 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
                 	typeLabel.setText("("+entity.getEntityData().size()+")");
                 }
                 else if (entityTypeName.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT) || 
-                		entityTypeName.equals(EntityConstants.TYPE_SAMPLE_PROCESSING_RESULT)) {
+                		entityTypeName.equals(EntityConstants.TYPE_SAMPLE_PROCESSING_RESULT) || 
+                		entityTypeName.equals(EntityConstants.TYPE_ALIGNMENT_RESULT)) {
                 	typeLabel.setText("("+df.format(entity.getCreationDate())+")");
                 }
             }
