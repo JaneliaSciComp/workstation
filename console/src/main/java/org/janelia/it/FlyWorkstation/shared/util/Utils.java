@@ -282,7 +282,9 @@ public class Utils {
      * @return - the new resized image
      */
     public static BufferedImage getScaledImage(BufferedImage sourceImage, int w, int h) {
-        BufferedImage resizedImg = new BufferedImage(w, h, sourceImage.getType());
+    	int type = sourceImage.getType();
+    	if (type==0) type = BufferedImage.TYPE_INT_ARGB;
+        BufferedImage resizedImg = new BufferedImage(w, h, type);
         Graphics2D g2 = resizedImg.createGraphics();
         g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
         g2.drawImage(sourceImage, 0, 0, w, h, null);
