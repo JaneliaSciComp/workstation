@@ -108,6 +108,7 @@ public abstract class AnnotatedImageButton extends JToggleButton {
         }
         
         titleLabel.setText(title);
+        titleLabel.setToolTipText(entity.getName());
         mainPanel.add(init(entity));
     }
     
