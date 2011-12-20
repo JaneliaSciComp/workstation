@@ -162,6 +162,9 @@ public class Icons {
         else if (EntityConstants.TYPE_SAMPLE_PROCESSING_RESULT.equals(type)) {
             return getIcon(large ? "folder_files_large.png" : "folder_image.png");
         }
+        else if (EntityConstants.TYPE_ALIGNMENT_RESULT.equals(type)) {
+            return getIcon(large ? "folder_files_large.png" : "folder_image.png");
+        }
         else if (EntityConstants.TYPE_SAMPLE.equals(type)
                 || EntityConstants.TYPE_SCREEN_SAMPLE.equals(type)) {
             return getIcon(large ? "folder_files_large.png" : "beaker.png");
@@ -199,8 +202,6 @@ public class Icons {
             return getIcon("page_white_edit.png");
         }
 
-        return null;
+        return getIcon(large ? "file_large.png" : "page_white.png");
     }
-
-    
 }
