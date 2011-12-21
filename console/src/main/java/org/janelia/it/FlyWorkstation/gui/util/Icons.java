@@ -153,11 +153,12 @@ public class Icons {
         if (EntityConstants.TYPE_FOLDER.equals(type)) {
             return getIcon(large ? "folder_large.png" : "folder.png");
         }
-        else if (EntityConstants.TYPE_LSM_STACK_PAIR.equals(type)) {
-            return getIcon(large ? "folder_files_large.png" : "folder_image.png");
+        else if (EntityConstants.TYPE_SAMPLE.equals(type)
+                || EntityConstants.TYPE_SCREEN_SAMPLE.equals(type)) {
+            return getIcon(large ? "folder_files_large.png" : "beaker.png");
         }
-        else if (EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT.equals(type)) {
-            return getIcon(large ? "folder_files_large.png" : "folder_image.png");
+        else if (EntityConstants.TYPE_SUPPORTING_DATA.equals(type)) {
+            return getIcon(large ? "folder_files_large.png" : "folder_page.png");
         }
         else if (EntityConstants.TYPE_SAMPLE_PROCESSING_RESULT.equals(type)) {
             return getIcon(large ? "folder_files_large.png" : "folder_image.png");
@@ -165,9 +166,11 @@ public class Icons {
         else if (EntityConstants.TYPE_ALIGNMENT_RESULT.equals(type)) {
             return getIcon(large ? "folder_files_large.png" : "folder_image.png");
         }
-        else if (EntityConstants.TYPE_SAMPLE.equals(type)
-                || EntityConstants.TYPE_SCREEN_SAMPLE.equals(type)) {
-            return getIcon(large ? "folder_files_large.png" : "beaker.png");
+        else if (EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT.equals(type)) {
+            return getIcon(large ? "folder_files_large.png" : "bricks.png");
+        }
+        else if (EntityConstants.TYPE_LSM_STACK_PAIR.equals(type)) {
+            return getIcon(large ? "folder_files_large.png" : "page_copy.png");
         }
         else if (EntityConstants.TYPE_TIF_2D.equals(type)) {
             return getIcon(large ? "file_large.png" : "image.png");
@@ -190,10 +193,7 @@ public class Icons {
             return getIcon(large ? "file_large.png" : "brick.png");
         }
         else if (EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION.equals(type)) {
-            return getIcon(large ? "folder_files_large.png" : "folder.png");
-        }
-        else if (EntityConstants.TYPE_SUPPORTING_DATA.equals(type)) {
-            return getIcon(large ? "folder_files_large.png" : "folder_page.png");
+            return getIcon(large ? "folder_files_large.png" : "folder_brick.png");
         }
         else if (EntityConstants.TYPE_ONTOLOGY_ELEMENT.equals(type) || EntityConstants.TYPE_ONTOLOGY_ROOT.equals(type)) {
             return getOntologyIcon(entity);
