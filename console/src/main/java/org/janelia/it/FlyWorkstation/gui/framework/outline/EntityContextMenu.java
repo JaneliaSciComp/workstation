@@ -13,6 +13,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenInFinderAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenWithDefaultAppAction;
+import org.janelia.it.FlyWorkstation.shared.util.EntityUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -54,14 +55,14 @@ public class EntityContextMenu extends JPopupMenu {
         add(copyMenuItem);
         
         if (OpenInFinderAction.isSupported()) {
-        	String filepath = Utils.getAnyFilePath(entity);
+        	String filepath = EntityUtils.getAnyFilePath(entity);
 	        if (!Utils.isEmpty(filepath)) {
 	        	addAction(new OpenInFinderAction(entity));
 	        }
         }
 
         if (OpenWithDefaultAppAction.isSupported()) {
-        	String filepath = Utils.getAnyFilePath(entity);
+        	String filepath = EntityUtils.getAnyFilePath(entity);
 	        if (!Utils.isEmpty(filepath)) {
 	        	addAction(new OpenWithDefaultAppAction(entity));
 	        }

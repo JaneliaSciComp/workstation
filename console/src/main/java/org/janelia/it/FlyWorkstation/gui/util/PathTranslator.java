@@ -67,8 +67,7 @@ public class PathTranslator {
     public static Entity translatePathsToCurrentPlatform(Entity entity) {
     	
         for (EntityData entityData : entity.getEntityData()) {
-        	if (entityData.getEntityAttribute().getName().equals(EntityConstants.ATTRIBUTE_FILE_PATH) 
-        			|| entityData.getEntityAttribute().getName().equals(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE_FILE_PATH)) {
+        	if (entityData.getEntityAttribute().getName().equals(EntityConstants.ATTRIBUTE_FILE_PATH)) {
         		entityData.setValue(PathTranslator.convertPath(entityData.getValue()));
         	}
         	else {

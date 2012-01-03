@@ -27,8 +27,11 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.*;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.util.EntityUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 
 import sun.awt.CausedFocusEvent;
@@ -229,8 +232,8 @@ public class IconDemoPanel extends JPanel {
 						}
 
 		        		// In case we have a lazy entity, lets load the children
-			        	if (!Utils.areLoaded(entity.getOrderedEntityData())) {
-			                Utils.loadLazyEntity(entity, false);
+			        	if (!EntityUtils.areLoaded(entity.getOrderedEntityData())) {
+			        		EntityUtils.loadLazyEntity(entity, false);
 			        	}
 
 			        	for(Entity child : entity.getOrderedChildren()) {
@@ -569,6 +572,12 @@ public class IconDemoPanel extends JPanel {
             protected void doStuff() throws Exception {
                 List<Entity> loadedEntities = new ArrayList<Entity>();
                 for (Entity entity : entities) {
+                	
+                	EntityData ed = entity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
+                	if (ed != null) {
+                		ed.setChildEntity(ModelMgr.getModelMgr().getEntityById(ed.getChildEntity().getId()+""));
+                	}
+                	
                     loadedEntities.add(entity);
                 }
                 setEntities(loadedEntities);
