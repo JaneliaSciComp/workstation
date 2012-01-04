@@ -1,6 +1,15 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.HashSet;
+
+import javax.swing.*;
+
 import loci.plugins.config.SpringUtilities;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -13,15 +22,6 @@ import org.janelia.it.jacs.model.tasks.fileDiscovery.MCFODataPipelineTask;
 import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
 import org.janelia.it.jacs.model.user_data.Node;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 /**
  * A dialog for starting a continuous neuron separation pipeline task which runs every N minutes and discovers new files
  * to run neuron separation on. Once the task is started, it can be managed with the TaskOutline. 
@@ -32,12 +32,10 @@ public class RunNeuronSeparationDialog extends ModalDialog {
 
 	private static final String INPUT_DIR = "/groups/flylight/flylight/%USER%/data";
 	private static final String TOP_LEVEL_FOLDER_NAME = "%USER%'s Single Neuron Data";
-//	private static final String LINKING_DIR_TEMPLATE = "/groups/scicomp/jacsData/flylight/%USER%/MySeparationResultLinks";
 	private static final int DEFAULT_RERUN_INTERVAL_MINS = 1;
 	private static final int DEFAULT_STATUS_CHECK_INTERVAL_SECS = 30;
 	
 	private static final String TOOLTIP_INPUT_DIR = "Root directory of the tree that should be loaded into the database";
-//	private static final String TOOLTIP_LINKING_DIR = "Directory where symbolic links to the results should be created";
 	private static final String TOOLTIP_TOP_LEVEL_ENTITY = "Name of the database entity which should be loaded with the data";
 	private static final String TOOLTIP_RERUN_INTERVAL = "Once a run is complete, how soon should we re-run it?";
 	private static final String TOOLTIP_REFRESH = "Run a new separation for samples that already have a separation result?";
@@ -45,7 +43,6 @@ public class RunNeuronSeparationDialog extends ModalDialog {
 
     private final JPanel attrPanel;    
     private final JTextField inputDirectoryField;
-//    private final JTextField linkingDirectoryField;
     private final JTextField topLevelFolderField;
     private final JTextField rerunIntervalField;
     private final JCheckBox refreshCheckbox;
@@ -67,15 +64,6 @@ public class RunNeuronSeparationDialog extends ModalDialog {
         inputDirectoryLabel.setLabelFor(inputDirectoryField);
         attrPanel.add(inputDirectoryLabel);
         attrPanel.add(inputDirectoryField);
-
-//        JLabel linkingDirectoryLabel = new JLabel("Linking Directory (Linux mounted)");
-//        linkingDirectoryLabel.setToolTipText(TOOLTIP_LINKING_DIR);
-//        linkingDirectoryField = new JTextField(40);
-//        linkingDirectoryField.setText(filter(LINKING_DIR_TEMPLATE));
-//        linkingDirectoryField.setToolTipText(TOOLTIP_LINKING_DIR);
-//        linkingDirectoryLabel.setLabelFor(linkingDirectoryField);
-//        attrPanel.add(linkingDirectoryLabel);
-//        attrPanel.add(linkingDirectoryField);
 
         JLabel topLevelFolderLabel = new JLabel("Top Level Entity Name");
         topLevelFolderLabel.setToolTipText(TOOLTIP_TOP_LEVEL_ENTITY);
@@ -212,7 +200,7 @@ public class RunNeuronSeparationDialog extends ModalDialog {
         	
             process = "NMSDataPipeline";
             task = new MCFODataPipelineTask(new HashSet<Node>(),
-                    owner, new ArrayList<Event>(), new HashSet<TaskParameter>(), inputDirList, topLevelFolderName, refresh, true, true);
+                    owner, new ArrayList<Event>(), new HashSet<TaskParameter>(), inputDirList, topLevelFolderName, false, false, refresh);
             task.setJobName("Neuron Merge Separation Task");
             task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
 
