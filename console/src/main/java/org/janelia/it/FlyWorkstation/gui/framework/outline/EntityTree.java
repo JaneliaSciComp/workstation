@@ -5,7 +5,10 @@ import java.awt.Cursor;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
@@ -20,9 +23,10 @@ import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
 import org.janelia.it.FlyWorkstation.gui.util.FakeProgressWorker;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
  * A tree of Entities that may load lazily. Manages all the asynchronous loading and tree updating that happens in the
@@ -237,7 +241,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
                 	return;
                 }
                 
-                Utils.loadLazyEntity(entity, recurse);
+                ModelMgrUtils.loadLazyEntity(entity, recurse);
             }
 
             @Override
@@ -245,7 +249,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
                 Entity entity = (Entity) node.getUserObject();
                 ArrayList<EntityData> edList = new ArrayList<EntityData>(entity.getOrderedEntityData());
 
-                if (!Utils.areLoaded(edList)) {
+                if (!EntityUtils.areLoaded(edList)) {
                     throw new IllegalStateException("replaceLazyChildren called on node whose children have not been loaded");
                 }
 
@@ -382,7 +386,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
         if (childDataList.isEmpty()) return;
 
         // Test for proxies
-        boolean allLoaded = Utils.areLoaded(childDataList);
+        boolean allLoaded = EntityUtils.areLoaded(childDataList);
 
         if (!allLoaded) {
             selectedTree.addObject(newNode, new LazyTreeNode());

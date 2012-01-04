@@ -16,6 +16,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenWithDefaultAppAct
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
  * Context pop up menu for entities.
@@ -52,17 +53,13 @@ public class EntityContextMenu extends JPopupMenu {
 			}
 		});
         add(copyMenuItem);
-        
-        if (OpenInFinderAction.isSupported()) {
-        	String filepath = Utils.getAnyFilePath(entity);
-	        if (!Utils.isEmpty(filepath)) {
+
+    	String filepath = EntityUtils.getAnyFilePath(entity);
+        if (!Utils.isEmpty(filepath)) {
+	        if (OpenInFinderAction.isSupported()) {
 	        	addAction(new OpenInFinderAction(entity));
 	        }
-        }
-
-        if (OpenWithDefaultAppAction.isSupported()) {
-        	String filepath = Utils.getAnyFilePath(entity);
-	        if (!Utils.isEmpty(filepath)) {
+	        if (OpenWithDefaultAppAction.isSupported()) {
 	        	addAction(new OpenWithDefaultAppAction(entity));
 	        }
         }

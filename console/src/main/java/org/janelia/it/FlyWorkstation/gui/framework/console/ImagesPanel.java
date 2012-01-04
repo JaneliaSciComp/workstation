@@ -15,9 +15,9 @@ import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
  * Self-adjusting grid of images which may be resized together.
@@ -134,8 +134,11 @@ public class ImagesPanel extends JScrollPane {
 		
         for (int i = 0; i < entities.size(); i++) {
             final Entity entity = entities.get(i);
+            
+            if (buttons.containsKey(entity.getId().toString())) continue;
+            
             AnnotatedImageButton button = null;
-            String filepath = Utils.getDefaultImageFilePath(entity);
+            String filepath = EntityUtils.getDefaultImageFilePath(entity);
             if (filepath != null) {
             	button = new DynamicImageButton(entity);
                 ((DynamicImageButton)button).setCache(imageCache);

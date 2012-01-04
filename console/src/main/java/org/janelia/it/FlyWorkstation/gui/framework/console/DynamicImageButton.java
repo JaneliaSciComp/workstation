@@ -8,8 +8,8 @@ import javax.swing.JComponent;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
  * An AnnotatedImageButton with a dynamic image.
@@ -26,7 +26,7 @@ public class DynamicImageButton extends AnnotatedImageButton {
     
     public JComponent init(final Entity entity) {
 
-        String filepath = Utils.getDefaultImageFilePath(entity);
+        String filepath = EntityUtils.getDefaultImageFilePath(entity);
         if (filepath == null) {
         	throw new IllegalStateException("Entity has no filepath");
         }

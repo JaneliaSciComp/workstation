@@ -5,8 +5,8 @@ import java.io.File;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
  * Given an entity with a File Path, reveal the path in Finder.
@@ -43,7 +43,7 @@ public class OpenInFinderAction implements Action {
 	@Override
 	public void doAction() {
 		try {
-			String filePath = Utils.getAnyFilePath(entity);
+			String filePath = EntityUtils.getAnyFilePath(entity);
 			if (filePath == null) {
 				throw new Exception("Entity has no file path");
 			}

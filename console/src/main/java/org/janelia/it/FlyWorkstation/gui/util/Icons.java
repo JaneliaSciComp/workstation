@@ -110,7 +110,7 @@ public class Icons {
         else if ("EnumItem".equals(type))
             return getIcon("page.png");
 
-        return null;
+        return getIcon("bullet_error.png");
     }
 
     /**
@@ -202,6 +202,6 @@ public class Icons {
             return getIcon("page_white_edit.png");
         }
 
-        return getIcon(large ? "file_large.png" : "page_white.png");
+        return getIcon(large ? "error_large.png" : "bullet_error.png");
     }
 }
