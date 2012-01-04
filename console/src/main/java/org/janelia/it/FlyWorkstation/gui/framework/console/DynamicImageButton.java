@@ -8,8 +8,8 @@ import javax.swing.JComponent;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
-import org.janelia.it.FlyWorkstation.shared.util.EntityUtils;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
  * An AnnotatedImageButton with a dynamic image.

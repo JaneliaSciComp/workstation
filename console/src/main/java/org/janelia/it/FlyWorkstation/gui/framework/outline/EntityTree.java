@@ -23,9 +23,10 @@ import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
 import org.janelia.it.FlyWorkstation.gui.util.FakeProgressWorker;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.shared.util.EntityUtils;
+import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
  * A tree of Entities that may load lazily. Manages all the asynchronous loading and tree updating that happens in the
@@ -240,7 +241,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
                 	return;
                 }
                 
-                EntityUtils.loadLazyEntity(entity, recurse);
+                ModelMgrUtils.loadLazyEntity(entity, recurse);
             }
 
             @Override

@@ -27,12 +27,13 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.*;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.shared.util.EntityUtils;
+import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 import sun.awt.CausedFocusEvent;
 import sun.awt.CausedFocusEvent.Cause;
@@ -233,7 +234,7 @@ public class IconDemoPanel extends JPanel {
 
 		        		// In case we have a lazy entity, lets load the children
 			        	if (!EntityUtils.areLoaded(entity.getOrderedEntityData())) {
-			        		EntityUtils.loadLazyEntity(entity, false);
+			        		ModelMgrUtils.loadLazyEntity(entity, false);
 			        	}
 
 			        	for(Entity child : entity.getOrderedChildren()) {
