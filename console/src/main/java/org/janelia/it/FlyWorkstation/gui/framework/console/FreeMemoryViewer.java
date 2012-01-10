@@ -19,13 +19,12 @@ import java.util.Observer;
 public class FreeMemoryViewer extends JPanel implements Observer {
     public static final int MEMORY_CONSTANT = 1024000; // Value to display memory in MB
     private BoxLayout boxLayout = new BoxLayout(this, BoxLayout.X_AXIS);
-    private JProgressBar bar;
     private JLabel label = new JLabel("  Memory Usage  ");
+    private JLabel percentageLabel = new JLabel("0 %");
     private long totalMemory;
     private static int FIRST_WARNING_PERCENT = 10;
     private static int SECOND_WARNING_PERCENT = 5;
     private static int FINAL_WARNING_PERCENT = 1;
-    private static int BAR_HEIGHT;
     private static int BAR_WIDTH = 200;
     private static int RED_BAR = 10;
     private static int YELLOW_BAR = 30;
@@ -43,13 +42,9 @@ public class FreeMemoryViewer extends JPanel implements Observer {
         errorPane = new JOptionPane("Available memory is currently at x and is critically low!", JOptionPane.ERROR_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
         errorDialog = errorPane.createDialog(this.getParent(), "Error: Critically Low Available Memory");
 
-        bar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 100);
-        BAR_HEIGHT = this.getFontMetrics(this.getFont()).getHeight();
-        bar.setMaximumSize(new Dimension(BAR_WIDTH, BAR_HEIGHT));
-        bar.setStringPainted(true);
         setLayout(boxLayout);
         this.add(label);
-        this.add(bar);
+        this.add(percentageLabel);
         this.addMouseListener(new MouseListener() {
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) {
@@ -74,11 +69,11 @@ public class FreeMemoryViewer extends JPanel implements Observer {
     public void update(Observable observable, Object obj) {
         if (observable instanceof FreeMemoryWatcher && obj instanceof Integer) {
             int value = ((Integer) obj).intValue();
-            if (value >= YELLOW_BAR) bar.setForeground(Color.green);
-            if (value >= RED_BAR && value < YELLOW_BAR) bar.setForeground(Color.yellow);
+            if (value >= YELLOW_BAR) percentageLabel.setBackground(Color.green);
+            if (value >= RED_BAR && value < YELLOW_BAR) percentageLabel.setBackground(Color.yellow);
             //   System.out.println("yello reached");
-            if (value < RED_BAR) bar.setForeground(Color.red);
-            bar.setValue(100 - value);
+            if (value < RED_BAR) percentageLabel.setBackground(Color.red);
+            percentageLabel.setText(String.valueOf(100 - value));
             checkWarning(value);
         }
     }

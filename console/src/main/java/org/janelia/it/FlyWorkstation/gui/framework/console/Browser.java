@@ -177,7 +177,13 @@ public class Browser extends JFrame implements Cloneable {
 //        showSubEditorWhenAvailable = ((Boolean) SessionMgr.getSessionMgr()
 //                                                          .getModelProperty(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY)).booleanValue();
 
-        useFreeMemoryViewer(true);
+        Object useFreeProperty = SessionMgr.getSessionMgr().getModelProperty("SessionMgr.DisplayFreeMemoryProperty");
+        if (null!=useFreeProperty && useFreeProperty instanceof Boolean) {
+            useFreeMemoryViewer((Boolean)useFreeProperty);
+        }
+        else {
+            useFreeMemoryViewer(false);
+        }
         getContentPane().setLayout(borderLayout);
         setTitle("");
 

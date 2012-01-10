@@ -66,7 +66,7 @@ public class ConsoleApp {
             sessionMgr.startExternalHttpListener(30000);
             sessionMgr.startAxisServer(30001);
             sessionMgr.setModelProperty("ShowInternalDataSourceInDialogs", new Boolean(internal));
-
+            sessionMgr.setModelProperty("SessionMgr.DisplayFreeMemoryProperty", false);
             //Exception Handler Registration
 //            sessionMgr.registerExceptionHandler(new PrintStackTraceHandler());
             sessionMgr.registerExceptionHandler(new UserNotificationExceptionHandler());

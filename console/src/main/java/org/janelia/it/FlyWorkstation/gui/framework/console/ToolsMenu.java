@@ -18,7 +18,7 @@ import java.util.prefs.BackingStoreException;
  * Time: 3:47 PM
  */
 public class ToolsMenu extends JMenu {
-    private JMenuItem v3dMenuItem;
+    private JMenuItem vaa3dMenuItem;
     private JMenuItem fijiMenuItem;
     private JFrame parentFrame;
 
@@ -27,15 +27,15 @@ public class ToolsMenu extends JMenu {
         try {
             this.parentFrame = console;
             // todo This needs to be customized
-            v3dMenuItem = new JMenuItem("V3D - NeuroAnnotator", Utils.getClasspathImage("v3d_16x16x32.png"));
-            v3dMenuItem.addActionListener(new ActionListener() {
+            vaa3dMenuItem = new JMenuItem("Vaa3D - NeuroAnnotator", Utils.getClasspathImage("v3d_16x16x32.png"));
+            vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
                         // todo This needs to be a custom user setting.
                         Runtime.getRuntime().exec("/Users/" + SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME) + "/Dev/v3d/v3d/v3d64.app/Contents/MacOS/v3d64");
                     }
                     catch (IOException e) {
-                        JOptionPane.showMessageDialog(v3dMenuItem.getParent(), "Could not launch V3D - NeuroAnnotator", "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(vaa3dMenuItem.getParent(), "Could not launch Vaa3D - NeuroAnnotator", "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
                     }
                 }
             });
@@ -71,7 +71,7 @@ public class ToolsMenu extends JMenu {
 
             // Add the tools
             add(fijiMenuItem);
-            add(v3dMenuItem);
+            add(vaa3dMenuItem);
             addSeparator();
             add(toolsConfiguration);
         }
