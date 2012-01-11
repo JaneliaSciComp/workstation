@@ -295,7 +295,7 @@ public abstract class DynamicTable extends JPanel {
     /**
      * Synchronous method for updating the JTable model. Should be called from the EDT.
      */
-    public void updateTableModel() {
+    public synchronized void updateTableModel() {
 
         // Data formatted for the JTable
         Vector<String> columnNames = new Vector<String>();

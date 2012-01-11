@@ -6,13 +6,16 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
+import java.beans.PropertyChangeEvent;
+import java.util.List;
+
 import javax.swing.JOptionPane;
+import javax.swing.ProgressMonitor;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
@@ -29,10 +32,9 @@ public class AnnotateAction extends OntologyElementAction {
     @Override
     public void doAction() {
         SessionMgr.getSessionMgr().getActiveBrowser().getOntologyOutline().navigateToOntologyElement(getOntologyElement());
-
-        Entity targetEntity = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().getCurrentEntity();
-
-        if (targetEntity == null) {
+        final List<Entity> selectedEntities = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().getSelectedEntities();
+        
+        if (selectedEntities.isEmpty()) {
             // Cannot annotate nothing
             System.out.println("AnnotateAction called without an entity being selected");
             return;
@@ -66,7 +68,41 @@ public class AnnotateAction extends OntologyElementAction {
             value = (String) JOptionPane.showInputDialog(SessionMgr.getSessionMgr().getActiveBrowser(), 
             		"Value:\n", "Annotating with text", JOptionPane.PLAIN_MESSAGE, null, null, null);
         }
+        
+        final OntologyElement finalTerm = term;
+        final String finalValue = value;
+        
+        SimpleWorker worker = new SimpleWorker() {
 
+			@Override
+			protected void doStuff() throws Exception {
+				int i=1;
+		        for(Entity entity : selectedEntities) {
+		        	doAnnotation(entity, finalTerm, finalValue);
+		            setProgress(i++, selectedEntities.size());
+		        }
+			}
+
+			@Override
+			protected void hadSuccess() {
+				// No need to do anything
+			}
+
+			@Override
+			protected void hadError(Throwable error) {
+				SessionMgr.getSessionMgr().handleException(error);
+			}
+        	
+        };
+
+        worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getSessionMgr().getActiveBrowser(), "Adding annotations", "", 0, 100));
+        worker.execute();
+    }
+    
+    public void doAnnotation(Entity targetEntity, OntologyElement term, String value) {
+
+        OntologyElementType type = term.getType();
+        
         // Save the annotation
         Entity keyEntity = term.getEntity();
         Entity valueEntity = null;
@@ -92,32 +128,15 @@ public class AnnotateAction extends OntologyElementAction {
     private void saveAnnotation(final Long sessionId, final Entity targetEntity, final Long keyEntityId, 
     		final String keyString, final Long valueEntityId, final String valueString) {
 
-        Utils.setWaitingCursor(SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel());
-
         final OntologyAnnotation annotation = new OntologyAnnotation(
         		sessionId, targetEntity.getId(), keyEntityId, keyString, valueEntityId, valueString);
-        
-        SimpleWorker worker = new SimpleWorker() {
 
-            private Entity annotationEntity;
-
-            protected void doStuff() throws Exception {
-            	annotationEntity = ModelMgr.getModelMgr().createOntologyAnnotation(annotation);
-            }
-
-            protected void hadSuccess() {
-                Utils.setDefaultCursor(SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel());
-                System.out.println("Saved annotation as " + annotationEntity.getId());
-            }
-
-            protected void hadError(Throwable error) {
-                Utils.setDefaultCursor(SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel());
-                error.printStackTrace();
-                JOptionPane.showMessageDialog(SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel(), 
-                		"Error saving annotation", "Error", JOptionPane.ERROR_MESSAGE);
-            }
-
-        };
-        worker.execute();
+        try {
+            Entity annotationEntity = ModelMgr.getModelMgr().createOntologyAnnotation(annotation);
+            System.out.println("Saved annotation as " + annotationEntity.getId());
+        }
+        catch (Exception e) {
+			SessionMgr.getSessionMgr().handleException(e);
+        }
     }
 }

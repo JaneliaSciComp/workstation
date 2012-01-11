@@ -37,10 +37,15 @@ public class ConsoleObserverImpl implements ModelMgrObserver  {
 	}
 
 	@Override
-	public void entitySelected(long entityId, boolean outline) {
+	public void entitySelected(long entityId, boolean outline, boolean clearAll) {
 		throw e;
 	}
-	
+
+	@Override
+    public void entityDeselected(long entityId, boolean outline) {
+		throw e;
+	}
+    
 	@Override
 	public void entityViewRequested(long entityId) {
 		throw e;

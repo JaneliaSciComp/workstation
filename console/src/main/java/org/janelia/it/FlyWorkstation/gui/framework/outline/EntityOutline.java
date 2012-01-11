@@ -44,7 +44,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 
         ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
 			@Override
-			public void entitySelected(final long entityId, final boolean outline) {
+			public void entitySelected(final long entityId, final boolean outline, final boolean clearAll) {
 				if (!outline) return;
 				selectEntityById(entityId);
 			}
@@ -291,7 +291,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
     	
     	selectedEntity = entity;
     	
-        ModelMgr.getModelMgr().selectEntity(entity.getId(), true);
+        ModelMgr.getModelMgr().selectEntity(entity.getId(), true, true);
     	
     	revalidate();
     	repaint();

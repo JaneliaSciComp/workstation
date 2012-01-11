@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.console;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -21,7 +22,10 @@ public class StatusBar extends JPanel {
 
     public StatusBar() {
         setLayout(boxLayout);
+        add(Box.createRigidArea(new Dimension(10,20)));
         add(label);
+        add(Box.createRigidArea(new Dimension(10,20)));
+        add(new JSeparator(JSeparator.VERTICAL));
         add(glue);
 
         this.addComponentListener(new ComponentAdapter() {
@@ -58,7 +62,6 @@ public class StatusBar extends JPanel {
             if (freeMemoryViewer == null) freeMemoryViewer = new FreeMemoryViewer();
             FreeMemoryWatcher.getFreeMemoryWatcher().addObserver(freeMemoryViewer);
             add(freeMemoryViewer);
-            validate();
         }
         else {
             if (freeMemoryViewer != null) {
@@ -66,13 +69,14 @@ public class StatusBar extends JPanel {
                 FreeMemoryWatcher.getFreeMemoryWatcher().deleteObserver(freeMemoryViewer);
                 freeMemoryViewer = null;
                 label.setText(label.getText());
-                this.repaint();
             }
         }
+        validate();
+        repaint();
     }
 
     private void resetPreferredSize() {
-        if (this.getParent() != null) {
+        if (this.getParent() != null && freeMemoryViewer!=null) {
             int height = this.getHeight();
             int width = this.getParent().getWidth() - freeMemoryViewer.getWidth();
             label.setPreferredSize(new Dimension(width, height));

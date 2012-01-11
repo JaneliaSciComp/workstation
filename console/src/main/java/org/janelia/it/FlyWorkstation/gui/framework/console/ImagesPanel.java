@@ -4,10 +4,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Rectangle;
-import java.awt.event.AdjustmentEvent;
-import java.awt.event.AdjustmentListener;
-import java.awt.event.FocusListener;
-import java.awt.event.KeyListener;
+import java.awt.event.*;
 import java.util.HashMap;
 import java.util.List;
 
@@ -36,9 +33,9 @@ public class ImagesPanel extends JScrollPane {
     
     private KeyListener buttonKeyListener;
     private FocusListener buttonFocusListener;
+    private MouseListener buttonMouseListener;
     
     private JPanel buttonsPanel;
-    private ButtonGroup buttonGroup;
 
     private int currImageSize = DEFAULT_THUMBNAIL_SIZE;
     private Rectangle currViewRect;
@@ -92,6 +89,10 @@ public class ImagesPanel extends JScrollPane {
 	public void setButtonFocusListener(FocusListener buttonFocusListener) {
 		this.buttonFocusListener = buttonFocusListener;
 	}
+	
+	public void setButtonMouseListener(MouseListener buttonMouseListener) {
+		this.buttonMouseListener = buttonMouseListener;
+	}
 
 	public void setScrollLoadingEnabled(boolean enabled) {
 		if (enabled) {
@@ -110,22 +111,26 @@ public class ImagesPanel extends JScrollPane {
 		}
 	}
 	
+	public void cancelAllLoads() {
+		for(AnnotatedImageButton button : buttons.values()) {
+        	if (button instanceof DynamicImageButton) {
+        		((DynamicImageButton)button).cancelLoad();
+        	}
+        }
+	}
+	
 	/**
      * Create the image buttons, but leave the images unloaded for now.
      */
     public void setEntities(List<Entity> entities) {
     	
-    	// Cancel all loading images
-        for (AnnotatedImageButton button : buttons.values()) {
-        	if (button instanceof DynamicImageButton)
-        		((DynamicImageButton)button).cancelLoad();
-        }
-
         buttons.clear();
-        buttonGroup = new ButtonGroup();
         for (Component component : buttonsPanel.getComponents()) {
             if (component instanceof AnnotatedImageButton) {
             	AnnotatedImageButton button = (AnnotatedImageButton)component;
+//            	if (button instanceof DynamicImageButton) {
+//            		((DynamicImageButton)button).cancelLoad();
+//            	}
             	buttonsPanel.remove(button);
             }
         }
@@ -152,9 +157,12 @@ public class ImagesPanel extends JScrollPane {
             
             if (buttonKeyListener!=null) button.addKeyListener(buttonKeyListener);
             if (buttonFocusListener!=null) button.addFocusListener(buttonFocusListener);
+            if (buttonMouseListener!=null) button.addMouseListener(buttonMouseListener);
+            
+            // Disable tab traversal, we will do it ourselves
+            button.setFocusTraversalKeysEnabled(false);
             
             buttons.put(entity.getId().toString(), button);
-            buttonGroup.add(button);
             buttonsPanel.add(button);
         }
     }
@@ -257,16 +265,35 @@ public class ImagesPanel extends JScrollPane {
             button.setInvertedColors(inverted);
         }
     }
-    
-    public boolean setSelectedImage(Entity entity) {
-        AnnotatedImageButton button = buttons.get(entity.getId().toString());
-        if (button != null) {
-	        button.setSelected(true);
-	        return true;
-        }
-        return false;
-    }
 
+    private boolean setSelection(AnnotatedImageButton button, boolean selection) {
+    	if (button.isSelected()!=selection) {
+    		button.setSelected(selection);
+			if (selection) button.requestFocus();
+    		return true;
+    	}
+    	return false;
+    }
+    
+    public void setSelection(Entity entity, boolean selection, boolean clearAll) {
+    	if (clearAll) {
+			for(AnnotatedImageButton button : buttons.values()) {
+				if (button.getEntity().getId().equals(entity.getId())) {
+					setSelection(button, true);
+				}
+				else {
+					setSelection(button, false);
+				}
+			}
+    	}
+	    else {
+	        AnnotatedImageButton button = buttons.get(entity.getId().toString());
+	        if (button != null) {
+	        	setSelection(button, selection);
+	        }
+	    }
+	}
+    
     /**
      * Set the number of columns in the grid layout based on the width of the parent component and the width of the
      * buttons.

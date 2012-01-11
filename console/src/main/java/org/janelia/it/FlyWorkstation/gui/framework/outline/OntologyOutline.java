@@ -9,7 +9,9 @@ package org.janelia.it.FlyWorkstation.gui.framework.outline;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
@@ -28,9 +30,11 @@ import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
+import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
 import org.janelia.it.jacs.model.ontology.types.*;
@@ -47,6 +51,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Out
 
     private static final String ADD_COMMAND = "add";
     private static final String REMOVE_COMMAND = "remove";
+    private static final String REMOVE_ANNOT_COMMAND = "removeAnnotations";
     private static final String SHOW_MANAGER_COMMAND = "manager";
     private static final String BIND_EDIT_COMMAND = "change_bind";
     private static final String BIND_MODE_COMMAND = "bind_mode";
@@ -59,7 +64,6 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Out
     private final OntologyManager ontologyManager;
 
     private final Map<Long, Action> ontologyActionMap = new HashMap<Long, Action>();
-
 
     public OntologyOutline() {
         super();
@@ -259,10 +263,15 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Out
 
             // Disallow deletion of root nodes. You've gotta use the OntologyManager for that.
             if (curr.getParent() != null) {
-            	JMenuItem removeNodeMenuItem = new JMenuItem("  Remove this node");
+            	JMenuItem removeNodeMenuItem = new JMenuItem("  Remove this term");
                 removeNodeMenuItem.addActionListener(this);
                 removeNodeMenuItem.setActionCommand(REMOVE_COMMAND);
                 popupMenu.add(removeNodeMenuItem);
+            
+            	JMenuItem removeAnnotNodeMenuItem = new JMenuItem("  Remove from all selected entities");
+            	removeAnnotNodeMenuItem.addActionListener(this);
+            	removeAnnotNodeMenuItem.setActionCommand(REMOVE_ANNOT_COMMAND);
+                popupMenu.add(removeAnnotNodeMenuItem);
             }
         }
 
@@ -365,7 +374,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Out
         String command = e.getActionCommand();
 
         if (REMOVE_COMMAND.equals(command)) {
-            int deleteConfirmation = JOptionPane.showConfirmDialog(this, "Are you sure you want to delete this term?", "Delete Term", JOptionPane.YES_NO_OPTION);
+            int deleteConfirmation = JOptionPane.showConfirmDialog(this, "Are you sure you want to permanently remove this term?", "Remove Term", JOptionPane.YES_NO_OPTION);
             if (deleteConfirmation != 0) {
                 return;
             }
@@ -385,7 +394,63 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Out
             }
             catch (Exception ex) {
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(OntologyOutline.this, "Error deleting ontology term", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(OntologyOutline.this, "Error removing ontology term", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+        if (REMOVE_ANNOT_COMMAND.equals(command)) {
+            int deleteConfirmation = JOptionPane.showConfirmDialog(this, "Are you sure you want to permanently remove annotations using this term in all selected entities?", "Remove Annotations", JOptionPane.YES_NO_OPTION);
+            if (deleteConfirmation != 0) {
+                return;
+            }
+
+            try {
+            	final List<Long> selectedEntities = new ArrayList<Long>(ModelMgr.getModelMgr().getSelectedEntitiesIds());
+            	
+            	// TODO: this should really use the ModelMgr
+            	final Annotations annotations = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().getAnnotations();
+                final Map<Long, List<OntologyAnnotation>> annotationMap = annotations.getFilteredAnnotationMap();
+                
+                SimpleWorker worker = new SimpleWorker() {
+
+                    @Override
+                    protected void doStuff() throws Exception {
+                        OntologyElement element = getOntologyElement(selectedTree.getCurrentNode());
+                        
+                        int i=1;
+                    	for(Long entityId : selectedEntities) {
+                            List<OntologyAnnotation> entityAnnotations = annotationMap.get(entityId);
+                            if (entityAnnotations==null) {
+                            	continue;
+                            }
+                            for(OntologyAnnotation annotation : entityAnnotations) {
+                            	if (annotation.getKeyEntityId().equals(element.getEntity().getId())) {
+                            		ModelMgr.getModelMgr().removeAnnotation(annotation.getId());
+                            	}
+                            }
+
+        		            setProgress(i++, selectedEntities.size());
+                    	}
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+        				// No need to do anything
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        error.printStackTrace();
+                        JOptionPane.showMessageDialog(OntologyOutline.this, "Error removing annotations", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                };
+
+                worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getSessionMgr().getActiveBrowser(), "Removing annotations", "", 0, 100));
+                worker.execute();
+                
+            }
+            catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(OntologyOutline.this, "Error removing annotations", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
         else if (SHOW_MANAGER_COMMAND.equals(command)) {

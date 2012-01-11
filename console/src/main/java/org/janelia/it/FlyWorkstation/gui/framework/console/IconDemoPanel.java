@@ -27,6 +27,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.*;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -34,9 +35,6 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
-
-import sun.awt.CausedFocusEvent;
-import sun.awt.CausedFocusEvent.Cause;
 
 /**
  * This panel shows images for annotation. It may show a bunch of images at once, or a single image.
@@ -62,7 +60,6 @@ public class IconDemoPanel extends JPanel {
     private AnnotationDetailsDialog annotationDetailsDialog;
 
     private List<Entity> entities;
-    private Entity currentEntity;
     private double currImageSize = 1.0;
     
     private final List<String> allUsers = new ArrayList<String>();
@@ -80,13 +77,45 @@ public class IconDemoPanel extends JPanel {
     private final KeyListener keyListener = new KeyAdapter() {
         @Override
         public void keyPressed(KeyEvent e) {
-            if (e.getID() == KeyEvent.KEY_PRESSED) {
-                if (KeymapUtil.isModifier(e)) return;
+        	
+        	if (KeymapUtil.isModifier(e)) return;
+            if (e.getID() != KeyEvent.KEY_PRESSED) return;
+        
+            KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
+            if (!SessionMgr.getKeyBindings().executeBinding(shortcut)) {
+
+            	// No keybinds matched, use the default behavior
+
+            	// Ctrl-A or Meta-A to select all
+                if (e.getKeyCode() == KeyEvent.VK_A && ((SystemInfo.isMac && e.isMetaDown()) || (e.isControlDown()))) {
+					for(Entity entity : entities) {
+						ModelMgr.getModelMgr().setEntitySelection(entity.getId(), true, false, false);
+					}
+                	return;
+                }
                 
+            	// Enter with a single entity selected triggers an outline navigation
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                	List<Long> selectedIds = ModelMgr.getModelMgr().getSelectedEntitiesIds();
+                	if (selectedIds.size()!=1) return;
+    				ModelMgr.getModelMgr().selectEntity(selectedIds.get(0), true, true);	    				
+                	return;
+                }
+            	
+                // Tab and arrow navigation to page through the images
+            	boolean clearAll = false;
                 Entity entity = null;
-                
-                KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
-                if (!SessionMgr.getKeyBindings().executeBinding(shortcut)) {
+                if (e.getKeyCode() == KeyEvent.VK_TAB) {
+                	clearAll = true;
+                	if (e.isShiftDown()) {
+	                	entity = getPreviousEntity();
+                	}
+                	else {
+	                	entity = getNextEntity();
+                	}
+                }
+                else {
+                	clearAll = true;
 	                if (e.getKeyCode() == KeyEvent.VK_LEFT) {
 	                	entity = getPreviousEntity();
 	                }
@@ -98,31 +127,73 @@ public class IconDemoPanel extends JPanel {
                 if (entity != null) {
             		AnnotatedImageButton button = imagesPanel.getButtonByEntityId(entity.getId());
                     if (button != null) {
-                    	button.requestFocus();
+            			ModelMgr.getModelMgr().selectEntity(button.getEntity().getId(), false, clearAll);
                     	imagesPanel.scrollEntityToCenter(entity);
                     }
                 }
-                
-                revalidate();
-                repaint();
             }
+            
+            revalidate();
+            repaint();
+        
         }
     };
-
-    private final FocusListener buttonFocusListener = new FocusAdapter() {
-        @Override
-        public void focusGained(FocusEvent e) {
-        	AnnotatedImageButton button = (AnnotatedImageButton)e.getSource();
-			ModelMgr.getModelMgr().selectEntity(button.getEntity().getId(), false);
-        	if (e instanceof CausedFocusEvent) {
-        		CausedFocusEvent cfe = (CausedFocusEvent)e;
-        		if (cfe.getCause()==Cause.TRAVERSAL_FORWARD || cfe.getCause()==Cause.TRAVERSAL_BACKWARD) {
-        			imagesPanel.scrollEntityToCenter(getCurrentEntity());
-        		}
-        		
-        	}
-        }
-    };
+    
+    private final MouseListener buttonMouseListener = new MouseAdapter() {
+    	
+		@Override
+		public void mousePressed(MouseEvent e) {
+			final AnnotatedImageButton button = (AnnotatedImageButton)e.getSource();	
+			final boolean shiftDown = e.isShiftDown();
+			final boolean metaDown = e.isMetaDown();
+			final boolean state = button.isSelected();
+			
+			final Entity entity = button.getEntity();
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					Long entityId = entity.getId();
+					// Now update the model
+					if (metaDown) {
+						// With the meta key we toggle items in the current selection without clearing it
+						ModelMgr.getModelMgr().setEntitySelection(entityId, !state, false, false);
+					}
+					else {
+						// With shift, we select ranges
+						Long lastSelected = ModelMgr.getModelMgr().getLastSelectedEntityId();
+						if (shiftDown && lastSelected != null) {
+							
+							// Walk through the buttons and select everything between the last and current selections
+							boolean selecting = false;
+							for(Entity entity : entities) {
+								if (entity.getId().equals(lastSelected) || entity.getId().equals(entityId)) {
+									if (entity.getId().equals(entityId)) {
+										// Always select the button that was clicked
+										ModelMgr.getModelMgr().setEntitySelection(entity.getId(), true, false, false);
+									}
+									if (selecting) return; // We already selected, this is the end
+									selecting = true; // Start selecting
+									continue; // Skip selection of the first and last items, which should already be selected
+								}
+								if (selecting) {
+									ModelMgr.getModelMgr().setEntitySelection(entity.getId(), true, false, false);			
+								}
+							}
+						}
+						else {
+							// This is a good old fashioned single button selection
+							ModelMgr.getModelMgr().setEntitySelection(entityId, true, false, true);
+						}
+						
+					}
+					
+					// Always request focus on the button that was clicked, 
+					// since other buttons may become selected if shift is involved
+					button.requestFocus();
+				}
+			});
+		}
+	};
     
     public IconDemoPanel() {
 
@@ -136,7 +207,7 @@ public class IconDemoPanel extends JPanel {
         toolbar = createToolbar();
         imagesPanel = new ImagesPanel();
         imagesPanel.setButtonKeyListener(keyListener);
-        imagesPanel.setButtonFocusListener(buttonFocusListener);
+        imagesPanel.setButtonMouseListener(buttonMouseListener);
         
         annotationDetailsDialog = new AnnotationDetailsDialog();
         
@@ -193,7 +264,7 @@ public class IconDemoPanel extends JPanel {
 			}
 
 			@Override
-			public void entitySelected(final long entityId, final boolean outline) {
+			public void entitySelected(final long entityId, final boolean outline, final boolean clearAll) {
 				
 				// Find the entity object
 				Entity selectedEntity = null;
@@ -214,9 +285,13 @@ public class IconDemoPanel extends JPanel {
 				}
 				
 				if (!outline) {
-					if (selectedEntity != null) setCurrentEntity(selectedEntity);
+					if (selectedEntity != null) {
+						imagesPanel.setSelection(selectedEntity, true, clearAll);
+					}
 					return;
 				}
+
+				imagesPanel.cancelAllLoads();
 				
 				final Entity potentialEntity = selectedEntity;
 				SimpleWorker worker = new SimpleWorker() {
@@ -261,6 +336,16 @@ public class IconDemoPanel extends JPanel {
 
 				worker.execute();
 			}
+
+			@Override
+			public void entityDeselected(long entityId, boolean outline) {
+				if (outline) return;
+				AnnotatedImageButton button = imagesPanel.getButtonByEntityId(entityId);
+				if (button!=null) {
+					imagesPanel.setSelection(button.getEntity(), false, false);	
+				}
+			}
+			
         });
 
         this.addComponentListener(new ComponentAdapter() {
@@ -296,7 +381,7 @@ public class IconDemoPanel extends JPanel {
     		entityIdToView = history.get(historyPosition);
     		prevButton.setEnabled(false);
     		nextButton.setEnabled(false);
-    		ModelMgr.getModelMgr().selectEntity(entityIdToView, true);
+    		ModelMgr.getModelMgr().selectEntity(entityIdToView, true, true);
     	}    	
     }
 
@@ -311,19 +396,19 @@ public class IconDemoPanel extends JPanel {
     		entityIdToView = history.get(historyPosition);
     		prevButton.setEnabled(false);
     		nextButton.setEnabled(false);
-    		ModelMgr.getModelMgr().selectEntity(entityIdToView, true);	
+    		ModelMgr.getModelMgr().selectEntity(entityIdToView, true, true);	
     	}
     }
 
     private synchronized void goParent() {
-    	Long selectedEntityId = ModelMgr.getModelMgr().getSelectedEntityId();
+    	Long selectedEntityId = ModelMgr.getModelMgr().getLastSelectedOutlineEntityId();
     	if (selectedEntityId==null) return;
     	Outline currOutline = SessionMgr.getSessionMgr().getActiveBrowser().getActiveOutline();
     	if (currOutline!=null && currOutline instanceof EntityOutline) {
     		EntityOutline entityOutline = (EntityOutline)currOutline;
     		Entity parentEntity = entityOutline.getParentEntityById(selectedEntityId);
     		if (parentEntity != null) {
-    			ModelMgr.getModelMgr().selectEntity(parentEntity.getId(), true);	
+    			ModelMgr.getModelMgr().selectEntity(parentEntity.getId(), true, true);	
     		}
     	}
     }
@@ -559,9 +644,6 @@ public class IconDemoPanel extends JPanel {
 		// Reset the zoom level
 		// TODO: make this an option
 		//slider.setValue(ImagesPanel.DEFAULT_THUMBNAIL_SIZE);
-		
-		// Reset the current entity
-		currentEntity = null;
 
         if (entityLoadingWorker != null && !entityLoadingWorker.isDone()) {
         	System.out.println("Cancel previous image load");
@@ -630,7 +712,7 @@ public class IconDemoPanel extends JPanel {
 				imagesPanel.setScrollLoadingEnabled(true);
 		        imagesPanel.loadUnloadImages();
 		        // Select the first entity
-				ModelMgr.getModelMgr().selectEntity(entities.get(0).getId(), false);
+				ModelMgr.getModelMgr().selectEntity(entities.get(0).getId(), false, true);
 			}
 		});
     }
@@ -702,7 +784,7 @@ public class IconDemoPanel extends JPanel {
         annotationLoadingWorker = new SimpleWorker() {
 
             protected void doStuff() throws Exception {
-                annotations.init(entities);
+                annotations.reload(entity);
             }
 
             protected void hadSuccess() {
@@ -722,7 +804,7 @@ public class IconDemoPanel extends JPanel {
      * Refresh the annotation display in the UI, but do not reload anything from the database.
      */
     private synchronized void refreshAnnotations(Entity entity) {
-
+		
     	// Refresh all user list
     	allUsers.clear();
     	for(OntologyAnnotation annotation : annotations.getAnnotations()) {
@@ -741,7 +823,6 @@ public class IconDemoPanel extends JPanel {
     
     public synchronized void clear() {
     	this.entities = null;
-    	this.currentEntity = null;
         removeAll();
         add(splashPanel, BorderLayout.CENTER);
         
@@ -758,22 +839,13 @@ public class IconDemoPanel extends JPanel {
         revalidate();
         repaint();
 
-        // Wait until everything is recomputed
-        SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-		        if (getCurrentEntity() == null) return;
-		        imagesPanel.scrollEntityToCenter(getCurrentEntity());
-			}
-        });
-        
         // Focus on the panel so that it can receive keyboard input
         requestFocusInWindow();
     }
 
     public Entity getPreviousEntity() {
         List<Entity> entities = getEntities();
-        int i = entities.indexOf(currentEntity);
+        int i = entities.indexOf(getLastSelectedEntity());
         if (i < 1) {
             // Already at the beginning
             return null;
@@ -783,7 +855,7 @@ public class IconDemoPanel extends JPanel {
 
     public Entity getNextEntity() {
         List<Entity> entities = getEntities();
-        int i = entities.indexOf(currentEntity);
+        int i = entities.indexOf(getLastSelectedEntity());
         if (i > entities.size() - 2) {
             // Already at the end
             return null;
@@ -799,17 +871,21 @@ public class IconDemoPanel extends JPanel {
         this.entities = entities;
     }
 
-    public synchronized Entity getCurrentEntity() {
-        return currentEntity;
+    public synchronized Entity getLastSelectedEntity() {
+    	Long entityId = ModelMgr.getModelMgr().getLastSelectedEntityId();
+    	if (entityId == null) return null;
+    	AnnotatedImageButton button = imagesPanel.getButtonByEntityId(entityId);
+    	if (button == null) return null;
+    	return button.getEntity();
     }
-
-    public synchronized void setCurrentEntity(Entity entity) {
-        if (Utils.areSameEntity(entity, currentEntity)) return;
-        if (!imagesPanel.setSelectedImage(entity)) {
-        	return;
+    
+    public synchronized List<Entity> getSelectedEntities() {
+        List<Entity> selectedEntities = new ArrayList<Entity>();
+        for(Entity entity : entities) {
+        	AnnotatedImageButton button = imagesPanel.getButtonByEntityId(entity.getId());
+        	if (button.isSelected()) selectedEntities.add(entity);
         }
-        this.currentEntity = entity;
-    	ModelMgr.getModelMgr().selectEntity(entity.getId(), false);
+        return selectedEntities;
     }
 
     public ImagesPanel getImagesPanel() {
@@ -830,5 +906,9 @@ public class IconDemoPanel extends JPanel {
 
 	public void viewAnnotationDetails(OntologyAnnotation tag) {
 		annotationDetailsDialog.showForAnnotation(tag);
+	}
+	
+	public Annotations getAnnotations() {
+		return annotations;
 	}
 }

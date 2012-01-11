@@ -15,7 +15,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.exception_handlers.PrintStackTraceHandler;
 import org.janelia.it.FlyWorkstation.shared.util.ThreadQueue;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
@@ -49,9 +48,8 @@ public class ModelMgr {
     private OntologyRoot selectedOntology;
     private OntologyKeyBindings ontologyKeyBindings;
     private AnnotationSession annotationSession;
-    private Long selectedEntityId;
-    private Long selectedOutlineEntityId;
-   
+    private List<Long> selectedEntitiesIds = new ArrayList<Long>();
+    private List<Long> selectedOutlineEntitiesIds = new ArrayList<Long>();
 
     static {
         // Register an exception handler.
@@ -265,12 +263,18 @@ public class ModelMgr {
         }
     }
     
-    private void notifyEntitySelected(Long entityId, boolean outline) {
+    private void notifyEntitySelected(Long entityId, boolean outline, boolean clearAll) {
         for (ModelMgrObserver listener : modelMgrObservers) {
-        	listener.entitySelected(entityId, outline);
+        	listener.entitySelected(entityId, outline, clearAll);
         }
     }
 
+    private void notifyEntityDeselected(Long entityId, boolean outline) {
+        for (ModelMgrObserver listener : modelMgrObservers) {
+        	listener.entityDeselected(entityId, outline);
+        }
+    }
+    
     public boolean notifyEntityViewRequestedInNeuronAnnotator(Long entityId) {
     	if (SessionMgr.getSessionMgr().getExternalClientsByName(NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
     		return false;
@@ -313,26 +317,63 @@ public class ModelMgr {
         return modelAvailable;
     }
 
-	public void selectEntity(Long entityId, boolean outline) {
+	public void selectEntity(Long entityId, boolean outline, boolean clearAll) {
 		if (outline) {
-	        if (Utils.areSame(entityId, selectedEntityId)) return;
-	    	selectedEntityId = entityId;
+			if (clearAll) {
+				selectedOutlineEntitiesIds.clear();
+			}
+			if (selectedOutlineEntitiesIds.contains(entityId)) return;
+			selectedOutlineEntitiesIds.add(entityId);
 		}
 		else {
-	        if (Utils.areSame(entityId, selectedOutlineEntityId)) return;
-	        selectedOutlineEntityId = entityId;
+			if (clearAll) {
+				selectedEntitiesIds.clear();
+			}
+			if (selectedEntitiesIds.contains(entityId)) return;
+			selectedEntitiesIds.add(entityId);
 		}
-		notifyEntitySelected(entityId, outline);
+		notifyEntitySelected(entityId, outline, clearAll);
+	}
+
+	public void deselectEntity(Long entityId, boolean outline) {
+		if (outline) {
+			if (!selectedOutlineEntitiesIds.contains(entityId)) return;
+			selectedOutlineEntitiesIds.remove(entityId);
+		}
+		else {
+			if (!selectedEntitiesIds.contains(entityId)) return;
+			selectedEntitiesIds.remove(entityId);
+		}
+		notifyEntityDeselected(entityId, outline);
 	}
 	
-    public Long getSelectedEntityId() {
-		return selectedEntityId;
+	public void setEntitySelection(Long entityId, boolean selection, boolean outline, boolean clearAll) {
+		if (selection) {
+			selectEntity(entityId, outline, clearAll);
+		}
+		else {
+			deselectEntity(entityId, outline);
+		}
 	}
 
-	public Long getSelectedOutlineEntityId() {
-		return selectedOutlineEntityId;
+    public List<Long> getSelectedEntitiesIds() {
+		return selectedEntitiesIds;
 	}
+    
+    public Long getLastSelectedEntityId() {
+    	if (selectedEntitiesIds.isEmpty()) return null;
+    	return selectedEntitiesIds.get(selectedEntitiesIds.size()-1);
+    }
 
+	public List<Long> getSelectedOutlineEntitiesIds() {
+		return selectedOutlineEntitiesIds;
+	}
+	
+    public Long getLastSelectedOutlineEntityId() {
+    	if (selectedOutlineEntitiesIds.isEmpty()) return null;
+    	return selectedOutlineEntitiesIds.get(selectedOutlineEntitiesIds.size()-1);
+    }
+	
 	public List<EntityType> getEntityTypes() {
         return FacadeManager.getFacadeManager().getEntityFacade().getEntityTypes();
     }

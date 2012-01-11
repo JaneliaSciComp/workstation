@@ -6,6 +6,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 
 import javax.swing.*;
 
@@ -71,23 +72,19 @@ public abstract class AnnotatedImageButton extends JToggleButton {
         buttonPanel.add(tagPanel, c);
 
 
-        // Fix event dispatching so that user can click on the title or the tags and still select the button
-
-        titleLabel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                AnnotatedImageButton.this.dispatchEvent(e);
-            }
-        });
+        // Remove all default mouse listeners
         
+        for(MouseListener mouseListener : getMouseListeners()) {
+        	removeMouseListener(mouseListener);
+        }
+
         // Mouse events
 		
         this.addMouseListener(new MouseHandler() {
 
 			@Override
 			protected void popupTriggered(MouseEvent e) {
-
-				ModelMgr.getModelMgr().selectEntity(entity.getId(), false);
+				ModelMgr.getModelMgr().selectEntity(entity.getId(), false, true);
 	            JPopupMenu popupMenu = new EntityContextMenu(entity);
 		        popupMenu.show(AnnotatedImageButton.this, e.getX(), e.getY());
 			}
@@ -95,9 +92,19 @@ public abstract class AnnotatedImageButton extends JToggleButton {
 			@Override
 			protected void doubleLeftClicked(MouseEvent e) {
 				// Double-clicking an image in gallery view triggers an outline selection
-				ModelMgr.getModelMgr().selectEntity(entity.getId(), true);
+				ModelMgr.getModelMgr().selectEntity(entity.getId(), true, true);
 			}
         	
+        });
+        
+        // Fix event dispatching so that user can click on the title or the tags and still select the button
+
+        titleLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+            	e.setSource(AnnotatedImageButton.this);
+                AnnotatedImageButton.this.dispatchEvent(e);
+            }
         });
         
     	this.entity = entity;

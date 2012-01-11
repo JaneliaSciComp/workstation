@@ -54,13 +54,13 @@ public class Annotations {
     }
 
     public synchronized void reload(Entity entity) {
-		
+
     	if (SwingUtilities.isEventDispatchThread()) throw new RuntimeException("Method must run outside of the EDT");
     	
     	// Remove all the annotations for this entity
     	List<OntologyAnnotation> copy = new ArrayList<OntologyAnnotation>(annotations);
     	for(OntologyAnnotation annotation : copy) {
-    		if (annotation.getEntity().getId().equals(entity.getId())) {
+    		if (annotation.getTargetEntityId().equals(entity.getId())) {
     			annotations.remove(annotation);
     		}
     	}
@@ -83,7 +83,8 @@ public class Annotations {
 	}
     
 	public synchronized List<OntologyAnnotation> getAnnotations() {
-		return annotations;
+    	// Copy to avoid concurrent modification issues
+    	return new ArrayList<OntologyAnnotation>();
 	}
     
 	public synchronized List<OntologyAnnotation> getFilteredAnnotations() {

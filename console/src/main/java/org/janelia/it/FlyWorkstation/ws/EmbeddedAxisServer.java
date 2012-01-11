@@ -51,13 +51,22 @@ public class EmbeddedAxisServer implements ModelMgrObserver {
 	}
 
 	@Override
-	public void entitySelected(long entityId, boolean outline) {
+	public void entitySelected(long entityId, boolean outline, boolean clearAll) {
 		Map<String,Object> parameters = new HashMap<String,Object>();
 		parameters.put("entityId",entityId);
 		parameters.put("outline",outline);
+		parameters.put("clearAll",clearAll);
 		SessionMgr.getSessionMgr().sendMessageToExternalClients("entitySelected", parameters);
 	}
 
+	@Override
+    public void entityDeselected(long entityId, boolean outline) {
+		Map<String,Object> parameters = new HashMap<String,Object>();
+		parameters.put("entityId",entityId);
+		parameters.put("outline",outline);
+		SessionMgr.getSessionMgr().sendMessageToExternalClients("entityDeselected", parameters);
+	}
+	
 	@Override
 	public void entityViewRequested( long entityId) {
 		Map<String,Object> parameters = new HashMap<String,Object>();

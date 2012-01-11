@@ -16,6 +16,7 @@ import java.util.List;
 import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.LoadRequestStatusObserverAdapter;
+import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestState;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestStatus;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
@@ -316,6 +317,25 @@ public class Browser extends JFrame implements Cloneable {
         };
         
         entityOutlineLoadingWorker.execute();
+        
+
+        ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
+
+			@Override
+			public void entitySelected(long entityId, boolean outline, boolean clearAll) {
+				if (!outline) {
+					statusBar.setDescription(ModelMgr.getModelMgr().getSelectedEntitiesIds().size()+" entities selected");
+				}
+			}
+
+			@Override
+			public void entityDeselected(long entityId, boolean outline) {
+				if (!outline) {
+					statusBar.setDescription(ModelMgr.getModelMgr().getSelectedEntitiesIds().size()+" entities selected");
+				}
+			}
+        	
+        });
     }
 
     ///////// Browser Controller section////////////
@@ -1001,7 +1021,7 @@ public class Browser extends JFrame implements Cloneable {
 //    }
 
     private void useFreeMemoryViewer(boolean use) {
-        statusBar.useFreeMemoryViewer(use);
+        statusBar.useFreeMemoryViewer(false);
         //validate();
     }
 

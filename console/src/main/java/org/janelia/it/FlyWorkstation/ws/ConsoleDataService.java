@@ -34,6 +34,12 @@ public interface ConsoleDataService extends Remote {
 
     public void selectEntity(
 			@WebParam(name = "entityId") long entityId,
+			@WebParam(name = "outline") boolean outline,
+			@WebParam(name = "clearAll") boolean clearAll)
+    		throws RemoteException;
+
+    public void deselectEntity(
+			@WebParam(name = "entityId") long entityId,
 			@WebParam(name = "outline") boolean outline)
     		throws RemoteException;
     

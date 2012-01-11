@@ -104,6 +104,7 @@ public class WrapLayout extends FlowLayout {
             int targetWidth = 0;
             for (Component c : target.getParent().getComponents()) {
                 if (c == target) continue;
+                if (!c.isVisible()) continue;
                 int cw = c.getPreferredSize().width;
                 if (cw > targetWidth) targetWidth = cw;
             }
@@ -124,12 +125,12 @@ public class WrapLayout extends FlowLayout {
 
             for (int i = 0; i < nmembers; i++) {
                 Component m = target.getComponent(i);
-
+                
                 if (m.isVisible()) {
                     Dimension d = preferred ? m.getPreferredSize() : m.getMinimumSize();
 
                     //  Can't add the component to current row. Start a new row.
-
+                	
                     if (rowWidth + d.width > maxWidth) {
                         addRow(dim, rowWidth, rowHeight);
                         rowWidth = 0;
@@ -148,10 +149,10 @@ public class WrapLayout extends FlowLayout {
             }
 
             addRow(dim, rowWidth, rowHeight);
-
+            
             dim.width += horizontalInsetsAndGap;
             dim.height += insets.top + insets.bottom + vgap * 2;
-
+            
             //	When using a scroll pane or the DecoratedLookAndFeel we need to
             //  make sure the preferred size is less than the size of the
             //  target containter so shrinking the container size works

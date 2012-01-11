@@ -275,6 +275,7 @@ public class OntologyManager extends JDialog implements ActionListener, Property
             tabbedPane.setSelectedIndex(0);
             privateTable.setLoading(true);
 
+            // TODO: modify this to use the built-in ProgressMonitor support in SimpleWorker, on which OWLDataLoader is based.
             progressMonitor = new ProgressMonitor(this, "Importing OWL", "", 0, 100);
             progressMonitor.setProgress(0);
 
