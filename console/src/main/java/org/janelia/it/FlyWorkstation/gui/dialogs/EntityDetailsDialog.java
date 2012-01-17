@@ -10,27 +10,22 @@ import javax.swing.*;
 
 import loci.plugins.config.SpringUtilities;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.janelia.it.jacs.model.entity.Entity;
 
 /**
- * A dialog for viewing details about an ontological annotation.
+ * A dialog for viewing details about an entity.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class AnnotationDetailsDialog extends ModalDialog {
-
+public class EntityDetailsDialog extends ModalDialog {
+    
     protected static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm");
     
     private JPanel attrPanel;
-    private JLabel sessionLabel;
-    private JLabel sessionOwnerLabel;
-    private JLabel keyLabel;
-    private JLabel valueLabel;
+    private JLabel nameLabel;
     private JLabel ownerLabel;
     private JLabel creationDateLabel;
+    private JLabel updatedDateLabel;
 
     private JLabel addAttribute(String name) {
         JLabel nameLabel = new JLabel(name);
@@ -41,7 +36,7 @@ public class AnnotationDetailsDialog extends ModalDialog {
         return valueLabel;
     }
     
-    public AnnotationDetailsDialog() {
+    public EntityDetailsDialog() {
 
         setTitle("Annotation Details");
 
@@ -49,12 +44,10 @@ public class AnnotationDetailsDialog extends ModalDialog {
         attrPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10), 
         		BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Annotation Properties")));
 
-        sessionLabel = addAttribute("Session: ");
-        sessionOwnerLabel = addAttribute("Session Owner: ");
-        keyLabel = addAttribute("Annotation Key: ");
-        valueLabel = addAttribute("Annotation Value: ");
+        nameLabel = addAttribute("Name: ");
         ownerLabel = addAttribute("Annotation Owner: ");
         creationDateLabel = addAttribute("Creation Date: ");
+        updatedDateLabel = addAttribute("Updated Date: ");
 
         add(attrPanel, BorderLayout.CENTER);
         SpringUtilities.makeCompactGrid(attrPanel, attrPanel.getComponentCount()/2, 2, 6, 6, 6, 6);
@@ -77,22 +70,13 @@ public class AnnotationDetailsDialog extends ModalDialog {
         add(buttonPane, BorderLayout.SOUTH);
     }
     
-    public void showForAnnotation(OntologyAnnotation annotation) {
+    public void showForEntity(Entity entity) {
 
-    	keyLabel.setText(annotation.getKeyString());
-    	valueLabel.setText(annotation.getValueString());
-        ownerLabel.setText(annotation.getOwner());
-        creationDateLabel.setText(df.format(annotation.getEntity().getCreationDate()));
+    	nameLabel.setText(entity.getName());
+        ownerLabel.setText(entity.getUser().getUserLogin());
+        creationDateLabel.setText(df.format(entity.getCreationDate()));
+        updatedDateLabel.setText(df.format(entity.getUpdatedDate()));
         
-    	try {
-    		AnnotationSession session = annotation.getSessionId()==null?null:ModelMgr.getModelMgr().getAnnotationSession(annotation.getSessionId());	
-    		sessionLabel.setText(session == null ? "None": session.getName());
-    		sessionOwnerLabel.setText(session == null ? "": session.getOwner());
-    	}
-    	catch (Exception e) {
-    		SessionMgr.getSessionMgr().handleException(e);
-    	}
-
         packAndShow();
     }
 }

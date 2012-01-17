@@ -178,6 +178,8 @@ public class DynamicTree extends JPanel {
     public void removeChildren(DefaultMutableTreeNode node) {
 
         int c = node.getChildCount();
+        if (c==0) return;
+        
         int[] childIndices = new int[c];
         Object[] removedChildren = new Object[c];
 
@@ -214,18 +216,30 @@ public class DynamicTree extends JPanel {
         throw new UnsupportedOperationException("This tree does not support child recreation");
     }
 
-    public void recreateChildNodes(DefaultMutableTreeNode node, boolean recurse) {
-
-        recreateChildNodes(node);
-
+    /**
+     * Remove a node and possibly all its ancestors from the tree.
+     */
+    public void removeNode(DefaultMutableTreeNode node, boolean recurse) {
+		
         if (recurse) {
             for (Enumeration e = node.children(); e.hasMoreElements(); ) {
                 DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) e.nextElement();
-                recreateChildNodes(childNode, true);
+                removeNode(childNode, true);
             }
         }
+
+		DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+		model.removeNodeFromParent(node);
     }
 
+
+    /**
+     * Remove a node from the tree.
+     */
+    public void removeNode(DefaultMutableTreeNode node) {
+        removeNode(node, false);
+    }
+    
     /**
      * Override this method to do any necessary lazy loading of children. Do everything in a separate worker thread.
      *
@@ -303,13 +317,6 @@ public class DynamicTree extends JPanel {
     }
 
     /**
-     * Remove the currently selected node.
-     */
-    public void removeNode(DefaultMutableTreeNode node) {
-        getTreeModel().removeNodeFromParent(node);
-    }
-
-    /**
      * Get the currently selected node.
      */
     public DefaultMutableTreeNode getCurrentNode() {
@@ -324,35 +331,26 @@ public class DynamicTree extends JPanel {
         tree.setSelectionPath(new TreePath(currentNode.getPath()));
     }
 
-    /**
-     * Add child to the currently selected node.
-     */
-    public DefaultMutableTreeNode addObject(Object child) {
-        DefaultMutableTreeNode parentNode = null;
-        TreePath parentPath = tree.getSelectionPath();
-
-        if (parentPath == null) {
-            parentNode = getRootNode();
-        }
-        else {
-            parentNode = (DefaultMutableTreeNode) (parentPath.getLastPathComponent());
-        }
-
-        return addObject(parentNode, child);
-    }
-
     public DefaultMutableTreeNode addObject(DefaultMutableTreeNode parentNode, Object child) {
         return addObject(parentNode, new DefaultMutableTreeNode(child));
     }
+    
+    public DefaultMutableTreeNode addObject(DefaultMutableTreeNode parentNode, Object child, int index) {
+        return addObject(parentNode, new DefaultMutableTreeNode(child), index);
+    }
 
     public DefaultMutableTreeNode addObject(DefaultMutableTreeNode parentNode, DefaultMutableTreeNode childNode) {
+    	return addObject(parentNode, childNode, parentNode.getChildCount());
+    }
+    
+    public DefaultMutableTreeNode addObject(DefaultMutableTreeNode parentNode, DefaultMutableTreeNode childNode, int index) {
 
         if (parentNode == null) {
             parentNode = getRootNode();
         }
 
         // It is key to invoke this on the TreeModel, and NOT DefaultMutableTreeNode
-        getTreeModel().insertNodeInto(childNode, parentNode, parentNode.getChildCount());
+        getTreeModel().insertNodeInto(childNode, parentNode, index);
 
         return childNode;
     }
@@ -378,10 +376,18 @@ public class DynamicTree extends JPanel {
      * @param expand expand or collapse?
      */
     public void expandAll(boolean expand) {
-        TreeNode root = (TreeNode) tree.getModel().getRoot();
-        expandAll(new TreePath(root), expand);
+        expandAll(getRootNode(), expand);
     }
 
+    /**
+     * Expand or collapse all the nodes in the given subtree.
+     *
+     * @param expand expand or collapse?
+     */
+    public void expandAll(DefaultMutableTreeNode node, boolean expand) {
+    	expandAll(new TreePath(node.getPath()), expand);
+    }
+    
     protected void expandAll(TreePath path, boolean expand) {
     	
         // Traverse children

@@ -109,7 +109,8 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         String cmd = e.getActionCommand();
         if (EXPAND_ALL.equals(cmd)) {
-        	if (tree.isLazyLoading()) {
+        	if (tree.getCurrentNode()==null) return;
+        	if (tree.isLazyLoading() && tree.getCurrentNode()==tree.getRootNode()) {
                 int deleteConfirmation = JOptionPane.showConfirmDialog(SessionMgr.getSessionMgr().getActiveBrowser(), 
                 		"Expanding the entire tree may take a long time. Are you sure you want to do this?", 
                 		"Expand All", JOptionPane.YES_NO_OPTION);
@@ -119,14 +120,15 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
         	}
             expandAllButton.setEnabled(false);
             collapseAllButton.setEnabled(false);
-            tree.expandAll(true);
+            tree.expandAll(tree.getCurrentNode(), true);
             expandAllButton.setEnabled(true);
             collapseAllButton.setEnabled(true);
         }
         else if (COLLAPSE_ALL.equals(cmd)) {
+        	if (tree.getCurrentNode()==null) return;
             collapseAllButton.setEnabled(false);
             expandAllButton.setEnabled(false);
-            tree.expandAll(false);
+            tree.expandAll(tree.getCurrentNode(), false);
             collapseAllButton.setEnabled(true);
             expandAllButton.setEnabled(true);
         }

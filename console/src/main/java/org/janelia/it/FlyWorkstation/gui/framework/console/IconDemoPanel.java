@@ -143,6 +143,10 @@ public class IconDemoPanel extends JPanel {
     	
 		@Override
 		public void mousePressed(MouseEvent e) {
+			
+	        if (e.isPopupTrigger()) return;
+	        if (e.getClickCount() != 1 || e.getButton() != MouseEvent.BUTTON1) return;
+	        
 			final AnnotatedImageButton button = (AnnotatedImageButton)e.getSource();	
 			final boolean shiftDown = e.isShiftDown();
 			final boolean metaDown = e.isMetaDown();

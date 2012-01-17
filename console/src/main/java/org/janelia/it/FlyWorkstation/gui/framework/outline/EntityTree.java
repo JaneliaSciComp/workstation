@@ -52,7 +52,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
 
     public EntityTree(boolean lazy) {
         super(new BorderLayout());
-
+        
         this.lazy = lazy;
         treesPanel = new JPanel(new BorderLayout());
         add(treesPanel, BorderLayout.CENTER);
@@ -141,6 +141,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
     }
 
     public JTree getTree() {
+    	if (selectedTree==null) return null;
         return selectedTree.getTree();
     }
 
@@ -148,6 +149,10 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
         return (Entity) selectedTree.getRootNode().getUserObject();
     }
 
+    public Entity getEntity(DefaultMutableTreeNode node) {
+    	return (Entity)node.getUserObject();
+    }
+    
     /**
      * Override this method to show a popup menu when the user right clicks a node in the tree.
      *
@@ -248,20 +253,15 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
             public int recreateChildNodes(DefaultMutableTreeNode node) {
                 Entity entity = (Entity) node.getUserObject();
                 ArrayList<EntityData> edList = new ArrayList<EntityData>(entity.getOrderedEntityData());
-
-                if (!EntityUtils.areLoaded(edList)) {
-                    throw new IllegalStateException("replaceLazyChildren called on node whose children have not been loaded");
-                }
-
                 selectedTree.removeChildren(node);
                 return addChildren(node, edList);
             }
 
             @Override
-            public void expandAll(final boolean expand) {
+            public void expandAll(final DefaultMutableTreeNode node, final boolean expand) {
 
                 if (!expand || !isLazyLoading()) {
-                    super.expandAll(expand);
+                    super.expandAll(node, expand);
                     return;
                 }
 
@@ -269,7 +269,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
                 	loadingWorker.cancel(true);
                 }
                 
-                // Expanding a lazy tree is hard. Let's eager load the entire thing first.
+                // Expanding a lazy tree node-by-node takes forever. Let's eager load the entire thing first.
 
                 progressMonitor = new ProgressMonitor(SessionMgr.getSessionMgr().getActiveBrowser(), "Loading tree...", "", 0, 100);
                 progressMonitor.setProgress(0);
@@ -277,25 +277,22 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
                 
                 loadingWorker = new FakeProgressWorker() {
 
-                    private Entity rootEntity;
+                    private Entity entity;
 
                     @Override
                     protected void doStuff() throws Exception {
                     	progressMonitor.setProgress(1);
-                        long rootId = ((Entity) getRootNode().getUserObject()).getId();
-                        rootEntity = ModelMgr.getModelMgr().getEntityTree(rootId);
+                        long entityId = ((Entity) node.getUserObject()).getId();
+                        entity = ModelMgr.getModelMgr().getEntityTree(entityId);
                     }
 
                     @Override
                     protected void hadSuccess() {
                     	if (isCancelled()) return;
                     	if (getProgress() < 90) setProgress(90);
-                        // The tree is no longer lazy
-                        setLazyLoading(false);
-                        DefaultMutableTreeNode rootNode = getRootNode();
-                        rootNode.setUserObject(rootEntity);
-                        recreateChildNodes(rootNode, true);
-                        expandAll(new TreePath(rootNode), expand);
+                        node.setUserObject(entity);
+                        recreateChildNodes(node);
+                        expandAll(new TreePath(node.getPath()), expand);
                         SwingUtilities.updateComponentTreeUI(EntityTree.this);
                         if (getProgress() < 100) setProgress(100);
                     }
@@ -359,13 +356,21 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
     	}
     	return null;
     }
-    
 
-    private void addNodes(DefaultMutableTreeNode parentNode, Entity newEntity) {
+    protected void addNodes(DefaultMutableTreeNode parentNode, Entity newEntity) {
+    	if (parentNode==null) {
+        	addNodes(parentNode, newEntity, 0);
+    	}
+    	else {
+    		addNodes(parentNode, newEntity, parentNode.getChildCount());	
+    	}
+    }
+
+    protected void addNodes(DefaultMutableTreeNode parentNode, Entity newEntity, int index) {
 
         DefaultMutableTreeNode newNode;
         if (parentNode != null) {
-            newNode = selectedTree.addObject(parentNode, newEntity);
+            newNode = selectedTree.addObject(parentNode, newEntity, index);
         }
         else {
             // If the parent node is null, then the node is already in the tree as the root
@@ -384,21 +389,20 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
         }
 
         if (childDataList.isEmpty()) return;
-
-        // Test for proxies
-        boolean allLoaded = EntityUtils.areLoaded(childDataList);
-
-        if (!allLoaded) {
-            selectedTree.addObject(newNode, new LazyTreeNode());
-        }
-        else {
-            addChildren(newNode, childDataList);
-        }
-
+        
+        addChildren(newNode, childDataList);
     }
 
     private int addChildren(DefaultMutableTreeNode parentNode, List<EntityData> dataList) {
+    	
+        // Test for proxies
+        boolean allLoaded = EntityUtils.areLoaded(dataList);
 
+        if (!allLoaded) {
+            selectedTree.addObject(parentNode, new LazyTreeNode());
+            return 1;
+        }
+    	
         int c = 0;
         for (EntityData entityData : dataList) {
             Entity child = entityData.getChildEntity();
@@ -407,6 +411,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
                 c++;
             }
         }
+                
         return c;
     }
 }

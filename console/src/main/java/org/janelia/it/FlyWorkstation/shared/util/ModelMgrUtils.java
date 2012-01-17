@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
@@ -48,4 +49,9 @@ public class ModelMgrUtils {
             }
         }
     }
+    
+    public static boolean isOwner(Entity entity) {
+    	return entity.getUser().getUserLogin().equals(SessionMgr.getUsername());
+    }
+
 }

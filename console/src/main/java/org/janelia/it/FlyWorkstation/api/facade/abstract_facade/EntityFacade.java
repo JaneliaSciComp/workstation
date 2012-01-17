@@ -1,11 +1,11 @@
 package org.janelia.it.FlyWorkstation.api.facade.abstract_facade;
 
+import java.util.List;
+import java.util.Set;
+
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
-
-import java.util.List;
-import java.util.Set;
 
 /**
  * Created by IntelliJ IDEA.
@@ -37,10 +37,16 @@ public interface EntityFacade {
     public Entity saveEntity(Entity entity) throws Exception;
     
     public EntityData saveEntityDataForEntity(EntityData newData) throws Exception;
-
+    
     public boolean deleteEntityById(Long entityId);
 
     public void deleteEntityTree(Long entityId) throws Exception;
 
     public Entity cloneEntityTree(Long entityId, String rootName) throws Exception;
+
+    public Entity createEntity(String entityTypeName, String entityName) throws Exception;
+    
+    public EntityData addEntityToParent(Entity parent, Entity entity, Integer index, String attrName) throws Exception;
+    
+    public void removeEntityFromParent(Entity parent, Entity entity) throws Exception;
 }

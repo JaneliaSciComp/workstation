@@ -436,10 +436,10 @@ public class EntityListPane extends JPanel {
     /**
      * Synchronous method for updating the JTable model. Should be called from the EDT.
      */
-    private void updateTableModel(List<Entity> entities) {
+    private void updateTableModel(List<Entity> entityList) {
 
-        this.entities = entities;
-
+        this.entities = (entityList == null) ? new ArrayList<Entity>() : entityList;
+        
         Collections.sort(entities, new Comparator<Entity>() {
             @Override
             public int compare(Entity o1, Entity o2) {

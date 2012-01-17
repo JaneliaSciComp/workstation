@@ -76,6 +76,16 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
                 titleLabel.setBackground(backgroundNonSelectionColor);
             }
 
+            // Support drag and drop 
+            
+            JTree.DropLocation dropLocation = tree.getDropLocation();
+            if (dropLocation != null
+                    && dropLocation.getChildIndex() == -1
+                    && tree.getRowForPath(dropLocation.getPath()) == row) {
+                titleLabel.setForeground(foregroundSelectionColor);
+                titleLabel.setBackground(backgroundSelectionColor);
+            }
+
             // Set the default icon
 
             cellPanel.setEnabled(tree.isEnabled());

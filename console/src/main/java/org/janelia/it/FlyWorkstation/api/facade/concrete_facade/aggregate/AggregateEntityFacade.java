@@ -1,5 +1,10 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.aggregate;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.EntityFacade;
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.OntologyFacade;
 import org.janelia.it.FlyWorkstation.api.stub.data.DuplicateDataException;
@@ -8,11 +13,6 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Created by IntelliJ IDEA.
@@ -283,4 +283,18 @@ public class AggregateEntityFacade extends AggregateFacadeBase implements Entity
         throw new NoDataException();
     }
 
+    @Override
+    public Entity createEntity(String entityTypeName, String entityName) throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public EntityData addEntityToParent(Entity parent, Entity entity, Integer index, String attrName) throws Exception {
+    	throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void removeEntityFromParent(Entity parent, Entity entity) throws Exception{
+    	throw new UnsupportedOperationException();
+    }
 }

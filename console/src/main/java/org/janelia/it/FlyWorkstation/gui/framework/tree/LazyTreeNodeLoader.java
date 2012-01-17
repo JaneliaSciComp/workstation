@@ -31,7 +31,7 @@ public class LazyTreeNodeLoader extends SimpleWorker {
      */
     public void loadSynchronously() throws Exception {
         dynamicTree.loadLazyNodeData(node, recurse);
-        dynamicTree.recreateChildNodes(node, recurse);
+        dynamicTree.recreateChildNodes(node);
         expansionState.restoreExpansionState(dynamicTree, node);
         doneLoading();
     }
@@ -43,7 +43,7 @@ public class LazyTreeNodeLoader extends SimpleWorker {
 
     @Override
     protected void hadSuccess() {
-        dynamicTree.recreateChildNodes(node, recurse);
+        dynamicTree.recreateChildNodes(node);
         expansionState.restoreExpansionState(dynamicTree, node);
         doneLoading();
     }

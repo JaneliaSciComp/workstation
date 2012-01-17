@@ -85,7 +85,8 @@ public abstract class AnnotatedImageButton extends JToggleButton {
 			@Override
 			protected void popupTriggered(MouseEvent e) {
 				ModelMgr.getModelMgr().selectEntity(entity.getId(), false, true);
-	            JPopupMenu popupMenu = new EntityContextMenu(entity);
+	            final EntityContextMenu popupMenu = new EntityContextMenu(entity);
+	            popupMenu.addMenuItems();
 		        popupMenu.show(AnnotatedImageButton.this, e.getX(), e.getY());
 			}
 

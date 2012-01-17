@@ -1,14 +1,15 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.EntityFacade;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
  * Created by IntelliJ IDEA.
@@ -89,7 +90,25 @@ public class EJBEntityFacade implements EntityFacade {
 
     @Override
     public Entity cloneEntityTree(Long entityId, String rootName) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().cloneEntityTree(entityId, SessionMgr.getUsername()
-                , rootName);
+        return EJBFactory.getRemoteAnnotationBean().cloneEntityTree(entityId, SessionMgr.getUsername(), rootName);
+    }
+    
+    @Override
+    public Entity createEntity(String entityTypeName, String entityName) throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().createEntity(SessionMgr.getUsername(), entityTypeName, entityName);
+    }
+
+    @Override
+    public EntityData addEntityToParent(Entity parent, Entity entity, Integer index, String attrName) throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().addEntityToParent(parent, entity, index, attrName);
+    }
+    
+    @Override
+    public void removeEntityFromParent(Entity parent, Entity entity) throws Exception {
+    	EntityData ed = EntityUtils.removeChild(parent, entity);
+    	if (ed == null) {
+    		throw new Exception("Given Entity is not a child of that parent");
+    	}
+        EJBFactory.getRemoteAnnotationBean().removeEntityFromFolder(ed);
     }
 }

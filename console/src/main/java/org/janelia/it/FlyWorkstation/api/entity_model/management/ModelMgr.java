@@ -506,6 +506,18 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().cloneEntityTree(entityId, rootName);
     }
 
+    public Entity createEntity(String entityTypeName, String entityName) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().createEntity(entityTypeName, entityName);
+    }
+
+    public EntityData addEntityToParent(Entity parent, Entity entity, Integer index, String attrName) throws Exception {
+    	return FacadeManager.getFacadeManager().getEntityFacade().addEntityToParent(parent, entity, index, attrName);
+    }
+
+    public void removeEntityFromParent(Entity parent, Entity entity) throws Exception {
+        FacadeManager.getFacadeManager().getEntityFacade().removeEntityFromParent(parent, entity);
+    }
+    
     public List<Entity> getAnnotationsForEntity(Long entityId) throws Exception {
         return FacadeManager.getFacadeManager().getAnnotationFacade().getAnnotationsForEntity(entityId);
     }

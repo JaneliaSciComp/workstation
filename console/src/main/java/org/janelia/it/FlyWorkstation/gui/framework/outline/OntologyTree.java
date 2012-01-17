@@ -121,6 +121,10 @@ public class OntologyTree extends JPanel {
     public JTree getTree() {
         return selectedTree.getTree();
     }
+    
+    public OntologyElement getElement(DefaultMutableTreeNode node) {
+    	return (OntologyElement)node.getUserObject();
+    }
 
     /**
      * Override this method to show a popup menu when the user right clicks a node in the tree.
