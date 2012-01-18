@@ -201,6 +201,9 @@ public class Icons {
         else if (EntityConstants.TYPE_ANNOTATION.equals(type)) {
             return getIcon("page_white_edit.png");
         }
+        else if (EntityConstants.TYPE_FLY_LINE.equals(type)) {
+            return getIcon(large ? "fruit_fly.png" : "fruit_fly_small.png");
+        }
 
         return getIcon(large ? "error_large.png" : "bullet_error.png");
     }
