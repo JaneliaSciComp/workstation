@@ -149,10 +149,31 @@ public abstract class TreeTransferHandler extends TransferHandler {
 		return true;
 	}
 
+	/**
+	 * Implement this to define when a transfer of a given node is allowed.
+	 * @param node
+	 * @param destination
+	 * @return
+	 */
 	protected abstract boolean allowTransfer(DefaultMutableTreeNode node, DefaultMutableTreeNode destination);
 	
+	/**
+	 * Implement this to update the underlying data model. 
+	 * @param nodeRemoved
+	 * @param nodeAdded
+	 * @param newParent
+	 * @param index
+	 * @return
+	 */
 	protected abstract boolean updateUserData(DefaultMutableTreeNode nodeRemoved, DefaultMutableTreeNode nodeAdded, DefaultMutableTreeNode newParent, int index);
 	
+	/**
+	 * Implement this to add the moved subtree back to the tree at the new parent.
+	 * @param parent
+	 * @param node
+	 * @param index
+	 * @return
+	 */
 	protected abstract boolean addNode(DefaultMutableTreeNode parent, DefaultMutableTreeNode node, int index);
 	
 	@Override

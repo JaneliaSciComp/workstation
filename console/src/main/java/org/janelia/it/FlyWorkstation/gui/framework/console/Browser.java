@@ -27,7 +27,9 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModelListenerAdapter;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.JOutlookBar;
+import org.janelia.it.FlyWorkstation.gui.util.JOutlookBar2;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
@@ -58,7 +60,7 @@ public class Browser extends JFrame implements Cloneable {
     public static final String VIEW_ONTOLOGY = "Ontology Section";
     public static final String BAR_PRIVATE_DATA = "My Data";
     public static final String BAR_PUBLIC_DATA = "Public Data";
-    public static final String BAR_SESSIONS = "Annotation Sessions";
+    public static final String BAR_SESSIONS = "Sessions";
     public static final String BAR_TASKS = "Services";
 
     private static String MEMORY_EXCEEDED_PRT_SCR_MSG = "Insufficient memory to print screen";
@@ -237,11 +239,11 @@ public class Browser extends JFrame implements Cloneable {
         ontologyOutline.setPreferredSize(new Dimension());
 //        icsTabPane = new ICSTabPane(this);
 
-        outlookBar = new JOutlookBar();
-        outlookBar.addBar(BAR_PRIVATE_DATA, privateEntityOutline);
-        outlookBar.addBar(BAR_PUBLIC_DATA, publicEntityOutline);
-        outlookBar.addBar(BAR_SESSIONS, sessionOutline);
-        outlookBar.addBar(BAR_TASKS, taskOutline);
+        outlookBar = new JOutlookBar2();
+        outlookBar.addBar(BAR_PRIVATE_DATA, Icons.getIcon("folders_explorer_medium.png"), privateEntityOutline);
+        outlookBar.addBar(BAR_PUBLIC_DATA, Icons.getIcon("folders_explorer_medium.png"), publicEntityOutline);
+        outlookBar.addBar(BAR_SESSIONS, Icons.getIcon("cart_medium.png"), sessionOutline);
+        outlookBar.addBar(BAR_TASKS, Icons.getIcon("cog_medium.png"), taskOutline);
 //        outlookBar.addBar("Files", fileOutline);
 //        outlookBar.setVisibleBarByName(Browser.BAR_PUBLIC_DATA);
         

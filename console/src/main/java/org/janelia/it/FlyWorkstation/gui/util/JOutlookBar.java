@@ -17,27 +17,27 @@ public class JOutlookBar extends JPanel implements ActionListener {
     /**
      * The top panel: contains the buttons displayed on the top of the JOutlookBar
      */
-    private JPanel topPanel = new JPanel(new GridLayout(1, 1));
+    protected JPanel topPanel = new JPanel(new GridLayout(1, 1));
 
     /**
      * The bottom panel: contains the buttons displayed on the bottom of the JOutlookBar
      */
-    private JPanel bottomPanel = new JPanel(new GridLayout(1, 1));
+    protected JPanel bottomPanel = new JPanel(new GridLayout(1, 1));
 
     /**
      * A LinkedHashMap of bars: we use a linked hash map to preserve the order of the bars
      */
-    private Map<String, BarInfo> bars = new LinkedHashMap<String, BarInfo>();
+    protected Map<String, BarInfo> bars = new LinkedHashMap<String, BarInfo>();
 
     /**
      * The currently visible bar (zero-based index)
      */
-    private int visibleBar = 0;
+    protected int visibleBar = 0;
 
     /**
      * A place-holder for the currently visible component
      */
-    private JComponent visibleComponent = null;
+    protected JComponent visibleComponent = null;
 
     /**
      * Creates a new JOutlookBar; after which you should make repeated calls to
@@ -260,7 +260,7 @@ public class JOutlookBar extends JPanel implements ActionListener {
      * button     The associated JButton for the bar
      * component    The component maintained in the Outlook bar
      */
-    class BarInfo {
+    protected class BarInfo {
         /**
          * The name of this bar
          */
@@ -269,7 +269,7 @@ public class JOutlookBar extends JPanel implements ActionListener {
         /**
          * The JButton that implements the Outlook bar itself
          */
-        private JButton button;
+        private AbstractButton button;
 
         /**
          * The component that is the body of the Outlook bar
@@ -324,10 +324,23 @@ public class JOutlookBar extends JPanel implements ActionListener {
          *
          * @return The Outlook Bar JButton implementation
          */
-        public JButton getButton() {
+        public AbstractButton getButton() {
             return this.button;
         }
 
+        /**
+         * Sets the button
+         *
+         * @param button
+         */
+        public void setButton(AbstractButton button) {
+            this.button = button;
+        }
+        
+        public Icon getIcon() {
+        	return button.getIcon();
+        }
+        
         /**
          * Returns the component that implements the body of this Outlook Bar
          *
