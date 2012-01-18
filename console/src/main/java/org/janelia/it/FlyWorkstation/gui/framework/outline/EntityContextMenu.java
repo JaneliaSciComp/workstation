@@ -109,14 +109,7 @@ public class EntityContextMenu extends JPopupMenu {
 	            	// Make sure we have the latest entity, then we can rename it
 	            	Entity dbEntity = ModelMgr.getModelMgr().getEntityById(""+entity.getId());
 	            	dbEntity.setName(newName);
-	            	Entity savedEntity = ModelMgr.getModelMgr().saveOrUpdateEntity(dbEntity);
-	            	
-	            	// Update our local entity
-	            	entity.setName(savedEntity.getName());
-	            	entity.setUpdatedDate(savedEntity.getUpdatedDate());
-	            	
-	            	revalidate();
-	            	repaint();
+	            	ModelMgr.getModelMgr().saveOrUpdateEntity(dbEntity);
 	            }
                 catch (Exception ex) {
                     ex.printStackTrace();

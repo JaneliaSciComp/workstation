@@ -342,6 +342,19 @@ public class IconDemoPanel extends JPanel {
 			}
 
 			@Override
+			public void entityChanged(long entityId) {
+				AnnotatedImageButton button = imagesPanel.getButtonByEntityId(entityId);
+				if (button != null) {
+					Entity entity = button.getEntity();
+					if (entity != null) {
+						ModelMgrUtils.updateEntity(entity);
+		                button.refresh(entity);
+		                button.setViewable(true);
+					}
+				}
+			}
+
+			@Override
 			public void entityDeselected(long entityId, boolean outline) {
 				if (outline) return;
 				AnnotatedImageButton button = imagesPanel.getButtonByEntityId(entityId);

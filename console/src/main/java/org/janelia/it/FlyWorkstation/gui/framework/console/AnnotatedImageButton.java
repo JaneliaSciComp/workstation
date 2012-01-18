@@ -110,6 +110,13 @@ public abstract class AnnotatedImageButton extends JToggleButton {
         
     	this.entity = entity;
     	
+    	refresh(entity);
+    }
+    
+    public void refresh(Entity entity) {
+
+    	mainPanel.removeAll();
+    	
     	String title = entity.getName();
         if (title.length()>30) {
         	title = title.substring(0, 27) + "...";
@@ -117,6 +124,7 @@ public abstract class AnnotatedImageButton extends JToggleButton {
         
         titleLabel.setText(title);
         titleLabel.setToolTipText(entity.getName());
+        
         mainPanel.add(init(entity));
     }
     

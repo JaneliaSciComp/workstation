@@ -53,5 +53,20 @@ public class ModelMgrUtils {
     public static boolean isOwner(Entity entity) {
     	return entity.getUser().getUserLogin().equals(SessionMgr.getUsername());
     }
+    
+    public static void updateEntity(Entity entity) {
+    	try {
+    		Entity newEntity = ModelMgr.getModelMgr().getEntityById(entity.getId()+"");
+	    	entity.setCreationDate(newEntity.getCreationDate());
+	    	entity.setEntityData(newEntity.getEntityData());
+	    	entity.setEntityStatus(newEntity.getEntityStatus());
+	    	entity.setEntityType(newEntity.getEntityType());
+	    	entity.setName(newEntity.getName());
+	    	entity.setUpdatedDate(newEntity.getUpdatedDate());
+	    	entity.setUser(newEntity.getUser());
+    	} catch (Exception e) {
+    		SessionMgr.getSessionMgr().handleException(e);
+    	}
+    }
 
 }

@@ -24,6 +24,7 @@ import org.janelia.it.FlyWorkstation.gui.util.FakeProgressWorker;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
@@ -274,6 +275,8 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
                 progressMonitor = new ProgressMonitor(SessionMgr.getSessionMgr().getActiveBrowser(), "Loading tree...", "", 0, 100);
                 progressMonitor.setProgress(0);
                 progressMonitor.setMillisToDecideToPopup(0);
+
+                Utils.setWaitingCursor(EntityTree.this);
                 
                 loadingWorker = new FakeProgressWorker() {
 
@@ -295,11 +298,12 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
                         expandAll(new TreePath(node.getPath()), expand);
                         SwingUtilities.updateComponentTreeUI(EntityTree.this);
                         if (getProgress() < 100) setProgress(100);
+                        Utils.setDefaultCursor(EntityTree.this);
                     }
 
                     @Override
                     protected void hadError(Throwable error) {
-                        getDynamicTree().setCursor(Cursor.getDefaultCursor());
+                    	Utils.setDefaultCursor(EntityTree.this);
                         JOptionPane.showMessageDialog(EntityTree.this, "Error loading tree", "Internal Error", JOptionPane.ERROR_MESSAGE);
                     }
                 };

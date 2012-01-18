@@ -274,6 +274,12 @@ public class ModelMgr {
         	listener.entityDeselected(entityId, outline);
         }
     }
+
+    public void notifyEntityChanged(Long entityId) {
+        for (ModelMgrObserver listener : modelMgrObservers) {
+        	listener.entityChanged(entityId);
+        }
+    }
     
     public boolean notifyEntityViewRequestedInNeuronAnnotator(Long entityId) {
     	if (SessionMgr.getSessionMgr().getExternalClientsByName(NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
@@ -563,7 +569,9 @@ public class ModelMgr {
     }
     
     public Entity saveOrUpdateEntity(Entity entity) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().saveEntity(entity);
+        Entity newEntity = FacadeManager.getFacadeManager().getEntityFacade().saveEntity(entity);
+        if (newEntity!=null) notifyEntityChanged(newEntity.getId());
+        return newEntity;
     }
     
     public EntityData saveOrUpdateEntityData(EntityData newEntityData) throws Exception {

@@ -15,6 +15,8 @@ public interface ConsoleObserver {
     public void entitySelected(@WebParam(name = "entityId") long entityId, @WebParam(name = "outline") boolean outline, @WebParam(name = "clearAll") boolean clearAll);
 
     public void entityDeselected(@WebParam(name = "entityId") long entityId, @WebParam(name = "outline") boolean outline);
+
+    public void entityChanged(@WebParam(name = "entityId") long entityId);
     
     public void entityViewRequested(@WebParam(name = "entityId") long entityId);
     
