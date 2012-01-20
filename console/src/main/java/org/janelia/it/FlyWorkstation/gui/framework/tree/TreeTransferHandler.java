@@ -180,7 +180,7 @@ public abstract class TreeTransferHandler extends TransferHandler {
 	protected void exportDone(JComponent source, Transferable data, int action) {
 		if ((action & MOVE) == MOVE) {
 			// Remove the old nodes
-			dynamicTree.removeNode(nodeToRemove, true);
+//			dynamicTree.removeNode(nodeToRemove, true);
 		}
 	}
 	

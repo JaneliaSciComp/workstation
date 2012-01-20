@@ -86,7 +86,8 @@ public class AnnotationSessionPropertyDialog extends ModalDialog {
 
                     protected void doStuff() throws Exception {
                         for (Entity entity : entityChooser.getChosenEntities()) {
-                            List<Entity> descs = entity.getDescendantsOfType(EntityConstants.TYPE_NEURON_FRAGMENT);
+                        	Entity entityTree = ModelMgr.getModelMgr().getEntityTree(entity.getId());
+                            List<Entity> descs = entityTree.getDescendantsOfType(EntityConstants.TYPE_NEURON_FRAGMENT);
                             entities.addAll(descs);
                         }
                     }

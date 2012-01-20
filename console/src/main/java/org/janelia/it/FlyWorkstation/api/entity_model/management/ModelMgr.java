@@ -352,15 +352,6 @@ public class ModelMgr {
 		}
 		notifyEntityDeselected(entityId, outline);
 	}
-	
-	public void setEntitySelection(Long entityId, boolean selection, boolean outline, boolean clearAll) {
-		if (selection) {
-			selectEntity(entityId, outline, clearAll);
-		}
-		else {
-			deselectEntity(entityId, outline);
-		}
-	}
 
     public List<Long> getSelectedEntitiesIds() {
 		return selectedEntitiesIds;
@@ -520,8 +511,8 @@ public class ModelMgr {
     	return FacadeManager.getFacadeManager().getEntityFacade().addEntityToParent(parent, entity, index, attrName);
     }
 
-    public void removeEntityFromParent(Entity parent, Entity entity) throws Exception {
-        FacadeManager.getFacadeManager().getEntityFacade().removeEntityFromParent(parent, entity);
+    public void removeEntityData(EntityData ed) throws Exception {
+        FacadeManager.getFacadeManager().getEntityFacade().removeEntityData(ed);
     }
     
     public List<Entity> getAnnotationsForEntity(Long entityId) throws Exception {

@@ -1,15 +1,17 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline.choose;
 
-import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTree;
-import org.janelia.it.jacs.model.entity.Entity;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
-import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.List;
+
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTree;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityData;
 
 
 /**
@@ -47,8 +49,8 @@ public class EntityChooser extends AbstractChooser {
         chosenEntities.clear();
         for (TreePath path : entityTree.getDynamicTree().getTree().getSelectionPaths()) {
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
-            Entity entity = (Entity) node.getUserObject();
-            chosenEntities.add(entity);
+            EntityData ed = entityTree.getEntityData(node);
+            chosenEntities.add(ed.getChildEntity());
         }
     }
 

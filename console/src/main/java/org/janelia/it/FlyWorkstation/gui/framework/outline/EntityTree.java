@@ -1,7 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import java.awt.BorderLayout;
-import java.awt.Cursor;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -43,7 +42,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
     
     private FakeProgressWorker loadingWorker;
     private ProgressMonitor progressMonitor;
-	private Entity rootEntity;
+	private EntityData rootEntityData;
     
 	private Map<Long,DefaultMutableTreeNode> entityIdToNodeMap = new HashMap<Long,DefaultMutableTreeNode>();
 	
@@ -60,7 +59,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
     }
 
     public Entity getRootEntity() {
-		return rootEntity;
+		return rootEntityData.getChildEntity();
 	}
 
 	public void showNothing() {
@@ -126,8 +125,13 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
 
         entityIdToNodeMap.clear();
         
-        createNewTree(rootEntity);
-        addNodes(null, rootEntity);
+        // Dummy ed for the root
+        EntityData rootEd = new EntityData();
+        rootEd.setChildEntity(rootEntity);
+
+        createNewTree(rootEd);
+        
+        addNodes(null, rootEd);
 
         selectedTree.expand(selectedTree.getRootNode(), true);
 
@@ -147,11 +151,16 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
     }
 
     public Entity getCurrentRootEntity() {
-        return (Entity) selectedTree.getRootNode().getUserObject();
+        return getEntity(selectedTree.getRootNode());
     }
 
     public Entity getEntity(DefaultMutableTreeNode node) {
-    	return (Entity)node.getUserObject();
+    	EntityData ed = getEntityData(node);
+    	return ed.getChildEntity();
+    }
+
+    public EntityData getEntityData(DefaultMutableTreeNode node) {
+    	return (EntityData)node.getUserObject();
     }
     
     /**
@@ -186,9 +195,9 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
     protected void nodeDoubleClicked(MouseEvent e) {
     }
 
-    protected void createNewTree(Entity root) {
+    protected void createNewTree(EntityData root) {
 
-    	this.rootEntity = root;
+    	this.rootEntityData = root;
         selectedTree = new DynamicTree(root, true, lazy) {
 
             protected void showPopupMenu(MouseEvent e) {
@@ -223,7 +232,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
 
             @Override
             public void loadLazyNodeData(DefaultMutableTreeNode node, boolean recurse) throws Exception {
-                Entity entity = (Entity) node.getUserObject();
+                Entity entity = getEntity(node);
                 
                 if (recurse == true) {
                 	// It's much faster to load the entire subtree in one go
@@ -252,7 +261,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
 
             @Override
             public int recreateChildNodes(DefaultMutableTreeNode node) {
-                Entity entity = (Entity) node.getUserObject();
+                Entity entity = getEntity(node);
                 ArrayList<EntityData> edList = new ArrayList<EntityData>(entity.getOrderedEntityData());
                 selectedTree.removeChildren(node);
                 return addChildren(node, edList);
@@ -285,7 +294,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
                     @Override
                     protected void doStuff() throws Exception {
                     	progressMonitor.setProgress(1);
-                        long entityId = ((Entity) node.getUserObject()).getId();
+                        long entityId = getEntity(node).getId();
                         entity = ModelMgr.getModelMgr().getEntityTree(entityId);
                     }
 
@@ -348,7 +357,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
     public Entity getEntityById(Long entityId) {
     	DefaultMutableTreeNode node = entityIdToNodeMap.get(entityId);
     	if (node==null) return null;
-    	return (Entity)node.getUserObject();
+    	return getEntity(node);
     }
 
     public Entity getParentEntityById(Long entityId) {
@@ -356,34 +365,35 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
     	if (node == null) return null;
     	DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode)node.getParent();
     	if (parentNode != null) {
-    		return (Entity)parentNode.getUserObject();
+    		return getEntity(parentNode);
     	}
     	return null;
     }
 
-    protected void addNodes(DefaultMutableTreeNode parentNode, Entity newEntity) {
+    protected void addNodes(DefaultMutableTreeNode parentNode, EntityData newEd) {
     	if (parentNode==null) {
-        	addNodes(parentNode, newEntity, 0);
+        	addNodes(parentNode, newEd, 0);
     	}
     	else {
-    		addNodes(parentNode, newEntity, parentNode.getChildCount());	
+    		addNodes(parentNode, newEd, parentNode.getChildCount());	
     	}
     }
 
-    protected void addNodes(DefaultMutableTreeNode parentNode, Entity newEntity, int index) {
+    protected void addNodes(DefaultMutableTreeNode parentNode, EntityData newEd, int index) {
 
         DefaultMutableTreeNode newNode;
         if (parentNode != null) {
-            newNode = selectedTree.addObject(parentNode, newEntity, index);
+            newNode = selectedTree.addObject(parentNode, newEd, index);
         }
         else {
             // If the parent node is null, then the node is already in the tree as the root
             newNode = selectedTree.getRootNode();
         }
         
-        entityIdToNodeMap.put(newEntity.getId(), newNode);
+        Entity entity = newEd.getChildEntity();
+        entityIdToNodeMap.put(entity.getId(), newNode);
         
-        List<EntityData> dataList = newEntity.getOrderedEntityData();
+        List<EntityData> dataList = entity.getOrderedEntityData();
         List<EntityData> childDataList = new ArrayList<EntityData>();
 
         for (EntityData ed : dataList) {
@@ -409,9 +419,8 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
     	
         int c = 0;
         for (EntityData entityData : dataList) {
-            Entity child = entityData.getChildEntity();
-            if (child != null) {
-                addNodes(parentNode, child);
+            if (entityData.getChildEntity() != null) {
+                addNodes(parentNode, entityData);
                 c++;
             }
         }

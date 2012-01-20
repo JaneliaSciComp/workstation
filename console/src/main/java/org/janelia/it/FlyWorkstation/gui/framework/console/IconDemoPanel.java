@@ -89,7 +89,7 @@ public class IconDemoPanel extends JPanel {
             	// Ctrl-A or Meta-A to select all
                 if (e.getKeyCode() == KeyEvent.VK_A && ((SystemInfo.isMac && e.isMetaDown()) || (e.isControlDown()))) {
 					for(Entity entity : entities) {
-						ModelMgr.getModelMgr().setEntitySelection(entity.getId(), true, false, false);
+						ModelMgr.getModelMgr().selectEntity(entity.getId(), false, false);
 					}
                 	return;
                 }
@@ -160,7 +160,12 @@ public class IconDemoPanel extends JPanel {
 					// Now update the model
 					if (metaDown) {
 						// With the meta key we toggle items in the current selection without clearing it
-						ModelMgr.getModelMgr().setEntitySelection(entityId, !state, false, false);
+						if (!state) {
+							ModelMgr.getModelMgr().selectEntity(entityId, false, false);
+						}
+						else {
+							ModelMgr.getModelMgr().deselectEntity(entityId, false);
+						}
 					}
 					else {
 						// With shift, we select ranges
@@ -173,20 +178,20 @@ public class IconDemoPanel extends JPanel {
 								if (entity.getId().equals(lastSelected) || entity.getId().equals(entityId)) {
 									if (entity.getId().equals(entityId)) {
 										// Always select the button that was clicked
-										ModelMgr.getModelMgr().setEntitySelection(entity.getId(), true, false, false);
+										ModelMgr.getModelMgr().selectEntity(entity.getId(), false, false);
 									}
 									if (selecting) return; // We already selected, this is the end
 									selecting = true; // Start selecting
 									continue; // Skip selection of the first and last items, which should already be selected
 								}
 								if (selecting) {
-									ModelMgr.getModelMgr().setEntitySelection(entity.getId(), true, false, false);			
+									ModelMgr.getModelMgr().selectEntity(entity.getId(), false, false);			
 								}
 							}
 						}
 						else {
 							// This is a good old fashioned single button selection
-							ModelMgr.getModelMgr().setEntitySelection(entityId, true, false, true);
+							ModelMgr.getModelMgr().selectEntity(entityId, false, true);
 						}
 						
 					}
@@ -277,14 +282,10 @@ public class IconDemoPanel extends JPanel {
 					selectedEntity = button.getEntity();
 				}
 				else {
-					EntityOutline publicEntityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline();
-					selectedEntity = publicEntityOutline.getEntityById(entityId);
+					EntityOutline entityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline();
+					selectedEntity = entityOutline.getEntityById(entityId);
 					if (selectedEntity == null) {
-						EntityOutline privateEntityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getPrivateEntityOutline();
-						selectedEntity = privateEntityOutline.getEntityById(entityId);
-						if (selectedEntity==null) {
-							System.out.println("Cannot find entity "+entityId+" in imagesPanel or either entity panel... falling back on DB.");
-						}
+						System.out.println("Cannot find entity "+entityId+" in imagesPanel or either entity panel... falling back on DB.");
 					}
 				}
 				

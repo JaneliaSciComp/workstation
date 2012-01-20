@@ -17,9 +17,11 @@ import javax.swing.tree.TreePath;
 public class ExpansionState {
 
 	private final Set<String> expanded = new HashSet<String>();
+	private String selected;
 	
     public void storeExpansionState(DynamicTree dynamicTree) {
     	expanded.clear();
+    	this.selected = getPath(dynamicTree.getCurrentNode());
     	storeExpansionState(dynamicTree, dynamicTree.getRootNode());
     }
     
@@ -39,10 +41,17 @@ public class ExpansionState {
     }
     
 	public void restoreExpansionState(DynamicTree dynamicTree, DefaultMutableTreeNode node) {
-    	if (expanded.contains(getPath(node))) {
+		
+		String path = getPath(node);
+		
+    	if (expanded.contains(path)) {
     		dynamicTree.expand(node, true);
     	}
 
+    	if (selected != null && selected.equals(path)) {
+    		dynamicTree.navigateToNode(node);
+    	}
+    	
         for (Enumeration e = node.children(); e.hasMoreElements(); ) {
             DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) e.nextElement();
             restoreExpansionState(dynamicTree, childNode);

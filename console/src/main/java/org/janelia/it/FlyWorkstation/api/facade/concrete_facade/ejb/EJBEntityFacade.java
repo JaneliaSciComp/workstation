@@ -104,11 +104,7 @@ public class EJBEntityFacade implements EntityFacade {
     }
     
     @Override
-    public void removeEntityFromParent(Entity parent, Entity entity) throws Exception {
-    	EntityData ed = EntityUtils.removeChild(parent, entity);
-    	if (ed == null) {
-    		throw new Exception("Given Entity is not a child of that parent");
-    	}
+    public void removeEntityData(EntityData ed) throws Exception {
         EJBFactory.getRemoteAnnotationBean().removeEntityFromFolder(ed);
     }
 }

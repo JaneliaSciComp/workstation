@@ -48,5 +48,5 @@ public interface EntityFacade {
     
     public EntityData addEntityToParent(Entity parent, Entity entity, Integer index, String attrName) throws Exception;
     
-    public void removeEntityFromParent(Entity parent, Entity entity) throws Exception;
+    public void removeEntityData(EntityData ed) throws Exception;
 }

@@ -58,8 +58,7 @@ public class Browser extends JFrame implements Cloneable {
     public static final String VIEW_SEARCH = "Search Toolbar";
     public static final String VIEW_OUTLINES = "Outlines Section";
     public static final String VIEW_ONTOLOGY = "Ontology Section";
-    public static final String BAR_PRIVATE_DATA = "My Data";
-    public static final String BAR_PUBLIC_DATA = "Public Data";
+    public static final String BAR_DATA = "Data";
     public static final String BAR_SESSIONS = "Sessions";
     public static final String BAR_TASKS = "Services";
 
@@ -93,8 +92,7 @@ public class Browser extends JFrame implements Cloneable {
     private JOutlookBar outlookBar;
     //    private FileOutline fileOutline;
     private SessionOutline sessionOutline;
-    private EntityOutline publicEntityOutline;
-    private EntityOutline privateEntityOutline;
+    private EntityOutline entityOutline;
     private TaskOutline taskOutline;
     private OntologyOutline ontologyOutline;
     private AnnotationSessionPropertyDialog annotationSessionPropertyPanel;
@@ -216,32 +214,26 @@ public class Browser extends JFrame implements Cloneable {
 //        fileOutline = new FileOutline(this);
         sessionOutline = new SessionOutline(this);
         // todo We should probably pass the user info to the server rather than filter the complete list on the console.
-        
-        publicEntityOutline = new EntityOutline() {
-			@Override
-			public List<Entity> loadRootList() {
-				return ModelMgr.getModelMgr().getSystemCommonRootEntitiesByTypeName(EntityConstants.TYPE_FOLDER);
-			}
-		};
 		
-        privateEntityOutline = new EntityOutline() {
+        entityOutline = new EntityOutline() {
 			@Override
 			public List<Entity> loadRootList() {
-				return ModelMgr.getModelMgr().getUserCommonRootEntitiesByTypeName(EntityConstants.TYPE_FOLDER);
+				List<Entity> rootList = ModelMgr.getModelMgr().getUserCommonRootEntitiesByTypeName(EntityConstants.TYPE_FOLDER);
+				rootList.addAll(ModelMgr.getModelMgr().getSystemCommonRootEntitiesByTypeName(EntityConstants.TYPE_FOLDER));
+				return rootList;
 			}
 		};
 		
         taskOutline = new TaskOutline(this);
         
         ontologyOutline = new OntologyOutline();
-        annotationSessionPropertyPanel = new AnnotationSessionPropertyDialog(publicEntityOutline, ontologyOutline);
+        annotationSessionPropertyPanel = new AnnotationSessionPropertyDialog(entityOutline, ontologyOutline);
         annotationSessionPropertyPanel.pack();
         ontologyOutline.setPreferredSize(new Dimension());
 //        icsTabPane = new ICSTabPane(this);
 
         outlookBar = new JOutlookBar2();
-        outlookBar.addBar(BAR_PRIVATE_DATA, Icons.getIcon("folders_explorer_medium.png"), privateEntityOutline);
-        outlookBar.addBar(BAR_PUBLIC_DATA, Icons.getIcon("folders_explorer_medium.png"), publicEntityOutline);
+        outlookBar.addBar(BAR_DATA, Icons.getIcon("folders_explorer_medium.png"), entityOutline);
         outlookBar.addBar(BAR_SESSIONS, Icons.getIcon("cart_medium.png"), sessionOutline);
         outlookBar.addBar(BAR_TASKS, Icons.getIcon("cog_medium.png"), taskOutline);
 //        outlookBar.addBar("Files", fileOutline);
@@ -291,29 +283,24 @@ public class Browser extends JFrame implements Cloneable {
 
         // Populate the data outlines
 
-        publicEntityOutline.showLoadingIndicator();
-        privateEntityOutline.showLoadingIndicator();
+        entityOutline.showLoadingIndicator();
 
         SimpleWorker entityOutlineLoadingWorker = new SimpleWorker() {
 
-            private List<Entity> privateRootList;
-            private List<Entity> publicRootList;
+            private List<Entity> rootList;
         	
             protected void doStuff() throws Exception {
-            	publicRootList = publicEntityOutline.loadRootList();
-            	privateRootList = privateEntityOutline.loadRootList();
+            	rootList = entityOutline.loadRootList();
             }
 
             protected void hadSuccess() {
-            	publicEntityOutline.init(publicRootList);
-                privateEntityOutline.init(privateRootList);
+                entityOutline.init(rootList);
             }
 
             protected void hadError(Throwable error) {
                 error.printStackTrace();
                 JOptionPane.showMessageDialog(mainPanel, "Error loading data outlines", "Data Load Error", JOptionPane.ERROR_MESSAGE);
-                publicEntityOutline.showNothing();
-                privateEntityOutline.showNothing();
+                entityOutline.showNothing();
             }
 
         };
@@ -1199,11 +1186,7 @@ public class Browser extends JFrame implements Cloneable {
     }
 
     public EntityOutline getEntityOutline() {
-        return publicEntityOutline;
-    }
-
-    public EntityOutline getPrivateEntityOutline() {
-        return privateEntityOutline;
+        return entityOutline;
     }
     
     public OntologyOutline getOntologyOutline() {

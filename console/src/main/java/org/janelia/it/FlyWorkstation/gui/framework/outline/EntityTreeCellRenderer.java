@@ -1,18 +1,23 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNode;
-import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.FlowLayout;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeCellRenderer;
-import java.awt.*;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
 
 /**
  * Special tree cell renderer for generic Entity trees.
@@ -21,12 +26,12 @@ import java.text.SimpleDateFormat;
  */
 public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements TreeCellRenderer {
     protected static final Color typeLabelColor = new Color(149, 125, 71);
-    protected static final Color keybindLabelColor = new Color(128, 128, 128);
+    protected static final Color metaLabelColor = new Color(128, 128, 128);
     protected static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm");
 
     protected JLabel titleLabel;
     protected JLabel typeLabel;
-    protected JLabel keybindLabel;
+    protected JLabel metaLabel;
     protected JPanel cellPanel;
     protected Color foregroundSelectionColor;
     protected Color foregroundNonSelectionColor;
@@ -49,9 +54,9 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
         typeLabel.setForeground(EntityTreeCellRenderer.typeLabelColor);
         cellPanel.add(typeLabel);
 
-        keybindLabel = new JLabel(" ");
-        keybindLabel.setForeground(EntityTreeCellRenderer.keybindLabelColor);
-        cellPanel.add(keybindLabel);
+        metaLabel = new JLabel(" ");
+        metaLabel.setForeground(EntityTreeCellRenderer.metaLabelColor);
+        cellPanel.add(metaLabel);
 
         foregroundSelectionColor = defaultRenderer.getTextSelectionColor();
         foregroundNonSelectionColor = defaultRenderer.getTextNonSelectionColor();
@@ -98,28 +103,57 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
             Object userObject = node.getUserObject();
 
-            if (node instanceof LazyTreeNode) {
-                titleLabel.setText("");
-                typeLabel.setText("");
-                titleLabel.setIcon(null);
+            titleLabel.setText("");
+            typeLabel.setText("");
+            titleLabel.setIcon(null);
+            metaLabel.setText("");
+            
+            Entity entity = null;
+            
+            if (userObject instanceof EntityData) {
+            	EntityData ed = (EntityData)userObject;
+                entity = (Entity)ed.getChildEntity();
             }
-            if (userObject instanceof Entity) {
-                Entity entity = (Entity) userObject;
+            else if (userObject instanceof Entity) {
+            	entity = (Entity)userObject;
+            }
+            
+            if (entity!= null) {
+                
+                DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();                
+                Entity parent = null;
+                if (parentNode != null) {
+                    Object parentUserObject = parentNode.getUserObject();
+                	if (parentUserObject instanceof EntityData) {
+                		EntityData parentEd = (EntityData)parentUserObject;
+                		parent = parentEd.getChildEntity();
+                		
+                	}
+                	else if (parentUserObject instanceof Entity) {
+                		parent = (Entity)parentUserObject;
+                	}
+                }
+                
                 String entityTypeName = entity.getEntityType().getName();
+                String parentEntityTypeName = parent == null ? "" : parent.getEntityType().getName();
                 
                 // Set the labels
                 titleLabel.setText(entity.getName());
                 titleLabel.setIcon(Icons.getIcon(entity));
                 titleLabel.setToolTipText(entityTypeName);
 
-                typeLabel.setText("");
-                if (entityTypeName.equals(EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION)) {
-                	typeLabel.setText("("+entity.getEntityData().size()+")");
+                String dateStr = entity.getUpdatedDate()==null?"":df.format(entity.getUpdatedDate());
+                String ownerStr = entity.getUser()==null?"":entity.getUser().getUserLogin();
+                
+                if (parentEntityTypeName.equals(EntityConstants.TYPE_SAMPLE)) {
+                	typeLabel.setText(dateStr+" "+ownerStr);
                 }
-                else if (entityTypeName.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT) || 
-                		entityTypeName.equals(EntityConstants.TYPE_SAMPLE_PROCESSING_RESULT) || 
-                		entityTypeName.equals(EntityConstants.TYPE_ALIGNMENT_RESULT)) {
-                	typeLabel.setText("("+df.format(entity.getCreationDate())+")");
+                else {
+                	typeLabel.setText(ownerStr);
+                }
+                
+                if (entityTypeName.equals(EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION)) {
+                	metaLabel.setText("("+entity.getEntityData().size()+" fragments)");
                 }
             }
 

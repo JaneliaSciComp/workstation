@@ -5,11 +5,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 import javax.swing.*;
-import javax.swing.event.MenuEvent;
-import javax.swing.event.MenuListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
@@ -37,7 +34,6 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  */
 public abstract class EntityOutline extends EntityTree implements Cloneable, Outline {
     
-    private List<Entity> entityRootList;
     private Entity selectedEntity;
     
     public EntityOutline() {
@@ -66,9 +62,20 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
     }
     
     public void init(List<Entity> entityRootList) {
-    	this.entityRootList = entityRootList;
+    	
         if (null != entityRootList && entityRootList.size() >= 1) {
-            initializeTree(entityRootList.get(0).getId(), null);
+        	EntityType folderType = entityRootList.get(0).getEntityType();
+        	
+        	Entity root = new Entity();
+        	root.setEntityType(folderType);
+        	root.setName("Janelia");
+        	
+        	for(Entity commonRoot : entityRootList) {
+        		EntityData ed = root.addChildEntity(commonRoot);
+        		ed.setOrderIndex(root.getMaxOrderIndex()+1);
+        	}
+        	
+            initializeTree(root);
         }
         else {
         	Entity noDataEntity = new Entity();
@@ -85,6 +92,8 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 		super.initializeTree(rootEntity);
 
         JTree tree = getTree();
+        tree.setRootVisible(false);
+        
         tree.setDragEnabled(true);  
         tree.setDropMode(DropMode.ON_OR_INSERT);
         tree.setTransferHandler(new TreeTransferHandler(getDynamicTree()) {
@@ -98,12 +107,12 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
         	protected boolean updateUserData(DefaultMutableTreeNode nodeRemoved, DefaultMutableTreeNode nodeAdded, DefaultMutableTreeNode newParent, int destIndex) {
         		
         		try {
-            		if (nodeRemoved!=null) {
-            			DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode)nodeRemoved.getParent();
-            			Entity entity = getEntity(nodeRemoved);
-            			Entity parent = getEntity(parentNode);
-                		ModelMgr.getModelMgr().removeEntityFromParent(parent, entity);
-            		}
+//            		if (nodeRemoved!=null) {
+//            			DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode)nodeRemoved.getParent();
+//            			Entity entity = getEntity(nodeRemoved);
+//            			Entity parent = getEntity(parentNode);
+//                		ModelMgr.getModelMgr().removeEntityFromParent(parent, entity);
+//            		}
 
             		if (nodeAdded!=null) {
 	        			DefaultMutableTreeNode parentNode = newParent;
@@ -147,7 +156,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
         	}
         	
         	protected boolean addNode(DefaultMutableTreeNode parent, DefaultMutableTreeNode node, int index) {
-        		addNodes(parent, (Entity)node.getUserObject(), index);
+        		addNodes(parent, getEntityData(node), index);
         		return true;
         	}
         	
@@ -164,7 +173,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 
     	private DefaultMutableTreeNode node;
 		public EntityOutlineContextMenu(DefaultMutableTreeNode node) {
-			super((Entity)node.getUserObject());
+			super(getEntity(node));
 			this.node = node;
 		}
 
@@ -183,7 +192,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
             add(getNeuronAnnotatorItem());
             
             setNextAddRequiresSeparator(true);
-            add(getChangeDataRootItem());
             add(getCreateSessionItem());
     	}
 
@@ -193,11 +201,16 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
             deleteItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
 
-                    int deleteConfirmation = JOptionPane.showConfirmDialog(browser, "Are you sure you want to permanently delete this item and all items under it?", "Delete", JOptionPane.YES_NO_OPTION);
-                    if (deleteConfirmation != 0) {
-                        return;
-                    }
+                	final List<EntityData> eds = ModelMgr.getModelMgr().getParentEntityDatas(entity.getId());
+            		final EntityData ed = getEntityData(node);
 
+                	if (eds.size()==1) {
+                		int deleteConfirmation = JOptionPane.showConfirmDialog(browser, "Are you sure you want to permanently delete this item and all items under it?", "Delete", JOptionPane.YES_NO_OPTION);
+                        if (deleteConfirmation != 0) {
+                            return;
+                        }	
+                	}
+                    
     	            Utils.setWaitingCursor(browser);
     	            
     	            SimpleWorker removeTask = new SimpleWorker() {
@@ -205,7 +218,13 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
     	                @Override
     	                protected void doStuff() throws Exception {
     	    	            // Update database
-    	                    ModelMgr.getModelMgr().deleteEntityTree(entity.getId());
+    	                	if (eds.size()>1) {
+    	                		// More than one parent. Don't delete, just unlink from here.
+                    			ModelMgr.getModelMgr().removeEntityData(ed);
+    	                	}
+    	                	else {
+    	                		ModelMgr.getModelMgr().deleteEntityTree(entity.getId());
+    	                	}
     	                }
 
     	                @Override
@@ -213,7 +232,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
     	                	Utils.setDefaultCursor(browser);
 
     	                	DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode)node.getParent();
-    	                	Entity parent = (Entity)parentNode.getUserObject();
+    	                	Entity parent = getEntity(parentNode);
 
     	                    // Update object model
     	                	EntityUtils.removeChild(parent, entity);
@@ -259,7 +278,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
                         // Update database
                     	Entity parentFolder = entity;
                         Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
-                        EntityData newData = ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder, parentFolder.getMaxOrderIndex(), EntityConstants.ATTRIBUTE_ENTITY);
+                        EntityData newData = ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder, parentFolder.getMaxOrderIndex()+1, EntityConstants.ATTRIBUTE_ENTITY);
                         
                         // Update these references to use our local objects, so that the object graph is consistent
                         newData.setParentEntity(parentFolder);
@@ -269,7 +288,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
                         parentFolder.getEntityData().add(newData);
 
                         // Update Tree UI
-                        addNodes(node, newFolder);
+                        addNodes(node, newData);
 
                         selectedTree.expand(node, true);
 
@@ -287,71 +306,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
             return newFolderItem;
     	}
     	
-    	private JMenuItem getChangeDataRootItem() {
-    		if (!node.isRoot()) return null;
-            final JMenu changeDataSourceMenu = new JMenu("  Change data root...");
-
-            changeDataSourceMenu.addMenuListener(new MenuListener() {
-    			
-    			@Override
-    			public void menuSelected(MenuEvent e) {
-
-    				changeDataSourceMenu.removeAll();
-    				JMenuItem loadingItem = new JMenuItem("Loading...");
-    				loadingItem.setEnabled(false);
-	                changeDataSourceMenu.add(loadingItem);
-	                
-    				SimpleWorker menuWorker = new SimpleWorker() {
-						
-						@Override
-						protected void doStuff() throws Exception {
-							entityRootList = loadRootList();
-						}
-						
-						@Override
-						protected void hadSuccess() {
-							changeDataSourceMenu.removeAll();
-				        	for(final Entity commonRoot : entityRootList) {
-				                final JMenuItem dataSourceItem = new JCheckBoxMenuItem(
-				                		commonRoot.getName() +" ("+commonRoot.getUser().getUserLogin()+")", 
-				                		commonRoot.getId().equals(selectedEntity.getId()));
-				                dataSourceItem.addActionListener(new ActionListener() {
-				                    public void actionPerformed(ActionEvent actionEvent) {
-				                    	initializeTree(commonRoot.getId(), null);
-				                    }
-				                });
-				                changeDataSourceMenu.add(dataSourceItem);
-				        	}
-
-				        	// A little hack to refresh the submenu. Just calling revalidate/repaint will show the new
-				        	// contents but not resize the menu to fit. 
-				        	if (changeDataSourceMenu.isSelected()) {
-					        	changeDataSourceMenu.setPopupMenuVisible(false);
-				        		changeDataSourceMenu.setPopupMenuVisible(true);
-				        	}
-						}
-						
-						@Override
-						protected void hadError(Throwable error) {
-							error.printStackTrace();
-						}
-					};
-					
-					menuWorker.execute();
-    			}
-    			
-    			@Override
-    			public void menuDeselected(MenuEvent e) {
-    			}
-    			
-    			@Override
-    			public void menuCanceled(MenuEvent e) {
-    			}
-    		});
-            
-    		return changeDataSourceMenu;
-    	}
-    	
     	private JMenuItem getCreateSessionItem() {
 
     		if (node.isRoot()) return null;
@@ -360,7 +314,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 	            public void actionPerformed(ActionEvent actionEvent) {
 	
 	                DefaultMutableTreeNode node = selectedTree.getCurrentNode();
-	                final Entity entity = (Entity) node.getUserObject();
+	                final Entity entity = getEntity(node);
 	
 	                try {
 	                    Utils.setWaitingCursor(EntityOutline.this);
@@ -405,7 +359,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
     	// Clicked on what node?
         final DefaultMutableTreeNode node = selectedTree.getCurrentNode();
         if (node == null) return;
-        final Entity entity = (Entity) node.getUserObject();
+        final Entity entity = getEntity(node);
     	if (entity == null) return;
 
         selectNode(node);
@@ -446,49 +400,41 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
      */
     @Override
 	public void refresh() {
-    	if (entityRootList == null || entityRootList.isEmpty()) {
-            SimpleWorker entityOutlineLoadingWorker = new SimpleWorker() {
+        Utils.setWaitingCursor(EntityOutline.this);
+    	final ExpansionState expansionState = new ExpansionState();
+    	expansionState.storeExpansionState(getDynamicTree());
+    	
+        SimpleWorker entityOutlineLoadingWorker = new SimpleWorker() {
 
-                private List<Entity> rootList;
-            	
-                protected void doStuff() throws Exception {
-                	rootList = loadRootList();
-                }
+            private List<Entity> rootList;
+        	
+            protected void doStuff() throws Exception {
+            	rootList = loadRootList();
+            }
 
-                protected void hadSuccess() {
-                	init(rootList);
-                }
+            protected void hadSuccess() {
+            	init(rootList);
+		    	expansionState.restoreExpansionState(getDynamicTree());
+                Utils.setDefaultCursor(EntityOutline.this);
+            }
 
-                protected void hadError(Throwable error) {
-                    error.printStackTrace();
-                    JOptionPane.showMessageDialog(EntityOutline.this, 
-                    		"Error loading data outline", "Data Load Error", JOptionPane.ERROR_MESSAGE);
-                    init(null);
-                }
-            };
-            
-            entityOutlineLoadingWorker.execute();
-    	}
-    	else if (getRootEntity()!=null) {
-	        Utils.setWaitingCursor(EntityOutline.this);
-	    	final ExpansionState expansionState = new ExpansionState();
-	    	expansionState.storeExpansionState(getDynamicTree());
-	    	initializeTree(getRootEntity().getId(), new Callable<Void>() {
-				@Override
-				public Void call() throws Exception {
-			    	expansionState.restoreExpansionState(getDynamicTree());
-	                Utils.setDefaultCursor(EntityOutline.this);
-					return null;
-				}
-			});
-    	}
+            protected void hadError(Throwable error) {
+                error.printStackTrace();
+                JOptionPane.showMessageDialog(EntityOutline.this, 
+                		"Error loading data outline", "Data Load Error", JOptionPane.ERROR_MESSAGE);
+                init(null);
+            }
+        };
+        
+        entityOutlineLoadingWorker.execute();
     }
     
     private void selectNode(DefaultMutableTreeNode node) {
-    	selectEntity((Entity)node.getUserObject());
+    	selectEntity(getEntity(node));
     }
     
     private void selectEntity(Entity entity) {
+    	if (entity==null) return;
     	selectEntityById(entity.getId());
     }
     
@@ -497,7 +443,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
     	DefaultMutableTreeNode node = getNodeByEntityId(entityId);
     	if (node==null) return;
     	
-    	Entity entity = (Entity)node.getUserObject();
+    	Entity entity = getEntity(node);
     	if (entity==null) return;
     	if (Utils.areSame(entity, selectedEntity)) return;
     	
