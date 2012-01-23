@@ -12,9 +12,13 @@ public interface ConsoleObserver {
     
     public void ontologyChanged(@WebParam(name = "rootId") long rootId);
 
-    public void entitySelected(@WebParam(name = "entityId") long entityId, @WebParam(name = "outline") boolean outline, @WebParam(name = "clearAll") boolean clearAll);
+    public void entityOutlineSelected(@WebParam(name = "uniqueId") String uniqueId, @WebParam(name = "clearAll") boolean clearAll);
 
-    public void entityDeselected(@WebParam(name = "entityId") long entityId, @WebParam(name = "outline") boolean outline);
+    public void entityOutlineDeselected(@WebParam(name = "uniqueId") String uniqueId);
+    
+    public void entitySelected(@WebParam(name = "entityId") long entityId, @WebParam(name = "clearAll") boolean clearAll);
+
+    public void entityDeselected(@WebParam(name = "entityId") long entityId);
 
     public void entityChanged(@WebParam(name = "entityId") long entityId);
     

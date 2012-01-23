@@ -111,6 +111,31 @@ public class Utils {
     	return buf.toString();
     }
     
+    public static Long getEntityIdFromUniqueId(String uniqueId) {
+    	String[] ids = uniqueId.split("/");
+    	String lastId = ids[ids.length-1];
+    	if (!lastId.startsWith("e_")) {
+    		throw new IllegalStateException("uniqueId must end with entity id starting with 'e_': "+uniqueId);
+    	}
+    	return Long.parseLong(lastId.substring(2));
+    }
+
+    public static String getParentIdFromUniqueId(String uniqueId) {
+    	String[] ids = uniqueId.split("/");
+    	StringBuffer parentUniqueId = new StringBuffer();
+    	try {
+        	for(int i=1; i<ids.length-2; i++) {
+        		parentUniqueId.append("/");
+        		parentUniqueId.append(ids[i]);
+        	}	
+    	}
+    	catch (Exception e) {
+    		e.printStackTrace();
+    		return null;
+    	}
+    	return parentUniqueId.toString();
+    }
+    
     /**
      * Borrowed from http://www.pikopong.com/blog/2008/08/13/auto-resize-jtable-column-width/
      *

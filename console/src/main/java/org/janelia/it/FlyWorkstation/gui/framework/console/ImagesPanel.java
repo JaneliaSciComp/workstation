@@ -275,10 +275,10 @@ public class ImagesPanel extends JScrollPane {
     	return false;
     }
     
-    public void setSelection(Entity entity, boolean selection, boolean clearAll) {
+    public void setSelection(Long selectedEntityId, boolean selection, boolean clearAll) {
     	if (clearAll) {
 			for(AnnotatedImageButton button : buttons.values()) {
-				if (button.getEntity().getId().equals(entity.getId())) {
+				if (button.getEntity().getId().equals(selectedEntityId)) {
 					setSelection(button, true);
 				}
 				else {
@@ -287,7 +287,7 @@ public class ImagesPanel extends JScrollPane {
 			}
     	}
 	    else {
-	        AnnotatedImageButton button = buttons.get(entity.getId().toString());
+	        AnnotatedImageButton button = buttons.get(selectedEntityId.toString());
 	        if (button != null) {
 	        	setSelection(button, selection);
 	        }

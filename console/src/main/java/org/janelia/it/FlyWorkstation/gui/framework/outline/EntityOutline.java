@@ -12,6 +12,7 @@ import javax.swing.tree.TreePath;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.console.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
@@ -34,8 +35,8 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  */
 public abstract class EntityOutline extends EntityTree implements Cloneable, Outline {
     
-    private Entity selectedEntity;
-    
+	private String currUniqueId;
+	
     public EntityOutline() {
     	super(true);
         this.setMinimumSize(new Dimension(400, 400));
@@ -44,15 +45,19 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
         ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
 			
         	@Override
-			public void entitySelected(final long entityId, final boolean outline, final boolean clearAll) {
-				if (!outline) return;
-				selectEntityById(entityId);
+			public void entityOutlineSelected(String entityPath, boolean clearAll) {
+        		selectEntityByPath(entityPath);
+			}
+
+			@Override
+			public void entityOutlineDeselected(String entityPath) {
+				getTree().clearSelection();
 			}
 			
 			@Override
 			public void entityChanged(long entityId) {
-				Entity entity = getEntityById(entityId);
-				if (entity!=null) {
+				// Update all the entities that are affected
+				for(Entity entity : getEntitiesById(entityId)) {
 					ModelMgrUtils.updateEntity(entity);
 					revalidate();
 					repaint();
@@ -428,45 +433,50 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
         
         entityOutlineLoadingWorker.execute();
     }
-    
-    private void selectNode(DefaultMutableTreeNode node) {
-    	selectEntity(getEntity(node));
+
+    private void selectEntityByPath(String path) {
+    	selectEntityByUniqueId(path);
     }
     
-    private void selectEntity(Entity entity) {
-    	if (entity==null) return;
-    	selectEntityById(entity.getId());
+    private void selectEntityByUniqueId(String uniqueId) {
+    	DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
+    	selectNode(node);
     }
     
-    private void selectEntityById(long entityId) {
-    	
-    	DefaultMutableTreeNode node = getNodeByEntityId(entityId);
+    private synchronized void selectNode(final DefaultMutableTreeNode node) {
+
     	if (node==null) return;
+
+    	String uniqueId = getUniqueId(node);    	
+    	if (uniqueId.equals(currUniqueId)) return;
     	
-    	Entity entity = getEntity(node);
-    	if (entity==null) return;
-    	if (Utils.areSame(entity, selectedEntity)) return;
+    	this.currUniqueId = uniqueId;
     	
-    	DefaultMutableTreeNode parent = (DefaultMutableTreeNode)node.getParent();
-    	if (parent!=null && !getTree().isExpanded(new TreePath(parent.getPath()))) {
-    		getDynamicTree().expand(parent, true);
+    	DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode)node.getParent();
+    	if (parentNode!=null && !getTree().isExpanded(new TreePath(parentNode.getPath()))) {
+    		getDynamicTree().expand(parentNode, true);
     	}
     	
     	getDynamicTree().navigateToNode(node);
     	
-    	selectedEntity = entity;
-    	
-        ModelMgr.getModelMgr().selectEntity(entity.getId(), true, true);
-    	
-    	revalidate();
-    	repaint();
-    	
+		final IconDemoPanel panel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
+
+		panel.showLoadingIndicator();
+		
     	if (!getDynamicTree().childrenAreLoaded(node)) {
         	// Load the children in the tree in case the user selects them in the gallery view
-        	// TODO: this should pause the UI because it could cause a desync in theory, if it loads slower then 
-        	// the user clicks.
-	        SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node, false);
+	        SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node, false) {
+				@Override
+				protected void doneLoading() {
+					panel.loadEntity(getEntity(node));
+				}
+	        };
 	        loadingWorker.execute();
     	}
+    	else {
+			panel.loadEntity(getEntity(node));
+    	}
+
+    	ModelMgr.getModelMgr().selectOutlineEntity(getUniqueId(node), true);
     }
 }

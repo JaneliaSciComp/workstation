@@ -6,10 +6,14 @@ public interface ModelMgrObserver {
     
     public void ontologyChanged(long rootId);
 
-    public void entitySelected(long entityId, boolean outline, boolean clearAll);
-    
-    public void entityDeselected(long entityId, boolean outline);
-    
+	public void entityOutlineSelected(String uniqueId, boolean clearAll);
+	
+	public void entityOutlineDeselected(String uniqueId);
+
+	public void entitySelected(long entityId, boolean clearAll);
+
+    public void entityDeselected(long entityId);
+
     public void entityChanged(long entityId);
     
     public void entityViewRequested(long entityId);

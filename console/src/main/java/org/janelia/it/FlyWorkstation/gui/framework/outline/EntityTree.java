@@ -4,10 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
@@ -44,7 +41,8 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
     private ProgressMonitor progressMonitor;
 	private EntityData rootEntityData;
     
-	private Map<Long,DefaultMutableTreeNode> entityIdToNodeMap = new HashMap<Long,DefaultMutableTreeNode>();
+	private Map<Long,Set<DefaultMutableTreeNode>> entityIdToNodeMap = new HashMap<Long,Set<DefaultMutableTreeNode>>();
+	private Map<String,DefaultMutableTreeNode> uniqueIdToNodeMap = new HashMap<String,DefaultMutableTreeNode>();
 	
     public EntityTree() {
         this(false);
@@ -124,6 +122,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
     public void initializeTree(final Entity rootEntity) {
 
         entityIdToNodeMap.clear();
+        uniqueIdToNodeMap.clear();
         
         // Dummy ed for the root
         EntityData rootEd = new EntityData();
@@ -156,6 +155,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
 
     public Entity getEntity(DefaultMutableTreeNode node) {
     	EntityData ed = getEntityData(node);
+    	if (ed==null) return null;
     	return ed.getChildEntity();
     }
 
@@ -349,19 +349,108 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
             }
         }
     }
+
+
+    /**
+     * Returns the full path to the given node
+     * @param node
+     * @return
+     */
+    public String getIdPath(DefaultMutableTreeNode node) {
+    	StringBuffer sb = new StringBuffer();
+    	DefaultMutableTreeNode curr = node;
+    	while(curr != null) {
+    		if (node != curr) sb.insert(0, "/");
+    		EntityData ed = getEntityData(curr);
+    		String nodeId = ed.getId()==null ? "" : "ed_"+ed.getId();
+    		nodeId += "/" + "e_"+ed.getChildEntity().getId();
+			sb.insert(0, nodeId);
+    		curr = ed.getId()==null ? null : (DefaultMutableTreeNode)curr.getParent();
+    	}
+    	return sb.toString();
+    }
     
-    public DefaultMutableTreeNode getNodeByEntityId(Long entityId) {
-    	return entityIdToNodeMap.get(entityId);
+    /**
+     * Returns the unique id based on the path to the given node
+     * @param node
+     * @return
+     */
+    public String getUniqueId(DefaultMutableTreeNode node) {
+    	// TODO: in the future, maybe hash this and cache it to save memory
+    	return getIdPath(node);
     }
 
-    public Entity getEntityById(Long entityId) {
-    	DefaultMutableTreeNode node = entityIdToNodeMap.get(entityId);
+    /**
+     * Get all the entity objects in the tree with the given id.
+     * @param entityId
+     * @return
+     */
+    public Set<Entity> getEntitiesById(Long entityId) {
+    	Set<DefaultMutableTreeNode> nodes = entityIdToNodeMap.get(entityId);
+    	Set<Entity> entities = new HashSet<Entity>();
+    	for(DefaultMutableTreeNode node : nodes) {
+    		entities.add(getEntity(node));
+    	}
+    	return entities;
+    }
+    
+    public DefaultMutableTreeNode getChildWithEntity(Long entityId) {
+    	
+    	try {
+    		DynamicTree dynamicTree = getDynamicTree();
+        	DefaultMutableTreeNode node = dynamicTree.getCurrentNode();
+        	if (node==null) return null;
+//        	if (!dynamicTree.childrenAreLoaded(node)) {
+//                SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node, false) {
+//
+//                    protected void doneLoading() {
+//                    }
+//
+//                    @Override
+//                    protected void hadError(Throwable error) {
+//                    	SessionMgr.getSessionMgr().handleException(error);
+//                    }
+//                };
+//
+//                loadingWorker.execute();
+//                loadingWorker.get();
+//        	}
+        	
+            for (int i = 0; i < node.getChildCount(); i++) {
+                DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) node.getChildAt(i);
+                Entity entity = getEntity(childNode);
+                if (entity!=null && entity.getId().equals(entityId)) {
+                	return childNode;
+                }
+            }
+    	}
+    	catch (Exception e) {
+    		SessionMgr.getSessionMgr().handleException(e);
+    	}
+    	return null;
+    }
+
+    public String getChildUniqueIdWithEntity(Long entityId) {
+    	return getUniqueId(getChildWithEntity(entityId));
+    }
+
+    public String getCurrUniqueId() {
+    	return getUniqueId(getDynamicTree().getCurrentNode());
+    }
+
+   
+    public DefaultMutableTreeNode getNodeByUniqueId(String uniqueId) {
+    	return uniqueIdToNodeMap.get(uniqueId);
+    }
+
+    public Entity getEntityByUniqueId(String uniqueId) {
+    	DefaultMutableTreeNode node = uniqueIdToNodeMap.get(uniqueId);
     	if (node==null) return null;
     	return getEntity(node);
     }
-
-    public Entity getParentEntityById(Long entityId) {
-    	DefaultMutableTreeNode node = getNodeByEntityId(entityId);
+    
+    public Entity getParentEntityByUniqueId(String uniqueId) {
+    	DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
     	if (node == null) return null;
     	DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode)node.getParent();
     	if (parentNode != null) {
@@ -391,7 +480,17 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
         }
         
         Entity entity = newEd.getChildEntity();
-        entityIdToNodeMap.put(entity.getId(), newNode);
+        
+        // Add to unique map
+        uniqueIdToNodeMap.put(getUniqueId(newNode), newNode);
+        
+        // Add to duplicate map
+        Set<DefaultMutableTreeNode> nodes = entityIdToNodeMap.get(entity.getId());
+        if (nodes==null) {
+        	nodes = new HashSet<DefaultMutableTreeNode>();
+        	entityIdToNodeMap.put(entity.getId(), nodes);
+        }
+        nodes.add(newNode);
         
         List<EntityData> dataList = entity.getOrderedEntityData();
         List<EntityData> childDataList = new ArrayList<EntityData>();

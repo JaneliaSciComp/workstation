@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
 /**
@@ -21,13 +20,13 @@ public class ExpansionState {
 	
     public void storeExpansionState(DynamicTree dynamicTree) {
     	expanded.clear();
-    	this.selected = getPath(dynamicTree.getCurrentNode());
+    	this.selected = dynamicTree.getStringPath(dynamicTree.getCurrentNode());
     	storeExpansionState(dynamicTree, dynamicTree.getRootNode());
     }
     
 	public void storeExpansionState(DynamicTree dynamicTree, DefaultMutableTreeNode node) {
     	if (dynamicTree.getTree().isExpanded(new TreePath(node.getPath()))) {
-    		expanded.add(getPath(node));
+    		expanded.add(dynamicTree.getStringPath(node));
     	}
 
         for (Enumeration e = node.children(); e.hasMoreElements(); ) {
@@ -42,7 +41,7 @@ public class ExpansionState {
     
 	public void restoreExpansionState(DynamicTree dynamicTree, DefaultMutableTreeNode node) {
 		
-		String path = getPath(node);
+		String path = dynamicTree.getStringPath(node);
 		
     	if (expanded.contains(path)) {
     		dynamicTree.expand(node, true);
@@ -56,16 +55,5 @@ public class ExpansionState {
             DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) e.nextElement();
             restoreExpansionState(dynamicTree, childNode);
         }
-    }
-
-    private String getPath(DefaultMutableTreeNode node) {
-    	StringBuffer sb = new StringBuffer();
-    	TreeNode curr = node;
-    	while(curr != null) {
-    		if (node != curr) sb.insert(0, "/");
-    		sb.insert(0, curr.toString());
-    		curr = curr.getParent();
-    	}
-    	return sb.toString();
     }
 }

@@ -12,7 +12,9 @@ import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityContextMenu;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 
 
@@ -84,7 +86,7 @@ public abstract class AnnotatedImageButton extends JToggleButton {
 
 			@Override
 			protected void popupTriggered(MouseEvent e) {
-				ModelMgr.getModelMgr().selectEntity(entity.getId(), false, true);
+				ModelMgr.getModelMgr().selectEntity(entity.getId(), true);
 	            final EntityContextMenu popupMenu = new EntityContextMenu(entity);
 	            popupMenu.addMenuItems();
 		        popupMenu.show(AnnotatedImageButton.this, e.getX(), e.getY());
@@ -93,7 +95,14 @@ public abstract class AnnotatedImageButton extends JToggleButton {
 			@Override
 			protected void doubleLeftClicked(MouseEvent e) {
 				// Double-clicking an image in gallery view triggers an outline selection
-				ModelMgr.getModelMgr().selectEntity(entity.getId(), true, true);
+            	String uniqueId = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline().getChildUniqueIdWithEntity(entity.getId());
+            	if (Utils.isEmpty(uniqueId)) {
+            		uniqueId = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline().getCurrUniqueId();
+            	}
+            	
+            	if (Utils.isEmpty(uniqueId)) return;
+            	
+        		ModelMgr.getModelMgr().selectOutlineEntity(uniqueId, true);	
 			}
         	
         });

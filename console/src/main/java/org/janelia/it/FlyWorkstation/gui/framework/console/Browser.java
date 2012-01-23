@@ -93,6 +93,7 @@ public class Browser extends JFrame implements Cloneable {
     //    private FileOutline fileOutline;
     private SessionOutline sessionOutline;
     private EntityOutline entityOutline;
+    private EntityOutlineHistory entityOutlineHistory;
     private TaskOutline taskOutline;
     private OntologyOutline ontologyOutline;
     private AnnotationSessionPropertyDialog annotationSessionPropertyPanel;
@@ -224,6 +225,8 @@ public class Browser extends JFrame implements Cloneable {
 			}
 		};
 		
+		entityOutlineHistory = new EntityOutlineHistory();
+		
         taskOutline = new TaskOutline(this);
         
         ontologyOutline = new OntologyOutline();
@@ -311,17 +314,13 @@ public class Browser extends JFrame implements Cloneable {
         ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
 
 			@Override
-			public void entitySelected(long entityId, boolean outline, boolean clearAll) {
-				if (!outline) {
-					statusBar.setDescription(ModelMgr.getModelMgr().getSelectedEntitiesIds().size()+" entities selected");
-				}
+			public void entitySelected(long entityId, boolean clearAll) {
+				statusBar.setDescription(ModelMgr.getModelMgr().getSelectedEntitiesIds().size()+" entities selected");
 			}
 
 			@Override
-			public void entityDeselected(long entityId, boolean outline) {
-				if (!outline) {
-					statusBar.setDescription(ModelMgr.getModelMgr().getSelectedEntitiesIds().size()+" entities selected");
-				}
+			public void entityDeselected(long entityId) {
+				statusBar.setDescription(ModelMgr.getModelMgr().getSelectedEntitiesIds().size()+" entities selected");
 			}
         	
         });
@@ -1187,6 +1186,10 @@ public class Browser extends JFrame implements Cloneable {
 
     public EntityOutline getEntityOutline() {
         return entityOutline;
+    }
+
+    public EntityOutlineHistory getEntityOutlineHistory() {
+        return entityOutlineHistory;
     }
     
     public OntologyOutline getOntologyOutline() {

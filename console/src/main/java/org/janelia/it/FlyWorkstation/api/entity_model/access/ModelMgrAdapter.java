@@ -11,11 +11,19 @@ public class ModelMgrAdapter implements ModelMgrObserver {
 	}
 
 	@Override
-	public void entitySelected(long entityId, boolean outline, boolean clearAll) {
+	public void entityOutlineSelected(String uniqueId, boolean clearAll) {
+	}
+	
+	@Override
+	public void entityOutlineDeselected(String uniqueId) {
+	}
+	
+	@Override
+	public void entitySelected(long entityId, boolean clearAll) {
 	}
 
 	@Override
-    public void entityDeselected(long entityId, boolean outline) {
+    public void entityDeselected(long entityId) {
     }
 
 	@Override

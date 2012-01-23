@@ -49,7 +49,7 @@ public class ModelMgr {
     private OntologyKeyBindings ontologyKeyBindings;
     private AnnotationSession annotationSession;
     private List<Long> selectedEntitiesIds = new ArrayList<Long>();
-    private List<Long> selectedOutlineEntitiesIds = new ArrayList<Long>();
+    private List<String> selectedOutlineEntitiesIds = new ArrayList<String>();
 
     static {
         // Register an exception handler.
@@ -263,15 +263,27 @@ public class ModelMgr {
         }
     }
     
-    private void notifyEntitySelected(Long entityId, boolean outline, boolean clearAll) {
+    private void notifyOutlineEntitySelected(String uniqueId, boolean clearAll) {
         for (ModelMgrObserver listener : modelMgrObservers) {
-        	listener.entitySelected(entityId, outline, clearAll);
+        	listener.entityOutlineSelected(uniqueId, clearAll);
         }
     }
 
-    private void notifyEntityDeselected(Long entityId, boolean outline) {
+    private void notifyOutlineEntityDeselected(String uniqueId) {
         for (ModelMgrObserver listener : modelMgrObservers) {
-        	listener.entityDeselected(entityId, outline);
+        	listener.entityOutlineDeselected(uniqueId);
+        }
+    }
+    
+    private void notifyEntitySelected(Long entityId, boolean clearAll) {
+        for (ModelMgrObserver listener : modelMgrObservers) {
+        	listener.entitySelected(entityId, clearAll);
+        }
+    }
+
+    private void notifyEntityDeselected(Long entityId) {
+        for (ModelMgrObserver listener : modelMgrObservers) {
+        	listener.entityDeselected(entityId);
         }
     }
 
@@ -323,34 +335,34 @@ public class ModelMgr {
         return modelAvailable;
     }
 
-	public void selectEntity(Long entityId, boolean outline, boolean clearAll) {
-		if (outline) {
-			if (clearAll) {
-				selectedOutlineEntitiesIds.clear();
-			}
-			if (selectedOutlineEntitiesIds.contains(entityId)) return;
-			selectedOutlineEntitiesIds.add(entityId);
+	public void selectOutlineEntity(String uniqueId, boolean clearAll) {
+		if (clearAll) {
+			selectedOutlineEntitiesIds.clear();
 		}
-		else {
-			if (clearAll) {
-				selectedEntitiesIds.clear();
-			}
-			if (selectedEntitiesIds.contains(entityId)) return;
-			selectedEntitiesIds.add(entityId);
-		}
-		notifyEntitySelected(entityId, outline, clearAll);
+		if (selectedOutlineEntitiesIds.contains(uniqueId)) return;
+		selectedOutlineEntitiesIds.add(uniqueId);
+		notifyOutlineEntitySelected(uniqueId, clearAll);
 	}
 
-	public void deselectEntity(Long entityId, boolean outline) {
-		if (outline) {
-			if (!selectedOutlineEntitiesIds.contains(entityId)) return;
-			selectedOutlineEntitiesIds.remove(entityId);
+	public void deselectOutlineEntity(String uniqueId) {
+		if (!selectedOutlineEntitiesIds.contains(uniqueId)) return;
+		selectedOutlineEntitiesIds.remove(uniqueId);
+		notifyOutlineEntityDeselected(uniqueId);
+	}
+	
+	public void selectEntity(Long entityId, boolean clearAll) {
+		if (clearAll) {
+			selectedEntitiesIds.clear();
 		}
-		else {
-			if (!selectedEntitiesIds.contains(entityId)) return;
-			selectedEntitiesIds.remove(entityId);
-		}
-		notifyEntityDeselected(entityId, outline);
+		if (selectedEntitiesIds.contains(entityId)) return;
+		selectedEntitiesIds.add(entityId);
+		notifyEntitySelected(entityId, clearAll);
+	}
+
+	public void deselectEntity(Long entityId) {
+		if (!selectedEntitiesIds.contains(entityId)) return;
+		selectedEntitiesIds.remove(entityId);
+		notifyEntityDeselected(entityId);
 	}
 
     public List<Long> getSelectedEntitiesIds() {
@@ -362,11 +374,11 @@ public class ModelMgr {
     	return selectedEntitiesIds.get(selectedEntitiesIds.size()-1);
     }
 
-	public List<Long> getSelectedOutlineEntitiesIds() {
+	public List<String> getSelectedOutlineEntitiesIds() {
 		return selectedOutlineEntitiesIds;
 	}
 	
-    public Long getLastSelectedOutlineEntityId() {
+    public String getLastSelectedOutlineEntityId() {
     	if (selectedOutlineEntitiesIds.isEmpty()) return null;
     	return selectedOutlineEntitiesIds.get(selectedOutlineEntitiesIds.size()-1);
     }

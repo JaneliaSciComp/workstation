@@ -356,6 +356,22 @@ public class DynamicTree extends JPanel {
     }
 
     /**
+     * Returns the full path to the current node
+     * @param node
+     * @return
+     */
+    public String getStringPath(DefaultMutableTreeNode node) {
+    	StringBuffer sb = new StringBuffer();
+    	TreeNode curr = node;
+    	while(curr != null) {
+    		if (node != curr) sb.insert(0, "/");
+    		sb.insert(0, curr.toString());
+    		curr = curr.getParent();
+    	}
+    	return sb.toString();
+    }
+    
+    /**
      * Expand or collapse the given node.
      *
      * @param node   the node to expand or collapse

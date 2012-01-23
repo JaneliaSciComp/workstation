@@ -51,19 +51,32 @@ public class EmbeddedAxisServer implements ModelMgrObserver {
 	}
 
 	@Override
-	public void entitySelected(long entityId, boolean outline, boolean clearAll) {
+	public void entityOutlineSelected(String uniqueId, boolean clearAll) {
+		Map<String,Object> parameters = new HashMap<String,Object>();
+		parameters.put("uniqueId",uniqueId);
+		parameters.put("clearAll",clearAll);
+		SessionMgr.getSessionMgr().sendMessageToExternalClients("entityOutlineSelected", parameters);
+	}
+
+	@Override
+    public void entityOutlineDeselected(String uniqueId) {
+		Map<String,Object> parameters = new HashMap<String,Object>();
+		parameters.put("uniqueId",uniqueId);
+		SessionMgr.getSessionMgr().sendMessageToExternalClients("entityOutlineDeselected", parameters);
+	}
+	
+	@Override
+	public void entitySelected(long entityId, boolean clearAll) {
 		Map<String,Object> parameters = new HashMap<String,Object>();
 		parameters.put("entityId",entityId);
-		parameters.put("outline",outline);
 		parameters.put("clearAll",clearAll);
 		SessionMgr.getSessionMgr().sendMessageToExternalClients("entitySelected", parameters);
 	}
 
 	@Override
-    public void entityDeselected(long entityId, boolean outline) {
+    public void entityDeselected(long entityId) {
 		Map<String,Object> parameters = new HashMap<String,Object>();
 		parameters.put("entityId",entityId);
-		parameters.put("outline",outline);
 		SessionMgr.getSessionMgr().sendMessageToExternalClients("entityDeselected", parameters);
 	}
 
