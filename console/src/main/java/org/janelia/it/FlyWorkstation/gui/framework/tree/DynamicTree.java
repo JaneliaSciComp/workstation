@@ -27,7 +27,7 @@ import javax.swing.tree.*;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 
 /**
- * A reusable tree component with toolbar features.
+ * A reusable tree component with toolbar features and an extended API.
  *
  * @author saffordt
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
@@ -61,13 +61,14 @@ public class DynamicTree extends JPanel {
             public void mouseReleased(MouseEvent e) {
 
                 int row = tree.getRowForLocation(e.getX(), e.getY());
+                if (e.isPopupTrigger()) {
+                    tree.setSelectionRow(row);
+                    showPopupMenu(e);
+                    return;
+                }
                 if (row >= 0) {
-                    if (e.isPopupTrigger()) {
-                        tree.setSelectionRow(row);
-                        showPopupMenu(e);
-                    }
                     // This masking is to make sure that the right button is being double clicked, not left and then right or right and then left
-                    else if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1 && (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
+                    if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1 && (e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
                         nodeDoubleClicked(e);
                     }
                     else if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
@@ -80,14 +81,13 @@ public class DynamicTree extends JPanel {
                 // We have to also listen for mousePressed because OSX generates the popup trigger here
                 // instead of mouseReleased like any sane OS.
                 int row = tree.getRowForLocation(e.getX(), e.getY());
+                if (e.isPopupTrigger()) {
+                    tree.setSelectionRow(row);
+                    showPopupMenu(e);
+                    return;
+                }
                 if (row >= 0) {
-                    if (e.isPopupTrigger()) {
-                        tree.setSelectionRow(row);
-                        showPopupMenu(e);
-                    }
-                    else {
-                        nodePressed(e);
-                    }
+                    nodePressed(e);
                 }
             }
         });
@@ -212,7 +212,7 @@ public class DynamicTree extends JPanel {
      * @param node
      * @param recurse
      */
-    protected int recreateChildNodes(DefaultMutableTreeNode node) {
+    protected void recreateChildNodes(DefaultMutableTreeNode node) {
         throw new UnsupportedOperationException("This tree does not support child recreation");
     }
 
@@ -280,6 +280,16 @@ public class DynamicTree extends JPanel {
     protected void nodeDoubleClicked(MouseEvent e) {
     }
 
+    /**
+     * Override this method to provide a unique id for every node, which is required for some DynamicTree consumers 
+     * such as ExpansionState. The default implementation throws UnsupportedOperationException.
+     * @param node
+     * @return
+     */
+    public String getUniqueId(DefaultMutableTreeNode node) {
+    	throw new UnsupportedOperationException();
+    }
+    
     /**
      * Set the cell renderer on the underlying JTree.
      *
@@ -378,11 +388,16 @@ public class DynamicTree extends JPanel {
      * @param expand expand or collapse?
      */
     public void expand(DefaultMutableTreeNode node, boolean expand) {
+    	TreePath path = new TreePath(node.getPath());
         if (expand) {
-            tree.expandPath(new TreePath(node.getPath()));
+        	if (!tree.isExpanded(path)) {
+	        	tree.expandPath(path);
+        	}
         }
         else {
-            tree.collapsePath(new TreePath(node.getPath()));
+        	if (tree.isExpanded(path)) {
+	            tree.collapsePath(path);
+        	}
         }
     }
 
@@ -552,11 +567,6 @@ public class DynamicTree extends JPanel {
         	}
         }
         
-//        searcher = new DynamicTreeSearcher(this, searchString, startingNode) {
-//
-//			@Override
-//			protected void foundPath(List<Long> finalMatch) {
-
         searcher = new LazyTreeSearcher(this, searchString, startingNode, bias, skipStartingNode) {
 
 			@Override

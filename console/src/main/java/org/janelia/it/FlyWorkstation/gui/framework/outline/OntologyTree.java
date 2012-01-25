@@ -15,6 +15,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.tree.DynamicTree;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
 
@@ -110,7 +111,6 @@ public class OntologyTree extends JPanel {
 
         // Prepare for display and update the UI
 
-        selectedTree.expandAll(true);
         OntologyTree.this.updateUI();
     }
 
@@ -124,6 +124,10 @@ public class OntologyTree extends JPanel {
     
     public OntologyElement getElement(DefaultMutableTreeNode node) {
     	return (OntologyElement)node.getUserObject();
+    }
+
+    public Entity getEntity(DefaultMutableTreeNode node) {
+    	return getElement(node).getEntity();
     }
 
     /**
@@ -179,6 +183,21 @@ public class OntologyTree extends JPanel {
                 OntologyTree.this.nodeDoubleClicked(e);
             }
 
+			@Override
+            public String getUniqueId(DefaultMutableTreeNode node) {
+				if (node==null) return null;
+				if (node.isRoot()) return "/";
+		    	StringBuffer sb = new StringBuffer();
+		    	DefaultMutableTreeNode curr = node;
+		    	while(curr != null) {
+		    		Entity entity = getEntity(curr);
+		    		String nodeId = "/" + "e_"+entity.getId();
+					sb.insert(0, nodeId);
+		    		curr = (DefaultMutableTreeNode)curr.getParent();
+		    	}
+		    	return sb.toString();
+            }
+			
 			@Override
 			public void refresh() {
 				OntologyTree.this.refresh();

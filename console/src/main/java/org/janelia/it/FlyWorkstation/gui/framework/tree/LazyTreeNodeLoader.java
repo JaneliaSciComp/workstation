@@ -14,14 +14,11 @@ public class LazyTreeNodeLoader extends SimpleWorker {
     private final DynamicTree dynamicTree;
     private final DefaultMutableTreeNode node;
     private final boolean recurse;
-    private final ExpansionState expansionState;
 
     public LazyTreeNodeLoader(DynamicTree dynamicTree, DefaultMutableTreeNode node, boolean recurse) {
         this.dynamicTree = dynamicTree;
         this.node = node;
         this.recurse = recurse;
-        this.expansionState = new ExpansionState();
-        expansionState.storeExpansionState(dynamicTree, node);
     }
 
     /**
@@ -32,7 +29,6 @@ public class LazyTreeNodeLoader extends SimpleWorker {
     public void loadSynchronously() throws Exception {
         dynamicTree.loadLazyNodeData(node, recurse);
         dynamicTree.recreateChildNodes(node);
-        expansionState.restoreExpansionState(dynamicTree, node);
         doneLoading();
     }
     
@@ -44,7 +40,6 @@ public class LazyTreeNodeLoader extends SimpleWorker {
     @Override
     protected void hadSuccess() {
         dynamicTree.recreateChildNodes(node);
-        expansionState.restoreExpansionState(dynamicTree, node);
         doneLoading();
     }
 

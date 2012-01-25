@@ -23,10 +23,7 @@ import org.janelia.it.FlyWorkstation.gui.application.SplashPanel;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationFilter;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutlineHistory;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.*;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
@@ -564,7 +561,7 @@ public class IconDemoPanel extends JPanel {
 			children = new ArrayList<Entity>();
 			children.add(parentEntity);
 		}
-		loadImageEntities(children);
+		loadImageEntities(children); 
 	}
 
 	private void loadImageEntities(final List<Entity> entities) {

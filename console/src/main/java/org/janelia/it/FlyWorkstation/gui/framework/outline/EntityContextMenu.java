@@ -65,9 +65,10 @@ public class EntityContextMenu extends JPopupMenu {
     	add(getOpenWithAppItem());
         add(getNeuronAnnotatorItem());
 	}
-	
+
 	protected JMenuItem getTitleItem() {
-        JMenuItem titleMenuItem = new JMenuItem(entity.getName());
+		String name = entity == null ? "Data" : entity.getName();
+        JMenuItem titleMenuItem = new JMenuItem(name);
         titleMenuItem.setEnabled(false);
         return titleMenuItem;
 	}

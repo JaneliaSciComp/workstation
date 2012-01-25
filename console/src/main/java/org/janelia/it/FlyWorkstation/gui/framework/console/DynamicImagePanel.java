@@ -48,6 +48,7 @@ public class DynamicImagePanel extends JPanel {
 		setLayout(new GridBagLayout());
 		setOpaque(false);
 
+		
 		this.imageFilename = imageFilename;
 		this.maxSize = maxSize;
 		if (maxSize != null) {

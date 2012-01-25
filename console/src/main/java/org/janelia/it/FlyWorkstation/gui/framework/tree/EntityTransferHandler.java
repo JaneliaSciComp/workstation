@@ -11,6 +11,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.jacs.model.entity.Entity;
 
 /**
  * Support for drag and drop operations within DynamicTrees.
@@ -19,18 +20,17 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class TreeTransferHandler extends TransferHandler {
+public abstract class EntityTransferHandler extends TransferHandler {
 
-	private DynamicTree dynamicTree;
 	private DataFlavor nodesFlavor;
 	private DataFlavor[] flavors = new DataFlavor[1];
 	private DefaultMutableTreeNode nodeToRemove;
 	
-	public TreeTransferHandler(DynamicTree dynamicTree) {
-		this.dynamicTree = dynamicTree;
+	public EntityTransferHandler() {
+		
 		try {
 			String mimeType = DataFlavor.javaJVMLocalObjectMimeType + ";class=\""
-					+ javax.swing.tree.DefaultMutableTreeNode[].class.getName() + "\"";
+					+ Entity.class.getName() + "\"";
 			nodesFlavor = new DataFlavor(mimeType);
 			flavors[0] = nodesFlavor;
 		} 

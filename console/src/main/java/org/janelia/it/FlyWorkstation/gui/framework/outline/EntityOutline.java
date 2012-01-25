@@ -1,3 +1,9 @@
+/*
+ * Created by IntelliJ IDEA. 
+ * User: saffordt 
+ * Date: 2/8/11 
+ * Time: 2:09 PM
+ */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import java.awt.Dimension;
@@ -27,456 +33,539 @@ import org.janelia.it.jacs.model.entity.EntityType;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
- * Created by IntelliJ IDEA.
- * User: saffordt
- * Date: 2/8/11
- * Time: 2:09 PM
- * This class is the initial outline of the data file tree
+ * The entity tree which lives in the right-hand "Data" panel and drives the IconDemoPanel.
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public abstract class EntityOutline extends EntityTree implements Cloneable, Outline {
-    
-	private String currUniqueId;
-	
-    public EntityOutline() {
-    	super(true);
-        this.setMinimumSize(new Dimension(400, 400));
-        showLoadingIndicator();
 
-        ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
-			
-        	@Override
+	private String currUniqueId;
+
+	public EntityOutline() {
+		super(true);
+		this.setMinimumSize(new Dimension(400, 400));
+		showLoadingIndicator();
+
+		ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
+
+			@Override
 			public void entityOutlineSelected(String entityPath, boolean clearAll) {
-        		selectEntityByPath(entityPath);
+				selectEntityByUniqueId(entityPath);
 			}
 
 			@Override
 			public void entityOutlineDeselected(String entityPath) {
 				getTree().clearSelection();
 			}
-			
+
 			@Override
 			public void entityChanged(long entityId) {
 				// Update all the entities that are affected
-				for(Entity entity : getEntitiesById(entityId)) {
+				for (Entity entity : getEntitiesById(entityId)) {
 					ModelMgrUtils.updateEntity(entity);
 					revalidate();
 					repaint();
 				}
 			}
-        });
-    }
-    
-    public void init(List<Entity> entityRootList) {
-    	
-        if (null != entityRootList && entityRootList.size() >= 1) {
-        	EntityType folderType = entityRootList.get(0).getEntityType();
-        	
-        	Entity root = new Entity();
-        	root.setEntityType(folderType);
-        	root.setName("Janelia");
-        	
-        	for(Entity commonRoot : entityRootList) {
-        		EntityData ed = root.addChildEntity(commonRoot);
-        		ed.setOrderIndex(root.getMaxOrderIndex()+1);
-        	}
-        	
-            initializeTree(root);
-        }
-        else {
-        	Entity noDataEntity = new Entity();
-        	EntityType type = new EntityType();
-        	type.setName("");
-        	noDataEntity.setEntityType(type);
-        	noDataEntity.setName("No data");
-        	initializeTree(noDataEntity);
-        } 
-    }
-    
-    @Override
+		});
+	}
+
+	public void init(List<Entity> entityRootList) {
+
+		if (null != entityRootList && entityRootList.size() >= 1) {
+			EntityType folderType = entityRootList.get(0).getEntityType();
+
+			Entity root = new Entity();
+			root.setEntityType(folderType);
+			root.setName("Janelia");
+
+			for (Entity commonRoot : entityRootList) {
+				addTopLevelEntity(root, commonRoot);
+			}
+
+			initializeTree(root);
+		} else {
+			Entity noDataEntity = new Entity();
+			EntityType type = new EntityType();
+			type.setName("");
+			noDataEntity.setEntityType(type);
+			noDataEntity.setName("No data");
+			initializeTree(noDataEntity);
+		}
+	}
+
+	private EntityData addTopLevelEntity(Entity rootEntity, Entity entity) {
+		EntityData ed = rootEntity.addChildEntity(entity);
+		ed.setOrderIndex(rootEntity.getMaxOrderIndex() + 1);
+		ed.setUser(entity.getUser());
+		return ed;
+	}
+
+	@Override
 	public void initializeTree(Entity rootEntity) {
 		super.initializeTree(rootEntity);
 
-        JTree tree = getTree();
-        tree.setRootVisible(false);
-        
-        tree.setDragEnabled(true);  
-        tree.setDropMode(DropMode.ON_OR_INSERT);
-        tree.setTransferHandler(new TreeTransferHandler(getDynamicTree()) {
+		JTree tree = getTree();
+		tree.setRootVisible(false);
 
-        	protected boolean allowTransfer(DefaultMutableTreeNode node, DefaultMutableTreeNode destination) {
-        		Entity entity = getEntity(node);
-        		Entity destEntity = getEntity(destination);
-        		return (ModelMgrUtils.isOwner(entity) && ModelMgrUtils.isOwner(destEntity));
-        	}
-        	
-        	protected boolean updateUserData(DefaultMutableTreeNode nodeRemoved, DefaultMutableTreeNode nodeAdded, DefaultMutableTreeNode newParent, int destIndex) {
-        		
-        		try {
-//            		if (nodeRemoved!=null) {
-//            			DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode)nodeRemoved.getParent();
-//            			Entity entity = getEntity(nodeRemoved);
-//            			Entity parent = getEntity(parentNode);
-//                		ModelMgr.getModelMgr().removeEntityFromParent(parent, entity);
-//            		}
+		tree.setDragEnabled(true);
+		tree.setDropMode(DropMode.ON_OR_INSERT);
+		tree.setTransferHandler(new TreeTransferHandler(getDynamicTree()) {
 
-            		if (nodeAdded!=null) {
-	        			DefaultMutableTreeNode parentNode = newParent;
-	        			Entity entity = getEntity(nodeAdded);
-	        			Entity parent = getEntity(parentNode);
-	            		
-	            		// Add to parent
-	            		EntityData newEd = parent.addChildEntity(entity);
-	            		// Temporarily remove it so that it can be inserted with the correct index
-	            		parent.getEntityData().remove(newEd); 
-	            		
-	            		List<EntityData> eds = EntityUtils.getOrderedEntityDataOfType(parent, EntityConstants.ATTRIBUTE_ENTITY);
-	            		if (destIndex>eds.size()) {
-	            			eds.add(newEd);
-	            		}
-	            		else {
-	            			eds.add(destIndex, newEd);	
-	            		}
-	            		
-	            		// Renumber the children
-	            		int index = 0;
-	            		for(EntityData ed : eds) {
-	            			if (ed.getOrderIndex()==null || ed.getOrderIndex()!=index) {
-	            				ed.setOrderIndex(index);
-	            				EntityData savedEd = ModelMgr.getModelMgr().saveOrUpdateEntityData(ed);
-	                    		if (index==destIndex) {
-	                        		// Re-add the saved entity data to the parent
-	                        		parent.getEntityData().add(savedEd);
-	                    		}
-	            			}
-	            			index++;
-	            		}
-            		}
-            		
-            		return true;
-        		}
-        		catch (Exception e) {
-        			SessionMgr.getSessionMgr().handleException(e);
-        			return false;
-        		}
-        	}
-        	
-        	protected boolean addNode(DefaultMutableTreeNode parent, DefaultMutableTreeNode node, int index) {
-        		addNodes(parent, getEntityData(node), index);
-        		return true;
-        	}
-        	
-        }); 
+			@Override
+			protected boolean allowTransfer(DefaultMutableTreeNode node, DefaultMutableTreeNode destination) {
+				if (destination.isRoot())
+					return false;
+				Entity entity = getEntity(node);
+				Entity destEntity = getEntity(destination);
+
+				// Disallow transfer if the source or target nodes are not both
+				// owned by the user
+				if (!ModelMgrUtils.isOwner(destEntity))
+					return false;
+
+				// Disallow transfer if the node is in the ancestor chain
+				DefaultMutableTreeNode parent = destination;
+				while (parent != null) {
+					Entity ancestor = getEntity(parent);
+					if (Utils.areSameEntity(entity, ancestor))
+						return false;
+					parent = (DefaultMutableTreeNode) parent.getParent();
+				}
+
+				return true;
+			}
+
+			@Override
+			protected void updateUserData(DefaultMutableTreeNode nodeRemoved, DefaultMutableTreeNode nodeAdded,
+					DefaultMutableTreeNode newParent, int destIndex) throws Exception {
+
+				DefaultMutableTreeNode parentNode = newParent;
+				Entity entity = getEntity(nodeAdded);
+				Entity parent = getEntity(parentNode);
+
+				// Add to parent
+				EntityData newEd = parent.addChildEntity(entity);
+				// Temporarily remove it so that it can be inserted with the
+				// correct index
+				parent.getEntityData().remove(newEd);
+
+				List<EntityData> eds = EntityUtils.getOrderedEntityDataOfType(parent, EntityConstants.ATTRIBUTE_ENTITY);
+				if (destIndex > eds.size()) {
+					eds.add(newEd);
+				} else {
+					eds.add(destIndex, newEd);
+				}
+
+				// Renumber the children
+				int index = 0;
+				for (EntityData ed : eds) {
+					if (ed.getOrderIndex() == null || ed.getOrderIndex() != index) {
+						ed.setOrderIndex(index);
+						EntityData savedEd = ModelMgr.getModelMgr().saveOrUpdateEntityData(ed);
+						if (index == destIndex) {
+							// Re-add the saved entity data to the parent
+							parent.getEntityData().add(savedEd);
+							// Update the tree model
+							nodeAdded.setUserObject(savedEd);
+							return;
+						}
+					}
+					index++;
+				}
+			}
+
+			@Override
+			protected void addNode(DefaultMutableTreeNode parent, DefaultMutableTreeNode node, int index)
+					throws Exception {
+				addNodes(parent, getEntityData(node), index);
+			}
+
+		});
 	}
 
 	/**
-     * Override this method to load the root list. This method will be called in a worker thread.
-     * @return
-     */
-    public abstract List<Entity> loadRootList();
-    
-    private class EntityOutlineContextMenu extends EntityContextMenu {
+	 * Override this method to load the root list. This method will be called in
+	 * a worker thread.
+	 * 
+	 * @return
+	 */
+	public abstract List<Entity> loadRootList();
 
-    	private DefaultMutableTreeNode node;
+	private class EntityOutlineContextMenu extends EntityContextMenu {
+
+		private DefaultMutableTreeNode node;
+		private EntityData entityData;
+
 		public EntityOutlineContextMenu(DefaultMutableTreeNode node) {
 			super(getEntity(node));
+			this.entityData = getEntityData(node);
 			this.node = node;
 		}
 
 		public void addMenuItems() {
-            
-    		add(getTitleItem());
-            add(getCopyToClipboardItem());
-            add(getDetailsItem());
-            add(getRenameItem());
-            add(getDeleteItem());
-            add(getNewFolderItem());
-            
-            setNextAddRequiresSeparator(true);
-        	add(getOpenInFinderItem());
-        	add(getOpenWithAppItem());
-            add(getNeuronAnnotatorItem());
-            
-            setNextAddRequiresSeparator(true);
-            add(getCreateSessionItem());
-    	}
 
-    	private JMenuItem getDeleteItem() {
-                
-            JMenuItem deleteItem = new JMenuItem("  Delete tree");
-            deleteItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent actionEvent) {
+			add(getTitleItem());
+			add(getCopyToClipboardItem());
+			add(getDetailsItem());
+			add(getRenameItem());
+			add(getDeleteItem());
+			add(getNewFolderItem());
 
-                	final List<EntityData> eds = ModelMgr.getModelMgr().getParentEntityDatas(entity.getId());
-            		final EntityData ed = getEntityData(node);
+			setNextAddRequiresSeparator(true);
+			add(getOpenInFinderItem());
+			add(getOpenWithAppItem());
+			add(getNeuronAnnotatorItem());
 
-                	if (eds.size()==1) {
-                		int deleteConfirmation = JOptionPane.showConfirmDialog(browser, "Are you sure you want to permanently delete this item and all items under it?", "Delete", JOptionPane.YES_NO_OPTION);
-                        if (deleteConfirmation != 0) {
-                            return;
-                        }	
-                	}
-                    
-    	            Utils.setWaitingCursor(browser);
-    	            
-    	            SimpleWorker removeTask = new SimpleWorker() {
+			setNextAddRequiresSeparator(true);
+			add(getCreateSessionItem());
+		}
 
-    	                @Override
-    	                protected void doStuff() throws Exception {
-    	    	            // Update database
-    	                	if (eds.size()>1) {
-    	                		// More than one parent. Don't delete, just unlink from here.
-                    			ModelMgr.getModelMgr().removeEntityData(ed);
-    	                	}
-    	                	else {
-    	                		ModelMgr.getModelMgr().deleteEntityTree(entity.getId());
-    	                	}
-    	                }
+		public void addRootMenuItems() {
 
-    	                @Override
-    	                protected void hadSuccess() {
-    	                	Utils.setDefaultCursor(browser);
+			add(getTitleItem());
+			add(getNewRootFolderItem());
+		}
 
-    	                	DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode)node.getParent();
-    	                	Entity parent = getEntity(parentNode);
+		private JMenuItem getDeleteItem() {
 
-    	                    // Update object model
-    	                	EntityUtils.removeChild(parent, entity);
-    	                	    	                    
-    	                    // Update Tree UI
-    	                    selectedTree.removeNode(node);
-    	                }
+			JMenuItem deleteItem = new JMenuItem("  Remove '"+entity.getName()+"'");
+			deleteItem.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent actionEvent) {
 
-    	                @Override
-    	                protected void hadError(Throwable error) {
-    	                	Utils.setDefaultCursor(browser);
-                            error.printStackTrace();
-                            JOptionPane.showMessageDialog(browser, "Error deletings entity", "Error", JOptionPane.ERROR_MESSAGE);
-    	                }
+					final List<EntityData> eds = ModelMgr.getModelMgr().getParentEntityDatas(entity.getId());
 
-    	            };
+					boolean removeReference = true;
+					
+					if (eds.size() <= 1 && entity.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+						// Make sure its not a reference to a common root
+						if (entity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)==null || eds.isEmpty()) {
+							int deleteConfirmation = JOptionPane.showConfirmDialog(browser,
+									"Are you sure you want to permanently delete '" + entity.getName()
+											+ "' and all orphaned items underneath it?", "Delete",
+									JOptionPane.YES_NO_OPTION);
+							if (deleteConfirmation != 0) {
+								return;
+							}
+							removeReference = false;
+						}
+						else if (entity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)!=null && entityData.getId()==null) {
+							JOptionPane.showMessageDialog(browser, "Cannot delete this root entity because there are other references to it", "Error",
+									JOptionPane.ERROR_MESSAGE);
+							return;
+						}
+					}
 
-    	            removeTask.execute();
-                }
-            });
+					Utils.setWaitingCursor(browser);
 
-            if (!entity.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
-            	deleteItem.setEnabled(false);
-            }
-            return deleteItem;
-    	}
-    	
-    	private JMenuItem getNewFolderItem() {
-            
-            if (!entity.getEntityType().getName().equals(EntityConstants.TYPE_FOLDER)) return null;
-                
-            JMenuItem newFolderItem = new JMenuItem("  Create new folder");
-            newFolderItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent actionEvent) {
+					final boolean removeRefFinal = removeReference;
+					SimpleWorker removeTask = new SimpleWorker() {
 
-                    // Add button clicked
-                    String folderName = (String) JOptionPane.showInputDialog(browser, "Folder Name:\n", "Create folder under "+entity.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
-                    if ((folderName == null) || (folderName.length() <= 0)) {
-                        return;
-                    }
+						@Override
+						protected void doStuff() throws Exception {
+							// Update database
+							if (removeRefFinal) {
+								ModelMgr.getModelMgr().removeEntityData(entityData);
+							} 
+							else {
+								ModelMgr.getModelMgr().deleteEntityTree(entity.getId());
+							}
+						}
 
-                    try {
-                        // Update database
-                    	Entity parentFolder = entity;
-                        Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
-                        EntityData newData = ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder, parentFolder.getMaxOrderIndex()+1, EntityConstants.ATTRIBUTE_ENTITY);
-                        
-                        // Update these references to use our local objects, so that the object graph is consistent
-                        newData.setParentEntity(parentFolder);
-                        newData.setChildEntity(newFolder);
-                        
-                        // Update object model
-                        parentFolder.getEntityData().add(newData);
+						@Override
+						protected void hadSuccess() {
+							Utils.setDefaultCursor(browser);
 
-                        // Update Tree UI
-                        addNodes(node, newData);
+							DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
+							Entity parent = getEntity(parentNode);
 
-                        selectedTree.expand(node, true);
+							// Update object model
+							EntityUtils.removeChild(parent, entity);
 
-                    }
-                    catch (Exception ex) {
-                        ex.printStackTrace();
-                        JOptionPane.showMessageDialog(browser, "Error creating folder", "Error", JOptionPane.ERROR_MESSAGE);
-                    }
-                }
-            });
+							// Update Tree UI
+							selectedTree.removeNode(node);
+						}
 
-            if (!entity.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
-            	newFolderItem.setEnabled(false);
-            }
-            return newFolderItem;
-    	}
-    	
-    	private JMenuItem getCreateSessionItem() {
+						@Override
+						protected void hadError(Throwable error) {
+							Utils.setDefaultCursor(browser);
+							error.printStackTrace();
+							JOptionPane.showMessageDialog(browser, "Error deleting entity", "Error",
+									JOptionPane.ERROR_MESSAGE);
+						}
 
-    		if (node.isRoot()) return null;
-	        JMenuItem newFragSessionItem = new JMenuItem("  Create Annotation Session for Neuron Fragments...");
-	        newFragSessionItem.addActionListener(new ActionListener() {
-	            public void actionPerformed(ActionEvent actionEvent) {
-	
-	                DefaultMutableTreeNode node = selectedTree.getCurrentNode();
-	                final Entity entity = getEntity(node);
-	
-	                try {
-	                    Utils.setWaitingCursor(EntityOutline.this);
-	
-	                    SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node, true) {
-	
-	                        protected void doneLoading() {
-	                            Utils.setDefaultCursor(EntityOutline.this);
-	                            List<Entity> entities = entity.getDescendantsOfType(EntityConstants.TYPE_NEURON_FRAGMENT);
-	                            browser.getAnnotationSessionPropertyDialog().showForNewSession(entity.getName(), entities);
-	                            SwingUtilities.updateComponentTreeUI(EntityOutline.this);
-	                        }
-	
-	                        @Override
-	                        protected void hadError(Throwable error) {
-	                        	error.printStackTrace();
-	                            Utils.setDefaultCursor(EntityOutline.this);
-	                            JOptionPane.showMessageDialog(browser, "Error loading nodes", "Internal Error", JOptionPane.ERROR_MESSAGE);
-	                        }
-	                    };
-	
-	                    loadingWorker.execute();
-	                }
-	                catch (Exception e) {
-	                    e.printStackTrace();
-	                }
-	            }
-	        });
-	        
-	        return newFragSessionItem;
-    	}
-    }
-    
-    
-    /**
-     * Override this method to show a popup menu when the user right clicks a node in the tree.
-     *
-     * @param e
-     */
-    protected void showPopupMenu(MouseEvent e) {
+					};
 
-    	// Clicked on what node?
-        final DefaultMutableTreeNode node = selectedTree.getCurrentNode();
-        if (node == null) return;
-        final Entity entity = getEntity(node);
-    	if (entity == null) return;
+					removeTask.execute();
+				}
+			});
 
-        selectNode(node);
+			if (!entityData.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+				deleteItem.setEnabled(false);
+			}
+			return deleteItem;
+		}
 
-        // Create context menus
-        final EntityOutlineContextMenu popupMenu = new EntityOutlineContextMenu(node);
-        popupMenu.addMenuItems();
-        popupMenu.show(selectedTree.getTree(), e.getX(), e.getY());
-    }
-    
-    /**
-     * Override this method to do something when the user left clicks a node.
-     *
-     * @param e
-     */
-    protected void nodeClicked(MouseEvent e) {
-        selectNode(selectedTree.getCurrentNode());
-    }
-    
-    /**
-     * Override this method to do something when the user presses down on a node.
-     *
-     * @param e
-     */
-    protected void nodePressed(MouseEvent e) {
-    }
+		private JMenuItem getNewFolderItem() {
 
-    /**
-     * Override this method to do something when the user double clicks a node.
-     *
-     * @param e
-     */
-    protected void nodeDoubleClicked(MouseEvent e) {
-    }
+			if (!entity.getEntityType().getName().equals(EntityConstants.TYPE_FOLDER))
+				return null;
 
-    /**
-     * Reload the data for the current tree.
-     */
-    @Override
+			JMenuItem newFolderItem = new JMenuItem("  Create new folder");
+			newFolderItem.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent actionEvent) {
+
+					// Add button clicked
+					String folderName = (String) JOptionPane.showInputDialog(browser, "Folder Name:\n",
+							"Create folder under " + entity.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
+					if ((folderName == null) || (folderName.length() <= 0)) {
+						return;
+					}
+
+					try {
+						// Update database
+						Entity parentFolder = entity;
+						Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
+						EntityData newData = ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder,
+								parentFolder.getMaxOrderIndex() + 1, EntityConstants.ATTRIBUTE_ENTITY);
+
+						// Update these references to use our local objects, so that the object graph is consistent
+						newData.setParentEntity(parentFolder);
+						newData.setChildEntity(newFolder);
+
+						// Update object model
+						parentFolder.getEntityData().add(newData);
+
+						// Update Tree UI
+						addNodes(node, newData);
+
+						selectedTree.expand(node, true);
+
+					} catch (Exception ex) {
+						ex.printStackTrace();
+						JOptionPane.showMessageDialog(browser, "Error creating folder", "Error",
+								JOptionPane.ERROR_MESSAGE);
+					}
+				}
+			});
+
+			if (!entity.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+				newFolderItem.setEnabled(false);
+			}
+			return newFolderItem;
+		}
+
+		private JMenuItem getNewRootFolderItem() {
+
+			JMenuItem newFolderItem = new JMenuItem("  Create new top-level folder");
+			newFolderItem.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent actionEvent) {
+
+					// Add button clicked
+					String folderName = (String) JOptionPane.showInputDialog(browser, "Folder Name:\n",
+							"Create top-level folder", JOptionPane.PLAIN_MESSAGE, null, null, null);
+					if ((folderName == null) || (folderName.length() <= 0)) {
+						return;
+					}
+
+					try {
+						// Update database
+						Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
+						newFolder.addAttributeAsTag(EntityConstants.ATTRIBUTE_COMMON_ROOT);
+						ModelMgr.getModelMgr().saveOrUpdateEntity(newFolder);
+
+						// Update object model
+						EntityData newData = addTopLevelEntity(getRootEntity(), newFolder);
+
+						// Update Tree UI
+						addNodes(getDynamicTree().getRootNode(), newData);
+					} catch (Exception ex) {
+						ex.printStackTrace();
+						JOptionPane.showMessageDialog(browser, "Error creating folder", "Error",
+								JOptionPane.ERROR_MESSAGE);
+					}
+				}
+			});
+
+			return newFolderItem;
+		}
+
+		private JMenuItem getCreateSessionItem() {
+
+			if (node.isRoot())
+				return null;
+			JMenuItem newFragSessionItem = new JMenuItem("  Create Annotation Session for Neuron Fragments...");
+			newFragSessionItem.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent actionEvent) {
+
+					DefaultMutableTreeNode node = selectedTree.getCurrentNode();
+					final Entity entity = getEntity(node);
+
+					try {
+						Utils.setWaitingCursor(EntityOutline.this);
+
+						SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node, true) {
+
+							protected void doneLoading() {
+								Utils.setDefaultCursor(EntityOutline.this);
+								List<Entity> entities = entity
+										.getDescendantsOfType(EntityConstants.TYPE_NEURON_FRAGMENT);
+								browser.getAnnotationSessionPropertyDialog().showForNewSession(entity.getName(),
+										entities);
+								SwingUtilities.updateComponentTreeUI(EntityOutline.this);
+							}
+
+							@Override
+							protected void hadError(Throwable error) {
+								error.printStackTrace();
+								Utils.setDefaultCursor(EntityOutline.this);
+								JOptionPane.showMessageDialog(browser, "Error loading nodes", "Internal Error",
+										JOptionPane.ERROR_MESSAGE);
+							}
+						};
+
+						loadingWorker.execute();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			});
+
+			return newFragSessionItem;
+		}
+	}
+
+	/**
+	 * Override this method to show a popup menu when the user right clicks a
+	 * node in the tree.
+	 * 
+	 * @param e
+	 */
+	protected void showPopupMenu(MouseEvent e) {
+
+		// Clicked on what node?
+		final DefaultMutableTreeNode node = selectedTree.getCurrentNode();
+
+		// Create context menu
+		final EntityOutlineContextMenu popupMenu = new EntityOutlineContextMenu(node);
+
+		if (node != null) {
+			final Entity entity = getEntity(node);
+			if (entity == null)
+				return;
+			selectNode(node);
+			popupMenu.addMenuItems();
+		} else {
+			popupMenu.addRootMenuItems();
+		}
+
+		popupMenu.show(selectedTree.getTree(), e.getX(), e.getY());
+	}
+
+	/**
+	 * Override this method to do something when the user left clicks a node.
+	 * 
+	 * @param e
+	 */
+	protected void nodeClicked(MouseEvent e) {
+		selectNode(selectedTree.getCurrentNode());
+	}
+
+	/**
+	 * Override this method to do something when the user presses down on a
+	 * node.
+	 * 
+	 * @param e
+	 */
+	protected void nodePressed(MouseEvent e) {
+	}
+
+	/**
+	 * Override this method to do something when the user double clicks a node.
+	 * 
+	 * @param e
+	 */
+	protected void nodeDoubleClicked(MouseEvent e) {
+	}
+
+	/**
+	 * Reload the data for the current tree.
+	 */
+	@Override
 	public void refresh() {
-        Utils.setWaitingCursor(EntityOutline.this);
-    	final ExpansionState expansionState = new ExpansionState();
-    	expansionState.storeExpansionState(getDynamicTree());
-    	
-        SimpleWorker entityOutlineLoadingWorker = new SimpleWorker() {
+		Utils.setWaitingCursor(EntityOutline.this);
+		final ExpansionState expansionState = new ExpansionState();
+		expansionState.storeExpansionState(getDynamicTree());
 
-            private List<Entity> rootList;
-        	
-            protected void doStuff() throws Exception {
-            	rootList = loadRootList();
-            }
+		SimpleWorker entityOutlineLoadingWorker = new SimpleWorker() {
 
-            protected void hadSuccess() {
-            	init(rootList);
-		    	expansionState.restoreExpansionState(getDynamicTree());
-                Utils.setDefaultCursor(EntityOutline.this);
-            }
+			private List<Entity> rootList;
 
-            protected void hadError(Throwable error) {
-                error.printStackTrace();
-                JOptionPane.showMessageDialog(EntityOutline.this, 
-                		"Error loading data outline", "Data Load Error", JOptionPane.ERROR_MESSAGE);
-                init(null);
-            }
-        };
-        
-        entityOutlineLoadingWorker.execute();
-    }
+			protected void doStuff() throws Exception {
+				rootList = loadRootList();
+			}
 
-    private void selectEntityByPath(String path) {
-    	selectEntityByUniqueId(path);
-    }
-    
-    private void selectEntityByUniqueId(String uniqueId) {
-    	DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
-    	selectNode(node);
-    }
-    
-    private synchronized void selectNode(final DefaultMutableTreeNode node) {
+			protected void hadSuccess() {
+				init(rootList);
+				expansionState.restoreExpansionState(getDynamicTree());
+				Utils.setDefaultCursor(EntityOutline.this);
+			}
 
-    	if (node==null) return;
+			protected void hadError(Throwable error) {
+				error.printStackTrace();
+				JOptionPane.showMessageDialog(EntityOutline.this, "Error loading data outline", "Data Load Error",
+						JOptionPane.ERROR_MESSAGE);
+				init(null);
+			}
+		};
 
-    	String uniqueId = getUniqueId(node);    	
-    	if (uniqueId.equals(currUniqueId)) return;
-    	
-    	this.currUniqueId = uniqueId;
-    	
-    	DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode)node.getParent();
-    	if (parentNode!=null && !getTree().isExpanded(new TreePath(parentNode.getPath()))) {
-    		getDynamicTree().expand(parentNode, true);
-    	}
-    	
-    	getDynamicTree().navigateToNode(node);
-    	
+		entityOutlineLoadingWorker.execute();
+	}
+	
+	public void expandByUniqueId(String uniqueId) {
+		DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
+		getDynamicTree().expand(node, true);
+	}
+
+	private void selectEntityByUniqueId(String uniqueId) {
+		DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
+		selectNode(node);
+	}
+
+	private synchronized void selectNode(final DefaultMutableTreeNode node) {
+
+		if (node == null) return;
+
+		String uniqueId = getDynamicTree().getUniqueId(node);
+		if (uniqueId.equals(currUniqueId)) return;
+
+		this.currUniqueId = uniqueId;
+
+		DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
+		if (parentNode != null && !getTree().isExpanded(new TreePath(parentNode.getPath()))) {
+			getDynamicTree().expand(parentNode, true);
+		}
+
+		getDynamicTree().navigateToNode(node);
+
 		final IconDemoPanel panel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
 
 		panel.showLoadingIndicator();
-		
-    	if (!getDynamicTree().childrenAreLoaded(node)) {
-        	// Load the children in the tree in case the user selects them in the gallery view
-	        SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node, false) {
+
+		if (!getDynamicTree().childrenAreLoaded(node)) {
+			// Load the children in the tree in case the user selects them in
+			// the gallery view
+			SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node, false) {
 				@Override
 				protected void doneLoading() {
 					panel.loadEntity(getEntity(node));
 				}
-	        };
-	        loadingWorker.execute();
-    	}
-    	else {
+			};
+			loadingWorker.execute();
+		} else {
 			panel.loadEntity(getEntity(node));
-    	}
+		}
 
-    	ModelMgr.getModelMgr().selectOutlineEntity(getUniqueId(node), true);
-    }
+		ModelMgr.getModelMgr().selectOutlineEntity(getDynamicTree().getUniqueId(node), true);
+	}
 }

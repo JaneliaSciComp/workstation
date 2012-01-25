@@ -9,7 +9,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
  * Created by IntelliJ IDEA.

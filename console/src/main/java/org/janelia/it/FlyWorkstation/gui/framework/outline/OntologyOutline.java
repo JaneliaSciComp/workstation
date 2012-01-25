@@ -190,7 +190,14 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Out
 
     public void loadOntology(long rootId) {
     	if (getCurrentOntology()!=null && getCurrentOntology().getId().equals(rootId)) return;
-    	initializeTree(rootId, null);
+    	initializeTree(rootId, new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+		        selectedTree.expandAll(true);
+				return null;
+			}
+    		
+    	});
     }
 
 //    @Override
@@ -367,7 +374,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Out
             action.doAction();
         }
     }
-
+    
     /**
      * Reload the data for the current tree.
      */
@@ -377,7 +384,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Out
             Utils.setWaitingCursor(OntologyOutline.this);
         	final ExpansionState expansionState = new ExpansionState();
         	expansionState.storeExpansionState(getDynamicTree());
-	    		initializeTree(getRootEntity().getId(), new Callable<Void>() {
+			initializeTree(getRootEntity().getId(), new Callable<Void>() {
 				@Override
 				public Void call() throws Exception {
 			    	expansionState.restoreExpansionState(getDynamicTree());

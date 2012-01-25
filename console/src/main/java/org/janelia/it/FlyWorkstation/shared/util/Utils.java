@@ -121,6 +121,7 @@ public class Utils {
     }
 
     public static String getParentIdFromUniqueId(String uniqueId) {
+    	if (uniqueId==null) return null;
     	String[] ids = uniqueId.split("/");
     	StringBuffer parentUniqueId = new StringBuffer();
     	try {

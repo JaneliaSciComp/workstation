@@ -51,6 +51,10 @@ public class ModelMgrUtils {
     }
     
     public static boolean isOwner(Entity entity) {
+    	if (entity==null) throw new IllegalArgumentException("Entity is null");
+    	if (entity.getUser()==null) {
+    		throw new IllegalArgumentException("Entity's user is null");
+    	}
     	return entity.getUser().getUserLogin().equals(SessionMgr.getUsername());
     }
     
