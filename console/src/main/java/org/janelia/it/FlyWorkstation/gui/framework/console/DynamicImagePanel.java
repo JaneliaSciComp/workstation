@@ -47,7 +47,6 @@ public class DynamicImagePanel extends JPanel {
 
 		setLayout(new GridBagLayout());
 		setOpaque(false);
-
 		
 		this.imageFilename = imageFilename;
 		this.maxSize = maxSize;
@@ -237,12 +236,12 @@ public class DynamicImagePanel extends JPanel {
     		this.success = success;
     	}
     	
-    	
         @Override
 		protected void doStuff() throws Exception {
             BufferedImage maxSizeImage = imageCache==null ? null : imageCache.get(imageFilename);
             if (maxSizeImage == null) {
             	maxSizeImage = Utils.readImage(imageFilename);
+            	if (isCancelled()) return;
             	if (maxSize != null) {
             		maxSizeImage = Utils.getScaledImage(maxSizeImage, maxSize);
             		displaySize = maxSize;
@@ -251,6 +250,7 @@ public class DynamicImagePanel extends JPanel {
             		displaySize = Math.max(maxSizeImage.getWidth(), maxSizeImage.getHeight());
             	}
             }
+            if (isCancelled()) return;
     		if (imageCache!=null) {
     			imageCache.put(imageFilename, maxSizeImage);
     		}

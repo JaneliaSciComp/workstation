@@ -145,12 +145,9 @@ public class IconDemoPanel extends JPanel {
 	private final MouseListener buttonMouseListener = new MouseAdapter() {
 
 		@Override
-		public void mousePressed(MouseEvent e) {
-
-			if (e.isPopupTrigger())
-				return;
-			if (e.getClickCount() != 1 || e.getButton() != MouseEvent.BUTTON1)
-				return;
+		public void mouseReleased(MouseEvent e) {
+			
+			if (e.isPopupTrigger() || e.getClickCount() != 1 || e.getButton() != MouseEvent.BUTTON1) return;
 
 			final AnnotatedImageButton button = (AnnotatedImageButton) e.getSource();
 			final boolean shiftDown = e.isShiftDown();
@@ -572,6 +569,7 @@ public class IconDemoPanel extends JPanel {
 
 		// Indicate a load
 		showLoadingIndicator();
+		imagesPanel.cancelAllLoads();
 
 		// Update back/forward navigation
 		EntityOutlineHistory history = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutlineHistory();

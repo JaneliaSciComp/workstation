@@ -22,7 +22,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.console.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
-import org.janelia.it.FlyWorkstation.gui.framework.tree.TreeTransferHandler;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -110,77 +109,11 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 
 		tree.setDragEnabled(true);
 		tree.setDropMode(DropMode.ON_OR_INSERT);
-		tree.setTransferHandler(new TreeTransferHandler(getDynamicTree()) {
-
+		tree.setTransferHandler(new EntityTransferHandler() {
 			@Override
-			protected boolean allowTransfer(DefaultMutableTreeNode node, DefaultMutableTreeNode destination) {
-				if (destination.isRoot())
-					return false;
-				Entity entity = getEntity(node);
-				Entity destEntity = getEntity(destination);
-
-				// Disallow transfer if the source or target nodes are not both
-				// owned by the user
-				if (!ModelMgrUtils.isOwner(destEntity))
-					return false;
-
-				// Disallow transfer if the node is in the ancestor chain
-				DefaultMutableTreeNode parent = destination;
-				while (parent != null) {
-					Entity ancestor = getEntity(parent);
-					if (Utils.areSameEntity(entity, ancestor))
-						return false;
-					parent = (DefaultMutableTreeNode) parent.getParent();
-				}
-
-				return true;
+			public JComponent getDropTargetComponent() {
+				return EntityOutline.this;
 			}
-
-			@Override
-			protected void updateUserData(DefaultMutableTreeNode nodeRemoved, DefaultMutableTreeNode nodeAdded,
-					DefaultMutableTreeNode newParent, int destIndex) throws Exception {
-
-				DefaultMutableTreeNode parentNode = newParent;
-				Entity entity = getEntity(nodeAdded);
-				Entity parent = getEntity(parentNode);
-
-				// Add to parent
-				EntityData newEd = parent.addChildEntity(entity);
-				// Temporarily remove it so that it can be inserted with the
-				// correct index
-				parent.getEntityData().remove(newEd);
-
-				List<EntityData> eds = EntityUtils.getOrderedEntityDataOfType(parent, EntityConstants.ATTRIBUTE_ENTITY);
-				if (destIndex > eds.size()) {
-					eds.add(newEd);
-				} else {
-					eds.add(destIndex, newEd);
-				}
-
-				// Renumber the children
-				int index = 0;
-				for (EntityData ed : eds) {
-					if (ed.getOrderIndex() == null || ed.getOrderIndex() != index) {
-						ed.setOrderIndex(index);
-						EntityData savedEd = ModelMgr.getModelMgr().saveOrUpdateEntityData(ed);
-						if (index == destIndex) {
-							// Re-add the saved entity data to the parent
-							parent.getEntityData().add(savedEd);
-							// Update the tree model
-							nodeAdded.setUserObject(savedEd);
-							return;
-						}
-					}
-					index++;
-				}
-			}
-
-			@Override
-			protected void addNode(DefaultMutableTreeNode parent, DefaultMutableTreeNode node, int index)
-					throws Exception {
-				addNodes(parent, getEntityData(node), index);
-			}
-
 		});
 	}
 
@@ -392,8 +325,8 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 
 		private JMenuItem getCreateSessionItem() {
 
-			if (node.isRoot())
-				return null;
+			if (node.isRoot()) return null;
+			
 			JMenuItem newFragSessionItem = new JMenuItem("  Create Annotation Session for Neuron Fragments...");
 			newFragSessionItem.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent actionEvent) {
@@ -408,10 +341,8 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 
 							protected void doneLoading() {
 								Utils.setDefaultCursor(EntityOutline.this);
-								List<Entity> entities = entity
-										.getDescendantsOfType(EntityConstants.TYPE_NEURON_FRAGMENT);
-								browser.getAnnotationSessionPropertyDialog().showForNewSession(entity.getName(),
-										entities);
+								List<Entity> entities = entity.getDescendantsOfType(EntityConstants.TYPE_NEURON_FRAGMENT);
+								browser.getAnnotationSessionPropertyDialog().showForNewSession(entity.getName(), entities);
 								SwingUtilities.updateComponentTreeUI(EntityOutline.this);
 							}
 
@@ -451,11 +382,11 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 
 		if (node != null) {
 			final Entity entity = getEntity(node);
-			if (entity == null)
-				return;
+			if (entity == null) return;
 			selectNode(node);
 			popupMenu.addMenuItems();
-		} else {
+		} 
+		else {
 			popupMenu.addRootMenuItems();
 		}
 

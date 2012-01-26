@@ -4,6 +4,7 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.awt.dnd.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -12,6 +13,7 @@ import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityContextMenu;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -23,18 +25,29 @@ import org.janelia.it.jacs.model.entity.Entity;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class AnnotatedImageButton extends JToggleButton {
+public abstract class AnnotatedImageButton extends JToggleButton implements DragGestureListener { 
 
 	private final JLabel titleLabel;
     private final JPanel mainPanel;
     private final AnnotationTagCloudPanel tagPanel;
-
-    // One of these goes in the mainPanel
+    private DragSource source;
     
     protected Entity entity;
     
     public AnnotatedImageButton(final Entity entity) {
+
+    	this.entity = entity;
     	
+    	this.source = new DragSource();
+    	source.createDefaultDragGestureRecognizer(this, DnDConstants.ACTION_LINK, this);
+    			
+		setTransferHandler(new EntityTransferHandler() {
+			@Override
+			public JComponent getDropTargetComponent() {
+				return AnnotatedImageButton.this;
+			}			
+		});
+				
         GridBagConstraints c = new GridBagConstraints();
         JPanel buttonPanel = new JPanel(new GridBagLayout());
         buttonPanel.setOpaque(false);
@@ -75,10 +88,11 @@ public abstract class AnnotatedImageButton extends JToggleButton {
         buttonPanel.add(tagPanel, c);
 
 
-        // Remove all default mouse listeners
-        
+        // Remove all default mouse listeners except drag gesture recognizer
         for(MouseListener mouseListener : getMouseListeners()) {
-        	removeMouseListener(mouseListener);
+        	if (!(mouseListener instanceof MouseDragGestureRecognizer)) {
+        		removeMouseListener(mouseListener);	
+        	}
         }
 
         // Mouse events
@@ -117,8 +131,6 @@ public abstract class AnnotatedImageButton extends JToggleButton {
                 AnnotatedImageButton.this.dispatchEvent(e);
             }
         });
-        
-    	this.entity = entity;
     	
     	refresh(entity);
     }
@@ -165,4 +177,14 @@ public abstract class AnnotatedImageButton extends JToggleButton {
 	public void setViewable(boolean viewable) {
 	}
 
+	@Override
+	public void dragGestureRecognized(DragGestureEvent dge) {
+		
+        if (!isSelected()) {
+        	ModelMgr.getModelMgr().selectEntity(getEntity().getId(), true);
+        }
+		
+		getTransferHandler().exportAsDrag(this, dge.getTriggerEvent(), TransferHandler.LINK);
+	}
+	
 }

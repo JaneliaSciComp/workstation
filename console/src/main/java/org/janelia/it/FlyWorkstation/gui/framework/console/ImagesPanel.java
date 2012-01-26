@@ -128,9 +128,6 @@ public class ImagesPanel extends JScrollPane {
         for (Component component : buttonsPanel.getComponents()) {
             if (component instanceof AnnotatedImageButton) {
             	AnnotatedImageButton button = (AnnotatedImageButton)component;
-//            	if (button instanceof DynamicImageButton) {
-//            		((DynamicImageButton)button).cancelLoad();
-//            	}
             	buttonsPanel.remove(button);
             }
         }
