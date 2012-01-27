@@ -180,6 +180,8 @@ public abstract class EntityTransferHandler extends TransferHandler {
 	@Override
 	protected Transferable createTransferable(JComponent sourceComponent) {
 
+		if (DEBUG) System.out.println("EntityTransferHandler.createTransferable");
+		
 		List<Entity> entityList = new ArrayList<Entity>();
 		
 		if (sourceComponent instanceof JTree) {
@@ -219,6 +221,8 @@ public abstract class EntityTransferHandler extends TransferHandler {
 	@Override
 	public boolean importData(TransferHandler.TransferSupport support) {
 
+		if (DEBUG) System.out.println("EntityTransferHandler.importData");
+		
 		if (!canImport(support)) return false;
 
 		try {
@@ -258,6 +262,8 @@ public abstract class EntityTransferHandler extends TransferHandler {
 	 */
 	protected void addEntities(DefaultMutableTreeNode targetNode, List<Entity> entitiesToAdd, int destIndex) throws Exception {
 
+		if (DEBUG) System.out.println("EntityTransferHandler.addEntities");
+		
 		Entity parentEntity = entityOutline.getEntity(targetNode);
 		
 		if (DEBUG) {
@@ -269,6 +275,8 @@ public abstract class EntityTransferHandler extends TransferHandler {
 		}
 
 		// First update the entity model
+		if (DEBUG) System.out.println("EntityTransferHandler.addEntities - updating entity model");
+		
 		List<EntityData> eds = EntityUtils.getOrderedEntityDataOfType(parentEntity, EntityConstants.ATTRIBUTE_ENTITY);
 		int origSize = eds.size();
 		List<EntityData> newEds = new ArrayList<EntityData>();
@@ -290,12 +298,22 @@ public abstract class EntityTransferHandler extends TransferHandler {
 			}
 		}
 
+		if (DEBUG) System.out.println("EntityTransferHandler.addEntities - renumbering children and adding to tree");
+		
 		// Renumber the children, re-add the new ones, and update the tree
 		int index = 0;
 		for (EntityData ed : eds) {
 			if ((ed.getOrderIndex() == null) || (ed.getOrderIndex() != index)) {
 				ed.setOrderIndex(index);
+				// For performance reasons, we have to replace the parent with a fake id-only entity. Otherwise, it 
+				// tries to transfer the entire object graph every time, and it gradually grinds to a halt, since the 
+				// object graph grows at some insane rate.
+				Entity fakeParentEntity = new Entity();
+				fakeParentEntity.setId(parentEntity.getId());
+				ed.setParentEntity(fakeParentEntity);
+				
 				EntityData savedEd = ModelMgr.getModelMgr().saveOrUpdateEntityData(ed);
+				if (DEBUG) System.out.println("EntityTransferHandler.addEntities - saved ED "+ed.getId()+" with index="+index);
 				if ((index >= destIndex) && (index < destIndex+entitiesToAdd.size())) {
 					// Re-add the saved entity data to the parent
 					targetEntity.getEntityData().add(savedEd);
@@ -305,8 +323,6 @@ public abstract class EntityTransferHandler extends TransferHandler {
 			}
 			index++;
 		}
-		
-		
 	}
 	
 	/**
