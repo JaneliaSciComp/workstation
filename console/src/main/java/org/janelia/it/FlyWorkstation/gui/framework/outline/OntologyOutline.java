@@ -28,6 +28,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.NavigateToNodeAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OntologyElementAction;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.choose.OntologyElementChooser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
@@ -331,7 +332,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Out
             }
             else if (type.allowsChildren() || type instanceof Tag) {
 
-                Class[] nodeTypes = {Category.class, Tag.class, Enum.class, Interval.class, Text.class};
+                Class[] nodeTypes = {Category.class, Tag.class, Enum.class, EnumText.class, Interval.class, Text.class};
                 for (Class<? extends OntologyElementType> nodeType : nodeTypes) {
                     try {
                         JMenuItem smi = new JMenuItem(nodeType.newInstance().getName());
@@ -575,7 +576,8 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Out
             OntologyElementType childType = OntologyElementType.createTypeByName(className);
 
             // Add button clicked
-            String termName = (String) JOptionPane.showInputDialog(this, "Ontology Term:\n", "Adding to " + getOntologyElement(selectedTree.getCurrentNode()).getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
+            String termName = (String) JOptionPane.showInputDialog(this, "Ontology Term:\n", "Adding to " + 
+            		getOntologyElement(selectedTree.getCurrentNode()).getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
 
             if ((termName == null) || (termName.length() <= 0)) {
                 return;
@@ -583,20 +585,43 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Out
 
             if (childType instanceof Interval) {
 
-                String lowerBoundStr = (String) JOptionPane.showInputDialog(this, "Lower bound:\n", "Adding an interval", JOptionPane.PLAIN_MESSAGE, null, null, null);
-
-                String upperBoundStr = (String) JOptionPane.showInputDialog(this, "Upper bound:\n", "Adding an interval", JOptionPane.PLAIN_MESSAGE, null, null, null);
+                String lowerBoundStr = (String) JOptionPane.showInputDialog(this, "Lower bound:\n", 
+                		"Adding an interval", JOptionPane.PLAIN_MESSAGE, null, null, null);
+                String upperBoundStr = (String) JOptionPane.showInputDialog(this, "Upper bound:\n", 
+                		"Adding an interval", JOptionPane.PLAIN_MESSAGE, null, null, null);
 
                 try {
                     ((Interval) childType).init(lowerBoundStr, upperBoundStr);
                 }
                 catch (Exception ex) {
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(this, "Invalid bounds");
+                    SessionMgr.getSessionMgr().handleException(ex);
                     return;
                 }
             }
+            else if (childType instanceof EnumText) {
 
+                OntologyElementChooser ontologyChooser = new OntologyElementChooser("Choose an enumeration", getCurrentOntology());
+                ontologyChooser.setMultipleSelection(false);
+                int returnVal = ontologyChooser.showDialog(SessionMgr.getSessionMgr().getActiveBrowser());
+                if (returnVal != OntologyElementChooser.CHOOSE_OPTION) return;
+                
+                List<OntologyElement> chosenElements = ontologyChooser.getChosenElements();
+                if (chosenElements.size()!=1) return;
+                
+                OntologyElement chosenEnum = chosenElements.get(0);
+                if (!(chosenEnum.getType() instanceof Enum)) {
+                    JOptionPane.showMessageDialog(OntologyOutline.this, "You must choosen an enumeration", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+
+                try {
+                    ((EnumText) childType).init(chosenEnum);
+                }
+                catch (Exception ex) {
+                    SessionMgr.getSessionMgr().handleException(ex);
+                    return;
+                }
+            }
+            
             try {
                 // Update database
                 EntityData newData = ModelMgr.getModelMgr().createOntologyTerm(element.getId(), termName, childType, null);
@@ -607,6 +632,12 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Out
 
                 // Update Tree UI
                 OntologyElement newElement = new OntologyElement(newData.getChildEntity(), element);
+                
+                // Update secondary attributes
+                if (newElement.getType() instanceof EnumText) {
+                	((EnumText)newElement.getType()).init(((EnumText)childType).getValueEnum());
+                }
+                
                 addNodes(treeNode, newElement);
 
                 populateActionMap(newElement);

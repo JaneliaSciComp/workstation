@@ -22,7 +22,7 @@ public class OntologyElementChooser extends AbstractChooser {
 
     private OntologyTree ontologyTree;
     private List<OntologyElement> chosenElements = new ArrayList<OntologyElement>();
-
+    
     public OntologyElementChooser(String title, OntologyRoot root) {
         super(title);
         ontologyTree = new OntologyTree() {
@@ -31,14 +31,20 @@ public class OntologyElementChooser extends AbstractChooser {
             }
         };
         ontologyTree.initializeTree(root);
-        ontologyTree.getTree().getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
+        setMultipleSelection(true);
         addChooser(ontologyTree);
+        ontologyTree.getDynamicTree().expandAll(true);
     }
 
     public List<OntologyElement> getChosenElements() {
         return chosenElements;
     }
 
+    public void setMultipleSelection(boolean multipleSelection) {
+    	ontologyTree.getTree().getSelectionModel().setSelectionMode(
+    			multipleSelection ? TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION : TreeSelectionModel.SINGLE_TREE_SELECTION);
+    }
+    
     protected void choosePressed() {
         chosenElements.clear();
         for (TreePath path : ontologyTree.getTree().getSelectionPaths()) {

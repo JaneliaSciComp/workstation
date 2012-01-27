@@ -825,6 +825,7 @@ public class IconDemoPanel extends JPanel {
 
 	public synchronized List<Entity> getSelectedEntities() {
 		List<Entity> selectedEntities = new ArrayList<Entity>();
+		if (entities==null) return selectedEntities;
 		for (Entity entity : entities) {
 			AnnotatedImageButton button = imagesPanel.getButtonByEntityId(entity.getId());
 			if (button.isSelected())

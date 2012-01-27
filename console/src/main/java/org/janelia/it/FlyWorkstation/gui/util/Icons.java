@@ -110,6 +110,9 @@ public class Icons {
         else if ("EnumItem".equals(type))
             return getIcon("page.png");
 
+        else if ("EnumText".equals(type))
+            return getIcon("page_go.png");
+        
         return getIcon("bullet_error.png");
     }
 

@@ -50,13 +50,13 @@ public class AnnotateAction extends OntologyElementAction {
 
         // Get the input value, if required
 
-        String value = null;
+        Object value = null;
         if (type instanceof Interval) {
-            value = (String) JOptionPane.showInputDialog(SessionMgr.getSessionMgr().getActiveBrowser(), 
-            		"Value:\n", "Annotating with interval", JOptionPane.PLAIN_MESSAGE, null, null, null);
+            value = JOptionPane.showInputDialog(SessionMgr.getSessionMgr().getActiveBrowser(), 
+            		"Value:\n", term.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
 
-            Double dvalue = Double.parseDouble(value);
-
+            if (value==null) return;
+            Double dvalue = Double.parseDouble((String)value);
             Interval interval = (Interval) type;
             if (dvalue < interval.getLowerBound().doubleValue() || dvalue > interval.getUpperBound().doubleValue()) {
                 JOptionPane.showMessageDialog(SessionMgr.getSessionMgr().getActiveBrowser(), 
@@ -64,13 +64,29 @@ public class AnnotateAction extends OntologyElementAction {
                 return;
             }
         }
+        else if (type instanceof EnumText) {
+        	
+        	OntologyElement valueEnum = ((EnumText) type).getValueEnum();
+        	List<OntologyElement> children = valueEnum.getChildren();
+        	
+        	int i = 0;
+        	Object[] selectionValues = new Object[children.size()];
+        	for(OntologyElement child : children) {
+        		selectionValues[i++] = child;
+        	}
+        	
+        	value = JOptionPane.showInputDialog(SessionMgr.getSessionMgr().getActiveBrowser(), 
+            		"Value:\n", term.getName(), JOptionPane.PLAIN_MESSAGE, null, selectionValues, null);
+        	if (value==null) return;
+        }
         else if (type instanceof Text) {
-            value = (String) JOptionPane.showInputDialog(SessionMgr.getSessionMgr().getActiveBrowser(), 
-            		"Value:\n", "Annotating with text", JOptionPane.PLAIN_MESSAGE, null, null, null);
+            value = JOptionPane.showInputDialog(SessionMgr.getSessionMgr().getActiveBrowser(), 
+            		"Value:\n", term.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
+            if (value==null) return;
         }
         
         final OntologyElement finalTerm = term;
-        final String finalValue = value;
+        final Object finalValue = value;
         
         SimpleWorker worker = new SimpleWorker() {
 
@@ -99,7 +115,7 @@ public class AnnotateAction extends OntologyElementAction {
         worker.execute();
     }
     
-    public void doAnnotation(Entity targetEntity, OntologyElement term, String value) {
+    public void doAnnotation(Entity targetEntity, OntologyElement term, Object value) {
 
         OntologyElementType type = term.getType();
         
@@ -107,7 +123,7 @@ public class AnnotateAction extends OntologyElementAction {
         Entity keyEntity = term.getEntity();
         Entity valueEntity = null;
         String keyString = keyEntity.getName();
-        String valueString = value;
+        String valueString = value.toString();
 
         if (type instanceof EnumItem) {
             keyEntity = term.getParent().getEntity();

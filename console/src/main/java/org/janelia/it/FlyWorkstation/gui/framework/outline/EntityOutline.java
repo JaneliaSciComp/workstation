@@ -452,13 +452,14 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 				init(rootList);
 				expansionState.restoreExpansionState(getDynamicTree());
 				Utils.setDefaultCursor(EntityOutline.this);
-				try {
-					success.call();	
+				if (success!=null) {
+					try {
+						success.call();	
+					}
+					catch (Exception e) {
+						SessionMgr.getSessionMgr().handleException(e);
+					}
 				}
-				catch (Exception e) {
-					SessionMgr.getSessionMgr().handleException(e);
-				}
-				
 			}
 
 			protected void hadError(Throwable error) {
