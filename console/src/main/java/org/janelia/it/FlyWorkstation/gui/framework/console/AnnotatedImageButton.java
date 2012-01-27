@@ -8,6 +8,7 @@ import java.awt.dnd.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.List;
 
 import javax.swing.*;
 
@@ -101,10 +102,30 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
 
 			@Override
 			protected void popupTriggered(MouseEvent e) {
-				ModelMgr.getModelMgr().selectEntity(entity.getId(), true);
-	            final EntityContextMenu popupMenu = new EntityContextMenu(entity);
-	            popupMenu.addMenuItems();
-		        popupMenu.show(AnnotatedImageButton.this, e.getX(), e.getY());
+				
+				if (!isSelected()) {
+					ModelMgr.getModelMgr().selectEntity(entity.getId(), true);	
+				}
+				
+				List<Long> entityIds = ModelMgr.getModelMgr().getSelectedEntitiesIds();
+				
+				JPopupMenu popupMenu = null;
+				if (entityIds.size()>1) {
+					popupMenu =  new JPopupMenu();
+
+					String name = "(Multiple selected)";
+			        JMenuItem titleMenuItem = new JMenuItem(name);
+			        titleMenuItem.setEnabled(false);
+			        popupMenu.add(titleMenuItem);
+			        
+			        // TODO: add a menu for doing things on multiple entities, such as removal
+				}
+				else {
+					popupMenu = new EntityContextMenu(entity);
+		            ((EntityContextMenu)popupMenu).addMenuItems();
+				}
+	            
+				popupMenu.show(AnnotatedImageButton.this, e.getX(), e.getY());
 			}
 
 			@Override
