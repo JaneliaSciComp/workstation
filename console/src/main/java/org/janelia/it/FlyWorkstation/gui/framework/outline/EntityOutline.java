@@ -11,6 +11,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -303,15 +304,22 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 
 					try {
 						// Update database
-						Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
+						final Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
 						newFolder.addAttributeAsTag(EntityConstants.ATTRIBUTE_COMMON_ROOT);
 						ModelMgr.getModelMgr().saveOrUpdateEntity(newFolder);
 
 						// Update object model
-						EntityData newData = addTopLevelEntity(getRootEntity(), newFolder);
+						addTopLevelEntity(getRootEntity(), newFolder);
 
 						// Update Tree UI
-						addNodes(getDynamicTree().getRootNode(), newData);
+						refresh(new Callable<Void>() {
+							@Override
+							public Void call() throws Exception {
+								selectEntityByUniqueId("/e_"+newFolder.getId());
+								return null;
+							}
+						});
+						
 					} catch (Exception ex) {
 						ex.printStackTrace();
 						JOptionPane.showMessageDialog(browser, "Error creating folder", "Error",
@@ -424,6 +432,10 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 	 */
 	@Override
 	public void refresh() {
+		refresh(null);
+	}
+	
+	public void refresh(final Callable<Void> success) {
 		Utils.setWaitingCursor(EntityOutline.this);
 		final ExpansionState expansionState = new ExpansionState();
 		expansionState.storeExpansionState(getDynamicTree());
@@ -440,6 +452,13 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 				init(rootList);
 				expansionState.restoreExpansionState(getDynamicTree());
 				Utils.setDefaultCursor(EntityOutline.this);
+				try {
+					success.call();	
+				}
+				catch (Exception e) {
+					SessionMgr.getSessionMgr().handleException(e);
+				}
+				
 			}
 
 			protected void hadError(Throwable error) {
