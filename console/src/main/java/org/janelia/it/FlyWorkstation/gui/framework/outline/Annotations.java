@@ -11,6 +11,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.janelia.it.jacs.model.ontology.OntologyElement;
 
 /**
  * Annotations about the entities which the user is currently interacting with.
@@ -84,7 +85,7 @@ public class Annotations {
     
 	public synchronized List<OntologyAnnotation> getAnnotations() {
     	// Copy to avoid concurrent modification issues
-    	return new ArrayList<OntologyAnnotation>();
+    	return new ArrayList<OntologyAnnotation>(annotations);
 	}
     
 	public synchronized List<OntologyAnnotation> getFilteredAnnotations() {
@@ -117,4 +118,24 @@ public class Annotations {
         
         return filteredMap;
     }
+
+    /**
+     * Returns all the annotations on the given entity, with the specified term.
+     * @param entity
+     * @param finalTerm
+     * @return
+     */
+	public List<OntologyAnnotation> getTermAnnotations(Entity entity, OntologyElement finalTerm) {
+		
+		List<OntologyAnnotation> matchingAnnotations = new ArrayList<OntologyAnnotation>();
+        for (OntologyAnnotation annotation : getAnnotations()) {
+        	if (entity.getId().equals(annotation.getTargetEntityId()) && 
+        			(annotation.getKeyEntityId().equals(finalTerm.getId()) || 
+        					(annotation.getValueEntityId()!=null && annotation.getValueEntityId().equals(finalTerm.getId())))) {
+        		matchingAnnotations.add(annotation);
+        	}
+        }
+		
+		return matchingAnnotations;
+	}
 }

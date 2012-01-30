@@ -6,7 +6,6 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
-import java.beans.PropertyChangeEvent;
 import java.util.List;
 
 import javax.swing.JOptionPane;
@@ -14,8 +13,10 @@ import javax.swing.ProgressMonitor;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
@@ -40,8 +41,8 @@ public class AnnotateAction extends OntologyElementAction {
             return;
         }
 
-        OntologyElement term = getOntologyElement();
-        OntologyElementType type = term.getType();
+        final OntologyElement term = getOntologyElement();
+        final OntologyElementType type = term.getType();
 
         if (type instanceof Category || type instanceof Enum) {
             // Cannot annotate with a category or enum
@@ -55,7 +56,7 @@ public class AnnotateAction extends OntologyElementAction {
             value = JOptionPane.showInputDialog(SessionMgr.getSessionMgr().getActiveBrowser(), 
             		"Value:\n", term.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
 
-            if (value==null) return;
+            if (Utils.isEmpty((String)value)) return;
             Double dvalue = Double.parseDouble((String)value);
             Interval interval = (Interval) type;
             if (dvalue < interval.getLowerBound().doubleValue() || dvalue > interval.getUpperBound().doubleValue()) {
@@ -94,7 +95,22 @@ public class AnnotateAction extends OntologyElementAction {
 			protected void doStuff() throws Exception {
 				int i=1;
 		        for(Entity entity : selectedEntities) {
+		        	
+		        	if (!(type instanceof Text)) {
+		        		// Non-text annotations are exclusive, so delete existing annotations first.
+			            Annotations annotations = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().getAnnotations();
+			        	List<OntologyAnnotation> existingAnnotations = annotations.getTermAnnotations(entity, finalTerm);
+			        	for(OntologyAnnotation existingAnnotation : existingAnnotations) {
+			        		if (existingAnnotation.getOwner().equals(SessionMgr.getUsername())) {
+			        			ModelMgr.getModelMgr().removeAnnotation(existingAnnotation.getId());
+			        		}
+			        	}
+		        	}
+		        	
+		        	// Create the new one
 		        	doAnnotation(entity, finalTerm, finalValue);
+		        	
+		        	// Update our progress
 		            setProgress(i++, selectedEntities.size());
 		        }
 			}
@@ -123,7 +139,7 @@ public class AnnotateAction extends OntologyElementAction {
         Entity keyEntity = term.getEntity();
         Entity valueEntity = null;
         String keyString = keyEntity.getName();
-        String valueString = value.toString();
+        String valueString = value == null ? null : value.toString();
 
         if (type instanceof EnumItem) {
             keyEntity = term.getParent().getEntity();

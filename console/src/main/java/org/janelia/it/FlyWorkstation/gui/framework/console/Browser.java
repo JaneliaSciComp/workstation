@@ -288,7 +288,7 @@ public class Browser extends JFrame implements Cloneable {
 
         entityOutline.showLoadingIndicator();
 
-        SimpleWorker entityOutlineLoadingWorker = new SimpleWorker() {
+        final SimpleWorker entityOutlineLoadingWorker = new SimpleWorker() {
 
             private List<Entity> rootList;
         	
@@ -308,9 +308,15 @@ public class Browser extends JFrame implements Cloneable {
 
         };
         
-        entityOutlineLoadingWorker.execute();
+        // Run this later so that the Browser has finished initializing by the time it runs
+        SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+		        entityOutlineLoadingWorker.execute();
+			}
+        	
+        });
         
-
         ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
 
 			@Override

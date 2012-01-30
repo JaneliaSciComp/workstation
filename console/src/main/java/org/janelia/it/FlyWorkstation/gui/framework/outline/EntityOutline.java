@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
@@ -116,8 +118,21 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 				return EntityOutline.this;
 			}
 		});
+		
+		tree.addTreeSelectionListener(new TreeSelectionListener() {
+			@Override
+			public void valueChanged(TreeSelectionEvent e) {
+				TreePath path = e.getPath();
+				if (path == null) return;
+				DefaultMutableTreeNode node = (DefaultMutableTreeNode)path.getLastPathComponent();
+		    	String uniqueId = selectedTree.getUniqueId(node);
+				if (uniqueId!=null && !uniqueId.equals(currUniqueId)) {
+					selectNode(node);
+				}
+			}
+		});
 	}
-
+	
 	/**
 	 * Override this method to load the root list. This method will be called in
 	 * a worker thread.
@@ -449,16 +464,21 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 			}
 
 			protected void hadSuccess() {
-				init(rootList);
-				expansionState.restoreExpansionState(getDynamicTree());
-				Utils.setDefaultCursor(EntityOutline.this);
-				if (success!=null) {
-					try {
-						success.call();	
-					}
-					catch (Exception e) {
-						SessionMgr.getSessionMgr().handleException(e);
-					}
+				try {
+					init(rootList);
+					
+					// clear the current selection so that restoreExpansionState can reestablish it
+					final IconDemoPanel panel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
+					panel.clear();
+					currUniqueId = null;
+					
+					expansionState.restoreExpansionState(getDynamicTree(), true);
+					
+					Utils.setDefaultCursor(EntityOutline.this);
+					if (success!=null) success.call();
+				}
+				catch (Exception e) {
+					SessionMgr.getSessionMgr().handleException(e);
 				}
 			}
 
@@ -482,14 +502,13 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 		DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
 		selectNode(node);
 	}
-
+    
 	private synchronized void selectNode(final DefaultMutableTreeNode node) {
 
 		if (node == null) return;
 
 		String uniqueId = getDynamicTree().getUniqueId(node);
 		if (uniqueId.equals(currUniqueId)) return;
-
 		this.currUniqueId = uniqueId;
 
 		DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
@@ -500,7 +519,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 		getDynamicTree().navigateToNode(node);
 
 		final IconDemoPanel panel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
-
 		panel.showLoadingIndicator();
 
 		if (!getDynamicTree().childrenAreLoaded(node)) {

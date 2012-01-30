@@ -297,6 +297,8 @@ public abstract class DynamicTable extends JPanel {
      */
     public synchronized void updateTableModel() {
 
+    	displayedColumns.clear();
+    	
         // Data formatted for the JTable
         Vector<String> columnNames = new Vector<String>();
         
@@ -317,7 +319,7 @@ public abstract class DynamicTable extends JPanel {
         		Object value = getValue(row.getUserObject(), column);
         		rowData.add(value == null ? "" : value.toString());
             }
-            
+
             data.add(rowData);
         }
         

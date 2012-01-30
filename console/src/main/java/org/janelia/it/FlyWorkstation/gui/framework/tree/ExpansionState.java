@@ -38,11 +38,12 @@ public class ExpansionState {
         }
     }
 
-    public void restoreExpansionState(DynamicTree dynamicTree) {
-    	restoreExpansionState(dynamicTree, dynamicTree.getRootNode());
+    public void restoreExpansionState(DynamicTree dynamicTree, boolean restoreSelection) {
+    	restoreExpansionState(dynamicTree, dynamicTree.getRootNode(), restoreSelection);
     }
     
-	public void restoreExpansionState(final DynamicTree dynamicTree, final DefaultMutableTreeNode node) {
+	public void restoreExpansionState(final DynamicTree dynamicTree, final DefaultMutableTreeNode node, 
+			final boolean restoreSelection) {
 
 		final String path = dynamicTree.getUniqueId(node);
 		final boolean expand = expanded.contains(path);
@@ -55,7 +56,7 @@ public class ExpansionState {
 			SimpleWorker loadingWorker = new LazyTreeNodeLoader(dynamicTree, node, false) {
 
 				protected void doneLoading() {
-					restoreExpansionState(dynamicTree, node);
+					restoreExpansionState(dynamicTree, node, restoreSelection);
 				}
 
 				@Override
@@ -73,13 +74,13 @@ public class ExpansionState {
     		dynamicTree.expand(node, true);
     	}
 
-    	if (select) {
+    	if (restoreSelection && select) {
     		dynamicTree.navigateToNode(node);
     	}
     	
         for (Enumeration e = node.children(); e.hasMoreElements(); ) {
             DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) e.nextElement();
-            restoreExpansionState(dynamicTree, childNode);
+            restoreExpansionState(dynamicTree, childNode, restoreSelection);
         }
     }
 }

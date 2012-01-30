@@ -262,16 +262,6 @@ public class IconDemoPanel extends JPanel {
 			}
 
 			@Override
-			public void sessionSelected(long sessionId) {
-				SwingUtilities.invokeLater(new Runnable() {
-					@Override
-					public void run() {
-						loadImageEntities(ModelMgr.getModelMgr().getCurrentAnnotationSession().getEntities());
-					}
-				});
-			}
-
-			@Override
 			public void sessionDeselected() {
 				SwingUtilities.invokeLater(new Runnable() {
 					@Override
@@ -536,7 +526,7 @@ public class IconDemoPanel extends JPanel {
 
 		userListMenu.show(userButton, 0, userButton.getHeight());
 	}
-
+	
 	public void showLoadingIndicator() {
 		removeAll();
 		add(new JLabel(Icons.getLoadingIcon()));
@@ -561,7 +551,7 @@ public class IconDemoPanel extends JPanel {
 		loadImageEntities(children); 
 	}
 
-	private void loadImageEntities(final List<Entity> entities) {
+	public void loadImageEntities(final List<Entity> entities) {
 		loadImageEntities(entities, null);
 	}
 

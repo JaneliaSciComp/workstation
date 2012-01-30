@@ -200,85 +200,6 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Out
     		
     	});
     }
-
-//    @Override
-//    public void initializeTree(final OntologyRoot root) {
-//		super.initializeTree(root);
-//
-//        JTree tree = getTree();
-//        tree.setDragEnabled(true);  
-//        tree.setDropMode(DropMode.ON_OR_INSERT);
-//        tree.setTransferHandler(new TreeTransferHandler(getDynamicTree()) {
-//
-//        	protected boolean allowTransfer(DefaultMutableTreeNode node, DefaultMutableTreeNode destination) {
-//        		OntologyElement element = getElement(node);
-//        		OntologyElement destElement = getElement(destination);
-//        		if (!ModelMgrUtils.isOwner(element.getEntity()) || !ModelMgrUtils.isOwner(destElement.getEntity())) return false;
-//        		
-//        		if (element.getType() instanceof EnumItem) return false;
-//        		if (!(destElement.getType() instanceof Category) || !(destElement.getType() instanceof Tag)) return false;
-//        		
-//        		return true;
-//        	}
-//        	
-//        	protected boolean updateUserData(DefaultMutableTreeNode nodeRemoved, DefaultMutableTreeNode nodeAdded, DefaultMutableTreeNode newParent, int destIndex) {
-//        		
-//        		try {
-//            		if (nodeRemoved!=null) {
-//            			DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode)nodeRemoved.getParent();
-//            			OntologyElement element = getElement(nodeRemoved);
-//            			OntologyElement parent = getElement(parentNode);
-//                		ModelMgr.getModelMgr().removeEntityFromParent(parent, entity);
-//            		}
-//
-//            		if (nodeAdded!=null) {
-//	        			DefaultMutableTreeNode parentNode = newParent;
-//	        			OntologyElement element = getElement(nodeAdded);
-//	        			OntologyElement parent = getElement(parentNode);
-//	            		
-//	            		// Add to parent
-//	            		EntityData newEd = parent.addChildEntity(entity);
-//	            		// Temporarily remove it so that it can be inserted with the correct index
-//	            		parent.getEntityData().remove(newEd); 
-//	            		
-//	            		List<EntityData> eds = EntityUtils.getOrderedEntityDataOfType(parent, EntityConstants.ATTRIBUTE_ENTITY);
-//	            		if (destIndex>eds.size()) {
-//	            			eds.add(newEd);
-//	            		}
-//	            		else {
-//	            			eds.add(destIndex, newEd);	
-//	            		}
-//	            		
-//	            		// Renumber the children
-//	            		int index = 0;
-//	            		for(EntityData ed : eds) {
-//	            			if (ed.getOrderIndex()==null || ed.getOrderIndex()!=index) {
-//	            				ed.setOrderIndex(index);
-//	            				EntityData savedEd = ModelMgr.getModelMgr().saveOrUpdateEntityData(ed);
-//	                    		if (index==destIndex) {
-//	                        		// Re-add the saved entity data to the parent
-//	                        		parent.getEntityData().add(savedEd);
-//	                    		}
-//	            			}
-//	            			index++;
-//	            		}
-//            		}
-//            		
-//            		return true;
-//        		}
-//        		catch (Exception e) {
-//        			SessionMgr.getSessionMgr().handleException(e);
-//        			return false;
-//        		}
-//        	}
-//        	
-//        	protected boolean addNode(DefaultMutableTreeNode parent, DefaultMutableTreeNode node, int index) {
-//        		addNodes(parent, (Entity)node.getUserObject(), index);
-//        		return true;
-//        	}
-//        	
-//        }); 
-//	}
     
     /**
      * Get the associated action for the given node.
@@ -349,7 +270,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Out
 
             // Disallow deletion of root nodes. You've gotta use the OntologyManager for that.
             if (curr.getParent() != null) {
-            	JMenuItem removeNodeMenuItem = new JMenuItem("  Remove this term");
+            	JMenuItem removeNodeMenuItem = new JMenuItem("  Delete term from ontology");
                 removeNodeMenuItem.addActionListener(this);
                 removeNodeMenuItem.setActionCommand(REMOVE_COMMAND);
                 popupMenu.add(removeNodeMenuItem);
@@ -388,7 +309,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Out
 			initializeTree(getRootEntity().getId(), new Callable<Void>() {
 				@Override
 				public Void call() throws Exception {
-			    	expansionState.restoreExpansionState(getDynamicTree());
+			    	expansionState.restoreExpansionState(getDynamicTree(), true);
 	                Utils.setDefaultCursor(OntologyOutline.this);
 					return null;
 				}

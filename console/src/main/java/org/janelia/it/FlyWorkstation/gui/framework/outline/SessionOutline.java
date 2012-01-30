@@ -19,6 +19,7 @@ import javax.swing.*;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
+import org.janelia.it.FlyWorkstation.gui.framework.console.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicRow;
@@ -89,11 +90,13 @@ public class SessionOutline extends JPanel implements Outline {
     
     @Override
 	public void refresh() {
+		
         loadAnnotationSessions(new Callable<Void>() {
 			public Void call() throws Exception {
 				// Wait until the sessions are loaded before getting the current one and reselecting it
 				AnnotationSession session = ModelMgr.getModelMgr().getCurrentAnnotationSession();
 				if (session != null) {
+					currSession = null;
 					selectSessionById(session.getId());	
 				}
 				return null;
@@ -290,8 +293,18 @@ public class SessionOutline extends JPanel implements Outline {
 
     public void selectSession(AnnotationSession session) {
     	if (currSession == session) return;
+		
     	currSession = session;
 		dynamicTable.navigateToRowWithObject(session);
+
+		final IconDemoPanel panel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
+		panel.clear();
+		
+		if (session != null) {
+			panel.showLoadingIndicator();
+			panel.loadImageEntities(session.getEntities());
+		}
+		
 		ModelMgr.getModelMgr().setCurrentAnnotationSession(session);
     }
 }
