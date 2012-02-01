@@ -13,9 +13,9 @@ import javax.swing.SwingWorker;
  */
 public abstract class SimpleWorker extends SwingWorker<Void, Void> implements PropertyChangeListener {
 
-    private Throwable error;
-    private boolean disregard;
-    private ProgressMonitor progressMonitor; 
+    protected Throwable error;
+    protected boolean disregard;
+    protected ProgressMonitor progressMonitor; 
     
     @Override
     protected Void doInBackground() throws Exception {

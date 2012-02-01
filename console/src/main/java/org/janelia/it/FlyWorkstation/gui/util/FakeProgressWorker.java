@@ -14,7 +14,8 @@ public abstract class FakeProgressWorker extends SimpleWorker {
 
     private Timer timer;
 
-	public void executeWithProgress() {
+    @Override
+    protected Void doInBackground() throws Exception {
         timer = new Timer(1000, new ActionListener() {
 			
 			@Override
@@ -28,8 +29,16 @@ public abstract class FakeProgressWorker extends SimpleWorker {
 			}
 		});
         timer.start();
-        execute();
-	}
+    	addPropertyChangeListener(this);
+        setProgress(0);
+        try {
+            doStuff();
+        }
+        catch (Throwable e) {
+            this.error = e;
+        }
+        return null;
+    }
 
 	@Override
 	protected void done() {
