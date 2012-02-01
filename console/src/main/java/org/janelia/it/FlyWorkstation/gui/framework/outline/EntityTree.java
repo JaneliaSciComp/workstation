@@ -37,7 +37,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
     protected DynamicTree selectedTree;
     protected boolean lazy;
     
-    private FakeProgressWorker loadingWorker;
+    private SimpleWorker loadingWorker;
     private ProgressMonitor progressMonitor;
 	private EntityData rootEntityData;
     
@@ -320,7 +320,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
                 };
                 
                 loadingWorker.addPropertyChangeListener(EntityTree.this);
-                loadingWorker.executeWithProgress();
+                loadingWorker.execute();
             }
 
 			@Override
