@@ -68,6 +68,13 @@ public class AnnotateAction extends OntologyElementAction {
         else if (type instanceof EnumText) {
         	
         	OntologyElement valueEnum = ((EnumText) type).getValueEnum();
+        	
+        	if (valueEnum==null) {
+        		Exception error = new Exception(term.getName()+" has no supporting enumeration.");
+				SessionMgr.getSessionMgr().handleException(error);
+        		return;
+        	}
+        	
         	List<OntologyElement> children = valueEnum.getChildren();
         	
         	int i = 0;
