@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.console;
+package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.Font;
 import java.awt.GridBagConstraints;

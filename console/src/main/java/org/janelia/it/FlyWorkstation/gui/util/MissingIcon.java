@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.console;
+package org.janelia.it.FlyWorkstation.gui.util;
 
 import javax.swing.*;
 import java.awt.*;

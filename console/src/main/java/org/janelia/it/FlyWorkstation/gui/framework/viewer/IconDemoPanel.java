@@ -4,7 +4,7 @@
  * Date: 5/6/11
  * Time: 10:47 AM
  */
-package org.janelia.it.FlyWorkstation.gui.framework.console;
+package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
