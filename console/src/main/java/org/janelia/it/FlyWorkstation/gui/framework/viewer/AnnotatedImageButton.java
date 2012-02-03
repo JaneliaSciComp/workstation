@@ -1,9 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import java.awt.*;
 import java.awt.dnd.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -30,8 +27,10 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
 
 	private final JLabel titleLabel;
     private final JPanel mainPanel;
-    private final AnnotationTagCloudPanel tagPanel;
+    private final JPanel buttonPanel;
+    private AnnotationView annotationView;
     private DragSource source;
+    private int annotationTableHeight = 100;
     
     protected Entity entity;
     
@@ -50,7 +49,7 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
 		});
 				
         GridBagConstraints c = new GridBagConstraints();
-        JPanel buttonPanel = new JPanel(new GridBagLayout());
+        buttonPanel = new JPanel(new GridBagLayout());
         buttonPanel.setOpaque(false);
         add(buttonPanel);
 
@@ -79,16 +78,8 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
         c.weighty = 0;
         buttonPanel.add(mainPanel, c);
 
-        tagPanel = new AnnotationTagCloudPanel();
-
-        c.gridx = 0;
-        c.gridy = 2;
-        c.fill = GridBagConstraints.BOTH;
-        c.anchor = GridBagConstraints.PAGE_START;
-        c.weighty = 1;
-        buttonPanel.add(tagPanel, c);
-
-
+        setAnnotationView(new AnnotationTagCloudPanel());
+        
         // Remove all default mouse listeners except drag gesture recognizer
         for(MouseListener mouseListener : getMouseListeners()) {
         	if (!(mouseListener instanceof MouseDragGestureRecognizer)) {
@@ -178,11 +169,28 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
     }
 
     public synchronized void setTagsVisible(boolean visible) {
-        tagPanel.setVisible(visible);
+        ((JPanel)annotationView).setVisible(visible);
     }
 
-    public AnnotationTagCloudPanel getTagPanel() {
-        return tagPanel;
+    public void setAnnotationView(AnnotationView annotationView) {
+    	
+    	if (this.annotationView != null) {
+    		buttonPanel.remove((JPanel)this.annotationView);
+    	}
+    	
+    	this.annotationView = annotationView;
+    	
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.gridy = 2;
+        c.fill = GridBagConstraints.BOTH;
+        c.anchor = GridBagConstraints.PAGE_START;
+        c.weighty = 1;
+        buttonPanel.add((JPanel)annotationView, c);
+    }
+    
+    public AnnotationView getAnnotationView() {
+        return annotationView;
     }
 
     public Entity getEntity() {
@@ -190,6 +198,10 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
     }
 
 	public void rescaleImage(int imageSize) {
+        JPanel annotationPanel = (JPanel)annotationView;
+        if (annotationView instanceof AnnotationTablePanel) {
+        	annotationPanel.setPreferredSize(new Dimension(imageSize, annotationTableHeight));
+        }
 	}
 
 	public void setInvertedColors(boolean inverted) {

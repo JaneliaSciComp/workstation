@@ -31,14 +31,13 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class EntityTree extends JPanel implements PropertyChangeListener  {
+public class EntityTree extends JPanel {
 
     protected final JPanel treesPanel;
     protected DynamicTree selectedTree;
     protected boolean lazy;
     
     private SimpleWorker loadingWorker;
-    private ProgressMonitor progressMonitor;
 	private EntityData rootEntityData;
     
 	private Map<Long,Set<DefaultMutableTreeNode>> entityIdToNodeMap = new HashMap<Long,Set<DefaultMutableTreeNode>>();
@@ -57,29 +56,36 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
     }
 
     public Entity getRootEntity() {
+    	if (rootEntityData==null) return null;
 		return rootEntityData.getChildEntity();
 	}
 
 	public void showNothing() {
         treesPanel.removeAll();
+        revalidate();
+        repaint();
     }
     
     public void showLoadingIndicator() {
         treesPanel.removeAll();
         treesPanel.add(new JLabel(Icons.getLoadingIcon()));
+        revalidate();
+        repaint();
     }
 
+    public void showTree() {
+        treesPanel.removeAll();
+        treesPanel.add(selectedTree);
+        revalidate();
+        repaint();
+    }
+    
     public void initializeTree(final Long rootId, final Callable<Void> success) {
         if (null != selectedTree) {
             ToolTipManager.sharedInstance().unregisterComponent(selectedTree);
         }
-        
-        treesPanel.removeAll();
 
         if (rootId == null) return;
-
-        treesPanel.add(new JLabel(Icons.getLoadingIcon()));
-        this.updateUI();
 
         SimpleWorker loadingWorker = new SimpleWorker() {
 
@@ -110,8 +116,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
             protected void hadError(Throwable error) {
                 error.printStackTrace();
                 JOptionPane.showMessageDialog(EntityTree.this, "Error loading folders", "Folder Load Error", JOptionPane.ERROR_MESSAGE);
-                treesPanel.removeAll();
-                EntityTree.this.updateUI();
+                showNothing();
             }
 
         };
@@ -134,10 +139,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
 
         selectedTree.expand(selectedTree.getRootNode(), true);
 
-        treesPanel.removeAll();
-        treesPanel.add(selectedTree);
-
-        EntityTree.this.updateUI();
+        showTree();
     }
 
     public DynamicTree getDynamicTree() {
@@ -281,10 +283,6 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
                 
                 // Expanding a lazy tree node-by-node takes forever. Let's eager load the entire thing first.
 
-                progressMonitor = new ProgressMonitor(SessionMgr.getSessionMgr().getActiveBrowser(), "Loading tree...", "", 0, 100);
-                progressMonitor.setProgress(0);
-                progressMonitor.setMillisToDecideToPopup(0);
-
                 Utils.setWaitingCursor(EntityTree.this);
                 
                 loadingWorker = new FakeProgressWorker() {
@@ -319,7 +317,7 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
                     }
                 };
                 
-                loadingWorker.addPropertyChangeListener(EntityTree.this);
+                loadingWorker.setProgressMonitor(new ProgressMonitor(SessionMgr.getSessionMgr().getActiveBrowser(), "Loading tree...", "", 0, 100));
                 loadingWorker.execute();
             }
 
@@ -339,6 +337,11 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
 		    	}
 		    	return sb.toString();
             }
+			
+			@Override
+			public void navigateToNodeWithUniqueId(String uniqueId) {
+				EntityTree.this.selectEntityByUniqueId(uniqueId);
+			}
             
 			@Override
 			public void refresh() {
@@ -350,23 +353,18 @@ public class EntityTree extends JPanel implements PropertyChangeListener  {
 
         selectedTree.setCellRenderer(new EntityTreeCellRenderer());
     }
-    
-    protected void refresh() {
-    }
-    
+
     /**
-     * Invoked when the loader's progress property changes.
+     * Override to provide selection behavior. Default implementation does nothing.
+     * @param uniqueId
      */
-    public void propertyChange(PropertyChangeEvent e) {
-        if ("progress".equals(e.getPropertyName())) {
-            int progress = (Integer) e.getNewValue();
-            progressMonitor.setProgress(progress);
-            String message = String.format("Completed %d%%", progress);
-            progressMonitor.setNote(message);
-            if (progressMonitor.isCanceled()) {
-            	loadingWorker.cancel(true);
-            }
-        }
+	protected void selectEntityByUniqueId(String uniqueId) {
+	}
+	
+	/**
+	 * Override to provide refresh behavior. Default implementation does nothing.
+	 */
+    protected void refresh() {
     }
 
     /**

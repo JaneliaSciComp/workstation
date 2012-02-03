@@ -50,6 +50,7 @@ public class IconDemoPanel extends JPanel {
 	private JButton parentButton;
 	private JToggleButton showTitlesButton;
 	private JToggleButton showTagsButton;
+	private JToggleButton tagTableButton;
 	private JToggleButton invertButton;
 	private JToggleButton hideCompletedButton;
 	private JToggleButton onlySessionButton;
@@ -262,16 +263,6 @@ public class IconDemoPanel extends JPanel {
 			}
 
 			@Override
-			public void sessionDeselected() {
-				SwingUtilities.invokeLater(new Runnable() {
-					@Override
-					public void run() {
-						clear();
-					}
-				});
-			}
-
-			@Override
 			public void entitySelected(long entityId, boolean clearAll) {
 				imagesPanel.setSelection(entityId, true, clearAll);
 				return;
@@ -431,6 +422,21 @@ public class IconDemoPanel extends JPanel {
 		});
 		toolBar.add(showTagsButton);
 
+		tagTableButton = new JToggleButton();
+		tagTableButton.setIcon(Icons.getIcon("table.png"));
+		tagTableButton.setFocusable(false);
+		tagTableButton.setToolTipText("Show annotations in a table instead of a tag cloud");
+		tagTableButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				imagesPanel.setTagTable(tagTableButton.isSelected());
+				imagesPanel.rescaleImages(imagesPanel.getCurrImageSize());
+				imagesPanel.recalculateGrid();
+				imagesPanel.loadUnloadImages();
+			}
+		});
+		toolBar.add(tagTableButton);
+		
 		onlySessionButton = new JToggleButton();
 		onlySessionButton.setIcon(Icons.getIcon("cart.png"));
 		onlySessionButton.setFocusable(false);
@@ -614,8 +620,6 @@ public class IconDemoPanel extends JPanel {
 		if (!SwingUtilities.isEventDispatchThread())
 			throw new RuntimeException("IconDemoPanel.entityLoadDone called outside of EDT");
 
-		imagesPanel.setTitleVisbility(showTitlesButton.isSelected());
-		imagesPanel.setTagVisbility(showTagsButton.isSelected());
 
 		imagesPanel.setEntities(getEntities());
 		refreshAnnotations(null);
@@ -623,6 +627,10 @@ public class IconDemoPanel extends JPanel {
 		showAllEntities();
 		filterEntities();
 
+		imagesPanel.setTagTable(tagTableButton.isSelected());
+		imagesPanel.setTagVisbility(showTagsButton.isSelected());
+		imagesPanel.setTitleVisbility(showTitlesButton.isSelected());
+		
 		// Since the images are not loaded yet, this will just resize the empty
 		// buttons so that we can calculate the grid correctly
 		imagesPanel.rescaleImages(imagesPanel.getCurrImageSize());

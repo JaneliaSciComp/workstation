@@ -179,7 +179,7 @@ public class ImagesPanel extends JScrollPane {
     public void loadAnnotations(Annotations annotations, Entity entity) {
     	AnnotatedImageButton button = getButtonByEntityId(entity.getId());
     	List<OntologyAnnotation> entityAnnotations = annotations.getFilteredAnnotationMap().get(entity.getId());
-        button.getTagPanel().setTags(entityAnnotations);
+        button.getAnnotationView().setAnnotations(entityAnnotations);
     }
 
     /**
@@ -257,6 +257,19 @@ public class ImagesPanel extends JScrollPane {
         }
     }
 
+    public void setTagTable(boolean tagTable) {
+        for (AnnotatedImageButton button : buttons.values()) {
+        	List<OntologyAnnotation> annotations = button.getAnnotationView().getAnnotations();
+        	if (tagTable) {
+        		button.setAnnotationView(new AnnotationTablePanel());
+        	}
+        	else {
+        		button.setAnnotationView(new AnnotationTagCloudPanel());
+        	}
+            button.getAnnotationView().setAnnotations(annotations);
+        }
+    }
+    
     public void setInvertedColors(boolean inverted) {
         for (AnnotatedImageButton button : buttons.values()) {
             button.setInvertedColors(inverted);

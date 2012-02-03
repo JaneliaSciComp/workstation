@@ -10,12 +10,11 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
@@ -28,10 +27,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.entity.EntityType;
+import org.janelia.it.jacs.model.entity.*;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
@@ -74,25 +70,35 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 
 	public void init(List<Entity> entityRootList) {
 
+		EntityType rootType = new EntityType();
+		rootType.setName("");
+		rootType.setAttributes(new HashSet<EntityAttribute>());
+		
+		Entity root = new Entity();
+		root.setEntityType(rootType);
+		root.setName("Data");
+		
 		if (null != entityRootList && entityRootList.size() >= 1) {
-			EntityType folderType = entityRootList.get(0).getEntityType();
-
-			Entity root = new Entity();
-			root.setEntityType(folderType);
-			root.setName("Janelia");
-
+			root.setEntityType(entityRootList.get(0).getEntityType());
+			
 			for (Entity commonRoot : entityRootList) {
 				addTopLevelEntity(root, commonRoot);
 			}
 
 			initializeTree(root);
-		} else {
-			Entity noDataEntity = new Entity();
+		} 
+		else {
 			EntityType type = new EntityType();
 			type.setName("");
+			type.setAttributes(new HashSet<EntityAttribute>());
+			
+			Entity noDataEntity = new Entity();
 			noDataEntity.setEntityType(type);
 			noDataEntity.setName("No data");
-			initializeTree(noDataEntity);
+
+			addTopLevelEntity(root, noDataEntity);
+			
+			initializeTree(root);
 		}
 	}
 
@@ -116,19 +122,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 			@Override
 			public JComponent getDropTargetComponent() {
 				return EntityOutline.this;
-			}
-		});
-		
-		tree.addTreeSelectionListener(new TreeSelectionListener() {
-			@Override
-			public void valueChanged(TreeSelectionEvent e) {
-				TreePath path = e.getPath();
-				if (path == null) return;
-				DefaultMutableTreeNode node = (DefaultMutableTreeNode)path.getLastPathComponent();
-		    	String uniqueId = selectedTree.getUniqueId(node);
-				if (uniqueId!=null && !uniqueId.equals(currUniqueId)) {
-					selectNode(node);
-				}
 			}
 		});
 	}
@@ -402,18 +395,20 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 
 		// Create context menu
 		final EntityOutlineContextMenu popupMenu = new EntityOutlineContextMenu(node);
-
+			
+		if ("".equals(getRootEntity().getEntityType().getName())) return;
+		
 		if (node != null) {
 			final Entity entity = getEntity(node);
 			if (entity == null) return;
 			selectNode(node);
 			popupMenu.addMenuItems();
 		} 
-		else {
+		else {			
 			popupMenu.addRootMenuItems();
 		}
 
-		popupMenu.show(selectedTree.getTree(), e.getX(), e.getY());
+		popupMenu.show(selectedTree.getTree(), e.getX(), e.getY());	
 	}
 
 	/**
@@ -451,7 +446,9 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 	}
 	
 	public void refresh(final Callable<Void> success) {
-		Utils.setWaitingCursor(EntityOutline.this);
+		
+		showLoadingIndicator();
+		
 		final ExpansionState expansionState = new ExpansionState();
 		expansionState.storeExpansionState(getDynamicTree());
 
@@ -465,20 +462,18 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 
 			protected void hadSuccess() {
 				try {
-					init(rootList);
 					
-					// clear the current selection so that restoreExpansionState can reestablish it
-					final IconDemoPanel panel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
-					panel.clear();
+					init(rootList);
 					currUniqueId = null;
 					
 					expansionState.restoreExpansionState(getDynamicTree(), true);
 					
-					Utils.setDefaultCursor(EntityOutline.this);
+					showTree();
+					
 					if (success!=null) success.call();
 				}
 				catch (Exception e) {
-					SessionMgr.getSessionMgr().handleException(e);
+					hadError(e);
 				}
 			}
 
@@ -498,7 +493,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 		getDynamicTree().expand(node, true);
 	}
 
-	private void selectEntityByUniqueId(String uniqueId) {
+	protected void selectEntityByUniqueId(String uniqueId) {
 		DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
 		selectNode(node);
 	}
@@ -510,7 +505,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 		String uniqueId = getDynamicTree().getUniqueId(node);
 		if (uniqueId.equals(currUniqueId)) return;
 		this.currUniqueId = uniqueId;
-
+		
 		DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
 		if (parentNode != null && !getTree().isExpanded(new TreePath(parentNode.getPath()))) {
 			getDynamicTree().expand(parentNode, true);

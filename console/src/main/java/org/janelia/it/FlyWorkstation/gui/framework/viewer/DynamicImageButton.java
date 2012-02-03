@@ -45,6 +45,7 @@ public class DynamicImageButton extends AnnotatedImageButton {
 	}
 
 	public void rescaleImage(int imageSize) {
+		super.rescaleImage(imageSize);
 		dynamicImagePanel.rescaleImage(imageSize);
     	dynamicImagePanel.setPreferredSize(new Dimension(imageSize, imageSize));
 	}

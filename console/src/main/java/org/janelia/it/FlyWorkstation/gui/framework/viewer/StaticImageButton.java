@@ -32,6 +32,7 @@ public class StaticImageButton extends AnnotatedImageButton {
     }
     
 	public void rescaleImage(int imageSize) {
+		super.rescaleImage(imageSize);
 		if (staticIcon!=null) {
 			if (imageSize<staticIcon.getHeight() || imageSize<staticIcon.getWidth()) { // Don't scale up icons
 				ImageIcon newIcon = new ImageIcon(Utils.getScaledImage(staticIcon, imageSize));

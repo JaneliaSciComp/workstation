@@ -246,8 +246,19 @@ public class Browser extends JFrame implements Cloneable {
         outlookBar.addPropertyChangeListener("visibleBar", new PropertyChangeListener() {
         	public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
         		JComponent comp = outlookBar.getBar(outlookBar.getVisibleBarName());
+				
+				// clear the current viewer 
+				final IconDemoPanel panel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
+				panel.clear();
+				
+				// refresh the outline being selected
         		if (comp instanceof Outline) {
         			((Outline)comp).refresh();
+        		}
+        		
+        		// clear annotation session whenever the user moves away from the session outline
+        		if (!(comp instanceof SessionOutline)) {
+        			ModelMgr.getModelMgr().setCurrentAnnotationSession(null);
         		}
             }
         });

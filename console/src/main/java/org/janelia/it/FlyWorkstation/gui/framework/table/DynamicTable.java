@@ -24,8 +24,10 @@ public abstract class DynamicTable extends JPanel {
 
 	private final JTable table;
     private final JScrollPane scrollPane;
+    private final boolean allowRightClickCellSelection;
+    private final boolean sortableByColumn;
     private TableModel tableModel;
-    private boolean allowRightClickCellSelection = true;
+    
 //    private ButtonHeaderRenderer headerRenderer;
 //    private JPopupMenu headerPopupMenu;
     
@@ -36,11 +38,26 @@ public abstract class DynamicTable extends JPanel {
     private Map<DynamicColumn,TableCellRenderer> renderers = new HashMap<DynamicColumn,TableCellRenderer>();
     
     public DynamicTable() {
-        table = new LargeFontTable(UIManager.getDefaults().getFont("Menu.font")); // Label.font
+    	this(true, false);
+    }
+    
+    public DynamicTable(final boolean allowRightClickCellSelection, final boolean sortableByColumn) {
+    	
+    	this.allowRightClickCellSelection = allowRightClickCellSelection;
+    	this.sortableByColumn = sortableByColumn;
+    	
+        table = new LargeFontTable(UIManager.getDefaults().getFont("Menu.font")) {
+    		@Override
+    		public TableCellEditor getCellEditor(int row, int col) {
+    			TableCellEditor editor = DynamicTable.this.getCellEditor(row, col);
+    			return editor==null ? super.getCellEditor(row, col) : editor;
+    		}
+    	};
         table.setFillsViewportHeight(true);
         table.setColumnSelectionAllowed(false);
         table.setRowSelectionAllowed(true);
-
+        table.setAutoCreateRowSorter(sortableByColumn);
+        
         table.addMouseListener(new MouseHandler() {	
 			@Override
 			protected void popupTriggered(MouseEvent e) {
@@ -129,6 +146,13 @@ public abstract class DynamicTable extends JPanel {
 //		}
 //	}
 
+    /**
+     * Override this method to return a custom cell editor for a given cell.
+     */
+    public TableCellEditor getCellEditor(int row, int col) {
+    	return null;
+    }
+    
     /**
      * Override this method and call super.createPopupMenu(e) to create the base menu. Then add your custom items
      * to the menu. Item names should begin with two spaces. 
@@ -225,6 +249,12 @@ public abstract class DynamicTable extends JPanel {
     		}
     	}
     	return null;
+    }
+    
+    public TableColumn getTableColumn(DynamicColumn column) {
+    	int index = columns.indexOf(column);
+    	if (index<0) return null;
+    	return table.getColumnModel().getColumn(index);
     }
     
     /**

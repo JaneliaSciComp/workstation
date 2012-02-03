@@ -5,6 +5,7 @@ import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.util.List;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -21,7 +22,7 @@ import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> {
+public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> implements AnnotationView {
     
     private void deleteTag(final OntologyAnnotation tag) {
     	
@@ -110,5 +111,26 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> {
 		
 		return label;
 	}
+
+	@Override
+    public List<OntologyAnnotation> getAnnotations() {
+        return getTags();
+    }
+
+	@Override
+    public void setAnnotations(List<OntologyAnnotation> annotations) {
+        setTags(annotations);
+    }
+
+	@Override
+    public void removeAnnotation(OntologyAnnotation annotation) {
+        removeTag(annotation);
+    }
+
+	@Override
+    public void addAnnotation(OntologyAnnotation annotation) {
+        addTag(annotation);
+    }
+
 
 }

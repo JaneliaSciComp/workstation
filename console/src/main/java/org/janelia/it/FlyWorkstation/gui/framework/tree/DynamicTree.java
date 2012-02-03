@@ -517,6 +517,10 @@ public class DynamicTree extends JPanel {
         tree.scrollPathToVisible(treePath);
     }
 
+    public void navigateToNodeWithUniqueId(String uniqueId) {
+    	throw new UnsupportedOperationException();
+    }
+    
     /**
      * Select the given nodes and scroll to ensure the first one is displayed.
      *

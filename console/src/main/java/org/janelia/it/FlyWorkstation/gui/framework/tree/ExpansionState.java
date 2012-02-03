@@ -45,9 +45,9 @@ public class ExpansionState {
 	public void restoreExpansionState(final DynamicTree dynamicTree, final DefaultMutableTreeNode node, 
 			final boolean restoreSelection) {
 
-		final String path = dynamicTree.getUniqueId(node);
-		final boolean expand = expanded.contains(path);
-		final boolean select = selected != null && selected.equals(path);
+		final String uniqueId = dynamicTree.getUniqueId(node);
+		final boolean expand = expanded.contains(uniqueId);
+		final boolean select = selected != null && selected.equals(uniqueId);
 		
     	if (!expand && !select) return;
 		
@@ -75,7 +75,7 @@ public class ExpansionState {
     	}
 
     	if (restoreSelection && select) {
-    		dynamicTree.navigateToNode(node);
+    		dynamicTree.navigateToNodeWithUniqueId(uniqueId);
     	}
     	
         for (Enumeration e = node.children(); e.hasMoreElements(); ) {
