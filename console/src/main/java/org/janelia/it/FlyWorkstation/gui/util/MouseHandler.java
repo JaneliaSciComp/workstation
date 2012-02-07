@@ -20,7 +20,6 @@ public class MouseHandler implements MouseListener {
         if (e.isPopupTrigger()) {
             // Right click
         	popupTriggered(e);
-        	e.consume();
         }
 	}
 
@@ -29,19 +28,16 @@ public class MouseHandler implements MouseListener {
         if (e.isPopupTrigger()) {
             // Right click
         	popupTriggered(e);
-        	e.consume();
         }
         else if (e.getClickCount() % 2 == 0 && e.getButton() == MouseEvent.BUTTON1 && 
         		(e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
             // Double click
         	// We check for mod 2 because if the user is clicking fast, the click count may not get reset between double-clicks
         	doubleLeftClicked(e);
-        	e.consume();
         }
         else if (e.getClickCount() == 1 && e.getButton() == MouseEvent.BUTTON1) {
             // Single click
         	singleLeftClicked(e);
-        	e.consume();
         }
 	}
 

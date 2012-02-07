@@ -13,6 +13,7 @@ import java.util.*;
 import javax.swing.*;
 import javax.swing.table.*;
 
+import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 
 /**
@@ -61,6 +62,7 @@ public abstract class DynamicTable extends JPanel {
         table.addMouseListener(new MouseHandler() {	
 			@Override
 			protected void popupTriggered(MouseEvent e) {
+				if (e.isConsumed()) return;
 				ListSelectionModel lsm = table.getSelectionModel();
 				if (lsm.getMinSelectionIndex() == lsm.getMaxSelectionIndex()) { 
 					// User is not selecting multiple rows, so we can select the cell they right clicked on
@@ -74,10 +76,12 @@ public abstract class DynamicTable extends JPanel {
 	                table.getSelectionModel().setSelectionInterval(row, row);
 				}
 				showPopupMenu(e);
+				e.consume();
 			}
 			
 			@Override
 			protected void singleLeftClicked(MouseEvent e) {
+				if (e.isConsumed()) return;
 				if (allowRightClickCellSelection) {
 	                table.setColumnSelectionAllowed(false);
 	                table.getColumnModel().getSelectionModel().setSelectionInterval(0, table.getColumnCount());
@@ -89,10 +93,12 @@ public abstract class DynamicTable extends JPanel {
                 else {
                 	backgroundClicked();
                 }
+				e.consume();
 			}
 			
 			@Override
 			protected void doubleLeftClicked(MouseEvent e) {
+				if (e.isConsumed()) return;
                 int row = table.rowAtPoint(e.getPoint());
                 if (row>=0) {
                 	rowDoubleClicked(row);
@@ -100,8 +106,11 @@ public abstract class DynamicTable extends JPanel {
                 else {
                 	backgroundClicked();
                 }
+				e.consume();
 			}
         });
+
+        table.addMouseListener(new MouseForwarder(this, "JTable->DynamicTable"));
 
         JTableHeader header = table.getTableHeader();
         
@@ -200,7 +209,7 @@ public abstract class DynamicTable extends JPanel {
     
     protected void showPopupMenu(MouseEvent e) {
     	JPopupMenu popupMenu = createPopupMenu(e);
-        if (popupMenu!=null) popupMenu.show((JComponent) e.getSource(), e.getX(), e.getY());
+        if (popupMenu!=null) popupMenu.show(e.getComponent(), e.getX(), e.getY());
     }   
 
     /**

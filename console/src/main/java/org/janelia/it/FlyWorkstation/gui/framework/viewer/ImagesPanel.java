@@ -27,6 +27,10 @@ public class ImagesPanel extends JScrollPane {
     public static final int DEFAULT_THUMBNAIL_SIZE = 300;
     public static final int MAX_THUMBNAIL_SIZE = 1000;
 
+	public static final int MIN_TABLE_HEIGHT = 50;
+	public static final int DEFAULT_TABLE_HEIGHT = 200;
+	public static final int MAX_TABLE_HEIGHT = 500;
+	
     private final HashMap<String, AnnotatedImageButton> buttons = new HashMap<String, AnnotatedImageButton>();
 
     private final ImageCache imageCache = new ImageCache();
@@ -38,6 +42,8 @@ public class ImagesPanel extends JScrollPane {
     private JPanel buttonsPanel;
 
     private int currImageSize = DEFAULT_THUMBNAIL_SIZE;
+    private int currTableHeight = DEFAULT_TABLE_HEIGHT;
+    
     private Rectangle currViewRect;
 	private int numCols;
     
@@ -202,9 +208,27 @@ public class ImagesPanel extends JScrollPane {
         }
     }
 
+    public synchronized void resizeTables(int tableHeight) {
+    	if (tableHeight < MIN_TABLE_HEIGHT || tableHeight > MAX_TABLE_HEIGHT) {
+    		return;
+    	}
+        this.currTableHeight = tableHeight;
+    	for (AnnotatedImageButton button : buttons.values()) {
+        	try {
+                button.resizeTable(tableHeight);
+	    	}
+	    	catch (Exception e) {
+	    		SessionMgr.getSessionMgr().handleException(e);
+	    	}
+        }
+    }
     
     public int getCurrImageSize() {
 		return currImageSize;
+	}
+    
+    public int getCurrTableHeight() {
+		return currTableHeight;
 	}
 	
 	public void scrollEntityToCenter(Entity entity) {

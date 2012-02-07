@@ -298,37 +298,6 @@ public class Browser extends JFrame implements Cloneable {
 
         // Populate the data outlines
 
-        entityOutline.showLoadingIndicator();
-
-        final SimpleWorker entityOutlineLoadingWorker = new SimpleWorker() {
-
-            private List<Entity> rootList;
-        	
-            protected void doStuff() throws Exception {
-            	rootList = entityOutline.loadRootList();
-            }
-
-            protected void hadSuccess() {
-                entityOutline.init(rootList);
-            }
-
-            protected void hadError(Throwable error) {
-                error.printStackTrace();
-                JOptionPane.showMessageDialog(mainPanel, "Error loading data outlines", "Data Load Error", JOptionPane.ERROR_MESSAGE);
-                entityOutline.showNothing();
-            }
-
-        };
-        
-        // Run this later so that the Browser has finished initializing by the time it runs
-        SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-		        entityOutlineLoadingWorker.execute();
-			}
-        	
-        });
-        
         ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
 
 			@Override
@@ -341,6 +310,35 @@ public class Browser extends JFrame implements Cloneable {
 				statusBar.setDescription(ModelMgr.getModelMgr().getSelectedEntitiesIds().size()+" entities selected");
 			}
         	
+        });
+        
+        // Run this later so that the Browser has finished initializing by the time it runs
+        SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+		        entityOutline.showLoadingIndicator();
+
+		        final SimpleWorker entityOutlineLoadingWorker = new SimpleWorker() {
+
+		            private List<Entity> rootList;
+		        	
+		            protected void doStuff() throws Exception {
+		            	rootList = entityOutline.loadRootList();
+		            }
+
+		            protected void hadSuccess() {
+		                entityOutline.init(rootList);
+		            }
+
+		            protected void hadError(Throwable error) {
+		                error.printStackTrace();
+		                JOptionPane.showMessageDialog(mainPanel, "Error loading data outlines", "Data Load Error", JOptionPane.ERROR_MESSAGE);
+		                entityOutline.showNothing();
+		            }
+
+		        };
+		        entityOutlineLoadingWorker.execute();
+			}
         });
     }
 

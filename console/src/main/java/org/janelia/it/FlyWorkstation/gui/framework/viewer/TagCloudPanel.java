@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
+import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.util.WrapLayout;
 
@@ -83,20 +84,34 @@ public class TagCloudPanel<T> extends JPanel {
             tagLabel.addMouseListener(new MouseHandler() {
 
 				@Override
+				public void mousePressed(MouseEvent e) {
+					super.mousePressed(e);
+				}
+
+				@Override
+				public void mouseReleased(MouseEvent e) {
+					super.mouseReleased(e);
+				}
+
+				@Override
 				protected void popupTriggered(MouseEvent e) {
+					if (e.isConsumed()) return;
                     showPopupMenu(e, tag);
 				}
 
 				@Override
 				protected void singleLeftClicked(MouseEvent e) {
+					if (e.isConsumed()) return;
                     tagClicked(e, tag);
 				}
 
 				@Override
 				protected void doubleLeftClicked(MouseEvent e) {
+					if (e.isConsumed()) return;
                     tagDoubleClicked(e, tag);
 				}
             });
+            tagLabel.addMouseListener(new MouseForwarder(this, "JLabel->TagCloudPanel"));
         }
 
         revalidate();

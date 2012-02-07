@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +18,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicTable;
+import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
@@ -27,7 +29,7 @@ import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class AnnotationTablePanel extends JPanel implements AnnotationView {
-
+	
     private static final String COLUMN_KEY = "Annotation Term";
     private static final String COLUMN_VALUE = "Annotation Value";
     
@@ -96,6 +98,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
                 
             	return getPopupMenu(e, annotation);
 	        };
+	        
 
 			@Override
 	        public TableCellEditor getCellEditor(int row, int col) {
@@ -103,14 +106,14 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 				
 				// TODO: implement custom editors for each ontology term type
 				
-				
 	        	return null;
 	        }
-	        
         };
-
+        
+        dynamicTable.addMouseListener(new MouseForwarder(this, "DynamicTable->AnnotationTablePanel"));
+        
         DynamicColumn keyCol = dynamicTable.addColumn(COLUMN_KEY, true, false, false);
-        DynamicColumn valueCol = dynamicTable.addColumn(COLUMN_VALUE, true, true, false);
+        DynamicColumn valueCol = dynamicTable.addColumn(COLUMN_VALUE, true, false, false);
 	    
         for (OntologyAnnotation annotation : annotations) {
         	dynamicTable.addRow(annotation);

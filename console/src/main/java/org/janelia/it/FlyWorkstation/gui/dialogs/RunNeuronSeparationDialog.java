@@ -136,7 +136,6 @@ public class RunNeuronSeparationDialog extends ModalDialog {
     	
     	final boolean refresh = refreshCheckbox.isSelected();
     	final String inputDirPath = inputDirectoryField.getText();
-//    	final String linkingDirName = linkingDirectoryField.getText();
     	final String topLevelFolderName = topLevelFolderField.getText();
     	final boolean runContinously = runContinuouslyCheckBox.isSelected();
 

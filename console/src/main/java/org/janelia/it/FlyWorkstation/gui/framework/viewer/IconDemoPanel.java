@@ -50,20 +50,22 @@ public class IconDemoPanel extends JPanel {
 	private JButton parentButton;
 	private JToggleButton showTitlesButton;
 	private JToggleButton showTagsButton;
-	private JToggleButton tagTableButton;
 	private JToggleButton invertButton;
 	private JToggleButton hideCompletedButton;
 	private JToggleButton onlySessionButton;
 	private JButton userButton;
-	private JSlider slider;
-
+	private JToggleButton tagTableButton;
+	private JSlider tagTableSlider;
+	private JSlider imageSizeSlider;
+	
 	private ImagesPanel imagesPanel;
 	private AnnotationDetailsDialog annotationDetailsDialog;
 
 	private Entity entity;
 	private List<Entity> entities;
-	private double currImageSize = 1.0;
-
+	private int currImageSize;
+	private int currTableHeight = ImagesPanel.DEFAULT_TABLE_HEIGHT;
+	
 	private final List<String> allUsers = new ArrayList<String>();
 	private final Set<String> hiddenUsers = new HashSet<String>();
 	private final Annotations annotations = new Annotations();
@@ -143,75 +145,6 @@ public class IconDemoPanel extends JPanel {
 		}
 	};
 
-	private final MouseListener buttonMouseListener = new MouseAdapter() {
-
-		@Override
-		public void mouseReleased(MouseEvent e) {
-			
-			if (e.isPopupTrigger() || e.getClickCount() != 1 || e.getButton() != MouseEvent.BUTTON1) return;
-
-			final AnnotatedImageButton button = (AnnotatedImageButton) e.getSource();
-			final boolean shiftDown = e.isShiftDown();
-			final boolean metaDown = e.isMetaDown();
-			final boolean state = button.isSelected();
-
-			final Entity entity = button.getEntity();
-			SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-					Long entityId = entity.getId();
-					// Now update the model
-					if (metaDown) {
-						// With the meta key we toggle items in the current
-						// selection without clearing it
-						if (!state) {
-							ModelMgr.getModelMgr().selectEntity(entityId, false);
-						} else {
-							ModelMgr.getModelMgr().deselectEntity(entityId);
-						}
-					} else {
-						// With shift, we select ranges
-						Long lastSelected = ModelMgr.getModelMgr().getLastSelectedEntityId();
-						if (shiftDown && lastSelected != null) {
-
-							// Walk through the buttons and select everything
-							// between the last and current selections
-							boolean selecting = false;
-							for (Entity entity : entities) {
-								if (entity.getId().equals(lastSelected) || entity.getId().equals(entityId)) {
-									if (entity.getId().equals(entityId)) {
-										// Always select the button that was
-										// clicked
-										ModelMgr.getModelMgr().selectEntity(entity.getId(), false);
-									}
-									if (selecting)
-										return; // We already selected, this is
-												// the end
-									selecting = true; // Start selecting
-									continue; // Skip selection of the first and
-												// last items, which should
-												// already be selected
-								}
-								if (selecting) {
-									ModelMgr.getModelMgr().selectEntity(entity.getId(), false);
-								}
-							}
-						} else {
-							// This is a good old fashioned single button
-							// selection
-							ModelMgr.getModelMgr().selectEntity(entityId, true);
-						}
-
-					}
-
-					// Always request focus on the button that was clicked,
-					// since other buttons may become selected if shift is
-					// involved
-					button.requestFocus();
-				}
-			});
-		}
-	};
 
 	public IconDemoPanel() {
 
@@ -225,11 +158,10 @@ public class IconDemoPanel extends JPanel {
 		toolbar = createToolbar();
 		imagesPanel = new ImagesPanel();
 		imagesPanel.setButtonKeyListener(keyListener);
-		imagesPanel.setButtonMouseListener(buttonMouseListener);
 
 		annotationDetailsDialog = new AnnotationDetailsDialog();
 
-		slider.addChangeListener(new ChangeListener() {
+		imageSizeSlider.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				JSlider source = (JSlider) e.getSource();
@@ -238,6 +170,22 @@ public class IconDemoPanel extends JPanel {
 					return;
 				currImageSize = imageSize;
 				imagesPanel.rescaleImages(imageSize);
+				imagesPanel.recalculateGrid();
+				imagesPanel.loadUnloadImages();
+				imagesPanel.revalidate();
+				imagesPanel.repaint();
+			}
+		});
+		
+		tagTableSlider.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				JSlider source = (JSlider) e.getSource();
+				int tableHeight = source.getValue();
+				if (currTableHeight == tableHeight) return;
+				currTableHeight = tableHeight;
+				imagesPanel.resizeTables(tableHeight);
+				imagesPanel.rescaleImages(imagesPanel.getCurrImageSize());
 				imagesPanel.recalculateGrid();
 				imagesPanel.loadUnloadImages();
 				imagesPanel.revalidate();
@@ -407,6 +355,8 @@ public class IconDemoPanel extends JPanel {
 		});
 		toolBar.add(showTitlesButton);
 
+		toolBar.addSeparator();
+
 		showTagsButton = new JToggleButton();
 		showTagsButton.setIcon(Icons.getIcon("page_white_stack.png"));
 		showTagsButton.setFocusable(false);
@@ -422,21 +372,6 @@ public class IconDemoPanel extends JPanel {
 		});
 		toolBar.add(showTagsButton);
 
-		tagTableButton = new JToggleButton();
-		tagTableButton.setIcon(Icons.getIcon("table.png"));
-		tagTableButton.setFocusable(false);
-		tagTableButton.setToolTipText("Show annotations in a table instead of a tag cloud");
-		tagTableButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				imagesPanel.setTagTable(tagTableButton.isSelected());
-				imagesPanel.rescaleImages(imagesPanel.getCurrImageSize());
-				imagesPanel.recalculateGrid();
-				imagesPanel.loadUnloadImages();
-			}
-		});
-		toolBar.add(tagTableButton);
-		
 		onlySessionButton = new JToggleButton();
 		onlySessionButton.setIcon(Icons.getIcon("cart.png"));
 		onlySessionButton.setFocusable(false);
@@ -461,9 +396,7 @@ public class IconDemoPanel extends JPanel {
 			}
 		});
 		toolBar.add(hideCompletedButton);
-
-		toolBar.addSeparator();
-
+		
 		userButton = new JButton("Annotations from...");
 		userButton.setIcon(Icons.getIcon("group.png"));
 		userButton.setFocusable(false);
@@ -475,13 +408,37 @@ public class IconDemoPanel extends JPanel {
 		});
 		toolBar.add(userButton);
 
+		tagTableButton = new JToggleButton();
+		tagTableButton.setIcon(Icons.getIcon("table.png"));
+		tagTableButton.setFocusable(false);
+		tagTableButton.setToolTipText("Show annotations in a table instead of a tag cloud");
+		tagTableButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				tagTableSlider.setEnabled(tagTableButton.isSelected());
+				imagesPanel.setTagTable(tagTableButton.isSelected());
+				imagesPanel.resizeTables(imagesPanel.getCurrTableHeight());
+				imagesPanel.rescaleImages(imagesPanel.getCurrImageSize());
+				imagesPanel.recalculateGrid();
+				imagesPanel.loadUnloadImages();
+			}
+		});
+		toolBar.add(tagTableButton);
+
+		tagTableSlider = new JSlider(ImagesPanel.MIN_TABLE_HEIGHT, ImagesPanel.MAX_TABLE_HEIGHT,
+				ImagesPanel.DEFAULT_TABLE_HEIGHT);
+		tagTableSlider.setFocusable(false);
+		tagTableSlider.setEnabled(false);
+		tagTableSlider.setToolTipText("Tag table height");
+		toolBar.add(tagTableSlider);
+		
 		toolBar.addSeparator();
 
-		slider = new JSlider(ImagesPanel.MIN_THUMBNAIL_SIZE, ImagesPanel.MAX_THUMBNAIL_SIZE,
+		imageSizeSlider = new JSlider(ImagesPanel.MIN_THUMBNAIL_SIZE, ImagesPanel.MAX_THUMBNAIL_SIZE,
 				ImagesPanel.DEFAULT_THUMBNAIL_SIZE);
-		slider.setFocusable(false);
-		slider.setToolTipText("Image size percentage");
-		toolBar.add(slider);
+		imageSizeSlider.setFocusable(false);
+		imageSizeSlider.setToolTipText("Image size percentage");
+		toolBar.add(imageSizeSlider);
 
 		return toolBar;
 	}
@@ -633,6 +590,7 @@ public class IconDemoPanel extends JPanel {
 		
 		// Since the images are not loaded yet, this will just resize the empty
 		// buttons so that we can calculate the grid correctly
+		imagesPanel.resizeTables(imagesPanel.getCurrTableHeight());
 		imagesPanel.rescaleImages(imagesPanel.getCurrImageSize());
 		imagesPanel.recalculateGrid();
 
