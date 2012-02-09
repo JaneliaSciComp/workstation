@@ -20,7 +20,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.AnnotatedImageButton;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
@@ -239,7 +238,9 @@ public abstract class EntityTransferHandler extends TransferHandler {
 			// Get drop index
 			int index = childIndex; // DropMode.INSERT
 			if (childIndex == -1) { // DropMode.ON
-				index = parent.getChildCount();
+				EntityData parentEd = (EntityData)parent.getUserObject();
+				Entity parentEntity = parentEd.getChildEntity();
+				index = parentEntity.getChildren().size();
 			}
 					
 			// Actually perform the transfer
@@ -277,7 +278,8 @@ public abstract class EntityTransferHandler extends TransferHandler {
 		// First update the entity model
 		if (DEBUG) System.out.println("EntityTransferHandler.addEntities - updating entity model");
 		
-		List<EntityData> eds = EntityUtils.getOrderedEntityDataOfType(parentEntity, EntityConstants.ATTRIBUTE_ENTITY);
+		List<EntityData> eds = EntityUtils.getOrderedEntityDataWithChildren(parentEntity);
+		
 		int origSize = eds.size();
 		List<EntityData> newEds = new ArrayList<EntityData>();
 		Entity targetEntity = entityOutline.getEntity(targetNode);
@@ -303,6 +305,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
 		// Renumber the children, re-add the new ones, and update the tree
 		int index = 0;
 		for (EntityData ed : eds) {
+			if (DEBUG) System.out.println("EntityTransferHandler.addEntities - processing ed order="+ed.getOrderIndex()+" ");
 			if ((ed.getOrderIndex() == null) || (ed.getOrderIndex() != index)) {
 				ed.setOrderIndex(index);
 				// For performance reasons, we have to replace the parent with a fake id-only entity. Otherwise, it 
@@ -313,12 +316,15 @@ public abstract class EntityTransferHandler extends TransferHandler {
 				ed.setParentEntity(fakeParentEntity);
 				
 				EntityData savedEd = ModelMgr.getModelMgr().saveOrUpdateEntityData(ed);
-				if (DEBUG) System.out.println("EntityTransferHandler.addEntities - saved ED "+ed.getId()+" with index="+index);
+				if (DEBUG) System.out.println("EntityTransferHandler.addEntities - saved ED "+savedEd.getId()+" with index="+index);
+
 				if ((index >= destIndex) && (index < destIndex+entitiesToAdd.size())) {
 					// Re-add the saved entity data to the parent
 					targetEntity.getEntityData().add(savedEd);
-					// Now add to the outline
-					entityOutline.addNodes(targetNode, savedEd, index);
+					// Now add to the outline, if its not lazy
+					if (entityOutline.getDynamicTree().childrenAreLoaded(targetNode)) {
+						entityOutline.addNodes(targetNode, savedEd, index);
+					}
 				}
 			}
 			index++;
