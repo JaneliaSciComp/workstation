@@ -177,6 +177,7 @@ public abstract class DynamicTable extends JPanel {
         popupMenu.setLightWeightPopupEnabled(true);
 
 		ListSelectionModel lsm = table.getSelectionModel();
+		
 		if (lsm.getMinSelectionIndex() == lsm.getMaxSelectionIndex()) { 
 
 	        final String value = target.getValueAt(target.getSelectedRow(), target.getSelectedColumn()).toString();
@@ -296,7 +297,7 @@ public abstract class DynamicTable extends JPanel {
      */
     public DynamicRow getCurrentRow() {
     	for (int i : table.getSelectedRows()) {
-    		return rows.get(i);
+    		return rows.get(table.convertRowIndexToModel(i));
     	}
     	return null;
     }
@@ -305,7 +306,8 @@ public abstract class DynamicTable extends JPanel {
     	int i = 0;
     	for(DynamicRow row : rows) {
     		if (row.getUserObject().equals(userObject)) {
-    			table.getSelectionModel().setSelectionInterval(i, i);
+    			int vi = table.convertRowIndexToView(i);
+    			table.getSelectionModel().setSelectionInterval(vi, vi);
     			return true;
     		}
     		i++;

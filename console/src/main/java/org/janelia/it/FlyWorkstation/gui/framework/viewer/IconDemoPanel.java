@@ -794,6 +794,14 @@ public class IconDemoPanel extends JPanel {
 		return imagesPanel;
 	}
 
+	public JSlider getTagTableSlider() {
+		return tagTableSlider;
+	}
+
+	public JSlider getImageSizeSlider() {
+		return imageSizeSlider;
+	}
+
 	public KeyListener getKeyListener() {
 		return keyListener;
 	}
