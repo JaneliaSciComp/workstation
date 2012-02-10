@@ -226,6 +226,9 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 
 							// Update Tree UI
 							selectedTree.removeNode(node);
+							
+							// Update the viewer
+							selectNode(null);
 						}
 
 						@Override
@@ -500,7 +503,13 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
     
 	private synchronized void selectNode(final DefaultMutableTreeNode node) {
 
-		if (node == null) return;
+		final IconDemoPanel panel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
+		
+		if (node == null) {
+			currUniqueId = null;
+			panel.clear();
+			return;
+		}
 
 		String uniqueId = getDynamicTree().getUniqueId(node);
 		if (uniqueId.equals(currUniqueId)) return;
@@ -513,7 +522,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 
 		getDynamicTree().navigateToNode(node);
 
-		final IconDemoPanel panel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
 		panel.showLoadingIndicator();
 
 		if (!getDynamicTree().childrenAreLoaded(node)) {
@@ -522,14 +530,21 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 			SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node, false) {
 				@Override
 				protected void doneLoading() {
-					panel.loadEntity(getEntity(node));
+					loadSelectedEntityInViewer();
 				}
 			};
 			loadingWorker.execute();
 		} else {
-			panel.loadEntity(getEntity(node));
+			loadSelectedEntityInViewer();
 		}
 
 		ModelMgr.getModelMgr().selectOutlineEntity(getDynamicTree().getUniqueId(node), true);
+	}
+	
+	private void loadSelectedEntityInViewer() {
+		if (currUniqueId==null) return;
+		DefaultMutableTreeNode node = getNodeByUniqueId(currUniqueId);
+		if (node==null) return;
+		SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadEntity(getEntity(node));
 	}
 }

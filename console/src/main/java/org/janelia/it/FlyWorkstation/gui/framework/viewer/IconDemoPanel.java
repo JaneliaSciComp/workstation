@@ -577,7 +577,6 @@ public class IconDemoPanel extends JPanel {
 		if (!SwingUtilities.isEventDispatchThread())
 			throw new RuntimeException("IconDemoPanel.entityLoadDone called outside of EDT");
 
-
 		imagesPanel.setEntities(getEntities());
 		refreshAnnotations(null);
 
@@ -718,7 +717,7 @@ public class IconDemoPanel extends JPanel {
 		}
 
 	}
-
+	
 	public synchronized void clear() {
 		this.entities = null;
 		removeAll();
@@ -765,7 +764,7 @@ public class IconDemoPanel extends JPanel {
 		return entities;
 	}
 
-	public synchronized void setEntities(List<Entity> entities) {
+	private synchronized void setEntities(List<Entity> entities) {
 		this.entities = entities;
 	}
 
