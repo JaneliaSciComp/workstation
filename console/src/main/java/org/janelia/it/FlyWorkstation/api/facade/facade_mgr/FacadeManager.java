@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.api.facade.facade_mgr;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.aggregate.AggregateFacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.FlyWorkstation.api.stub.data.NoDataException;
+import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 
 import java.util.*;
 
@@ -306,4 +307,15 @@ public class FacadeManager {
         exceptionHandlers.remove(handler);
     }
 
+    static public boolean isDataSourceConnectivityValid() {
+        return PathTranslator.isMounted();
+    }
+    
+    static public String getDataSourceHelpInformation() {
+        return PathTranslator.getMountHelpMessage();
+    }
+    
+    static public String getOsSpecificRootPath() {
+        return PathTranslator.getOsSpecificRootPath();
+    }
 }

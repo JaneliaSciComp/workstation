@@ -9,8 +9,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.exception_handlers.UserNotifi
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
-import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
-import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ApplicationSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.panels.DataSourceSettings;
 import org.janelia.it.FlyWorkstation.gui.util.server_status.ServerStatusReportManager;
@@ -55,7 +53,7 @@ public class ConsoleApp {
         try {
             //Browser Setup
             final String versionString = ConsoleProperties.getString("console.versionNumber");
-            final boolean internal = (versionString != null) && (versionString.toLowerCase().indexOf("internal") > -1);
+            final boolean internal = (versionString != null) && (versionString.toLowerCase().contains("internal"));
 
             sessionMgr.setNewBrowserTitle(ConsoleProperties.getString("console.Title") + " " + ConsoleProperties.getString("console.versionNumber"));
             sessionMgr.setApplicationName(ConsoleProperties.getString("console.Title"));
@@ -65,7 +63,7 @@ public class ConsoleApp {
             sessionMgr.setNewBrowserMenuBar(ConsoleMenuBar.class);
             sessionMgr.startExternalHttpListener(30000);
             sessionMgr.startAxisServer(30001);
-            sessionMgr.setModelProperty("ShowInternalDataSourceInDialogs", new Boolean(internal));
+            sessionMgr.setModelProperty("ShowInternalDataSourceInDialogs", internal);
             sessionMgr.setModelProperty("SessionMgr.DisplayFreeMemoryProperty", false);
             //Exception Handler Registration
 //            sessionMgr.registerExceptionHandler(new PrintStackTraceHandler());
@@ -136,12 +134,9 @@ public class ConsoleApp {
             }
 
         	// Make sure we can access the data mount
-        	if (!PathTranslator.isMounted()) {
-        		String message = SystemInfo.isMac ? 
-        					"The jacsData volume is not mounted. From Finder choose 'Go' and 'Connect to Server' " +
-        					"then enter '"+PathTranslator.JACS_DATA_MOUNT_MAC+"' and press Connect."
-        				  : "The data is not mounted as "+PathTranslator.JACS_DATA_PATH_LINUX;
-        		throw new MissingResourceException(message, ConsoleApp.class.getName(), "Missing Data Mount");
+        	if (!FacadeManager.isDataSourceConnectivityValid()) {
+        		throw new MissingResourceException(FacadeManager.getDataSourceHelpInformation(), ConsoleApp.class.getName(),
+                        "Missing Data Mount");
         	}
         	
             //Start First Browser

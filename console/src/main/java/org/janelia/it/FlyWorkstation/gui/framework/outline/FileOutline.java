@@ -187,15 +187,14 @@ public class FileOutline extends JScrollPane implements Cloneable {
 
     private void getImagePopupMenu(final File treePath, MouseEvent e) {
         actionPopup = new JPopupMenu();
-        JMenuItem v3dMenuItem = new JMenuItem("Show in V3D");
-        v3dMenuItem.addActionListener(new ActionListener() {
+        JMenuItem vaa3dMenuItem = new JMenuItem("Show in Vaa3D");
+        vaa3dMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-                String tmpCmd = "/Users/" + SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME) + "/Dev/NeuroAnnotator/v3d/v3d64.app/Contents/MacOS/v3d64 -f " + treePath.getAbsolutePath();
+                String tmpCmd = "/Users/" + SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME) + "/Dev/NeuroAnnotator/vaa3d/v3d64.app/Contents/MacOS/v3d64 -f " + treePath.getAbsolutePath();
                 System.out.println("DEBUG: " + tmpCmd);
                 try {
                     Runtime.getRuntime().exec(tmpCmd);
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
@@ -208,7 +207,7 @@ public class FileOutline extends JScrollPane implements Cloneable {
                 JOptionPane.showMessageDialog(actionPopup, "Calling for TIF Info...", "Show Image Info", JOptionPane.PLAIN_MESSAGE);
             }
         });
-        actionPopup.add(v3dMenuItem);
+        actionPopup.add(vaa3dMenuItem);
         if (treePath.getAbsolutePath().toLowerCase().endsWith(".tif") || treePath.getAbsolutePath().toLowerCase().endsWith(".lsm")) {
             actionPopup.add(stackInfoItem);
         }

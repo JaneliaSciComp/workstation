@@ -32,7 +32,7 @@ public class ToolsMenu extends JMenu {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
                         // todo This needs to be a custom user setting.
-                        Runtime.getRuntime().exec("/Users/" + SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME) + "/Dev/v3d/v3d/v3d64.app/Contents/MacOS/v3d64");
+                        Runtime.getRuntime().exec("/Users/" + SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME) + "/Dev/vaa3d/vaa3d/v3d64.app/Contents/MacOS/v3d64");
                     }
                     catch (IOException e) {
                         JOptionPane.showMessageDialog(vaa3dMenuItem.getParent(), "Could not launch Vaa3D - NeuroAnnotator", "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);

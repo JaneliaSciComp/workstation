@@ -1,12 +1,14 @@
 package org.janelia.it.FlyWorkstation.gui.framework.search;
 
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.jacs.model.tasks.search.SearchTask;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 
 /**
  * Created by IntelliJ IDEA.
@@ -110,6 +112,13 @@ public class SearchToolbar extends JPanel implements ActionListener {
         }
         else if (SEARCH.equals(cmd)) { // fourth button clicked
             description = "Searches the database for entites that match your Search terms.";
+            ArrayList<String> topics = new ArrayList<String>();
+            topics.add(SearchTask.TOPIC_ENTITIES);
+            SearchTask task = new SearchTask();
+            task.setMatchFlags(SearchTask.MATCH_ANY);
+            task.setSearchString(textArea.getText());
+            task.setSearchTopics(topics);
+//            FacadeManager.getFacadeManager().getAnnotationFacade().
         }
         else if (TEXT_ENTERED.equals(cmd)) { // text field
             JTextField tf = (JTextField) e.getSource();

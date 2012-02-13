@@ -1,19 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.application;
 
-import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.File;
-import java.io.IOException;
-import java.util.MissingResourceException;
-
-import javax.swing.*;
-
 import loci.plugins.config.SpringUtilities;
-
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
+import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.gui.framework.exception_handlers.ExitHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.exception_handlers.UserNotificationExceptionHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -21,6 +10,16 @@ import org.janelia.it.FlyWorkstation.gui.util.*;
 import org.janelia.it.jacs.compute.api.ComputeBeanRemote;
 import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.SystemCall;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.IOException;
+import java.util.MissingResourceException;
 
 /**
  * Check version against the JACS server and update the entire FlySuite if needed.
@@ -81,11 +80,8 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
         final String serverVersion = computeBean.getAppVersion();
         final String clientVersion = ConsoleProperties.getString("console.versionNumber");
 
-    	if (!PathTranslator.isMounted()) {
-    		String message = SystemInfo.isMac ? 
-    					"The jacsData volume is not mounted. From Finder choose 'Go' and 'Connect to Server' " +
-    					"then enter '"+PathTranslator.JACS_DATA_MOUNT_MAC+"' and press Connect."
-    				  : "The data is not mounted as "+PathTranslator.JACS_DATA_PATH_LINUX;
+    	if (!FacadeManager.isDataSourceConnectivityValid()) {
+    		String message = FacadeManager.getDataSourceHelpInformation();
     		throw new MissingResourceException(message, ConsoleApp.class.getName(), "Missing Data Mount");
     	}
     	
@@ -93,7 +89,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 
         	if (SystemInfo.isMac) {
             	String suiteDir = "FlySuite_"+serverVersion;
-            	remoteFile = new File(PathTranslator.JACS_DATA_PATH_MAC, "FlySuite/"+suiteDir+".tgz");
+            	remoteFile = new File(FacadeManager.getOsSpecificRootPath(), "FlySuite/"+suiteDir+".tgz");
         		downloadsDir = new File(System.getProperty("user.home"),"Downloads/");
             	downloadFile = new File(downloadsDir, remoteFile.getName());
             	extractedDir = new File(downloadsDir, suiteDir);
@@ -101,7 +97,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
         	}
         	else if (SystemInfo.isLinux) {
             	String suiteDir = "FlySuite_linux_"+serverVersion;
-            	remoteFile = new File(PathTranslator.JACS_DATA_PATH_LINUX, "FlySuite/"+suiteDir+".tgz");
+            	remoteFile = new File(FacadeManager.getOsSpecificRootPath(), "FlySuite/"+suiteDir+".tgz");
         		downloadsDir = new File("/tmp/");
             	downloadFile = new File(downloadsDir, remoteFile.getName());
             	extractedDir = new File(downloadsDir, suiteDir);
