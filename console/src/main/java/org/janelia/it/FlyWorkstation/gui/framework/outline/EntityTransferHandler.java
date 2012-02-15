@@ -5,6 +5,7 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
 
@@ -30,6 +31,8 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  */
 public abstract class EntityTransferHandler extends TransferHandler {
 
+	private static final boolean MOVE_WHEN_REORDERING = false;
+	
 	private static final boolean DEBUG = false;
 	
 	private EntityOutline entityOutline;
@@ -57,7 +60,10 @@ public abstract class EntityTransferHandler extends TransferHandler {
 		try {
 			// Only dealing with drag and drop for now
 			if (!support.isDrop()) return false;
-			if (!support.isDataFlavorSupported(nodesFlavor)) return false;
+			if (!support.isDataFlavorSupported(nodesFlavor)) {
+				if (DEBUG) System.out.println("Disallow transfer because target node is a root");
+				return false;
+			}
 			
 			support.setShowDropLocation(true);
 			
@@ -91,16 +97,25 @@ public abstract class EntityTransferHandler extends TransferHandler {
 			}
 
 			// Can't moved to the root
-			if (targetNode.isRoot()) return false;
+			if (targetNode.isRoot()) {
+				if (DEBUG) System.out.println("Disallow transfer because target node is a root");
+				return false;
+			}
 			
 			for(TreePath sourcePath : sourcePaths) {
 
 				// Can't move to a descendant
-				if (sourcePath.isDescendant(targetPath)) return false;
+				if (sourcePath.isDescendant(targetPath)) {
+					if (DEBUG) System.out.println("Disallow transfer because source node descendant of target");
+					return false;
+				}
 
 				// Can't move the root
 				DefaultMutableTreeNode sourceNode = (DefaultMutableTreeNode)sourcePath.getLastPathComponent();
-				if (sourceNode.isRoot()) return false;
+				if (sourceNode.isRoot()) {
+					if (DEBUG) System.out.println("Disallow transfer because source node is a root");
+					return false;
+				}
 				
 				DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode)sourceNode.getParent();
 				int sourceIndex = parentNode.getIndex(sourceNode);
@@ -109,6 +124,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
 				// Do not allow a drop in the same location 
 				if ((targetPath.equals(sourcePath) || targetPath.equals(sourcePath.getParentPath())) 
 						&& (sourceIndex==targetIndex || (targetIndex<0 && sourceIndex==parentNode.getChildCount()-1))) {
+					if (DEBUG) System.out.println("Disallow transfer to the same location");
 					return false;
 				}
 			}
@@ -117,6 +133,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
 			int dropRow = tree.getRowForPath(targetPath);
 			for (int i = 0; i < selRows.length; i++) {
 				if (selRows[i] == dropRow) {
+					if (DEBUG) System.out.println("Disallow transfer drag and drop rows are identical");
 					return false;
 				}
 			}
@@ -124,6 +141,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
 			// Enforce some Entity-specific rules
 			List<Entity> entities = (List<Entity>)support.getTransferable().getTransferData(nodesFlavor);
 			if (!allowTransfer(targetNode, entities)) {
+				if (DEBUG) System.out.println("Disallow transfer because of entity rules");
 				return false;
 			}
 			
@@ -154,7 +172,10 @@ public abstract class EntityTransferHandler extends TransferHandler {
 
 		for(Entity entity : entitiesToAdd) {
 			// Disallow transfer if the entity is in the ancestor chain
-			DefaultMutableTreeNode nextParent = targetNode;
+			DefaultMutableTreeNode nextParent = (DefaultMutableTreeNode)targetNode.getParent();
+			if (nextParent!=null) {
+				nextParent = (DefaultMutableTreeNode)targetNode.getParent();
+			}
 			while (nextParent != null) {
 				Entity ancestor = entityOutline.getEntity(nextParent);
 				if (Utils.areSameEntity(entity, ancestor)) {
@@ -165,12 +186,12 @@ public abstract class EntityTransferHandler extends TransferHandler {
 			}
 			
 			// Disallow multiple instances of the same entity
-			for(Entity child : targetEntity.getChildren()) {
-				if (Utils.areSameEntity(entity, child)) {
-					if (DEBUG) System.out.println("Disallow transfer because target already has this child");
-					return false;
-				}
-			}
+//			for(Entity child : targetEntity.getChildren()) {
+//				if (Utils.areSameEntity(entity, child)) {
+//					if (DEBUG) System.out.println("Disallow transfer because target already has this child");
+//					return false;
+//				}
+//			}
 		}
 		
 		return true;
@@ -263,40 +284,50 @@ public abstract class EntityTransferHandler extends TransferHandler {
 	 */
 	protected void addEntities(DefaultMutableTreeNode targetNode, List<Entity> entitiesToAdd, int destIndex) throws Exception {
 
-		if (DEBUG) System.out.println("EntityTransferHandler.addEntities");
-		
 		Entity parentEntity = entityOutline.getEntity(targetNode);
 		
 		if (DEBUG) {
+			System.out.println("EntityTransferHandler.addEntities");
 			int i = destIndex;
 			for(Entity entity : entitiesToAdd) {
 				System.out.println("Will add "+entity.getName()+" to "+parentEntity.getName()+" at "+i);
 				i++;
 			}
+			System.out.println("EntityTransferHandler.addEntities - updating entity model");
 		}
 
 		// First update the entity model
-		if (DEBUG) System.out.println("EntityTransferHandler.addEntities - updating entity model");
 		
+		List<DefaultMutableTreeNode> toRemove = new ArrayList<DefaultMutableTreeNode>();		
 		List<EntityData> eds = EntityUtils.getOrderedEntityDataWithChildren(parentEntity);
 		
 		int origSize = eds.size();
-		List<EntityData> newEds = new ArrayList<EntityData>();
-		Entity targetEntity = entityOutline.getEntity(targetNode);
-		
 		int currIndex = destIndex;		
+		
 		for(Entity entity : entitiesToAdd) {
 			// Add the entity to the new parent, generating the ED
-			EntityData newEd = targetEntity.addChildEntity(entity);
+			EntityData newEd = parentEntity.addChildEntity(entity);
+			if (DEBUG) System.out.println("EntityTransferHandler.addEntities - created new child "+entity.getName());
+			
 			// Temporarily remove the ED so that it can be inserted with the correct index
-			targetEntity.getEntityData().remove(newEd);
-			newEds.add(newEd);
+			parentEntity.getEntityData().remove(newEd);
 			
 			if (destIndex > origSize) {
 				eds.add(newEd);
 			} 
 			else {
 				eds.add(currIndex++, newEd);
+			}
+
+			if (MOVE_WHEN_REORDERING) {
+		        Enumeration enumeration = targetNode.children();
+		        while (enumeration.hasMoreElements()) {
+		            DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) enumeration.nextElement();
+		            EntityData ed = entityOutline.getEntityData(childNode);
+					if (ed!=null && ed.getChildEntity()!=null && Utils.areSameEntity(entity, ed.getChildEntity())) {
+						toRemove.add(childNode);
+					}
+		        }
 			}
 		}
 
@@ -314,13 +345,14 @@ public abstract class EntityTransferHandler extends TransferHandler {
 				Entity fakeParentEntity = new Entity();
 				fakeParentEntity.setId(parentEntity.getId());
 				ed.setParentEntity(fakeParentEntity);
-				
+
+				if (DEBUG) System.out.println("EntityTransferHandler.addEntities - will save ED "+ed.getId()+" with index="+index+" child:"+ed.getChildEntity().getName()+" value:"+ed.getValue());
 				EntityData savedEd = ModelMgr.getModelMgr().saveOrUpdateEntityData(ed);
 				if (DEBUG) System.out.println("EntityTransferHandler.addEntities - saved ED "+savedEd.getId()+" with index="+index);
 
 				if ((index >= destIndex) && (index < destIndex+entitiesToAdd.size())) {
 					// Re-add the saved entity data to the parent
-					targetEntity.getEntityData().add(savedEd);
+					parentEntity.getEntityData().add(savedEd);
 					// Now add to the outline, if its not lazy
 					if (entityOutline.getDynamicTree().childrenAreLoaded(targetNode)) {
 						entityOutline.addNodes(targetNode, savedEd, index);
@@ -328,6 +360,19 @@ public abstract class EntityTransferHandler extends TransferHandler {
 				}
 			}
 			index++;
+		}
+		
+		// Remove old eds, if the target is the same
+		if (MOVE_WHEN_REORDERING) {
+			for (DefaultMutableTreeNode childNode : toRemove) {
+	            EntityData ed = entityOutline.getEntityData(childNode);
+	            if (!parentEntity.getEntityData().remove(ed)) {
+	            	System.out.println("EntityTransferHandler.addEntities - could not remove ED "+ed.getId());
+	            }
+				ModelMgr.getModelMgr().removeEntityData(ed);
+				if (DEBUG) System.out.println("EntityTransferHandler.addEntities - removed old ED "+ed.getId());
+				entityOutline.getDynamicTree().removeNode(childNode);
+			}
 		}
 	}
 	
