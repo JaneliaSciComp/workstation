@@ -184,19 +184,22 @@ public class DynamicImagePanel extends JPanel {
 
         rescaleImage(displaySize);
     }
-
+    
     /**
      * Tell the panel if its image should be viewable. When this is set to false, the images can be released from
      * memory to save space. When it's set to true, the image will be reloaded from disk if necessary.
      * @param wantViewable
      */
 	public synchronized void setViewable(boolean wantViewable, Callable success) {
-
+		
 		if (imageFilename!=null) {
 			if (wantViewable) {
 				if (!this.viewable) {
 					loadWorker = new LoadImageWorker(success);
 					loadWorker.execute();
+				}
+				else {
+					syncToViewerState();
 				}
 			}
 			else {
@@ -213,7 +216,7 @@ public class DynamicImagePanel extends JPanel {
 				invalidate();
 				// Call the callback
 				try {
-					success.call();
+					if (success!=null) success.call();
 				}
 				catch (Exception e) {
 					SessionMgr.getSessionMgr().handleException(e);
@@ -261,7 +264,7 @@ public class DynamicImagePanel extends JPanel {
 		protected void hadSuccess() {
             loadDone();
             try {
-            	success.call();
+            	if (success!=null) success.call();
             }
             catch (Exception e) {
             	SessionMgr.getSessionMgr().handleException(e);
@@ -276,6 +279,7 @@ public class DynamicImagePanel extends JPanel {
 
     private synchronized void loadDone() {
         setImageLabel(imageLabel);
+        syncToViewerState();
         revalidate();
         repaint();
     }
@@ -307,5 +311,16 @@ public class DynamicImagePanel extends JPanel {
         removeAll();
         add(label);
     }
-	
+
+    private void syncToViewerState() {
+    	// TODO: this should use a more generic interface, 
+    	// and should not be coupled to the IconDemoPanel and ImagesPanel directly
+		IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
+        if (iconDemoPanel.isInverted()) {
+        	setInvertedColors(true);
+        }
+        else {
+        	rescaleImage(iconDemoPanel.getImagesPanel().getCurrImageSize());
+        }
+    }
 }

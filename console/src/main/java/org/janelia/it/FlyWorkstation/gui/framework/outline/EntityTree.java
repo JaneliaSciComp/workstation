@@ -2,8 +2,6 @@ package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import java.awt.BorderLayout;
 import java.awt.event.MouseEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.*;
 import java.util.concurrent.Callable;
 
@@ -538,6 +536,7 @@ public class EntityTree extends JPanel {
         int c = 0;
         for (EntityData entityData : dataList) {
             if (entityData.getChildEntity() != null) {
+            	if (EntityUtils.isHidden(entityData)) continue;
                 addNodes(parentNode, entityData, c++, visitedEds, level+1);
             }
         }

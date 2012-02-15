@@ -20,6 +20,7 @@ import javax.swing.tree.TreePath;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
@@ -28,7 +29,6 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.*;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
  * The entity tree which lives in the right-hand "Data" panel and drives the IconDemoPanel.
@@ -148,7 +148,8 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 		public void addMenuItems() {
 
 			add(getTitleItem());
-			add(getCopyToClipboardItem());
+			add(getCopyNameToClipboardItem());
+			add(getCopyIdToClipboardItem());
 			add(getDetailsItem());
 			add(getRenameItem());
 			add(getDeleteItem());
@@ -167,6 +168,18 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 
 			add(getTitleItem());
 			add(getNewRootFolderItem());
+		}
+		
+		@Override
+		protected JMenuItem getDetailsItem() {
+	        JMenuItem detailsMenuItem = new JMenuItem("  View details");
+	        detailsMenuItem.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+			        new EntityDetailsDialog().showForEntityData(entityData);
+				}
+			});
+	        return detailsMenuItem;
 		}
 
 		private JMenuItem getDeleteItem() {
@@ -222,7 +235,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 							Entity parent = getEntity(parentNode);
 
 							// Update object model
-							EntityUtils.removeChild(parent, entity);
+							parent.getEntityData().remove(entityData);
 
 							// Update Tree UI
 							selectedTree.removeNode(node);

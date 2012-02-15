@@ -2,7 +2,6 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.Dimension;
 import java.io.File;
-import java.util.concurrent.Callable;
 
 import javax.swing.JComponent;
 
@@ -26,7 +25,9 @@ public class DynamicImageButton extends AnnotatedImageButton {
     
     public JComponent init(final Entity entity) {
 
-        String filepath = EntityUtils.getDefaultImageFilePath(entity);
+    	String imageRole = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().getCurrImageRole();
+    	
+        String filepath = EntityUtils.getDefaultImageFilePath(entity, imageRole);
         if (filepath == null) {
         	throw new IllegalStateException("Entity has no filepath");
         }
@@ -55,21 +56,6 @@ public class DynamicImageButton extends AnnotatedImageButton {
 	}
 
 	public void setViewable(boolean viewable) {
-        dynamicImagePanel.setViewable(viewable, new Callable<Void>() {
-			@Override
-			public Void call() throws Exception {
-				if (dynamicImagePanel.isViewable()) {
-					// TODO: refactor this so it doesn't need to do this kind of dependency access
-					IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
-			        if (iconDemoPanel.isInverted()) {
-			        	dynamicImagePanel.setInvertedColors(true);
-			        }
-			        else {
-			        	dynamicImagePanel.rescaleImage(iconDemoPanel.getImagesPanel().getCurrImageSize());
-			        }
-				}
-				return null;
-			}
-		});
+        dynamicImagePanel.setViewable(viewable, null);
 	}	
 }

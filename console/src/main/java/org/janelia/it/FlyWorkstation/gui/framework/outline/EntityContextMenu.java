@@ -54,7 +54,8 @@ public class EntityContextMenu extends JPopupMenu {
 
 	public void addMenuItems() {
         add(getTitleItem());
-        add(getCopyToClipboardItem());
+        add(getCopyNameToClipboardItem());
+        add(getCopyIdToClipboardItem());
         add(getDetailsItem());
         add(getRenameItem());
         setNextAddRequiresSeparator(true);
@@ -81,7 +82,7 @@ public class EntityContextMenu extends JPopupMenu {
         return detailsMenuItem;
 	}
 	
-	protected JMenuItem getCopyToClipboardItem() {
+	protected JMenuItem getCopyNameToClipboardItem() {
         JMenuItem copyMenuItem = new JMenuItem("  Copy name to clipboard");
         copyMenuItem.addActionListener(new ActionListener() {
 			@Override
@@ -93,6 +94,18 @@ public class EntityContextMenu extends JPopupMenu {
         return copyMenuItem;
 	}
 
+	protected JMenuItem getCopyIdToClipboardItem() {
+        JMenuItem copyMenuItem = new JMenuItem("  Copy GUID to clipboard");
+        copyMenuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+	            Transferable t = new StringSelection(entity.getId().toString());
+	            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
+			}
+		});
+        return copyMenuItem;
+	}
+	
 	protected JMenuItem getRenameItem() {
 		JMenuItem renameItem = new JMenuItem("  Rename");
         renameItem.addActionListener(new ActionListener() {

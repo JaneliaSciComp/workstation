@@ -34,6 +34,7 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
  * This panel shows images for annotation. It may show a bunch of images at
@@ -49,6 +50,7 @@ public class IconDemoPanel extends JPanel {
 	private JButton nextButton;
 	private JButton parentButton;
 	private JToggleButton showTitlesButton;
+	private JButton imageRoleButton;
 	private JToggleButton showTagsButton;
 	private JToggleButton invertButton;
 	private JToggleButton hideCompletedButton;
@@ -70,6 +72,9 @@ public class IconDemoPanel extends JPanel {
 	private final Set<String> hiddenUsers = new HashSet<String>();
 	private final Annotations annotations = new Annotations();
 
+	private final List<String> allImageRoles = new ArrayList<String>();
+	private String currImageRole;
+	
 	private SimpleWorker entityLoadingWorker;
 	private SimpleWorker annotationLoadingWorker;
 
@@ -148,6 +153,11 @@ public class IconDemoPanel extends JPanel {
 
 	public IconDemoPanel() {
 
+		allImageRoles.add(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
+		allImageRoles.add(EntityConstants.ATTRIBUTE_SIGNAL_MIP_IMAGE);
+		allImageRoles.add(EntityConstants.ATTRIBUTE_REFERENCE_MIP_IMAGE);
+		currImageRole = EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE;
+		
 		setBackground(Color.white);
 		setLayout(new BorderLayout());
 		setFocusable(true);
@@ -354,9 +364,7 @@ public class IconDemoPanel extends JPanel {
 			}
 		});
 		toolBar.add(showTitlesButton);
-
-		toolBar.addSeparator();
-
+		
 		showTagsButton = new JToggleButton();
 		showTagsButton.setIcon(Icons.getIcon("page_white_stack.png"));
 		showTagsButton.setFocusable(false);
@@ -396,6 +404,8 @@ public class IconDemoPanel extends JPanel {
 			}
 		});
 		toolBar.add(hideCompletedButton);
+
+		toolBar.addSeparator();
 		
 		userButton = new JButton("Annotations from...");
 		userButton.setIcon(Icons.getIcon("group.png"));
@@ -407,7 +417,22 @@ public class IconDemoPanel extends JPanel {
 			}
 		});
 		toolBar.add(userButton);
+		
+		toolBar.addSeparator();
+		
+		imageRoleButton = new JButton("Image type...");
+		imageRoleButton.setIcon(Icons.getIcon("image.png"));
+		imageRoleButton.setFocusable(false);
+		imageRoleButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				showPopupImageRoleMenu();
+			}
+		});
+		toolBar.add(imageRoleButton);
 
+		toolBar.addSeparator();
+		
 		tagTableButton = new JToggleButton();
 		tagTableButton.setIcon(Icons.getIcon("table.png"));
 		tagTableButton.setFocusable(false);
@@ -443,6 +468,25 @@ public class IconDemoPanel extends JPanel {
 		return toolBar;
 	}
 
+	private void showPopupImageRoleMenu() {
+
+		final JPopupMenu imageRoleListMenu = new JPopupMenu();
+		final List<String> imageRoles = new ArrayList<String>(allImageRoles);
+
+		for (final String imageRole : imageRoles) {
+			JMenuItem roleMenuItem = new JCheckBoxMenuItem(imageRole, imageRole.equals(currImageRole));
+			roleMenuItem.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					currImageRole = imageRole;
+					entityLoadDone();
+				}
+			});
+			imageRoleListMenu.add(roleMenuItem);
+		}
+
+		imageRoleListMenu.show(imageRoleButton, 0, imageRoleButton.getHeight());
+	}
+	
 	private void showPopupUserMenu() {
 
 		final JPopupMenu userListMenu = new JPopupMenu();
@@ -450,8 +494,7 @@ public class IconDemoPanel extends JPanel {
 		UserColorMapping userColors = ModelMgr.getModelMgr().getUserColorMapping();
 
 		// Save the list of users so that when the function actually runs, the
-		// users it affects are the same
-		// users that were displayed
+		// users it affects are the same users that were displayed
 		final List<String> savedUsers = new ArrayList<String>(allUsers);
 
 		JMenuItem allUsersMenuItem = new JCheckBoxMenuItem("All users", hiddenUsers.isEmpty());
@@ -471,7 +514,7 @@ public class IconDemoPanel extends JPanel {
 
 		userListMenu.addSeparator();
 
-		for (final String username : allUsers) {
+		for (final String username : savedUsers) {
 			JMenuItem userMenuItem = new JCheckBoxMenuItem(username, !hiddenUsers.contains(username));
 			userMenuItem.setBackground(userColors.getColor(username));
 			userMenuItem.addActionListener(new ActionListener() {
@@ -506,7 +549,14 @@ public class IconDemoPanel extends JPanel {
 
 	public void loadEntity(Entity parentEntity) {
 		this.entity = parentEntity;
-		List<Entity> children = parentEntity.getOrderedChildren();
+		List<EntityData> eds = parentEntity.getOrderedEntityData();
+		List<Entity> children = new ArrayList<Entity>();
+		for(EntityData ed : eds) {
+			Entity child = ed.getChildEntity();
+			if (!EntityUtils.isHidden(ed) && child!=null) {
+				children.add(child);
+			}
+		}
 		if (children.isEmpty()) {
 			children = new ArrayList<Entity>();
 			children.add(parentEntity);
@@ -586,6 +636,7 @@ public class IconDemoPanel extends JPanel {
 		imagesPanel.setTagTable(tagTableButton.isSelected());
 		imagesPanel.setTagVisbility(showTagsButton.isSelected());
 		imagesPanel.setTitleVisbility(showTitlesButton.isSelected());
+		imagesPanel.setInvertedColors(invertButton.isSelected());
 		
 		// Since the images are not loaded yet, this will just resize the empty
 		// buttons so that we can calculate the grid correctly
@@ -787,6 +838,10 @@ public class IconDemoPanel extends JPanel {
 				selectedEntities.add(entity);
 		}
 		return selectedEntities;
+	}
+
+	public String getCurrImageRole() {
+		return currImageRole;
 	}
 
 	public ImagesPanel getImagesPanel() {

@@ -71,7 +71,6 @@ public class ImagesPanel extends JScrollPane {
         setViewportView(buttonsPanel);
     }
 
-
 	/**
      * Returns the button with the given entity.
      *
@@ -146,7 +145,8 @@ public class ImagesPanel extends JScrollPane {
             if (buttons.containsKey(entity.getId().toString())) continue;
             
             AnnotatedImageButton button = null;
-            String filepath = EntityUtils.getDefaultImageFilePath(entity);
+
+            String filepath = EntityUtils.getDefaultImageFilePath(entity, iconDemoPanel.getCurrImageRole());
             if (filepath != null) {
             	button = new DynamicImageButton(entity);
                 ((DynamicImageButton)button).setCache(imageCache);

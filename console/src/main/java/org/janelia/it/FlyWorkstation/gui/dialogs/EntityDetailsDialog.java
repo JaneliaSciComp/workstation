@@ -11,6 +11,7 @@ import javax.swing.*;
 import loci.plugins.config.SpringUtilities;
 
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityData;
 
 /**
  * A dialog for viewing details about an entity.
@@ -22,6 +23,7 @@ public class EntityDetailsDialog extends ModalDialog {
     protected static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm");
     
     private JPanel attrPanel;
+    private JLabel roleLabel;
     private JLabel nameLabel;
     private JLabel ownerLabel;
     private JLabel creationDateLabel;
@@ -38,13 +40,14 @@ public class EntityDetailsDialog extends ModalDialog {
     
     public EntityDetailsDialog() {
 
-        setTitle("Annotation Details");
+        setTitle("Entity Details");
 
         attrPanel = new JPanel(new SpringLayout());
         attrPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10), 
         		BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Annotation Properties")));
 
         nameLabel = addAttribute("Name: ");
+        roleLabel = addAttribute("Role: ");
         ownerLabel = addAttribute("Annotation Owner: ");
         creationDateLabel = addAttribute("Creation Date: ");
         updatedDateLabel = addAttribute("Updated Date: ");
@@ -68,6 +71,18 @@ public class EntityDetailsDialog extends ModalDialog {
         buttonPane.add(okButton);
         
         add(buttonPane, BorderLayout.SOUTH);
+    }
+
+    public void showForEntityData(EntityData entityData) {
+
+    	Entity entity = entityData.getChildEntity();
+    	nameLabel.setText(entity.getName());
+    	roleLabel.setText(entityData.getEntityAttribute().getName());
+        ownerLabel.setText(entity.getUser().getUserLogin());
+        creationDateLabel.setText(df.format(entity.getCreationDate()));
+        updatedDateLabel.setText(df.format(entity.getUpdatedDate()));
+        
+        packAndShow();
     }
     
     public void showForEntity(Entity entity) {
