@@ -32,7 +32,6 @@ import loci.formats.in.APNGReader;
 import loci.formats.in.TiffReader;
 
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
 
 /**
  * Common utilities for loading images, testing strings, etc.
@@ -52,42 +51,6 @@ public class Utils {
         catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-    }
-
-    public static String getFilePath(Entity entity) {
-    	if (entity == null) return null;
-    	return entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
-    }
-    
-    public static String getDefaultImageFilePath(Entity entity) {
-
-    	String type = entity.getEntityType().getName();
-    	String path = null;
-    	
-    	// If the entity is a 2D image, just return its path
-		if (type.equals(EntityConstants.TYPE_IMAGE_2D)) {
-			path = getFilePath(entity);
-		}
-    	
-		if (path == null) {
-	    	// If the entity has a default 2D image, just return that path
-	    	path = getFilePath(entity.getChildByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE));
-		}
-
-		if (path == null) {
-	    	// TODO: This is for backwards compatibility with old data. Remove this in the future.
-	    	path = entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE_FILE_PATH);
-		}
-    	
-		return path;
-    }
-
-    public static String getAnyFilePath(Entity entity) {
-    	String filePath = getFilePath(entity);
-    	if (filePath != null) {
-    		return filePath;
-    	}
-    	return getDefaultImageFilePath(entity);
     }
     
     public static boolean areSame(Object obj1, Object obj2) {
@@ -282,10 +245,23 @@ public class Utils {
      */
     public static BufferedImage getScaledImage(BufferedImage sourceImage, int w, int h) {
     	int type = sourceImage.getType();
-    	if (type==0) type = BufferedImage.TYPE_INT_ARGB;
+
+    	if (type==0) {
+    		type = BufferedImage.TYPE_INT_ARGB;
+    	}
+    	
+    	if (type==BufferedImage.TYPE_BYTE_INDEXED || type==BufferedImage.TYPE_BYTE_BINARY) {
+    		// Force the type to RGB in order to correctly display bitmapped images. This is strange, but it works.
+    		type = BufferedImage.TYPE_INT_RGB;	
+    	}
+    	
         BufferedImage resizedImg = new BufferedImage(w, h, type);
         Graphics2D g2 = resizedImg.createGraphics();
-        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
+    	if (((double)sourceImage.getHeight()/(double)h > 2) || ((double)sourceImage.getWidth()/(double)w > 2)) {
+//    		g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+    	}
+    	
         g2.drawImage(sourceImage, 0, 0, w, h, null);
         g2.dispose();
         return resizedImg;
