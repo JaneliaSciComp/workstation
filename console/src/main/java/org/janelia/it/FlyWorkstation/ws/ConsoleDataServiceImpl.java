@@ -169,6 +169,11 @@ public class ConsoleDataServiceImpl {
 //        return ModelMgr.getModelMgr().getEntityTypes();
 //    }
 
+    public Entity[] getParentEntityArray(long childEntityId) {
+    	List<Entity> list = ModelMgr.getModelMgr().getParentEntities(childEntityId);
+    	return list.toArray(new Entity[0]);
+    }
+    
     public EntityData[] getParentEntityDataArray(long childEntityId) {
     	List<EntityData> list = ModelMgr.getModelMgr().getParentEntityDatas(childEntityId);
     	return list.toArray(new EntityData[0]);

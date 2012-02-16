@@ -62,6 +62,7 @@ public class EntityContextMenu extends JPopupMenu {
     	add(getOpenInFinderItem());
     	add(getOpenWithAppItem());
         add(getNeuronAnnotatorItem());
+        add(getVaa3dItem());
 	}
 
 	protected JMenuItem getTitleItem() {
@@ -170,7 +171,7 @@ public class EntityContextMenu extends JPopupMenu {
                             return;
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
+                    	SessionMgr.getSessionMgr().handleException(e);
                     }
                 }
             });
@@ -179,6 +180,27 @@ public class EntityContextMenu extends JPopupMenu {
         return null;
 	}
 
+	protected JMenuItem getVaa3dItem() {
+        final String entityType = entity.getEntityType().getName();
+        if (entityType.equals(EntityConstants.TYPE_IMAGE_3D)) {
+            JMenuItem vaa3dMenuItem = new JMenuItem("  View in Vaa3D");
+            vaa3dMenuItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
+                    try {
+                        if (entity != null && ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(entity.getId())) {
+                            // Success
+                            return;
+                        }
+                    } catch (Exception e) {
+                        SessionMgr.getSessionMgr().handleException(e);
+                    }
+                }
+            });
+            return vaa3dMenuItem;
+        }
+        return null;
+	}
+	
 	private JMenuItem getActionItem(final Action action) {
         JMenuItem actionMenuItem = new JMenuItem("  "+action.getName());
         actionMenuItem.addActionListener(new ActionListener() {

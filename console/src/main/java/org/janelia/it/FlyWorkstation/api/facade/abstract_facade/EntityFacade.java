@@ -31,6 +31,8 @@ public interface EntityFacade {
     public Set<Entity> getChildEntities(Long parentEntityId);
 
     public List<EntityData> getParentEntityDatas(Long childEntityId);
+    
+    public List<Entity> getParentEntities(Long childEntityId);
 
     public List<Entity> getEntitiesByTypeName(String entityTypeName);
 

@@ -166,6 +166,20 @@ public class AggregateEntityFacade extends AggregateFacadeBase implements Entity
         }
         return returnList;
     }
+    
+    @Override
+    public List<Entity> getParentEntities(Long childEntityId) {
+        Object[] aggregates = getAggregates();
+        List<Entity> returnList = new ArrayList<Entity>();
+        List<Entity> tmpEntityData;
+        for (Object aggregate : aggregates) {
+            tmpEntityData = ((EntityFacade) aggregate).getParentEntities(childEntityId);
+            if (null != tmpEntityData) {
+                returnList.addAll(tmpEntityData);
+            }
+        }
+        return returnList;
+    }
 
     @Override
     public Set<Entity> getChildEntities(Long parentEntityId) {

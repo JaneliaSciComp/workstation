@@ -159,6 +159,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 			add(getOpenInFinderItem());
 			add(getOpenWithAppItem());
 			add(getNeuronAnnotatorItem());
+			add(getVaa3dItem());
 
 			setNextAddRequiresSeparator(true);
 			add(getCreateSessionItem());

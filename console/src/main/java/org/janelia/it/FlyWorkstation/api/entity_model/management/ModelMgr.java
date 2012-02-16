@@ -395,6 +395,10 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().getEntitiesByName(entityName);
     }
 
+    public List<Entity> getParentEntities(Long childEntityId) {
+        return FacadeManager.getFacadeManager().getEntityFacade().getParentEntities(childEntityId);
+    }
+
     public List<EntityData> getParentEntityDatas(Long childEntityId) {
         return FacadeManager.getFacadeManager().getEntityFacade().getParentEntityDatas(childEntityId);
     }

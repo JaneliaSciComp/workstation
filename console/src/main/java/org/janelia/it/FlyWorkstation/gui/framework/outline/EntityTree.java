@@ -484,13 +484,16 @@ public class EntityTree extends JPanel {
         List<EntityData> dataList = entity.getOrderedEntityData();
         List<EntityData> childDataList = new ArrayList<EntityData>();
 
+        boolean allHidden = true;
+        
         for (EntityData ed : dataList) {
         	if (ed.getChildEntity()!=null) {
         		childDataList.add(ed);
+        		if (!EntityUtils.isHidden(ed)) allHidden = false;
         	}
         }
 
-        if (childDataList.isEmpty()) return;
+        if (childDataList.isEmpty() || allHidden) return;
         
         // End infinite recursion
 
