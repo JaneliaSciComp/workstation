@@ -23,7 +23,10 @@ import org.janelia.it.FlyWorkstation.gui.application.SplashPanel;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.*;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationFilter;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutlineHistory;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
@@ -153,9 +156,6 @@ public class IconDemoPanel extends JPanel {
 
 	public IconDemoPanel() {
 
-		allImageRoles.add(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
-		allImageRoles.add(EntityConstants.ATTRIBUTE_SIGNAL_MIP_IMAGE);
-		allImageRoles.add(EntityConstants.ATTRIBUTE_REFERENCE_MIP_IMAGE);
 		currImageRole = EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE;
 		
 		setBackground(Color.white);
@@ -594,7 +594,7 @@ public class IconDemoPanel extends JPanel {
 				List<Entity> loadedEntities = new ArrayList<Entity>();
 				for (Entity entity : entities) {
 					EntityData ed = entity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
-					if (ed != null) {
+					if (ed != null && ed.getChildEntity()!=null) {
 						ed.setChildEntity(ModelMgr.getModelMgr().getEntityById(ed.getChildEntity().getId() + ""));
 					}
 
@@ -817,6 +817,22 @@ public class IconDemoPanel extends JPanel {
 
 	private synchronized void setEntities(List<Entity> entities) {
 		this.entities = entities;
+		
+		Set<String> imageRoles = new HashSet<String>();
+		for(Entity entity : entities) {
+			for(EntityData ed : entity.getEntityData()) {
+				String attrName = ed.getEntityAttribute().getName();
+				if (attrName.endsWith("Image")) {
+					imageRoles.add(attrName);
+				}
+			}
+		}
+		
+		allImageRoles.clear();
+		allImageRoles.addAll(imageRoles);
+		Collections.sort(allImageRoles);
+		
+		imageRoleButton.setEnabled(!allImageRoles.isEmpty());
 	}
 
 	public synchronized Entity getLastSelectedEntity() {
