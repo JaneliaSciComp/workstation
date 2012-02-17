@@ -280,6 +280,7 @@ public class SessionMgr {
         }
         browser.setVisible(true);
         browserModelsToBrowser.put(browser.getBrowserModel(), browser);
+        activeBrowser = browser;
         return browser;
     }
 
