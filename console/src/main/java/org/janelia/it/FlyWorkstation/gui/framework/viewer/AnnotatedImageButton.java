@@ -2,7 +2,6 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.*;
 import java.awt.dnd.*;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.List;
@@ -217,18 +216,19 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
     }
     
     public void refresh(Entity entity) {
-
     	mainPanel.removeAll();
-    	
-    	String title = entity.getName();
-        if (title.length()>30) {
-        	title = title.substring(0, 27) + "...";
-        }
-        
-        titleLabel.setText(title);
-        titleLabel.setToolTipText(entity.getName());
-        
+    	setTitle(entity.getName(), 100);
         mainPanel.add(init(entity));
+    }
+    
+    public void setTitle(String title, int maxWidth) {
+    	// Subtle font size scaling 
+    	int fontSize = (int)Math.round((double)maxWidth*0.005)+10;
+    	Font titleLabelFont = new Font("Sans Serif", Font.PLAIN, fontSize);
+    	titleLabel.setFont(titleLabelFont);
+    	titleLabel.setPreferredSize(new Dimension(maxWidth, titleLabel.getFontMetrics(titleLabelFont).getHeight()));
+        titleLabel.setText(title);
+        titleLabel.setToolTipText(title);
     }
     
     public abstract JComponent init(Entity entity);
@@ -270,6 +270,7 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
     }
 
 	public void rescaleImage(int imageSize) {
+    	setTitle(entity.getName(), imageSize);
         JPanel annotationPanel = (JPanel)annotationView;
         if (annotationView instanceof AnnotationTablePanel) {
         	annotationPanel.setPreferredSize(new Dimension(imageSize, annotationPanel.getPreferredSize().height));

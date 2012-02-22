@@ -182,8 +182,6 @@ public class IconDemoPanel extends JPanel {
 				imagesPanel.rescaleImages(imageSize);
 				imagesPanel.recalculateGrid();
 				imagesPanel.loadUnloadImages();
-				imagesPanel.revalidate();
-				imagesPanel.repaint();
 			}
 		});
 		
@@ -195,11 +193,11 @@ public class IconDemoPanel extends JPanel {
 				if (currTableHeight == tableHeight) return;
 				currTableHeight = tableHeight;
 				imagesPanel.resizeTables(tableHeight);
-				imagesPanel.rescaleImages(imagesPanel.getCurrImageSize());
+				imagesPanel.rescaleImages(currImageSize);
 				imagesPanel.recalculateGrid();
+				imagesPanel.scrollSelectedEntitiesToCenter();
 				imagesPanel.loadUnloadImages();
-				imagesPanel.revalidate();
-				imagesPanel.repaint();
+
 			}
 		});
 
@@ -547,7 +545,7 @@ public class IconDemoPanel extends JPanel {
 		return showTagsButton.isSelected();
 	}
 
-	public void loadEntity(Entity parentEntity) {
+	public synchronized void loadEntity(Entity parentEntity) {
 		this.entity = parentEntity;
 		List<EntityData> eds = parentEntity.getOrderedEntityData();
 		List<Entity> children = new ArrayList<Entity>();
@@ -572,6 +570,13 @@ public class IconDemoPanel extends JPanel {
 
 		// Indicate a load
 		showLoadingIndicator();
+		
+		// Cancel previous loads
+
+		if (entityLoadingWorker != null && !entityLoadingWorker.isDone()) {
+			System.out.println("Cancel previous image load");
+			entityLoadingWorker.disregard();
+		}
 		imagesPanel.cancelAllLoads();
 
 		// Update back/forward navigation
@@ -582,19 +587,14 @@ public class IconDemoPanel extends JPanel {
 
 		// Temporarily disable scroll loading
 		imagesPanel.setScrollLoadingEnabled(false);
-
-		if (entityLoadingWorker != null && !entityLoadingWorker.isDone()) {
-			System.out.println("Cancel previous image load");
-			entityLoadingWorker.disregard();
-		}
-
+		
 		entityLoadingWorker = new SimpleWorker() {
 
 			protected void doStuff() throws Exception {
 				List<Entity> loadedEntities = new ArrayList<Entity>();
 				for (Entity entity : entities) {
 					EntityData ed = entity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
-					if (ed != null && ed.getChildEntity()!=null) {
+					if (ed!= null && ed.getValue() == null && ed.getChildEntity()!=null) {
 						ed.setChildEntity(ModelMgr.getModelMgr().getEntityById(ed.getChildEntity().getId() + ""));
 					}
 
@@ -623,7 +623,7 @@ public class IconDemoPanel extends JPanel {
 	}
 	
 	private synchronized void entityLoadDone() {
-
+		
 		if (!SwingUtilities.isEventDispatchThread())
 			throw new RuntimeException("IconDemoPanel.entityLoadDone called outside of EDT");
 
@@ -643,7 +643,7 @@ public class IconDemoPanel extends JPanel {
 		imagesPanel.resizeTables(imagesPanel.getCurrTableHeight());
 		imagesPanel.rescaleImages(imagesPanel.getCurrImageSize());
 		imagesPanel.recalculateGrid();
-
+		
 		revalidate();
 		repaint();
 

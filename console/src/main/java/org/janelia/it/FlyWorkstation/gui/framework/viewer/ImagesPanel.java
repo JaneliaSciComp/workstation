@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -230,18 +231,21 @@ public class ImagesPanel extends JScrollPane {
     public int getCurrTableHeight() {
 		return currTableHeight;
 	}
-	
+
 	public void scrollEntityToCenter(Entity entity) {
-	    
 		if (entity == null) return;
-		
-	    JViewport viewport = getViewport();
     	AnnotatedImageButton selectedButton = getButtonByEntityId(entity.getId());
-    	if (selectedButton == null) return;
+    	scrollButtonToCenter(selectedButton);
+	}
+	
+	public void scrollButtonToCenter(AnnotatedImageButton button) {
+
+    	if (button == null) return;
+	    JViewport viewport = getViewport();
     	
 	    // This rectangle is relative to the table where the
 	    // northwest corner of cell (0,0) is always (0,0).
-	    Rectangle rect = selectedButton.getBounds();
+	    Rectangle rect = button.getBounds();
 
 	    // The location of the view relative to the table
 	    Rectangle viewRect = viewport.getViewRect();
@@ -268,7 +272,14 @@ public class ImagesPanel extends JScrollPane {
 	    // Scroll the area into view.
 	    viewport.scrollRectToVisible(rect);
 	}
-    
+
+	public void scrollSelectedEntitiesToCenter() {
+		List<AnnotatedImageButton> selected = getSelectedButtons();
+		int i = selected.size()/2;
+		AnnotatedImageButton centerOfMass = selected.get(i);
+		scrollButtonToCenter(centerOfMass);
+	}
+	
     public void setTitleVisbility(boolean visible) {
         for (AnnotatedImageButton button : buttons.values()) {
             button.setTitleVisible(visible);
@@ -327,6 +338,16 @@ public class ImagesPanel extends JScrollPane {
 	        }
 	    }
 	}
+    
+    public List<AnnotatedImageButton> getSelectedButtons() {
+    	List<AnnotatedImageButton> selected = new ArrayList<AnnotatedImageButton>();
+		for(AnnotatedImageButton button : buttons.values()) {
+			if (button.isSelected()) {
+				selected.add(button);
+			}
+		}
+		return selected;
+    }
     
     /**
      * Set the number of columns in the grid layout based on the width of the parent component and the width of the

@@ -538,27 +538,37 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 
 		panel.showLoadingIndicator();
 
+		final String finalCurrUniqueId = currUniqueId;
+		
 		if (!getDynamicTree().childrenAreLoaded(node)) {
-			// Load the children in the tree in case the user selects them in
-			// the gallery view
+			// Load the children before displaying them
 			SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node, false) {
 				@Override
 				protected void doneLoading() {
-					loadSelectedEntityInViewer();
+					loadEntityInViewer(finalCurrUniqueId);
 				}
 			};
 			loadingWorker.execute();
-		} else {
-			loadSelectedEntityInViewer();
+		} 
+		else {
+			loadEntityInViewer(finalCurrUniqueId);
 		}
 
-		ModelMgr.getModelMgr().selectOutlineEntity(getDynamicTree().getUniqueId(node), true);
 	}
 	
-	private void loadSelectedEntityInViewer() {
-		if (currUniqueId==null) return;
-		DefaultMutableTreeNode node = getNodeByUniqueId(currUniqueId);
+	private void loadEntityInViewer(String uniqueId) {
+		// Make sure this load is still relevant. User could have selected a new node in the meantime. 
+		if (uniqueId==null || !uniqueId.equals(currUniqueId)) return;
+		
+		DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
 		if (node==null) return;
+		
+		// This method would never be called on a node whose children are lazy
+		if (!selectedTree.childrenAreLoaded(node)) {
+			throw new IllegalStateException("Cannot display entity whose children are not loaded");
+		}
+		
 		SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadEntity(getEntity(node));
+		ModelMgr.getModelMgr().selectOutlineEntity(uniqueId, true);
 	}
 }
