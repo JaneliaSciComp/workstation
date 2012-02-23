@@ -22,7 +22,7 @@ public class OpenInFinderAction implements Action {
 	 * @return
 	 */
 	public static boolean isSupported() {
-		return SystemInfo.isMac || SystemInfo.isLinux;
+		return SystemInfo.isMac || SystemInfo.isLinux || SystemInfo.isWindows;
 	}
 	
 	public OpenInFinderAction(Entity entity) {
@@ -37,6 +37,9 @@ public class OpenInFinderAction implements Action {
 		else if (SystemInfo.isLinux) {
 			return "Reveal in File Manager";
 		}
+        else if (SystemInfo.isWindows) {
+            return "Reveal in Windows Explorer";
+        }
 		return null;
 	}
 
@@ -57,6 +60,9 @@ public class OpenInFinderAction implements Action {
 			else if (file.isDirectory() && !file.canRead()) {
 				throw new Exception("Cannot access "+file.getAbsolutePath());
 			}
+            else if (!file.exists()) {
+                throw new Exception("Cannot access "+file.getAbsolutePath());
+            }
 			
             String[] cmdArr=null;
 			if (SystemInfo.isMac) {
@@ -81,8 +87,19 @@ public class OpenInFinderAction implements Action {
                     cmdArr[1]=file.getAbsolutePath();
 				}
 			}
-
-			if (Runtime.getRuntime().exec(cmdArr).waitFor() != 0) {
+            else if (SystemInfo.isWindows) {
+                cmdArr=new String[2];
+                cmdArr[0]="explorer";
+                if (file.isFile()) {
+                    cmdArr[1]="/select,"+file.getAbsolutePath();
+                }
+                else {
+                    cmdArr[1]="/e,"+file.getAbsolutePath();
+                }
+            }
+            int returnCode = Runtime.getRuntime().exec(cmdArr).waitFor();
+			if ((returnCode != 0 && !SystemInfo.isWindows) ||
+                 (returnCode>1 && SystemInfo.isWindows)) {
 				throw new Exception("Error opening file: "+file.getAbsolutePath());
 			}
 		}
