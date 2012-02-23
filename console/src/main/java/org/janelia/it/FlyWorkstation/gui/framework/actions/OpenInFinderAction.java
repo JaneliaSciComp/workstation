@@ -58,23 +58,31 @@ public class OpenInFinderAction implements Action {
 				throw new Exception("Cannot access "+file.getAbsolutePath());
 			}
 			
-			StringBuffer cmd = new StringBuffer();
+            String[] cmdArr=null;
 			if (SystemInfo.isMac) {
-				cmd.append("/usr/bin/open ");
-				if (file.isFile()) cmd.append("-R ");
-				cmd.append(file.getAbsolutePath());
+                if (file.isFile()) {
+                    cmdArr=new String[3];
+                    cmdArr[0]="/usr/bin/open";
+                    cmdArr[1]="-R";
+                    cmdArr[2]=file.getAbsolutePath();
+                } else {
+                    cmdArr=new String[2];
+                    cmdArr[0]="/usr/bin/open";
+                    cmdArr[1]=file.getAbsolutePath();
+                }
 			}
 			else if (SystemInfo.isLinux) {
-				cmd.append("gnome-open ");
+                cmdArr=new String[2];
+                cmdArr[0]="gnome-open";
 				if (file.isFile()) {
-					cmd.append(file.getParentFile().getAbsolutePath());
+                    cmdArr[1]=file.getParentFile().getAbsolutePath();
 				}
 				else {
-					cmd.append(file.getAbsolutePath());
+                    cmdArr[1]=file.getAbsolutePath();
 				}
 			}
-			
-			if (Runtime.getRuntime().exec(cmd.toString()).waitFor() != 0) {
+
+			if (Runtime.getRuntime().exec(cmdArr).waitFor() != 0) {
 				throw new Exception("Error opening file: "+file.getAbsolutePath());
 			}
 		}
