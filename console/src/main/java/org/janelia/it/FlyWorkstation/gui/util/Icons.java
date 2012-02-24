@@ -209,7 +209,7 @@ public class Icons {
         else if (EntityConstants.TYPE_SWC_FILE.equals(type)) {
             return getIcon(large ? "swc_large.png" : "swc_small.png");
         }
-        else if (EntityConstants.TYPE_SWC_FILE.equals(type)) {
+        else if (EntityConstants.TYPE_V3D_ANO_FILE.equals(type)) {
             return getIcon(large ? "ano_large.png" : "ano_small.png");
         }
 
