@@ -206,6 +206,9 @@ public class Icons {
         else if (EntityConstants.TYPE_FLY_LINE.equals(type)) {
             return getIcon(large ? "fruit_fly.png" : "fruit_fly_small_17.png");
         }
+        else if (EntityConstants.TYPE_SWC_FILE.equals(type)) {
+            return getIcon(large ? "swc_large.png" : "swc_small.png");
+        }
 
         return getIcon(large ? "error_large.png" : "bullet_error.png");
     }
