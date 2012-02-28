@@ -40,15 +40,58 @@ public class PathTranslator {
      * @return
      */
     public static String convertPath(String filepath) {
+        //System.out.println("convertPath() called with filepath="+filepath);
+        // General filter for nfs vs /Volumes
+        if (SystemInfo.isMac) {
+            //System.out.println("SystemInfo.isMac() true");
+            String[] pathComponents=filepath.split("/");
+            //System.out.println("After split");
+            if (pathComponents!=null && pathComponents.length>2) {
+                int offset=0;
+                if (pathComponents[0].trim().length()==0) {
+                    offset=1;
+                }
+                //System.out.println("pathComponents offset="+offset+" length="+pathComponents.length);
+                String nfsStylePath="/" + pathComponents[0+offset] + "/" + pathComponents[1+offset] + "/" + pathComponents[2+offset];
+                File nfsStyleFile=new File(nfsStylePath);
+                if (nfsStyleFile.canRead()) {
+                    //System.out.println("Returning nfs-style path="+filepath);
+                    return filepath;
+                } else {
+                    String macStylePath="/Volumes/"+pathComponents[2+offset];
+                    File macStyleFile=new File(macStylePath);
+                    if (macStyleFile.canRead()) {
+                        StringBuffer macFullPath=new StringBuffer(macStylePath);
+                        for (int i=(3+offset);i<pathComponents.length;i++) {
+                            macFullPath.append("/"+pathComponents[i]);
+                        }
+                        //System.out.println("Returning mac-style path="+macFullPath.toString());
+                        return macFullPath.toString();
+                    } else {
+                        //System.out.println("Cannot read mac-style path="+macStyleFile.getAbsolutePath());
+                    }
+                }
+            } else {
+                if (pathComponents==null) {
+                    //System.out.println("pathComponents is null");
+                } else {
+                    //System.out.println("pathComponents length="+pathComponents.length);
+                }
+            }
+        } else {
+            //System.out.println("SystemInfo.isMac() false");
+        }
 
         // This is a little optimization for Macs that have /groups mounted. It's faster than using /Volumes.
         File jacsData = new File(JACS_DATA_PATH_LINUX);
         if (jacsData.canRead()) return filepath;
 
-        if (SystemInfo.isMac) {
-            return filepath.replace(JACS_DATA_PATH_LINUX, JACS_DATA_PATH_MAC);
-        }
-        else if (SystemInfo.isWindows) {
+//        if (SystemInfo.isMac) {
+//            return filepath.replace(JACS_DATA_PATH_LINUX, JACS_DATA_PATH_MAC);
+//        }
+//        else
+
+        if (SystemInfo.isWindows) {
             filepath = filepath.replace(JACS_DATA_PATH_LINUX, JACS_DATA_PATH_WINDOWS);
             return filepath.replaceAll("/", "\\\\");
         }
