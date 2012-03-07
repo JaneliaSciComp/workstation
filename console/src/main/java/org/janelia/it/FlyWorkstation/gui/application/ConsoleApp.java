@@ -58,7 +58,7 @@ public class ConsoleApp {
             sessionMgr.setNewBrowserTitle(ConsoleProperties.getString("console.Title") + " " + ConsoleProperties.getString("console.versionNumber"));
             sessionMgr.setApplicationName(ConsoleProperties.getString("console.Title"));
             sessionMgr.setApplicationVersion(ConsoleProperties.getString("console.versionNumber"));
-            sessionMgr.setNewBrowserImageIcon(Utils.getClasspathImage("flyscope.jpg"));
+            sessionMgr.setNewBrowserImageIcon(Utils.getClasspathImage("fly.png"));
             sessionMgr.setNewBrowserSize(.8f);
             sessionMgr.setNewBrowserMenuBar(ConsoleMenuBar.class);
             sessionMgr.startExternalHttpListener(30000);
