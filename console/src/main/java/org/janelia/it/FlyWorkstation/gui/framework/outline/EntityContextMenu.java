@@ -12,6 +12,7 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
+import javax.ejb.EntityContext;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
@@ -182,7 +183,13 @@ public class EntityContextMenu extends JPopupMenu {
 
 	protected JMenuItem getVaa3dItem() {
         final String entityType = entity.getEntityType().getName();
-        if (entityType.equals(EntityConstants.TYPE_IMAGE_3D)) {
+        if (entityType.equals(EntityConstants.TYPE_IMAGE_3D) ||
+            entityType.equals(EntityConstants.TYPE_ALIGNED_BRAIN_STACK) ||
+            entityType.equals(EntityConstants.TYPE_LSM_STACK) ||
+            entityType.equals(EntityConstants.TYPE_STITCHED_V3D_RAW) ||
+            entityType.equals(EntityConstants.TYPE_SWC_FILE) ||
+            entityType.equals(EntityConstants.TYPE_V3D_ANO_FILE) ||
+            entityType.equals(EntityConstants.TYPE_TIF_3D)) {
             JMenuItem vaa3dMenuItem = new JMenuItem("  View in Vaa3D");
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
