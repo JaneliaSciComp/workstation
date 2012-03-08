@@ -37,7 +37,7 @@ public class SplashPanel extends JPanel {
     @Override
     protected void paintComponent(Graphics graphics) {
         try {
-            ImageIcon bkgdImageIcon = Utils.getClasspathImage("flylight_logo_modified101110.png");
+            ImageIcon bkgdImageIcon = Utils.getClasspathImage("flylight_transparent_bkgrnd.png");
             graphics.drawImage(bkgdImageIcon.getImage(), (this.getWidth() - bkgdImageIcon.getIconWidth()) / 2, (this.getHeight() - bkgdImageIcon.getIconHeight()) / 2, null);
         }
         catch (FileNotFoundException e) {
