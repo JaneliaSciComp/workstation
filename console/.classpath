@@ -16,5 +16,6 @@
 	<classpathentry kind="lib" path="lib/owlapi-bin.jar"/>
 	<classpathentry kind="lib" path="lib/jai_codec.jar"/>
 	<classpathentry kind="lib" path="lib/jai_core.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Ehcache"/>
 	<classpathentry kind="output" path="build/eclipse"/>
 </classpath>
