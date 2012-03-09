@@ -75,4 +75,10 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
     	return EJBFactory.getRemoteAnnotationBean().searchTreeForNameStartingWith(rootId, searchString);
 	}
 	
+
+	public List<Entity> searchEntities(Long rootId, String searchString, Integer start, Integer rows) throws Exception {
+		// TODO: pass the username to enable security, once this is all tested
+		return EJBFactory.getRemoteAnnotationBean().searchEntities("*", rootId, searchString, start, rows);
+	}
+	
 }

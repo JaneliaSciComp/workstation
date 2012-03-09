@@ -1,9 +1,9 @@
 package org.janelia.it.FlyWorkstation.api.facade.abstract_facade;
 
-import org.janelia.it.jacs.model.entity.Entity;
-
 import java.util.List;
 import java.util.Set;
+
+import org.janelia.it.jacs.model.entity.Entity;
 
 /**
  * Created by IntelliJ IDEA.
@@ -36,5 +36,7 @@ public interface AnnotationFacade extends EntityFacade {
     public Entity getAncestorWithType(Entity entity, String typeName) throws Exception;
 
 	public List<List<Long>> searchTreeForNameStartingWith(Long rootId, String searchString) throws Exception;
+	
+	public List<Entity> searchEntities(Long rootId, String searchString, Integer start, Integer rows) throws Exception;
 
 }

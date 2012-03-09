@@ -75,16 +75,19 @@ public class EditMenu extends JMenu {
         cutAction = new MyCutAction();
         cutAction.putValue(Action.NAME, "Cut");
         menuCut = new JMenuItem(cutAction);
+        menuCut.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_X, java.awt.Event.META_MASK));
         add(menuCut);
 
         copyAction = new MyCopyAction();
         copyAction.putValue(Action.NAME, "Copy");
         menuCopy = new JMenuItem(copyAction);
+        menuCopy.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, java.awt.Event.META_MASK));
         add(menuCopy);
 
         pasteAction = new MyPasteAction();
         pasteAction.putValue(Action.NAME, "Paste");
         menuPaste = new JMenuItem(pasteAction);
+        menuPaste.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_V, java.awt.Event.META_MASK));
         add(menuPaste);
 
         menuSetPreferences = new JMenu("Preferences");

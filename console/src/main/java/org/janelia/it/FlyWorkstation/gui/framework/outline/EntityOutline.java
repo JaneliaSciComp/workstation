@@ -163,6 +163,9 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 
 			setNextAddRequiresSeparator(true);
 			add(getCreateSessionItem());
+			
+	        setNextAddRequiresSeparator(true);
+	        add(getSearchHereItem());
 		}
 
 		public void addRootMenuItems() {

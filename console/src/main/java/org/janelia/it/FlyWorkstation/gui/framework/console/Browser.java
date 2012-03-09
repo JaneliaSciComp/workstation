@@ -21,6 +21,8 @@ import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestState;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestStatus;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationSessionPropertyDialog;
+import org.janelia.it.FlyWorkstation.gui.dialogs.GeneralSearchDialog;
+import org.janelia.it.FlyWorkstation.gui.dialogs.RunNeuronSeparationDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.*;
 import org.janelia.it.FlyWorkstation.gui.framework.search.SearchToolbar;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
@@ -98,6 +100,8 @@ public class Browser extends JFrame implements Cloneable {
     private TaskOutline taskOutline;
     private OntologyOutline ontologyOutline;
     private AnnotationSessionPropertyDialog annotationSessionPropertyPanel;
+    private RunNeuronSeparationDialog runNeuronSeparationDialog;
+    private GeneralSearchDialog searchDialog;
     private String mostRecentFileOutlinePath;
     private JTabbedPane icsTabPane = new JTabbedPane();
     private int rightDividerLocation;
@@ -112,7 +116,8 @@ public class Browser extends JFrame implements Cloneable {
     private boolean usingSplashPanel = true;
     private boolean isDrillingDownToSelectedEntity = false;
     private String currentAnnotationSessionTaskId;
-
+    
+    
     /**
      * Center Window, use passed realEstatePercent (0-1.0, where 1.0 is 100% of the screen)
      */
@@ -231,8 +236,11 @@ public class Browser extends JFrame implements Cloneable {
         taskOutline = new TaskOutline(this);
         
         ontologyOutline = new OntologyOutline();
+        
         annotationSessionPropertyPanel = new AnnotationSessionPropertyDialog(entityOutline, ontologyOutline);
-        annotationSessionPropertyPanel.pack();
+        runNeuronSeparationDialog = new RunNeuronSeparationDialog();
+        searchDialog = new GeneralSearchDialog();
+        
         ontologyOutline.setPreferredSize(new Dimension());
 //        icsTabPane = new ICSTabPane(this);
 
@@ -1224,7 +1232,15 @@ public class Browser extends JFrame implements Cloneable {
         return annotationSessionPropertyPanel;
     }
 
-    public String getMostRecentFileOutlinePath() {
+    public RunNeuronSeparationDialog getRunNeuronSeparationDialog() {
+		return runNeuronSeparationDialog;
+	}
+
+	public GeneralSearchDialog getSearchDialog() {
+		return searchDialog;
+	}
+
+	public String getMostRecentFileOutlinePath() {
         return mostRecentFileOutlinePath;
     }
 

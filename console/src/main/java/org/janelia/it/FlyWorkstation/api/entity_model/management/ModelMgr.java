@@ -634,6 +634,10 @@ public class ModelMgr {
         FacadeManager.getFacadeManager().getComputeFacade().removePreferenceCategory(category);
     }
 
+    public List<Entity> searchEntities(Long rootId, String searchString, Integer start, Integer rows) throws Exception {
+    	return FacadeManager.getFacadeManager().getAnnotationFacade().searchEntities(rootId, searchString, start, rows);
+    }
+    
     //  private void workSpaceWasCreated(GenomeVersion genomeVersion) {
 //    Set genomeVersions=getGenomeVersions();
 //    GenomeVersion gv;

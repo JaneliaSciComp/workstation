@@ -1,10 +1,14 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import org.janelia.it.FlyWorkstation.gui.dialogs.RunNeuronSeparationDialog;
-
-import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.KeyStroke;
+
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 
 /**
  * Created by IntelliJ IDEA.
@@ -14,9 +18,9 @@ import java.awt.event.ActionListener;
  */
 public class ServicesMenu extends JMenu {
     private JMenuItem neuronSeparationMenuItem;
+    private JMenuItem searchMenuItem;
     private JFrame parentFrame;
-    private static RunNeuronSeparationDialog runNeuronSeparationDialog = new RunNeuronSeparationDialog();
-
+    
     public ServicesMenu(Browser console) {
         super("Services");
         this.parentFrame = console;
@@ -24,11 +28,21 @@ public class ServicesMenu extends JMenu {
         neuronSeparationMenuItem = new JMenuItem("Neuron Separation Service...");
         neuronSeparationMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-                runNeuronSeparationDialog.showDialog();
+                SessionMgr.getSessionMgr().getActiveBrowser().getRunNeuronSeparationDialog().showDialog();
             }
         });
 
+        searchMenuItem = new JMenuItem("Search...");
+        searchMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+            	SessionMgr.getSessionMgr().getActiveBrowser().getSearchDialog().showDialog();
+            }
+        });
+        
+        searchMenuItem.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, java.awt.Event.META_MASK)); 
+        
         // Add the tools
         add(neuronSeparationMenuItem);
+        add(searchMenuItem);
     }
 }

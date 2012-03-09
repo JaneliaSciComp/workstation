@@ -6,6 +6,7 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -140,4 +141,10 @@ public class AggregateAnnotationFacade extends AggregateEntityFacade implements 
 	public List<List<Long>> searchTreeForNameStartingWith(Long rootId, String searchString) throws Exception {
 		throw new UnsupportedOperationException();
 	}	
+
+	@Override
+	public List<Entity> searchEntities(Long rootId, String searchString, Integer start, Integer rows) throws Exception {
+		throw new UnsupportedOperationException();
+	}
+	
 }

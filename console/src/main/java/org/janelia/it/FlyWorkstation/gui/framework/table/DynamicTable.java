@@ -23,6 +23,8 @@ import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
  */
 public abstract class DynamicTable extends JPanel {
 
+    private static final int MAX_COLUMN_WIDTH = 500;
+    
 	private final JTable table;
     private final JScrollPane scrollPane;
     private final boolean allowRightClickCellSelection;
@@ -291,6 +293,11 @@ public abstract class DynamicTable extends JPanel {
     	updateTableModel();
     }
     
+    public void removeAllRows() {
+    	rows.clear();
+    	updateTableModel();
+    }
+    
     /**
      * Returns the first currently selected row.
      * @return
@@ -300,6 +307,32 @@ public abstract class DynamicTable extends JPanel {
     		return rows.get(table.convertRowIndexToModel(i));
     	}
     	return null;
+    }
+
+    /**
+     * Returns all of the selected rows.
+     * @return
+     */
+    public List<DynamicRow> getSelectedRows() {
+    	List<DynamicRow> selected = new ArrayList<DynamicRow>();
+        for (int i : table.getSelectedRows()) {
+            int mi = table.convertRowIndexToModel(i);
+        	selected.add(rows.get(mi));
+        }	
+        return selected;
+    }
+
+    /**
+     * Returns all of the selected user objects.
+     * @return
+     */
+    public List<Object> getSelectedObjects() {
+    	List<Object> selected = new ArrayList<Object>();
+        for (int i : table.getSelectedRows()) {
+            int mi = table.convertRowIndexToModel(i);
+        	selected.add(rows.get(mi).getUserObject());
+        }	
+        return selected;
     }
     
     public boolean navigateToRowWithObject(Object userObject) {
@@ -412,7 +445,7 @@ public abstract class DynamicTable extends JPanel {
     public TableModel getTableModel() {
         return tableModel;
     }
-
+    
     /**
      * Borrowed from http://www.pikopong.com/blog/2008/08/13/auto-resize-jtable-column-width/
      *
@@ -446,6 +479,7 @@ public abstract class DynamicTable extends JPanel {
             }
 
             width += 2 * margin;
+            if (width>MAX_COLUMN_WIDTH) width=MAX_COLUMN_WIDTH;
             col.setPreferredWidth(width);
         }
 
