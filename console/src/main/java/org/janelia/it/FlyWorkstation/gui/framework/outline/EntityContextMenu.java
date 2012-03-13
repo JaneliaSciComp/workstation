@@ -221,7 +221,7 @@ public class EntityContextMenu extends JPopupMenu {
         searchHereMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
-                	SessionMgr.getSessionMgr().getActiveBrowser().getSearchDialog().showForEntity(entity);
+                	SessionMgr.getSessionMgr().getActiveBrowser().getSearchDialog().showDialog(entity);
                 } 
                 catch (Exception e) {
                     SessionMgr.getSessionMgr().handleException(e);

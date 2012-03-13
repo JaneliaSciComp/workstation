@@ -1,14 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.framework.table;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.util.*;
+import java.util.List;
 
 import javax.swing.*;
 import javax.swing.table.*;
@@ -23,12 +20,12 @@ import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
  */
 public abstract class DynamicTable extends JPanel {
 
-    private static final int MAX_COLUMN_WIDTH = 500;
+	private static final int DEFAULT_MIN_COLUMN_WIDTH = 100;
+    private static final int DEFAULT_MAX_COLUMN_WIDTH = 500;
     
 	private final JTable table;
     private final JScrollPane scrollPane;
     private final boolean allowRightClickCellSelection;
-    private final boolean sortableByColumn;
     private TableModel tableModel;
     
 //    private ButtonHeaderRenderer headerRenderer;
@@ -39,6 +36,11 @@ public abstract class DynamicTable extends JPanel {
     private List<DynamicRow> rows = new ArrayList<DynamicRow>();
     
     private Map<DynamicColumn,TableCellRenderer> renderers = new HashMap<DynamicColumn,TableCellRenderer>();
+
+    private Rectangle currViewRect;
+    private boolean hasMoreResults;
+    private int minColWidth = DEFAULT_MIN_COLUMN_WIDTH;
+    private int maxColWidth = DEFAULT_MAX_COLUMN_WIDTH;
     
     public DynamicTable() {
     	this(true, false);
@@ -47,7 +49,6 @@ public abstract class DynamicTable extends JPanel {
     public DynamicTable(final boolean allowRightClickCellSelection, final boolean sortableByColumn) {
     	
     	this.allowRightClickCellSelection = allowRightClickCellSelection;
-    	this.sortableByColumn = sortableByColumn;
     	
         table = new LargeFontTable(UIManager.getDefaults().getFont("Menu.font")) {
     		@Override
@@ -121,11 +122,46 @@ public abstract class DynamicTable extends JPanel {
         
         scrollPane = new JScrollPane();
         scrollPane.setViewportView(table);
-
+        scrollPane.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
+	        @Override
+	        public void adjustmentValueChanged(final AdjustmentEvent e) {
+	            SwingUtilities.invokeLater(new Runnable() {
+	    			@Override
+	    			public void run() {
+	    		    	final JViewport viewPort = scrollPane.getViewport();
+	    		    	Rectangle viewRect = viewPort.getViewRect();
+	    		    	if (viewRect.equals(currViewRect)) {
+	    		    		return;
+	    		    	}
+	    		    	currViewRect = viewRect;
+	    		    	
+	    		    	if (isAtBottom() && hasMoreResults) {
+	    		    		loadMoreResults();
+	    		    	}
+	    			}
+	    		});
+	        }
+	    });
+        
         setLayout(new BorderLayout());
         add(scrollPane, BorderLayout.CENTER);
     }
 
+    private boolean isAtBottom() {
+        Adjustable sb = scrollPane.getVerticalScrollBar();
+        return sb.getMaximum() == (sb.getValue() + sb.getVisibleAmount());
+    }
+
+    /**
+     * Implement this to load more results when the user scrolls to the bottom of the table.
+     */
+    protected void loadMoreResults() {
+    }
+    
+    public JScrollPane getScrollPane() {
+    	return scrollPane;
+    }
+    
 //	private class HeaderListener extends MouseAdapter {
 //
 //		public void mousePressed(MouseEvent e) {
@@ -446,7 +482,27 @@ public abstract class DynamicTable extends JPanel {
         return tableModel;
     }
     
-    /**
+    public void setMoreResults(boolean moreResults) {
+    	this.hasMoreResults = moreResults;
+    }
+    
+    public int getMinColWidth() {
+		return minColWidth;
+	}
+
+	public void setMinColWidth(int minColWidth) {
+		this.minColWidth = minColWidth;
+	}
+
+	public int getMaxColWidth() {
+		return maxColWidth;
+	}
+
+	public void setMaxColWidth(int maxColWidth) {
+		this.maxColWidth = maxColWidth;
+	}
+
+	/**
      * Borrowed from http://www.pikopong.com/blog/2008/08/13/auto-resize-jtable-column-width/
      *
      * @param table table to work against
@@ -479,7 +535,8 @@ public abstract class DynamicTable extends JPanel {
             }
 
             width += 2 * margin;
-            if (width>MAX_COLUMN_WIDTH) width=MAX_COLUMN_WIDTH;
+            if (width>maxColWidth) width=maxColWidth;
+            if (width<minColWidth) width=minColWidth;
             col.setPreferredWidth(width);
         }
 
