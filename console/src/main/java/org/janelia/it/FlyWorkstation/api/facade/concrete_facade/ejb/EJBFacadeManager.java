@@ -1,15 +1,15 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.*;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.ConnectionStatus;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManagerBase;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.LoginProperties;
 import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
 import org.janelia.it.jacs.model.entity.EntityConstants;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class EJBFacadeManager extends FacadeManagerBase {
     private static Class[] createMethodArgumentsClass = new Class[0];
@@ -30,6 +30,7 @@ public class EJBFacadeManager extends FacadeManagerBase {
     private EntityFacade entityFacade;
     private OntologyFacade ontologyFacade;
     private AnnotationFacade annotationFacade;
+    private SolrFacade solrFacade;
     private ComputeFacade computeFacade;
 
     public EJBFacadeManager() {
@@ -61,6 +62,14 @@ public class EJBFacadeManager extends FacadeManagerBase {
             annotationFacade = new EJBAnnotationFacade();
         }
         return annotationFacade;
+    }
+    
+    @Override
+    public SolrFacade getSolrFacade() {
+        if (solrFacade == null) {
+        	solrFacade = new EJBSolrFacade();
+        }
+        return solrFacade;
     }
 
     @Override

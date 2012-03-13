@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.api.entity_model.management;
 import java.awt.Color;
 import java.util.*;
 
+import org.apache.solr.client.solrj.SolrQuery;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.ActiveThreadModel;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
@@ -15,6 +16,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.exception_handlers.PrintStackTraceHandler;
 import org.janelia.it.FlyWorkstation.shared.util.ThreadQueue;
+import org.janelia.it.jacs.compute.api.support.SolrResults;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
@@ -634,8 +636,9 @@ public class ModelMgr {
         FacadeManager.getFacadeManager().getComputeFacade().removePreferenceCategory(category);
     }
 
-    public List<Entity> searchEntities(Long rootId, String searchString, Integer start, Integer rows) throws Exception {
-    	return FacadeManager.getFacadeManager().getAnnotationFacade().searchEntities(rootId, searchString, start, rows);
+    public SolrResults searchSolr(SolrQuery query) throws Exception {
+    	System.out.println("Searching SOLR: "+query.getQuery());
+    	return FacadeManager.getFacadeManager().getSolrFacade().searchSolr(query);
     }
     
     //  private void workSpaceWasCreated(GenomeVersion genomeVersion) {

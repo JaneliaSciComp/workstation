@@ -1,18 +1,15 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.xml;
 
-import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.AnnotationFacade;
-import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.ComputeFacade;
-import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.EntityFacade;
-import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.OntologyFacade;
-import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.ConnectionStatus;
-import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
-import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.*;
+
+import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.*;
+import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.ConnectionStatus;
+import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 
 /**
  * This facade manager provides all facades to field requests for data
@@ -154,6 +151,11 @@ public class XmlServiceFacadeManager extends XmlFacadeManager {
         return null;
     }
 
+    @Override
+    public SolrFacade getSolrFacade() {
+        return null;
+    }
+    
     /**
      * Returns a class name to be instantiated to return a data source for this
      * factory.

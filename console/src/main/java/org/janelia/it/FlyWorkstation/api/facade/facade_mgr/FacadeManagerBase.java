@@ -51,6 +51,8 @@ public abstract class FacadeManagerBase {
 
     public abstract AnnotationFacade getAnnotationFacade();
 
+    public abstract SolrFacade getSolrFacade();
+    
     public abstract ComputeFacade getComputeFacade();
 }
 

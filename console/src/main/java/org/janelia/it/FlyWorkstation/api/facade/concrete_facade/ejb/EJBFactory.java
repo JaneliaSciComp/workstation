@@ -1,18 +1,20 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 
-import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
-import org.janelia.it.jacs.compute.api.*;
+import java.util.Properties;
 
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import java.util.Properties;
+
+import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
+import org.janelia.it.jacs.compute.api.*;
 
 public class EJBFactory {
     private static final String PROVIDER_URL = ConsoleProperties.getInstance().getProperty("provider.url");
     private static final String INITIAL_CONTEXT_FACTORY = ConsoleProperties.getInstance().getProperty("initial.context.factory");
     private static final String URL_PKG_PREFIXES = ConsoleProperties.getInstance().getProperty("url.pkg.prefixes");
     private static final String REMOTE_ANNOTATION_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.annotation.jndi.name");
+    private static final String REMOTE_SOLR_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.solr.jndi.name");
     private static final String REMOTE_COMPUTE_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.compute.jndi.name");
     private static final String REMOTE_SEARCH_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.search.jndi.name");
     private static final String REMOTE_GENOME_CONTEXT_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.genome.context.jndi.name");
@@ -69,6 +71,10 @@ public class EJBFactory {
 
     public static SearchBeanRemote getRemoteSearchBean() {
         return (SearchBeanRemote) getRemoteInterface(REMOTE_SEARCH_JNDI_NAME);
+    }
+
+    public static SolrBeanRemote getRemoteSolrBean() {
+        return (SolrBeanRemote) getRemoteInterface(REMOTE_SOLR_JNDI_NAME);
     }
 
     public static GenomeContextBeanRemote getRemoteGenomeContextBean() {

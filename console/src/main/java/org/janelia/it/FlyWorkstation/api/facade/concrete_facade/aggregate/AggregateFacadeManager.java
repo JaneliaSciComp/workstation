@@ -24,6 +24,7 @@ public class AggregateFacadeManager extends FacadeManagerBase {
     private AggregateOntologyFacade ontologyFacade;
     private AggregateEntityFacade entityFacade;
     private AggregateAnnotationFacade annotationFacade;
+    private AggregateSolrFacade solrFacade;
     private AggregateComputeFacade computeFacade;
     private AggregateControlledVocabService vocabService;
 
@@ -89,6 +90,14 @@ public class AggregateFacadeManager extends FacadeManagerBase {
         return annotationFacade;
     }
 
+    @Override
+    public SolrFacade getSolrFacade() {
+        if (null == solrFacade) {
+        	solrFacade = new AggregateSolrFacade();
+        }
+        return solrFacade;
+    }
+    
     @Override
     public ComputeFacade getComputeFacade() {
         if (null == computeFacade) {

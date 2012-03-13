@@ -36,7 +36,5 @@ public interface AnnotationFacade extends EntityFacade {
     public Entity getAncestorWithType(Entity entity, String typeName) throws Exception;
 
 	public List<List<Long>> searchTreeForNameStartingWith(Long rootId, String searchString) throws Exception;
-	
-	public List<Entity> searchEntities(Long rootId, String searchString, Integer start, Integer rows) throws Exception;
 
 }
