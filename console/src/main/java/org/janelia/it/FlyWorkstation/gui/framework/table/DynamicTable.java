@@ -10,6 +10,7 @@ import java.util.List;
 import javax.swing.*;
 import javax.swing.table.*;
 
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 
@@ -160,6 +161,26 @@ public abstract class DynamicTable extends JPanel {
     
     public JScrollPane getScrollPane() {
     	return scrollPane;
+    }
+
+	public void showNothing() {
+        removeAll();
+        revalidate();
+        repaint();
+    }
+    
+    public void showLoadingIndicator() {
+        removeAll();
+        add(new JLabel(Icons.getLoadingIcon()), BorderLayout.CENTER);
+        revalidate();
+        repaint();
+    }
+
+    public void showTable() {
+    	removeAll();
+        add(scrollPane, BorderLayout.CENTER);
+        revalidate();
+        repaint();
     }
     
 //	private class HeaderListener extends MouseAdapter {

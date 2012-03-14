@@ -109,7 +109,7 @@ public class GeneralSearchDialog extends ModalDialog {
 			@Override
 			public void keyReleased(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-					performFreshSearch(true, true);
+					performFreshSearch(true, true, true);
 				}
 			}
 		});
@@ -138,7 +138,7 @@ public class GeneralSearchDialog extends ModalDialog {
 
 			@Override
 			protected void loadMoreResults() {
-				performSearch(pages.size());	
+				performSearch(pages.size(), false);	
 			}
 		};
 
@@ -154,7 +154,7 @@ public class GeneralSearchDialog extends ModalDialog {
         // --------------------------------
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, facetScrollPane, resultsTable);
         splitPane.setOneTouchExpandable(false);
-        splitPane.setDividerLocation(250);
+        splitPane.setDividerLocation(260);
 		add(splitPane, BorderLayout.CENTER);
         
         // --------------------------------
@@ -197,7 +197,7 @@ public class GeneralSearchDialog extends ModalDialog {
     
 	protected void init() {
 		folderNameField.setText(getNextFolderName());
-		performFreshSearch(true, true);
+		performFreshSearch(true, true, true);
 
 		Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
 		setPreferredSize(new Dimension((int)(browser.getWidth()*0.8),(int)(browser.getHeight()*0.8)));
@@ -207,6 +207,7 @@ public class GeneralSearchDialog extends ModalDialog {
     }
     
     public void showDialog() {
+    	this.searchRoot = null;
     	titleLabel.setText("Search all data");
     	init();
     }
@@ -217,7 +218,7 @@ public class GeneralSearchDialog extends ModalDialog {
     	init();
     }
     
-    protected void performFreshSearch(boolean clearFilters, boolean clearSort) {
+    protected void performFreshSearch(boolean clearFilters, boolean clearSort, boolean showLoading) {
     	if (clearFilters) {
     		filters.clear();
     	}
@@ -227,11 +228,11 @@ public class GeneralSearchDialog extends ModalDialog {
 		}
 		pages.clear();
 		numLoaded = 0;
-		performSearch(0);
+		performSearch(0, showLoading);
 		resultsTable.getScrollPane().getVerticalScrollBar().setValue(0); 
     }
     
-    protected synchronized void performSearch(final int page) {
+    protected synchronized void performSearch(final int page, final boolean showLoading) {
 
     	final String qs = inputField.getText();    	
     	if (qs==null || "".equals(qs)) return;
@@ -286,16 +287,19 @@ public class GeneralSearchDialog extends ModalDialog {
 				populateFacets(results);
 	        	populateResultView(results);
 		    	Utils.setDefaultCursor(GeneralSearchDialog.this);
+		    	if (showLoading) resultsTable.showTable();
 			}
 			
 			@Override
 			protected void hadError(Throwable error) {
 				SessionMgr.getSessionMgr().handleException(error);
 		    	Utils.setDefaultCursor(GeneralSearchDialog.this);
+		    	if (showLoading) resultsTable.showNothing();
 			}
     	};
     	
     	Utils.setWaitingCursor(GeneralSearchDialog.this);
+    	if (showLoading) resultsTable.showLoadingIndicator();
 		worker.execute();
     }
     
@@ -401,7 +405,7 @@ public class GeneralSearchDialog extends ModalDialog {
 			sortKeys.add(new SortKey(column, newOrder));
 			sortField = columnFields[column];
 			ascending = (newOrder != SortOrder.DESCENDING);
-			performFreshSearch(false, false);
+			performFreshSearch(false, false, true);
 		}
 		
 		@Override
@@ -500,7 +504,7 @@ public class GeneralSearchDialog extends ModalDialog {
 						else {
 							values.remove(count.getName());
 						}
-						performFreshSearch(false, true);
+						performFreshSearch(false, true, true);
 					}
 				});
     			
