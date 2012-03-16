@@ -220,8 +220,8 @@ public class SessionOutline extends JPanel implements Outline {
 
         dynamicTable.getTable().getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         
-        DynamicColumn nameCol = dynamicTable.addColumn(COLUMN_NAME, true, false, false);
-        DynamicColumn pctCompCol = dynamicTable.addColumn(COLUMN_PCT_COMPLETE, true, false, true);
+        DynamicColumn nameCol = dynamicTable.addColumn(COLUMN_NAME, COLUMN_NAME, true, false, false, false);
+        DynamicColumn pctCompCol = dynamicTable.addColumn(COLUMN_PCT_COMPLETE, COLUMN_PCT_COMPLETE, true, false, true, false);
         
         dynamicTable.setColumnRenderer(pctCompCol, new ProgressCellRenderer() {
 			@Override

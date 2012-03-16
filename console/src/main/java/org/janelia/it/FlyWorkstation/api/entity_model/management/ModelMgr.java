@@ -15,6 +15,7 @@ import org.janelia.it.FlyWorkstation.shared.exception_handlers.PrintStackTraceHa
 import org.janelia.it.FlyWorkstation.shared.util.ThreadQueue;
 import org.janelia.it.jacs.compute.api.support.SolrResults;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityAttribute;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
@@ -390,6 +391,10 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().getEntityTypes();
     }
 
+	public List<EntityAttribute> getEntityAttributes() {
+        return FacadeManager.getFacadeManager().getEntityFacade().getEntityAttributes();
+    }
+	
     public Entity getEntityById(String entityId) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().getEntityById(entityId);
     }

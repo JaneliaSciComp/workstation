@@ -300,10 +300,28 @@ public abstract class DynamicTable extends JPanel {
      * @param switchable
      * @return
      */
-    public DynamicColumn addColumn(String name, boolean visible, boolean editable, boolean switchable) {
-    	DynamicColumn col = new DynamicColumn(name, visible, editable, switchable);
+    public DynamicColumn addColumn(String name, String label, boolean visible, boolean editable, boolean switchable, boolean sortable) {
+    	DynamicColumn col = new DynamicColumn(name, label, visible, editable, switchable, sortable);
     	columns.add(col);
     	return col;
+    }
+
+    /**
+     * Get a list of all columns.
+     * @param name
+     * @return
+     */
+    public List<DynamicColumn> getColumns() {
+    	return columns;
+    }
+
+    /**
+     * Get a list of currently displayed columns.
+     * @param name
+     * @return
+     */
+    public List<DynamicColumn> getDisplayedColumns() {
+    	return displayedColumns;
     }
     
     /**
@@ -435,7 +453,7 @@ public abstract class DynamicTable extends JPanel {
         
         for(DynamicColumn column : columns) {
         	if (column.isVisible()) {
-        		columnNames.add(column.getName());
+        		columnNames.add(column.getLabel());
         		displayedColumns.add(column);
         	}
         }

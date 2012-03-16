@@ -116,7 +116,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Out
         };
 
 
-        add(new JLabel("Ontology Editor"), BorderLayout.NORTH);
+//        add(new JLabel("Ontology Editor"), BorderLayout.NORTH);
 
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(manageButton);

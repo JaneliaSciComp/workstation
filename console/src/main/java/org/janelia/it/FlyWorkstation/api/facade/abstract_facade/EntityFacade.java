@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityAttribute;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
 
@@ -14,8 +15,11 @@ import org.janelia.it.jacs.model.entity.EntityType;
  * Time: 3:52 PM
  */
 public interface EntityFacade {
+	
     public List<EntityType> getEntityTypes();
-
+    
+    public List<EntityAttribute> getEntityAttributes();
+    
     public Entity getEntityById(String entityId) throws Exception;
 
     public Entity getEntityTree(Long entityId) throws Exception;

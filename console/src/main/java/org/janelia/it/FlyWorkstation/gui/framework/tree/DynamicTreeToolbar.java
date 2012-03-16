@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.tree;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -41,6 +42,8 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
         toolBar.setFloatable(false);
         toolBar.setRollover(true);
 
+        toolBar.add(Box.createRigidArea(new Dimension(1,25)));
+        
         expandAllButton = new JButton(Icons.getExpandAllIcon());
         expandAllButton.setActionCommand(EXPAND_ALL);
         expandAllButton.setToolTipText("Expand all the nodes in the tree.");
@@ -62,19 +65,19 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
         refreshButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
         toolBar.add(refreshButton);
         
-        toolBar.addSeparator();
-
-        JLabel label = new JLabel("Find:");
-        toolBar.add(label);
-
-        textField = new JTextField(); 
-        textField.setColumns(10);
-        textField.addActionListener(this);
-        JPanel innerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        innerPanel.add(textField);
-        toolBar.add(innerPanel);
-
-        // Disabled search-as-you-type because it can generate many long running queries on large trees
+        
+//        toolBar.addSeparator();
+//
+//        JLabel label = new JLabel("Find:");
+//        toolBar.add(label);
+//
+//        textField = new JTextField(); 
+//        textField.setColumns(10);
+//        textField.addActionListener(this);
+//        JPanel innerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+//        innerPanel.add(textField);
+//        toolBar.add(innerPanel);
+//
 //        textField.getDocument().addDocumentListener(new DocumentListener() {
 //            public void changedUpdate(DocumentEvent e) {
 //                tree.navigateToNodeStartingWith(textField.getText(), Bias.Forward, false);
@@ -89,20 +92,20 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
 //            }
 //        });
         
-        JButton button = new JButton("Next");
-        button.setActionCommand(NEXT_MATCH);
-        button.setToolTipText("Find the next occurence of the phrase.");
-        button.addActionListener(this);
-        innerPanel.add(button);
-
-        button = new JButton("Previous");
-        button.setActionCommand(PREVIOUS_MATCH);
-        button.setToolTipText("Find the previous occurence of the phrase.");
-        button.addActionListener(this);
-        innerPanel.add(button);
-
-        spinner = new JLabel();
-        innerPanel.add(spinner);
+//        JButton button = new JButton("Next");
+//        button.setActionCommand(NEXT_MATCH);
+//        button.setToolTipText("Find the next occurence of the phrase.");
+//        button.addActionListener(this);
+//        innerPanel.add(button);
+//
+//        button = new JButton("Previous");
+//        button.setActionCommand(PREVIOUS_MATCH);
+//        button.setToolTipText("Find the previous occurence of the phrase.");
+//        button.addActionListener(this);
+//        innerPanel.add(button);
+//
+//        spinner = new JLabel();
+//        innerPanel.add(spinner);
         
         add(toolBar, BorderLayout.PAGE_START);
     }

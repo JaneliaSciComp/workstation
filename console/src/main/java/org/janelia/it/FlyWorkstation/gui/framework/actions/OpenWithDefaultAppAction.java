@@ -15,7 +15,7 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  */
 public class OpenWithDefaultAppAction implements Action {
 
-	private Entity entity;
+	private String filePath;
 	
 	/**
 	 * Returns true if this operation is supported on the current system.
@@ -26,7 +26,11 @@ public class OpenWithDefaultAppAction implements Action {
 	}
 
 	public OpenWithDefaultAppAction(Entity entity) {
-		this.entity = entity;
+		this.filePath = EntityUtils.getAnyFilePath(entity);
+	}
+	
+	public OpenWithDefaultAppAction(String filePath) {
+		this.filePath = filePath;
 	}
 	
 	@Override
@@ -36,8 +40,7 @@ public class OpenWithDefaultAppAction implements Action {
 
 	@Override
 	public void doAction() {
-		try {
-			String filePath = EntityUtils.getAnyFilePath(entity);
+		try { 
 			if (filePath == null) {
 				throw new Exception("Entity has no file path");
 			}

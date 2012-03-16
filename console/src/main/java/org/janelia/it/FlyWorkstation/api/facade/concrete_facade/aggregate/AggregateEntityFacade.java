@@ -9,10 +9,7 @@ import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.EntityFacade;
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.OntologyFacade;
 import org.janelia.it.FlyWorkstation.api.stub.data.DuplicateDataException;
 import org.janelia.it.FlyWorkstation.api.stub.data.NoDataException;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.entity.EntityType;
+import org.janelia.it.jacs.model.entity.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -49,6 +46,11 @@ public class AggregateEntityFacade extends AggregateFacadeBase implements Entity
             }
         }
         return returnList;
+    }
+
+    @Override
+    public List<EntityAttribute> getEntityAttributes() {
+    	throw new UnsupportedOperationException();
     }
 
     @Override

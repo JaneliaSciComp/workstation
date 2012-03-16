@@ -6,7 +6,6 @@ import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
@@ -17,7 +16,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenInFinderAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenWithDefaultAppAction;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
-import org.janelia.it.FlyWorkstation.gui.framework.console.ConsoleMenuBar;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;

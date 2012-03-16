@@ -257,8 +257,8 @@ public class TaskOutline extends JPanel implements Outline {
 			
         };
 
-        DynamicColumn nameCol = dynamicTable.addColumn(COLUMN_NAME, true, false, false);
-        DynamicColumn statusCol = dynamicTable.addColumn(COLUMN_STATUS, true, false, false);
+        DynamicColumn nameCol = dynamicTable.addColumn(COLUMN_NAME, COLUMN_NAME, true, false, false, false);
+        DynamicColumn statusCol = dynamicTable.addColumn(COLUMN_STATUS, COLUMN_STATUS, true, false, false, false);
         
         
         dynamicTable.setColumnRenderer(nameCol, taskTableCellRenderer);

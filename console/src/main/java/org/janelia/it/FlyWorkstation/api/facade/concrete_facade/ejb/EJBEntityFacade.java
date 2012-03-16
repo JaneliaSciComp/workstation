@@ -7,6 +7,7 @@ import java.util.Set;
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.EntityFacade;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityAttribute;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
 
@@ -21,7 +22,12 @@ public class EJBEntityFacade implements EntityFacade {
     public List<EntityType> getEntityTypes() {
         return EJBFactory.getRemoteAnnotationBean().getEntityTypes();
     }
-
+    
+    @Override
+    public List<EntityAttribute> getEntityAttributes() {
+    	return EJBFactory.getRemoteAnnotationBean().getEntityAttributes();
+    }
+    
     @Override
     public Entity getEntityById(String entityId) {
         return EJBFactory.getRemoteAnnotationBean().getEntityById(entityId);

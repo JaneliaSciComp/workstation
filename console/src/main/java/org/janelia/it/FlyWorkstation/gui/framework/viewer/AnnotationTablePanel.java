@@ -139,8 +139,8 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
         
         dynamicTable.addMouseListener(new MouseForwarder(this, "DynamicTable->AnnotationTablePanel"));
         
-        DynamicColumn keyCol = dynamicTable.addColumn(COLUMN_KEY, true, false, false);
-        DynamicColumn valueCol = dynamicTable.addColumn(COLUMN_VALUE, true, false, false);
+        DynamicColumn keyCol = dynamicTable.addColumn(COLUMN_KEY, COLUMN_KEY, true, false, false, true);
+        DynamicColumn valueCol = dynamicTable.addColumn(COLUMN_VALUE, COLUMN_VALUE, true, false, false, true);
 	    
         for (OntologyAnnotation annotation : annotations) {
         	dynamicTable.addRow(annotation);

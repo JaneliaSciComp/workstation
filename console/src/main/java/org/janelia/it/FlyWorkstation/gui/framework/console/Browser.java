@@ -56,6 +56,7 @@ public class Browser extends JFrame implements Cloneable {
 //    private static Hashtable editorNameToTypeRegistry = new Hashtable();
 //    private static Map typeToDefaultEditorName = new HashMap();
     private static String BROWSER_POSITION = "BROWSER_POSITION_ON_SCREEN";
+	private static String SEARCH_HISTORY = "SEARCH_HISTORY";
 
     // Used by printing mechanism to ensure capacity.
     public static final String VIEW_SEARCH = "Search Toolbar";
@@ -240,6 +241,9 @@ public class Browser extends JFrame implements Cloneable {
         annotationSessionPropertyPanel = new AnnotationSessionPropertyDialog(entityOutline, ontologyOutline);
         runNeuronSeparationDialog = new RunNeuronSeparationDialog();
         searchDialog = new GeneralSearchDialog();
+
+        List<String> searchHistory = (List<String>) SessionMgr.getSessionMgr().getModelProperty(SEARCH_HISTORY);
+        searchDialog.setSearchHistory(searchHistory);
         
         ontologyOutline.setPreferredSize(new Dimension());
 //        icsTabPane = new ICSTabPane(this);
@@ -1144,7 +1148,10 @@ public class Browser extends JFrame implements Cloneable {
 //                    dataSplitPaneVertical.getDividerLocation());
             position.setHorizontalLeftDividerLocation(centerLeftHorizontalSplitPane.getDividerLocation());
             position.setHorizontalRightDividerLocation(centerRightHorizontalSplitPane.getDividerLocation());
+            
             SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, position);
+            SessionMgr.getSessionMgr().setModelProperty(SEARCH_HISTORY, searchDialog.getSearchHistory());
+            
             dispose();
         }
     }
