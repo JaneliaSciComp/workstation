@@ -1,14 +1,14 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.aggregate;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.ComputeFacade;
 import org.janelia.it.FlyWorkstation.api.stub.data.DuplicateDataException;
 import org.janelia.it.FlyWorkstation.api.stub.data.NoDataException;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.user_data.User;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -138,6 +138,28 @@ public class AggregateComputeFacade extends AggregateFacadeBase implements Compu
             }
         }
         // Only one facade should be allowing saves of data; therefore, only one item should be returned
+        if (1 < returnList.size()) {
+            throw new DuplicateDataException();
+        }
+        if (1 == returnList.size()) {
+            return returnList.get(0);
+        }
+        throw new NoDataException();
+    }
+
+    @Override
+    public boolean loginUser() throws Exception {
+        // todo This doesn't really fit unless we check n logins against n data sources.
+        Object[] aggregates = getAggregates();
+        List<Boolean> returnList = new ArrayList<Boolean>();
+        Boolean tmpUserLogin;
+        for (Object aggregate : aggregates) {
+            tmpUserLogin = ((ComputeFacade) aggregate).loginUser();
+            if (tmpUserLogin != null) {
+                returnList.add(tmpUserLogin);
+            }
+        }
+        // Only one facade should be returning user data; therefore, only one item should be returned
         if (1 < returnList.size()) {
             throw new DuplicateDataException();
         }

@@ -54,6 +54,7 @@ public class SessionMgr {
     private Browser activeBrowser;
     private String appName, appVersion;
     private Date sessionCreationTime;
+    private boolean isLoggedIn;
 
     private SessionMgr() {
         settingsFile = new File(prefsFile);
@@ -476,6 +477,21 @@ public class SessionMgr {
             handleException(e);
             return null;
         }
+    }
+
+    public boolean loginUser() {
+        try {
+            isLoggedIn =  ModelMgr.getModelMgr().loginUser();
+            return isLoggedIn;
+        }
+        catch (Exception e) {
+            handleException(e);
+            return false;
+        }
+    }
+
+    public boolean isLoggedIn() {
+        return isLoggedIn;
     }
 
     class MyBrowserListener extends WindowAdapter {

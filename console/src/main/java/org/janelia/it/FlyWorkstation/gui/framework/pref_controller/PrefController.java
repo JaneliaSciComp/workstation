@@ -269,6 +269,19 @@ public class PrefController {
      */
     private void applyButton_actionPerformed() {
         propagateApplyChanges();
+        SessionMgr.getSessionMgr().loginUser();
+        if (!SessionMgr.getSessionMgr().isLoggedIn()) {
+            Object[] options = {"Fix Login", "Exit Program"};
+            final int answer = JOptionPane.showOptionDialog(null, "Please correct your login information.", "Login Information Invalid",
+                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+            if (answer == 0) {
+                return;
+            }
+            else {
+                SessionMgr.getSessionMgr().systemExit();
+            }
+
+        }
     }
 
     /**
@@ -277,6 +290,19 @@ public class PrefController {
      */
     private void okButton_actionPerformed() {
         propagateApplyChanges();
+        SessionMgr.getSessionMgr().loginUser();
+        if (!SessionMgr.getSessionMgr().isLoggedIn()) {
+            Object[] options = {"Fix Login", "Exit Program"};
+            final int answer = JOptionPane.showOptionDialog(null, "Please correct your login information.", "Login Information Invalid", 
+                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+            if (answer == 0) {
+                return;
+            }
+            else {
+                SessionMgr.getSessionMgr().systemExit();
+            }
+
+        }
         tabPane.removeAll();
         // This will clear out the panels and nuke the listeners.
         for (Object o : orderedEditorMap.values()) {
@@ -318,6 +344,18 @@ public class PrefController {
      * tabs, and close the frame.
      */
     private void cancelDialog() {
+        if (!SessionMgr.getSessionMgr().isLoggedIn()) {
+            Object[] options = {"Fix Login", "Exit Program"};
+            final int answer = JOptionPane.showOptionDialog(null, "Please correct your login information.", "Login Information Invalid",
+                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+            if (answer == 0) {
+                return;
+            }
+            else {
+                SessionMgr.getSessionMgr().systemExit();
+            }
+
+        }
         for (int x = 0; x < tabPane.getComponentCount(); x++) {
             if (((PrefEditor) tabPane.getComponentAt(x)).hasChanged())
                 ((PrefEditor) tabPane.getComponentAt(x)).cancelChanges();

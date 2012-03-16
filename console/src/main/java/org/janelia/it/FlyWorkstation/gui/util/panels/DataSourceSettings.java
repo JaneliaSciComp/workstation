@@ -32,7 +32,6 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
     JPanel ejbPanel = new JPanel();
     JPasswordField passwordTextField;
     JLabel passwordLabel = new JLabel("Password:");
-    JCheckBox saveCheckBox;
     JLabel loginLabel = new JLabel("User Name:");
     JTextField loginTextField = new StandardTextField();
     TitledBorder titledBorder2;
@@ -111,12 +110,13 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
         userPassword = new String(passwordTextField.getPassword());
 
         if ((!userLogin.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME))) || (!userPassword.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_PASSWORD)))) {
-            if (saveCheckBox.isSelected()) {
-                SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, userLogin);
-                SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_PASSWORD, userPassword);
+            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, userLogin);
+            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_PASSWORD, userPassword);
+            boolean loginSuccess = SessionMgr.getSessionMgr().loginUser();
+            if (!loginSuccess) {
+
             }
-            PropertyConfigurator.getProperties().setProperty(SessionMgr.USER_NAME, userLogin);
-            PropertyConfigurator.getProperties().setProperty(SessionMgr.USER_PASSWORD, userPassword);
+            
             // End login apply code
 
             // Begin Datasource directory selection apply code
@@ -175,7 +175,6 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
             public void focusLost(FocusEvent e) {
             }
         });
-        saveCheckBox = new JCheckBox("Save Login Information");
         loginTextField = new StandardTextField(userLogin, 10);
         loginTextField.setMaximumSize(new Dimension(100, 20));
         loginTextField.addFocusListener(new FocusListener() {
@@ -190,7 +189,6 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         ejbPanel.setBorder(titledBorder2);
         ejbPanel.setLayout(new BoxLayout(ejbPanel, BoxLayout.Y_AXIS));
-        saveCheckBox.setSelected(true);
         JPanel userPassPanel = new JPanel();
         userPassPanel.setLayout(new BoxLayout(userPassPanel, BoxLayout.X_AXIS));
         userPassPanel.add(loginLabel);
@@ -200,14 +198,9 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
         userPassPanel.add(passwordLabel);
         userPassPanel.add(Box.createHorizontalStrut(5));
         userPassPanel.add(passwordTextField);
-        JPanel checkPanel = new JPanel();
-        checkPanel.setLayout(new BoxLayout(checkPanel, BoxLayout.X_AXIS));
-        checkPanel.add(saveCheckBox);
         ejbPanel.add(Box.createVerticalStrut(10));
         ejbPanel.add(userPassPanel);
         ejbPanel.add(Box.createVerticalStrut(10));
-        ejbPanel.add(checkPanel);
-        ejbPanel.add(Box.createVerticalStrut(5));
 
         add(Box.createVerticalStrut(10));
         add(ejbPanel);

@@ -125,12 +125,21 @@ public class ConsoleApp {
 //            FacadeManager.addProtocolToUseList("sage");
 
 //            splash.setVisible(false);
-            if (null==sessionMgr.getModelProperty(SessionMgr.USER_NAME)  || "".equals(sessionMgr.getModelProperty(SessionMgr.USER_NAME))
-                /*&& modelMgr.getNumberOfLoadedGenomeVersions() == 0*/) {
-                final int answer = JOptionPane.showConfirmDialog(null, "Please enter your login information.", "Information Required", JOptionPane.OK_CANCEL_OPTION);
-                if (answer != JOptionPane.CANCEL_OPTION) {
+            // Assuming that the user has entered the login/password information, now validate
+            SessionMgr.getSessionMgr().loginUser();
+            if (!SessionMgr.getSessionMgr().isLoggedIn()) {
+                Object[] options = {"Enter Login", "Exit Program"};
+                final int answer = JOptionPane.showOptionDialog(null, "Please enter your login information.", "Information Required",
+                        JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+                if (answer == 0) {
                     PrefController.getPrefController().getPrefInterface(DataSourceSettings.class, null);
                 }
+                else {
+                    SessionMgr.getSessionMgr().systemExit();
+                }
+            }
+            else {
+                System.out.println("Successfully logged in user "+SessionMgr.getUsername());
             }
 
         	// Make sure we can access the data mount

@@ -1,11 +1,11 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 
-import java.util.List;
-
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.ComputeFacade;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.user_data.User;
+
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -45,6 +45,7 @@ public class EJBComputeFacade implements ComputeFacade {
         EJBFactory.getRemoteComputeBean().deleteTaskById(taskId);
     }
 
+
     @Override
     public void submitJob(String processDefName, Long taskId) throws Exception {
     	if (taskId == null) throw new IllegalArgumentException("Task id may not be null");
@@ -74,6 +75,12 @@ public class EJBComputeFacade implements ComputeFacade {
     @Override
     public User saveOrUpdateUser(User user) throws Exception {
         return EJBFactory.getRemoteComputeBean().saveOrUpdateUser(user);
+    }
+
+    @Override
+    public boolean loginUser() throws Exception {
+        return EJBFactory.getRemoteComputeBean().login(SessionMgr.getUsername(),
+                (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_PASSWORD));
     }
 
     @Override
