@@ -8,6 +8,7 @@ package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.xml;
  */
 
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.shared.utils.FileUtil;
 
 import java.io.*;
@@ -42,7 +43,7 @@ public class ValidationManager {
     private static String fileSep = System.getProperty("file.separator");
 
     //----------------------------OBJECT MEMBER VARIABLES
-    private File validationPrefFile = new File(System.getProperty("user.home") + fileSep + "x" + fileSep + "FlyWorkstation" + fileSep + "userPrefs." + VALIDATION_PROP_NAME);
+    private File validationPrefFile = new File(SessionMgr.getSessionMgr().getApplicationOutputDirectory() + fileSep + "userPrefs." + VALIDATION_PROP_NAME);
 
     private List filesValidatedInSession = null;
 

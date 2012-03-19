@@ -1,14 +1,10 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+
+import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
-import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.KeyStroke;
-
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 
 /**
  * Created by IntelliJ IDEA.
@@ -39,7 +35,7 @@ public class ServicesMenu extends JMenu {
             }
         });
         
-        searchMenuItem.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, java.awt.Event.META_MASK)); 
+        searchMenuItem.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, java.awt.Event.META_MASK));
         
         // Add the tools
         add(neuronSeparationMenuItem);

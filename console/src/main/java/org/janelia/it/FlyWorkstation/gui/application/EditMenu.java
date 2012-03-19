@@ -22,8 +22,6 @@ import java.io.FileWriter;
  * Initially written by: Peter Davies
  */
 public class EditMenu extends JMenu {
-    private static String fileSep = File.separator;
-    private static final String EXPORT_IMPORT_LOCATION = "PreferenceExportImportLocation";
     private JMenuItem menuUnDo;
     private JMenuItem menuReDo;
     private JMenuItem menuCut;
@@ -35,13 +33,16 @@ public class EditMenu extends JMenu {
     private JMenuItem menuPrefExport;
     private JMenuItem menuPrefImport;
     private JMenu menuSetPreferences;
-    private String userHomeDir = System.getProperty("user.home") + fileSep + "x" + fileSep + "FlyWorkstation";
+    private static String fileSep = File.separator;
+    private static final String EXPORT_IMPORT_LOCATION = "PreferenceExportImportLocation";
+    private String userHomeDir;
     private final Browser browser;
     private Action copyAction;
     private Action cutAction;
     private Action pasteAction;
 
     public EditMenu(Browser browser) {
+        userHomeDir = SessionMgr.getSessionMgr().getApplicationOutputDirectory();
         setText("Edit");
         this.browser = browser;
         this.setMnemonic('E');
@@ -72,24 +73,24 @@ public class EditMenu extends JMenu {
 //        menuReDo.setEnabled(false);
 //        add(menuReDo);
 //        add(new JSeparator());
-        cutAction = new MyCutAction();
-        cutAction.putValue(Action.NAME, "Cut");
-        menuCut = new JMenuItem(cutAction);
-        menuCut.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_X, java.awt.Event.META_MASK));
-        add(menuCut);
-
-        copyAction = new MyCopyAction();
-        copyAction.putValue(Action.NAME, "Copy");
-        menuCopy = new JMenuItem(copyAction);
-        menuCopy.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, java.awt.Event.META_MASK));
-        add(menuCopy);
-
-        pasteAction = new MyPasteAction();
-        pasteAction.putValue(Action.NAME, "Paste");
-        menuPaste = new JMenuItem(pasteAction);
-        menuPaste.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_V, java.awt.Event.META_MASK));
-        add(menuPaste);
-
+//        cutAction = new MyCutAction();
+//        cutAction.putValue(Action.NAME, "Cut");
+//        menuCut = new JMenuItem(cutAction);
+//        menuCut.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_X, java.awt.Event.META_MASK));
+//        add(menuCut);
+//
+//        copyAction = new MyCopyAction();
+//        copyAction.putValue(Action.NAME, "Copy");
+//        menuCopy = new JMenuItem(copyAction);
+//        menuCopy.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, java.awt.Event.META_MASK));
+//        add(menuCopy);
+//
+//        pasteAction = new MyPasteAction();
+//        pasteAction.putValue(Action.NAME, "Paste");
+//        menuPaste = new JMenuItem(pasteAction);
+//        menuPaste.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_V, java.awt.Event.META_MASK));
+//        add(menuPaste);
+//
         menuSetPreferences = new JMenu("Preferences");
         menuSetPreferences.setMnemonic('P');
         add(menuSetPreferences);
@@ -246,6 +247,25 @@ public class EditMenu extends JMenu {
         PrefController.getPrefController().getPrefInterface(prefLevel, browser);
     }
 
+    /**
+     * This method exists to help the pref file export and import actions.
+     */
+    private void copyFile(File oldFile, File newFile) {
+        try {
+            FileReader in = new FileReader(oldFile);
+            FileWriter out = new FileWriter(newFile);
+            int c;
+
+            while ((c = in.read()) != -1) out.write(c);
+
+            in.close();
+            out.close();
+        }
+        catch (Exception ex) {
+            SessionMgr.getSessionMgr().handleException(ex);
+        }
+    }
+
 //    private void unDo_actionPerformed(ActionEvent e) {
 //        //  try{
 //        ModifyManager.getModifyMgr().undoCommand();
@@ -272,25 +292,6 @@ public class EditMenu extends JMenu {
 //        }
 //        */
 //    }
-
-    /**
-     * This method exists to help the pref file export and import actions.
-     */
-    private void copyFile(File oldFile, File newFile) {
-        try {
-            FileReader in = new FileReader(oldFile);
-            FileWriter out = new FileWriter(newFile);
-            int c;
-
-            while ((c = in.read()) != -1) out.write(c);
-
-            in.close();
-            out.close();
-        }
-        catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
-        }
-    }
 
 //    class CommandObserver extends ModifyManagerObserverAdapter {
 //        public void noteCanUndo(String undoString) {

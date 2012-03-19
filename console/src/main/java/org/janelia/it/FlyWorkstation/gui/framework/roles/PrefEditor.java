@@ -2,11 +2,10 @@ package org.janelia.it.FlyWorkstation.gui.framework.roles;
 
 public interface PrefEditor {
 
-    public static final String APPLICATION_SETTINGS = "Application Settings";
     public static final String[] NO_DELAYED_CHANGES = new String[0];
 
     /**
-     * @return String indicating while panel group this panel belongs to
+     * @return String indicating which panel group this panel belongs to
      */
     public String getPanelGroup();
 

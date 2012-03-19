@@ -64,7 +64,8 @@ public class ConsoleApp {
             sessionMgr.startExternalHttpListener(30000);
             sessionMgr.startAxisServer(30001);
             sessionMgr.setModelProperty("ShowInternalDataSourceInDialogs", internal);
-            sessionMgr.setModelProperty("SessionMgr.DisplayFreeMemoryProperty", false);
+            sessionMgr.setModelProperty(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY, false);
+            sessionMgr.setModelProperty(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY, false);
             //Exception Handler Registration
 //            sessionMgr.registerExceptionHandler(new PrintStackTraceHandler());
             sessionMgr.registerExceptionHandler(new UserNotificationExceptionHandler());
@@ -103,10 +104,11 @@ public class ConsoleApp {
 //                    client.gui.other.panels.BackupPanel.class,
 //                    client.gui.other.panels.BackupPanel.class);
             sessionMgr.registerPreferenceInterface(ApplicationSettingsPanel.class, ApplicationSettingsPanel.class);
+            sessionMgr.registerPreferenceInterface(DataSourceSettings.class, DataSourceSettings.class);
+//            sessionMgr.registerPreferenceInterface(ToolSettingsPanel.class, ToolSettingsPanel.class);
 //            sessionMgr.registerPreferenceInterface(
 //                    client.gui.other.panels.ViewSettingsPanel.class,
 //                    client.gui.other.panels.ViewSettingsPanel.class);
-            sessionMgr.registerPreferenceInterface(DataSourceSettings.class, DataSourceSettings.class);
 //            sessionMgr.registerPreferenceInterface(
 //                    client.gui.other.panels.TransTransPanel.class,
 //                    client.gui.other.panels.TransTransPanel.class);

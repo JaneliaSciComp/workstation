@@ -74,7 +74,7 @@ public class SessionMgr {
         readSettingsFile();
         if (getModelProperty(DISPLAY_FREE_MEMORY_METER_PROPERTY) == null)
             setModelProperty(DISPLAY_FREE_MEMORY_METER_PROPERTY, true);
-//        if (getModelProperty(DISPLAY_SUB_EDITOR_PROPERTY) == null) setModelProperty(DISPLAY_SUB_EDITOR_PROPERTY, true);
+        if (getModelProperty(DISPLAY_SUB_EDITOR_PROPERTY) == null) { setModelProperty(DISPLAY_SUB_EDITOR_PROPERTY, true); }
 //      if (getModelProperty(PROPERTY_CREATION_RULES)!=null) {
 //        Set rules= (Set)getModelProperty(PROPERTY_CREATION_RULES);
 //          for (Object rule : rules) {
@@ -492,6 +492,10 @@ public class SessionMgr {
 
     public boolean isLoggedIn() {
         return isLoggedIn;
+    }
+
+    public String getApplicationOutputDirectory() {
+        return prefsDir;
     }
 
     class MyBrowserListener extends WindowAdapter {

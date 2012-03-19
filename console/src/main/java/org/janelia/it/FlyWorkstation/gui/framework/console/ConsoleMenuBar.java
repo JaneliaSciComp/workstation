@@ -1,7 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import org.janelia.it.FlyWorkstation.gui.application.EditMenu;
-
 import javax.swing.*;
 import java.awt.*;
 import java.util.HashMap;
@@ -28,7 +26,7 @@ public class ConsoleMenuBar extends JMenuBar {
 
     protected JLabel staticImageLabel, animatedImageLabel;
     protected FileMenu fileMenu;
-    protected EditMenu editMenu;
+//    protected EditMenu editMenu;
     protected JMenu toolsMenu;
     protected JMenu servicesMenu;
     protected JMenu ontologyMenu;
@@ -50,7 +48,7 @@ public class ConsoleMenuBar extends JMenuBar {
 
     private void constructMenus() {
         fileMenu = new FileMenu(console);
-        editMenu = new EditMenu(console);
+//        editMenu = new EditMenu(console);
         toolsMenu = new ToolsMenu(console);
         servicesMenu = new ServicesMenu(console);
         ontologyMenu = new OntologyMenu(console);
@@ -60,7 +58,7 @@ public class ConsoleMenuBar extends JMenuBar {
 
     private void addMenus() {
         add(fileMenu);
-        add(editMenu);
+//        add(editMenu);
         add(toolsMenu);
         add(servicesMenu);
         add(viewMenu);

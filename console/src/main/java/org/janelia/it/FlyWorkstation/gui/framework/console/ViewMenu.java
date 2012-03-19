@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.console;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 
 /**
  * Created by IntelliJ IDEA.
@@ -12,21 +13,13 @@ import java.awt.event.ActionListener;
  */
 public class ViewMenu extends JMenu {
     Browser console;
-    JMenuItem searchMenuItem;
     JMenuItem ontologyMenuItem;
-    JMenuItem outlinesMenuItem;
+    JMenuItem dataMenuItem;
 
     public ViewMenu(Browser console) {
         super("View");
         this.setMnemonic('V');
         this.console = console;
-
-        searchMenuItem = new JCheckBoxMenuItem("Search", false);
-        searchMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                viewActionPerformed(Browser.VIEW_SEARCH);
-            }
-        });
 
         ontologyMenuItem = new JCheckBoxMenuItem("Ontology Editor", true);
         ontologyMenuItem.addActionListener(new ActionListener() {
@@ -34,24 +27,23 @@ public class ViewMenu extends JMenu {
                 viewActionPerformed(Browser.VIEW_ONTOLOGY);
             }
         });
+        ontologyMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, java.awt.Event.META_MASK));
 
-        outlinesMenuItem = new JCheckBoxMenuItem("Outlines", true);
-        outlinesMenuItem.addActionListener(new ActionListener() {
+        dataMenuItem = new JCheckBoxMenuItem("Data Panel", true);
+        dataMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 viewActionPerformed(Browser.VIEW_OUTLINES);
             }
         });
+        dataMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, java.awt.Event.META_MASK));
 
         addMenuItems();
     }
 
     private void addMenuItems() {
         removeAll();
-
-        add(searchMenuItem);
+        add(dataMenuItem);
         add(ontologyMenuItem);
-        add(outlinesMenuItem);
-
     }
 
     private void viewActionPerformed(String viewComponent) {

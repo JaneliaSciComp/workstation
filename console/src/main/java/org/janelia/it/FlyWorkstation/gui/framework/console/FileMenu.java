@@ -17,6 +17,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,12 +31,18 @@ import java.util.StringTokenizer;
  * Time: 1:16 PM
  */
 public class FileMenu extends JMenu {
+    private static String fileSep = File.separator;
+    private static final String EXPORT_IMPORT_LOCATION = "PreferenceExportImportLocation";
     Browser browser;
     JMenuItem menuOpenDataSource;
     JMenuItem menuFileExit;
     JMenuItem menuFilePrint;
     JMenuItem menuListOpen;
     JMenuItem setLoginMI;
+    private JMenu menuSetPreferences;
+    private JMenuItem menuPrefSystem;
+//    private JMenuItem menuPrefExport;
+//    private JMenuItem menuPrefImport;
 
     ArrayList<JMenuItem> addedMenus = new ArrayList<JMenuItem>();
     //    private boolean workSpaceHasBeenSaved = false;
@@ -76,6 +84,10 @@ public class FileMenu extends JMenu {
             }
         });
 
+        menuSetPreferences = new JMenu("Preferences");
+        menuSetPreferences.setMnemonic('P');
+        add(menuSetPreferences);
+
         menuFilePrint = new JMenuItem("Print Screen...", 'P');
         menuFilePrint.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -90,6 +102,121 @@ public class FileMenu extends JMenu {
             }
         });
 
+        menuPrefSystem = new JMenuItem("System...", 'S');
+//        menuPrefSystem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F3, InputEvent.CTRL_MASK, false));
+        menuPrefSystem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                establishPrefController(PrefController.SYSTEM_EDITOR);
+            }
+        });
+        menuSetPreferences.add(menuPrefSystem);
+
+//        menuPrefExport = new JMenuItem("Export Preference File...", 'x');
+//        menuPrefExport.addActionListener(new ActionListener() {
+//            public void actionPerformed(ActionEvent e) {
+//                try {
+//                    String targetDir = userHomeDir;
+//
+//                    if (SessionMgr.getSessionMgr().getModelProperty(EXPORT_IMPORT_LOCATION) != null) {
+//                        targetDir = (String) SessionMgr.getSessionMgr().getModelProperty(EXPORT_IMPORT_LOCATION);
+//                    }
+//
+//                    FileChooser tmpExportChooser = new FileChooser(userHomeDir);
+//                    tmpExportChooser.setDialogTitle("Select File To Export");
+//
+//                    int ans = tmpExportChooser.showDialog(FileMenu.this.browser, "OK");
+//
+//                    if (ans == FileChooser.CANCEL_OPTION) {
+//                        return;
+//                    }
+//
+//                    File targetToExport = tmpExportChooser.getSelectedFile();
+//
+//                    if (targetToExport == null) {
+//                        return;
+//                    }
+//
+//                    FileChooser tmpDestChooser = new FileChooser(targetDir);
+//                    tmpDestChooser.setDialogTitle("Select File Destination");
+//                    tmpDestChooser.setFileSelectionMode(FileChooser.DIRECTORIES_ONLY);
+//                    ans = tmpDestChooser.showDialog(FileMenu.this.browser, "OK");
+//
+//                    if (ans == FileChooser.CANCEL_OPTION) {
+//                        return;
+//                    }
+//
+//                    // Copy file to targetDir here.
+//                    String destDir = tmpDestChooser.getSelectedFile().getAbsolutePath();
+//
+//                    if ((destDir == null) || destDir.equals("")) {
+//                        return;
+//                    }
+//
+//                    File newFile = new File(destDir + fileSep + targetToExport.getName());
+//                    copyFile(targetToExport, newFile);
+//
+//                    /**
+//                     * Save preference if the user has changed export/import directory.
+//                     * Assuming that exports and imports occur in from the same directory.
+//                     */
+//                    if ((destDir != null) && !destDir.equals(targetDir)) {
+//                        SessionMgr.getSessionMgr().setModelProperty(EXPORT_IMPORT_LOCATION, destDir);
+//                    }
+//                }
+//                catch (Exception ex) {
+//                    SessionMgr.getSessionMgr().handleException(ex);
+//                }
+//            }
+//        });
+//        menuSetPreferences.add(menuPrefExport);
+//
+//        menuPrefImport = new JMenuItem("Import Preference File...", 'I');
+//        menuPrefImport.addActionListener(new ActionListener() {
+//            public void actionPerformed(ActionEvent e) {
+//                try {
+//                    String targetDir = userHomeDir;
+//
+//                    if (SessionMgr.getSessionMgr().getModelProperty(EXPORT_IMPORT_LOCATION) != null) {
+//                        targetDir = (String) SessionMgr.getSessionMgr().getModelProperty(EXPORT_IMPORT_LOCATION);
+//                    }
+//
+//                    FileChooser tmpImportChooser = new FileChooser(targetDir);
+//                    tmpImportChooser.setDialogTitle("Select File To Import");
+//
+//                    int ans = tmpImportChooser.showDialog(FileMenu.this.browser, "OK");
+//
+//                    if (ans == FileChooser.CANCEL_OPTION) {
+//                        return;
+//                    }
+//
+//                    File targetToImport = tmpImportChooser.getSelectedFile();
+//
+//                    if (targetToImport == null) {
+//                        return;
+//                    }
+//
+//                    String destDir = userHomeDir + fileSep;
+//                    File newFile = new File(destDir + targetToImport.getName());
+//                    copyFile(targetToImport, newFile);
+//
+//                    /**
+//                     * Save preference if the user has changed export/import directory.
+//                     * Assuming that exports and imports occur in from the same directory.
+//                     */
+//                    String newDir = tmpImportChooser.getCurrentDirectory().getAbsolutePath();
+//
+//                    if ((newDir != null) && !newDir.equals(targetDir)) {
+//                        SessionMgr.getSessionMgr().setModelProperty(EXPORT_IMPORT_LOCATION, newDir);
+//                    }
+//                }
+//                catch (Exception ex) {
+//                    SessionMgr.getSessionMgr().handleException(ex);
+//                }
+//            }
+//        });
+//        menuSetPreferences.add(menuPrefImport);
+
+
         addMenuItems();
 
 //        ModelMgr.getModelMgr().addModelMgrObserver(new MyModelManagerObserver());
@@ -102,6 +229,7 @@ public class FileMenu extends JMenu {
         add(setLoginMI);
         add(new JSeparator());
 //        add(menuListOpen);
+        add(menuSetPreferences);
         add(menuFilePrint);
         if (addedMenus.size() > 0) add(new JSeparator());
         for (JMenuItem addedMenu : addedMenus) {
@@ -210,6 +338,30 @@ public class FileMenu extends JMenu {
         openDataSourceDialog.setLocation((screenSize.width - frameSize.width) / 2, (screenSize.height - frameSize.height) / 2);
         mainPanel.getRootPane().setDefaultButton(okButton);
         openDataSourceDialog.setVisible(true);
+    }
+
+    private void establishPrefController(String prefLevel) {
+        browser.repaint();
+        PrefController.getPrefController().getPrefInterface(prefLevel, browser);
+    }
+
+    /**
+     * This method exists to help the pref file export and import actions.
+     */
+    private void copyFile(File oldFile, File newFile) {
+        try {
+            FileReader in = new FileReader(oldFile);
+            FileWriter out = new FileWriter(newFile);
+            int c;
+
+            while ((c = in.read()) != -1) out.write(c);
+
+            in.close();
+            out.close();
+        }
+        catch (Exception ex) {
+            SessionMgr.getSessionMgr().handleException(ex);
+        }
     }
 
 //    class MyModelManagerObserver extends ModelMgrObserverAdapter {

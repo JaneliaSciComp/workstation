@@ -34,6 +34,7 @@ public class PrefController {
 
     private static final String DEFAULT = "Default";
     public static final String SYSTEM_EDITOR = "System";
+    public static final String TOOLS_EDITOR = "Tools";
     // List and offer the Panel Categories
     private JFrame parentFrame = null;
     private JDialog mainDialog;
