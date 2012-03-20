@@ -15,6 +15,7 @@ import java.awt.event.ActionListener;
 public class ServicesMenu extends JMenu {
     private JMenuItem neuronSeparationMenuItem;
     private JMenuItem searchMenuItem;
+    private JMenuItem patternSearchMenuItem;
     private JFrame parentFrame;
     
     public ServicesMenu(Browser console) {
@@ -34,11 +35,20 @@ public class ServicesMenu extends JMenu {
             	SessionMgr.getSessionMgr().getActiveBrowser().getSearchDialog().showDialog();
             }
         });
+
+        patternSearchMenuItem = new JMenuItem("Pattern Annotation Search...");
+        patternSearchMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                SessionMgr.getSessionMgr().getActiveBrowser().getPatternSearchDialog().showDialog();
+            }
+        });
         
         searchMenuItem.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, java.awt.Event.META_MASK));
         
         // Add the tools
         add(neuronSeparationMenuItem);
         add(searchMenuItem);
+        add(patternSearchMenuItem);
     }
 }

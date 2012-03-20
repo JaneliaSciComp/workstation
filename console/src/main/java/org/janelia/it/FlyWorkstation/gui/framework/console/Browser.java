@@ -7,6 +7,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestStatus
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationSessionPropertyDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.GeneralSearchDialog;
+import org.janelia.it.FlyWorkstation.gui.dialogs.PatternSearchDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.RunNeuronSeparationDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.*;
 import org.janelia.it.FlyWorkstation.gui.framework.search.SearchToolbar;
@@ -102,6 +103,7 @@ public class Browser extends JFrame implements Cloneable {
     private AnnotationSessionPropertyDialog annotationSessionPropertyPanel;
     private RunNeuronSeparationDialog runNeuronSeparationDialog;
     private GeneralSearchDialog searchDialog;
+    private PatternSearchDialog patternSearchDialog;
     private String mostRecentFileOutlinePath;
     private JTabbedPane icsTabPane = new JTabbedPane();
     private int rightDividerLocation;
@@ -1241,6 +1243,10 @@ public class Browser extends JFrame implements Cloneable {
     public RunNeuronSeparationDialog getRunNeuronSeparationDialog() {
 		return runNeuronSeparationDialog;
 	}
+
+    public PatternSearchDialog getPatternSearchDialog() {
+        return patternSearchDialog;
+    }
 
 	public GeneralSearchDialog getSearchDialog() {
 		return searchDialog;
