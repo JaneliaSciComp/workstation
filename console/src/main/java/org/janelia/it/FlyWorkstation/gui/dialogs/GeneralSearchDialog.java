@@ -268,7 +268,7 @@ public class GeneralSearchDialog extends ModalDialog {
 					}
 				});
 				for(EntityAttribute attr : attrs) {
-					resultsTable.addColumn(SolrUtils.getFieldName(attr.getName()), attr.getName(), false, false, true, true);	
+					resultsTable.addColumn(SolrUtils.getDynamicFieldName(attr.getName()), attr.getName(), false, false, true, true);	
 				}
 			}
 
