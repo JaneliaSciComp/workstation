@@ -1,15 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
-import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.HashSet;
-
-import javax.swing.*;
-
 import loci.plugins.config.SpringUtilities;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -22,6 +13,13 @@ import org.janelia.it.jacs.model.tasks.fileDiscovery.MCFODataPipelineTask;
 import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
 import org.janelia.it.jacs.model.user_data.Node;
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.HashSet;
+
 /**
  * A dialog for starting a continuous neuron separation pipeline task which runs every N minutes and discovers new files
  * to run neuron separation on. Once the task is started, it can be managed with the TaskOutline. 
@@ -30,31 +28,50 @@ import org.janelia.it.jacs.model.user_data.Node;
  */
 public class RunNeuronSeparationDialog extends ModalDialog {
 
-	private static final String INPUT_DIR = "/groups/flylight/flylight/%USER%/data";
+	public static final String PREF_NEURON_SERVICE_INPUT_DIR    =           "NeuronSeparationService.InputDir";
+    public static final String PREF_NEURON_SERVICE_FOLDER_NAME  =           "NeuronSeparationService.TopLevelFolderName";
+    public static final String PREF_NEURON_SERVICE_RERUN_INTERVAL_VALUE =   "NeuronSeparationService.ReRunValue";
+    public static final String PREF_NEURON_SERVICE_RERUN_SCALE          =   "NeuronSeparationService.ReRunScale";
+    public static final String SCALE_DAYS   = "Days";
+    public static final String SCALE_MINUTES= "Minutes";
+    
+    private static final String INPUT_DIR = "";
 	private static final String TOP_LEVEL_FOLDER_NAME = "%USER%'s Single Neuron Data";
-	private static final int DEFAULT_RERUN_INTERVAL_MINS = 1;
+	private static final String DEFAULT_RERUN_INTERVAL_VALUE = "1";
 	private static final int DEFAULT_STATUS_CHECK_INTERVAL_SECS = 30;
 	
-	private static final String TOOLTIP_INPUT_DIR = "Root directory of the tree that should be loaded into the database";
-	private static final String TOOLTIP_TOP_LEVEL_ENTITY = "Name of the database entity which should be loaded with the data";
-	private static final String TOOLTIP_RERUN_INTERVAL = "Once a run is complete, how soon should we re-run it?";
-	private static final String TOOLTIP_REFRESH = "Run a new separation for samples that already have a separation result?";
-    private static final String TOOLTIP_CONTINUOUSLY = "Continuously look for new LSM Pairs until I say stop";
+	private static final String TOOLTIP_INPUT_DIR       = "Root directory of the tree that should be loaded into the database";
+	private static final String TOOLTIP_TOP_LEVEL_FOLDER= "Name of the folder which should be loaded with the data";
+	private static final String TOOLTIP_RERUN_INTERVAL  = "Once a run is complete, how soon should we re-run it?";
+	private static final String TOOLTIP_REFRESH         = "Run a new separation for samples that already have a separation result?";
+    private static final String TOOLTIP_CONTINUOUSLY    = "Continuously look for new LSM Pairs until I say stop";
 
     private final JPanel attrPanel;    
     private final JTextField inputDirectoryField;
     private final JTextField topLevelFolderField;
     private final JTextField rerunIntervalField;
+    private final ButtonGroup scaleGroup;
+    private final JRadioButton dayRadioButton;
+    private final JRadioButton minuteRadioButton;
     private final JCheckBox refreshCheckbox;
     private final JCheckBox runContinuouslyCheckBox;
     
     public RunNeuronSeparationDialog() {
     	
-        setTitle("Launch Periodic Neuron Separation Task");
+        setTitle("Launch Neuron Separation");
         
         attrPanel = new JPanel(new SpringLayout());
         attrPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10), 
         		BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Task Parameters")));
+
+        JLabel topLevelFolderLabel = new JLabel("Top Level Folder Name");
+        topLevelFolderLabel.setToolTipText(TOOLTIP_TOP_LEVEL_FOLDER);
+        topLevelFolderField = new JTextField(40);
+        topLevelFolderField.setText(filter(TOP_LEVEL_FOLDER_NAME));
+        topLevelFolderField.setToolTipText(TOOLTIP_TOP_LEVEL_FOLDER);
+        topLevelFolderLabel.setLabelFor(topLevelFolderField);
+        attrPanel.add(topLevelFolderLabel);
+        attrPanel.add(topLevelFolderField);
 
         JLabel inputDirectoryLabel = new JLabel("Input Directory (Linux mounted)");
         inputDirectoryLabel.setToolTipText(TOOLTIP_INPUT_DIR);
@@ -65,23 +82,25 @@ public class RunNeuronSeparationDialog extends ModalDialog {
         attrPanel.add(inputDirectoryLabel);
         attrPanel.add(inputDirectoryField);
 
-        JLabel topLevelFolderLabel = new JLabel("Top Level Entity Name");
-        topLevelFolderLabel.setToolTipText(TOOLTIP_TOP_LEVEL_ENTITY);
-        topLevelFolderField = new JTextField(40);
-        topLevelFolderField.setText(filter(TOP_LEVEL_FOLDER_NAME));
-        topLevelFolderField.setToolTipText(TOOLTIP_TOP_LEVEL_ENTITY);
-        topLevelFolderLabel.setLabelFor(topLevelFolderField);
-        attrPanel.add(topLevelFolderLabel);
-        attrPanel.add(topLevelFolderField);
-        
-        JLabel rerunIntervalLabel = new JLabel("Re-run Interval (minutes)");
+        JLabel rerunIntervalLabel = new JLabel("Re-run Interval");
         rerunIntervalLabel.setToolTipText(TOOLTIP_RERUN_INTERVAL);
-        rerunIntervalField = new JTextField(10);
-        rerunIntervalField.setText(DEFAULT_RERUN_INTERVAL_MINS+"");
+        rerunIntervalField = new JTextField(5);
+        rerunIntervalField.setText(DEFAULT_RERUN_INTERVAL_VALUE + "");
         rerunIntervalField.setToolTipText(TOOLTIP_RERUN_INTERVAL);
         rerunIntervalLabel.setLabelFor(rerunIntervalField);
+        dayRadioButton = new JRadioButton("Day(s)");
+        minuteRadioButton = new JRadioButton("Minute(s)");
+        dayRadioButton.setSelected(true);
+        scaleGroup = new ButtonGroup();
+        scaleGroup.add(minuteRadioButton);
+        scaleGroup.add(dayRadioButton);
+        JPanel rerunPanel = new JPanel();
+        rerunPanel.setLayout(new BoxLayout(rerunPanel, BoxLayout.X_AXIS));
+        rerunPanel.add(rerunIntervalField);
+        rerunPanel.add(minuteRadioButton);
+        rerunPanel.add(dayRadioButton);
         attrPanel.add(rerunIntervalLabel);
-        attrPanel.add(rerunIntervalField);
+        attrPanel.add(rerunPanel);
 
         JLabel refreshLabel = new JLabel("Re-run samples with existing results?");
         refreshLabel.setToolTipText(TOOLTIP_REFRESH);
@@ -128,6 +147,26 @@ public class RunNeuronSeparationDialog extends ModalDialog {
         buttonPane.add(cancelButton);
         
         add(buttonPane, BorderLayout.SOUTH);
+        
+        // Get the user prefs and set
+        String userFolderName = (String)SessionMgr.getSessionMgr().getModelProperty(PREF_NEURON_SERVICE_FOLDER_NAME);
+        String userInputDir   = (String)SessionMgr.getSessionMgr().getModelProperty(PREF_NEURON_SERVICE_INPUT_DIR);
+        String userRerunValue = (String)SessionMgr.getSessionMgr().getModelProperty(PREF_NEURON_SERVICE_RERUN_INTERVAL_VALUE);
+        String userRerunScale = (String)SessionMgr.getSessionMgr().getModelProperty(PREF_NEURON_SERVICE_RERUN_SCALE);
+        if (null!=userFolderName) { topLevelFolderField.setText(userFolderName); }
+        if (null!=userInputDir)   { inputDirectoryField.setText(userInputDir); }
+        if (null!=userRerunValue) { 
+            rerunIntervalField.setText(userRerunValue); 
+        }
+        else {
+            rerunIntervalField.setText("1");
+        }
+        if (null!=userRerunScale) {
+            if (SCALE_DAYS.equals(userRerunScale)) { dayRadioButton.setSelected(true); }
+            else if (SCALE_MINUTES.equals(userRerunScale)) {
+                minuteRadioButton.setSelected(true);}
+            else { dayRadioButton.setSelected(true); }
+        }
     }
      
     public void runNeuronSeparation() {
@@ -142,13 +181,36 @@ public class RunNeuronSeparationDialog extends ModalDialog {
     	int rerunMins = 0;
     	try {
     		rerunMins = Integer.parseInt(rerunIntervalField.getText());
+            if (dayRadioButton.isSelected()) {
+                rerunMins = rerunMins * 1440;
+            }
     	}
     	catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, 
             		"Can't parse refresh interval", "Error", JOptionPane.ERROR_MESSAGE);
     	}
     	
-    	final int loopTimerInMinutes = rerunMins;
+        // Update user Preferences
+        if (null!=topLevelFolderField.getText()) {
+            SessionMgr.getSessionMgr().setModelProperty(PREF_NEURON_SERVICE_FOLDER_NAME,topLevelFolderField.getText());
+        }
+        if (null!=inputDirectoryField.getText()) {
+            SessionMgr.getSessionMgr().setModelProperty(PREF_NEURON_SERVICE_INPUT_DIR,inputDirectoryField.getText());
+        }
+        if (null!=rerunIntervalField.getText()) {
+            SessionMgr.getSessionMgr().setModelProperty(PREF_NEURON_SERVICE_RERUN_INTERVAL_VALUE,rerunIntervalField.getText());
+        }
+        if (dayRadioButton.isSelected()) {
+            SessionMgr.getSessionMgr().setModelProperty(PREF_NEURON_SERVICE_RERUN_SCALE,SCALE_DAYS);
+        }
+        else if (minuteRadioButton.isSelected()) {
+            SessionMgr.getSessionMgr().setModelProperty(PREF_NEURON_SERVICE_RERUN_SCALE,SCALE_MINUTES);
+        }
+
+    	// Prompt a save of the user settings because we can't trust the Mac exit yet
+        SessionMgr.getSessionMgr().saveUserSettings();
+
+        final int loopTimerInMinutes = rerunMins;
     	
     	SimpleWorker executeWorker = new SimpleWorker() {
 

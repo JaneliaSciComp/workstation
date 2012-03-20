@@ -449,6 +449,10 @@ public class SessionMgr {
 //    }
 //  }
 //
+    public void saveUserSettings() {
+        writeSettings();
+    }
+
     private void writeSettings() {
         try {
             System.out.println("Saving user settings.");
