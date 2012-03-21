@@ -208,7 +208,7 @@ public class Browser extends JFrame implements Cloneable {
 //            menuBar = (JMenuBar) menuBarClass.getConstructor(new Class[] { this.getClass() }).newInstance(new Object[] { this });
             Constructor[] cons = menuBarClass.getConstructors();
             for (Constructor con : cons) {
-                System.out.println(con.toString());
+//                System.out.println(con.toString());
             }
             menuBar = (JMenuBar) menuBarClass.getConstructor(new Class[]{this.getClass()}).newInstance(new Object[]{this});
         }

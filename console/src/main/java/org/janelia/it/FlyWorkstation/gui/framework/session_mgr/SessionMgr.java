@@ -505,6 +505,7 @@ public class SessionMgr {
     class MyBrowserListener extends WindowAdapter {
         public void windowClosed(WindowEvent e) {
             e.getWindow().removeWindowListener(this);
+            SessionMgr.getSessionMgr().saveUserSettings();
         }
 
         public void windowActivated(WindowEvent e) {

@@ -35,6 +35,7 @@ public class ConsoleApp {
         System.setProperty("apple.laf.useScreenMenuBar", "true");
         // set the name of the application menu item
         System.setProperty("com.apple.mrj.application.apple.menu.about.name", ConsoleProperties.getString("console.Title"));
+        System.setProperty("apple.eawt.quitStrategy", "CLOSE_ALL_WINDOWS");
     }
 
     public static void main(final String[] args) {
