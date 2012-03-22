@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.session_mgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.roles.ExceptionHandler;
+import org.janelia.it.FlyWorkstation.api.stub.data.SystemError;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.external_listener.ExternalListener;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyBindings;
@@ -489,8 +490,7 @@ public class SessionMgr {
             return isLoggedIn;
         }
         catch (Exception e) {
-            handleException(e);
-            return false;
+            throw new SystemError("Cannot authenticate login. The server may be down. Please try again later.");
         }
     }
 

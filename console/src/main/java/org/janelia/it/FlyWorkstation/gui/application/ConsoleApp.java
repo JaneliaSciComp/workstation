@@ -159,6 +159,7 @@ public class ConsoleApp {
         }
         catch (Exception ex) {
             SessionMgr.getSessionMgr().handleException(ex);
+            SessionMgr.getSessionMgr().systemExit();
         }
         finally {
 //            splash.setVisible(false);
