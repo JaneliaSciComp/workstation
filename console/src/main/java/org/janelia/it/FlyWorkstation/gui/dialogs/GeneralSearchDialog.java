@@ -24,7 +24,6 @@ import net.sourceforge.jdatepicker.JDateComponentFactory;
 import net.sourceforge.jdatepicker.impl.JDatePickerImpl;
 
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrQuery.ORDER;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.FacetField.Count;
 import org.apache.solr.client.solrj.response.QueryResponse;
@@ -116,7 +115,7 @@ public class GeneralSearchDialog extends ModalDialog {
     protected String sortField;
     protected boolean ascending = true;
     protected String searchString;
-    
+    	
     public GeneralSearchDialog() {
 
         setTitle("Search");
@@ -182,6 +181,7 @@ public class GeneralSearchDialog extends ModalDialog {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				advancedSearch.setVisible(!advancedSearch.isVisible());
+				performFreshSearch(false, false, false);
 			}
 		});
         
@@ -444,59 +444,31 @@ public class GeneralSearchDialog extends ModalDialog {
      * @return
      * @throws ComputeException
      */
-    protected SolrResults search(SearchParameters params, int page, int pageSize, boolean fetchFacets) throws Exception {
+    protected SolrResults search(SolrQueryBuilder builder, int page, int pageSize) throws Exception {
     	
 		if (SwingUtilities.isEventDispatchThread())
 			throw new RuntimeException("GeneralSearchDialog.search called in the EDT");
 		
-		if (params.getSearchString()==null) return null;
-		
 		populateHistory();
-		
-    	String qs = "-entity_type:Ontology* AND (" + params.getSearchString() +")";
-    	
-    	if (params.isUseAdvancedParameters()) {
-    		qs += " +updated_date:["+params.getStartDateStr()+" TO "+params.getEndDateStr()+"]";
-    	}
-    	
-		SolrQueryBuilder builder = new SolrQueryBuilder();
-		builder.setQueryString(qs);
-		builder.setUsername(params.getUsername()); 
-		if (params.getSearchRoot()!=null) builder.setRootId(params.getSearchRoot().getId());
+
 		SolrQuery query = builder.getQuery();
-		query.addField("score");
 		query.setStart(pageSize*page);
 		query.setRows(pageSize);
-		
-		if (params.getSortField()!=null) {
-			query.setSortField(params.getSortField(), params.isAscending()?ORDER.asc:ORDER.desc);
-		}
-		
-		for(String fieldName : filters.keySet()) {
-			Set<String> values = filters.get(fieldName);
-			if (values==null||values.isEmpty()) continue;
-			query.addFilterQuery(getFilterQuery(fieldName, values));
-		}
-		
-		if (fetchFacets) {
-			for(String facet : facets) {
-				// Exclude the facet field from itself, to support multi-valued faceting
-	    		query.addFacetField("{!ex="+facet+"}"+facet);
-			}
-		}
 		
 		return ModelMgr.getModelMgr().searchSolr(query);
     }
     
     protected synchronized void performSearch(final int page, final boolean showLoading) {
     	
+		final SolrQueryBuilder builder = getQueryBuilder(true);
+		
     	SimpleWorker worker = new SimpleWorker() {
 			
     		private SolrResults results;
     		
 			@Override
 			protected void doStuff() throws Exception {
-				results = search(new SearchParameters(), page, PAGE_SIZE, true);
+				results = search(builder, page, PAGE_SIZE);
 	    		pages.add(results);
 	    		numLoaded += results.getResultList().size();
 	    		resultsTable.setMoreResults(results.getResponse().getResults().getNumFound()>numLoaded);
@@ -604,8 +576,8 @@ public class GeneralSearchDialog extends ModalDialog {
             return;
         }
 
-		final SearchParameters params = new SearchParameters();
-		
+        final SolrQueryBuilder builder = getQueryBuilder(false);
+        
     	SimpleWorker worker = new SimpleWorker() {
     		
 			@Override
@@ -623,7 +595,7 @@ public class GeneralSearchDialog extends ModalDialog {
 				long numProcessed = 0;
 				int page = 0;
 				while (true) {
-					SolrResults results = search(params, page, EXPORT_PAGE_SIZE, true);
+					SolrResults results = search(builder, page, EXPORT_PAGE_SIZE);
 					long numFound = results.getResponse().getResults().getNumFound();
 					
 					for(EntityDocument entityDoc : results.getEntityDocuments()) {
@@ -910,6 +882,44 @@ public class GeneralSearchDialog extends ModalDialog {
 		}
 		return searchHistory;
 	}
+
+	/**
+	 * Returns a query builder for the current search parameters.
+	 * @param fetchFacets
+	 * @return
+	 */
+	public SolrQueryBuilder getQueryBuilder(boolean fetchFacets) {
+		SolrQueryBuilder builder = new SolrQueryBuilder();
+		builder.setUsername(SessionMgr.getUsername());
+		builder.setSearchString(searchString);
+		builder.setSortField(sortField);
+		builder.setAscending(ascending);
+		
+		if (searchRoot!=null) {
+			builder.setRootId(searchRoot.getId());
+		}
+
+		builder.getFilters().putAll(filters);
+		
+		if (fetchFacets) {
+    		builder.getFacets().addAll(Arrays.asList(facets));
+		}
+		
+    	if (advancedSearchCheckbox.isSelected()) {
+    		Calendar startCal = (Calendar)startDatePicker.getModel().getValue();
+    		if (startCal!=null) {
+    			Date startDate = startCal.getTime();
+    	    	builder.setStartDate(startDate);
+    		}
+    		Calendar endCal = (Calendar)endDatePicker.getModel().getValue();
+    		if (endCal!=null) {
+    			Date endDate = endCal.getTime();
+    	    	builder.setEndDate(endDate);
+    		}
+    	}
+    	
+    	return builder;
+	}
 	
     /**
      * Looks for folders in the entity tree, and creates a new result name which does not already exist.
@@ -937,24 +947,6 @@ public class GeneralSearchDialog extends ModalDialog {
 		return "Search Results #"+(maxNum+1);
     }
 
-    /**
-     * Returns a SOLR-style field query for the given field containing the given values. Also tags the
-     * field so that it can be excluded in facets on other fields. 
-     * @param fieldName
-     * @param values
-     * @return
-     */
-	protected String getFilterQuery(String fieldName, Set<String> values) {
-    	StringBuffer sb = new StringBuffer("{!tag="+fieldName+"}"+fieldName);
-    	sb.append(":("); // Sad face :/
-    	for(String value : values) {
-    		sb.append("\"");
-    		sb.append(value);
-    		sb.append("\" ");
-    	}
-    	sb.append(")");
-    	return sb.toString();
-    }
 	
     /**
      * Return the value of the specified column for the given object.
@@ -1059,82 +1051,5 @@ public class GeneralSearchDialog extends ModalDialog {
 		}
 		return buf.toString();
 	}
-
-    /**
-     * Holder for the current search parameters. This ensures that the search parameters can be reused between
-     * pagination calls.
-     */
-    private class SearchParameters {
-    	
-    	private final String searchString;
-    	private final Entity searchRoot;
-    	private final String username;
-    	private final Map<String,Set<String>> filters = new HashMap<String,Set<String>>();
-    	private final String sortField;
-    	private final boolean ascending;
-    	private final boolean useAdvancedParameters;
-    	private final String startDateStr;
-    	private final String endDateStr;
-    	
-    	public SearchParameters() {
-    		this.searchString = GeneralSearchDialog.this.searchString;
-    		this.searchRoot = GeneralSearchDialog.this.searchRoot;
-    		this.sortField = GeneralSearchDialog.this.sortField;
-    		this.ascending = GeneralSearchDialog.this.ascending;
-    		// TODO: set this to the user's username once we've tested
-    		this.username = "*";
-    		filters.putAll(GeneralSearchDialog.this.filters);
-    		
-    		String startDateStr = "*";
-    		String endDateStr = "*";
-        	if (advancedSearchCheckbox.isSelected()) {
-        		Calendar startCal = (Calendar)startDatePicker.getModel().getValue();
-        		if (startCal!=null) {
-        			Date startDate = startCal.getTime();
-        			startDateStr = SolrUtils.formatDate(startDate);
-        		}
-        		Calendar endCal = (Calendar)endDatePicker.getModel().getValue();
-        		if (endCal!=null) {
-        			Date endDate = endCal.getTime();
-        			endDateStr = SolrUtils.formatDate(endDate);
-        		}
-        	}
-        	
-        	this.startDateStr = startDateStr;
-        	this.endDateStr = endDateStr;
-        	this.useAdvancedParameters = (!"*".equals(startDateStr) || !"*".equals(endDateStr));
-    	}
-
-		public String getSearchString() {
-			return searchString;
-		}
-
-		public Entity getSearchRoot() {
-			return searchRoot;
-		}
-
-		public String getUsername() {
-			return username;
-		}
-
-		public String getSortField() {
-			return sortField;
-		}
-		
-		public boolean isAscending() {
-			return ascending;
-		}
-
-		public boolean isUseAdvancedParameters() {
-			return useAdvancedParameters;
-		}
-
-		public String getStartDateStr() {
-			return startDateStr;
-		}
-
-		public String getEndDateStr() {
-			return endDateStr;
-		}
-    }
+	
 }
