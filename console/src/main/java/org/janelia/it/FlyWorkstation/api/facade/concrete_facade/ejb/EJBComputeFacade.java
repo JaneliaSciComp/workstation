@@ -79,7 +79,8 @@ public class EJBComputeFacade implements ComputeFacade {
 
     @Override
     public boolean loginUser() throws Exception {
-        return EJBFactory.getRemoteComputeBean().login(SessionMgr.getUsername(),
+        return EJBFactory.getRemoteComputeBean().login(
+        		(String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME),
                 (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_PASSWORD));
     }
 
