@@ -8,4 +8,5 @@ package org.janelia.it.FlyWorkstation.shared.util;
  */
 public class PreferenceConstants {
     public static final String TOOLS = "Tools";
+    public static final String PATH_VAA3D = "Path.Vaa3d";
 }
