@@ -7,7 +7,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.prefs.BackingStoreException;
@@ -30,18 +29,20 @@ public class ToolsMenu extends JMenu {
         super("Tools");
         try {
             this.parentFrame = console;
-            // todo This needs to be customized
+            System.out.println("Base root executable path  = "+rootExecutablePath);
             if (SystemInfo.isMac || SystemInfo.isWindows) {
-                rootExecutablePath = rootExecutablePath+ File.separator+VAA3D_PATH_MAC; 
+                rootExecutablePath = rootExecutablePath+VAA3D_PATH_MAC;
             }
             else if (SystemInfo.isLinux) {
-                rootExecutablePath = rootExecutablePath+File.separator+VAA3D_PATH_LINUX;
+                rootExecutablePath = rootExecutablePath+VAA3D_PATH_LINUX;
             }
+            // Start in NA mode
+            rootExecutablePath+=" -na";
+            System.out.println("Vaa3d root executable path = "+rootExecutablePath);
             vaa3dMenuItem = new JMenuItem("Vaa3D - NeuroAnnotator", Utils.getClasspathImage("v3d_16x16x32.png"));
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
-                        // todo This needs to be a custom user setting.
                         Runtime.getRuntime().exec(rootExecutablePath);
                     }
                     catch (IOException e) {
