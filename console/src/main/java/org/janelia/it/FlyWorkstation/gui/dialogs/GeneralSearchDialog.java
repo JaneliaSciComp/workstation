@@ -510,8 +510,8 @@ public class GeneralSearchDialog extends ModalDialog {
 				ModelMgr.getModelMgr().saveOrUpdateEntity(newFolder);
 
 		        for (Object obj : resultsTable.getSelectedObjects()) {
-		        	Entity entity = (Entity)obj;
-					EntityData newEd = newFolder.addChildEntity(entity);
+		        	EntityDocument entityDoc = (EntityDocument)obj;
+					EntityData newEd = newFolder.addChildEntity(entityDoc.getEntity());
 					ModelMgr.getModelMgr().saveOrUpdateEntityData(newEd);	
 				}
 			}
