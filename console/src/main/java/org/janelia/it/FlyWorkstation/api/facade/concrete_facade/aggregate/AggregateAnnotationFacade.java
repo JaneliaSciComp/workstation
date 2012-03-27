@@ -140,5 +140,11 @@ public class AggregateAnnotationFacade extends AggregateEntityFacade implements 
 	@Override
 	public List<List<Long>> searchTreeForNameStartingWith(Long rootId, String searchString) throws Exception {
 		throw new UnsupportedOperationException();
-	}	
+	}
+
+    @Override
+    public Object[] getPatternAnnotationQuantifierMapsFromSummary() throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
 }

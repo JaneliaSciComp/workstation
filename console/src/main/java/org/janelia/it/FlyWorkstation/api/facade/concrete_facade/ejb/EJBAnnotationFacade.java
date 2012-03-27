@@ -74,4 +74,8 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
 	public List<List<Long>> searchTreeForNameStartingWith(Long rootId, String searchString) throws Exception {
     	return EJBFactory.getRemoteAnnotationBean().searchTreeForNameStartingWith(rootId, searchString);
 	}
+
+    public Object[] getPatternAnnotationQuantifierMapsFromSummary() throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().getPatternAnnotationQuantifierMapsFromSummary();
+    }
 }

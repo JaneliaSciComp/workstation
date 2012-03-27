@@ -238,13 +238,10 @@ public class PatternSearchDialog extends ModalDialog {
     public void showDialog() {
     	titleLabel.setText("Search for anatomical patterns");
     	init();
-        Map<Long, Map<String, String>> sampleInfoMap=new HashMap<Long, Map<String, String>>();
-        double sampleQuantifiers[][]=new double[3][3];
         try {
-            String patternAnnotationResourceDirPath= ConsoleProperties.getString("FlyScreen.PatternAnnotationResourceDir");
-            String patternAnnotationQuantifierSummaryFilename=ConsoleProperties.getString("FlyScreen.PatternAnnotationQuantifierSummaryFile");
-            File patternAnntotationSummaryFile=new File(patternAnnotationResourceDirPath, patternAnnotationQuantifierSummaryFilename);
-            PatternAnnotationDataManager.loadPatternAnnotationQuantifierSummaryFile(patternAnntotationSummaryFile, sampleInfoMap, sampleQuantifiers);
+            System.out.println("PatterSearchDialog getPatternAnnotationQuantifierMapsFromSummary() start");
+            ModelMgr.getModelMgr().getPatternAnnotationQuantifierMapsFromSummary();
+            System.out.println("PatterSearchDialog getPatternAnnotationQuantifierMapsFromSummary() end");
         } catch (Exception ex) {
             ex.printStackTrace();
         }
