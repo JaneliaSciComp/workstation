@@ -20,6 +20,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -239,9 +240,11 @@ public class PatternSearchDialog extends ModalDialog {
     	titleLabel.setText("Search for anatomical patterns");
     	init();
         try {
+            Long startTime=new Date().getTime();
             System.out.println("PatterSearchDialog getPatternAnnotationQuantifierMapsFromSummary() start");
             ModelMgr.getModelMgr().getPatternAnnotationQuantifierMapsFromSummary();
-            System.out.println("PatterSearchDialog getPatternAnnotationQuantifierMapsFromSummary() end");
+            Long elapsedTime=new Date().getTime() - startTime;
+            System.out.println("PatterSearchDialog getPatternAnnotationQuantifierMapsFromSummary() end - elapsedTime="+elapsedTime);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
