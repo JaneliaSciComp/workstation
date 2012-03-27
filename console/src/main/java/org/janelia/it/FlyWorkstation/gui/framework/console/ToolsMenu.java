@@ -36,6 +36,8 @@ public class ToolsMenu extends JMenu {
         try {
             this.parentFrame = console;
             System.out.println("Base root executable path  = "+rootExecutablePath);
+//            rootExecutablePath="/Applications/FlySuite.app/Contents/Resources/workstation.jar";
+            rootExecutablePath=rootExecutablePath.substring(0,rootExecutablePath.lastIndexOf(File.separator)+1);
             vaa3dExePath = (String) SessionMgr.getSessionMgr().getModelProperty(PreferenceConstants.PATH_VAA3D);
             if (null==vaa3dExePath || "".equals(vaa3dExePath)) {
                 if (SystemInfo.isMac || SystemInfo.isWindows) {
