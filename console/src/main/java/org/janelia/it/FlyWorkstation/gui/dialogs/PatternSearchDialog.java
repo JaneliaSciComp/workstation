@@ -5,11 +5,13 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicTable;
+import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,6 +19,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -235,6 +238,16 @@ public class PatternSearchDialog extends ModalDialog {
     public void showDialog() {
     	titleLabel.setText("Search for anatomical patterns");
     	init();
+        Map<Long, Map<String, String>> sampleInfoMap=new HashMap<Long, Map<String, String>>();
+        double sampleQuantifiers[][]=new double[3][3];
+        try {
+            String patternAnnotationResourceDirPath= ConsoleProperties.getString("FlyScreen.PatternAnnotationResourceDir");
+            String patternAnnotationQuantifierSummaryFilename=ConsoleProperties.getString("FlyScreen.PatternAnnotationQuantifierSummaryFile");
+            File patternAnntotationSummaryFile=new File(patternAnnotationResourceDirPath, patternAnnotationQuantifierSummaryFilename);
+            PatternAnnotationDataManager.loadPatternAnnotationQuantifierSummaryFile(patternAnntotationSummaryFile, sampleInfoMap, sampleQuantifiers);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
 //    public void showForEntity(Entity entity) {
@@ -245,26 +258,26 @@ public class PatternSearchDialog extends ModalDialog {
 
     private void init() {
 
-		final EntityOutline entityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline();
-
-		int maxNum = 0;
-		for(EntityData ed : entityOutline.getRootEntity().getEntityData()) {
-			Entity topLevelFolder = ed.getChildEntity();
-			if (topLevelFolder != null) {
-				Pattern p = Pattern.compile("^Search Results #(\\d+)$");
-				Matcher m = p.matcher(topLevelFolder.getName());
-				if (m.matches()) {
-					String num = m.group(1);
-					if (num!=null && !"".equals(num)) {
-						int n = Integer.parseInt(num);
-						if (n>maxNum) {
-							maxNum = n;
-						}
-					}
-				}
-			}
-		}
-		folderNameField.setText("Search Results #"+(maxNum+1));
+//		final EntityOutline entityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline();
+//
+//		int maxNum = 0;
+//		for(EntityData ed : entityOutline.getRootEntity().getEntityData()) {
+//			Entity topLevelFolder = ed.getChildEntity();
+//			if (topLevelFolder != null) {
+//				Pattern p = Pattern.compile("^Search Results #(\\d+)$");
+//				Matcher m = p.matcher(topLevelFolder.getName());
+//				if (m.matches()) {
+//					String num = m.group(1);
+//					if (num!=null && !"".equals(num)) {
+//						int n = Integer.parseInt(num);
+//						if (n>maxNum) {
+//							maxNum = n;
+//						}
+//					}
+//				}
+//			}
+//		}
+//		folderNameField.setText("Search Results #"+(maxNum+1));
 
     	packAndShow();
     }

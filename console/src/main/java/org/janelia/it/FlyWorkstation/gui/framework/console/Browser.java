@@ -245,6 +245,8 @@ public class Browser extends JFrame implements Cloneable {
 
         List<String> searchHistory = (List<String>) SessionMgr.getSessionMgr().getModelProperty(SEARCH_HISTORY);
         searchDialog.setSearchHistory(searchHistory);
+
+        patternSearchDialog = new PatternSearchDialog();
         
         ontologyOutline.setPreferredSize(new Dimension());
 //        icsTabPane = new ICSTabPane(this);
