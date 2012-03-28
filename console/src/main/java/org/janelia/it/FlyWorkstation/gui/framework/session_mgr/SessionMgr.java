@@ -171,9 +171,9 @@ public class SessionMgr {
     }
 
     public void sendMessageToExternalClients(String operationName, Map<String,Object> parameters) {
-    	sessionModel.sendMessageToExternalClients(operationName, parameters);
+        sessionModel.sendMessageToExternalClients(operationName, parameters);
     }
-    
+
     public static KeyBindings getKeyBindings() {
         return SessionModel.getKeyBindings();
     }
@@ -389,13 +389,13 @@ public class SessionMgr {
     }
 
     public void startAxisServer(int port) {
-    	try {
-	        if (axisServer == null) axisServer = new EmbeddedAxisServer(port);
-	        axisServer.start();
-    	}
-    	catch (Exception e) {
+        try {
+            if (axisServer == null) axisServer = new EmbeddedAxisServer(port);
+            axisServer.start();
+        }
+        catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
-    	}
+        }
     }
 
     public void stopAxisServer() {
@@ -404,12 +404,12 @@ public class SessionMgr {
             axisServer = null;
         }
     }
-    
-    public EmbeddedAxisServer getAxisServer() {
-		return axisServer;
-	}
 
-	public void resetSession() {
+    public EmbeddedAxisServer getAxisServer() {
+        return axisServer;
+    }
+
+    public void resetSession() {
         Set keys = browserModelsToBrowser.keySet();
         List browserList = new ArrayList(keys.size());
         for (Object key : keys) {
@@ -514,9 +514,14 @@ public class SessionMgr {
     }
 
     public static String getUsername() {
-        String username = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
-        if (username.startsWith("admin-")) username = username.replaceFirst("admin-", "");
-        return username;
+        try {
+            String username = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
+            if (username.startsWith("admin-")) username = username.replaceFirst("admin-", "");
+            return username;
+        }
+        catch (Exception e) {
+            return null;
+        }
     }
 
 }

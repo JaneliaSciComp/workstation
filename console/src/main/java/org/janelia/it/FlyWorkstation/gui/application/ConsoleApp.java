@@ -71,14 +71,14 @@ public class ConsoleApp {
 //            sessionMgr.registerExceptionHandler(new PrintStackTraceHandler());
             sessionMgr.registerExceptionHandler(new UserNotificationExceptionHandler());
             sessionMgr.registerExceptionHandler(new ExitHandler()); //should be last so that other handlers can complete first.
-        	
+
             // Protocol Registration - Adding more than one type should automatically switch over to the Aggregate Facade
             final ModelMgr modelMgr = ModelMgr.getModelMgr();
             modelMgr.registerFacadeManagerForProtocol(FacadeManager.getEJBProtocolString(), EJBFacadeManager.class, "JACS EJB Facade Manager");
-            
+
             // Model Observers
             modelMgr.addModelMgrObserver(sessionMgr.getAxisServer());
-            
+
             // Editor Registration
             //      sessionMgr.registerEditorForType(api.entity_model.model.genetics.Species.class,
             //        client.gui.components.assembly.genome_view.GenomeView.class,"Genome View", "ejb");
@@ -129,6 +129,20 @@ public class ConsoleApp {
 
 //            splash.setVisible(false);
             // Assuming that the user has entered the login/password information, now validate
+            if (null==SessionMgr.getUsername()) {
+                Object[] options = {"Enter Login", "Exit Program"};
+                final int answer = JOptionPane.showOptionDialog(null, "Please enter your login information.", "Information Required",
+                        JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+                if (answer == 0) {
+                    PrefController.getPrefController().getPrefInterface(DataSourceSettings.class, null);
+                }
+                else {
+                    SessionMgr.getSessionMgr().systemExit();
+                }
+            }
+            else {
+                System.out.println("Successfully logged in user "+SessionMgr.getUsername());
+            }
             SessionMgr.getSessionMgr().loginUser();
             if (!SessionMgr.getSessionMgr().isLoggedIn()) {
                 Object[] options = {"Enter Login", "Exit Program"};
@@ -145,17 +159,17 @@ public class ConsoleApp {
                 System.out.println("Successfully logged in user "+SessionMgr.getUsername());
             }
 
-        	// Make sure we can access the data mount
-        	if (!FacadeManager.isDataSourceConnectivityValid()) {
-        		throw new MissingResourceException(FacadeManager.getDataSourceHelpInformation(), ConsoleApp.class.getName(),
+            // Make sure we can access the data mount
+            if (!FacadeManager.isDataSourceConnectivityValid()) {
+                throw new MissingResourceException(FacadeManager.getDataSourceHelpInformation(), ConsoleApp.class.getName(),
                         "Missing Data Mount");
-        	}
-        	
+            }
+
             //Start First Browser
             sessionMgr.newBrowser();
-            
+
 //            splash.setStatusText("Connected.");
-            
+
         }
         catch (Exception ex) {
             SessionMgr.getSessionMgr().handleException(ex);

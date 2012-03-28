@@ -178,6 +178,7 @@ public class FacadeManager {
         if (inUseProtocols.contains(protocol)) {
             return FacadeManagerBase.CONNECTION_STATUS_OK;
         }
+        // todo Shouldn't this be a HashSet?
         inUseProtocols.add(protocol);
         FacadeManagerBase concreteFacade = (FacadeManagerBase) concreteFacades.get(protocol);
         try {
@@ -310,11 +311,11 @@ public class FacadeManager {
     static public boolean isDataSourceConnectivityValid() {
         return PathTranslator.isMounted();
     }
-    
+
     static public String getDataSourceHelpInformation() {
         return PathTranslator.getMountHelpMessage();
     }
-    
+
     static public String getOsSpecificRootPath() {
         return PathTranslator.getOsSpecificRootPath();
     }
