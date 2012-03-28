@@ -8,7 +8,9 @@ import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicTable;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.jacs.compute.api.support.SolrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityAttribute;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
@@ -20,10 +22,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -40,22 +40,25 @@ public class PatternSearchDialog extends ModalDialog {
 
     private final JPanel mainPanel;
 	private final JPanel inputPanel;
+    private final JPanel buttonPane;
+    private final JPanel statusPane;
+
+    private final JLabel statusLabel;
 	private final JLabel titleLabel;
     private final JTextField inputField;
     private final JTextField folderNameField;
+
+    private final SimpleWorker quantifierLoaderWorker;
 
     private String lastSearchString;
     private List<Entity> results;
 
     private DynamicTable resultsTable;
 
-    public class PatternAnnotationQuantified {
-        public double v1;
-        public double v2;
-    }
-
-    private static Map<String, PatternAnnotationQuantified> patternQMap = new HashMap<String, PatternAnnotationQuantified>();
-
+    static boolean quantifierDataIsLoading=false;
+    static protected Map<Long, Map<String,String>> sampleInfoMap=null;
+    static protected Map<Long, List<Double>> quantifierInfoMap=null;
+    
     public PatternSearchDialog() {
 
         setTitle("Pattern Annotation Search");
@@ -130,7 +133,7 @@ public class PatternSearchDialog extends ModalDialog {
 
 		add(resultsTable, BorderLayout.CENTER);
 
-        JPanel buttonPane = new JPanel();
+        buttonPane = new JPanel();
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
         buttonPane.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
         buttonPane.add(Box.createHorizontalGlue());
@@ -162,7 +165,29 @@ public class PatternSearchDialog extends ModalDialog {
 		});
         buttonPane.add(cancelButton);
 
-        add(buttonPane, BorderLayout.SOUTH);
+        add(buttonPane, BorderLayout.AFTER_LAST_LINE);
+
+       Object[] statusObjects = createStatusObjects();
+       statusPane=(JPanel)statusObjects[0];
+       statusLabel=(JLabel)statusObjects[1];
+       add(statusPane, BorderLayout.SOUTH);
+        
+        quantifierLoaderWorker=createQuantifierLoaderWorker();
+
+    }
+
+    private Object[] createStatusObjects() {
+        JPanel statusPane = new JPanel();
+        JLabel statusLabel = new JLabel("");
+        statusPane.add(statusLabel);
+        Object[] statusObjects=new Object[2];
+        statusObjects[0]=statusPane;
+        statusObjects[1]=statusLabel;
+        return statusObjects;
+    }
+    
+    private void setStatusMessage(String message) {
+        statusLabel.setText(message);
     }
 
     public void performSearch() {
@@ -239,15 +264,6 @@ public class PatternSearchDialog extends ModalDialog {
     public void showDialog() {
     	titleLabel.setText("Search for anatomical patterns");
     	init();
-        try {
-            Long startTime=new Date().getTime();
-            System.out.println("PatterSearchDialog getPatternAnnotationQuantifierMapsFromSummary() start");
-            ModelMgr.getModelMgr().getPatternAnnotationQuantifierMapsFromSummary();
-            Long elapsedTime=new Date().getTime() - startTime;
-            System.out.println("PatterSearchDialog getPatternAnnotationQuantifierMapsFromSummary() end - elapsedTime="+elapsedTime);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
     }
 
 //    public void showForEntity(Entity entity) {
@@ -257,29 +273,53 @@ public class PatternSearchDialog extends ModalDialog {
 //    }
 
     private void init() {
+        System.out.println("Pre-worker");
+        quantifierLoaderWorker.execute();
+        System.out.println("Post-worker");
+        packAndShow();
+    }
 
-//		final EntityOutline entityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline();
-//
-//		int maxNum = 0;
-//		for(EntityData ed : entityOutline.getRootEntity().getEntityData()) {
-//			Entity topLevelFolder = ed.getChildEntity();
-//			if (topLevelFolder != null) {
-//				Pattern p = Pattern.compile("^Search Results #(\\d+)$");
-//				Matcher m = p.matcher(topLevelFolder.getName());
-//				if (m.matches()) {
-//					String num = m.group(1);
-//					if (num!=null && !"".equals(num)) {
-//						int n = Integer.parseInt(num);
-//						if (n>maxNum) {
-//							maxNum = n;
-//						}
-//					}
-//				}
-//			}
-//		}
-//		folderNameField.setText("Search Results #"+(maxNum+1));
+    protected void loadPatternAnnotationQuantifierMapsFromSummary() {
+        if (!quantifierDataIsLoading && (sampleInfoMap==null || quantifierInfoMap==null)) {
+            quantifierDataIsLoading=true;
+            try {
+                Long startTime=new Date().getTime();
+                System.out.println("PatterSearchDialog loadPatternAnnotationQuantifierMapsFromSummary() start");
+                Object[] sampleMaps = ModelMgr.getModelMgr().getPatternAnnotationQuantifierMapsFromSummary();
+                sampleInfoMap = (Map<Long, Map<String,String>>)sampleMaps[0];
+                quantifierInfoMap = (Map<Long, List<Double>>)sampleMaps[1];
+                Long elapsedTime=new Date().getTime() - startTime;
+                System.out.println("PatterSearchDialog loadPatternAnnotationQuantifierMapsFromSummary() end - elapsedTime="+elapsedTime);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            quantifierDataIsLoading=false;
+        } else {
+            System.out.println("PatternSearchDialog loadPatternAnnotationQuantifierMapsFromSummary() - maps already loaded");
+        }
+    }
 
-    	packAndShow();
+    SimpleWorker createQuantifierLoaderWorker() {
+        SimpleWorker quantifierLoaderWorker = new SimpleWorker() {
+
+            @Override
+            protected void doStuff() throws Exception {
+                setStatusMessage("Loading quantifier maps...");
+                loadPatternAnnotationQuantifierMapsFromSummary();
+            }
+
+            @Override
+            protected void hadSuccess() {
+                setStatusMessage("Ready");
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+                setStatusMessage("Error during quantifier load");
+            }
+        };
+        return quantifierLoaderWorker;
     }
 
 }
