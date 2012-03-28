@@ -129,6 +129,20 @@ public class ConsoleApp {
 
 //            splash.setVisible(false);
             // Assuming that the user has entered the login/password information, now validate
+            if (null==SessionMgr.getUsername()) {
+                Object[] options = {"Enter Login", "Exit Program"};
+                final int answer = JOptionPane.showOptionDialog(null, "Please enter your login information.", "Information Required",
+                        JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+                if (answer == 0) {
+                    PrefController.getPrefController().getPrefInterface(DataSourceSettings.class, null);
+                }
+                else {
+                    SessionMgr.getSessionMgr().systemExit();
+                }
+            }
+            else {
+                System.out.println("Successfully logged in user "+SessionMgr.getUsername());
+            }
             SessionMgr.getSessionMgr().loginUser();
             if (!SessionMgr.getSessionMgr().isLoggedIn()) {
                 Object[] options = {"Enter Login", "Exit Program"};

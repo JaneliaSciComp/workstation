@@ -178,6 +178,7 @@ public class FacadeManager {
         if (inUseProtocols.contains(protocol)) {
             return FacadeManagerBase.CONNECTION_STATUS_OK;
         }
+        // todo Shouldn't this be a HashSet?
         inUseProtocols.add(protocol);
         FacadeManagerBase concreteFacade = (FacadeManagerBase) concreteFacades.get(protocol);
         try {

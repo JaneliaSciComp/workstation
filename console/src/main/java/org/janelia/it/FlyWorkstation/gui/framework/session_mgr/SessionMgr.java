@@ -514,9 +514,14 @@ public class SessionMgr {
     }
 
     public static String getUsername() {
-        String username = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
-        if (username.startsWith("admin-")) username = username.replaceFirst("admin-", "");
-        return username;
+        try {
+            String username = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
+            if (username.startsWith("admin-")) username = username.replaceFirst("admin-", "");
+            return username;
+        }
+        catch (Exception e) {
+            return null;
+        }
     }
 
 }
