@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.dialogs;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -22,6 +23,7 @@ public class PatternSearchDialog extends ModalDialog {
     
     private static final String PEAK_TYPE="Peak";
     private static final String TOTAL_TYPE="Total";
+    private static final String GLOBAL = "Global";
 
 
     private final JPanel mainPanel;
@@ -34,6 +36,8 @@ public class PatternSearchDialog extends ModalDialog {
     private final JTextField currentSetTextField;
 
     private final SimpleWorker quantifierLoaderWorker;
+    
+    private final Map<String, Map<String, MinMaxModel>> filterSetMap=new HashMap<String, Map<String, MinMaxModel>>();
 
     static boolean quantifierDataIsLoading=false;
     static protected Map<Long, Map<String,String>> sampleInfoMap=null;
@@ -108,6 +112,12 @@ public class PatternSearchDialog extends ModalDialog {
             lineCountText.setText(lineCount.toString());
         }
     };
+    
+    public class MinMaxModel {
+        public Double min;
+        public Double max;
+        public String type;
+    }
 
     public PatternSearchDialog() {
 
@@ -120,7 +130,7 @@ public class PatternSearchDialog extends ModalDialog {
         currentSetNamePanel = new JPanel();
         currentSetNameLabel = new JLabel("Name of set: ");
         currentSetTextField = new JTextField(50);
-        currentSetTextField.setText("Placeholder set name");
+        currentSetTextField.setText("");
         currentSetNamePanel.add(currentSetNameLabel);
         currentSetNamePanel.add(currentSetTextField);
         mainPanel.add(currentSetNamePanel, Box.createVerticalGlue());
@@ -136,6 +146,36 @@ public class PatternSearchDialog extends ModalDialog {
         add(mainPanel, BorderLayout.NORTH);
 
         quantifierLoaderWorker=createQuantifierLoaderWorker();
+
+    }
+    
+    private int getNextFilterSetIndex() {
+        return filterSetMap.size()+1;        
+    }
+    
+    private MinMaxModel getOpenMinMaxModelInstance() {
+        MinMaxModel model=new MinMaxModel();
+        model.min=0.0;
+        model.max=100.0;
+        model.type=PEAK_TYPE;
+        return model;
+    }
+
+    private void createInitialFilterSet() {
+        currentSetTextField.setText("Set 1");
+        Map<String, MinMaxModel> initialFilterSetMap=new HashMap<String, MinMaxModel>();
+        MinMaxModel globalModel=getOpenMinMaxModelInstance();
+        initialFilterSetMap.put(GLOBAL, globalModel);
+        List<String> compartmentAbbreviationList= PatternAnnotationDataManager.getCompartmentListInstance();
+        for (String compartmentName : compartmentAbbreviationList) {
+            MinMaxModel compartmentModel=getOpenMinMaxModelInstance();
+            initialFilterSetMap.put(compartmentName, compartmentModel);
+        }
+        filterSetMap.put(currentSetTextField.getText(), initialFilterSetMap);
+        setCurrentFilterSetMap(filterSetMap.get(currentSetTextField.getText()));      
+    }
+    
+    private void setCurrentFilterSetMap(Map<String, MinMaxModel> filterMap) {
 
     }
     
@@ -164,6 +204,7 @@ public class PatternSearchDialog extends ModalDialog {
 
     private void init() {
         quantifierLoaderWorker.execute();
+        createInitialFilterSet();
         packAndShow();
     }
 
