@@ -377,7 +377,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 
 							protected void doneLoading() {
 								Utils.setDefaultCursor(EntityOutline.this);
-								List<Entity> entities = entity.getDescendantsOfType(EntityConstants.TYPE_NEURON_FRAGMENT);
+								List<Entity> entities = entity.getDescendantsOfType(EntityConstants.TYPE_NEURON_FRAGMENT, true);
 								browser.getAnnotationSessionPropertyDialog().showForNewSession(entity.getName(), entities);
 								SwingUtilities.updateComponentTreeUI(EntityOutline.this);
 							}
