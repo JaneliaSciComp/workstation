@@ -6,6 +6,8 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
 
 import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -24,11 +26,30 @@ public class PatternSearchDialog extends ModalDialog {
     private static final String PEAK_TYPE="Peak";
     private static final String TOTAL_TYPE="Total";
     private static final String GLOBAL = "Global";
-
+    
+    private static final String[] filterTableColumnNames = {
+            "Compartment",
+            "Description",
+            "Filter Type",
+            "Min",
+            "Max",
+            "Graph",
+            "Lines"
+    };
+    
+    private static final int FT_INDEX_COMPARTMENT=0;
+    private static final int FT_INDEX_DESCRIPTION=1;
+    private static final int FT_INDEX_FILTERTYPE=2;
+    private static final int FT_INDEX_MIN=3;
+    private static final int FT_INDEX_MAX=4;
+    private static final int FT_INDEX_GRAPH=5;
+    private static final int FT_INDEX_LINES=6;
 
     private final JPanel mainPanel;
     private final JPanel currentSetNamePanel;
-    private final MinMaxSelectionPanel globalSettingsPanel;
+    private final MinMaxSelectionRow globalMinMaxPanel;
+    private final JTable filterTable;
+    private final JScrollPane filterTableScrollPane;
     private final JPanel statusPane;
 
     private final JLabel statusLabel;
@@ -38,12 +59,14 @@ public class PatternSearchDialog extends ModalDialog {
     private final SimpleWorker quantifierLoaderWorker;
     
     private final Map<String, Map<String, MinMaxModel>> filterSetMap=new HashMap<String, Map<String, MinMaxModel>>();
+    //private final Map<String, MinMaxModel> currentMinMaxModelMap=new HashMap<String, MinMaxModel>();
+    private final Map<String, MinMaxSelectionRow> minMaxRowMap=new HashMap<String, MinMaxSelectionRow>();
 
     static boolean quantifierDataIsLoading=false;
     static protected Map<Long, Map<String,String>> sampleInfoMap=null;
     static protected Map<Long, List<Double>> quantifierInfoMap=null;
     
-    private class MinMaxSelectionPanel extends JPanel implements ActionListener {
+    private class MinMaxSelectionRow extends JPanel implements ActionListener {
         String abbreviation;
         String description;
         JRadioButton peakButton;
@@ -56,7 +79,7 @@ public class PatternSearchDialog extends ModalDialog {
         JTextField maxText;
         JTextField lineCountText;
 
-        public MinMaxSelectionPanel(String abbreviation, String description) {
+        public MinMaxSelectionRow(String abbreviation, String description) {
             this.abbreviation=abbreviation;
             this.description=description;
             JLabel abbreviationLabel=new JLabel();
@@ -111,6 +134,28 @@ public class PatternSearchDialog extends ModalDialog {
             }
             lineCountText.setText(lineCount.toString());
         }
+        
+        public void setModelState(MinMaxModel model) {
+            this.min=model.min;
+            this.max=model.max;
+            if (model.type.equals(PEAK_TYPE)) {
+                peakButton.setSelected(true);
+            } else if (model.type.equals(TOTAL_TYPE)) {
+                totalButton.setSelected(true);
+            }
+        }
+        
+        public MinMaxModel getModelState() {
+            MinMaxModel model=new MinMaxModel();
+            model.min=min;
+            model.max=max;
+            if (peakButton.isSelected()) {
+                model.type=PEAK_TYPE;
+            } else if (totalButton.isSelected()) {
+                model.type=TOTAL_TYPE;
+            }
+            return model;
+        }
     };
     
     public class MinMaxModel {
@@ -135,8 +180,12 @@ public class PatternSearchDialog extends ModalDialog {
         currentSetNamePanel.add(currentSetTextField);
         mainPanel.add(currentSetNamePanel, Box.createVerticalGlue());
         
-        globalSettingsPanel = createGlobalSettingsPanel();
-        mainPanel.add(globalSettingsPanel, Box.createVerticalGlue());
+        globalMinMaxPanel = createGlobalMinMaxPanel();
+        mainPanel.add(globalMinMaxPanel, Box.createVerticalGlue());
+        
+        filterTable = createFilterTable();
+        filterTableScrollPane = createFilterTableScrollPane();
+        mainPanel.add(filterTableScrollPane, Box.createVerticalGlue());
 
         Object[] statusObjects = createStatusObjects();
         statusPane=(JPanel)statusObjects[0];
@@ -147,6 +196,16 @@ public class PatternSearchDialog extends ModalDialog {
 
         quantifierLoaderWorker=createQuantifierLoaderWorker();
 
+    }
+    
+    private JTable createFilterTable() {
+        JTable filterTable=new JTable();
+        return filterTable;
+    }
+    
+    private JScrollPane createFilterTableScrollPane() {
+        JScrollPane scrollPane=new JScrollPane(filterTable);
+        return scrollPane;
     }
     
     private int getNextFilterSetIndex() {
@@ -161,26 +220,36 @@ public class PatternSearchDialog extends ModalDialog {
         return model;
     }
 
-    private void createInitialFilterSet() {
-        currentSetTextField.setText("Set 1");
-        Map<String, MinMaxModel> initialFilterSetMap=new HashMap<String, MinMaxModel>();
+    private void createOpenFilterSet(String filterSetName) {
+        Map<String, MinMaxModel> openFilterSetMap=new HashMap<String, MinMaxModel>();
         MinMaxModel globalModel=getOpenMinMaxModelInstance();
-        initialFilterSetMap.put(GLOBAL, globalModel);
+        openFilterSetMap.put(GLOBAL, globalModel);
         List<String> compartmentAbbreviationList= PatternAnnotationDataManager.getCompartmentListInstance();
         for (String compartmentName : compartmentAbbreviationList) {
             MinMaxModel compartmentModel=getOpenMinMaxModelInstance();
-            initialFilterSetMap.put(compartmentName, compartmentModel);
+            openFilterSetMap.put(compartmentName, compartmentModel);
         }
-        filterSetMap.put(currentSetTextField.getText(), initialFilterSetMap);
-        setCurrentFilterSetMap(filterSetMap.get(currentSetTextField.getText()));      
+        filterSetMap.put(filterSetName, openFilterSetMap);
     }
     
-    private void setCurrentFilterSetMap(Map<String, MinMaxModel> filterMap) {
-
+    private void setCurrentFilterModel(Map<String, MinMaxModel> filterMap) {
+        for (String key : filterMap.keySet()) {
+            MinMaxModel model=filterMap.get(key);
+            if (key.equals(GLOBAL)) {
+                globalMinMaxPanel.setModelState(model);    
+            } else {
+                MinMaxSelectionRow minMaxRow=minMaxRowMap.get(key);
+                if (minMaxRow==null) {
+                    minMaxRow=new MinMaxSelectionRow(key, key + " description");
+                    minMaxRowMap.put(key, minMaxRow);
+                }
+                minMaxRow.setModelState(model);
+            }
+        }
     }
     
-    private MinMaxSelectionPanel createGlobalSettingsPanel() {
-        MinMaxSelectionPanel globalSettingsPanel=new MinMaxSelectionPanel("Global", "Settings for all non-modified compartments");
+    private MinMaxSelectionRow createGlobalMinMaxPanel() {
+        MinMaxSelectionRow globalSettingsPanel=new MinMaxSelectionRow("Global", "Settings for all non-modified compartments");
         return globalSettingsPanel;
     }
     
@@ -204,8 +273,57 @@ public class PatternSearchDialog extends ModalDialog {
 
     private void init() {
         quantifierLoaderWorker.execute();
-        createInitialFilterSet();
+        String initialFilterName="Set "+getNextFilterSetIndex();
+        currentSetTextField.setText(initialFilterName);
+        createOpenFilterSet(initialFilterName);
+        setCurrentFilterModel(filterSetMap.get(initialFilterName));
+        setupFilterTable();
         packAndShow();
+    }
+
+    private void setupFilterTable() {
+        final List<String> compartmentAbbreviationList = PatternAnnotationDataManager.getCompartmentListInstance();
+        TableModel tableModel = new AbstractTableModel() {
+            @Override
+            public int getRowCount() {
+                return compartmentAbbreviationList.size();
+            }
+
+            @Override
+            public int getColumnCount() {
+                return filterTableColumnNames.length;
+            }
+
+            @Override
+            public Object getValueAt(int rowIndex, int columnIndex) {
+                String rowKey=compartmentAbbreviationList.get(rowIndex);
+                MinMaxSelectionRow compartmentRow=minMaxRowMap.get(rowKey);
+                switch (columnIndex) {
+                    case FT_INDEX_COMPARTMENT:
+                        String compartmentAbbreviation=compartmentRow.getAbbreviation();
+                        return compartmentAbbreviation;
+                    case FT_INDEX_DESCRIPTION:
+                        String description=compartmentRow.getDescription();
+                        return description;
+                    case FT_INDEX_FILTERTYPE:
+                        String filterType=compartmentRow.getModelState().type;
+                        return filterType;
+                    case FT_INDEX_MIN:
+                        Double min=compartmentRow.getModelState().min;
+                        return min;
+                    case FT_INDEX_MAX:
+                        Double max=compartmentRow.getModelState().max;
+                        return max;
+                    case FT_INDEX_GRAPH:
+                        return "<graph>";
+                    case FT_INDEX_LINES:
+                        return "<lines>";
+                    default:
+                        return null;
+                }
+            }
+        };
+        filterTable.setModel(tableModel);
     }
 
     protected void loadPatternAnnotationQuantifierMapsFromSummary() {
