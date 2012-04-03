@@ -643,7 +643,10 @@ public class GeneralSearchDialog extends ModalDialog {
 
     	if (pageResults==null) return;
     	
-    	statusLabel.setText(pageResults.getResponse().getResults().getNumFound()+" results found for '"+searchString+"'");
+    	long numResults = pageResults.getResponse().getResults().getNumFound();
+    	if (pageResults.getResultList().isEmpty()) numResults = 0;
+    	
+    	statusLabel.setText(numResults+" results found for '"+searchString+"'");
     	statusLabel.setToolTipText("Query took "+pageResults.getResponse().getElapsedTime()+" milliseconds");
     	
     	if (pages.size()==1) {
@@ -764,7 +767,7 @@ public class GeneralSearchDialog extends ModalDialog {
     	
     	facetsPanel.removeAll();
 
-    	if (pageResults==null) return;
+    	if (pageResults==null || pageResults.getResultList().isEmpty()) return;
     	
     	QueryResponse qr = pageResults.getResponse();
     	for(final FacetField ff : qr.getFacetFields()) {
