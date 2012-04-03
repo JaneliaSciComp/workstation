@@ -7,6 +7,7 @@ import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -156,6 +157,11 @@ public class PatternSearchDialog extends ModalDialog {
             }
             return model;
         }
+
+        public JTextField getMinText() {
+            return minText;
+        }
+
     };
     
     public class MinMaxModel {
@@ -283,7 +289,7 @@ public class PatternSearchDialog extends ModalDialog {
 
     private void setupFilterTable() {
         final List<String> compartmentAbbreviationList = PatternAnnotationDataManager.getCompartmentListInstance();
-        TableModel tableModel = new AbstractTableModel() {
+        TableModel tableModel = new DefaultTableModel() {
             @Override
             public int getRowCount() {
                 return compartmentAbbreviationList.size();
@@ -292,6 +298,20 @@ public class PatternSearchDialog extends ModalDialog {
             @Override
             public int getColumnCount() {
                 return filterTableColumnNames.length;
+            }
+
+            @Override
+            public boolean isCellEditable(int row, int col) {
+                if (col==FT_INDEX_MIN) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+
+            @Override
+            public Class getColumnClass(int c) {
+                return getValueAt(0,c).getClass();
             }
 
             @Override
@@ -322,6 +342,29 @@ public class PatternSearchDialog extends ModalDialog {
                         return null;
                 }
             }
+
+            @Override
+            public void setValueAt(Object value, int row, int col) {
+                System.out.println("setValueAt value="+value.toString()+" row="+row+" col="+col);
+                if (col==FT_INDEX_MIN) {
+                    System.out.println("col==FT_INDEX_MIN");
+                    String rowKey=compartmentAbbreviationList.get(row);
+                    MinMaxSelectionRow compartmentRow=minMaxRowMap.get(rowKey);
+                    MinMaxModel state=compartmentRow.getModelState();
+                    Double newValue=new Double(value.toString());
+                    System.out.println("Setting new value="+newValue);
+                    state.min=newValue;
+                    compartmentRow.setModelState(state);
+                    // Check
+                    MinMaxSelectionRow checkRow=minMaxRowMap.get(rowKey);
+                    MinMaxModel checkState=checkRow.getModelState();
+                    Double checkValue=checkState.min;
+                    System.out.println("Check value="+checkValue);
+                }
+                System.out.println("fireTableCellUpdated row="+row+" col="+col);
+                fireTableCellUpdated(row, col);
+            }
+
         };
         filterTable.setModel(tableModel);
     }
