@@ -6,9 +6,7 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
 
 import javax.swing.*;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
+import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -24,9 +22,11 @@ import java.util.List;
  */
 public class PatternSearchDialog extends ModalDialog {
     
-    private static final String PEAK_TYPE="Peak";
-    private static final String TOTAL_TYPE="Total";
+    private static final String INTENSITY_TYPE="Intensity";
+    private static final String DISTRIBUTION_TYPE="Distribution";
     private static final String GLOBAL = "Global";
+
+    DefaultTableModel tableModel;
     
     private static final String[] filterTableColumnNames = {
             "Compartment",
@@ -34,7 +34,6 @@ public class PatternSearchDialog extends ModalDialog {
             "Filter Type",
             "Min",
             "Max",
-            "Graph",
             "Lines"
     };
     
@@ -43,8 +42,7 @@ public class PatternSearchDialog extends ModalDialog {
     private static final int FT_INDEX_FILTERTYPE=2;
     private static final int FT_INDEX_MIN=3;
     private static final int FT_INDEX_MAX=4;
-    private static final int FT_INDEX_GRAPH=5;
-    private static final int FT_INDEX_LINES=6;
+    private static final int FT_INDEX_LINES=5;
 
     private final JPanel mainPanel;
     private final JPanel currentSetNamePanel;
@@ -60,18 +58,21 @@ public class PatternSearchDialog extends ModalDialog {
     private final SimpleWorker quantifierLoaderWorker;
     
     private final Map<String, Map<String, MinMaxModel>> filterSetMap=new HashMap<String, Map<String, MinMaxModel>>();
-    //private final Map<String, MinMaxModel> currentMinMaxModelMap=new HashMap<String, MinMaxModel>();
     private final Map<String, MinMaxSelectionRow> minMaxRowMap=new HashMap<String, MinMaxSelectionRow>();
 
     static boolean quantifierDataIsLoading=false;
     static protected Map<Long, Map<String,String>> sampleInfoMap=null;
     static protected Map<Long, List<Double>> quantifierInfoMap=null;
-    
+
+    final List<String> compartmentAbbreviationList = PatternAnnotationDataManager.getCompartmentListInstance();
+    boolean currentSetInitialized=false;
+    final List<Boolean> currentListModified = new ArrayList<Boolean>();
+
     private class MinMaxSelectionRow extends JPanel implements ActionListener {
         String abbreviation;
         String description;
-        JRadioButton peakButton;
-        JRadioButton totalButton;
+        JRadioButton intensityButton;
+        JRadioButton distributionButton;
         Double min=0.0;
         Double max=100.0;
         Long lineCount;
@@ -89,18 +90,18 @@ public class PatternSearchDialog extends ModalDialog {
             descriptionLabel.setText(description);
             add(abbreviationLabel);
             add(descriptionLabel);
-            peakButton = new JRadioButton(PEAK_TYPE);
-            peakButton.setActionCommand(PEAK_TYPE);
-            totalButton = new JRadioButton(TOTAL_TYPE);
-            totalButton.setActionCommand(TOTAL_TYPE);
+            intensityButton = new JRadioButton(INTENSITY_TYPE);
+            intensityButton.setActionCommand(INTENSITY_TYPE);
+            distributionButton = new JRadioButton(DISTRIBUTION_TYPE);
+            distributionButton.setActionCommand(DISTRIBUTION_TYPE);
             buttonGroup = new ButtonGroup();
-            buttonGroup.add(peakButton);
-            buttonGroup.add(totalButton);
-            peakButton.setSelected(true);
-            peakButton.addActionListener(this);
-            totalButton.addActionListener(this);
-            add(peakButton);
-            add(totalButton);
+            buttonGroup.add(intensityButton);
+            buttonGroup.add(distributionButton);
+            intensityButton.setSelected(true);
+            intensityButton.addActionListener(this);
+            distributionButton.addActionListener(this);
+            add(intensityButton);
+            add(distributionButton);
             minText=new JTextField(5);
             minText.setText(min.toString());
             maxText=new JTextField(5);
@@ -111,10 +112,10 @@ public class PatternSearchDialog extends ModalDialog {
 
         public void actionPerformed(ActionEvent e) {
             String actionString=e.getActionCommand();
-            if (actionString.equals(PEAK_TYPE)) {
-                setStatusMessage(abbreviation+": Peak type selected");
-            } else if (actionString.equals(TOTAL_TYPE)) {
-                setStatusMessage(abbreviation+": Total type selected");
+            if (actionString.equals(INTENSITY_TYPE)) {
+                setStatusMessage(abbreviation+": INTENSITY type selected");
+            } else if (actionString.equals(DISTRIBUTION_TYPE)) {
+                setStatusMessage(abbreviation+": DISTRIBUTION type selected");
             }
             return;
         }
@@ -139,10 +140,10 @@ public class PatternSearchDialog extends ModalDialog {
         public void setModelState(MinMaxModel model) {
             this.min=model.min;
             this.max=model.max;
-            if (model.type.equals(PEAK_TYPE)) {
-                peakButton.setSelected(true);
-            } else if (model.type.equals(TOTAL_TYPE)) {
-                totalButton.setSelected(true);
+            if (model.type.equals(INTENSITY_TYPE)) {
+                intensityButton.setSelected(true);
+            } else if (model.type.equals(DISTRIBUTION_TYPE)) {
+                distributionButton.setSelected(true);
             }
         }
         
@@ -150,16 +151,12 @@ public class PatternSearchDialog extends ModalDialog {
             MinMaxModel model=new MinMaxModel();
             model.min=min;
             model.max=max;
-            if (peakButton.isSelected()) {
-                model.type=PEAK_TYPE;
-            } else if (totalButton.isSelected()) {
-                model.type=TOTAL_TYPE;
+            if (intensityButton.isSelected()) {
+                model.type=INTENSITY_TYPE;
+            } else if (distributionButton.isSelected()) {
+                model.type=DISTRIBUTION_TYPE;
             }
             return model;
-        }
-
-        public JTextField getMinText() {
-            return minText;
         }
 
     };
@@ -168,6 +165,32 @@ public class PatternSearchDialog extends ModalDialog {
         public Double min;
         public Double max;
         public String type;
+    }
+
+    public class TypeComboBoxEditor extends DefaultCellEditor {
+        public TypeComboBoxEditor(String[] items) {
+            super(new JComboBox(items));
+        }
+    }
+
+    public class ModifyAwareRenderer extends DefaultTableCellRenderer {
+
+        public ModifyAwareRenderer() {
+            this.setHorizontalAlignment(JLabel.LEFT);
+        }
+
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                                                       boolean hasFocus, int row, int column) {
+            Component cell=super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            if (currentListModified.get(row)) {
+                cell.setBackground(new Color(100,255,100));
+                cell.setForeground(filterTable.getForeground());
+            } else {
+                cell.setForeground(filterTable.getForeground());
+                cell.setBackground(filterTable.getBackground());
+            }
+            return cell;
+        }
     }
 
     public PatternSearchDialog() {
@@ -202,6 +225,14 @@ public class PatternSearchDialog extends ModalDialog {
 
         quantifierLoaderWorker=createQuantifierLoaderWorker();
 
+        initializeCurrentListModified();
+
+    }
+
+    private void initializeCurrentListModified() {
+        for (String abbreviation : compartmentAbbreviationList) {
+            currentListModified.add(false);
+        }
     }
     
     private JTable createFilterTable() {
@@ -222,7 +253,7 @@ public class PatternSearchDialog extends ModalDialog {
         MinMaxModel model=new MinMaxModel();
         model.min=0.0;
         model.max=100.0;
-        model.type=PEAK_TYPE;
+        model.type=INTENSITY_TYPE;
         return model;
     }
 
@@ -288,8 +319,7 @@ public class PatternSearchDialog extends ModalDialog {
     }
 
     private void setupFilterTable() {
-        final List<String> compartmentAbbreviationList = PatternAnnotationDataManager.getCompartmentListInstance();
-        TableModel tableModel = new DefaultTableModel() {
+        tableModel = new DefaultTableModel(filterTableColumnNames, filterTableColumnNames.length) {
             @Override
             public int getRowCount() {
                 return compartmentAbbreviationList.size();
@@ -302,7 +332,9 @@ public class PatternSearchDialog extends ModalDialog {
 
             @Override
             public boolean isCellEditable(int row, int col) {
-                if (col==FT_INDEX_MIN) {
+                if (col==FT_INDEX_MIN ||
+                    col==FT_INDEX_MAX ||
+                    col==FT_INDEX_FILTERTYPE) {
                     return true;
                 } else {
                     return false;
@@ -334,8 +366,6 @@ public class PatternSearchDialog extends ModalDialog {
                     case FT_INDEX_MAX:
                         Double max=compartmentRow.getModelState().max;
                         return max;
-                    case FT_INDEX_GRAPH:
-                        return "<graph>";
                     case FT_INDEX_LINES:
                         return "<lines>";
                     default:
@@ -345,28 +375,55 @@ public class PatternSearchDialog extends ModalDialog {
 
             @Override
             public void setValueAt(Object value, int row, int col) {
-                System.out.println("setValueAt value="+value.toString()+" row="+row+" col="+col);
+                String rowKey=compartmentAbbreviationList.get(row);
+                MinMaxSelectionRow compartmentRow=minMaxRowMap.get(rowKey);
+                MinMaxModel state=compartmentRow.getModelState();
                 if (col==FT_INDEX_MIN) {
-                    System.out.println("col==FT_INDEX_MIN");
-                    String rowKey=compartmentAbbreviationList.get(row);
-                    MinMaxSelectionRow compartmentRow=minMaxRowMap.get(rowKey);
-                    MinMaxModel state=compartmentRow.getModelState();
                     Double newValue=new Double(value.toString());
-                    System.out.println("Setting new value="+newValue);
+                    if (newValue<0.0) {
+                        newValue=0.0;
+                    }
+                    if (newValue>state.max) {
+                        newValue=state.max;
+                    }
                     state.min=newValue;
                     compartmentRow.setModelState(state);
-                    // Check
-                    MinMaxSelectionRow checkRow=minMaxRowMap.get(rowKey);
-                    MinMaxModel checkState=checkRow.getModelState();
-                    Double checkValue=checkState.min;
-                    System.out.println("Check value="+checkValue);
+                } else if (col==FT_INDEX_MAX) {
+                    Double newValue=new Double(value.toString());
+                    if (newValue>100.0) {
+                        newValue=100.0;
+                    }
+                    if (newValue<state.min) {
+                        newValue=state.min;
+                    }
+                    state.max=newValue;
+                    compartmentRow.setModelState(state);
+                } else if (col==FT_INDEX_FILTERTYPE) {
+                    state.type=(String)value;
+                    compartmentRow.setModelState(state);
                 }
-                System.out.println("fireTableCellUpdated row="+row+" col="+col);
+                if (currentSetInitialized) {
+                    if (state.min==0.0 && state.max==100.0 && state.type.equals(INTENSITY_TYPE)) {
+                        if (currentListModified.get(row)) {
+                            currentListModified.set(row, false);
+                        }
+                    } else {
+                        if (!currentListModified.get(row)) {
+                            currentListModified.set(row, true);
+                        }
+                    }
+                }
                 fireTableCellUpdated(row, col);
             }
 
         };
         filterTable.setModel(tableModel);
+        TableColumn typeColumn = filterTable.getColumnModel().getColumn(FT_INDEX_FILTERTYPE);
+        typeColumn.setCellEditor(new TypeComboBoxEditor(new String[] { INTENSITY_TYPE, DISTRIBUTION_TYPE }));
+
+        ModifyAwareRenderer modifyAwareRenderer=new ModifyAwareRenderer();
+        filterTable.setDefaultRenderer(Object.class, modifyAwareRenderer);
+        filterTable.setDefaultRenderer(Double.class, modifyAwareRenderer);
     }
 
     protected void loadPatternAnnotationQuantifierMapsFromSummary() {
@@ -396,6 +453,7 @@ public class PatternSearchDialog extends ModalDialog {
             protected void doStuff() throws Exception {
                 setStatusMessage("Loading quantifier maps...");
                 loadPatternAnnotationQuantifierMapsFromSummary();
+                currentSetInitialized=true;
             }
 
             @Override
