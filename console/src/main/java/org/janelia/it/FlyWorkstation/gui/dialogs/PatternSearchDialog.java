@@ -80,6 +80,7 @@ public class PatternSearchDialog extends ModalDialog {
         JTextField minText;
         JTextField maxText;
         JTextField lineCountText;
+        JButton applyButton;
 
         public MinMaxSelectionRow(String abbreviation, String description) {
             this.abbreviation=abbreviation;
@@ -108,6 +109,39 @@ public class PatternSearchDialog extends ModalDialog {
             maxText.setText(max.toString());
             add(minText);
             add(maxText);
+            applyButton=new JButton();
+            applyButton.setText("Apply");
+            applyButton.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    applyGlobalSettings();
+                }
+            });
+            add(applyButton);
+        }
+
+        public void applyGlobalSettings() {
+            Double globalMin=0.0;
+            Double globalMax=100.0;
+            try {
+                globalMin=new Double(minText.getText());
+            } catch (Exception ex) {}
+            try {
+                globalMax=new Double(maxText.getText());
+            } catch (Exception ex) {}
+            String globalType=(intensityButton.isSelected()?INTENSITY_TYPE:DISTRIBUTION_TYPE);
+            for (int rowIndex=0;rowIndex<compartmentAbbreviationList.size();rowIndex++) {
+                String rowKey=compartmentAbbreviationList.get(rowIndex);
+                MinMaxSelectionRow compartmentRow=minMaxRowMap.get(rowKey);
+                if (!currentListModified.get(rowIndex)) {
+                    MinMaxModel state=compartmentRow.getModelState();
+                    state.min=globalMin;
+                    state.max=globalMax;
+                    state.type=globalType;
+                    compartmentRow.setModelState(state);
+                }
+            }
+            filterTableScrollPane.update(filterTableScrollPane.getGraphics());
         }
 
         public void actionPerformed(ActionEvent e) {
@@ -117,6 +151,7 @@ public class PatternSearchDialog extends ModalDialog {
             } else if (actionString.equals(DISTRIBUTION_TYPE)) {
                 setStatusMessage(abbreviation+": DISTRIBUTION type selected");
             }
+            applyGlobalSettings();
             return;
         }
         
@@ -160,7 +195,7 @@ public class PatternSearchDialog extends ModalDialog {
         }
 
     };
-    
+
     public class MinMaxModel {
         public Double min;
         public Double max;
