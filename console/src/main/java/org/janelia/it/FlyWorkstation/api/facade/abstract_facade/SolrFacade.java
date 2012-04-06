@@ -1,6 +1,9 @@
 package org.janelia.it.FlyWorkstation.api.facade.abstract_facade;
 
+import java.util.Map;
+
 import org.apache.solr.client.solrj.SolrQuery;
+import org.janelia.it.jacs.compute.api.support.SageTerm;
 import org.janelia.it.jacs.compute.api.support.SolrResults;
 
 /**
@@ -11,5 +14,7 @@ import org.janelia.it.jacs.compute.api.support.SolrResults;
 public interface SolrFacade {
 
 	public SolrResults searchSolr(SolrQuery query) throws Exception;
+	
+	public Map<String, SageTerm> getFlyLightVocabulary() throws Exception;
 	
 }

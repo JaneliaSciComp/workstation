@@ -19,16 +19,16 @@ import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import javax.swing.table.TableModel;
 
-import loci.plugins.config.SpringUtilities;
-import net.sourceforge.jdatepicker.JDateComponentFactory;
-import net.sourceforge.jdatepicker.impl.JDatePickerImpl;
-
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.FacetField.Count;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchAttribute;
+import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchCriteria;
+import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchAttribute.DataStore;
+import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchAttribute.DataType;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenWithDefaultAppAction;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
@@ -40,10 +40,7 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ScrollablePanel;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.compute.api.ComputeException;
-import org.janelia.it.jacs.compute.api.support.EntityDocument;
-import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
-import org.janelia.it.jacs.compute.api.support.SolrResults;
-import org.janelia.it.jacs.compute.api.support.SolrUtils;
+import org.janelia.it.jacs.compute.api.support.*;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityAttribute;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -61,7 +58,7 @@ public class GeneralSearchDialog extends ModalDialog {
 	protected static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm");
 
 	/** Default directory for exports */
-	protected static final String DEFAULT_DIR = System.getProperty("user.home");
+	protected static final String DEFAULT_EXPORT_DIR = System.getProperty("user.home");
 	
 	/** Number of characters before cell values are truncated */
 	protected static final int MAX_CELL_LENGTH = 50;
@@ -79,13 +76,26 @@ public class GeneralSearchDialog extends ModalDialog {
     protected String[] facets = {"entity_type", "tiling_pattern_txt", "username"};
 
     /** Fields to use as columns */
-    protected static final String[] columnFields = {"id", "name", "entity_type", "username", "updated_date", "annotations", "score"};
+    protected static final String[] columnFields = {"id", "name", "entity_type", "username", "creation_date", "updated_date", "annotations", "score"};
     
     /** Labels to use on the columns */
-    protected static final String[] columnLabels = {"GUID", "Name", "Type", "Owner", "Last Updated", "Annotations", "Score"};
+    protected static final String[] columnLabels = {"GUID", "Name", "Type", "Owner", "Date Created", "Date Last Updated", "Annotations", "Score"};
     
     /** Which columns are sortable */
-    protected static final boolean[] columnSortable = {true, true, true, true, true, false, true};
+    protected static final boolean[] columnSortable = {true, true, true, true, true, true, false, true};
+    
+    /** Data types of the columns */
+    protected static final DataType[] columnTypes = {DataType.STRING, DataType.STRING, DataType.STRING, DataType.STRING, DataType.DATE, DataType.DATE, DataType.STRING, DataType.STRING};
+    
+    /** Count of items in each column group */
+    protected List<Integer> columnGroupLengths = new ArrayList<Integer>();
+    
+    /** Labels for column groups displayed in the attribute panel */
+    protected List<String> columnGroupLabels = new ArrayList<String>();
+    
+    // Data
+    protected List<SearchAttribute> attributes = new ArrayList<SearchAttribute>();
+    protected Map<String, SageTerm> vocab;
     
     // UI Settings
     protected Font groupFont = new Font("Sans Serif", Font.BOLD, 11);
@@ -97,8 +107,8 @@ public class GeneralSearchDialog extends ModalDialog {
     protected final JLabel titleLabel2;
     protected final JComboBox inputField;
     protected final JCheckBox advancedSearchCheckbox;
-    protected final JDatePickerImpl startDatePicker;
-    protected final JDatePickerImpl endDatePicker;
+    protected final JPanel adhocPanel;
+    protected final JPanel criteriaPanel;
     protected final JSplitPane splitPane;
     protected final JPanel facetsPanel;
     protected final JPanel attrsPanel;
@@ -108,14 +118,16 @@ public class GeneralSearchDialog extends ModalDialog {
     protected final JButton exportButton;
     
     // Search state
+    protected List<SearchCriteria> searchCriteriaList = new ArrayList<SearchCriteria>();
     protected Entity searchRoot;
     protected final List<SolrResults> pages = new ArrayList<SolrResults>();
     protected final Map<String,Set<String>> filters = new HashMap<String,Set<String>>();
     protected int numLoaded = 0;
     protected String sortField;
     protected boolean ascending = true;
-    protected String searchString;
-    	
+    protected String searchString = "";
+    protected String fullQueryString = "";
+    
     public GeneralSearchDialog() {
 
         setTitle("Search");
@@ -132,56 +144,61 @@ public class GeneralSearchDialog extends ModalDialog {
         inputField.setEditable(true);
         inputField.setToolTipText("Enter search terms...");
         
+        JButton searchButton = new JButton("Search");
+        searchButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				performFreshSearch(false, false, true);
+			}
+		});
+        
         JPanel searchBox = new JPanel();
         searchBox.setLayout(new BoxLayout(searchBox, BoxLayout.LINE_AXIS));
         searchBox.add(titleLabel);
         searchBox.add(inputField);
         searchBox.add(titleLabel2);
+        searchBox.add(searchButton);
 
-        final JPanel advancedSearch = new JPanel(new SpringLayout());
+        criteriaPanel = new JPanel();
+        criteriaPanel.setLayout(new BoxLayout(criteriaPanel, BoxLayout.PAGE_AXIS));
+        
+        JButton addCriteriaButton = new JButton("Add search criteria", Icons.getIcon("add.png"));
+        addCriteriaButton.setBorderPainted(false);
+        addCriteriaButton.setBorder(BorderFactory.createEmptyBorder(10,13,10,0));
+        addCriteriaButton.setIconTextGap(20);
+        addCriteriaButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				addSearchCriteria(true);
+			}
+		});
+
+        adhocPanel = new JPanel();
+        adhocPanel.setLayout(new BoxLayout(adhocPanel, BoxLayout.PAGE_AXIS));
+        criteriaPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        adhocPanel.add(criteriaPanel);
+        addCriteriaButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+        adhocPanel.add(addCriteriaButton);
+
+        final JPanel advancedSearch = new JPanel();
+        advancedSearch.setMinimumSize(new Dimension(500, 200));
+        advancedSearch.setLayout(new BoxLayout(advancedSearch, BoxLayout.PAGE_AXIS));
+        advancedSearch.setVisible(false);
         advancedSearch.setBorder(BorderFactory.createCompoundBorder(
         				BorderFactory.createEmptyBorder(10,10,10,10), 
         				BorderFactory.createEtchedBorder(EtchedBorder.LOWERED)));
         
-        advancedSearch.setVisible(false);
-        
-        startDatePicker = (JDatePickerImpl) JDateComponentFactory.createJDatePicker();
-        startDatePicker.setMaximumSize(new Dimension(200, Integer.MAX_VALUE));
-        JLabel startDateLabel = new JLabel("Start Date: ");
-        startDateLabel.setLabelFor(startDatePicker);
-        startDatePicker.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				performFreshSearch(false, false, false);
-			}
-		});
-        
-        endDatePicker = (JDatePickerImpl) JDateComponentFactory.createJDatePicker();
-        endDatePicker.setMaximumSize(new Dimension(200, Integer.MAX_VALUE));
-        JLabel endDateLabel = new JLabel("End Date: ");
-        endDateLabel.setLabelFor(endDatePicker);
-        endDatePicker.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				performFreshSearch(false, false, false);
-			}
-		});
-        
-        advancedSearch.add(startDateLabel);
-        advancedSearch.add(startDatePicker);
-        advancedSearch.add(endDateLabel);
-        advancedSearch.add(endDatePicker);
-        SpringUtilities.makeCompactGrid(advancedSearch, advancedSearch.getComponentCount()/2, 2, 6, 6, 6, 6);
-        
-        JPanel advancedSearchHolder = new JPanel(new BorderLayout());
-        advancedSearchHolder.add(advancedSearch, BorderLayout.WEST);
+        adhocPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        advancedSearch.add(adhocPanel);
         
         advancedSearchCheckbox = new JCheckBox("Advanced search options");
         advancedSearchCheckbox.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				advancedSearch.setVisible(!advancedSearch.isVisible());
-				performFreshSearch(false, false, false);
+				if (searchCriteriaList.isEmpty()) {
+			        addSearchCriteria(false);
+				}
 			}
 		});
         
@@ -227,6 +244,8 @@ public class GeneralSearchDialog extends ModalDialog {
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.FIRST_LINE_END;
         c.weightx = c.weighty = 1.0;
+        JPanel advancedSearchHolder = new JPanel(new BorderLayout());
+        advancedSearchHolder.add(advancedSearch, BorderLayout.WEST);
         inputPanel.add(advancedSearchHolder, c);
 
         c.gridx = 2;
@@ -268,8 +287,33 @@ public class GeneralSearchDialog extends ModalDialog {
 					}
 				});
 				for(EntityAttribute attr : attrs) {
-					resultsTable.addColumn(SolrUtils.getDynamicFieldName(attr.getName()), attr.getName(), false, false, true, true);	
+					String name = SolrUtils.getDynamicFieldName(attr.getName());
+					String label = attr.getName();
+					resultsTable.addColumn(name, label, false, false, true, true);
+					attributes.add(new SearchAttribute(name, label, DataType.STRING, DataStore.ENTITY_DATA));
 				}
+
+				columnGroupLengths.add(attrs.size());
+				columnGroupLabels.add("Extended Attributes");
+				
+				vocab = ModelMgr.getModelMgr().getFlyLightVocabulary();
+				List<SageTerm> terms = new ArrayList<SageTerm>(vocab.values());
+				Collections.sort(terms, new Comparator<SageTerm>() {
+					@Override
+					public int compare(SageTerm o1, SageTerm o2) {
+						return o1.getName().compareTo(o2.getName());
+					}
+				});
+				
+				for(SageTerm term : terms) {
+					String name = SolrUtils.getSageFieldName(term.getName(), term);
+					String label = term.getDisplayName();
+					resultsTable.addColumn(name, label, false, false, true, true);
+					attributes.add(new SearchAttribute(name, label, DataType.STRING, DataStore.SOLR));
+				}	
+				
+				columnGroupLengths.add(terms.size());
+				columnGroupLabels.add("SAGE Attributes");
 			}
 
 			@Override
@@ -307,8 +351,15 @@ public class GeneralSearchDialog extends ModalDialog {
 		resultsTable.setBorder(BorderFactory.createEmptyBorder(0, 0, 12, 5));
 		
 		for(int i=0; i<columnFields.length; i++) {
-			resultsTable.addColumn(columnFields[i], columnLabels[i], i>0, false, true, columnSortable[i]);	
+			String name = columnFields[i];
+			String label = columnLabels[i];
+			DataType dataType = columnTypes[i];
+			resultsTable.addColumn(name, label, i>0, false, true, columnSortable[i]);	
+			attributes.add(new SearchAttribute(name, label, dataType, DataStore.ENTITY));
 		}
+
+		columnGroupLengths.add(columnFields.length);
+		columnGroupLabels.add("Basic Attributes");
 		
 		JPanel resultsPane = new JPanel(new BorderLayout());
         statusLabel = new JLabel(" ");
@@ -379,7 +430,7 @@ public class GeneralSearchDialog extends ModalDialog {
     }
     
 	protected void init() {
-
+		
 		// Add the action listener here, because if we add it in the constructor, we get some spurious events
         inputField.addActionListener(new ActionListener() {
 			@Override
@@ -416,11 +467,22 @@ public class GeneralSearchDialog extends ModalDialog {
     	titleLabel2.setText(" in "+searchRoot.getName());
     	init();
     }
-    
+
+	private void addSearchCriteria(boolean enableDelete) {
+		SearchCriteria searchCriteria = new SearchCriteria(attributes, enableDelete) {
+			@Override
+			protected void removeSearchCriteria() {
+				searchCriteriaList.remove(this);
+				criteriaPanel.remove(this);
+				adhocPanel.revalidate();
+			}
+		};
+		searchCriteriaList.add(searchCriteria);
+		criteriaPanel.add(searchCriteria);
+		adhocPanel.revalidate();
+	}
+	
     protected void performFreshSearch(boolean clearFilters, boolean clearSort, boolean showLoading) {
-    	
-    	if (searchString==null) return;
-    	
     	if (clearFilters) {
     		filters.clear();
     	}
@@ -460,7 +522,20 @@ public class GeneralSearchDialog extends ModalDialog {
     
     protected synchronized void performSearch(final int page, final boolean showLoading) {
     	
-		final SolrQueryBuilder builder = getQueryBuilder(true);
+		final SolrQueryBuilder builder = getQueryBuilder(true);		
+		if (!builder.hasQuery()) return;
+
+		// We don't want to display all the system level query parameters, so build a simplified version of 
+		// the query string for display purposes. 
+		StringBuilder qs = new StringBuilder();
+		if (builder.getAuxString()!=null) {
+			qs.append(builder.getAuxString());
+		}
+		if (qs.length()>0) qs.append(" ");
+		if (builder.getSearchString()!=null) {
+			qs.append(builder.getSearchString());
+		}
+		this.fullQueryString = qs.toString();
 		
     	SimpleWorker worker = new SimpleWorker() {
 			
@@ -547,11 +622,11 @@ public class GeneralSearchDialog extends ModalDialog {
         JFileChooser chooser = new JFileChooser();
         chooser.setDialogTitle("Select File Destination");
         chooser.setFileSelectionMode(FileChooser.FILES_ONLY);
-        File defaultFile = new File(DEFAULT_DIR,"WorkstationSearchResults.xls");
+        File defaultFile = new File(DEFAULT_EXPORT_DIR,"WorkstationSearchResults.xls");
         
         int i = 1;
         while (defaultFile.exists() && i<10000) {
-        	defaultFile = new File(DEFAULT_DIR,"WorkstationSearchResults_"+i+".xls");
+        	defaultFile = new File(DEFAULT_EXPORT_DIR,"WorkstationSearchResults_"+i+".xls");
         	i++;
         }
         
@@ -646,7 +721,7 @@ public class GeneralSearchDialog extends ModalDialog {
     	long numResults = pageResults.getResponse().getResults().getNumFound();
     	if (pageResults.getResultList().isEmpty()) numResults = 0;
     	
-    	statusLabel.setText(numResults+" results found for '"+searchString+"'");
+    	statusLabel.setText(numResults+" results found for '"+fullQueryString.trim()+"'");
     	statusLabel.setToolTipText("Query took "+pageResults.getResponse().getElapsedTime()+" milliseconds");
     	
     	if (pages.size()==1) {
@@ -674,7 +749,7 @@ public class GeneralSearchDialog extends ModalDialog {
 		public SolrRowSorter() {
 			List<DynamicColumn> columns = resultsTable.getDisplayedColumns();
 			for (int i=0; i<columns.size(); i++) {
-				if (columns.get(i).equals(sortField)) {
+				if (columns.get(i).getName().equals(sortField)) {
 					sortKeys.add(new SortKey(i, ascending?SortOrder.ASCENDING:SortOrder.DESCENDING));
 				}
 			}
@@ -824,13 +899,21 @@ public class GeneralSearchDialog extends ModalDialog {
 		JPanel attrGroupPanel = null;
 		
 		int i = 0;
+		int currGroup = 0;
+		int groupIndex = 0;
+		
 		for(final DynamicColumn column : resultsTable.getColumns()) {
 			
-			if (i==0 || i==columnFields.length) {
+			if (i==0 || groupIndex>=columnGroupLengths.get(currGroup)) {
+				// Start a new group
+				if (i>0) {
+					currGroup++;
+					groupIndex = 0;
+				}
 				attrGroupPanel = new JPanel();
 				attrGroupPanel.setOpaque(false);
 				attrGroupPanel.setLayout(new BoxLayout(attrGroupPanel, BoxLayout.PAGE_AXIS));
-				JLabel attrGroupLabel = new JLabel(i==0 ? "Basic Attributes" : "Extended Attributes");
+				JLabel attrGroupLabel = new JLabel(columnGroupLabels.get(currGroup));
 				attrGroupLabel.setFont(groupFont);
 				attrGroupPanel.add(attrGroupLabel);
 				attrsPanel.add(Box.createRigidArea(new Dimension(0,10)));
@@ -849,16 +932,19 @@ public class GeneralSearchDialog extends ModalDialog {
 			checkBox.setFont(checkboxFont);
 			attrGroupPanel.add(checkBox);
 			i++;
+			groupIndex++;
 		}
+		
 		
 		attrsPanel.add(Box.createRigidArea(new Dimension(0,10)));
 	}
 
 	protected void populateHistory() {
+		
 		DefaultComboBoxModel model = (DefaultComboBoxModel)inputField.getModel();
 		
 		// Check if the current search term is already recorded in the history
-		if (model.getSize()>0 && model.getElementAt(0).equals(searchString)) return;
+		if (model.getSize()>0 && model.getElementAt(0)!=null && model.getElementAt(0).equals(searchString)) return;
 		
 		// Update the model
     	while (model.getSize()>=MAX_HISTORY_LENGTH) {
@@ -909,16 +995,53 @@ public class GeneralSearchDialog extends ModalDialog {
 		}
 		
     	if (advancedSearchCheckbox.isSelected()) {
-    		Calendar startCal = (Calendar)startDatePicker.getModel().getValue();
-    		if (startCal!=null) {
-    			Date startDate = startCal.getTime();
-    	    	builder.setStartDate(startDate);
+    		
+    		StringBuilder aux = new StringBuilder();
+    		
+    		for(SearchCriteria criteria : searchCriteriaList) {
+    			
+    			String value1 = null;
+    			String value2 = null;
+    			
+    			SearchAttribute sa = criteria.getAttribute();
+    			if (sa==null) continue;
+    			
+    			if (sa.getDataType().equals(DataType.DATE)) {
+    				Calendar startCal = (Calendar)criteria.getValue1();
+    				Calendar endCal = (Calendar)criteria.getValue2();
+	    			value1 = startCal==null?"*":SolrUtils.formatDate(startCal.getTime());
+	    			value2 =  endCal==null?"*":SolrUtils.formatDate(endCal.getTime());
+    			}
+    			else {
+    				value1 = (String)criteria.getValue1();
+    				value2 = (String)criteria.getValue2();
+    			}
+
+    			if (value1==null&&value2==null) continue;
+    			
+    			if (aux.length()>0) aux.append(" ");
+    			aux.append("+");
+    			aux.append(sa.getName());
+    			aux.append(":");
+    			
+    			switch(criteria.getOp()) {
+    			case CONTAINS:
+    				aux.append(value1);
+    				break;
+    			case BETWEEN:
+    				aux.append("[");
+    				aux.append(value1);
+    				aux.append(" TO ");
+    				aux.append(value2);
+    				aux.append("]");
+    				break;
+    			case NOT_NULL:
+    				aux.append("*");
+    				break;
+    			}
     		}
-    		Calendar endCal = (Calendar)endDatePicker.getModel().getValue();
-    		if (endCal!=null) {
-    			Date endDate = endCal.getTime();
-    	    	builder.setEndDate(endDate);
-    		}
+    		
+    		builder.setAuxString(aux.toString());
     	}
     	
     	return builder;
@@ -949,7 +1072,6 @@ public class GeneralSearchDialog extends ModalDialog {
 		}
 		return "Search Results #"+(maxNum+1);
     }
-
 	
     /**
      * Return the value of the specified column for the given object.
@@ -974,6 +1096,9 @@ public class GeneralSearchDialog extends ModalDialog {
 		}
 		else if ("username".equals(field)) {
 			value = entity.getUser().getUserLogin();
+		}
+		else if ("creation_date".equals(field)) {
+			value = df.format(entity.getCreationDate());
 		}
 		else if ("updated_date".equals(field)) {
 			value = df.format(entity.getUpdatedDate());

@@ -13,6 +13,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.exception_handlers.PrintStackTraceHandler;
 import org.janelia.it.FlyWorkstation.shared.util.ThreadQueue;
+import org.janelia.it.jacs.compute.api.support.SageTerm;
 import org.janelia.it.jacs.compute.api.support.SolrResults;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityAttribute;
@@ -645,6 +646,10 @@ public class ModelMgr {
     public SolrResults searchSolr(SolrQuery query) throws Exception {
     	System.out.println("Searching SOLR: "+query.getQuery());
     	return FacadeManager.getFacadeManager().getSolrFacade().searchSolr(query);
+    }
+    
+    public Map<String, SageTerm> getFlyLightVocabulary() throws Exception {
+    	return FacadeManager.getFacadeManager().getSolrFacade().getFlyLightVocabulary();
     }
 
     public boolean loginUser() throws Exception {
