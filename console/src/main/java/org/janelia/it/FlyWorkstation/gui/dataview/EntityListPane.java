@@ -16,6 +16,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -260,7 +261,9 @@ public class EntityListPane extends JPanel {
     private void populateEntityDataPanes(final Entity entity) {
 
         System.out.println("Populate data panes with " + entity);
-
+        
+    	ModelMgrUtils.loadLazyEntity(entity, false);
+        
         entityChildrenPane.showEntityData(entity.getOrderedEntityData());
         entityParentsPane.showLoading();
         

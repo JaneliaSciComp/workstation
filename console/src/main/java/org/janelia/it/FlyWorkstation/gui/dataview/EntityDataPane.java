@@ -20,6 +20,7 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 public class EntityDataPane extends JPanel {
 
@@ -156,11 +157,13 @@ public class EntityDataPane extends JPanel {
             protected void doStuff() throws Exception {
                 for (EntityData data : datas) {
                     Entity child = data.getChildEntity();
-                    if (child != null) {
+                    if (child != null && !EntityUtils.isInitialized(child)) {
+                    	System.out.println("Fetching child "+child.getId());
                         data.setChildEntity(ModelMgr.getModelMgr().getEntityById(child.getId().toString()));
                     }
                     Entity parent = data.getParentEntity();
-                    if (parent != null) {
+                    if (parent != null && !EntityUtils.isInitialized(parent)) {
+                    	System.out.println("Fetching parent "+parent.getId());
                         data.setParentEntity(ModelMgr.getModelMgr().getEntityById(parent.getId().toString()));
                     }
                     if (isCancelled()) return;
