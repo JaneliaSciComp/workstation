@@ -52,7 +52,7 @@ public class ConsoleProperties extends Properties {
      *
      * @param filename - property file name to inject into Spring
      */
-    public void setFileName(String filename) {
+    public static void setFileName(String filename) {
         fileNames.clear();
         fileNames.add(filename);
     }
