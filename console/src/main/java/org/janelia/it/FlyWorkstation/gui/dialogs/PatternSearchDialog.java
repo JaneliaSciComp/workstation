@@ -61,8 +61,11 @@ public class PatternSearchDialog extends ModalDialog {
     private final Map<String, MinMaxSelectionRow> minMaxRowMap=new HashMap<String, MinMaxSelectionRow>();
 
     static boolean quantifierDataIsLoading=false;
+
     static protected Map<Long, Map<String,String>> sampleInfoMap=null;
     static protected Map<Long, List<Double>> quantifierInfoMap=null;
+    static protected Map<Long, Map<String, Double>> intensityScoreMap=null;
+    static protected Map<Long, Map<String, Double>> distributionScoreMap=null;
 
     final List<String> compartmentAbbreviationList = PatternAnnotationDataManager.getCompartmentListInstance();
     boolean currentSetInitialized=false;
@@ -488,6 +491,8 @@ public class PatternSearchDialog extends ModalDialog {
             protected void doStuff() throws Exception {
                 setStatusMessage("Loading quantifier maps...");
                 loadPatternAnnotationQuantifierMapsFromSummary();
+                setStatusMessage("Computing scores...");
+                computeScores();
                 currentSetInitialized=true;
             }
 
@@ -503,6 +508,45 @@ public class PatternSearchDialog extends ModalDialog {
             }
         };
         return quantifierLoaderWorker;
+    }
+
+    protected void computeScores() {
+        long totalComputeCount=0;
+        if (intensityScoreMap==null) {
+            intensityScoreMap=new HashMap<Long, Map<String, Double>>();
+        }
+        if (distributionScoreMap==null) {
+            distributionScoreMap=new HashMap<Long, Map<String, Double>>();
+        }
+        for (Long sampleId : quantifierInfoMap.keySet()) {
+            List<Double> quantifierList = quantifierInfoMap.get(sampleId);
+            Map<String, Double> intensityMap = new HashMap<String, Double>();
+            Map<String, Double> distributionMap = new HashMap<String, Double>();
+            List<Double> globalList = new ArrayList<Double>();
+            List<Double> compartmentList = new ArrayList<Double>();
+            // We assume the compartment list here matches the order of the quantifierList
+            final int GLOBAL_LIST_SIZE=9;
+            for (int g=0;g<GLOBAL_LIST_SIZE;g++) {
+                globalList.add(quantifierList.get(g));
+            }
+            int compartmentCount=0;
+            for (String compartmentAbbreviation : compartmentAbbreviationList) {
+                compartmentList.clear();
+                int startPosition=GLOBAL_LIST_SIZE + compartmentCount*10;
+                int endPosition=startPosition+10;
+                for (int c=startPosition;c<endPosition;c++) {
+                    compartmentList.add(quantifierList.get(c));
+                }
+                Object[] scores =PatternAnnotationDataManager.getCompartmentScoresByQuantifiers(globalList, compartmentList);
+                totalComputeCount++;
+                intensityMap.put(compartmentAbbreviation, (Double)scores[0]);
+                distributionMap.put(compartmentAbbreviation, (Double)scores[1]);
+                compartmentCount++;
+            }
+            intensityScoreMap.put(sampleId, intensityMap);
+            distributionScoreMap.put(sampleId, distributionMap);
+        }
+        System.out.println("Total calls to getCompartmentScoresByQuantifiers() = "+totalComputeCount);
     }
 
 }
