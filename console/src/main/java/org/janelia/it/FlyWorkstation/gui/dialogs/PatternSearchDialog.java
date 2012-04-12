@@ -488,7 +488,7 @@ public class PatternSearchDialog extends ModalDialog {
                     }
                     state.min=newValue;
                     compartmentRow.setModelState(state);
-                    compartmentRow.lineCountText.setText(computeLineCountForCompartment(row).toString());
+                    updateRowImpactOnCounts(row);
                 } else if (col==FT_INDEX_MAX) {
                     Double newValue=new Double(value.toString());
                     if (newValue>100.0) {
@@ -499,11 +499,11 @@ public class PatternSearchDialog extends ModalDialog {
                     }
                     state.max=newValue;
                     compartmentRow.setModelState(state);
-                    compartmentRow.lineCountText.setText(computeLineCountForCompartment(row).toString());
+                    updateRowImpactOnCounts(row);
                 } else if (col==FT_INDEX_FILTERTYPE) {
                     state.type=(String)value;
                     compartmentRow.setModelState(state);
-                    compartmentRow.lineCountText.setText(computeLineCountForCompartment(row).toString());
+                    updateRowImpactOnCounts(row);
                 }
                 if (currentSetInitialized) {
                     MinMaxModel globalState=globalMinMaxPanel.getModelState();
@@ -736,11 +736,11 @@ public class PatternSearchDialog extends ModalDialog {
     }
 
     protected void refreshCompartmentTable() {
+        List<Integer> rowUpdateList=new ArrayList<Integer>();
         for (int rowIndex=0;rowIndex<compartmentAbbreviationList.size();rowIndex++) {
-            String rowKey=compartmentAbbreviationList.get(rowIndex);
-            MinMaxSelectionRow compartmentRow=minMaxRowMap.get(rowKey);
-            compartmentRow.lineCountText.setText(computeLineCountForCompartment(rowIndex).toString());
+            rowUpdateList.add(rowIndex);
         }
+        updateRowImpactOnCounts(rowUpdateList);
         filterTableScrollPane.update(filterTableScrollPane.getGraphics());
     }
 
@@ -769,6 +769,20 @@ public class PatternSearchDialog extends ModalDialog {
         }
         setStatusMessage("Membership list ready with " + sampleSet.size() + " members");
         return sampleSet;
+    }
+
+    protected void updateRowImpactOnCounts(int rowIndex) {
+        List<Integer> rowList=new ArrayList<Integer>();
+        rowList.add(rowIndex);
+        updateRowImpactOnCounts(rowList);
+    }
+
+    protected void updateRowImpactOnCounts(List<Integer> rowList) {
+        for (int rowIndex : rowList) {
+            String rowKey=compartmentAbbreviationList.get(rowIndex);
+            MinMaxSelectionRow compartmentRow=minMaxRowMap.get(rowKey);
+            compartmentRow.lineCountText.setText(computeLineCountForCompartment(rowIndex).toString());
+        }
     }
 
 
