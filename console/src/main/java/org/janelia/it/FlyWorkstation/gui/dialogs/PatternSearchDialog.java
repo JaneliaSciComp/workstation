@@ -49,6 +49,7 @@ public class PatternSearchDialog extends ModalDialog {
     private final MinMaxSelectionRow globalMinMaxPanel;
     private final JTable filterTable;
     private final JScrollPane filterTableScrollPane;
+    private final JPanel savePanel;
     private final JPanel statusPane;
 
     private final JLabel statusLabel;
@@ -98,7 +99,6 @@ public class PatternSearchDialog extends ModalDialog {
         String description;
         JRadioButton intensityButton;
         JRadioButton distributionButton;
-        Long lineCount;
         ButtonGroup buttonGroup;
         JTextField minText;
         JTextField maxText;
@@ -132,6 +132,10 @@ public class PatternSearchDialog extends ModalDialog {
             maxText.setText(new Double(100.0).toString());
             add(minText);
             add(maxText);
+            lineCountText=new JTextField(7);
+            if (!abbreviation.equals(GLOBAL)) {
+                add(lineCountText);
+            }
             applyButton=new JButton();
             applyButton.setText("Apply");
             applyButton.addActionListener(new ActionListener() {
@@ -184,11 +188,6 @@ public class PatternSearchDialog extends ModalDialog {
         }
         
         public void setLineCount(Long lineCount) {
-            this.lineCount=lineCount;
-            if (lineCountText==null) {
-                lineCountText=new JTextField(7);
-                add(lineCountText);
-            }
             lineCountText.setText(lineCount.toString());
         }
         
@@ -293,6 +292,8 @@ public class PatternSearchDialog extends ModalDialog {
         Object[] statusObjects = createStatusObjects();
         statusPane=(JPanel)statusObjects[0];
         statusLabel=(JLabel)statusObjects[1];
+        savePanel=createSavePanel();
+        mainPanel.add(savePanel, Box.createVerticalGlue());
         mainPanel.add(statusPane, Box.createVerticalGlue());
 
         add(mainPanel, BorderLayout.NORTH);
@@ -301,6 +302,23 @@ public class PatternSearchDialog extends ModalDialog {
 
         initializeCurrentListModified();
 
+    }
+
+    private JPanel createSavePanel() {
+        JPanel savePanel=new JPanel();
+        JLabel instructionLabel=new JLabel();
+        instructionLabel.setText("Update final set for saving");
+        savePanel.add(instructionLabel);
+        JButton finalUpdateButton=new JButton();
+        finalUpdateButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                generateMembershipListForCurrentSet();
+            }
+        });
+        finalUpdateButton.setText("Finalize");
+        savePanel.add(finalUpdateButton);
+        return savePanel;
     }
 
     private void initializeCurrentListModified() {
@@ -441,7 +459,13 @@ public class PatternSearchDialog extends ModalDialog {
                         Double max=compartmentRow.getModelState().max;
                         return max;
                     case FT_INDEX_LINES:
-                        Long lineCount=computeLineCountForCompartment(rowIndex);
+                        Long lineCount=0L;
+                        if (compartmentRow.lineCountText!=null) {
+                            String lineText=compartmentRow.lineCountText.getText();
+                            if (lineText!=null && lineText.trim().length()>0) {
+                                lineCount=new Long(lineText);
+                            }
+                        }
                         return lineCount.toString();
                     default:
                         return null;
@@ -463,6 +487,7 @@ public class PatternSearchDialog extends ModalDialog {
                     }
                     state.min=newValue;
                     compartmentRow.setModelState(state);
+                    compartmentRow.lineCountText.setText(computeLineCountForCompartment(row).toString());
                 } else if (col==FT_INDEX_MAX) {
                     Double newValue=new Double(value.toString());
                     if (newValue>100.0) {
@@ -473,9 +498,11 @@ public class PatternSearchDialog extends ModalDialog {
                     }
                     state.max=newValue;
                     compartmentRow.setModelState(state);
+                    compartmentRow.lineCountText.setText(computeLineCountForCompartment(row).toString());
                 } else if (col==FT_INDEX_FILTERTYPE) {
                     state.type=(String)value;
                     compartmentRow.setModelState(state);
+                    compartmentRow.lineCountText.setText(computeLineCountForCompartment(row).toString());
                 }
                 if (currentSetInitialized) {
                     MinMaxModel globalState=globalMinMaxPanel.getModelState();
@@ -699,7 +726,17 @@ public class PatternSearchDialog extends ModalDialog {
     }
 
     protected void refreshCompartmentTable() {
+        for (int rowIndex=0;rowIndex<compartmentAbbreviationList.size();rowIndex++) {
+            String rowKey=compartmentAbbreviationList.get(rowIndex);
+            MinMaxSelectionRow compartmentRow=minMaxRowMap.get(rowKey);
+            compartmentRow.lineCountText.setText(computeLineCountForCompartment(rowIndex).toString());
+        }
         filterTableScrollPane.update(filterTableScrollPane.getGraphics());
+    }
+
+    protected void generateMembershipListForCurrentSet() {
+        setStatusMessage("Determining membership for set");
+
     }
 
 
