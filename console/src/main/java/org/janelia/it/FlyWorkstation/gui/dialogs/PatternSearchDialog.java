@@ -75,6 +75,7 @@ public class PatternSearchDialog extends ModalDialog {
     final List<String> compartmentAbbreviationList = PatternAnnotationDataManager.getCompartmentListInstance();
     boolean currentSetInitialized=false;
     final List<Boolean> currentListModified = new ArrayList<Boolean>();
+    Set<Long> membershipSampleSet;
 
     public class PercentileScore implements Comparable {
 
@@ -313,7 +314,7 @@ public class PatternSearchDialog extends ModalDialog {
         finalUpdateButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                generateMembershipListForCurrentSet();
+                membershipSampleSet=generateMembershipListForCurrentSet();
             }
         });
         finalUpdateButton.setText("Finalize");
@@ -693,7 +694,16 @@ public class PatternSearchDialog extends ModalDialog {
         if (quantifierDataIsLoading) {
             return 0L;
         } else {
-            Long lineCount=0L;
+            List<Long> validSamples=getValidSamplesForCompartment(compartmentAbbreviation);
+            return new Long(validSamples.size());
+        }
+    }
+
+    List<Long> getValidSamplesForCompartment(String compartmentAbbreviation) {
+        List<Long> validSamples=new ArrayList<Long>();
+        if (quantifierDataIsLoading) {
+            return validSamples;
+        } else {
             MinMaxSelectionRow compartmentRow=minMaxRowMap.get(compartmentAbbreviation);
             MinMaxModel state=compartmentRow.getModelState();
             Double min=state.min / 100.0;
@@ -703,7 +713,7 @@ public class PatternSearchDialog extends ModalDialog {
                     Map<String, Double> map=intensityPercentileMap.get(sampleId);
                     Double value=map.get(compartmentAbbreviation);
                     if (value>=min && value <=max) {
-                        lineCount++;
+                        validSamples.add(sampleId);
                     }
                 }
             } else if (state.type.equals(DISTRIBUTION_TYPE)) {
@@ -717,12 +727,12 @@ public class PatternSearchDialog extends ModalDialog {
                         System.err.println("distribution perc value is null for compartmentAbbr="+compartmentAbbreviation);
                     }
                     if (value>=min && value <=max) {
-                        lineCount++;
+                        validSamples.add(sampleId);
                     }
                 }
             }
-            return lineCount;
         }
+        return validSamples;
     }
 
     protected void refreshCompartmentTable() {
@@ -734,9 +744,31 @@ public class PatternSearchDialog extends ModalDialog {
         filterTableScrollPane.update(filterTableScrollPane.getGraphics());
     }
 
-    protected void generateMembershipListForCurrentSet() {
-        setStatusMessage("Determining membership for set");
-
+    protected Set<Long> generateMembershipListForCurrentSet() {
+        Long compartmentListSize=new Long(compartmentAbbreviationList.size());
+        Set<Long> sampleSet=new HashSet<Long>();
+        Map<Long, Long> sampleCompartmentCountMap=new HashMap<Long, Long>();
+        for (String compartment : compartmentAbbreviationList) {
+            List<Long> samples=getValidSamplesForCompartment(compartment);
+            System.out.println("Compartment="+compartment+" sampleCount="+samples.size());
+            for (Long sampleId : samples) {
+                Long sampleCount=sampleCompartmentCountMap.get(sampleId);
+                if (sampleCount==null) {
+                    sampleCount=new Long(0L);
+                }
+                sampleCount++;
+                sampleCompartmentCountMap.put(sampleId, sampleCount);
+            }
+        }
+        for (Long sampleId : sampleCompartmentCountMap.keySet()) {
+            Long count=sampleCompartmentCountMap.get(sampleId);
+            System.out.println("sampleId="+sampleId+" count="+count);
+            if (count.equals(compartmentListSize)) {
+                sampleSet.add(sampleId);
+            }
+        }
+        setStatusMessage("Membership list ready with " + sampleSet.size() + " members");
+        return sampleSet;
     }
 
 
