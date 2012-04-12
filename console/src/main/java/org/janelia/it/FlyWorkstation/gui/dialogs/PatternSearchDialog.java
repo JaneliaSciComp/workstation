@@ -64,20 +64,40 @@ public class PatternSearchDialog extends ModalDialog {
 
     static protected Map<Long, Map<String,String>> sampleInfoMap=null;
     static protected Map<Long, List<Double>> quantifierInfoMap=null;
+
     static protected Map<Long, Map<String, Double>> intensityScoreMap=null;
     static protected Map<Long, Map<String, Double>> distributionScoreMap=null;
+
+    static protected Map<Long, Map<String, Double>> intensityPercentileMap=null;
+    static protected Map<Long, Map<String, Double>> distributionPercentileMap=null;
 
     final List<String> compartmentAbbreviationList = PatternAnnotationDataManager.getCompartmentListInstance();
     boolean currentSetInitialized=false;
     final List<Boolean> currentListModified = new ArrayList<Boolean>();
+
+    public class PercentileScore implements Comparable {
+
+        public Long sampleId;
+        public Double score;
+
+        @Override
+        public int compareTo(Object o) {
+            PercentileScore other=(PercentileScore)o;
+            if (score > other.score) {
+                return 1;
+            } else if (score < other.score) {
+                return -1;
+            } else {
+                return 0;
+            }
+        }
+    }
 
     private class MinMaxSelectionRow extends JPanel implements ActionListener {
         String abbreviation;
         String description;
         JRadioButton intensityButton;
         JRadioButton distributionButton;
-        Double min=0.0;
-        Double max=100.0;
         Long lineCount;
         ButtonGroup buttonGroup;
         JTextField minText;
@@ -107,9 +127,9 @@ public class PatternSearchDialog extends ModalDialog {
             add(intensityButton);
             add(distributionButton);
             minText=new JTextField(5);
-            minText.setText(min.toString());
+            minText.setText(new Double(0.0).toString());
             maxText=new JTextField(5);
-            maxText.setText(max.toString());
+            maxText.setText(new Double(100.0).toString());
             add(minText);
             add(maxText);
             applyButton=new JButton();
@@ -124,27 +144,24 @@ public class PatternSearchDialog extends ModalDialog {
         }
 
         public void applyGlobalSettings() {
-            Double globalMin=0.0;
-            Double globalMax=100.0;
-            try {
-                globalMin=new Double(minText.getText());
-            } catch (Exception ex) {}
-            try {
-                globalMax=new Double(maxText.getText());
-            } catch (Exception ex) {}
-            String globalType=(intensityButton.isSelected()?INTENSITY_TYPE:DISTRIBUTION_TYPE);
+            MinMaxModel globalState = getModelState();
             for (int rowIndex=0;rowIndex<compartmentAbbreviationList.size();rowIndex++) {
                 String rowKey=compartmentAbbreviationList.get(rowIndex);
                 MinMaxSelectionRow compartmentRow=minMaxRowMap.get(rowKey);
-                if (!currentListModified.get(rowIndex)) {
-                    MinMaxModel state=compartmentRow.getModelState();
-                    state.min=globalMin;
-                    state.max=globalMax;
-                    state.type=globalType;
+                MinMaxModel state=compartmentRow.getModelState();
+                if (currentListModified.get(rowIndex)) {
+                    // Check to see if change reverts to unmodified
+                    if (state.equals(globalState)) {
+                        currentListModified.set(rowIndex, false);
+                    }
+                } else {
+                    state.min=globalState.min;
+                    state.max=globalState.max;
+                    state.type=globalState.type;
                     compartmentRow.setModelState(state);
                 }
             }
-            filterTableScrollPane.update(filterTableScrollPane.getGraphics());
+            refreshCompartmentTable();
         }
 
         public void actionPerformed(ActionEvent e) {
@@ -176,19 +193,28 @@ public class PatternSearchDialog extends ModalDialog {
         }
         
         public void setModelState(MinMaxModel model) {
-            this.min=model.min;
-            this.max=model.max;
+            minText.setText(model.min.toString());
+            maxText.setText(model.max.toString());
             if (model.type.equals(INTENSITY_TYPE)) {
                 intensityButton.setSelected(true);
             } else if (model.type.equals(DISTRIBUTION_TYPE)) {
                 distributionButton.setSelected(true);
             }
+            //updateLineCount();
         }
         
         public MinMaxModel getModelState() {
             MinMaxModel model=new MinMaxModel();
-            model.min=min;
-            model.max=max;
+            if (minText==null || minText.getText()==null || minText.getText().trim().length()==0) {
+                model.min=0.0;
+            } else {
+                model.min=new Double(minText.getText().toString());
+            }
+            if (maxText==null || maxText.getText()==null || maxText.getText().trim().length()==0) {
+                model.max=0.0;
+            } else {
+                model.max=new Double(maxText.getText().toString());
+            }
             if (intensityButton.isSelected()) {
                 model.type=INTENSITY_TYPE;
             } else if (distributionButton.isSelected()) {
@@ -203,6 +229,16 @@ public class PatternSearchDialog extends ModalDialog {
         public Double min;
         public Double max;
         public String type;
+
+        @Override
+        public boolean equals(Object o) {
+            MinMaxModel other = (MinMaxModel)o;
+            if (min.equals(other.min) && max.equals(other.max) && type.equals(other.type)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
     }
 
     public class TypeComboBoxEditor extends DefaultCellEditor {
@@ -405,7 +441,8 @@ public class PatternSearchDialog extends ModalDialog {
                         Double max=compartmentRow.getModelState().max;
                         return max;
                     case FT_INDEX_LINES:
-                        return "<lines>";
+                        Long lineCount=computeLineCountForCompartment(rowIndex);
+                        return lineCount.toString();
                     default:
                         return null;
                 }
@@ -441,11 +478,16 @@ public class PatternSearchDialog extends ModalDialog {
                     compartmentRow.setModelState(state);
                 }
                 if (currentSetInitialized) {
-                    if (state.min==0.0 && state.max==100.0 && state.type.equals(INTENSITY_TYPE)) {
+                    MinMaxModel globalState=globalMinMaxPanel.getModelState();
+                    System.out.println("state  min="+state.min+" max="+state.max+" type="+state.type);
+                    System.out.println("global min="+globalState.min+" max="+globalState.max+" type="+globalState.type);
+                    if (state.equals(globalState)) {
+                        System.out.println("EQUALS=true");
                         if (currentListModified.get(row)) {
                             currentListModified.set(row, false);
                         }
                     } else {
+                        System.out.println("EQUALS=false");
                         if (!currentListModified.get(row)) {
                             currentListModified.set(row, true);
                         }
@@ -493,6 +535,9 @@ public class PatternSearchDialog extends ModalDialog {
                 loadPatternAnnotationQuantifierMapsFromSummary();
                 setStatusMessage("Computing scores...");
                 computeScores();
+                setStatusMessage("Computing percentiles...");
+                computePercentiles();
+                refreshCompartmentTable();
                 currentSetInitialized=true;
             }
 
@@ -548,5 +593,118 @@ public class PatternSearchDialog extends ModalDialog {
         }
         System.out.println("Total calls to getCompartmentScoresByQuantifiers() = "+totalComputeCount);
     }
+
+    protected void computePercentiles() {
+        if (intensityPercentileMap==null) {
+            intensityPercentileMap=new HashMap<Long, Map<String, Double>>();
+        }
+        if (distributionPercentileMap==null) {
+            distributionPercentileMap=new HashMap<Long, Map<String, Double>>();
+        }
+        List<PercentileScore> intensityList = new ArrayList<PercentileScore>();
+        List<PercentileScore> distributionList = new ArrayList<PercentileScore>();
+        Map<Long, Double> percIntensityMap=new HashMap<Long, Double>();
+        Map<Long, Double> percDistMap=new HashMap<Long, Double>();
+        for (String compartmentAbbreviation : compartmentAbbreviationList) {
+            intensityList.clear();
+            distributionList.clear();
+            for (Long sampleId : intensityScoreMap.keySet()) {
+                Map<String, Double> intensityMap = intensityScoreMap.get(sampleId);
+                PercentileScore ps=new PercentileScore();
+                ps.sampleId=sampleId;
+                ps.score=intensityMap.get(compartmentAbbreviation);
+                intensityList.add(ps);
+            }
+            for (Long sampleId : distributionScoreMap.keySet()) {
+                Map<String, Double> distributionMap = distributionScoreMap.get(sampleId);
+                PercentileScore ps=new PercentileScore();
+                ps.sampleId=sampleId;
+                ps.score=distributionMap.get(compartmentAbbreviation);
+                distributionList.add(ps);
+            }
+            Collections.sort(intensityList);
+            Collections.sort(distributionList);
+            double listLength=intensityList.size()-1.0;
+
+            percIntensityMap.clear();
+            percDistMap.clear();
+
+            double index=0.0;
+            for (PercentileScore ps : intensityList) {
+                ps.score = index / listLength;
+                percIntensityMap.put(ps.sampleId, ps.score);
+                index+=1.0;
+            }
+            index=0.0;
+            for (PercentileScore ps : distributionList) {
+                ps.score = index / listLength;
+                percDistMap.put(ps.sampleId, ps.score);
+                index+=1.0;
+            }
+
+            for (Long sampleId : intensityScoreMap.keySet()) {
+                Map<String, Double> piMap=intensityPercentileMap.get(sampleId);
+                if (piMap==null) {
+                    piMap=new HashMap<String, Double>();
+                    intensityPercentileMap.put(sampleId, piMap);
+                }
+                piMap.put(compartmentAbbreviation, percIntensityMap.get(sampleId));
+            }
+            for (Long sampleId : distributionScoreMap.keySet()) {
+                Map<String, Double> pdMap=distributionPercentileMap.get(sampleId);
+                if (pdMap==null) {
+                    pdMap=new HashMap<String, Double>();
+                    distributionPercentileMap.put(sampleId, pdMap);
+                }
+                pdMap.put(compartmentAbbreviation, percDistMap.get(sampleId));
+            }
+        }
+    }
+
+    protected Long computeLineCountForCompartment(int rowIndex) {
+        String rowKey=compartmentAbbreviationList.get(rowIndex);
+        return computeLineCountForCompartment(rowKey);
+    }
+
+    protected Long computeLineCountForCompartment(String compartmentAbbreviation) {
+        if (quantifierDataIsLoading) {
+            return 0L;
+        } else {
+            Long lineCount=0L;
+            MinMaxSelectionRow compartmentRow=minMaxRowMap.get(compartmentAbbreviation);
+            MinMaxModel state=compartmentRow.getModelState();
+            Double min=state.min / 100.0;
+            Double max=state.max / 100.0;
+            if (state.type.equals(INTENSITY_TYPE)) {
+                for (Long sampleId : intensityPercentileMap.keySet()) {
+                    Map<String, Double> map=intensityPercentileMap.get(sampleId);
+                    Double value=map.get(compartmentAbbreviation);
+                    if (value>=min && value <=max) {
+                        lineCount++;
+                    }
+                }
+            } else if (state.type.equals(DISTRIBUTION_TYPE)) {
+                for (Long sampleId : distributionPercentileMap.keySet()) {
+                    Map<String, Double> map=distributionPercentileMap.get(sampleId);
+                    if (map==null) {
+                        System.err.println("distributionPercentileMap is null for sampleId="+sampleId);
+                    }
+                    Double value=map.get(compartmentAbbreviation);
+                    if (value==null) {
+                        System.err.println("distribution perc value is null for compartmentAbbr="+compartmentAbbreviation);
+                    }
+                    if (value>=min && value <=max) {
+                        lineCount++;
+                    }
+                }
+            }
+            return lineCount;
+        }
+    }
+
+    protected void refreshCompartmentTable() {
+        filterTableScrollPane.update(filterTableScrollPane.getGraphics());
+    }
+
 
 }
