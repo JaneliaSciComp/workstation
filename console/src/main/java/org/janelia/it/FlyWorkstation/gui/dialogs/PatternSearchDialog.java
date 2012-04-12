@@ -479,15 +479,11 @@ public class PatternSearchDialog extends ModalDialog {
                 }
                 if (currentSetInitialized) {
                     MinMaxModel globalState=globalMinMaxPanel.getModelState();
-                    System.out.println("state  min="+state.min+" max="+state.max+" type="+state.type);
-                    System.out.println("global min="+globalState.min+" max="+globalState.max+" type="+globalState.type);
                     if (state.equals(globalState)) {
-                        System.out.println("EQUALS=true");
                         if (currentListModified.get(row)) {
                             currentListModified.set(row, false);
                         }
                     } else {
-                        System.out.println("EQUALS=false");
                         if (!currentListModified.get(row)) {
                             currentListModified.set(row, true);
                         }
