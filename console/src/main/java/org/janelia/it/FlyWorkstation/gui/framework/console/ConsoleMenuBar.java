@@ -29,6 +29,7 @@ public class ConsoleMenuBar extends JMenuBar {
 //    protected EditMenu editMenu;
     protected JMenu toolsMenu;
     protected JMenu servicesMenu;
+    protected JMenu searchMenu;
     protected JMenu ontologyMenu;
     protected JMenu helpMenu;
     protected JMenu viewMenu;
@@ -50,6 +51,7 @@ public class ConsoleMenuBar extends JMenuBar {
         fileMenu = new FileMenu(console);
 //        editMenu = new EditMenu(console);
         toolsMenu = new ToolsMenu(console);
+        searchMenu = new SearchMenu(console);
         servicesMenu = new ServicesMenu(console);
         ontologyMenu = new OntologyMenu(console);
         helpMenu = new HelpMenu(console);
@@ -60,6 +62,7 @@ public class ConsoleMenuBar extends JMenuBar {
         add(fileMenu);
 //        add(editMenu);
         add(toolsMenu);
+        add(searchMenu);
         add(servicesMenu);
         add(viewMenu);
 //        add(ontologyMenu);

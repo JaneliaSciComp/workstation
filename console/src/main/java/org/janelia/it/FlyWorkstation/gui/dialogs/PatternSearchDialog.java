@@ -12,7 +12,9 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
 
 import javax.swing.*;
-import javax.swing.table.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -25,7 +27,6 @@ import java.util.concurrent.Callable;
  * User: murphys
  * Date: 3/13/12
  * Time: 1:40 PM
- * To change this template use File | Settings | File Templates.
  */
 public class PatternSearchDialog extends ModalDialog {
     
