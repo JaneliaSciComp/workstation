@@ -13,6 +13,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.exception_handlers.PrintStackTraceHandler;
 import org.janelia.it.FlyWorkstation.shared.util.ThreadQueue;
+import org.janelia.it.jacs.compute.api.ComputeException;
 import org.janelia.it.jacs.compute.api.support.SageTerm;
 import org.janelia.it.jacs.compute.api.support.SolrResults;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -654,6 +655,10 @@ public class ModelMgr {
 
     public boolean loginUser() throws Exception {
         return FacadeManager.getFacadeManager().getComputeFacade().loginUser();
+    }
+    
+    public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception {
+    	FacadeManager.getFacadeManager().getAnnotationFacade().addChildren(parentId, childrenIds, attributeName);
     }
 
     public Object[] getPatternAnnotationQuantifierMapsFromSummary() throws Exception {

@@ -37,6 +37,8 @@ public interface AnnotationFacade extends EntityFacade {
 
 	public List<List<Long>> searchTreeForNameStartingWith(Long rootId, String searchString) throws Exception;
 
+	public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception;
+	
     public Object[] getPatternAnnotationQuantifierMapsFromSummary() throws Exception;
 
 }

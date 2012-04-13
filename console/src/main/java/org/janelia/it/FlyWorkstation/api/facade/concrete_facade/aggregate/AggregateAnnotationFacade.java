@@ -142,6 +142,11 @@ public class AggregateAnnotationFacade extends AggregateEntityFacade implements 
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
+	public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception {
+		throw new UnsupportedOperationException();
+	}
+	
     @Override
     public Object[] getPatternAnnotationQuantifierMapsFromSummary() throws Exception {
         throw new UnsupportedOperationException();

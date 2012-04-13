@@ -75,6 +75,10 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
     	return EJBFactory.getRemoteAnnotationBean().searchTreeForNameStartingWith(rootId, searchString);
 	}
 
+	public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception {
+    	EJBFactory.getRemoteAnnotationBean().addChildren(SessionMgr.getUsername(), parentId, childrenIds, attributeName);
+	}
+	
     public Object[] getPatternAnnotationQuantifierMapsFromSummary() throws Exception {
         return EJBFactory.getRemoteAnnotationBean().getPatternAnnotationQuantifierMapsFromSummary();
     }

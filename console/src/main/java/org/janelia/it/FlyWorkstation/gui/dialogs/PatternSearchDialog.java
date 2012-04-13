@@ -1,6 +1,18 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
-import com.google.gwt.logging.client.SystemLogHandler;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.*;
+import java.util.concurrent.Callable;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -8,19 +20,7 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
-
-import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumn;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Callable;
 
 /**
  * Created by IntelliJ IDEA.
@@ -810,27 +810,23 @@ public class PatternSearchDialog extends ModalDialog {
                 newFolder.addAttributeAsTag(EntityConstants.ATTRIBUTE_COMMON_ROOT);
                 ModelMgr.getModelMgr().saveOrUpdateEntity(newFolder);
 
-                for (Long sampleId : membershipSampleSet) {
-                    Entity sampleEntity=ModelMgr.getModelMgr().getEntityById(sampleId.toString());
-                    EntityData newEd = newFolder.addChildEntity(sampleEntity);
-                    ModelMgr.getModelMgr().saveOrUpdateEntityData(newEd);
-                }
+                ModelMgr.getModelMgr().addChildren(newFolder.getId(), 
+                		new ArrayList<Long>(membershipSampleSet), EntityConstants.ATTRIBUTE_ENTITY);
             }
 
             @Override
             protected void hadSuccess() {
                 final EntityOutline entityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline();
-                entityOutline.refresh(new Callable<Void>() {
+                entityOutline.refresh(false, new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
                         ModelMgr.getModelMgr().selectOutlineEntity("/e_"+newFolder.getId(), true);
+                        Utils.setDefaultCursor(PatternSearchDialog.this);
+                        setVisible(false);
+                        resetSearchState();
                         return null;
                     }
-
                 });
-                Utils.setDefaultCursor(PatternSearchDialog.this);
-                //setVisible(false);
-                resetSearchState();
             }
 
             @Override
