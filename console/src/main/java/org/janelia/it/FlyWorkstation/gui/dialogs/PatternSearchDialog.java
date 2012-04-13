@@ -1,11 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
+import com.google.gwt.logging.client.SystemLogHandler;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.jacs.compute.api.support.EntityDocument;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -575,8 +575,7 @@ public class PatternSearchDialog extends ModalDialog {
 
             @Override
             protected void hadSuccess() {
-                Utils.setDefaultCursor(PatternSearchDialog.this);
-                setStatusMessage("Ready");
+                resetSearchState();
             }
 
             @Override
@@ -829,18 +828,35 @@ public class PatternSearchDialog extends ModalDialog {
 
                 });
                 Utils.setDefaultCursor(PatternSearchDialog.this);
-                setVisible(false);
+                //setVisible(false);
+                resetSearchState();
             }
 
             @Override
             protected void hadError(Throwable error) {
                 SessionMgr.getSessionMgr().handleException(error);
                 Utils.setDefaultCursor(PatternSearchDialog.this);
+                resetSearchState();
             }
         };
 
-        Utils.setWaitingCursor(this);
+        Utils.setWaitingCursor(PatternSearchDialog.this);
         worker.execute();
+    }
+
+    protected void resetSearchState() {
+        membershipSampleSet.clear();
+        MinMaxModel globalModel=globalMinMaxPanel.getModelState();
+        globalModel.min=0.0;
+        globalModel.max=100.0;
+        globalModel.type=INTENSITY_TYPE;
+        globalMinMaxPanel.setModelState(globalModel);
+        for (int row=0;row<currentListModified.size();row++) {
+            currentListModified.set(row, false);
+        }
+        globalMinMaxPanel.applyGlobalSettings();
+        Utils.setDefaultCursor(PatternSearchDialog.this);
+        setStatusMessage("Ready");
     }
 
 
