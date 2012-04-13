@@ -308,17 +308,17 @@ public class PatternSearchDialog extends ModalDialog {
     private JPanel createSavePanel() {
         JPanel savePanel=new JPanel();
         JLabel instructionLabel=new JLabel();
-        instructionLabel.setText("Update final set for saving");
+        instructionLabel.setText("Save search result");
         savePanel.add(instructionLabel);
-        JButton finalUpdateButton=new JButton();
-        finalUpdateButton.addActionListener(new ActionListener() {
+        JButton saveButton=new JButton();
+        saveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                membershipSampleSet=generateMembershipListForCurrentSet();
+                saveCurrentSet();
             }
         });
-        finalUpdateButton.setText("Finalize");
-        savePanel.add(finalUpdateButton);
+        saveButton.setText("Save");
+        savePanel.add(saveButton);
         return savePanel;
     }
 
@@ -745,12 +745,12 @@ public class PatternSearchDialog extends ModalDialog {
     }
 
     protected Set<Long> generateMembershipListForCurrentSet() {
+        setStatusMessage("Computing result membership");
         Long compartmentListSize=new Long(compartmentAbbreviationList.size());
         Set<Long> sampleSet=new HashSet<Long>();
         Map<Long, Long> sampleCompartmentCountMap=new HashMap<Long, Long>();
         for (String compartment : compartmentAbbreviationList) {
             List<Long> samples=getValidSamplesForCompartment(compartment);
-            System.out.println("Compartment="+compartment+" sampleCount="+samples.size());
             for (Long sampleId : samples) {
                 Long sampleCount=sampleCompartmentCountMap.get(sampleId);
                 if (sampleCount==null) {
@@ -762,12 +762,11 @@ public class PatternSearchDialog extends ModalDialog {
         }
         for (Long sampleId : sampleCompartmentCountMap.keySet()) {
             Long count=sampleCompartmentCountMap.get(sampleId);
-            System.out.println("sampleId="+sampleId+" count="+count);
             if (count.equals(compartmentListSize)) {
                 sampleSet.add(sampleId);
             }
         }
-        setStatusMessage("Membership list ready with " + sampleSet.size() + " members");
+        setStatusMessage("Result has " + sampleSet.size() + " members");
         return sampleSet;
     }
 
@@ -781,8 +780,14 @@ public class PatternSearchDialog extends ModalDialog {
         for (int rowIndex : rowList) {
             String rowKey=compartmentAbbreviationList.get(rowIndex);
             MinMaxSelectionRow compartmentRow=minMaxRowMap.get(rowKey);
-            compartmentRow.lineCountText.setText(computeLineCountForCompartment(rowIndex).toString());
+            Long updatedLineCount=computeLineCountForCompartment(rowIndex);
+            compartmentRow.lineCountText.setText(updatedLineCount.toString());
         }
+        membershipSampleSet=generateMembershipListForCurrentSet();
+    }
+
+    protected void saveCurrentSet() {
+        setStatusMessage("Saving set \""+currentSetTextField.getText()+"\"");
     }
 
 
