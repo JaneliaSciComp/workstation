@@ -39,7 +39,7 @@ import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class TaskOutline extends JPanel implements Outline {
+public class TaskOutline extends JPanel implements Refreshable {
 
     private static final String COLUMN_NAME = "Name";
     private static final String COLUMN_STATUS = "Status";

@@ -1,14 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 /**
- * A common interface for outline panels.
+ * Some that can be freshed and refreshed ad infinitum.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public interface Outline {
+public interface Refreshable {
 
-	/**
-	 * Refreshes the outline's data and view. 
-	 */
 	public void refresh();
 }

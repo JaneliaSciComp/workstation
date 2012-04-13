@@ -48,7 +48,7 @@ import org.janelia.it.jacs.model.ontology.types.Enum;
  * @author saffordt
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class OntologyOutline extends OntologyTree implements ActionListener, Outline {
+public class OntologyOutline extends OntologyTree implements ActionListener, Refreshable {
 
     private static final String ADD_COMMAND = "add";
     private static final String REMOVE_COMMAND = "remove";

@@ -51,7 +51,7 @@ public class DataviewMenuBar extends JMenuBar {
                     }
 
                     protected void hadSuccess() {
-                        dataview.getEntityListPane().showEntity(entity);
+                        dataview.getEntityPane().showEntity(entity);
                     }
 
                     protected void hadError(Throwable error) {
@@ -82,7 +82,7 @@ public class DataviewMenuBar extends JMenuBar {
                     }
 
                     protected void hadSuccess() {
-                        dataview.getEntityListPane().showEntities(entities);
+                        dataview.getEntityPane().showEntities(entities);
                     }
 
                     protected void hadError(Throwable error) {

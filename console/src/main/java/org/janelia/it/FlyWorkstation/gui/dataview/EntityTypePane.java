@@ -43,12 +43,12 @@ public class EntityTypePane extends JScrollPane {
                 TreePath path = tree.getClosestPathForLocation(e.getX(), e.getY());
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
                 if (node.getUserObject() instanceof EntityType) {
-                    DataviewApp.getMainFrame().getEntityListPane().showEntities((EntityType) node.getUserObject());
+                    DataviewApp.getMainFrame().getEntityPane().showEntities((EntityType) node.getUserObject());
                     tree.setSelectionPath(path);
                 }
                 else if (node.getUserObject() instanceof EntityAttribute) {
                     DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
-                    DataviewApp.getMainFrame().getEntityListPane().showEntities((EntityType) parent.getUserObject());
+                    DataviewApp.getMainFrame().getEntityPane().showEntities((EntityType) parent.getUserObject());
                     tree.setSelectionPath(path.getParentPath());
                 }
 			}

@@ -1,303 +1,91 @@
 package org.janelia.it.FlyWorkstation.gui.dataview;
 
 import java.awt.BorderLayout;
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.*;
+import java.awt.event.MouseEvent;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JTable;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
+import org.janelia.it.FlyWorkstation.gui.dialogs.search.*;
+import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchConfiguration.AttrGroup;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
+import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicColumn;
+import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicTable;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
 
-public class EntityListPane extends JPanel {
+/**
+ * A panel for displaying lists of entities. 
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
+public abstract class EntityListPane extends JPanel implements SearchConfigurationListener, Refreshable {
 
-    private final EntityDataPane entityParentsPane;
-    private final EntityDataPane entityChildrenPane;
-    private final List<String> staticColumns = new ArrayList<String>();
-    private final JTable table;
+	/** Format for displaying dates */
+	protected static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm");
+	
     private final JLabel titleLabel;
-    private final JScrollPane scrollPane;
     private List<Entity> entities;
-    private TableModel tableModel;
     private SimpleWorker loadTask;
-    private JComponent loadingView = new JLabel(Icons.getLoadingIcon());
+    protected final DynamicTable resultsTable;
 
     private EntityType shownEntityType;
     private Entity shownEntity;
 
-    public EntityListPane(final EntityDataPane entityParentsPane, final EntityDataPane entityChildrenPane) {
+    public EntityListPane() {
 
-        this.entityParentsPane = entityParentsPane;
-        this.entityChildrenPane = entityChildrenPane;
-
-        staticColumns.add("Id");
-        staticColumns.add("User");
-        staticColumns.add("Creation Date");
-        staticColumns.add("Updated Date");
-        staticColumns.add("Name");
-
-        table = new JTable();
-        table.setFillsViewportHeight(true);
-        table.setColumnSelectionAllowed(false);
-        table.setRowSelectionAllowed(true);
-
-        table.addMouseListener(new MouseHandler() {	
+        resultsTable = new DynamicTable() {
 			@Override
-			protected void popupTriggered(MouseEvent e) {
-				ListSelectionModel lsm = table.getSelectionModel();
-				if (lsm.getAnchorSelectionIndex() == lsm.getLeadSelectionIndex()) {
-					// User is not selecting multiple rows, so we can select the cell they right clicked on
-	                table.setColumnSelectionAllowed(true);
-	                int row = table.rowAtPoint(e.getPoint());
-	                int col = table.columnAtPoint(e.getPoint());
-	                table.getSelectionModel().setSelectionInterval(row, row);
-	                table.getColumnModel().getSelectionModel().setSelectionInterval(col, col);
-				}
-				showPopupMenu(e);
+			public Object getValue(Object userObject, DynamicColumn column) {
+				return EntityListPane.this.getValue(userObject, column);
 			}
-			@Override
-			protected void singleLeftClicked(MouseEvent e) {
-                table.setColumnSelectionAllowed(false);
-                table.getColumnModel().getSelectionModel().setSelectionInterval(0, table.getColumnCount());
-                int row = table.getSelectedRow();
-                if (row>=0) populateEntityDataPanes(entities.get(row));
-			}
-        });
-
-        scrollPane = new JScrollPane();
-        scrollPane.setViewportView(table);
+        	@Override
+        	protected JPopupMenu createPopupMenu(MouseEvent e) {
+        		return EntityListPane.this.createPopupMenu(e);
+        	}
+        	@Override
+        	protected void rowClicked(int row) {
+                if (row>=0) entitySelected(entities.get(row));
+            }
+		};
 
         titleLabel = new JLabel("Entity");
 
         setLayout(new BorderLayout());
         add(titleLabel, BorderLayout.NORTH);
-        add(scrollPane, BorderLayout.CENTER);
+        add(resultsTable, BorderLayout.CENTER);
     }
     
-    private void showPopupMenu(MouseEvent e) {
+    public abstract void entitySelected(Entity entity);
 
-        final int num = table.getSelectedRows().length;
+    private JPopupMenu createPopupMenu(MouseEvent e) {    	
+
         JTable target = (JTable) e.getSource();
         final String value = target.getValueAt(target.getSelectedRow(), target.getSelectedColumn()).toString();
     	
-        final JPopupMenu popupMenu = new JPopupMenu();
-        popupMenu.setLightWeightPopupEnabled(true);
-
-        ListSelectionModel lsm = table.getSelectionModel();
-		if (lsm.getAnchorSelectionIndex() == lsm.getLeadSelectionIndex()) {
-			
-			// Items which are  only available when selecting a single cell
-			
-	        JMenuItem copyMenuItem = new JMenuItem("Copy to clipboard");
-	        copyMenuItem.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-		            Transferable t = new StringSelection(value);
-		            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
-				}
-			});
-	        popupMenu.add(copyMenuItem);
-	        
-	        JMenuItem renameMenuItem = new JMenuItem("Rename...");
-	        renameMenuItem.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					Entity toRename = entities.get(table.getSelectedRow());
-					
-		            String newName = (String) JOptionPane.showInputDialog(EntityListPane.this, "Name:\n", "Rename entity", 
-		            		JOptionPane.PLAIN_MESSAGE, null, null, toRename.getName());
-
-		            if ((newName == null) || (newName.length() <= 0)) {
-		                return;
-		            }
-
-		            Utils.setWaitingCursor(DataviewApp.getMainFrame());
-		            
-		            try {
-		            	toRename.setName(newName);
-		            	ModelMgr.getModelMgr().saveOrUpdateEntity(toRename);
-	    	            reshow();
-	    	            Utils.setDefaultCursor(DataviewApp.getMainFrame());
-		            }
-					catch (Exception x) {
-						x.printStackTrace();
-	                    error("Error renaming entity: "+x.getMessage());
-					}
-					
-				}
-			});
-	        popupMenu.add(renameMenuItem);
-	    }
-
-        JMenuItem deleteTreeMenuItem = new JMenuItem("Delete tree");
-        deleteTreeMenuItem.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-	            int deleteConfirmation = confirm("Are you sure you want to delete " + num + " entities and all their descendants?");
-	            if (deleteConfirmation != 0) {
-	                return;
-	            }
-
-	            final List<Entity> toDelete = new ArrayList<Entity>();
-	            for (int i : table.getSelectedRows()) {
-	                toDelete.add(entities.get(i));
-	            }
-
-            	boolean su = false;
-	            for (Entity entity : toDelete) {
-                	if (!SessionMgr.getUsername().equals(entity.getUser().getUserLogin())) {
-        	            int overrideConfirmation = confirm("Override owner "+entity.getUser().getUserLogin()+" to delete "+entity.getName()+"?");
-        	            if (overrideConfirmation != 0) {
-        	                continue;
-        	            }
-        	            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, entity.getUser().getUserLogin());
-        	            su = true;
-        	            break;
-                	}
-	            }
-	            
-	            final boolean didSu = su;
-	            final String realUsername = SessionMgr.getUsername();
-	            
-	            Utils.setWaitingCursor(DataviewApp.getMainFrame());
-	            
-	            SimpleWorker loadTask = new SimpleWorker() {
-
-	                @Override
-	                protected void doStuff() throws Exception {
-	    	            // Update database
-	    	            for (Entity entity : toDelete) {
-	    	            	System.out.println("Deleting "+entity.getId());
-    	                    ModelMgr.getModelMgr().deleteEntityTree(entity.getId());
-	    	            }
-	                }
-
-	                @Override
-	                protected void hadSuccess() {
-	                    if (didSu) {
-	        	            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, realUsername);
-	                    }
-	                	Utils.setDefaultCursor(DataviewApp.getMainFrame());
-	    	            reshow();
-	                }
-
-	                @Override
-	                protected void hadError(Throwable error) {
-	                    error.printStackTrace();
-	                    error("Error deleting entity tree: "+error.getMessage());
-	                }
-
-	            };
-
-	            loadTask.execute();
-			}
-		});
-        popupMenu.add(deleteTreeMenuItem);
-        
-        JMenuItem deleteEntityMenuItem = new JMenuItem("Delete entity");
-        deleteEntityMenuItem.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-	            int deleteConfirmation = confirm("Are you sure you want to delete " + num + 
-	            		" entities? This can potentially orphan their children, if they have any.");
-	            if (deleteConfirmation != 0) return;
-
-	            final List<Entity> toDelete = new ArrayList<Entity>();
-	            for (int i : table.getSelectedRows()) {
-	                toDelete.add(entities.get(i));
-	            }
-
-	            Utils.setWaitingCursor(DataviewApp.getMainFrame());
-	            
-	            SimpleWorker loadTask = new SimpleWorker() {
-
-	                @Override
-	                protected void doStuff() throws Exception {
-    		            // Update database
-    		            for (Entity entity : toDelete) {
-    		                boolean success = ModelMgr.getModelMgr().deleteEntityById(entity.getId());
-    		                if (!success) {
-    		                    error("Error deleting entity with id=" + entity.getId());
-    		                }
-    		            }
-	                }
-
-	                @Override
-	                protected void hadSuccess() {
-	                	Utils.setDefaultCursor(DataviewApp.getMainFrame());
-	    	            reshow();
-	                }
-
-	                @Override
-	                protected void hadError(Throwable error) {
-	                    error.printStackTrace();
-	                    error("Error deleting entity: "+error.getMessage());
-	                }
-
-	            };
-
-	            loadTask.execute();
-			}
-		});
-        popupMenu.add(deleteEntityMenuItem);
-        popupMenu.show((JComponent) e.getSource(), e.getX(), e.getY());
+        List<Entity> selectedEntities = new ArrayList<Entity>();
+        for (int i : resultsTable.getTable().getSelectedRows()) {
+        	selectedEntities.add((Entity)resultsTable.getRows().get(i).getUserObject());
+        }
+        return getPopupMenu(selectedEntities, value);
     }
     
-    private void populateEntityDataPanes(final Entity entity) {
-
-        System.out.println("Populate data panes with " + entity);
-        
-    	ModelMgrUtils.loadLazyEntity(entity, false);
-        
-        entityChildrenPane.showEntityData(entity.getOrderedEntityData());
-        entityParentsPane.showLoading();
-        
-        loadTask = new SimpleWorker() {
-
-            List<EntityData> eds;
-
-            @Override
-            protected void doStuff() throws Exception {
-                eds = ModelMgr.getModelMgr().getParentEntityDatas(entity.getId());
-            }
-
-            @Override
-            protected void hadSuccess() {
-                entityParentsPane.showEntityData(eds);
-            }
-
-            @Override
-            protected void hadError(Throwable error) {
-                error.printStackTrace();
-            }
-
-        };
-
-        loadTask.execute();
-    }
+    
+    protected abstract JPopupMenu getPopupMenu(List<Entity> selectedEntites, String label);
 
     public void showLoading() {
-        remove(scrollPane);
-        add(loadingView, BorderLayout.CENTER);
-	    updateUI();
+        resultsTable.showLoadingIndicator();
     }
-
-    public void reshow() {
+    
+    @Override
+    public void refresh() {
         if (shownEntity != null) {
             showEntity(shownEntity);
         }
@@ -330,24 +118,19 @@ public class EntityListPane extends JPanel {
             protected void doStuff() throws Exception {
                 List<Entity> entities = ModelMgr.getModelMgr().getEntitiesByTypeName(entityType.getName());
                 if (isCancelled()) return;
-                updateTableModel(entities);
+                setEntities(entities);
             }
 
             @Override
             protected void hadSuccess() {
-                table.setModel(tableModel);
-                Utils.autoResizeColWidth(table);
-                remove(loadingView);
-                add(scrollPane, BorderLayout.CENTER);
-                entityParentsPane.showEmpty();
-                entityChildrenPane.showEmpty();
+            	updateTableModel();
+                resultsTable.showTable();
             }
 
             @Override
             protected void hadError(Throwable error) {
                 error.printStackTrace();
             }
-
         };
 
         loadTask.execute();
@@ -368,24 +151,19 @@ public class EntityListPane extends JPanel {
             @Override
             protected void doStuff() throws Exception {
                 if (isCancelled()) return;
-                updateTableModel(entities);
+                setEntities(entities);
             }
 
             @Override
             protected void hadSuccess() {
-                table.setModel(tableModel);
-                Utils.autoResizeColWidth(table);
-                remove(loadingView);
-                add(scrollPane, BorderLayout.CENTER);
-                entityParentsPane.showEmpty();
-                entityChildrenPane.showEmpty();
+            	updateTableModel();
+                resultsTable.showTable();
             }
 
             @Override
             protected void hadError(Throwable error) {
                 error.printStackTrace();
             }
-
         };
 
         loadTask.execute();
@@ -393,6 +171,8 @@ public class EntityListPane extends JPanel {
 
     public void showEntity(final Entity entity) {
 
+        if (entity==null) return;
+        
         shownEntityType = null;
         shownEntity = entity;
 
@@ -401,11 +181,10 @@ public class EntityListPane extends JPanel {
             loadTask.cancel(true);
         }
 
-        System.out.println("Loading entity " + entity.getName());
         showLoading();
-        entityParentsPane.showEmpty();
-        entityChildrenPane.showEmpty();
 
+        System.out.println("Loading entity " + entity.getName());
+        
         loadTask = new SimpleWorker() {
 
             @Override
@@ -413,17 +192,15 @@ public class EntityListPane extends JPanel {
                 titleLabel.setText("Entity: " + entity.getEntityType().getName() + " (" + entity.getName() + ")");
                 List<Entity> entities = new ArrayList<Entity>();
                 entities.add(entity);
-                updateTableModel(entities);
+                setEntities(entities);
             }
 
             @Override
             protected void hadSuccess() {
-                table.setModel(tableModel);
-                Utils.autoResizeColWidth(table);
-                remove(loadingView);
-                add(scrollPane, BorderLayout.CENTER);
-                table.getSelectionModel().setSelectionInterval(0, 0);
-                populateEntityDataPanes(entity);
+            	updateTableModel();
+                resultsTable.showTable();
+                resultsTable.getTable().getSelectionModel().setSelectionInterval(0, 0);
+                entitySelected(entity);
             }
 
             @Override
@@ -436,12 +213,9 @@ public class EntityListPane extends JPanel {
         loadTask.execute();
     }
 
-    /**
-     * Synchronous method for updating the JTable model. Should be called from the EDT.
-     */
-    private void updateTableModel(List<Entity> entityList) {
+    private void setEntities(List<Entity> entityList) {
 
-        this.entities = (entityList == null) ? new ArrayList<Entity>() : entityList;
+    	entities = (entityList == null) ? new ArrayList<Entity>() : entityList;
         
         Collections.sort(entities, new Comparator<Entity>() {
             @Override
@@ -449,35 +223,63 @@ public class EntityListPane extends JPanel {
                 return o1.getId().compareTo(o2.getId());
             }
         });
-
-        // Data formatted for the JTable
-        Vector<String> columnNames = new Vector<String>(staticColumns);
-        Vector<Vector<String>> data = new Vector<Vector<String>>();
-
-        // Build the data in column order
-        for (Entity entity : entities) {
-            Vector<String> rowData = new Vector<String>();
-            rowData.add(entity.getId().toString());
-            rowData.add((entity.getUser() == null) ? "" : entity.getUser().getUserLogin());
-            rowData.add((entity.getCreationDate() == null) ? "" : entity.getCreationDate().toString());
-            rowData.add((entity.getUpdatedDate() == null) ? "" : entity.getUpdatedDate().toString());
-            rowData.add((entity.getName() == null) ? "(unnamed)" : entity.getName().toString());
-            data.add(rowData);
-        }
-
-        tableModel = new DefaultTableModel(data, columnNames) {
-            public boolean isCellEditable(int rowIndex, int mColIndex) {
-                return false;
-            }
-        };
     }
 
-    private int confirm(String message) {
-    	return JOptionPane.showConfirmDialog(EntityListPane.this, message, "Are you sure?", JOptionPane.YES_NO_OPTION);
+    protected void updateTableModel() {
+    	resultsTable.removeAllRows();
+    	for(Entity entity : entities) {
+    		resultsTable.addRow(entity);
+    	}    
+		resultsTable.updateTableModel();
     }
+    
+    @Override
+	public void configurationChange(SearchConfigurationEvent evt) {
+    	SearchConfiguration searchConfig = evt.getSearchConfig();
+    	Map<AttrGroup, List<SearchAttribute>> attributeGroups = searchConfig.getAttributeGroups();
+    	
+    	for(SearchAttribute attr : attributeGroups.get(AttrGroup.BASIC)) {
+			resultsTable.addColumn(attr.getName(), attr.getLabel(), true, false, true, attr.isSortable());	
+    	}
+    	
+    	for(SearchAttribute attr : attributeGroups.get(AttrGroup.EXT)) {
+    		resultsTable.addColumn(attr.getName(), attr.getLabel(), false, false, true, true);
+    	}
 
-    private void error(String message) {
-        JOptionPane.showMessageDialog(EntityListPane.this, message, "Error", JOptionPane.ERROR_MESSAGE);
-    }
+		revalidate();
+	}
+    
+    /**
+     * Return the value of the specified column for the given object.
+     * @param userObject
+     * @param column
+     * @return
+     */
+	public Object getValue(Object userObject, DynamicColumn column) {
+		Entity entity = (Entity)userObject;
+		String field = column.getName();
+		Object value = null;
+		if ("id".equals(field)) {
+			value = entity.getId();
+		}
+		else if ("name".equals(field)) {
+			value = entity.getName();
+		}
+		else if ("entity_type".equals(field)) {
+			value = entity.getEntityType().getName();
+		}
+		else if ("username".equals(field)) {
+			value = entity.getUser().getUserLogin();
+		}
+		else if ("creation_date".equals(field)) {
+			value = df.format(entity.getCreationDate());
+		}
+		else if ("updated_date".equals(field)) {
+			value = df.format(entity.getUpdatedDate());
+		}
+		
+		return value;
+	}
+    
     
 }

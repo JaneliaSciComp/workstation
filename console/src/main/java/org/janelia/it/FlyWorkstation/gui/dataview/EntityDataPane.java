@@ -22,6 +22,11 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
+/**
+ * A panel for displaying entity data objects. 
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
 public class EntityDataPane extends JPanel {
 
     private final List<String> staticColumns = new ArrayList<String>();
@@ -63,6 +68,7 @@ public class EntityDataPane extends JPanel {
         table.addMouseListener(new MouseHandler() {
 			@Override
 			protected void popupTriggered(MouseEvent e) {
+				if (datas==null) return;
                 table.setColumnSelectionAllowed(true);
                 int row = table.rowAtPoint(e.getPoint());
                 int col = table.columnAtPoint(e.getPoint());
@@ -73,12 +79,14 @@ public class EntityDataPane extends JPanel {
 
 			@Override
 			protected void doubleLeftClicked(MouseEvent e) {
+				if (datas==null) return;
                 table.setColumnSelectionAllowed(false);
                 doubleClick(datas.get(table.getSelectedRow()));
 			}
 
 			@Override
 			protected void singleLeftClicked(MouseEvent e) {
+				if (datas==null) return;
                 table.setColumnSelectionAllowed(false);
                 table.getColumnModel().getSelectionModel().setSelectionInterval(0, table.getColumnCount());
 			}

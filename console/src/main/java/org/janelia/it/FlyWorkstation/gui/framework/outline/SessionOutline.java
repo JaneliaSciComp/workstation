@@ -35,7 +35,7 @@ import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class SessionOutline extends JPanel implements Outline {
+public class SessionOutline extends JPanel implements Refreshable {
 
     private static final String COLUMN_NAME = "Name";
     private static final String COLUMN_PCT_COMPLETE = "% Complete";

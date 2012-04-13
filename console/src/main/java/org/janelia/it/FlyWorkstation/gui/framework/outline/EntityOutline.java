@@ -35,7 +35,7 @@ import org.janelia.it.jacs.model.entity.*;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class EntityOutline extends EntityTree implements Cloneable, Outline {
+public abstract class EntityOutline extends EntityTree implements Cloneable, Refreshable {
 
 	private String currUniqueId;
 
@@ -340,7 +340,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 						addTopLevelEntity(getRootEntity(), newFolder);
 
 						// Update Tree UI
-						refresh(new Callable<Void>() {
+						refresh(false, new Callable<Void>() {
 							@Override
 							public Void call() throws Exception {
 								selectEntityByUniqueId("/e_"+newFolder.getId());
@@ -462,10 +462,10 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 	 */
 	@Override
 	public void refresh() {
-		refresh(null);
+		refresh(true, null);
 	}
 	
-	public void refresh(final Callable<Void> success) {
+	public void refresh(final boolean restoreState, final Callable<Void> success) {
 		
 		showLoadingIndicator();
 		
@@ -486,7 +486,9 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Out
 					init(rootList);
 					currUniqueId = null;
 					
-					expansionState.restoreExpansionState(getDynamicTree(), true);
+					if (restoreState) {
+						expansionState.restoreExpansionState(getDynamicTree(), true);
+					}
 					
 					showTree();
 					

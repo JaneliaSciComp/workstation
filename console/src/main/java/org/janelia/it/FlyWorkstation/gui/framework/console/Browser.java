@@ -267,8 +267,8 @@ public class Browser extends JFrame implements Cloneable {
 				panel.clear();
 				
 				// refresh the outline being selected
-        		if (comp instanceof Outline) {
-        			((Outline)comp).refresh();
+        		if (comp instanceof Refreshable) {
+        			((Refreshable)comp).refresh();
         		}
         		
         		// clear annotation session whenever the user moves away from the session outline
@@ -1214,8 +1214,8 @@ public class Browser extends JFrame implements Cloneable {
         return viewerPanel;
     }
 
-    public Outline getActiveOutline() {
-    	return (Outline)outlookBar.getVisibleBarComponent();
+    public Refreshable getActiveOutline() {
+    	return (Refreshable)outlookBar.getVisibleBarComponent();
     }
 
     public EntityOutline getEntityOutline() {
