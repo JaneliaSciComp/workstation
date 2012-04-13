@@ -378,7 +378,7 @@ public class PatternSearchDialog extends ModalDialog {
             } else {
                 MinMaxSelectionRow minMaxRow=minMaxRowMap.get(key);
                 if (minMaxRow==null) {
-                    minMaxRow=new MinMaxSelectionRow(key, key + " description");
+                    minMaxRow=new MinMaxSelectionRow(key, PatternAnnotationDataManager.getCompartmentDescription(key));
                     minMaxRowMap.put(key, minMaxRow);
                 }
                 minMaxRow.setModelState(model);
