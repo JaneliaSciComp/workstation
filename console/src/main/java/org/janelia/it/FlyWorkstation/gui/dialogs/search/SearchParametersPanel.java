@@ -30,8 +30,9 @@ public abstract class SearchParametersPanel extends JPanel implements SearchConf
 	
     // UI Elements
     protected final JLabel titleLabel;
-    protected final JLabel titleLabel2;
     protected final JComboBox inputField;
+    protected final JLabel titleLabel2;
+    protected final JButton deleteContextButton;
     protected final JCheckBox advancedSearchCheckbox;
     protected final JPanel adhocPanel;
     protected final JPanel criteriaPanel;
@@ -59,20 +60,33 @@ public abstract class SearchParametersPanel extends JPanel implements SearchConf
 				performSearchInternal(false);
 			}
 		});
+
+        deleteContextButton = new JButton(Icons.getIcon("cancel.png"));
+        deleteContextButton.setBorderPainted(false);
+        deleteContextButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				setSearchRoot(null);
+				performSearchInternal(false);
+			}
+		});
+        deleteContextButton.setVisible(false);
         
         JPanel searchBox = new JPanel();
         searchBox.setLayout(new BoxLayout(searchBox, BoxLayout.LINE_AXIS));
         searchBox.add(titleLabel);
         searchBox.add(inputField);
         searchBox.add(titleLabel2);
+        searchBox.add(deleteContextButton);
+        searchBox.add(Box.createHorizontalStrut(5));
         searchBox.add(searchButton);
-
+        
         criteriaPanel = new JPanel();
         criteriaPanel.setLayout(new BoxLayout(criteriaPanel, BoxLayout.PAGE_AXIS));
         
         JButton addCriteriaButton = new JButton("Add search criteria", Icons.getIcon("add.png"));
         addCriteriaButton.setBorderPainted(false);
-        addCriteriaButton.setBorder(BorderFactory.createEmptyBorder(10,13,10,0));
+        addCriteriaButton.setBorder(BorderFactory.createEmptyBorder(10,13,10,10));
         addCriteriaButton.setIconTextGap(20);
         addCriteriaButton.addActionListener(new ActionListener() {
 			@Override
@@ -106,7 +120,7 @@ public abstract class SearchParametersPanel extends JPanel implements SearchConf
 			public void actionPerformed(ActionEvent e) {
 				advancedSearch.setVisible(!advancedSearch.isVisible());
 				if (searchCriteriaList.isEmpty()) {
-			        addSearchCriteria(false);
+			        addSearchCriteria(true);
 				}
 			}
 		});
@@ -312,9 +326,11 @@ public abstract class SearchParametersPanel extends JPanel implements SearchConf
 		
 		if (searchRoot == null) {
 			titleLabel2.setText(" in all data");
+			deleteContextButton.setVisible(false);
 		}
 		else {
 			titleLabel2.setText(" in "+searchRoot.getName());
+			deleteContextButton.setVisible(true);
 		}
 	}
 
