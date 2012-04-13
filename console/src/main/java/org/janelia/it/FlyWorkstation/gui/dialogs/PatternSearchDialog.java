@@ -1,8 +1,14 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.jacs.compute.api.support.EntityDocument;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
 
 import javax.swing.*;
@@ -12,6 +18,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * Created by IntelliJ IDEA.
@@ -555,6 +562,7 @@ public class PatternSearchDialog extends ModalDialog {
 
             @Override
             protected void doStuff() throws Exception {
+                Utils.setWaitingCursor(PatternSearchDialog.this);
                 setStatusMessage("Loading quantifier maps...");
                 loadPatternAnnotationQuantifierMapsFromSummary();
                 setStatusMessage("Computing scores...");
@@ -567,11 +575,13 @@ public class PatternSearchDialog extends ModalDialog {
 
             @Override
             protected void hadSuccess() {
+                Utils.setDefaultCursor(PatternSearchDialog.this);
                 setStatusMessage("Ready");
             }
 
             @Override
             protected void hadError(Throwable error) {
+                Utils.setDefaultCursor(PatternSearchDialog.this);
                 SessionMgr.getSessionMgr().handleException(error);
                 setStatusMessage("Error during quantifier load");
             }
@@ -786,8 +796,51 @@ public class PatternSearchDialog extends ModalDialog {
         membershipSampleSet=generateMembershipListForCurrentSet();
     }
 
-    protected void saveCurrentSet() {
-        setStatusMessage("Saving set \""+currentSetTextField.getText()+"\"");
+    protected synchronized void saveCurrentSet() {
+
+        SimpleWorker worker = new SimpleWorker() {
+
+            private Entity newFolder;
+
+            @Override
+            protected void doStuff() throws Exception {
+
+                String folderName = currentSetTextField.getText();
+                this.newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
+                newFolder.addAttributeAsTag(EntityConstants.ATTRIBUTE_COMMON_ROOT);
+                ModelMgr.getModelMgr().saveOrUpdateEntity(newFolder);
+
+                for (Long sampleId : membershipSampleSet) {
+                    Entity sampleEntity=ModelMgr.getModelMgr().getEntityById(sampleId.toString());
+                    EntityData newEd = newFolder.addChildEntity(sampleEntity);
+                    ModelMgr.getModelMgr().saveOrUpdateEntityData(newEd);
+                }
+            }
+
+            @Override
+            protected void hadSuccess() {
+                final EntityOutline entityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline();
+                entityOutline.refresh(new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        ModelMgr.getModelMgr().selectOutlineEntity("/e_"+newFolder.getId(), true);
+                        return null;
+                    }
+
+                });
+                Utils.setDefaultCursor(PatternSearchDialog.this);
+                setVisible(false);
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+                Utils.setDefaultCursor(PatternSearchDialog.this);
+            }
+        };
+
+        Utils.setWaitingCursor(this);
+        worker.execute();
     }
 
 

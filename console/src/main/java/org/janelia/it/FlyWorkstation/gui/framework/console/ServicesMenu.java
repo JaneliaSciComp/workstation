@@ -49,6 +49,6 @@ public class ServicesMenu extends JMenu {
         // Add the tools
         add(neuronSeparationMenuItem);
         add(searchMenuItem);
-//        add(patternSearchMenuItem);
+        add(patternSearchMenuItem);
     }
 }
