@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.outline.choose;
+package org.janelia.it.FlyWorkstation.gui.dialogs.choose;
 
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;

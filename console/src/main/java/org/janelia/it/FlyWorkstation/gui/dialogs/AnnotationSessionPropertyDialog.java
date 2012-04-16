@@ -2,10 +2,10 @@ package org.janelia.it.FlyWorkstation.gui.dialogs;
 
 import loci.plugins.config.SpringUtilities;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.dialogs.choose.EntityChooser;
+import org.janelia.it.FlyWorkstation.gui.dialogs.choose.OntologyElementChooser;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.*;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.choose.EntityChooser;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.choose.OntologyElementChooser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
