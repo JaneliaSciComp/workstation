@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.dialogs;
+package org.janelia.it.FlyWorkstation.gui.dialogs.search;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -14,9 +14,7 @@ import java.util.regex.Pattern;
 import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchConfiguration;
-import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchParametersPanel;
-import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchResultsPanel;
+import org.janelia.it.FlyWorkstation.gui.dialogs.ModalDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenWithDefaultAppAction;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
