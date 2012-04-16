@@ -18,13 +18,14 @@ import org.janelia.it.jacs.model.ontology.OntologyRoot;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class OntologyElementChooser extends AbstractChooser {
+public class OntologyElementChooser extends AbstractChooser<OntologyElement> {
 
-    private OntologyTree ontologyTree;
-    private List<OntologyElement> chosenElements = new ArrayList<OntologyElement>();
+    private final OntologyTree ontologyTree;
     
     public OntologyElementChooser(String title, OntologyRoot root) {
-        super(title);
+    	
+    	setTitle(title);
+    	
         ontologyTree = new OntologyTree() {
             protected void nodeDoubleClicked(MouseEvent e) {
                 chooseSelection();
@@ -36,21 +37,18 @@ public class OntologyElementChooser extends AbstractChooser {
         ontologyTree.getDynamicTree().expandAll(true);
     }
 
-    public List<OntologyElement> getChosenElements() {
-        return chosenElements;
-    }
-
     public void setMultipleSelection(boolean multipleSelection) {
     	ontologyTree.getTree().getSelectionModel().setSelectionMode(
     			multipleSelection ? TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION : TreeSelectionModel.SINGLE_TREE_SELECTION);
     }
     
-    protected void choosePressed() {
-        chosenElements.clear();
+    protected List<OntologyElement> choosePressed() {
+    	List<OntologyElement> chosen = new ArrayList<OntologyElement>();
         for (TreePath path : ontologyTree.getTree().getSelectionPaths()) {
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
             OntologyElement element = (OntologyElement) node.getUserObject();
-            chosenElements.add(element);
+            chosen.add(element);
         }
+        return chosen;
     }
 }

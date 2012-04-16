@@ -1,6 +1,23 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.concurrent.Callable;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+
 import loci.plugins.config.SpringUtilities;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.choose.EntityChooser;
 import org.janelia.it.FlyWorkstation.gui.dialogs.choose.OntologyElementChooser;
@@ -11,22 +28,11 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.types.Tag;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
-
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.concurrent.Callable;
 
 /**
  * A dialog for creating a new annotation session, or editing an existing one.
@@ -85,7 +91,8 @@ public class AnnotationSessionPropertyDialog extends ModalDialog {
                     private List<Entity> entities = new ArrayList<Entity>();
 
                     protected void doStuff() throws Exception {
-                        for (Entity entity : entityChooser.getChosenEntities()) {
+                        for (EntityData entityData : entityChooser.getChosenElements()) {
+                        	Entity entity = entityData.getChildEntity();
                         	Entity entityTree = ModelMgr.getModelMgr().getEntityTree(entity.getId());
                             List<Entity> descs = entityTree.getDescendantsOfType(EntityConstants.TYPE_NEURON_FRAGMENT, true);
                             entities.addAll(descs);
@@ -95,7 +102,10 @@ public class AnnotationSessionPropertyDialog extends ModalDialog {
                     protected void hadSuccess() {
                         List<DefaultMutableTreeNode> nodes = new ArrayList<DefaultMutableTreeNode>();
                         for (Entity entity : entities) {
-                            nodes.add(entityTreePanel.addItemUniquely(entity));
+                        	DefaultMutableTreeNode node = entityTreePanel.addItemUniquely(entity);
+                        	if (node!=null) { // Node is null if it could not be added uniquely
+                        		nodes.add(node);
+                        	}
                         }
                         getDynamicTree().selectAndShowNodes(nodes);
                         SwingUtilities.updateComponentTreeUI(AnnotationSessionPropertyDialog.this);
