@@ -1,8 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.dataview;
 
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -10,102 +7,53 @@ import java.util.List;
 
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
-import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenInFinderAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenWithDefaultAppAction;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
+import org.janelia.it.FlyWorkstation.gui.framework.context_menu.AbstractContextMenu;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 
 /**
  * Context pop up menu for entities in the data viewer.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DataviewContextMenu extends JPopupMenu {
+public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 
 	protected static final Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
 
-	protected List<Entity> selectedEntities;
-	protected Entity entity;
-	protected String label;
-	protected boolean nextAddRequiresSeparator = false;
-
-
 	public DataviewContextMenu(List<Entity> selectedEntities, String label) {
-		this.selectedEntities = selectedEntities;
-		this.entity = selectedEntities.get(0);
-		this.label = label;
+		super(selectedEntities, label);
+	}
+
+	@Override
+	protected void addSingleSelectionItems() {
+		Entity entity = getSelectedElement();
+		add(getTitleItem("Entity '"+entity.getName()+"'"));
+        add(getDetailsItem());
+        add(getRenameItem());
+        add(getDeleteItem());
+        add(getDeleteTreeItem());
+        setNextAddRequiresSeparator(true);
+    	add(getOpenInFinderItem());
+    	add(getOpenWithAppItem());
 	}
 	
 	@Override
-	public JMenuItem add(JMenuItem menuItem) {
-		
-		if (menuItem == null) return null;
-		
-		if (nextAddRequiresSeparator) {
-			addSeparator();
-			nextAddRequiresSeparator = false;
-		}
-		
-		return super.add(menuItem);
-	}
-
-	public void setNextAddRequiresSeparator(boolean nextAddRequiresSeparator) {
-		this.nextAddRequiresSeparator = nextAddRequiresSeparator;
-	}
-
-	public void addMenuItems() {
-		if (selectedEntities.size()>1) {
-			add(getTitleItem("(Multiple items selected)"));
-	        add(getDeleteItem());
-	        add(getDeleteTreeItem());
-		}
-		else {
-			if (!StringUtils.isEmpty(label)) {
-				add(getTitleItem(label));
-		        add(getCopyToClipboardItem());
-			}
-			add(getTitleItem("Entity '"+entity.getName()+"'"));
-	        add(getDetailsItem());
-	        add(getRenameItem());
-	        add(getDeleteItem());
-	        add(getDeleteTreeItem());
-	        setNextAddRequiresSeparator(true);
-	    	add(getOpenInFinderItem());
-	    	add(getOpenWithAppItem());
-		}
-	}
-
-	protected JMenuItem getTitleItem(String title) {
-        JMenuItem titleMenuItem = new JMenuItem(title);
-        titleMenuItem.setEnabled(false);
-        return titleMenuItem;
-	}
-	
-	protected JMenuItem getCopyToClipboardItem() {
-		if (selectedEntities.size()>1) return null;
-        JMenuItem copyMenuItem = new JMenuItem("  Copy to clipboard");
-        copyMenuItem.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-	            Transferable t = new StringSelection(label);
-	            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
-			}
-		});
-        return copyMenuItem;
+	protected void addMultipleSelectionItems() {
+        add(getDeleteItem());
+        add(getDeleteTreeItem());
 	}
 	
 	protected JMenuItem getDetailsItem() {
-		if (selectedEntities.size()>1) return null;
+		final Entity entity = getSelectedElement();
         JMenuItem detailsMenuItem = new JMenuItem("  View details");
         detailsMenuItem.addActionListener(new ActionListener() {
 			@Override
@@ -117,7 +65,7 @@ public class DataviewContextMenu extends JPopupMenu {
 	}
 	
 	protected JMenuItem getRenameItem() {
-		if (selectedEntities.size()>1) return null;
+		final Entity entity = getSelectedElement();
 		JMenuItem renameItem = new JMenuItem("  Rename");
         renameItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
@@ -144,18 +92,18 @@ public class DataviewContextMenu extends JPopupMenu {
 
 	private JMenuItem getDeleteItem() {
 
-		String name = selectedEntities.size()>1 ? "Delete entities" : "Delete entity";
+		String name = isMultipleSelection() ? "Delete entities" : "Delete entity";
 		
 		JMenuItem deleteEntityMenuItem = new JMenuItem("  "+name);
         deleteEntityMenuItem.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-	            int deleteConfirmation = confirm("Are you sure you want to delete " + selectedEntities.size() + 
+	            int deleteConfirmation = confirm("Are you sure you want to delete " + getSelectedElements().size() + 
 	            		" entities? This can potentially orphan their children, if they have any.");
 	            if (deleteConfirmation != 0) return;
 
-	            final List<Entity> toDelete = new ArrayList<Entity>(selectedEntities);
+	            final List<Entity> toDelete = new ArrayList<Entity>(getSelectedElements());
 
 	            Utils.setWaitingCursor(DataviewApp.getMainFrame());
 	            
@@ -194,19 +142,19 @@ public class DataviewContextMenu extends JPopupMenu {
 
 	private JMenuItem getDeleteTreeItem() {
 
-		String name = selectedEntities.size()>1 ? "Delete entity trees" : "Delete entity tree";
+		String name = isMultipleSelection() ? "Delete entity trees" : "Delete entity tree";
 		
         JMenuItem deleteTreeMenuItem = new JMenuItem("  "+name);
         deleteTreeMenuItem.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-	            int deleteConfirmation = confirm("Are you sure you want to delete " + selectedEntities.size() + " entities and all their descendants?");
+	            int deleteConfirmation = confirm("Are you sure you want to delete " + getSelectedElements().size() + " entities and all their descendants?");
 	            if (deleteConfirmation != 0) {
 	                return;
 	            }
 
-	            final List<Entity> toDelete = new ArrayList<Entity>(selectedEntities);
+	            final List<Entity> toDelete = new ArrayList<Entity>(getSelectedElements());
 
             	boolean su = false;
 	            for (Entity entity : toDelete) {
@@ -262,6 +210,7 @@ public class DataviewContextMenu extends JPopupMenu {
 	
 	protected JMenuItem getOpenInFinderItem() {
 		if (!OpenInFinderAction.isSupported()) return null;
+		final Entity entity = getSelectedElement();
     	String filepath = EntityUtils.getAnyFilePath(entity);
         if (!Utils.isEmpty(filepath)) {
         	return getActionItem(new OpenInFinderAction(entity));
@@ -271,22 +220,12 @@ public class DataviewContextMenu extends JPopupMenu {
 	
 	protected JMenuItem getOpenWithAppItem() {
         if (!OpenWithDefaultAppAction.isSupported()) return null;
+		final Entity entity = getSelectedElement();
     	String filepath = EntityUtils.getAnyFilePath(entity);
         if (!Utils.isEmpty(filepath)) {
         	return getActionItem(new OpenWithDefaultAppAction(entity));
         }
         return null;
-	}
-	
-	private JMenuItem getActionItem(final Action action) {
-        JMenuItem actionMenuItem = new JMenuItem("  "+action.getName());
-        actionMenuItem.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				action.doAction();
-			}
-		});
-        return actionMenuItem;
 	}
 
 	private int confirm(String message) {

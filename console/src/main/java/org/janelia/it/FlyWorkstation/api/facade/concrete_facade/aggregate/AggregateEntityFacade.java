@@ -74,6 +74,11 @@ public class AggregateEntityFacade extends AggregateFacadeBase implements Entity
     }
 
     @Override
+    public List<Entity> getEntitiesById(List<Long> entityIds) throws Exception {
+    	throw new UnsupportedOperationException();
+    }
+    
+    @Override
     public Entity getEntityTree(Long entityId) throws Exception {
         Object[] aggregates = getAggregates();
         List<Entity> returnList = new ArrayList<Entity>();

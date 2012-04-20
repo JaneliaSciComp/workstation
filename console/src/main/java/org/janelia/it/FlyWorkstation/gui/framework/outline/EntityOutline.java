@@ -112,10 +112,11 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	@Override
 	public void initializeTree(Entity rootEntity) {
 		super.initializeTree(rootEntity);
-
+		
+		selectedTree.expand(selectedTree.getRootNode(), true);
+		
 		JTree tree = getTree();
 		tree.setRootVisible(false);
-
 		tree.setDragEnabled(true);
 		tree.setDropMode(DropMode.ON_OR_INSERT);
 		tree.setTransferHandler(new EntityTransferHandler() {
@@ -515,7 +516,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		getDynamicTree().expand(node, true);
 	}
 
-	protected void selectEntityByUniqueId(String uniqueId) {
+	public void selectEntityByUniqueId(String uniqueId) {
 		DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
 		selectNode(node);
 	}

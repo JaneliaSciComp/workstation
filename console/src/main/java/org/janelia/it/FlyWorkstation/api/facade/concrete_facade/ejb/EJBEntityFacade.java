@@ -32,7 +32,12 @@ public class EJBEntityFacade implements EntityFacade {
     public Entity getEntityById(String entityId) {
         return EJBFactory.getRemoteAnnotationBean().getEntityById(entityId);
     }
-
+    
+    @Override
+    public List<Entity> getEntitiesById(List<Long> entityIds) throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().getEntitiesById(entityIds);
+    }
+    
     @Override
     public Entity getEntityTree(Long entityId) {
         return EJBFactory.getRemoteAnnotationBean().getEntityTree(entityId);

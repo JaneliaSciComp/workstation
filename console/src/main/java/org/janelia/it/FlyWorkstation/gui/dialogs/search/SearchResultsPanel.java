@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
@@ -12,6 +13,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.TableModel;
 
 import org.apache.solr.client.solrj.SolrQuery;
@@ -20,12 +23,14 @@ import org.apache.solr.client.solrj.response.FacetField.Count;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchAttribute.DataStore;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchConfiguration.AttrGroup;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicRow;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicTable;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ScrollablePanel;
 import org.janelia.it.jacs.compute.api.support.EntityDocument;
@@ -58,20 +63,29 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 	
     // UI Elements
     protected final JSplitPane splitPane;
+    protected final JSplitPane tableSplitPane;
     protected final JPanel facetsPanel;
     protected final JPanel attrsPanel;
     protected final JLabel statusLabel;
+    protected final JLabel projectionStatusLabel;
+    protected final JPanel resultsPane;
+    protected final JPanel projectionPane;
     protected final DynamicTable resultsTable;
-    
+    protected final DynamicTable projectionTable;
+    protected final ListSelectionListener resultsTableListener;
+    protected final ListSelectionListener projectionTableListener;
+ 	protected final JScrollPane facetScrollPane;
+ 	protected final JScrollPane attrScrollPane;
+ 	protected final JTabbedPane leftTabbedPane;
     // Search state
     protected SearchConfiguration searchConfig;
-    protected final List<SolrResults> pages = new ArrayList<SolrResults>();
     protected final Map<String,Set<String>> filters = new HashMap<String,Set<String>>();
-    protected int numLoaded = 0;
     protected String sortField;
     protected boolean ascending = true;
     protected String fullQueryString = "";
     
+    // Results
+    protected SearchResults searchResults = new SearchResults();
     
 	public SearchResultsPanel() {
 		setLayout(new BorderLayout());
@@ -83,18 +97,21 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
         
         facetsPanel = new ScrollablePanel();
         facetsPanel.setLayout(new BoxLayout(facetsPanel, BoxLayout.PAGE_AXIS));
-        JScrollPane facetScrollPane = new JScrollPane();
+        facetsPanel.setOpaque(false);
+        facetScrollPane = new JScrollPane();
         facetScrollPane.setViewportView(facetsPanel);
         facetScrollPane.getViewport().setBackground(color);
+        facetScrollPane.setBorder(BorderFactory.createEmptyBorder());
         
         attrsPanel = new ScrollablePanel();
         attrsPanel.setLayout(new BoxLayout(attrsPanel, BoxLayout.PAGE_AXIS));
-        final JScrollPane attrScrollPane = new JScrollPane();
+        attrsPanel.setOpaque(false);
+        attrScrollPane = new JScrollPane();
         attrScrollPane.setViewportView(attrsPanel);
         attrScrollPane.getViewport().setBackground(color);
+        attrScrollPane.setBorder(BorderFactory.createEmptyBorder());
         
-        
-		JTabbedPane leftTabbedPane = new JTabbedPane();
+		leftTabbedPane = new JTabbedPane();
 		leftTabbedPane.addTab("Result Filter", null, facetScrollPane, "Values to filter the results on");
 		leftTabbedPane.addTab("Attributes", null, attrScrollPane, "Attributes to display in the result table");
 		
@@ -103,12 +120,12 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
         // --------------------------------
         resultsTable = new DynamicTable() {
 			@Override
-			public Object getValue(Object userObject, DynamicColumn column) {
+			public Object getValue(Object userObject, DynamicColumn column) {				
 				return SearchResultsPanel.this.getValue(userObject, column);
 			}
 			@Override
 			protected void loadMoreResults() {
-				performSearch(pages.size(), false);	
+				performSearch(searchResults.getNumLoadedPages(), false);	
 			}
         	@Override
         	protected JPopupMenu createPopupMenu(MouseEvent e) {
@@ -131,20 +148,120 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 		resultsTable.setMaxColWidth(80);
 		resultsTable.setMaxColWidth(600);
 		resultsTable.setBorder(BorderFactory.createEmptyBorder(0, 0, 12, 5));
+
 		
+        projectionTable = new DynamicTable() {
+			@Override
+			public Object getValue(Object userObject, DynamicColumn column) {
+				return SearchResultsPanel.this.getValue(userObject, column);
+			}
+			@Override
+			protected void loadMoreResults() {
+				performSearch(searchResults.getNumLoadedPages(), false);	
+			}
+        	@Override
+        	protected JPopupMenu createPopupMenu(MouseEvent e) {
+        		return super.createPopupMenu(e);
+        	}
+		};
+
+		projectionTable.setMaxColWidth(80);
+		projectionTable.setMaxColWidth(600);
+		projectionTable.setBorder(BorderFactory.createEmptyBorder(0, 0, 12, 5));
+
+		final JTable resultsJTable = resultsTable.getTable();
+	 	final JTable projectionJTable = projectionTable.getTable();
 		
-		JPanel resultsPane = new JPanel(new BorderLayout());
+	 	resultsTableListener = new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				if (!projectionPane.isVisible()) return;
+				projectionJTable.getSelectionModel().removeListSelectionListener(projectionTableListener);
+				List<Entity> list = new ArrayList<Entity>();
+				for(int row : resultsJTable.getSelectedRows()) {
+	        		DynamicRow drow = resultsTable.getRows().get(row);
+	        		EntityDocument doc = (EntityDocument)drow.getUserObject();
+	        		Entity entity = doc.getEntity();
+	            	for(ResultPage resultPage : searchResults.getPages()) {
+	            		List<Entity> mappedEntities = resultPage.getMappedEntities(entity.getId());
+            			list.addAll(mappedEntities);
+	            	}
+				}
+				selectMappedEntities(list);
+				projectionJTable.getSelectionModel().addListSelectionListener(projectionTableListener);
+			}
+		};
+		
+		projectionTableListener = new ListSelectionListener() {
+			@Override
+			public void valueChanged(ListSelectionEvent e) {
+				if (!projectionPane.isVisible()) return;
+				resultsJTable.getSelectionModel().removeListSelectionListener(resultsTableListener);
+				List<Entity> list = new ArrayList<Entity>();
+				for(int row : projectionJTable.getSelectedRows()) {
+	        		DynamicRow drow = projectionTable.getRows().get(row);
+	        		Entity mappedEntity = (Entity)drow.getUserObject();
+	            	for(ResultPage resultPage : searchResults.getPages()) {
+	            		List<Entity> resultEntities = resultPage.getResultEntities(mappedEntity.getId());
+            			list.addAll(resultEntities);
+	            	}
+	            	
+				}
+				selectResultEntities(list);
+				resultsJTable.getSelectionModel().addListSelectionListener(resultsTableListener);
+			}
+		};
+
+		resultsJTable.getSelectionModel().addListSelectionListener(resultsTableListener);
+		projectionJTable.getSelectionModel().addListSelectionListener(projectionTableListener);
+
+		
+		resultsPane = new JPanel(new BorderLayout());
+		
         statusLabel = new JLabel(" ");
         statusLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
         resultsPane.add(statusLabel, BorderLayout.NORTH);
         resultsPane.add(resultsTable, BorderLayout.CENTER);
+
+
+        JButton hideProjectionButton = new JButton(Icons.getIcon("close.png"));
+        hideProjectionButton.setBorderPainted(false);
+        hideProjectionButton.setToolTipText("Close mapped result view");
+        hideProjectionButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				searchResults.setResultTreeMapping(null);
+				projectionPane.setVisible(false);
+			}
+		});
+        
+		projectionPane = new JPanel(new BorderLayout());
+        projectionStatusLabel = new JLabel(" ");
+        projectionStatusLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        JPanel projectionTitlePane = new JPanel();
+        projectionTitlePane.setLayout(new BoxLayout(projectionTitlePane, BoxLayout.LINE_AXIS));
+        projectionTitlePane.add(projectionStatusLabel);
+        projectionTitlePane.add(Box.createHorizontalGlue());
+        projectionTitlePane.add(hideProjectionButton);
+        projectionPane.add(projectionTitlePane, BorderLayout.NORTH);
+        projectionPane.add(projectionTable, BorderLayout.CENTER);
+        projectionPane.setVisible(false);
+        
+        // --------------------------------
+		// Results split for projections
+        // --------------------------------
+        
+        tableSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, resultsPane, projectionPane);
+        tableSplitPane.setBorder(BorderFactory.createEmptyBorder());
         
         // --------------------------------
 		// Split pane center
         // --------------------------------
-        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, leftTabbedPane, resultsPane);
+        splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, leftTabbedPane, tableSplitPane);
         splitPane.setOneTouchExpandable(false);
         splitPane.setDividerLocation(260);
+        splitPane.setBorder(BorderFactory.createEmptyBorder());
+        
 		add(splitPane, BorderLayout.CENTER);
 	}
 
@@ -155,7 +272,10 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     	Map<AttrGroup, List<SearchAttribute>> attributeGroups = searchConfig.getAttributeGroups();
     	
     	for(SearchAttribute attr : attributeGroups.get(AttrGroup.BASIC)) {
-			resultsTable.addColumn(attr.getName(), attr.getLabel(), !attr.getName().equals("id"), false, true, attr.isSortable());	
+			resultsTable.addColumn(attr.getName(), attr.getLabel(), !attr.getName().equals("id"), false, true, attr.isSortable());
+			if (attr.getDataStore()==DataStore.ENTITY) {
+				projectionTable.addColumn(attr.getName(), attr.getLabel(), !attr.getName().equals("id"), false, true, false);	
+			}
     	}
     	
     	for(SearchAttribute attr : attributeGroups.get(AttrGroup.EXT)) {
@@ -174,6 +294,47 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     }
     
     public void entitySelected(Entity entity) {
+
+    	Color d = leftTabbedPane.getBackground();
+    	System.out.println("color: "+d);
+    	facetScrollPane.getViewport().setBackground(leftTabbedPane.getBackground());
+    	
+    }
+    
+    public void selectResultEntities(List<Entity> entities) {
+    	JTable table = resultsTable.getTable();
+    	table.clearSelection();
+		int firstRow = Integer.MAX_VALUE;
+    	for (Entity entity : entities) {
+    		Integer row = searchResults.getRowIndexForResultId(entity.getId());
+    		if (row!=null) {
+				table.setColumnSelectionAllowed(false);
+				table.addRowSelectionInterval(row, row);
+	        	if (row<firstRow) firstRow = row;
+    		}
+    		else {
+    			System.out.println("WARNING: row index not found for "+entity.getId());
+    		}
+    	}
+    	table.scrollRectToVisible(table.getCellRect(firstRow, 1, true));
+    }
+
+	public void selectMappedEntities(List<Entity> mappedEntities) {
+		JTable table = projectionTable.getTable();
+		table.clearSelection();
+		int firstRow = Integer.MAX_VALUE;
+    	for (Entity mappedEntity : mappedEntities) {
+    		Integer row = searchResults.getRowIndexForMappedId(mappedEntity.getId());
+    		if (row!=null) {
+				table.setColumnSelectionAllowed(false);
+				table.addRowSelectionInterval(row, row);
+	        	if (row<firstRow) firstRow = row;
+    		}
+    		else {
+    			System.out.println("WARNING: row index not found for "+mappedEntity.getId());
+    		}
+    	}   
+    	table.scrollRectToVisible(table.getCellRect(firstRow, 1, true));
     }
 
     private JPopupMenu createPopupMenu(MouseEvent e) {    	
@@ -206,13 +367,12 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 			sortField = null;
 			ascending = true;
 		}
-		pages.clear();
-		numLoaded = 0;
+		searchResults.clear();
 		performSearch(0, showLoading);
 		resultsTable.getScrollPane().getVerticalScrollBar().setValue(0); 
     }
     
-    public synchronized void performSearch(final int page, final boolean showLoading) {
+    public synchronized void performSearch(final int pageNum, final boolean showLoading) {
     	
 		final SolrQueryBuilder builder = getQueryBuilder(true);		
 		
@@ -232,20 +392,19 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 		
     	SimpleWorker worker = new SimpleWorker() {
 			
-    		private SolrResults results;
+    		private ResultPage resultPage;
     		
 			@Override
 			protected void doStuff() throws Exception {
-				results = performSearch(builder, page, PAGE_SIZE);
-	    		pages.add(results);
-	    		numLoaded += results.getResultList().size();
-	    		resultsTable.setMoreResults(results.getResponse().getResults().getNumFound()>numLoaded);
+				resultPage = new ResultPage(performSearch(builder, pageNum, PAGE_SIZE));
+	    		searchResults.addPage(resultPage);
+	    		resultsTable.setMoreResults(searchResults.hasMoreResults());
 			}
 
 			@Override
 			protected void hadSuccess() {
-				populateFacets(results);
-	        	populateResultView(results);
+				populateFacets(resultPage);
+	        	populateResultView(resultPage);
 		    	if (showLoading) resultsTable.showTable();
 			}
 			
@@ -274,18 +433,83 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 		
 		return ModelMgr.getModelMgr().searchSolr(query);
     }
-
-    protected void populateResultView(SolrResults pageResults) {
-
-    	if (pageResults==null) return;
+    
+    public void projectResults(final ResultTreeMapping projection) {
     	
+    	projectionTable.removeAllRows();
+    	searchResults.setResultTreeMapping(projection);
+    	resultsTable.setAutoLoadResults(false);
+    	projectionTable.setAutoLoadResults(false);
+    	
+		SimpleWorker worker = new SimpleWorker() {
+			
+			@Override
+			protected void doStuff() throws Exception {
+				searchResults.projectResultPages();
+			}
+			
+			@Override
+			protected void hadSuccess() {
+				for(ResultPage resultPage : searchResults.getPages()) {
+					populateProjectionView(resultPage);
+				}
+//				projectionTable.setMoreResults(searchResults.hasMoreResults());
+				resultsTable.setAutoLoadResults(true);
+		    	projectionTable.setAutoLoadResults(true);
+			}
+			
+			@Override
+			protected void hadError(Throwable error) {
+				resultsTable.setAutoLoadResults(true);
+		    	projectionTable.setAutoLoadResults(true);
+				SessionMgr.getSessionMgr().handleException(error);
+			}
+		};
+		
+		worker.execute();
+    }
+    
+    public void projectResultPage(final ResultPage resultPage) {
+    	if (searchResults.getResultTreeMapping()==null) return;
+    	resultsTable.setAutoLoadResults(false);
+    	projectionTable.setAutoLoadResults(false);
+    	
+		SimpleWorker worker = new SimpleWorker() {
+			
+			@Override
+			protected void doStuff() throws Exception {
+				searchResults.projectResultPage(resultPage);
+			}
+			
+			@Override
+			protected void hadSuccess() {
+				populateProjectionView(resultPage);
+				resultsTable.setAutoLoadResults(true);
+		    	projectionTable.setAutoLoadResults(true);
+			}
+			
+			@Override
+			protected void hadError(Throwable error) {
+				resultsTable.setAutoLoadResults(true);
+		    	projectionTable.setAutoLoadResults(true);
+				SessionMgr.getSessionMgr().handleException(error);
+			}
+		};
+		
+		worker.execute();
+    }
+    
+    protected void populateResultView(final ResultPage resultPage) {
+
+    	if (resultPage==null) return;
+    	SolrResults pageResults = resultPage.getSolrResults();
     	long numResults = pageResults.getResponse().getResults().getNumFound();
     	if (pageResults.getResultList().isEmpty()) numResults = 0;
     	
     	statusLabel.setText(numResults+" results found for '"+fullQueryString.trim()+"'");
     	statusLabel.setToolTipText("Query took "+pageResults.getResponse().getElapsedTime()+" milliseconds");
     	
-    	if (pages.size()==1) {
+    	if (searchResults.getNumLoadedPages()==1) {
     		// First page, so clear the previous results
 			resultsTable.removeAllRows();
     	}	
@@ -295,8 +519,33 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     	}    	
 
     	updateTableModel();
+    	projectResultPage(resultPage);
     }
+    
+    protected void populateProjectionView(ResultPage resultPage) {
 
+    	if (resultPage.getMappedResults()==null) {
+    		System.out.println("WARNING: populateProjectionView called with null projected results");
+    		return;
+    	}
+
+		projectionStatusLabel.setText("Mapped results ("+
+				searchResults.getResultTreeMapping().getDescription()+")");
+		
+    	if (searchResults.getNumLoadedPages()==1) {
+    		// First page, so clear the previous results
+    		projectionTable.removeAllRows();
+    	}	
+    	
+    	for(Entity mappedEntity : resultPage.getMappedResults())  {
+			projectionTable.addRow(mappedEntity);	
+    	}
+
+    	projectionTable.updateTableModel();
+    	projectionPane.setVisible(true);
+    	tableSplitPane.setDividerLocation(0.5);
+    }
+    
     protected void updateTableModel() {
 		resultsTable.updateTableModel();
 		resultsTable.getTable().setRowSorter(new SolrRowSorter());
@@ -398,10 +647,11 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 		}
 	};
 	
-	protected void populateFacets(SolrResults pageResults) {
+	protected void populateFacets(ResultPage resultPage) {
     	
     	facetsPanel.removeAll();
-
+    	SolrResults pageResults =  resultPage.getSolrResults();
+    	
     	if (pageResults==null || pageResults.getResultList().isEmpty()) return;
     	
     	QueryResponse qr = pageResults.getResponse();
@@ -455,49 +705,36 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 	protected void populateAttrs() {
     	
     	attrsPanel.removeAll();
+		
+		for(final AttrGroup currGroup : searchConfig.getAttributeGroups().keySet()) {
 
-		JPanel attrGroupPanel = null;
-		
-		int i = 0;
-		int currGroupIndex = 0;
-		int groupIndex = 0;
-		
-		for(final DynamicColumn column : resultsTable.getColumns()) {
-			AttrGroup currGroup = AttrGroup.values()[currGroupIndex];
-			
-			if (i==0 || groupIndex>=searchConfig.getAttributeGroups().get(currGroup).size()) {
-				// Start a new group
-				if (i>0) {
-					currGroupIndex++;
-					groupIndex = 0;
-				}
-				attrGroupPanel = new JPanel();
-				attrGroupPanel.setOpaque(false);
-				attrGroupPanel.setLayout(new BoxLayout(attrGroupPanel, BoxLayout.PAGE_AXIS));
-				JLabel attrGroupLabel = new JLabel(currGroup.toString());
-				attrGroupLabel.setFont(groupFont);
-				attrGroupPanel.add(attrGroupLabel);
-				attrsPanel.add(Box.createRigidArea(new Dimension(0,10)));
-				attrsPanel.add(attrGroupPanel);
+			JPanel attrGroupPanel = new JPanel();
+			attrGroupPanel.setOpaque(false);
+			attrGroupPanel.setLayout(new BoxLayout(attrGroupPanel, BoxLayout.PAGE_AXIS));
+			JLabel attrGroupLabel = new JLabel(currGroup.getLabel());
+			attrGroupLabel.setFont(groupFont);
+			attrGroupPanel.add(attrGroupLabel);
+			attrsPanel.add(Box.createRigidArea(new Dimension(0,10)));
+			attrsPanel.add(attrGroupPanel);
+
+			for(final SearchAttribute attr : searchConfig.getAttributeGroups().get(currGroup)) {
+				final DynamicColumn column = resultsTable.getColumn(attr.getName());
+
+				final JCheckBox checkBox = new JCheckBox(new AbstractAction(attr.getLabel()) {
+					public void actionPerformed(ActionEvent e) {
+						JCheckBox cb = (JCheckBox) e.getSource();
+						column.setVisible(cb.isSelected());
+						performSearch(false, false, false);
+					}
+				});
+				checkBox.setToolTipText(attr.getDescription());
+				checkBox.setSelected(column.isVisible());
+				checkBox.setFont(checkboxFont);
+				attrGroupPanel.add(checkBox);
 			}
-			
-			final JCheckBox checkBox = new JCheckBox(new AbstractAction(column.getLabel()) {
-				public void actionPerformed(ActionEvent e) {
-					JCheckBox cb = (JCheckBox) e.getSource();
-					column.setVisible(cb.isSelected());
-					performSearch(false, false, false);
-				}
-			});
-			
-			checkBox.setSelected(column.isVisible());
-			checkBox.setFont(checkboxFont);
-			attrGroupPanel.add(checkBox);
-			i++;
-			groupIndex++;
 		}
 		
 		attrsPanel.add(Box.createRigidArea(new Dimension(0,10)));
-		
 		attrsPanel.revalidate();
 		attrsPanel.repaint();
 	}
@@ -522,9 +759,24 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
      * @return
      */
 	public Object getValue(Object userObject, DynamicColumn column) {
-		EntityDocument entityDoc = (EntityDocument)userObject;
-		Entity entity = entityDoc.getEntity();
-		SolrDocument doc = entityDoc.getDocument();
+		Entity entity = null;
+		SolrDocument doc  = null;
+		if (userObject instanceof EntityDocument)  {
+			EntityDocument entityDoc = (EntityDocument)userObject;	
+			entity = entityDoc.getEntity();
+			doc = entityDoc.getDocument();
+		}
+		else if (userObject instanceof Entity) {
+			entity = (Entity)userObject;
+		}
+		else {
+			throw new IllegalArgumentException("User object must be Entity or EntityDocument");
+		}
+		
+		if (entity == null) {
+			throw new IllegalArgumentException("Entity may not be null in user object="+userObject);
+		}
+		
 		String field = column.getName();
 		Object value = null;
 		if ("id".equals(field)) {
@@ -545,16 +797,21 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 		else if ("updated_date".equals(field)) {
 			value = df.format(entity.getUpdatedDate());
 		}
-		else if ("annotations".equals(field)) {
-			value = doc.getFieldValues("annotations");
-		}
-		else if ("score".equals(field)) {
-			Float score = (Float)doc.get("score");
-	        DecimalFormat twoDForm = new DecimalFormat("#.##");
-	        value = Double.valueOf(twoDForm.format(score));
+		else if (doc!=null) {
+			if ("annotations".equals(field)) {
+				value = doc.getFieldValues("annotations");
+			}
+			else if ("score".equals(field)) {
+				Float score = (Float)doc.get("score");
+		        DecimalFormat twoDForm = new DecimalFormat("#.##");
+		        value = Double.valueOf(twoDForm.format(score));
+			}
+			else {
+				value = doc.getFieldValues(column.getName());	
+			}
 		}
 		else {
-			value = doc.getFieldValues(column.getName());
+			throw new IllegalStateException("Unknown field '"+field+"'");
 		}
 		
 		return getFormattedFieldValue(field, value);
@@ -624,5 +881,15 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 
 	public DynamicTable getResultsTable() {
 		return resultsTable;
+	}
+
+	public DynamicTable getMappedResultsTable() {
+		return projectionTable;
+	}
+	
+	public SearchResults getSearchResults() {
+		return searchResults;
 	}	
+	
+	
 }

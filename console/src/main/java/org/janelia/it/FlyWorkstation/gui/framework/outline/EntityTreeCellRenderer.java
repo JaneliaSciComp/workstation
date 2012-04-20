@@ -27,6 +27,7 @@ import org.janelia.it.jacs.model.entity.EntityData;
 public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements TreeCellRenderer {
     protected static final Color typeLabelColor = new Color(149, 125, 71);
     protected static final Color metaLabelColor = new Color(128, 128, 128);
+    protected static final Color highlightColor = new Color(205, 157, 250);
     protected static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm");
 
     protected JLabel titleLabel;
@@ -65,7 +66,7 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
 
         cellPanel.setBackground(backgroundNonSelectionColor);
     }
-
+    
     public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
         Component returnValue = null;
         if ((value != null) || (value instanceof DefaultMutableTreeNode)) {
@@ -155,6 +156,11 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
                 if (entityTypeName.equals(EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION)) {
                 	metaLabel.setText("("+entity.getEntityData().size()+" fragments)");
                 }
+                
+                if (isHighlighted(entity)) {
+                    titleLabel.setBackground(highlightColor);
+                }
+                
             }
 
             returnValue = cellPanel;
@@ -163,5 +169,9 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
             returnValue = defaultRenderer.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
         }
         return returnValue;
+    }
+
+    protected boolean isHighlighted(Entity entity) {
+    	return false;
     }
 }

@@ -11,6 +11,11 @@ import org.janelia.it.jacs.compute.api.support.SageTerm;
 import org.janelia.it.jacs.compute.api.support.SolrUtils;
 import org.janelia.it.jacs.model.entity.EntityAttribute;
 
+/**
+ * The configuration of search attributes available for query and display.
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
 public class SearchConfiguration {
 
     /** Fields to use as columns */
@@ -18,13 +23,19 @@ public class SearchConfiguration {
     
     /** Labels to use on the columns */
     protected static final String[] columnLabels = {"GUID", "Name", "Type", "Owner", "Date Created", "Date Last Updated", "Annotations", "Score"};
+
+    /** Labels to use on the columns */
+    protected static final String[] columnDescriptions = {"Unique identifier", "Name", "Type", "Owner's username", "Date Created", "Date Last Updated", "Annotations", "Search relevancy score"};
     
     /** Which columns are sortable */
     protected static final boolean[] columnSortable = {true, true, true, true, true, true, false, true};
     
     /** Data types of the columns */
     protected static final DataType[] columnTypes = {DataType.STRING, DataType.STRING, DataType.STRING, DataType.STRING, DataType.DATE, DataType.DATE, DataType.STRING, DataType.STRING};
-
+    
+    /** Which columns are available in the entity model */
+    protected static final boolean[] columnIsInEntity = {true, true, true, true, true, true, false, false};
+    
     // Data
     protected final Map<AttrGroup, List<SearchAttribute>> attributeGroups = new LinkedHashMap<AttrGroup, List<SearchAttribute>>();
     protected List<SearchAttribute> attributes = new ArrayList<SearchAttribute>();
@@ -66,7 +77,7 @@ public class SearchConfiguration {
 					String name = columnFields[i];
 					String label = columnLabels[i];
 					DataType dataType = columnTypes[i];
-					SearchAttribute attr = new SearchAttribute(name, label, dataType, DataStore.ENTITY, columnSortable[i]);
+					SearchAttribute attr = new SearchAttribute(name, label, columnDescriptions[i], dataType, columnIsInEntity[i]?DataStore.ENTITY:DataStore.SOLR, columnSortable[i]);
 					attrListBasic.add(attr);
 					attributes.add(attr);
 				}
@@ -84,7 +95,7 @@ public class SearchConfiguration {
 				for(EntityAttribute entityAttr : attrs) {
 					String name = SolrUtils.getDynamicFieldName(entityAttr.getName());
 					String label = entityAttr.getName();
-					SearchAttribute attr = new SearchAttribute(name, label, DataType.STRING, DataStore.ENTITY_DATA, true);
+					SearchAttribute attr = new SearchAttribute(name, label, label, DataType.STRING, DataStore.ENTITY_DATA, true);
 					attrListExt.add(attr);
 					attributes.add(attr);
 				}
@@ -103,7 +114,7 @@ public class SearchConfiguration {
 				for(SageTerm term : terms) {
 					String name = SolrUtils.getSageFieldName(term.getName(), term);
 					String label = term.getDisplayName();
-					SearchAttribute attr = new SearchAttribute(name, label, DataType.STRING, DataStore.SOLR, true);
+					SearchAttribute attr = new SearchAttribute(name, label, term.getDefinition(), DataType.STRING, DataStore.SOLR, true);
 					attrListSage.add(attr);
 					attributes.add(attr);
 				}

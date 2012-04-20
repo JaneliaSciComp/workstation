@@ -66,7 +66,6 @@ public class EntityPane extends JPanel {
         	}
         	@Override
         	protected JPopupMenu getPopupMenu(List<Entity> selectedEntites, String label) {
-        		System.out.println("FGFGDG");
         		return EntityPane.this.getPopupMenu(selectedEntites, label);
         	}
         };
@@ -165,8 +164,6 @@ public class EntityPane extends JPanel {
 
 	protected DataviewContextMenu getPopupMenu(List<Entity> selectedEntities, String label) {
 		// Create context menu
-		final DataviewContextMenu popupMenu = new DataviewContextMenu(selectedEntities, label);
-		popupMenu.addMenuItems();
-		return popupMenu;
+		return new DataviewContextMenu(selectedEntities, label);
 	}
 }

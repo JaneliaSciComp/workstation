@@ -24,16 +24,20 @@ public class EntityChooser extends AbstractChooser<EntityData> {
     private final EntityTree entityTree;
     private final List<String> uniqueIds = new ArrayList<String>();
 
-    public EntityChooser(String title, EntityOutline entityOutline) {
-        
+    public EntityChooser(String title, EntityTree entityTree) {
     	setTitle(title);
-        
+        this.entityTree = entityTree;
+        entityTree.getTree().getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
+        addChooser(entityTree);
+    }
+    
+    public EntityChooser(String title, EntityOutline entityOutline) {
+    	setTitle(title);
         entityTree = new EntityTree(entityOutline.getDynamicTree().isLazyLoading()) {
             protected void nodeDoubleClicked(MouseEvent e) {
                 chooseSelection();
             }
         };
-        
         entityTree.initializeTree(entityOutline.getCurrentRootEntity());
         entityTree.getTree().getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
         addChooser(entityTree);
@@ -45,7 +49,9 @@ public class EntityChooser extends AbstractChooser<EntityData> {
 
     protected List<EntityData> choosePressed() {
     	List<EntityData> chosen = new ArrayList<EntityData>();
-        for (TreePath path : entityTree.getDynamicTree().getTree().getSelectionPaths()) {
+    	TreePath[] selectionPaths = entityTree.getDynamicTree().getTree().getSelectionPaths();
+    	if (selectionPaths==null) return chosen;
+        for (TreePath path : selectionPaths) {
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
             chosen.add(entityTree.getEntityData(node));
             uniqueIds.add(entityTree.getDynamicTree().getUniqueId(node));
@@ -53,4 +59,7 @@ public class EntityChooser extends AbstractChooser<EntityData> {
         return chosen;
     }
 
+    public List<String> getUniqueIds() {
+    	return uniqueIds;
+    }
 }

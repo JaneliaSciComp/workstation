@@ -3,6 +3,8 @@ package org.janelia.it.FlyWorkstation.api.facade.abstract_facade;
 import java.util.List;
 import java.util.Set;
 
+import org.janelia.it.jacs.compute.api.support.EntityMapStep;
+import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.model.entity.Entity;
 
 /**
@@ -38,6 +40,8 @@ public interface AnnotationFacade extends EntityFacade {
 	public List<List<Long>> searchTreeForNameStartingWith(Long rootId, String searchString) throws Exception;
 
 	public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception;
+	
+	public List<MappedId> getProjectedResults(List<Long> entityIds, List<EntityMapStep> upMapping, List<EntityMapStep> downMapping) throws Exception;
 	
     public Object[] getPatternAnnotationQuantifierMapsFromSummary() throws Exception;
 

@@ -35,11 +35,13 @@ public abstract class DynamicTable extends JPanel {
     private List<DynamicColumn> columns = new ArrayList<DynamicColumn>();
     private List<DynamicColumn> displayedColumns = new ArrayList<DynamicColumn>();
     private List<DynamicRow> rows = new ArrayList<DynamicRow>();
+    private List<Object> userObjects = new ArrayList<Object>();
     
     private Map<DynamicColumn,TableCellRenderer> renderers = new HashMap<DynamicColumn,TableCellRenderer>();
 
     private Rectangle currViewRect;
     private boolean hasMoreResults;
+    private boolean autoLoadResults = true;
     private int minColWidth = DEFAULT_MIN_COLUMN_WIDTH;
     private int maxColWidth = DEFAULT_MAX_COLUMN_WIDTH;
     
@@ -129,6 +131,7 @@ public abstract class DynamicTable extends JPanel {
 	            SwingUtilities.invokeLater(new Runnable() {
 	    			@Override
 	    			public void run() {
+	    				if (!autoLoadResults) return;
 	    		    	final JViewport viewPort = scrollPane.getViewport();
 	    		    	Rectangle viewRect = viewPort.getViewRect();
 	    		    	if (viewRect.equals(currViewRect)) {
@@ -352,6 +355,7 @@ public abstract class DynamicTable extends JPanel {
     public DynamicRow addRow(Object userObject) {
     	DynamicRow row = new DynamicRow(userObject);
     	rows.add(row);
+    	userObjects.add(userObject);
     	return row;
     }
     
@@ -362,13 +366,19 @@ public abstract class DynamicTable extends JPanel {
     public List<DynamicRow> getRows() {
     	return rows;
     }
+    
+    public List<Object> getUserObjects() {
+    	return userObjects;
+    }
 
     public void removeRow(DynamicRow row) {
+    	userObjects.remove(rows.indexOf(row));
     	rows.remove(row);
     	updateTableModel();
     }
     
     public void removeAllRows() {
+    	userObjects.clear();
     	rows.clear();
     	updateTableModel();
     }
@@ -405,7 +415,7 @@ public abstract class DynamicTable extends JPanel {
     	List<Object> selected = new ArrayList<Object>();
         for (int i : table.getSelectedRows()) {
             int mi = table.convertRowIndexToModel(i);
-        	selected.add(rows.get(mi).getUserObject());
+        	selected.add(userObjects.get(mi));
         }	
         return selected;
     }
@@ -425,12 +435,7 @@ public abstract class DynamicTable extends JPanel {
     }
 
     public DynamicRow getRowForUserObject(Object userObject) {
-    	for(DynamicRow row : rows) {
-    		if (row.getUserObject().equals(userObject)) {
-    			return row;
-    		}
-    	}
-    	return null;
+    	return rows.get(userObjects.indexOf(userObject));
     }
     
     /**
@@ -539,6 +544,14 @@ public abstract class DynamicTable extends JPanel {
 
 	public void setMaxColWidth(int maxColWidth) {
 		this.maxColWidth = maxColWidth;
+	}
+
+	public boolean isAutoLoadResults() {
+		return autoLoadResults;
+	}
+
+	public void setAutoLoadResults(boolean autoLoadResults) {
+		this.autoLoadResults = autoLoadResults;
 	}
 
 	/**

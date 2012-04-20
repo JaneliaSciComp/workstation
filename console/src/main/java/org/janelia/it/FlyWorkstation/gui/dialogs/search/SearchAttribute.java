@@ -23,11 +23,13 @@ public class SearchAttribute {
 	private DataType dataType;
 	private String name;
 	private String label;
+	private String description;
 	private boolean sortable;
 	
-	public SearchAttribute(String name, String label, DataType dataType, DataStore dataStore, boolean sortable) {
+	public SearchAttribute(String name, String label, String description, DataType dataType, DataStore dataStore, boolean sortable) {
 		this.name = name;
 		this.label = label;
+		this.description = description;
 		this.dataType = dataType;
 		this.dataStore = dataStore;
 		this.sortable = sortable;
@@ -47,6 +49,10 @@ public class SearchAttribute {
 
 	public String getLabel() {
 		return label;
+	}
+
+	public String getDescription() {
+		return description;
 	}
 	
 	public boolean isSortable() {

@@ -57,11 +57,11 @@ public abstract class SearchParametersPanel extends JPanel implements SearchConf
         searchButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				performSearchInternal(false);
+				performSearchInternal(true);
 			}
 		});
 
-        deleteContextButton = new JButton(Icons.getIcon("cancel.png"));
+        deleteContextButton = new JButton(Icons.getIcon("close.png"));
         deleteContextButton.setBorderPainted(false);
         deleteContextButton.addActionListener(new ActionListener() {
 			@Override

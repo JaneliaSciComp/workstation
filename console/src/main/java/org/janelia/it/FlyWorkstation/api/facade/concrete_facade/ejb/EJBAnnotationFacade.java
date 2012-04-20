@@ -5,6 +5,8 @@ import java.util.Set;
 
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.AnnotationFacade;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.jacs.compute.api.support.EntityMapStep;
+import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.model.entity.Entity;
 
 /**
@@ -77,6 +79,10 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
 
 	public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception {
     	EJBFactory.getRemoteAnnotationBean().addChildren(SessionMgr.getUsername(), parentId, childrenIds, attributeName);
+	}
+	
+	public List<MappedId> getProjectedResults(List<Long> entityIds, List<EntityMapStep> upMapping, List<EntityMapStep> downMapping) throws Exception {
+		return EJBFactory.getRemoteAnnotationBean().getProjectedResults(entityIds, upMapping, downMapping);
 	}
 	
     public Object[] getPatternAnnotationQuantifierMapsFromSummary() throws Exception {

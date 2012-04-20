@@ -20,6 +20,8 @@ public interface EntityFacade {
     
     public List<EntityAttribute> getEntityAttributes();
     
+    public List<Entity> getEntitiesById(List<Long> entityIds) throws Exception;
+    
     public Entity getEntityById(String entityId) throws Exception;
 
     public Entity getEntityTree(Long entityId) throws Exception;

@@ -135,8 +135,6 @@ public class EntityTree extends JPanel {
         
         addNodes(null, rootEd);
 
-        selectedTree.expand(selectedTree.getRootNode(), true);
-
         showTree();
     }
 
@@ -353,16 +351,20 @@ public class EntityTree extends JPanel {
     }
 
     /**
-     * Override to provide selection behavior. Default implementation does nothing.
+     * Override to provide custom selection behavior. 
      * @param uniqueId
      */
-	protected void selectEntityByUniqueId(String uniqueId) {
+	public void selectEntityByUniqueId(String uniqueId) {
+//		DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
+//		if (node!=null) {
+//			getDynamicTree().navigateToNode(node);
+//		}
 	}
 	
 	/**
 	 * Override to provide refresh behavior. Default implementation does nothing.
 	 */
-    protected void refresh() {
+	public void refresh() {
     }
 
     /**
@@ -410,14 +412,17 @@ public class EntityTree extends JPanel {
     	return getDynamicTree().getUniqueId(getDynamicTree().getCurrentNode());
     }
 
-   
     public DefaultMutableTreeNode getNodeByUniqueId(String uniqueId) {
     	return uniqueIdToNodeMap.get(uniqueId);
     }
 
+    public EntityData getEntityDataByUniqueId(String uniqueId) {
+    	DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
+    	return getEntityData(node);
+    }
+    
     public Entity getEntityByUniqueId(String uniqueId) {
-    	DefaultMutableTreeNode node = uniqueIdToNodeMap.get(uniqueId);
-    	if (node==null) return null;
+    	DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
     	return getEntity(node);
     }
     
@@ -469,7 +474,9 @@ public class EntityTree extends JPanel {
 //		System.out.println(indent+"EntityTree.addNodes - adding "+entity.getName()+" ("+newEd.getId()+") to "+(parentEntity==null?"ROOT":parentEntity.getName())+" at index:"+index);
         
         // Add to unique map
-        uniqueIdToNodeMap.put(selectedTree.getUniqueId(newNode), newNode);
+        String uniqueId = selectedTree.getUniqueId(newNode);
+//        System.out.println(indent+""+entity.getName()+" (uniqueId="+uniqueId+")");
+        uniqueIdToNodeMap.put(uniqueId, newNode);
         
         // Add to duplicate map
         Set<DefaultMutableTreeNode> nodes = entityIdToNodeMap.get(entity.getId());

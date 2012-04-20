@@ -1,13 +1,14 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.aggregate;
 
-import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.AnnotationFacade;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+
+import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.AnnotationFacade;
+import org.janelia.it.jacs.compute.api.support.EntityMapStep;
+import org.janelia.it.jacs.compute.api.support.MappedId;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 
 /**
  * Created by IntelliJ IDEA.
@@ -144,6 +145,11 @@ public class AggregateAnnotationFacade extends AggregateEntityFacade implements 
 
 	@Override
 	public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception {
+		throw new UnsupportedOperationException();
+	}
+	
+	@Override
+	public List<MappedId> getProjectedResults(List<Long> entityIds, List<EntityMapStep> upMapping, List<EntityMapStep> downMapping) throws Exception {
 		throw new UnsupportedOperationException();
 	}
 	

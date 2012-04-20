@@ -6,6 +6,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileWriter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.regex.Matcher;
@@ -20,6 +21,8 @@ import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicColumn;
+import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicRow;
+import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicTable;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.compute.api.support.EntityDocument;
@@ -45,7 +48,6 @@ public class GeneralSearchDialog extends ModalDialog {
 	/** How many results to load at a time when exporting */
 	protected static final int EXPORT_PAGE_SIZE = 1000;
 
-    // Data
 	protected final SearchConfiguration searchConfig;
 	
     // UI Elements
@@ -70,13 +72,17 @@ public class GeneralSearchDialog extends ModalDialog {
         
         resultsPanel = new SearchResultsPanel() {
         	@Override
-        	protected void populateResultView(SolrResults pageResults) {
-        		super.populateResultView(pageResults);
-            	exportButton.setEnabled(!pageResults.getResultList().isEmpty());
+        	protected void populateResultView(ResultPage resultPage) {
+        		super.populateResultView(resultPage);
+            	exportButton.setEnabled(!resultPage.getSolrResults().getResultList().isEmpty());
         	}
         	@Override
         	protected SolrQueryBuilder getQueryBuilder() {
         		return paramsPanel.getQueryBuilder();
+        	}
+        	@Override
+        	protected JPopupMenu getPopupMenu(List<Entity> selectedEntites, String label) {
+        		return GeneralSearchDialog.this.getPopupMenu(selectedEntites, label);
         	}
     		
         };
@@ -159,7 +165,11 @@ public class GeneralSearchDialog extends ModalDialog {
     	paramsPanel.setSearchRoot(entity);
     	init();
     }
-    
+
+	protected SearchResultContextMenu getPopupMenu(List<Entity> selectedEntities, String label) {
+		return new SearchResultContextMenu(resultsPanel, selectedEntities, label);
+	}
+	
     public void setSearchHistory(List<String> searchHistory) {
     	paramsPanel.setSearchHistory(searchHistory);
     }
@@ -180,13 +190,25 @@ public class GeneralSearchDialog extends ModalDialog {
 				String folderName = folderNameField.getText();
 				this.newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
 				newFolder.addAttributeAsTag(EntityConstants.ATTRIBUTE_COMMON_ROOT);
-				ModelMgr.getModelMgr().saveOrUpdateEntity(newFolder);
+				newFolder = ModelMgr.getModelMgr().saveOrUpdateEntity(newFolder);
 
-		        for (Object obj : resultsPanel.getResultsTable().getSelectedObjects()) {
-		        	EntityDocument entityDoc = (EntityDocument)obj;
-					EntityData newEd = newFolder.addChildEntity(entityDoc.getEntity());
-					ModelMgr.getModelMgr().saveOrUpdateEntityData(newEd);	
+				List<Long> childIds = new ArrayList<Long>();
+				SearchResults searchResults = resultsPanel.getSearchResults();
+				DynamicTable table = searchResults.getResultTreeMapping()==null?resultsPanel.getResultsTable():resultsPanel.getMappedResultsTable();
+				
+				for(DynamicRow row : table.getSelectedRows()) {
+					Object o = row.getUserObject();
+					Entity entity = null;
+					if (o instanceof Entity) {
+						entity = (Entity)o;
+					}
+					else if (o instanceof EntityDocument) {
+						entity = ((EntityDocument)o).getEntity();
+					}
+					childIds.add(entity.getId());
 				}
+				
+				ModelMgr.getModelMgr().addChildren(newFolder.getId(), childIds, EntityConstants.ATTRIBUTE_ENTITY);
 			}
 			
 			@Override
@@ -215,6 +237,32 @@ public class GeneralSearchDialog extends ModalDialog {
 		worker.execute();
     }
 
+    /**
+     * Looks for folders in the entity tree, and creates a new result name which does not already exist.
+     * @return
+     */
+	protected String getNextFolderName() {
+		final EntityOutline entityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline();
+		int maxNum = 0;
+		for(EntityData ed : entityOutline.getRootEntity().getEntityData()) {
+			Entity topLevelFolder = ed.getChildEntity();
+			if (topLevelFolder != null) {
+				Pattern p = Pattern.compile("^Search Results #(\\d+)$");
+				Matcher m = p.matcher(topLevelFolder.getName());
+				if (m.matches()) {
+					String num = m.group(1);
+					if (num!=null && !"".equals(num)) {
+						int n = Integer.parseInt(num);
+						if (n>maxNum) {
+							maxNum = n;
+						}
+					}
+				}
+			}
+		}
+		return "Search Results #"+(maxNum+1);
+    }
+	
     protected synchronized void exportResults() {
 
         JFileChooser chooser = new JFileChooser();
@@ -310,31 +358,5 @@ public class GeneralSearchDialog extends ModalDialog {
 
     	worker.setProgressMonitor(new ProgressMonitor(GeneralSearchDialog.this, "Exporting data", "", 0, 100));
 		worker.execute();
-    }
-    
-    /**
-     * Looks for folders in the entity tree, and creates a new result name which does not already exist.
-     * @return
-     */
-	protected String getNextFolderName() {
-		final EntityOutline entityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline();
-		int maxNum = 0;
-		for(EntityData ed : entityOutline.getRootEntity().getEntityData()) {
-			Entity topLevelFolder = ed.getChildEntity();
-			if (topLevelFolder != null) {
-				Pattern p = Pattern.compile("^Search Results #(\\d+)$");
-				Matcher m = p.matcher(topLevelFolder.getName());
-				if (m.matches()) {
-					String num = m.group(1);
-					if (num!=null && !"".equals(num)) {
-						int n = Integer.parseInt(num);
-						if (n>maxNum) {
-							maxNum = n;
-						}
-					}
-				}
-			}
-		}
-		return "Search Results #"+(maxNum+1);
     }
 }

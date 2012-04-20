@@ -1,5 +1,8 @@
 package org.janelia.it.FlyWorkstation.api.entity_model.management;
 
+import java.awt.Color;
+import java.util.*;
+
 import org.apache.solr.client.solrj.SolrQuery;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.ActiveThreadModel;
@@ -13,7 +16,8 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.exception_handlers.PrintStackTraceHandler;
 import org.janelia.it.FlyWorkstation.shared.util.ThreadQueue;
-import org.janelia.it.jacs.compute.api.ComputeException;
+import org.janelia.it.jacs.compute.api.support.EntityMapStep;
+import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.compute.api.support.SageTerm;
 import org.janelia.it.jacs.compute.api.support.SolrResults;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -28,10 +32,6 @@ import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
 import org.janelia.it.jacs.model.user_data.User;
 import org.janelia.it.jacs.model.user_data.prefs.UserPreference;
-
-import java.awt.*;
-import java.util.*;
-import java.util.List;
 
 public class ModelMgr {
 	
@@ -400,6 +400,10 @@ public class ModelMgr {
     public Entity getEntityById(String entityId) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().getEntityById(entityId);
     }
+    
+    public List<Entity> getEntityByIds(List<Long> entityIds) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().getEntitiesById(entityIds);
+    }
 
     public List<Entity> getEntitiesByName(String entityName) {
         return FacadeManager.getFacadeManager().getEntityFacade().getEntitiesByName(entityName);
@@ -660,7 +664,11 @@ public class ModelMgr {
     public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception {
     	FacadeManager.getFacadeManager().getAnnotationFacade().addChildren(parentId, childrenIds, attributeName);
     }
-
+    
+    public List<MappedId> getProjectedResults(List<Long> entityIds, List<EntityMapStep> upMapping, List<EntityMapStep> downMapping) throws Exception {
+    	return FacadeManager.getFacadeManager().getAnnotationFacade().getProjectedResults(entityIds, upMapping, downMapping);
+    }
+    
     public Object[] getPatternAnnotationQuantifierMapsFromSummary() throws Exception {
         return FacadeManager.getFacadeManager().getAnnotationFacade().getPatternAnnotationQuantifierMapsFromSummary();
     }
@@ -719,6 +727,17 @@ public class ModelMgr {
 
 	public Color getUserAnnotationColor(String username) {
 		return userColorMapping.getColor(username);
+	}
+	
+	// TODO: move this to a security module
+	public boolean hasAccess(Entity entity) {
+		String ul = entity.getUser().getUserLogin();
+		return (User.SYSTEM_USER_LOGIN.equals(ul) || SessionMgr.getUsername().equals(ul));
+	}
+	
+	public boolean hasAccess(EntityData entityData) {
+		String ul = entityData.getUser().getUserLogin();
+		return (User.SYSTEM_USER_LOGIN.equals(ul) || SessionMgr.getUsername().equals(ul));
 	}
 }
 
