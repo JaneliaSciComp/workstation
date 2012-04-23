@@ -25,7 +25,10 @@ public abstract class DynamicTable extends JPanel {
     private static final int DEFAULT_MAX_COLUMN_WIDTH = 500;
     
 	private final JTable table;
+	private final JButton loadMoreButton;
     private final JScrollPane scrollPane;
+    private final JPanel mainPane;
+    
     private final boolean allowRightClickCellSelection;
     private TableModel tableModel;
     
@@ -40,8 +43,8 @@ public abstract class DynamicTable extends JPanel {
     private Map<DynamicColumn,TableCellRenderer> renderers = new HashMap<DynamicColumn,TableCellRenderer>();
 
     private Rectangle currViewRect;
-    private boolean hasMoreResults;
-    private boolean autoLoadResults = true;
+    private boolean hasMoreResults = false;
+    private boolean autoLoadResults = false;
     private int minColWidth = DEFAULT_MIN_COLUMN_WIDTH;
     private int maxColWidth = DEFAULT_MAX_COLUMN_WIDTH;
     
@@ -52,6 +55,15 @@ public abstract class DynamicTable extends JPanel {
     public DynamicTable(final boolean allowRightClickCellSelection, final boolean sortableByColumn) {
     	
     	this.allowRightClickCellSelection = allowRightClickCellSelection;
+    	
+    	loadMoreButton = new JButton("Load More");
+    	loadMoreButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				loadMoreResults();
+			}
+		});
+    	loadMoreButton.setVisible(false);
     	
         table = new LargeFontTable(UIManager.getDefaults().getFont("Menu.font")) {
     		@Override
@@ -125,6 +137,9 @@ public abstract class DynamicTable extends JPanel {
         
         scrollPane = new JScrollPane();
         scrollPane.setViewportView(table);
+//        scrollPane.getVerticalScrollBar().setUnitIncrement(20);
+//        scrollPane.getVerticalScrollBar().setBlockIncrement(200);
+        
         scrollPane.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
 	        @Override
 	        public void adjustmentValueChanged(final AdjustmentEvent e) {
@@ -147,8 +162,16 @@ public abstract class DynamicTable extends JPanel {
 	        }
 	    });
         
+        scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
+        loadMoreButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
+        mainPane = new JPanel();
+        mainPane.setLayout(new BoxLayout(mainPane, BoxLayout.PAGE_AXIS));
+        mainPane.add(scrollPane);
+        mainPane.add(loadMoreButton);
+        
         setLayout(new BorderLayout());
-        add(scrollPane, BorderLayout.CENTER);
+        add(mainPane, BorderLayout.CENTER);
     }
 
     private boolean isAtBottom() {
@@ -181,7 +204,7 @@ public abstract class DynamicTable extends JPanel {
 
     public void showTable() {
     	removeAll();
-        add(scrollPane, BorderLayout.CENTER);
+        add(mainPane, BorderLayout.CENTER);
         revalidate();
         repaint();
     }
@@ -528,6 +551,9 @@ public abstract class DynamicTable extends JPanel {
     
     public void setMoreResults(boolean moreResults) {
     	this.hasMoreResults = moreResults;
+    	loadMoreButton.setVisible(hasMoreResults);
+    	revalidate();
+    	repaint();
     }
     
     public int getMinColWidth() {
@@ -552,6 +578,7 @@ public abstract class DynamicTable extends JPanel {
 
 	public void setAutoLoadResults(boolean autoLoadResults) {
 		this.autoLoadResults = autoLoadResults;
+		loadMoreButton.setVisible(!autoLoadResults);
 	}
 
 	/**

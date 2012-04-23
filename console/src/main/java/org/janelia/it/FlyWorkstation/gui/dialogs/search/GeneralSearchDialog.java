@@ -151,7 +151,7 @@ public class GeneralSearchDialog extends ModalDialog {
     	paramsPanel.getInputField().requestFocus();
 		paramsPanel.init();
 		
-    	resultsPanel.performSearch(true, true, true);
+    	resultsPanel.performSearch(false, false, true);
 		
     	packAndShow();
     }

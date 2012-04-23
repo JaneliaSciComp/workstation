@@ -294,11 +294,6 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     }
     
     public void entitySelected(Entity entity) {
-
-    	Color d = leftTabbedPane.getBackground();
-    	System.out.println("color: "+d);
-    	facetScrollPane.getViewport().setBackground(leftTabbedPane.getBackground());
-    	
     }
     
     public void selectResultEntities(List<Entity> entities) {
@@ -367,15 +362,24 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 			sortField = null;
 			ascending = true;
 		}
-		searchResults.clear();
+		clear();
 		performSearch(0, showLoading);
 		resultsTable.getScrollPane().getVerticalScrollBar().setValue(0); 
     }
+	
+	public void clear() {
+		searchResults.clear();
+		statusLabel.setText("");
+    	statusLabel.setToolTipText("");
+    	facetsPanel.removeAll();
+    	resultsTable.removeAllRows();
+		projectionTable.removeAllRows();
+		projectionPane.setVisible(false);
+	}
     
     public synchronized void performSearch(final int pageNum, final boolean showLoading) {
-    	
+
 		final SolrQueryBuilder builder = getQueryBuilder(true);		
-		
 		if (!builder.hasQuery()) return;
 		
 		// We don't want to display all the system level query parameters, so build a simplified version of 
@@ -438,30 +442,20 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     	
     	projectionTable.removeAllRows();
     	searchResults.setResultTreeMapping(projection);
-    	resultsTable.setAutoLoadResults(false);
-    	projectionTable.setAutoLoadResults(false);
     	
 		SimpleWorker worker = new SimpleWorker() {
-			
 			@Override
 			protected void doStuff() throws Exception {
 				searchResults.projectResultPages();
 			}
-			
 			@Override
 			protected void hadSuccess() {
 				for(ResultPage resultPage : searchResults.getPages()) {
 					populateProjectionView(resultPage);
 				}
-//				projectionTable.setMoreResults(searchResults.hasMoreResults());
-				resultsTable.setAutoLoadResults(true);
-		    	projectionTable.setAutoLoadResults(true);
 			}
-			
 			@Override
 			protected void hadError(Throwable error) {
-				resultsTable.setAutoLoadResults(true);
-		    	projectionTable.setAutoLoadResults(true);
 				SessionMgr.getSessionMgr().handleException(error);
 			}
 		};
@@ -471,27 +465,18 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     
     public void projectResultPage(final ResultPage resultPage) {
     	if (searchResults.getResultTreeMapping()==null) return;
-    	resultsTable.setAutoLoadResults(false);
-    	projectionTable.setAutoLoadResults(false);
     	
 		SimpleWorker worker = new SimpleWorker() {
-			
 			@Override
 			protected void doStuff() throws Exception {
 				searchResults.projectResultPage(resultPage);
 			}
-			
 			@Override
 			protected void hadSuccess() {
 				populateProjectionView(resultPage);
-				resultsTable.setAutoLoadResults(true);
-		    	projectionTable.setAutoLoadResults(true);
 			}
-			
 			@Override
 			protected void hadError(Throwable error) {
-				resultsTable.setAutoLoadResults(true);
-		    	projectionTable.setAutoLoadResults(true);
 				SessionMgr.getSessionMgr().handleException(error);
 			}
 		};
@@ -541,6 +526,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 			projectionTable.addRow(mappedEntity);	
     	}
 
+    	projectionTable.setMoreResults(!projectionTable.getRows().isEmpty()&&searchResults.hasMoreResults());
     	projectionTable.updateTableModel();
     	projectionPane.setVisible(true);
     	tableSplitPane.setDividerLocation(0.5);
@@ -649,9 +635,9 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 	
 	protected void populateFacets(ResultPage resultPage) {
     	
-    	facetsPanel.removeAll();
+		facetsPanel.removeAll();
+		
     	SolrResults pageResults =  resultPage.getSolrResults();
-    	
     	if (pageResults==null || pageResults.getResultList().isEmpty()) return;
     	
     	QueryResponse qr = pageResults.getResponse();
@@ -799,7 +785,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 		}
 		else if (doc!=null) {
 			if ("annotations".equals(field)) {
-				value = doc.getFieldValues("annotations");
+				value = doc.getFieldValues(SessionMgr.getUsername()+"_annotations");
 			}
 			else if ("score".equals(field)) {
 				Float score = (Float)doc.get("score");
