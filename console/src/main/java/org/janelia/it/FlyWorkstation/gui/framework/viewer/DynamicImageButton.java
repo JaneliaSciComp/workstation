@@ -57,5 +57,9 @@ public class DynamicImageButton extends AnnotatedImageButton {
 
 	public void setViewable(boolean viewable) {
         dynamicImagePanel.setViewable(viewable, null);
+	}
+
+	public DynamicImagePanel getDynamicImagePanel() {
+		return dynamicImagePanel;
 	}	
 }

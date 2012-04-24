@@ -302,7 +302,11 @@ public class DynamicImagePanel extends JPanel {
         revalidate();
         repaint();
     }
-    
+
+	public synchronized BufferedImage getMaxSizeImage() {
+		return (inverted) ? invertedMaxSizeImage : maxSizeImage;
+	}
+	
 	private synchronized void setMaxSizeImage(BufferedImage maxSizeImage) {
 		if (viewable) this.maxSizeImage = maxSizeImage;
 	}

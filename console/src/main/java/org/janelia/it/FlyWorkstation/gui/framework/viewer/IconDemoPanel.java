@@ -9,6 +9,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.concurrent.Callable;
 
@@ -39,6 +40,8 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
+import com.explodingpixels.macwidgets.HudWindow;
+
 /**
  * This panel shows images for annotation. It may show a bunch of images at
  * once, or a single image.
@@ -65,7 +68,10 @@ public class IconDemoPanel extends JPanel {
 	
 	private ImagesPanel imagesPanel;
 	private AnnotationDetailsDialog annotationDetailsDialog;
-
+	
+	private HudWindow hud;
+	private JLabel previewLabel;
+	
 	private Entity entity;
 	private List<Entity> entities;
 	private int currImageSize;
@@ -101,6 +107,15 @@ public class IconDemoPanel extends JPanel {
 					for (Entity entity : entities) {
 						ModelMgr.getModelMgr().selectEntity(entity.getId(), false);
 					}
+					return;
+				}
+				
+				// Space on a single entity triggers a preview 
+				if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+					updateHud();
+					hud.getJDialog().setLocationRelativeTo(SessionMgr.getSessionMgr().getActiveBrowser());
+					hud.getJDialog().setVisible(true);
+					e.consume();
 					return;
 				}
 
@@ -153,7 +168,6 @@ public class IconDemoPanel extends JPanel {
 		}
 	};
 
-
 	public IconDemoPanel() {
 
 		currImageRole = EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE;
@@ -162,6 +176,41 @@ public class IconDemoPanel extends JPanel {
 		setLayout(new BorderLayout());
 		setFocusable(true);
 
+		hud = new HudWindow();
+		hud.getJDialog().setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+		hud.getJDialog().addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+					hud.getJDialog().setVisible(false);
+				}
+				else {
+					// TODO: enable this navigation after making getMaxSizeImage() an async call which 
+					// blocks until the image is in memory
+					Entity entity = null;
+					if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_UP) {
+						entity = getPreviousEntity();
+					} 
+					else if (e.getKeyCode() == KeyEvent.VK_RIGHT || e.getKeyCode() == KeyEvent.VK_DOWN) {
+						entity = getNextEntity();
+					}
+					
+					if (entity==null) {
+						hud.getJDialog().setVisible(false);
+						return;
+					}
+					
+					ModelMgr.getModelMgr().selectEntity(entity.getId(), true);
+					updateHud();
+				}
+			}
+		});
+		
+		previewLabel = new JLabel(new ImageIcon());
+		previewLabel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+		hud.getContentPane().add(previewLabel);
+		
 		splashPanel = new SplashPanel();
 		add(splashPanel);
 
@@ -221,12 +270,14 @@ public class IconDemoPanel extends JPanel {
 			@Override
 			public void entitySelected(long entityId, boolean clearAll) {
 				imagesPanel.setSelection(entityId, true, clearAll);
+				updateHud();
 				return;
 			}
 
 			@Override
 			public void entityDeselected(long entityId) {
 				imagesPanel.setSelection(entityId, false, false);
+				updateHud();
 			}
 
 			@Override
@@ -268,6 +319,26 @@ public class IconDemoPanel extends JPanel {
 
 	}
 
+	private void updateHud() {
+		List<Long> selectedIds = ModelMgr.getModelMgr().getSelectedEntitiesIds();
+		if (selectedIds.size() != 1) {
+			hud.getJDialog().setVisible(false);
+			return;
+		}
+		Long selectedId = selectedIds.get(0);
+		AnnotatedImageButton button = imagesPanel.getButtonByEntityId(selectedId);
+		if (button instanceof DynamicImageButton) {
+			DynamicImageButton d = (DynamicImageButton)button;
+			BufferedImage bufferedImage = d.getDynamicImagePanel().getMaxSizeImage();
+			if (bufferedImage==null) {
+				return;
+			}
+			previewLabel.setIcon(new ImageIcon(bufferedImage));
+			hud.getJDialog().setTitle(button.getEntity().getName());
+			hud.getJDialog().pack();
+		}
+	}
+	
 	private synchronized void goBack() {
 		EntityOutlineHistory history = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutlineHistory();
 		history.goBack();
