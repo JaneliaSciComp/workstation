@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
@@ -63,7 +64,8 @@ public class GeneralSearchDialog extends ModalDialog {
         
         paramsPanel = new SearchParametersPanel() {
         	@Override
-        	protected void performSearch(boolean clear) {
+        	public void performSearch(boolean clear) {
+        		super.performSearch(clear);
         		resultsPanel.performSearch(clear, clear, true);
         	}
         };
@@ -152,6 +154,14 @@ public class GeneralSearchDialog extends ModalDialog {
 		paramsPanel.init();
 		
     	resultsPanel.performSearch(false, false, true);
+
+    	getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true),"searchAction");
+    	getRootPane().getActionMap().put("searchAction",new AbstractAction("searchAction") {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				paramsPanel.performSearch(true);
+			}
+		});
 		
     	packAndShow();
     }

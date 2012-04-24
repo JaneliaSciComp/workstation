@@ -3,7 +3,6 @@ package org.janelia.it.FlyWorkstation.gui.dialogs.search;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.InputEvent;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -23,7 +22,7 @@ import org.janelia.it.jacs.model.entity.Entity;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class SearchParametersPanel extends JPanel implements SearchConfigurationListener {
+public class SearchParametersPanel extends JPanel implements SearchConfigurationListener {
 
 	/** Number of historical search terms in the drop down */
 	protected static final int MAX_HISTORY_LENGTH = 10;
@@ -57,7 +56,8 @@ public abstract class SearchParametersPanel extends JPanel implements SearchConf
         searchButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				performSearchInternal(true);
+				System.out.println("search button pressed "+e);
+				performSearch(true);
 			}
 		});
 
@@ -67,7 +67,7 @@ public abstract class SearchParametersPanel extends JPanel implements SearchConf
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				setSearchRoot(null);
-				performSearchInternal(false);
+				performSearch(false);
 			}
 		});
         deleteContextButton.setVisible(false);
@@ -182,6 +182,9 @@ public abstract class SearchParametersPanel extends JPanel implements SearchConf
         setLayout(new BorderLayout());
         add(contentPanel, BorderLayout.CENTER);
     }
+    
+	public void init() {
+	}
 
     @Override
 	public void configurationChange(SearchConfigurationEvent evt) {
@@ -190,28 +193,13 @@ public abstract class SearchParametersPanel extends JPanel implements SearchConf
     	revalidate();
 	}
     
-	public void init() {
-		// Add the action listener here, because if we add it in the constructor, we get some spurious events
-		inputField.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// Execute the search if the user types a new value and presses Enter, or selects a previous search
-				// from the drop down list.
-				if ("comboBoxEdited".equals(e.getActionCommand()) || 
-						("comboBoxChanged".equals(e.getActionCommand()) && 
-								((e.getModifiers() & InputEvent.BUTTON1_MASK)!=0))) {
-			        searchString = (String)inputField.getSelectedItem();
-					performSearchInternal(true);
-				}
-			}
-		});
-	}
-
 	/**
 	 * Returns a query builder for the current search parameters.
 	 * @return
 	 */
 	public SolrQueryBuilder getQueryBuilder() {
+
+		searchString = (String)inputField.getSelectedItem();
 		
 		SolrQueryBuilder builder = new SolrQueryBuilder();
 		builder.setUsername(SessionMgr.getUsername());
@@ -370,10 +358,7 @@ public abstract class SearchParametersPanel extends JPanel implements SearchConf
 		return criteriaPanel;
 	}
     
-	protected void performSearchInternal(boolean clear) {
+	public void performSearch(boolean clear) {
 		populateHistory();
-		performSearch(clear);
 	}
-	
-	protected abstract void performSearch(boolean clear);
 }

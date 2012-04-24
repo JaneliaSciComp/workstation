@@ -11,6 +11,7 @@ import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.Callable;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -52,7 +53,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 	protected static final int MAX_CELL_LENGTH = 50;
 	
 	/** How many results to load at a time */
-	protected static final int PAGE_SIZE = 50;	
+	protected static final int PAGE_SIZE = 100;	
 
 	/** Fields on which to calculate facet counts */
     protected String[] facets = {"entity_type", "tiling_pattern_txt", "username"};
@@ -124,8 +125,8 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 				return SearchResultsPanel.this.getValue(userObject, column);
 			}
 			@Override
-			protected void loadMoreResults() {
-				performSearch(searchResults.getNumLoadedPages(), false);	
+			protected void loadMoreResults(Callable<Void> success) {
+				performSearch(searchResults.getNumLoadedPages(), false, success);	
 			}
         	@Override
         	protected JPopupMenu createPopupMenu(MouseEvent e) {
@@ -156,8 +157,8 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 				return SearchResultsPanel.this.getValue(userObject, column);
 			}
 			@Override
-			protected void loadMoreResults() {
-				performSearch(searchResults.getNumLoadedPages(), false);	
+			protected void loadMoreResults(Callable<Void> success) {
+				performSearch(searchResults.getNumLoadedPages(), false, success);	
 			}
         	@Override
         	protected JPopupMenu createPopupMenu(MouseEvent e) {
@@ -376,8 +377,12 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 		projectionTable.removeAllRows();
 		projectionPane.setVisible(false);
 	}
-    
+
     public synchronized void performSearch(final int pageNum, final boolean showLoading) {
+    	performSearch(pageNum, showLoading, null);
+    }
+    
+    public synchronized void performSearch(final int pageNum, final boolean showLoading, final Callable<Void> success) {
 
 		final SolrQueryBuilder builder = getQueryBuilder(true);		
 		if (!builder.hasQuery()) return;
@@ -410,6 +415,12 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 				populateFacets(resultPage);
 	        	populateResultView(resultPage);
 		    	if (showLoading) resultsTable.showTable();
+		    	try {
+		    		if (success!=null) success.call();
+		    	}
+		    	catch (Exception e) {
+		    		SessionMgr.getSessionMgr().handleException(e);
+		    	}
 			}
 			
 			@Override
@@ -490,10 +501,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     	SolrResults pageResults = resultPage.getSolrResults();
     	long numResults = pageResults.getResponse().getResults().getNumFound();
     	if (pageResults.getResultList().isEmpty()) numResults = 0;
-    	
-    	statusLabel.setText(numResults+" results found for '"+fullQueryString.trim()+"'");
-    	statusLabel.setToolTipText("Query took "+pageResults.getResponse().getElapsedTime()+" milliseconds");
-    	
+    	    	
     	if (searchResults.getNumLoadedPages()==1) {
     		// First page, so clear the previous results
 			resultsTable.removeAllRows();
@@ -501,8 +509,12 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 
     	for(EntityDocument entityDoc : pageResults.getEntityDocuments()) {
     		resultsTable.addRow(entityDoc);
-    	}    	
-
+    	}
+    	
+    	int numLoadedResults = resultsTable.getRows().size();
+    	statusLabel.setText(numResults+" results found for '"+fullQueryString.trim()+"', "+numLoadedResults+" results loaded.");
+    	statusLabel.setToolTipText("Query took "+pageResults.getResponse().getElapsedTime()+" milliseconds");
+    	
     	updateTableModel();
     	projectResultPage(resultPage);
     }

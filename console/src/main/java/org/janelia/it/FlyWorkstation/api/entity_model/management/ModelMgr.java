@@ -649,7 +649,7 @@ public class ModelMgr {
     }
 
     public SolrResults searchSolr(SolrQuery query) throws Exception {
-    	System.out.println("Searching SOLR: "+query.getQuery());
+    	System.out.println("Searching SOLR: "+query.getQuery()+" start="+query.getStart()+" rows="+query.getRows());
     	return FacadeManager.getFacadeManager().getSolrFacade().searchSolr(query);
     }
     

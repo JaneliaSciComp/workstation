@@ -6,6 +6,7 @@ import java.awt.datatransfer.Transferable;
 import java.awt.event.*;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import javax.swing.*;
 import javax.swing.table.*;
@@ -13,6 +14,7 @@ import javax.swing.table.*;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 
 /**
  * A reusable table component with configurable columns.
@@ -26,6 +28,7 @@ public abstract class DynamicTable extends JPanel {
     
 	private final JTable table;
 	private final JButton loadMoreButton;
+	private final JButton loadAllButton;
     private final JScrollPane scrollPane;
     private final JPanel mainPane;
     
@@ -52,6 +55,17 @@ public abstract class DynamicTable extends JPanel {
     	this(true, false);
     }
     
+    private void loadAll() {
+    	if (!hasMoreResults) return;
+    	loadMoreResults(new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				loadAll();
+				return null;
+			}
+		});
+    }
+    
     public DynamicTable(final boolean allowRightClickCellSelection, final boolean sortableByColumn) {
     	
     	this.allowRightClickCellSelection = allowRightClickCellSelection;
@@ -60,10 +74,31 @@ public abstract class DynamicTable extends JPanel {
     	loadMoreButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				loadMoreResults();
+				Utils.setWaitingCursor(DynamicTable.this);
+				loadMoreButton.setEnabled(false);
+				loadMoreResults(new Callable<Void>() {
+					@Override
+					public Void call() throws Exception {
+						Utils.setDefaultCursor(DynamicTable.this);
+						loadMoreButton.setEnabled(true);
+						return null;
+					}
+					
+				});
 			}
 		});
     	loadMoreButton.setVisible(false);
+
+    	loadAllButton = new JButton("Load All");
+    	loadAllButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				loadAllButton.setEnabled(false);
+				loadAll();
+			}
+		});
+    	loadAllButton.setVisible(false);
+
     	
         table = new LargeFontTable(UIManager.getDefaults().getFont("Menu.font")) {
     		@Override
@@ -155,7 +190,7 @@ public abstract class DynamicTable extends JPanel {
 	    		    	currViewRect = viewRect;
 	    		    	
 	    		    	if (isAtBottom() && hasMoreResults) {
-	    		    		loadMoreResults();
+	    		    		loadMoreResults(null);
 	    		    	}
 	    			}
 	    		});
@@ -163,12 +198,17 @@ public abstract class DynamicTable extends JPanel {
 	    });
         
         scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
-        loadMoreButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+        
+        JPanel buttonPane = new JPanel();
+        buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
+        buttonPane.add(loadMoreButton);
+//        buttonPane.add(loadAllButton);
+        buttonPane.setAlignmentX(Component.LEFT_ALIGNMENT);
         
         mainPane = new JPanel();
         mainPane.setLayout(new BoxLayout(mainPane, BoxLayout.PAGE_AXIS));
         mainPane.add(scrollPane);
-        mainPane.add(loadMoreButton);
+        mainPane.add(buttonPane);
         
         setLayout(new BorderLayout());
         add(mainPane, BorderLayout.CENTER);
@@ -182,7 +222,7 @@ public abstract class DynamicTable extends JPanel {
     /**
      * Implement this to load more results when the user scrolls to the bottom of the table.
      */
-    protected void loadMoreResults() {
+    protected void loadMoreResults(Callable<Void> success) {
     }
     
     public JScrollPane getScrollPane() {
@@ -552,6 +592,7 @@ public abstract class DynamicTable extends JPanel {
     public void setMoreResults(boolean moreResults) {
     	this.hasMoreResults = moreResults;
     	loadMoreButton.setVisible(hasMoreResults);
+    	loadAllButton.setVisible(hasMoreResults);
     	revalidate();
     	repaint();
     }
@@ -579,6 +620,7 @@ public abstract class DynamicTable extends JPanel {
 	public void setAutoLoadResults(boolean autoLoadResults) {
 		this.autoLoadResults = autoLoadResults;
 		loadMoreButton.setVisible(!autoLoadResults);
+    	loadAllButton.setVisible(!autoLoadResults);
 	}
 
 	/**
