@@ -341,7 +341,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 						addTopLevelEntity(getRootEntity(), newFolder);
 
 						// Update Tree UI
-						refresh(false, new Callable<Void>() {
+						refresh(true, new Callable<Void>() {
 							@Override
 							public Void call() throws Exception {
 								selectEntityByUniqueId("/e_"+newFolder.getId());
