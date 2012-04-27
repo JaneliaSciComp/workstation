@@ -55,7 +55,9 @@ public class ModelMgrUtils {
     		// Map old children onto new EDs
     		Map<Long,Entity> childMap = new HashMap<Long,Entity>();
     		for(EntityData ed : entity.getEntityData()) {
-    			childMap.put(ed.getChildEntity().getId(), ed.getChildEntity());
+    			if (ed.getChildEntity()!=null) {
+    				childMap.put(ed.getChildEntity().getId(), ed.getChildEntity());
+    			}
     		}
     		for(EntityData ed : newEntity.getEntityData()) {
     			if (ed.getChildEntity()!=null) {
