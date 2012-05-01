@@ -271,6 +271,8 @@ public class PrefController {
     private void applyButton_actionPerformed() {
         propagateApplyChanges();
         SessionMgr.getSessionMgr().loginUser();
+        // Not the best order of operations
+        SessionMgr.getSessionMgr().saveUserSettings();
         if (!SessionMgr.getSessionMgr().isLoggedIn()) {
             Object[] options = {"Fix Login", "Exit Program"};
             final int answer = JOptionPane.showOptionDialog(null, "Please correct your login information.", "Login Information Invalid",
