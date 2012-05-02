@@ -380,7 +380,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
         String command = e.getActionCommand();
 
         if (REMOVE_COMMAND.equals(command)) {
-            int deleteConfirmation = JOptionPane.showConfirmDialog(this, "Are you sure you want to permanently remove this term?", "Remove Term", JOptionPane.YES_NO_OPTION);
+            int deleteConfirmation = JOptionPane.showConfirmDialog(SessionMgr.getSessionMgr().getActiveBrowser(), "Are you sure you want to permanently remove this term?", "Remove Term", JOptionPane.YES_NO_OPTION);
             if (deleteConfirmation != 0) {
                 return;
             }
@@ -400,11 +400,11 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
             }
             catch (Exception ex) {
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(OntologyOutline.this, "Error removing ontology term", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Error removing ontology term", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
         if (REMOVE_ANNOT_COMMAND.equals(command)) {
-            int deleteConfirmation = JOptionPane.showConfirmDialog(this, "Are you sure you want to permanently remove annotations using this term in all selected entities?", "Remove Annotations", JOptionPane.YES_NO_OPTION);
+            int deleteConfirmation = JOptionPane.showConfirmDialog(SessionMgr.getSessionMgr().getActiveBrowser(), "Are you sure you want to permanently remove annotations using this term in all selected entities?", "Remove Annotations", JOptionPane.YES_NO_OPTION);
             if (deleteConfirmation != 0) {
                 return;
             }
@@ -446,7 +446,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
                     @Override
                     protected void hadError(Throwable error) {
                         error.printStackTrace();
-                        JOptionPane.showMessageDialog(OntologyOutline.this, "Error removing annotations", "Error", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Error removing annotations", "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 };
 
@@ -456,7 +456,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
             }
             catch (Exception ex) {
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(OntologyOutline.this, "Error removing annotations", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Error removing annotations", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
         else if (SHOW_MANAGER_COMMAND.equals(command)) {
@@ -487,7 +487,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
         else if (command.startsWith(ADD_COMMAND)) {
 
             if (selectedTree == null) {
-                JOptionPane.showMessageDialog(this, "No ontology selected.");
+                JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "No ontology selected.");
             }
 
             DefaultMutableTreeNode treeNode = selectedTree.getCurrentNode();
@@ -497,7 +497,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
             OntologyElementType childType = OntologyElementType.createTypeByName(className);
 
             // Add button clicked
-            String termName = (String) JOptionPane.showInputDialog(this, "Ontology Term:\n", "Adding to " + 
+            String termName = (String) JOptionPane.showInputDialog(SessionMgr.getBrowser(), "Ontology Term:\n", "Adding to " + 
             		getOntologyElement(selectedTree.getCurrentNode()).getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
 
             if ((termName == null) || (termName.length() <= 0)) {
@@ -506,9 +506,9 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
 
             if (childType instanceof Interval) {
 
-                String lowerBoundStr = (String) JOptionPane.showInputDialog(this, "Lower bound:\n", 
+                String lowerBoundStr = (String) JOptionPane.showInputDialog(SessionMgr.getBrowser(), "Lower bound:\n", 
                 		"Adding an interval", JOptionPane.PLAIN_MESSAGE, null, null, null);
-                String upperBoundStr = (String) JOptionPane.showInputDialog(this, "Upper bound:\n", 
+                String upperBoundStr = (String) JOptionPane.showInputDialog(SessionMgr.getBrowser(), "Upper bound:\n", 
                 		"Adding an interval", JOptionPane.PLAIN_MESSAGE, null, null, null);
 
                 try {
@@ -523,7 +523,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
 
                 OntologyElementChooser ontologyChooser = new OntologyElementChooser("Choose an enumeration", getCurrentOntology());
                 ontologyChooser.setMultipleSelection(false);
-                int returnVal = ontologyChooser.showDialog(SessionMgr.getSessionMgr().getActiveBrowser());
+                int returnVal = ontologyChooser.showDialog(SessionMgr.getBrowser());
                 if (returnVal != OntologyElementChooser.CHOOSE_OPTION) return;
                 
                 List<OntologyElement> chosenElements = ontologyChooser.getChosenElements();
@@ -531,7 +531,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
                 
                 OntologyElement chosenEnum = chosenElements.get(0);
                 if (!(chosenEnum.getType() instanceof Enum)) {
-                    JOptionPane.showMessageDialog(OntologyOutline.this, "You must choosen an enumeration", "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "You must choosen an enumeration", "Error", JOptionPane.ERROR_MESSAGE);
                 }
 
                 try {
@@ -567,7 +567,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
             }
             catch (Exception ex) {
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(OntologyOutline.this, "Error creating ontology term", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Error creating ontology term", "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }

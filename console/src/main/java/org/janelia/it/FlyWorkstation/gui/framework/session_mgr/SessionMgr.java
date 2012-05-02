@@ -15,6 +15,7 @@ import org.janelia.it.FlyWorkstation.ws.EmbeddedAxisServer;
 import org.janelia.it.jacs.model.user_data.User;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -523,5 +524,8 @@ public class SessionMgr {
             return null;
         }
     }
-
+    
+    public static Browser getBrowser() {
+    	return getSessionMgr().getActiveBrowser();
+    }
 }

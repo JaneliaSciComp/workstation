@@ -6,7 +6,19 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import java.awt.BorderLayout;
+import java.awt.Dialog.ModalityType;
+import java.awt.Dimension;
+import java.awt.event.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.util.List;
+
+import javax.swing.*;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.dialogs.ModalDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.ontology.OWLDataLoader;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
@@ -14,20 +26,12 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
 import org.semanticweb.owlapi.model.OWLException;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.File;
-import java.util.List;
-
 /**
  * A dialog for managing ontologies that can be loaded into the OntologyOutline.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class OntologyManager extends JDialog implements ActionListener, PropertyChangeListener {
+public class OntologyManager extends ModalDialog implements ActionListener, PropertyChangeListener {
 
     private static final String ONTOLOGY_LOAD_COMMAND = "ontology_load";
     private static final String ONTOLOGY_DELETE_COMMAND = "ontology_delete";
@@ -54,11 +58,8 @@ public class OntologyManager extends JDialog implements ActionListener, Property
         this.ontologyOutline = ontologyOutline;
 
         setTitle("Ontology Manager");
-        setModalityType(ModalityType.APPLICATION_MODAL);
         setPreferredSize(new Dimension(800, 600));
-        getContentPane().setLayout(new BorderLayout());
-        setLocationRelativeTo(SessionMgr.getSessionMgr().getActiveBrowser());
-
+        
         tabbedPane = new JTabbedPane();
         add(tabbedPane, BorderLayout.CENTER);
 
@@ -123,13 +124,6 @@ public class OntologyManager extends JDialog implements ActionListener, Property
         buttonPane.add(Box.createRigidArea(new Dimension(10, 0)));
         buttonPane.add(cancelButton);
         add(buttonPane, BorderLayout.SOUTH);
-
-        setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-        addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent we) {
-                setVisible(false);
-            }
-        });
 
         createPopupMenus();
     }
@@ -204,7 +198,7 @@ public class OntologyManager extends JDialog implements ActionListener, Property
             publicTable.reloadData(null);
         }
 
-        setVisible(true);
+        packAndShow();
     }
 
     public AbstractOntologyTable getPrivateTable() {
