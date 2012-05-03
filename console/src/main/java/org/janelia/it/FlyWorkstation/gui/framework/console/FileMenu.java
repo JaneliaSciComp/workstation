@@ -41,6 +41,7 @@ public class FileMenu extends JMenu {
     JMenuItem setLoginMI;
     private JMenu menuSetPreferences;
     private JMenuItem menuPrefSystem;
+    private JMenuItem menuPrefViewer;
 //    private JMenuItem menuPrefExport;
 //    private JMenuItem menuPrefImport;
 
@@ -103,7 +104,6 @@ public class FileMenu extends JMenu {
         });
 
         menuPrefSystem = new JMenuItem("System...", 'S');
-//        menuPrefSystem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F3, InputEvent.CTRL_MASK, false));
         menuPrefSystem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 establishPrefController(PrefController.SYSTEM_EDITOR);
@@ -111,6 +111,14 @@ public class FileMenu extends JMenu {
         });
         menuSetPreferences.add(menuPrefSystem);
 
+        menuPrefViewer = new JMenuItem("Viewer...", 'V');
+        menuPrefViewer.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                establishPrefController(PrefController.VIEWER_EDITOR);
+            }
+        });
+        menuSetPreferences.add(menuPrefViewer);
+        
 //        menuPrefExport = new JMenuItem("Export Preference File...", 'x');
 //        menuPrefExport.addActionListener(new ActionListener() {
 //            public void actionPerformed(ActionEvent e) {

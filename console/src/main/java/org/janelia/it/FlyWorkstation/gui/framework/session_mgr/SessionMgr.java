@@ -29,7 +29,7 @@ public class SessionMgr {
 
     public static String DISPLAY_FREE_MEMORY_METER_PROPERTY = "SessionMgr.DisplayFreeMemoryProperty";
     public static String DISPLAY_SUB_EDITOR_PROPERTY = "SessionMgr.DisplaySubEditorProperty";
-
+    
     public static String USER_NAME = LoginProperties.SERVER_LOGIN_NAME;
     public static String USER_PASSWORD = LoginProperties.SERVER_LOGIN_PASSWORD;
 

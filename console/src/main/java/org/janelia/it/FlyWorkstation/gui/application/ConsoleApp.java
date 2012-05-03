@@ -11,6 +11,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ApplicationSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.panels.DataSourceSettings;
+import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.server_status.ServerStatusReportManager;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 
@@ -106,6 +107,7 @@ public class ConsoleApp {
 //                    client.gui.other.panels.BackupPanel.class);
             sessionMgr.registerPreferenceInterface(ApplicationSettingsPanel.class, ApplicationSettingsPanel.class);
             sessionMgr.registerPreferenceInterface(DataSourceSettings.class, DataSourceSettings.class);
+            sessionMgr.registerPreferenceInterface(ViewerSettingsPanel.class, ViewerSettingsPanel.class);
 //            sessionMgr.registerPreferenceInterface(ToolSettingsPanel.class, ToolSettingsPanel.class);
 //            sessionMgr.registerPreferenceInterface(
 //                    client.gui.other.panels.ViewSettingsPanel.class,

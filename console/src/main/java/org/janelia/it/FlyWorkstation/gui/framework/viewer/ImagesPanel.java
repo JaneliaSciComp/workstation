@@ -4,10 +4,10 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Rectangle;
-import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
+import java.awt.event.KeyListener;
+import java.util.*;
 
 import javax.swing.*;
 
@@ -32,21 +32,16 @@ public class ImagesPanel extends JScrollPane {
 	public static final int DEFAULT_TABLE_HEIGHT = 200;
 	public static final int MAX_TABLE_HEIGHT = 500;
 	
-    private final HashMap<String, AnnotatedImageButton> buttons = new HashMap<String, AnnotatedImageButton>();
-
-    private final ImageCache imageCache = new ImageCache();
+    private final HashMap<String, AnnotatedImageButton> buttons = new LinkedHashMap<String, AnnotatedImageButton>();
     
     private KeyListener buttonKeyListener;
-    private FocusListener buttonFocusListener;
-    private MouseListener buttonMouseListener;
     
-    private JPanel buttonsPanel;
+    private ScrollableGridPanel buttonsPanel;
 
     private int currImageSize = DEFAULT_THUMBNAIL_SIZE;
     private int currTableHeight = DEFAULT_TABLE_HEIGHT;
     
     private Rectangle currViewRect;
-	private int numCols;
     
     // Listen for scroll events
     private final AdjustmentListener scrollListener = new AdjustmentListener() {
@@ -81,23 +76,8 @@ public class ImagesPanel extends JScrollPane {
         return buttons.get(entityId+"");
     }
     
-    /**
-     * TODO: remove this after refactoring so that its not needed.
-     */
-    public HashMap<String, AnnotatedImageButton> getButtons() {
-        return buttons;
-    }
-    
     public void setButtonKeyListener(KeyListener buttonKeyListener) {
 		this.buttonKeyListener = buttonKeyListener;
-	}
-
-	public void setButtonFocusListener(FocusListener buttonFocusListener) {
-		this.buttonFocusListener = buttonFocusListener;
-	}
-	
-	public void setButtonMouseListener(MouseListener buttonMouseListener) {
-		this.buttonMouseListener = buttonMouseListener;
 	}
 
 	public void setScrollLoadingEnabled(boolean enabled) {
@@ -138,8 +118,9 @@ public class ImagesPanel extends JScrollPane {
             }
         }
 
-		IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
-		
+		IconDemoPanel iconDemoPanel = SessionMgr.getBrowser().getViewerPanel();
+		ImageCache imageCache = SessionMgr.getBrowser().getImageCache();
+			
         for (int i = 0; i < entities.size(); i++) {
             final Entity entity = entities.get(i);
             
@@ -160,8 +141,6 @@ public class ImagesPanel extends JScrollPane {
             button.setTagsVisible(iconDemoPanel.areTagsVisible());
             
             if (buttonKeyListener!=null) button.addKeyListener(buttonKeyListener);
-            if (buttonFocusListener!=null) button.addFocusListener(buttonFocusListener);
-            if (buttonMouseListener!=null) button.addMouseListener(buttonMouseListener);
             
             // Disable tab traversal, we will do it ourselves
             button.setFocusTraversalKeysEnabled(false);
@@ -222,6 +201,24 @@ public class ImagesPanel extends JScrollPane {
 	    		SessionMgr.getSessionMgr().handleException(e);
 	    	}
         }
+    }
+
+    public synchronized void showAllButtons() {
+    	buttonsPanel.removeAll();
+    	for(AnnotatedImageButton button : buttons.values()) {
+    		buttonsPanel.add(button);
+    	}
+    	revalidate();
+    	repaint();
+    }
+    
+    public synchronized void hideButtons(Collection<Long> entityIds) {
+    	for(Long entityId : entityIds) {
+    		AnnotatedImageButton button = getButtonByEntityId(entityId);
+    		buttonsPanel.remove(button);
+    	}
+    	revalidate();
+    	repaint();
     }
     
     public int getCurrImageSize() {
@@ -367,9 +364,9 @@ public class ImagesPanel extends JScrollPane {
         if (maxButtonWidth == 0) maxButtonWidth = 400;
         
         int fullWidth = getSize().width - getVerticalScrollBar().getWidth();
-        this.numCols = (int) Math.floor((double)fullWidth / maxButtonWidth);
+        int numCols = (int) Math.floor((double)fullWidth / maxButtonWidth);
         if (numCols > 0) {
-            ((GridLayout)buttonsPanel.getLayout()).setColumns(numCols);
+        	buttonsPanel.setColumns(numCols);
         }
     }
 
@@ -380,11 +377,9 @@ public class ImagesPanel extends JScrollPane {
 			public void run() {
 		    	final JViewport viewPort = getViewport();
 		    	Rectangle viewRect = viewPort.getViewRect();
-		    	
-		    	if (numCols == 1) {
+		    	if (buttonsPanel.getColumns() == 1) {
 		    		viewRect.setSize(viewRect.width, viewRect.height+100);
 		    	}
-		    	
 		        for(AnnotatedImageButton button : buttons.values()) {
 		        	try {
 		        		button.setViewable(viewRect.intersects(button.getBounds()));
@@ -427,6 +422,14 @@ public class ImagesPanel extends JScrollPane {
         @Override
         public boolean getScrollableTracksViewportHeight() {
             return false;
+        }
+        
+        public int getColumns() {
+        	return ((GridLayout)getLayout()).getColumns();
+        }
+        
+        public void setColumns(int columns) {
+        	((GridLayout)getLayout()).setColumns(columns);
         }
     }
 }

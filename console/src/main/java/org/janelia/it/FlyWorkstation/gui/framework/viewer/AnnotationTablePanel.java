@@ -18,6 +18,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicTable;
 import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 
@@ -91,8 +92,8 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 		summaryLabel.addMouseListener(new MouseHandler() {
 			@Override
 			protected void doubleLeftClicked(MouseEvent e) {
-				JSlider slider = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().getTagTableSlider();
-				slider.setValue(ImagesPanel.DEFAULT_TABLE_HEIGHT);
+				SessionMgr.getSessionMgr().setModelProperty(
+						ViewerSettingsPanel.ANNOTATION_TABLES_HEIGHT_PROPERTY, ImagesPanel.DEFAULT_TABLE_HEIGHT);
 				e.consume();
 			}
 			

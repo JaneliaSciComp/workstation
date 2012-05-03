@@ -8,6 +8,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.util.*;
@@ -28,10 +29,13 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationFilter;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutlineHistory;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
+import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -40,11 +44,8 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
-import com.explodingpixels.macwidgets.HudWindow;
-
 /**
- * This panel shows images for annotation. It may show a bunch of images at
- * once, or a single image.
+ * This panel shows images for annotation. 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -58,21 +59,13 @@ public class IconDemoPanel extends JPanel {
 	private JToggleButton showTitlesButton;
 	private JButton imageRoleButton;
 	private JToggleButton showTagsButton;
-	private JToggleButton invertButton;
-	private JToggleButton hideCompletedButton;
-	private JToggleButton onlySessionButton;
 	private JButton userButton;
-	private JToggleButton tagTableButton;
-	private JSlider tagTableSlider;
 	private JSlider imageSizeSlider;
 	
 	private ImagesPanel imagesPanel;
-	private AnnotationDetailsDialog annotationDetailsDialog;
 	
-	private HudWindow hud;
-	private JLabel previewLabel;
+	private Hud hud;
 	
-	private Entity entity;
 	private List<Entity> entities;
 	private int currImageSize;
 	private int currTableHeight = ImagesPanel.DEFAULT_TABLE_HEIGHT;
@@ -113,8 +106,7 @@ public class IconDemoPanel extends JPanel {
 				// Space on a single entity triggers a preview 
 				if (e.getKeyCode() == KeyEvent.VK_SPACE) {
 					updateHud();
-					hud.getJDialog().setLocationRelativeTo(SessionMgr.getSessionMgr().getActiveBrowser());
-					hud.getJDialog().setVisible(true);
+					hud.showDialog();
 					e.consume();
 					return;
 				}
@@ -176,14 +168,13 @@ public class IconDemoPanel extends JPanel {
 		setLayout(new BorderLayout());
 		setFocusable(true);
 
-		hud = new HudWindow();
-		hud.getJDialog().setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		hud = new Hud();
 
 		hud.getJDialog().addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent e) {
 				if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-					hud.getJDialog().setVisible(false);
+					hud.hideDialog();
 				}
 				else {
 					// TODO: enable this navigation after making getMaxSizeImage() an async call which 
@@ -197,7 +188,7 @@ public class IconDemoPanel extends JPanel {
 					}
 					
 					if (entity==null) {
-						hud.getJDialog().setVisible(false);
+						hud.hideDialog();
 						return;
 					}
 					
@@ -207,18 +198,12 @@ public class IconDemoPanel extends JPanel {
 			}
 		});
 		
-		previewLabel = new JLabel(new ImageIcon());
-		previewLabel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-		hud.getContentPane().add(previewLabel);
-		
 		splashPanel = new SplashPanel();
 		add(splashPanel);
 
 		toolbar = createToolbar();
 		imagesPanel = new ImagesPanel();
 		imagesPanel.setButtonKeyListener(keyListener);
-
-		annotationDetailsDialog = new AnnotationDetailsDialog();
 
 		imageSizeSlider.addChangeListener(new ChangeListener() {
 			@Override
@@ -234,22 +219,6 @@ public class IconDemoPanel extends JPanel {
 			}
 		});
 		
-		tagTableSlider.addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				JSlider source = (JSlider) e.getSource();
-				int tableHeight = source.getValue();
-				if (currTableHeight == tableHeight) return;
-				currTableHeight = tableHeight;
-				imagesPanel.resizeTables(tableHeight);
-				imagesPanel.rescaleImages(currImageSize);
-				imagesPanel.recalculateGrid();
-				imagesPanel.scrollSelectedEntitiesToCenter();
-				imagesPanel.loadUnloadImages();
-
-			}
-		});
-
 		this.addKeyListener(getKeyListener());
 
 		ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
@@ -304,25 +273,79 @@ public class IconDemoPanel extends JPanel {
 		annotations.setFilter(new AnnotationFilter() {
 			@Override
 			public boolean accept(OntologyAnnotation annotation) {
+				
 				// Hidden by user?
-				if (hiddenUsers.contains(annotation.getOwner()))
-					return false;
+				if (hiddenUsers.contains(annotation.getOwner())) return false;
 				AnnotationSession session = ModelMgr.getModelMgr().getCurrentAnnotationSession();
+				
 				// Hidden by session?
-				if (!onlySessionButton.isSelected() || session == null)
-					return true;
+				Boolean onlySession = (Boolean)SessionMgr.getSessionMgr().getModelProperty(
+						ViewerSettingsPanel.ONLY_SESSION_ANNOTATIONS_PROPERTY);
+				if (!onlySession || session == null) return true;
+				
 				// At this point we know there is a current session, and we have
 				// to match it
 				return (annotation.getSessionId() != null && annotation.getSessionId().equals(session.getId()));
 			}
 		});
 
+		SessionMgr.getSessionMgr().addSessionModelListener(new SessionModelListener() {
+			
+			@Override
+			public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
+				
+				if (ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY.equals(key)) {
+					Utils.setWaitingCursor(IconDemoPanel.this);
+					try {
+						imagesPanel.setInvertedColors((Boolean)newValue);
+						imagesPanel.repaint();
+					} finally {
+						Utils.setDefaultCursor(IconDemoPanel.this);
+					}	
+				}
+				else if (ViewerSettingsPanel.ONLY_SESSION_ANNOTATIONS_PROPERTY.equals(key)) {
+					refreshAnnotations(null);
+				}
+				else if (ViewerSettingsPanel.HIDE_ANNOTATED_PROPERTY.equals(key)) {
+					filterEntities();
+				}
+				else if (ViewerSettingsPanel.SHOW_ANNOTATION_TABLES_PROPERTY.equals(key)) {
+					imagesPanel.setTagTable((Boolean)newValue);
+					imagesPanel.resizeTables(imagesPanel.getCurrTableHeight());
+					imagesPanel.rescaleImages(imagesPanel.getCurrImageSize());
+					imagesPanel.recalculateGrid();
+					imagesPanel.loadUnloadImages();
+				}
+				else if (ViewerSettingsPanel.ANNOTATION_TABLES_HEIGHT_PROPERTY.equals(key)) {
+					int tableHeight = (Integer)newValue;
+					if (currTableHeight == tableHeight) return;
+					currTableHeight = tableHeight;
+					imagesPanel.resizeTables(tableHeight);
+					imagesPanel.rescaleImages(currImageSize);
+					imagesPanel.recalculateGrid();
+					imagesPanel.scrollSelectedEntitiesToCenter();
+					imagesPanel.loadUnloadImages();
+				}
+			}
+			
+			@Override
+			public void sessionWillExit() {
+			}
+			
+			@Override
+			public void browserRemoved(BrowserModel browserModel) {
+			}
+			
+			@Override
+			public void browserAdded(BrowserModel browserModel) {
+			}
+		});
 	}
 
 	private void updateHud() {
 		List<Long> selectedIds = ModelMgr.getModelMgr().getSelectedEntitiesIds();
 		if (selectedIds.size() != 1) {
-			hud.getJDialog().setVisible(false);
+			hud.hideDialog();
 			return;
 		}
 		Long selectedId = selectedIds.get(0);
@@ -333,9 +356,8 @@ public class IconDemoPanel extends JPanel {
 			if (bufferedImage==null) {
 				return;
 			}
-			previewLabel.setIcon(new ImageIcon(bufferedImage));
-			hud.getJDialog().setTitle(button.getEntity().getName());
-			hud.getJDialog().pack();
+			hud.setTitle(button.getEntity().getName());
+			hud.setImage(bufferedImage);
 		}
 	}
 	
@@ -401,24 +423,6 @@ public class IconDemoPanel extends JPanel {
 
 		toolBar.addSeparator();
 
-		invertButton = new JToggleButton();
-		invertButton.setIcon(Icons.getIcon("invert.png"));
-		invertButton.setFocusable(false);
-		invertButton.setToolTipText("Invert the color space on all images");
-		invertButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				Utils.setWaitingCursor(IconDemoPanel.this);
-				try {
-					imagesPanel.setInvertedColors(invertButton.isSelected());
-					imagesPanel.repaint();
-				} finally {
-					Utils.setDefaultCursor(IconDemoPanel.this);
-				}
-			}
-		});
-		toolBar.add(invertButton);
-
 		showTitlesButton = new JToggleButton();
 		showTitlesButton.setIcon(Icons.getIcon("text_smallcaps.png"));
 		showTitlesButton.setFocusable(false);
@@ -449,31 +453,6 @@ public class IconDemoPanel extends JPanel {
 		});
 		toolBar.add(showTagsButton);
 
-		onlySessionButton = new JToggleButton();
-		onlySessionButton.setIcon(Icons.getIcon("cart.png"));
-		onlySessionButton.setFocusable(false);
-		onlySessionButton.setToolTipText("Only show annotations within the current annotation session");
-		onlySessionButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				refreshAnnotations(null);
-			}
-		});
-		toolBar.add(onlySessionButton);
-
-		hideCompletedButton = new JToggleButton();
-		hideCompletedButton.setIcon(Icons.getIcon("page_white_go.png"));
-		hideCompletedButton.setFocusable(false);
-		hideCompletedButton
-				.setToolTipText("Hide images which have been annotated completely according to the annotation session's ruleset.");
-		hideCompletedButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				filterEntities();
-			}
-		});
-		toolBar.add(hideCompletedButton);
-
 		toolBar.addSeparator();
 		
 		userButton = new JButton("Annotations from...");
@@ -501,36 +480,11 @@ public class IconDemoPanel extends JPanel {
 		toolBar.add(imageRoleButton);
 
 		toolBar.addSeparator();
-		
-		tagTableButton = new JToggleButton();
-		tagTableButton.setIcon(Icons.getIcon("table.png"));
-		tagTableButton.setFocusable(false);
-		tagTableButton.setToolTipText("Show annotations in a table instead of a tag cloud");
-		tagTableButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				tagTableSlider.setEnabled(tagTableButton.isSelected());
-				imagesPanel.setTagTable(tagTableButton.isSelected());
-				imagesPanel.resizeTables(imagesPanel.getCurrTableHeight());
-				imagesPanel.rescaleImages(imagesPanel.getCurrImageSize());
-				imagesPanel.recalculateGrid();
-				imagesPanel.loadUnloadImages();
-			}
-		});
-		toolBar.add(tagTableButton);
-
-		tagTableSlider = new JSlider(ImagesPanel.MIN_TABLE_HEIGHT, ImagesPanel.MAX_TABLE_HEIGHT,
-				ImagesPanel.DEFAULT_TABLE_HEIGHT);
-		tagTableSlider.setFocusable(false);
-		tagTableSlider.setEnabled(false);
-		tagTableSlider.setToolTipText("Tag table height");
-		toolBar.add(tagTableSlider);
-		
-		toolBar.addSeparator();
 
 		imageSizeSlider = new JSlider(ImagesPanel.MIN_THUMBNAIL_SIZE, ImagesPanel.MAX_THUMBNAIL_SIZE,
 				ImagesPanel.DEFAULT_THUMBNAIL_SIZE);
 		imageSizeSlider.setFocusable(false);
+		imageSizeSlider.setMaximumSize(new Dimension(200, Integer.MAX_VALUE));
 		imageSizeSlider.setToolTipText("Image size percentage");
 		toolBar.add(imageSizeSlider);
 
@@ -617,7 +571,6 @@ public class IconDemoPanel extends JPanel {
 	}
 
 	public synchronized void loadEntity(Entity parentEntity) {
-		this.entity = parentEntity;
 		List<EntityData> eds = parentEntity.getOrderedEntityData();
 		List<Entity> children = new ArrayList<Entity>();
 		for(EntityData ed : eds) {
@@ -704,10 +657,15 @@ public class IconDemoPanel extends JPanel {
 		showAllEntities();
 		filterEntities();
 
-		imagesPanel.setTagTable(tagTableButton.isSelected());
+		Boolean invertImages = (Boolean)SessionMgr.getSessionMgr().getModelProperty(
+				ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY);
+		Boolean tagTable = (Boolean)SessionMgr.getSessionMgr().getModelProperty(
+				ViewerSettingsPanel.SHOW_ANNOTATION_TABLES_PROPERTY);
+		
+		imagesPanel.setTagTable(tagTable);
 		imagesPanel.setTagVisbility(showTagsButton.isSelected());
 		imagesPanel.setTitleVisbility(showTitlesButton.isSelected());
-		imagesPanel.setInvertedColors(invertButton.isSelected());
+		imagesPanel.setInvertedColors(invertImages);
 		
 		// Since the images are not loaded yet, this will just resize the empty
 		// buttons so that we can calculate the grid correctly
@@ -752,13 +710,12 @@ public class IconDemoPanel extends JPanel {
 			return;
 		session.clearCompletedIds();
 		Set<Long> completed = session.getCompletedEntityIds();
-
-		for (AnnotatedImageButton button : imagesPanel.getButtons().values()) {
-			if (hideCompletedButton.isSelected() && completed.contains(button.getEntity().getId())) {
-				button.setVisible(false);
-			} else {
-				button.setVisible(true);
-			}
+		
+		imagesPanel.showAllButtons();
+		Boolean hideAnnotated = (Boolean)SessionMgr.getSessionMgr().getModelProperty(
+				ViewerSettingsPanel.HIDE_ANNOTATED_PROPERTY);
+		if (hideAnnotated) {
+			imagesPanel.hideButtons(completed);	
 		}
 	}
 
@@ -935,10 +892,6 @@ public class IconDemoPanel extends JPanel {
 		return imagesPanel;
 	}
 
-	public JSlider getTagTableSlider() {
-		return tagTableSlider;
-	}
-
 	public JSlider getImageSizeSlider() {
 		return imageSizeSlider;
 	}
@@ -947,15 +900,12 @@ public class IconDemoPanel extends JPanel {
 		return keyListener;
 	}
 
-	public boolean isInverted() {
-		return invertButton.isSelected();
-	}
-
 	public double getCurrImageSizePercent() {
 		return currImageSize;
 	}
 
 	public void viewAnnotationDetails(OntologyAnnotation tag) {
+		AnnotationDetailsDialog annotationDetailsDialog = new AnnotationDetailsDialog();
 		annotationDetailsDialog.showForAnnotation(tag);
 	}
 

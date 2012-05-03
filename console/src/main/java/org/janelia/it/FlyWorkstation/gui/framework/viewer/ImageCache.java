@@ -13,7 +13,7 @@ import org.janelia.it.FlyWorkstation.shared.util.LRUCache;
  */
 public class ImageCache {
 
-	public static final int DEFAULT_CACHE_SIZE = 100;
+	public static final int DEFAULT_CACHE_SIZE = 500;
 	
 	private final Map<String, BufferedImage> cache;
 

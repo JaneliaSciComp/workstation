@@ -14,6 +14,7 @@ import loci.formats.FormatException;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 
 /**
@@ -319,8 +320,12 @@ public class DynamicImagePanel extends JPanel {
     private void syncToViewerState() {
     	// TODO: this should use a more generic interface, 
     	// and should not be coupled to the IconDemoPanel and ImagesPanel directly
-		IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
-        if (iconDemoPanel.isInverted()) {
+    	IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
+    	this.displaySize = iconDemoPanel.getImagesPanel().getCurrImageSize();
+    	
+		Boolean invertImages = (Boolean)SessionMgr.getSessionMgr().getModelProperty(
+				ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY);
+        if (invertImages) {
         	setInvertedColors(true);
         }
         else {

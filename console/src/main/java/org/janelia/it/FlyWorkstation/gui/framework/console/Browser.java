@@ -16,6 +16,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModelListe
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.ImageCache;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.JOutlookBar;
 import org.janelia.it.FlyWorkstation.gui.util.JOutlookBar2;
@@ -80,6 +81,7 @@ public class Browser extends JFrame implements Cloneable {
     private JPanel collapsedOutlineView = new JPanel();
     private JPanel mainPanel = new JPanel();
     private IconDemoPanel viewerPanel;
+    private final ImageCache imageCache = new ImageCache();
     private CardLayout layout = new CardLayout();
     private JMenuBar menuBar;
     private SearchToolbar searchToolbar;
@@ -152,6 +154,10 @@ public class Browser extends JFrame implements Cloneable {
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
         }
+    }
+    
+    public ImageCache getImageCache() {
+    	return imageCache;
     }
 
     static public void setMenuBarClass(Class aMenuBarClass) {

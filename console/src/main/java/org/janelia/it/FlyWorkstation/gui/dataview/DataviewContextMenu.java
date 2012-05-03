@@ -27,7 +27,7 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  */
 public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 
-	protected static final Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
+	protected static final Browser browser = SessionMgr.getBrowser();
 
 	public DataviewContextMenu(List<Entity> selectedEntities, String label) {
 		super(selectedEntities, label);
