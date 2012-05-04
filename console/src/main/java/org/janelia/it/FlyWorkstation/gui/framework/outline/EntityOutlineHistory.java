@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
+import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 
 /**
@@ -19,8 +20,10 @@ public class EntityOutlineHistory {
 	public EntityOutlineHistory() {
         ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
 			@Override
-			public void entityOutlineSelected(final String uniqueId, final boolean clearAll) {
-				pushHistory(uniqueId);
+			public void entitySelected(String category, String entityId, boolean clearAll) {
+				if (EntitySelectionModel.CATEGORY_OUTLINE.equals(category)) {
+					pushHistory(entityId);
+				}
 			}
         });
 	}
@@ -37,7 +40,7 @@ public class EntityOutlineHistory {
     	if (historyPosition > 0) {
     		historyPosition--;
     		String uniqueIdToView = history.get(historyPosition);
-    		ModelMgr.getModelMgr().selectOutlineEntity(uniqueIdToView, true);
+    		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueIdToView, true);
     	}    	
     }
 
@@ -45,7 +48,7 @@ public class EntityOutlineHistory {
     	if (historyPosition < history.size()-1) {
     		historyPosition++;
     		String uniqueIdToView = history.get(historyPosition);
-    		ModelMgr.getModelMgr().selectOutlineEntity(uniqueIdToView, true);	
+    		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueIdToView, true);	
     	}
     }
     

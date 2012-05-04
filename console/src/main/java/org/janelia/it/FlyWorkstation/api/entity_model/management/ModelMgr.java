@@ -50,13 +50,13 @@ public class ModelMgr {
     private ThreadQueue notificationQueue;
     private ResourceBundle modelMgrResourceBundle;
     
+    private EntitySelectionModel entitySelectionModel = new EntitySelectionModel();
     private UserColorMapping userColorMapping = new UserColorMapping();
     private OntologyRoot selectedOntology;
     private OntologyKeyBindings ontologyKeyBindings;
     private AnnotationSession annotationSession;
-    private List<Long> selectedEntitiesIds = new ArrayList<Long>();
-    private List<String> selectedOutlineEntitiesIds = new ArrayList<String>();
-
+    
+    
     static {
         // Register an exception handler.
         ModelMgr.getModelMgr().registerExceptionHandler(new PrintStackTraceHandler());
@@ -269,28 +269,36 @@ public class ModelMgr {
         }
     }
     
-    private void notifyOutlineEntitySelected(String uniqueId, boolean clearAll) {
-        for (ModelMgrObserver listener : modelMgrObservers) {
-        	listener.entityOutlineSelected(uniqueId, clearAll);
-        }
+    void notifyEntitySelected(String category, String identifier, boolean clearAll) {
+    	for (ModelMgrObserver listener : modelMgrObservers) {
+			listener.entitySelected(category, identifier, clearAll);
+		}
+    	if (EntitySelectionModel.CATEGORY_OUTLINE.equals(category)) {
+    		for (ModelMgrObserver listener : modelMgrObservers) {
+    			listener.entityOutlineSelected(identifier, clearAll);
+    		}
+    	}
+    	else if (EntitySelectionModel.CATEGORY_MAIN_VIEW.equals(category)) {
+    		for (ModelMgrObserver listener : modelMgrObservers) {
+    			listener.entitySelected(new Long(identifier), clearAll);	
+    		}
+    	}
     }
 
-    private void notifyOutlineEntityDeselected(String uniqueId) {
-        for (ModelMgrObserver listener : modelMgrObservers) {
-        	listener.entityOutlineDeselected(uniqueId);
-        }
-    }
-    
-    private void notifyEntitySelected(Long entityId, boolean clearAll) {
-        for (ModelMgrObserver listener : modelMgrObservers) {
-        	listener.entitySelected(entityId, clearAll);
-        }
-    }
-
-    private void notifyEntityDeselected(Long entityId) {
-        for (ModelMgrObserver listener : modelMgrObservers) {
-        	listener.entityDeselected(entityId);
-        }
+    void notifyEntityDeselected(String category, String identifier) {
+    	for (ModelMgrObserver listener : modelMgrObservers) {
+			listener.entityDeselected(category, identifier);
+		}
+    	if (EntitySelectionModel.CATEGORY_OUTLINE.equals(category)) {
+    		for (ModelMgrObserver listener : modelMgrObservers) {
+    			listener.entityOutlineDeselected(identifier);
+    		}
+    	}
+    	else if (EntitySelectionModel.CATEGORY_MAIN_VIEW.equals(category)) {
+    		for (ModelMgrObserver listener : modelMgrObservers) {
+    			listener.entityDeselected(new Long(identifier));	
+    		}
+    	}
     }
 
     public void notifyEntityChanged(Long entityId) {
@@ -341,53 +349,9 @@ public class ModelMgr {
         return modelAvailable;
     }
 
-	public void selectOutlineEntity(String uniqueId, boolean clearAll) {
-		if (clearAll) {
-			selectedOutlineEntitiesIds.clear();
-		}
-		if (selectedOutlineEntitiesIds.contains(uniqueId)) return;
-		selectedOutlineEntitiesIds.add(uniqueId);
-		notifyOutlineEntitySelected(uniqueId, clearAll);
+	public EntitySelectionModel getEntitySelectionModel() {
+		return entitySelectionModel;
 	}
-
-	public void deselectOutlineEntity(String uniqueId) {
-		if (!selectedOutlineEntitiesIds.contains(uniqueId)) return;
-		selectedOutlineEntitiesIds.remove(uniqueId);
-		notifyOutlineEntityDeselected(uniqueId);
-	}
-	
-	public void selectEntity(Long entityId, boolean clearAll) {
-		if (clearAll) {
-			selectedEntitiesIds.clear();
-		}
-		if (selectedEntitiesIds.contains(entityId)) return;
-		selectedEntitiesIds.add(entityId);
-		notifyEntitySelected(entityId, clearAll);
-	}
-
-	public void deselectEntity(Long entityId) {
-		if (!selectedEntitiesIds.contains(entityId)) return;
-		selectedEntitiesIds.remove(entityId);
-		notifyEntityDeselected(entityId);
-	}
-
-    public List<Long> getSelectedEntitiesIds() {
-		return selectedEntitiesIds;
-	}
-    
-    public Long getLastSelectedEntityId() {
-    	if (selectedEntitiesIds.isEmpty()) return null;
-    	return selectedEntitiesIds.get(selectedEntitiesIds.size()-1);
-    }
-
-	public List<String> getSelectedOutlineEntitiesIds() {
-		return selectedOutlineEntitiesIds;
-	}
-	
-    public String getLastSelectedOutlineEntityId() {
-    	if (selectedOutlineEntitiesIds.isEmpty()) return null;
-    	return selectedOutlineEntitiesIds.get(selectedOutlineEntitiesIds.size()-1);
-    }
 	
 	public List<EntityType> getEntityTypes() {
         return FacadeManager.getFacadeManager().getEntityFacade().getEntityTypes();
@@ -428,6 +392,7 @@ public class ModelMgr {
     public void deleteEntityTree(Long id) {
         try {
             FacadeManager.getFacadeManager().getEntityFacade().deleteEntityTree(id);
+            notifyEntityChanged(id);
         }
         catch (Exception e) {
             handleException(e);
@@ -538,11 +503,14 @@ public class ModelMgr {
     }
 
     public EntityData addEntityToParent(Entity parent, Entity entity, Integer index, String attrName) throws Exception {
-    	return FacadeManager.getFacadeManager().getEntityFacade().addEntityToParent(parent, entity, index, attrName);
+    	EntityData ed = FacadeManager.getFacadeManager().getEntityFacade().addEntityToParent(parent, entity, index, attrName);
+    	notifyEntityChanged(parent.getId());
+    	return ed;
     }
 
     public void removeEntityData(EntityData ed) throws Exception {
         FacadeManager.getFacadeManager().getEntityFacade().removeEntityData(ed);
+        notifyEntityChanged(ed.getChildEntity().getId());
     }
     
     public List<Entity> getAnnotationsForEntity(Long entityId) throws Exception {

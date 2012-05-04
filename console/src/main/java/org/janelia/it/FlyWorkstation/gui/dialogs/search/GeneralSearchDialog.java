@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 
 import javax.swing.*;
 
+import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.ModalDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenWithDefaultAppAction;
@@ -227,7 +228,7 @@ public class GeneralSearchDialog extends ModalDialog {
 				entityOutline.refresh(true, new Callable<Void>() {
 					@Override
 					public Void call() throws Exception {
-		        		ModelMgr.getModelMgr().selectOutlineEntity("/e_"+newFolder.getId(), true);	
+		        		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, "/e_"+newFolder.getId(), true);	
 						return null;
 					}
 					

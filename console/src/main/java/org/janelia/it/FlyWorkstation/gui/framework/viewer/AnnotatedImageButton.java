@@ -8,14 +8,16 @@ import java.util.List;
 
 import javax.swing.*;
 
+import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityContextMenu;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTransferHandler;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityData;
 
 /**
  * A DynamicImagePanel with a title on top and optional annotation tags underneath. Made to be aggregated in an 
@@ -32,12 +34,14 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
     private DragSource source;
     
     protected final IconDemoPanel iconDemoPanel;
-    protected final Entity entity;
+    protected final EntityData entityData;
+    protected final Entity entity; // just a shortcut to entityData.getChildEntity()
     
-    public AnnotatedImageButton(final Entity entity, final IconDemoPanel iconDemoPanel) {
+    public AnnotatedImageButton(final EntityData entityData, final IconDemoPanel iconDemoPanel) {
 
     	this.iconDemoPanel = iconDemoPanel;
-    	this.entity = entity;
+    	this.entityData = entityData;
+    	this.entity = entityData.getChildEntity();
     	
     	this.source = new DragSource();
     	source.createDefaultDragGestureRecognizer(this, DnDConstants.ACTION_LINK, this);
@@ -97,11 +101,10 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
 				if (e.isConsumed()) return;
 				
 				if (!isSelected()) {
-					ModelMgr.getModelMgr().selectEntity(entity.getId(), true);
+					ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(iconDemoPanel.getSelectionCategory(), entity.getId()+"", true);
 				}
 				
-				List<Long> entityIds = ModelMgr.getModelMgr().getSelectedEntitiesIds();
-				
+				List<String> entityIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(iconDemoPanel.getSelectionCategory());				
 				JPopupMenu popupMenu = null;
 				if (entityIds.size()>1) {
 					popupMenu =  new JPopupMenu();
@@ -114,7 +117,8 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
 			        // TODO: add a menu for doing things on multiple entities, such as removal
 				}
 				else {
-					popupMenu = new EntityContextMenu(entity);
+					String uniqueId = EntityOutline.getChildUniqueId(iconDemoPanel.getContextUniqueId(), entityData);
+					popupMenu = new EntityContextMenu(entityData, uniqueId);
 		            ((EntityContextMenu)popupMenu).addMenuItems();
 				}
 	            
@@ -126,15 +130,27 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
 			protected void doubleLeftClicked(MouseEvent e) {
 				if (e.isConsumed()) return;
 				
+				EntityData contextEd = iconDemoPanel.getContextEntityData();
+				if (contextEd==entityData) return;
+				
 				// Double-clicking an image in gallery view triggers an outline selection
-            	String uniqueId = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline().getChildUniqueIdWithEntity(entity.getId());
-            	if (Utils.isEmpty(uniqueId)) {
-            		uniqueId = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline().getCurrUniqueId();
-            	}
+            	String uniqueId = EntityOutline.getChildUniqueId(iconDemoPanel.getContextUniqueId(), entityData);
+            	
+//            	if (Utils.isEmpty(uniqueId)) {
+//            		Set<DefaultMutableTreeNode> matchingNodes = entityOutline.getNodesById(entity.getId());
+//            		if (matchingNodes==null || matchingNodes.isEmpty()) {
+//            			System.out.println("No nodes in the tree match entity id="+entity.getId()+".");
+//            			return;
+//            		}
+//            		if (matchingNodes.size()>1) {
+//            			System.out.println("More than one node with the id="+entity.getId()+". Picking one at random!");
+//            		}
+//            		DefaultMutableTreeNode node = matchingNodes.iterator().next();
+//            		uniqueId = entityOutline.getDynamicTree().getUniqueId(node);
+//            	}
             	
             	if (Utils.isEmpty(uniqueId)) return;
-            	
-        		ModelMgr.getModelMgr().selectOutlineEntity(uniqueId, true);	
+        		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueId, true);	
         		e.consume();
 			}
 
@@ -149,12 +165,13 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
     			final boolean state = button.isSelected();
     			final Entity entity = button.getEntity();
     			final Long entityId = entity.getId();
+    			final String category = iconDemoPanel.getSelectionCategory();
     			
     			if (e.getClickCount() != 1) return;
     			
     			if (e.getButton() != MouseEvent.BUTTON1) {
     				if (!state) {
-						ModelMgr.getModelMgr().selectEntity(entityId, true);
+						ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, entityId+"", true);
     				}
 					return;
     			}
@@ -167,38 +184,38 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
     						// With the meta key we toggle items in the current
     						// selection without clearing it
     						if (!state) {
-    							ModelMgr.getModelMgr().selectEntity(entityId, false);
+    							ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, entityId+"", false);
     						} 
     						else {
-    							ModelMgr.getModelMgr().deselectEntity(entityId);
+    							ModelMgr.getModelMgr().getEntitySelectionModel().deselectEntity(category, entityId+"");
     						}
     					} 
     					else {
     						// With shift, we select ranges
-    						Long lastSelected = ModelMgr.getModelMgr().getLastSelectedEntityId();
+    						String lastSelected = ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityId(iconDemoPanel.getSelectionCategory());
     						if (shiftDown && lastSelected != null) {
-
+    							Long lastSelectedId = new Long(lastSelected);
     							// Walk through the buttons and select everything between the last and current selections
     							boolean selecting = false;
     							List<Entity> entities = iconDemoPanel.getEntities();
     							for (Entity entity : entities) {
-    								if (entity.getId().equals(lastSelected) || entity.getId().equals(entityId)) {
+    								if (entity.getId().equals(lastSelectedId) || entity.getId().equals(entityId)) {
     									if (entity.getId().equals(entityId)) {
     										// Always select the button that was clicked
-    										ModelMgr.getModelMgr().selectEntity(entity.getId(), false);
+    										ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, entity.getId()+"", false);
     									}
     									if (selecting) return; // We already selected, this is the end
     									selecting = true; // Start selecting
     									continue; // Skip selection of the first and last items, which should already be selected
     								}
     								if (selecting) {
-    									ModelMgr.getModelMgr().selectEntity(entity.getId(), false);
+    									ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, entity.getId()+"", false);
     								}
     							}
     						} 
     						else {
     							// This is a good old fashioned single button selection
-    							ModelMgr.getModelMgr().selectEntity(entityId, true);
+    							ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, entityId+"", true);
     						}
 
     					}
@@ -214,13 +231,13 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
         // Fix event dispatching so that user can click on the title or the tags and still select the button
         titleLabel.addMouseListener(new MouseForwarder(this, "JLabel(titleLabel)->AnnotatedImageButton"));
         
-    	refresh(entity);
+    	refresh(entityData);
     }
     
-    public void refresh(Entity entity) {
+    public void refresh(EntityData entityData) {
     	mainPanel.removeAll();
-    	setTitle(entity.getName(), 100);
-        mainPanel.add(init(entity));
+    	setTitle(entityData.getChildEntity().getName(), 100);
+        mainPanel.add(init(entityData));
     }
     
     public void setTitle(String title, int maxWidth) {
@@ -233,7 +250,7 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
         titleLabel.setToolTipText(title);
     }
     
-    public abstract JComponent init(Entity entity);
+    public abstract JComponent init(EntityData entityData);
     
 	public synchronized void setTitleVisible(boolean visible) {
         titleLabel.setVisible(visible);
@@ -271,6 +288,10 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
         return entity;
     }
 
+    public EntityData getEntityData() {
+        return entityData;
+    }
+    
 	public void rescaleImage(int imageSize) {
     	setTitle(entity.getName(), imageSize);
         JPanel annotationPanel = (JPanel)annotationView;
@@ -296,10 +317,13 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
 	public void dragGestureRecognized(DragGestureEvent dge) {
 		
         if (!isSelected()) {
-        	ModelMgr.getModelMgr().selectEntity(getEntity().getId(), true);
+        	ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(iconDemoPanel.getSelectionCategory(), getEntity().getId()+"", true);
         }
 		
 		getTransferHandler().exportAsDrag(this, dge.getTriggerEvent(), TransferHandler.LINK);
 	}
-	
+
+	public IconDemoPanel getIconDemoPanel() {
+		return iconDemoPanel;
+	}
 }

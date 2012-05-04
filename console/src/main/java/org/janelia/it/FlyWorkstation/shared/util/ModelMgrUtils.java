@@ -48,39 +48,35 @@ public class ModelMgrUtils {
     	return entity.getUser().getUserLogin().equals(SessionMgr.getUsername());
     }
     
-    public static void updateEntity(Entity entity) {
-    	try {
-    		Entity newEntity = ModelMgr.getModelMgr().getEntityById(entity.getId()+"");
-    		
-    		// Map old children onto new EDs
-    		Map<Long,Entity> childMap = new HashMap<Long,Entity>();
-    		for(EntityData ed : entity.getEntityData()) {
-    			if (ed.getChildEntity()!=null) {
-    				childMap.put(ed.getChildEntity().getId(), ed.getChildEntity());
-    			}
-    		}
-    		for(EntityData ed : newEntity.getEntityData()) {
-    			if (ed.getChildEntity()!=null) {
-    				Entity child = childMap.get(ed.getChildEntity().getId());
-    				if (child==null) {
-    					System.out.println("Warning: no existing child found with id="+ed.getChildEntity().getId());
-    				}
-    				else {
-    					ed.setChildEntity(child);
-    				}
-    			}
-    		}
-    		
-    		entity.setName(newEntity.getName());
-	    	entity.setUpdatedDate(newEntity.getUpdatedDate());
-    		entity.setCreationDate(newEntity.getCreationDate());
-    		entity.setEntityStatus(newEntity.getEntityStatus());
-    		entity.setEntityType(newEntity.getEntityType());
-    		entity.setUser(newEntity.getUser());
-    		entity.setEntityData(newEntity.getEntityData());
-    	} catch (Exception e) {
-    		SessionMgr.getSessionMgr().handleException(e);
-    	}
+    public static void updateEntity(Entity entity, Entity newEntity) throws Exception {
+	
+		// Map old children onto new EDs
+		Map<Long,Entity> childMap = new HashMap<Long,Entity>();
+		for(EntityData ed : entity.getEntityData()) {
+			if (ed.getChildEntity()!=null) {
+				childMap.put(ed.getChildEntity().getId(), ed.getChildEntity());
+			}
+		}
+		for(EntityData ed : newEntity.getEntityData()) {
+			if (ed.getChildEntity()!=null) {
+				Entity child = childMap.get(ed.getChildEntity().getId());
+				if (child==null) {
+					System.out.println("Warning: no existing child found with id="+ed.getChildEntity().getId());
+				}
+				else {
+					ed.setChildEntity(child);
+				}
+			}
+		}
+		
+		entity.setName(newEntity.getName());
+    	entity.setUpdatedDate(newEntity.getUpdatedDate());
+		entity.setCreationDate(newEntity.getCreationDate());
+		entity.setEntityStatus(newEntity.getEntityStatus());
+		entity.setEntityType(newEntity.getEntityType());
+		entity.setUser(newEntity.getUser());
+		entity.setEntityData(newEntity.getEntityData());
+
     }
 
 }

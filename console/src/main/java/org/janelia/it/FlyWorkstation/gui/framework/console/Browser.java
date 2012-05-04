@@ -19,6 +19,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.access.LoadRequestStatusOb
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestState;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestStatus;
+import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationSessionPropertyDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.PatternSearchDialog;
@@ -133,7 +134,7 @@ public class Browser extends JFrame implements Cloneable {
         this.realEstatePercent = realEstatePercent;
 
         viewerPanel = new ViewerSplitPanel();
-        viewerPanel.setMainViewer(new IconDemoPanel());
+        viewerPanel.setMainViewer(new IconDemoPanel(viewerPanel, EntitySelectionModel.CATEGORY_MAIN_VIEW));
         
         try {
             jbInit(browserModel);
@@ -226,7 +227,7 @@ public class Browser extends JFrame implements Cloneable {
         setJMenuBar(menuBar);
         
         
-        viewerPanel.setBorder(BorderFactory.createLineBorder(Color.black));
+//        viewerPanel.setBorder(BorderFactory.createLineBorder(Color.black));
         searchToolbar = new SearchToolbar();
         usingSplashPanel = true;
 //        subBrowserTabPane = new SubBrowser(browserModel);
@@ -299,12 +300,14 @@ public class Browser extends JFrame implements Cloneable {
         centerRightHorizontalSplitPane.setDividerSize(10);
         centerRightHorizontalSplitPane.setOneTouchExpandable(true);
         centerRightHorizontalSplitPane.setDividerLocation(consolePosition.getHorizontalRightDividerLocation());
-
+        centerRightHorizontalSplitPane.setBorder(BorderFactory.createEmptyBorder());
+        
         centerLeftHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, outlookBar, centerRightHorizontalSplitPane);
         centerLeftHorizontalSplitPane.setMinimumSize(new Dimension(400, 0));
         centerLeftHorizontalSplitPane.setOneTouchExpandable(true);
         centerLeftHorizontalSplitPane.setDividerLocation(consolePosition.getHorizontalLeftDividerLocation());
-
+        centerLeftHorizontalSplitPane.setBorder(BorderFactory.createEmptyBorder());
+        
         setSize(consolePosition.getBrowserSize());
         setLocation(consolePosition.getBrowserLocation());
 
@@ -321,21 +324,16 @@ public class Browser extends JFrame implements Cloneable {
         mainPanel.add(collapsedOutlineView, "Collapsed FileOutline");
         getContentPane().add(mainPanel, BorderLayout.CENTER);
 
-        // Populate the data outlines
-
-        ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
-
-			@Override
-			public void entitySelected(long entityId, boolean clearAll) {
-				statusBar.setDescription(ModelMgr.getModelMgr().getSelectedEntitiesIds().size()+" entities selected");
-			}
-
-			@Override
-			public void entityDeselected(long entityId) {
-				statusBar.setDescription(ModelMgr.getModelMgr().getSelectedEntitiesIds().size()+" entities selected");
-			}
-        	
-        });
+//        ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
+//			@Override
+//			public void entitySelected(String category, String entityId, boolean clearAll) {
+//				updateStatusBar();
+//			}
+//			@Override
+//			public void entityDeselected(String category, String entityId) {
+//				updateStatusBar();
+//			}
+//        });
         
         // Run this later so that the Browser has finished initializing by the time it runs
         SwingUtilities.invokeLater(new Runnable() {
@@ -367,6 +365,13 @@ public class Browser extends JFrame implements Cloneable {
         });
     }
 
+	private void updateStatusBar() {
+		EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
+		int s = esm.getSelectedEntitiesIds(EntitySelectionModel.CATEGORY_MAIN_VIEW).size() + 
+			esm.getSelectedEntitiesIds(EntitySelectionModel.CATEGORY_SEC_VIEW).size();
+		statusBar.setDescription(s+" entities selected");
+	}
+	
     ///////// Browser Controller section////////////
 //    static public void registerEditorForType(Class type, Class editor,
 //                                             String editorName,

@@ -18,6 +18,7 @@ import javax.swing.tree.TreePath;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.AnnotatedImageButton;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -86,8 +87,14 @@ public abstract class EntityTransferHandler extends TransferHandler {
 				sourcePaths.add(tree.getPathForRow(selRows[0]));
 			}
 			else if (sourceComponent instanceof AnnotatedImageButton) {
-				for(Long entityId : ModelMgr.getModelMgr().getSelectedEntitiesIds()) {
-	            	String uniqueId = entityOutline.getChildUniqueIdWithEntity(entityId);
+            	List<String> selectedEntities = new ArrayList<String>(
+            			ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(
+            					SessionMgr.getBrowser().getActiveViewer().getSelectionCategory()));
+            	IconDemoPanel iconDemoPanel = ((AnnotatedImageButton)sourceComponent).getIconDemoPanel();
+				for(String selectedId : selectedEntities) {
+					Long entityId = new Long(selectedId);
+					EntityData entityData = iconDemoPanel.getEntityDataWithEntityId(entityId);
+	            	String uniqueId = EntityOutline.getChildUniqueId(iconDemoPanel.getContextUniqueId(), entityData);
 	            	DefaultMutableTreeNode node = entityOutline.getNodeByUniqueId(uniqueId);
 	            	sourcePaths.add(new TreePath(node.getPath()));
 				}				
@@ -216,8 +223,11 @@ public abstract class EntityTransferHandler extends TransferHandler {
 			}
 		}
 		else if (sourceComponent instanceof AnnotatedImageButton) {
-			
-			for(Long entityId : ModelMgr.getModelMgr().getSelectedEntitiesIds()) {
+			final List<String> selectedEntities = new ArrayList<String>(
+        			ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(
+        					SessionMgr.getBrowser().getActiveViewer().getSelectionCategory()));
+			for(String selectedId : selectedEntities) {
+				Long entityId = new Long(selectedId);
 				Set<Entity> matchingEntities = entityOutline.getEntitiesById(entityId);
 				if (matchingEntities.isEmpty()) {
 					throw new IllegalStateException("Entity not found in entity tree: "+entityId);

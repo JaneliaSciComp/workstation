@@ -142,7 +142,6 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
         // Listen for changes to the model
         
         ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
-
 			@Override
 			public void ontologySelected(long rootId) {
 				try {
@@ -412,7 +411,9 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
             }
 
             try {
-            	final List<Long> selectedEntities = new ArrayList<Long>(ModelMgr.getModelMgr().getSelectedEntitiesIds());
+            	final List<String> selectedEntities = new ArrayList<String>(
+            			ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(
+            					SessionMgr.getBrowser().getActiveViewer().getSelectionCategory()));
             	
             	// TODO: this should really use the ModelMgr
             	final Annotations annotations = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer()).getAnnotations();
@@ -425,7 +426,8 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
                         OntologyElement element = getOntologyElement(selectedTree.getCurrentNode());
                         
                         int i=1;
-                    	for(Long entityId : selectedEntities) {
+                    	for(String selectedId : selectedEntities) {
+                    		Long entityId = new Long(selectedId);
                             List<OntologyAnnotation> entityAnnotations = annotationMap.get(entityId);
                             if (entityAnnotations==null) {
                             	continue;

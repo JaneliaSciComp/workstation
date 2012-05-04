@@ -19,6 +19,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
+import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -47,23 +48,47 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
 
 			@Override
-			public void entityOutlineSelected(String entityPath, boolean clearAll) {
-				selectEntityByUniqueId(entityPath);
-			}
-
-			@Override
-			public void entityOutlineDeselected(String entityPath) {
-				getTree().clearSelection();
-			}
-
-			@Override
-			public void entityChanged(long entityId) {
-				// Update all the entities that are affected
-				for (Entity entity : getEntitiesById(entityId)) {
-					ModelMgrUtils.updateEntity(entity);
-					revalidate();
-					repaint();
+			public void entitySelected(String category, String entityId, boolean clearAll) {
+				if (EntitySelectionModel.CATEGORY_OUTLINE.equals(category)) {
+					selectEntityByUniqueId(entityId);
 				}
+			}
+
+			@Override
+			public void entityDeselected(String category, String entityId) {
+				if (EntitySelectionModel.CATEGORY_OUTLINE.equals(category)) {
+					getTree().clearSelection();
+				}
+			}
+
+			@Override
+			public void entityChanged(final long entityId) {
+				SimpleWorker worker = new SimpleWorker() {
+					@Override
+					protected void doStuff() throws Exception {
+						Entity newEntity = ModelMgr.getModelMgr().getEntityById(entityId+"");
+						if (newEntity==null) {
+							return;
+						}
+						// Update all the entities that are affected
+						for (Entity entity : getEntitiesById(entityId)) {
+							ModelMgrUtils.updateEntity(entity, newEntity);
+						}
+						revalidate();
+						repaint();
+					}
+					
+					@Override
+					protected void hadSuccess() {
+					}
+					
+					@Override
+					protected void hadError(Throwable error) {
+						SessionMgr.getSessionMgr().handleException(error);
+					}
+				};
+				
+				worker.execute();
 			}
 		});
 	}
@@ -138,11 +163,9 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	private class EntityOutlineContextMenu extends EntityContextMenu {
 
 		private DefaultMutableTreeNode node;
-		private EntityData entityData;
 
-		public EntityOutlineContextMenu(DefaultMutableTreeNode node) {
-			super(getEntity(node));
-			this.entityData = getEntityData(node);
+		public EntityOutlineContextMenu(DefaultMutableTreeNode node, String uniqueId) {
+			super(getEntityData(node), uniqueId);
 			this.node = node;
 		}
 
@@ -247,7 +270,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 							selectedTree.removeNode(node);
 							
 							// Update the viewer
-							selectNode(null);
+//							selectNode(null);
 						}
 
 						@Override
@@ -416,14 +439,13 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		final DefaultMutableTreeNode node = selectedTree.getCurrentNode();
 
 		// Create context menu
-		final EntityOutlineContextMenu popupMenu = new EntityOutlineContextMenu(node);
+		final EntityOutlineContextMenu popupMenu = new EntityOutlineContextMenu(node, selectedTree.getUniqueId(node));
 			
 		if ("".equals(getRootEntity().getEntityType().getName())) return;
 		
 		if (node != null) {
 			final Entity entity = getEntity(node);
 			if (entity == null) return;
-//			selectNode(node);
 			popupMenu.addMenuItems();
 		} 
 		else {			
@@ -564,6 +586,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	}
 	
 	private void loadEntityInViewer(String uniqueId) {
+		
 		// Make sure this load is still relevant. User could have selected a new node in the meantime. 
 		if (uniqueId==null || !uniqueId.equals(currUniqueId)) return;
 		
@@ -575,7 +598,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			throw new IllegalStateException("Cannot display entity whose children are not loaded");
 		}
 		
-		((IconDemoPanel)SessionMgr.getSessionMgr().getActiveBrowser().getActiveViewer()).loadEntity(getEntity(node));
-		ModelMgr.getModelMgr().selectOutlineEntity(uniqueId, true);
+		((IconDemoPanel)SessionMgr.getSessionMgr().getActiveBrowser().getActiveViewer()).loadEntity(getEntityData(node), uniqueId);
+		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueId+"", true);
 	}
 }

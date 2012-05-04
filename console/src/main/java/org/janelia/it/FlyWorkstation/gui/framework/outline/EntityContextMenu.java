@@ -11,6 +11,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 
+import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
@@ -25,6 +26,7 @@ import org.janelia.it.FlyWorkstation.shared.util.PreferenceConstants;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
@@ -35,12 +37,16 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
 public class EntityContextMenu extends JPopupMenu {
 
 	protected static final Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
-	protected Entity entity;
+	protected EntityData entityData;
+	protected Entity entity; // just a shortcut to entityData.getChildEntity()
+	protected String uniqueId;
 	protected boolean nextAddRequiresSeparator = false;
 	
-	public EntityContextMenu(Entity entity) {
+	public EntityContextMenu(EntityData entityData, String uniqueId) {
 		super();
-		this.entity = entity;
+		this.entityData = entityData;
+		this.entity = entityData.getChildEntity();
+		this.uniqueId = uniqueId;
 	}
 	
 	@Override
@@ -67,6 +73,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getDetailsItem());
         add(getRenameItem());
         setNextAddRequiresSeparator(true);
+        add(getOpenInSecondViewerItem());
     	add(getOpenInFinderItem());
     	add(getOpenWithAppItem());
         add(getNeuronAnnotatorItem());
@@ -147,16 +154,17 @@ public class EntityContextMenu extends JPopupMenu {
 	}
 
 	protected JMenuItem getOpenInSecondViewerItem() {
+		if (Utils.isEmpty(uniqueId)) return null;
         JMenuItem copyMenuItem = new JMenuItem("  Open in second viewer");
         copyMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				Viewer secViewer = SessionMgr.getBrowser().getViewersPanel().getSecViewer();
 				if (secViewer==null) {
-					secViewer = new IconDemoPanel();
+					secViewer = new IconDemoPanel(SessionMgr.getBrowser().getViewersPanel(), EntitySelectionModel.CATEGORY_SEC_VIEW);
 					SessionMgr.getBrowser().getViewersPanel().setSecViewer(secViewer);
 				}
-	            ((IconDemoPanel)secViewer).loadEntity(entity);
+	            ((IconDemoPanel)secViewer).loadEntity(entityData, uniqueId);
 			}
 		});
         return copyMenuItem;

@@ -57,6 +57,23 @@ public class EmbeddedAxisServer implements ModelMgrObserver {
 	}
 
 	@Override
+	public void entitySelected(String category, String entityId, boolean clearAll) {
+		Map<String,Object> parameters = new LinkedHashMap<String,Object>();
+		parameters.put("category",category);
+		parameters.put("entityId",entityId);
+		parameters.put("clearAll",clearAll);
+		SessionMgr.getSessionMgr().sendMessageToExternalClients("entitySelected", parameters);
+	}
+
+	@Override
+    public void entityDeselected(String category, String entityId) {
+		Map<String,Object> parameters = new LinkedHashMap<String,Object>();
+		parameters.put("category",category);
+		parameters.put("entityId",entityId);
+		SessionMgr.getSessionMgr().sendMessageToExternalClients("entityDeselected", parameters);
+	}
+	
+	@Override
 	public void entityOutlineSelected(String uniqueId, boolean clearAll) {
 		// Using a LinkedHashMap is necessary because some clients require the parameters to be in the same order
 		// defined in the operation's parameterOrder attribute (which is generated from the method signature). 

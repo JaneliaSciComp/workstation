@@ -15,6 +15,7 @@ import java.util.Map;
 import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
 
+import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.OntologyKeyBindings;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
@@ -65,19 +66,19 @@ public class ConsoleDataServiceImpl {
     }
 
     public void selectOutlineEntity(String uniqueId, boolean clearAll) throws Exception {
-        ModelMgr.getModelMgr().selectOutlineEntity(uniqueId, clearAll);
+        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueId, clearAll);
     }
 
     public void deselectOutlineEntity(String uniqueId) throws Exception {
-        ModelMgr.getModelMgr().deselectOutlineEntity(uniqueId);
+        ModelMgr.getModelMgr().getEntitySelectionModel().deselectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueId);
     }
     
     public void selectEntity(long entityId, boolean clearAll) throws Exception {
-        ModelMgr.getModelMgr().selectEntity(entityId, clearAll);
+        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_MAIN_VIEW, entityId+"", clearAll);
     }
 
     public void deselectEntity(long entityId) throws Exception {
-        ModelMgr.getModelMgr().deselectEntity(entityId);
+        ModelMgr.getModelMgr().getEntitySelectionModel().deselectEntity(EntitySelectionModel.CATEGORY_MAIN_VIEW, entityId+"");
     }
     
     public Entity createAnnotation(OntologyAnnotation annotation) throws Exception {

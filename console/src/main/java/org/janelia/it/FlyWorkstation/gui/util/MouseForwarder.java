@@ -22,7 +22,7 @@ public class MouseForwarder extends MouseHandler {
 //	@Override
 //	public void mouseClicked(MouseEvent e) {
 //		super.mouseClicked(e);
-//		forward(e);
+//		forward(e, "mouseClicked");
 //	}
 
 	@Override
@@ -40,13 +40,13 @@ public class MouseForwarder extends MouseHandler {
 //	@Override
 //	public void mouseEntered(MouseEvent e) {
 //		super.mouseEntered(e);
-//		forward(e);
+//		forward(e, "mouseEntered");
 //	}
 //
 //	@Override
 //	public void mouseExited(MouseEvent e) {
 //		super.mouseExited(e);
-//		forward(e);
+//		forward(e, "mouseExited");
 //	}
 
 	private void forward(MouseEvent e, String eventName) {

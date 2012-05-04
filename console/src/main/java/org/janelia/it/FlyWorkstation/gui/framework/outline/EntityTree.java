@@ -355,10 +355,6 @@ public class EntityTree extends JPanel {
      * @param uniqueId
      */
 	public void selectEntityByUniqueId(String uniqueId) {
-//		DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
-//		if (node!=null) {
-//			getDynamicTree().navigateToNode(node);
-//		}
 	}
 	
 	/**
@@ -381,32 +377,22 @@ public class EntityTree extends JPanel {
     	}
     	return entities;
     }
-    
-    public DefaultMutableTreeNode getChildWithEntity(Long entityId) {
-    	
-    	try {
-    		DynamicTree dynamicTree = getDynamicTree();
-        	DefaultMutableTreeNode node = dynamicTree.getCurrentNode();
-        	if (node==null) return null;
-        	if (!dynamicTree.childrenAreLoaded(node)) return null;
-        	
-            for (int i = 0; i < node.getChildCount(); i++) {
-                DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) node.getChildAt(i);
-                Entity entity = getEntity(childNode);
-                if (entity!=null && entity.getId().equals(entityId)) {
-                	return childNode;
-                }
-            }
-    	}
-    	catch (Exception e) {
-    		SessionMgr.getSessionMgr().handleException(e);
-    	}
-    	return null;
+
+    /**
+     * Get all the nodes in the tree with the given entity id.
+     * @param entityId
+     * @return
+     */
+    public Set<DefaultMutableTreeNode> getNodesById(Long entityId) {
+    	return entityIdToNodeMap.get(entityId);
     }
 
-    public String getChildUniqueIdWithEntity(Long entityId) {
-    	return getDynamicTree().getUniqueId(getChildWithEntity(entityId));
-    }
+	public static String getChildUniqueId(String parentUniqueId, EntityData entityData) {
+		String uniqueId = parentUniqueId;
+		uniqueId += "/ed_"+entityData.getId();
+		uniqueId += "/e_"+entityData.getChildEntity().getId();
+		return uniqueId;
+	}
 
     public String getCurrUniqueId() {
     	return getDynamicTree().getUniqueId(getDynamicTree().getCurrentNode());

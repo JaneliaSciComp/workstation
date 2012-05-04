@@ -11,6 +11,16 @@ public class ModelMgrAdapter implements ModelMgrObserver {
 	}
 
 	@Override
+	public void entitySelected(String category, String entityId, boolean clearAll) {
+		
+	}
+
+	@Override
+    public void entityDeselected(String category, String entityId) {
+    	
+    }
+    
+	@Override
 	public void entityOutlineSelected(String uniqueId, boolean clearAll) {
 	}
 	

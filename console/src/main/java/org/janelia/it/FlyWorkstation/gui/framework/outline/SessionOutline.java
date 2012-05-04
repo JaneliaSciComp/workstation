@@ -27,6 +27,8 @@ import org.janelia.it.FlyWorkstation.gui.framework.table.ProgressCellRenderer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 
@@ -302,7 +304,13 @@ public class SessionOutline extends JPanel implements Refreshable {
 		
 		if (session != null) {
 			panel.showLoadingIndicator();
-			panel.loadImageEntities(session.getEntities());
+			List<EntityData> fakeEds = new ArrayList<EntityData>();
+			for(Entity entity : session.getEntities()) {
+				EntityData ed = new EntityData();
+				ed.setChildEntity(entity);
+				fakeEds.add(ed);
+			}
+			panel.loadImageEntities(fakeEds);
 		}
 		
 		ModelMgr.getModelMgr().setCurrentAnnotationSession(session);

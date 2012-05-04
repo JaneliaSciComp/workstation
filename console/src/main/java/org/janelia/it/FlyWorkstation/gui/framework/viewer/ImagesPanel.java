@@ -13,7 +13,9 @@ import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
@@ -67,6 +69,7 @@ public class ImagesPanel extends JScrollPane {
     	this.iconDemoPanel = iconDemoPanel;
     	buttonsPanel = new ScrollableGridPanel();
         setViewportView(buttonsPanel);
+        setBorder(BorderFactory.createEmptyBorder());
     }
 
 	/**
@@ -110,7 +113,7 @@ public class ImagesPanel extends JScrollPane {
 	/**
      * Create the image buttons, but leave the images unloaded for now.
      */
-    public void setEntities(List<Entity> entities) {
+    public void setEntityDatas(List<EntityData> entityDatas) {
     	
         buttons.clear();
         for (Component component : buttonsPanel.getComponents()) {
@@ -122,8 +125,9 @@ public class ImagesPanel extends JScrollPane {
 
 		ImageCache imageCache = SessionMgr.getBrowser().getImageCache();
 			
-        for (int i = 0; i < entities.size(); i++) {
-            final Entity entity = entities.get(i);
+        for (int i = 0; i < entityDatas.size(); i++) {
+            final EntityData entityData = entityDatas.get(i);
+            final Entity entity = entityData.getChildEntity();
             
             if (buttons.containsKey(entity.getId().toString())) continue;
             
@@ -131,17 +135,19 @@ public class ImagesPanel extends JScrollPane {
 
             String filepath = EntityUtils.getDefaultImageFilePath(entity, iconDemoPanel.getCurrImageRole());
             if (filepath != null) {
-            	button = new DynamicImageButton(entity, iconDemoPanel);
+            	button = new DynamicImageButton(entityData, iconDemoPanel);
                 ((DynamicImageButton)button).setCache(imageCache);
             }
             else {
-            	button = new StaticImageButton(entity, iconDemoPanel);
+            	button = new StaticImageButton(entityData, iconDemoPanel);
             }
             
             button.setTitleVisible(iconDemoPanel.areTitlesVisible());
             button.setTagsVisible(iconDemoPanel.areTagsVisible());
             
             if (buttonKeyListener!=null) button.addKeyListener(buttonKeyListener);
+            
+            button.addMouseListener(new MouseForwarder(this, "AnnotatedImageButton->ImagesPanel"));
             
             // Disable tab traversal, we will do it ourselves
             button.setFocusTraversalKeysEnabled(false);
@@ -365,10 +371,14 @@ public class ImagesPanel extends JScrollPane {
         if (maxButtonWidth == 0) maxButtonWidth = 400;
         
         int fullWidth = getSize().width - getVerticalScrollBar().getWidth();
+        
         int numCols = (int) Math.floor((double)fullWidth / maxButtonWidth);
         if (numCols > 0) {
         	buttonsPanel.setColumns(numCols);
         }
+
+        buttonsPanel.revalidate();
+        buttonsPanel.repaint();
     }
 
     public synchronized void loadUnloadImages() {
@@ -397,6 +407,7 @@ public class ImagesPanel extends JScrollPane {
 
 		public ScrollableGridPanel() {
 			setLayout(new GridLayout(0, 2));
+			setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
 			setOpaque(false);
 		}
 		

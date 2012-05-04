@@ -13,6 +13,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
+import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -820,7 +821,7 @@ public class PatternSearchDialog extends ModalDialog {
                 entityOutline.refresh(true, new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
-                        ModelMgr.getModelMgr().selectOutlineEntity("/e_"+newFolder.getId(), true);
+                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, "/e_"+newFolder.getId(), true);
                         Utils.setDefaultCursor(PatternSearchDialog.this);
                         setVisible(false);
                         resetSearchState();

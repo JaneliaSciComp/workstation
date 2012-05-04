@@ -1,11 +1,14 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.*;
-import javax.swing.border.EtchedBorder;
+import javax.swing.border.Border;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 
@@ -16,18 +19,32 @@ import org.janelia.it.FlyWorkstation.gui.util.Icons;
  */
 public class ViewerSplitPanel extends JPanel {
 	
+	private static final Font titleLabelFont = new Font("Sans Serif", Font.PLAIN, 12);
+	
 	private boolean mainViewerOnly = true;
 	private JSplitPane mainSplitPane;
 	private ViewerPane mainViewerPane;
 	private ViewerPane secViewerPane;
+	private ViewerPane activeViewerPane;
+	
+	private final Border normalBorder;
+	private final Border focusBorder;
 	
 	public ViewerSplitPanel() {
 		super(new BorderLayout());
-
+		setBorder(BorderFactory.createEmptyBorder());
+		
+		Color panelColor = (Color)UIManager.get("Panel.background");
+		Color normalColor = (Color)UIManager.get("windowBorder");
+		Color focusColor = (Color)UIManager.get("Focus.color");
+		
+		normalBorder = BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(normalColor, 1), BorderFactory.createLineBorder(panelColor, 1));
+		focusBorder = BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(focusColor, 1), BorderFactory.createLineBorder(focusColor, 1));
+		
 		mainViewerPane = new ViewerPane(false);
-		mainViewerPane.setLabel("Main viewer");
+		mainViewerPane.setLabel("");
 		secViewerPane = new ViewerPane(true);
-		secViewerPane.setLabel("Secondary viewer");
+		secViewerPane.setLabel("");
 		
 		this.mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, mainViewerPane, secViewerPane);
 		mainSplitPane.setOneTouchExpandable(false);
@@ -35,10 +52,30 @@ public class ViewerSplitPanel extends JPanel {
         
         setSecViewer(null);
 	}
+	
+	public void setAsActive(Viewer viewer) {
+		activeViewerPane = getViewerPane(viewer);
 
+		if (activeViewerPane==mainViewerPane) {
+			secViewerPane.setBorder(normalBorder);
+			mainViewerPane.setBorder(focusBorder);
+		}
+		else if (activeViewerPane==secViewerPane) {
+			mainViewerPane.setBorder(normalBorder);
+			secViewerPane.setBorder(focusBorder);
+		}
+		else {
+			throw new IllegalArgumentException("Unknown viewer with class "+viewer.getClass().getName());
+		}
+	}
+
+	public void setTitle(Viewer viewer, String title) {
+		activeViewerPane = getViewerPane(viewer);
+		activeViewerPane.setLabel(title);
+	}
+	
 	public Viewer getActiveViewer() {
-		// TODO: determine which one is active
-		return mainViewerPane.getViewer();
+		return activeViewerPane.getViewer();
 	}
 	
 	public Viewer getMainViewer() {
@@ -52,6 +89,7 @@ public class ViewerSplitPanel extends JPanel {
 	public void setMainViewer(Viewer viewer) {
 		mainViewerPane.setViewer(viewer);
 		mainViewerPane.setVisible(viewer!=null);
+		setAsActive(viewer);
 	}
 	
 	public void setSecViewer(Viewer viewer) {
@@ -77,10 +115,33 @@ public class ViewerSplitPanel extends JPanel {
 		}
 		else {
 			mainViewerOnly = true;
+			activeViewerPane = mainViewerPane;
 			remove(mainSplitPane);
 	        add(mainViewerPane, BorderLayout.CENTER);
 			revalidate();
 			repaint();
+		}
+
+		if (mainViewerPane.getViewer()!=null) {
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					// always refresh the main viewer if something changes with the secondary viewer
+					mainViewerPane.getViewer().refresh();
+				}
+			});	
+		}
+	}
+
+	private ViewerPane getViewerPane(Viewer viewer) {
+		if (mainViewerPane.getViewer()==viewer) {
+			return mainViewerPane;
+		}
+		else if (secViewerPane.getViewer()==viewer) {
+			return secViewerPane;
+		}
+		else {
+			throw new IllegalArgumentException("Unknown viewer with class "+viewer.getClass().getName());
 		}
 	}
 	
@@ -91,16 +152,18 @@ public class ViewerSplitPanel extends JPanel {
 		public ViewerPane(boolean showHideButton) {
 
 			setLayout(new BorderLayout());
-			setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
 			
 	        titleLabel = new JLabel(" ");
-	        titleLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+	        titleLabel.setBorder(BorderFactory.createEmptyBorder(1, 5, 3, 0));
+	        titleLabel.setFont(titleLabelFont);
+	        
 	        JPanel mainTitlePane = new JPanel();
 	        mainTitlePane.setLayout(new BoxLayout(mainTitlePane, BoxLayout.LINE_AXIS));
 	        mainTitlePane.add(titleLabel);
-
+	        
 			if (showHideButton) {
 		        JButton hideButton = new JButton(Icons.getIcon("close.png"));
+		        hideButton.setPreferredSize(new Dimension(16, 16));
 		        hideButton.setBorderPainted(false);
 		        hideButton.setToolTipText("Close this viewer");
 		        hideButton.addActionListener(new ActionListener() {
