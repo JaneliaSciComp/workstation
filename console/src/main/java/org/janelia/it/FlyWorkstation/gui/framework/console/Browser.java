@@ -1,5 +1,20 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
+import java.awt.*;
+import java.awt.event.WindowEvent;
+import java.awt.print.PageFormat;
+import java.awt.print.PrinterJob;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import javax.swing.*;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.access.LoadRequestStatusObserverAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestState;
@@ -17,6 +32,8 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ImageCache;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerSplitPanel;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.JOutlookBar;
 import org.janelia.it.FlyWorkstation.gui.util.JOutlookBar2;
@@ -26,20 +43,6 @@ import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableImage;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.WindowEvent;
-import java.awt.print.PageFormat;
-import java.awt.print.PrinterJob;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.File;
-import java.io.FilenameFilter;
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -80,7 +83,7 @@ public class Browser extends JFrame implements Cloneable {
     private JPanel allPanelsView = new JPanel();
     private JPanel collapsedOutlineView = new JPanel();
     private JPanel mainPanel = new JPanel();
-    private IconDemoPanel viewerPanel;
+    private ViewerSplitPanel viewerPanel;
     private final ImageCache imageCache = new ImageCache();
     private CardLayout layout = new CardLayout();
     private JMenuBar menuBar;
@@ -129,8 +132,9 @@ public class Browser extends JFrame implements Cloneable {
         enableEvents(AWTEvent.WINDOW_EVENT_MASK);
         this.realEstatePercent = realEstatePercent;
 
-        viewerPanel = new IconDemoPanel();
-
+        viewerPanel = new ViewerSplitPanel();
+        viewerPanel.setMainViewer(new IconDemoPanel());
+        
         try {
             jbInit(browserModel);
         }
@@ -268,8 +272,8 @@ public class Browser extends JFrame implements Cloneable {
         	public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
         		JComponent comp = outlookBar.getBar(outlookBar.getVisibleBarName());
 				
-				// clear the current viewer 
-				final IconDemoPanel panel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
+				// clear the main viewer 
+				final IconDemoPanel panel = (IconDemoPanel)Browser.this.getMainViewer();
 				panel.clear();
 				
 				// refresh the outline being selected
@@ -1216,8 +1220,23 @@ public class Browser extends JFrame implements Cloneable {
     }
 
 
-    public IconDemoPanel getViewerPanel() {
-        return viewerPanel;
+    // TODO: this was refactored but clients just cast the result to IconDemoPanel for now. At some point we need to 
+    // go through every usage of this method and make sure the cast to IconDemoPanel is appropriate, or if additional
+    // checks need to be made.
+    public Viewer getActiveViewer() {
+        return viewerPanel.getActiveViewer();
+    }
+    
+    public Viewer getMainViewer() {
+        return viewerPanel.getMainViewer();
+    }
+    
+    public Viewer getSecViewer() {
+        return viewerPanel.getSecViewer();
+    }
+    
+    public ViewerSplitPanel getViewersPanel() {
+    	return viewerPanel;
     }
 
     public Refreshable getActiveOutline() {

@@ -15,6 +15,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -33,7 +34,7 @@ public class AnnotateAction extends OntologyElementAction {
     @Override
     public void doAction() {
         SessionMgr.getSessionMgr().getActiveBrowser().getOntologyOutline().navigateToOntologyElement(getOntologyElement());
-        final List<Entity> selectedEntities = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().getSelectedEntities();
+        final List<Entity> selectedEntities = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer()).getSelectedEntities();
         
         if (selectedEntities.isEmpty()) {
             // Cannot annotate nothing
@@ -105,7 +106,7 @@ public class AnnotateAction extends OntologyElementAction {
 		        	
 		        	if (!(type instanceof Text)) {
 		        		// Non-text annotations are exclusive, so delete existing annotations first.
-			            Annotations annotations = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().getAnnotations();
+			            Annotations annotations = ((IconDemoPanel)SessionMgr.getSessionMgr().getActiveBrowser().getActiveViewer()).getAnnotations();
 			        	List<OntologyAnnotation> existingAnnotations = annotations.getTermAnnotations(entity, finalTerm);
 			        	for(OntologyAnnotation existingAnnotation : existingAnnotations) {
 			        		if (existingAnnotation.getOwner().equals(SessionMgr.getUsername())) {

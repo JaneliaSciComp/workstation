@@ -7,6 +7,7 @@ import javax.swing.JComponent;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
+import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
@@ -19,13 +20,13 @@ public class DynamicImageButton extends AnnotatedImageButton {
 
     private DynamicImagePanel dynamicImagePanel;
 
-    public DynamicImageButton(Entity entity) {
-		super(entity);
+    public DynamicImageButton(final Entity entity, final IconDemoPanel iconDemoPanel) {
+		super(entity, iconDemoPanel);
 	}
     
     public JComponent init(final Entity entity) {
 
-    	String imageRole = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().getCurrImageRole();
+    	String imageRole = iconDemoPanel.getCurrImageRole();
     	
         String filepath = EntityUtils.getDefaultImageFilePath(entity, imageRole);
         if (filepath == null) {
@@ -33,7 +34,19 @@ public class DynamicImageButton extends AnnotatedImageButton {
         }
         
         File file = new File(PathTranslator.convertPath(filepath));
-        this.dynamicImagePanel = new DynamicImagePanel(file.getAbsolutePath(), ImagesPanel.MAX_THUMBNAIL_SIZE);
+        this.dynamicImagePanel = new DynamicImagePanel(file.getAbsolutePath(), ImagesPanel.MAX_THUMBNAIL_SIZE) {
+            protected void syncToViewerState() {
+            	this.displaySize = iconDemoPanel.getImagesPanel().getCurrImageSize();
+        		Boolean invertImages = (Boolean)SessionMgr.getSessionMgr().getModelProperty(
+        				ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY);
+                if (invertImages) {
+                	setInvertedColors(true);
+                }
+                else {
+                	rescaleImage(iconDemoPanel.getImagesPanel().getCurrImageSize());
+                }
+            }
+        };
         return dynamicImagePanel;
     }
     

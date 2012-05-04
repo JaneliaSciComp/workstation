@@ -157,6 +157,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			add(getNewFolderItem());
 
 			setNextAddRequiresSeparator(true);
+			add(getOpenInSecondViewerItem());
 			add(getOpenInFinderItem());
 			add(getOpenWithAppItem());
 			add(getNeuronAnnotatorItem());
@@ -422,7 +423,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		if (node != null) {
 			final Entity entity = getEntity(node);
 			if (entity == null) return;
-			selectNode(node);
+//			selectNode(node);
 			popupMenu.addMenuItems();
 		} 
 		else {			
@@ -523,7 +524,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
     
 	private synchronized void selectNode(final DefaultMutableTreeNode node) {
 
-		final IconDemoPanel panel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
+		final IconDemoPanel panel = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer());
 		
 		if (node == null) {
 			currUniqueId = null;
@@ -574,7 +575,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			throw new IllegalStateException("Cannot display entity whose children are not loaded");
 		}
 		
-		SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().loadEntity(getEntity(node));
+		((IconDemoPanel)SessionMgr.getSessionMgr().getActiveBrowser().getActiveViewer()).loadEntity(getEntity(node));
 		ModelMgr.getModelMgr().selectOutlineEntity(uniqueId, true);
 	}
 }

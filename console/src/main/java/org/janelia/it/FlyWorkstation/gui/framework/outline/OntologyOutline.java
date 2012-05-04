@@ -21,6 +21,7 @@ import javax.swing.tree.DefaultTreeModel;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.KeyBindDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.choose.OntologyElementChooser;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
@@ -31,6 +32,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -413,7 +415,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
             	final List<Long> selectedEntities = new ArrayList<Long>(ModelMgr.getModelMgr().getSelectedEntitiesIds());
             	
             	// TODO: this should really use the ModelMgr
-            	final Annotations annotations = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().getAnnotations();
+            	final Annotations annotations = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer()).getAnnotations();
                 final Map<Long, List<OntologyAnnotation>> annotationMap = annotations.getFilteredAnnotationMap();
                 
                 SimpleWorker worker = new SimpleWorker() {
@@ -571,4 +573,9 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
             }
         }
     }
+
+	public static void viewAnnotationDetails(OntologyAnnotation tag) {
+		AnnotationDetailsDialog annotationDetailsDialog = new AnnotationDetailsDialog();
+		annotationDetailsDialog.showForAnnotation(tag);
+	}
 }

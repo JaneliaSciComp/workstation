@@ -14,7 +14,6 @@ import loci.formats.FormatException;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 
 /**
@@ -23,19 +22,19 @@ import org.janelia.it.FlyWorkstation.shared.util.Utils;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DynamicImagePanel extends JPanel {
+public abstract class DynamicImagePanel extends JPanel {
 
-    private final String imageFilename;
-    private final Integer maxSize;
-    private BufferedImage maxSizeImage;
-    private BufferedImage invertedMaxSizeImage;
-    private int displaySize;
-    private boolean inverted = false;
-    private boolean viewable = false;
+	protected final String imageFilename;
+    protected final Integer maxSize;
+    protected BufferedImage maxSizeImage;
+    protected BufferedImage invertedMaxSizeImage;
+    protected int displaySize;
+    protected boolean inverted = false;
+    protected boolean viewable = false;
     
-    private final JLabel loadingLabel;
-    private final JLabel imageLabel;
-    private final JLabel errorLabel;
+    protected final JLabel loadingLabel;
+    protected final JLabel imageLabel;
+    protected final JLabel errorLabel;
 
     private LoadImageWorker loadWorker;
     private ImageCache imageCache; 
@@ -94,7 +93,7 @@ public class DynamicImagePanel extends JPanel {
     public int getDisplaySize() {
         return displaySize;
     }
-
+    
     /**
      * Get the underlying image, if it's currently loaded.
      * @return
@@ -317,19 +316,5 @@ public class DynamicImagePanel extends JPanel {
         add(label);
     }
 
-    private void syncToViewerState() {
-    	// TODO: this should use a more generic interface, 
-    	// and should not be coupled to the IconDemoPanel and ImagesPanel directly
-    	IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
-    	this.displaySize = iconDemoPanel.getImagesPanel().getCurrImageSize();
-    	
-		Boolean invertImages = (Boolean)SessionMgr.getSessionMgr().getModelProperty(
-				ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY);
-        if (invertImages) {
-        	setInvertedColors(true);
-        }
-        else {
-        	rescaleImage(iconDemoPanel.getImagesPanel().getCurrImageSize());
-        }
-    }
+    protected abstract void syncToViewerState(); 
 }

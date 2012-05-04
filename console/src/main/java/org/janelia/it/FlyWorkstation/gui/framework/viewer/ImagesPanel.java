@@ -36,6 +36,7 @@ public class ImagesPanel extends JScrollPane {
     
     private KeyListener buttonKeyListener;
     
+    private final IconDemoPanel iconDemoPanel;
     private ScrollableGridPanel buttonsPanel;
 
     private int currImageSize = DEFAULT_THUMBNAIL_SIZE;
@@ -62,7 +63,8 @@ public class ImagesPanel extends JScrollPane {
         }
     };
     
-    public ImagesPanel() {
+    public ImagesPanel(IconDemoPanel iconDemoPanel) {
+    	this.iconDemoPanel = iconDemoPanel;
     	buttonsPanel = new ScrollableGridPanel();
         setViewportView(buttonsPanel);
     }
@@ -118,7 +120,6 @@ public class ImagesPanel extends JScrollPane {
             }
         }
 
-		IconDemoPanel iconDemoPanel = SessionMgr.getBrowser().getViewerPanel();
 		ImageCache imageCache = SessionMgr.getBrowser().getImageCache();
 			
         for (int i = 0; i < entities.size(); i++) {
@@ -130,11 +131,11 @@ public class ImagesPanel extends JScrollPane {
 
             String filepath = EntityUtils.getDefaultImageFilePath(entity, iconDemoPanel.getCurrImageRole());
             if (filepath != null) {
-            	button = new DynamicImageButton(entity);
+            	button = new DynamicImageButton(entity, iconDemoPanel);
                 ((DynamicImageButton)button).setCache(imageCache);
             }
             else {
-            	button = new StaticImageButton(entity);
+            	button = new StaticImageButton(entity, iconDemoPanel);
             }
             
             button.setTitleVisible(iconDemoPanel.areTitlesVisible());

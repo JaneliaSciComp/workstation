@@ -12,6 +12,7 @@ import javax.swing.*;
 import javax.swing.table.TableCellEditor;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicTable;
@@ -242,7 +243,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 	        JMenuItem detailsItem = new JMenuItem("  View details");
 	        detailsItem.addActionListener(new ActionListener() {
 	            public void actionPerformed(ActionEvent actionEvent) {
-	            	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().viewAnnotationDetails(annotation);
+	            	OntologyOutline.viewAnnotationDetails(annotation);
 	            }
 	        });
 	        popupMenu.add(detailsItem);

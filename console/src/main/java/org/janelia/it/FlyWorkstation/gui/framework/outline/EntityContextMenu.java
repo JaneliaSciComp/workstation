@@ -1,5 +1,16 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
@@ -7,20 +18,14 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenInFinderAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenWithDefaultAppAction;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.util.PreferenceConstants;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.File;
 
 /**
  * Context pop up menu for entities.
@@ -141,6 +146,22 @@ public class EntityContextMenu extends JPopupMenu {
         return renameItem;
 	}
 
+	protected JMenuItem getOpenInSecondViewerItem() {
+        JMenuItem copyMenuItem = new JMenuItem("  Open in second viewer");
+        copyMenuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Viewer secViewer = SessionMgr.getBrowser().getViewersPanel().getSecViewer();
+				if (secViewer==null) {
+					secViewer = new IconDemoPanel();
+					SessionMgr.getBrowser().getViewersPanel().setSecViewer(secViewer);
+				}
+	            ((IconDemoPanel)secViewer).loadEntity(entity);
+			}
+		});
+        return copyMenuItem;
+	}
+	
 	protected JMenuItem getOpenInFinderItem() {
 		if (!OpenInFinderAction.isSupported()) return null;
     	String filepath = EntityUtils.getAnyFilePath(entity);

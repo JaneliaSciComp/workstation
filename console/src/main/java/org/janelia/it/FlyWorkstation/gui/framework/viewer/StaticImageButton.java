@@ -7,7 +7,6 @@ import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -22,8 +21,8 @@ public class StaticImageButton extends AnnotatedImageButton {
     private BufferedImage staticIcon;
     private JLabel label;
 
-    public StaticImageButton(Entity entity) {
-		super(entity);
+    public StaticImageButton(final Entity entity, final IconDemoPanel iconDemoPanel) {
+		super(entity, iconDemoPanel);
 	}
 
 	public JComponent init(final Entity entity) {
@@ -48,7 +47,6 @@ public class StaticImageButton extends AnnotatedImageButton {
 		if (viewable) {
 	    	this.staticIcon = Icons.getLargeIconAsBufferedImage(entity);
 	    	label.setIcon(new ImageIcon(staticIcon));
-			IconDemoPanel iconDemoPanel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
         	rescaleImage(iconDemoPanel.getImagesPanel().getCurrImageSize());
 		}
 		else {

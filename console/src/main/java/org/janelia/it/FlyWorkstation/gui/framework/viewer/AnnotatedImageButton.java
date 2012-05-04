@@ -31,10 +31,12 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
     private AnnotationView annotationView;
     private DragSource source;
     
-    protected Entity entity;
+    protected final IconDemoPanel iconDemoPanel;
+    protected final Entity entity;
     
-    public AnnotatedImageButton(final Entity entity) {
+    public AnnotatedImageButton(final Entity entity, final IconDemoPanel iconDemoPanel) {
 
+    	this.iconDemoPanel = iconDemoPanel;
     	this.entity = entity;
     	
     	this.source = new DragSource();
@@ -178,7 +180,7 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
 
     							// Walk through the buttons and select everything between the last and current selections
     							boolean selecting = false;
-    							List<Entity> entities = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().getEntities();
+    							List<Entity> entities = iconDemoPanel.getEntities();
     							for (Entity entity : entities) {
     								if (entity.getId().equals(lastSelected) || entity.getId().equals(entityId)) {
     									if (entity.getId().equals(entityId)) {

@@ -297,7 +297,7 @@ public class SessionOutline extends JPanel implements Refreshable {
     	currSession = session;
 		dynamicTable.navigateToRowWithObject(session);
 
-		final IconDemoPanel panel = SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel();
+		final IconDemoPanel panel = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer());
 		panel.clear();
 		
 		if (session != null) {

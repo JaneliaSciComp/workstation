@@ -49,7 +49,7 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class IconDemoPanel extends JPanel {
+public class IconDemoPanel extends Viewer {
 
 	private SplashPanel splashPanel;
 	private JToolBar toolbar;
@@ -202,7 +202,7 @@ public class IconDemoPanel extends JPanel {
 		add(splashPanel);
 
 		toolbar = createToolbar();
-		imagesPanel = new ImagesPanel();
+		imagesPanel = new ImagesPanel(this);
 		imagesPanel.setButtonKeyListener(keyListener);
 
 		imageSizeSlider.addChangeListener(new ChangeListener() {
@@ -240,7 +240,6 @@ public class IconDemoPanel extends JPanel {
 			public void entitySelected(long entityId, boolean clearAll) {
 				imagesPanel.setSelection(entityId, true, clearAll);
 				updateHud();
-				return;
 			}
 
 			@Override
@@ -617,6 +616,9 @@ public class IconDemoPanel extends JPanel {
 			protected void doStuff() throws Exception {
 				List<Entity> loadedEntities = new ArrayList<Entity>();
 				for (Entity entity : entities) {
+					if (!EntityUtils.isInitialized(entity)) {
+						entity = ModelMgr.getModelMgr().getEntityById(entity.getId()+"");
+					}
 					EntityData ed = entity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
 					if (ed!= null && ed.getValue() == null && ed.getChildEntity()!=null) {
 						ed.setChildEntity(ModelMgr.getModelMgr().getEntityById(ed.getChildEntity().getId() + ""));
@@ -797,6 +799,11 @@ public class IconDemoPanel extends JPanel {
 
 	}
 	
+	@Override
+	public void refresh() {
+		// TODO: implement this
+	}
+
 	public synchronized void clear() {
 		this.entities = null;
 		removeAll();
@@ -902,11 +909,6 @@ public class IconDemoPanel extends JPanel {
 
 	public double getCurrImageSizePercent() {
 		return currImageSize;
-	}
-
-	public void viewAnnotationDetails(OntologyAnnotation tag) {
-		AnnotationDetailsDialog annotationDetailsDialog = new AnnotationDetailsDialog();
-		annotationDetailsDialog.showForAnnotation(tag);
 	}
 
 	public Annotations getAnnotations() {

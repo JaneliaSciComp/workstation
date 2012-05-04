@@ -1,7 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -12,6 +11,7 @@ import javax.swing.border.Border;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -74,7 +74,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
         JMenuItem detailsItem = new JMenuItem("  View details");
         detailsItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-            	SessionMgr.getSessionMgr().getActiveBrowser().getViewerPanel().viewAnnotationDetails(tag);
+            	OntologyOutline.viewAnnotationDetails(tag);
             }
         });
         popupMenu.add(detailsItem);
