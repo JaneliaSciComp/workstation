@@ -6,8 +6,12 @@ import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
@@ -24,6 +28,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.PreferenceConstants;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -39,33 +44,33 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
 public class EntityContextMenu extends JPopupMenu {
 
 	protected static final Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
+	
+	// Option A: a list of entities, where the operation affects all of them
+	protected final List<EntityData> entityDataList;
+	
+	// Option B: a specific entity
 	protected final EntityData entityData;
 	protected final Entity entity; // just a shortcut to entityData.getChildEntity()
 	protected final String uniqueId;
+	
+	// Internal state
 	protected boolean nextAddRequiresSeparator = false;
 	
 	public EntityContextMenu(EntityData entityData, String uniqueId) {
 		super();
+		this.entityDataList = new ArrayList<EntityData>();
+		entityDataList.add(entityData);
 		this.entityData = entityData;
 		this.entity = entityData!=null ? entityData.getChildEntity() : null;
 		this.uniqueId = uniqueId;
 	}
-	
-	@Override
-	public JMenuItem add(JMenuItem menuItem) {
-		
-		if (menuItem == null) return null;
-		
-		if (nextAddRequiresSeparator) {
-			addSeparator();
-			nextAddRequiresSeparator = false;
-		}
-		
-		return super.add(menuItem);
-	}
 
-	public void setNextAddRequiresSeparator(boolean nextAddRequiresSeparator) {
-		this.nextAddRequiresSeparator = nextAddRequiresSeparator;
+	public EntityContextMenu(List<EntityData> entityDataList) {
+		super();
+		this.entityDataList = entityDataList;
+		this.entityData = null;
+		this.entity = null;
+		this.uniqueId = null;
 	}
 
 	public void addMenuItems() {
@@ -73,37 +78,44 @@ public class EntityContextMenu extends JPopupMenu {
         add(getCopyNameToClipboardItem());
         add(getCopyIdToClipboardItem());
         add(getDetailsItem());
+        
+        setNextAddRequiresSeparator(true);
+        add(getAddToRootFolderItem());
         add(getRenameItem());
 		add(getDeleteItem());
-        setNextAddRequiresSeparator(true);
+        
+		setNextAddRequiresSeparator(true);
         add(getOpenInSecondViewerItem());
     	add(getOpenInFinderItem());
     	add(getOpenWithAppItem());
         add(getNeuronAnnotatorItem());
         add(getVaa3dItem());
+        
         setNextAddRequiresSeparator(true);
         add(getSearchHereItem());
 	}
 
-	protected JMenuItem getTitleItem() {
-		String name = entity == null ? "Data" : entity.getName();
+	protected JMenuItem getTitleItem() {;
+		String name = entity == null ? "(Multiple selected)" : entity.getName();
         JMenuItem titleMenuItem = new JMenuItem(name);
         titleMenuItem.setEnabled(false);
         return titleMenuItem;
 	}
 	
 	protected JMenuItem getDetailsItem() {
+		if (entityData==null) return null;
         JMenuItem detailsMenuItem = new JMenuItem("  View details");
         detailsMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-		        new EntityDetailsDialog().showForEntity(entity);
+		        new EntityDetailsDialog().showForEntityData(entityData);
 			}
 		});
         return detailsMenuItem;
 	}
 	
 	protected JMenuItem getCopyNameToClipboardItem() {
+		if (entityData==null) return null;
         JMenuItem copyMenuItem = new JMenuItem("  Copy name to clipboard");
         copyMenuItem.addActionListener(new ActionListener() {
 			@Override
@@ -116,6 +128,7 @@ public class EntityContextMenu extends JPopupMenu {
 	}
 
 	protected JMenuItem getCopyIdToClipboardItem() {
+		if (entityData==null) return null;
         JMenuItem copyMenuItem = new JMenuItem("  Copy GUID to clipboard");
         copyMenuItem.addActionListener(new ActionListener() {
 			@Override
@@ -128,6 +141,7 @@ public class EntityContextMenu extends JPopupMenu {
 	}
 	
 	protected JMenuItem getRenameItem() {
+		if (entityData==null) return null;
 		JMenuItem renameItem = new JMenuItem("  Rename");
         renameItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
@@ -156,83 +170,194 @@ public class EntityContextMenu extends JPopupMenu {
         return renameItem;
 	}
 
-	protected JMenuItem getDeleteItem() {
+	protected JMenu getAddToRootFolderItem() {
 
-		JMenuItem deleteItem = new JMenuItem("  Remove '"+entity.getName()+"'");
-		deleteItem.addActionListener(new ActionListener() {
+		if (entity!=null && entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)!=null) {
+			return null;
+		}
+		
+		JMenu newFolderMenu = new JMenu("  Add to top-level folder...");
+		
+		List<EntityData> rootEds = SessionMgr.getBrowser().getEntityOutline().getRootEntity().getOrderedEntityData();
+		
+		for(EntityData rootEd : rootEds) {
+			final Entity commonRoot = rootEd.getChildEntity();
+			if (!commonRoot.getUser().getUserLogin().equals(SessionMgr.getUsername())) continue;
+			
+			JMenuItem commonRootItem = new JMenuItem(commonRoot.getName());
+			commonRootItem.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent actionEvent) {
+					SimpleWorker worker = new SimpleWorker() {
+						@Override
+						protected void doStuff() throws Exception {
+							for(EntityData entityData : entityDataList) {
+								ModelMgrUtils.addChild(commonRoot, entityData.getChildEntity());
+							}
+						}
+						@Override
+						protected void hadSuccess() {
+							SessionMgr.getBrowser().getEntityOutline().refresh(true, null);
+						}
+						@Override
+						protected void hadError(Throwable error) {
+							SessionMgr.getSessionMgr().handleException(error);
+						}
+					};
+					worker.execute();
+				}
+			});
+			
+			newFolderMenu.add(commonRootItem);
+		}
+		
+		newFolderMenu.addSeparator();
+		
+		JMenuItem createNewItem = new JMenuItem("Create new...");
+		
+		createNewItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent actionEvent) {
 
-				final List<EntityData> eds = ModelMgr.getModelMgr().getParentEntityDatas(entity.getId());
-
-				boolean removeReference = true;
-				boolean removeCommonRootTag = false;
-				
-				if (eds.size() <= 1 && entity.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
-					// Make sure its not a reference to a common root
-					if (entity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)==null || eds.isEmpty()) {
-						int deleteConfirmation = JOptionPane.showConfirmDialog(browser,
-								"Are you sure you want to permanently delete '" + entity.getName()
-										+ "' and all orphaned items underneath it?", "Delete",
-								JOptionPane.YES_NO_OPTION);
-						if (deleteConfirmation != 0) {
-							return;
-						}
-						removeReference = false;
-					}
-					else if (entity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)!=null && entityData.getId()==null) {
-						removeCommonRootTag = true;
-					}
+				// Add button clicked
+				final String folderName = (String) JOptionPane.showInputDialog(browser, "Folder Name:\n",
+						"Create top-level folder", JOptionPane.PLAIN_MESSAGE, null, null, null);
+				if ((folderName == null) || (folderName.length() <= 0)) {
+					return;
 				}
 
-				Utils.setWaitingCursor(browser);
-				
-				final boolean removeCommonRootTagFinal = removeCommonRootTag;
-				final boolean removeReferenceFinal = removeReference;
-				SimpleWorker removeTask = new SimpleWorker() {
-
+				SimpleWorker worker = new SimpleWorker() {
+					private Entity newFolder;
 					@Override
 					protected void doStuff() throws Exception {
 						// Update database
-						if (removeCommonRootTagFinal) {
-							EntityData rootTagEd = entity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT);
-							ModelMgr.getModelMgr().removeEntityData(rootTagEd);
-						}
-						else if (removeReferenceFinal) {
-							ModelMgr.getModelMgr().removeEntityData(entityData);
-						} 
-						else {
-							ModelMgr.getModelMgr().deleteEntityTree(entity.getId());
+						newFolder = ModelMgrUtils.createNewCommonRoot(folderName);
+						for(EntityData entityData : entityDataList) {
+							ModelMgrUtils.addChild(newFolder, entityData.getChildEntity());
 						}
 					}
-
 					@Override
 					protected void hadSuccess() {
-						if (removeCommonRootTagFinal) {
-							browser.getEntityOutline().refresh();
-						}
-						Utils.setDefaultCursor(browser);
+						// Update Tree UI
+						SessionMgr.getBrowser().getEntityOutline().refresh(true, null);
 					}
-
 					@Override
 					protected void hadError(Throwable error) {
-						Utils.setDefaultCursor(browser);
-						error.printStackTrace();
-						JOptionPane.showMessageDialog(browser, "Error deleting entity", "Error",
-								JOptionPane.ERROR_MESSAGE);
+						SessionMgr.getSessionMgr().handleException(error);
 					}
 				};
+				worker.execute();
+			}
+		});
+		
+		newFolderMenu.add(createNewItem);
+		
+		return newFolderMenu;
+	}
 
-				removeTask.execute();
+	protected JMenuItem getDeleteItem() {
+
+		JMenuItem deleteItem = new JMenuItem(entityData!=null?"  Remove '"+entity.getName()+"'":"  Remove "+entityDataList.size()+" entities");
+		
+		deleteItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent actionEvent) {
+
+				Utils.setWaitingCursor(browser);
+				
+				SimpleWorker worker = new SimpleWorker() {
+
+					Set<EntityData> removeReference = new HashSet<EntityData>();
+					Set<EntityData> removeRootTag = new HashSet<EntityData>();
+					
+					@Override
+					protected void doStuff() throws Exception {
+						for(EntityData ed : entityDataList) {
+							final List<EntityData> eds = ModelMgr.getModelMgr().getParentEntityDatas(ed.getChildEntity().getId());
+							if (eds.size() <= 1 && ed.getChildEntity().getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+								EntityData rootEd = ed.getChildEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT);
+								if (rootEd==null || eds.isEmpty()) {
+									removeReference.add(ed);
+								}
+								else if (rootEd!=null && entityData.getId()==null) {
+									removeRootTag.add(ed);
+								}
+							}
+						}
+					}
+					
+					@Override
+					protected void hadSuccess() {
+
+						final Set<EntityData> toDelete = new HashSet<EntityData>(entityDataList);
+						for(EntityData ed : entityDataList) {
+							if (!removeReference.contains(ed) && !removeRootTag.contains(ed)) {
+								int deleteConfirmation = JOptionPane.showConfirmDialog(browser,
+										"Are you sure you want to permanently delete '" + entity.getName()
+												+ "' and all orphaned items underneath it?", "Delete",
+										JOptionPane.YES_NO_OPTION);
+								if (deleteConfirmation != 0) {
+									toDelete.remove(ed);
+								}
+							}
+						}
+						
+						if (toDelete.isEmpty()) return;
+						
+						SimpleWorker removeTask = new SimpleWorker() {
+
+							@Override
+							protected void doStuff() throws Exception {
+								
+								for(EntityData ed : toDelete) {
+									// Update database
+									if (removeRootTag.contains(ed)) {
+										EntityData rootTagEd = ed.getChildEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT);
+										ModelMgr.getModelMgr().removeEntityData(rootTagEd);
+									}
+									else if (removeReference.contains(ed)) {
+										ModelMgr.getModelMgr().removeEntityData(ed);
+									} 
+									else {
+										ModelMgr.getModelMgr().deleteEntityTree(ed.getChildEntity().getId());
+									}
+								}
+							}
+
+							@Override
+							protected void hadSuccess() {
+								browser.getEntityOutline().refresh();
+								Utils.setDefaultCursor(browser);
+							}
+
+							@Override
+							protected void hadError(Throwable error) {
+								SessionMgr.getSessionMgr().handleException(error);
+							}
+						};
+
+						removeTask.execute();
+					}
+					
+					@Override
+					protected void hadError(Throwable error) {
+                    	SessionMgr.getSessionMgr().handleException(error);
+					}
+					
+				};
+				worker.execute();
+				
+				
+				
+
 			}
 		});
 
-		if (entityData==null || !entityData.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+		if (entityData!=null && !entityData.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
 			deleteItem.setEnabled(false);
 		}
 		return deleteItem;
 	}
 	
 	protected JMenuItem getOpenInSecondViewerItem() {
+		if (entityData==null) return null;
 		if (Utils.isEmpty(uniqueId)) return null;
         JMenuItem copyMenuItem = new JMenuItem("  Open in second viewer");
         copyMenuItem.addActionListener(new ActionListener() {
@@ -252,6 +377,7 @@ public class EntityContextMenu extends JPopupMenu {
 	}
 	
 	protected JMenuItem getOpenInFinderItem() {
+		if (entityData==null) return null;
 		if (!OpenInFinderAction.isSupported()) return null;
     	String filepath = EntityUtils.getAnyFilePath(entity);
         if (!Utils.isEmpty(filepath)) {
@@ -261,6 +387,7 @@ public class EntityContextMenu extends JPopupMenu {
 	}
 	
 	protected JMenuItem getOpenWithAppItem() {
+		if (entityData==null) return null;
         if (!OpenWithDefaultAppAction.isSupported()) return null;
     	String filepath = EntityUtils.getAnyFilePath(entity);
         if (!Utils.isEmpty(filepath)) {
@@ -270,6 +397,7 @@ public class EntityContextMenu extends JPopupMenu {
 	}
 	
 	protected JMenuItem getNeuronAnnotatorItem() {
+		if (entityData==null) return null;
         final String entityType = entity.getEntityType().getName();
         if (entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT) || entityType.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
             JMenuItem vaa3dMenuItem = new JMenuItem("  View in Vaa3D (Neuron Annotator)");
@@ -297,6 +425,7 @@ public class EntityContextMenu extends JPopupMenu {
 	}
 
 	protected JMenuItem getVaa3dItem() {
+		if (entityData==null) return null;
         final String entityType = entity.getEntityType().getName();
         if (entityType.equals(EntityConstants.TYPE_IMAGE_3D) ||
             entityType.equals(EntityConstants.TYPE_ALIGNED_BRAIN_STACK) ||
@@ -337,6 +466,7 @@ public class EntityContextMenu extends JPopupMenu {
 	}
 
 	protected JMenuItem getSearchHereItem() {
+		if (entityData==null) return null;
         JMenuItem searchHereMenuItem = new JMenuItem("  Search here...");
         searchHereMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
@@ -360,5 +490,22 @@ public class EntityContextMenu extends JPopupMenu {
 			}
 		});
         return actionMenuItem;
+	}
+	
+	@Override
+	public JMenuItem add(JMenuItem menuItem) {
+		
+		if (menuItem == null) return null;
+		
+		if (nextAddRequiresSeparator) {
+			addSeparator();
+			nextAddRequiresSeparator = false;
+		}
+		
+		return super.add(menuItem);
+	}
+
+	public void setNextAddRequiresSeparator(boolean nextAddRequiresSeparator) {
+		this.nextAddRequiresSeparator = nextAddRequiresSeparator;
 	}
 }

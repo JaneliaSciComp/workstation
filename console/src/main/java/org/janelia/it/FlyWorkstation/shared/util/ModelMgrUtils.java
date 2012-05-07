@@ -7,6 +7,7 @@ import java.util.Set;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
@@ -74,7 +75,16 @@ public class ModelMgrUtils {
 		entity.setEntityType(newEntity.getEntityType());
 		entity.setUser(newEntity.getUser());
 		entity.setEntityData(newEntity.getEntityData());
-
+    }
+    
+    public static Entity createNewCommonRoot(String folderName) throws Exception {
+    	Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
+		newFolder.addAttributeAsTag(EntityConstants.ATTRIBUTE_COMMON_ROOT);
+		return ModelMgr.getModelMgr().saveOrUpdateEntity(newFolder);
     }
 
+    public static EntityData addChild(Entity parent, Entity child) throws Exception {
+		EntityData newEntityData = parent.addChildEntity(child);
+		return ModelMgr.getModelMgr().saveOrUpdateEntityData(newEntityData);
+    }
 }

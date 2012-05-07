@@ -203,6 +203,9 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			add(getCopyNameToClipboardItem());
 			add(getCopyIdToClipboardItem());
 			add(getDetailsItem());
+			
+			setNextAddRequiresSeparator(true);
+			add(getAddToRootFolderItem());
 			add(getRenameItem());
 			add(getDeleteItem());
 			add(getNewFolderItem());
@@ -223,22 +226,16 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 
 		public void addRootMenuItems() {
 
-			add(getTitleItem());
+			add(getRootItem());
 			add(getNewRootFolderItem());
 		}
-		
-		@Override
-		protected JMenuItem getDetailsItem() {
-	        JMenuItem detailsMenuItem = new JMenuItem("  View details");
-	        detailsMenuItem.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-			        new EntityDetailsDialog().showForEntityData(entityData);
-				}
-			});
-	        return detailsMenuItem;
-		}
 
+		protected JMenuItem getRootItem() {;
+	        JMenuItem titleMenuItem = new JMenuItem("Data");
+	        titleMenuItem.setEnabled(false);
+	        return titleMenuItem;
+		}
+		
 		private JMenuItem getNewFolderItem() {
 
 			if (!entity.getEntityType().getName().equals(EntityConstants.TYPE_FOLDER))
@@ -316,12 +313,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 
 					try {
 						// Update database
-						Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
-						newFolder.addAttributeAsTag(EntityConstants.ATTRIBUTE_COMMON_ROOT);
-						newFolder = ModelMgr.getModelMgr().saveOrUpdateEntity(newFolder);
-
-						// Update object model
-						addTopLevelEntity(getRootEntity(), newFolder);
+						Entity newFolder = ModelMgrUtils.createNewCommonRoot(folderName);
 
 						// Update Tree UI
 						final Long newFolderId = newFolder.getId();

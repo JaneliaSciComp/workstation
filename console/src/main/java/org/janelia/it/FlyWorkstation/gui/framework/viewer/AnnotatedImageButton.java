@@ -4,6 +4,7 @@ import java.awt.*;
 import java.awt.dnd.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.*;
@@ -107,14 +108,12 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
 				List<String> entityIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(iconDemoPanel.getSelectionCategory());				
 				JPopupMenu popupMenu = null;
 				if (entityIds.size()>1) {
-					popupMenu =  new JPopupMenu();
-
-					String name = "(Multiple selected)";
-			        JMenuItem titleMenuItem = new JMenuItem(name);
-			        titleMenuItem.setEnabled(false);
-			        popupMenu.add(titleMenuItem);
-			        
-			        // TODO: add a menu for doing things on multiple entities, such as removal
+					List<EntityData> entityDataList = new ArrayList<EntityData>();
+					for (String entityId : entityIds) {
+						entityDataList.add(iconDemoPanel.getEntityDataWithEntityId(new Long(entityId)));
+					}
+					popupMenu = new EntityContextMenu(entityDataList);
+					((EntityContextMenu)popupMenu).addMenuItems();
 				}
 				else {
 					String uniqueId = EntityOutline.getChildUniqueId(iconDemoPanel.getContextUniqueId(), entityData);

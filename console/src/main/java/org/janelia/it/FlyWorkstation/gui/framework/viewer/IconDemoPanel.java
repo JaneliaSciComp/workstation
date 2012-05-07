@@ -17,7 +17,6 @@ import java.util.concurrent.Callable;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
@@ -320,7 +319,7 @@ public class IconDemoPanel extends Viewer {
 			@Override
 			public void entityRemoved(long entityId) {
 				if (contextEntityData==null) return;
-				if (contextEntityData.getChildEntity().getId().equals(entityId)) {
+				if (contextEntityData.getChildEntity()!=null && contextEntityData.getChildEntity().getId().equals(entityId)) {
 					goParent();
 				}
 				else {
@@ -335,16 +334,17 @@ public class IconDemoPanel extends Viewer {
 
 			@Override
 			public void entityDataRemoved(long entityDataId) {
-				if (contextEntityData==null || contextEntityData.getId()==null) return;
-				if (contextEntityData.getId().equals(entityDataId)) {
+				if (contextEntityData==null) return;
+				if (contextEntityData.getId()!=null && contextEntityData.getId().equals(entityDataId)) {
 					goParent();
 				}
-				else {for(EntityData entityData : entityDatas) {
-					if (entityData.getId().equals(entityDataId)) {
-						refresh();
-						return;
+				else {
+					for(EntityData entityData : entityDatas) {
+						if (entityData.getId().equals(entityDataId)) {
+							refresh();
+							return;
+						}
 					}
-				}
 				}
 			}
 		});
