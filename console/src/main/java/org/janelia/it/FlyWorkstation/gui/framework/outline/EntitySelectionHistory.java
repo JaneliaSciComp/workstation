@@ -3,7 +3,6 @@ package org.janelia.it.FlyWorkstation.gui.framework.outline;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 
@@ -12,20 +11,12 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class EntityOutlineHistory {
+public class EntitySelectionHistory {
 
     private List<String> history = new ArrayList<String>();
     private int historyPosition = -1;
     
-	public EntityOutlineHistory() {
-        ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
-			@Override
-			public void entitySelected(String category, String entityId, boolean clearAll) {
-				if (EntitySelectionModel.CATEGORY_OUTLINE.equals(category)) {
-					pushHistory(entityId);
-				}
-			}
-        });
+	public EntitySelectionHistory() {
 	}
 	
 	public boolean isBackEnabled() {
@@ -52,7 +43,7 @@ public class EntityOutlineHistory {
     	}
     }
     
-    private synchronized void pushHistory(String uniqueId) {
+    public synchronized void pushHistory(String uniqueId) {
     	if (!history.isEmpty()) {
     		if (uniqueId.equals(history.get(historyPosition))) {
     			// already got this

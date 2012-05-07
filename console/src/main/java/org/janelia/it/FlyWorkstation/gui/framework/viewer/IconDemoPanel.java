@@ -17,6 +17,7 @@ import java.util.concurrent.Callable;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
@@ -63,9 +64,6 @@ public class IconDemoPanel extends Viewer {
 	private JPanel statusBar;
 	private JLabel statusLabel;
 	private Hud hud;
-	
-	// Category within the selection model
-	private String selectionCategory;
 
 	// The parent entity which we are displaying children for
 	private EntityData contextEntityData;
@@ -107,7 +105,7 @@ public class IconDemoPanel extends Viewer {
 				if (e.getKeyCode() == KeyEvent.VK_A && ((SystemInfo.isMac && e.isMetaDown()) || (e.isControlDown()))) {
 					for (EntityData entityData : entityDatas) {
 						Entity entity = entityData.getChildEntity(); 
-						ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(selectionCategory, entity.getId()+"", false);
+						ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), entity.getId()+"", false);
 					}
 					return;
 				}
@@ -123,7 +121,7 @@ public class IconDemoPanel extends Viewer {
 				// Enter with a single entity selected triggers an outline
 				// navigation
 				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-					List<String> selectedIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(selectionCategory);
+					List<String> selectedIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
 					if (selectedIds.size() != 1)
 						return;
 					Long selectedId = new Long(selectedIds.get(0));
@@ -157,7 +155,7 @@ public class IconDemoPanel extends Viewer {
 				if (entity != null) {
 					AnnotatedImageButton button = imagesPanel.getButtonByEntityId(entity.getId());
 					if (button != null) {
-						ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(selectionCategory, button.getEntity().getId()+"", clearAll);
+						ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), button.getEntity().getId()+"", clearAll);
 						imagesPanel.scrollEntityToCenter(entity);
 					}
 				}
@@ -171,9 +169,7 @@ public class IconDemoPanel extends Viewer {
 
 	public IconDemoPanel(final ViewerSplitPanel viewerContainer, final String selectionCategory) {
 
-		super(viewerContainer);
-		
-		this.selectionCategory = selectionCategory;
+		super(viewerContainer, selectionCategory);
 		
 		currImageRole = EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE;
 		
@@ -286,52 +282,70 @@ public class IconDemoPanel extends Viewer {
 			@Override
 			public void entityChanged(final long entityId) {
 				if (contextEntityData==null) return;
-				SimpleWorker worker = new SimpleWorker() {
-					@Override
-					protected void doStuff() throws Exception {
-						Entity newEntity = ModelMgr.getModelMgr().getEntityById(entityId+"");
+				if (contextEntityData.getChildEntity().getId().equals(entityId)) {
+					refresh();	
+				}
+				else {
+					SimpleWorker worker = new SimpleWorker() {
+						private Entity newEntity;
 						
-						if (contextEntityData.getChildEntity().getId().equals(entityId)) {
-							if (newEntity==null) {
-								goParent();
-							}
-							else {
-								refresh();	
-							}
-							return;
+						@Override
+						protected void doStuff() throws Exception {
+							newEntity = ModelMgr.getModelMgr().getEntityById(entityId+"");
 						}
 						
-						boolean refreshAll = false;
-						AnnotatedImageButton button = imagesPanel.getButtonByEntityId(entityId);
-						if (button != null) {
-							EntityData entityData = button.getEntityData();
-							if (entityData != null) {
-								if (newEntity==null) {
-									refreshAll = true;
-								}
-								else {
+						@Override
+						protected void hadSuccess() {
+							AnnotatedImageButton button = imagesPanel.getButtonByEntityId(entityId);
+							if (button != null) {
+								EntityData entityData = button.getEntityData();
+								if (entityData != null) {
 									ModelMgrUtils.updateEntity(button.getEntity(), newEntity);	
 									button.refresh(entityData);
 									button.setViewable(true);
 								}
 							}
 						}
-						if (refreshAll) {
-							refresh();	
+						
+						@Override
+						protected void hadError(Throwable error) {
+							SessionMgr.getSessionMgr().handleException(error);
 						}
-					}
+					};
 					
-					@Override
-					protected void hadSuccess() {
+					worker.execute();
+				}
+			}
+			
+			@Override
+			public void entityRemoved(long entityId) {
+				if (contextEntityData==null) return;
+				if (contextEntityData.getChildEntity().getId().equals(entityId)) {
+					goParent();
+				}
+				else {
+					for(Entity entity : entities) {
+						if (entity.getId().equals(entityId)) {
+							refresh();
+							return;
+						}
+					}	
+				}
+			}
+
+			@Override
+			public void entityDataRemoved(long entityDataId) {
+				if (contextEntityData==null || contextEntityData.getId()==null) return;
+				if (contextEntityData.getId().equals(entityDataId)) {
+					goParent();
+				}
+				else {for(EntityData entityData : entityDatas) {
+					if (entityData.getId().equals(entityDataId)) {
+						refresh();
+						return;
 					}
-					
-					@Override
-					protected void hadError(Throwable error) {
-						SessionMgr.getSessionMgr().handleException(error);
-					}
-				};
-				
-				worker.execute();
+				}
+				}
 			}
 		});
 
@@ -416,12 +430,12 @@ public class IconDemoPanel extends Viewer {
 
 	private void updateStatusBar() {
 		EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
-		int s = esm.getSelectedEntitiesIds(selectionCategory).size();
+		int s = esm.getSelectedEntitiesIds(getSelectionCategory()).size();
 		statusLabel.setText(s+" of "+entityDatas.size()+" selected");
 	}
 	
 	private void updateHud() {
-		List<String> selectedIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(selectionCategory);
+		List<String> selectedIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
 		if (selectedIds.size() != 1) {
 			hud.hideDialog();
 			return;
@@ -440,24 +454,37 @@ public class IconDemoPanel extends Viewer {
 	}
 	
 	private synchronized void goBack() {
-		EntityOutlineHistory history = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutlineHistory();
-		history.goBack();
+		final EntitySelectionHistory history = getEntitySelectionHistory();
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				history.goBack();
+			}
+		});
 	}
 
 	private synchronized void goForward() {
-		EntityOutlineHistory history = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutlineHistory();
-		history.goForward();
+		final EntitySelectionHistory history = getEntitySelectionHistory();
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				history.goForward();
+			}
+		});
 	}
 
 	private synchronized void goParent() {
-		String selectedUniqueId = ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityId(EntitySelectionModel.CATEGORY_OUTLINE);
-		if (Utils.isEmpty(selectedUniqueId)) return;
-		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, Utils.getParentIdFromUniqueId(selectedUniqueId), true);
+		final String selectedUniqueId = contextUniqueId;
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, Utils.getParentIdFromUniqueId(selectedUniqueId), true);
+			}
+		});
 	}
 
 	private boolean isParentEnabled() {
-		String selectedUniqueId = ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityId(EntitySelectionModel.CATEGORY_OUTLINE);
-		return (!Utils.isEmpty(Utils.getParentIdFromUniqueId(selectedUniqueId)));
+		return (!Utils.isEmpty(Utils.getParentIdFromUniqueId(contextUniqueId)));
 	}
 	
 	private JToolBar createToolbar() {
@@ -476,6 +503,7 @@ public class IconDemoPanel extends Viewer {
 				goBack();
 			}
 		});
+		prevButton.addMouseListener(new MouseForwarder(toolBar, "PrevButton->JToolBar"));
 		toolBar.add(prevButton);
 
 		nextButton = new JButton();
@@ -487,6 +515,7 @@ public class IconDemoPanel extends Viewer {
 				goForward();
 			}
 		});
+		nextButton.addMouseListener(new MouseForwarder(toolBar, "NextButton->JToolBar"));
 		toolBar.add(nextButton);
 
 		parentButton = new JButton();
@@ -498,6 +527,7 @@ public class IconDemoPanel extends Viewer {
 				goParent();
 			}
 		});
+		parentButton.addMouseListener(new MouseForwarder(toolBar, "ParentButton->JToolBar"));
 		toolBar.add(parentButton);
 
 		toolBar.addSeparator();
@@ -515,6 +545,7 @@ public class IconDemoPanel extends Viewer {
 				imagesPanel.loadUnloadImages();
 			}
 		});
+		showTitlesButton.addMouseListener(new MouseForwarder(toolBar, "ShowTitlesButton->JToolBar"));
 		toolBar.add(showTitlesButton);
 		
 		showTagsButton = new JToggleButton();
@@ -530,6 +561,7 @@ public class IconDemoPanel extends Viewer {
 				imagesPanel.loadUnloadImages();
 			}
 		});
+		showTagsButton.addMouseListener(new MouseForwarder(toolBar, "ShowTagsButton->JToolBar"));
 		toolBar.add(showTagsButton);
 
 		toolBar.addSeparator();
@@ -543,6 +575,7 @@ public class IconDemoPanel extends Viewer {
 				showPopupUserMenu();
 			}
 		});
+		userButton.addMouseListener(new MouseForwarder(toolBar, "UserButton->JToolBar"));
 		toolBar.add(userButton);
 		
 		toolBar.addSeparator();
@@ -556,6 +589,7 @@ public class IconDemoPanel extends Viewer {
 				showPopupImageRoleMenu();
 			}
 		});
+		imageRoleButton.addMouseListener(new MouseForwarder(toolBar, "ImageRoleButton->JToolBar"));
 		toolBar.add(imageRoleButton);
 
 		toolBar.addSeparator();
@@ -565,6 +599,7 @@ public class IconDemoPanel extends Viewer {
 		imageSizeSlider.setFocusable(false);
 		imageSizeSlider.setMaximumSize(new Dimension(200, Integer.MAX_VALUE));
 		imageSizeSlider.setToolTipText("Image size percentage");
+		imageSizeSlider.addMouseListener(new MouseForwarder(toolBar, "ImageSizeSlider->JToolBar"));
 		toolBar.add(imageSizeSlider);
 
 		return toolBar;
@@ -655,6 +690,7 @@ public class IconDemoPanel extends Viewer {
 		this.contextUniqueId = uniqueId;
 		Entity entity = contextEntityData.getChildEntity();
 
+		getEntitySelectionHistory().pushHistory(contextUniqueId);
 		setTitle(entity.getName());
 		
 		List<EntityData> eds = entity.getOrderedEntityData();
@@ -690,7 +726,7 @@ public class IconDemoPanel extends Viewer {
 		imagesPanel.cancelAllLoads();
 
 		// Update back/forward navigation
-		EntityOutlineHistory history = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutlineHistory();
+		EntitySelectionHistory history = getEntitySelectionHistory();
 		prevButton.setEnabled(history.isBackEnabled());
 		nextButton.setEnabled(history.isNextEnabled());
 		parentButton.setEnabled(isParentEnabled());
@@ -771,7 +807,7 @@ public class IconDemoPanel extends Viewer {
 				imagesPanel.setScrollLoadingEnabled(true);
 				imagesPanel.loadUnloadImages();
 				// Select the first entity
-				ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(selectionCategory, entityDatas.get(0).getId()+"", true);
+				ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), entities.get(0).getId()+"", true);
 			}
 		});
 	}
@@ -888,6 +924,8 @@ public class IconDemoPanel extends Viewer {
 	@Override
 	public void refresh() {
 
+		if (contextEntityData==null) return;
+		
 		SimpleWorker refreshWorker = new SimpleWorker() {
 
 			EntityData entityData = contextEntityData;
@@ -994,7 +1032,7 @@ public class IconDemoPanel extends Viewer {
 	}
 
 	public synchronized Entity getLastSelectedEntity() {
-		String entityId = ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityId(selectionCategory);
+		String entityId = ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityId(getSelectionCategory());
 		if (entityId == null)
 			return null;
 		AnnotatedImageButton button = imagesPanel.getButtonByEntityId(new Long(entityId));
@@ -1046,10 +1084,6 @@ public class IconDemoPanel extends Viewer {
 
 	public Annotations getAnnotations() {
 		return annotations;
-	}
-
-	public String getSelectionCategory() {
-		return selectionCategory;
 	}
 
 	public EntityData getContextEntityData() {

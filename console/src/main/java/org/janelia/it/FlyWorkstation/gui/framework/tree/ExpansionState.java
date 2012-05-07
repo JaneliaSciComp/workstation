@@ -28,6 +28,17 @@ public class ExpansionState {
 	
 	public void setSelectedUniqueId(String uniqueId) {
 		this.selected = uniqueId;
+		// In case you want to select something that was not expanded already...
+		String[] pathParts = selected.split("/");
+		String path = "";
+		for(int i=0; i<pathParts.length; i+=2) {
+			path += "/";
+			if (!Utils.isEmpty(pathParts[i])) {
+				path += pathParts[i]+"/";
+			}
+			path += pathParts[i+1];
+			expanded.add(path);
+		}
 	}
 	
     public void storeExpansionState(DynamicTree dynamicTree) {

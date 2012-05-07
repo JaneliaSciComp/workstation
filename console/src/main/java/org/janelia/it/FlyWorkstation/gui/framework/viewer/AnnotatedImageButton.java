@@ -131,23 +131,10 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
 				if (e.isConsumed()) return;
 				
 				EntityData contextEd = iconDemoPanel.getContextEntityData();
-				if (contextEd==entityData) return;
+				if (contextEd==null || contextEd==entityData) return;
 				
 				// Double-clicking an image in gallery view triggers an outline selection
             	String uniqueId = EntityOutline.getChildUniqueId(iconDemoPanel.getContextUniqueId(), entityData);
-            	
-//            	if (Utils.isEmpty(uniqueId)) {
-//            		Set<DefaultMutableTreeNode> matchingNodes = entityOutline.getNodesById(entity.getId());
-//            		if (matchingNodes==null || matchingNodes.isEmpty()) {
-//            			System.out.println("No nodes in the tree match entity id="+entity.getId()+".");
-//            			return;
-//            		}
-//            		if (matchingNodes.size()>1) {
-//            			System.out.println("More than one node with the id="+entity.getId()+". Picking one at random!");
-//            		}
-//            		DefaultMutableTreeNode node = matchingNodes.iterator().next();
-//            		uniqueId = entityOutline.getDynamicTree().getUniqueId(node);
-//            	}
             	
             	if (Utils.isEmpty(uniqueId)) return;
         		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueId, true);	

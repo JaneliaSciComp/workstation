@@ -103,7 +103,6 @@ public class Browser extends JFrame implements Cloneable {
     //    private FileOutline fileOutline;
     private SessionOutline sessionOutline;
     private EntityOutline entityOutline;
-    private EntityOutlineHistory entityOutlineHistory;
     private TaskOutline taskOutline;
     private OntologyOutline ontologyOutline;
     private AnnotationSessionPropertyDialog annotationSessionPropertyPanel;
@@ -243,8 +242,6 @@ public class Browser extends JFrame implements Cloneable {
 				return rootList;
 			}
 		};
-		
-		entityOutlineHistory = new EntityOutlineHistory();
 		
         taskOutline = new TaskOutline(this);
         
@@ -1250,10 +1247,6 @@ public class Browser extends JFrame implements Cloneable {
 
     public EntityOutline getEntityOutline() {
         return entityOutline;
-    }
-
-    public EntityOutlineHistory getEntityOutlineHistory() {
-        return entityOutlineHistory;
     }
     
     public OntologyOutline getOntologyOutline() {

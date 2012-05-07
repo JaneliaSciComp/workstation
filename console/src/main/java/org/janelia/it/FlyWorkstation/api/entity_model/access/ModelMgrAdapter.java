@@ -41,6 +41,16 @@ public class ModelMgrAdapter implements ModelMgrObserver {
 	}
 	
 	@Override
+    public void entityRemoved(long entityId) {
+    	
+    }
+	
+    @Override
+    public void entityDataRemoved(long entityDataId) {
+    	
+    }
+    
+	@Override
 	public void entityViewRequested(long entityId) {
 	}
 

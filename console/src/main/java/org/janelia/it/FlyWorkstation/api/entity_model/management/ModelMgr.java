@@ -306,6 +306,18 @@ public class ModelMgr {
         	listener.entityChanged(entityId);
         }
     }
+
+    public void notifyEntityRemoved(Long entityId) {
+        for (ModelMgrObserver listener : modelMgrObservers) {
+        	listener.entityRemoved(entityId);
+        }
+    }
+
+    public void notifyEntityDataRemoved(Long entityDataId) {
+        for (ModelMgrObserver listener : modelMgrObservers) {
+        	listener.entityDataRemoved(entityDataId);
+        }
+    }
     
     public boolean notifyEntityViewRequestedInNeuronAnnotator(Long entityId) {
     	if (SessionMgr.getSessionMgr().getExternalClientsByName(NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
@@ -386,13 +398,20 @@ public class ModelMgr {
     }
 
     public boolean deleteEntityById(Long entityId) {
-        return FacadeManager.getFacadeManager().getEntityFacade().deleteEntityById(entityId);
+        boolean success = FacadeManager.getFacadeManager().getEntityFacade().deleteEntityById(entityId);
+        notifyEntityRemoved(entityId);
+        return success;
     }
 
+    public void removeEntityData(EntityData ed) throws Exception {
+        FacadeManager.getFacadeManager().getEntityFacade().removeEntityData(ed);
+        notifyEntityDataRemoved(ed.getId());
+    }
+    
     public void deleteEntityTree(Long id) {
         try {
             FacadeManager.getFacadeManager().getEntityFacade().deleteEntityTree(id);
-            notifyEntityChanged(id);
+            notifyEntityRemoved(id);
         }
         catch (Exception e) {
             handleException(e);
@@ -506,11 +525,6 @@ public class ModelMgr {
     	EntityData ed = FacadeManager.getFacadeManager().getEntityFacade().addEntityToParent(parent, entity, index, attrName);
     	notifyEntityChanged(parent.getId());
     	return ed;
-    }
-
-    public void removeEntityData(EntityData ed) throws Exception {
-        FacadeManager.getFacadeManager().getEntityFacade().removeEntityData(ed);
-        notifyEntityChanged(ed.getChildEntity().getId());
     }
     
     public List<Entity> getAnnotationsForEntity(Long entityId) throws Exception {

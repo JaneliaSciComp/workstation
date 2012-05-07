@@ -111,6 +111,20 @@ public class EmbeddedAxisServer implements ModelMgrObserver {
 		parameters.put("entityId",entityId);
 		SessionMgr.getSessionMgr().sendMessageToExternalClients("entityChanged", parameters);
 	}
+
+	@Override
+    public void entityRemoved(long entityId) {
+		Map<String,Object> parameters = new LinkedHashMap<String,Object>();
+		parameters.put("entityId",entityId);
+		SessionMgr.getSessionMgr().sendMessageToExternalClients("entityRemoved", parameters);
+    }
+
+	@Override
+    public void entityDataRemoved(long entityDataId) {
+		Map<String,Object> parameters = new LinkedHashMap<String,Object>();
+		parameters.put("entityDataId",entityDataId);
+		SessionMgr.getSessionMgr().sendMessageToExternalClients("entityDataRemoved", parameters);
+    }
 	
 	@Override
 	public void entityViewRequested(long entityId) {

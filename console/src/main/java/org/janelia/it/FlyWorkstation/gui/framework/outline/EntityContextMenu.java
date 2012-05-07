@@ -6,6 +6,7 @@ import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.List;
 
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -22,6 +23,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
+import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.PreferenceConstants;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -37,15 +39,15 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
 public class EntityContextMenu extends JPopupMenu {
 
 	protected static final Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
-	protected EntityData entityData;
-	protected Entity entity; // just a shortcut to entityData.getChildEntity()
-	protected String uniqueId;
+	protected final EntityData entityData;
+	protected final Entity entity; // just a shortcut to entityData.getChildEntity()
+	protected final String uniqueId;
 	protected boolean nextAddRequiresSeparator = false;
 	
 	public EntityContextMenu(EntityData entityData, String uniqueId) {
 		super();
 		this.entityData = entityData;
-		this.entity = entityData.getChildEntity();
+		this.entity = entityData!=null ? entityData.getChildEntity() : null;
 		this.uniqueId = uniqueId;
 	}
 	
@@ -72,6 +74,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getCopyIdToClipboardItem());
         add(getDetailsItem());
         add(getRenameItem());
+		add(getDeleteItem());
         setNextAddRequiresSeparator(true);
         add(getOpenInSecondViewerItem());
     	add(getOpenInFinderItem());
@@ -153,6 +156,82 @@ public class EntityContextMenu extends JPopupMenu {
         return renameItem;
 	}
 
+	protected JMenuItem getDeleteItem() {
+
+		JMenuItem deleteItem = new JMenuItem("  Remove '"+entity.getName()+"'");
+		deleteItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent actionEvent) {
+
+				final List<EntityData> eds = ModelMgr.getModelMgr().getParentEntityDatas(entity.getId());
+
+				boolean removeReference = true;
+				boolean removeCommonRootTag = false;
+				
+				if (eds.size() <= 1 && entity.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+					// Make sure its not a reference to a common root
+					if (entity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)==null || eds.isEmpty()) {
+						int deleteConfirmation = JOptionPane.showConfirmDialog(browser,
+								"Are you sure you want to permanently delete '" + entity.getName()
+										+ "' and all orphaned items underneath it?", "Delete",
+								JOptionPane.YES_NO_OPTION);
+						if (deleteConfirmation != 0) {
+							return;
+						}
+						removeReference = false;
+					}
+					else if (entity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)!=null && entityData.getId()==null) {
+						removeCommonRootTag = true;
+					}
+				}
+
+				Utils.setWaitingCursor(browser);
+				
+				final boolean removeCommonRootTagFinal = removeCommonRootTag;
+				final boolean removeReferenceFinal = removeReference;
+				SimpleWorker removeTask = new SimpleWorker() {
+
+					@Override
+					protected void doStuff() throws Exception {
+						// Update database
+						if (removeCommonRootTagFinal) {
+							EntityData rootTagEd = entity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT);
+							ModelMgr.getModelMgr().removeEntityData(rootTagEd);
+						}
+						else if (removeReferenceFinal) {
+							ModelMgr.getModelMgr().removeEntityData(entityData);
+						} 
+						else {
+							ModelMgr.getModelMgr().deleteEntityTree(entity.getId());
+						}
+					}
+
+					@Override
+					protected void hadSuccess() {
+						if (removeCommonRootTagFinal) {
+							browser.getEntityOutline().refresh();
+						}
+						Utils.setDefaultCursor(browser);
+					}
+
+					@Override
+					protected void hadError(Throwable error) {
+						Utils.setDefaultCursor(browser);
+						error.printStackTrace();
+						JOptionPane.showMessageDialog(browser, "Error deleting entity", "Error",
+								JOptionPane.ERROR_MESSAGE);
+					}
+				};
+
+				removeTask.execute();
+			}
+		});
+
+		if (entityData==null || !entityData.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+			deleteItem.setEnabled(false);
+		}
+		return deleteItem;
+	}
+	
 	protected JMenuItem getOpenInSecondViewerItem() {
 		if (Utils.isEmpty(uniqueId)) return null;
         JMenuItem copyMenuItem = new JMenuItem("  Open in second viewer");
@@ -165,6 +244,8 @@ public class EntityContextMenu extends JPopupMenu {
 					SessionMgr.getBrowser().getViewersPanel().setSecViewer(secViewer);
 				}
 	            ((IconDemoPanel)secViewer).loadEntity(entityData, uniqueId);
+	            secViewer.setAsActive();
+	            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueId, true);
 			}
 		});
         return copyMenuItem;

@@ -150,7 +150,7 @@ public class ViewerSplitPanel extends JPanel {
 		private Viewer viewer;
 		
 		public ViewerPane(boolean showHideButton) {
-
+			
 			setLayout(new BorderLayout());
 			
 	        titleLabel = new JLabel(" ");

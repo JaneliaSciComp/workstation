@@ -12,6 +12,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
@@ -67,19 +68,16 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 					@Override
 					protected void doStuff() throws Exception {
 						Entity newEntity = ModelMgr.getModelMgr().getEntityById(entityId+"");
-						if (newEntity==null) {
-							return;
-						}
 						// Update all the entities that are affected
 						for (Entity entity : getEntitiesById(entityId)) {
 							ModelMgrUtils.updateEntity(entity, newEntity);
 						}
-						revalidate();
-						repaint();
 					}
 					
 					@Override
 					protected void hadSuccess() {
+						revalidate();
+						repaint();
 					}
 					
 					@Override
@@ -89,6 +87,36 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 				};
 				
 				worker.execute();
+			}
+
+			@Override
+			public void entityRemoved(long entityId) {
+				Set<DefaultMutableTreeNode> nodes = getNodesByEntityId(entityId);
+				if (nodes == null) return;
+				for(DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
+					DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
+					Entity parent = getEntity(parentNode);
+					EntityData entityData = getEntityData(node);
+					if (parent!=null) {
+						parent.getEntityData().remove(entityData);
+					}
+					removeNode(node);	
+				}
+			}
+
+			@Override
+			public void entityDataRemoved(long entityDataId) {
+				Set<DefaultMutableTreeNode> nodes = getNodesByEntityDataId(entityDataId);
+				if (nodes == null) return;
+				for(DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
+					DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
+					Entity parent = getEntity(parentNode);
+					EntityData entityData = getEntityData(node);
+					if (parent!=null) {
+						parent.getEntityData().remove(entityData);
+					}
+					removeNode(node);	
+				}
 			}
 		});
 	}
@@ -211,88 +239,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	        return detailsMenuItem;
 		}
 
-		private JMenuItem getDeleteItem() {
-
-			JMenuItem deleteItem = new JMenuItem("  Remove '"+entity.getName()+"'");
-			deleteItem.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent actionEvent) {
-
-					final List<EntityData> eds = ModelMgr.getModelMgr().getParentEntityDatas(entity.getId());
-
-					boolean removeReference = true;
-					
-					if (eds.size() <= 1 && entity.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
-						// Make sure its not a reference to a common root
-						if (entity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)==null || eds.isEmpty()) {
-							int deleteConfirmation = JOptionPane.showConfirmDialog(browser,
-									"Are you sure you want to permanently delete '" + entity.getName()
-											+ "' and all orphaned items underneath it?", "Delete",
-									JOptionPane.YES_NO_OPTION);
-							if (deleteConfirmation != 0) {
-								return;
-							}
-							removeReference = false;
-						}
-						else if (entity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)!=null && entityData.getId()==null) {
-							JOptionPane.showMessageDialog(browser, "Cannot delete this root entity because there are other references to it", "Error",
-									JOptionPane.ERROR_MESSAGE);
-							return;
-						}
-					}
-
-					Utils.setWaitingCursor(browser);
-
-					final boolean removeRefFinal = removeReference;
-					SimpleWorker removeTask = new SimpleWorker() {
-
-						@Override
-						protected void doStuff() throws Exception {
-							// Update database
-							if (removeRefFinal) {
-								ModelMgr.getModelMgr().removeEntityData(entityData);
-							} 
-							else {
-								ModelMgr.getModelMgr().deleteEntityTree(entity.getId());
-							}
-						}
-
-						@Override
-						protected void hadSuccess() {
-							Utils.setDefaultCursor(browser);
-
-							DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
-							Entity parent = getEntity(parentNode);
-
-							// Update object model
-							parent.getEntityData().remove(entityData);
-
-							// Update Tree UI
-							selectedTree.removeNode(node);
-							
-							// Update the viewer
-//							selectNode(null);
-						}
-
-						@Override
-						protected void hadError(Throwable error) {
-							Utils.setDefaultCursor(browser);
-							error.printStackTrace();
-							JOptionPane.showMessageDialog(browser, "Error deleting entity", "Error",
-									JOptionPane.ERROR_MESSAGE);
-						}
-
-					};
-
-					removeTask.execute();
-				}
-			});
-
-			if (!entityData.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
-				deleteItem.setEnabled(false);
-			}
-			return deleteItem;
-		}
-
 		private JMenuItem getNewFolderItem() {
 
 			if (!entity.getEntityType().getName().equals(EntityConstants.TYPE_FOLDER))
@@ -313,7 +259,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 						// Update database
 						Entity parentFolder = entity;
 						Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
-						EntityData newData = ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder,
+						final EntityData newData = ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder,
 								parentFolder.getMaxOrderIndex() + 1, EntityConstants.ATTRIBUTE_ENTITY);
 
 						// Update these references to use our local objects, so that the object graph is consistent
@@ -325,8 +271,21 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 
 						// Update Tree UI
 						addNodes(node, newData);
-
-						selectedTree.expand(node, true);
+						
+//						final String childId = EntityTree.getChildUniqueId(selectedTree.getUniqueId(node), newData);
+						final ExpansionState expansionState = new ExpansionState();
+						expansionState.storeExpansionState(getDynamicTree());
+						expansionState.setSelectedUniqueId(selectedTree.getUniqueId(node));
+						
+						refresh(true, expansionState, new Callable<Void>() {
+							@Override
+							public Void call() throws Exception {
+								// TODO: can't do this because this callback is executed after the refresh, not after the
+								// tree expansion. In the future, this should be fixed.
+//								loadEntityInViewer(childId);
+								return null;
+							}
+						});
 
 					} catch (Exception ex) {
 						ex.printStackTrace();
@@ -357,18 +316,19 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 
 					try {
 						// Update database
-						final Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
+						Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
 						newFolder.addAttributeAsTag(EntityConstants.ATTRIBUTE_COMMON_ROOT);
-						ModelMgr.getModelMgr().saveOrUpdateEntity(newFolder);
+						newFolder = ModelMgr.getModelMgr().saveOrUpdateEntity(newFolder);
 
 						// Update object model
 						addTopLevelEntity(getRootEntity(), newFolder);
 
 						// Update Tree UI
+						final Long newFolderId = newFolder.getId();
 						refresh(true, new Callable<Void>() {
 							@Override
 							public Void call() throws Exception {
-								selectEntityByUniqueId("/e_"+newFolder.getId());
+								selectEntityByUniqueId("/e_"+newFolderId);
 								return null;
 							}
 						});
@@ -488,14 +448,17 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	public void refresh() {
 		refresh(true, null);
 	}
-	
+
 	public void refresh(final boolean restoreState, final Callable<Void> success) {
+		final ExpansionState expansionState = new ExpansionState();
+		expansionState.storeExpansionState(getDynamicTree());
+		refresh(restoreState, expansionState, success);
+	}
+	
+	public void refresh(final boolean restoreState, final ExpansionState expansionState, final Callable<Void> success) {
 		
 		showLoadingIndicator();
 		
-		final ExpansionState expansionState = new ExpansionState();
-		expansionState.storeExpansionState(getDynamicTree());
-
 		SimpleWorker entityOutlineLoadingWorker = new SimpleWorker() {
 
 			private List<Entity> rootList;
@@ -587,8 +550,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	
 	private void loadEntityInViewer(String uniqueId) {
 		
-		// Make sure this load is still relevant. User could have selected a new node in the meantime. 
-		if (uniqueId==null || !uniqueId.equals(currUniqueId)) return;
+		if (uniqueId==null) return;
 		
 		DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
 		if (node==null) return;

@@ -48,7 +48,7 @@ public class ModelMgrUtils {
     	return entity.getUser().getUserLogin().equals(SessionMgr.getUsername());
     }
     
-    public static void updateEntity(Entity entity, Entity newEntity) throws Exception {
+    public static void updateEntity(Entity entity, Entity newEntity) {
 	
 		// Map old children onto new EDs
 		Map<Long,Entity> childMap = new HashMap<Long,Entity>();
@@ -57,13 +57,11 @@ public class ModelMgrUtils {
 				childMap.put(ed.getChildEntity().getId(), ed.getChildEntity());
 			}
 		}
-		for(EntityData ed : newEntity.getEntityData()) {
+		entity.setEntityData(newEntity.getEntityData());
+		for(EntityData ed : entity.getEntityData()) {
 			if (ed.getChildEntity()!=null) {
 				Entity child = childMap.get(ed.getChildEntity().getId());
-				if (child==null) {
-					System.out.println("Warning: no existing child found with id="+ed.getChildEntity().getId());
-				}
-				else {
+				if (child!=null) {
 					ed.setChildEntity(child);
 				}
 			}

@@ -24,6 +24,10 @@ public interface ModelMgrObserver {
 
     public void entityChanged(long entityId);
     
+    public void entityRemoved(long entityId);
+    
+    public void entityDataRemoved(long entityDataId);
+    
     public void entityViewRequested(long entityId);
     
     public void annotationsChanged(long entityId);    

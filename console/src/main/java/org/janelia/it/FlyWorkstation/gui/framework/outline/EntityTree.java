@@ -38,6 +38,7 @@ public class EntityTree extends JPanel {
     private SimpleWorker loadingWorker;
 	private EntityData rootEntityData;
     
+	private Map<Long,Set<DefaultMutableTreeNode>> entityDataIdToNodeMap = new HashMap<Long,Set<DefaultMutableTreeNode>>();
 	private Map<Long,Set<DefaultMutableTreeNode>> entityIdToNodeMap = new HashMap<Long,Set<DefaultMutableTreeNode>>();
 	private Map<String,DefaultMutableTreeNode> uniqueIdToNodeMap = new HashMap<String,DefaultMutableTreeNode>();
 	
@@ -124,6 +125,7 @@ public class EntityTree extends JPanel {
 
     public void initializeTree(final Entity rootEntity) {
 
+    	entityDataIdToNodeMap.clear();
         entityIdToNodeMap.clear();
         uniqueIdToNodeMap.clear();
         
@@ -379,12 +381,36 @@ public class EntityTree extends JPanel {
     }
 
     /**
+     * Get all the entity data objects in the tree with the given id.
+     * @param entityId
+     * @return
+     */
+    public Set<EntityData> getEntityDatasById(Long entityDataId) {
+    	Set<DefaultMutableTreeNode> nodes = entityDataIdToNodeMap.get(entityDataId);
+    	Set<EntityData> entityDatas = new HashSet<EntityData>();
+    	if (nodes==null) return entityDatas;
+    	for(DefaultMutableTreeNode node : nodes) {
+    		entityDatas.add(getEntityData(node));
+    	}
+    	return entityDatas;
+    }
+
+    /**
      * Get all the nodes in the tree with the given entity id.
      * @param entityId
      * @return
      */
-    public Set<DefaultMutableTreeNode> getNodesById(Long entityId) {
+    public Set<DefaultMutableTreeNode> getNodesByEntityId(Long entityId) {
     	return entityIdToNodeMap.get(entityId);
+    }
+    
+    /**
+     * Get all the nodes in the tree with the given entity data id.
+     * @param entityDataId
+     * @return
+     */
+    public Set<DefaultMutableTreeNode> getNodesByEntityDataId(Long entityDataId) {
+    	return entityDataIdToNodeMap.get(entityDataId);
     }
 
 	public static String getChildUniqueId(String parentUniqueId, EntityData entityData) {
@@ -464,14 +490,21 @@ public class EntityTree extends JPanel {
 //        System.out.println(indent+""+entity.getName()+" (uniqueId="+uniqueId+")");
         uniqueIdToNodeMap.put(uniqueId, newNode);
         
-        // Add to duplicate map
+        // Add to duplicate maps
         Set<DefaultMutableTreeNode> nodes = entityIdToNodeMap.get(entity.getId());
         if (nodes==null) {
         	nodes = new HashSet<DefaultMutableTreeNode>();
         	entityIdToNodeMap.put(entity.getId(), nodes);
         }
         nodes.add(newNode);
-
+        
+        nodes = entityDataIdToNodeMap.get(newEd.getId());
+        if (nodes==null) {
+        	nodes = new HashSet<DefaultMutableTreeNode>();
+        	entityDataIdToNodeMap.put(newEd.getId(), nodes);
+        }
+        nodes.add(newNode);
+        
         // Get children
         
         List<EntityData> dataList = entity.getOrderedEntityData();
@@ -507,6 +540,23 @@ public class EntityTree extends JPanel {
     	// Add children
         
         addChildren(newNode, childDataList, nextVisitedEds, level);
+    }
+
+    protected void removeNode(DefaultMutableTreeNode node) {
+
+    	EntityData entityData = getEntityData(node);
+    	Entity entity = getEntity(node);
+
+    	// Remove from all maps
+        String uniqueId = selectedTree.getUniqueId(node);
+        uniqueIdToNodeMap.remove(uniqueId);
+        Set<DefaultMutableTreeNode> nodes = entityIdToNodeMap.get(entity.getId());
+        nodes.remove(node);
+        nodes = entityDataIdToNodeMap.get(entityData.getId());
+        nodes.remove(node);
+        
+        // Remove from the tree
+        getDynamicTree().removeNode(node);
     }
     
     private int addChildren(DefaultMutableTreeNode parentNode, List<EntityData> dataList) {

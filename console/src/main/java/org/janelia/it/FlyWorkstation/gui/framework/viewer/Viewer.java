@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import javax.swing.JPanel;
 
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntitySelectionHistory;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
 
 /**
@@ -12,17 +13,27 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
 public abstract class Viewer extends JPanel implements Refreshable {
 
 	private ViewerSplitPanel viewerContainer;
+	private String selectionCategory;
+	private EntitySelectionHistory entitySelectionHistory;
 	
-	public Viewer(ViewerSplitPanel viewerContainer) {
+	public Viewer(ViewerSplitPanel viewerContainer, String selectionCategory) {
 		this.viewerContainer = viewerContainer;
+		this.selectionCategory = selectionCategory;
+		this.entitySelectionHistory = new EntitySelectionHistory();
 	}
 	
 	/**
 	 * Returns the selection category of this viewer in the EntitySelectionModel.
 	 * @return EntitySelectionModel.CATEGORY_*
 	 */
-	public abstract String getSelectionCategory();
-	
+	public String getSelectionCategory() {
+		return selectionCategory;
+	}
+
+	public EntitySelectionHistory getEntitySelectionHistory() {
+		return entitySelectionHistory;
+	}
+
 	public void setAsActive() {
 		viewerContainer.setAsActive(this);
 	}

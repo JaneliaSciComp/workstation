@@ -70,7 +70,17 @@ public class ConsoleObserverImpl implements ModelMgrObserver  {
     public void entityChanged(long entityId) {
 		throw e;
 	}
-	
+
+	@Override
+    public void entityRemoved(long entityId) {
+		throw e;
+    }
+
+	@Override
+    public void entityDataRemoved(long entityDataId) {
+		throw e;
+    }
+    
 	@Override
 	public void entityViewRequested(long entityId) {
 		throw e;
