@@ -193,7 +193,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		private DefaultMutableTreeNode node;
 
 		public EntityOutlineContextMenu(DefaultMutableTreeNode node, String uniqueId) {
-			super(getEntityData(node), uniqueId);
+			super(new RootedEntity(uniqueId, getEntityData(node)));
 			this.node = node;
 		}
 
@@ -237,8 +237,9 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		}
 		
 		private JMenuItem getNewFolderItem() {
-
-			if (!entity.getEntityType().getName().equals(EntityConstants.TYPE_FOLDER))
+			if (multiple) return null;
+			
+			if (!rootedEntity.getEntity().getEntityType().getName().equals(EntityConstants.TYPE_FOLDER))
 				return null;
 
 			JMenuItem newFolderItem = new JMenuItem("  Create new folder");
@@ -247,14 +248,14 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 
 					// Add button clicked
 					String folderName = (String) JOptionPane.showInputDialog(browser, "Folder Name:\n",
-							"Create folder under " + entity.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
+							"Create folder under " + rootedEntity.getEntity().getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
 					if ((folderName == null) || (folderName.length() <= 0)) {
 						return;
 					}
 
 					try {
 						// Update database
-						Entity parentFolder = entity;
+						Entity parentFolder = rootedEntity.getEntity();
 						Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
 						final EntityData newData = ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder,
 								parentFolder.getMaxOrderIndex() + 1, EntityConstants.ATTRIBUTE_ENTITY);
@@ -292,14 +293,15 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 				}
 			});
 
-			if (!entity.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+			if (!rootedEntity.getEntity().getUser().getUserLogin().equals(SessionMgr.getUsername())) {
 				newFolderItem.setEnabled(false);
 			}
 			return newFolderItem;
 		}
 
 		private JMenuItem getNewRootFolderItem() {
-
+			if (multiple) return null;
+			
 			JMenuItem newFolderItem = new JMenuItem("  Create new top-level folder");
 			newFolderItem.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent actionEvent) {
@@ -337,7 +339,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		}
 
 		private JMenuItem getCreateSessionItem() {
-
+			if (multiple) return null;
 			if (node.isRoot()) return null;
 			
 			JMenuItem newFragSessionItem = new JMenuItem("  Create annotation session...");

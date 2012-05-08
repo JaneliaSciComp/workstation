@@ -114,7 +114,7 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
 					((EntityContextMenu)popupMenu).addMenuItems();
 				}
 				else {
-					popupMenu = new EntityContextMenu(rootedEntity.getEntityData(), rootedEntity.getUniqueId());
+					popupMenu = new EntityContextMenu(rootedEntity);
 		            ((EntityContextMenu)popupMenu).addMenuItems();
 				}
 	            

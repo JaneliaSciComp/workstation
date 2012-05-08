@@ -43,37 +43,24 @@ public class EntityContextMenu extends JPopupMenu {
 
 	protected static final Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
 	
-	// Option A: a list of entities, where the operation affects all of them
-	protected final List<EntityData> entityDataList;
-	
-	// Option B: a specific entity
-	protected final EntityData entityData;
-	protected final Entity entity; // just a shortcut to entityData.getChildEntity()
-	protected final String uniqueId;
+	protected final List<RootedEntity> rootedEntityList;
+	protected final RootedEntity rootedEntity;
+	protected final boolean multiple;
 	
 	// Internal state
 	protected boolean nextAddRequiresSeparator = false;
 	
-	public EntityContextMenu(EntityData entityData, String uniqueId) {
-		super();
-		this.entityDataList = new ArrayList<EntityData>();
-		entityDataList.add(entityData);
-		this.entityData = entityData;
-		this.entity = entityData!=null ? entityData.getChildEntity() : null;
-		this.uniqueId = uniqueId;
+	public EntityContextMenu(List<RootedEntity> rootedEntityList) {
+		this.rootedEntityList = rootedEntityList;
+		this.rootedEntity = rootedEntityList.size()==1 ? rootedEntityList.get(0) : null;
+		this.multiple = rootedEntityList.size()>1;
 	}
 
-	public EntityContextMenu(List<RootedEntity> rootedEntityList) {
-		super();
-		this.entityDataList = new ArrayList<EntityData>();
-		// TODO: use the rootedEntity internally instead of this
-		for(RootedEntity rootedEntity : rootedEntityList) {
-			entityDataList.add(rootedEntity.getEntityData());
-		}
-		
-		this.entityData = null;
-		this.entity = null;
-		this.uniqueId = null;
+	public EntityContextMenu(RootedEntity rootedEntity) {
+		this.rootedEntity = rootedEntity;
+		this.rootedEntityList = new ArrayList<RootedEntity>();
+		rootedEntityList.add(rootedEntity);
+		this.multiple = false;
 	}
 
 	public void addMenuItems() {
@@ -99,31 +86,31 @@ public class EntityContextMenu extends JPopupMenu {
 	}
 
 	protected JMenuItem getTitleItem() {;
-		String name = entity == null ? "(Multiple selected)" : entity.getName();
+		String name = multiple ? "(Multiple selected)" : rootedEntity.getEntity().getName();
         JMenuItem titleMenuItem = new JMenuItem(name);
         titleMenuItem.setEnabled(false);
         return titleMenuItem;
 	}
 	
 	protected JMenuItem getDetailsItem() {
-		if (entityData==null) return null;
+		if (multiple) return null;
         JMenuItem detailsMenuItem = new JMenuItem("  View details");
         detailsMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-		        new EntityDetailsDialog().showForEntityData(entityData);
+		        new EntityDetailsDialog().showForEntityData(rootedEntity.getEntityData());
 			}
 		});
         return detailsMenuItem;
 	}
 	
 	protected JMenuItem getCopyNameToClipboardItem() {
-		if (entityData==null) return null;
+		if (multiple) return null;
         JMenuItem copyMenuItem = new JMenuItem("  Copy name to clipboard");
         copyMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-	            Transferable t = new StringSelection(entity.getName());
+	            Transferable t = new StringSelection(rootedEntity.getEntity().getName());
 	            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
 			}
 		});
@@ -131,12 +118,12 @@ public class EntityContextMenu extends JPopupMenu {
 	}
 
 	protected JMenuItem getCopyIdToClipboardItem() {
-		if (entityData==null) return null;
+		if (multiple) return null;
         JMenuItem copyMenuItem = new JMenuItem("  Copy GUID to clipboard");
         copyMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-	            Transferable t = new StringSelection(entity.getId().toString());
+	            Transferable t = new StringSelection(rootedEntity.getEntity().getId().toString());
 	            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
 			}
 		});
@@ -144,19 +131,19 @@ public class EntityContextMenu extends JPopupMenu {
 	}
 	
 	protected JMenuItem getRenameItem() {
-		if (entityData==null || entityData.getId()==null) return null;
+		if (multiple) return null;
 		JMenuItem renameItem = new JMenuItem("  Rename");
         renameItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
-                String newName = (String) JOptionPane.showInputDialog(browser, "Name:\n", "Rename "+entity.getName(), JOptionPane.PLAIN_MESSAGE, null, null, entity.getName());
+                String newName = (String) JOptionPane.showInputDialog(browser, "Name:\n", "Rename "+rootedEntity.getEntity().getName(), JOptionPane.PLAIN_MESSAGE, null, null, rootedEntity.getEntity().getName());
                 if ((newName == null) || (newName.length() <= 0)) {
                     return;
                 }
 	            
 	            try {
 	            	// Make sure we have the latest entity, then we can rename it
-	            	Entity dbEntity = ModelMgr.getModelMgr().getEntityById(""+entity.getId());
+	            	Entity dbEntity = ModelMgr.getModelMgr().getEntityById(""+rootedEntity.getEntity().getId());
 	            	dbEntity.setName(newName);
 	            	ModelMgr.getModelMgr().saveOrUpdateEntity(dbEntity);
 	            }
@@ -167,7 +154,7 @@ public class EntityContextMenu extends JPopupMenu {
 				
             }
         });
-		if (!entity.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+		if (!rootedEntity.getEntity().getUser().getUserLogin().equals(SessionMgr.getUsername())) {
 			renameItem.setEnabled(false);
 		}
         return renameItem;
@@ -175,7 +162,7 @@ public class EntityContextMenu extends JPopupMenu {
 
 	protected JMenu getAddToRootFolderItem() {
 
-		if (entity!=null && entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)!=null) {
+		if (!multiple && rootedEntity.getEntity()!=null && rootedEntity.getEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)!=null) {
 			return null;
 		}
 		
@@ -193,8 +180,8 @@ public class EntityContextMenu extends JPopupMenu {
 					SimpleWorker worker = new SimpleWorker() {
 						@Override
 						protected void doStuff() throws Exception {
-							for(EntityData entityData : entityDataList) {
-								ModelMgrUtils.addChild(commonRoot, entityData.getChildEntity());
+							for(RootedEntity rootedEntity : rootedEntityList) {
+								ModelMgrUtils.addChild(commonRoot, rootedEntity.getEntity());
 							}
 						}
 						@Override
@@ -233,8 +220,8 @@ public class EntityContextMenu extends JPopupMenu {
 					protected void doStuff() throws Exception {
 						// Update database
 						newFolder = ModelMgrUtils.createNewCommonRoot(folderName);
-						for(EntityData entityData : entityDataList) {
-							ModelMgrUtils.addChild(newFolder, entityData.getChildEntity());
+						for(RootedEntity rootedEntity : rootedEntityList) {
+							ModelMgrUtils.addChild(newFolder, rootedEntity.getEntity());
 						}
 					}
 					@Override
@@ -258,7 +245,8 @@ public class EntityContextMenu extends JPopupMenu {
 
 	protected JMenuItem getDeleteItem() {
 		
-		for(EntityData ed : entityDataList) {
+		for(RootedEntity rootedEntity : rootedEntityList) {
+			EntityData ed = rootedEntity.getEntityData();
 			if (ed.getId()==null && ed.getChildEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)==null) {
 				// Fake ED, not a common root, this must be part of an annotation session. 
 				// TODO: this check could be done more robustly
@@ -266,16 +254,20 @@ public class EntityContextMenu extends JPopupMenu {
 			}
 		}
 		
-		JMenuItem deleteItem = new JMenuItem(entityData!=null?"  Remove":"  Remove "+entityDataList.size()+" entities");
+		JMenuItem deleteItem = new JMenuItem(multiple?"  Remove "+rootedEntityList.size()+" entities":"  Remove");
 		
 		deleteItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent actionEvent) {
 
 				Utils.setWaitingCursor(browser.getEntityOutline());
 
+				final Set<EntityData> toDelete = new HashSet<EntityData>();
+				for(RootedEntity rootedEntity : rootedEntityList) {
+					toDelete.add(rootedEntity.getEntityData());
+				}
+				
 				// Pre-screen the selections to ensure we have permission to delete everything 
-				final Set<EntityData> toDelete = new HashSet<EntityData>(entityDataList);
-				for(EntityData ed : entityDataList) {
+				for(EntityData ed : new HashSet<EntityData>(toDelete)) {
 					if (ed.getUser()!=null && !ed.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
 						JOptionPane.showMessageDialog(browser, "Do not have permission to delete "+ed.getChildEntity().getName(), "Error", JOptionPane.ERROR_MESSAGE);
 						toDelete.remove(ed);
@@ -421,64 +413,88 @@ public class EntityContextMenu extends JPopupMenu {
 			}
 		});
 
-		if (entityData!=null && entityData.getUser()!=null && !entityData.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
-			deleteItem.setEnabled(false);
+		for(RootedEntity rootedEntity : rootedEntityList) {
+			EntityData entityData = rootedEntity.getEntityData();
+			if (entityData!=null && entityData.getUser()!=null && !entityData.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+				deleteItem.setEnabled(false);
+				break;
+			}
 		}
+		
 		return deleteItem;
 	}
 	
 	protected JMenuItem getOpenInSecondViewerItem() {
-		if (entityData==null) return null;
-		if (Utils.isEmpty(uniqueId)) return null;
+		if (multiple) return null;
+		if (Utils.isEmpty(rootedEntity.getUniqueId())) return null;
         JMenuItem copyMenuItem = new JMenuItem("  Open in second viewer");
         
         copyMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				Viewer secViewer = SessionMgr.getBrowser().getViewersPanel().getSecViewer();
-				if (secViewer==null) {
-					secViewer = new IconDemoPanel(SessionMgr.getBrowser().getViewersPanel(), EntitySelectionModel.CATEGORY_SEC_VIEW);
-					SessionMgr.getBrowser().getViewersPanel().setSecViewer(secViewer);
-				}
-	            ((IconDemoPanel)secViewer).loadEntity(new RootedEntity(uniqueId, entityData));
-	            secViewer.setAsActive();
-	            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueId, true);
+				SimpleWorker worker = new SimpleWorker() {
+					
+					@Override
+					protected void doStuff() throws Exception {
+						if (EntityUtils.isInitialized(rootedEntity.getEntity())) {
+							ModelMgrUtils.loadLazyEntity(rootedEntity.getEntity(), false);
+						}
+					}
+					
+					@Override
+					protected void hadSuccess() {
+						Viewer secViewer = SessionMgr.getBrowser().getViewersPanel().getSecViewer();
+						if (secViewer==null) {
+							secViewer = new IconDemoPanel(SessionMgr.getBrowser().getViewersPanel(), EntitySelectionModel.CATEGORY_SEC_VIEW);
+							SessionMgr.getBrowser().getViewersPanel().setSecViewer(secViewer);
+						}
+			            ((IconDemoPanel)secViewer).loadEntity(rootedEntity);
+			            secViewer.setAsActive();
+			            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, rootedEntity.getUniqueId(), true);
+					}
+					
+					@Override
+					protected void hadError(Throwable error) {
+						SessionMgr.getSessionMgr().handleException(error);
+					}
+				};
+				worker.execute();
 			}
 		});
         return copyMenuItem;
 	}
 	
 	protected JMenuItem getOpenInFinderItem() {
-		if (entityData==null) return null;
+		if (multiple) return null;
 		if (!OpenInFinderAction.isSupported()) return null;
-    	String filepath = EntityUtils.getAnyFilePath(entity);
+    	String filepath = EntityUtils.getAnyFilePath(rootedEntity.getEntity());
         if (!Utils.isEmpty(filepath)) {
-        	return getActionItem(new OpenInFinderAction(entity));
+        	return getActionItem(new OpenInFinderAction(rootedEntity.getEntity()));
         }
         return null;
 	}
 	
 	protected JMenuItem getOpenWithAppItem() {
-		if (entityData==null) return null;
+		if (multiple) return null;
         if (!OpenWithDefaultAppAction.isSupported()) return null;
-    	String filepath = EntityUtils.getAnyFilePath(entity);
+    	String filepath = EntityUtils.getAnyFilePath(rootedEntity.getEntity());
         if (!Utils.isEmpty(filepath)) {
-        	return getActionItem(new OpenWithDefaultAppAction(entity));
+        	return getActionItem(new OpenWithDefaultAppAction(rootedEntity.getEntity()));
         }
         return null;
 	}
 	
 	protected JMenuItem getNeuronAnnotatorItem() {
-		if (entityData==null) return null;
-        final String entityType = entity.getEntityType().getName();
+		if (multiple) return null;
+        final String entityType = rootedEntity.getEntity().getEntityType().getName();
         if (entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT) || entityType.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
             JMenuItem vaa3dMenuItem = new JMenuItem("  View in Vaa3D (Neuron Annotator)");
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
-                        Entity result = entity;
+                        Entity result = rootedEntity.getEntity();
                         if (!entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
-                            result = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
+                            result = ModelMgr.getModelMgr().getAncestorWithType(result, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
                         }
 
                         if (result != null && ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(result.getId())) {
@@ -497,8 +513,8 @@ public class EntityContextMenu extends JPopupMenu {
 	}
 
 	protected JMenuItem getVaa3dItem() {
-		if (entityData==null) return null;
-        final String entityType = entity.getEntityType().getName();
+		if (multiple) return null;
+        final String entityType = rootedEntity.getEntity().getEntityType().getName();
         if (entityType.equals(EntityConstants.TYPE_IMAGE_3D) ||
             entityType.equals(EntityConstants.TYPE_ALIGNED_BRAIN_STACK) ||
             entityType.equals(EntityConstants.TYPE_LSM_STACK) ||
@@ -511,15 +527,11 @@ public class EntityContextMenu extends JPopupMenu {
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
-//                        if (entity != null && ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(entity.getId())) {
-//                            // Success
-//                            return;
-//                        }
                         String vaa3dExePath = (String) SessionMgr.getSessionMgr().getModelProperty(PreferenceConstants.PATH_VAA3D);
 //                        vaa3dExePath = "/Applications/FlySuite.app/Contents/Resources/vaa3d64.app/Contents/MacOS/vaa3d64"; // DEBUG ONLY
                         File tmpFile = new File(vaa3dExePath);
                         if (tmpFile.exists()&&tmpFile.canExecute()) {
-                            vaa3dExePath+=" -i "+ PathTranslator.convertPath(EntityUtils.getAnyFilePath(entity));
+                            vaa3dExePath+=" -i "+ PathTranslator.convertPath(EntityUtils.getAnyFilePath(rootedEntity.getEntity()));
                             System.out.println("Calling to open file with: "+vaa3dExePath);
                             Runtime.getRuntime().exec(vaa3dExePath);
                         }
@@ -539,12 +551,12 @@ public class EntityContextMenu extends JPopupMenu {
 	}
 
 	protected JMenuItem getSearchHereItem() {
-		if (entityData==null) return null;
+		if (multiple) return null;
         JMenuItem searchHereMenuItem = new JMenuItem("  Search here...");
         searchHereMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
-                	SessionMgr.getSessionMgr().getActiveBrowser().getSearchDialog().showDialog(entity);
+                	SessionMgr.getSessionMgr().getActiveBrowser().getSearchDialog().showDialog(rootedEntity.getEntity());
                 } 
                 catch (Exception e) {
                     SessionMgr.getSessionMgr().handleException(e);
