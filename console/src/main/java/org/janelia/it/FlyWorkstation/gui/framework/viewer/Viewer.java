@@ -42,5 +42,6 @@ public abstract class Viewer extends JPanel implements Refreshable {
 		viewerContainer.setTitle(this, title);
 	}
 	
+	public abstract RootedEntity getRootedEntityById(String id);
 	
 }

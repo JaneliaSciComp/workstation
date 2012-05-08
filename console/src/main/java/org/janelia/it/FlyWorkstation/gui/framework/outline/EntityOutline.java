@@ -26,6 +26,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -551,7 +552,8 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			throw new IllegalStateException("Cannot display entity whose children are not loaded");
 		}
 		
-		((IconDemoPanel)SessionMgr.getSessionMgr().getActiveBrowser().getActiveViewer()).loadEntity(getEntityData(node), uniqueId);
+		RootedEntity rootedEntity = new RootedEntity(uniqueId, getEntityData(node));
+		((IconDemoPanel)SessionMgr.getSessionMgr().getActiveBrowser().getActiveViewer()).loadEntity(rootedEntity);
 		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueId+"", true);
 	}
 }

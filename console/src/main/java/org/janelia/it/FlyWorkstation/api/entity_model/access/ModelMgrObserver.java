@@ -9,18 +9,6 @@ public interface ModelMgrObserver {
     public void entitySelected(String category, String entityId, boolean clearAll);
 
     public void entityDeselected(String category, String entityId);
-    
-    @Deprecated
-	public void entityOutlineSelected(String uniqueId, boolean clearAll);
-	
-    @Deprecated
-	public void entityOutlineDeselected(String uniqueId);
-
-    @Deprecated
-	public void entitySelected(long entityId, boolean clearAll);
-
-    @Deprecated
-    public void entityDeselected(long entityId);
 
     public void entityChanged(long entityId);
     

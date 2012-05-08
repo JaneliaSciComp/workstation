@@ -77,8 +77,8 @@ public class ImagesPanel extends JScrollPane {
      *
      * @return
      */
-    public AnnotatedImageButton getButtonByEntityId(long entityId) {
-        return buttons.get(entityId+"");
+    public AnnotatedImageButton getButtonById(String id) {
+        return buttons.get(id);
     }
     
     public void setButtonKeyListener(KeyListener buttonKeyListener) {
@@ -113,7 +113,7 @@ public class ImagesPanel extends JScrollPane {
 	/**
      * Create the image buttons, but leave the images unloaded for now.
      */
-    public void setEntityDatas(List<EntityData> entityDatas) {
+    public void setRootedEntities(List<RootedEntity> rootedEntities) {
     	
         buttons.clear();
         for (Component component : buttonsPanel.getComponents()) {
@@ -125,21 +125,20 @@ public class ImagesPanel extends JScrollPane {
 
 		ImageCache imageCache = SessionMgr.getBrowser().getImageCache();
 			
-        for (int i = 0; i < entityDatas.size(); i++) {
-            final EntityData entityData = entityDatas.get(i);
-            final Entity entity = entityData.getChildEntity();
+        for (int i = 0; i < rootedEntities.size(); i++) {
+            final RootedEntity rootedEntity = rootedEntities.get(i);
             
-            if (buttons.containsKey(entity.getId().toString())) continue;
+            if (buttons.containsKey(rootedEntity.getId())) continue;
             
             AnnotatedImageButton button = null;
 
-            String filepath = EntityUtils.getDefaultImageFilePath(entity, iconDemoPanel.getCurrImageRole());
+            String filepath = EntityUtils.getDefaultImageFilePath(rootedEntity.getEntity(), iconDemoPanel.getCurrImageRole());
             if (filepath != null) {
-            	button = new DynamicImageButton(entityData, iconDemoPanel);
+            	button = new DynamicImageButton(rootedEntity, iconDemoPanel);
                 ((DynamicImageButton)button).setCache(imageCache);
             }
             else {
-            	button = new StaticImageButton(entityData, iconDemoPanel);
+            	button = new StaticImageButton(rootedEntity, iconDemoPanel);
             }
             
             button.setTitleVisible(iconDemoPanel.areTitlesVisible());
@@ -152,16 +151,15 @@ public class ImagesPanel extends JScrollPane {
             // Disable tab traversal, we will do it ourselves
             button.setFocusTraversalKeysEnabled(false);
             
-            buttons.put(entity.getId().toString(), button);
+            buttons.put(rootedEntity.getId(), button);
             buttonsPanel.add(button);
         }
     }
     
-    public void removeEntityData(EntityData entityData) {
-    	String entityId = entityData.getChildEntity().getId()+"";
-    	AnnotatedImageButton button = buttons.get(entityId);
+    public void removeRootedEntity(RootedEntity rootedEntity) {
+    	AnnotatedImageButton button = buttons.get(rootedEntity.getId());
     	buttonsPanel.remove(button);
-    	buttons.remove(entityId);
+    	buttons.remove(rootedEntity.getId());
     }
 
     /**
@@ -169,20 +167,31 @@ public class ImagesPanel extends JScrollPane {
      */
     public void loadAnnotations(Annotations annotations) {
         for (AnnotatedImageButton button : buttons.values()) {
-        	loadAnnotations(annotations, button.getEntity());
+        	loadAnnotations(annotations, button.getRootedEntity().getEntity().getId());
         }
     }
 
     /**
      * Show the given annotations on the appropriate images.
      */
-    public void loadAnnotations(Annotations annotations, Entity entity) {
-    	AnnotatedImageButton button = getButtonByEntityId(entity.getId());
-    	List<OntologyAnnotation> entityAnnotations = annotations.getFilteredAnnotationMap().get(entity.getId());
-        button.getAnnotationView().setAnnotations(entityAnnotations);
+    public void loadAnnotations(Annotations annotations, Long entityId) {
+    	for (AnnotatedImageButton button : getButtonsByEntityId(entityId)) {
+        	List<OntologyAnnotation> entityAnnotations = annotations.getFilteredAnnotationMap().get(entityId);
+            button.getAnnotationView().setAnnotations(entityAnnotations);
+    	}
     }
 
-    /**
+    public List<AnnotatedImageButton> getButtonsByEntityId(Long entityId) {
+    	List<AnnotatedImageButton> entityButtons = new ArrayList<AnnotatedImageButton>();
+        for (AnnotatedImageButton button : buttons.values()) {
+        	if (button.getRootedEntity().getEntity().getId().equals(entityId)) {
+        		entityButtons.add(button);
+        	}
+        }
+        return entityButtons;
+	}
+
+	/**
      * Scale all the images to the given max size.
      *
      * @param imageSize
@@ -228,7 +237,7 @@ public class ImagesPanel extends JScrollPane {
     
     public synchronized void hideButtons(Collection<Long> entityIds) {
     	for(Long entityId : entityIds) {
-    		AnnotatedImageButton button = getButtonByEntityId(entityId);
+    		AnnotatedImageButton button = getButtonById(entityId+"");
     		buttonsPanel.remove(button);
     	}
     	revalidate();
@@ -243,9 +252,9 @@ public class ImagesPanel extends JScrollPane {
 		return currTableHeight;
 	}
 
-	public void scrollEntityToCenter(Entity entity) {
-		if (entity == null) return;
-    	AnnotatedImageButton selectedButton = getButtonByEntityId(entity.getId());
+	public void scrollEntityToCenter(RootedEntity rootedEntity) {
+		if (rootedEntity == null) return;
+    	AnnotatedImageButton selectedButton = getButtonById(rootedEntity.getId());
     	scrollButtonToCenter(selectedButton);
 	}
 	
@@ -331,10 +340,10 @@ public class ImagesPanel extends JScrollPane {
     	return false;
     }
     
-    public void setSelection(Long selectedEntityId, boolean selection, boolean clearAll) {
+    public void setSelection(String selectedEntityId, boolean selection, boolean clearAll) {
     	if (clearAll) {
 			for(AnnotatedImageButton button : buttons.values()) {
-				if (button.getEntity().getId().equals(selectedEntityId)) {
+				if (button.getRootedEntity().getId().equals(selectedEntityId)) {
 					setSelection(button, true);
 				}
 				else {

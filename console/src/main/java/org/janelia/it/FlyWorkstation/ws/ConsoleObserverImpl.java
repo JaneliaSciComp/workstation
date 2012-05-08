@@ -47,26 +47,6 @@ public class ConsoleObserverImpl implements ModelMgrObserver  {
 	}
 
 	@Override
-	public void entityOutlineSelected(String uniqueId, boolean clearAll) {
-		throw e;
-	}
-
-	@Override
-    public void entityOutlineDeselected(String uniqueId) {
-		throw e;
-	}
-	
-	@Override
-	public void entitySelected(long entityId, boolean clearAll) {
-		throw e;
-	}
-
-	@Override
-    public void entityDeselected(long entityId) {
-		throw e;
-	}
-
-	@Override
     public void entityChanged(long entityId) {
 		throw e;
 	}

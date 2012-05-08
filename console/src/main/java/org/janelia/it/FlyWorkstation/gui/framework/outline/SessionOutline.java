@@ -25,6 +25,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicRow;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicTable;
 import org.janelia.it.FlyWorkstation.gui.framework.table.ProgressCellRenderer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -297,20 +298,22 @@ public class SessionOutline extends JPanel implements Refreshable {
     	if (currSession == session) return;
 		
     	currSession = session;
+    	
+    	if (session==null) return;
+    	
 		dynamicTable.navigateToRowWithObject(session);
 
 		final IconDemoPanel panel = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer());
-		panel.clear();
 		
 		if (session != null) {
 			panel.showLoadingIndicator();
-			List<EntityData> fakeEds = new ArrayList<EntityData>();
+			List<RootedEntity> fakeREs = new ArrayList<RootedEntity>();
 			for(Entity entity : session.getEntities()) {
 				EntityData ed = new EntityData();
 				ed.setChildEntity(entity);
-				fakeEds.add(ed);
+				fakeREs.add(new RootedEntity(null, ed));
 			}
-			panel.loadImageEntities(fakeEds);
+			panel.loadImageEntities(fakeREs);
 		}
 		
 		ModelMgr.getModelMgr().setCurrentAnnotationSession(session);

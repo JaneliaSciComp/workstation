@@ -25,6 +25,7 @@ public class EntityDetailsDialog extends ModalDialog {
     private JPanel attrPanel;
     private JLabel roleLabel;
     private JLabel nameLabel;
+    private JLabel typeLabel;
     private JLabel ownerLabel;
     private JLabel creationDateLabel;
     private JLabel updatedDateLabel;
@@ -47,6 +48,7 @@ public class EntityDetailsDialog extends ModalDialog {
         		BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Annotation Properties")));
 
         nameLabel = addAttribute("Name: ");
+        typeLabel = addAttribute("Type: ");
         roleLabel = addAttribute("Role: ");
         ownerLabel = addAttribute("Annotation Owner: ");
         creationDateLabel = addAttribute("Creation Date: ");
@@ -74,20 +76,16 @@ public class EntityDetailsDialog extends ModalDialog {
     }
 
     public void showForEntityData(EntityData entityData) {
-
+    	
+    	roleLabel.setText(entityData.getEntityAttribute()==null?"":entityData.getEntityAttribute().getName());
     	Entity entity = entityData.getChildEntity();
-    	nameLabel.setText(entity.getName());
-    	roleLabel.setText(entityData.getEntityAttribute().getName());
-        ownerLabel.setText(entity.getUser().getUserLogin());
-        creationDateLabel.setText(df.format(entity.getCreationDate()));
-        updatedDateLabel.setText(df.format(entity.getUpdatedDate()));
-        
-        packAndShow();
+    	showForEntity(entity);
     }
     
     public void showForEntity(Entity entity) {
 
     	nameLabel.setText(entity.getName());
+    	typeLabel.setText(entity.getEntityType().getName());
         ownerLabel.setText(entity.getUser().getUserLogin());
         creationDateLabel.setText(df.format(entity.getCreationDate()));
         updatedDateLabel.setText(df.format(entity.getUpdatedDate()));

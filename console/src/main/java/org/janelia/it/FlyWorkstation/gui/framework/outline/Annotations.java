@@ -54,21 +54,21 @@ public class Annotations {
         }
     }
 
-    public synchronized void reload(Entity entity) {
+    public synchronized void reload(Long entityId) {
 
     	if (SwingUtilities.isEventDispatchThread()) throw new RuntimeException("Method must run outside of the EDT");
     	
     	// Remove all the annotations for this entity
     	List<OntologyAnnotation> copy = new ArrayList<OntologyAnnotation>(annotations);
     	for(OntologyAnnotation annotation : copy) {
-    		if (annotation.getTargetEntityId().equals(entity.getId())) {
+    		if (annotation.getTargetEntityId().equals(entityId)) {
     			annotations.remove(annotation);
     		}
     	}
     	
     	// Reload them
         try {
-            for(Entity entityAnnot : ModelMgr.getModelMgr().getAnnotationsForEntity(entity.getId())) {
+            for(Entity entityAnnot : ModelMgr.getModelMgr().getAnnotationsForEntity(entityId)) {
             	OntologyAnnotation annotation = new OntologyAnnotation();
             	annotation.init(entityAnnot);
             	annotations.add(annotation);

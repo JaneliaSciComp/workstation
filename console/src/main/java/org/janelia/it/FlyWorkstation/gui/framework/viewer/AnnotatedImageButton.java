@@ -35,14 +35,12 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
     private DragSource source;
     
     protected final IconDemoPanel iconDemoPanel;
-    protected final EntityData entityData;
-    protected final Entity entity; // just a shortcut to entityData.getChildEntity()
+    protected final RootedEntity rootedEntity;
     
-    public AnnotatedImageButton(final EntityData entityData, final IconDemoPanel iconDemoPanel) {
+    public AnnotatedImageButton(final RootedEntity rootedEntity, final IconDemoPanel iconDemoPanel) {
 
     	this.iconDemoPanel = iconDemoPanel;
-    	this.entityData = entityData;
-    	this.entity = entityData.getChildEntity();
+    	this.rootedEntity = rootedEntity;
     	
     	this.source = new DragSource();
     	source.createDefaultDragGestureRecognizer(this, DnDConstants.ACTION_LINK, this);
@@ -102,22 +100,21 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
 				if (e.isConsumed()) return;
 				
 				if (!isSelected()) {
-					ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(iconDemoPanel.getSelectionCategory(), entity.getId()+"", true);
+					ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(iconDemoPanel.getSelectionCategory(), rootedEntity.getId(), true);
 				}
 				
-				List<String> entityIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(iconDemoPanel.getSelectionCategory());				
+				List<String> selectionIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(iconDemoPanel.getSelectionCategory());				
 				JPopupMenu popupMenu = null;
-				if (entityIds.size()>1) {
-					List<EntityData> entityDataList = new ArrayList<EntityData>();
-					for (String entityId : entityIds) {
-						entityDataList.add(iconDemoPanel.getEntityDataWithEntityId(new Long(entityId)));
+				if (selectionIds.size()>1) {
+					List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
+					for (String entityId : selectionIds) {
+						rootedEntityList.add(iconDemoPanel.getRootedEntityById(entityId));
 					}
-					popupMenu = new EntityContextMenu(entityDataList);
+					popupMenu = new EntityContextMenu(rootedEntityList);
 					((EntityContextMenu)popupMenu).addMenuItems();
 				}
 				else {
-					String uniqueId = EntityOutline.getChildUniqueId(iconDemoPanel.getContextUniqueId(), entityData);
-					popupMenu = new EntityContextMenu(entityData, uniqueId);
+					popupMenu = new EntityContextMenu(rootedEntity.getEntityData(), rootedEntity.getUniqueId());
 		            ((EntityContextMenu)popupMenu).addMenuItems();
 				}
 	            
@@ -129,14 +126,11 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
 			protected void doubleLeftClicked(MouseEvent e) {
 				if (e.isConsumed()) return;
 				
-				EntityData contextEd = iconDemoPanel.getContextEntityData();
-				if (contextEd==null || contextEd==entityData) return;
-				
 				// Double-clicking an image in gallery view triggers an outline selection
-            	String uniqueId = EntityOutline.getChildUniqueId(iconDemoPanel.getContextUniqueId(), entityData);
-            	
-            	if (Utils.isEmpty(uniqueId)) return;
-        		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueId, true);	
+				RootedEntity contextRootedEntity = iconDemoPanel.getContextRootedEntity();
+				if (contextRootedEntity==null || contextRootedEntity==rootedEntity) return;
+            	if (Utils.isEmpty(rootedEntity.getUniqueId())) return;
+        		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, rootedEntity.getUniqueId(), true);	
         		e.consume();
 			}
 
@@ -145,19 +139,17 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
     			if (e.isConsumed()) return;
     			super.mouseReleased(e);
     			
-    			final AnnotatedImageButton button = AnnotatedImageButton.this;
     			final boolean shiftDown = e.isShiftDown();
     			final boolean metaDown = e.isMetaDown();
-    			final boolean state = button.isSelected();
-    			final Entity entity = button.getEntity();
-    			final Long entityId = entity.getId();
+    			final boolean state = isSelected();
+    			final String rootedEntityId = rootedEntity.getId();
     			final String category = iconDemoPanel.getSelectionCategory();
     			
     			if (e.getClickCount() != 1) return;
     			
     			if (e.getButton() != MouseEvent.BUTTON1) {
     				if (!state) {
-						ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, entityId+"", true);
+						ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, rootedEntityId, true);
     				}
 					return;
     			}
@@ -170,45 +162,44 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
     						// With the meta key we toggle items in the current
     						// selection without clearing it
     						if (!state) {
-    							ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, entityId+"", false);
+    							ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, rootedEntityId, false);
     						} 
     						else {
-    							ModelMgr.getModelMgr().getEntitySelectionModel().deselectEntity(category, entityId+"");
+    							ModelMgr.getModelMgr().getEntitySelectionModel().deselectEntity(category, rootedEntityId);
     						}
     					} 
     					else {
     						// With shift, we select ranges
     						String lastSelected = ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityId(iconDemoPanel.getSelectionCategory());
     						if (shiftDown && lastSelected != null) {
-    							Long lastSelectedId = new Long(lastSelected);
     							// Walk through the buttons and select everything between the last and current selections
     							boolean selecting = false;
-    							List<Entity> entities = iconDemoPanel.getEntities();
-    							for (Entity entity : entities) {
-    								if (entity.getId().equals(lastSelectedId) || entity.getId().equals(entityId)) {
-    									if (entity.getId().equals(entityId)) {
+    							List<RootedEntity> rootedEntities = iconDemoPanel.getRootedEntities();
+    							for (RootedEntity otherRootedEntity : rootedEntities) {
+    								if (otherRootedEntity.getId().equals(lastSelected) || otherRootedEntity.getId().equals(rootedEntityId)) {
+    									if (otherRootedEntity.getId().equals(rootedEntityId)) {
     										// Always select the button that was clicked
-    										ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, entity.getId()+"", false);
+    										ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, otherRootedEntity.getId(), false);
     									}
     									if (selecting) return; // We already selected, this is the end
     									selecting = true; // Start selecting
     									continue; // Skip selection of the first and last items, which should already be selected
     								}
     								if (selecting) {
-    									ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, entity.getId()+"", false);
+    									ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, otherRootedEntity.getId(), false);
     								}
     							}
     						} 
     						else {
     							// This is a good old fashioned single button selection
-    							ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, entityId+"", true);
+    							ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, rootedEntityId, true);
     						}
 
     					}
 
     					// Always request focus on the button that was clicked, 
     					// since other buttons may become selected if shift is involved
-    					button.requestFocus();
+    					requestFocus();
     				}
     			});
     		}
@@ -217,13 +208,13 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
         // Fix event dispatching so that user can click on the title or the tags and still select the button
         titleLabel.addMouseListener(new MouseForwarder(this, "JLabel(titleLabel)->AnnotatedImageButton"));
         
-    	refresh(entityData);
+    	refresh(rootedEntity);
     }
     
-    public void refresh(EntityData entityData) {
+    public void refresh(RootedEntity rootedEntity) {
     	mainPanel.removeAll();
-    	setTitle(entityData.getChildEntity().getName(), 100);
-        mainPanel.add(init(entityData));
+    	setTitle(rootedEntity.getEntity().getName(), 100);
+        mainPanel.add(init(rootedEntity));
     }
     
     public void setTitle(String title, int maxWidth) {
@@ -236,7 +227,7 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
         titleLabel.setToolTipText(title);
     }
     
-    public abstract JComponent init(EntityData entityData);
+    public abstract JComponent init(RootedEntity rootedEntity);
     
 	public synchronized void setTitleVisible(boolean visible) {
         titleLabel.setVisible(visible);
@@ -270,16 +261,20 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
         return annotationView;
     }
 
-    public Entity getEntity() {
-        return entity;
-    }
-
-    public EntityData getEntityData() {
-        return entityData;
+    public RootedEntity getRootedEntity() {
+        return rootedEntity;
     }
     
+//    public Entity getEntity() {
+//        return rootedEntity.getEntity();
+//    }
+//
+//    public EntityData getEntityData() {
+//        return rootedEntity.getEntityData();
+//    }
+    
 	public void rescaleImage(int imageSize) {
-    	setTitle(entity.getName(), imageSize);
+    	setTitle(rootedEntity.getEntity().getName(), imageSize);
         JPanel annotationPanel = (JPanel)annotationView;
         if (annotationView instanceof AnnotationTablePanel) {
         	annotationPanel.setPreferredSize(new Dimension(imageSize, annotationPanel.getPreferredSize().height));
@@ -301,11 +296,9 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
 
 	@Override
 	public void dragGestureRecognized(DragGestureEvent dge) {
-		
         if (!isSelected()) {
-        	ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(iconDemoPanel.getSelectionCategory(), getEntity().getId()+"", true);
+        	ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(iconDemoPanel.getSelectionCategory(), rootedEntity.getId(), true);
         }
-		
 		getTransferHandler().exportAsDrag(this, dge.getTriggerEvent(), TransferHandler.LINK);
 	}
 

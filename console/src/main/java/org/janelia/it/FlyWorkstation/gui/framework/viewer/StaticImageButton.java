@@ -9,7 +9,6 @@ import javax.swing.JLabel;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.jacs.model.entity.EntityData;
 
 /**
  * An AnnotatedImageButton with a static icon or label.
@@ -21,11 +20,11 @@ public class StaticImageButton extends AnnotatedImageButton {
     private BufferedImage staticIcon;
     private JLabel label;
 
-    public StaticImageButton(final EntityData entityData, final IconDemoPanel iconDemoPanel) {
-		super(entityData, iconDemoPanel);
+    public StaticImageButton(final RootedEntity rootedEntity, final IconDemoPanel iconDemoPanel) {
+		super(rootedEntity, iconDemoPanel);
 	}
 
-	public JComponent init(final EntityData entityData) {
+	public JComponent init(final RootedEntity rootedEntity) {
     	this.label = new JLabel(Icons.getLoadingIcon());
     	return label;
     }
@@ -45,7 +44,7 @@ public class StaticImageButton extends AnnotatedImageButton {
 
 	public void setViewable(boolean viewable) {
 		if (viewable) {
-	    	this.staticIcon = Icons.getLargeIconAsBufferedImage(entity);
+	    	this.staticIcon = Icons.getLargeIconAsBufferedImage(rootedEntity.getEntity());
 	    	label.setIcon(new ImageIcon(staticIcon));
         	rescaleImage(iconDemoPanel.getImagesPanel().getCurrImageSize());
 		}

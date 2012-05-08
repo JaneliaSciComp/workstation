@@ -22,6 +22,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenWithDefaultAppAct
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
@@ -62,9 +63,14 @@ public class EntityContextMenu extends JPopupMenu {
 		this.uniqueId = uniqueId;
 	}
 
-	public EntityContextMenu(List<EntityData> entityDataList) {
+	public EntityContextMenu(List<RootedEntity> rootedEntityList) {
 		super();
-		this.entityDataList = entityDataList;
+		this.entityDataList = new ArrayList<EntityData>();
+		// TODO: use the rootedEntity internally instead of this
+		for(RootedEntity rootedEntity : rootedEntityList) {
+			entityDataList.add(rootedEntity.getEntityData());
+		}
+		
 		this.entityData = null;
 		this.entity = null;
 		this.uniqueId = null;
@@ -138,7 +144,7 @@ public class EntityContextMenu extends JPopupMenu {
 	}
 	
 	protected JMenuItem getRenameItem() {
-		if (entityData==null) return null;
+		if (entityData==null || entityData.getId()==null) return null;
 		JMenuItem renameItem = new JMenuItem("  Rename");
         renameItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
@@ -251,7 +257,15 @@ public class EntityContextMenu extends JPopupMenu {
 	}
 
 	protected JMenuItem getDeleteItem() {
-
+		
+		for(EntityData ed : entityDataList) {
+			if (ed.getId()==null && ed.getChildEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)==null) {
+				// Fake ED, not a common root, this must be part of an annotation session. 
+				// TODO: this check could be done more robustly
+				return null;
+			}
+		}
+		
 		JMenuItem deleteItem = new JMenuItem(entityData!=null?"  Remove":"  Remove "+entityDataList.size()+" entities");
 		
 		deleteItem.addActionListener(new ActionListener() {
@@ -407,7 +421,7 @@ public class EntityContextMenu extends JPopupMenu {
 			}
 		});
 
-		if (entityData!=null && !entityData.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+		if (entityData!=null && entityData.getUser()!=null && !entityData.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
 			deleteItem.setEnabled(false);
 		}
 		return deleteItem;
@@ -417,6 +431,7 @@ public class EntityContextMenu extends JPopupMenu {
 		if (entityData==null) return null;
 		if (Utils.isEmpty(uniqueId)) return null;
         JMenuItem copyMenuItem = new JMenuItem("  Open in second viewer");
+        
         copyMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -425,7 +440,7 @@ public class EntityContextMenu extends JPopupMenu {
 					secViewer = new IconDemoPanel(SessionMgr.getBrowser().getViewersPanel(), EntitySelectionModel.CATEGORY_SEC_VIEW);
 					SessionMgr.getBrowser().getViewersPanel().setSecViewer(secViewer);
 				}
-	            ((IconDemoPanel)secViewer).loadEntity(entityData, uniqueId);
+	            ((IconDemoPanel)secViewer).loadEntity(new RootedEntity(uniqueId, entityData));
 	            secViewer.setAsActive();
 	            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueId, true);
 			}
@@ -491,6 +506,7 @@ public class EntityContextMenu extends JPopupMenu {
             entityType.equals(EntityConstants.TYPE_SWC_FILE) ||
             entityType.equals(EntityConstants.TYPE_V3D_ANO_FILE) ||
             entityType.equals(EntityConstants.TYPE_TIF_3D)) {
+        	
             JMenuItem vaa3dMenuItem = new JMenuItem("  View in Vaa3D");
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {

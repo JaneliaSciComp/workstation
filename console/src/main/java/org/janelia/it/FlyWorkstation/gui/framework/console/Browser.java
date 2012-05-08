@@ -16,7 +16,6 @@ import java.util.List;
 import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.LoadRequestStatusObserverAdapter;
-import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestState;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestStatus;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
@@ -362,12 +361,12 @@ public class Browser extends JFrame implements Cloneable {
         });
     }
 
-	private void updateStatusBar() {
-		EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
-		int s = esm.getSelectedEntitiesIds(EntitySelectionModel.CATEGORY_MAIN_VIEW).size() + 
-			esm.getSelectedEntitiesIds(EntitySelectionModel.CATEGORY_SEC_VIEW).size();
-		statusBar.setDescription(s+" entities selected");
-	}
+//	private void updateStatusBar() {
+//		EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
+//		int s = esm.getSelectedEntitiesIds(EntitySelectionModel.CATEGORY_MAIN_VIEW).size() + 
+//			esm.getSelectedEntitiesIds(EntitySelectionModel.CATEGORY_SEC_VIEW).size();
+//		statusBar.setDescription(s+" entities selected");
+//	}
 	
     ///////// Browser Controller section////////////
 //    static public void registerEditorForType(Class type, Class editor,
@@ -1239,6 +1238,18 @@ public class Browser extends JFrame implements Cloneable {
     
     public ViewerSplitPanel getViewersPanel() {
     	return viewerPanel;
+    }
+    
+    public Viewer getViewerForCategory(String category) {
+    	if (getMainViewer().getSelectionCategory().equals(category)) {
+    		return getMainViewer();
+    	}
+    	else if (getSecViewer()!=null && getSecViewer().getSelectionCategory().equals(category)) {
+    		return getSecViewer();
+    	}
+    	else {
+    		throw new IllegalArgumentException("Unknown viewer category: "+category);
+    	}
     }
 
     public Refreshable getActiveOutline() {

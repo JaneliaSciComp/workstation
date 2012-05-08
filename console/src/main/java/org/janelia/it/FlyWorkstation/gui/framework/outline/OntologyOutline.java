@@ -33,6 +33,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -416,7 +417,8 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
             					SessionMgr.getBrowser().getActiveViewer().getSelectionCategory()));
             	
             	// TODO: this should really use the ModelMgr
-            	final Annotations annotations = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer()).getAnnotations();
+            	final IconDemoPanel iconDemoPanel = (IconDemoPanel)SessionMgr.getBrowser().getActiveViewer();
+            	final Annotations annotations = iconDemoPanel.getAnnotations();
                 final Map<Long, List<OntologyAnnotation>> annotationMap = annotations.getFilteredAnnotationMap();
                 
                 SimpleWorker worker = new SimpleWorker() {
@@ -424,11 +426,11 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
                     @Override
                     protected void doStuff() throws Exception {
                         OntologyElement element = getOntologyElement(selectedTree.getCurrentNode());
-                        
+
                         int i=1;
-                    	for(String selectedId : selectedEntities) {
-                    		Long entityId = new Long(selectedId);
-                            List<OntologyAnnotation> entityAnnotations = annotationMap.get(entityId);
+            			for(String selectedId : selectedEntities) {
+            				RootedEntity rootedEntity = iconDemoPanel.getRootedEntityById(selectedId);
+                            List<OntologyAnnotation> entityAnnotations = annotationMap.get(rootedEntity.getEntity().getId());
                             if (entityAnnotations==null) {
                             	continue;
                             }
@@ -437,7 +439,6 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
                             		ModelMgr.getModelMgr().removeAnnotation(annotation.getId());
                             	}
                             }
-
         		            setProgress(i++, selectedEntities.size());
                     	}
                     }

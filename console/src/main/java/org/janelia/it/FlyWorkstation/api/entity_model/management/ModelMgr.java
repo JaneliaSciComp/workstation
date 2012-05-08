@@ -273,32 +273,12 @@ public class ModelMgr {
     	for (ModelMgrObserver listener : modelMgrObservers) {
 			listener.entitySelected(category, identifier, clearAll);
 		}
-    	if (EntitySelectionModel.CATEGORY_OUTLINE.equals(category)) {
-    		for (ModelMgrObserver listener : modelMgrObservers) {
-    			listener.entityOutlineSelected(identifier, clearAll);
-    		}
-    	}
-    	else if (EntitySelectionModel.CATEGORY_MAIN_VIEW.equals(category)) {
-    		for (ModelMgrObserver listener : modelMgrObservers) {
-    			listener.entitySelected(new Long(identifier), clearAll);	
-    		}
-    	}
     }
 
     void notifyEntityDeselected(String category, String identifier) {
     	for (ModelMgrObserver listener : modelMgrObservers) {
 			listener.entityDeselected(category, identifier);
 		}
-    	if (EntitySelectionModel.CATEGORY_OUTLINE.equals(category)) {
-    		for (ModelMgrObserver listener : modelMgrObservers) {
-    			listener.entityOutlineDeselected(identifier);
-    		}
-    	}
-    	else if (EntitySelectionModel.CATEGORY_MAIN_VIEW.equals(category)) {
-    		for (ModelMgrObserver listener : modelMgrObservers) {
-    			listener.entityDeselected(new Long(identifier));	
-    		}
-    	}
     }
 
     public void notifyEntityChanged(Long entityId) {
