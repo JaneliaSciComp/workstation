@@ -156,6 +156,13 @@ public class ImagesPanel extends JScrollPane {
             buttonsPanel.add(button);
         }
     }
+    
+    public void removeEntityData(EntityData entityData) {
+    	String entityId = entityData.getChildEntity().getId()+"";
+    	AnnotatedImageButton button = buttons.get(entityId);
+    	buttonsPanel.remove(button);
+    	buttons.remove(entityId);
+    }
 
     /**
      * Show the given annotations on the appropriate images.

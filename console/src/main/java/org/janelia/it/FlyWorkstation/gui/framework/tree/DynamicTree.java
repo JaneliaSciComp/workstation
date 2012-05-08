@@ -217,10 +217,9 @@ public class DynamicTree extends JPanel {
     }
 
     /**
-     * Remove a node and possibly all its ancestors from the tree.
+     * Remove a node and possibly all its descendants from the tree.
      */
     public void removeNode(DefaultMutableTreeNode node, boolean recurse) {
-		
         if (recurse) {
             for (Enumeration e = node.children(); e.hasMoreElements(); ) {
                 DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) e.nextElement();

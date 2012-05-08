@@ -11,10 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
+import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
@@ -78,6 +75,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getCopyNameToClipboardItem());
         add(getCopyIdToClipboardItem());
         add(getDetailsItem());
+        add(getOpenInSecondViewerItem());
         
         setNextAddRequiresSeparator(true);
         add(getAddToRootFolderItem());
@@ -85,7 +83,6 @@ public class EntityContextMenu extends JPopupMenu {
 		add(getDeleteItem());
         
 		setNextAddRequiresSeparator(true);
-        add(getOpenInSecondViewerItem());
     	add(getOpenInFinderItem());
     	add(getOpenWithAppItem());
         add(getNeuronAnnotatorItem());
@@ -255,59 +252,116 @@ public class EntityContextMenu extends JPopupMenu {
 
 	protected JMenuItem getDeleteItem() {
 
-		JMenuItem deleteItem = new JMenuItem(entityData!=null?"  Remove '"+entity.getName()+"'":"  Remove "+entityDataList.size()+" entities");
+		JMenuItem deleteItem = new JMenuItem(entityData!=null?"  Remove":"  Remove "+entityDataList.size()+" entities");
 		
 		deleteItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent actionEvent) {
 
-				Utils.setWaitingCursor(browser);
-				
-				SimpleWorker worker = new SimpleWorker() {
+				Utils.setWaitingCursor(browser.getEntityOutline());
 
-					Set<EntityData> removeReference = new HashSet<EntityData>();
-					Set<EntityData> removeRootTag = new HashSet<EntityData>();
+				// Pre-screen the selections to ensure we have permission to delete everything 
+				final Set<EntityData> toDelete = new HashSet<EntityData>(entityDataList);
+				for(EntityData ed : entityDataList) {
+					if (ed.getUser()!=null && !ed.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+						JOptionPane.showMessageDialog(browser, "Do not have permission to delete "+ed.getChildEntity().getName(), "Error", JOptionPane.ERROR_MESSAGE);
+						toDelete.remove(ed);
+					}
+				}
 					
+				SimpleWorker verifyTask = new SimpleWorker() {
+
+					private Set<EntityData> removeTree = new HashSet<EntityData>();
+					private Set<EntityData> removeReference = new HashSet<EntityData>();
+					private Set<EntityData> removeRootTag = new HashSet<EntityData>();
+						
 					@Override
 					protected void doStuff() throws Exception {
-						for(EntityData ed : entityDataList) {
-							final List<EntityData> eds = ModelMgr.getModelMgr().getParentEntityDatas(ed.getChildEntity().getId());
-							if (eds.size() <= 1 && ed.getChildEntity().getUser().getUserLogin().equals(SessionMgr.getUsername())) {
-								EntityData rootEd = ed.getChildEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT);
-								if (rootEd==null || eds.isEmpty()) {
-									removeReference.add(ed);
+						
+						int i = 0;
+						for(EntityData ed : toDelete) {
+							Entity child = ed.getChildEntity();
+							List<EntityData> eds = ModelMgr.getModelMgr().getParentEntityDatas(ed.getChildEntity().getId());
+							// Determine deletion type
+							if (child.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)!=null) {
+								// Common root
+								if (eds.isEmpty()) {
+									// No references to this root, so delete the entire tree
+									removeTree.add(ed);
 								}
-								else if (rootEd!=null && entityData.getId()==null) {
+								else if (ed.getId()==null) {
+									// User wants to delete the root, so just remove the tag, but leave the tree intact
 									removeRootTag.add(ed);
 								}
+								else {
+									// User wants to delete a reference to the root
+									removeReference.add(ed);
+								}
 							}
+							else {
+								if (eds.size() > 1) {
+									// Just remove the reference
+									removeReference.add(ed);
+								}
+								else {
+									// Only 1 reference left, so delete the entire tree
+									removeTree.add(ed);
+								}
+							}
+							setProgress(i++, toDelete.size());
 						}
 					}
 					
 					@Override
 					protected void hadSuccess() {
-
-						final Set<EntityData> toDelete = new HashSet<EntityData>(entityDataList);
-						for(EntityData ed : entityDataList) {
-							if (!removeReference.contains(ed) && !removeRootTag.contains(ed)) {
-								int deleteConfirmation = JOptionPane.showConfirmDialog(browser,
-										"Are you sure you want to permanently delete '" + entity.getName()
-												+ "' and all orphaned items underneath it?", "Delete",
-										JOptionPane.YES_NO_OPTION);
-								if (deleteConfirmation != 0) {
-									toDelete.remove(ed);
+						
+						Utils.setWaitingCursor(browser.getEntityOutline());
+						
+						final Set<EntityData> toReallyDelete = new HashSet<EntityData>(toDelete);
+						for(EntityData ed : toDelete) {
+							Entity child = ed.getChildEntity();
+							if (removeRootTag.contains(ed)) {
+								// Must own the root in order to de-root it
+								if (!child.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+									JOptionPane.showMessageDialog(browser, "No permission to remove "+ed.getChildEntity().getName(), "Error", JOptionPane.ERROR_MESSAGE);
+									toReallyDelete.remove(ed);
+								}
+							}
+							else if (removeReference.contains(ed)) {
+								// Must own the reference to remove it
+								if (!ed.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+									JOptionPane.showMessageDialog(browser, "No permission to remove "+ed.getChildEntity().getName(), "Error", JOptionPane.ERROR_MESSAGE);
+									toReallyDelete.remove(ed);
+								}
+							}
+							else if (removeTree.contains(ed)) {
+								// Must own the tree root to delete it
+								if (!ed.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+									JOptionPane.showMessageDialog(browser, "No permission to delete "+ed.getChildEntity().getName(), "Error", JOptionPane.ERROR_MESSAGE);
+									toReallyDelete.remove(ed);
+								}
+								else {
+									Object[] options = {"Yes", "No"};
+									int deleteConfirmation = JOptionPane.showOptionDialog(browser,
+											"Are you sure you want to permanently delete '" + ed.getChildEntity().getName()
+													+ "' and all orphaned items underneath it?", "Delete",
+											JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[1]);
+									if (deleteConfirmation != 0) {
+										toReallyDelete.remove(ed);
+									}
 								}
 							}
 						}
 						
-						if (toDelete.isEmpty()) return;
+						if (toReallyDelete.isEmpty()) {
+							Utils.setDefaultCursor(browser.getEntityOutline());
+							return;
+						}
 						
 						SimpleWorker removeTask = new SimpleWorker() {
-
 							@Override
 							protected void doStuff() throws Exception {
-								
-								for(EntityData ed : toDelete) {
-									// Update database
+								int i = 0;
+								for(EntityData ed : toReallyDelete) {
 									if (removeRootTag.contains(ed)) {
 										EntityData rootTagEd = ed.getChildEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT);
 										ModelMgr.getModelMgr().removeEntityData(rootTagEd);
@@ -315,38 +369,41 @@ public class EntityContextMenu extends JPopupMenu {
 									else if (removeReference.contains(ed)) {
 										ModelMgr.getModelMgr().removeEntityData(ed);
 									} 
-									else {
+									else if (removeTree.contains(ed)) {
 										ModelMgr.getModelMgr().deleteEntityTree(ed.getChildEntity().getId());
 									}
+									else {
+										throw new IllegalStateException("Unknown deletion type for EntityData.id="+ed.getId());
+									}
+									setProgress(i++, toReallyDelete.size());
 								}
 							}
 
 							@Override
 							protected void hadSuccess() {
-								browser.getEntityOutline().refresh();
-								Utils.setDefaultCursor(browser);
+								Utils.setDefaultCursor(browser.getEntityOutline());
 							}
 
 							@Override
 							protected void hadError(Throwable error) {
+								Utils.setDefaultCursor(browser.getEntityOutline());
 								SessionMgr.getSessionMgr().handleException(error);
 							}
 						};
 
+						removeTask.setProgressMonitor(new ProgressMonitor(SessionMgr.getBrowser(), "Removing", "", 0, 100));
 						removeTask.execute();
 					}
 					
 					@Override
 					protected void hadError(Throwable error) {
+						Utils.setDefaultCursor(browser.getEntityOutline());
                     	SessionMgr.getSessionMgr().handleException(error);
 					}
 					
 				};
-				worker.execute();
-				
-				
-				
-
+				verifyTask.setProgressMonitor(new ProgressMonitor(SessionMgr.getBrowser(), "Verifying", "", 0, 100));
+				verifyTask.execute();
 			}
 		});
 

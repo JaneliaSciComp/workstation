@@ -323,11 +323,13 @@ public class IconDemoPanel extends Viewer {
 					goParent();
 				}
 				else {
+					int i=0;
 					for(Entity entity : entities) {
-						if (entity.getId().equals(entityId)) {
-							refresh();
+						if (entity.getId()!=null && entity.getId().equals(entityId)) {
+							removeEntityData(entityDatas.get(i));
 							return;
 						}
+						i++;
 					}	
 				}
 			}
@@ -340,8 +342,8 @@ public class IconDemoPanel extends Viewer {
 				}
 				else {
 					for(EntityData entityData : entityDatas) {
-						if (entityData.getId().equals(entityDataId)) {
-							refresh();
+						if (entityData.getId()!=null && entityData.getId().equals(entityDataId)) {
+							removeEntityData(entityData);
 							return;
 						}
 					}
@@ -688,6 +690,9 @@ public class IconDemoPanel extends Viewer {
 		
 		this.contextEntityData = entityData;
 		this.contextUniqueId = uniqueId;
+		
+		if (contextEntityData==null) return;
+		
 		Entity entity = contextEntityData.getChildEntity();
 
 		getEntitySelectionHistory().pushHistory(contextUniqueId);
@@ -718,9 +723,8 @@ public class IconDemoPanel extends Viewer {
 		showLoadingIndicator();
 		
 		// Cancel previous loads
-
 		if (entityLoadingWorker != null && !entityLoadingWorker.isDone()) {
-			System.out.println("Cancel previous image load");
+			System.out.println("Cancel previous entity load");
 			entityLoadingWorker.disregard();
 		}
 		imagesPanel.cancelAllLoads();
@@ -740,10 +744,12 @@ public class IconDemoPanel extends Viewer {
 				List<EntityData> loadedEntityDatas = new ArrayList<EntityData>();
 				for (EntityData entityData : entityDatas) {
 					if (!EntityUtils.isInitialized(entityData.getChildEntity())) {
+						System.out.println("Warning: had to load entity "+entityData.getChildEntity().getId());
 						entityData.setChildEntity(ModelMgr.getModelMgr().getEntityById(entityData.getChildEntity().getId()+""));
 					}
 					EntityData defaultImageEd = entityData.getChildEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
 					if (defaultImageEd!= null && defaultImageEd.getValue() == null && defaultImageEd.getChildEntity()!=null) {
+						System.out.println("Warning: had to load default image "+entityData.getChildEntity().getName());
 						defaultImageEd.setChildEntity(ModelMgr.getModelMgr().getEntityById(defaultImageEd.getChildEntity().getId() + ""));
 					}
 					loadedEntityDatas.add(entityData);
@@ -754,11 +760,13 @@ public class IconDemoPanel extends Viewer {
 
 			protected void hadSuccess() {
 				entityLoadDone();
-				try {
-					if (success != null)
-						success.call();
-				} catch (Exception e) {
-					SessionMgr.getSessionMgr().handleException(e);
+				if (success != null) {
+					try {
+							success.call();
+					} 
+					catch (Exception e) {
+						SessionMgr.getSessionMgr().handleException(e);
+					}
 				}
 			}
 
@@ -795,7 +803,6 @@ public class IconDemoPanel extends Viewer {
 		// buttons so that we can calculate the grid correctly
 		imagesPanel.resizeTables(imagesPanel.getCurrTableHeight());
 		imagesPanel.rescaleImages(imagesPanel.getCurrImageSize());
-		imagesPanel.recalculateGrid();
 		
 		revalidate();
 		repaint();
@@ -804,6 +811,7 @@ public class IconDemoPanel extends Viewer {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
+				imagesPanel.recalculateGrid();
 				imagesPanel.setScrollLoadingEnabled(true);
 				imagesPanel.loadUnloadImages();
 				// Select the first entity
@@ -825,6 +833,24 @@ public class IconDemoPanel extends Viewer {
 			JOptionPane.showMessageDialog(IconDemoPanel.this, "Error loading session", "Data Loading Error",
 					JOptionPane.ERROR_MESSAGE);
 		}
+	}
+
+	protected void removeEntityData(final EntityData entityData) {
+		int index = entityDatas.indexOf(entityData);
+		if (index < 0) return;
+		entityDatas.remove(index);
+		entities.remove(index);
+		
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				imagesPanel.removeEntityData(entityData);
+				imagesPanel.recalculateGrid();
+				imagesPanel.loadUnloadImages();
+				revalidate();
+				repaint();
+			}
+		});
 	}
 
 	private void filterEntities() {
@@ -931,7 +957,9 @@ public class IconDemoPanel extends Viewer {
 			EntityData entityData = contextEntityData;
 			
 			protected void doStuff() throws Exception {
-				entityData.setChildEntity(ModelMgr.getModelMgr().getEntityById(entityData.getChildEntity().getId()+""));
+				Entity entity = ModelMgr.getModelMgr().getEntityById(entityData.getChildEntity().getId()+"");
+				ModelMgrUtils.loadLazyEntity(entity, false);
+				entityData.setChildEntity(entity);
 			}
 
 			protected void hadSuccess() {
@@ -939,14 +967,12 @@ public class IconDemoPanel extends Viewer {
 					clear();
 				}
 				else {
-					loadEntity(contextEntityData, contextUniqueId);	
+					loadEntity(entityData, contextUniqueId);	
 				}
 			}
 
 			protected void hadError(Throwable error) {
-				error.printStackTrace();
-				JOptionPane.showMessageDialog(IconDemoPanel.this, "Error refreshing", "Data Loading Error",
-						JOptionPane.ERROR_MESSAGE);
+				SessionMgr.getSessionMgr().handleException(error);
 			}
 		};
 

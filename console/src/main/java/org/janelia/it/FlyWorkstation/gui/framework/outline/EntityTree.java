@@ -542,11 +542,16 @@ public class EntityTree extends JPanel {
         addChildren(newNode, childDataList, nextVisitedEds, level);
     }
 
-    protected void removeNode(DefaultMutableTreeNode node) {
-
+    protected synchronized void removeNode(DefaultMutableTreeNode node) {
+    	
     	EntityData entityData = getEntityData(node);
     	Entity entity = getEntity(node);
-
+    	
+    	if (node.getParent()==null) {
+    		System.out.println("EntityTree.removeNode: "+entity.getName()+" was already removed");
+    		return;
+    	}
+    	
     	// Remove from all maps
         String uniqueId = selectedTree.getUniqueId(node);
         uniqueIdToNodeMap.remove(uniqueId);
