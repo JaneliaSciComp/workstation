@@ -338,10 +338,18 @@ public class ImagesPanel extends JScrollPane {
     	return false;
     }
     
+    /**
+     * The identifier can be either a uniqueId (path) or just a simple entity id. In the latter case you may get 
+     * multiple entities selected, if there are duplicates.
+     * @param selectedEntityId
+     * @param selection
+     * @param clearAll
+     */
     public void setSelection(String selectedEntityId, boolean selection, boolean clearAll) {
     	if (clearAll) {
 			for(AnnotatedImageButton button : buttons.values()) {
-				if (button.getRootedEntity().getId().equals(selectedEntityId)) {
+				RootedEntity rootedEntity = button.getRootedEntity();
+				if (rootedEntity.getId().equals(selectedEntityId) || rootedEntity.getEntity().getId().toString().equals(selectedEntityId)) {
 					setSelection(button, true);
 				}
 				else {

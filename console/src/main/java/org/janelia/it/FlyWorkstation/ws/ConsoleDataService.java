@@ -31,15 +31,6 @@ public interface ConsoleDataService extends Remote {
 			@WebParam(name = "port") int port, 
 			@WebParam(name = "endpointUrl") String endpointUrl) 
 			throws RemoteException;
-
-    public void selectOutlineEntity(
-			@WebParam(name = "uniqueId") String uniqueId,
-			@WebParam(name = "clearAll") boolean clearAll)
-    		throws RemoteException;
-
-    public void deselectOutlineEntity(
-			@WebParam(name = "uniqueId") String uniqueId)
-    		throws RemoteException;
     
     public void selectEntity(
 			@WebParam(name = "entityId") long entityId,

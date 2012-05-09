@@ -64,21 +64,15 @@ public class ConsoleDataServiceImpl {
 			client.sendMessage("sessionSelected", parameters);
 		}
     }
-
-    public void selectOutlineEntity(String uniqueId, boolean clearAll) throws Exception {
-        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueId, clearAll);
-    }
-
-    public void deselectOutlineEntity(String uniqueId) throws Exception {
-        ModelMgr.getModelMgr().getEntitySelectionModel().deselectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueId);
-    }
     
     public void selectEntity(long entityId, boolean clearAll) throws Exception {
         ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_MAIN_VIEW, entityId+"", clearAll);
+        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_SEC_VIEW, entityId+"", clearAll);
     }
 
     public void deselectEntity(long entityId) throws Exception {
         ModelMgr.getModelMgr().getEntitySelectionModel().deselectEntity(EntitySelectionModel.CATEGORY_MAIN_VIEW, entityId+"");
+        ModelMgr.getModelMgr().getEntitySelectionModel().deselectEntity(EntitySelectionModel.CATEGORY_SEC_VIEW, entityId+"");
     }
     
     public Entity createAnnotation(OntologyAnnotation annotation) throws Exception {
