@@ -38,7 +38,7 @@ public class DynamicImageButton extends AnnotatedImageButton {
             	this.displaySize = iconDemoPanel.getImagesPanel().getCurrImageSize();
         		Boolean invertImages = (Boolean)SessionMgr.getSessionMgr().getModelProperty(
         				ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY);
-                if (invertImages) {
+                if (invertImages!=null && invertImages) {
                 	setInvertedColors(true);
                 }
                 else {

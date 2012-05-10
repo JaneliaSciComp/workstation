@@ -799,7 +799,9 @@ public class IconDemoPanel extends Viewer {
 				ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY);
 		Boolean tagTable = (Boolean)SessionMgr.getSessionMgr().getModelProperty(
 				ViewerSettingsPanel.SHOW_ANNOTATION_TABLES_PROPERTY);
-		
+		if (invertImages==null) invertImages = false;
+        if (tagTable==null) tagTable = false;
+
 		imagesPanel.setTagTable(tagTable);
 		imagesPanel.setTagVisbility(showTagsButton.isSelected());
 		imagesPanel.setTitleVisbility(showTitlesButton.isSelected());
