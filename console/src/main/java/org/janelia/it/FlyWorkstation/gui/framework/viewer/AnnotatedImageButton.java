@@ -12,13 +12,10 @@ import javax.swing.*;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityContextMenu;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 
 /**
  * A DynamicImagePanel with a title on top and optional annotation tags underneath. Made to be aggregated in an 
@@ -129,7 +126,7 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
 				// Double-clicking an image in gallery view triggers an outline selection
 				RootedEntity contextRootedEntity = iconDemoPanel.getContextRootedEntity();
 				if (contextRootedEntity==null || contextRootedEntity==rootedEntity) return;
-            	if (Utils.isEmpty(rootedEntity.getUniqueId())) return;
+            	if (StringUtils.isEmpty(rootedEntity.getUniqueId())) return;
         		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, rootedEntity.getUniqueId(), true);	
         		e.consume();
 			}
@@ -264,14 +261,6 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
     public RootedEntity getRootedEntity() {
         return rootedEntity;
     }
-    
-//    public Entity getEntity() {
-//        return rootedEntity.getEntity();
-//    }
-//
-//    public EntityData getEntityData() {
-//        return rootedEntity.getEntityData();
-//    }
     
 	public void rescaleImage(int imageSize) {
     	setTitle(rootedEntity.getEntity().getName(), imageSize);

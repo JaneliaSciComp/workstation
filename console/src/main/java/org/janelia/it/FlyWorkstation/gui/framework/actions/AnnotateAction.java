@@ -18,12 +18,12 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.types.*;
 import org.janelia.it.jacs.model.ontology.types.Enum;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 
 /**
  * This action creates and saves an annotation, and adds a corresponding tag to the currently selected item in an IconDemoPanel.
@@ -58,7 +58,7 @@ public class AnnotateAction extends OntologyElementAction {
             value = JOptionPane.showInputDialog(SessionMgr.getSessionMgr().getActiveBrowser(), 
             		"Value:\n", term.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
 
-            if (Utils.isEmpty((String)value)) return;
+            if (StringUtils.isEmpty((String)value)) return;
             Double dvalue = Double.parseDouble((String)value);
             Interval interval = (Interval) type;
             if (dvalue < interval.getLowerBound().doubleValue() || dvalue > interval.getUpperBound().doubleValue()) {

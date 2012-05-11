@@ -14,9 +14,9 @@ import javax.swing.tree.TreePath;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.EntityAttribute;
 import org.janelia.it.jacs.model.entity.EntityType;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 
 /**
  * The left-hand panel which lists the Entity types and their attributes.
@@ -70,7 +70,7 @@ public class EntityTypePane extends JScrollPane {
     			@Override
     			public void actionPerformed(ActionEvent e) {
     	            String typeName = (String) JOptionPane.showInputDialog(DataviewApp.getMainFrame(), "Name:\n", "Add Entity Type", JOptionPane.PLAIN_MESSAGE, null, null, null);
-    	            if (Utils.isEmpty(typeName)) return;
+    	            if (StringUtils.isEmpty(typeName)) return;
     	            
     	            try {
     	            	ModelMgr.getModelMgr().createEntityType(typeName);	
@@ -93,7 +93,7 @@ public class EntityTypePane extends JScrollPane {
     			@Override
     			public void actionPerformed(ActionEvent e) {
     	            String attrName = (String) JOptionPane.showInputDialog(DataviewApp.getMainFrame(), "Name:\n", "Add Entity Attribute", JOptionPane.PLAIN_MESSAGE, null, null, null);
-    	            if (Utils.isEmpty(attrName)) return;
+    	            if (StringUtils.isEmpty(attrName)) return;
     	            
     	            try {
     	            	ModelMgr.getModelMgr().createEntityAttribute(entityType.getName(), attrName);		

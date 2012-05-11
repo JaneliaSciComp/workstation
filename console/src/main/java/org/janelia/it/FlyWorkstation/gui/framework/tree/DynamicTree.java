@@ -616,7 +616,6 @@ public class DynamicTree extends JPanel {
      */
 	protected void refresh() {
 	}
-    
 }
 
 

@@ -16,6 +16,7 @@ public class EntitySelectionModel {
 	public static final String CATEGORY_OUTLINE = "outline";
 	public static final String CATEGORY_MAIN_VIEW = "mainViewer";
 	public static final String CATEGORY_SEC_VIEW = "secViewer";
+	public static final String CATEGORY_CROSS_VIEW = "crossViewer";
 	
 	private final Map<String, List<String>> selectionModels = new HashMap<String, List<String>>();
 	
@@ -23,6 +24,7 @@ public class EntitySelectionModel {
 		selectionModels.put(CATEGORY_OUTLINE, new ArrayList<String>());
 		selectionModels.put(CATEGORY_MAIN_VIEW, new ArrayList<String>());
 		selectionModels.put(CATEGORY_SEC_VIEW, new ArrayList<String>());
+		selectionModels.put(CATEGORY_CROSS_VIEW, new ArrayList<String>());
 	}
 	
 	private List<String> getCategory(String category) {

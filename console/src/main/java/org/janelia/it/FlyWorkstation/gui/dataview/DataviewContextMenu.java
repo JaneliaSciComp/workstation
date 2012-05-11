@@ -19,6 +19,7 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 
 /**
  * Context pop up menu for entities in the data viewer.
@@ -212,7 +213,7 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 		if (!OpenInFinderAction.isSupported()) return null;
 		final Entity entity = getSelectedElement();
     	String filepath = EntityUtils.getAnyFilePath(entity);
-        if (!Utils.isEmpty(filepath)) {
+        if (!StringUtils.isEmpty(filepath)) {
         	return getActionItem(new OpenInFinderAction(entity));
         }
         return null;
@@ -222,7 +223,7 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
         if (!OpenWithDefaultAppAction.isSupported()) return null;
 		final Entity entity = getSelectedElement();
     	String filepath = EntityUtils.getAnyFilePath(entity);
-        if (!Utils.isEmpty(filepath)) {
+        if (!StringUtils.isEmpty(filepath)) {
         	return getActionItem(new OpenWithDefaultAppAction(entity));
         }
         return null;

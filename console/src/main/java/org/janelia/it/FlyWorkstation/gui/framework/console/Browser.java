@@ -141,6 +141,15 @@ public class Browser extends JFrame implements Cloneable {
             SessionMgr.getSessionMgr().handleException(e);
         }
     }
+    
+    public Viewer showSecViewer() {
+    	Viewer secViewer = viewerPanel.getSecViewer();
+		if (secViewer==null) {
+			secViewer = new IconDemoPanel(SessionMgr.getBrowser().getViewersPanel(), EntitySelectionModel.CATEGORY_SEC_VIEW);
+			viewerPanel.setSecViewer(secViewer);
+		}
+		return secViewer;
+    }
 
     /**
      * Use given coordinates of the top left point and passed realEstatePercent (0-1.0).
@@ -290,7 +299,11 @@ public class Browser extends JFrame implements Cloneable {
             consolePosition = getNewBrowserPosition();
         }
 
-        centerRightHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, viewerPanel, ontologyOutline);
+        VerticalPanelPicker rightPanel = new VerticalPanelPicker();
+        rightPanel.addPanel(Icons.getIcon("page.png"), "Ontology", "Displays an ontology for annotation", ontologyOutline);
+        rightPanel.addPanel(Icons.getIcon("page_copy.png"), "Split Picking Tool", "Allows for simulation of flyline crosses", new SplitPickingPanel());
+        
+        centerRightHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, viewerPanel, rightPanel);
         centerRightHorizontalSplitPane.setMinimumSize(new Dimension(200, 0));
         centerRightHorizontalSplitPane.setOpaque(true);
         centerRightHorizontalSplitPane.setDividerSize(10);

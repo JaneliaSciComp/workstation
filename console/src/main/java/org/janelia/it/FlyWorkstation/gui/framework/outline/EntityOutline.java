@@ -31,6 +31,7 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.*;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
  * The entity tree which lives in the right-hand "Data" panel and drives the IconDemoPanel.
@@ -495,10 +496,34 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
 		getDynamicTree().expand(node, true);
 	}
-
-	public void selectEntityByUniqueId(String uniqueId) {
+	
+	public void selectEntityByUniqueId(final String uniqueId) {
 		DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
-		selectNode(node);
+		if (node!=null) {
+			selectNode(node);	
+			return;
+		}
+		
+		// Let's try to lazy load the ancestors of this node
+		List<String> path = EntityUtils.getPathFromUniqueId(uniqueId);
+		for (String ancestorId : path) {
+			DefaultMutableTreeNode ancestor = getNodeByUniqueId(ancestorId);
+			if (ancestor==null) {
+				// Give up, can't find the entity with this uniqueId
+				return;
+			}
+			if (!getDynamicTree().childrenAreLoaded(ancestor)) {
+				// Load the children before displaying them
+				SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, ancestor, false) {
+					@Override
+					protected void doneLoading() {
+						selectEntityByUniqueId(uniqueId);
+					}
+				};
+				loadingWorker.execute();
+				return;
+			}
+		}
 	}
     
 	private synchronized void selectNode(final DefaultMutableTreeNode node) {
@@ -507,7 +532,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		
 		if (node == null) {
 			currUniqueId = null;
-			panel.clear();
 			return;
 		}
 

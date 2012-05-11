@@ -41,6 +41,7 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 
 /**
  * This panel shows images for annotation. 
@@ -49,43 +50,43 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  */
 public class IconDemoPanel extends Viewer {
 
-	private SplashPanel splashPanel;
-	private JToolBar toolbar;
-	private JButton prevButton;
-	private JButton nextButton;
-	private JButton parentButton;
-	private JToggleButton showTitlesButton;
-	private JButton imageRoleButton;
-	private JToggleButton showTagsButton;
-	private JButton userButton;
-	private JSlider imageSizeSlider;
-	private ImagesPanel imagesPanel;
-	private JPanel statusBar;
-	private JLabel statusLabel;
-	private Hud hud;
-
+	protected SplashPanel splashPanel;
+	protected JToolBar toolbar;
+	protected JButton prevButton;
+	protected JButton nextButton;
+	protected JButton parentButton;
+	protected JToggleButton showTitlesButton;
+	protected JButton imageRoleButton;
+	protected JToggleButton showTagsButton;
+	protected JButton userButton;
+	protected JSlider imageSizeSlider;
+	protected ImagesPanel imagesPanel;
+	protected JPanel statusBar;
+	protected JLabel statusLabel;
+	protected Hud hud;
+	
 	// The parent entity which we are displaying children for
-	private RootedEntity contextRootedEntity;
+	protected RootedEntity contextRootedEntity;
 	
 	// Children of the parent entity
-	private List<RootedEntity> rootedEntities;
-	private Map<String,RootedEntity> rootedEntityMap;
+	protected List<RootedEntity> rootedEntities;
+	protected Map<String,RootedEntity> rootedEntityMap;
 	
-	private int currImageSize;
-	private int currTableHeight = ImagesPanel.DEFAULT_TABLE_HEIGHT;
+	protected int currImageSize;
+	protected int currTableHeight = ImagesPanel.DEFAULT_TABLE_HEIGHT;
 	
-	private final List<String> allUsers = new ArrayList<String>();
-	private final Set<String> hiddenUsers = new HashSet<String>();
-	private final Annotations annotations = new Annotations();
+	protected final List<String> allUsers = new ArrayList<String>();
+	protected final Set<String> hiddenUsers = new HashSet<String>();
+	protected final Annotations annotations = new Annotations();
 
-	private final List<String> allImageRoles = new ArrayList<String>();
-	private String currImageRole;
+	protected final List<String> allImageRoles = new ArrayList<String>();
+	protected String currImageRole;
 	
 	private SimpleWorker entityLoadingWorker;
 	private SimpleWorker annotationLoadingWorker;
 
 	// Listen for key strokes and execute the appropriate key bindings
-	private final KeyListener keyListener = new KeyAdapter() {
+	protected final KeyListener keyListener = new KeyAdapter() {
 		@Override
 		public void keyPressed(KeyEvent e) {
 
@@ -157,6 +158,10 @@ public class IconDemoPanel extends Viewer {
 		}
 	};
 
+	public IconDemoPanel(final String selectionCategory) {
+		this(null, selectionCategory);
+	}
+	
 	public IconDemoPanel(final ViewerSplitPanel viewerContainer, final String selectionCategory) {
 
 		super(viewerContainer, selectionCategory);
@@ -360,10 +365,9 @@ public class IconDemoPanel extends Viewer {
 				// Hidden by session?
 				Boolean onlySession = (Boolean)SessionMgr.getSessionMgr().getModelProperty(
 						ViewerSettingsPanel.ONLY_SESSION_ANNOTATIONS_PROPERTY);
-				if (!onlySession || session == null) return true;
+				if ((onlySession!=null && !onlySession) || session == null) return true;
 				
-				// At this point we know there is a current session, and we have
-				// to match it
+				// At this point we know there is a current session, and we have to match it
 				return (annotation.getSessionId() != null && annotation.getSessionId().equals(session.getId()));
 			}
 		});
@@ -487,10 +491,10 @@ public class IconDemoPanel extends Viewer {
 	}
 
 	private boolean isParentEnabled() {
-		return (contextRootedEntity!=null && !Utils.isEmpty(Utils.getParentIdFromUniqueId(contextRootedEntity.getUniqueId())));
+		return (contextRootedEntity!=null && !StringUtils.isEmpty(Utils.getParentIdFromUniqueId(contextRootedEntity.getUniqueId())));
 	}
 	
-	private JToolBar createToolbar() {
+	protected JToolBar createToolbar() {
 
 		JToolBar toolBar = new JToolBar("Still draggable");
 		toolBar.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, (Color)UIManager.get("windowBorder")), BorderFactory.createEmptyBorder(0, 5, 2, 5)));
@@ -871,7 +875,7 @@ public class IconDemoPanel extends Viewer {
 		imagesPanel.showAllButtons();
 		Boolean hideAnnotated = (Boolean)SessionMgr.getSessionMgr().getModelProperty(
 				ViewerSettingsPanel.HIDE_ANNOTATED_PROPERTY);
-		if (hideAnnotated) {
+		if (hideAnnotated!=null && hideAnnotated) {
 			imagesPanel.hideButtons(completed);	
 		}
 	}
@@ -961,6 +965,7 @@ public class IconDemoPanel extends Viewer {
 			
 			protected void doStuff() throws Exception {
 				Entity entity = ModelMgr.getModelMgr().getEntityById(rootedEntity.getEntity().getId()+"");
+				if (entity==null) return;
 				ModelMgrUtils.loadLazyEntity(entity, false);
 				rootedEntity.getEntityData().setChildEntity(entity);
 			}
@@ -986,13 +991,13 @@ public class IconDemoPanel extends Viewer {
 		this.contextRootedEntity = null;
 		this.rootedEntities = null;
 		this.rootedEntityMap = null;
-		
+
+		setTitle("");
+		removeAll();
+		add(splashPanel, BorderLayout.CENTER);
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				setTitle("");
-				removeAll();
-				add(splashPanel, BorderLayout.CENTER);
 			}
 		});
 	}
@@ -1097,6 +1102,10 @@ public class IconDemoPanel extends Viewer {
 
 	public JSlider getImageSizeSlider() {
 		return imageSizeSlider;
+	}
+
+	public SplashPanel getSplashPanel() {
+		return splashPanel;
 	}
 
 	public KeyListener getKeyListener() {

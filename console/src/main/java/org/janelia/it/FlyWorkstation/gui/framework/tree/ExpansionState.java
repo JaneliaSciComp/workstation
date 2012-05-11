@@ -10,6 +10,7 @@ import javax.swing.tree.TreePath;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
  * Saves and restores expansion state for a DynamicTree. Asynchronously loads any lazy nodes that were expanded when 
@@ -29,17 +30,8 @@ public class ExpansionState {
 	public void setSelectedUniqueId(String uniqueId) {
 		this.selected = uniqueId;
 		// In case you want to select something that was not expanded already...
-		String[] pathParts = selected.split("/");
-		String path = "";
-		for(int i=0; i<pathParts.length; i+=2) {
-			path += "/";
-			if (!Utils.isEmpty(pathParts[i])) {
-				path += pathParts[i]+"/";
-			}
-			path += pathParts[i+1];
-			expanded.add(path);
-		}
-	}
+		expanded.addAll(EntityUtils.getPathFromUniqueId(uniqueId));
+	};
 	
     public void storeExpansionState(DynamicTree dynamicTree) {
     	expanded.clear();

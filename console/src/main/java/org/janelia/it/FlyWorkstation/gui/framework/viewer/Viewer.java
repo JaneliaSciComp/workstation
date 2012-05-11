@@ -15,6 +15,12 @@ public abstract class Viewer extends JPanel implements Refreshable {
 	private ViewerSplitPanel viewerContainer;
 	private String selectionCategory;
 	private EntitySelectionHistory entitySelectionHistory;
+
+	public Viewer(String selectionCategory) {
+		this.viewerContainer = null;
+		this.selectionCategory = selectionCategory;
+		this.entitySelectionHistory = new EntitySelectionHistory();
+	}
 	
 	public Viewer(ViewerSplitPanel viewerContainer, String selectionCategory) {
 		this.viewerContainer = viewerContainer;
@@ -35,11 +41,11 @@ public abstract class Viewer extends JPanel implements Refreshable {
 	}
 
 	public void setAsActive() {
-		viewerContainer.setAsActive(this);
+		if (viewerContainer!=null) viewerContainer.setAsActive(this);
 	}
 	
 	public void setTitle(String title) {
-		viewerContainer.setTitle(this, title);
+		if (viewerContainer!=null) viewerContainer.setTitle(this, title);
 	}
 	
 	public abstract RootedEntity getRootedEntityById(String id);

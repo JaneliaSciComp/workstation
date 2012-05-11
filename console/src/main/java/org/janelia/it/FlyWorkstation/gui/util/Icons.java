@@ -159,6 +159,9 @@ public class Icons {
                 || EntityConstants.TYPE_SCREEN_SAMPLE.equals(type)) {
             return getIcon(large ? "folder_files_large.png" : "beaker.png");
         }
+        else if (EntityConstants.TYPE_SCREEN_SAMPLE_CROSS.equals(type)) {
+            return getIcon(large ? "gear_large.png" : "intersect.png");
+        }
         else if (EntityConstants.TYPE_SUPPORTING_DATA.equals(type)) {
             return getIcon(large ? "folder_files_large.png" : "folder_page.png");
         }

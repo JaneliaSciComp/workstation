@@ -33,6 +33,7 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 
 /**
  * Context pop up menu for entities.
@@ -426,7 +427,7 @@ public class EntityContextMenu extends JPopupMenu {
 	
 	protected JMenuItem getOpenInSecondViewerItem() {
 		if (multiple) return null;
-		if (Utils.isEmpty(rootedEntity.getUniqueId())) return null;
+		if (StringUtils.isEmpty(rootedEntity.getUniqueId())) return null;
         JMenuItem copyMenuItem = new JMenuItem("  Open in second viewer");
         
         copyMenuItem.addActionListener(new ActionListener() {
@@ -443,11 +444,7 @@ public class EntityContextMenu extends JPopupMenu {
 					
 					@Override
 					protected void hadSuccess() {
-						Viewer secViewer = SessionMgr.getBrowser().getViewersPanel().getSecViewer();
-						if (secViewer==null) {
-							secViewer = new IconDemoPanel(SessionMgr.getBrowser().getViewersPanel(), EntitySelectionModel.CATEGORY_SEC_VIEW);
-							SessionMgr.getBrowser().getViewersPanel().setSecViewer(secViewer);
-						}
+						Viewer secViewer = SessionMgr.getBrowser().showSecViewer();
 			            ((IconDemoPanel)secViewer).loadEntity(rootedEntity);
 			            secViewer.setAsActive();
 			            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, rootedEntity.getUniqueId(), true);
@@ -468,7 +465,7 @@ public class EntityContextMenu extends JPopupMenu {
 		if (multiple) return null;
 		if (!OpenInFinderAction.isSupported()) return null;
     	String filepath = EntityUtils.getAnyFilePath(rootedEntity.getEntity());
-        if (!Utils.isEmpty(filepath)) {
+        if (!StringUtils.isEmpty(filepath)) {
         	return getActionItem(new OpenInFinderAction(rootedEntity.getEntity()));
         }
         return null;
@@ -478,7 +475,7 @@ public class EntityContextMenu extends JPopupMenu {
 		if (multiple) return null;
         if (!OpenWithDefaultAppAction.isSupported()) return null;
     	String filepath = EntityUtils.getAnyFilePath(rootedEntity.getEntity());
-        if (!Utils.isEmpty(filepath)) {
+        if (!StringUtils.isEmpty(filepath)) {
         	return getActionItem(new OpenWithDefaultAppAction(rootedEntity.getEntity()));
         }
         return null;

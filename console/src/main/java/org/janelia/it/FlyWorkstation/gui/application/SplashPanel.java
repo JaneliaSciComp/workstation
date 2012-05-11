@@ -14,34 +14,31 @@ import java.io.FileNotFoundException;
  * This panel is the main part of the splash screen.
  */
 public class SplashPanel extends JPanel {
+	
+	private boolean showSplashImage = true;
+	
     public SplashPanel() {
-        try {
-            jbInit();
-        }
-        catch (Exception e) {
-            try {
-//                client.gui.framework.session_mgr.SessionMgr.getSessionMgr()
-//                                                      .handleException(e);
-            }
-            catch (Exception ex1) {
-                e.printStackTrace();
-            }
-        }
-
-    }
-
-    private void jbInit() throws Exception {
         setBackground(Color.white);
     }
 
     @Override
     protected void paintComponent(Graphics graphics) {
         try {
-            ImageIcon bkgdImageIcon = Utils.getClasspathImage("flylight_transparent_no_shadow.png");
-            graphics.drawImage(bkgdImageIcon.getImage(), (this.getWidth() - bkgdImageIcon.getIconWidth()) / 2, (this.getHeight() - bkgdImageIcon.getIconHeight()) / 2, null);
+        	if (showSplashImage) {
+	            ImageIcon bkgdImageIcon = Utils.getClasspathImage("flylight_transparent_no_shadow.png");
+	            graphics.drawImage(bkgdImageIcon.getImage(), (this.getWidth() - bkgdImageIcon.getIconWidth()) / 2, (this.getHeight() - bkgdImageIcon.getIconHeight()) / 2, null);
+        	}
         }
         catch (FileNotFoundException e) {
             e.printStackTrace();
         }
     }
+
+	public boolean isShowSplashImage() {
+		return showSplashImage;
+	}
+
+	public void setShowSplashImage(boolean showSplashImage) {
+		this.showSplashImage = showSplashImage;
+	}
 }

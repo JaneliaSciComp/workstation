@@ -61,10 +61,6 @@ public class Utils {
     	return areSame(entity1, entity2) || (entity1!=null && entity2!=null && entity1.getId().equals(entity2.getId()));
     }
     
-    public static boolean isEmpty(String str) {
-        return (str == null || "".equals(str));
-    }
-    
     public static String join(List list, String delim) {
     	StringBuffer buf = new StringBuffer();
     	for(Object obj : list) {
