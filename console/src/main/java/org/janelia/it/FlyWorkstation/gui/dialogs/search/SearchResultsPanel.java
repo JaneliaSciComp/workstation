@@ -225,7 +225,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
         resultsPane.add(resultsTable, BorderLayout.CENTER);
 
 
-        JButton hideProjectionButton = new JButton(Icons.getIcon("close.png"));
+        JButton hideProjectionButton = new JButton(Icons.getIcon("close_red.png"));
         hideProjectionButton.setBorderPainted(false);
         hideProjectionButton.setToolTipText("Close mapped result view");
         hideProjectionButton.addActionListener(new ActionListener() {

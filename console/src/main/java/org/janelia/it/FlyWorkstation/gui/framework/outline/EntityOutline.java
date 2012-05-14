@@ -536,8 +536,10 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		}
 
 		String uniqueId = getDynamicTree().getUniqueId(node);
-		if (uniqueId.equals(currUniqueId)) return;
-		this.currUniqueId = uniqueId;
+		if (!uniqueId.equals(currUniqueId)) {
+			this.currUniqueId = uniqueId;
+			ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueId+"", true);
+		}
 		
 		DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
 		if (parentNode != null && !getTree().isExpanded(new TreePath(parentNode.getPath()))) {
@@ -580,6 +582,5 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		
 		RootedEntity rootedEntity = new RootedEntity(uniqueId, getEntityData(node));
 		((IconDemoPanel)SessionMgr.getSessionMgr().getActiveBrowser().getActiveViewer()).loadEntity(rootedEntity);
-		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueId+"", true);
 	}
 }

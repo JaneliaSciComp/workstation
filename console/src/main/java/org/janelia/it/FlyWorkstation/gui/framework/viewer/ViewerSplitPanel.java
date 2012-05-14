@@ -162,7 +162,7 @@ public class ViewerSplitPanel extends JPanel {
 	        mainTitlePane.add(titleLabel);
 	        
 			if (showHideButton) {
-		        JButton hideButton = new JButton(Icons.getIcon("close.png"));
+		        JButton hideButton = new JButton(Icons.getIcon("close_red.png"));
 		        hideButton.setPreferredSize(new Dimension(16, 16));
 		        hideButton.setBorderPainted(false);
 		        hideButton.setToolTipText("Close this viewer");

@@ -7,6 +7,7 @@ import java.awt.Rectangle;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseListener;
 import java.util.*;
 
 import javax.swing.*;
@@ -35,6 +36,7 @@ public class ImagesPanel extends JScrollPane {
     private final HashMap<String, AnnotatedImageButton> buttons = new LinkedHashMap<String, AnnotatedImageButton>();
     
     private KeyListener buttonKeyListener;
+    private MouseListener buttonMouseListener;
     
     private final IconDemoPanel iconDemoPanel;
     private ScrollableGridPanel buttonsPanel;
@@ -81,6 +83,10 @@ public class ImagesPanel extends JScrollPane {
     
     public void setButtonKeyListener(KeyListener buttonKeyListener) {
 		this.buttonKeyListener = buttonKeyListener;
+	}
+    
+    public void setButtonMouseListener(MouseListener buttonMouseListener) {
+		this.buttonMouseListener = buttonMouseListener;
 	}
 
 	public void setScrollLoadingEnabled(boolean enabled) {
@@ -143,6 +149,7 @@ public class ImagesPanel extends JScrollPane {
             button.setTagsVisible(iconDemoPanel.areTagsVisible());
             
             if (buttonKeyListener!=null) button.addKeyListener(buttonKeyListener);
+            if (buttonMouseListener!=null) button.addMouseListener(buttonMouseListener);
             
             button.addMouseListener(new MouseForwarder(this, "AnnotatedImageButton->ImagesPanel"));
             

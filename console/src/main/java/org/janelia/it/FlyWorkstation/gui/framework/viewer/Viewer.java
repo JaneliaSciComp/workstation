@@ -4,6 +4,7 @@ import javax.swing.JPanel;
 
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntitySelectionHistory;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
+import org.janelia.it.jacs.model.entity.Entity;
 
 /**
  * A viewer panel that is refreshable and can be placed inside a ViewerSplitPanel. 
@@ -48,6 +49,8 @@ public abstract class Viewer extends JPanel implements Refreshable {
 		if (viewerContainer!=null) viewerContainer.setTitle(this, title);
 	}
 	
-	public abstract RootedEntity getRootedEntityById(String id);
+	public abstract RootedEntity getRootedEntityById(String uniqueId);
+	
+	public abstract Entity getEntityById(Long id);
 	
 }

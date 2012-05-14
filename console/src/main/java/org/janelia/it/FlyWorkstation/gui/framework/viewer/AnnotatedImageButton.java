@@ -2,20 +2,13 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.*;
 import java.awt.dnd.*;
-import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.*;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityContextMenu;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
-import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 
 /**
  * A DynamicImagePanel with a title on top and optional annotation tags underneath. Made to be aggregated in an 
@@ -88,120 +81,6 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
         	}
         }
 
-        // Mouse events
-		
-        this.addMouseListener(new MouseHandler() {
-
-			@Override
-			protected void popupTriggered(MouseEvent e) {
-				if (e.isConsumed()) return;
-				
-				if (!isSelected()) {
-					ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(iconDemoPanel.getSelectionCategory(), rootedEntity.getId(), true);
-				}
-				
-				List<String> selectionIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(iconDemoPanel.getSelectionCategory());				
-				JPopupMenu popupMenu = null;
-				if (selectionIds.size()>1) {
-					List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
-					for (String entityId : selectionIds) {
-						rootedEntityList.add(iconDemoPanel.getRootedEntityById(entityId));
-					}
-					popupMenu = new EntityContextMenu(rootedEntityList);
-					((EntityContextMenu)popupMenu).addMenuItems();
-				}
-				else {
-					popupMenu = new EntityContextMenu(rootedEntity);
-		            ((EntityContextMenu)popupMenu).addMenuItems();
-				}
-	            
-				popupMenu.show(e.getComponent(), e.getX(), e.getY());
-				e.consume();
-			}
-
-			@Override
-			protected void doubleLeftClicked(MouseEvent e) {
-				if (e.isConsumed()) return;
-				
-				// Double-clicking an image in gallery view triggers an outline selection
-				RootedEntity contextRootedEntity = iconDemoPanel.getContextRootedEntity();
-				if (contextRootedEntity==null || contextRootedEntity==rootedEntity) return;
-            	if (StringUtils.isEmpty(rootedEntity.getUniqueId())) return;
-        		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, rootedEntity.getUniqueId(), true);	
-        		e.consume();
-			}
-
-    		@Override
-    		public void mouseReleased(MouseEvent e) {
-    			if (e.isConsumed()) return;
-    			super.mouseReleased(e);
-    			
-    			final boolean shiftDown = e.isShiftDown();
-    			final boolean metaDown = e.isMetaDown();
-    			final boolean state = isSelected();
-    			final String rootedEntityId = rootedEntity.getId();
-    			final String category = iconDemoPanel.getSelectionCategory();
-    			
-    			if (e.getClickCount() != 1) return;
-    			
-    			if (e.getButton() != MouseEvent.BUTTON1) {
-    				if (!state) {
-						ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, rootedEntityId, true);
-    				}
-					return;
-    			}
-            	
-    			SwingUtilities.invokeLater(new Runnable() {
-    				@Override
-    				public void run() {
-    					// Now update the model
-    					if (metaDown) {
-    						// With the meta key we toggle items in the current
-    						// selection without clearing it
-    						if (!state) {
-    							ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, rootedEntityId, false);
-    						} 
-    						else {
-    							ModelMgr.getModelMgr().getEntitySelectionModel().deselectEntity(category, rootedEntityId);
-    						}
-    					} 
-    					else {
-    						// With shift, we select ranges
-    						String lastSelected = ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityId(iconDemoPanel.getSelectionCategory());
-    						if (shiftDown && lastSelected != null) {
-    							// Walk through the buttons and select everything between the last and current selections
-    							boolean selecting = false;
-    							List<RootedEntity> rootedEntities = iconDemoPanel.getRootedEntities();
-    							for (RootedEntity otherRootedEntity : rootedEntities) {
-    								if (otherRootedEntity.getId().equals(lastSelected) || otherRootedEntity.getId().equals(rootedEntityId)) {
-    									if (otherRootedEntity.getId().equals(rootedEntityId)) {
-    										// Always select the button that was clicked
-    										ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, otherRootedEntity.getId(), false);
-    									}
-    									if (selecting) return; // We already selected, this is the end
-    									selecting = true; // Start selecting
-    									continue; // Skip selection of the first and last items, which should already be selected
-    								}
-    								if (selecting) {
-    									ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, otherRootedEntity.getId(), false);
-    								}
-    							}
-    						} 
-    						else {
-    							// This is a good old fashioned single button selection
-    							ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, rootedEntityId, true);
-    						}
-
-    					}
-
-    					// Always request focus on the button that was clicked, 
-    					// since other buttons may become selected if shift is involved
-    					requestFocus();
-    				}
-    			});
-    		}
-    	});
-        
         // Fix event dispatching so that user can click on the title or the tags and still select the button
         titleLabel.addMouseListener(new MouseForwarder(this, "JLabel(titleLabel)->AnnotatedImageButton"));
         

@@ -8,12 +8,14 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.AnnotatedImageButton;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
@@ -123,25 +125,159 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				// Override to customize the toolbar
 				JToolBar toolbar = super.createToolbar();
 				toolbar.removeAll();
+				toolbar.add(refreshButton);
+				toolbar.addSeparator();
 				toolbar.add(imageSizeSlider);
 				return toolbar;
 			}
+			@Override
+			protected void buttonDrillDown(AnnotatedImageButton button) {
+				// Do nothing, this panel does not support drill down
+			}
+			@Override
+			protected void buttonSelection(AnnotatedImageButton button, boolean multiSelect, boolean rangeSelect) {
+				super.buttonSelection(button, multiSelect, rangeSelect);
+				if (rangeSelect || multiSelect) return;
+				final RootedEntity rootedEntity = button.getRootedEntity();
+				final String rootedEntityId = rootedEntity.getId();
+
+				if (!rootedEntity.getEntity().getEntityType().getName().equals(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS)) {
+					return;
+				}
+				
+				// This is a sample cross, attempt to select its parents in the other viewers
+				
+				Entity crossEntity = rootedEntity.getEntity();
+				Entity sourceEntity1 = null;
+				Entity sourceEntity2 = null;
+				
+				for(EntityData childEd : crossEntity.getOrderedEntityData()) {
+					if (!childEd.getEntityAttribute().getName().equals(EntityConstants.ATTRIBUTE_ENTITY)) continue;
+					if (sourceEntity1 == null) {
+						sourceEntity1 = childEd.getChildEntity();
+					}
+					else {
+						sourceEntity2 = childEd.getChildEntity();
+						break;
+					}
+				}
+
+				if (sourceEntity1==null || sourceEntity2==null) {
+					System.out.println("Error: incomplete sample cross entity: "+rootedEntityId);
+					return;
+				}
+				
+				final Entity finalEntity1 = sourceEntity1;
+				final Entity finalEntity2 = sourceEntity2;
+
+				
+				SimpleWorker worker = new SimpleWorker() {
+
+					private Entity sourceEntity1 = finalEntity1;
+					private Entity sourceEntity2 = finalEntity2;
+					
+					@Override
+					protected void doStuff() throws Exception {
+						if (!EntityUtils.isInitialized(sourceEntity1)) {
+							sourceEntity1 = ModelMgr.getModelMgr().getEntityById(""+sourceEntity1.getId());
+						}
+						if (!EntityUtils.isInitialized(sourceEntity2)) {
+							sourceEntity2 = ModelMgr.getModelMgr().getEntityById(""+sourceEntity2.getId());
+						}
+					}
+					
+					@Override
+					protected void hadSuccess() {
+						final IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_MAIN_VIEW);
+						if (mainViewer.getEntityById(sourceEntity1.getId()) == null) {
+							mainViewer.loadEntity(rootedEntity, new Callable<Void>() {
+								@Override
+								public Void call() throws Exception {
+									selectAndScroll(mainViewer, sourceEntity1.getId());	
+									return null;
+								}
+							});
+						}
+						else {
+							selectAndScroll(mainViewer, sourceEntity1.getId());	
+						}
+						
+						final IconDemoPanel secViewer = (IconDemoPanel)SessionMgr.getBrowser().showSecViewer();
+						if (secViewer.getEntityById(sourceEntity2.getId()) == null) {
+							secViewer.loadEntity(rootedEntity, new Callable<Void>() {
+								@Override
+								public Void call() throws Exception {
+									selectAndScroll(secViewer, sourceEntity2.getId());
+									return null;
+								}
+							});
+						}
+						else {
+							selectAndScroll(secViewer, sourceEntity2.getId());
+						}
+					}
+					
+					@Override
+					protected void hadError(Throwable error) {
+						SessionMgr.getSessionMgr().handleException(error);
+					}
+				};
+				
+				worker.execute();
+				
+			}
 		};
+		
 		crossesPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-		crossesPanel.setBorder(BorderFactory.createLineBorder(Color.black));
+		crossesPanel.setBorder(BorderFactory.createLineBorder((Color)UIManager.get("windowBorder")));
 		crossesPanel.getSplashPanel().setShowSplashImage(false);
 		add(crossesPanel);
 	}
 
+	/**
+	 * Select the given entity in the given viewer, and then scroll it into view.
+	 * @param viewer
+	 * @param entityId
+	 */
+	private void selectAndScroll(final IconDemoPanel viewer, final Long entityId) {
+		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(viewer.getSelectionCategory(), ""+entityId, true);
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				viewer.getImagesPanel().scrollSelectedEntitiesToCenter();
+			}
+		});	
+	}
+	
 	@Override
 	public void refresh() {
-		// Open the secondary viewer, if necessary
-		SessionMgr.getBrowser().showSecViewer();
+		 
+		final int padding = 100;
+		final int fullWidth = SessionMgr.getBrowser().getViewersPanel().getWidth();
+		final IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_MAIN_VIEW);
+		final IconDemoPanel secViewer = (IconDemoPanel)SessionMgr.getBrowser().showSecViewer(); 
+		
 		// Refresh the image viewer
 		crossesPanel.refresh();
+
+		// Resize images to 1 per row
+		SwingUtilities.invokeLater(new Runnable() {
+			
+			@Override
+			public void run() {
+				mainViewer.getImageSizeSlider().setValue((int)((double)fullWidth/2-padding));
+				secViewer.getImageSizeSlider().setValue((int)((double)fullWidth/2-padding));
+				crossesPanel.getImageSizeSlider().setValue(crossesPanel.getWidth()-padding);
+			}
+		});
 	}
 
 	private void createCrosses() {
+		
+		if (resultFolder==null) {
+			JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Please choose a result folder first", "Error", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
 		
 		EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
 		final List<String> mainSelectionIds = esm.getSelectedEntitiesIds(EntitySelectionModel.CATEGORY_MAIN_VIEW);		
@@ -177,6 +313,10 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			if (deleteConfirmation != 0) {
 				return;
 			}
+		}
+		else if (numCrosses == 0) {
+			JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Please select at least one Screen Sample in each viewer", "Error", JOptionPane.ERROR_MESSAGE);
+			return;
 		}
 		
 		SimpleWorker worker = new SimpleWorker() {
@@ -314,12 +454,14 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
     	String idList2Str = commafy(sampleIdList2);
     	String idList3Str = commafy(outputIdList3);
     	String method = "1"; // TODO: could make this a user preference
+    	String kernelSize = "3"; // TODO: could make this a user preference
     	
     	HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
     	taskParameters.add(new TaskParameter("screen sample 1 id list", idList1Str, null));
     	taskParameters.add(new TaskParameter("screen sample 2 id list", idList2Str, null));
     	taskParameters.add(new TaskParameter("output entity id_list", idList3Str, null));
     	taskParameters.add(new TaskParameter("intersection method", method, null));
+    	taskParameters.add(new TaskParameter("kernel size", kernelSize, null));
     	
     	Task task = new GenericTask(new HashSet<Node>(), "system", new ArrayList<Event>(), 
     			taskParameters, "screenSampleCrossService", "Screen Sample Cross Service");
