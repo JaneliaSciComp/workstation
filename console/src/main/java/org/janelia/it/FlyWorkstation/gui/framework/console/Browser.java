@@ -145,7 +145,7 @@ public class Browser extends JFrame implements Cloneable {
     public Viewer showSecViewer() {
     	Viewer secViewer = viewerPanel.getSecViewer();
 		if (secViewer==null) {
-			secViewer = new IconDemoPanel(SessionMgr.getBrowser().getViewersPanel(), EntitySelectionModel.CATEGORY_SEC_VIEW);
+			secViewer = new IconDemoPanel(viewerPanel, EntitySelectionModel.CATEGORY_SEC_VIEW);
 			viewerPanel.setSecViewer(secViewer);
 		}
 		return secViewer;
@@ -1330,7 +1330,13 @@ public class Browser extends JFrame implements Cloneable {
         }
     }
 
-    /**
+    
+    
+    public JSplitPane getCenterRightHorizontalSplitPane() {
+		return centerRightHorizontalSplitPane;
+	}
+
+	/**
      * TODO: put this in the FileOutline
      *
      * @param pathToData

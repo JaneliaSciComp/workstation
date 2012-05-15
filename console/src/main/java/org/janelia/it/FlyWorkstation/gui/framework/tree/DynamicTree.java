@@ -387,6 +387,7 @@ public class DynamicTree extends JPanel {
      * @param expand expand or collapse?
      */
     public void expand(DefaultMutableTreeNode node, boolean expand) {
+    	if (node==null) return;
     	TreePath path = new TreePath(node.getPath());
         if (expand) {
         	if (!tree.isExpanded(path)) {

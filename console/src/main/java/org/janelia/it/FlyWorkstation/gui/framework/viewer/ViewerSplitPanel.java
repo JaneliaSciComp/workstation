@@ -53,6 +53,10 @@ public class ViewerSplitPanel extends JPanel {
         setSecViewer(null);
 	}
 	
+	public JSplitPane getMainSplitPane() {
+		return mainSplitPane;
+	}
+
 	public void setAsActive(Viewer viewer) {
 		activeViewerPane = getViewerPane(viewer);
 
@@ -70,8 +74,8 @@ public class ViewerSplitPanel extends JPanel {
 	}
 
 	public void setTitle(Viewer viewer, String title) {
-		activeViewerPane = getViewerPane(viewer);
-		activeViewerPane.setLabel(title);
+		ViewerPane viewerPane = getViewerPane(viewer);
+		viewerPane.setLabel(title);
 	}
 	
 	public Viewer getActiveViewer() {

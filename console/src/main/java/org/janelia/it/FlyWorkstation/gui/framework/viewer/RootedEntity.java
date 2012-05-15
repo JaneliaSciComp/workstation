@@ -17,6 +17,12 @@ public class RootedEntity {
 		this.uniqueId = uniqueId;
 		this.entityData = entityData;
 	}
+	
+	public RootedEntity(Entity entity) {
+		this.uniqueId = "/e_"+entity.getId();
+		this.entityData = new EntityData();
+		entityData.setChildEntity(entity);
+	}
 
 	public String getId() {
 		return uniqueId==null ? entityData.getChildEntity().getId()+"" : uniqueId;
@@ -32,5 +38,13 @@ public class RootedEntity {
 
 	public Entity getEntity() {
 		return entityData.getChildEntity();
+	}
+	
+	public void updateEntity(Entity entity) {
+		entityData.setChildEntity(entity);
+	}
+	
+	public RootedEntity getChild(EntityData childEd) {
+		return new RootedEntity(getUniqueId()+"/ed_"+childEd.getId()+"/e_"+childEd.getChildEntity().getId(), childEd);
 	}
 }

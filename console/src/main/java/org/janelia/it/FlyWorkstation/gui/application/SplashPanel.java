@@ -28,6 +28,9 @@ public class SplashPanel extends JPanel {
 	            ImageIcon bkgdImageIcon = Utils.getClasspathImage("flylight_transparent_no_shadow.png");
 	            graphics.drawImage(bkgdImageIcon.getImage(), (this.getWidth() - bkgdImageIcon.getIconWidth()) / 2, (this.getHeight() - bkgdImageIcon.getIconHeight()) / 2, null);
         	}
+        	else {
+        		super.paintComponent(graphics);
+        	}
         }
         catch (FileNotFoundException e) {
             e.printStackTrace();

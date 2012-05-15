@@ -22,7 +22,6 @@ import javax.swing.event.ChangeListener;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.api.entity_model.management.UserColorMapping;
 import org.janelia.it.FlyWorkstation.gui.application.SplashPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
@@ -241,12 +240,20 @@ public class IconDemoPanel extends Viewer {
 		}
 	}
 	
+	private AnnotatedImageButton getButtonAncestor(Component component) {
+		Component c = component;
+		while (!(c instanceof AnnotatedImageButton)) {
+			c = c.getParent();
+		}
+		return (AnnotatedImageButton)c;
+	}
+	
 	protected MouseListener buttonMouseListener = new MouseHandler() {
 
 		@Override
 		protected void popupTriggered(MouseEvent e) {
 			if (e.isConsumed()) return;
-			AnnotatedImageButton button = (AnnotatedImageButton)e.getComponent();
+			AnnotatedImageButton button = getButtonAncestor(e.getComponent());
 			getPopupMenu(button).show(e.getComponent(), e.getX(), e.getY());
 			e.consume();
 		}
@@ -254,7 +261,7 @@ public class IconDemoPanel extends Viewer {
 		@Override
 		protected void doubleLeftClicked(MouseEvent e) {
 			if (e.isConsumed()) return;
-			AnnotatedImageButton button = (AnnotatedImageButton)e.getComponent();
+			AnnotatedImageButton button = getButtonAncestor(e.getComponent());
 			buttonDrillDown(button);
 			// Double-clicking an image in gallery view triggers an outline selection
     		e.consume();
@@ -264,13 +271,7 @@ public class IconDemoPanel extends Viewer {
 		public void mouseReleased(MouseEvent e) {
 			super.mouseReleased(e);
 			if (e.isConsumed()) return;
-			
-			Component c = e.getComponent();
-			while (!(c instanceof AnnotatedImageButton)) {
-				c = c.getParent();
-			}
-			AnnotatedImageButton button = (AnnotatedImageButton)c;
-			
+			AnnotatedImageButton button = getButtonAncestor(e.getComponent());			
 			if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() != 1) {
 				return;
 			}
@@ -1140,11 +1141,6 @@ public class IconDemoPanel extends Viewer {
 		setTitle("");
 		removeAll();
 		add(splashPanel, BorderLayout.CENTER);
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-			}
-		});
 	}
 
 	public synchronized void showAllEntities() {

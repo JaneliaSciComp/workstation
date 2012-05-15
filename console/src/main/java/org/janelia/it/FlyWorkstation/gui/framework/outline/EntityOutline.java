@@ -65,29 +65,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 
 			@Override
 			public void entityChanged(final long entityId) {
-				SimpleWorker worker = new SimpleWorker() {
-					@Override
-					protected void doStuff() throws Exception {
-						Entity newEntity = ModelMgr.getModelMgr().getEntityById(entityId+"");
-						// Update all the entities that are affected
-						for (Entity entity : getEntitiesById(entityId)) {
-							ModelMgrUtils.updateEntity(entity, newEntity);
-						}
-					}
-					
-					@Override
-					protected void hadSuccess() {
-						revalidate();
-						repaint();
-					}
-					
-					@Override
-					protected void hadError(Throwable error) {
-						SessionMgr.getSessionMgr().handleException(error);
-					}
-				};
-				
-				worker.execute();
+				refresh();
 			}
 
 			@Override
@@ -492,9 +470,34 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		entityOutlineLoadingWorker.execute();
 	}
 	
-	public void expandByUniqueId(String uniqueId) {
+	public void expandByUniqueId(final String uniqueId) {
 		DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
-		getDynamicTree().expand(node, true);
+		if (node!=null) {
+			getDynamicTree().expand(node, true);
+			return;
+		}
+
+		// Let's try to lazy load the ancestors of this node
+		List<String> path = EntityUtils.getPathFromUniqueId(uniqueId);
+		for (String ancestorId : path) {
+			DefaultMutableTreeNode ancestor = getNodeByUniqueId(ancestorId);
+			if (ancestor==null) {
+				// Give up, can't find the entity with this uniqueId
+				System.out.println("EntityOutline.expandByUniqueId: cannot locate "+uniqueId);
+				return;
+			}
+			if (!getDynamicTree().childrenAreLoaded(ancestor)) {
+				// Load the children before displaying them
+				SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, ancestor, false) {
+					@Override
+					protected void doneLoading() {
+						expandByUniqueId(uniqueId);
+					}
+				};
+				loadingWorker.execute();
+				return;
+			}
+		}
 	}
 	
 	public void selectEntityByUniqueId(final String uniqueId) {
@@ -510,6 +513,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			DefaultMutableTreeNode ancestor = getNodeByUniqueId(ancestorId);
 			if (ancestor==null) {
 				// Give up, can't find the entity with this uniqueId
+				System.out.println("EntityOutline.selectEntityByUniqueId: cannot locate "+uniqueId);
 				return;
 			}
 			if (!getDynamicTree().childrenAreLoaded(ancestor)) {

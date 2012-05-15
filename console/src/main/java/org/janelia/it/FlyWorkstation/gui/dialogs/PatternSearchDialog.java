@@ -17,10 +17,12 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelection
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
 
 /**
@@ -35,6 +37,8 @@ public class PatternSearchDialog extends ModalDialog {
     private static final String DISTRIBUTION_TYPE="Distribution";
     private static final String GLOBAL = "Global";
 
+    private RootedEntity outputFolder;
+    
     DefaultTableModel tableModel;
     
     private static final String[] filterTableColumnNames = {
@@ -407,9 +411,14 @@ public class PatternSearchDialog extends ModalDialog {
     }
 
     public void showDialog() {
-    	init();
+    	showDialog(null);
     }
 
+    public void showDialog(RootedEntity outputFolder) {
+    	this.outputFolder = outputFolder;
+    	init();
+    }
+    
     private void init() {
         quantifierLoaderWorker.execute();
         String initialFilterName="Set "+getNextFilterSetIndex();
@@ -801,16 +810,23 @@ public class PatternSearchDialog extends ModalDialog {
 
         SimpleWorker worker = new SimpleWorker() {
 
-            private Entity newFolder;
+            private RootedEntity newRootedFolder;
 
             @Override
             protected void doStuff() throws Exception {
+                Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, currentSetTextField.getText());
 
-                String folderName = currentSetTextField.getText();
-                this.newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
-                newFolder.addAttributeAsTag(EntityConstants.ATTRIBUTE_COMMON_ROOT);
-                ModelMgr.getModelMgr().saveOrUpdateEntity(newFolder);
-
+            	if (outputFolder!=null) {
+                    newFolder = ModelMgr.getModelMgr().saveOrUpdateEntity(newFolder);
+                    EntityData childEd = ModelMgr.getModelMgr().addEntityToParent(outputFolder.getEntity(), newFolder, outputFolder.getEntity().getMaxOrderIndex()+1, EntityConstants.ATTRIBUTE_ENTITY);
+                    newRootedFolder = outputFolder.getChild(childEd);
+            	}
+            	else {
+                    newFolder.addAttributeAsTag(EntityConstants.ATTRIBUTE_COMMON_ROOT);
+                    newFolder = ModelMgr.getModelMgr().saveOrUpdateEntity(newFolder);	
+                    newRootedFolder = new RootedEntity(newFolder);
+            	}
+            	
                 ModelMgr.getModelMgr().addChildren(newFolder.getId(), 
                 		new ArrayList<Long>(membershipSampleSet), EntityConstants.ATTRIBUTE_ENTITY);
             }
@@ -821,7 +837,7 @@ public class PatternSearchDialog extends ModalDialog {
                 entityOutline.refresh(true, new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
-                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, "/e_"+newFolder.getId(), true);
+                        ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, newRootedFolder.getUniqueId(), true);
                         Utils.setDefaultCursor(PatternSearchDialog.this);
                         setVisible(false);
                         resetSearchState();

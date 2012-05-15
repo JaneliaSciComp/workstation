@@ -3,6 +3,8 @@ package org.janelia.it.FlyWorkstation.api.entity_model.management;
 import java.awt.Color;
 import java.util.*;
 
+import javax.swing.SwingUtilities;
+
 import org.apache.solr.client.solrj.SolrQuery;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.ActiveThreadModel;
@@ -257,46 +259,130 @@ public class ModelMgr {
         ModelMgr.getModelMgr().removePreferenceCategory(CATEGORY_KEYBINDS_ONTOLOGY + ontologyId);
     }
     
-    private void notifyOntologySelected(Long ontologyId) {
-        for (ModelMgrObserver listener : modelMgrObservers) {
-        	listener.ontologySelected(ontologyId);
-        }
+    private void notifyOntologySelected(final Long ontologyId) {    	
+        if (!SwingUtilities.isEventDispatchThread()) {
+    		SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+			        for (ModelMgrObserver listener : modelMgrObservers) {
+			        	listener.ontologySelected(ontologyId);
+			        }
+				}
+			});
+    	}
+    	else {
+            for (ModelMgrObserver listener : modelMgrObservers) {
+            	listener.ontologySelected(ontologyId);
+            }
+    	}
     }
 
-    public void notifyOntologyChanged(Long entityId) {
-        for (ModelMgrObserver listener : modelMgrObservers) {
-        	listener.ontologyChanged(entityId);
-        }
+    public void notifyOntologyChanged(final Long entityId) {
+        if (!SwingUtilities.isEventDispatchThread()) {
+    		SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+			        for (ModelMgrObserver listener : modelMgrObservers) {
+			        	listener.ontologyChanged(entityId);
+			        }
+				}
+			});
+    	}
+    	else {
+            for (ModelMgrObserver listener : modelMgrObservers) {
+            	listener.ontologyChanged(entityId);
+            }
+    	}
     }
     
-    void notifyEntitySelected(String category, String identifier, boolean clearAll) {
-    	for (ModelMgrObserver listener : modelMgrObservers) {
-			listener.entitySelected(category, identifier, clearAll);
-		}
+    void notifyEntitySelected(final String category, final String identifier, final boolean clearAll) {
+    	if (!SwingUtilities.isEventDispatchThread()) {
+    		SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+			    	for (ModelMgrObserver listener : modelMgrObservers) {
+						listener.entitySelected(category, identifier, clearAll);
+					}
+				}
+			});
+    	}
+    	else {
+        	for (ModelMgrObserver listener : modelMgrObservers) {
+    			listener.entitySelected(category, identifier, clearAll);
+    		}
+    	}
     }
 
-    void notifyEntityDeselected(String category, String identifier) {
-    	for (ModelMgrObserver listener : modelMgrObservers) {
-			listener.entityDeselected(category, identifier);
-		}
+    void notifyEntityDeselected(final String category, final String identifier) {
+    	if (!SwingUtilities.isEventDispatchThread()) {
+    		SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+			    	for (ModelMgrObserver listener : modelMgrObservers) {
+						listener.entityDeselected(category, identifier);
+					}
+				}
+			});
+    	}
+    	else {
+        	for (ModelMgrObserver listener : modelMgrObservers) {
+    			listener.entityDeselected(category, identifier);
+    		}
+    	}
     }
 
-    public void notifyEntityChanged(Long entityId) {
-        for (ModelMgrObserver listener : modelMgrObservers) {
-        	listener.entityChanged(entityId);
-        }
+    public void notifyEntityChanged(final Long entityId) {
+    	if (!SwingUtilities.isEventDispatchThread()) {
+    		SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+			        for (ModelMgrObserver listener : modelMgrObservers) {
+			        	listener.entityChanged(entityId);
+			        }
+				}
+			});
+    	}
+    	else {
+            for (ModelMgrObserver listener : modelMgrObservers) {
+            	listener.entityChanged(entityId);
+            }
+    	}
     }
 
-    public void notifyEntityRemoved(Long entityId) {
-        for (ModelMgrObserver listener : modelMgrObservers) {
-        	listener.entityRemoved(entityId);
-        }
+    public void notifyEntityRemoved(final Long entityId) {
+    	if (!SwingUtilities.isEventDispatchThread()) {
+    		SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+			        for (ModelMgrObserver listener : modelMgrObservers) {
+			        	listener.entityRemoved(entityId);
+			        }
+				}
+			});
+    	}
+    	else {
+            for (ModelMgrObserver listener : modelMgrObservers) {
+            	listener.entityRemoved(entityId);
+            }
+    	}
     }
 
-    public void notifyEntityDataRemoved(Long entityDataId) {
-        for (ModelMgrObserver listener : modelMgrObservers) {
-        	listener.entityDataRemoved(entityDataId);
-        }
+    public void notifyEntityDataRemoved(final Long entityDataId) {
+    	if (!SwingUtilities.isEventDispatchThread()) {
+    		SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+			        for (ModelMgrObserver listener : modelMgrObservers) {
+			        	listener.entityDataRemoved(entityDataId);
+			        }
+				}
+			});
+    	}
+    	else {
+            for (ModelMgrObserver listener : modelMgrObservers) {
+            	listener.entityDataRemoved(entityDataId);
+            }
+    	}
     }
     
     public boolean notifyEntityViewRequestedInNeuronAnnotator(Long entityId) {
@@ -309,22 +395,59 @@ public class ModelMgr {
         return true;
     }
     
-    public void notifyAnnotationsChanged(Long entityId) {
-        for (ModelMgrObserver listener : modelMgrObservers) {
-        	listener.annotationsChanged(entityId);
-        }
+    public void notifyAnnotationsChanged(final Long entityId) {
+    	if (!SwingUtilities.isEventDispatchThread()) {
+    		SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+			        for (ModelMgrObserver listener : modelMgrObservers) {
+			        	listener.annotationsChanged(entityId);
+			        }
+				}
+			});
+    	}
+    	else {
+            for (ModelMgrObserver listener : modelMgrObservers) {
+            	listener.annotationsChanged(entityId);
+            }
+    	}
     }
 
-    private void notifyAnnotationSessionSelected(Long sessionId) {
-        for (ModelMgrObserver listener : modelMgrObservers) {
-        	listener.sessionSelected(sessionId);
-        }
+    private void notifyAnnotationSessionSelected(final Long sessionId) {
+    	if (!SwingUtilities.isEventDispatchThread()) {
+    		SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+			        for (ModelMgrObserver listener : modelMgrObservers) {
+			        	listener.sessionSelected(sessionId);
+			        }
+				}
+			});
+    	}
+    	else {
+        	
+            for (ModelMgrObserver listener : modelMgrObservers) {
+            	listener.sessionSelected(sessionId);
+            }
+    	}
     }
 
     private void notifyAnnotationSessionDeselected() {
-        for (ModelMgrObserver listener : modelMgrObservers) {
-        	listener.sessionDeselected();
-        }
+    	if (!SwingUtilities.isEventDispatchThread()) {
+    		SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+			        for (ModelMgrObserver listener : modelMgrObservers) {
+			        	listener.sessionDeselected();
+			        }
+				}
+			});
+    	}
+    	else {
+            for (ModelMgrObserver listener : modelMgrObservers) {
+            	listener.sessionDeselected();
+            }
+    	}
     }
     
     public void prepareForSystemExit() {
@@ -503,6 +626,7 @@ public class ModelMgr {
 
     public EntityData addEntityToParent(Entity parent, Entity entity, Integer index, String attrName) throws Exception {
     	EntityData ed = FacadeManager.getFacadeManager().getEntityFacade().addEntityToParent(parent, entity, index, attrName);
+    	parent.getEntityData().add(ed);
     	notifyEntityChanged(parent.getId());
     	return ed;
     }
