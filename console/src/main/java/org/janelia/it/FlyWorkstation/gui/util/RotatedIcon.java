@@ -161,6 +161,11 @@ public class RotatedIcon implements Icon
     	{
 			g2.translate(x + cHeight, y + cWidth);
 			g2.rotate( Math.toRadians( 90 ) );
+			
+			// Adding this line is a terrible hack. 
+			// TODO: Figure out why this class doesn't render correctly in Linux without this extra line. 
+			if (SystemInfo.isLinux) g2.translate(0, 10);
+			
 			icon.paintIcon(c, g2,  -cWidth, yAdjustment - cHeight);
     	}
     	else if (rotate == Rotate.UP)

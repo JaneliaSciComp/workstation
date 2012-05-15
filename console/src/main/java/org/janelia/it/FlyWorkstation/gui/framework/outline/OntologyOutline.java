@@ -304,7 +304,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
      */
     @Override
 	public void refresh() {
-    	if (getRootEntity()!=null) {
+    	if (getRootEntity()!=null && getDynamicTree()!=null) {
             Utils.setWaitingCursor(OntologyOutline.this);
         	final ExpansionState expansionState = new ExpansionState();
         	expansionState.storeExpansionState(getDynamicTree());

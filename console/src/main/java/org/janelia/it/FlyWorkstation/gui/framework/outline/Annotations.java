@@ -84,6 +84,7 @@ public class Annotations {
 	}
     
 	public synchronized List<OntologyAnnotation> getAnnotations() {
+		if (annotations==null) return new ArrayList<OntologyAnnotation>();
     	// Copy to avoid concurrent modification issues
     	return new ArrayList<OntologyAnnotation>(annotations);
 	}

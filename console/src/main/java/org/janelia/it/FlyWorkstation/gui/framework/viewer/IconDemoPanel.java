@@ -274,7 +274,7 @@ public class IconDemoPanel extends Viewer {
 			if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() != 1) {
 				return;
 			}
-			buttonSelection(button, e.isMetaDown(), e.isShiftDown());
+			buttonSelection(button, (SystemInfo.isMac && e.isMetaDown()) || e.isControlDown(), e.isShiftDown());
 		}
 	};
 	
@@ -665,7 +665,6 @@ public class IconDemoPanel extends Viewer {
 		refreshButton = new JButton();
 		refreshButton.setIcon(Icons.getRefreshIcon());
 		refreshButton.setFocusable(false);
-		refreshButton.setSelected(true);
 		refreshButton.setToolTipText("Refresh the current view");
 		refreshButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
 		refreshButton.addActionListener(new ActionListener() {
