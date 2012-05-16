@@ -15,6 +15,7 @@ import com.explodingpixels.macwidgets.HudWindow;
  */
 public class Hud {
 
+	private Long entityId;
 	private HudWindow hud;
 	private JLabel previewLabel;
 	
@@ -26,7 +27,6 @@ public class Hud {
 		previewLabel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 		hud.getContentPane().add(previewLabel);
 	}
-	
 	
 	public void showDialog() {
 		hud.getJDialog().setLocationRelativeTo(SessionMgr.getSessionMgr().getActiveBrowser());
@@ -40,13 +40,21 @@ public class Hud {
 	public JDialog getJDialog() {
 		return hud.getJDialog();
 	}
+	
+	public Long getEntityId() {
+		return entityId;
+	}
+	
+	public void setEntityId(Long entityId) {
+		this.entityId = entityId;
+	}
 
 	public void setTitle(String name) {
 		hud.getJDialog().setTitle(name);
 	}
 
 	public void setImage(BufferedImage bufferedImage) {
-		previewLabel.setIcon(new ImageIcon(bufferedImage));
+		previewLabel.setIcon(bufferedImage==null?null:new ImageIcon(bufferedImage));
 		hud.getJDialog().pack();
 	}
 	

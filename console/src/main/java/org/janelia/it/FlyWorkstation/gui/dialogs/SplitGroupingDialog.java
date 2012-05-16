@@ -25,7 +25,8 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 
 /**
- * Groups Screen Samples in one folder into representatives for AD's and DBD's in another folder.
+ * A dialog that pops up from the SplitPickingPanel and allows the user to group Screen Samples in one folder into 
+ * representatives for AD's and DBD's in another folder.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -168,6 +169,9 @@ public class SplitGroupingDialog extends ModalDialog {
 
     public void showDialog() {
 
+    	// TODO: prepopulate a grouping
+    	
+    	
         packAndShow();
     }
     

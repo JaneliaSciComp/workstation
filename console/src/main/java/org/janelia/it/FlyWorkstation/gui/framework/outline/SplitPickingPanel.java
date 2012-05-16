@@ -9,6 +9,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
@@ -32,6 +33,15 @@ import org.janelia.it.jacs.model.tasks.utility.GenericTask;
 import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
+/**
+ * A panel that may be inserted into the right-most view pane and serves as a workflow driver for the GAL4 split line 
+ * picking task. The top part of the panel describes the step-wise workflow and provides buttons for the user to
+ * access various aspects of the workflow (search, grouping, crossing). The bottom part of the panel is an abbreviated 
+ * image viewer which shows the results of cross simulations. It is synchronized with the other two image viewer panels
+ * in that selecting a cross result selects its two inputs in the other two panels. 
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
 public class SplitPickingPanel extends JPanel implements Refreshable {
 	
 	public static final String FOLDER_NAME_REPRESENTATIVES = "Representatives";
@@ -39,6 +49,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	public static final String FOLDER_NAME_SPLIT_LINES_AD = "AD";
 	public static final String FOLDER_NAME_SPLIT_LINES_DBD = "DBD";
 	public static final String FOLDER_NAME_CROSSES = "Crosses";
+	
 	private static final int STEP_PANEL_HEIGHT = 35;
 	private static final int MAX_FREE_CROSSES = 1;
 	
@@ -56,7 +67,6 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	private RootedEntity groupAdFolder;
 	private RootedEntity groupDbdFolder;
 	private RootedEntity crossFolder;
-	 
 	
 	public SplitPickingPanel() {
 	
@@ -226,6 +236,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		add(mainPanel, BorderLayout.NORTH);
 		
 		crossesPanel = new IconDemoPanel(EntitySelectionModel.CATEGORY_CROSS_VIEW) {
+			
 			@Override
 			protected JToolBar createToolbar() {
 				// Override to customize the toolbar
@@ -236,17 +247,21 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				toolbar.add(imageSizeSlider);
 				return toolbar;
 			}
+			
 			@Override
 			protected void buttonDrillDown(AnnotatedImageButton button) {
 				// Do nothing, this panel does not support drill down
 			}
+			
 			@Override
-			protected void buttonSelection(AnnotatedImageButton button, boolean multiSelect, boolean rangeSelect) {
-				super.buttonSelection(button, multiSelect, rangeSelect);
-				if (rangeSelect || multiSelect) return;
-				final RootedEntity rootedEntity = button.getRootedEntity();
-				final String rootedEntityId = rootedEntity.getId();
-
+			protected void entitySelected(String rootedEntityId, boolean clearAll) {
+				super.entitySelected(rootedEntityId, clearAll);
+				
+				final RootedEntity rootedEntity = getRootedEntityById(rootedEntityId);
+				if (rootedEntity == null) {
+					System.out.println("SplitPickingPanel.entitySelected: cannot find entity with id="+rootedEntityId);
+					return;
+				}
 				if (!rootedEntity.getEntity().getEntityType().getName().equals(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS)) {
 					return;
 				}
@@ -275,7 +290,6 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				
 				final Entity finalEntity1 = sourceEntity1;
 				final Entity finalEntity2 = sourceEntity2;
-
 				
 				SimpleWorker worker = new SimpleWorker() {
 
@@ -295,7 +309,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					@Override
 					protected void hadSuccess() {
 						final IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_MAIN_VIEW);
-						if (mainViewer.getEntityById(sourceEntity1.getId()) == null) {
+						if (mainViewer.getEntityById(""+sourceEntity1.getId()) == null) {
 							mainViewer.loadEntity(rootedEntity, new Callable<Void>() {
 								@Override
 								public Void call() throws Exception {
@@ -309,7 +323,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 						}
 						
 						final IconDemoPanel secViewer = (IconDemoPanel)SessionMgr.getBrowser().showSecViewer();
-						if (secViewer.getEntityById(sourceEntity2.getId()) == null) {
+						if (secViewer.getEntityById(""+sourceEntity2.getId()) == null) {
 							secViewer.loadEntity(rootedEntity, new Callable<Void>() {
 								@Override
 								public Void call() throws Exception {
@@ -347,7 +361,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				viewer.getImagesPanel().scrollSelectedEntitiesToCenter();
+				viewer.getImagesPanel().scrollSelectedEntitiesToTop();
 			}
 		});	
 	}
@@ -393,7 +407,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		final List<Entity> samples2 = new ArrayList<Entity>();
 
 		for(String mainSelectionId : mainSelectionIds) {
-			Entity sample1 = SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_MAIN_VIEW).getRootedEntityById(mainSelectionId).getEntity();
+			Entity sample1 = SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_MAIN_VIEW).getEntityById(mainSelectionId);
 			if (!sample1.getEntityType().getName().equals(EntityConstants.TYPE_SCREEN_SAMPLE)) {
 				JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Not a screen sample: "+sample1.getName(), "Error", JOptionPane.ERROR_MESSAGE);
 				return;
@@ -402,7 +416,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		}
 
 		for(String secSelectionId : secSelectionIds) {
-			Entity sample2 = SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_SEC_VIEW).getRootedEntityById(secSelectionId).getEntity();
+			Entity sample2 = SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_SEC_VIEW).getEntityById(secSelectionId);
 			if (!sample2.getEntityType().getName().equals(EntityConstants.TYPE_SCREEN_SAMPLE)) {
 				JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Not a screen sample: "+sample2.getName(), "Error", JOptionPane.ERROR_MESSAGE);
 				return;
@@ -424,9 +438,40 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Please select at least one Screen Sample in each viewer", "Error", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
+
+		final Set<String> existingCrosses = new HashSet<String>();
+		for(Entity sample1 : samples1) {
+			for(Entity sample2 : samples2) {
+				for(RootedEntity rootedEntity : crossesPanel.getRootedEntities()) {
+					String crossName = rootedEntity.getEntity().getName();
+					String c1 = createCrossName(sample1, sample2);
+					String c2 = createCrossName(sample2, sample1);
+					if (crossName.equals(c1) || crossName.equals(c2)) {
+						existingCrosses.add(c1);
+					}
+				}
+			}
+		}
+		
+		int numExisting = existingCrosses.size();
+		if (numExisting > 0) {
+			Object[] options = {"Yes", "No"};
+			String message = numCrosses==1 ? 
+					"The cross you have selected already exists in the result folder. Recompute it?" : 
+					numExisting+" out of "+numCrosses+" crosses already exist in the result folder. Recompute them?";
+			int deleteConfirmation = JOptionPane.showOptionDialog(SessionMgr.getBrowser(), message, "Recompute?",
+					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+			if (deleteConfirmation == 0) {
+				existingCrosses.clear();
+			}
+		}
+		
+		if (existingCrosses.size()==numCrosses) return;
 		
 		SimpleWorker worker = new SimpleWorker() {
 
+			private Entity firstCross;
+			
 			@Override
 			protected void doStuff() throws Exception {
 				
@@ -437,13 +482,19 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				List<Long> outputIds = new ArrayList<Long>();
 				
 				for(Entity sample1 : samples1) {
-					String[] parts1 = sample1.getName().split("-");
-					
 					for(Entity sample2 : samples2) {
-						String[] parts2 = sample2.getName().split("-");
 						
-						Entity cross = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS, parts1[0]+"-"+parts2[0]);
+						String crossName = createCrossName(sample1, sample2);
+						if (existingCrosses.contains(crossName)) {
+							continue;
+						}
+						
+						Entity cross = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS, crossName);
 						ModelMgr.getModelMgr().addEntityToParent(parent, cross, parent.getMaxOrderIndex()+1, EntityConstants.ATTRIBUTE_ENTITY);
+						
+						if (firstCross==null) {
+							firstCross = cross;
+						}
 						
 						List<Long> childrenIds = new ArrayList<Long>();
 						childrenIds.add(sample1.getId());
@@ -462,7 +513,13 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			
 			@Override
 			protected void hadSuccess() {
-				crossesPanel.refresh();
+				crossesPanel.refresh(new Callable<Void>() {
+					@Override
+					public Void call() throws Exception {
+						selectAndScroll(crossesPanel, firstCross.getId());
+						return null;
+					}
+				});
 			}
 			
 			@Override
@@ -474,6 +531,34 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		worker.execute();
 	}
 
+    private void startIntersections(List<Long> sampleIdList1, List<Long> sampleIdList2, List<Long> outputIdList3) throws Exception {
+
+    	String idList1Str = commafy(sampleIdList1);
+    	String idList2Str = commafy(sampleIdList2);
+    	String idList3Str = commafy(outputIdList3);
+    	String method = methodField.getText();
+    	String kernelSize = blurField.getText();
+    	
+    	HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
+    	taskParameters.add(new TaskParameter("screen sample 1 id list", idList1Str, null));
+    	taskParameters.add(new TaskParameter("screen sample 2 id list", idList2Str, null));
+    	taskParameters.add(new TaskParameter("output entity id_list", idList3Str, null));
+    	taskParameters.add(new TaskParameter("intersection method", method, null));
+    	taskParameters.add(new TaskParameter("kernel size", kernelSize, null));
+    	
+    	Task task = new GenericTask(new HashSet<Node>(), "system", new ArrayList<Event>(), 
+    			taskParameters, "screenSampleCrossService", "Screen Sample Cross Service");
+        task.setJobName("Screen Sample Cross Service");
+        task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
+        ModelMgr.getModelMgr().submitJob("ScreenSampleCrossService", task.getObjectId());
+    }
+
+	private String createCrossName(Entity sample1, Entity sample2) {
+		String[] parts1 = sample1.getName().split("-");
+		String[] parts2 = sample2.getName().split("-");
+		return parts1[0]+"-"+parts2[0];
+	}
+	
 	private void setResultFolder(Entity entity) {
 		resultFolderButton.setText(entity.getName());
 		workingFolder = new RootedEntity(entity);
@@ -628,28 +713,6 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		
 		chooseFolderMenu.show(resultFolderButton, 0, resultFolderButton.getHeight());
 	}
-
-    private void startIntersections(List<Long> sampleIdList1, List<Long> sampleIdList2, List<Long> outputIdList3) throws Exception {
-
-    	String idList1Str = commafy(sampleIdList1);
-    	String idList2Str = commafy(sampleIdList2);
-    	String idList3Str = commafy(outputIdList3);
-    	String method = methodField.getText();
-    	String kernelSize = blurField.getText();
-    	
-    	HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
-    	taskParameters.add(new TaskParameter("screen sample 1 id list", idList1Str, null));
-    	taskParameters.add(new TaskParameter("screen sample 2 id list", idList2Str, null));
-    	taskParameters.add(new TaskParameter("output entity id_list", idList3Str, null));
-    	taskParameters.add(new TaskParameter("intersection method", method, null));
-    	taskParameters.add(new TaskParameter("kernel size", kernelSize, null));
-    	
-    	Task task = new GenericTask(new HashSet<Node>(), "system", new ArrayList<Event>(), 
-    			taskParameters, "screenSampleCrossService", "Screen Sample Cross Service");
-        task.setJobName("Screen Sample Cross Service");
-        task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
-        ModelMgr.getModelMgr().submitJob("ScreenSampleCrossService", task.getObjectId());
-    }
 	
 	private String commafy(List<Long> list) {
 		StringBuffer sb = new StringBuffer();

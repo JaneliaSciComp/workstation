@@ -41,7 +41,12 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 
 /**
- * This panel shows images for annotation. 
+ * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of 
+ * functionality on top of it, such as:
+ * 1) Asynchronous entity loading
+ * 2) Entity selection and navigation
+ * 3) Toolbar with various features 
+ * 4) HUD display for currently selected image
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -147,13 +152,13 @@ public class IconDemoPanel extends Viewer {
 					if (button != null) {
 						ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), clearAll);
 						imagesPanel.scrollEntityToCenter(rootedEntity);
+						button.requestFocus();
 					}
 				}
 			}
 
 			revalidate();
 			repaint();
-
 		}
 	};
 
@@ -204,9 +209,6 @@ public class IconDemoPanel extends Viewer {
 			else {
 				ModelMgr.getModelMgr().getEntitySelectionModel().deselectEntity(category, rootedEntityId);
 			}
-			// Always request focus on the button that was clicked, 
-			// since other buttons may become selected if shift is involved
-			button.requestFocus();
 		} 
 		else {
 			// With shift, we select ranges
@@ -229,15 +231,14 @@ public class IconDemoPanel extends Viewer {
 						ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, otherRootedEntity.getId(), false);
 					}
 				}
-				// Always request focus on the button that was clicked, 
-				// since other buttons may become selected if shift is involved
-				button.requestFocus();
 			} 
 			else {
 				// This is a good old fashioned single button selection
 				ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(category, rootedEntityId, true);
 			}
 		}
+		
+		button.requestFocus();
 	}
 	
 	private AnnotatedImageButton getButtonAncestor(Component component) {
@@ -295,7 +296,6 @@ public class IconDemoPanel extends Viewer {
 		setFocusable(true);
 
 		hud = new Hud();
-
 		hud.getJDialog().addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent e) {
@@ -341,13 +341,6 @@ public class IconDemoPanel extends Viewer {
         statusBar.add(Box.createRigidArea(new Dimension(10,20)));
         statusBar.add(new JSeparator(JSeparator.VERTICAL));
 		
-		addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				setAsActive();
-			}
-		});
-		
 		imageSizeSlider.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent e) {
@@ -377,22 +370,18 @@ public class IconDemoPanel extends Viewer {
 					});	
 				}
 			}
-
+			
 			@Override
 			public void entitySelected(String category, String entityId, boolean clearAll) {
 				if (category.equals(selectionCategory)) {
-					imagesPanel.setSelection(entityId, true, clearAll);
-					updateHud();
-					updateStatusBar();
+					IconDemoPanel.this.entitySelected(entityId, clearAll);
 				}
 			}
 
 			@Override
 			public void entityDeselected(String category, String entityId) {
 				if (category.equals(selectionCategory)) {
-					imagesPanel.setSelection(entityId, false, false);
-					updateHud();
-					updateStatusBar();
+					IconDemoPanel.this.entityDeselected(entityId);
 				}
 			}
 
@@ -557,11 +546,27 @@ public class IconDemoPanel extends Viewer {
 		return rootedEntityList;
 	}
 
+	protected void entitySelected(String entityId, boolean clearAll) {
+		imagesPanel.setSelection(entityId, true, clearAll);
+		updateHud();
+		updateStatusBar();
+	}
+
+	public void entityDeselected(String entityId) {
+		imagesPanel.setSelection(entityId, false, false);
+		updateHud();
+		updateStatusBar();
+	}
+	
 	private void updateStatusBar() {
 		if (rootedEntities==null) return;
 		EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
 		int s = esm.getSelectedEntitiesIds(getSelectionCategory()).size();
 		statusLabel.setText(s+" of "+rootedEntities.size()+" selected");
+	}
+	
+	public Hud getHud() {
+		return hud;
 	}
 	
 	private void updateHud() {
@@ -571,15 +576,49 @@ public class IconDemoPanel extends Viewer {
 			return;
 		}
 		String selectedId = selectedIds.get(0);
-		AnnotatedImageButton button = imagesPanel.getButtonById(selectedId);
-		if (button instanceof DynamicImageButton) {
-			DynamicImageButton d = (DynamicImageButton)button;
-			BufferedImage bufferedImage = d.getDynamicImagePanel().getMaxSizeImage();
-			if (bufferedImage==null) {
-				return;
+		for(RootedEntity re : getRootedEntitiesById(selectedId)) {
+			final AnnotatedImageButton button = imagesPanel.getButtonById(re.getId());
+			if (button instanceof DynamicImageButton) {
+				final DynamicImageButton d = (DynamicImageButton)button;
+				hud.setEntityId(re.getEntity().getId());
+				BufferedImage bufferedImage = d.getDynamicImagePanel().getMaxSizeImage();
+				if (bufferedImage==null) {
+					return;
+				}
+				hud.setTitle(button.getRootedEntity().getEntity().getName());
+				hud.setImage(bufferedImage);
+				
+//				else {
+//					hud.setImage(bufferedImage);	
+//				}
+				
+				
+//				SimpleWorker worker = new SimpleWorker() {
+//					private BufferedImage bufferedImage;
+//
+//					@Override
+//					protected void doStuff() throws Exception {
+//						bufferedImage = d.getDynamicImagePanel().getMaxSizeImage();
+//					}
+//					
+//					@Override
+//					protected void hadSuccess() {
+//						if (bufferedImage==null) {
+//							return;
+//						}
+//						hud.setTitle(button.getRootedEntity().getEntity().getName());
+//						hud.setImage(bufferedImage);
+//					}
+//					
+//					@Override
+//					protected void hadError(Throwable error) {
+//						SessionMgr.getSessionMgr().handleException(error);
+//					}
+//				};
+//				
+//				worker.execute();
+				break; // There can be only one!
 			}
-			hud.setTitle(button.getRootedEntity().getEntity().getName());
-			hud.setImage(bufferedImage);
 		}
 	}
 	
@@ -620,7 +659,7 @@ public class IconDemoPanel extends Viewer {
 	protected JToolBar createToolbar() {
 
 		JToolBar toolBar = new JToolBar("Still draggable");
-		toolBar.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, (Color)UIManager.get("windowBorder")), BorderFactory.createEmptyBorder(0, 5, 2, 5)));
+		toolBar.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, (Color)UIManager.get("windowBorder")), BorderFactory.createEmptyBorder(0, 5, 2, 5)));
 		toolBar.setFloatable(true);
 		toolBar.setRollover(true);
 
@@ -1101,6 +1140,10 @@ public class IconDemoPanel extends Viewer {
 	
 	@Override
 	public void refresh() {
+		refresh(null);
+	}
+	
+	public void refresh(final Callable<Void> success) {
 
 		if (contextRootedEntity==null) return;
 		
@@ -1118,9 +1161,17 @@ public class IconDemoPanel extends Viewer {
 			protected void hadSuccess() {
 				if (rootedEntity.getEntity()==null) {
 					clear();
+					if (success!=null) {
+						try {
+							success.call();
+						}
+						catch (Exception e) {
+							hadError(e);
+						}
+					}
 				}
 				else {
-					loadEntity(rootedEntity);	
+					loadEntity(rootedEntity, success);	
 				}
 			}
 
@@ -1275,6 +1326,23 @@ public class IconDemoPanel extends Viewer {
 		return new ArrayList<Entity>(entities.values());
 	}
 	
+	private List<RootedEntity> getRootedEntitiesById(String id) {
+		if (rootedEntityMap==null) return null;
+		List<RootedEntity> res = new ArrayList<RootedEntity>();
+		RootedEntity re = rootedEntityMap.get(id);
+		if (re!=null) {
+			res.add(re);
+		}
+		else {
+			for(RootedEntity rootedEntity : rootedEntities) {
+				if (rootedEntity.getEntity().getId().toString().equals(id)) {
+					res.add(rootedEntity);	
+				}
+			}	
+		}
+		return res;
+	}
+	
 	@Override
 	public RootedEntity getRootedEntityById(String id) {
 		if (rootedEntityMap==null) return null;
@@ -1282,8 +1350,14 @@ public class IconDemoPanel extends Viewer {
 	}
 	
 	@Override	
-	public Entity getEntityById(Long id) {
-		if (entityMap==null) return null;
-		return entityMap.get(id);
+	public Entity getEntityById(String id) {
+		try {
+			return entityMap.get(new Long(id));	
+		}
+		catch (Exception e) {
+			RootedEntity re = rootedEntityMap.get(id);
+			if (re!=null) return re.getEntity();
+		}
+		return null;
 	}
 }

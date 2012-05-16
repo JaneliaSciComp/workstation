@@ -2,24 +2,21 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 import javax.swing.*;
 import javax.swing.border.Border;
 
-import org.janelia.it.FlyWorkstation.gui.util.Icons;
-
 /**
- * The main viewer panel that contains subviewers in tabs (or with no tabs if there is just one).
+ * The main viewer panel that contains two viewers: a main viewer and a secondary viewer that may be closed (and begins
+ * in a closed state). Also implements the concept of an "active" viewer and paints a selection border around the 
+ * currently active viewer. 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ViewerSplitPanel extends JPanel {
-	
-	private static final Font titleLabelFont = new Font("Sans Serif", Font.PLAIN, 12);
+public class ViewerSplitPanel extends JPanel implements ViewerContainer {
+
+	private final Border normalBorder;
+	private final Border focusBorder;
 	
 	private boolean mainViewerOnly = true;
 	private JSplitPane mainSplitPane;
@@ -27,11 +24,9 @@ public class ViewerSplitPanel extends JPanel {
 	private ViewerPane secViewerPane;
 	private ViewerPane activeViewerPane;
 	
-	private final Border normalBorder;
-	private final Border focusBorder;
-	
 	public ViewerSplitPanel() {
-		super(new BorderLayout());
+		
+		setLayout(new BorderLayout());
 		setBorder(BorderFactory.createEmptyBorder());
 		
 		Color panelColor = (Color)UIManager.get("Panel.background");
@@ -42,9 +37,14 @@ public class ViewerSplitPanel extends JPanel {
 		focusBorder = BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(focusColor, 1), BorderFactory.createLineBorder(focusColor, 1));
 		
 		mainViewerPane = new ViewerPane(false);
-		mainViewerPane.setLabel("");
-		secViewerPane = new ViewerPane(true);
-		secViewerPane.setLabel("");
+		mainViewerPane.setTitle("");
+		secViewerPane = new ViewerPane(true) {
+			@Override
+			protected void closeButtonPressed() {
+				setSecViewer(null);
+			}
+		};
+		secViewerPane.setTitle("");
 		
 		this.mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, mainViewerPane, secViewerPane);
 		mainSplitPane.setOneTouchExpandable(false);
@@ -57,6 +57,7 @@ public class ViewerSplitPanel extends JPanel {
 		return mainSplitPane;
 	}
 
+	@Override
 	public void setAsActive(Viewer viewer) {
 		activeViewerPane = getViewerPane(viewer);
 
@@ -73,9 +74,10 @@ public class ViewerSplitPanel extends JPanel {
 		}
 	}
 
+	@Override
 	public void setTitle(Viewer viewer, String title) {
 		ViewerPane viewerPane = getViewerPane(viewer);
-		viewerPane.setLabel(title);
+		viewerPane.setTitle(title);
 	}
 	
 	public Viewer getActiveViewer() {
@@ -149,61 +151,5 @@ public class ViewerSplitPanel extends JPanel {
 		}
 	}
 	
-	private class ViewerPane extends JPanel {
-		private JLabel titleLabel;
-		private Viewer viewer;
-		
-		public ViewerPane(boolean showHideButton) {
-			
-			setLayout(new BorderLayout());
-			
-	        titleLabel = new JLabel(" ");
-	        titleLabel.setBorder(BorderFactory.createEmptyBorder(1, 5, 3, 0));
-	        titleLabel.setFont(titleLabelFont);
-	        
-	        JPanel mainTitlePane = new JPanel();
-	        mainTitlePane.setLayout(new BoxLayout(mainTitlePane, BoxLayout.LINE_AXIS));
-	        mainTitlePane.add(titleLabel);
-	        
-			if (showHideButton) {
-		        JButton hideButton = new JButton(Icons.getIcon("close_red.png"));
-		        hideButton.setPreferredSize(new Dimension(16, 16));
-		        hideButton.setBorderPainted(false);
-		        hideButton.setToolTipText("Close this viewer");
-		        hideButton.addActionListener(new ActionListener() {
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						setSecViewer(null);
-					}
-				});
-		        mainTitlePane.add(Box.createHorizontalGlue());
-		        mainTitlePane.add(hideButton);
-			}
-			
-	        add(mainTitlePane, BorderLayout.NORTH);
-		}
-		
-		public void clearViewer() {
-			if (this.viewer!=null) {
-				remove(this.viewer);
-			}
-			viewer = null;
-		}
 
-		public void setLabel(String label) {
-			titleLabel.setText(label);
-		}
-
-		public void setViewer(Viewer viewer) {
-			clearViewer();
-			this.viewer = viewer;
-			if (viewer!=null) {
-				add(viewer, BorderLayout.CENTER);
-			}
-		}
-		
-		public Viewer getViewer() {
-			return viewer;
-		}
-	}
 }

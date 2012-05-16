@@ -298,11 +298,40 @@ public class ImagesPanel extends JScrollPane {
 	    viewport.scrollRectToVisible(rect);
 	}
 
+	public void scrollButtonToTop(AnnotatedImageButton button) {
+
+    	if (button == null) return;
+	    JViewport viewport = getViewport();
+    	
+	    // This rectangle is relative to the table where the
+	    // northwest corner of cell (0,0) is always (0,0).
+	    Rectangle rect = button.getBounds();
+
+	    // The location of the view relative to the table
+	    Rectangle viewRect = viewport.getViewRect();
+
+	    // Translate the cell location so that it is relative
+	    // to the view, assuming the northwest corner of the
+	    // view is (0,0). Also make the rect as large as the view, 
+	    // so that the relevant portion goes to the top.
+	    rect.setBounds(rect.x-viewRect.x, rect.y-viewRect.y, viewRect.width, viewRect.height);
+
+	    // Scroll the area into view.
+	    viewport.scrollRectToVisible(rect);
+	}
+	
 	public void scrollSelectedEntitiesToCenter() {
 		List<AnnotatedImageButton> selected = getSelectedButtons();
+		if (selected.isEmpty()) return;
 		int i = selected.size()/2;
 		AnnotatedImageButton centerOfMass = selected.get(i);
 		scrollButtonToCenter(centerOfMass);
+	}
+
+	public void scrollSelectedEntitiesToTop() {
+		List<AnnotatedImageButton> selected = getSelectedButtons();
+		if (selected.isEmpty()) return;
+		scrollButtonToTop(selected.get(0));
 	}
 	
     public void setTitleVisbility(boolean visible) {
@@ -339,7 +368,6 @@ public class ImagesPanel extends JScrollPane {
     private boolean setSelection(AnnotatedImageButton button, boolean selection) {
     	if (button.isSelected()!=selection) {
     		button.setSelected(selection);
-			if (selection) button.requestFocus();
     		return true;
     	}
     	return false;

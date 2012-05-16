@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.Dimension;
 import java.io.File;
+import java.util.concurrent.Callable;
 
 import javax.swing.JComponent;
 
@@ -68,7 +69,19 @@ public class DynamicImageButton extends AnnotatedImageButton {
 	}
 
 	public void setViewable(boolean viewable) {
-        dynamicImagePanel.setViewable(viewable, null);
+        dynamicImagePanel.setViewable(viewable, new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				// This is a bit of a hack. Whenever an image loads, check if its the image expected in the HUD, and
+				// updated the HUD if necessary.
+				if (rootedEntity.getEntity().getId().equals(iconDemoPanel.getHud().getEntityId())) {
+					iconDemoPanel.getHud().setTitle(getRootedEntity().getEntity().getName());
+					iconDemoPanel.getHud().setImage(dynamicImagePanel.getMaxSizeImage());
+				}
+				return null;
+			}
+        	
+		});
 	}
 
 	public DynamicImagePanel getDynamicImagePanel() {
