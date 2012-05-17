@@ -1327,8 +1327,8 @@ public class IconDemoPanel extends Viewer {
 	}
 	
 	private List<RootedEntity> getRootedEntitiesById(String id) {
-		if (rootedEntityMap==null) return null;
 		List<RootedEntity> res = new ArrayList<RootedEntity>();
+		if (rootedEntityMap==null) return res;
 		RootedEntity re = rootedEntityMap.get(id);
 		if (re!=null) {
 			res.add(re);
@@ -1351,6 +1351,7 @@ public class IconDemoPanel extends Viewer {
 	
 	@Override	
 	public Entity getEntityById(String id) {
+		if (entityMap==null && rootedEntityMap==null) return null;
 		try {
 			return entityMap.get(new Long(id));	
 		}

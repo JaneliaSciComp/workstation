@@ -52,6 +52,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	
 	private static final int STEP_PANEL_HEIGHT = 35;
 	private static final int MAX_FREE_CROSSES = 1;
+	private static final int MAX_TOTAL_CROSSES = 10;
 	
 	private final SplitGroupingDialog splitGroupingDialog;
 	private final JButton searchButton;
@@ -213,7 +214,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		JLabel param1Label = new JLabel("Method (0=minimum value, 1=geometric mean, 2=scaled product): ");
 		param1Panel.add(Box.createHorizontalStrut(50));
 		param1Panel.add(param1Label);		
-		methodField = new JTextField("1");
+		methodField = new JTextField("0");
 		methodField.setMaximumSize(new Dimension(50, STEP_PANEL_HEIGHT));
 		param1Panel.add(methodField);
 		param1Panel.setPreferredSize(new Dimension(0, STEP_PANEL_HEIGHT));
@@ -424,8 +425,12 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			samples2.add(sample2);
 		}
 		
-		int numCrosses = samples1.size() * samples2.size();
-		if (numCrosses > MAX_FREE_CROSSES) {
+		final int numCrosses = samples1.size() * samples2.size();
+		if (numCrosses > MAX_TOTAL_CROSSES) {
+			JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Cannot run "+numCrosses+" crosses (limited to "+MAX_TOTAL_CROSSES+" max)", "Error", JOptionPane.ERROR_MESSAGE);
+			return;
+		}
+		else if (numCrosses > MAX_FREE_CROSSES) {
 			Object[] options = {"Yes", "Cancel"};
 			int deleteConfirmation = JOptionPane.showOptionDialog(SessionMgr.getBrowser(),
 					"Are you sure you want to compute "+numCrosses+" crosses?", "Compute Crosses",
@@ -453,7 +458,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			}
 		}
 		
-		int numExisting = existingCrosses.size();
+		final int numExisting = existingCrosses.size();
 		if (numExisting > 0) {
 			Object[] options = {"Yes", "No"};
 			String message = numCrosses==1 ? 
@@ -481,8 +486,12 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				List<Long> sampleIds2 = new ArrayList<Long>();
 				List<Long> outputIds = new ArrayList<Long>();
 				
+				System.out.println("Processing "+numCrosses+" crosses");
+				
+				int i = 0;
 				for(Entity sample1 : samples1) {
 					for(Entity sample2 : samples2) {
+						setProgress(i++, numCrosses+1);
 						
 						String crossName = createCrossName(sample1, sample2);
 						if (existingCrosses.contains(crossName)) {
@@ -490,11 +499,6 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 						}
 						
 						Entity cross = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS, crossName);
-						ModelMgr.getModelMgr().addEntityToParent(parent, cross, parent.getMaxOrderIndex()+1, EntityConstants.ATTRIBUTE_ENTITY);
-						
-						if (firstCross==null) {
-							firstCross = cross;
-						}
 						
 						List<Long> childrenIds = new ArrayList<Long>();
 						childrenIds.add(sample1.getId());
@@ -504,15 +508,21 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 						sampleIds1.add(sample1.getId());
 						sampleIds2.add(sample2.getId());
 						outputIds.add(cross.getId());
+
+						if (firstCross==null) {
+							firstCross = cross;
+						}
 					}
 				}
 				
+				ModelMgr.getModelMgr().addChildren(parent.getId(), outputIds, EntityConstants.ATTRIBUTE_ENTITY);
+				
 				startIntersections(sampleIds1, sampleIds2, outputIds);
-				SessionMgr.getBrowser().getEntityOutline().refresh();
 			}
 			
 			@Override
 			protected void hadSuccess() {
+				SessionMgr.getBrowser().getEntityOutline().refresh();
 				crossesPanel.refresh(new Callable<Void>() {
 					@Override
 					public Void call() throws Exception {
@@ -528,6 +538,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			}
 		};
 		
+		worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getSessionMgr().getActiveBrowser(), "Submitting jobs to the compute cluster...", "", 0, 100));
 		worker.execute();
 	}
 
@@ -550,19 +561,22 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
     			taskParameters, "screenSampleCrossService", "Screen Sample Cross Service");
         task.setJobName("Screen Sample Cross Service");
         task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
+        
+        System.out.println("Submitting task "+task.getDisplayName()+" id="+task.getObjectId());
+        
         ModelMgr.getModelMgr().submitJob("ScreenSampleCrossService", task.getObjectId());
     }
 
 	private String createCrossName(Entity sample1, Entity sample2) {
 		String[] parts1 = sample1.getName().split("-");
 		String[] parts2 = sample2.getName().split("-");
-		return parts1[0]+"-"+parts2[0];
+		return parts1[0]+"+"+parts2[0];
 	}
 	
 	private void setResultFolder(Entity entity) {
+		
 		resultFolderButton.setText(entity.getName());
 		workingFolder = new RootedEntity(entity);
-		
 		repFolder = null;
 		splitLinesFolder = null;
 		groupAdFolder = null;
@@ -592,8 +606,6 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			
 			@Override
 			protected void hadSuccess() {
-				SessionMgr.getBrowser().getEntityOutline().expandByUniqueId(workingFolder.getUniqueId());
-				
 				final IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_MAIN_VIEW);
 				if (groupAdFolder==null && groupDbdFolder==null) {
 					if (repFolder!=null) {
@@ -663,7 +675,12 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 						}
 						@Override
 						protected void hadSuccess() {
-							SessionMgr.getBrowser().getEntityOutline().expandByUniqueId(workingFolder.getUniqueId());
+							SwingUtilities.invokeLater(new Runnable() {
+								@Override
+								public void run() {
+									SessionMgr.getBrowser().getEntityOutline().selectEntityByUniqueId(workingFolder.getUniqueId());
+								}
+							});
 						}
 						@Override
 						protected void hadError(Throwable error) {
@@ -698,7 +715,12 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					}
 					@Override
 					protected void hadSuccess() {
-						SessionMgr.getBrowser().getEntityOutline().expandByUniqueId(workingFolder.getUniqueId());
+						SwingUtilities.invokeLater(new Runnable() {
+							@Override
+							public void run() {
+								SessionMgr.getBrowser().getEntityOutline().selectEntityByUniqueId(workingFolder.getUniqueId());
+							}
+						});
 					}
 					@Override
 					protected void hadError(Throwable error) {
