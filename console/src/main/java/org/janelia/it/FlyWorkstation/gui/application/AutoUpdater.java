@@ -44,11 +44,9 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 	public AutoUpdater() {
         getContentPane().setLayout(new BorderLayout());
         setSize(400, 200);
-        setLocationRelativeTo(null);
         mainPane = new JPanel(new BorderLayout());
         mainPane.setBorder(BorderFactory.createEmptyBorder(padding, padding, padding, padding));
         add(mainPane, BorderLayout.CENTER);
-        
 	}
 	
 	public void checkVersions() throws Exception {
@@ -221,6 +219,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
         }
         
         pack();
+        setLocationRelativeTo(null);
 		setVisible(true);
 	}
     
