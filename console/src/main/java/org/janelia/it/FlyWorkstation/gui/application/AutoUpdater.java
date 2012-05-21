@@ -21,7 +21,6 @@ import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
-import java.io.IOException;
 import java.util.MissingResourceException;
 
 /**
@@ -37,20 +36,17 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 	private JLabel mainLabel;
 	private JProgressBar progressBar;
 	private File remoteFile;
-	private File releaseNotesFile;
-	private File downloadsDir;
+    private File downloadsDir;
 	private File downloadFile;
 	private File extractedDir;
-	private File packageDir;
+	private File packageDir=null;
 	
 	public AutoUpdater() {
         getContentPane().setLayout(new BorderLayout());
         setSize(400, 200);
-        setLocationRelativeTo(null);
         mainPane = new JPanel(new BorderLayout());
         mainPane.setBorder(BorderFactory.createEmptyBorder(padding, padding, padding, padding));
         add(mainPane, BorderLayout.CENTER);
-        
 	}
 	
 	public void checkVersions() throws Exception {
@@ -92,7 +88,8 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
     	
         if (!serverVersion.equals(clientVersion)) {
 
-        	if (SystemInfo.isMac) {
+            File releaseNotesFile;
+            if (SystemInfo.isMac) {
             	String suiteDir = "FlySuite_"+serverVersion;
             	remoteFile = new File(FacadeManager.getOsSpecificRootPath(), "FlySuite/"+suiteDir+".tgz");
             	releaseNotesFile = new File(FacadeManager.getOsSpecificRootPath(), "FlySuite/"+suiteDir+"/releaseNotes.txt");
@@ -113,7 +110,8 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
             else if (SystemInfo.isWindows) {
                 String suiteDir = "FlySuite_windows_"+serverVersion;
                 remoteFile = new File(FacadeManager.getOsSpecificRootPath(), "FlySuite/"+suiteDir+".zip");
-                downloadsDir = new File("/tmp/");
+                releaseNotesFile = new File(FacadeManager.getOsSpecificRootPath(), "FlySuite/"+suiteDir+"/releaseNotes.txt");
+                downloadsDir = new File(SessionMgr.getSessionMgr().getApplicationOutputDirectory()+"/tmp/");
                 downloadFile = new File(downloadsDir, remoteFile.getName());
                 extractedDir = new File(downloadsDir, suiteDir);
                 packageDir = extractedDir;
@@ -221,6 +219,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
         }
         
         pack();
+        setLocationRelativeTo(null);
 		setVisible(true);
 	}
     
@@ -248,25 +247,39 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 				if (extractedDir.exists()) {
 					FileUtil.deleteDirectory(extractedDir);
 				}
-				
-            	if (runShellCommand("cp "+remoteFile+" "+downloadFile, downloadsDir) != 0) {
-            		throw new Exception("Error extracting archive: "+downloadFile.getAbsolutePath());
-            	}
 
-            	if (runShellCommand("tar xvfz "+downloadFile, downloadsDir) != 0) {
-            		throw new Exception("Error extracting archive: "+downloadFile.getAbsolutePath());
-            	}
-                
-			}
+                if (SystemInfo.isLinux || SystemInfo.isMac) {
+                    if (runShellCommand("cp "+remoteFile+" "+downloadFile, downloadsDir) != 0) {
+                        throw new Exception("Error extracting archive: "+downloadFile.getAbsolutePath());
+                    }
+
+                    if (runShellCommand("tar xvfz "+downloadFile, downloadsDir) != 0) {
+                        throw new Exception("Error extracting archive: "+downloadFile.getAbsolutePath());
+                    }
+                }
+                else if (SystemInfo.isWindows) {
+                    if (runShellCommand("copy "+remoteFile+" "+downloadFile, downloadsDir) != 0) {
+                        throw new Exception("Error extracting archive: "+downloadFile.getAbsolutePath());
+                    }
+
+                    FileUtil.zipUncompress(downloadFile, downloadsDir.getAbsolutePath());
+                }
+
+            }
 			
 			@Override
 			protected void hadSuccess() {
 
 				try {					
-					if (!packageDir.exists() || packageDir.listFiles().length<1) {
+					if (null==packageDir || !packageDir.exists()) {
 						throw new Exception("Error retrieving update. "+packageDir);
 					}
-					
+
+                    File[] tmpPkgFiles = packageDir.listFiles();
+                    if (null==tmpPkgFiles || tmpPkgFiles.length<1) {
+                        throw new Exception("Error retrieving update. "+packageDir);
+                    }
+
 					// The last line of output is agree to be the downloaded package
 					System.out.println(packageDir.getAbsolutePath());
 					
@@ -310,38 +323,6 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
         }
     }
 
-    /**
-     * A revised copyDirectory, adapted from the one in FileUtil. 
-     * This one copies the entire file hierarchy without flattening it.
-     * @param sourceDirectory
-     * @param destinationDirectory
-     * @throws IOException
-     */
-    public static void copyDirectory(File sourceDirectory, File destinationDirectory) throws IOException {
-    	
-    	File destination = new File(destinationDirectory, sourceDirectory.getName());
-    	destination.mkdir();
-    	
-        File[] dirFiles = sourceDirectory.listFiles();
-        if (dirFiles != null) {
-            for (File dirFile : dirFiles) {
-                if (dirFile.isFile()) {
-                	FileUtil.copyFile(dirFile, new File(destination, dirFile.getName()));
-                }
-                else if (dirFile.isDirectory()) {
-                    copyDirectory(dirFile, destination);
-                }
-            }
-        }
-    }
-    
-    /**
-     * 
-     * @param command
-     * @param dir
-     * @return
-     * @throws Exception
-     */
 	private int runShellCommand(String command, File dir) throws Exception {
 
 		//System.out.println("RUN: "+command);
@@ -351,12 +332,11 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
         StringBuffer stdout = new StringBuffer();
         StringBuffer stderr = new StringBuffer();
         SystemCall call = new SystemCall(stdout, stderr);
-    	int exitCode = call.emulateCommandLine(args, null, dir, 3600);
-        
-    	//System.out.println("STDOUT: "+stdout);
+
+        //System.out.println("STDOUT: "+stdout);
 		//System.out.println("STDERR: "+stderr);
 		
-		return exitCode;
+		return call.emulateCommandLine(args, null, dir, 3600);
 	}
 	
     public static void main(final String[] args) {
