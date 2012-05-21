@@ -1,18 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.application;
 
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.File;
-import java.io.IOException;
-import java.util.MissingResourceException;
-
-import javax.swing.*;
-
-import loci.plugins.config.SpringUtilities;
-
 import org.apache.commons.io.FileUtils;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
@@ -26,6 +13,16 @@ import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
 import org.janelia.it.jacs.compute.api.ComputeBeanRemote;
 import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.SystemCall;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.IOException;
+import java.util.MissingResourceException;
 
 /**
  * Check version against the JACS server and update the entire FlySuite if needed.
@@ -113,7 +110,15 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
             	extractedDir = new File(downloadsDir, suiteDir);
             	packageDir = extractedDir;
         	}
-        	else {
+            else if (SystemInfo.isWindows) {
+                String suiteDir = "FlySuite_windows_"+serverVersion;
+                remoteFile = new File(FacadeManager.getOsSpecificRootPath(), "FlySuite/"+suiteDir+".zip");
+                downloadsDir = new File("/tmp/");
+                downloadFile = new File(downloadsDir, remoteFile.getName());
+                extractedDir = new File(downloadsDir, suiteDir);
+                packageDir = extractedDir;
+            }
+            else {
         		throw new IllegalStateException("Operation system not supported: "+SystemInfo.OS_NAME);
         	}
         	
