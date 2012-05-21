@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -34,7 +35,7 @@ public class SearchMenu extends JMenu {
             }
         });
         
-        searchMenuItem.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, java.awt.Event.META_MASK));
+        searchMenuItem.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, SystemInfo.isMac?java.awt.Event.META_MASK:java.awt.Event.CTRL_MASK));
         
         // Add the tools
         add(searchMenuItem);
