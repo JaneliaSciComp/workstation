@@ -1,17 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.application;
 
-import loci.plugins.config.SpringUtilities;
-import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
-import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
-import org.janelia.it.FlyWorkstation.gui.framework.exception_handlers.ExitHandler;
-import org.janelia.it.FlyWorkstation.gui.framework.exception_handlers.UserNotificationExceptionHandler;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.*;
-import org.janelia.it.jacs.compute.api.ComputeBeanRemote;
-import org.janelia.it.jacs.shared.utils.FileUtil;
-import org.janelia.it.jacs.shared.utils.SystemCall;
-
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -20,6 +8,24 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.util.MissingResourceException;
+
+import javax.swing.*;
+
+import loci.plugins.config.SpringUtilities;
+
+import org.apache.commons.io.FileUtils;
+import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
+import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.FlyWorkstation.gui.framework.exception_handlers.ExitHandler;
+import org.janelia.it.FlyWorkstation.gui.framework.exception_handlers.UserNotificationExceptionHandler;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
+import org.janelia.it.FlyWorkstation.gui.util.FakeProgressWorker;
+import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
+import org.janelia.it.jacs.compute.api.ComputeBeanRemote;
+import org.janelia.it.jacs.shared.utils.FileUtil;
+import org.janelia.it.jacs.shared.utils.SystemCall;
 
 /**
  * Check version against the JACS server and update the entire FlySuite if needed.
@@ -34,6 +40,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 	private JLabel mainLabel;
 	private JProgressBar progressBar;
 	private File remoteFile;
+	private File releaseNotesFile;
 	private File downloadsDir;
 	private File downloadFile;
 	private File extractedDir;
@@ -46,6 +53,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
         mainPane = new JPanel(new BorderLayout());
         mainPane.setBorder(BorderFactory.createEmptyBorder(padding, padding, padding, padding));
         add(mainPane, BorderLayout.CENTER);
+        
 	}
 	
 	public void checkVersions() throws Exception {
@@ -90,6 +98,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
         	if (SystemInfo.isMac) {
             	String suiteDir = "FlySuite_"+serverVersion;
             	remoteFile = new File(FacadeManager.getOsSpecificRootPath(), "FlySuite/"+suiteDir+".tgz");
+            	releaseNotesFile = new File(FacadeManager.getOsSpecificRootPath(), "FlySuite/"+suiteDir+"/releaseNotes.txt");
         		downloadsDir = new File(System.getProperty("user.home"),"Downloads/");
             	downloadFile = new File(downloadsDir, remoteFile.getName());
             	extractedDir = new File(downloadsDir, suiteDir);
@@ -98,6 +107,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
         	else if (SystemInfo.isLinux) {
             	String suiteDir = "FlySuite_linux_"+serverVersion;
             	remoteFile = new File(FacadeManager.getOsSpecificRootPath(), "FlySuite/"+suiteDir+".tgz");
+            	releaseNotesFile = new File(FacadeManager.getOsSpecificRootPath(), "FlySuite/"+suiteDir+"/releaseNotes.txt");
         		downloadsDir = new File("/tmp/");
             	downloadFile = new File(downloadsDir, remoteFile.getName());
             	extractedDir = new File(downloadsDir, suiteDir);
@@ -116,23 +126,46 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 
         	mainPane.add(new JLabel("A new version of FlyWorkstation is available."), BorderLayout.NORTH);
         	
-        	JPanel attrPanel = new JPanel(new SpringLayout());
+        	JPanel attrPanel = new JPanel(new GridBagLayout());
+        	GridBagConstraints c = new GridBagConstraints();
+        	c.anchor = GridBagConstraints.FIRST_LINE_START;
+        	c.insets = new Insets(10,0,0,0);
         	
             JLabel currVersionKeyLabel = new JLabel("Current Version: ");
-            JLabel currVersionValueLabel = new JLabel(clientVersion);
-            currVersionKeyLabel.setLabelFor(currVersionValueLabel);
-            attrPanel.add(currVersionKeyLabel);
-            attrPanel.add(currVersionValueLabel);
-
-            JLabel latestVersionKeyLabel = new JLabel("Latest Version: ");
-            JLabel latestVersionValueLabel = new JLabel(serverVersion);
-            latestVersionKeyLabel.setLabelFor(latestVersionValueLabel);
-            attrPanel.add(latestVersionKeyLabel);
-            attrPanel.add(latestVersionValueLabel);
-
-            mainPane.add(attrPanel, BorderLayout.CENTER);
+        	c.gridx = 0;
+        	c.gridy = 0;
+            attrPanel.add(currVersionKeyLabel, c);
             
-            SpringUtilities.makeCompactGrid(attrPanel, attrPanel.getComponentCount()/2, 2, 6, 6, 6, 6);
+            JLabel currVersionValueLabel = new JLabel(clientVersion);
+        	c.gridx = 1;
+        	c.gridy = 0;
+            attrPanel.add(currVersionValueLabel, c);
+            
+            JLabel latestVersionKeyLabel = new JLabel("Latest Version: ");
+            c.gridx = 0;
+        	c.gridy = 1;
+            attrPanel.add(latestVersionKeyLabel, c);
+            
+            JLabel latestVersionValueLabel = new JLabel(serverVersion);
+            c.gridx = 1;
+        	c.gridy = 1;
+            attrPanel.add(latestVersionValueLabel, c);
+            
+            if (releaseNotesFile.exists() && releaseNotesFile.canRead()) {
+            	JLabel releaseNotesKeyLabel = new JLabel("Release Notes: ");
+            	c.gridx = 0;
+            	c.gridy = 2;
+            	attrPanel.add(releaseNotesKeyLabel, c);
+            	
+            	JTextArea releaseNotesArea = new JTextArea(FileUtils.readFileToString(releaseNotesFile));
+            	releaseNotesArea.setEditable(false);
+            	releaseNotesArea.setBackground((Color)UIManager.get("Panel.background"));
+            	c.gridx = 1;
+            	c.gridy = 2;
+            	attrPanel.add(releaseNotesArea, c);
+            }
+            
+            mainPane.add(attrPanel, BorderLayout.CENTER);
             
             JButton okButton = new JButton("Update");
             okButton.setToolTipText("Update and launch the FlyWorkstation");
@@ -181,6 +214,9 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
     			}
     		});
         }
+        
+        pack();
+		setVisible(true);
 	}
     
 	public void update() {
@@ -328,7 +364,6 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
             sessionMgr.registerExceptionHandler(new ExitHandler());
             
         	AutoUpdater updater = new AutoUpdater();
-            updater.setVisible(true);
             updater.checkVersions();
             
         }
