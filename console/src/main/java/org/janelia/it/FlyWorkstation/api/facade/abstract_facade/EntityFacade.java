@@ -26,8 +26,6 @@ public interface EntityFacade {
 
     public Entity getEntityTree(Long entityId) throws Exception;
 
-    public Entity getCachedEntityTree(Long entityId) throws Exception;
-
     public List<Entity> getEntitiesByName(String entityName);
 
     public List<Entity> getUserCommonRootEntitiesByTypeName(String entityTypeName);
@@ -46,7 +44,7 @@ public interface EntityFacade {
     
     public EntityData saveEntityDataForEntity(EntityData newData) throws Exception;
     
-    public boolean deleteEntityById(Long entityId);
+    public boolean deleteEntityById(Long entityId) throws Exception;
 
     public void deleteEntityTree(Long entityId) throws Exception;
 

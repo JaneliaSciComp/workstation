@@ -500,7 +500,7 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().getEntitiesByTypeName(entityTypeName);
     }
 
-    public boolean deleteEntityById(Long entityId) {
+    public boolean deleteEntityById(Long entityId) throws Exception {
         boolean success = FacadeManager.getFacadeManager().getEntityFacade().deleteEntityById(entityId);
         notifyEntityRemoved(entityId);
         return success;
@@ -589,10 +589,6 @@ public class ModelMgr {
 
     public Entity getEntityTree(long entityId) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().getEntityTree(entityId);
-    }
-
-    public Entity getCachedEntityTree(Long entityId) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().getCachedEntityTree(entityId);
     }
 
     public Set<Entity> getChildEntities(Long parentEntityId) {

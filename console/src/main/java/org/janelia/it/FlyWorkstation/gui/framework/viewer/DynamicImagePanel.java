@@ -6,7 +6,6 @@ import java.awt.GridBagLayout;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 
 import javax.swing.*;
 
@@ -304,19 +303,8 @@ public abstract class DynamicImagePanel extends JPanel {
         revalidate();
         repaint();
     }
-
+    
 	public synchronized BufferedImage getMaxSizeImage() {
-//		while (loadWorker!=null) {
-//			try {
-//				System.out.println("waiting for image "+maxSizeImage);
-//				loadWorker.get();
-//				System.out.println("done waiting for image "+maxSizeImage);
-//			}
-//			catch (Exception e) {
-//				e.printStackTrace();
-//				return null;
-//			}
-//		}
 		return (inverted) ? invertedMaxSizeImage : maxSizeImage;
 	}
 	

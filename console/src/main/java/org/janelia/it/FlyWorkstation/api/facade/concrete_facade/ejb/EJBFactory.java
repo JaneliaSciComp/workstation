@@ -16,6 +16,7 @@ public class EJBFactory {
     private static final String REMOTE_ANNOTATION_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.annotation.jndi.name");
     private static final String REMOTE_SOLR_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.solr.jndi.name");
     private static final String REMOTE_COMPUTE_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.compute.jndi.name");
+    private static final String REMOTE_ENTITY_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.entity.jndi.name");
     private static final String REMOTE_SEARCH_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.search.jndi.name");
     private static final String REMOTE_GENOME_CONTEXT_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.genome.context.jndi.name");
     private static final String REMOTE_JOB_CONTROL_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.job.control.jndi.name");
@@ -69,6 +70,10 @@ public class EJBFactory {
         return (ComputeBeanRemote) getRemoteInterface(REMOTE_COMPUTE_JNDI_NAME);
     }
 
+    public static EntityBeanRemote getRemoteEntityBean() {
+        return (EntityBeanRemote) getRemoteInterface(REMOTE_ENTITY_JNDI_NAME);
+    }
+    
     public static SearchBeanRemote getRemoteSearchBean() {
         return (SearchBeanRemote) getRemoteInterface(REMOTE_SEARCH_JNDI_NAME);
     }

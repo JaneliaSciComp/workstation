@@ -58,10 +58,10 @@ public class DynamicImageButton extends AnnotatedImageButton {
 		dynamicImagePanel.setCache(imageCache);
 	}
 
-	public void rescaleImage(int imageSize) {
-		super.rescaleImage(imageSize);
-		dynamicImagePanel.rescaleImage(imageSize);
-    	dynamicImagePanel.setPreferredSize(new Dimension(imageSize, imageSize));
+	public void rescaleImage(int width, int height) {
+		super.rescaleImage(width, height);
+		dynamicImagePanel.rescaleImage(width);
+    	dynamicImagePanel.setPreferredSize(new Dimension(width, height));
 	}
 
 	public void setInvertedColors(boolean inverted) {
@@ -78,6 +78,13 @@ public class DynamicImageButton extends AnnotatedImageButton {
 					iconDemoPanel.getHud().setTitle(getRootedEntity().getEntity().getName());
 					iconDemoPanel.getHud().setImage(dynamicImagePanel.getMaxSizeImage());
 				}
+				// Register our image height
+				// TODO: Dynamic image height is hard to implement due to async issues. The height can potentially 
+				// change whenever a new image is loaded, or whatever the images are resized by the user. 
+//				if (dynamicImagePanel.getMaxSizeImage()!=null) {
+//					iconDemoPanel.getImagesPanel().registerImageHeight(dynamicImagePanel.getImage().getIconHeight());
+//					iconDemoPanel.getImagesPanel().recalculateGrid();
+//				}
 				return null;
 			}
         	

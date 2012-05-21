@@ -7,7 +7,6 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
-import org.janelia.it.jacs.compute.api.AnnotationBeanRemote;
 import org.janelia.it.jacs.model.entity.Entity;
 
 /**
@@ -23,10 +22,9 @@ public class JAXBSerializer {
 	}
 
 	public static void seralizeCommonRoots(String username, File dir) throws JAXBException {
-		AnnotationBeanRemote annotationBean = EJBFactory.getRemoteAnnotationBean();
-		List<Entity> roots = annotationBean.getCommonRootEntitiesByTypeName(username, "Folder");
+		List<Entity> roots = EJBFactory.getRemoteAnnotationBean().getCommonRootEntitiesByTypeName(username, "Folder");
 		for(Entity root : roots) {
-			Entity tree = annotationBean.getEntityTree(root.getId());
+			Entity tree = EJBFactory.getRemoteEntityBean().getEntityTree(root.getId());
 			File file = new File(dir, "commonRoot-"+root.getId()+".xml");
 			JAXBSerializer.serializeUsingJAXB(tree, file);
 		}

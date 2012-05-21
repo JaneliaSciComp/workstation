@@ -29,15 +29,15 @@ public class StaticImageButton extends AnnotatedImageButton {
     	return label;
     }
     
-	public void rescaleImage(int imageSize) {
-		super.rescaleImage(imageSize);
+	public void rescaleImage(int width, int height) {
+		super.rescaleImage(width, height);
 		if (staticIcon!=null) {
-			if (imageSize<staticIcon.getHeight() || imageSize<staticIcon.getWidth()) { // Don't scale up icons
-				ImageIcon newIcon = new ImageIcon(Utils.getScaledImage(staticIcon, imageSize));
+			if (width<staticIcon.getWidth() || height<staticIcon.getHeight()) { // Don't scale up icons
+				ImageIcon newIcon = new ImageIcon(Utils.getScaledImage(staticIcon, width));
 	        	label.setIcon(newIcon);
 			}
 		}
-		label.setPreferredSize(new Dimension(imageSize, imageSize));
+		label.setPreferredSize(new Dimension(width, height));
 		label.revalidate();
 		label.repaint();
 	}
@@ -46,7 +46,7 @@ public class StaticImageButton extends AnnotatedImageButton {
 		if (viewable) {
 	    	this.staticIcon = Icons.getLargeIconAsBufferedImage(rootedEntity.getEntity());
 	    	label.setIcon(new ImageIcon(staticIcon));
-        	rescaleImage(iconDemoPanel.getImagesPanel().getCurrImageSize());
+        	rescaleImage(iconDemoPanel.getImagesPanel().getCurrImageSize(), iconDemoPanel.getImagesPanel().getCurrImageSize());
 		}
 		else {
 			this.staticIcon = null;

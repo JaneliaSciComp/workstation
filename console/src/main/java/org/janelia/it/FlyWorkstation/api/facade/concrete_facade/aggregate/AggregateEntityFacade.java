@@ -99,26 +99,6 @@ public class AggregateEntityFacade extends AggregateFacadeBase implements Entity
     }
 
     @Override
-    public Entity getCachedEntityTree(Long entityId) throws Exception {
-        Object[] aggregates = getAggregates();
-        List<Entity> returnList = new ArrayList<Entity>();
-        Entity tmpEntity;
-        for (Object aggregate : aggregates) {
-            tmpEntity = ((EntityFacade) aggregate).getCachedEntityTree(entityId);
-            if (null != tmpEntity) {
-                returnList.add(tmpEntity);
-            }
-        }
-        if (1 < returnList.size()) {
-            throw new DuplicateDataException();
-        }
-        if (1 == returnList.size()) {
-            return returnList.get(0);
-        }
-        return null;
-    }
-
-    @Override
     public List<Entity> getEntitiesByName(String entityName) {
         Object[] aggregates = getAggregates();
         List<Entity> returnList = new ArrayList<Entity>();
@@ -241,7 +221,12 @@ public class AggregateEntityFacade extends AggregateFacadeBase implements Entity
         Object[] aggregates = getAggregates();
         List<Boolean> returnList = new ArrayList<Boolean>();
         for (Object aggregate : aggregates) {
-            returnList.add(((EntityFacade) aggregate).deleteEntityById(entityId));
+        	try {
+        		returnList.add(((EntityFacade) aggregate).deleteEntityById(entityId));	
+        	}
+            catch (Exception e) {
+            	returnList.add(false);
+            }
         }
         boolean returnSuccess = false;
         for (Boolean aBoolean : returnList) {

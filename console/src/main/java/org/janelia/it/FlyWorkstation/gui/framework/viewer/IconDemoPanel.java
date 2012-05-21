@@ -647,7 +647,13 @@ public class IconDemoPanel extends Viewer {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, Utils.getParentIdFromUniqueId(selectedUniqueId), true);
+				String parentId = Utils.getParentIdFromUniqueId(selectedUniqueId);
+				if (StringUtils.isEmpty(parentId)) {
+					clear();
+				}
+				else {
+					ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, parentId, true);	
+				}
 			}
 		});
 	}

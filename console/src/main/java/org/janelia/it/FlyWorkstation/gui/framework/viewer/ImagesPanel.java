@@ -41,8 +41,9 @@ public class ImagesPanel extends JScrollPane {
     private final IconDemoPanel iconDemoPanel;
     private ScrollableGridPanel buttonsPanel;
 
-    private int currImageSize = DEFAULT_THUMBNAIL_SIZE;
-    private int currTableHeight = DEFAULT_TABLE_HEIGHT;
+    private Integer maxImageHeight;
+    private Integer currImageSize = DEFAULT_THUMBNAIL_SIZE;
+    private Integer currTableHeight = DEFAULT_TABLE_HEIGHT;
     
     private Rectangle currViewRect;
     
@@ -159,6 +160,8 @@ public class ImagesPanel extends JScrollPane {
             buttons.put(rootedEntity.getId(), button);
             buttonsPanel.add(button);
         }
+        
+        resetMaxImageHeight();
     }
     
     public void removeRootedEntity(RootedEntity rootedEntity) {
@@ -205,10 +208,14 @@ public class ImagesPanel extends JScrollPane {
         if (imageSize < MIN_THUMBNAIL_SIZE || imageSize > MAX_THUMBNAIL_SIZE) {
             return;
         }
+        if (currImageSize > imageSize) {
+        	resetMaxImageHeight();
+        }
         this.currImageSize = imageSize;
         for (AnnotatedImageButton button : buttons.values()) {
         	try {
-                button.rescaleImage(imageSize);
+        		int imageHeight = getMaxImageHeight()==null? imageSize : getMaxImageHeight();
+                button.rescaleImage(imageSize, imageHeight);
 	    	}
 	    	catch (Exception e) {
 	    		SessionMgr.getSessionMgr().handleException(e);
@@ -334,7 +341,21 @@ public class ImagesPanel extends JScrollPane {
 		scrollButtonToTop(selected.get(0));
 	}
 	
-    public void setTitleVisbility(boolean visible) {
+    public synchronized Integer getMaxImageHeight() {
+		return maxImageHeight;
+	}
+
+    public synchronized void resetMaxImageHeight() {
+    	this.maxImageHeight = null;
+    }
+    
+	public synchronized void registerImageHeight(Integer imageHeight) {
+		if (maxImageHeight==null || imageHeight>maxImageHeight) {
+			this.maxImageHeight = imageHeight;	
+		}
+	}
+
+	public void setTitleVisbility(boolean visible) {
         for (AnnotatedImageButton button : buttons.values()) {
             button.setTitleVisible(visible);
         }

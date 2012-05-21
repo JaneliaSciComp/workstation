@@ -95,7 +95,7 @@ public class EntityTree extends JPanel {
                     rootEntity = ModelMgr.getModelMgr().getEntityById(rootId.toString());
                 }
                 else {
-                    rootEntity = ModelMgr.getModelMgr().getCachedEntityTree(rootId);
+                    rootEntity = ModelMgr.getModelMgr().getEntityTree(rootId);
                 }
             }
 

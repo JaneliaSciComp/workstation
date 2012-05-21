@@ -141,11 +141,11 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
         return rootedEntity;
     }
     
-	public void rescaleImage(int imageSize) {
-    	setTitle(rootedEntity.getEntity().getName(), imageSize);
+	public void rescaleImage(int width, int height) {
+    	setTitle(rootedEntity.getEntity().getName(), width);
         JPanel annotationPanel = (JPanel)annotationView;
         if (annotationView instanceof AnnotationTablePanel) {
-        	annotationPanel.setPreferredSize(new Dimension(imageSize, annotationPanel.getPreferredSize().height));
+        	annotationPanel.setPreferredSize(new Dimension(width, annotationPanel.getPreferredSize().height));
         }
 	}
 	

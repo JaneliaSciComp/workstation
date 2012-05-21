@@ -33,7 +33,7 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  */
 public abstract class EntityTransferHandler extends TransferHandler {
 
-	private static final boolean MOVE_WHEN_REORDERING = false;
+	private static final boolean MOVE_WHEN_REORDERING = true;
 	
 	private static final boolean DEBUG = false;
 	

@@ -11,7 +11,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.swing.*;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
@@ -24,11 +27,11 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
+import org.janelia.it.FlyWorkstation.gui.util.IndeterminateProgressMonitor;
 import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.PreferenceConstants;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -181,9 +184,11 @@ public class EntityContextMenu extends JPopupMenu {
 					SimpleWorker worker = new SimpleWorker() {
 						@Override
 						protected void doStuff() throws Exception {
+							List<Long> ids = new ArrayList<Long>();
 							for(RootedEntity rootedEntity : rootedEntityList) {
-								ModelMgrUtils.addChild(commonRoot, rootedEntity.getEntity());
+								ids.add(rootedEntity.getEntity().getId());
 							}
+							ModelMgr.getModelMgr().addChildren(commonRoot.getId(), ids, EntityConstants.ATTRIBUTE_ENTITY);
 						}
 						@Override
 						protected void hadSuccess() {
@@ -221,9 +226,12 @@ public class EntityContextMenu extends JPopupMenu {
 					protected void doStuff() throws Exception {
 						// Update database
 						newFolder = ModelMgrUtils.createNewCommonRoot(folderName);
+						
+						List<Long> ids = new ArrayList<Long>();
 						for(RootedEntity rootedEntity : rootedEntityList) {
-							ModelMgrUtils.addChild(newFolder, rootedEntity.getEntity());
+							ids.add(rootedEntity.getEntity().getId());
 						}
+						ModelMgr.getModelMgr().addChildren(newFolder.getId(), ids, EntityConstants.ATTRIBUTE_ENTITY);
 					}
 					@Override
 					protected void hadSuccess() {
@@ -260,8 +268,6 @@ public class EntityContextMenu extends JPopupMenu {
 		deleteItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent actionEvent) {
 
-				Utils.setWaitingCursor(browser.getEntityOutline());
-
 				final Set<EntityData> toDelete = new HashSet<EntityData>();
 				for(RootedEntity rootedEntity : rootedEntityList) {
 					toDelete.add(rootedEntity.getEntityData());
@@ -283,8 +289,8 @@ public class EntityContextMenu extends JPopupMenu {
 						
 					@Override
 					protected void doStuff() throws Exception {
+						setProgress(1);
 						
-						int i = 0;
 						for(EntityData ed : toDelete) {
 							Entity child = ed.getChildEntity();
 							List<EntityData> eds = ModelMgr.getModelMgr().getParentEntityDatas(ed.getChildEntity().getId());
@@ -314,14 +320,11 @@ public class EntityContextMenu extends JPopupMenu {
 									removeTree.add(ed);
 								}
 							}
-							setProgress(i++, toDelete.size());
 						}
 					}
 					
 					@Override
 					protected void hadSuccess() {
-						
-						Utils.setWaitingCursor(browser.getEntityOutline());
 						
 						final Set<EntityData> toReallyDelete = new HashSet<EntityData>(toDelete);
 						for(EntityData ed : toDelete) {
@@ -360,14 +363,13 @@ public class EntityContextMenu extends JPopupMenu {
 						}
 						
 						if (toReallyDelete.isEmpty()) {
-							Utils.setDefaultCursor(browser.getEntityOutline());
 							return;
 						}
 						
 						SimpleWorker removeTask = new SimpleWorker() {
 							@Override
 							protected void doStuff() throws Exception {
-								int i = 0;
+								setProgress(1);
 								for(EntityData ed : toReallyDelete) {
 									if (removeRootTag.contains(ed)) {
 										EntityData rootTagEd = ed.getChildEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT);
@@ -382,34 +384,30 @@ public class EntityContextMenu extends JPopupMenu {
 									else {
 										throw new IllegalStateException("Unknown deletion type for EntityData.id="+ed.getId());
 									}
-									setProgress(i++, toReallyDelete.size());
 								}
 							}
 
 							@Override
 							protected void hadSuccess() {
-								Utils.setDefaultCursor(browser.getEntityOutline());
 							}
 
 							@Override
 							protected void hadError(Throwable error) {
-								Utils.setDefaultCursor(browser.getEntityOutline());
 								SessionMgr.getSessionMgr().handleException(error);
 							}
 						};
 
-						removeTask.setProgressMonitor(new ProgressMonitor(SessionMgr.getBrowser(), "Removing", "", 0, 100));
+						removeTask.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Removing...", ""));
 						removeTask.execute();
 					}
 					
 					@Override
 					protected void hadError(Throwable error) {
-						Utils.setDefaultCursor(browser.getEntityOutline());
                     	SessionMgr.getSessionMgr().handleException(error);
 					}
 					
 				};
-				verifyTask.setProgressMonitor(new ProgressMonitor(SessionMgr.getBrowser(), "Verifying", "", 0, 100));
+				verifyTask.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Verifying...", ""));
 				verifyTask.execute();
 			}
 		});

@@ -442,17 +442,20 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 
 			protected void hadSuccess() {
 				try {
-					
 					init(rootList);
 					currUniqueId = null;
 					
 					if (restoreState) {
-						expansionState.restoreExpansionState(getDynamicTree(), true);
+						expansionState.restoreExpansionState(getDynamicTree(), true, new Callable<Void>() {
+							@Override
+							public Void call() throws Exception {
+								showTree();
+								if (success!=null) success.call();
+								return null;
+							}
+						});
 					}
 					
-					showTree();
-					
-					if (success!=null) success.call();
 				}
 				catch (Exception e) {
 					hadError(e);

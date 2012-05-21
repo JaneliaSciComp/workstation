@@ -63,26 +63,26 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
     }
 
     public void createEntityType(String typeName) throws Exception {
-    	EJBFactory.getRemoteAnnotationBean().createNewEntityType(typeName);
+    	EJBFactory.getRemoteEntityBean().createNewEntityType(typeName);
     }
     
     public void createEntityAttribute(String typeName, String attrName) throws Exception {
-    	EJBFactory.getRemoteAnnotationBean().createNewEntityAttr(typeName, attrName);
+    	EJBFactory.getRemoteEntityBean().createNewEntityAttr(typeName, attrName);
     }
     
     public Entity getAncestorWithType(Entity entity, String typeName) throws Exception {
-    	return EJBFactory.getRemoteAnnotationBean().getAncestorWithType(entity, typeName);
+    	return EJBFactory.getRemoteEntityBean().getAncestorWithType(entity, typeName);
     }
 	public List<List<Long>> searchTreeForNameStartingWith(Long rootId, String searchString) throws Exception {
-    	return EJBFactory.getRemoteAnnotationBean().searchTreeForNameStartingWith(rootId, searchString);
+    	return EJBFactory.getRemoteEntityBean().searchTreeForNameStartingWith(rootId, searchString);
 	}
 
 	public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception {
-    	EJBFactory.getRemoteAnnotationBean().addChildren(SessionMgr.getUsername(), parentId, childrenIds, attributeName);
+    	EJBFactory.getRemoteEntityBean().addChildren(SessionMgr.getUsername(), parentId, childrenIds, attributeName);
 	}
 	
 	public List<MappedId> getProjectedResults(List<Long> entityIds, List<EntityMapStep> upMapping, List<EntityMapStep> downMapping) throws Exception {
-		return EJBFactory.getRemoteAnnotationBean().getProjectedResults(entityIds, upMapping, downMapping);
+		return EJBFactory.getRemoteEntityBean().getProjectedResults(entityIds, upMapping, downMapping);
 	}
 	
     public Object[] getPatternAnnotationQuantifierMapsFromSummary() throws Exception {

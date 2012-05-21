@@ -1,8 +1,10 @@
 package org.janelia.it.FlyWorkstation.gui.framework.tree;
 
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Callable;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
@@ -11,6 +13,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+
 
 /**
  * Saves and restores expansion state for a DynamicTree. Asynchronously loads any lazy nodes that were expanded when 
@@ -23,6 +26,10 @@ public class ExpansionState {
 	private final Set<String> expanded = new HashSet<String>();
 	private String selected;
 	
+	private final Set<SimpleWorker> workers = Collections.synchronizedSet(new HashSet<SimpleWorker>());
+	boolean startedAllWorkers = false;
+	boolean calledSuccess = false;
+
 	public void addExpandedUniqueId(String uniqueId) {
 		expanded.add(uniqueId);
 	}
@@ -51,11 +58,17 @@ public class ExpansionState {
     }
 
     public void restoreExpansionState(DynamicTree dynamicTree, boolean restoreSelection) {
-    	restoreExpansionState(dynamicTree, dynamicTree.getRootNode(), restoreSelection);
+    	restoreExpansionState(dynamicTree, dynamicTree.getRootNode(), restoreSelection, null);
+    }
+    
+    public void restoreExpansionState(DynamicTree dynamicTree, boolean restoreSelection, Callable<Void> success) {
+    	restoreExpansionState(dynamicTree, dynamicTree.getRootNode(), restoreSelection, success);
+    	setStartedAllWorkers(true);
+    	callSuccessFunction(success);
     }
     
 	public void restoreExpansionState(final DynamicTree dynamicTree, final DefaultMutableTreeNode node, 
-			final boolean restoreSelection) {
+			final boolean restoreSelection, final Callable<Void> success) {
 		
 		final String uniqueId = dynamicTree.getUniqueId(node);
 		final boolean expand = expanded.contains(uniqueId);
@@ -71,16 +84,21 @@ public class ExpansionState {
 
 				protected void doneLoading() {
 					Utils.setDefaultCursor(dynamicTree);
-					restoreExpansionState(dynamicTree, node, restoreSelection);
+					restoreExpansionState(dynamicTree, node, restoreSelection, success);
+					workers.remove(this);
+					// The last worker to finish calls the success function
+					callSuccessFunction(success);
 				}
 
 				@Override
 				protected void hadError(Throwable error) {
 					Utils.setDefaultCursor(dynamicTree);
 					SessionMgr.getSessionMgr().handleException(error);
+					workers.remove(this);
 				}
 			};
 
+			workers.add(loadingWorker);
 			loadingWorker.execute();
 			
 			return;
@@ -96,7 +114,35 @@ public class ExpansionState {
     	
         for (Enumeration e = node.children(); e.hasMoreElements(); ) {
             DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) e.nextElement();
-            restoreExpansionState(dynamicTree, childNode, restoreSelection);
+            restoreExpansionState(dynamicTree, childNode, restoreSelection, success);
         }
     }
+
+    private void callSuccessFunction(Callable<Void> success) {
+		if (hasStartedAllWorkers() && workers.isEmpty() && !hasCalledSuccess()) {
+			try {
+				success.call();	
+				setCalledSuccess(true);
+			}
+			catch (Exception e) {
+				SessionMgr.getSessionMgr().handleException(e);
+			}
+		}
+    }
+    
+	public synchronized boolean hasStartedAllWorkers() {
+		return startedAllWorkers;
+	}
+
+	public synchronized void setStartedAllWorkers(boolean startedAllWorkers) {
+		this.startedAllWorkers = startedAllWorkers;
+	}
+
+	public boolean hasCalledSuccess() {
+		return calledSuccess;
+	}
+
+	public void setCalledSuccess(boolean calledSuccess) {
+		this.calledSuccess = calledSuccess;
+	}
 }
