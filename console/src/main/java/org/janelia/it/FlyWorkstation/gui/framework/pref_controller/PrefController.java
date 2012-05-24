@@ -274,9 +274,9 @@ public class PrefController {
         SessionMgr.getSessionMgr().loginUser();
         // Not the best order of operations
         SessionMgr.getSessionMgr().saveUserSettings();
-        if (!SessionMgr.getSessionMgr().isLoggedIn()) {
+        if (!SessionMgr.getSessionMgr().isLoggedIn() || null==SessionMgr.getSessionMgr().getUserEmail()) {
             Object[] options = {"Fix Login", "Exit Program"};
-            final int answer = JOptionPane.showOptionDialog(null, "Please correct your login information.", "Login Information Invalid",
+            final int answer = JOptionPane.showOptionDialog(null, "Please correct your login or email information.", "Login Information Invalid",
                     JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
             if (answer == 0) {
                 return;
@@ -295,9 +295,9 @@ public class PrefController {
     private void okButton_actionPerformed() {
         propagateApplyChanges();
         SessionMgr.getSessionMgr().loginUser();
-        if (!SessionMgr.getSessionMgr().isLoggedIn()) {
+        if (!SessionMgr.getSessionMgr().isLoggedIn() || null==SessionMgr.getSessionMgr().getUserEmail()) {
             Object[] options = {"Fix Login", "Exit Program"};
-            final int answer = JOptionPane.showOptionDialog(null, "Please correct your login information.", "Login Information Invalid", 
+            final int answer = JOptionPane.showOptionDialog(null, "Please correct your login or email information.", "Login Information Invalid",
                     JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
             if (answer == 0) {
                 return;

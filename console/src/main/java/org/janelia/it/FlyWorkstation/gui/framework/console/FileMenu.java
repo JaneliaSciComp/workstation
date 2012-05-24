@@ -39,6 +39,7 @@ public class FileMenu extends JMenu {
     JMenuItem menuFilePrint;
     JMenuItem menuListOpen;
     JMenuItem setLoginMI;
+    JMenuItem menuFileImport;
     private JMenu menuSetPreferences;
     private JMenuItem menuPrefSystem;
     private JMenuItem menuPrefViewer;
@@ -82,6 +83,13 @@ public class FileMenu extends JMenu {
         menuListOpen.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 menuListOpen_actionPerformed();
+            }
+        });
+
+        menuFileImport = new JMenuItem("Import...", 'I');
+        menuFileImport.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                menuFileImport_actionPerformed();
             }
         });
 
@@ -237,6 +245,7 @@ public class FileMenu extends JMenu {
         add(setLoginMI);
         add(new JSeparator());
 //        add(menuListOpen);
+        add(menuFileImport);
         add(menuSetPreferences);
         add(menuFilePrint);
         if (addedMenus.size() > 0) add(new JSeparator());
@@ -249,6 +258,10 @@ public class FileMenu extends JMenu {
 
     private void setLogin() {
         PrefController.getPrefController().getPrefInterface(DataSourceSettings.class, browser);
+    }
+
+    private void menuFileImport_actionPerformed(){
+        SessionMgr.getSessionMgr().getActiveBrowser().getRunImportDialog().showDialog();
     }
 
     private void fileExit_actionPerformed() {

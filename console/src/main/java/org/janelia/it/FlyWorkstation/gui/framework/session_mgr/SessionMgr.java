@@ -32,6 +32,7 @@ public class SessionMgr {
     
     public static String USER_NAME = LoginProperties.SERVER_LOGIN_NAME;
     public static String USER_PASSWORD = LoginProperties.SERVER_LOGIN_PASSWORD;
+    public static String USER_EMAIL = "UserEmail";
 
     public static String DISPLAY_LOOK_AND_FEEL = "SessionMgr.DisplayLookAndFeel";
 
@@ -499,6 +500,8 @@ public class SessionMgr {
         return isLoggedIn;
     }
 
+
+
     public String getApplicationOutputDirectory() {
         return prefsDir;
     }
@@ -524,7 +527,17 @@ public class SessionMgr {
             return null;
         }
     }
-    
+
+    public static String getUserEmail() {
+            String userEmail = SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL).toString();
+            if (null != userEmail && userEmail.contains("@")){
+                return userEmail;
+            }
+            else {
+                return null;
+            }
+    }
+
     public static Browser getBrowser() {
     	return getSessionMgr().getActiveBrowser();
     }

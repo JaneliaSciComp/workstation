@@ -28,6 +28,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.util.IndeterminateProgressMonitor;
+import org.janelia.it.FlyWorkstation.gui.util.MailDialogueBox;
 import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
@@ -77,6 +78,7 @@ public class EntityContextMenu extends JPopupMenu {
         setNextAddRequiresSeparator(true);
         add(getAddToRootFolderItem());
         add(getRenameItem());
+        add(getErrorFlag());
 		add(getDeleteItem());
         
 		setNextAddRequiresSeparator(true);
@@ -163,6 +165,27 @@ public class EntityContextMenu extends JPopupMenu {
 		}
         return renameItem;
 	}
+
+    protected JMenuItem getErrorFlag(){
+        if (multiple) return null;
+        JMenuItem errorFlag = new JMenuItem("Flag this data");
+        errorFlag.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                bugReport_actionPerformed();
+            }
+        });
+        return errorFlag;
+    }
+
+    private void bugReport_actionPerformed(){
+        String tempsubject = "Flagged Data: " + rootedEntity.getEntity().getName();
+        StringBuffer sBuf = new StringBuffer();
+        sBuf.append("Name: ").append(rootedEntity.getEntity().getName()).append("\n");
+        sBuf.append("Type: ").append(rootedEntity.getEntity().getEntityType().getName()).append("\n");
+        sBuf.append("ID: ").append(rootedEntity.getEntity().getId().toString()).append("\n\n");
+        MailDialogueBox popup = new MailDialogueBox(tempsubject, sBuf.toString());
+        popup.show();
+    }
 
 	protected JMenu getAddToRootFolderItem() {
 

@@ -131,9 +131,9 @@ public class ConsoleApp {
 
 //            splash.setVisible(false);
             // Assuming that the user has entered the login/password information, now validate
-            if (null==SessionMgr.getUsername()) {
+            if (null==SessionMgr.getUsername() || null==SessionMgr.getUserEmail()) {
                 Object[] options = {"Enter Login", "Exit Program"};
-                final int answer = JOptionPane.showOptionDialog(null, "Please enter your login information.", "Information Required",
+                final int answer = JOptionPane.showOptionDialog(null, "Please enter your login and email information.", "Information Required",
                         JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
                 if (answer == 0) {
                     PrefController.getPrefController().getPrefInterface(DataSourceSettings.class, null);

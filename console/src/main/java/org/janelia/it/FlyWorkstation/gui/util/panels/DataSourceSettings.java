@@ -27,14 +27,19 @@ import java.util.List;
 public class DataSourceSettings extends JPanel implements PrefEditor {
     private String userLogin = new String("");
     private String userPassword = new String("");
+    private String userEmail = new String("");
     private boolean settingsChanged = false;
     private JFrame parentFrame;
     JPanel loginPanel = new JPanel();
+    JPanel emailPanel = new JPanel();
     JPasswordField passwordTextField;
     JLabel passwordLabel = new JLabel("Password:");
     JLabel loginLabel = new JLabel("User Name:");
+    JLabel emailLabel = new JLabel("Email Address:");
     JTextField loginTextField = new StandardTextField();
+    JTextField emailTextField = new StandardTextField();
     TitledBorder titledBorder2;
+    TitledBorder titledBorder3;
 
     private static final String LOCATION_PROP_NAME = "XmlGenomeVersionLocation";
     private static final int PREFERRED_JLIST_HEIGHT = 165;
@@ -62,6 +67,8 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
             if (userLogin == null) userLogin = "";
             userPassword = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_PASSWORD);
             if (userPassword == null) userPassword = "";
+            userEmail = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL);
+            if (userEmail == null) userEmail = "";
             jbInit();
         }
         catch (Exception ex) {
@@ -86,16 +93,17 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
      * the Controller frame.
      */
     public void cancelChanges() {
-        if (userLogin == null || userPassword == null) {
+        if (userLogin == null || userPassword == null || userEmail == null) {
             PropertyConfigurator.getProperties().setProperty(SessionMgr.USER_NAME, "NoUserLogin");
             PropertyConfigurator.getProperties().setProperty(SessionMgr.USER_PASSWORD, "NoUserPassword");
+            PropertyConfigurator.getProperties().setProperty(SessionMgr.USER_EMAIL, "NoUserEmail");
         }
         settingsChanged = false;
     }
 
     public boolean hasChanged() {
         // If not equal to original values, they have changed.
-        if (!userLogin.equals(loginTextField.getText().trim()) || !userPassword.equals(new String(passwordTextField.getPassword())))
+        if (!userLogin.equals(loginTextField.getText().trim()) || !userPassword.equals(new String(passwordTextField.getPassword())) || !userEmail.equals(new String(emailTextField.getText().trim())))
             settingsChanged = true;
         return settingsChanged;
     }
@@ -108,10 +116,13 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
         List delayedChanges = new ArrayList();
         userLogin = loginTextField.getText().trim();
         userPassword = new String(passwordTextField.getPassword());
+        userEmail = emailTextField.getText().trim();
 
-        if ((!userLogin.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME))) || (!userPassword.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_PASSWORD)))) {
+        if ((!userLogin.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME))) || (!userPassword.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_PASSWORD))) ||
+                (!userEmail.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL)))) {
             SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, userLogin);
             SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_PASSWORD, userPassword);
+            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_EMAIL, userEmail);
             boolean loginSuccess = SessionMgr.getSessionMgr().loginUser();
             if (!loginSuccess) {
 
@@ -185,6 +196,16 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
             public void focusLost(FocusEvent e) {
             }
         });
+        emailTextField = new StandardTextField(userEmail, 40);
+        emailTextField.setMaximumSize(new Dimension(200, 20));
+        emailTextField.addFocusListener(new FocusListener() {
+            public void focusGained(FocusEvent e) {
+                if (e.getSource() == emailTextField) emailTextField.selectAll();
+            }
+
+            public void focusLost(FocusEvent e) {
+            }
+        });
         titledBorder2 = new TitledBorder("Workstation Login Information");
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         loginPanel.setBorder(titledBorder2);
@@ -203,8 +224,25 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
         loginPanel.add(userPassPanel);
         loginPanel.add(Box.createVerticalStrut(10));
 
+
+        titledBorder3 = new TitledBorder("Email Address");
+        emailPanel.setBorder(titledBorder3);
+        emailPanel.setLayout(new BoxLayout(emailPanel, BoxLayout.LINE_AXIS));
+        emailPanel.setMaximumSize(new Dimension(2000, 100));
+        JPanel userEmailPanel = new JPanel();
+        userEmailPanel.setLayout(new BoxLayout(userEmailPanel, BoxLayout.X_AXIS));
+        userEmailPanel.add(emailLabel);
+        userEmailPanel.add(Box.createHorizontalStrut(10));
+        userEmailPanel.add(emailTextField);
+        userEmailPanel.add(Box.createHorizontalStrut(30));
+        emailPanel.add(Box.createVerticalStrut(10));
+        emailPanel.add(userEmailPanel);
+        emailPanel.add(Box.createVerticalStrut(10));
+
         add(Box.createVerticalStrut(10));
         add(loginPanel);
+        add(Box.createVerticalStrut(10));
+        add(emailPanel);
         add(Box.createVerticalStrut(10));
         add(Box.createVerticalGlue());
 

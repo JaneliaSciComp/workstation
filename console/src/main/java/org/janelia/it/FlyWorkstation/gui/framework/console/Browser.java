@@ -22,6 +22,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelection
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationSessionPropertyDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.PatternSearchDialog;
+import org.janelia.it.FlyWorkstation.gui.dialogs.RunImportDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.RunNeuronSeparationDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.GeneralSearchDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.*;
@@ -105,6 +106,7 @@ public class Browser extends JFrame implements Cloneable {
     private TaskOutline taskOutline;
     private OntologyOutline ontologyOutline;
     private AnnotationSessionPropertyDialog annotationSessionPropertyPanel;
+    private RunImportDialog runImportDialog;
     private RunNeuronSeparationDialog runNeuronSeparationDialog;
     private GeneralSearchDialog searchDialog;
     private PatternSearchDialog patternSearchDialog;
@@ -256,6 +258,7 @@ public class Browser extends JFrame implements Cloneable {
         ontologyOutline = new OntologyOutline();
         
         annotationSessionPropertyPanel = new AnnotationSessionPropertyDialog(entityOutline, ontologyOutline);
+        runImportDialog = new RunImportDialog();
         runNeuronSeparationDialog = new RunNeuronSeparationDialog();
         searchDialog = new GeneralSearchDialog();
 
@@ -1292,6 +1295,10 @@ public class Browser extends JFrame implements Cloneable {
     public RunNeuronSeparationDialog getRunNeuronSeparationDialog() {
 		return runNeuronSeparationDialog;
 	}
+
+    public RunImportDialog getRunImportDialog(){
+        return runImportDialog;
+    }
 
     public PatternSearchDialog getPatternSearchDialog() {
         return patternSearchDialog;
