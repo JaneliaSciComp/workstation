@@ -126,7 +126,7 @@ public class RunImportDialog extends ModalDialog{
                 Utils.setDefaultCursor(RunImportDialog.this);
                 Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
                 browser.getTaskOutline().loadTasks();
-                browser.getOutlookBar().setVisibleBarByName(Browser.BAR_TASKS);
+                browser.getOutlookBar().setVisibleBarByName(Browser.BAR_DATA);
                 setVisible(false);
             }
 
