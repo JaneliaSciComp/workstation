@@ -529,13 +529,13 @@ public class SessionMgr {
     }
 
     public static String getUserEmail() {
+        if (null!=SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL)) {
             String userEmail = SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL).toString();
             if (null != userEmail && userEmail.contains("@")){
                 return userEmail;
             }
-            else {
-                return null;
-            }
+        }
+        return null;
     }
 
     public static Browser getBrowser() {
