@@ -8,9 +8,11 @@ import org.janelia.it.FlyWorkstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.FlyWorkstation.api.stub.data.FatalCommError;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
+import org.janelia.it.FlyWorkstation.gui.util.MailDialogueBox;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.util.text_component.StandardTextArea;
+import org.janelia.it.jacs.compute.launcher.fileDiscovery.FlyLightScreenPipelineLauncherMDB;
 
 import javax.swing.*;
 import java.awt.*;
@@ -174,50 +176,54 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
 
     private void sendEmail(Throwable exception) {
         try {
-            String emailFrom = null;
-            while (emailFrom == null || emailFrom.equals("")) {
-                emailFrom = JOptionPane.showInputDialog(getParentFrame(), "Please enter your Internet email address.", "E-Mail Address", JOptionPane.QUESTION_MESSAGE);
-                if (emailFrom == null) return;
-            }
-            String desc = null;
-            JPanel panel = new JPanel();
-            panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-            panel.add(new JLabel("Please give a quick description of what you were doing, "));
-            panel.add(new JLabel("what you saw at the time of the problem and any useful information."));
-            panel.add(Box.createVerticalStrut(15));
-            JTextArea textArea = new StandardTextArea(4, 20);
-            panel.add(new JScrollPane(textArea));
-            int ans = 0;
-            while (desc == null || desc.equals("")) {
-                ans = getOptionPane().showConfirmDialog(getParentFrame(), panel, "Problem Description", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
-                if (ans == JOptionPane.CANCEL_OPTION) return;
-                desc = textArea.getText();
-            }
-            String line;
-            URL url = getEmailURL();
-            if (url == null) {
-                showEMailFailureDialog();
-                return;
-            }
-            URLConnection connection = url.openConnection();
-            connection.setDoOutput(true);
-            connection.setDoInput(true);
-            PrintStream out = new PrintStream(connection.getOutputStream());
-            out.print("emailFrom=" + URLEncoder.encode(emailFrom, "UTF-8") + "&problemDescription=" + URLEncoder.encode(formMessage(exception, emailFrom, desc), "UTF-8") + "&subject=" + URLEncoder.encode("Fly Workstation Exception Report", "UTF-8"));
-            out.close();
-            connection.getInputStream();
-            // Now we read the response
-            boolean success = false;
-            BufferedReader stream = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            while ((line = stream.readLine()) != null && !success) {
-                if (line.indexOf("Message successfully sent") > -1) success = true;
-            }
-            if (success) {
-                getOptionPane().showMessageDialog(getParentFrame(), "Your message was sent " + "to our support staff.");
-            }
-            else {
-                showEMailFailureDialog();
-            }
+
+            MailDialogueBox mailDialogueBox = new MailDialogueBox("Fly Workstation Exception Report", "Problem Description:");
+            mailDialogueBox.show();
+
+//            String emailFrom = null;
+//            while (emailFrom == null || emailFrom.equals("")) {
+//                emailFrom = JOptionPane.showInputDialog(getParentFrame(), "Please enter your Internet email address.", "E-Mail Address", JOptionPane.QUESTION_MESSAGE);
+//                if (emailFrom == null) return;
+//            }
+//            String desc = null;
+//            JPanel panel = new JPanel();
+//            panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+//            panel.add(new JLabel("Please give a quick description of what you were doing, "));
+//            panel.add(new JLabel("what you saw at the time of the problem and any useful information."));
+//            panel.add(Box.createVerticalStrut(15));
+//            JTextArea textArea = new StandardTextArea(4, 20);
+//            panel.add(new JScrollPane(textArea));
+//            int ans = 0;
+//            while (desc == null || desc.equals("")) {
+//                ans = getOptionPane().showConfirmDialog(getParentFrame(), panel, "Problem Description", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+//                if (ans == JOptionPane.CANCEL_OPTION) return;
+//                desc = textArea.getText();
+//            }
+//            String line;
+//            URL url = getEmailURL();
+//            if (url == null) {
+//                showEMailFailureDialog();
+//                return;
+//            }
+//            URLConnection connection = url.openConnection();
+//            connection.setDoOutput(true);
+//            connection.setDoInput(true);
+//            PrintStream out = new PrintStream(connection.getOutputStream());
+//            out.print("emailFrom=" + URLEncoder.encode(emailFrom, "UTF-8") + "&problemDescription=" + URLEncoder.encode(formMessage(exception, emailFrom, desc), "UTF-8") + "&subject=" + URLEncoder.encode("Fly Workstation Exception Report", "UTF-8"));
+//            out.close();
+//            connection.getInputStream();
+//            // Now we read the response
+//            boolean success = false;
+//            BufferedReader stream = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+//            while ((line = stream.readLine()) != null && !success) {
+//                if (line.indexOf("Message successfully sent") > -1) success = true;
+//            }
+//            if (success) {
+//                getOptionPane().showMessageDialog(getParentFrame(), "Your message was sent " + "to our support staff.");
+//            }
+//            else {
+//                showEMailFailureDialog();
+//            }
         }
         catch (Exception ex) {
             showEMailFailureDialog();

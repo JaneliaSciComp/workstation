@@ -33,6 +33,7 @@ public class SessionMgr {
     public static String USER_NAME = LoginProperties.SERVER_LOGIN_NAME;
     public static String USER_PASSWORD = LoginProperties.SERVER_LOGIN_PASSWORD;
     public static String USER_EMAIL = "UserEmail";
+    public static String FIJI_PATH = "FijiPath";
 
     public static String DISPLAY_LOOK_AND_FEEL = "SessionMgr.DisplayLookAndFeel";
 

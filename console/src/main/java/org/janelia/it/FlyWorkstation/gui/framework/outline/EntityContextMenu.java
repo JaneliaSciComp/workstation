@@ -84,6 +84,7 @@ public class EntityContextMenu extends JPopupMenu {
 		setNextAddRequiresSeparator(true);
     	add(getOpenInFinderItem());
     	add(getOpenWithAppItem());
+        add(getFijiViewerItem());
         add(getNeuronAnnotatorItem());
         add(getVaa3dItem());
         
@@ -168,7 +169,7 @@ public class EntityContextMenu extends JPopupMenu {
 
     protected JMenuItem getErrorFlag(){
         if (multiple) return null;
-        JMenuItem errorFlag = new JMenuItem("Flag this data");
+        JMenuItem errorFlag = new JMenuItem("  Flag this data");
         errorFlag.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 bugReport_actionPerformed();
@@ -501,8 +502,51 @@ public class EntityContextMenu extends JPopupMenu {
         }
         return null;
 	}
-	
-	protected JMenuItem getNeuronAnnotatorItem() {
+
+    protected JMenuItem getFijiViewerItem() {
+        if (multiple) return null;
+        final String entityType = rootedEntity.getEntity().getEntityType().getName();
+        if (entityType.equals(EntityConstants.TYPE_IMAGE_3D) ||
+                entityType.equals(EntityConstants.TYPE_ALIGNED_BRAIN_STACK) ||
+                entityType.equals(EntityConstants.TYPE_LSM_STACK) ||
+                entityType.equals(EntityConstants.TYPE_STITCHED_V3D_RAW) ||
+                entityType.equals(EntityConstants.TYPE_SWC_FILE) ||
+                entityType.equals(EntityConstants.TYPE_V3D_ANO_FILE) ||
+                entityType.equals(EntityConstants.TYPE_TIF_3D) ||
+                entityType.equals(EntityConstants.TYPE_IMAGE_2D) ||
+                entityType.equals(EntityConstants.TYPE_TIF_2D) ||
+                entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT) ||
+                entityType.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
+
+            JMenuItem fijiMenuItem = new JMenuItem("  View in Fiji");
+            fijiMenuItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
+                    try {
+                        String fijiExePath = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.FIJI_PATH);
+//                        fijiExePath = "C:\\Users\\kimmelr\\Documents\\Fiji.app\\fiji-win64.exe"; // DEBUG ONLY
+                        File tmpFile = new File(fijiExePath);
+                        if (tmpFile.exists()&&tmpFile.canExecute()) {
+                            fijiExePath+= " " + PathTranslator.convertPath(EntityUtils.getAnyFilePath(rootedEntity.getEntity()));
+                            System.out.println("Calling to open file with: "+fijiExePath);
+                            Runtime.getRuntime().exec(fijiExePath);
+                        }
+                        else {
+                            JOptionPane.showMessageDialog(browser, "Could not launch Fiji, please choose the appropriate file path", "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
+                            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.FIJI_PATH, null);
+                        }
+
+                    }
+                    catch (Exception e) {
+                        SessionMgr.getSessionMgr().handleException(e);
+                    }
+                }
+            });
+            return fijiMenuItem;
+        }
+        return null;
+    }
+
+    protected JMenuItem getNeuronAnnotatorItem() {
 		if (multiple) return null;
         final String entityType = rootedEntity.getEntity().getEntityType().getName();
         if (entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT) || entityType.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {

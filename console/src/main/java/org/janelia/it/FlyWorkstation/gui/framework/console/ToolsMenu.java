@@ -1,10 +1,16 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.shared.util.PreferenceConstants;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 
+import javax.jnlp.FileContents;
+import javax.jnlp.FileOpenService;
+import javax.jnlp.ServiceManager;
+import javax.jnlp.UnavailableServiceException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -13,6 +19,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.prefs.BackingStoreException;
+
+import javax.swing.filechooser.*;
+import javax.swing.SwingUtilities;
+
 
 /**
  * Created by IntelliJ IDEA.
@@ -90,12 +100,38 @@ public class ToolsMenu extends JMenu {
             fijiMenuItem = new JMenuItem("FIJI", fijiImageIcon);
             fijiMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
+
                     try {
-                        // todo This needs to be a custom user setting.
-                        Runtime.getRuntime().exec("/Applications/Fiji.app/Contents/MacOS/fiji-macosx");
+                        String fijiPath = null;
+                        File tmpFile;
+                        if (null == (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.FIJI_PATH)){
+                            JFileChooser choosePath = new JFileChooser();
+                            choosePath.showOpenDialog(SessionMgr.getBrowser());
+                            tmpFile = choosePath.getSelectedFile();
+                            fijiPath = tmpFile.getCanonicalPath();
+                            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.FIJI_PATH, fijiPath);
+                            SessionMgr.getSessionMgr().saveUserSettings();
+
+                        }
+                        else{
+
+//                        fijiExePath = "C:\\Users\\kimmelr\\Documents\\Fiji.app\\fiji-win64.exe"; // DEBUG ONLY
+                            fijiPath = SessionMgr.getSessionMgr().getModelProperty(SessionMgr.FIJI_PATH).toString();
+                            tmpFile = new File(fijiPath);
+                            if (tmpFile.exists()&&tmpFile.canExecute()) {
+                                Runtime.getRuntime().exec(fijiPath);
+                            }
+                            else {
+                                JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Could not launch Fiji, please choose the appropriate file path", "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
+                                SessionMgr.getSessionMgr().setModelProperty(SessionMgr.FIJI_PATH, null);
+                            }
+                        }
                     }
                     catch (IOException e) {
-                        JOptionPane.showMessageDialog(fijiMenuItem.getParent(), "Could not launch Fiji", "Tool Launch Error", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(fijiMenuItem.getParent(), "Could not launch Fiji, please choose the appropriate file path",
+                                "Tool Launch Error",
+                                JOptionPane.ERROR_MESSAGE);
+                        SessionMgr.getSessionMgr().setModelProperty(SessionMgr.FIJI_PATH, null);
                     }
                 }
             });
