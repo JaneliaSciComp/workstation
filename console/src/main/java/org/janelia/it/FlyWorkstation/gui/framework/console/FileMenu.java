@@ -245,7 +245,7 @@ public class FileMenu extends JMenu {
         add(setLoginMI);
         add(new JSeparator());
 //        add(menuListOpen);
-        add(menuFileImport);
+//        add(menuFileImport);
         add(menuSetPreferences);
         add(menuFilePrint);
         if (addedMenus.size() > 0) add(new JSeparator());

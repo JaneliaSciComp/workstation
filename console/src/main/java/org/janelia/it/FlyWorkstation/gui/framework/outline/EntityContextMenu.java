@@ -1,21 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
@@ -38,6 +22,18 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Context pop up menu for entities.
@@ -531,7 +527,7 @@ public class EntityContextMenu extends JPopupMenu {
                             Runtime.getRuntime().exec(fijiExePath);
                         }
                         else {
-                            JOptionPane.showMessageDialog(browser, "Could not launch Fiji, please choose the appropriate file path", "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(browser, "Could not launch Fiji. Please choose the appropriate file path from the Tools Menu", "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
                             SessionMgr.getSessionMgr().setModelProperty(SessionMgr.FIJI_PATH, null);
                         }
 
