@@ -12,7 +12,6 @@ import org.janelia.it.FlyWorkstation.gui.util.MailDialogueBox;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.util.text_component.StandardTextArea;
-import org.janelia.it.jacs.compute.launcher.fileDiscovery.FlyLightScreenPipelineLauncherMDB;
 
 import javax.swing.*;
 import java.awt.*;
