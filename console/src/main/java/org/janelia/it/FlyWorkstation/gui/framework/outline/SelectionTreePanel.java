@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import org.janelia.it.FlyWorkstation.gui.framework.tree.DynamicTree;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 
 import javax.swing.*;
@@ -27,8 +28,12 @@ public class SelectionTreePanel<T> extends JPanel implements ActionListener {
     private JLabel countLabel;
     private DynamicTree tree;
     private JPanel treePanel;
-
+    
     public SelectionTreePanel(String title) {
+    	this(title, true);
+    }
+
+    public SelectionTreePanel(String title, boolean allowAdding) {
         super(new BorderLayout());
 
         setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10), BorderFactory.createTitledBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(), BorderFactory.createEmptyBorder(10, 10, 0, 10)), title)));
@@ -48,10 +53,12 @@ public class SelectionTreePanel<T> extends JPanel implements ActionListener {
 
         buttonPane.add(Box.createHorizontalGlue());
 
-        JButton addButton = new JButton("Add");
-        addButton.setActionCommand(ADD_COMMAND);
-        addButton.addActionListener(this);
-        buttonPane.add(addButton);
+        if (allowAdding) {
+	        JButton addButton = new JButton("Add");
+	        addButton.setActionCommand(ADD_COMMAND);
+	        addButton.addActionListener(this);
+	        buttonPane.add(addButton);
+        }
 
         JButton removeButton = new JButton("Remove");
         removeButton.setActionCommand(REMOVE_COMMAND);
@@ -61,6 +68,18 @@ public class SelectionTreePanel<T> extends JPanel implements ActionListener {
         add(buttonPane, BorderLayout.SOUTH);
     }
 
+    public void showLoadingIndicator() {
+    	treePanel.removeAll();
+    	treePanel.add(new JLabel(Icons.getLoadingIcon()));
+        SwingUtilities.updateComponentTreeUI(this);
+    }
+
+    public void showTree() {
+    	treePanel.removeAll();
+        treePanel.add(tree);
+        SwingUtilities.updateComponentTreeUI(this);
+    }
+    
     private void updateCount() {
         DefaultMutableTreeNode node = getDynamicTree().getRootNode();
         countLabel.setText(node.getChildCount() + " objects");
@@ -134,9 +153,8 @@ public class SelectionTreePanel<T> extends JPanel implements ActionListener {
         tree = new DynamicTree("ROOT", false, false);
         tree.getTree().setRootVisible(false);
         tree.getTree().getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
-        treePanel.removeAll();
-        treePanel.add(tree);
         updateCount();
+        showTree();
     }
 
     /**

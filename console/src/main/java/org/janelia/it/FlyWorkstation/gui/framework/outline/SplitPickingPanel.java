@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
@@ -21,6 +22,8 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.AnnotatedImageButton;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -53,21 +56,28 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	private static final int STEP_PANEL_HEIGHT = 35;
 	private static final int MAX_FREE_CROSSES = 1;
 	private static final int MAX_TOTAL_CROSSES = 10;
+	private static final int REFRESH_DELAY = 5000;
+	private static final int INTERSECTION_METHOD = 0;
+	private static final int KERNEL_SIZE = 3;
 	
 	private final SplitGroupingDialog splitGroupingDialog;
 	private final JButton searchButton;
 	private final JButton groupButton;
 	private final JButton resultFolderButton;
 	private final IconDemoPanel crossesPanel;
-	private final JTextField methodField;
-	private final JTextField blurField;
-
+//	private final JTextField methodField;
+//	private final JTextField blurField;
+	private final JToggleButton refreshToggleButton;
+	
 	private RootedEntity workingFolder;
 	private RootedEntity repFolder;
 	private RootedEntity splitLinesFolder;
 	private RootedEntity groupAdFolder;
 	private RootedEntity groupDbdFolder;
 	private RootedEntity crossFolder;
+
+	private Timer refreshTimer;
+	
 	
 	public SplitPickingPanel() {
 	
@@ -186,12 +196,17 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 						if (crossFolder==null) {
 							setCrossFolder(ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_CROSSES, true));
 						}
+						SwingUtilities.invokeLater(new Runnable() {
+							@Override
+							public void run() {
+								crossesPanel.loadEntity(getCrossFolder());
+							}
+						});
+						createCrosses(getCrossFolder());
 					}
 					
 					@Override
 					protected void hadSuccess() {
-						crossesPanel.loadEntity(getCrossFolder());
-						createCrosses(getCrossFolder());
 					}
 					
 					@Override
@@ -207,32 +222,43 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		computePanel.setPreferredSize(new Dimension(0, STEP_PANEL_HEIGHT));
 		computePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		mainPanel.add(computePanel);
-		
-		
-		JPanel param1Panel = new JPanel();
-		param1Panel.setLayout(new BoxLayout(param1Panel, BoxLayout.LINE_AXIS));
-		JLabel param1Label = new JLabel("Method (0=minimum value, 1=geometric mean, 2=scaled product): ");
-		param1Panel.add(Box.createHorizontalStrut(50));
-		param1Panel.add(param1Label);		
-		methodField = new JTextField("0");
-		methodField.setMaximumSize(new Dimension(50, STEP_PANEL_HEIGHT));
-		param1Panel.add(methodField);
-		param1Panel.setPreferredSize(new Dimension(0, STEP_PANEL_HEIGHT));
-		param1Panel.setAlignmentX(Component.LEFT_ALIGNMENT);
-		mainPanel.add(param1Panel);
-		
 
-		JPanel param2Panel = new JPanel();
-		param2Panel.setLayout(new BoxLayout(param2Panel, BoxLayout.LINE_AXIS));
-		JLabel param2Label = new JLabel("Gaussian kernel size for blur: ");
-		param2Panel.add(Box.createHorizontalStrut(50));
-		param2Panel.add(param2Label);
-		blurField = new JTextField("3");
-		blurField.setMaximumSize(new Dimension(50, STEP_PANEL_HEIGHT));
-		param2Panel.add(blurField);
-		param2Panel.setPreferredSize(new Dimension(0, STEP_PANEL_HEIGHT));
-		param2Panel.setAlignmentX(Component.LEFT_ALIGNMENT);
-		mainPanel.add(param2Panel);
+		refreshToggleButton = new JToggleButton();
+		refreshToggleButton.setIcon(Icons.getIcon("refresh_static.gif"));
+		refreshToggleButton.setSelectedIcon(Icons.getIcon("refresh_spin.gif"));
+		refreshToggleButton.setFocusable(false);
+		refreshToggleButton.setToolTipText("Periodically refresh the current view");
+		refreshToggleButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				setRefreshing(refreshToggleButton.isSelected());
+			}
+		});
+		
+//		JPanel param1Panel = new JPanel();
+//		param1Panel.setLayout(new BoxLayout(param1Panel, BoxLayout.LINE_AXIS));
+//		JLabel param1Label = new JLabel("Method (0=minimum value, 1=geometric mean, 2=scaled product): ");
+//		param1Panel.add(Box.createHorizontalStrut(50));
+//		param1Panel.add(param1Label);		
+//		methodField = new JTextField("0");
+//		methodField.setMaximumSize(new Dimension(50, STEP_PANEL_HEIGHT));
+//		param1Panel.add(methodField);
+//		param1Panel.setPreferredSize(new Dimension(0, STEP_PANEL_HEIGHT));
+//		param1Panel.setAlignmentX(Component.LEFT_ALIGNMENT);
+//		mainPanel.add(param1Panel);
+//		
+//
+//		JPanel param2Panel = new JPanel();
+//		param2Panel.setLayout(new BoxLayout(param2Panel, BoxLayout.LINE_AXIS));
+//		JLabel param2Label = new JLabel("Gaussian kernel size for blur: ");
+//		param2Panel.add(Box.createHorizontalStrut(50));
+//		param2Panel.add(param2Label);
+//		blurField = new JTextField("3");
+//		blurField.setMaximumSize(new Dimension(50, STEP_PANEL_HEIGHT));
+//		param2Panel.add(blurField);
+//		param2Panel.setPreferredSize(new Dimension(0, STEP_PANEL_HEIGHT));
+//		param2Panel.setAlignmentX(Component.LEFT_ALIGNMENT);
+//		mainPanel.add(param2Panel);
 		
 		add(mainPanel, BorderLayout.NORTH);
 		
@@ -243,7 +269,10 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				// Override to customize the toolbar
 				JToolBar toolbar = super.createToolbar();
 				toolbar.removeAll();
-				toolbar.add(refreshButton);
+				
+				refreshToggleButton.addMouseListener(new MouseForwarder(toolbar, "RefreshToggleButton->JToolBar"));
+				toolbar.add(refreshToggleButton);
+
 				toolbar.addSeparator();
 				toolbar.add(imageSizeSlider);
 				return toolbar;
@@ -352,6 +381,45 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		add(crossesPanel, BorderLayout.CENTER);
 	}
 
+	private void setRefreshing(final boolean refreshing) {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				refreshToggleButton.setSelected(refreshing);
+				
+				if (refreshTimer!=null) {
+					refreshTimer.stop();
+				}
+				
+				if (refreshing) {
+					refreshTimer = new Timer(REFRESH_DELAY, new ActionListener() {
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							crossesPanel.refresh(new Callable<Void>() {
+								@Override
+								public Void call() throws Exception {
+									for(RootedEntity rootedEntity : crossesPanel.getRootedEntities()) {
+										Entity entity = rootedEntity.getEntity();
+										if (entity.getEntityType().getName().equals(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS)
+												&& EntityUtils.getDefaultImageFilePath(entity)==null) {
+											return null;
+										}
+									}
+									// All seems to be done, stop refreshing
+									setRefreshing(false);
+									return null;
+								}
+							});
+						}
+					});
+					refreshTimer.setInitialDelay(0);
+					refreshTimer.start();	
+				} 
+			}
+		});
+		
+	}
+	
 	/**
 	 * Select the given entity in the given viewer, and then scroll it into view.
 	 * @param viewer
@@ -399,6 +467,9 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	}
 
 	private void createCrosses(final RootedEntity resultFolder) {
+
+		if (SwingUtilities.isEventDispatchThread())
+			throw new RuntimeException("SplitPickingPanel.createCrosses must be called outside of EDT");
 		
 		EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
 		final List<String> mainSelectionIds = esm.getSelectedEntitiesIds(EntitySelectionModel.CATEGORY_MAIN_VIEW);		
@@ -409,8 +480,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 
 		for(String mainSelectionId : mainSelectionIds) {
 			Entity sample1 = SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_MAIN_VIEW).getEntityById(mainSelectionId);
-			if (!sample1.getEntityType().getName().equals(EntityConstants.TYPE_SCREEN_SAMPLE)) {
-				JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Not a screen sample: "+sample1.getName(), "Error", JOptionPane.ERROR_MESSAGE);
+			if (!sample1.getEntityType().getName().equals(EntityConstants.TYPE_SCREEN_SAMPLE) && !sample1.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
+				JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Not a Screen Sample or Fly Line: "+sample1.getName(), "Error", JOptionPane.ERROR_MESSAGE);
 				return;
 			}
 			samples1.add(sample1);
@@ -418,8 +489,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 
 		for(String secSelectionId : secSelectionIds) {
 			Entity sample2 = SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_SEC_VIEW).getEntityById(secSelectionId);
-			if (!sample2.getEntityType().getName().equals(EntityConstants.TYPE_SCREEN_SAMPLE)) {
-				JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Not a screen sample: "+sample2.getName(), "Error", JOptionPane.ERROR_MESSAGE);
+			if (!sample2.getEntityType().getName().equals(EntityConstants.TYPE_SCREEN_SAMPLE) && !sample2.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
+				JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Not a Screen Sample or Fly Line: "+sample2.getName(), "Error", JOptionPane.ERROR_MESSAGE);
 				return;
 			}
 			samples2.add(sample2);
@@ -440,19 +511,21 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			}
 		}
 		else if (numCrosses == 0) {
-			JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Please select at least one Screen Sample in each viewer", "Error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Please select at least one Screen Sample or Fly Line in each viewer", "Error", JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 
 		final Set<String> existingCrosses = new HashSet<String>();
 		for(Entity sample1 : samples1) {
 			for(Entity sample2 : samples2) {
-				for(RootedEntity rootedEntity : crossesPanel.getRootedEntities()) {
-					String crossName = rootedEntity.getEntity().getName();
-					String c1 = createCrossName(sample1, sample2);
-					String c2 = createCrossName(sample2, sample1);
-					if (crossName.equals(c1) || crossName.equals(c2)) {
-						existingCrosses.add(c1);
+				String c1 = createCrossName(sample1, sample2);
+				String c2 = createCrossName(sample2, sample1);
+				if (crossesPanel.getRootedEntities()!=null) {
+					for(RootedEntity rootedEntity : crossesPanel.getRootedEntities()) {
+						String crossName = rootedEntity.getEntity().getName();
+						if (crossName.equals(c1) || crossName.equals(c2)) {
+							existingCrosses.add(crossName);
+						}
 					}
 				}
 			}
@@ -505,8 +578,22 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 						childrenIds.add(sample2.getId());
 						ModelMgr.getModelMgr().addChildren(cross.getId(), childrenIds, EntityConstants.ATTRIBUTE_ENTITY);
 						
-						sampleIds1.add(sample1.getId());
-						sampleIds2.add(sample2.getId());
+						if (sample1.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
+							Entity rep = sample1.getChildByAttributeName(EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE);
+							sampleIds1.add(rep.getId());
+						}
+						else {
+							sampleIds1.add(sample1.getId());	
+						}
+						
+						if (sample2.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
+							Entity rep = sample2.getChildByAttributeName(EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE);
+							sampleIds2.add(rep.getId());
+						}
+						else {
+							sampleIds2.add(sample2.getId());	
+						}
+						
 						outputIds.add(cross.getId());
 
 						if (firstCross==null) {
@@ -527,6 +614,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					@Override
 					public Void call() throws Exception {
 						selectAndScroll(crossesPanel, firstCross.getId());
+						setRefreshing(true);
 						return null;
 					}
 				});
@@ -547,8 +635,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
     	String idList1Str = commafy(sampleIdList1);
     	String idList2Str = commafy(sampleIdList2);
     	String idList3Str = commafy(outputIdList3);
-    	String method = methodField.getText();
-    	String kernelSize = blurField.getText();
+    	String method = ""+INTERSECTION_METHOD;//methodField.getText();
+    	String kernelSize = ""+KERNEL_SIZE;//blurField.getText();
     	
     	HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
     	taskParameters.add(new TaskParameter("screen sample 1 id list", idList1Str, null));
@@ -609,9 +697,11 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				final IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_MAIN_VIEW);
 				if (groupAdFolder==null && groupDbdFolder==null) {
 					if (repFolder!=null) {
+						expandEntityOutline(repFolder.getUniqueId());
 						mainViewer.loadEntity(repFolder);
 					}
 					else {
+						expandEntityOutline(workingFolder.getUniqueId());
 						mainViewer.clear();
 					}
 					IconDemoPanel secViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_SEC_VIEW);
@@ -620,6 +710,16 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					}
 				}
 				else {
+					if (splitLinesFolder != null) {
+						expandEntityOutline(splitLinesFolder.getUniqueId());
+					}
+					else if (repFolder != null) {
+						expandEntityOutline(repFolder.getUniqueId());
+					}
+					else {
+						expandEntityOutline(workingFolder.getUniqueId());	
+					}
+					
 					final IconDemoPanel secViewer = (IconDemoPanel)SessionMgr.getBrowser().showSecViewer();
 					if (groupAdFolder!=null) {
 	    				mainViewer.loadEntity(groupAdFolder);
@@ -646,6 +746,12 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				}
 			}
 			
+			private void expandEntityOutline(String uniqueId) {
+				final EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
+				DefaultMutableTreeNode node = entityOutline.getNodeByUniqueId(uniqueId);
+				entityOutline.getDynamicTree().navigateToNode(node);
+			}
+			
 			@Override
 			protected void hadError(Throwable error) {
 				SessionMgr.getSessionMgr().handleException(error);
@@ -668,26 +774,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			JMenuItem commonRootItem = new JMenuItem(commonRoot.getName());
 			commonRootItem.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent actionEvent) {
-					SimpleWorker worker = new SimpleWorker() {
-						@Override
-						protected void doStuff() throws Exception {
-							setResultFolder(commonRoot);							
-						}
-						@Override
-						protected void hadSuccess() {
-							SwingUtilities.invokeLater(new Runnable() {
-								@Override
-								public void run() {
-									SessionMgr.getBrowser().getEntityOutline().selectEntityByUniqueId(workingFolder.getUniqueId());
-								}
-							});
-						}
-						@Override
-						protected void hadError(Throwable error) {
-							SessionMgr.getSessionMgr().handleException(error);
-						}
-					};
-					worker.execute();
+					setResultFolder(commonRoot);
 				}
 			});
 			
@@ -708,26 +795,12 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					return;
 				}
 
-				SimpleWorker worker = new SimpleWorker() {
-					@Override
-					protected void doStuff() throws Exception {
-						setResultFolder(ModelMgrUtils.createNewCommonRoot(folderName));
-					}
-					@Override
-					protected void hadSuccess() {
-						SwingUtilities.invokeLater(new Runnable() {
-							@Override
-							public void run() {
-								SessionMgr.getBrowser().getEntityOutline().selectEntityByUniqueId(workingFolder.getUniqueId());
-							}
-						});
-					}
-					@Override
-					protected void hadError(Throwable error) {
-						SessionMgr.getSessionMgr().handleException(error);
-					}
-				};
-				worker.execute();
+				try {
+					setResultFolder(ModelMgrUtils.createNewCommonRoot(folderName));	
+				}
+				catch (Exception e) {
+					SessionMgr.getSessionMgr().handleException(e);
+				}
 			}
 		});
 		

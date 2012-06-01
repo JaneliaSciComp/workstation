@@ -8,15 +8,14 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenInFinderAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenWithDefaultAppAction;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
-import org.janelia.it.FlyWorkstation.gui.util.IndeterminateProgressMonitor;
-import org.janelia.it.FlyWorkstation.gui.util.MailDialogueBox;
-import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.gui.util.*;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.PreferenceConstants;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -24,6 +23,8 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 
 import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
@@ -69,7 +70,6 @@ public class EntityContextMenu extends JPopupMenu {
         add(getCopyNameToClipboardItem());
         add(getCopyIdToClipboardItem());
         add(getDetailsItem());
-        add(getOpenInSecondViewerItem());
         
         setNextAddRequiresSeparator(true);
         add(getAddToRootFolderItem());
@@ -78,14 +78,15 @@ public class EntityContextMenu extends JPopupMenu {
 		add(getDeleteItem());
         
 		setNextAddRequiresSeparator(true);
-    	add(getOpenInFinderItem());
-    	add(getOpenWithAppItem());
-        add(getFijiViewerItem());
-        add(getNeuronAnnotatorItem());
-        add(getVaa3dItem());
-        
+		add(getOpenInSecondViewerItem());
+		add(getOpenInFinderItem());
+		add(getOpenWithMenu());
+
         setNextAddRequiresSeparator(true);
         add(getSearchHereItem());
+        
+		setNextAddRequiresSeparator(true);
+		add(getCreateSessionItem());
 	}
 
 	protected JMenuItem getTitleItem() {;
@@ -442,7 +443,7 @@ public class EntityContextMenu extends JPopupMenu {
 		
 		return deleteItem;
 	}
-	
+    
 	protected JMenuItem getOpenInSecondViewerItem() {
 		if (multiple) return null;
 		if (StringUtils.isEmpty(rootedEntity.getUniqueId())) return null;
@@ -478,51 +479,64 @@ public class EntityContextMenu extends JPopupMenu {
 		});
         return copyMenuItem;
 	}
-	
+
+    protected JMenu getOpenWithMenu() {
+    	if (multiple) return null;
+		JMenu newFolderMenu = new JMenu("  Open with...");
+		add(newFolderMenu, getOpenWithAppItem());
+		add(newFolderMenu, getNeuronAnnotatorItem());
+		add(newFolderMenu, getVaa3dItem());
+		add(newFolderMenu, getFijiViewerItem());
+		return newFolderMenu;
+    }
+    
 	protected JMenuItem getOpenInFinderItem() {
 		if (multiple) return null;
 		if (!OpenInFinderAction.isSupported()) return null;
     	String filepath = EntityUtils.getAnyFilePath(rootedEntity.getEntity());
         if (!StringUtils.isEmpty(filepath)) {
-        	return getActionItem(new OpenInFinderAction(rootedEntity.getEntity()));
+        	OpenInFinderAction action = new OpenInFinderAction(rootedEntity.getEntity()) {
+        		@Override
+        		public String getName() {
+        			String name = super.getName();
+        			if (name==null) return null;
+        			return "  "+name;
+        		}
+        	};
+        	return getActionItem(action);
         }
         return null;
 	}
-	
+    
 	protected JMenuItem getOpenWithAppItem() {
 		if (multiple) return null;
         if (!OpenWithDefaultAppAction.isSupported()) return null;
     	String filepath = EntityUtils.getAnyFilePath(rootedEntity.getEntity());
         if (!StringUtils.isEmpty(filepath)) {
-        	return getActionItem(new OpenWithDefaultAppAction(rootedEntity.getEntity()));
+        	OpenWithDefaultAppAction action = new OpenWithDefaultAppAction(rootedEntity.getEntity()) {
+        		@Override
+        		public String getName() {
+        			return "System default";
+        		}
+        	};
+        	return getActionItem(action);
         }
         return null;
 	}
 
     protected JMenuItem getFijiViewerItem() {
         if (multiple) return null;
-        final String entityType = rootedEntity.getEntity().getEntityType().getName();
-        if (entityType.equals(EntityConstants.TYPE_IMAGE_3D) ||
-                entityType.equals(EntityConstants.TYPE_ALIGNED_BRAIN_STACK) ||
-                entityType.equals(EntityConstants.TYPE_LSM_STACK) ||
-                entityType.equals(EntityConstants.TYPE_STITCHED_V3D_RAW) ||
-                entityType.equals(EntityConstants.TYPE_SWC_FILE) ||
-                entityType.equals(EntityConstants.TYPE_V3D_ANO_FILE) ||
-                entityType.equals(EntityConstants.TYPE_TIF_3D) ||
-                entityType.equals(EntityConstants.TYPE_IMAGE_2D) ||
-                entityType.equals(EntityConstants.TYPE_TIF_2D) ||
-                entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT) ||
-                entityType.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
-
-            JMenuItem fijiMenuItem = new JMenuItem("  View in Fiji");
+        final String path = EntityUtils.getDefault3dImageFilePath(rootedEntity.getEntity());
+        if (path!=null) {
+            JMenuItem fijiMenuItem = new JMenuItem("Fiji");
             fijiMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
                         String fijiExePath = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.FIJI_PATH);
 //                        fijiExePath = "C:\\Users\\kimmelr\\Documents\\Fiji.app\\fiji-win64.exe"; // DEBUG ONLY
                         File tmpFile = new File(fijiExePath);
-                        if (tmpFile.exists()&&tmpFile.canExecute()) {
-                            fijiExePath+= " " + PathTranslator.convertPath(EntityUtils.getAnyFilePath(rootedEntity.getEntity()));
+                        if (tmpFile.exists() && tmpFile.canExecute()) {
+                            fijiExePath+= " " + PathTranslator.convertPath(path);
                             System.out.println("Calling to open file with: "+fijiExePath);
                             Runtime.getRuntime().exec(fijiExePath);
                         }
@@ -546,7 +560,7 @@ public class EntityContextMenu extends JPopupMenu {
 		if (multiple) return null;
         final String entityType = rootedEntity.getEntity().getEntityType().getName();
         if (entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT) || entityType.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
-            JMenuItem vaa3dMenuItem = new JMenuItem("  View in Vaa3D (Neuron Annotator)");
+            JMenuItem vaa3dMenuItem = new JMenuItem("Vaa3D (Neuron Annotator)");
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
@@ -572,16 +586,9 @@ public class EntityContextMenu extends JPopupMenu {
 
 	protected JMenuItem getVaa3dItem() {
 		if (multiple) return null;
-        final String entityType = rootedEntity.getEntity().getEntityType().getName();
-        if (entityType.equals(EntityConstants.TYPE_IMAGE_3D) ||
-            entityType.equals(EntityConstants.TYPE_ALIGNED_BRAIN_STACK) ||
-            entityType.equals(EntityConstants.TYPE_LSM_STACK) ||
-            entityType.equals(EntityConstants.TYPE_STITCHED_V3D_RAW) ||
-            entityType.equals(EntityConstants.TYPE_SWC_FILE) ||
-            entityType.equals(EntityConstants.TYPE_V3D_ANO_FILE) ||
-            entityType.equals(EntityConstants.TYPE_TIF_3D)) {
-        	
-            JMenuItem vaa3dMenuItem = new JMenuItem("  View in Vaa3D");
+        final String path = EntityUtils.getDefault3dImageFilePath(rootedEntity.getEntity());
+        if (path!=null) {
+            JMenuItem vaa3dMenuItem = new JMenuItem("Vaa3D");
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
@@ -589,7 +596,7 @@ public class EntityContextMenu extends JPopupMenu {
 //                        vaa3dExePath = "/Applications/FlySuite.app/Contents/Resources/vaa3d64.app/Contents/MacOS/vaa3d64"; // DEBUG ONLY
                         File tmpFile = new File(vaa3dExePath);
                         if (tmpFile.exists()&&tmpFile.canExecute()) {
-                            vaa3dExePath+=" -i "+ PathTranslator.convertPath(EntityUtils.getAnyFilePath(rootedEntity.getEntity()));
+                            vaa3dExePath+=" -i "+ PathTranslator.convertPath(path);
                             System.out.println("Calling to open file with: "+vaa3dExePath);
                             Runtime.getRuntime().exec(vaa3dExePath);
                         }
@@ -606,6 +613,41 @@ public class EntityContextMenu extends JPopupMenu {
             return vaa3dMenuItem;
         }
         return null;
+	}
+	
+	protected JMenuItem getCreateSessionItem() {
+		if (multiple) return null;
+		
+		JMenuItem newFragSessionItem = new JMenuItem("  Create annotation session...");
+		newFragSessionItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent actionEvent) {
+
+				final Entity entity = rootedEntity.getEntity();
+				final String uniqueId = rootedEntity.getUniqueId();
+				if (uniqueId == null) return;
+				
+				EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
+				DefaultMutableTreeNode node = entityOutline.getNodeByUniqueId(uniqueId);
+				
+				SimpleWorker loadingWorker = new LazyTreeNodeLoader(entityOutline.getDynamicTree(), node, true) {
+
+					protected void doneLoading() {
+						List<Entity> entities = entity.getDescendantsOfType(EntityConstants.TYPE_NEURON_FRAGMENT, true);
+						browser.getAnnotationSessionPropertyDialog().showForNewSession(entity.getName(), entities);
+					}
+
+					@Override
+					protected void hadError(Throwable error) {
+						SessionMgr.getSessionMgr().handleException(error);
+					}
+				};
+
+				loadingWorker.execute();
+			
+			}
+		});
+
+		return newFragSessionItem;
 	}
 
 	protected JMenuItem getSearchHereItem() {
@@ -625,7 +667,7 @@ public class EntityContextMenu extends JPopupMenu {
 	}
 	
 	private JMenuItem getActionItem(final Action action) {
-        JMenuItem actionMenuItem = new JMenuItem("  "+action.getName());
+        JMenuItem actionMenuItem = new JMenuItem(action.getName());
         actionMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -635,10 +677,17 @@ public class EntityContextMenu extends JPopupMenu {
         return actionMenuItem;
 	}
 	
+	
+	
 	@Override
 	public JMenuItem add(JMenuItem menuItem) {
 		
 		if (menuItem == null) return null;
+		
+		if ((menuItem instanceof JMenu)) {
+			JMenu menu = (JMenu)menuItem;
+			if (menu.getItemCount()==0) return null;
+		}
 		
 		if (nextAddRequiresSeparator) {
 			addSeparator();
@@ -646,6 +695,11 @@ public class EntityContextMenu extends JPopupMenu {
 		}
 		
 		return super.add(menuItem);
+	}
+	
+	public JMenuItem add(JMenu menu, JMenuItem menuItem) {
+		if (menu==null || menuItem==null) return null;
+		return menu.add(menuItem);
 	}
 
 	public void setNextAddRequiresSeparator(boolean nextAddRequiresSeparator) {

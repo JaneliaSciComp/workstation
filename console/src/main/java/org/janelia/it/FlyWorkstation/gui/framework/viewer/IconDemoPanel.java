@@ -29,6 +29,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.*;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
+import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.util.*;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
@@ -356,6 +357,19 @@ public class IconDemoPanel extends Viewer {
 		
 		this.addKeyListener(getKeyListener());
 
+		this.addMouseListener(new MouseHandler() {
+			@Override
+			protected void popupTriggered(MouseEvent e) {
+				if (contextRootedEntity==null) return;
+				JPopupMenu popupMenu = new JPopupMenu();
+				JMenuItem titleItem = new JMenuItem("" +contextRootedEntity.getEntity().getName());
+				titleItem.setEnabled(false);
+				popupMenu.add(titleItem);
+				popupMenu.add(getNewFolderItem());
+				popupMenu.show(IconDemoPanel.this, e.getX(), e.getY());	
+			}
+		});
+		
 		ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
 
 			@Override
@@ -535,6 +549,40 @@ public class IconDemoPanel extends Viewer {
 		});
 	}
 
+	private JMenuItem getNewFolderItem() {
+
+		JMenuItem newFolderItem = new JMenuItem("  Create new folder");
+		newFolderItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent actionEvent) {
+
+				// Add button clicked
+				String folderName = (String) JOptionPane.showInputDialog(IconDemoPanel.this, "Folder Name:\n",
+						"Create folder under " + contextRootedEntity.getEntity().getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
+				if ((folderName == null) || (folderName.length() <= 0)) {
+					return;
+				}
+
+				try {
+					// Update database
+					Entity parentFolder = contextRootedEntity.getEntity();
+					Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
+					ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder,
+							parentFolder.getMaxOrderIndex() + 1, EntityConstants.ATTRIBUTE_ENTITY);
+
+				} 
+				catch (Exception ex) {
+					SessionMgr.getSessionMgr().handleException(ex);
+				}
+			}
+		});
+
+		if (!contextRootedEntity.getEntity().getEntityType().getName().equals(EntityConstants.TYPE_FOLDER)
+				|| !contextRootedEntity.getEntity().getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+			newFolderItem.setEnabled(false);
+		}
+		return newFolderItem;
+	}
+	
 	protected List<RootedEntity> getRootedEntitiesForEntityId(long entityId) {
 		List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
 		if (rootedEntities==null) return rootedEntityList; 
@@ -587,37 +635,7 @@ public class IconDemoPanel extends Viewer {
 				}
 				hud.setTitle(button.getRootedEntity().getEntity().getName());
 				hud.setImage(bufferedImage);
-				
-//				else {
-//					hud.setImage(bufferedImage);	
-//				}
-				
-				
-//				SimpleWorker worker = new SimpleWorker() {
-//					private BufferedImage bufferedImage;
-//
-//					@Override
-//					protected void doStuff() throws Exception {
-//						bufferedImage = d.getDynamicImagePanel().getMaxSizeImage();
-//					}
-//					
-//					@Override
-//					protected void hadSuccess() {
-//						if (bufferedImage==null) {
-//							return;
-//						}
-//						hud.setTitle(button.getRootedEntity().getEntity().getName());
-//						hud.setImage(bufferedImage);
-//					}
-//					
-//					@Override
-//					protected void hadError(Throwable error) {
-//						SessionMgr.getSessionMgr().handleException(error);
-//					}
-//				};
-//				
-//				worker.execute();
-				break; // There can be only one!
+				return; // There can be only one!
 			}
 		}
 	}

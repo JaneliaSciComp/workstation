@@ -61,7 +61,7 @@ public class Icons {
      * @return
      */
     public static Icon getRefreshIcon() {
-    	return getIcon("arrow_refresh.png");
+    	return getIcon("refresh_static.gif");
     }
     
     /**

@@ -28,7 +28,7 @@ public class DynamicImageButton extends AnnotatedImageButton {
 
     	String imageRole = iconDemoPanel.getCurrImageRole();
     	
-        String filepath = EntityUtils.getDefaultImageFilePath(rootedEntity.getEntity(), imageRole);
+        String filepath = EntityUtils.getImageFilePath(rootedEntity.getEntity(), imageRole);
         if (filepath == null) {
         	throw new IllegalStateException("Entity has no filepath");
         }

@@ -169,115 +169,19 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 
 	private class EntityOutlineContextMenu extends EntityContextMenu {
 
-		private DefaultMutableTreeNode node;
-
 		public EntityOutlineContextMenu(DefaultMutableTreeNode node, String uniqueId) {
 			super(new RootedEntity(uniqueId, getEntityData(node)));
-			this.node = node;
 		}
-
-		public void addMenuItems() {
-
-			add(getTitleItem());
-			add(getCopyNameToClipboardItem());
-			add(getCopyIdToClipboardItem());
-			add(getDetailsItem());
-			add(getOpenInSecondViewerItem());
-			
-			setNextAddRequiresSeparator(true);
-			add(getAddToRootFolderItem());
-			add(getRenameItem());
-            add(getErrorFlag());
-			add(getDeleteItem());
-			add(getNewFolderItem());
-
-			setNextAddRequiresSeparator(true);
-			add(getOpenInFinderItem());
-			add(getOpenWithAppItem());
-            add(getFijiViewerItem());
-			add(getNeuronAnnotatorItem());
-			add(getVaa3dItem());
-
-			setNextAddRequiresSeparator(true);
-			add(getCreateSessionItem());
-			
-	        setNextAddRequiresSeparator(true);
-	        add(getSearchHereItem());
-		}
-
+		
 		public void addRootMenuItems() {
-
 			add(getRootItem());
 			add(getNewRootFolderItem());
 		}
 
-		protected JMenuItem getRootItem() {;
+		protected JMenuItem getRootItem() {
 	        JMenuItem titleMenuItem = new JMenuItem("Data");
 	        titleMenuItem.setEnabled(false);
 	        return titleMenuItem;
-		}
-		
-		private JMenuItem getNewFolderItem() {
-			if (multiple) return null;
-			
-			if (!rootedEntity.getEntity().getEntityType().getName().equals(EntityConstants.TYPE_FOLDER))
-				return null;
-
-			JMenuItem newFolderItem = new JMenuItem("  Create new folder");
-			newFolderItem.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent actionEvent) {
-
-					// Add button clicked
-					String folderName = (String) JOptionPane.showInputDialog(browser, "Folder Name:\n",
-							"Create folder under " + rootedEntity.getEntity().getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
-					if ((folderName == null) || (folderName.length() <= 0)) {
-						return;
-					}
-
-					try {
-						// Update database
-						Entity parentFolder = rootedEntity.getEntity();
-						Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
-						final EntityData newData = ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder,
-								parentFolder.getMaxOrderIndex() + 1, EntityConstants.ATTRIBUTE_ENTITY);
-
-						// Update these references to use our local objects, so that the object graph is consistent
-						newData.setParentEntity(parentFolder);
-						newData.setChildEntity(newFolder);
-
-						// Update object model
-						parentFolder.getEntityData().add(newData);
-
-						// Update Tree UI
-						addNodes(node, newData);
-						
-//						final String childId = EntityTree.getChildUniqueId(selectedTree.getUniqueId(node), newData);
-						final ExpansionState expansionState = new ExpansionState();
-						expansionState.storeExpansionState(getDynamicTree());
-						expansionState.setSelectedUniqueId(selectedTree.getUniqueId(node));
-						
-						refresh(true, expansionState, new Callable<Void>() {
-							@Override
-							public Void call() throws Exception {
-								// TODO: can't do this because this callback is executed after the refresh, not after the
-								// tree expansion. In the future, this should be fixed.
-//								loadEntityInViewer(childId);
-								return null;
-							}
-						});
-
-					} catch (Exception ex) {
-						ex.printStackTrace();
-						JOptionPane.showMessageDialog(browser, "Error creating folder", "Error",
-								JOptionPane.ERROR_MESSAGE);
-					}
-				}
-			});
-
-			if (!rootedEntity.getEntity().getUser().getUserLogin().equals(SessionMgr.getUsername())) {
-				newFolderItem.setEnabled(false);
-			}
-			return newFolderItem;
 		}
 
 		private JMenuItem getNewRootFolderItem() {
@@ -317,48 +221,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			});
 
 			return newFolderItem;
-		}
-
-		private JMenuItem getCreateSessionItem() {
-			if (multiple) return null;
-			if (node.isRoot()) return null;
-			
-			JMenuItem newFragSessionItem = new JMenuItem("  Create annotation session...");
-			newFragSessionItem.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent actionEvent) {
-
-					DefaultMutableTreeNode node = selectedTree.getCurrentNode();
-					final Entity entity = getEntity(node);
-
-					try {
-						Utils.setWaitingCursor(EntityOutline.this);
-
-						SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node, true) {
-
-							protected void doneLoading() {
-								Utils.setDefaultCursor(EntityOutline.this);
-								List<Entity> entities = entity.getDescendantsOfType(EntityConstants.TYPE_NEURON_FRAGMENT, true);
-								browser.getAnnotationSessionPropertyDialog().showForNewSession(entity.getName(), entities);
-								SwingUtilities.updateComponentTreeUI(EntityOutline.this);
-							}
-
-							@Override
-							protected void hadError(Throwable error) {
-								error.printStackTrace();
-								Utils.setDefaultCursor(EntityOutline.this);
-								JOptionPane.showMessageDialog(browser, "Error loading nodes", "Internal Error",
-										JOptionPane.ERROR_MESSAGE);
-							}
-						};
-
-						loadingWorker.execute();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			});
-
-			return newFragSessionItem;
 		}
 	}
 

@@ -8,7 +8,14 @@ import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTransferHandler;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
+import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 
 /**
  * A DynamicImagePanel with a title on top and optional annotation tags underneath. Made to be aggregated in an 
@@ -19,6 +26,7 @@ import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
 public abstract class AnnotatedImageButton extends JToggleButton implements DragGestureListener { 
 
 	private final JLabel titleLabel;
+	private final JLabel subtitleLabel;
     private final JPanel mainPanel;
     private final JPanel buttonPanel;
     private AnnotationView annotationView;
@@ -52,20 +60,35 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
         titleLabel.setFont(new Font("Sans Serif", Font.PLAIN, 12));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         titleLabel.setOpaque(false);
+
+        subtitleLabel = new JLabel();
+        subtitleLabel.setFocusable(false);
+        subtitleLabel.setFont(new Font("Sans Serif", Font.PLAIN, 12));
+        subtitleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        subtitleLabel.setOpaque(false);
+        subtitleLabel.setVisible(false);
         
         c.gridx = 0;
         c.gridy = 0;
-        c.insets = new Insets(0, 0, 5, 0);
+        c.insets = new Insets(0, 0, 0, 0);
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.PAGE_START;
         c.weighty = 0;
         buttonPanel.add(titleLabel, c);
 
+        c.gridx = 0;
+        c.gridy = 1;
+        c.insets = new Insets(0, 0, 5, 0);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.anchor = GridBagConstraints.PAGE_START;
+        c.weighty = 0;
+        buttonPanel.add(subtitleLabel, c);
+        
         mainPanel = new JPanel();
         mainPanel.setOpaque(false);
         
         c.gridx = 0;
-        c.gridy = 1;
+        c.gridy = 2;
         c.insets = new Insets(0, 0, 5, 0);
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.CENTER;
@@ -88,8 +111,59 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
     }
     
     public void refresh(RootedEntity rootedEntity) {
+    	
     	mainPanel.removeAll();
-    	setTitle(rootedEntity.getEntity().getName(), 100);
+    	
+        Entity entity = rootedEntity.getEntity();
+        
+        StringBuffer tsb = new StringBuffer();
+        tsb.append(entity.getName());
+        
+        String splitPart = entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SPLIT_PART);
+        if (splitPart!=null) {
+        	tsb.append(" (").append(splitPart).append(")");
+        }
+
+        StringBuffer ssb = new StringBuffer();
+        
+        final Entity rep = entity.getChildByAttributeName(EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE);
+        if (rep!=null) {
+        	if (EntityUtils.isInitialized(rep)) {
+        		ssb.append("Represented by ").append(rep.getName());	
+        	}
+        	else {
+        		SimpleWorker worker = new SimpleWorker() {
+
+        			private Entity loadedRep;
+        			
+					@Override
+					protected void doStuff() throws Exception {
+						loadedRep = ModelMgr.getModelMgr().getEntityById(rep.getId()+"");
+					}
+					
+					@Override
+					protected void hadSuccess() {
+		        		String subtitle = "Represented by "+loadedRep.getName();
+		        		setSubtitle(subtitle, 100);
+		        		subtitleLabel.setVisible(true);
+					}
+					
+					@Override
+					protected void hadError(Throwable error) {
+						SessionMgr.getSessionMgr().handleException(error);
+					}
+					
+				};
+	        	worker.execute();
+        	}
+        }
+        
+    	setTitle(tsb.toString(), 100);
+    	if (ssb.length()>0) {
+    		setSubtitle(ssb.toString(), 100);
+    		subtitleLabel.setVisible(true);
+    	}
+    	
         mainPanel.add(init(rootedEntity));
     }
     
@@ -102,11 +176,22 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
         titleLabel.setText(title);
         titleLabel.setToolTipText(title);
     }
+
+    public void setSubtitle(String subtitle, int maxWidth) {
+    	// Subtle font size scaling 
+    	int fontSize = (int)Math.round((double)maxWidth*0.003)+10;
+    	Font titleLabelFont = new Font("Sans Serif", Font.PLAIN, fontSize);
+    	subtitleLabel.setFont(titleLabelFont);
+    	subtitleLabel.setPreferredSize(new Dimension(maxWidth, subtitleLabel.getFontMetrics(titleLabelFont).getHeight()));
+    	subtitleLabel.setText(subtitle);
+    	subtitleLabel.setToolTipText(subtitle);
+    }
     
     public abstract JComponent init(RootedEntity rootedEntity);
     
 	public synchronized void setTitleVisible(boolean visible) {
         titleLabel.setVisible(visible);
+        subtitleLabel.setVisible(visible && !StringUtils.isEmpty(subtitleLabel.getText()));
     }
 
     public synchronized void setTagsVisible(boolean visible) {
@@ -142,7 +227,7 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
     }
     
 	public void rescaleImage(int width, int height) {
-    	setTitle(rootedEntity.getEntity().getName(), width);
+    	setTitle(titleLabel.getText(), width);
         JPanel annotationPanel = (JPanel)annotationView;
         if (annotationView instanceof AnnotationTablePanel) {
         	annotationPanel.setPreferredSize(new Dimension(width, annotationPanel.getPreferredSize().height));

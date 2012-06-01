@@ -2,6 +2,8 @@ package org.janelia.it.FlyWorkstation.shared.util;
 
 import java.util.*;
 
+import javax.swing.text.html.HTMLDocument.HTMLReader.IsindexAction;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
@@ -31,8 +33,8 @@ public class ModelMgrUtils {
         EntityUtils.replaceChildNodes(entity, childEntitySet);
     }
     
-    public static void loadLazyEntity(Entity entity, boolean recurse) {
-
+    public static void loadLazyEntity(Entity entity, boolean recurse) throws Exception {
+    	
         if (!EntityUtils.areLoaded(entity.getEntityData())) {
             Set<Entity> childEntitySet = ModelMgr.getModelMgr().getChildEntities(entity.getId());
             EntityUtils.replaceChildNodes(entity, childEntitySet);
@@ -124,7 +126,7 @@ public class ModelMgrUtils {
 	 * @param ignoreNested
 	 * @return
 	 */
-    public static List<Entity> getDescendantsOfType(Entity entity, String typeName, boolean ignoreNested) {
+    public static List<Entity> getDescendantsOfType(Entity entity, String typeName, boolean ignoreNested) throws Exception {
     	
     	boolean found = false;
         List<Entity> items = new ArrayList<Entity>();
