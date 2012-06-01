@@ -29,7 +29,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.*;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
-import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.util.*;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
@@ -57,7 +56,7 @@ public class IconDemoPanel extends Viewer {
 	protected JToolBar toolbar;
 	protected JButton prevButton;
 	protected JButton nextButton;
-	protected JButton parentButton;
+	protected JButton pathButton;
 	protected JToggleButton showTitlesButton;
 	protected JButton imageRoleButton;
 	protected JToggleButton showTagsButton;
@@ -71,6 +70,9 @@ public class IconDemoPanel extends Viewer {
 	
 	// The parent entity which we are displaying children for
 	protected RootedEntity contextRootedEntity;
+	
+	// Ancestors of the parent entity
+	protected List<RootedEntity> rootedAncestors;
 	
 	// Children of the parent entity
 	protected List<RootedEntity> rootedEntities;
@@ -357,7 +359,7 @@ public class IconDemoPanel extends Viewer {
 		
 		this.addKeyListener(getKeyListener());
 
-		this.addMouseListener(new MouseHandler() {
+		imagesPanel.addMouseListener(new MouseHandler() {
 			@Override
 			protected void popupTriggered(MouseEvent e) {
 				if (contextRootedEntity==null) return;
@@ -366,7 +368,7 @@ public class IconDemoPanel extends Viewer {
 				titleItem.setEnabled(false);
 				popupMenu.add(titleItem);
 				popupMenu.add(getNewFolderItem());
-				popupMenu.show(IconDemoPanel.this, e.getX(), e.getY());	
+				popupMenu.show(imagesPanel, e.getX(), e.getY());	
 			}
 		});
 		
@@ -676,8 +678,13 @@ public class IconDemoPanel extends Viewer {
 		});
 	}
 
-	private boolean isParentEnabled() {
-		return (contextRootedEntity!=null && !StringUtils.isEmpty(Utils.getParentIdFromUniqueId(contextRootedEntity.getUniqueId())));
+	private synchronized void goEntity(final String uniqueId) {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueId, true);	
+			}
+		});
 	}
 	
 	protected JToolBar createToolbar() {
@@ -713,24 +720,23 @@ public class IconDemoPanel extends Viewer {
 		nextButton.addMouseListener(new MouseForwarder(toolBar, "NextButton->JToolBar"));
 		toolBar.add(nextButton);
 
-		parentButton = new JButton();
-		parentButton.setIcon(Icons.getIcon("parent.gif"));
-		parentButton.setToolTipText("Go to the parent entity");
-		parentButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
-		parentButton.addActionListener(new ActionListener() {
+		pathButton = new JButton();
+		pathButton.setIcon(Icons.getIcon("path.png"));
+		pathButton.setToolTipText("See the current location");
+		pathButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				goParent();
+				showPopupPathMenu();
 			}
 		});
-		parentButton.addMouseListener(new MouseForwarder(toolBar, "ParentButton->JToolBar"));
-		toolBar.add(parentButton);
+		pathButton.addMouseListener(new MouseForwarder(toolBar, "ParentButton->JToolBar"));
+		toolBar.add(pathButton);
 
 		refreshButton = new JButton();
 		refreshButton.setIcon(Icons.getRefreshIcon());
 		refreshButton.setFocusable(false);
 		refreshButton.setToolTipText("Refresh the current view");
-		refreshButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
+		refreshButton.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
 		refreshButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -832,6 +838,24 @@ public class IconDemoPanel extends Viewer {
 		}
 
 		imageRoleListMenu.show(imageRoleButton, 0, imageRoleButton.getHeight());
+	}
+	
+	private void showPopupPathMenu() {
+
+		final JPopupMenu pathMenu = new JPopupMenu();
+
+		for (final RootedEntity ancestor : rootedAncestors) {
+			JMenuItem pathMenuItem = new JMenuItem(ancestor.getEntity().getName(), Icons.getIcon(ancestor.getEntity()));
+			pathMenuItem.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					goEntity(ancestor.getUniqueId());
+				}
+			});
+			pathMenuItem.setEnabled(pathMenu.getComponentCount()>0);
+			pathMenu.add(pathMenuItem);
+		}
+
+		pathMenu.show(pathButton, 0, pathButton.getHeight());
 	}
 	
 //	private void showPopupUserMenu() {
@@ -950,7 +974,6 @@ public class IconDemoPanel extends Viewer {
 		EntitySelectionHistory history = getEntitySelectionHistory();
 		prevButton.setEnabled(history.isBackEnabled());
 		nextButton.setEnabled(history.isNextEnabled());
-		parentButton.setEnabled(isParentEnabled());
 
 		// Temporarily disable scroll loading
 		imagesPanel.setScrollLoadingEnabled(false);
@@ -985,6 +1008,45 @@ public class IconDemoPanel extends Viewer {
 		};
 
 		entityLoadingWorker.execute();
+
+		
+		
+		SimpleWorker ancestorLoadingWorker = new SimpleWorker() {
+
+			private List<RootedEntity> ancestors = new ArrayList<RootedEntity>();
+				
+			protected void doStuff() throws Exception {
+				List<String> uniqueIds = EntityUtils.getPathFromUniqueId(contextRootedEntity.getUniqueId());
+				List<Long> entityIds = new ArrayList<Long>();
+				for(String uniqueId : uniqueIds) {
+					entityIds.add(EntityUtils.getEntityIdFromUniqueId(uniqueId));
+				}
+				Map<Long,Entity>entityMap = EntityUtils.getEntityMap(ModelMgr.getModelMgr().getEntityByIds(entityIds));
+
+				for(String uniqueId : uniqueIds) {
+					Long entityId = EntityUtils.getEntityIdFromUniqueId(uniqueId);
+					Entity entity = entityMap.get(entityId);
+					if (entity!=null) {
+						EntityData entityData = new EntityData();
+						entityData.setChildEntity(entity);
+						ancestors.add(new RootedEntity(uniqueId, entityData));
+					}
+				}
+				
+				Collections.reverse(ancestors);
+			}
+
+			protected void hadSuccess() {
+				rootedAncestors = ancestors;
+			}
+
+			protected void hadError(Throwable error) {
+				SessionMgr.getSessionMgr().handleException(error);
+				
+			}
+		};
+
+		ancestorLoadingWorker.execute();
 	}
 	
 	private synchronized void entityLoadDone(final Callable<Void> success) {
@@ -1167,9 +1229,25 @@ public class IconDemoPanel extends Viewer {
 		refresh(null);
 	}
 	
-	public void refresh(final Callable<Void> success) {
+	public void refresh(final Callable<Void> successCallback) {
 
 		if (contextRootedEntity==null) return;
+		
+		final List<String> selectedIds = new ArrayList<String>(ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory()));
+		final Callable<Void> success = new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				// At the very end, reselect our buttons if possible
+				boolean first = true;
+				for(String selectedId : selectedIds) {
+					ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), selectedId, first);
+					first = false;
+				}
+				// Now call the user's callback 
+				if (successCallback!=null) successCallback.call();
+				return null;
+			}
+		};
 		
 		SimpleWorker refreshWorker = new SimpleWorker() {
 

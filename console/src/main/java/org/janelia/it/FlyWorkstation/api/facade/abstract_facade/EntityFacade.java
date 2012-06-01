@@ -3,6 +3,8 @@ package org.janelia.it.FlyWorkstation.api.facade.abstract_facade;
 import java.util.List;
 import java.util.Set;
 
+import org.janelia.it.jacs.compute.api.support.EntityMapStep;
+import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityAttribute;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -55,4 +57,16 @@ public interface EntityFacade {
     public EntityData addEntityToParent(Entity parent, Entity entity, Integer index, String attrName) throws Exception;
     
     public void removeEntityData(EntityData ed) throws Exception;
+
+    public void createEntityType(String typeName) throws Exception;
+    
+    public void createEntityAttribute(String typeName, String attrName) throws Exception;
+    
+    public Entity getAncestorWithType(Entity entity, String typeName) throws Exception;
+    
+	public List<MappedId> getProjectedResults(List<Long> entityIds, List<EntityMapStep> upMapping, List<EntityMapStep> downMapping) throws Exception;
+	
+	public List<List<Long>> searchTreeForNameStartingWith(Long rootId, String searchString) throws Exception;
+
+	public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception;
 }

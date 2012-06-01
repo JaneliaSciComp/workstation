@@ -9,6 +9,8 @@ import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.EntityFacade;
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.OntologyFacade;
 import org.janelia.it.FlyWorkstation.api.stub.data.DuplicateDataException;
 import org.janelia.it.FlyWorkstation.api.stub.data.NoDataException;
+import org.janelia.it.jacs.compute.api.support.EntityMapStep;
+import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.model.entity.*;
 
 /**
@@ -303,4 +305,34 @@ public class AggregateEntityFacade extends AggregateFacadeBase implements Entity
     public void removeEntityData(EntityData ed) throws Exception{
     	throw new UnsupportedOperationException();
     }
+
+	@Override
+	public void createEntityType(String typeName) throws Exception {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void createEntityAttribute(String typeName, String attrName) throws Exception {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Entity getAncestorWithType(Entity entity, String typeName) throws Exception {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public List<List<Long>> searchTreeForNameStartingWith(Long rootId, String searchString) throws Exception {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception {
+		throw new UnsupportedOperationException();
+	}
+	
+	@Override
+	public List<MappedId> getProjectedResults(List<Long> entityIds, List<EntityMapStep> upMapping, List<EntityMapStep> downMapping) throws Exception {
+		throw new UnsupportedOperationException();
+	}
 }

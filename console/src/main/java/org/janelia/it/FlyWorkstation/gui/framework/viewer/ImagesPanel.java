@@ -270,6 +270,11 @@ public class ImagesPanel extends JScrollPane {
     	scrollButtonToCenter(selectedButton);
 	}
 	
+	public void scrollButtonToVisible(AnnotatedImageButton button) {
+    	if (button == null) return;
+	    getViewport().scrollRectToVisible(button.getBounds());
+	}
+	
 	public void scrollButtonToCenter(AnnotatedImageButton button) {
 
     	if (button == null) return;
@@ -386,7 +391,7 @@ public class ImagesPanel extends JScrollPane {
         }
     }
 
-    private boolean setSelection(AnnotatedImageButton button, boolean selection) {
+    private boolean setSelection(final AnnotatedImageButton button, boolean selection) {
     	if (button.isSelected()!=selection) {
     		button.setSelected(selection);
     		return true;
@@ -460,7 +465,6 @@ public class ImagesPanel extends JScrollPane {
     }
 
     public synchronized void loadUnloadImages() {
-    	
         SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {

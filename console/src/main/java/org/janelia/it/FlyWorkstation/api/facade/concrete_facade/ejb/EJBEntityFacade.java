@@ -6,6 +6,8 @@ import java.util.Set;
 
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.EntityFacade;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.jacs.compute.api.support.EntityMapStep;
+import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityAttribute;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -117,4 +119,28 @@ public class EJBEntityFacade implements EntityFacade {
     public void removeEntityData(EntityData ed) throws Exception {
         EJBFactory.getRemoteEntityBean().deleteEntityData(SessionMgr.getUsername(), ed);
     }
+
+    public void createEntityType(String typeName) throws Exception {
+    	EJBFactory.getRemoteEntityBean().createNewEntityType(typeName);
+    }
+    
+    public void createEntityAttribute(String typeName, String attrName) throws Exception {
+    	EJBFactory.getRemoteEntityBean().createNewEntityAttr(typeName, attrName);
+    }
+    
+    public Entity getAncestorWithType(Entity entity, String typeName) throws Exception {
+    	return EJBFactory.getRemoteEntityBean().getAncestorWithType(entity, typeName);
+    }
+	public List<List<Long>> searchTreeForNameStartingWith(Long rootId, String searchString) throws Exception {
+    	return EJBFactory.getRemoteEntityBean().searchTreeForNameStartingWith(rootId, searchString);
+	}
+
+	public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception {
+    	EJBFactory.getRemoteEntityBean().addChildren(SessionMgr.getUsername(), parentId, childrenIds, attributeName);
+	}
+	
+	public List<MappedId> getProjectedResults(List<Long> entityIds, List<EntityMapStep> upMapping, List<EntityMapStep> downMapping) throws Exception {
+		return EJBFactory.getRemoteEntityBean().getProjectedResults(entityIds, upMapping, downMapping);
+	}
+	
 }

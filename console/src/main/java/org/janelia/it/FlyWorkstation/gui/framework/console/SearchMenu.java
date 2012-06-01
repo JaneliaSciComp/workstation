@@ -20,14 +20,14 @@ public class SearchMenu extends JMenu {
     public SearchMenu(Browser console) {
         super("Search");
 
-        searchMenuItem = new JMenuItem("Search...");
+        searchMenuItem = new JMenuItem("Search");
         searchMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
             	SessionMgr.getSessionMgr().getActiveBrowser().getSearchDialog().showDialog();
             }
         });
 
-        patternSearchMenuItem = new JMenuItem("Pattern Annotation Search...");
+        patternSearchMenuItem = new JMenuItem("Pattern Annotation Search");
         patternSearchMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {

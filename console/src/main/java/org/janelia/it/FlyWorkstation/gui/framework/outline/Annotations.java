@@ -12,6 +12,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
  * Annotations about the entities which the user is currently interacting with.
@@ -100,11 +101,7 @@ public class Annotations {
 
     public synchronized Map<Long, List<OntologyAnnotation>> getFilteredAnnotationMap() {
     	Map<Long, List<OntologyAnnotation>> filteredMap = new HashMap<Long, List<OntologyAnnotation>>();
-    	
-        Map<Long, Entity> entityMap = new HashMap<Long, Entity>();
-        for (Entity entity : entities) {
-            entityMap.put(entity.getId(), entity);
-        }
+        Map<Long, Entity> entityMap = EntityUtils.getEntityMap(entities);
 
         for (OntologyAnnotation annotation : getFilteredAnnotations()) {
             Entity entity = entityMap.get(annotation.getTargetEntityId());

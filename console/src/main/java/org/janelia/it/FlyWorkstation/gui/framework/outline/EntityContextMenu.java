@@ -191,7 +191,7 @@ public class EntityContextMenu extends JPopupMenu {
 			return null;
 		}
 		
-		JMenu newFolderMenu = new JMenu("  Add to top-level folder...");
+		JMenu newFolderMenu = new JMenu("  Add to top-level folder");
 		
 		List<EntityData> rootEds = SessionMgr.getBrowser().getEntityOutline().getRootEntity().getOrderedEntityData();
 		
@@ -652,7 +652,7 @@ public class EntityContextMenu extends JPopupMenu {
 
 	protected JMenuItem getSearchHereItem() {
 		if (multiple) return null;
-        JMenuItem searchHereMenuItem = new JMenuItem("  Search here...");
+        JMenuItem searchHereMenuItem = new JMenuItem("  Search here");
         searchHereMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 try {

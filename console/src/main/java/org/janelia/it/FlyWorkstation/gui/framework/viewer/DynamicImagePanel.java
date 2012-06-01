@@ -192,6 +192,10 @@ public abstract class DynamicImagePanel extends JPanel {
      */
 	public synchronized void setViewable(boolean wantViewable, Callable success) {
 		
+		if (!SwingUtilities.isEventDispatchThread()) {
+			throw new IllegalStateException("DynamicImagePanel.setViewable must be called from EDT");
+		}
+		
 		if (imageFilename!=null) {
 			if (wantViewable) {
 				if (!this.viewable) {

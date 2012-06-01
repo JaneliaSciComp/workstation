@@ -122,36 +122,6 @@ public class AggregateAnnotationFacade extends AggregateEntityFacade implements 
             ((AnnotationFacade) aggregate).removeAllOntologyAnnotationsForSession(annotationSessionId);
         }
     }
-
-	@Override
-	public void createEntityType(String typeName) throws Exception {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void createEntityAttribute(String typeName, String attrName) throws Exception {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Entity getAncestorWithType(Entity entity, String typeName) throws Exception {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public List<List<Long>> searchTreeForNameStartingWith(Long rootId, String searchString) throws Exception {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception {
-		throw new UnsupportedOperationException();
-	}
-	
-	@Override
-	public List<MappedId> getProjectedResults(List<Long> entityIds, List<EntityMapStep> upMapping, List<EntityMapStep> downMapping) throws Exception {
-		throw new UnsupportedOperationException();
-	}
 	
     @Override
     public Object[] getPatternAnnotationQuantifierMapsFromSummary() throws Exception {
