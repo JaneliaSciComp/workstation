@@ -37,6 +37,8 @@ public class GiantFiberSearchDialog extends ModalDialog {
     private static final String DISTRIBUTION_TYPE="Distribution";
     private static final String GLOBAL = "Global";
 
+    private static final String GIANT_FIBER_FOLDER_NAME="GiantFiber";
+
     private RootedEntity outputFolder;
 
     DefaultTableModel tableModel;
@@ -283,7 +285,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
     public GiantFiberSearchDialog() {
 
-        setTitle("Pattern Annotation Search");
+        setTitle("Giant Fiber Compartment Search");
 
         mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
@@ -554,18 +556,18 @@ public class GiantFiberSearchDialog extends ModalDialog {
             quantifierDataIsLoading=true;
             try {
                 Long startTime=new Date().getTime();
-                System.out.println("PatterSearchDialog loadPatternAnnotationQuantifierMapsFromSummary() start");
-                Object[] sampleMaps = ModelMgr.getModelMgr().getPatternAnnotationQuantifierMapsFromSummary();
+                System.out.println("GiantFiberSearchDialog loadPatternAnnotationQuantifierMapsFromSummary() start");
+                Object[] sampleMaps = ModelMgr.getModelMgr().getMaskQuantifierMapsFromSummary(GIANT_FIBER_FOLDER_NAME);
                 sampleInfoMap = (Map<Long, Map<String,String>>)sampleMaps[0];
                 quantifierInfoMap = (Map<Long, List<Double>>)sampleMaps[1];
                 Long elapsedTime=new Date().getTime() - startTime;
-                System.out.println("PatterSearchDialog loadPatternAnnotationQuantifierMapsFromSummary() end - elapsedTime="+elapsedTime);
+                System.out.println("GiantFiberSearchDialog loadPatternAnnotationQuantifierMapsFromSummary() end - elapsedTime="+elapsedTime);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
             quantifierDataIsLoading=false;
         } else {
-            System.out.println("PatternSearchDialog loadPatternAnnotationQuantifierMapsFromSummary() - maps already loaded");
+            System.out.println("GiantFiberSearchDialog loadPatternAnnotationQuantifierMapsFromSummary() - maps already loaded");
         }
     }
 

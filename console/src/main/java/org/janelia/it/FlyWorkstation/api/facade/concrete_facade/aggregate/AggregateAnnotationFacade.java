@@ -128,4 +128,9 @@ public class AggregateAnnotationFacade extends AggregateEntityFacade implements 
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public Object[] getMaskQuantifierMapsFromSummary(String maskFolderName) throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
 }

@@ -65,4 +65,8 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
     public Object[] getPatternAnnotationQuantifierMapsFromSummary() throws Exception {
         return EJBFactory.getRemoteAnnotationBean().getPatternAnnotationQuantifierMapsFromSummary();
     }
+
+    public Object[] getMaskQuantifierMapsFromSummary(String maskFolderName) throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().getMaskQuantifierMapsFromSummary(maskFolderName);
+    }
 }

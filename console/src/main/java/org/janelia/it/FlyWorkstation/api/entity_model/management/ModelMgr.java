@@ -755,6 +755,10 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getAnnotationFacade().getPatternAnnotationQuantifierMapsFromSummary();
     }
 
+    public Object[] getMaskQuantifierMapsFromSummary(String maskFolderName) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().getMaskQuantifierMapsFromSummary(maskFolderName);
+    }
+
     //  private void workSpaceWasCreated(GenomeVersion genomeVersion) {
 //    Set genomeVersions=getGenomeVersions();
 //    GenomeVersion gv;

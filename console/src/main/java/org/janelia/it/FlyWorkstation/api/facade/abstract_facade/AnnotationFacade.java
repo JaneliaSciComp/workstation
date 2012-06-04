@@ -31,4 +31,6 @@ public interface AnnotationFacade extends EntityFacade {
     
     public Object[] getPatternAnnotationQuantifierMapsFromSummary() throws Exception;
 
+    public Object[] getMaskQuantifierMapsFromSummary(String maskFolderName) throws Exception;
+
 }
