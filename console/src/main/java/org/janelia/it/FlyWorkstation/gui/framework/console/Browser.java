@@ -20,10 +20,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestState;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestStatus;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationSessionPropertyDialog;
-import org.janelia.it.FlyWorkstation.gui.dialogs.PatternSearchDialog;
-import org.janelia.it.FlyWorkstation.gui.dialogs.RunImportDialog;
-import org.janelia.it.FlyWorkstation.gui.dialogs.RunNeuronSeparationDialog;
+import org.janelia.it.FlyWorkstation.gui.dialogs.*;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.GeneralSearchDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.*;
 import org.janelia.it.FlyWorkstation.gui.framework.search.SearchToolbar;
@@ -110,6 +107,7 @@ public class Browser extends JFrame implements Cloneable {
     private RunNeuronSeparationDialog runNeuronSeparationDialog;
     private GeneralSearchDialog searchDialog;
     private PatternSearchDialog patternSearchDialog;
+    private GiantFiberSearchDialog giantFiberSearchDialog;
     private String mostRecentFileOutlinePath;
     private JTabbedPane icsTabPane = new JTabbedPane();
     private int rightDividerLocation;
@@ -266,6 +264,8 @@ public class Browser extends JFrame implements Cloneable {
         searchDialog.setSearchHistory(searchHistory);
 
         patternSearchDialog = new PatternSearchDialog();
+
+        giantFiberSearchDialog = new GiantFiberSearchDialog();
         
         ontologyOutline.setPreferredSize(new Dimension());
 //        icsTabPane = new ICSTabPane(this);
@@ -1304,7 +1304,11 @@ public class Browser extends JFrame implements Cloneable {
         return patternSearchDialog;
     }
 
-	public GeneralSearchDialog getSearchDialog() {
+    public GiantFiberSearchDialog getGiantFiberSearchDialog() {
+        return giantFiberSearchDialog;
+    }
+
+    public GeneralSearchDialog getSearchDialog() {
 		return searchDialog;
 	}
 
