@@ -14,7 +14,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.util.*;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
-import org.janelia.it.FlyWorkstation.shared.util.PreferenceConstants;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -592,7 +591,7 @@ public class EntityContextMenu extends JPopupMenu {
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
-                        String vaa3dExePath = (String) SessionMgr.getSessionMgr().getModelProperty(PreferenceConstants.PATH_VAA3D);
+                        String vaa3dExePath = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.PATH_VAA3D);
 //                        vaa3dExePath = "/Applications/FlySuite.app/Contents/Resources/vaa3d64.app/Contents/MacOS/vaa3d64"; // DEBUG ONLY
                         File tmpFile = new File(vaa3dExePath);
                         if (tmpFile.exists()&&tmpFile.canExecute()) {
