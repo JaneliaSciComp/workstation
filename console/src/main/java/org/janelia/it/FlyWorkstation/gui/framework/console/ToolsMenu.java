@@ -1,8 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.tool_manager.Tool;
+import org.janelia.it.FlyWorkstation.gui.framework.tool_manager.ToolConfigurationDialog;
 import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
-import org.janelia.it.FlyWorkstation.shared.util.PreferenceConstants;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 
 import javax.swing.*;
@@ -12,6 +13,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Set;
 import java.util.prefs.BackingStoreException;
 
 
@@ -34,12 +36,13 @@ public class ToolsMenu extends JMenu {
     
     public ToolsMenu(Browser console) {
         super("Tools");
+        this.setMnemonic('T');
         try {
             this.parentFrame = console;
             System.out.println("Base root executable path  = "+rootExecutablePath);
 //            rootExecutablePath="/Applications/FlySuite.app/Contents/Resources/workstation.jar";
             rootExecutablePath=rootExecutablePath.substring(0,rootExecutablePath.lastIndexOf(File.separator)+1);
-            vaa3dExePath = (String) SessionMgr.getSessionMgr().getModelProperty(PreferenceConstants.PATH_VAA3D);
+            vaa3dExePath = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.PATH_VAA3D);
             if (null==vaa3dExePath || "".equals(vaa3dExePath)) {
                 if (SystemInfo.isMac || SystemInfo.isWindows) {
                     vaa3dExePath = rootExecutablePath+VAA3D_PATH_MAC;
@@ -50,10 +53,10 @@ public class ToolsMenu extends JMenu {
             }
             File testFile = new File(vaa3dExePath);
             if (testFile.exists() && testFile.canExecute()) {
-                SessionMgr.getSessionMgr().setModelProperty(PreferenceConstants.PATH_VAA3D, vaa3dExePath);
+                SessionMgr.getSessionMgr().setModelProperty(SessionMgr.PATH_VAA3D, vaa3dExePath);
             }
             else {
-                SessionMgr.getSessionMgr().setModelProperty(PreferenceConstants.PATH_VAA3D, "");
+                SessionMgr.getSessionMgr().setModelProperty(SessionMgr.PATH_VAA3D, "");
             }
 //            vaa3dExePath = "/Applications/FlySuite.app/Contents/Resources/vaa3d64.app/Contents/MacOS/vaa3d64";   //DEBUG LINE
             System.out.println("Vaa3d root executable path = "+vaa3dExePath);
@@ -101,9 +104,11 @@ public class ToolsMenu extends JMenu {
                             fijiPath = tmpFile.getCanonicalPath();
                             if (SystemInfo.isWindows || SystemInfo.isLinux) {
                                 SessionMgr.getSessionMgr().setModelProperty(SessionMgr.FIJI_PATH, fijiPath);
+                                Runtime.getRuntime().exec(fijiPath);
                             }
                             else if (SystemInfo.isMac && fijiPath.endsWith("Fiji.app")) {
                                 SessionMgr.getSessionMgr().setModelProperty(SessionMgr.FIJI_PATH, fijiPath+"/Contents/MacOS/fiji-macosx");
+                                Runtime.getRuntime().exec(fijiPath);
                             }
                             SessionMgr.getSessionMgr().saveUserSettings();
                         }
@@ -141,12 +146,37 @@ public class ToolsMenu extends JMenu {
                 }
             });
 
+            Set keySet = SessionMgr.TOOL_MGR.toolTreeMap.keySet();
+            for (final Object o : keySet) {
+                add(new JMenuItem(o.toString().replaceAll("Tools.", "").replaceFirst("SYSTEM.", "").replaceFirst(SessionMgr.getUsername() + ".", ""))).addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        Tool tmpTool = SessionMgr.TOOL_MGR.toolTreeMap.get(o);
+                        File tmpFile = new File(tmpTool.getToolPath());
+                        if (tmpFile.exists()&&tmpFile.canExecute()) {
+                            try {
+                                Runtime.getRuntime().exec(tmpTool.getToolPath());
+                            }
+                            catch (IOException e1) {
+                                e1.printStackTrace();
+                            }
+                        }
+                        else {
+                            JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Could not launch this tool. " +
+                                    "Please choose the appropriate file path from the Configure Tools Dialogue", "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
+                            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.FIJI_PATH, null);
+                        }
+                    }
+                });
+
+            }
+
             // Add the tools
             add(fijiMenuItem);
             add(vaa3dMenuItem);
             add(vaa3dNAMenuItem);
-//            addSeparator();
-//            add(toolsConfiguration);
+            addSeparator();
+            add(toolsConfiguration);
         }
         catch (FileNotFoundException e) {
             e.printStackTrace();
