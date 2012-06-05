@@ -175,7 +175,7 @@ public class ToolsMenu extends JMenu {
             add(fijiMenuItem);
             add(vaa3dMenuItem);
             add(vaa3dNAMenuItem);
-            addSeparator();
+            add(new JSeparator());
             add(toolsConfiguration);
         }
         catch (FileNotFoundException e) {
