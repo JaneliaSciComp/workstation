@@ -32,10 +32,12 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
     private JFrame parentFrame;
     JPanel loginPanel = new JPanel();
     JPanel emailPanel = new JPanel();
+    JPanel requiredPanel = new JPanel();
     JPasswordField passwordTextField;
-    JLabel passwordLabel = new JLabel("Password:");
-    JLabel loginLabel = new JLabel("User Name:");
-    JLabel emailLabel = new JLabel("Email Address:");
+    JLabel passwordLabel = new JLabel("* Password:");
+    JLabel loginLabel = new JLabel("* User Name:");
+    JLabel emailLabel = new JLabel("* Email Address:");
+    JLabel requiredField = new JLabel("* indicates a required field");
     JTextField loginTextField = new StandardTextField();
     JTextField emailTextField = new StandardTextField();
     TitledBorder titledBorder2;
@@ -85,7 +87,7 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
     }
 
     public String getDescription() {
-        return "Set the Login/Password for the Internal EJB Server, XML Directory and XML Service location.";
+        return "Set the Login, Password and Email for the Internal EJB Server, XML Directory and XML Service location.";
     }
 
     /**
@@ -244,6 +246,7 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
         add(Box.createVerticalStrut(10));
         add(emailPanel);
         add(Box.createVerticalStrut(10));
+        add(requiredField);
         add(Box.createVerticalGlue());
 
         addDirectoryButton = new JButton("Add to Current Directories");
