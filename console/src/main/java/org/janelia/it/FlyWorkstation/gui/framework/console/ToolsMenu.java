@@ -1,6 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.FlyWorkstation.gui.framework.tool_manager.Tool;
 import org.janelia.it.FlyWorkstation.gui.framework.tool_manager.ToolConfigurationDialog;
 import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
@@ -27,6 +29,7 @@ public class ToolsMenu extends JMenu {
     private JMenuItem vaa3dMenuItem;
     private JMenuItem vaa3dNAMenuItem;
     private JMenuItem fijiMenuItem;
+    private JMenuItem toolsConfiguration;
     private JFrame parentFrame;
     public static final String VAA3D_PATH_MAC="vaa3d64.app/Contents/MacOS/vaa3d64";
     public static final String VAA3D_PATH_LINUX="vaa3d";
@@ -38,6 +41,12 @@ public class ToolsMenu extends JMenu {
         super("Tools");
         this.setMnemonic('T');
         try {
+
+            if (null!=SessionMgr.getSessionMgr().getModelProperty(SessionMgr.FIJI_PATH)){
+                SessionMgr.TOOL_MGR.addTool(new Tool("Fiji", SessionMgr.getSessionMgr().getModelProperty(SessionMgr.FIJI_PATH).toString(), "", "SYSTEM"));
+//            TOOL_MGR.addTool(new Tool("Vaa3d", getModelProperty(PATH_VAA3D).toString(), "", "SYSTEM"));
+            }
+
             this.parentFrame = console;
             System.out.println("Base root executable path  = "+rootExecutablePath);
 //            rootExecutablePath="/Applications/FlySuite.app/Contents/Resources/workstation.jar";
@@ -134,7 +143,7 @@ public class ToolsMenu extends JMenu {
                 }
             });
 
-            JMenuItem toolsConfiguration = new JMenuItem("Configure Tools...");
+            toolsConfiguration = new JMenuItem("Configure Tools...");
             toolsConfiguration.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
@@ -181,5 +190,67 @@ public class ToolsMenu extends JMenu {
         catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+
+        SessionMgr.getSessionMgr().addSessionModelListener(new SessionModelListener() {
+            @Override
+            public void browserAdded(BrowserModel browserModel) {
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public void browserRemoved(BrowserModel browserModel) {
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public void sessionWillExit() {
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+
+            @Override
+            public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
+                if (((String)key).startsWith("Tools.")){
+                    rebuildMenu();
+                }
+            }
+        });
+
     }
+
+    public void rebuildMenu() {
+        this.removeAll();
+
+        Set keySet = SessionMgr.TOOL_MGR.toolTreeMap.keySet();
+        for (final Object o : keySet) {
+            add(new JMenuItem(o.toString().replaceAll("Tools.", "").replaceFirst("SYSTEM.", "").replaceFirst(SessionMgr.getUsername() + ".", ""))).addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    Tool tmpTool = SessionMgr.TOOL_MGR.toolTreeMap.get(o);
+                    File tmpFile = new File(tmpTool.getToolPath());
+                    if (tmpFile.exists()&&tmpFile.canExecute()) {
+                        try {
+                            Runtime.getRuntime().exec(tmpTool.getToolPath());
+                            }
+                        catch (IOException e1) {
+                            e1.printStackTrace();
+                            }
+                        }
+                    else {
+                        JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Could not launch this tool. " +
+                            "Please choose the appropriate file path from the Configure Tools Dialogue", "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
+                        SessionMgr.getSessionMgr().setModelProperty(SessionMgr.FIJI_PATH, null);
+                    }
+                }
+            });
+
+        }
+
+        // Add the tools
+        add(fijiMenuItem);
+        add(vaa3dMenuItem);
+        add(vaa3dNAMenuItem);
+        add(new JSeparator());
+        add(toolsConfiguration);
+    }
+
 }

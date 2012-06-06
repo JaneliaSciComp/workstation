@@ -109,10 +109,31 @@ public class SessionMgr {
         sessionCreationTime = new Date();
         // TODO: Bundle FIJI with Fly Workstation
 
-        if (null!=getModelProperty(FIJI_PATH)){
-            TOOL_MGR.addTool(new Tool("Fiji", getModelProperty(FIJI_PATH).toString(), "", "SYSTEM"));
-//            TOOL_MGR.addTool(new Tool("Vaa3d", getModelProperty(PATH_VAA3D).toString(), "", "SYSTEM"));
+        Iterator keys = getModelPropertyKeys();
+        while (keys.hasNext()){
+            String tmpkey = (String) keys.next();
+            tmpkey = tmpkey.replaceAll(".Icon","").replaceAll(".Name", "").replaceAll(".Path", "");
+            if (tmpkey.startsWith("Tools.") && null == TOOL_MGR.toolTreeMap.get(tmpkey)){
+                String[] splitKey = tmpkey.split("\\.");
+
+                if(splitKey[1].matches("SYSTEM")){
+                    TOOL_MGR.toolTreeMap.put(tmpkey, new Tool(
+                            getModelProperty("Tools.SYSTEM." + splitKey[2] + ".Name").toString(),
+                            getModelProperty("Tools.SYSTEM." + splitKey[2] + ".Path").toString(),
+                            getModelProperty("Tools.SYSTEM." + splitKey[2] + ".Icon").toString(),
+                            "SYSTEM"));
+                }
+                else{
+                    TOOL_MGR.toolTreeMap.put(tmpkey, new Tool(
+                            getModelProperty("Tools." + tempLogin + "." + splitKey[2] + ".Name").toString(),
+                            getModelProperty("Tools." + tempLogin + "." + splitKey[2] + ".Path").toString(),
+                            getModelProperty("Tools." + tempLogin + "." + splitKey[2] + ".Icon").toString(),
+                            tempLogin));
+                }
+            }
         }
+
+
     } //Singleton enforcement
 
     private void readSettingsFile() {
@@ -193,6 +214,10 @@ public class SessionMgr {
 
     public Object getModelProperty(Object key) {
         return sessionModel.getModelProperty(key);
+    }
+
+    public void removeModelProperty(Object key){
+        sessionModel.removeModelProperty(key);
     }
 
     public Iterator getModelPropertyKeys() {

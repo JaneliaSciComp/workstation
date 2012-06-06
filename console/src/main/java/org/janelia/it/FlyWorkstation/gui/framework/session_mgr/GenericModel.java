@@ -47,6 +47,11 @@ public abstract class GenericModel {
         return modelProperties.get(key);
     }
 
+    public void removeModelProperty(Object key){
+        modelProperties.remove(key);
+        fireModelPropertyChangeEvent(key, null, null);
+    }
+
     int sizeofProperties() {
         if (!modelProperties.isEmpty()) return modelProperties.size();
         else return 0;

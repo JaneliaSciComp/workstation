@@ -11,6 +11,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.util.Set;
 import java.util.prefs.BackingStoreException;
 
 /**
@@ -22,7 +23,6 @@ import java.util.prefs.BackingStoreException;
 public class ToolConfigurationDialog extends JDialog{
 
 
-    private JTextField _toolTextField;
     private JFileChooser _toolFileChooser;
     private DefaultTableModel model;
     private ToolMgr toolMgr = SessionMgr.TOOL_MGR;
@@ -58,14 +58,9 @@ public class ToolConfigurationDialog extends JDialog{
         //Create the scroll pane and add the table to it.
         JScrollPane scrollPane = new JScrollPane(table);
 
-        _toolTextField = new JTextField(40);
+
         _toolFileChooser = new JFileChooser();
-        _toolFileChooser.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                _toolTextField.setText(_toolFileChooser.getSelectedFile().getName());
-            }
-        });
+
         JButton _addButton = new JButton("Add");
         _addButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
@@ -78,15 +73,20 @@ public class ToolConfigurationDialog extends JDialog{
                     System.out.println("Open command cancelled by user.");
                 }
 
-                if (_toolFileChooser.getSelectedFile().exists() && (null != _toolTextField.getText() && !"".equals(_toolTextField.getText()))) {
+                if(!_toolFileChooser.getSelectedFile().getAbsolutePath().contains(".exe")){
+                    JOptionPane.showMessageDialog(ToolConfigurationDialog.this, "Tools must be Executables.", "Tool Exception", JOptionPane.ERROR_MESSAGE);
+                }
+                else{
+                    if (_toolFileChooser.getSelectedFile().exists()) {
 
-                    String toolTest = toolMgr.getPref().get("Tools." + SessionMgr.getUsername() + "." + _toolTextField.getText(), null);
-                    if (null == toolTest) {
-                        toolMgr.addTool(new Tool(_toolTextField.getText(), _toolFileChooser.getSelectedFile().getAbsolutePath(), "", SessionMgr.getUsername()));
-                        refreshTable();
-                    }
-                    else {
-                        JOptionPane.showMessageDialog(ToolConfigurationDialog.this, "The tool has already been added.", "Tool Already Added", JOptionPane.WARNING_MESSAGE);
+                        Tool toolTest = toolMgr.toolTreeMap.get("Tools." + SessionMgr.getUsername() + "." + _toolFileChooser.getSelectedFile().getName());
+                        if (null == toolTest) {
+                            toolMgr.addTool(new Tool(_toolFileChooser.getSelectedFile().getName().replaceAll(".exe", ""), _toolFileChooser.getSelectedFile().getAbsolutePath(), "", SessionMgr.getUsername()));
+                            refreshTable();
+                        }
+                        else {
+                            JOptionPane.showMessageDialog(ToolConfigurationDialog.this, "The tool has already been added.", "Tool Already Added", JOptionPane.WARNING_MESSAGE);
+                        }
                     }
                 }
 
@@ -107,8 +107,8 @@ public class ToolConfigurationDialog extends JDialog{
                         toolMgr.addTool(new Tool(name.replaceFirst("Tools.SYSTEM.", ""), editDialog.getPathText(), "", "SYSTEM"));
                     }
                     else {
-                        toolMgr.removeTool(toolMgr.toolTreeMap.get(name.replaceFirst("Tools." + SessionMgr.getUsername() + ".", "")));
-                        toolMgr.addTool(new Tool(editDialog.getNameText(), editDialog.getPathText(), "", SessionMgr.getUsername()));
+                        toolMgr.removeTool(toolMgr.toolTreeMap.get(name));
+                        toolMgr.addTool(new Tool(editDialog.getNameText().replaceFirst("Tools." + SessionMgr.getUsername() + ".", ""), editDialog.getPathText(), "", SessionMgr.getUsername()));
                     }
 
 
@@ -133,35 +133,12 @@ public class ToolConfigurationDialog extends JDialog{
             }
         });
 
-        JButton _clearToolsAndPrefs = new JButton("Clear All");
-        _clearToolsAndPrefs.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    toolMgr.getPref().clear();
-                    int tmp = model.getRowCount();
-                    if (0 != tmp){
-                        for (int i = tmp; i > 0; i--){
-                            model.removeRow(i - 1);
-                        }
-                    }
-                }
-                catch (BackingStoreException e1) {
-                    e1.printStackTrace();
-                }
-            }
-        });
-
         getContentPane().add(new JLabel("Current Tools"));
         getContentPane().add(scrollPane);
         JPanel mainPanel = new JPanel();
-        mainPanel.add(new JLabel("Add a New Tool"));
-        mainPanel.add(new JLabel("Name:"));
-        mainPanel.add(_toolTextField);
         mainPanel.add(_addButton);
         mainPanel.add(_editButton);
         mainPanel.add(_clearTool);
-        mainPanel.add(_clearToolsAndPrefs);
         mainPanel.add(_closeButton);
         getContentPane().add(mainPanel);
         pack();
@@ -175,7 +152,7 @@ public class ToolConfigurationDialog extends JDialog{
 
 
     private void refreshTable() {
-        try {
+
 //            tmpPrefs.exportNode(System.out);
             int tmp = model.getRowCount();
             if (0 != tmp){
@@ -184,14 +161,11 @@ public class ToolConfigurationDialog extends JDialog{
                 }
             }
 
-            for (int i = 0; i < toolMgr.getPref().keys().length; i++) {
-                String tmpKey = toolMgr.getPref().keys()[i];
-                model.addRow(new Object[]{tmpKey, toolMgr.getPref().get(tmpKey, "Unknown")});
+            for (int i = 0; i < toolMgr.toolTreeMap.keySet().size(); i++) {
+                String tmpKey = toolMgr.toolTreeMap.keySet().toArray()[i].toString();
+                model.addRow(new Object[]{tmpKey, toolMgr.toolTreeMap.get(tmpKey).getToolPath()});
             }
-        }
-        catch (BackingStoreException e) {
-            e.printStackTrace();
-        }
+
 //        catch (IOException e) {
 //            e.printStackTrace();
 //        }
@@ -202,7 +176,6 @@ public class ToolConfigurationDialog extends JDialog{
         toolMgr.removeTool(toolMgr.toolTreeMap.get(key));
         if (!key.contains("SYSTEM"))
             model.removeRow(selectedRow);
-        _toolTextField.setText("");
     }
 
     private void printDebugData(JTable table) {

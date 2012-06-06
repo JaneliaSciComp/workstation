@@ -13,18 +13,22 @@ import java.util.prefs.Preferences;
  * Time: 10:39 AM
  */
 public class ToolMgr {
-    public Preferences pref = Preferences.userNodeForPackage(getClass());
+    //public Preferences pref = Preferences.userNodeForPackage(getClass());
     public TreeMap<String, Tool> toolTreeMap = new TreeMap<String, Tool>();
     public ToolMgr(){}
 
     public void addTool(Tool tool){
         String tmpName = tool.getToolName();
         String tmpPath = tool.getToolPath();
+        String key = "Tools." + tool.getToolUser() + "." + tmpName;
 
 
         if (!tmpName.equals("") && !tmpPath.equals("")){
-            pref.put("Tools." + tool.getToolUser() + "." + tmpName, tmpPath);
-            toolTreeMap.put("Tools." + tool.getToolUser() + "." + tmpName, tool);
+
+            toolTreeMap.put(key, tool);
+            SessionMgr.getSessionMgr().setModelProperty(key + ".Name", tmpName);
+            SessionMgr.getSessionMgr().setModelProperty(key + ".Path", tmpPath);
+            SessionMgr.getSessionMgr().setModelProperty(key + ".Icon", tool.getToolIcon());
         }
         else {
             JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Please make sure the tool name and path are correct.", "Tool Exception", JOptionPane.ERROR_MESSAGE);
@@ -33,21 +37,21 @@ public class ToolMgr {
 
     public void removeTool(Tool tool){
         String tmpName = tool.getToolName();
+        String key = "Tools." + tool.getToolUser() + "." + tmpName;
         if(tool.getToolUser().equals("SYSTEM")){
             JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Cannot remove a system tool.", "Tool Exception", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        if (null!=pref.get("Tools." + tool.getToolUser() + "." + tmpName, null) && null!=toolTreeMap.get("Tools." + tool.getToolUser() + "." + tmpName)){
-            pref.remove("Tools." + tool.getToolUser() + "." + tmpName);
-            toolTreeMap.remove("Tools." + SessionMgr.getUsername() + "." + tmpName);
+        if (null!=toolTreeMap.get(key)){
+
+            toolTreeMap.remove(key);
+            SessionMgr.getSessionMgr().removeModelProperty(key + ".Name");
+            SessionMgr.getSessionMgr().removeModelProperty(key + ".Path");
+            SessionMgr.getSessionMgr().removeModelProperty(key + ".Icon");
         }
         else {
             JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "The tool specified does not exist.", "Tool Exception", JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    public Preferences getPref(){
-        return pref;
     }
 
 }
