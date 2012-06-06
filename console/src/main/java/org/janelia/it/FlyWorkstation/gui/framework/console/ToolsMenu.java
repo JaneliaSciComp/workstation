@@ -168,8 +168,9 @@ public class ToolsMenu extends JMenu {
 
             Set keySet = SessionMgr.TOOL_MGR.toolTreeMap.keySet();
             for (final Object o : keySet) {
-                JMenuItem tmpMenuItem = new JMenuItem(o.toString().replaceAll("Tools.", "").replaceFirst("SYSTEM.", "").replaceFirst(SessionMgr.getUsername() + ".", ""),
-                        Utils.getClasspathImage(SessionMgr.TOOL_MGR.toolTreeMap.get(o).getToolIcon()));
+                Tool tmpTool = SessionMgr.TOOL_MGR.toolTreeMap.get(o);
+                JMenuItem tmpMenuItem = new JMenuItem(tmpTool.getToolName(),
+                        Utils.getClasspathImage(tmpTool.getToolIcon()));
                 add(tmpMenuItem).addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
@@ -232,9 +233,11 @@ public class ToolsMenu extends JMenu {
         Set keySet = SessionMgr.TOOL_MGR.toolTreeMap.keySet();
         for (final Object o : keySet) {
             JMenuItem tmpMenuItem = null;
+            Tool tmpTool = SessionMgr.TOOL_MGR.toolTreeMap.get(o);
+
             try {
-                tmpMenuItem = new JMenuItem(o.toString().replaceAll("Tools.", "").replaceFirst("SYSTEM.", "").replaceFirst(SessionMgr.getUsername() + ".", ""),
-                        Utils.getClasspathImage(SessionMgr.TOOL_MGR.toolTreeMap.get(o).getToolIcon()));
+                tmpMenuItem = new JMenuItem(tmpTool.getToolName(),
+                    Utils.getClasspathImage(tmpTool.getToolIcon()));
             }
             catch (FileNotFoundException e) {
                 e.printStackTrace();

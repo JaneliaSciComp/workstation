@@ -29,8 +29,6 @@ public class ToolConfigurationDialog extends JDialog{
     private DefaultTableModel model;
     private ToolMgr toolMgr = SessionMgr.TOOL_MGR;
     private int selectedRow;
-    private int selectedColumn;
-
 
     public ToolConfigurationDialog(final JFrame parentFrame) throws HeadlessException, BackingStoreException {
         super(parentFrame);
@@ -54,7 +52,6 @@ public class ToolConfigurationDialog extends JDialog{
             public void mouseClicked(MouseEvent e) {
                 printDebugData(table);
                 selectedRow = table.getSelectedRow();
-                selectedColumn = table.getSelectedColumn();
             }
         });
         //Create the scroll pane and add the table to it.
@@ -77,9 +74,9 @@ public class ToolConfigurationDialog extends JDialog{
 
                 if (_toolFileChooser.getSelectedFile().exists()) {
 
-                    Tool toolTest = toolMgr.toolTreeMap.get("Tools." + SessionMgr.getUsername() + "." + _toolFileChooser.getSelectedFile().getName());
+                    Tool toolTest = toolMgr.toolTreeMap.get("Tools." + SessionMgr.getUsername() + "." + _toolFileChooser.getSelectedFile().getName().replaceAll("\\.", ""));
                     if (null == toolTest) {
-                        toolMgr.addTool(new Tool(_toolFileChooser.getSelectedFile().getName().replaceAll(".exe", ""), _toolFileChooser.getSelectedFile().getAbsolutePath(), "brain.png", SessionMgr.getUsername()));
+                        toolMgr.addTool(new Tool(_toolFileChooser.getSelectedFile().getName(), _toolFileChooser.getSelectedFile().getAbsolutePath(), "brain.png", SessionMgr.getUsername()));
                         refreshTable();
                     }
                     else {
@@ -97,9 +94,10 @@ public class ToolConfigurationDialog extends JDialog{
                 try {
                     Tool tool = new Tool("name", "path", "icon", "user");
                     String name = model.getValueAt(selectedRow, 0).toString();
+                    String keyName = name.replaceAll("\\.","");
                     String path = model.getValueAt(selectedRow, 1).toString();
-                    Tool toolSystem = toolMgr.toolTreeMap.get("Tools.SYSTEM." + name);
-                    Tool toolUser = toolMgr.toolTreeMap.get("Tools."+SessionMgr.getUsername()+"."+name);
+                    Tool toolSystem = toolMgr.toolTreeMap.get("Tools.SYSTEM." + keyName);
+                    Tool toolUser = toolMgr.toolTreeMap.get("Tools."+SessionMgr.getUsername()+"."+ keyName);
                     if(null!=toolSystem){
                         tool = toolSystem;
                     }
@@ -116,7 +114,7 @@ public class ToolConfigurationDialog extends JDialog{
                         toolMgr.addTool(new Tool(name, editDialog.getPathText(), tool.getToolIcon(), "SYSTEM"));
                     }
                     else {
-                        toolMgr.removeTool(toolMgr.toolTreeMap.get("Tools."+SessionMgr.getUsername()+"."+name));
+                        toolMgr.removeTool(toolMgr.toolTreeMap.get("Tools."+SessionMgr.getUsername()+"."+keyName));
                         toolMgr.addTool(new Tool(editDialog.getNameText(), editDialog.getPathText(), tool.getToolIcon(), SessionMgr.getUsername()));
                     }
 
@@ -172,8 +170,8 @@ public class ToolConfigurationDialog extends JDialog{
 
             for (int i = 0; i < toolMgr.toolTreeMap.keySet().size(); i++) {
                 String tmpKey = toolMgr.toolTreeMap.keySet().toArray()[i].toString();
-                model.addRow(new Object[]{tmpKey.replaceAll("Tools.","").replaceAll("SYSTEM.","").replaceAll(SessionMgr.getUsername()+".",""),
-                        toolMgr.toolTreeMap.get(tmpKey).getToolPath()});
+                Tool tmpTool = toolMgr.toolTreeMap.get(tmpKey);
+                model.addRow(new Object[]{tmpTool.getToolName(), tmpTool.getToolPath()});
             }
 
 //        catch (IOException e) {
@@ -183,9 +181,9 @@ public class ToolConfigurationDialog extends JDialog{
 
     private void removeTool() {
         Tool tool = new Tool("name", "path", "icon", "user");
-        String name = model.getValueAt(selectedRow, 0).toString();
-        Tool toolSystem = toolMgr.toolTreeMap.get("Tools.SYSTEM." + name);
-        Tool toolUser = toolMgr.toolTreeMap.get("Tools."+SessionMgr.getUsername()+"."+name);
+        String key = model.getValueAt(selectedRow, 0).toString().replaceAll("\\.", "");
+        Tool toolSystem = toolMgr.toolTreeMap.get("Tools.SYSTEM." + key);
+        Tool toolUser = toolMgr.toolTreeMap.get("Tools."+SessionMgr.getUsername()+"."+key);
         if(null!=toolSystem){
             tool = toolSystem;
         }
