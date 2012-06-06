@@ -95,19 +95,29 @@ public class ToolConfigurationDialog extends JDialog{
         _editButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
+                    Tool tool = new Tool("name", "path", "icon", "user");
                     String name = model.getValueAt(selectedRow, 0).toString();
                     String path = model.getValueAt(selectedRow, 1).toString();
-                    Tool tool = toolMgr.toolTreeMap.get(name);
-                    boolean isSystem = name.contains("SYSTEM");
+                    Tool toolSystem = toolMgr.toolTreeMap.get("Tools.SYSTEM." + name);
+                    Tool toolUser = toolMgr.toolTreeMap.get("Tools."+SessionMgr.getUsername()+"."+name);
+                    if(null!=toolSystem){
+                        tool = toolSystem;
+                    }
+                    else{
+                        if(null!= toolUser){
+                            tool = toolUser;
+                        }
+                    }
+                    boolean isSystem = tool.getToolUser().equals("SYSTEM");
                     EditDialog editDialog = new EditDialog(parentFrame, name, path, isSystem);
                     model.setValueAt(editDialog.getNameText(), selectedRow, 0);
                     model.setValueAt(editDialog.getPathText(), selectedRow, 1);
                     if(isSystem){
-                        toolMgr.addTool(new Tool(name.replaceFirst("Tools.SYSTEM.", ""), editDialog.getPathText(), tool.getToolIcon(), "SYSTEM"));
+                        toolMgr.addTool(new Tool(name, editDialog.getPathText(), tool.getToolIcon(), "SYSTEM"));
                     }
                     else {
-                        toolMgr.removeTool(toolMgr.toolTreeMap.get(name));
-                        toolMgr.addTool(new Tool(editDialog.getNameText().replaceFirst("Tools." + SessionMgr.getUsername() + ".", ""), editDialog.getPathText(), tool.getToolIcon(), SessionMgr.getUsername()));
+                        toolMgr.removeTool(toolMgr.toolTreeMap.get("Tools."+SessionMgr.getUsername()+"."+name));
+                        toolMgr.addTool(new Tool(editDialog.getNameText(), editDialog.getPathText(), tool.getToolIcon(), SessionMgr.getUsername()));
                     }
 
 
@@ -162,7 +172,8 @@ public class ToolConfigurationDialog extends JDialog{
 
             for (int i = 0; i < toolMgr.toolTreeMap.keySet().size(); i++) {
                 String tmpKey = toolMgr.toolTreeMap.keySet().toArray()[i].toString();
-                model.addRow(new Object[]{tmpKey, toolMgr.toolTreeMap.get(tmpKey).getToolPath()});
+                model.addRow(new Object[]{tmpKey.replaceAll("Tools.","").replaceAll("SYSTEM.","").replaceAll(SessionMgr.getUsername()+".",""),
+                        toolMgr.toolTreeMap.get(tmpKey).getToolPath()});
             }
 
 //        catch (IOException e) {
@@ -171,9 +182,23 @@ public class ToolConfigurationDialog extends JDialog{
     }
 
     private void removeTool() {
-        String key = model.getValueAt(selectedRow, selectedColumn).toString();
-        toolMgr.removeTool(toolMgr.toolTreeMap.get(key));
-        if (!key.contains("SYSTEM"))
+        Tool tool = new Tool("name", "path", "icon", "user");
+        String name = model.getValueAt(selectedRow, 0).toString();
+        Tool toolSystem = toolMgr.toolTreeMap.get("Tools.SYSTEM." + name);
+        Tool toolUser = toolMgr.toolTreeMap.get("Tools."+SessionMgr.getUsername()+"."+name);
+        if(null!=toolSystem){
+            tool = toolSystem;
+        }
+        else{
+            if(null!= toolUser){
+                tool = toolUser;
+            }
+        }
+
+
+
+        toolMgr.removeTool(tool);
+        if (!tool.getToolUser().equals("SYSTEM"))
             model.removeRow(selectedRow);
     }
 
