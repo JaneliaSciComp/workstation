@@ -965,7 +965,6 @@ public class IconDemoPanel extends Viewer {
 		
 		// Cancel previous loads
 		if (entityLoadingWorker != null && !entityLoadingWorker.isDone()) {
-			System.out.println("Cancel previous entity load");
 			entityLoadingWorker.disregard();
 		}
 		imagesPanel.cancelAllLoads();

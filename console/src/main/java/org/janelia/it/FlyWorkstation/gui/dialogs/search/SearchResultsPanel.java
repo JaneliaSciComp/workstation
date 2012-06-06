@@ -48,7 +48,10 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 
 	/** Format for displaying dates */
 	protected static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm");
-	
+
+	/** Format for displaying scores */
+	protected static final DecimalFormat decFormat = new DecimalFormat("#.##");
+    
 	/** Number of characters before cell values are truncated */
 	protected static final int MAX_CELL_LENGTH = 50;
 	
@@ -78,9 +81,13 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
  	protected final JScrollPane facetScrollPane;
  	protected final JScrollPane attrScrollPane;
  	protected final JTabbedPane leftTabbedPane;
+	private final Map<DynamicColumn,JCheckBox> attrCheckboxes =  new HashMap<DynamicColumn,JCheckBox>();
+	
     // Search state
-    protected SearchConfiguration searchConfig;
-    protected final Map<String,Set<String>> filters = new HashMap<String,Set<String>>();
+ 	protected final SearchParametersPanel paramsPanel;
+ 	protected final Map<SearchAttribute, DynamicColumn> attrToColumn = new HashMap<SearchAttribute, DynamicColumn>();
+ 	protected final Map<String,Set<String>> filters = new HashMap<String,Set<String>>();
+ 	protected SearchConfiguration searchConfig;
     protected String sortField;
     protected boolean ascending = true;
     protected String fullQueryString = "";
@@ -88,8 +95,10 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     // Results
     protected SearchResults searchResults = new SearchResults();
     
-	public SearchResultsPanel() {
+	public SearchResultsPanel(SearchParametersPanel paramsPanel) {
 		setLayout(new BorderLayout());
+		
+		this.paramsPanel = paramsPanel;
 		
         // --------------------------------
         // Facets and Attributes on left
@@ -273,18 +282,21 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     	Map<AttrGroup, List<SearchAttribute>> attributeGroups = searchConfig.getAttributeGroups();
     	
     	for(SearchAttribute attr : attributeGroups.get(AttrGroup.BASIC)) {
-			resultsTable.addColumn(attr.getName(), attr.getLabel(), !attr.getName().equals("id"), false, true, attr.isSortable());
+			DynamicColumn column = resultsTable.addColumn(attr.getName(), attr.getLabel(), !attr.getName().equals("id"), false, true, attr.isSortable());
+			attrToColumn.put(attr, column);
 			if (attr.getDataStore()==DataStore.ENTITY) {
 				projectionTable.addColumn(attr.getName(), attr.getLabel(), !attr.getName().equals("id"), false, true, false);	
 			}
     	}
     	
     	for(SearchAttribute attr : attributeGroups.get(AttrGroup.EXT)) {
-    		resultsTable.addColumn(attr.getName(), attr.getLabel(), false, false, true, true);
+    		DynamicColumn column = resultsTable.addColumn(attr.getName(), attr.getLabel(), false, false, true, attr.isSortable());
+    		attrToColumn.put(attr, column);
     	}
 
 		for(SearchAttribute attr : attributeGroups.get(AttrGroup.SAGE)) {
-			resultsTable.addColumn(attr.getName(), attr.getLabel(), false, false, true, true);
+			DynamicColumn column = resultsTable.addColumn(attr.getName(), attr.getLabel(), false, false, true, attr.isSortable());
+			attrToColumn.put(attr, column);
 		}
 		
     	populateAttrs();
@@ -502,6 +514,17 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     	long numResults = pageResults.getResponse().getResults().getNumFound();
     	if (pageResults.getResultList().isEmpty()) numResults = 0;
     	    	
+    	for(SearchCriteria searchCriteria : paramsPanel.getSearchCriteriaList()) {
+    		DynamicColumn column = attrToColumn.get(searchCriteria.getAttribute());
+    		if (column!=null) {
+    			column.setVisible(true);
+    			JCheckBox checkBox = attrCheckboxes.get(column);
+    			if (checkBox!=null) {
+    				checkBox.setSelected(true);
+    			}
+    		}
+    	}
+    	
     	if (searchResults.getNumLoadedPages()==1) {
     		// First page, so clear the previous results
 			resultsTable.removeAllRows();
@@ -563,14 +586,15 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 		}
 		
 		@Override
-		public void toggleSortOrder(int column) {
+		public void toggleSortOrder(int columnNum) {
 			List<DynamicColumn> columns = resultsTable.getDisplayedColumns();
-			if (!columns.get(column).isVisible()) return;
+			DynamicColumn column = columns.get(columnNum);
+			if (!column.isVisible() || !column.isSortable()) return;
 			
 			SortOrder newOrder = SortOrder.ASCENDING;
 			if (!sortKeys.isEmpty()) {
 				SortKey currentSortKey = sortKeys.get(0);
-				if (currentSortKey.getColumn()==column) {
+				if (currentSortKey.getColumn()==columnNum) {
 					// Reverse the sort
 					if (currentSortKey.getSortOrder() == SortOrder.ASCENDING) {
 						newOrder = SortOrder.DESCENDING;
@@ -579,8 +603,8 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 				sortKeys.clear();
 			}
 			
-			sortKeys.add(new SortKey(column, newOrder));
-			sortField = columns.get(column).getName();
+			sortKeys.add(new SortKey(columnNum, newOrder));
+			sortField = column.getName();
 			ascending = (newOrder != SortOrder.DESCENDING);
 			performSearch(false, false, true);
 		}
@@ -717,7 +741,6 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 
 			for(final SearchAttribute attr : searchConfig.getAttributeGroups().get(currGroup)) {
 				final DynamicColumn column = resultsTable.getColumn(attr.getName());
-
 				final JCheckBox checkBox = new JCheckBox(new AbstractAction(attr.getLabel()) {
 					public void actionPerformed(ActionEvent e) {
 						JCheckBox cb = (JCheckBox) e.getSource();
@@ -728,6 +751,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 				checkBox.setToolTipText(attr.getDescription());
 				checkBox.setSelected(column.isVisible());
 				checkBox.setFont(checkboxFont);
+				attrCheckboxes.put(column, checkBox);
 				attrGroupPanel.add(checkBox);
 			}
 		}
@@ -737,7 +761,9 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 		attrsPanel.repaint();
 	}
 
-	protected abstract SolrQueryBuilder getQueryBuilder();
+	protected SolrQueryBuilder getQueryBuilder() {
+		return paramsPanel.getQueryBuilder();
+	}
 	
 	public SolrQueryBuilder getQueryBuilder(boolean fetchFacets) {
 		SolrQueryBuilder builder = getQueryBuilder();
@@ -801,8 +827,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 			}
 			else if ("score".equals(field)) {
 				Float score = (Float)doc.get("score");
-		        DecimalFormat twoDForm = new DecimalFormat("#.##");
-		        value = Double.valueOf(twoDForm.format(score));
+		        value = Double.valueOf(decFormat.format(score));
 			}
 			else {
 				value = doc.getFieldValues(column.getName());	

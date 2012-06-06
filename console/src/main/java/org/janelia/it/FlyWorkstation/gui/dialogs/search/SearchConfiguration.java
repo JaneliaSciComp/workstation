@@ -95,7 +95,7 @@ public class SearchConfiguration {
 				for(EntityAttribute entityAttr : attrs) {
 					String name = SolrUtils.getDynamicFieldName(entityAttr.getName());
 					String label = entityAttr.getName();
-					SearchAttribute attr = new SearchAttribute(name, label, label, DataType.STRING, DataStore.ENTITY_DATA, true);
+					SearchAttribute attr = new SearchAttribute(name, label, label, DataType.STRING, DataStore.ENTITY_DATA, !name.endsWith("_txt"));
 					attrListExt.add(attr);
 					attributes.add(attr);
 				}

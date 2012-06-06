@@ -73,15 +73,11 @@ public class GeneralSearchDialog extends ModalDialog {
         
         add(paramsPanel, BorderLayout.NORTH);
         
-        resultsPanel = new SearchResultsPanel() {
+        resultsPanel = new SearchResultsPanel(paramsPanel) {
         	@Override
         	protected void populateResultView(ResultPage resultPage) {
         		super.populateResultView(resultPage);
             	exportButton.setEnabled(!resultPage.getSolrResults().getResultList().isEmpty());
-        	}
-        	@Override
-        	protected SolrQueryBuilder getQueryBuilder() {
-        		return paramsPanel.getQueryBuilder();
         	}
         	@Override
         	protected JPopupMenu getPopupMenu(List<Entity> selectedEntites, String label) {

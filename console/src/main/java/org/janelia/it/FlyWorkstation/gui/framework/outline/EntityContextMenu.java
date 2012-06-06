@@ -1,5 +1,19 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.util.*;
+
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
+import javax.swing.tree.DefaultMutableTreeNode;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
@@ -12,7 +26,10 @@ import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
-import org.janelia.it.FlyWorkstation.gui.util.*;
+import org.janelia.it.FlyWorkstation.gui.util.IndeterminateProgressMonitor;
+import org.janelia.it.FlyWorkstation.gui.util.MailDialogueBox;
+import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
+import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -20,20 +37,6 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-
-import java.awt.*;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Context pop up menu for entities.
@@ -69,6 +72,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getCopyNameToClipboardItem());
         add(getCopyIdToClipboardItem());
         add(getDetailsItem());
+        add(getGotoRelatedItem());
         
         setNextAddRequiresSeparator(true);
         add(getAddToRootFolderItem());
@@ -105,6 +109,140 @@ public class EntityContextMenu extends JPopupMenu {
 			}
 		});
         return detailsMenuItem;
+	}
+
+	private void gotoEntity(final Entity entity) {
+		
+		Utils.setWaitingCursor(SessionMgr.getBrowser());
+		
+		SimpleWorker worker = new SimpleWorker() {
+			
+			@Override
+			protected void doStuff() throws Exception {
+				// Find the best context to show the entity in
+				List<List<EntityData>> edPaths = ModelMgr.getModelMgr().getPathsToRoots(entity.getId());
+				List<EntityDataPath> paths = new ArrayList<EntityDataPath>();
+				for (List<EntityData> path : edPaths) {
+					if (ModelMgr.getModelMgr().hasAccess(path.get(0))) {
+						EntityDataPath edp = new EntityDataPath(path);
+						if (!edp.isHidden()) {
+							paths.add(edp);	
+						}
+					}
+				}
+				sortPathsByPreference(paths);
+				
+				for(EntityDataPath edp : paths) {
+					System.out.println(""+edp);
+				}
+				
+				if (paths.isEmpty()) {
+					throw new Exception("Could not find the related entity");
+				}
+				
+				EntityDataPath chosen = paths.get(0);
+				SessionMgr.getBrowser().getEntityOutline().selectEntityByUniqueId(chosen.getUniqueId());
+			}
+			
+			@Override
+			protected void hadSuccess() {
+				Utils.setDefaultCursor(SessionMgr.getBrowser());
+			}
+			
+			@Override
+			protected void hadError(Throwable error) {
+				Utils.setDefaultCursor(SessionMgr.getBrowser());
+				SessionMgr.getSessionMgr().handleException(error);
+			}
+		};
+		
+		worker.execute();
+	}
+	
+	private void sortPathsByPreference(List<EntityDataPath> paths) {
+		
+		Collections.sort(paths, new Comparator<EntityDataPath>() {
+			@Override
+			public int compare(EntityDataPath p1, EntityDataPath p2) {
+				Integer p1Score = 0;
+				Integer p2Score = 0;
+				p1Score += "system".equals(p1.getRootOwner())?2:0;
+				p2Score += "system".equals(p2.getRootOwner())?2:0;
+				p1Score += SessionMgr.getUsername().equals(p1.getRootOwner())?1:0;
+				p2Score += SessionMgr.getUsername().equals(p2.getRootOwner())?1:0;
+				EntityData e1 = p1.getPath().get(0);
+				EntityData e2 = p2.getPath().get(0);
+				int c = p2Score.compareTo(p1Score);
+				if (c==0) {
+					return e2.getId().compareTo(e1.getId());
+				}
+				return c;
+			}
+			
+		});
+	}
+	
+	private class EntityDataPath {
+		private List<EntityData> path;
+		private String rootOwner;
+		private boolean isHidden = false;
+		
+		public EntityDataPath(List<EntityData> path) {
+			this.path = path;
+			EntityData first = path.get(0);
+			this.rootOwner = first.getParentEntity().getUser().getUserLogin();
+			for (EntityData ed : path) {
+				if (EntityUtils.isHidden(ed)) this.isHidden = true;
+			}
+		}
+
+		public String getUniqueId() {
+			return EntityUtils.getUniqueIdFromParentEntityPath(path);
+		}
+		
+		@Override
+		public String toString() {
+			StringBuffer sb = new StringBuffer();
+			for(EntityData pathEd : path) {
+				if (sb.length()<=0) {
+					sb.append(" / "+pathEd.getParentEntity().getName());	
+				}
+				sb.append(" / "+pathEd.getChildEntity().getName());
+			}
+			return sb.toString();
+		}
+		
+		public List<EntityData> getPath() {
+			return path;
+		}
+
+		public String getRootOwner() {
+			return rootOwner;
+		}
+
+		public boolean isHidden() {
+			return isHidden;
+		}
+	}
+	
+	protected JMenuItem getGotoRelatedItem() {
+		if (multiple) return null;
+		JMenu relatedMenu = new JMenu("  Go to related");
+		
+		Entity entity = rootedEntity.getEntity();
+		
+		final EntityData repEd = entity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE);
+		if (repEd!=null) {
+	        JMenuItem relatedMenuItem = new JMenuItem("Representative Sample");
+	        relatedMenuItem.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+			        gotoEntity(repEd.getChildEntity());
+				}
+			});
+	        add(relatedMenu, relatedMenuItem);
+		}
+        return relatedMenu;
 	}
 	
 	protected JMenuItem getCopyNameToClipboardItem() {

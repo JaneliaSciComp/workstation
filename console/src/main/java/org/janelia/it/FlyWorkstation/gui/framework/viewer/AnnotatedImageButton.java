@@ -210,7 +210,7 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
         
         GridBagConstraints c = new GridBagConstraints();
         c.gridx = 0;
-        c.gridy = 2;
+        c.gridy = 3;
         c.fill = GridBagConstraints.BOTH;
         c.anchor = GridBagConstraints.PAGE_START;
         c.weighty = 1;

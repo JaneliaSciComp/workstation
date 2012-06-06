@@ -488,6 +488,10 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().getEntitiesByName(entityName);
     }
 
+    public List<List<EntityData>> getPathsToRoots(Long entityId) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().getPathsToRoots(entityId);
+    }
+
     public List<Entity> getParentEntities(Long childEntityId) {
         return FacadeManager.getFacadeManager().getEntityFacade().getParentEntities(childEntityId);
     }

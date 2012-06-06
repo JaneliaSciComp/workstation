@@ -61,6 +61,12 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
+    public List<List<EntityData>> getPathsToRoots(Long entityId) throws Exception {
+    	Entity entity = EJBFactory.getRemoteEntityBean().getEntityById(entityId+"");
+    	return EJBFactory.getRemoteEntityBean().getPathsToRoots(SessionMgr.getUsername(), entity);
+    }
+    
+    @Override
     public List<EntityData> getParentEntityDatas(Long childEntityId) {
         return new ArrayList<EntityData>(EJBFactory.getRemoteEntityBean().getParentEntityDatas(childEntityId));
     }

@@ -55,11 +55,7 @@ public class EntityPane extends JPanel {
         	}
         };
         
-        this.searchResultsPanel = new SearchResultsPanel() {
-			@Override
-			protected SolrQueryBuilder getQueryBuilder() {
-				return searchPanel.getSolrPanel().getQueryBuilder();
-			}
+        this.searchResultsPanel = new SearchResultsPanel(searchPanel.getSolrPanel()) {
         	@Override
         	public void entitySelected(Entity entity) {
         		populateEntityDataPanes(entity);

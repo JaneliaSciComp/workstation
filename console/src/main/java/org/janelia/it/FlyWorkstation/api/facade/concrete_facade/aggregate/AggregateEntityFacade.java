@@ -141,7 +141,12 @@ public class AggregateEntityFacade extends AggregateFacadeBase implements Entity
         }
         return returnList;
     }
-
+    
+    @Override
+    public List<List<EntityData>> getPathsToRoots(Long entityId) throws Exception {
+		throw new UnsupportedOperationException();
+    }
+    
     @Override
     public List<EntityData> getParentEntityDatas(Long childEntityId) {
         Object[] aggregates = getAggregates();

@@ -91,7 +91,6 @@ public class TaskOutline extends JPanel implements Refreshable {
         
         showLoadingIndicator();
         this.updateUI();
-        loadTasks();
     }
 
     @Override
