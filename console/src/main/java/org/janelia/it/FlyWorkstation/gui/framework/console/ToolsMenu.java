@@ -12,6 +12,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.peer.ComponentPeer;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -41,11 +42,6 @@ public class ToolsMenu extends JMenu {
         super("Tools");
         this.setMnemonic('T');
         try {
-
-            if (null!=SessionMgr.getSessionMgr().getModelProperty(SessionMgr.FIJI_PATH)){
-                SessionMgr.TOOL_MGR.addTool(new Tool("Fiji", SessionMgr.getSessionMgr().getModelProperty(SessionMgr.FIJI_PATH).toString(), "", "SYSTEM"));
-//            TOOL_MGR.addTool(new Tool("Vaa3d", getModelProperty(PATH_VAA3D).toString(), "", "SYSTEM"));
-            }
 
             this.parentFrame = console;
             System.out.println("Base root executable path  = "+rootExecutablePath);
@@ -82,6 +78,8 @@ public class ToolsMenu extends JMenu {
                 }
             });
 
+            SessionMgr.TOOL_MGR.addTool(new Tool("Vaa3D", vaa3dExePath, "v3d_16x16x32.png", "SYSTEM"));
+
             // Start in NA mode
             vaa3dNAExePath = vaa3dExePath+" -na";
             vaa3dNAMenuItem = new JMenuItem("Vaa3D - NeuronAnnotator", Utils.getClasspathImage("v3d_16x16x32.png"));
@@ -91,57 +89,69 @@ public class ToolsMenu extends JMenu {
                         Runtime.getRuntime().exec(vaa3dNAExePath);
                     }
                     catch (IOException e) {
-                        JOptionPane.showMessageDialog(vaa3dNAMenuItem.getParent(), "Could not launch Vaa3D - NeuroAnnotator", "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(vaa3dNAMenuItem.getParent(), "Could not launch Vaa3D - NeuronAnnotator", "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
                     }
                 }
             });
 
-            ImageIcon fijiImageIcon = Utils.getClasspathImage("fijiicon.png");
-            Image img = fijiImageIcon.getImage();
-            Image newimg = img.getScaledInstance(16, 16, Image.SCALE_SMOOTH);
-            fijiImageIcon = new ImageIcon(newimg);
-            fijiMenuItem = new JMenuItem("FIJI", fijiImageIcon);
-            fijiMenuItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent actionEvent) {
-                    try {
-                        String fijiPath;
-                        File tmpFile;
-                        if (null == SessionMgr.getSessionMgr().getModelProperty(SessionMgr.FIJI_PATH)){
-                            JFileChooser choosePath = new JFileChooser();
-                            choosePath.showOpenDialog(SessionMgr.getBrowser());
-                            tmpFile = choosePath.getSelectedFile();
-                            fijiPath = tmpFile.getCanonicalPath();
-                            if (SystemInfo.isWindows || SystemInfo.isLinux) {
-                                SessionMgr.getSessionMgr().setModelProperty(SessionMgr.FIJI_PATH, fijiPath);
-                                Runtime.getRuntime().exec(fijiPath);
-                            }
-                            else if (SystemInfo.isMac && fijiPath.endsWith("Fiji.app")) {
-                                SessionMgr.getSessionMgr().setModelProperty(SessionMgr.FIJI_PATH, fijiPath+"/Contents/MacOS/fiji-macosx");
-                                Runtime.getRuntime().exec(fijiPath);
-                            }
-                            SessionMgr.getSessionMgr().saveUserSettings();
-                        }
-                        else{
-//                        fijiExePath = "C:\\Users\\kimmelr\\Documents\\Fiji.app\\fiji-win64.exe"; // DEBUG ONLY
-                            fijiPath = SessionMgr.getSessionMgr().getModelProperty(SessionMgr.FIJI_PATH).toString();
-                            tmpFile = new File(fijiPath);
-                            if (tmpFile.exists()&&tmpFile.canExecute()) {
-                                Runtime.getRuntime().exec(fijiPath);
-                            }
-                            else {
-                                JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Could not launch Fiji. Please choose the appropriate file path from the Tools Menu", "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
-                                SessionMgr.getSessionMgr().setModelProperty(SessionMgr.FIJI_PATH, null);
-                            }
-                        }
-                    }
-                    catch (IOException e) {
-                        JOptionPane.showMessageDialog(fijiMenuItem.getParent(), "Could not launch Fiji. Please choose the appropriate file path from the Tools Menu",
-                                "Tool Launch Error",
-                                JOptionPane.ERROR_MESSAGE);
-                        SessionMgr.getSessionMgr().setModelProperty(SessionMgr.FIJI_PATH, null);
-                    }
-                }
-            });
+            SessionMgr.TOOL_MGR.addTool(new Tool("Vaa3D - NeuronAnnotator", vaa3dNAExePath, "v3d_16x16x32.png", "SYSTEM"));
+
+//            ImageIcon fijiImageIcon = Utils.getClasspathImage("fijiicon.png");
+//            Image img = fijiImageIcon.getImage();
+//            Image newimg = img.getScaledInstance(16, 16, Image.SCALE_SMOOTH);
+//            fijiImageIcon = new ImageIcon(newimg);
+//            fijiMenuItem = new JMenuItem("FIJI", fijiImageIcon);
+//            fijiMenuItem.addActionListener(new ActionListener() {
+//                public void actionPerformed(ActionEvent actionEvent) {
+//                    try {
+//                        String fijiPath;
+//                        File tmpFile;
+//                        if (null == SessionMgr.getSessionMgr().getModelProperty(SessionMgr.FIJI_PATH)){
+//                            JFileChooser choosePath = new JFileChooser();
+//                            choosePath.showOpenDialog(SessionMgr.getBrowser());
+//                            tmpFile = choosePath.getSelectedFile();
+//                            fijiPath = tmpFile.getCanonicalPath();
+//                            if (SystemInfo.isWindows || SystemInfo.isLinux) {
+//                                SessionMgr.getSessionMgr().setModelProperty(SessionMgr.FIJI_PATH, fijiPath);
+//                                Runtime.getRuntime().exec(fijiPath);
+//                                SessionMgr.TOOL_MGR.addTool(new Tool("FIJI", fijiPath, "fijiicon.png", "SYSTEM"));
+//                            }
+//                            else if (SystemInfo.isMac && fijiPath.endsWith("Fiji.app")) {
+//                                SessionMgr.getSessionMgr().setModelProperty(SessionMgr.FIJI_PATH, fijiPath+"/Contents/MacOS/fiji-macosx");
+//                                Runtime.getRuntime().exec(fijiPath);
+//                                SessionMgr.TOOL_MGR.addTool(new Tool("FIJI", fijiPath+"/Contents/MacOS/fiji-macosx", "fijiicon.png", "SYSTEM"));
+//                            }
+//                            SessionMgr.getSessionMgr().saveUserSettings();
+//                        }
+//                        else{
+////                        fijiExePath = "C:\\Users\\kimmelr\\Documents\\Fiji.app\\fiji-win64.exe"; // DEBUG ONLY
+//                            fijiPath = SessionMgr.getSessionMgr().getModelProperty(SessionMgr.FIJI_PATH).toString();
+//                            tmpFile = new File(fijiPath);
+//                            if (tmpFile.exists()&&tmpFile.canExecute()) {
+//                                Runtime.getRuntime().exec(fijiPath);
+//                            }
+//                            else {
+//                                JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Could not launch Fiji. Please choose the appropriate file path from the Tools Menu", "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
+//                                SessionMgr.getSessionMgr().setModelProperty(SessionMgr.FIJI_PATH, null);
+//                            }
+//                        }
+//                    }
+//                    catch (IOException e) {
+//                        JOptionPane.showMessageDialog(fijiMenuItem.getParent(), "Could not launch Fiji. Please choose the appropriate file path from the Tools Menu",
+//                                "Tool Launch Error",
+//                                JOptionPane.ERROR_MESSAGE);
+//                        SessionMgr.getSessionMgr().setModelProperty(SessionMgr.FIJI_PATH, null);
+//                    }
+//                }
+//            });
+
+//            if (null!=SessionMgr.getSessionMgr().getModelProperty(SessionMgr.FIJI_PATH)){
+//                SessionMgr.TOOL_MGR.addTool(new Tool("FIJI", SessionMgr.getSessionMgr().getModelProperty(SessionMgr.FIJI_PATH).toString(), "fijiicon.png", "SYSTEM"));
+//            }
+//
+//            else {
+//                SessionMgr.TOOL_MGR.addTool(new Tool("FIJI", "Default Fiji Path", "fijiicon.png", "SYSTEM"));
+//            }
 
             toolsConfiguration = new JMenuItem("Configure Tools...");
             toolsConfiguration.addActionListener(new ActionListener() {
@@ -155,9 +165,12 @@ public class ToolsMenu extends JMenu {
                 }
             });
 
+
             Set keySet = SessionMgr.TOOL_MGR.toolTreeMap.keySet();
             for (final Object o : keySet) {
-                add(new JMenuItem(o.toString().replaceAll("Tools.", "").replaceFirst("SYSTEM.", "").replaceFirst(SessionMgr.getUsername() + ".", ""))).addActionListener(new ActionListener() {
+                JMenuItem tmpMenuItem = new JMenuItem(o.toString().replaceAll("Tools.", "").replaceFirst("SYSTEM.", "").replaceFirst(SessionMgr.getUsername() + ".", ""),
+                        Utils.getClasspathImage(SessionMgr.TOOL_MGR.toolTreeMap.get(o).getToolIcon()));
+                add(tmpMenuItem).addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         Tool tmpTool = SessionMgr.TOOL_MGR.toolTreeMap.get(o);
@@ -180,10 +193,6 @@ public class ToolsMenu extends JMenu {
 
             }
 
-            // Add the tools
-            add(fijiMenuItem);
-            add(vaa3dMenuItem);
-            add(vaa3dNAMenuItem);
             add(new JSeparator());
             add(toolsConfiguration);
         }
@@ -222,7 +231,15 @@ public class ToolsMenu extends JMenu {
 
         Set keySet = SessionMgr.TOOL_MGR.toolTreeMap.keySet();
         for (final Object o : keySet) {
-            add(new JMenuItem(o.toString().replaceAll("Tools.", "").replaceFirst("SYSTEM.", "").replaceFirst(SessionMgr.getUsername() + ".", ""))).addActionListener(new ActionListener() {
+            JMenuItem tmpMenuItem = null;
+            try {
+                tmpMenuItem = new JMenuItem(o.toString().replaceAll("Tools.", "").replaceFirst("SYSTEM.", "").replaceFirst(SessionMgr.getUsername() + ".", ""),
+                        Utils.getClasspathImage(SessionMgr.TOOL_MGR.toolTreeMap.get(o).getToolIcon()));
+            }
+            catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            add(tmpMenuItem).addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     Tool tmpTool = SessionMgr.TOOL_MGR.toolTreeMap.get(o);
@@ -230,14 +247,14 @@ public class ToolsMenu extends JMenu {
                     if (tmpFile.exists()&&tmpFile.canExecute()) {
                         try {
                             Runtime.getRuntime().exec(tmpTool.getToolPath());
-                            }
+                        }
                         catch (IOException e1) {
                             e1.printStackTrace();
-                            }
                         }
+                    }
                     else {
                         JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Could not launch this tool. " +
-                            "Please choose the appropriate file path from the Configure Tools Dialogue", "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
+                                "Please choose the appropriate file path from the Configure Tools Dialogue", "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
                         SessionMgr.getSessionMgr().setModelProperty(SessionMgr.FIJI_PATH, null);
                     }
                 }
@@ -245,10 +262,6 @@ public class ToolsMenu extends JMenu {
 
         }
 
-        // Add the tools
-        add(fijiMenuItem);
-        add(vaa3dMenuItem);
-        add(vaa3dNAMenuItem);
         add(new JSeparator());
         add(toolsConfiguration);
     }

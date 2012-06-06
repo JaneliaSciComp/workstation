@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.tool_manager;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 
 
 import javax.swing.*;
@@ -11,6 +12,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Set;
 import java.util.prefs.BackingStoreException;
 
@@ -73,22 +75,18 @@ public class ToolConfigurationDialog extends JDialog{
                     System.out.println("Open command cancelled by user.");
                 }
 
-                if(!_toolFileChooser.getSelectedFile().getAbsolutePath().contains(".exe")){
-                    JOptionPane.showMessageDialog(ToolConfigurationDialog.this, "Tools must be Executables.", "Tool Exception", JOptionPane.ERROR_MESSAGE);
-                }
-                else{
-                    if (_toolFileChooser.getSelectedFile().exists()) {
+                if (_toolFileChooser.getSelectedFile().exists()) {
 
-                        Tool toolTest = toolMgr.toolTreeMap.get("Tools." + SessionMgr.getUsername() + "." + _toolFileChooser.getSelectedFile().getName());
-                        if (null == toolTest) {
-                            toolMgr.addTool(new Tool(_toolFileChooser.getSelectedFile().getName().replaceAll(".exe", ""), _toolFileChooser.getSelectedFile().getAbsolutePath(), "", SessionMgr.getUsername()));
-                            refreshTable();
-                        }
-                        else {
-                            JOptionPane.showMessageDialog(ToolConfigurationDialog.this, "The tool has already been added.", "Tool Already Added", JOptionPane.WARNING_MESSAGE);
-                        }
+                    Tool toolTest = toolMgr.toolTreeMap.get("Tools." + SessionMgr.getUsername() + "." + _toolFileChooser.getSelectedFile().getName());
+                    if (null == toolTest) {
+                        toolMgr.addTool(new Tool(_toolFileChooser.getSelectedFile().getName().replaceAll(".exe", ""), _toolFileChooser.getSelectedFile().getAbsolutePath(), "brain.png", SessionMgr.getUsername()));
+                        refreshTable();
                     }
-                }
+                    else {
+                        JOptionPane.showMessageDialog(ToolConfigurationDialog.this, "The tool has already been added.", "Tool Already Added", JOptionPane.WARNING_MESSAGE);
+                    }
+                    }
+
 
             }
         });
@@ -99,16 +97,17 @@ public class ToolConfigurationDialog extends JDialog{
                 try {
                     String name = model.getValueAt(selectedRow, 0).toString();
                     String path = model.getValueAt(selectedRow, 1).toString();
+                    Tool tool = toolMgr.toolTreeMap.get(name);
                     boolean isSystem = name.contains("SYSTEM");
                     EditDialog editDialog = new EditDialog(parentFrame, name, path, isSystem);
                     model.setValueAt(editDialog.getNameText(), selectedRow, 0);
                     model.setValueAt(editDialog.getPathText(), selectedRow, 1);
                     if(isSystem){
-                        toolMgr.addTool(new Tool(name.replaceFirst("Tools.SYSTEM.", ""), editDialog.getPathText(), "", "SYSTEM"));
+                        toolMgr.addTool(new Tool(name.replaceFirst("Tools.SYSTEM.", ""), editDialog.getPathText(), tool.getToolIcon(), "SYSTEM"));
                     }
                     else {
                         toolMgr.removeTool(toolMgr.toolTreeMap.get(name));
-                        toolMgr.addTool(new Tool(editDialog.getNameText().replaceFirst("Tools." + SessionMgr.getUsername() + ".", ""), editDialog.getPathText(), "", SessionMgr.getUsername()));
+                        toolMgr.addTool(new Tool(editDialog.getNameText().replaceFirst("Tools." + SessionMgr.getUsername() + ".", ""), editDialog.getPathText(), tool.getToolIcon(), SessionMgr.getUsername()));
                     }
 
 
@@ -223,13 +222,21 @@ public class ToolConfigurationDialog extends JDialog{
                 }
             });
 
-            JButton _filePathButton = new JButton("...");
-            _filePathButton.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    fileChooser.showOpenDialog(EditDialog.this);
-                }
-            });
+            JButton _filePathButton = null;
+            try {
+                _filePathButton = new JButton(Utils.getClasspathImage("magnifier.png"));
+            }
+            catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            if (_filePathButton != null) {
+                _filePathButton.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        fileChooser.showOpenDialog(EditDialog.this);
+                    }
+                });
+            }
 
             JButton _saveButton = new JButton("Save");
             _saveButton.addActionListener(new ActionListener() {
