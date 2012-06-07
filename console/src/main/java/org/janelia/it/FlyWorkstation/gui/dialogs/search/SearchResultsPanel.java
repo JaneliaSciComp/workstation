@@ -842,7 +842,6 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 			throw new IllegalStateException("Unknown field '"+field+"'");
 		}
 
-		System.out.println(column.getName()+" value="+value);
 		return getFormattedFieldValue(attrByName.get(field), value);
 	}
     
