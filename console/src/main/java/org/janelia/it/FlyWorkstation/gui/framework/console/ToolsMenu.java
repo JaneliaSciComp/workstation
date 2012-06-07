@@ -219,7 +219,7 @@ public class ToolsMenu extends JMenu {
 
             @Override
             public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
-                if (((String)key).startsWith("Tools.")){
+                if (((String)key).startsWith(SessionMgr.TOOL_PREFIX)){
                     rebuildMenu();
                 }
             }

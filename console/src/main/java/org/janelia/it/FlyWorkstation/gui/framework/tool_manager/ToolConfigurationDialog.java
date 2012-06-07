@@ -74,7 +74,7 @@ public class ToolConfigurationDialog extends JDialog{
 
                 if (_toolFileChooser.getSelectedFile().exists()) {
 
-                    Tool toolTest = toolMgr.toolTreeMap.get("Tools." + SessionMgr.getUsername() + "." + _toolFileChooser.getSelectedFile().getName().replaceAll("\\.", ""));
+                    Tool toolTest = toolMgr.toolTreeMap.get(SessionMgr.TOOL_PREFIX + SessionMgr.getUsername() + "." + _toolFileChooser.getSelectedFile().getName().replaceAll("\\.", ""));
                     if (null == toolTest) {
                         toolMgr.addTool(new Tool(_toolFileChooser.getSelectedFile().getName(), _toolFileChooser.getSelectedFile().getAbsolutePath(), "brain.png", SessionMgr.getUsername()));
                         refreshTable();
@@ -96,8 +96,8 @@ public class ToolConfigurationDialog extends JDialog{
                     String name = model.getValueAt(selectedRow, 0).toString();
                     String keyName = name.replaceAll("\\.","");
                     String path = model.getValueAt(selectedRow, 1).toString();
-                    Tool toolSystem = toolMgr.toolTreeMap.get("Tools.SYSTEM." + keyName);
-                    Tool toolUser = toolMgr.toolTreeMap.get("Tools."+SessionMgr.getUsername()+"."+ keyName);
+                    Tool toolSystem = toolMgr.toolTreeMap.get(SessionMgr.TOOL_PREFIX+"SYSTEM." + keyName);
+                    Tool toolUser = toolMgr.toolTreeMap.get(SessionMgr.TOOL_PREFIX+SessionMgr.getUsername()+"."+ keyName);
                     if(null!=toolSystem){
                         tool = toolSystem;
                     }
@@ -114,7 +114,7 @@ public class ToolConfigurationDialog extends JDialog{
                         toolMgr.addTool(new Tool(name, editDialog.getPathText(), tool.getToolIcon(), "SYSTEM"));
                     }
                     else {
-                        toolMgr.removeTool(toolMgr.toolTreeMap.get("Tools."+SessionMgr.getUsername()+"."+keyName));
+                        toolMgr.removeTool(toolMgr.toolTreeMap.get(SessionMgr.TOOL_PREFIX+SessionMgr.getUsername()+"."+keyName));
                         toolMgr.addTool(new Tool(editDialog.getNameText(), editDialog.getPathText(), tool.getToolIcon(), SessionMgr.getUsername()));
                     }
 
@@ -182,8 +182,8 @@ public class ToolConfigurationDialog extends JDialog{
     private void removeTool() {
         Tool tool = new Tool("name", "path", "icon", "user");
         String key = model.getValueAt(selectedRow, 0).toString().replaceAll("\\.", "");
-        Tool toolSystem = toolMgr.toolTreeMap.get("Tools.SYSTEM." + key);
-        Tool toolUser = toolMgr.toolTreeMap.get("Tools."+SessionMgr.getUsername()+"."+key);
+        Tool toolSystem = toolMgr.toolTreeMap.get(SessionMgr.TOOL_PREFIX+"SYSTEM." + key);
+        Tool toolUser = toolMgr.toolTreeMap.get(SessionMgr.TOOL_PREFIX+SessionMgr.getUsername()+"."+key);
         if(null!=toolSystem){
             tool = toolSystem;
         }

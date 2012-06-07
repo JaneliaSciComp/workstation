@@ -20,7 +20,7 @@ public class ToolMgr {
     public void addTool(Tool tool){
         String tmpName = tool.getToolName();
         String tmpPath = tool.getToolPath();
-        String key = "Tools." + tool.getToolUser() + "." + tmpName.replaceAll("\\.", "");
+        String key = SessionMgr.TOOL_PREFIX + tool.getToolUser() + "." + tmpName.replaceAll("\\.", "");
 
 
         if (!tmpName.equals("") && !tmpPath.equals("")){
@@ -37,7 +37,7 @@ public class ToolMgr {
 
     public void removeTool(Tool tool){
         String tmpName = tool.getToolName();
-        String key = "Tools." + tool.getToolUser() + "." + tmpName.replaceAll("\\.", "");
+        String key = SessionMgr.TOOL_PREFIX + tool.getToolUser() + "." + tmpName.replaceAll("\\.", "");
         if(tool.getToolUser().equals("SYSTEM")){
             JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Cannot remove a system tool.", "Tool Exception", JOptionPane.ERROR_MESSAGE);
             return;

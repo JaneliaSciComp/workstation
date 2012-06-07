@@ -37,6 +37,7 @@ public class SessionMgr {
     public static String FIJI_PATH = "FijiPath";
     public static String PATH_VAA3D = "Path.Vaa3d";
     public static ToolMgr TOOL_MGR;
+    public static String TOOL_PREFIX = "Tool.";
 
     public static String DISPLAY_LOOK_AND_FEEL = "SessionMgr.DisplayLookAndFeel";
 
@@ -108,33 +109,48 @@ public class SessionMgr {
         }
         sessionCreationTime = new Date();
         // TODO: Bundle FIJI with Fly Workstation
-
+        // Building toolTreeMap from stored preferences
         Iterator keys = getModelPropertyKeys();
-        while (keys.hasNext()){
-            String tmpkey = (String) keys.next();
-            tmpkey = tmpkey.replaceAll(".Icon","").replaceAll(".Name", "").replaceAll(".Path", "");
-            if (tmpkey.startsWith("Tools.") && null == TOOL_MGR.toolTreeMap.get(tmpkey)){
-                String[] splitKey = tmpkey.split("\\.");
+        try {
+            while (keys.hasNext()){
+                String tmpkey = (String) keys.next();
+                tmpkey = tmpkey.replaceAll(".Icon","").replaceAll(".Name", "").replaceAll(".Path", "");
+                if (tmpkey.startsWith(TOOL_PREFIX) && null == TOOL_MGR.toolTreeMap.get(tmpkey)){
+                    String[] splitKey = tmpkey.split("\\.");
 
-                if(splitKey[1].matches("SYSTEM")){
-                    TOOL_MGR.toolTreeMap.put(tmpkey, new Tool(
-                            getModelProperty("Tools.SYSTEM." + splitKey[2] + ".Name").toString(),
-                            getModelProperty("Tools.SYSTEM." + splitKey[2] + ".Path").toString(),
-                            getModelProperty("Tools.SYSTEM." + splitKey[2] + ".Icon").toString(),
-                            "SYSTEM"));
-                }
-                else{
-                    TOOL_MGR.toolTreeMap.put(tmpkey, new Tool(
-                            getModelProperty("Tools." + tempLogin + "." + splitKey[2] + ".Name").toString(),
-                            getModelProperty("Tools." + tempLogin + "." + splitKey[2] + ".Path").toString(),
-                            getModelProperty("Tools." + tempLogin + "." + splitKey[2] + ".Icon").toString(),
-                            tempLogin));
+                    if(splitKey[1].matches("SYSTEM")){
+                        TOOL_MGR.toolTreeMap.put(tmpkey, new Tool(
+                                getModelProperty(TOOL_PREFIX+"SYSTEM." + splitKey[2] + ".Name").toString(),
+                                getModelProperty(TOOL_PREFIX+"SYSTEM." + splitKey[2] + ".Path").toString(),
+                                getModelProperty(TOOL_PREFIX+"SYSTEM." + splitKey[2] + ".Icon").toString(),
+                                "SYSTEM"));
+                    }
+                    else{
+                        TOOL_MGR.toolTreeMap.put(tmpkey, new Tool(
+                                getModelProperty(TOOL_PREFIX + tempLogin + "." + splitKey[2] + ".Name").toString(),
+                                getModelProperty(TOOL_PREFIX + tempLogin + "." + splitKey[2] + ".Path").toString(),
+                                getModelProperty(TOOL_PREFIX + tempLogin + "." + splitKey[2] + ".Icon").toString(),
+                                tempLogin));
+                    }
                 }
             }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
         }
 
 
     } //Singleton enforcement
+
+    private String getSafeModelProperty(String targetKey) {
+        Object testValue = getModelProperty(targetKey);
+        if (null==testValue || !(testValue instanceof String)) {
+            return "";
+        }
+        else {
+            return (String)testValue;
+        }
+    }
 
     private void readSettingsFile() {
         JFrame mainFrame = new JFrame();
