@@ -111,10 +111,10 @@ public class SearchConfiguration {
 				
 				List<SearchAttribute> attrListSage = new ArrayList<SearchAttribute>();
 				attributeGroups.put(AttrGroup.SAGE, attrListSage);
-				for(SageTerm term : terms) {
-					String name = SolrUtils.getSageFieldName(term.getName(), term);
-					String label = term.getDisplayName();
-					SearchAttribute attr = new SearchAttribute(name, label, term.getDefinition(), DataType.STRING, DataStore.SOLR, true);
+				for(SageTerm sageTerm : terms) {
+					String name = SolrUtils.getSageFieldName(sageTerm);
+					String label = sageTerm.getDisplayName();
+					SearchAttribute attr = new SearchAttribute(name, label, sageTerm.getDefinition(), "date_time".equals(sageTerm.getDataType())?DataType.DATE:DataType.STRING, DataStore.SOLR, true);
 					attrListSage.add(attr);
 					attributes.add(attr);
 				}

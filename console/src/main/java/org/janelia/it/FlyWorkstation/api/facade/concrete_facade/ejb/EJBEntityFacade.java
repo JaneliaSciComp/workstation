@@ -68,12 +68,20 @@ public class EJBEntityFacade implements EntityFacade {
     
     @Override
     public List<EntityData> getParentEntityDatas(Long childEntityId) {
-        return new ArrayList<EntityData>(EJBFactory.getRemoteEntityBean().getParentEntityDatas(childEntityId));
+    	List<EntityData> list = new ArrayList<EntityData>();
+    	Set<EntityData> set = EJBFactory.getRemoteEntityBean().getParentEntityDatas(childEntityId);
+    	if (set==null) return list;
+    	list.addAll(set);
+        return list;
     }
 
     @Override
     public List<Entity> getParentEntities(Long childEntityId) {
-        return new ArrayList<Entity>(EJBFactory.getRemoteEntityBean().getParentEntities(childEntityId));
+    	List<Entity> list = new ArrayList<Entity>();
+    	Set<Entity> set = EJBFactory.getRemoteEntityBean().getParentEntities(childEntityId);
+    	if (set==null) return list;
+    	list.addAll(set);
+        return list;
     }
     
     @Override

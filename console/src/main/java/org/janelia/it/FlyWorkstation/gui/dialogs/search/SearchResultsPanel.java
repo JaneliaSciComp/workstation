@@ -85,7 +85,8 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 	
     // Search state
  	protected final SearchParametersPanel paramsPanel;
- 	protected final Map<SearchAttribute, DynamicColumn> attrToColumn = new HashMap<SearchAttribute, DynamicColumn>();
+ 	protected final Map<String, DynamicColumn> columnByName = new HashMap<String, DynamicColumn>();
+ 	protected final Map<String, SearchAttribute> attrByName = new HashMap<String, SearchAttribute>();
  	protected final Map<String,Set<String>> filters = new HashMap<String,Set<String>>();
  	protected SearchConfiguration searchConfig;
     protected String sortField;
@@ -283,7 +284,8 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     	
     	for(SearchAttribute attr : attributeGroups.get(AttrGroup.BASIC)) {
 			DynamicColumn column = resultsTable.addColumn(attr.getName(), attr.getLabel(), !attr.getName().equals("id"), false, true, attr.isSortable());
-			attrToColumn.put(attr, column);
+			columnByName.put(attr.getName(), column);
+			attrByName.put(attr.getName(), attr);
 			if (attr.getDataStore()==DataStore.ENTITY) {
 				projectionTable.addColumn(attr.getName(), attr.getLabel(), !attr.getName().equals("id"), false, true, false);	
 			}
@@ -291,12 +293,14 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     	
     	for(SearchAttribute attr : attributeGroups.get(AttrGroup.EXT)) {
     		DynamicColumn column = resultsTable.addColumn(attr.getName(), attr.getLabel(), false, false, true, attr.isSortable());
-    		attrToColumn.put(attr, column);
+    		columnByName.put(attr.getName(), column);
+    		attrByName.put(attr.getName(), attr);
     	}
 
 		for(SearchAttribute attr : attributeGroups.get(AttrGroup.SAGE)) {
 			DynamicColumn column = resultsTable.addColumn(attr.getName(), attr.getLabel(), false, false, true, attr.isSortable());
-			attrToColumn.put(attr, column);
+			columnByName.put(attr.getName(), column);
+			attrByName.put(attr.getName(), attr);
 		}
 		
     	populateAttrs();
@@ -514,14 +518,18 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     	long numResults = pageResults.getResponse().getResults().getNumFound();
     	if (pageResults.getResultList().isEmpty()) numResults = 0;
     	    	
+    	// Show any columns for attributes that were used in the search criteria
     	for(SearchCriteria searchCriteria : paramsPanel.getSearchCriteriaList()) {
-    		DynamicColumn column = attrToColumn.get(searchCriteria.getAttribute());
-    		if (column!=null) {
-    			column.setVisible(true);
-    			JCheckBox checkBox = attrCheckboxes.get(column);
-    			if (checkBox!=null) {
-    				checkBox.setSelected(true);
-    			}
+    		SearchAttribute attr = searchCriteria.getAttribute();
+    		if (attr!=null) {
+	    		DynamicColumn column = columnByName.get(attr.getName());
+	    		if (column!=null) {
+	    			column.setVisible(true);
+	    			JCheckBox checkBox = attrCheckboxes.get(column);
+	    			if (checkBox!=null) {
+	    				checkBox.setSelected(true);
+	    			}
+	    		}
     		}
     	}
     	
@@ -692,7 +700,8 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     		if (counts==null) continue;
     		
     		for(final Count count : ff.getValues()) {
-    			final String label = getFormattedFieldValue(ff.getName(), count.getName())+" ("+count.getCount()+")";
+    			final SearchAttribute attr = attrByName.get(ff.getName());
+    			final String label = getFormattedFieldValue(attr, count.getName())+" ("+count.getCount()+")";
     			final JCheckBox checkBox = new JCheckBox(new AbstractAction(label) {
 					public void actionPerformed(ActionEvent e) {
 						JCheckBox cb = (JCheckBox) e.getSource();
@@ -816,18 +825,14 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 			value = entity.getUser().getUserLogin();
 		}
 		else if ("creation_date".equals(field)) {
-			value = df.format(entity.getCreationDate());
+			value = entity.getCreationDate();
 		}
 		else if ("updated_date".equals(field)) {
-			value = df.format(entity.getUpdatedDate());
+			value = entity.getUpdatedDate();
 		}
 		else if (doc!=null) {
 			if ("annotations".equals(field)) {
 				value = doc.getFieldValues(SessionMgr.getUsername()+"_annotations");
-			}
-			else if ("score".equals(field)) {
-				Float score = (Float)doc.get("score");
-		        value = Double.valueOf(decFormat.format(score));
 			}
 			else {
 				value = doc.getFieldValues(column.getName());	
@@ -836,8 +841,9 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 		else {
 			throw new IllegalStateException("Unknown field '"+field+"'");
 		}
-		
-		return getFormattedFieldValue(field, value);
+
+		System.out.println(column.getName()+" value="+value);
+		return getFormattedFieldValue(attrByName.get(field), value);
 	}
     
     /**
@@ -864,16 +870,42 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
      * @param value
      * @return
      */
-	protected Object getFormattedFieldValue(String fieldName, Object value) {
+	protected Object getFormattedFieldValue(SearchAttribute attr, Object value) {
 		if (value==null) return null;
-		String formattedValue = value.toString();
+
+		// Convert to collection
+		Collection coll = null;
 		if (value instanceof Collection) {
-			formattedValue = getCommaDelimited((Collection)value, MAX_CELL_LENGTH);
+			coll = (Collection)value;
     	}
-    	if ("tiling_pattern_txt".equals(fieldName)) {
-    		formattedValue = underscoreToTitleCase(formattedValue);
-    	}
-    	return formattedValue;
+		else {
+			coll = new ArrayList<Object>();
+			coll.add(value);
+		}
+		
+		// Format every value in the collection
+		List<String> formattedValues = new ArrayList<String>();
+		for(Object v : coll) {
+			String formattedValue = v.toString();
+			if (v instanceof Date) {
+				formattedValue = df.format((Date)v);
+			}
+			else if (v instanceof Float) {
+				formattedValue = decFormat.format((Float)v);
+			}
+			else if (v instanceof Double) {
+				formattedValue = decFormat.format((Double)v);
+			}
+			else {
+				if ("tiling_pattern_txt".equals(attr.getName())) {
+		    		formattedValue = underscoreToTitleCase(formattedValue);
+		    	}	
+			}
+			formattedValues.add(formattedValue);
+		}
+
+		// Combine values
+    	return getCommaDelimited(formattedValues, MAX_CELL_LENGTH);
     }
     
 	protected String underscoreToTitleCase(String name) {

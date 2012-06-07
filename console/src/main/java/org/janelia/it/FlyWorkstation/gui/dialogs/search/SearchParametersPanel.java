@@ -56,7 +56,6 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
         searchButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("search button pressed "+e);
 				performSearch(true);
 			}
 		});
