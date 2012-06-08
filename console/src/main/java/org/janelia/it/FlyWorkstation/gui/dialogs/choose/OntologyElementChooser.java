@@ -65,6 +65,13 @@ public class OntologyElementChooser extends AbstractChooser<OntologyElement> {
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
             OntologyElement element = (OntologyElement) node.getUserObject();
             chosen.add(element);
+            if(canAnnotate){
+                Action action = SessionMgr.getBrowser().getOntologyOutline().getActionForNode(ontologyTree.getDynamicTree().getCurrentNode());
+                if (action != null && !(action instanceof NavigateToNodeAction)) {
+                    action.doAction();
+                    OntologyElementChooser.this.setVisible(false);
+                }
+            }
         }
         return chosen;
     }
