@@ -27,7 +27,7 @@ import org.janelia.it.jacs.model.ontology.OntologyRoot;
 public class OntologyElementChooser extends AbstractChooser<OntologyElement> {
 
     private final OntologyTree ontologyTree;
-    private boolean isCalledfromECM = false;
+    private boolean canAnnotate = false;
     
     public OntologyElementChooser(String title, OntologyRoot root) {
     	
@@ -35,12 +35,15 @@ public class OntologyElementChooser extends AbstractChooser<OntologyElement> {
     	
         ontologyTree = new OntologyTree() {
             protected void nodeDoubleClicked(MouseEvent e) {
-                chooseSelection();
-                if(isCalledfromECM){
-                    Action action = SessionMgr.getBrowser().getOntologyOutline().getActionForNode(ontologyTree.getDynamicTree().getCurrentNode());
+                if(canAnnotate){
+                    org.janelia.it.FlyWorkstation.gui.framework.actions.Action action = SessionMgr.getBrowser().getOntologyOutline().getActionForNode(ontologyTree.getDynamicTree().getCurrentNode());
                     if (action != null && !(action instanceof NavigateToNodeAction)) {
                         action.doAction();
+                        OntologyElementChooser.this.setVisible(false);
                     }
+                }
+                else{
+                    chooseSelection();
                 }
             }
         };
@@ -66,10 +69,8 @@ public class OntologyElementChooser extends AbstractChooser<OntologyElement> {
         return chosen;
     }
 
-
-
-    public void setCalledfromECM(boolean calledfromECM){
-        isCalledfromECM = calledfromECM;
+    public void setCanAnnotate(boolean bool){
+        canAnnotate = bool;
     }
 
 }

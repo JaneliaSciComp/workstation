@@ -340,7 +340,7 @@ public class EntityContextMenu extends JPopupMenu {
                     ModelMgr.getModelMgr().getOntology(tmpErrorOntology.getId()));
             flagType.setSize(400,400);
             flagType.setIconImage(SessionMgr.getBrowser().getIconImage());
-            flagType.setCalledfromECM(true);
+            flagType.setCanAnnotate(true);
             flagType.showDialog(SessionMgr.getBrowser());
 
         }
