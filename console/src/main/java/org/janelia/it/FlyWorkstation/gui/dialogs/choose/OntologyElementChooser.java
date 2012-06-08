@@ -2,13 +2,19 @@ package org.janelia.it.FlyWorkstation.gui.dialogs.choose;
 
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.NavigateToNodeAction;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyTree;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
 
@@ -21,6 +27,7 @@ import org.janelia.it.jacs.model.ontology.OntologyRoot;
 public class OntologyElementChooser extends AbstractChooser<OntologyElement> {
 
     private final OntologyTree ontologyTree;
+    private boolean isCalledfromECM = false;
     
     public OntologyElementChooser(String title, OntologyRoot root) {
     	
@@ -29,12 +36,19 @@ public class OntologyElementChooser extends AbstractChooser<OntologyElement> {
         ontologyTree = new OntologyTree() {
             protected void nodeDoubleClicked(MouseEvent e) {
                 chooseSelection();
+                if(isCalledfromECM){
+                    Action action = SessionMgr.getBrowser().getOntologyOutline().getActionForNode(ontologyTree.getDynamicTree().getCurrentNode());
+                    if (action != null && !(action instanceof NavigateToNodeAction)) {
+                        action.doAction();
+                    }
+                }
             }
         };
         ontologyTree.initializeTree(root);
         setMultipleSelection(true);
         addChooser(ontologyTree);
         ontologyTree.getDynamicTree().expandAll(true);
+
     }
 
     public void setMultipleSelection(boolean multipleSelection) {
@@ -51,4 +65,11 @@ public class OntologyElementChooser extends AbstractChooser<OntologyElement> {
         }
         return chosen;
     }
+
+
+
+    public void setCalledfromECM(boolean calledfromECM){
+        isCalledfromECM = calledfromECM;
+    }
+
 }

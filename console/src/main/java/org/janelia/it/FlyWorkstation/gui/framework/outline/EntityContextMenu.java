@@ -17,7 +17,9 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
+import org.janelia.it.FlyWorkstation.gui.dialogs.choose.OntologyElementChooser;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.NavigateToNodeAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenInFinderAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenWithDefaultAppAction;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
@@ -26,16 +28,17 @@ import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
-import org.janelia.it.FlyWorkstation.gui.util.IndeterminateProgressMonitor;
-import org.janelia.it.FlyWorkstation.gui.util.MailDialogueBox;
-import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.gui.util.*;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.jacs.compute.api.ComputeException;
+import org.janelia.it.jacs.compute.api.EJBFactory;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 
 /**
@@ -314,12 +317,34 @@ public class EntityContextMenu extends JPopupMenu {
 
     private void bugReport_actionPerformed(){
         String tempsubject = "Flagged Data: " + rootedEntity.getEntity().getName();
-        StringBuffer sBuf = new StringBuffer();
+        StringBuilder sBuf = new StringBuilder();
         sBuf.append("Name: ").append(rootedEntity.getEntity().getName()).append("\n");
         sBuf.append("Type: ").append(rootedEntity.getEntity().getEntityType().getName()).append("\n");
         sBuf.append("ID: ").append(rootedEntity.getEntity().getId().toString()).append("\n\n");
-        MailDialogueBox popup = new MailDialogueBox(tempsubject, sBuf.toString());
-        popup.show();
+        MailHelper helper = new MailHelper();
+        helper.sendEmail((String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL),
+                ConsoleProperties.getString("console.HelpEmail"),
+                tempsubject, sBuf.toString());
+
+        Entity tmpErrorOntology = null;
+
+        try {
+           tmpErrorOntology = ModelMgr.getModelMgr().getErrorOntology();
+        }
+
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (null!=tmpErrorOntology){
+            OntologyElementChooser flagType = new OntologyElementChooser("Please choose a bad data flag from the list",
+                    ModelMgr.getModelMgr().getOntology(tmpErrorOntology.getId()));
+            flagType.setSize(400,400);
+            flagType.setIconImage(SessionMgr.getBrowser().getIconImage());
+            flagType.setCalledfromECM(true);
+            flagType.showDialog(SessionMgr.getBrowser());
+
+        }
+
     }
 
 	protected JMenu getAddToRootFolderItem() {

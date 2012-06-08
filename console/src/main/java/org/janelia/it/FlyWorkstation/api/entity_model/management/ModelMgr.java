@@ -607,6 +607,10 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getOntologyFacade().getPublicOntologies();
     }
 
+    public Entity getErrorOntology() throws Exception{
+        return FacadeManager.getFacadeManager().getOntologyFacade().getErrorOntology();
+    }
+
     public Entity publishOntology(Long ontologyEntityId, String rootName) throws Exception {
         return FacadeManager.getFacadeManager().getOntologyFacade().publishOntology(ontologyEntityId, rootName);
     }

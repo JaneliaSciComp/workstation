@@ -167,6 +167,11 @@ public class AggregateOntologyFacade extends AggregateEntityFacade implements On
     }
 
     @Override
+    public Entity getErrorOntology() throws Exception{
+        return null;
+    }
+
+    @Override
     public Entity publishOntology(Long ontologyEntityId, String rootName) throws Exception {
         Object[] aggregates = getAggregates();
         List<Entity> returnList = new ArrayList<Entity>();

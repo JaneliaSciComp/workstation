@@ -30,6 +30,8 @@ public interface OntologyFacade extends EntityFacade {
 
     public List<Entity> getPublicOntologies() throws Exception;
 
+    public Entity getErrorOntology() throws Exception;
+
     public Entity publishOntology(Long ontologyEntityId, String rootName) throws Exception;
 
     public void removeOntologyTerm(Long termEntityId) throws Exception;
