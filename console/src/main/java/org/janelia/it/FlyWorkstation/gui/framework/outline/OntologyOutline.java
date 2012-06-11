@@ -375,6 +375,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
     }
 
     public void navigateToOntologyElement(OntologyElement element) {
+        if(null!= selectedTree)
         selectedTree.navigateToNodeWithObject(element);
     }
 

@@ -12,6 +12,7 @@ import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.AnnotateAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.NavigateToNodeAction;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyTree;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -35,16 +36,17 @@ public class OntologyElementChooser extends AbstractChooser<OntologyElement> {
     	
         ontologyTree = new OntologyTree() {
             protected void nodeDoubleClicked(MouseEvent e) {
-                if(canAnnotate){
-                    org.janelia.it.FlyWorkstation.gui.framework.actions.Action action = SessionMgr.getBrowser().getOntologyOutline().getActionForNode(ontologyTree.getDynamicTree().getCurrentNode());
-                    if (action != null && !(action instanceof NavigateToNodeAction)) {
+                    DefaultMutableTreeNode node = ontologyTree.getDynamicTree().getCurrentNode();
+                    OntologyElement element = (OntologyElement) node.getUserObject();
+                    if(canAnnotate){
+                        AnnotateAction action = new AnnotateAction();
+                        action.init(element);
                         action.doAction();
                         OntologyElementChooser.this.setVisible(false);
                     }
-                }
-                else{
-                    chooseSelection();
-                }
+                    else{
+                        chooseSelection();
+                    }
             }
         };
         ontologyTree.initializeTree(root);
@@ -65,14 +67,17 @@ public class OntologyElementChooser extends AbstractChooser<OntologyElement> {
             DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
             OntologyElement element = (OntologyElement) node.getUserObject();
             chosen.add(element);
-            if(canAnnotate){
-                Action action = SessionMgr.getBrowser().getOntologyOutline().getActionForNode(ontologyTree.getDynamicTree().getCurrentNode());
-                if (action != null && !(action instanceof NavigateToNodeAction)) {
-                    action.doAction();
-                    OntologyElementChooser.this.setVisible(false);
-                }
-            }
         }
+
+        DefaultMutableTreeNode node1 = ontologyTree.getDynamicTree().getCurrentNode();
+        OntologyElement element1 = (OntologyElement) node1.getUserObject();
+        if(canAnnotate){
+            AnnotateAction action = new AnnotateAction();
+            action.init(element1);
+            action.doAction();
+            OntologyElementChooser.this.setVisible(false);
+        }
+
         return chosen;
     }
 

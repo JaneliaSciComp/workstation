@@ -557,7 +557,11 @@ public class ModelMgr {
     }
 
     public OntologyRoot getOntology(Long rootId) {
-    	if (selectedOntology.getId().equals(rootId)) return selectedOntology;
+    	if (null!= selectedOntology){
+            if(selectedOntology.getId().equals(rootId)){
+                return selectedOntology;
+            }
+        }
     	try {
     		return new OntologyRoot(getOntologyTree(rootId));
     	}
