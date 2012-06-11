@@ -141,6 +141,7 @@ public class PrefController {
         }
         else tabPane.setSelectedIndex(0);
         mainDialog.setTitle("Preferences: " + ((PrefEditor) tabPane.getSelectedComponent()).getPanelGroup());
+        mainDialog.pack();
     }
 
     /**
