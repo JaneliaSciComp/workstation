@@ -1,6 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.util.panels;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.xml.XmlServiceFacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
@@ -9,7 +8,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.swing_models.CollectionJListModel;
 import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
 import org.janelia.it.FlyWorkstation.shared.util.text_component.StandardTextField;
-import org.janelia.it.jacs.shared.file_chooser.FileChooser;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -19,21 +17,19 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 public class DataSourceSettings extends JPanel implements PrefEditor {
-    private String userLogin = new String("");
-    private String userPassword = new String("");
-    private String userEmail = new String("");
+    private String userLogin = "";
+    private String userPassword = "";
+    private String userEmail = "";
     private boolean settingsChanged = false;
     private JFrame parentFrame;
     JPanel loginPanel = new JPanel();
     JPanel emailPanel = new JPanel();
-    JPanel requiredPanel = new JPanel();
+//    JPanel requiredPanel = new JPanel();
     JPasswordField passwordTextField;
     JLabel passwordLabel = new JLabel("* Password:");
     JLabel loginLabel = new JLabel("* User Name:");
@@ -45,20 +41,20 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
     TitledBorder titledBorder3;
 
     private static final String LOCATION_PROP_NAME = "XmlGenomeVersionLocation";
-    private static final int PREFERRED_JLIST_HEIGHT = 165;
+//    private static final int PREFERRED_JLIST_HEIGHT = 165;
 
-    private JButton addDirectoryButton;
-    private JComboBox validationComboBox;
+//    private JButton addDirectoryButton;
+//    private JComboBox validationComboBox;
     private static String fileSep = File.separator;
     protected File directoryPrefFile = new File(SessionMgr.getSessionMgr().getApplicationOutputDirectory() + fileSep + "userPrefs." + LOCATION_PROP_NAME);
 
-    private JList currentDirectoryJList;
-    private CollectionJListModel directoryLocationModel;
-    private static final int VERY_WIDE = 800;
-    private JList urlJList = null;
-    private CollectionJListModel urlLocationModel;
+//    private JList currentDirectoryJList;
+//    private CollectionJListModel directoryLocationModel;
+//    private static final int VERY_WIDE = 800;
+//    private JList urlJList = null;
+//    private CollectionJListModel urlLocationModel;
     private JButton removeUrlButton = new JButton("Remove Selected URL");
-    private JButton addUrlButton = new JButton("Add to Current URLs");
+//    private JButton addUrlButton = new JButton("Add to Current URLs");
     private JTextField addUrlField = new StandardTextField();
     private JButton removeDirectoryButton = new JButton("Remove Selected Directory");
     private static final int MAX_DIR_LENGTH = 60;
@@ -141,30 +137,30 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
 //         }
             FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
         }
-        try {
-            if (directoryLocationModel.isModified()) {
-                if (ModelMgr.getModelMgr().getNumberOfLoadedOntologies() > 0)
-                    delayedChanges.add("Changing the XML Directories");
-                setNewDirectoryLocations(directoryLocationModel.getList());
-            } // Change required.
-
-            String userChosenValidation = (String) validationComboBox.getSelectedItem();
-//         if (!userChosenValidation.equals(ValidationManager.getInstance().getDisplayableValidationSetting())) {
-//            ValidationManager.getInstance().setDisplayableValidationSetting(userChosenValidation);
-//            delayedChanges.add("Changing XML File Validation Preference");
-//         } // Change required.
-
-        } // End try to save changes.
-        catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
-        } // End catch for delete
-        // End datasource dir selection, apply code
-
-        if (urlLocationModel.isModified()) {
-            delayedChanges.add("Changing the XML Service URLs");
-        }
-
-        setNewUrlLocations(urlLocationModel.getList());
+//        try {
+//            if (directoryLocationModel.isModified()) {
+//                if (ModelMgr.getModelMgr().getNumberOfLoadedOntologies() > 0)
+//                    delayedChanges.add("Changing the XML Directories");
+//                setNewDirectoryLocations(directoryLocationModel.getList());
+//            } // Change required.
+//
+//            String userChosenValidation = (String) validationComboBox.getSelectedItem();
+////         if (!userChosenValidation.equals(ValidationManager.getInstance().getDisplayableValidationSetting())) {
+////            ValidationManager.getInstance().setDisplayableValidationSetting(userChosenValidation);
+////            delayedChanges.add("Changing XML File Validation Preference");
+////         } // Change required.
+//
+//        } // End try to save changes.
+//        catch (Exception ex) {
+//            SessionMgr.getSessionMgr().handleException(ex);
+//        } // End catch for delete
+//        // End datasource dir selection, apply code
+//
+//        if (urlLocationModel.isModified()) {
+//            delayedChanges.add("Changing the XML Service URLs");
+//        }
+//
+//        setNewUrlLocations(urlLocationModel.getList());
         settingsChanged = false;
         return (String[]) delayedChanges.toArray(new String[delayedChanges.size()]);
     }
@@ -385,42 +381,42 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
 //        add(Box.createVerticalStrut(10));
     }
 
-    private void addUrlButtonActionPerformed(ActionEvent ae) {
-        try {
-            URL url = new URL(addUrlField.getText());
-            settingsChanged = true;
-            String valueToAdd = url.toString(); //addUrlField.getText().trim();
-            if ((valueToAdd != null) && (valueToAdd.length() > 0)) {
-                urlLocationModel.add(valueToAdd);
-                removeUrlButton.setEnabled(true);
-            } // User entered something.
-        }
-        catch (MalformedURLException ex) {
-            JOptionPane.showMessageDialog(DataSourceSettings.this, "The typed URL is not valid", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        this.repaint();
-    }
+//    private void addUrlButtonActionPerformed(ActionEvent ae) {
+//        try {
+//            URL url = new URL(addUrlField.getText());
+//            settingsChanged = true;
+//            String valueToAdd = url.toString(); //addUrlField.getText().trim();
+//            if ((valueToAdd != null) && (valueToAdd.length() > 0)) {
+//                urlLocationModel.add(valueToAdd);
+//                removeUrlButton.setEnabled(true);
+//            } // User entered something.
+//        }
+//        catch (MalformedURLException ex) {
+//            JOptionPane.showMessageDialog(DataSourceSettings.this, "The typed URL is not valid", "Error", JOptionPane.ERROR_MESSAGE);
+//            return;
+//        }
+//        this.repaint();
+//    }
 
-    private void showNewXmlDirectoryChooser() {
-        JFileChooser chooser = null;
-
-        if (directoryLocationModel.getSize() == 0) chooser = new FileChooser();
-        else chooser = new FileChooser(new File((String) directoryLocationModel.findLast()));
-        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        chooser.setMultiSelectionEnabled(true);
-        int returnVal = chooser.showOpenDialog(parentFrame);
-        if (returnVal == JFileChooser.APPROVE_OPTION) {
-            settingsChanged = true;
-            File[] files = chooser.getSelectedFiles();
-            for (int i = 0; i < files.length; i++) {
-                directoryLocationModel.add(files[i].getAbsolutePath());
-            } // For all files.
-            currentDirectoryJList.updateUI();
-            removeDirectoryButton.setEnabled(true);
-        } // Got approved.
-
-    } // End method
+//    private void showNewXmlDirectoryChooser() {
+//        JFileChooser chooser = null;
+//
+//        if (directoryLocationModel.getSize() == 0) chooser = new FileChooser();
+//        else chooser = new FileChooser(new File((String) directoryLocationModel.findLast()));
+//        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+//        chooser.setMultiSelectionEnabled(true);
+//        int returnVal = chooser.showOpenDialog(parentFrame);
+//        if (returnVal == JFileChooser.APPROVE_OPTION) {
+//            settingsChanged = true;
+//            File[] files = chooser.getSelectedFiles();
+//            for (int i = 0; i < files.length; i++) {
+//                directoryLocationModel.add(files[i].getAbsolutePath());
+//            } // For all files.
+//            currentDirectoryJList.updateUI();
+//            removeDirectoryButton.setEnabled(true);
+//        } // Got approved.
+//
+//    } // End method
 
     /**
      * Gets the old location settings.
