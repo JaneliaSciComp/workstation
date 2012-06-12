@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.outline;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
+import org.janelia.it.FlyWorkstation.gui.dialogs.search.SpecialAnnotationChooserDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.AnnotateAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenInFinderAction;
@@ -91,20 +92,12 @@ public class EntityContextMenu extends JPopupMenu {
         
 		setNextAddRequiresSeparator(true);
 		add(getCreateSessionItem());
+        if (SessionMgr.getUsername().equals("simpsonj") || SessionMgr.getUsername().equals("simpsonlab")){
+            add(getSpecialAnnotationSession());
+        }
 	}
 
     private void addBadDataButtons() {
-
-        String tempsubject = "Reported Data: " + rootedEntity.getEntity().getName();
-        StringBuilder sBuf = new StringBuilder();
-        sBuf.append("Name: ").append(rootedEntity.getEntity().getName()).append("\n");
-        sBuf.append("Type: ").append(rootedEntity.getEntity().getEntityType().getName()).append("\n");
-        sBuf.append("ID: ").append(rootedEntity.getEntity().getId().toString()).append("\n\n");
-        MailHelper helper = new MailHelper();
-        helper.sendEmail((String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL),
-                ConsoleProperties.getString("console.HelpEmail"),
-                tempsubject, sBuf.toString());
-
         Entity tmpErrorOntology = null;
 
         try {
@@ -887,6 +880,18 @@ public class EntityContextMenu extends JPopupMenu {
 		});
         return actionMenuItem;
 	}
+
+    private JMenuItem getSpecialAnnotationSession(){
+        JMenuItem specialAnnotationSession = new JMenuItem("  Special Annotation");
+        specialAnnotationSession.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SpecialAnnotationChooserDialog dialog = new SpecialAnnotationChooserDialog();
+            }
+        });
+
+        return specialAnnotationSession;
+    }
 	
 	
 	
