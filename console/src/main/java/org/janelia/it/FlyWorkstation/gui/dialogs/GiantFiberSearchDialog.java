@@ -69,21 +69,25 @@ public class GiantFiberSearchDialog extends ModalDialog {
     private static final int FT_INDEX_MAX=5;
     private static final int FT_INDEX_LINES=6;
 
-    private final JPanel mainPanel;
-    private final JPanel currentSetNamePanel;
-    private final JPanel computeTypePanel;
-    private final MinMaxSelectionRow globalMinMaxPanel;
-    private final JTable filterTable;
-    private final JScrollPane filterTableScrollPane;
-    private final JPanel savePanel;
-    private final JPanel statusPane;
+    private final JPanel mainPanel=new JPanel();
 
-    private final JLabel statusLabel;
-    private final JLabel currentSetNameLabel;
-    private final JTextField currentSetTextField;
+    private final JPanel currentSetNamePanel = new JPanel();
+    private final JLabel currentSetNameLabel = new JLabel("Name of set: ");
+    private final JTextField currentSetTextField = new JTextField(50);
+    private final JPanel computeTypePanel = createComputeTypePanel();
+
+    private final MinMaxSelectionRow globalMinMaxPanel = createGlobalMinMaxPanel();
+
+
+    private final JTable filterTable = createFilterTable();
+    private final JScrollPane filterTableScrollPane = createFilterTableScrollPane();
+    private JPanel savePanel;
+    private JPanel statusPane;
+
+    private JLabel statusLabel;
     MaskAnnotationDataManager maskManager=new MaskAnnotationDataManager();
 
-    private final SimpleWorker quantifierLoaderWorker;
+    private final SimpleWorker quantifierLoaderWorker=createQuantifierLoaderWorker();
 
     private final Map<String, Map<String, MinMaxModel>> filterSetMap=new HashMap<String, Map<String, MinMaxModel>>();
     private final Map<String, MinMaxSelectionRow> minMaxRowMap=new HashMap<String, MinMaxSelectionRow>();
@@ -356,48 +360,56 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
     public GiantFiberSearchDialog() throws Exception {
 
-        setTitle("Giant Fiber Compartment Search");
-        File maskSummaryFile = getMaskSummaryFile();
-        File maskNameIndexFile = getMaskNameIndexFile();
-        maskManager.loadMaskCompartmentList(maskNameIndexFile);
-        maskManager.loadMaskSummaryFile(maskSummaryFile);
-        compartmentAbbreviationList = maskManager.getCompartmentListInstance();
+        SimpleWorker worker = new SimpleWorker() {
 
+            @Override
+            protected void doStuff() throws Exception {
+                System.out.println("Starting GiantFiberSearchDialog constructor worker thread");
+                setTitle("Giant Fiber Compartment Search");
+                File maskSummaryFile = getMaskSummaryFile();
+                File maskNameIndexFile = getMaskNameIndexFile();
+                maskManager.loadMaskCompartmentList(maskNameIndexFile);
+                maskManager.loadMaskSummaryFile(maskSummaryFile);
+                compartmentAbbreviationList = maskManager.getCompartmentListInstance();
 
-        mainPanel = new JPanel();
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+                mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
+                mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        currentSetNamePanel = new JPanel();
-        currentSetNameLabel = new JLabel("Name of set: ");
-        currentSetTextField = new JTextField(50);
-        currentSetTextField.setText("");
-        currentSetNamePanel.add(currentSetNameLabel);
-        currentSetNamePanel.add(currentSetTextField);
-        mainPanel.add(currentSetNamePanel, Box.createVerticalGlue());
+                currentSetTextField.setText("");
+                currentSetNamePanel.add(currentSetNameLabel);
+                currentSetNamePanel.add(currentSetTextField);
+                mainPanel.add(currentSetNamePanel, Box.createVerticalGlue());
+                mainPanel.add(computeTypePanel, Box.createVerticalGlue());
+                mainPanel.add(globalMinMaxPanel, Box.createVerticalGlue());
+                mainPanel.add(filterTableScrollPane, Box.createVerticalGlue());
 
-        computeTypePanel = createComputeTypePanel();
-        mainPanel.add(computeTypePanel, Box.createVerticalGlue());
+                Object[] statusObjects = createStatusObjects();
+                statusPane=(JPanel)statusObjects[0];
+                statusLabel=(JLabel)statusObjects[1];
+                savePanel=createSavePanel();
+                mainPanel.add(savePanel, Box.createVerticalGlue());
+                mainPanel.add(statusPane, Box.createVerticalGlue());
 
-        globalMinMaxPanel = createGlobalMinMaxPanel();
-        mainPanel.add(globalMinMaxPanel, Box.createVerticalGlue());
+                add(mainPanel, BorderLayout.NORTH);
 
-        filterTable = createFilterTable();
-        filterTableScrollPane = createFilterTableScrollPane();
-        mainPanel.add(filterTableScrollPane, Box.createVerticalGlue());
+                initializeCurrentListModified();
+            }
 
-        Object[] statusObjects = createStatusObjects();
-        statusPane=(JPanel)statusObjects[0];
-        statusLabel=(JLabel)statusObjects[1];
-        savePanel=createSavePanel();
-        mainPanel.add(savePanel, Box.createVerticalGlue());
-        mainPanel.add(statusPane, Box.createVerticalGlue());
+            @Override
+            protected void hadSuccess() {
+                setStatusMessage("Done loading resources.");
+            }
 
-        add(mainPanel, BorderLayout.NORTH);
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+                Utils.setDefaultCursor(GiantFiberSearchDialog.this);
+                resetSearchState();
+            }
+        };
 
-        quantifierLoaderWorker=createQuantifierLoaderWorker();
-
-        initializeCurrentListModified();
+        Utils.setWaitingCursor(GiantFiberSearchDialog.this);
+        worker.execute();
 
     }
 
