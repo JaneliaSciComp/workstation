@@ -43,7 +43,13 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
     DefaultTableModel tableModel;
 
+    private static final String COMPUTE_TYPE_AND = "And";
+    private static final String COMPUTE_TYPE_OR = "Or";
+
+    private String computeType=COMPUTE_TYPE_AND;
+
     private static final String[] filterTableColumnNames = {
+            "Include",
             "Compartment",
             "Description",
             "Filter Type",
@@ -52,15 +58,17 @@ public class GiantFiberSearchDialog extends ModalDialog {
             "Lines"
     };
 
-    private static final int FT_INDEX_COMPARTMENT=0;
-    private static final int FT_INDEX_DESCRIPTION=1;
-    private static final int FT_INDEX_FILTERTYPE=2;
-    private static final int FT_INDEX_MIN=3;
-    private static final int FT_INDEX_MAX=4;
-    private static final int FT_INDEX_LINES=5;
+    private static final int FT_INDEX_INCLUDE=0;
+    private static final int FT_INDEX_COMPARTMENT=1;
+    private static final int FT_INDEX_DESCRIPTION=2;
+    private static final int FT_INDEX_FILTERTYPE=3;
+    private static final int FT_INDEX_MIN=4;
+    private static final int FT_INDEX_MAX=5;
+    private static final int FT_INDEX_LINES=6;
 
     private final JPanel mainPanel;
     private final JPanel currentSetNamePanel;
+    private final JPanel computeTypePanel;
     private final MinMaxSelectionRow globalMinMaxPanel;
     private final JTable filterTable;
     private final JScrollPane filterTableScrollPane;
@@ -88,7 +96,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
     static protected Map<Long, Map<String, Double>> intensityPercentileMap=null;
     static protected Map<Long, Map<String, Double>> distributionPercentileMap=null;
 
-    final List<String> compartmentAbbreviationList = maskManager.getCompartmentListInstance();
+    List<String> compartmentAbbreviationList;
     boolean currentSetInitialized=false;
     final List<Boolean> currentListModified = new ArrayList<Boolean>();
     Set<Long> membershipSampleSet;
@@ -112,6 +120,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
     }
 
     private class MinMaxSelectionRow extends JPanel implements ActionListener {
+        Boolean include;
         String abbreviation;
         String description;
         JRadioButton intensityButton;
@@ -123,6 +132,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
         JButton applyButton;
 
         public MinMaxSelectionRow(String abbreviation, String description) {
+            include=true;
             this.abbreviation=abbreviation;
             this.description=description;
             JLabel abbreviationLabel=new JLabel();
@@ -196,6 +206,10 @@ public class GiantFiberSearchDialog extends ModalDialog {
             return;
         }
 
+        public Boolean getInclude() {
+            return include;
+        }
+
         public String getDescription() {
             return description;
         }
@@ -216,6 +230,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
             } else if (model.type.equals(DISTRIBUTION_TYPE)) {
                 distributionButton.setSelected(true);
             }
+            include=model.include;
             //updateLineCount();
         }
 
@@ -236,12 +251,14 @@ public class GiantFiberSearchDialog extends ModalDialog {
             } else if (distributionButton.isSelected()) {
                 model.type=DISTRIBUTION_TYPE;
             }
+            model.include=include;
             return model;
         }
 
     };
 
     public class MinMaxModel {
+        public Boolean include;
         public Double min;
         public Double max;
         public String type;
@@ -263,6 +280,12 @@ public class GiantFiberSearchDialog extends ModalDialog {
         }
     }
 
+    public class TypeCheckBoxEditor extends DefaultCellEditor {
+        public TypeCheckBoxEditor() {
+            super(new JCheckBox());
+        }
+    }
+
     public class ModifyAwareRenderer extends DefaultTableCellRenderer {
 
         public ModifyAwareRenderer() {
@@ -271,7 +294,19 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
                                                        boolean hasFocus, int row, int column) {
-            Component cell=super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            Component cell=null;
+            if (column==FT_INDEX_INCLUDE) {
+                Boolean bv=(Boolean)value;
+                JCheckBox checkBox=new JCheckBox();
+                if (bv) {
+                    checkBox.setSelected(true);
+                } else {
+                    checkBox.setSelected(false);
+                }
+                cell=checkBox;
+            } else {
+                cell=super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            }
             if (currentListModified.get(row)) {
                 cell.setBackground(new Color(100,255,100));
                 cell.setForeground(filterTable.getForeground());
@@ -279,13 +314,21 @@ public class GiantFiberSearchDialog extends ModalDialog {
                 cell.setForeground(filterTable.getForeground());
                 cell.setBackground(filterTable.getBackground());
             }
+            if (column==FT_INDEX_INCLUDE && computeType.equals(COMPUTE_TYPE_AND)) {
+                cell.setBackground(new Color(200,200,200));
+                cell.setForeground(new Color(200,200,200));
+                cell.setEnabled(false);
+            }
             return cell;
         }
     }
 
-    public GiantFiberSearchDialog() {
+    public GiantFiberSearchDialog() throws Exception {
 
         setTitle("Giant Fiber Compartment Search");
+        maskManager.loadMaskSummaryFile(GIANT_FIBER_FOLDER_NAME);
+        compartmentAbbreviationList = maskManager.getCompartmentListInstance();
+
 
         mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
@@ -298,6 +341,9 @@ public class GiantFiberSearchDialog extends ModalDialog {
         currentSetNamePanel.add(currentSetNameLabel);
         currentSetNamePanel.add(currentSetTextField);
         mainPanel.add(currentSetNamePanel, Box.createVerticalGlue());
+
+        computeTypePanel = createComputeTypePanel();
+        mainPanel.add(computeTypePanel, Box.createVerticalGlue());
 
         globalMinMaxPanel = createGlobalMinMaxPanel();
         mainPanel.add(globalMinMaxPanel, Box.createVerticalGlue());
@@ -360,6 +406,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
     private MinMaxModel getOpenMinMaxModelInstance() {
         MinMaxModel model=new MinMaxModel();
+        model.include=true;
         model.min=0.0;
         model.max=100.0;
         model.type=INTENSITY_TYPE;
@@ -392,6 +439,57 @@ public class GiantFiberSearchDialog extends ModalDialog {
                 minMaxRow.setModelState(model);
             }
         }
+    }
+
+    private JPanel createComputeTypePanel() {
+        JPanel computeTypePanel=new JPanel();
+        JLabel searchTypeLabel=new JLabel();
+        searchTypeLabel.setText("Search type");
+        computeTypePanel.add(searchTypeLabel);
+
+        JRadioButton andButton=new JRadioButton(COMPUTE_TYPE_AND);
+        JRadioButton orButton=new JRadioButton(COMPUTE_TYPE_OR);
+        ButtonGroup computeTypeButtonGroup=new ButtonGroup();
+        computeTypeButtonGroup.add(andButton);
+        computeTypeButtonGroup.add(orButton);
+
+        andButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                computeType=COMPUTE_TYPE_AND;
+                for (String key : minMaxRowMap.keySet()) {
+                    MinMaxSelectionRow row=minMaxRowMap.get(key);
+                    if (!key.equals(GLOBAL) && row!=null) {
+                        MinMaxModel model=row.getModelState();
+                        model.include=true;
+                        row.setModelState(model);
+                    }
+                }
+                refreshCompartmentTable();
+            }
+        });
+
+        orButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                computeType=COMPUTE_TYPE_OR;
+                for (String key : minMaxRowMap.keySet()) {
+                    MinMaxSelectionRow row=minMaxRowMap.get(key);
+                    if (!key.equals(GLOBAL) && row!=null) {
+                        MinMaxModel model=row.getModelState();
+                        model.include=false;
+                        row.setModelState(model);
+                    }
+                }
+                refreshCompartmentTable();
+            }
+        });
+
+        andButton.setSelected(true);
+
+        computeTypePanel.add(andButton);
+        computeTypePanel.add(orButton);
+        return computeTypePanel;
     }
 
     private MinMaxSelectionRow createGlobalMinMaxPanel() {
@@ -447,8 +545,9 @@ public class GiantFiberSearchDialog extends ModalDialog {
             @Override
             public boolean isCellEditable(int row, int col) {
                 if (col==FT_INDEX_MIN ||
-                        col==FT_INDEX_MAX ||
-                        col==FT_INDEX_FILTERTYPE) {
+                    col==FT_INDEX_MAX ||
+                    col==FT_INDEX_FILTERTYPE ||
+                    col==FT_INDEX_INCLUDE) {
                     return true;
                 } else {
                     return false;
@@ -465,6 +564,9 @@ public class GiantFiberSearchDialog extends ModalDialog {
                 String rowKey=compartmentAbbreviationList.get(rowIndex);
                 MinMaxSelectionRow compartmentRow=minMaxRowMap.get(rowKey);
                 switch (columnIndex) {
+                    case FT_INDEX_INCLUDE:
+                        Boolean include=compartmentRow.getInclude();
+                        return include;
                     case FT_INDEX_COMPARTMENT:
                         String compartmentAbbreviation=compartmentRow.getAbbreviation();
                         return compartmentAbbreviation;
@@ -499,7 +601,15 @@ public class GiantFiberSearchDialog extends ModalDialog {
                 String rowKey=compartmentAbbreviationList.get(row);
                 MinMaxSelectionRow compartmentRow=minMaxRowMap.get(rowKey);
                 MinMaxModel state=compartmentRow.getModelState();
-                if (col==FT_INDEX_MIN) {
+                if (col==FT_INDEX_INCLUDE) {
+                    Boolean includeValue=(Boolean)value;
+                    if (computeType.equals(COMPUTE_TYPE_AND)) {
+                        includeValue=true;
+                    }
+                    state.include=includeValue;
+                    compartmentRow.setModelState(state);
+                    updateRowImpactOnCounts(row);
+                } else if (col==FT_INDEX_MIN) {
                     Double newValue=new Double(value.toString());
                     if (newValue<0.0) {
                         newValue=0.0;
@@ -539,16 +649,22 @@ public class GiantFiberSearchDialog extends ModalDialog {
                     }
                 }
                 fireTableCellUpdated(row, col);
+                refreshCompartmentTable();
             }
 
         };
         filterTable.setModel(tableModel);
+
         TableColumn typeColumn = filterTable.getColumnModel().getColumn(FT_INDEX_FILTERTYPE);
         typeColumn.setCellEditor(new TypeComboBoxEditor(new String[] { INTENSITY_TYPE, DISTRIBUTION_TYPE }));
+
+        TableColumn includeColumn = filterTable.getColumnModel().getColumn(FT_INDEX_INCLUDE);
+        includeColumn.setCellEditor(new TypeCheckBoxEditor());
 
         ModifyAwareRenderer modifyAwareRenderer=new ModifyAwareRenderer();
         filterTable.setDefaultRenderer(Object.class, modifyAwareRenderer);
         filterTable.setDefaultRenderer(Double.class, modifyAwareRenderer);
+        filterTable.setDefaultRenderer(Boolean.class, modifyAwareRenderer);
     }
 
     protected void loadPatternAnnotationQuantifierMapsFromSummary() {
@@ -556,18 +672,18 @@ public class GiantFiberSearchDialog extends ModalDialog {
             quantifierDataIsLoading=true;
             try {
                 Long startTime=new Date().getTime();
-                System.out.println("GiantFiberSearchDialog loadPatternAnnotationQuantifierMapsFromSummary() start");
+                System.out.println("GiantFiberSearchDialog getMaskQuantifierMapsFromSummary() start");
                 Object[] sampleMaps = ModelMgr.getModelMgr().getMaskQuantifierMapsFromSummary(GIANT_FIBER_FOLDER_NAME);
                 sampleInfoMap = (Map<Long, Map<String,String>>)sampleMaps[0];
                 quantifierInfoMap = (Map<Long, List<Double>>)sampleMaps[1];
                 Long elapsedTime=new Date().getTime() - startTime;
-                System.out.println("GiantFiberSearchDialog loadPatternAnnotationQuantifierMapsFromSummary() end - elapsedTime="+elapsedTime);
+                System.out.println("GiantFiberSearchDialog getMaskQuantifierMapsFromSummary() end - elapsedTime="+elapsedTime);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
             quantifierDataIsLoading=false;
         } else {
-            System.out.println("GiantFiberSearchDialog loadPatternAnnotationQuantifierMapsFromSummary() - maps already loaded");
+            System.out.println("GiantFiberSearchDialog getMaskQuantifierMapsFromSummary() - maps already loaded");
         }
     }
 
@@ -729,6 +845,10 @@ public class GiantFiberSearchDialog extends ModalDialog {
         } else {
             MinMaxSelectionRow compartmentRow=minMaxRowMap.get(compartmentAbbreviation);
             MinMaxModel state=compartmentRow.getModelState();
+            if (!state.include) {
+                validSamples.clear();
+                return validSamples;
+            }
             Double min=state.min / 100.0;
             Double max=state.max / 100.0;
             if (state.type.equals(INTENSITY_TYPE)) {
@@ -785,8 +905,14 @@ public class GiantFiberSearchDialog extends ModalDialog {
         }
         for (Long sampleId : sampleCompartmentCountMap.keySet()) {
             Long count=sampleCompartmentCountMap.get(sampleId);
-            if (count.equals(compartmentListSize)) {
-                sampleSet.add(sampleId);
+            if (computeType.equals(COMPUTE_TYPE_AND)) {
+                if (count.equals(compartmentListSize)) {
+                    sampleSet.add(sampleId);
+                }
+            } else if (computeType.equals(COMPUTE_TYPE_OR)) {
+                if (count>0) {
+                    sampleSet.add(sampleId);
+                }
             }
         }
         setStatusMessage("Result has " + sampleSet.size() + " members");
