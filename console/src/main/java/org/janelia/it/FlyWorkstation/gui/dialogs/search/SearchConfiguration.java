@@ -22,7 +22,7 @@ public class SearchConfiguration {
     protected static final String[] columnFields = {"id", "name", "entity_type", "username", "creation_date", "updated_date", "annotations", "score"};
     
     /** Labels to use on the columns */
-    protected static final String[] columnLabels = {"GUID", "Name", "Type", "Owner", "Date Created", "Date Last Updated", "Annotations", "Score"};
+    protected static final String[] columnLabels = {"GUID", "Name", "Type", "Owner", "Date Created", "Date Last Updated", "Annotations", "Relevance"};
 
     /** Labels to use on the columns */
     protected static final String[] columnDescriptions = {"Unique identifier", "Name", "Type", "Owner's username", "Date Created", "Date Last Updated", "Annotations", "Search relevancy score"};

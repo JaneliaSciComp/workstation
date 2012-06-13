@@ -228,6 +228,7 @@ public class DynamicTree extends JPanel {
         }
 
 		DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+		if (node.getParent()==null) return;
 		model.removeNodeFromParent(node);
     }
 
