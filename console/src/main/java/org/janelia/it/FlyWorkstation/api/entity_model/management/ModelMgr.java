@@ -499,7 +499,11 @@ public class ModelMgr {
     public List<EntityData> getParentEntityDatas(Long childEntityId) {
         return FacadeManager.getFacadeManager().getEntityFacade().getParentEntityDatas(childEntityId);
     }
-
+    
+    public Set<Long> getParentIdsForAttribute(long childEntityId, String attributeName) {
+    	return FacadeManager.getFacadeManager().getEntityFacade().getParentIdsForAttribute(childEntityId, attributeName);
+    }
+    
     public List<Entity> getEntitiesByTypeName(String entityTypeName) {
         return FacadeManager.getFacadeManager().getEntityFacade().getEntitiesByTypeName(entityTypeName);
     }

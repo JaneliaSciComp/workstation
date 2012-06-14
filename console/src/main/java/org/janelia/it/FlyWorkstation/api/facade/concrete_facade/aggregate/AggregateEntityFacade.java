@@ -162,6 +162,11 @@ public class AggregateEntityFacade extends AggregateFacadeBase implements Entity
     }
     
     @Override
+    public Set<Long> getParentIdsForAttribute(long childEntityId, String attributeName) {
+        throw new UnsupportedOperationException();
+    }
+    
+    @Override
     public List<Entity> getParentEntities(Long childEntityId) {
         Object[] aggregates = getAggregates();
         List<Entity> returnList = new ArrayList<Entity>();

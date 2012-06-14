@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -74,7 +75,16 @@ public class EJBEntityFacade implements EntityFacade {
     	list.addAll(set);
         return list;
     }
-
+    
+    @Override
+    public Set<Long> getParentIdsForAttribute(long childEntityId, String attributeName) {
+    	Set<Long> set = new HashSet<Long>();
+    	Set<Long> results = EJBFactory.getRemoteEntityBean().getParentIdsForAttribute(childEntityId, attributeName);
+    	if (results==null) return set;
+    	set.addAll(results);
+        return set;
+    }
+    
     @Override
     public List<Entity> getParentEntities(Long childEntityId) {
     	List<Entity> list = new ArrayList<Entity>();

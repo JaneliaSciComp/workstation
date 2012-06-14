@@ -277,21 +277,23 @@ public class EntityContextMenu extends JPopupMenu {
 	protected JMenuItem getGotoRelatedItem() {
 		if (multiple) return null;
 		JMenu relatedMenu = new JMenu("  Go to related");
-		
 		Entity entity = rootedEntity.getEntity();
-		
-		final EntityData repEd = entity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE);
-		if (repEd!=null) {
-	        JMenuItem relatedMenuItem = new JMenuItem("Representative Sample");
-	        relatedMenuItem.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-			        gotoEntity(repEd.getChildEntity());
-				}
-			});
-	        add(relatedMenu, relatedMenuItem);
-		}
+		add(relatedMenu, getRelatedItem(entity, EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE, "Representative Sample"));
+		add(relatedMenu, getRelatedItem(entity, EntityConstants.ATTRIBUTE_ORIGINAL_FLYLINE, "Original Fly Line"));
         return relatedMenu;
+	}
+	
+	private JMenuItem getRelatedItem(Entity entity, String attributeName, String label) {
+		final EntityData ed = entity.getEntityDataByAttributeName(attributeName);
+		if (ed==null) return null;
+        JMenuItem relatedMenuItem = new JMenuItem(label);
+        relatedMenuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+		        gotoEntity(ed.getChildEntity());
+			}
+		});
+        return relatedMenuItem;
 	}
 	
 	protected JMenuItem getCopyNameToClipboardItem() {

@@ -9,6 +9,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -27,6 +28,7 @@ import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
  * A dialog that pops up from the SplitPickingPanel and allows the user to group Screen Samples in one folder into 
@@ -143,16 +145,26 @@ public class SplitGroupingDialog extends ModalDialog {
 
 				RootedEntity repFolder = splitPickingPanel.getRepFolder();
 				
-		    	Entity repEntity = ModelMgr.getModelMgr().getEntityById(repFolder.getEntity().getId()+"");
+				// Try to get it from the entity tree, in case it's already partially loaded
+				Entity repEntity = null;
+				Set<Entity> repEntities = SessionMgr.getBrowser().getEntityOutline().getEntitiesById(repFolder.getEntity().getId());
+				for(Entity entity : repEntities) {
+					if (EntityUtils.isInitialized(repEntities)) {
+						repEntity = entity;
+					}
+				}
+				
+				if (repEntity==null) {
+					repEntity = ModelMgr.getModelMgr().getEntityById(repFolder.getEntity().getId()+"");
+				}
+				
 		    	List<Entity> screenSamples = ModelMgrUtils.getDescendantsOfType(repEntity, EntityConstants.TYPE_SCREEN_SAMPLE, true);  
 		    	
 		    	List<Long> entityIds = new ArrayList<Long>();
 		    	for(Entity screenSample : screenSamples) {
-		    		List<EntityData> parentEds = ModelMgr.getModelMgr().getParentEntityDatas(screenSample.getId());
-		    		for(EntityData parentEd : parentEds) {
-		    			if (parentEd.getEntityAttribute().getName().equals(EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE)) {
-		    				entityIds.add(parentEd.getParentEntity().getId());
-		    			}
+		    		Set<Long> parentIds = ModelMgr.getModelMgr().getParentIdsForAttribute(screenSample.getId(), EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE);
+		    		if (!parentIds.isEmpty()) {
+		    			entityIds.addAll(parentIds);
 		    		}
 		    	}
 		    	
