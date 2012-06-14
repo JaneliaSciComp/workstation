@@ -8,8 +8,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.external_listener.ExternalListener;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyBindings;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
-import org.janelia.it.FlyWorkstation.gui.framework.tool_manager.Tool;
-import org.janelia.it.FlyWorkstation.gui.framework.tool_manager.ToolMgr;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -17,13 +15,13 @@ import org.janelia.it.FlyWorkstation.ws.EmbeddedAxisServer;
 import org.janelia.it.jacs.model.user_data.User;
 
 import javax.swing.*;
-
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.*;
 import java.util.*;
 import java.util.List;
-import java.util.prefs.BackingStoreException;
 
 
 public class SessionMgr {
@@ -34,10 +32,6 @@ public class SessionMgr {
     public static String USER_NAME = LoginProperties.SERVER_LOGIN_NAME;
     public static String USER_PASSWORD = LoginProperties.SERVER_LOGIN_PASSWORD;
     public static String USER_EMAIL = "UserEmail";
-    public static String FIJI_PATH = "FijiPath";
-    public static String PATH_VAA3D = "Path.Vaa3d";
-    public static ToolMgr TOOL_MGR;
-    public static String TOOL_PREFIX = "Tool.";
 
     public static String DISPLAY_LOOK_AND_FEEL = "SessionMgr.DisplayLookAndFeel";
 
@@ -65,7 +59,6 @@ public class SessionMgr {
     private boolean isLoggedIn;
 
     private SessionMgr() {
-        TOOL_MGR = new ToolMgr();
         settingsFile = new File(prefsFile);
         try {
             settingsFile.createNewFile();  //only creates if does not exist
@@ -109,37 +102,6 @@ public class SessionMgr {
         }
         sessionCreationTime = new Date();
         // TODO: Bundle FIJI with Fly Workstation
-        // Building toolTreeMap from stored preferences
-        Iterator keys = getModelPropertyKeys();
-        try {
-            while (keys.hasNext()){
-                String tmpkey = (String) keys.next();
-                tmpkey = tmpkey.replaceAll(".Icon","").replaceAll(".Name", "").replaceAll(".Path", "");
-                if (tmpkey.startsWith(TOOL_PREFIX) && null == TOOL_MGR.toolTreeMap.get(tmpkey)){
-                    String[] splitKey = tmpkey.split("\\.");
-
-                    if(splitKey[1].matches("SYSTEM")){
-                        TOOL_MGR.toolTreeMap.put(tmpkey, new Tool(
-                                getModelProperty(TOOL_PREFIX+"SYSTEM." + splitKey[2] + ".Name").toString(),
-                                getModelProperty(TOOL_PREFIX+"SYSTEM." + splitKey[2] + ".Path").toString(),
-                                getModelProperty(TOOL_PREFIX+"SYSTEM." + splitKey[2] + ".Icon").toString(),
-                                "SYSTEM"));
-                    }
-                    else{
-                        TOOL_MGR.toolTreeMap.put(tmpkey, new Tool(
-                                getModelProperty(TOOL_PREFIX + tempLogin + "." + splitKey[2] + ".Name").toString(),
-                                getModelProperty(TOOL_PREFIX + tempLogin + "." + splitKey[2] + ".Path").toString(),
-                                getModelProperty(TOOL_PREFIX + tempLogin + "." + splitKey[2] + ".Icon").toString(),
-                                tempLogin));
-                    }
-                }
-            }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
     } //Singleton enforcement
 
     private String getSafeModelProperty(String targetKey) {

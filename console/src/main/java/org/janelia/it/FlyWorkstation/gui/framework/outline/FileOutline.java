@@ -31,7 +31,7 @@ import java.io.IOException;
  * This class is the initial outline of the data file tree
  */
 public class FileOutline extends JScrollPane implements Cloneable {
-    // todo Remove this hard-wiring of the path
+    // todo Remove this hard-wiring of the path - I don't think we use this class anymore
     public static final String DATA_SOURCE_PATH = ConsoleProperties.getString("remote.defaultMacPath") + "/filestore/" + (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
     public static final String NO_DATASOURCE = "Data Source Unreachable";
     private Browser consoleFrame;

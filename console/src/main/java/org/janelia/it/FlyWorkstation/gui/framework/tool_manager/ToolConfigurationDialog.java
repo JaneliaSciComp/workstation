@@ -1,8 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.tool_manager;
 
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
-
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -13,7 +11,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.Set;
 import java.util.prefs.BackingStoreException;
 
 /**
@@ -24,10 +21,8 @@ import java.util.prefs.BackingStoreException;
  */
 public class ToolConfigurationDialog extends JDialog{
 
-
     private JFileChooser _toolFileChooser;
     private DefaultTableModel model;
-    private ToolMgr toolMgr = SessionMgr.TOOL_MGR;
     private int selectedRow;
 
     public ToolConfigurationDialog(final JFrame parentFrame) throws HeadlessException, BackingStoreException {
@@ -73,18 +68,15 @@ public class ToolConfigurationDialog extends JDialog{
                 }
 
                 if (_toolFileChooser.getSelectedFile().exists()) {
-
-                    Tool toolTest = toolMgr.toolTreeMap.get(SessionMgr.TOOL_PREFIX + SessionMgr.getUsername() + "." + _toolFileChooser.getSelectedFile().getName().replaceAll("\\.", ""));
+                    ToolInfo toolTest = ToolMgr.getTool(ToolInfo.TOOL_PREFIX + ToolInfo.USER + "." + _toolFileChooser.getSelectedFile().getName().replaceAll("\\.", ""));
                     if (null == toolTest) {
-                        toolMgr.addTool(new Tool(_toolFileChooser.getSelectedFile().getName(), _toolFileChooser.getSelectedFile().getAbsolutePath(), "brain.png", SessionMgr.getUsername()));
+                        ToolMgr.getToolMgr().addTool(new ToolInfo(_toolFileChooser.getSelectedFile().getName(), _toolFileChooser.getSelectedFile().getAbsolutePath(), "brain.png"));
                         refreshTable();
                     }
                     else {
-                        JOptionPane.showMessageDialog(ToolConfigurationDialog.this, "The tool has already been added.", "Tool Already Added", JOptionPane.WARNING_MESSAGE);
+                        JOptionPane.showMessageDialog(ToolConfigurationDialog.this, "The tool has already been added.", "ToolInfo Already Added", JOptionPane.WARNING_MESSAGE);
                     }
-                    }
-
-
+                }
             }
         });
 
@@ -92,33 +84,15 @@ public class ToolConfigurationDialog extends JDialog{
         _editButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
-                    Tool tool = new Tool("name", "path", "icon", "user");
                     String name = model.getValueAt(selectedRow, 0).toString();
-                    String keyName = name.replaceAll("\\.","");
                     String path = model.getValueAt(selectedRow, 1).toString();
-                    Tool toolSystem = toolMgr.toolTreeMap.get(SessionMgr.TOOL_PREFIX+"SYSTEM." + keyName);
-                    Tool toolUser = toolMgr.toolTreeMap.get(SessionMgr.TOOL_PREFIX+SessionMgr.getUsername()+"."+ keyName);
-                    if(null!=toolSystem){
-                        tool = toolSystem;
-                    }
-                    else{
-                        if(null!= toolUser){
-                            tool = toolUser;
-                        }
-                    }
-                    boolean isSystem = tool.getToolUser().equals("SYSTEM");
-                    EditDialog editDialog = new EditDialog(parentFrame, name, path, isSystem);
+                    ToolInfo tool = ToolMgr.getTool(name);
+                    EditDialog editDialog = new EditDialog(parentFrame, name, path);
                     model.setValueAt(editDialog.getNameText(), selectedRow, 0);
                     model.setValueAt(editDialog.getPathText(), selectedRow, 1);
-                    if(isSystem){
-                        toolMgr.addTool(new Tool(name, editDialog.getPathText(), tool.getToolIcon(), "SYSTEM"));
-                    }
-                    else {
-                        toolMgr.removeTool(toolMgr.toolTreeMap.get(SessionMgr.TOOL_PREFIX+SessionMgr.getUsername()+"."+keyName));
-                        toolMgr.addTool(new Tool(editDialog.getNameText(), editDialog.getPathText(), tool.getToolIcon(), SessionMgr.getUsername()));
-                    }
-
-
+                    tool.setName(editDialog.getNameText());
+                    tool.setPath(editDialog.getPathText());
+                    ToolMgr.getToolMgr().fireToolsChanged();
                 }
                 catch (BackingStoreException e) {
                     e.printStackTrace();
@@ -168,10 +142,10 @@ public class ToolConfigurationDialog extends JDialog{
                 }
             }
 
-            for (int i = 0; i < toolMgr.toolTreeMap.keySet().size(); i++) {
-                String tmpKey = toolMgr.toolTreeMap.keySet().toArray()[i].toString();
-                Tool tmpTool = toolMgr.toolTreeMap.get(tmpKey);
-                model.addRow(new Object[]{tmpTool.getToolName(), tmpTool.getToolPath()});
+            for (int i = 0; i < ToolMgr.getTools().keySet().size(); i++) {
+                String tmpKey = ToolMgr.getTools().keySet().toArray()[i].toString();
+                ToolInfo tmpTool = ToolMgr.getTools().get(tmpKey);
+                model.addRow(new Object[]{tmpTool.getName(), tmpTool.getPath()});
             }
 
 //        catch (IOException e) {
@@ -180,24 +154,12 @@ public class ToolConfigurationDialog extends JDialog{
     }
 
     private void removeTool() {
-        Tool tool = new Tool("name", "path", "icon", "user");
-        String key = model.getValueAt(selectedRow, 0).toString().replaceAll("\\.", "");
-        Tool toolSystem = toolMgr.toolTreeMap.get(SessionMgr.TOOL_PREFIX+"SYSTEM." + key);
-        Tool toolUser = toolMgr.toolTreeMap.get(SessionMgr.TOOL_PREFIX+SessionMgr.getUsername()+"."+key);
-        if(null!=toolSystem){
-            tool = toolSystem;
-        }
-        else{
-            if(null!= toolUser){
-                tool = toolUser;
-            }
-        }
-
-
-
-        toolMgr.removeTool(tool);
-        if (!tool.getToolUser().equals("SYSTEM"))
+        String key = model.getValueAt(selectedRow, 0).toString();
+        ToolInfo tmpTool = ToolMgr.getTool(key);
+        if (!ToolInfo.SYSTEM.equals(tmpTool.getSourceFile())) {
+            ToolMgr.getToolMgr().removeTool(tmpTool);
             model.removeRow(selectedRow);
+        }
     }
 
     private void printDebugData(JTable table) {
@@ -223,15 +185,12 @@ public class ToolConfigurationDialog extends JDialog{
         private JTextField pathTextField;
         private JFileChooser fileChooser;
 
-        public EditDialog(JFrame aFrame, String name, String path, boolean isSystem) throws BackingStoreException {
+        public EditDialog(JFrame aFrame, String name, String path) throws BackingStoreException {
             super(aFrame, "Edit", true);
             nameText = name;
             pathText = path;
             nameTextField = new JTextField(40);
             nameTextField.setText(name);
-            if(isSystem){
-                nameTextField.setEditable(false);
-            }
             pathTextField = new JTextField(40);
             pathTextField.setText(path);
             getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.PAGE_AXIS));

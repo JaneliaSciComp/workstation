@@ -62,7 +62,7 @@ public abstract class GenericModel {
         return modelProperties.keySet().iterator();
     }
 
-    protected TreeMap getModelProperties() {
+    public TreeMap getModelProperties() {
         return modelProperties;
     }
 

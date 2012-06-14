@@ -262,7 +262,7 @@ public class ConsoleProperties extends Properties {
      * into properties passed in.
      *
      * @param propertiesFileName - property file to load
-     * @param properties         - SystemConfigurationProperties object to load props into
+     * @param properties         - ConsoleProperties object to load props into
      * @return the BaseProperties instance loaded with properties
      */
     protected static ConsoleProperties load(String propertiesFileName, ConsoleProperties properties) {

@@ -10,13 +10,13 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenInFinderAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenWithDefaultAppAction;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.tool_manager.ToolMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.gui.util.IndeterminateProgressMonitor;
-import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -35,7 +35,6 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.util.*;
 import java.util.List;
 
@@ -738,19 +737,7 @@ public class EntityContextMenu extends JPopupMenu {
             fijiMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
-                        String fijiExePath = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.FIJI_PATH);
-//                        fijiExePath = "C:\\Users\\kimmelr\\Documents\\Fiji.app\\fiji-win64.exe"; // DEBUG ONLY
-                        File tmpFile = new File(fijiExePath);
-                        if (tmpFile.exists() && tmpFile.canExecute()) {
-                            fijiExePath+= " " + PathTranslator.convertPath(path);
-                            System.out.println("Calling to open file with: "+fijiExePath);
-                            Runtime.getRuntime().exec(fijiExePath);
-                        }
-                        else {
-                            JOptionPane.showMessageDialog(browser, "Could not launch Fiji. Please choose the appropriate file path from the Tools Menu", "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
-                            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.FIJI_PATH, null);
-                        }
-
+                        ToolMgr.openFile(ToolMgr.TOOL_FIJI,path);
                     }
                     catch (Exception e) {
                         SessionMgr.getSessionMgr().handleException(e);
@@ -772,14 +759,10 @@ public class EntityContextMenu extends JPopupMenu {
                     try {
                         Entity result = rootedEntity.getEntity();
                         if (!entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
-                            result = ModelMgr.getModelMgr().getAncestorWithType(result, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
+                            ModelMgr.getModelMgr().getAncestorWithType(result, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
                         }
-
-                        if (result != null && ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(result.getId())) {
-                            // Success
-                            return;
-                        }
-                    } 
+                        ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(result.getId());
+                    }
                     catch (Exception e) {
                     	SessionMgr.getSessionMgr().handleException(e);
                     }
@@ -798,19 +781,8 @@ public class EntityContextMenu extends JPopupMenu {
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
-                        String vaa3dExePath = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.PATH_VAA3D);
-//                        vaa3dExePath = "/Applications/FlySuite.app/Contents/Resources/vaa3d64.app/Contents/MacOS/vaa3d64"; // DEBUG ONLY
-                        File tmpFile = new File(vaa3dExePath);
-                        if (tmpFile.exists()&&tmpFile.canExecute()) {
-                            vaa3dExePath+=" -i "+ PathTranslator.convertPath(path);
-                            System.out.println("Calling to open file with: "+vaa3dExePath);
-                            Runtime.getRuntime().exec(vaa3dExePath);
-                        }
-                        else {
-                            JOptionPane.showMessageDialog(browser, "Could not launch Vaa3D", "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
-                        }
-                                
-                    } 
+                        ToolMgr.openFile(ToolMgr.TOOL_VAA3D, path);
+                    }
                     catch (Exception e) {
                         SessionMgr.getSessionMgr().handleException(e);
                     }

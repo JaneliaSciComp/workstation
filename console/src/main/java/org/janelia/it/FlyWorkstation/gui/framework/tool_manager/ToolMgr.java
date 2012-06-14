@@ -1,10 +1,21 @@
 package org.janelia.it.FlyWorkstation.gui.framework.tool_manager;
 
+import org.janelia.it.FlyWorkstation.gui.framework.console.ToolsMenu;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
+import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
+import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
+import org.janelia.it.FlyWorkstation.shared.preferences.InfoObject;
+import org.janelia.it.FlyWorkstation.shared.preferences.PrefMgrListener;
+import org.janelia.it.FlyWorkstation.shared.preferences.PreferenceManager;
 
 import javax.swing.*;
-import java.util.TreeMap;
-import java.util.prefs.Preferences;
+import java.awt.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -12,45 +23,301 @@ import java.util.prefs.Preferences;
  * Date: 6/1/12
  * Time: 10:39 AM
  */
-public class ToolMgr {
-    //public Preferences pref = Preferences.userNodeForPackage(getClass());
-    public TreeMap<String, Tool> toolTreeMap = new TreeMap<String, Tool>();
-    public ToolMgr(){}
+public class ToolMgr extends PreferenceManager {
+    public static final String TOOL_FIJI    = "Fiji.app";
+    public static final String TOOL_VAA3D   = "Vaa3d";
+    public static final String TOOL_NA      = "Vaa3d - Neuron Annotator";
+    public static String rootExecutablePath = ToolsMenu.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 
-    public void addTool(Tool tool){
-        String tmpName = tool.getToolName();
-        String tmpPath = tool.getToolPath();
-        String key = SessionMgr.TOOL_PREFIX + tool.getToolUser() + "." + tmpName.replaceAll("\\.", "");
+    private static TreeMap<String, ToolInfo> toolTreeMap = new TreeMap<String, ToolInfo>();
+    private static ToolMgr toolMgr;
 
+    private ToolMgr(){
+        super();
+        DEBUG = false;
+        userFileDescription = "Fly Workstation Tools";
+        // Set up the necessary attributes.
+        setFileParameters();
 
-        if (!tmpName.equals("") && !tmpPath.equals("")){
+        // This listener is to hear when the client session is exiting and save.
+        SessionMgr.getSessionMgr().addSessionModelListener(new MySessionModelListener());
+        initializeMasterInfoObjects();
+        resetWorkingCollections();
+    }
 
-            toolTreeMap.put(key, tool);
-            SessionMgr.getSessionMgr().setModelProperty(key + ".Name", tmpName);
-            SessionMgr.getSessionMgr().setModelProperty(key + ".Path", tmpPath);
-            SessionMgr.getSessionMgr().setModelProperty(key + ".Icon", tool.getToolIcon());
+    public static ToolMgr getToolMgr() {
+        if (toolMgr==null) toolMgr=new ToolMgr();
+        return toolMgr;
+    }
+
+    /**
+     * Inputs the required values to make the mechanism work.
+     */
+    public void setFileParameters() {
+        this.filenameFilter  = "_Tools.properties";
+        this.defaultFilename = "";
+
+        // Check for the existence of the group directory property and/or set values.
+        String groupDir = "";
+        if (SessionMgr.getSessionMgr().getModelProperty(GROUP_DIR)==null) {
+            SessionMgr.getSessionMgr().setModelProperty(GROUP_DIR, groupDir);
         }
-        else {
-            JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Please make sure the tool name and path are correct.", "Tool Exception", JOptionPane.ERROR_MESSAGE);
+        else groupDir = (String)SessionMgr.getSessionMgr().getModelProperty(GROUP_DIR);
+        setGroupPreferenceDirectory(groupDir);
+
+        // Establish the initial "default" user file.
+        this.userDirectory = SessionMgr.getSessionMgr().getApplicationOutputDirectory();
+        this.userFilename = userDirectory + "User_Tools.properties";
+    }
+
+    /**
+     * This method will send all of its proprietary collections to the base class method
+     * formatOutput(), one-by-one.
+     */
+    protected void writeOutAllCollections(FileWriter writer, String destinationFile) {
+        addCollectionToOutput(writer, toolTreeMap, destinationFile);
+    }
+
+
+    /**
+     * This method is supposed to hierarchially add info objects to the final
+     * collections.  Any deletion should be a cause for remerging; for example, if
+     * a user defined info object is removed it could be replaced with a group
+     * or default object.  Currently, this manager only knows about BookmarkInfo
+     * objects.
+     */
+    protected void mergeIntoWorkingCollections(Map<String, InfoObject> targetMasterCollection) {
+        for (Object o : targetMasterCollection.keySet()) {
+            ToolInfo tmpObject = (ToolInfo)(targetMasterCollection.get(o).clone());
+            toolTreeMap.put(tmpObject.getName(), tmpObject);
         }
     }
 
-    public void removeTool(Tool tool){
-        String tmpName = tool.getToolName();
-        String key = SessionMgr.TOOL_PREFIX + tool.getToolUser() + "." + tmpName.replaceAll("\\.", "");
-        if(tool.getToolUser().equals("SYSTEM")){
-            JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Cannot remove a system tool.", "Tool Exception", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        if (null!=toolTreeMap.get(key)){
 
-            toolTreeMap.remove(key);
-            SessionMgr.getSessionMgr().removeModelProperty(key + ".Name");
-            SessionMgr.getSessionMgr().removeModelProperty(key + ".Path");
-            SessionMgr.getSessionMgr().removeModelProperty(key + ".Icon");
+    /**
+     * This method sifts through the Java property keys and puts them in sub-groups by
+     * type; in this case only Bookmarks.  It then passes those Properties objects
+     * on to the build methods.  Remember this is for only one source,
+     * Default or User, at a time.
+     */
+    protected void populateInfoObjects(Properties allProperties, Map targetMasterCollection,
+                                       String sourceFile) {
+        Properties allToolProperties=new Properties();
+        //Separate all properties into the separate categories
+        for (Enumeration e=allProperties.propertyNames();e.hasMoreElements();) {
+            String tempKey = (String) e.nextElement();
+            StringTokenizer mainToken = new StringTokenizer(tempKey,".");
+            if (tempKey!=null && !tempKey.equals("")) {
+                String firstToken = mainToken.nextToken();
+                String tmpValue = (String)allProperties.get(tempKey);
+                String remainingString;
+                if (!mainToken.hasMoreTokens()) remainingString = "";
+                else remainingString = tempKey.substring(firstToken.length()+1);
+                if (firstToken.equals("Tool")) allToolProperties.setProperty(remainingString, tmpValue);
+                else if (DEBUG) System.out.println("This key is not known: "+firstToken);
+            }
+        }
+        // This area constructs the Info Objects for this source and adds them to the
+        // specific Master collection.
+        buildTools(allToolProperties, targetMasterCollection, sourceFile);
+    }
+
+    /**
+     * This method is a no op to this tool class as there are no default tools.
+     */
+    public void handleDefaultKeyOverrideRequest() {}
+
+    protected void handleOutputWriteError(){
+        /**
+         * @todo need to figure out what to do with write errors.
+         */
+    }
+
+    /**
+     * @todo Need to give the base class an abstract method to make
+     * this work properly.
+     */
+    protected void commitChangesToSourceObjects() {
+        // First remove the unwanteds.  Only need to check top of hierarchy on down.
+        // If the object is found in the user map, bingo.
+        super.commitChangesToSourceObjects();
+        handleDirtyOrUnknownInfoObjects(toolTreeMap);
+        resetWorkingCollections();
+    }
+
+
+    /**
+     * Clears the Working collections of Info Objects and rebuilds from the
+     * Master collections; merging them into their usable state.
+     * Clear out specific InfoObject collection(s) before calling super.
+     */
+    public void resetWorkingCollections() {
+        toolTreeMap = new TreeMap<String, ToolInfo>(new MyStringComparator());
+        //  Call the superclass which will merge the collections.
+        super.resetWorkingCollections();
+    }
+
+
+    /**
+     * Builds the ToolInfo objects for the given Master collection.
+     */
+    private void buildTools(Properties toolProperties, Map<String, ToolInfo> targetMasterCollection, String sourceFile) {
+        Set uniqueTools = getUniqueKeys(toolProperties);
+        for (Object uniqueTool : uniqueTools) {
+            String nameBase = (String) uniqueTool;
+            ToolInfo tmpToolInfo = new ToolInfo(nameBase, toolProperties, sourceFile);
+            targetMasterCollection.put(ToolInfo.TOOL_PREFIX + nameBase, tmpToolInfo);
+        }
+
+        // Todo Remove this evil hack
+        System.out.println("Base root executable path  = "+rootExecutablePath);
+        rootExecutablePath=rootExecutablePath.substring(0,rootExecutablePath.lastIndexOf(File.separator)+1);
+//      rootExecutablePath="/Applications/FlySuite.app/Contents/Resources/workstation.jar";
+
+        String vaa3dExePath="";
+        if (SystemInfo.isMac || SystemInfo.isWindows) {
+            vaa3dExePath = rootExecutablePath+"vaa3d64.app/Contents/MacOS/vaa3d64";
+        }
+        else if (SystemInfo.isLinux) {
+            vaa3dExePath = rootExecutablePath+"vaa3d";
+        }
+
+        if (!targetMasterCollection.containsKey(ToolInfo.TOOL_PREFIX+PreferenceManager.getKeyForName(TOOL_VAA3D, true))) {
+            ToolInfo tmpTool = new ToolInfo(TOOL_VAA3D, vaa3dExePath, "v3d_16x16x32.png");
+            tmpTool.setSourceFile(sourceFile);
+            targetMasterCollection.put(ToolInfo.TOOL_PREFIX + tmpTool.getName(), tmpTool);
+        }
+        if (!targetMasterCollection.containsKey(ToolInfo.TOOL_PREFIX+PreferenceManager.getKeyForName(TOOL_NA, true))) {
+            ToolInfo tmpTool = new ToolInfo(TOOL_NA, vaa3dExePath, "v3d_16x16x32.png");
+            tmpTool.setSourceFile(sourceFile);
+            targetMasterCollection.put(ToolInfo.TOOL_PREFIX + tmpTool.getName(), tmpTool);
+        }
+        if (!targetMasterCollection.containsKey(ToolInfo.TOOL_PREFIX+PreferenceManager.getKeyForName(TOOL_FIJI, true))) {
+            // Providing a blank path as we don't bundle the tool yet
+            ToolInfo tmpTool = new ToolInfo(TOOL_FIJI, "", "brain.png");
+            tmpTool.setSourceFile(sourceFile);
+            targetMasterCollection.put(ToolInfo.TOOL_PREFIX + tmpTool.getName(), tmpTool);
+        }
+        // end evil hack
+    }
+
+
+    public void addToolListener(ToolListener listener) {
+        if (listeners==null) listeners=new ArrayList<PrefMgrListener>();
+        listeners.add(listener);
+    }
+
+    public void removeToolListener(ToolListener listener) {
+        if (listeners==null) return;
+        listeners.remove(listener);
+        if (listeners.isEmpty()) {
+            listeners=null;
+        }
+    }
+
+    public void addTool(ToolInfo tool){
+        String tmpName = tool.getName();
+        String tmpPath = tool.getPath();
+        if (!tmpName.equals("") && !tmpPath.equals("")){
+            toolTreeMap.put(tmpName, tool);
+            fireToolsChanged();
         }
         else {
-            JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "The tool specified does not exist.", "Tool Exception", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Please make sure the tool name and path are correct.", "ToolInfo Exception", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    public void removeTool(ToolInfo targetTool){
+        String tmpName = targetTool.getName();
+        if(!targetTool.getSourceFile().endsWith("User_Tools.properties")){
+            JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Cannot remove a System tool.", "ToolInfo Exception", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (null!=toolTreeMap.get(tmpName)){
+            toolTreeMap.remove(targetTool.getName());
+            deletedInfos.put(targetTool.getKeyName(), targetTool);
+            fireToolsChanged();
+        }
+        else {
+            JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "The tool specified does not exist.", "ToolInfo Exception", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    public static ToolInfo getTool(String toolName) {
+        return toolTreeMap.get(toolName);
+    }
+
+    public static TreeMap<String, ToolInfo> getTools() {
+        return toolTreeMap;
+    }
+
+    public static void runTool(String toolName) throws IOException {
+        ToolInfo tmpTool = toolTreeMap.get(toolName);
+        if (null==tmpTool.getPath()||"".equals(tmpTool.getPath())) {
+            JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Cannot launch the tool. Please go to the Tools->Configure Tools and define a path to the executable.", "ToolInfo Exception", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (tmpTool.getPath().endsWith(".app")) {
+            Desktop.getDesktop().open(new File(tmpTool.getPath()));
+        }
+        else {
+            Runtime.getRuntime().exec(tmpTool.getPath());
+        }
+    }
+
+    public static void openFile(String tool, String pathToTarget) throws IOException {
+        ToolInfo tmpTool = getTool(tool);
+        File tmpToolFile = new File(tmpTool.getPath());
+        String exeCmd = tmpTool.getPath();
+        if (TOOL_VAA3D.equals(tool)) {
+            exeCmd = tmpTool.getPath()+" -i "+ PathTranslator.convertPath(pathToTarget);
+        }
+        if (TOOL_FIJI.equals(tool)) {
+            exeCmd = tmpTool.getPath()+ " " + PathTranslator.convertPath(pathToTarget);
+        }
+        if (tmpToolFile.exists()&&tmpToolFile.canExecute()) {
+            if (tmpTool.getPath().endsWith(".app")) {
+                runTool(tool);
+            }
+            else {
+                Runtime.getRuntime().exec(exeCmd);
+            }
+        }
+        else {
+            JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Could not open file with " + tool, "ToolInfo Launch ERROR", JOptionPane.ERROR_MESSAGE);
+            throw new IOException("ToolInfo does "+tool+" does not exist or cannot be executed.");
+        }
+    }
+
+    public void fireToolsChanged() {
+        if (listeners!=null) {
+            for (Object listener : listeners) {
+                ((ToolListener) listener).toolsChanged();
+            }
+        }
+    }
+
+
+    private class MySessionModelListener implements SessionModelListener {
+        public void browserAdded(BrowserModel browserModel) {}
+        public void browserRemoved(BrowserModel browserModel){}
+        /**
+         * This method first commits any changes to be safe, and then sets all dirty
+         * infos to the selected writeback file.  Then for each selection in the
+         * writebackFileCollection (sources that have had thier infos changed)
+         * the method calls writeOutToDestinationFile.
+         */
+        public void sessionWillExit() {
+            closeOutCurrentUserFile();
+        }
+        public void modelPropertyChanged(Object key, Object oldValue, Object newValue){
+            if (key.equals(GROUP_DIR)) {
+                String groupDirectory = "";
+                if (newValue !=null) groupDirectory = newValue + File.separator;
+                // Make the change, flush and reset the preferences.
+                setGroupPreferenceDirectory(groupDirectory);
+                fireToolsChanged();
+            }
         }
     }
 
