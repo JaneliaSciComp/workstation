@@ -255,7 +255,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
             }
             else if (type.allowsChildren() || type instanceof Tag) {
 
-                Class[] nodeTypes = {Category.class, Tag.class, Enum.class, EnumText.class, Interval.class, Text.class};
+                Class[] nodeTypes = {Category.class, Tag.class, Enum.class, EnumText.class, Interval.class, Text.class, Custom.class};
                 for (Class<? extends OntologyElementType> nodeType : nodeTypes) {
                     try {
                         JMenuItem smi = new JMenuItem(nodeType.newInstance().getName());

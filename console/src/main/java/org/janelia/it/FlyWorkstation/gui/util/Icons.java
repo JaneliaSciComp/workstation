@@ -106,6 +106,9 @@ public class Icons {
         else if ("Text".equals(type))
             return getIcon("page_white_text.png");
 
+        else if ("Custom".equals(type))
+            return getIcon("page_white_text.png");
+
         else if ("EnumItem".equals(type))
             return getIcon("page.png");
 
