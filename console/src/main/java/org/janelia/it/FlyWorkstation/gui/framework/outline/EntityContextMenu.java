@@ -3,7 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.outline;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
-import org.janelia.it.FlyWorkstation.gui.dialogs.search.SpecialAnnotationChooserDialog;
+import org.janelia.it.FlyWorkstation.gui.dialogs.SpecialAnnotationChooserDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.AnnotateAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenInFinderAction;
@@ -92,7 +92,7 @@ public class EntityContextMenu extends JPopupMenu {
         
 		setNextAddRequiresSeparator(true);
 		add(getCreateSessionItem());
-        if (SessionMgr.getUsername().equals("simpsonj") || SessionMgr.getUsername().equals("simpsonlab")){
+        if ((SessionMgr.getUsername().equals("simpsonj") || SessionMgr.getUsername().equals("simpsonlab")) && !this.multiple){
             add(getSpecialAnnotationSession());
         }
 	}
@@ -888,7 +888,12 @@ public class EntityContextMenu extends JPopupMenu {
         specialAnnotationSession.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                SpecialAnnotationChooserDialog dialog = new SpecialAnnotationChooserDialog();
+                if(!SpecialAnnotationChooserDialog.frame.isVisible()){
+                    SpecialAnnotationChooserDialog.frame.setVisible(true);
+                }
+                else{
+                    SpecialAnnotationChooserDialog.frame.transferFocus();
+                }
             }
         });
 

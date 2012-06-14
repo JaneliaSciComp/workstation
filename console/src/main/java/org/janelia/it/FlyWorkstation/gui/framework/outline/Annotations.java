@@ -62,7 +62,7 @@ public class Annotations {
     	// Remove all the annotations for this entity
     	List<OntologyAnnotation> copy = new ArrayList<OntologyAnnotation>(annotations);
     	for(OntologyAnnotation annotation : copy) {
-    		if (annotation.getTargetEntityId().equals(entityId)) {
+    		if (null!=annotation.getTargetEntityId() && annotation.getTargetEntityId().equals(entityId)) {
     			annotations.remove(annotation);
     		}
     	}
@@ -72,7 +72,8 @@ public class Annotations {
             for(Entity entityAnnot : ModelMgr.getModelMgr().getAnnotationsForEntity(entityId)) {
             	OntologyAnnotation annotation = new OntologyAnnotation();
             	annotation.init(entityAnnot);
-            	annotations.add(annotation);
+                if(null!=annotation.getTargetEntityId())
+            	    annotations.add(annotation);
             }
         }
         catch (Exception e) {
