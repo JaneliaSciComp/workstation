@@ -177,7 +177,9 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
                     	System.out.println("Loading last used ontology "+lastSessionId);
                     	try {
 	                    	Entity ontology = ModelMgr.getModelMgr().getOntologyTree(Long.valueOf(lastSessionId));
-	                    	ModelMgr.getModelMgr().setCurrentOntology(new OntologyRoot(ontology));
+	                    	if (ontology!=null) {
+	                    		ModelMgr.getModelMgr().setCurrentOntology(new OntologyRoot(ontology));
+	                    	}
                     	}
                     	catch (Exception e) {
                     		e.printStackTrace();
