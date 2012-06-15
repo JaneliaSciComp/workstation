@@ -860,11 +860,11 @@ public class EntityContextMenu extends JPopupMenu {
         specialAnnotationSession.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(!SpecialAnnotationChooserDialog.frame.isVisible()){
-                    SpecialAnnotationChooserDialog.frame.setVisible(true);
+                if(!SpecialAnnotationChooserDialog.getDialog().isVisible()){
+                    SpecialAnnotationChooserDialog.getDialog().setVisible(true);
                 }
                 else{
-                    SpecialAnnotationChooserDialog.frame.transferFocus();
+                    SpecialAnnotationChooserDialog.getDialog().transferFocus();
                 }
             }
         });

@@ -31,17 +31,16 @@ import java.util.List;
  */
 
 
-public class SpecialAnnotationChooserDialog extends JDialog{
+public class SpecialAnnotationChooserDialog extends JFrame{
 
     private static JPanel annotationPanel = new JPanel();
     private List<OntologyElement> ontologyElements = new ArrayList<OntologyElement>();
     private DefaultTableModel model;
     JComboBox comboBox;
-    public static JFrame frame = new JFrame("Special Annotation Session");
     private static SpecialAnnotationChooserDialog dialog = new SpecialAnnotationChooserDialog();
 
     private SpecialAnnotationChooserDialog() {
-        super( SessionMgr.getBrowser(),"Special Annotation Session", false);
+        super("Special Annotation Session");
         annotationPanel.setLayout(new BoxLayout(annotationPanel, BoxLayout.PAGE_AXIS));
 
         model = new DefaultTableModel(){
@@ -81,15 +80,34 @@ public class SpecialAnnotationChooserDialog extends JDialog{
 
             @Override
             public void entitySelected(String category, String entityId, boolean clearAll) {
-                if(!category.equals("outline") && clearAll){
-                    List<OntologyAnnotation> annotations = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer()).getAnnotations().getAnnotations();
-                    int i = 0;
-                    for(OntologyAnnotation annotation:annotations){
-                        if(model.getValueAt(i,0).equals(annotation.getKeyString())){
-                            model.setValueAt(annotation.getValueString(),i,1);
+                try {
+
+                    String[] splitResult = entityId.split("/e_");
+                    String splitlast = splitResult[splitResult.length-1];
+                    SpecialAnnotationChooserDialog.this.setTitle(ModelMgr.getModelMgr().getEntityById(splitlast).getName());
+
+                    Long iD = ModelMgr.getModelMgr().getEntityById(splitlast).getId();
+                    List<Entity> annotations = ModelMgr.getModelMgr().getAnnotationsForEntity(iD);
+
+                    if(!category.equals("outline") && clearAll && annotations.size()!=0){
+
+                        List<OntologyAnnotation> annotations1 = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer()).getAnnotations().getAnnotations();
+                        int i = 0;
+                        for(OntologyAnnotation annotation:annotations1){
+                            if(model.getValueAt(i,0).equals(annotation.getKeyString())){
+                                model.setValueAt(annotation.getValueString(),i,1);
+                            }
+                            i++;
                         }
-                        i++;
                     }
+                    else{
+                        for(int i = 0; i < model.getRowCount(); i++){
+                            model.setValueAt("undetermined",i,1);
+                        }
+                    }
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
 
@@ -138,10 +156,11 @@ public class SpecialAnnotationChooserDialog extends JDialog{
         table.setFillsViewportHeight(true);
         //Create the scroll pane and add the table to it.
         JScrollPane scrollPane = new JScrollPane(table);
-        JButton annotateButton = new JButton("Annotate");
+        final JButton annotateButton = new JButton("Annotate");
         annotateButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                annotateButton.setEnabled(false);
                 SimpleWorker worker = new SimpleWorker() {
                     @Override
                     protected void doStuff() throws Exception {
@@ -173,7 +192,7 @@ public class SpecialAnnotationChooserDialog extends JDialog{
 
                     @Override
                     protected void hadSuccess() {
-
+                        annotateButton.setEnabled(true);
                     }
 
                     @Override
@@ -186,10 +205,31 @@ public class SpecialAnnotationChooserDialog extends JDialog{
                 worker.execute();
             }
         });
+
+        JButton resetButton = new JButton("Reset");
+        resetButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                for(int i = 0; i < model.getRowCount(); i++){
+                    model.setValueAt("undetermined",i,1);
+                }
+            }
+        });
+
+        JButton closeButton = new JButton("Close");
+        closeButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SpecialAnnotationChooserDialog.this.setVisible(false);
+            }
+        });
         //Add the scroll pane to this panel.
         annotationPanel.add(scrollPane);
-        JPanel buttonPanel = new JPanel(new GridLayout(1,0));
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
         buttonPanel.add(annotateButton);
+        buttonPanel.add(resetButton);
+        buttonPanel.add(closeButton);
         annotationPanel.add(buttonPanel);
 
         createAndShowGUI();
@@ -201,21 +241,21 @@ public class SpecialAnnotationChooserDialog extends JDialog{
      * this method should be invoked from the
      * event-dispatching thread.
      */
-    private static void createAndShowGUI() {
+    private void createAndShowGUI() {
         //Create and set up the window.
 
-        frame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-        frame.setResizable(false);
-        frame.setIconImage(SessionMgr.getBrowser().getIconImage());
-        frame.setAlwaysOnTop(true);
+        this.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+        this.setResizable(false);
+        this.setIconImage(SessionMgr.getBrowser().getIconImage());
+        this.setAlwaysOnTop(true);
         //Create and set up the content pane.
 
         annotationPanel.setOpaque(true); //content panes must be opaque
-        frame.setContentPane(annotationPanel);
+        this.setContentPane(annotationPanel);
 
         //Display the window.
-        frame.pack();
-        frame.setVisible(true);
+        this.pack();
+        this.setVisible(true);
     }
 
     private void iterateAndAddRows(List<OntologyElement> list){
@@ -247,6 +287,10 @@ public class SpecialAnnotationChooserDialog extends JDialog{
                 iterateAndAddRows(element.getChildren());
             }
         }
+    }
+
+    public static SpecialAnnotationChooserDialog getDialog(){
+        return dialog;
     }
 
 
