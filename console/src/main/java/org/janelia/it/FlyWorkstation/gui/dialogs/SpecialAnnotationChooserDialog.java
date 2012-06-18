@@ -37,7 +37,8 @@ public class SpecialAnnotationChooserDialog extends JFrame{
     private List<OntologyElement> ontologyElements = new ArrayList<OntologyElement>();
     private DefaultTableModel model;
     JComboBox comboBox;
-    private static SpecialAnnotationChooserDialog dialog = new SpecialAnnotationChooserDialog();
+    private static SpecialAnnotationChooserDialog  dialog = new SpecialAnnotationChooserDialog();
+    private TableModelListener tableModelListener=null;
 
     private SpecialAnnotationChooserDialog() {
         super("Special Annotation Session");
@@ -63,18 +64,19 @@ public class SpecialAnnotationChooserDialog extends JFrame{
             model.setValueAt("undetermined",i,1);
         }
 
-        model.addTableModelListener(new TableModelListener() {
-            @Override
-            public void tableChanged(TableModelEvent e) {
-                OntologyElement child = ontologyElements.get(table.getSelectedRow());
-                OntologyElement parent = child.getParent();
-                if(parent.getType() instanceof EnumText &&
-                        !model.getValueAt(table.getSelectedRow(),1).equals(model.getValueAt(ontologyElements.indexOf(parent), 1))){
-                    model.setValueAt( model.getValueAt(table.getSelectedRow(), 1),
-                            ontologyElements.indexOf(parent), 1);
+        tableModelListener = new TableModelListener() {
+        @Override
+        public void tableChanged(TableModelEvent e) {
+            OntologyElement child = ontologyElements.get(table.getSelectedRow());
+            OntologyElement parent = child.getParent();
+            if(parent.getType() instanceof EnumText &&
+                    !model.getValueAt(table.getSelectedRow(),1).equals(model.getValueAt(ontologyElements.indexOf(parent), 1))){
+                model.setValueAt( model.getValueAt(table.getSelectedRow(), 1),
+                        ontologyElements.indexOf(parent), 1);
                 }
             }
-        });
+        };
+        model.addTableModelListener(tableModelListener);
 
         ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrObserver() {
             @Override
@@ -86,7 +88,7 @@ public class SpecialAnnotationChooserDialog extends JFrame{
             @Override
             public void entitySelected(String category, String entityId, boolean clearAll) {
                 try {
-
+                    model.removeTableModelListener(tableModelListener);
                     String[] splitResult = entityId.split("/e_");
                     String splitlast = splitResult[splitResult.length-1];
                     SpecialAnnotationChooserDialog.this.setTitle(ModelMgr.getModelMgr().getEntityById(splitlast).getName());
@@ -99,7 +101,7 @@ public class SpecialAnnotationChooserDialog extends JFrame{
                         List<OntologyAnnotation> annotations1 = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer()).getAnnotations().getAnnotations();
                         int i = 0;
                         for(OntologyAnnotation annotation:annotations1){
-                            if(model.getValueAt(i,0).equals(annotation.getKeyString())){
+                            if(model.getValueAt(i,0).toString().trim().equals(annotation.getKeyString())){
                                 model.setValueAt(annotation.getValueString(),i,1);
                             }
                             i++;
@@ -110,6 +112,7 @@ public class SpecialAnnotationChooserDialog extends JFrame{
                             model.setValueAt("undetermined",i,1);
                         }
                     }
+                    model.addTableModelListener(tableModelListener);
                 }
                 catch (Exception e) {
                     e.printStackTrace();
