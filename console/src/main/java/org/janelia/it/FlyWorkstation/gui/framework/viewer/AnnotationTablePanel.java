@@ -2,6 +2,9 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -228,7 +231,16 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 	        JMenuItem titleItem = new JMenuItem(annotation.getEntity().getName());
 	        titleItem.setEnabled(false);
 	        popupMenu.add(titleItem);
-			
+
+            JMenuItem copyMenuItem = new JMenuItem("  Copy to clipboard");
+            copyMenuItem.addActionListener(new ActionListener() {
+    			@Override
+    			public void actionPerformed(ActionEvent e) {
+    	            Transferable t = new StringSelection(annotation.getEntity().getName());
+    	            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
+    			}
+    		});
+	        popupMenu.add(copyMenuItem);
 
 	    	if (SessionMgr.getUsername().equals(annotation.getOwner())) {
 	            JMenuItem deleteItem = new JMenuItem("  Delete annotation");

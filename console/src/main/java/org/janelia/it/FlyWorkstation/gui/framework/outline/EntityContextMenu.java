@@ -279,6 +279,7 @@ public class EntityContextMenu extends JPopupMenu {
 		Entity entity = rootedEntity.getEntity();
 		add(relatedMenu, getRelatedItem(entity, EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE, "Representative Sample"));
 		add(relatedMenu, getRelatedItem(entity, EntityConstants.ATTRIBUTE_ORIGINAL_FLYLINE, "Original Fly Line"));
+		add(relatedMenu, getRelatedItem(entity, EntityConstants.ATTRIBUTE_BALANCED_FLYLINE, "Balanced Fly Line"));
         return relatedMenu;
 	}
 	
