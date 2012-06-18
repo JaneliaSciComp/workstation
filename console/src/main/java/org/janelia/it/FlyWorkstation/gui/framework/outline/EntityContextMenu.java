@@ -860,11 +860,16 @@ public class EntityContextMenu extends JPopupMenu {
         specialAnnotationSession.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(!SpecialAnnotationChooserDialog.getDialog().isVisible()){
-                    SpecialAnnotationChooserDialog.getDialog().setVisible(true);
+                if(null==ModelMgr.getModelMgr().getCurrentOntology()){
+                    JOptionPane.showMessageDialog(SessionMgr.getBrowser(),"Please select an ontology in the ontology window.", "Null Ontology Warning", JOptionPane.WARNING_MESSAGE);
                 }
                 else{
-                    SpecialAnnotationChooserDialog.getDialog().transferFocus();
+                    if(!SpecialAnnotationChooserDialog.getDialog().isVisible()){
+                        SpecialAnnotationChooserDialog.getDialog().setVisible(true);
+                    }
+                    else{
+                        SpecialAnnotationChooserDialog.getDialog().transferFocus();
+                    }
                 }
             }
         });

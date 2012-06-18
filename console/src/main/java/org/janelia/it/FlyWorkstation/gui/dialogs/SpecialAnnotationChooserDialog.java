@@ -1,6 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.AnnotateAction;
@@ -14,10 +13,11 @@ import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.types.EnumText;
 
 import javax.swing.*;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.Dimension;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -46,37 +46,42 @@ public class SpecialAnnotationChooserDialog extends JFrame{
         model = new DefaultTableModel(){
             @Override
             public boolean isCellEditable(int row, int column) {
-                if(0 == column){
-                    return false;
-                }
-                else{
-                    return true;
-                }
+                return column!=0;
             }
         };
         model.addColumn("Annotation");
         model.addColumn("Enumeration");
 
-        JTable table = new JTable(model);
+        final JTable table = new JTable(model);
         TableColumn comboColumn = table.getColumnModel().getColumn(1);
 
         List<OntologyElement> list = ModelMgr.getModelMgr().getCurrentOntology().getChildren();
-        iterateAndAddRows(list);
+        iterateAndAddRows(list, 0);
+
         comboColumn.setCellEditor(new DefaultCellEditor(comboBox));
         for(int i = 0; i < model.getRowCount(); i++){
             model.setValueAt("undetermined",i,1);
         }
 
+        model.addTableModelListener(new TableModelListener() {
+            @Override
+            public void tableChanged(TableModelEvent e) {
+                OntologyElement child = ontologyElements.get(table.getSelectedRow());
+                OntologyElement parent = child.getParent();
+                if(parent.getType() instanceof EnumText &&
+                        !model.getValueAt(table.getSelectedRow(),1).equals(model.getValueAt(ontologyElements.indexOf(parent), 1))){
+                    model.setValueAt( model.getValueAt(table.getSelectedRow(), 1),
+                            ontologyElements.indexOf(parent), 1);
+                }
+            }
+        });
+
         ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrObserver() {
             @Override
-            public void ontologySelected(long rootId) {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
+            public void ontologySelected(long rootId) {}
 
             @Override
-            public void ontologyChanged(long rootId) {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
+            public void ontologyChanged(long rootId) {}
 
             @Override
             public void entitySelected(String category, String entityId, boolean clearAll) {
@@ -112,44 +117,28 @@ public class SpecialAnnotationChooserDialog extends JFrame{
             }
 
             @Override
-            public void entityDeselected(String category, String entityId) {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
+            public void entityDeselected(String category, String entityId) {}
 
             @Override
-            public void entityChanged(long entityId) {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
+            public void entityChanged(long entityId) {}
 
             @Override
-            public void entityRemoved(long entityId) {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
+            public void entityRemoved(long entityId) {}
 
             @Override
-            public void entityDataRemoved(long entityDataId) {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
+            public void entityDataRemoved(long entityDataId) {}
 
             @Override
-            public void entityViewRequested(long entityId) {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
+            public void entityViewRequested(long entityId) {}
 
             @Override
-            public void annotationsChanged(long entityId) {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
+            public void annotationsChanged(long entityId) {}
 
             @Override
-            public void sessionSelected(long sessionId) {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
+            public void sessionSelected(long sessionId) {}
 
             @Override
-            public void sessionDeselected() {
-                //To change body of implemented methods use File | Settings | File Templates.
-            }
+            public void sessionDeselected() {}
         });
 
         table.setPreferredScrollableViewportSize(new Dimension(500, 500));
@@ -258,11 +247,16 @@ public class SpecialAnnotationChooserDialog extends JFrame{
         this.setVisible(true);
     }
 
-    private void iterateAndAddRows(List<OntologyElement> list){
+    private void iterateAndAddRows(List<OntologyElement> list, int recursionLevel){
+        StringBuilder tabString = new StringBuilder("");
+        for(int i = 0; i<recursionLevel; i++){
+            tabString.append("   ");
+        }
+
 
         for(OntologyElement element:list){
             if(element.getType() instanceof EnumText){
-                model.addRow(new Object[]{element.getName()});
+                model.addRow(new Object[]{tabString + element.getName()});
                 OntologyElement valueEnum = ((EnumText) element.getType()).getValueEnum();
 
                 if (valueEnum==null) {
@@ -281,12 +275,14 @@ public class SpecialAnnotationChooserDialog extends JFrame{
 
                 comboBox = new JComboBox(selectionValues);
                 ontologyElements.add(element);
+
             }
 
             if(null!=element.getChildren()){
-                iterateAndAddRows(element.getChildren());
+                iterateAndAddRows(element.getChildren(), recursionLevel+1);
             }
         }
+
     }
 
     public static SpecialAnnotationChooserDialog getDialog(){
