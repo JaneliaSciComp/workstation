@@ -44,6 +44,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
     public AnnotationTablePanel() {
         setLayout(new BorderLayout());
         setOpaque(false);
+        refresh();
     }
 
 	@Override

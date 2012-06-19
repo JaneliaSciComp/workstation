@@ -153,7 +153,7 @@ public class EntityContextMenu extends JPopupMenu {
         detailsMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-		        new EntityDetailsDialog().showForEntityData(rootedEntity.getEntityData());
+		        new EntityDetailsDialog().showForRootedEntity(rootedEntity);
 			}
 		});
         return detailsMenuItem;

@@ -131,6 +131,4 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
     public void addAnnotation(OntologyAnnotation annotation) {
         addTag(annotation);
     }
-
-
 }

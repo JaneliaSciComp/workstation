@@ -521,11 +521,7 @@ public class IconDemoPanel extends Viewer {
 					filterEntities();
 				}
 				else if (ViewerSettingsPanel.SHOW_ANNOTATION_TABLES_PROPERTY.equals(key)) {
-					imagesPanel.setTagTable((Boolean)newValue);
-					imagesPanel.resizeTables(imagesPanel.getCurrTableHeight());
-					imagesPanel.rescaleImages(imagesPanel.getCurrImageSize());
-					imagesPanel.recalculateGrid();
-					imagesPanel.loadUnloadImages();
+					refresh();
 				}
 				else if (ViewerSettingsPanel.ANNOTATION_TABLES_HEIGHT_PROPERTY.equals(key)) {
 					int tableHeight = (Integer)newValue;
@@ -844,6 +840,8 @@ public class IconDemoPanel extends Viewer {
 	
 	private void showPopupPathMenu() {
 
+		if (rootedAncestors==null) return;
+		
 		final JPopupMenu pathMenu = new JPopupMenu();
 
 		for (final RootedEntity ancestor : rootedAncestors) {
@@ -943,29 +941,33 @@ public class IconDemoPanel extends Viewer {
 			}
 		}
 		
-		List<RootedEntity> rootedEntities = new ArrayList<RootedEntity>();
+		List<RootedEntity> lazyRootedEntities = new ArrayList<RootedEntity>();
 		for(EntityData ed : children) {
 			String childId = EntityOutline.getChildUniqueId(rootedEntity.getUniqueId(), ed);
-			rootedEntities.add(new RootedEntity(childId, ed));
+			lazyRootedEntities.add(new RootedEntity(childId, ed));
 		}
 
-		if (rootedEntities.isEmpty()) {
-			rootedEntities.add(rootedEntity);
+		if (lazyRootedEntities.isEmpty()) {
+			lazyRootedEntities.add(rootedEntity);
 		}
 		
-		loadImageEntities(rootedEntities, success); 
+		loadImageEntities(lazyRootedEntities, success); 
 	}
 
-	public void loadImageEntities(final List<RootedEntity> rootedEntities) {
-		loadImageEntities(rootedEntities, null);
+	public void loadImageEntities(final List<RootedEntity> lazyRootedEntities) {
+		loadImageEntities(lazyRootedEntities, null);
 	}
 
-	private synchronized void loadImageEntities(final List<RootedEntity> rootedEntities, final Callable<Void> success) {
+	private synchronized void loadImageEntities(final List<RootedEntity> lazyRootedEntities, final Callable<Void> success) {
 
+		if (!SwingUtilities.isEventDispatchThread())
+			throw new RuntimeException("IconDemoPanel.entityLoadDone called outside of EDT");
+		
 		// Indicate a load
 		showLoadingIndicator();
 		
 		// Cancel previous loads
+		imagesPanel.cancelAllLoads();
 		if (entityLoadingWorker != null && !entityLoadingWorker.isDone()) {
 			entityLoadingWorker.disregard();
 		}
@@ -975,7 +977,6 @@ public class IconDemoPanel extends Viewer {
 		if (ancestorLoadingWorker != null && !ancestorLoadingWorker.isDone()) {
 			ancestorLoadingWorker.disregard();
 		}
-		imagesPanel.cancelAllLoads();
 		
 		// Update back/forward navigation
 		EntitySelectionHistory history = getEntitySelectionHistory();
@@ -989,7 +990,7 @@ public class IconDemoPanel extends Viewer {
 
 			protected void doStuff() throws Exception {
 				List<RootedEntity> loadedRootedEntities = new ArrayList<RootedEntity>();
-				for (RootedEntity rootedEntity : rootedEntities) {
+				for (RootedEntity rootedEntity : lazyRootedEntities) {
 					if (!EntityUtils.isInitialized(rootedEntity.getEntity())) {
 						System.out.println("Warning: had to load entity "+rootedEntity.getEntity().getId());
 						rootedEntity.getEntityData().setChildEntity(ModelMgr.getModelMgr().getEntityById(rootedEntity.getEntity().getId()+""));
@@ -1020,7 +1021,7 @@ public class IconDemoPanel extends Viewer {
 			@Override
 			protected void doStuff() throws Exception {
 				List<Entity> entities = new ArrayList<Entity>();
-				for(RootedEntity rootedEntity : rootedEntities) {
+				for(RootedEntity rootedEntity : lazyRootedEntities) {
 					entities.add(rootedEntity.getEntity());
 				}
 				annotations.init(entities);
@@ -1092,6 +1093,11 @@ public class IconDemoPanel extends Viewer {
 		if (!SwingUtilities.isEventDispatchThread())
 			throw new RuntimeException("IconDemoPanel.entityLoadDone called outside of EDT");
 
+		if (getRootedEntities()==null) {
+			System.out.println("Warning: rooted entity list is null upon calling entityLoadDone");
+			return;
+		}
+		
 		// Create the image buttons
 		imagesPanel.setRootedEntities(getRootedEntities());
 		
@@ -1124,7 +1130,7 @@ public class IconDemoPanel extends Viewer {
 				imagesPanel.setScrollLoadingEnabled(true);
 				imagesPanel.loadUnloadImages();
 				// Select the first entity
-				ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntities.get(0).getId(), true);
+				ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), getRootedEntities().get(0).getId(), true);
 				// Finally, we're done, we can call the success callback
 				if (success != null) {
 					try {
@@ -1139,9 +1145,9 @@ public class IconDemoPanel extends Viewer {
 	}
 
 	protected void removeRootedEntity(final RootedEntity rootedEntity) {
-		int index = rootedEntities.indexOf(rootedEntity);
+		int index = getRootedEntities().indexOf(rootedEntity);
 		if (index < 0) return;
-		rootedEntities.remove(index);
+		getRootedEntities().remove(index);
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
@@ -1306,7 +1312,7 @@ public class IconDemoPanel extends Viewer {
 		refreshWorker.execute();
 	}
 
-	public void clear() {
+	public synchronized void clear() {
 		this.contextRootedEntity = null;
 		this.rootedEntities = null;
 		this.rootedEntityMap = null;
@@ -1315,6 +1321,9 @@ public class IconDemoPanel extends Viewer {
 		setTitle("");
 		removeAll();
 		add(splashPanel, BorderLayout.CENTER);
+		
+		revalidate();
+		repaint();
 	}
 
 	public synchronized void showImagePanel() {

@@ -150,6 +150,4 @@ public class ViewerSplitPanel extends JPanel implements ViewerContainer {
 			throw new IllegalArgumentException("Unknown viewer with class "+viewer.getClass().getName());
 		}
 	}
-	
-
 }

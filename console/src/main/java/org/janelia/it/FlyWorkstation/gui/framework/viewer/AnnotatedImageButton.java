@@ -109,8 +109,6 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
         c.anchor = GridBagConstraints.PAGE_START;
         c.weighty = 1;
         buttonPanel.add(loadingLabel, c);
-
-        setAnnotationView(new AnnotationTagCloudPanel());
         
         // Remove all default mouse listeners except drag gesture recognizer
         for(MouseListener mouseListener : getMouseListeners()) {
@@ -209,10 +207,11 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
     }
 
     public synchronized void setTagsVisible(boolean visible) {
+    	if (annotationView==null) return;
         ((JPanel)annotationView).setVisible(visible);
     }
 
-    public void setAnnotationView(AnnotationView annotationView) {
+    public synchronized void setAnnotationView(AnnotationView annotationView) {
     	this.annotationView = annotationView;
         // Fix event dispatching so that user can click on the tags and still select the button
     	((JPanel)annotationView).addMouseListener(new MouseForwarder(this,"JPanel(annotationView)->AnnotatedImageButton"));
@@ -221,11 +220,11 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
     	}
     }
     
-    public AnnotationView getAnnotationView() {
+    public synchronized AnnotationView getAnnotationView() {
         return annotationView;
     }
 
-    public void showAnnotations(List<OntologyAnnotation> annotations) {
+    public synchronized void showAnnotations(List<OntologyAnnotation> annotations) {
     	
     	annotationView.setAnnotations(annotations);
     	annotationsLoaded = true;
@@ -245,7 +244,7 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
         return rootedEntity;
     }
     
-	public void rescaleImage(int width, int height) {
+	public synchronized void rescaleImage(int width, int height) {
     	setTitle(titleLabel.getText(), width);
         JPanel annotationPanel = (JPanel)annotationView;
         if (annotationView instanceof AnnotationTablePanel) {
@@ -253,7 +252,7 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
         }
 	}
 	
-	public void resizeTable(int tableHeight) {
+	public synchronized void resizeTable(int tableHeight) {
         JPanel annotationPanel = (JPanel)annotationView;
         if (annotationView instanceof AnnotationTablePanel) {
         	annotationPanel.setPreferredSize(new Dimension(annotationPanel.getPreferredSize().width, tableHeight));

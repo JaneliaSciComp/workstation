@@ -4,14 +4,12 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.Rectangle;
-import java.awt.event.AdjustmentEvent;
-import java.awt.event.AdjustmentListener;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 import java.util.*;
 
 import javax.swing.*;
 
+import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
@@ -378,12 +376,19 @@ public class ImagesPanel extends JScrollPane {
     }
 
     public void setTagTable(boolean tagTable) {
-        for (AnnotatedImageButton button : buttons.values()) {
+        for (final AnnotatedImageButton button : buttons.values()) {
         	if (tagTable) {
+        		if (button.getAnnotationView() instanceof AnnotationTablePanel) return;
         		button.setAnnotationView(new AnnotationTablePanel());
         	}
         	else {
-        		button.setAnnotationView(new AnnotationTagCloudPanel());
+        		if (button.getAnnotationView() instanceof AnnotationTagCloudPanel) return;
+        		button.setAnnotationView(new AnnotationTagCloudPanel() {
+        			@Override
+        			protected void moreDoubleClicked(MouseEvent e) {
+        		        new EntityDetailsDialog().showForRootedEntity(button.getRootedEntity());
+        			}
+        		});
         	}
         }
     }
