@@ -278,14 +278,14 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
                 removeNodeMenuItem.addActionListener(this);
                 removeNodeMenuItem.setActionCommand(REMOVE_COMMAND);
                 popupMenu.add(removeNodeMenuItem);
-            
-            	JMenuItem removeAnnotNodeMenuItem = new JMenuItem("  Remove from all selected entities");
-            	removeAnnotNodeMenuItem.addActionListener(this);
-            	removeAnnotNodeMenuItem.setActionCommand(REMOVE_ANNOT_COMMAND);
-                popupMenu.add(removeAnnotNodeMenuItem);
             }
         }
 
+    	JMenuItem removeAnnotNodeMenuItem = new JMenuItem("  Remove from all selected entities");
+    	removeAnnotNodeMenuItem.addActionListener(this);
+    	removeAnnotNodeMenuItem.setActionCommand(REMOVE_ANNOT_COMMAND);
+        popupMenu.add(removeAnnotNodeMenuItem);
+        
         popupMenu.show((JComponent) e.getSource(), e.getX(), e.getY());
     }
 

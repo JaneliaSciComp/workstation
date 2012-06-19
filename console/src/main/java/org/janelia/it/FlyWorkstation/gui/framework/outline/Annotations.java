@@ -102,6 +102,8 @@ public class Annotations {
 
     public synchronized Map<Long, List<OntologyAnnotation>> getFilteredAnnotationMap() {
     	Map<Long, List<OntologyAnnotation>> filteredMap = new HashMap<Long, List<OntologyAnnotation>>();
+    	if (entities==null) return filteredMap;
+    	
         Map<Long, Entity> entityMap = EntityUtils.getEntityMap(entities);
 
         for (OntologyAnnotation annotation : getFilteredAnnotations()) {

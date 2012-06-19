@@ -142,7 +142,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 	        }
         };
         
-        dynamicTable.addMouseListener(new MouseForwarder(this, "DynamicTable->AnnotationTablePanel"));
+        dynamicTable.getTable().addMouseListener(new MouseForwarder(this, "DynamicTable->AnnotationTablePanel"));
         
         DynamicColumn keyCol = dynamicTable.addColumn(COLUMN_KEY, COLUMN_KEY, true, false, false, true);
         DynamicColumn valueCol = dynamicTable.addColumn(COLUMN_VALUE, COLUMN_VALUE, true, false, false, true);

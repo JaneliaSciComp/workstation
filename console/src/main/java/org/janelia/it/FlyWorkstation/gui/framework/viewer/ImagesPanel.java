@@ -182,11 +182,16 @@ public class ImagesPanel extends JScrollPane {
     /**
      * Show the given annotations on the appropriate images.
      */
-    public void loadAnnotations(Annotations annotations, Long entityId) {
-    	for (AnnotatedImageButton button : getButtonsByEntityId(entityId)) {
-        	List<OntologyAnnotation> entityAnnotations = annotations.getFilteredAnnotationMap().get(entityId);
-            button.getAnnotationView().setAnnotations(entityAnnotations);
-    	}
+    public void loadAnnotations(final Annotations annotations, final Long entityId) {
+    	SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+		    	for (AnnotatedImageButton button : getButtonsByEntityId(entityId)) {
+		        	List<OntologyAnnotation> entityAnnotations = annotations.getFilteredAnnotationMap().get(entityId);
+		            button.showAnnotations(entityAnnotations);
+		    	}
+			}
+		});
     }
 
     public List<AnnotatedImageButton> getButtonsByEntityId(Long entityId) {
@@ -374,14 +379,12 @@ public class ImagesPanel extends JScrollPane {
 
     public void setTagTable(boolean tagTable) {
         for (AnnotatedImageButton button : buttons.values()) {
-        	List<OntologyAnnotation> annotations = button.getAnnotationView().getAnnotations();
         	if (tagTable) {
         		button.setAnnotationView(new AnnotationTablePanel());
         	}
         	else {
         		button.setAnnotationView(new AnnotationTagCloudPanel());
         	}
-            button.getAnnotationView().setAnnotations(annotations);
         }
     }
     

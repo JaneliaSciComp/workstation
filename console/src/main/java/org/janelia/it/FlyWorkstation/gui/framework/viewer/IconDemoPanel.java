@@ -91,7 +91,9 @@ public class IconDemoPanel extends Viewer {
 	
 	private SimpleWorker entityLoadingWorker;
 	private SimpleWorker annotationLoadingWorker;
-
+	private SimpleWorker annotationsInitWorker;
+	private SimpleWorker ancestorLoadingWorker;
+	
 	// Listen for key strokes and execute the appropriate key bindings
 	protected KeyListener keyListener = new KeyAdapter() {
 		@Override
@@ -967,8 +969,14 @@ public class IconDemoPanel extends Viewer {
 		if (entityLoadingWorker != null && !entityLoadingWorker.isDone()) {
 			entityLoadingWorker.disregard();
 		}
+		if (annotationsInitWorker != null && !annotationsInitWorker.isDone()) {
+			annotationsInitWorker.disregard();
+		}
+		if (ancestorLoadingWorker != null && !ancestorLoadingWorker.isDone()) {
+			ancestorLoadingWorker.disregard();
+		}
 		imagesPanel.cancelAllLoads();
-
+		
 		// Update back/forward navigation
 		EntitySelectionHistory history = getEntitySelectionHistory();
 		prevButton.setEnabled(history.isBackEnabled());
@@ -994,7 +1002,6 @@ public class IconDemoPanel extends Viewer {
 					loadedRootedEntities.add(rootedEntity);
 				}
 				setRootedEntities(loadedRootedEntities);
-				annotations.init(getDistinctEntities());
 			}
 
 			protected void hadSuccess() {
@@ -1002,15 +1009,48 @@ public class IconDemoPanel extends Viewer {
 			}
 
 			protected void hadError(Throwable error) {
-				entityLoadError(error);
+				SessionMgr.getSessionMgr().handleException(error);
 			}
 		};
-
 		entityLoadingWorker.execute();
 
 		
+		annotationsInitWorker = new SimpleWorker() {
+			
+			@Override
+			protected void doStuff() throws Exception {
+				List<Entity> entities = new ArrayList<Entity>();
+				for(RootedEntity rootedEntity : rootedEntities) {
+					entities.add(rootedEntity.getEntity());
+				}
+				annotations.init(entities);
+			}
+			
+			@Override
+			protected void hadSuccess() {
+				
+				refreshAnnotations(null);
+				filterEntities();
+
+				// Wait until everything is recomputed
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						imagesPanel.recalculateGrid();		
+					}
+				});
+				
+			}
+			
+			@Override
+			protected void hadError(Throwable error) {
+				SessionMgr.getSessionMgr().handleException(error);
+			}
+		};
+		annotationsInitWorker.execute();
 		
-		SimpleWorker ancestorLoadingWorker = new SimpleWorker() {
+		
+		ancestorLoadingWorker = new SimpleWorker() {
 
 			private List<RootedEntity> ancestors = new ArrayList<RootedEntity>();
 				
@@ -1044,7 +1084,6 @@ public class IconDemoPanel extends Viewer {
 				
 			}
 		};
-
 		ancestorLoadingWorker.execute();
 	}
 	
@@ -1053,12 +1092,10 @@ public class IconDemoPanel extends Viewer {
 		if (!SwingUtilities.isEventDispatchThread())
 			throw new RuntimeException("IconDemoPanel.entityLoadDone called outside of EDT");
 
+		// Create the image buttons
 		imagesPanel.setRootedEntities(getRootedEntities());
-		refreshAnnotations(null);
-
-		showAllEntities();
-		filterEntities();
-
+		
+		// Update preferences for each button
 		Boolean invertImages = (Boolean)SessionMgr.getSessionMgr().getModelProperty(
 				ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY);
 		Boolean tagTable = (Boolean)SessionMgr.getSessionMgr().getModelProperty(
@@ -1075,10 +1112,10 @@ public class IconDemoPanel extends Viewer {
 		// buttons so that we can calculate the grid correctly
 		imagesPanel.resizeTables(imagesPanel.getCurrTableHeight());
 		imagesPanel.rescaleImages(imagesPanel.getCurrImageSize());
-		
-		revalidate();
-		repaint();
 
+		// Actually display everything
+		showImagePanel();
+		
 		// Wait until everything is recomputed
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
@@ -1099,21 +1136,6 @@ public class IconDemoPanel extends Viewer {
 				}
 			}
 		});
-	}
-
-	private synchronized void entityLoadError(Throwable error) {
-
-		error.printStackTrace();
-		if (rootedEntities != null) {
-			JOptionPane.showMessageDialog(IconDemoPanel.this, "Error loading annotations", "Data Loading Error",
-					JOptionPane.ERROR_MESSAGE);
-			imagesPanel.setRootedEntities(rootedEntities);
-			showAllEntities();
-			// TODO: set read-only mode
-		} else {
-			JOptionPane.showMessageDialog(IconDemoPanel.this, "Error loading session", "Data Loading Error",
-					JOptionPane.ERROR_MESSAGE);
-		}
 	}
 
 	protected void removeRootedEntity(final RootedEntity rootedEntity) {
@@ -1295,7 +1317,7 @@ public class IconDemoPanel extends Viewer {
 		add(splashPanel, BorderLayout.CENTER);
 	}
 
-	public synchronized void showAllEntities() {
+	public synchronized void showImagePanel() {
 
 		removeAll();
 		add(toolbar, BorderLayout.NORTH);

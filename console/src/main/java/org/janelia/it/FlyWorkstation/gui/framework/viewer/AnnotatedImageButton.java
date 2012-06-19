@@ -3,18 +3,20 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 import java.awt.*;
 import java.awt.dnd.*;
 import java.awt.event.MouseListener;
+import java.util.List;
 
 import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 
 /**
  * A DynamicImagePanel with a title on top and optional annotation tags underneath. Made to be aggregated in an 
@@ -23,12 +25,14 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public abstract class AnnotatedImageButton extends JToggleButton implements DragGestureListener { 
-
+	
 	private final JLabel titleLabel;
 	private final JLabel subtitleLabel;
     private final JPanel mainPanel;
     private final JPanel buttonPanel;
+    private final JLabel loadingLabel;
     private AnnotationView annotationView;
+    private boolean annotationsLoaded = false;
     private DragSource source;
     
     protected final IconDemoPanel iconDemoPanel;
@@ -54,18 +58,23 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
         buttonPanel.setOpaque(false);
         add(buttonPanel);
 
-        titleLabel = new JLabel();
+        titleLabel = new JLabel(" ");
         titleLabel.setFocusable(false);
         titleLabel.setFont(new Font("Sans Serif", Font.PLAIN, 12));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         titleLabel.setOpaque(false);
 
-        subtitleLabel = new JLabel();
+        subtitleLabel = new JLabel(" ");
         subtitleLabel.setFocusable(false);
         subtitleLabel.setFont(new Font("Sans Serif", Font.PLAIN, 12));
         subtitleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         subtitleLabel.setOpaque(false);
-        subtitleLabel.setVisible(false);
+
+        loadingLabel = new JLabel();
+        loadingLabel.setOpaque(false);
+        loadingLabel.setIcon(Icons.getLoadingIcon());
+        loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        loadingLabel.setVerticalAlignment(SwingConstants.CENTER);
         
         c.gridx = 0;
         c.gridy = 0;
@@ -93,6 +102,13 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
         c.anchor = GridBagConstraints.CENTER;
         c.weighty = 0;
         buttonPanel.add(mainPanel, c);
+        
+        c.gridx = 0;
+        c.gridy = 3;
+        c.fill = GridBagConstraints.BOTH;
+        c.anchor = GridBagConstraints.PAGE_START;
+        c.weighty = 1;
+        buttonPanel.add(loadingLabel, c);
 
         setAnnotationView(new AnnotationTagCloudPanel());
         
@@ -105,6 +121,7 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
 
         // Fix event dispatching so that user can click on the title or the tags and still select the button
         titleLabel.addMouseListener(new MouseForwarder(this, "JLabel(titleLabel)->AnnotatedImageButton"));
+        subtitleLabel.addMouseListener(new MouseForwarder(this, "JLabel(titleLabel)->AnnotatedImageButton"));
         
     	refresh(rootedEntity);
     }
@@ -144,7 +161,6 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
 					protected void hadSuccess() {
 		        		String subtitle = "Represented by "+loadedRep.getName();
 		        		setSubtitle(subtitle, 100);
-		        		subtitleLabel.setVisible(true);
 					}
 					
 					@Override
@@ -160,7 +176,6 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
     	setTitle(tsb.toString(), 100);
     	if (ssb.length()>0) {
     		setSubtitle(ssb.toString(), 100);
-    		subtitleLabel.setVisible(true);
     	}
     	
         mainPanel.add(init(rootedEntity));
@@ -190,7 +205,7 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
     
 	public synchronized void setTitleVisible(boolean visible) {
         titleLabel.setVisible(visible);
-        subtitleLabel.setVisible(visible && !StringUtils.isEmpty(subtitleLabel.getText()));
+        subtitleLabel.setVisible(visible);
     }
 
     public synchronized void setTagsVisible(boolean visible) {
@@ -198,16 +213,25 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
     }
 
     public void setAnnotationView(AnnotationView annotationView) {
-    	
-    	if (this.annotationView != null) {
-    		buttonPanel.remove((JPanel)this.annotationView);
-    	}
-    	
     	this.annotationView = annotationView;
-
         // Fix event dispatching so that user can click on the tags and still select the button
     	((JPanel)annotationView).addMouseListener(new MouseForwarder(this,"JPanel(annotationView)->AnnotatedImageButton"));
-        
+    	if (annotationsLoaded) {
+    		showAnnotations(annotationView.getAnnotations());
+    	}
+    }
+    
+    public AnnotationView getAnnotationView() {
+        return annotationView;
+    }
+
+    public void showAnnotations(List<OntologyAnnotation> annotations) {
+    	
+    	annotationView.setAnnotations(annotations);
+    	annotationsLoaded = true;
+    	
+    	buttonPanel.remove(loadingLabel);
+    	if (annotationView!=null) buttonPanel.remove((JPanel)annotationView);
         GridBagConstraints c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 3;
@@ -217,10 +241,6 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
         buttonPanel.add((JPanel)annotationView, c);
     }
     
-    public AnnotationView getAnnotationView() {
-        return annotationView;
-    }
-
     public RootedEntity getRootedEntity() {
         return rootedEntity;
     }
