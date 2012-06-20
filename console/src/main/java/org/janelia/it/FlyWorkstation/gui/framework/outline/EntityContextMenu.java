@@ -760,9 +760,13 @@ public class EntityContextMenu extends JPopupMenu {
                     try {
                         Entity result = rootedEntity.getEntity();
                         if (!entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
-                            ModelMgr.getModelMgr().getAncestorWithType(result, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
+                            result = ModelMgr.getModelMgr().getAncestorWithType(result, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
                         }
-                        ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(result.getId());
+
+                        if (result != null && ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(result.getId())) {
+                            // Success
+                            return;
+                        }
                     }
                     catch (Exception e) {
                     	SessionMgr.getSessionMgr().handleException(e);
