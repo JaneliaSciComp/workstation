@@ -1014,41 +1014,6 @@ public class IconDemoPanel extends Viewer {
 			}
 		};
 		entityLoadingWorker.execute();
-
-		
-		annotationsInitWorker = new SimpleWorker() {
-			
-			@Override
-			protected void doStuff() throws Exception {
-				List<Entity> entities = new ArrayList<Entity>();
-				for(RootedEntity rootedEntity : lazyRootedEntities) {
-					entities.add(rootedEntity.getEntity());
-				}
-				annotations.init(entities);
-			}
-			
-			@Override
-			protected void hadSuccess() {
-				
-				refreshAnnotations(null);
-				filterEntities();
-
-				// Wait until everything is recomputed
-				SwingUtilities.invokeLater(new Runnable() {
-					@Override
-					public void run() {
-						imagesPanel.recalculateGrid();		
-					}
-				});
-				
-			}
-			
-			@Override
-			protected void hadError(Throwable error) {
-				SessionMgr.getSessionMgr().handleException(error);
-			}
-		};
-		annotationsInitWorker.execute();
 		
 		
 		ancestorLoadingWorker = new SimpleWorker() {
@@ -1118,7 +1083,43 @@ public class IconDemoPanel extends Viewer {
 		// buttons so that we can calculate the grid correctly
 		imagesPanel.resizeTables(imagesPanel.getCurrTableHeight());
 		imagesPanel.rescaleImages(imagesPanel.getCurrImageSize());
+		
+		// Begin annotation load
+		annotationsInitWorker = new SimpleWorker() {
+			
+			@Override
+			protected void doStuff() throws Exception {
+				List<Entity> entities = new ArrayList<Entity>();
+				for(RootedEntity rootedEntity : getRootedEntities()) {
+					entities.add(rootedEntity.getEntity());
+				}
+				annotations.init(entities);
+			}
+			
+			@Override
+			protected void hadSuccess() {
+				
+				refreshAnnotations(null);
+				filterEntities();
 
+				// Wait until everything is recomputed
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						imagesPanel.recalculateGrid();		
+					}
+				});
+				
+			}
+			
+			@Override
+			protected void hadError(Throwable error) {
+				SessionMgr.getSessionMgr().handleException(error);
+			}
+		};
+		annotationsInitWorker.execute();
+		
+		
 		// Actually display everything
 		showImagePanel();
 		
