@@ -92,6 +92,7 @@ public class FileMenu extends JMenu {
                 menuFileImport_actionPerformed();
             }
         });
+        add(menuFileImport);
 
         menuSetPreferences = new JMenu("Preferences");
         menuSetPreferences.setMnemonic('P');
