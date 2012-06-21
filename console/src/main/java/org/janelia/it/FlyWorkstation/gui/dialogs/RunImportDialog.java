@@ -4,13 +4,17 @@ import loci.plugins.config.SpringUtilities;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.fileDiscovery.FileDiscoveryTask;
 import org.janelia.it.jacs.model.user_data.Node;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,6 +22,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created with IntelliJ IDEA.
@@ -33,9 +39,14 @@ public class RunImportDialog extends ModalDialog{
     private static final String TOOLTIP_INPUT_DIR       = "Root directory of the tree that should be loaded into the database";
     private static final String TOOLTIP_TOP_LEVEL_FOLDER= "Name of the folder which should be loaded with the data";
 
+    private static final int REFRESH_DELAY = 3000;
 
     private final JTextField inputDirectoryField;
     private final JTextField topLevelFolderField;
+
+    private long taskID;
+
+    private Timer refreshTimer;
 
     public RunImportDialog() {
         final JPanel attrPanel;
@@ -129,6 +140,7 @@ public class RunImportDialog extends ModalDialog{
         };
 
         executeWorker.execute();
+
     }
 
     public void showDialog() {
@@ -147,8 +159,27 @@ public class RunImportDialog extends ModalDialog{
                     owner, new ArrayList<Event>(), new HashSet<TaskParameter>(), path, topLevelFolderName, false);
             task.setJobName("Import Task");
             task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
+            taskID = task.getObjectId();
+            ModelMgr.getModelMgr().submitJob(process, task.getObjectId());
 
-                ModelMgr.getModelMgr().submitJob(process, task.getObjectId());
+            refreshTimer = new Timer(REFRESH_DELAY, new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        Task importCompleteYet = ModelMgr.getModelMgr().getTaskById(taskID);
+                        if (importCompleteYet.isDone()) {
+                            refreshTimer.stop();
+                            SessionMgr.getBrowser().getEntityOutline().refresh();
+                        }
+                    }
+                    catch (Exception e1) {
+                        e1.printStackTrace();
+                    }
+                }
+            });
+            refreshTimer.setInitialDelay(0);
+            refreshTimer.start();
+
         }
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
