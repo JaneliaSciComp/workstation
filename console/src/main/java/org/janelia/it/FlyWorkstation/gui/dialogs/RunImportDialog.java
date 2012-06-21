@@ -10,7 +10,6 @@ import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.fileDiscovery.FileDiscoveryTask;
-import org.janelia.it.jacs.model.tasks.fileDiscovery.FileTreeLoaderPipelineTask;
 import org.janelia.it.jacs.model.user_data.Node;
 
 import javax.swing.*;
@@ -103,16 +102,6 @@ public class RunImportDialog extends ModalDialog{
 
         final String inputDirPath = inputDirectoryField.getText();
         final String topLevelFolderName = topLevelFolderField.getText();
-
-        // Update user Preferences
-        if (null!=topLevelFolderField.getText()) {
-            SessionMgr.getSessionMgr().setModelProperty(TOP_LEVEL_FOLDER_NAME,topLevelFolderField.getText());
-        }
-        if (null!=inputDirectoryField.getText()) {
-            SessionMgr.getSessionMgr().setModelProperty(INPUT_DIR,inputDirectoryField.getText());
-        }
-        // Prompt a save of the user settings because we can't trust the Mac exit yet
-        SessionMgr.getSessionMgr().saveUserSettings();
 
         SimpleWorker executeWorker = new SimpleWorker() {
 
