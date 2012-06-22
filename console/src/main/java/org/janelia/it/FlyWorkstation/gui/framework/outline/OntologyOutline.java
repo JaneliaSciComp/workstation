@@ -30,7 +30,9 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.NavigateToNodeAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OntologyElementAction;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
@@ -152,6 +154,31 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
 					e.printStackTrace();
 				}
 			}
+        });
+
+        SessionMgr.getSessionMgr().addSessionModelListener(new SessionModelListener() {
+            @Override
+            public void browserAdded(BrowserModel browserModel) {
+
+            }
+
+            @Override
+            public void browserRemoved(BrowserModel browserModel) {
+
+            }
+
+            @Override
+            public void sessionWillExit() {
+
+            }
+
+            @Override
+            public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
+                if(key == "console.serverLogin"){
+                    SessionMgr.getBrowser().getOntologyOutline().clearTree();
+                    ModelMgr.getModelMgr().setCurrentOntology(null);
+                }
+            }
         });
         
         // Prepare the ontology manager and start preloading ontologies

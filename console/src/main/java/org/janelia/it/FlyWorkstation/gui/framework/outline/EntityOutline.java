@@ -22,7 +22,9 @@ import javax.swing.tree.TreePath;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
@@ -98,6 +100,30 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 				}
 			}
 		});
+
+        SessionMgr.getSessionMgr().addSessionModelListener(new SessionModelListener() {
+            @Override
+            public void browserAdded(BrowserModel browserModel) {
+
+            }
+
+            @Override
+            public void browserRemoved(BrowserModel browserModel) {
+
+            }
+
+            @Override
+            public void sessionWillExit() {
+
+            }
+
+            @Override
+            public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
+                if(key == "console.serverLogin"){
+                   SessionMgr.getBrowser().getEntityOutline().refresh();
+                }
+            }
+        });
 	}
 
 	public void init(List<Entity> entityRootList) {
