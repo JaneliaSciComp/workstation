@@ -24,6 +24,7 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
+import org.janelia.it.jacs.model.ontology.OntologyRoot;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
@@ -37,6 +38,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * Context pop up menu for entities.
@@ -51,6 +53,7 @@ public class EntityContextMenu extends JPopupMenu {
 	protected final RootedEntity rootedEntity;
 	protected final boolean multiple;
     private JMenu errorMenu;
+    private OntologyRoot tmpErrorOntology = ModelMgr.ERROR_ONTOLOGY_ENTITY;
 	
 	// Internal state
 	protected boolean nextAddRequiresSeparator = false;
@@ -97,33 +100,55 @@ public class EntityContextMenu extends JPopupMenu {
 	}
 
     private void addBadDataButtons() {
-        Entity tmpErrorOntology = null;
 
-        try {
-            tmpErrorOntology = ModelMgr.getModelMgr().getErrorOntology();
-        }
-
-        catch (Exception e) {
-            e.printStackTrace();
-        }
         if (null!=tmpErrorOntology){
-            List<OntologyElement> ontologyElements = ModelMgr.getModelMgr().getOntology(tmpErrorOntology.getId()).getChildren();
+            List<OntologyElement> ontologyElements = tmpErrorOntology.getChildren();
             for(final OntologyElement element: ontologyElements){
                 errorMenu.add(new JMenuItem(element.getName())).addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
 
-                        String tempsubject = "Reported Data: " + rootedEntity.getEntity().getName();
-                        StringBuilder sBuf = new StringBuilder();
-                        sBuf.append("Name: ").append(rootedEntity.getEntity().getName()).append("\n");
-                        sBuf.append("Type: ").append(rootedEntity.getEntity().getEntityType().getName()).append("\n");
-                        sBuf.append("ID: ").append(rootedEntity.getEntity().getId().toString()).append("\n\n");
-                        MailHelper helper = new MailHelper();
-                        helper.sendEmail((String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL),
-                                ConsoleProperties.getString("console.HelpEmail"),
-                                tempsubject, sBuf.toString());
+                        Callable<Void> doSuccess = new Callable<Void>() {
+                            @Override
+                            public Void call() throws Exception {
+                                SimpleWorker simpleWorker = new SimpleWorker() {
+                                    @Override
+                                    protected void doStuff() throws Exception {
+                                        String annotationValue = "";
+                                        List<Entity> annotationEntities = ModelMgr.getModelMgr().getAnnotationsForEntity(rootedEntity.getEntity().getId());
+                                        for(Entity annotation:annotationEntities){
+                                            if(annotation.getValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_KEY_TERM).contains(element.getName())){
+                                                annotationValue = annotation.getName();
+                                            }
+                                        }
 
-                        AnnotateAction action = new AnnotateAction();
+                                        String tempsubject = "Reported Data: " + rootedEntity.getEntity().getName();
+                                        StringBuilder sBuf = new StringBuilder();
+                                        sBuf.append("Name: ").append(rootedEntity.getEntity().getName()).append("\n");
+                                        sBuf.append("Type: ").append(rootedEntity.getEntity().getEntityType().getName()).append("\n");
+                                        sBuf.append("ID: ").append(rootedEntity.getEntity().getId().toString()).append("\n");
+                                        sBuf.append("Annotation: ").append(annotationValue).append("\n\n");
+                                        MailHelper helper = new MailHelper();
+                                        helper.sendEmail((String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL),
+                                                ConsoleProperties.getString("console.HelpEmail"),
+                                                tempsubject, sBuf.toString());
+                                    }
+
+                                    @Override
+                                    protected void hadSuccess() {
+                                    }
+
+                                    @Override
+                                    protected void hadError(Throwable error) {
+                                        SessionMgr.getSessionMgr().handleException(error);
+                                    }
+                                };
+                                simpleWorker.execute();
+                                return null;
+                            }
+                        };
+
+                        AnnotateAction action = new AnnotateAction(doSuccess);
                         action.init(element);
                         action.doAction();
                     }

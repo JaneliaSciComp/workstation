@@ -76,7 +76,7 @@ public class ConsoleApp {
             // Protocol Registration - Adding more than one type should automatically switch over to the Aggregate Facade
             final ModelMgr modelMgr = ModelMgr.getModelMgr();
             modelMgr.registerFacadeManagerForProtocol(FacadeManager.getEJBProtocolString(), EJBFacadeManager.class, "JACS EJB Facade Manager");
-            
+            modelMgr.initErrorOntology();
             // Model Observers
             modelMgr.addModelMgrObserver(sessionMgr.getAxisServer());
             

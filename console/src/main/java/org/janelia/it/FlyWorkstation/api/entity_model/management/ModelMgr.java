@@ -16,6 +16,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.keybind.OntologyKeyBind;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.OntologyKeyBindings;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.exception_handlers.PrintStackTraceHandler;
 import org.janelia.it.FlyWorkstation.shared.util.ThreadQueue;
 import org.janelia.it.jacs.compute.api.support.EntityMapStep;
@@ -41,6 +42,7 @@ public class ModelMgr {
 	private static final String NEURON_ANNOTATOR_CLIENT_NAME = "NeuronAnnotator";
 	public static final String CATEGORY_KEYBINDS_GENERAL = "Keybind:General";
     public static final String CATEGORY_KEYBINDS_ONTOLOGY = "Keybind:Ontology:";
+    public static OntologyRoot ERROR_ONTOLOGY_ENTITY = null;
     
     private static ModelMgr modelManager = new ModelMgr();
     private boolean readOnly;
@@ -98,6 +100,26 @@ public class ModelMgr {
 
     public void deregisterExceptionHandler(ExceptionHandler handler) {
         FacadeManager.deregisterExceptionHandler(handler);
+    }
+
+    public void initErrorOntology(){
+        SimpleWorker worker = new SimpleWorker() {
+            @Override
+            protected void doStuff() throws Exception {
+                ERROR_ONTOLOGY_ENTITY = getOntology(getErrorOntology().getId());
+            }
+
+            @Override
+            protected void hadSuccess() {
+
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        worker.execute();
     }
 
     /**

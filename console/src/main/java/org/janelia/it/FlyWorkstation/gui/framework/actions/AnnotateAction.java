@@ -7,6 +7,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import javax.swing.JOptionPane;
 import javax.swing.ProgressMonitor;
@@ -31,6 +32,13 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class AnnotateAction extends OntologyElementAction {
+    Callable<Void> doSuccess = null;
+
+    public AnnotateAction(){}
+
+    public AnnotateAction(Callable<Void> callable){
+        doSuccess = callable;
+    }
 
     @Override
     public void doAction() {
@@ -127,7 +135,14 @@ public class AnnotateAction extends OntologyElementAction {
 
 			@Override
 			protected void hadSuccess() {
-				// No need to do anything
+				if(null!=doSuccess){
+                    try {
+                        doSuccess.call();
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
 			}
 
 			@Override
