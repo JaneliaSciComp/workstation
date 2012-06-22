@@ -49,6 +49,6 @@ public class SearchMenu extends JMenu {
         // Add the tools
         add(searchMenuItem);
         add(patternSearchMenuItem);
-        //add(giantFiberSearchMenuItem);
+        add(giantFiberSearchMenuItem);
     }
 }
