@@ -267,6 +267,15 @@ public class ImagesPanel extends JScrollPane {
 		return currTableHeight;
 	}
 
+	public void scrollToBottom() {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+			    getViewport().scrollRectToVisible(new Rectangle(0, buttonsPanel.getHeight(), 1, 1));
+			}
+		});
+	}
+	
 	public void scrollEntityToCenter(RootedEntity rootedEntity) {
 		if (rootedEntity == null) return;
     	AnnotatedImageButton selectedButton = getButtonById(rootedEntity.getId());

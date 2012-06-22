@@ -85,6 +85,7 @@ public class EntityContextMenu extends JPopupMenu {
 		add(getDeleteItem());
         
 		setNextAddRequiresSeparator(true);
+		add(getOpenInFirstViewerItem());
 		add(getOpenInSecondViewerItem());
 		add(getOpenInFinderItem());
 		add(getOpenWithMenu());
@@ -674,7 +675,43 @@ public class EntityContextMenu extends JPopupMenu {
 		
 		return deleteItem;
 	}
-    
+
+	protected JMenuItem getOpenInFirstViewerItem() {
+		if (multiple) return null;
+		if (StringUtils.isEmpty(rootedEntity.getUniqueId())) return null;
+        JMenuItem copyMenuItem = new JMenuItem("  Open in first viewer");
+        
+        copyMenuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				SimpleWorker worker = new SimpleWorker() {
+					
+					@Override
+					protected void doStuff() throws Exception {
+						if (EntityUtils.isInitialized(rootedEntity.getEntity())) {
+							ModelMgrUtils.loadLazyEntity(rootedEntity.getEntity(), false);
+						}
+					}
+					
+					@Override
+					protected void hadSuccess() {
+						Viewer mainViewer = SessionMgr.getBrowser().getMainViewer();
+			            ((IconDemoPanel)mainViewer).loadEntity(rootedEntity);
+			            mainViewer.setAsActive();
+			            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, rootedEntity.getUniqueId(), true);
+					}
+					
+					@Override
+					protected void hadError(Throwable error) {
+						SessionMgr.getSessionMgr().handleException(error);
+					}
+				};
+				worker.execute();
+			}
+		});
+        return copyMenuItem;
+	}
+	
 	protected JMenuItem getOpenInSecondViewerItem() {
 		if (multiple) return null;
 		if (StringUtils.isEmpty(rootedEntity.getUniqueId())) return null;

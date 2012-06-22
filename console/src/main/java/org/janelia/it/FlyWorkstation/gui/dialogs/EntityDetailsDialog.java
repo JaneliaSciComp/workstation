@@ -1,8 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
 import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -65,28 +64,27 @@ public class EntityDetailsDialog extends ModalDialog {
     public EntityDetailsDialog() {
 
         setTitle("Entity Details");
-        setModalityType(ModalityType.TOOLKIT_MODAL);
+        setModalityType(ModalityType.MODELESS);
         
         attrPanel = new JPanel(new SpringLayout());
-        attrPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10), 
-        		BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Properties")));
+        attrPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
 
         nameLabel = addAttribute("Name: ");
         typeLabel = addAttribute("Type: ");
         roleLabel = addAttribute("Role: ");
-        ownerLabel = addAttribute("Annotation Owner: ");
+        ownerLabel = addAttribute("Owner: ");
         creationDateLabel = addAttribute("Creation Date: ");
         updatedDateLabel = addAttribute("Updated Date: ");
         
         add(attrPanel, BorderLayout.NORTH);
         SpringUtilities.makeCompactGrid(attrPanel, attrPanel.getComponentCount()/2, 2, 6, 6, 6, 6);
 
-        attributePanel = new JPanel();
+        attributePanel = new JPanel(new BorderLayout());
         attributePanel.setBorder(
         		BorderFactory.createCompoundBorder(
         				BorderFactory.createCompoundBorder(
     							BorderFactory.createEmptyBorder(10, 10, 0, 10), 
-    							BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Attributes")),
+    							BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(), "Attributes")),
         		BorderFactory.createEmptyBorder(0, 0, 10, 0)));
         
         dynamicTable = new DynamicTable(true, true) {
@@ -111,18 +109,27 @@ public class EntityDetailsDialog extends ModalDialog {
         DynamicColumn valueCol = dynamicTable.addColumn(COLUMN_VALUE, COLUMN_VALUE, true, false, false, true);
         attributePanel.add(dynamicTable, BorderLayout.CENTER);
         
-        annotationPanel = new JPanel();
+        annotationPanel = new JPanel(new BorderLayout());
         annotationPanel.setBorder(
         		BorderFactory.createCompoundBorder(
         				BorderFactory.createCompoundBorder(
     							BorderFactory.createEmptyBorder(10, 10, 0, 10), 
-    							BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Annotations")),
+    							BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(), "Annotations")),
         		BorderFactory.createEmptyBorder(0, 0, 10, 0)));
         annotationView = new AnnotationTablePanel();
         annotationPanel.add((JPanel)annotationView, BorderLayout.CENTER);
         
         splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, attributePanel, annotationPanel);
+        splitPane.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         add(splitPane, BorderLayout.CENTER);
+        
+        addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentShown(ComponentEvent e) {
+				// Has to happen after the pane is visible
+		        splitPane.setDividerLocation(0.3);
+			}
+		});
         
         JButton okButton = new JButton("OK");
         okButton.setToolTipText("Close and save changes");

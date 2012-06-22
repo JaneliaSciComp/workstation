@@ -6,13 +6,11 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
+import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
@@ -1419,6 +1417,10 @@ public class IconDemoPanel extends Viewer {
 		return null;
 	}
 
+	public void scrollToBottom() {
+		imagesPanel.scrollToBottom();
+	}
+	
 	public String getCurrImageRole() {
 		return currImageRole;
 	}

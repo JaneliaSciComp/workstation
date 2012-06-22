@@ -6,24 +6,23 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.io.File;
+import java.io.FileWriter;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
+import javax.swing.Timer;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.SplitGroupingDialog;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenWithDefaultAppAction;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.AnnotatedImageButton;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
-import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -34,6 +33,7 @@ import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.utility.GenericTask;
 import org.janelia.it.jacs.model.user_data.Node;
+import org.janelia.it.jacs.shared.file_chooser.FileChooser;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
@@ -46,6 +46,9 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class SplitPickingPanel extends JPanel implements Refreshable {
+
+	/** Default directory for exports */
+	protected static final String DEFAULT_EXPORT_DIR = System.getProperty("user.home");
 	
 	public static final String FOLDER_NAME_REPRESENTATIVES = "Representatives";
 	public static final String FOLDER_NAME_SPLIT_LINES = "Split Lines";
@@ -67,7 +70,6 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	private final IconDemoPanel crossesPanel;
 //	private final JTextField methodField;
 //	private final JTextField blurField;
-	private final JToggleButton refreshToggleButton;
 	
 	private RootedEntity workingFolder;
 	private RootedEntity repFolder;
@@ -77,7 +79,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	private RootedEntity crossFolder;
 
 	private Timer refreshTimer;
-	
+	private Set<Long> runningTasks = Collections.synchronizedSet(new HashSet<Long>());
 	
 	public SplitPickingPanel() {
 	
@@ -88,7 +90,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		
 		JPanel mainPanel = new JPanel();
 		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
-		mainPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+		mainPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 0, 5));
 		
 		JPanel folderPanel = new JPanel();
 		folderPanel.setLayout(new BoxLayout(folderPanel, BoxLayout.LINE_AXIS));
@@ -223,18 +225,6 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		computePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		mainPanel.add(computePanel);
 
-		refreshToggleButton = new JToggleButton();
-		refreshToggleButton.setIcon(Icons.getIcon("refresh_static.gif"));
-		refreshToggleButton.setSelectedIcon(Icons.getIcon("refresh_spin.gif"));
-		refreshToggleButton.setFocusable(false);
-		refreshToggleButton.setToolTipText("Periodically refresh the current view");
-		refreshToggleButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				setRefreshing(refreshToggleButton.isSelected());
-			}
-		});
-		
 //		JPanel param1Panel = new JPanel();
 //		param1Panel.setLayout(new BoxLayout(param1Panel, BoxLayout.LINE_AXIS));
 //		JLabel param1Label = new JLabel("Method (0=minimum value, 1=geometric mean, 2=scaled product): ");
@@ -260,6 +250,34 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 //		param2Panel.setAlignmentX(Component.LEFT_ALIGNMENT);
 //		mainPanel.add(param2Panel);
 		
+
+		
+		JPanel exportPanel = new JPanel();
+		exportPanel.setLayout(new BoxLayout(exportPanel, BoxLayout.LINE_AXIS));
+		JLabel exportLabel = new JLabel("5. Export results to file: ");
+		exportPanel.add(exportLabel);
+		JButton exportButton = new JButton("Export");
+		exportButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (workingFolder==null) {
+					JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Please choose a result folder first", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				if (crossFolder==null) {
+					JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Please compute some crosses first", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+
+				exportResults();
+			}
+		});
+		exportPanel.add(exportButton);
+		exportPanel.setPreferredSize(new Dimension(0, STEP_PANEL_HEIGHT));
+		exportPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		mainPanel.add(exportPanel);
+		
+		
 		add(mainPanel, BorderLayout.NORTH);
 		
 		crossesPanel = new IconDemoPanel(EntitySelectionModel.CATEGORY_CROSS_VIEW) {
@@ -270,8 +288,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				JToolBar toolbar = super.createToolbar();
 				toolbar.removeAll();
 				
-				refreshToggleButton.addMouseListener(new MouseForwarder(toolbar, "RefreshToggleButton->JToolBar"));
-				toolbar.add(refreshToggleButton);
+				toolbar.add(refreshButton);
 
 				toolbar.addSeparator();
 				toolbar.add(imageSizeSlider);
@@ -385,31 +402,49 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				refreshToggleButton.setSelected(refreshing);
-				
 				if (refreshTimer!=null) {
 					refreshTimer.stop();
+					refreshTimer = null;
 				}
 				
 				if (refreshing) {
 					refreshTimer = new Timer(REFRESH_DELAY, new ActionListener() {
 						@Override
 						public void actionPerformed(ActionEvent e) {
-							crossesPanel.refresh(new Callable<Void>() {
-								@Override
-								public Void call() throws Exception {
-									for(RootedEntity rootedEntity : crossesPanel.getRootedEntities()) {
-										Entity entity = rootedEntity.getEntity();
-										if (entity.getEntityType().getName().equals(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS)
-												&& EntityUtils.getDefaultImageFilePath(entity)==null) {
-											return null;
+							
+							synchronized (runningTasks) {
+								if (runningTasks.isEmpty()) {
+									refreshTimer.stop();
+									refreshTimer = null;
+									return;
+								}
+								
+								Set<Long> doneTasks = new HashSet<Long>();
+								for(Long taskId : runningTasks) {
+									try {
+										Task task = ModelMgr.getModelMgr().getTaskById(taskId);
+										if (task!= null) {
+											Event lastEvent = task.getLastNonDeletedEvent();
+											if (lastEvent != null) {
+												if (Task.isDone(lastEvent.getEventType())) {
+													doneTasks.add(taskId);
+												}
+											}
 										}
 									}
-									// All seems to be done, stop refreshing
-									setRefreshing(false);
-									return null;
+									catch (Exception ex) {
+										SessionMgr.getSessionMgr().handleException(ex);
+									}
 								}
-							});
+								
+								if (!doneTasks.isEmpty()) {
+									crossesPanel.refresh();
+								}
+								
+								for(Long doneTaskId : doneTasks) {
+									runningTasks.remove(doneTaskId);
+								}
+							}
 						}
 					});
 					refreshTimer.setInitialDelay(0);
@@ -603,7 +638,6 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				}
 				
 				ModelMgr.getModelMgr().addChildren(parent.getId(), outputIds, EntityConstants.ATTRIBUTE_ENTITY);
-				
 				startIntersections(sampleIds1, sampleIds2, outputIds);
 			}
 			
@@ -613,11 +647,11 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				crossesPanel.refresh(new Callable<Void>() {
 					@Override
 					public Void call() throws Exception {
-						selectAndScroll(crossesPanel, firstCross.getId());
-						setRefreshing(true);
+						crossesPanel.scrollToBottom();
 						return null;
 					}
 				});
+				setRefreshing(true);
 			}
 			
 			@Override
@@ -652,13 +686,14 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
         
         System.out.println("Submitting task "+task.getDisplayName()+" id="+task.getObjectId());
         
+        runningTasks.add(task.getObjectId());
         ModelMgr.getModelMgr().submitJob("ScreenSampleCrossService", task.getObjectId());
     }
 
 	private String createCrossName(Entity sample1, Entity sample2) {
 		String[] parts1 = sample1.getName().split("-");
 		String[] parts2 = sample2.getName().split("-");
-		return parts1[0]+"+"+parts2[0];
+		return parts1[0]+"-x-"+parts2[0];
 	}
 	
 	private void setResultFolder(Entity entity) {
@@ -808,7 +843,167 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		
 		chooseFolderMenu.show(resultFolderButton, 0, resultFolderButton.getHeight());
 	}
-	
+
+    protected synchronized void exportResults() {
+
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Select File Destination");
+        chooser.setFileSelectionMode(FileChooser.FILES_ONLY);
+        File defaultFile = new File(DEFAULT_EXPORT_DIR,"SplitPickingResults.xls");
+        
+        int i = 1;
+        while (defaultFile.exists() && i<10000) {
+        	defaultFile = new File(DEFAULT_EXPORT_DIR,"SplitPickingResults_"+i+".xls");
+        	i++;
+        }
+        
+        chooser.setSelectedFile(defaultFile);
+        chooser.setFileFilter(new javax.swing.filechooser.FileFilter() {
+			@Override
+			public String getDescription() {
+				return "Tab-delimited Files (*.xls, *.txt)";
+			}
+			@Override
+			public boolean accept(File f) {
+				return !f.isDirectory();
+			}
+		});
+
+        if (chooser.showDialog(SessionMgr.getBrowser(), "OK") == FileChooser.CANCEL_OPTION) {
+            return;
+        }
+
+        final String destFile = chooser.getSelectedFile().getAbsolutePath();
+        if ((destFile == null) || destFile.equals("")) {
+            return;
+        }
+        
+        final String[] exportColumns = { "CrossIdentifier",
+        							     "OriginalADTransformantId", "OriginalADRobotId", 
+        								 "OriginalDBDTransformantId","OriginalDBDRobotId",
+        								 "BalancedADTransformantId", "BalancedADRobotId", 
+        								 "BalancedDBDTransformantId", "BalancedDBDRobotId" };
+        
+    	SimpleWorker worker = new SimpleWorker() {
+    		
+			@Override
+			protected void doStuff() throws Exception {
+				FileWriter writer = new FileWriter(destFile);
+
+				StringBuffer buf = new StringBuffer();
+				for(String column : exportColumns) {
+					buf.append(column);
+					buf.append("\t");
+				}
+				buf.append("\n");
+				writer.write(buf.toString());
+
+
+				long numTotal = crossesPanel.getRootedEntities().size();
+				long numProcessed = 0;
+				for(RootedEntity crossRootedEntity : crossesPanel.getRootedEntities()) {
+					
+					ModelMgrUtils.refreshEntityAndChildren(crossRootedEntity.getEntity());
+					
+					Entity crossEntity = ModelMgr.getModelMgr().getEntityTree(crossRootedEntity.getEntity().getId());
+					
+					Entity flylineAd = null;
+					Entity flylineDbd = null;
+					
+					if (crossEntity.getEntityType().getName().equals(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS)) {
+
+						for (Entity child : crossEntity.getChildren()) {
+							if (child.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
+								String splitPart = child.getValueByAttributeName(EntityConstants.ATTRIBUTE_SPLIT_PART);
+								if ("AD".equals(splitPart)) {
+									flylineAd = child;
+								}
+								else if ("DBD".equals(splitPart)) {
+									flylineDbd = child;
+								}
+							}
+						}
+						
+						if (flylineAd == null) {
+							System.out.println("Could not find AD line for screen sample "+crossEntity.getName());
+							continue;
+						}
+							
+						if (flylineDbd == null) {
+							System.out.println("Could not find DBD line for screen sample "+crossEntity.getName());
+							continue;
+						}
+
+						ModelMgrUtils.loadLazyEntity(flylineAd, false);
+						ModelMgrUtils.loadLazyEntity(flylineDbd, false);
+						Entity balancedAd = flylineAd.getChildByAttributeName(EntityConstants.ATTRIBUTE_BALANCED_FLYLINE);
+						Entity balancedDbd = flylineDbd.getChildByAttributeName(EntityConstants.ATTRIBUTE_BALANCED_FLYLINE);
+						String adRobotId = flylineAd.getValueByAttributeName(EntityConstants.ATTRIBUTE_ROBOT_ID);
+						String dbdRobotId = flylineDbd.getValueByAttributeName(EntityConstants.ATTRIBUTE_ROBOT_ID);
+						
+						StringBuffer buf2 = new StringBuffer();
+						buf2.append(crossEntity.getName());
+						buf2.append("\t");
+						buf2.append(flylineAd.getName());
+						buf2.append("\t");
+						buf2.append(adRobotId==null?"":adRobotId);
+						buf2.append("\t");
+						buf2.append(flylineDbd.getName());
+						buf2.append("\t");
+						buf2.append(dbdRobotId==null?"":dbdRobotId);
+						buf2.append("\t");
+
+						if (balancedAd==null) {
+							buf2.append("\t\t");
+						}
+						else {
+							String robotId = balancedAd.getValueByAttributeName(EntityConstants.ATTRIBUTE_ROBOT_ID);
+							buf2.append(balancedAd==null?"":balancedAd.getName());	
+							buf2.append("\t");
+							buf2.append(robotId==null?"":robotId);	
+							buf2.append("\t");
+						}
+						
+						if (balancedDbd==null) {
+							buf2.append("\t");
+						}
+						else {
+							String robotId = balancedDbd.getValueByAttributeName(EntityConstants.ATTRIBUTE_ROBOT_ID);
+							buf2.append(balancedDbd==null?"":balancedDbd.getName());	
+							buf2.append("\t");
+							buf2.append(robotId==null?"":robotId);
+						}
+						
+						buf2.append("\n");
+						writer.write(buf2.toString());
+					}
+
+					setProgress((int)++numProcessed, (int)numTotal);
+				}
+				
+				writer.close();
+			}
+			
+			@Override
+			protected void hadSuccess() {
+				int rv = JOptionPane.showConfirmDialog(SessionMgr.getBrowser(), "Data was successfully exported to "+destFile+". Open file in default viewer?", 
+						"Export successful", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+				if (rv==JOptionPane.YES_OPTION) {
+					OpenWithDefaultAppAction openAction = new OpenWithDefaultAppAction(destFile);
+					openAction.doAction();
+				}
+			}
+			
+			@Override
+			protected void hadError(Throwable error) {
+				SessionMgr.getSessionMgr().handleException(error);
+			}
+		};
+
+    	worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getBrowser(), "Exporting data", "", 0, 100));
+		worker.execute();
+    }
+    
 	private String commafy(List<Long> list) {
 		StringBuffer sb = new StringBuffer();
 		for(Long l : list) {
