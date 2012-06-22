@@ -204,11 +204,17 @@ public class ModelMgr {
     }
 
     public void setCurrentOntology(OntologyRoot ontology) {
-        if (selectedOntology == null || ontology == null || !selectedOntology.getId().equals(ontology.getId())) {
-            SessionMgr.getSessionMgr().setModelProperty("lastSelectedOntology", ontology.getId().toString());
-            modelAvailable = true;
-            selectedOntology = ontology;
-            notifyOntologySelected(ontology.getId());
+        if(ontology == null){
+            SessionMgr.getSessionMgr().setModelProperty("lastSelectedOntology", null);
+        }
+
+        else{
+            if(selectedOntology == null || !selectedOntology.getId().equals(ontology.getId())) {
+                SessionMgr.getSessionMgr().setModelProperty("lastSelectedOntology", ontology.getId().toString());
+                modelAvailable = true;
+                selectedOntology = ontology;
+                notifyOntologySelected(ontology.getId());
+            }
         }
     }
 

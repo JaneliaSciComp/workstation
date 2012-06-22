@@ -259,6 +259,9 @@ public class FileMenu extends JMenu {
 
     private void setLogin() {
         PrefController.getPrefController().getPrefInterface(DataSourceSettings.class, browser);
+        SessionMgr.getBrowser().getOntologyOutline().clearTree();
+        SessionMgr.getBrowser().getEntityOutline().refresh();
+        ModelMgr.getModelMgr().setCurrentOntology(null);
     }
 
     private void menuFileImport_actionPerformed(){
