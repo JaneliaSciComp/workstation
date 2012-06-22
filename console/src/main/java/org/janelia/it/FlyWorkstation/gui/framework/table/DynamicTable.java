@@ -55,12 +55,14 @@ public abstract class DynamicTable extends JPanel {
     	this(true, false);
     }
     
-    private void loadAll() {
-    	if (!hasMoreResults) return;
+    protected void loadAllResults() {
+    	if (!hasMoreResults) {
+			return;
+    	}
     	loadMoreResults(new Callable<Void>() {
 			@Override
 			public Void call() throws Exception {
-				loadAll();
+				loadAllResults();
 				return null;
 			}
 		});
@@ -94,7 +96,7 @@ public abstract class DynamicTable extends JPanel {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				loadAllButton.setEnabled(false);
-				loadAll();
+				loadAllResults();
 			}
 		});
     	loadAllButton.setVisible(false);
@@ -202,7 +204,7 @@ public abstract class DynamicTable extends JPanel {
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
         buttonPane.add(loadMoreButton);
-//        buttonPane.add(loadAllButton);
+        buttonPane.add(loadAllButton);
         buttonPane.setAlignmentX(Component.LEFT_ALIGNMENT);
         
         mainPane = new JPanel();
@@ -592,7 +594,9 @@ public abstract class DynamicTable extends JPanel {
     public void setMoreResults(boolean moreResults) {
     	this.hasMoreResults = moreResults;
     	loadMoreButton.setVisible(hasMoreResults);
+    	loadMoreButton.setEnabled(hasMoreResults);
     	loadAllButton.setVisible(hasMoreResults);
+    	loadAllButton.setEnabled(hasMoreResults);
     	revalidate();
     	repaint();
     }
