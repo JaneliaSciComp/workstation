@@ -285,29 +285,6 @@ public class IconDemoPanel extends Viewer {
 	
 	public IconDemoPanel(final String selectionCategory) {
 		this(null, selectionCategory);
-        SessionMgr.getSessionMgr().addSessionModelListener(new SessionModelListener() {
-            @Override
-            public void browserAdded(BrowserModel browserModel) {
-
-            }
-
-            @Override
-            public void browserRemoved(BrowserModel browserModel) {
-
-            }
-
-            @Override
-            public void sessionWillExit() {
-
-            }
-
-            @Override
-            public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
-                if(key == "console.serverLogin"){
-                    IconDemoPanel.this.clear();
-                }
-            }
-        });
 	}
 	
 	public IconDemoPanel(final ViewerSplitPanel viewerContainer, final String selectionCategory) {
@@ -324,17 +301,14 @@ public class IconDemoPanel extends Viewer {
         SessionMgr.getSessionMgr().addSessionModelListener(new SessionModelListener() {
             @Override
             public void browserAdded(BrowserModel browserModel) {
-
             }
 
             @Override
             public void browserRemoved(BrowserModel browserModel) {
-
             }
 
             @Override
             public void sessionWillExit() {
-
             }
 
             @Override
@@ -1433,6 +1407,9 @@ public class IconDemoPanel extends Viewer {
 		Collections.sort(allImageRoles);
 		
 		imageRoleButton.setEnabled(!allImageRoles.isEmpty());
+		if (!allImageRoles.contains(currImageRole)) {
+			currImageRole = EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE;
+		}
 	}
 
 	public synchronized RootedEntity getLastSelectedEntity() {
