@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 
 import javax.swing.*;
 
+import org.apache.commons.lang.StringUtils;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.ModalDialog;
@@ -141,8 +142,10 @@ public class GeneralSearchDialog extends ModalDialog {
     }
     
 	protected void init() {
-		
-		folderNameField.setText(getNextFolderName());
+	
+		if (StringUtils.isEmpty(folderNameField.getText()) || folderNameField.getText().matches("^Search Results #(\\d+)$")) {
+			folderNameField.setText(getNextFolderName());	
+		}
 
 		Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
 		setPreferredSize(new Dimension((int)(browser.getWidth()*0.8),(int)(browser.getHeight()*0.8)));
@@ -152,11 +155,16 @@ public class GeneralSearchDialog extends ModalDialog {
 		
     	resultsPanel.performSearch(false, false, true);
 
-    	getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true),"searchAction");
-    	getRootPane().getActionMap().put("searchAction",new AbstractAction("searchAction") {
+    	getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true),"enterAction");
+    	getRootPane().getActionMap().put("enterAction",new AbstractAction("enterAction") {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				paramsPanel.performSearch(true);
+				if (folderNameField.hasFocus()) {
+					saveResults();
+				}
+				else {
+					paramsPanel.performSearch(true);	
+				}
 			}
 		});
 		
@@ -189,15 +197,28 @@ public class GeneralSearchDialog extends ModalDialog {
     	
     	SimpleWorker worker = new SimpleWorker() {
 
-    		private Entity newFolder;
+    		private Entity saveFolder;
     		
 			@Override
 			protected void doStuff() throws Exception {
 
 				String folderName = folderNameField.getText();
-				this.newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
-				newFolder.addAttributeAsTag(EntityConstants.ATTRIBUTE_COMMON_ROOT);
-				newFolder = ModelMgr.getModelMgr().saveOrUpdateEntity(newFolder);
+
+				List<EntityData> rootEds = SessionMgr.getBrowser().getEntityOutline().getRootEntity().getOrderedEntityData();
+				for(EntityData rootEd : rootEds) {
+					final Entity commonRoot = rootEd.getChildEntity();
+					if (!commonRoot.getUser().getUserLogin().equals(SessionMgr.getUsername())) continue;
+					if (commonRoot.getName().equals(folderName)) {
+						this.saveFolder = commonRoot;
+					}
+				}
+				
+				if (saveFolder == null) {
+					// No existing folder, so create a new one
+					this.saveFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
+					saveFolder.addAttributeAsTag(EntityConstants.ATTRIBUTE_COMMON_ROOT);
+					saveFolder = ModelMgr.getModelMgr().saveOrUpdateEntity(saveFolder);	
+				}
 
 				List<Long> childIds = new ArrayList<Long>();
 				SearchResults searchResults = resultsPanel.getSearchResults();
@@ -215,7 +236,7 @@ public class GeneralSearchDialog extends ModalDialog {
 					childIds.add(entity.getId());
 				}
 				
-				ModelMgr.getModelMgr().addChildren(newFolder.getId(), childIds, EntityConstants.ATTRIBUTE_ENTITY);
+				ModelMgr.getModelMgr().addChildren(saveFolder.getId(), childIds, EntityConstants.ATTRIBUTE_ENTITY);
 			}
 			
 			@Override
@@ -224,7 +245,7 @@ public class GeneralSearchDialog extends ModalDialog {
 				entityOutline.refresh(true, new Callable<Void>() {
 					@Override
 					public Void call() throws Exception {
-		        		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, "/e_"+newFolder.getId(), true);	
+		        		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, "/e_"+saveFolder.getId(), true);	
 						return null;
 					}
 					
