@@ -264,7 +264,7 @@ public class Browser extends JFrame implements Cloneable {
 
         patternSearchDialog = new PatternSearchDialog();
 
-//        giantFiberSearchDialog = new GiantFiberSearchDialog();
+        giantFiberSearchDialog = new GiantFiberSearchDialog();
         
         ontologyOutline.setPreferredSize(new Dimension());
 //        icsTabPane = new ICSTabPane(this);
