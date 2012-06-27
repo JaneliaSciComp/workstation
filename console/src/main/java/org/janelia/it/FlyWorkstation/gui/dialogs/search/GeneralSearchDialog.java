@@ -15,7 +15,6 @@ import java.util.regex.Pattern;
 
 import javax.swing.*;
 
-import org.apache.commons.lang.StringUtils;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.ModalDialog;
@@ -35,6 +34,7 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.file_chooser.FileChooser;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 
 
 /**
