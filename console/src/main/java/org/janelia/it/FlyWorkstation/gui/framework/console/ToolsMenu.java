@@ -11,7 +11,6 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Set;
 import java.util.prefs.BackingStoreException;
 
@@ -67,7 +66,7 @@ public class ToolsMenu extends JMenu implements ToolListener {
                     try {
                         ToolMgr.runTool((String)o);
                     }
-                    catch (IOException e1) {
+                    catch (Exception e1) {
                         JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Could not launch this tool. " +
                                 "Please choose the appropriate file path from the Tools->Configure Tools area", "ToolInfo Launch ERROR", JOptionPane.ERROR_MESSAGE);
                     }

@@ -10,7 +10,6 @@ import org.janelia.it.FlyWorkstation.shared.preferences.InfoObject;
 import org.janelia.it.FlyWorkstation.shared.preferences.PrefMgrListener;
 import org.janelia.it.FlyWorkstation.shared.preferences.PreferenceManager;
 
-import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.FileWriter;
@@ -188,7 +187,7 @@ public class ToolMgr extends PreferenceManager {
             targetMasterCollection.put(ToolInfo.TOOL_PREFIX + tmpTool.getName(), tmpTool);
         }
         if (!targetMasterCollection.containsKey(ToolInfo.TOOL_PREFIX+PreferenceManager.getKeyForName(TOOL_NA, true))) {
-            ToolInfo tmpTool = new ToolInfo(TOOL_NA, vaa3dExePath, "v3d_16x16x32.png");
+            ToolInfo tmpTool = new ToolInfo(TOOL_NA, vaa3dExePath+" -na", "v3d_16x16x32.png");
             tmpTool.setSourceFile(sourceFile);
             targetMasterCollection.put(ToolInfo.TOOL_PREFIX + tmpTool.getName(), tmpTool);
         }
@@ -215,7 +214,7 @@ public class ToolMgr extends PreferenceManager {
         }
     }
 
-    public void addTool(ToolInfo tool){
+    public void addTool(ToolInfo tool) throws Exception {
         String tmpName = tool.getName();
         String tmpPath = tool.getPath();
         if (!tmpName.equals("") && !tmpPath.equals("")){
@@ -223,15 +222,14 @@ public class ToolMgr extends PreferenceManager {
             fireToolsChanged();
         }
         else {
-            JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Please make sure the tool name and path are correct.", "ToolInfo Exception", JOptionPane.ERROR_MESSAGE);
+            throw new Exception("Please make sure the tool name and path are correct.");
         }
     }
 
-    public void removeTool(ToolInfo targetTool){
+    public void removeTool(ToolInfo targetTool) throws Exception {
         String tmpName = targetTool.getName();
         if(!targetTool.getSourceFile().endsWith("User_Tools.properties")){
-            JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Cannot remove a System tool.", "ToolInfo Exception", JOptionPane.ERROR_MESSAGE);
-            return;
+            throw new Exception("Cannot remove a System tool.");
         }
         if (null!=toolTreeMap.get(tmpName)){
             toolTreeMap.remove(targetTool.getName());
@@ -239,7 +237,7 @@ public class ToolMgr extends PreferenceManager {
             fireToolsChanged();
         }
         else {
-            JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "The tool specified does not exist.", "ToolInfo Exception", JOptionPane.ERROR_MESSAGE);
+            throw new Exception("The tool specified does not exist.");
         }
     }
 
@@ -251,11 +249,10 @@ public class ToolMgr extends PreferenceManager {
         return toolTreeMap;
     }
 
-    public static void runTool(String toolName) throws IOException {
+    public static void runTool(String toolName) throws Exception {
         ToolInfo tmpTool = toolTreeMap.get(toolName);
         if (null==tmpTool.getPath()||"".equals(tmpTool.getPath())) {
-            JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Cannot launch the tool. Please go to the Tools->Configure Tools and define a path to the executable.", "ToolInfo Exception", JOptionPane.ERROR_MESSAGE);
-            return;
+            throw new Exception("Cannot run the tool.  A path to the program is not defined.");
         }
         if (tmpTool.getPath().endsWith(".app")) {
             Desktop.getDesktop().open(new File(tmpTool.getPath()));
@@ -265,7 +262,7 @@ public class ToolMgr extends PreferenceManager {
         }
     }
 
-    public static void openFile(String tool, String pathToTarget) throws IOException {
+    public static void openFile(String tool, String pathToTarget) throws Exception {
         ToolInfo tmpTool = getTool(tool);
         File tmpToolFile = new File(tmpTool.getPath());
         String exeCmd = tmpTool.getPath();
@@ -273,10 +270,14 @@ public class ToolMgr extends PreferenceManager {
             exeCmd = tmpTool.getPath()+" -i "+ PathTranslator.convertPath(pathToTarget);
         }
         if (TOOL_FIJI.equals(tool)) {
+            if (tmpTool.getPath().endsWith(".app")) {
+                tmpTool.setPath(tmpTool.getPath()+"/Contents/MacOS/fiji-macosx");
+            }
             exeCmd = tmpTool.getPath()+ " " + PathTranslator.convertPath(pathToTarget);
         }
+        System.out.println("Running command: "+exeCmd);
         if (tmpToolFile.exists()&&tmpToolFile.canExecute()) {
-            if (tmpTool.getPath().endsWith(".app")) {
+            if (exeCmd.endsWith(".app")) {
                 runTool(tool);
             }
             else {
@@ -284,8 +285,7 @@ public class ToolMgr extends PreferenceManager {
             }
         }
         else {
-            JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Could not open file with " + tool, "ToolInfo Launch ERROR", JOptionPane.ERROR_MESSAGE);
-            throw new IOException("ToolInfo does "+tool+" does not exist or cannot be executed.");
+            throw new IOException("Tool "+tool+" does not exist or cannot be executed.");
         }
     }
 

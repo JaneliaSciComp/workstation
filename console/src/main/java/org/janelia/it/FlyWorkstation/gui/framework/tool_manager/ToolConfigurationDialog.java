@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.tool_manager;
 
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 
 import javax.swing.*;
@@ -19,7 +20,7 @@ import java.util.prefs.BackingStoreException;
  * Date: 5/5/11
  * Time: 10:40 AM
  */
-public class ToolConfigurationDialog extends JDialog{
+public class ToolConfigurationDialog extends JDialog {
 
     private JFileChooser _toolFileChooser;
     private DefaultTableModel model;
@@ -70,7 +71,12 @@ public class ToolConfigurationDialog extends JDialog{
                 if (_toolFileChooser.getSelectedFile().exists()) {
                     ToolInfo toolTest = ToolMgr.getTool(ToolInfo.TOOL_PREFIX + ToolInfo.USER + "." + _toolFileChooser.getSelectedFile().getName().replaceAll("\\.", ""));
                     if (null == toolTest) {
-                        ToolMgr.getToolMgr().addTool(new ToolInfo(_toolFileChooser.getSelectedFile().getName(), _toolFileChooser.getSelectedFile().getAbsolutePath(), "brain.png"));
+                        try {
+                            ToolMgr.getToolMgr().addTool(new ToolInfo(_toolFileChooser.getSelectedFile().getName(), _toolFileChooser.getSelectedFile().getAbsolutePath(), "brain.png"));
+                        }
+                        catch (Exception e) {
+                            SessionMgr.getSessionMgr().handleException(e);
+                        }
                         refreshTable();
                     }
                     else {
@@ -157,7 +163,12 @@ public class ToolConfigurationDialog extends JDialog{
         String key = model.getValueAt(selectedRow, 0).toString();
         ToolInfo tmpTool = ToolMgr.getTool(key);
         if (!ToolInfo.SYSTEM.equals(tmpTool.getSourceFile())) {
-            ToolMgr.getToolMgr().removeTool(tmpTool);
+            try {
+                ToolMgr.getToolMgr().removeTool(tmpTool);
+            }
+            catch (Exception e) {
+                SessionMgr.getSessionMgr().handleException(e);
+            }
             model.removeRow(selectedRow);
         }
     }

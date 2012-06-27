@@ -88,7 +88,10 @@ public class EntityContextMenu extends JPopupMenu {
 		add(getOpenInFirstViewerItem());
 		add(getOpenInSecondViewerItem());
 		add(getOpenInFinderItem());
-		add(getOpenWithMenu());
+        add(getOpenWithAppItem());
+        add(getNeuronAnnotatorItem());
+        add(getVaa3dItem());
+        add(getFijiViewerItem());
 
         setNextAddRequiresSeparator(true);
         add(getSearchHereItem());
@@ -748,16 +751,6 @@ public class EntityContextMenu extends JPopupMenu {
         return copyMenuItem;
 	}
 
-    protected JMenu getOpenWithMenu() {
-    	if (multiple) return null;
-		JMenu newFolderMenu = new JMenu("  Open with...");
-		add(newFolderMenu, getOpenWithAppItem());
-		add(newFolderMenu, getNeuronAnnotatorItem());
-		add(newFolderMenu, getVaa3dItem());
-		add(newFolderMenu, getFijiViewerItem());
-		return newFolderMenu;
-    }
-    
 	protected JMenuItem getOpenInFinderItem() {
 		if (multiple) return null;
 		if (!OpenInFinderAction.isSupported()) return null;
@@ -784,7 +777,7 @@ public class EntityContextMenu extends JPopupMenu {
         	OpenWithDefaultAppAction action = new OpenWithDefaultAppAction(rootedEntity.getEntity()) {
         		@Override
         		public String getName() {
-        			return "System default";
+        			return "  System default";
         		}
         	};
         	return getActionItem(action);
@@ -796,14 +789,15 @@ public class EntityContextMenu extends JPopupMenu {
         if (multiple) return null;
         final String path = EntityUtils.getDefault3dImageFilePath(rootedEntity.getEntity());
         if (path!=null) {
-            JMenuItem fijiMenuItem = new JMenuItem("Fiji");
+            JMenuItem fijiMenuItem = new JMenuItem("  View In Fiji");
             fijiMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
                         ToolMgr.openFile(ToolMgr.TOOL_FIJI,path);
                     }
                     catch (Exception e) {
-                        SessionMgr.getSessionMgr().handleException(e);
+                        JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Could not launch this tool. " +
+                                "Please choose the appropriate file path from the Tools->Configure Tools area", "Tool Launch ERROR", JOptionPane.ERROR_MESSAGE);
                     }
                 }
             });
@@ -816,7 +810,7 @@ public class EntityContextMenu extends JPopupMenu {
 		if (multiple) return null;
         final String entityType = rootedEntity.getEntity().getEntityType().getName();
         if (entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT) || entityType.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
-            JMenuItem vaa3dMenuItem = new JMenuItem("Vaa3D (Neuron Annotator)");
+            JMenuItem vaa3dMenuItem = new JMenuItem("  View in Vaa3D (Neuron Annotator)");
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
@@ -844,14 +838,15 @@ public class EntityContextMenu extends JPopupMenu {
 		if (multiple) return null;
         final String path = EntityUtils.getDefault3dImageFilePath(rootedEntity.getEntity());
         if (path!=null) {
-            JMenuItem vaa3dMenuItem = new JMenuItem("Vaa3D");
+            JMenuItem vaa3dMenuItem = new JMenuItem("  View in Vaa3D");
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
                         ToolMgr.openFile(ToolMgr.TOOL_VAA3D, path);
                     }
                     catch (Exception e) {
-                        SessionMgr.getSessionMgr().handleException(e);
+                        JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Could not launch this tool. " +
+                                "Please choose the appropriate file path from the Tools->Configure Tools area", "ToolInfo Launch ERROR", JOptionPane.ERROR_MESSAGE);
                     }
                 }
             });
