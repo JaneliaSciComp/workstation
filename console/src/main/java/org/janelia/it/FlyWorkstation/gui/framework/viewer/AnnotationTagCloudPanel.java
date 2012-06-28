@@ -15,6 +15,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 
 /**
@@ -70,6 +71,38 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
             });
             popupMenu.add(deleteItem);
     	}
+
+        if (null!=tag.getValueString()){
+            JMenuItem editItem = new JMenuItem("  Edit annotation");
+            editItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    final Object value = JOptionPane.showInputDialog(SessionMgr.getSessionMgr().getActiveBrowser(),
+                            "Value:\n", "Edit Annotation", JOptionPane.PLAIN_MESSAGE, null, null, tag.getValueString());
+
+                    final List<RootedEntity> selectedEntities = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer()).getSelectedEntities();
+                    for(RootedEntity rootedEntity: selectedEntities){
+                        if(null!=value && !value.toString().isEmpty()){
+                            String tmpValue = tag.getValueString();
+                            tag.setValueString(value.toString());
+                            tag.getEntity().setValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_VALUE_TERM, value.toString());
+                            String tmpName = tag.getEntity().getName();
+                            tmpName = tmpName.replaceAll(tmpValue, value.toString());
+                            tag.getEntity().setName(tmpName);
+                            try {
+                                ModelMgr.getModelMgr().saveOrUpdateAnnotation(rootedEntity.getEntity(), tag.getEntity());
+                            }
+                            catch (Exception e1) {
+                                e1.printStackTrace();
+                                SessionMgr.getSessionMgr().handleException(e1);
+                            }
+                        }
+                    }
+                }
+            });
+
+            popupMenu.add(editItem);
+        }
 
         JMenuItem detailsItem = new JMenuItem("  View details");
         detailsItem.addActionListener(new ActionListener() {

@@ -720,6 +720,12 @@ public class ModelMgr {
         if (newEntity!=null) notifyEntityChanged(newEntity.getId());
         return newEntity;
     }
+
+    public Entity saveOrUpdateAnnotation(Entity annotatedEntity, Entity annotation) throws Exception {
+        Entity newAnnotation = FacadeManager.getFacadeManager().getAnnotationFacade().saveEntity(annotation);
+        if(newAnnotation!=null) notifyAnnotationsChanged(annotatedEntity.getId());
+        return newAnnotation;
+    }
     
     public EntityData saveOrUpdateEntityData(EntityData newEntityData) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().saveEntityDataForEntity(newEntityData);

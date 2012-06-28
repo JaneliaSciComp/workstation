@@ -24,7 +24,9 @@ import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.janelia.it.jacs.model.ontology.types.Text;
 
 /**
  * A panel that shows a bunch of annotations in a table. 
@@ -252,6 +254,38 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 	            });
 	            popupMenu.add(deleteItem);
 	    	}
+
+            if (null!=annotation.getValueString()){
+                JMenuItem editItem = new JMenuItem("  Edit annotation");
+                editItem.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        final Object value = JOptionPane.showInputDialog(SessionMgr.getSessionMgr().getActiveBrowser(),
+                                "Value:\n", "Edit Annotation", JOptionPane.PLAIN_MESSAGE, null, null, annotation.getValueString());
+
+                        final List<RootedEntity> selectedEntities = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer()).getSelectedEntities();
+                        for(RootedEntity rootedEntity: selectedEntities){
+                            if(null!=value && !value.toString().trim().isEmpty()){
+                                String tmpValue = annotation.getValueString();
+                                annotation.setValueString(value.toString());
+                                annotation.getEntity().setValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_VALUE_TERM, value.toString());
+                                String tmpName = annotation.getEntity().getName();
+                                tmpName = tmpName.replaceAll(tmpValue, value.toString());
+                                annotation.getEntity().setName(tmpName);
+                                try {
+                                    ModelMgr.getModelMgr().saveOrUpdateAnnotation(rootedEntity.getEntity(), annotation.getEntity());
+                                }
+                                catch (Exception e1) {
+                                    e1.printStackTrace();
+                                    SessionMgr.getSessionMgr().handleException(e1);
+                                }
+                            }
+                        }
+                    }
+                });
+
+                popupMenu.add(editItem);
+            }
 
 	        JMenuItem detailsItem = new JMenuItem("  View details");
 	        detailsItem.addActionListener(new ActionListener() {
