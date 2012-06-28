@@ -231,7 +231,7 @@ public class ModelMgr {
         }
 
         else{
-            if(selectedOntology == null || !selectedOntology.getId().equals(ontology.getId())) {
+            if(selectedOntology == null || !selectedOntology.getId().equals(ontology.getId()) || !selectedOntology.isFullyLoaded()) {
                 SessionMgr.getSessionMgr().setModelProperty("lastSelectedOntology", ontology.getId().toString());
                 modelAvailable = true;
                 selectedOntology = ontology;

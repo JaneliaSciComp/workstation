@@ -112,6 +112,7 @@ public class OntologyTree extends JPanel {
         // Prepare for display and update the UI
 
         OntologyTree.this.updateUI();
+        ModelMgr.getModelMgr().setCurrentOntology(root);
     }
 
     public DynamicTree getDynamicTree() {
