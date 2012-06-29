@@ -6,17 +6,6 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.BufferedImage;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Callable;
-
-import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
@@ -38,6 +27,16 @@ import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Callable;
+
 /**
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of 
  * functionality on top of it, such as:
@@ -55,7 +54,8 @@ public class IconDemoPanel extends Viewer {
 	protected JButton prevButton;
 	protected JButton nextButton;
 	protected JButton pathButton;
-	protected JToggleButton showTitlesButton;
+    protected JToggleButton invertButton;
+    protected JToggleButton showTitlesButton;
 	protected JButton imageRoleButton;
 	protected JToggleButton showTagsButton;
 	protected JButton refreshButton;
@@ -765,7 +765,20 @@ public class IconDemoPanel extends Viewer {
 
 		toolBar.addSeparator();
 
-		showTitlesButton = new JToggleButton();
+        invertButton = new JToggleButton();
+        invertButton.setIcon(Icons.getIcon("invert.png"));
+        invertButton.setFocusable(false);
+        invertButton.setToolTipText("Invert the color space on all images");
+        invertButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SessionMgr.getSessionMgr().setModelProperty(ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY,
+                        Boolean.valueOf(invertButton.isSelected()));
+            }
+        });
+        toolBar.add(invertButton);
+
+        showTitlesButton = new JToggleButton();
 		showTitlesButton.setIcon(Icons.getIcon("text_smallcaps.png"));
 		showTitlesButton.setFocusable(false);
 		showTitlesButton.setSelected(true);
