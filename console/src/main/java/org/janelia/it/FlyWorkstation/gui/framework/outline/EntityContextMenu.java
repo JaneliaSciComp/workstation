@@ -79,6 +79,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getGotoRelatedItem());
         
         setNextAddRequiresSeparator(true);
+        add(getNewFolderItem());
         add(getAddToRootFolderItem());
         add(getRenameItem());
         add(getErrorFlag());
@@ -854,8 +855,41 @@ public class EntityContextMenu extends JPopupMenu {
         }
         return null;
 	}
-	
-	protected JMenuItem getCreateSessionItem() {
+
+    protected JMenuItem getNewFolderItem() {
+        if (multiple) return null;
+        if (EntityConstants.TYPE_FOLDER.equals(rootedEntity.getEntity().getEntityType().getName())) {
+            JMenuItem newFolderItem = new JMenuItem("  Create new folder");
+            newFolderItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
+
+                    // Add button clicked
+                    String folderName = (String) JOptionPane.showInputDialog(browser, "Folder Name:\n",
+                            "Create folder under " + rootedEntity.getEntity().getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
+                    if ((folderName == null) || (folderName.length() <= 0)) {
+                        return;
+                    }
+
+                    try {
+                        // Update database
+                        Entity parentFolder = rootedEntity.getEntity();
+                        Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
+                        ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder,
+                                parentFolder.getMaxOrderIndex() + 1, EntityConstants.ATTRIBUTE_ENTITY);
+
+                    }
+                    catch (Exception ex) {
+                        SessionMgr.getSessionMgr().handleException(ex);
+                    }
+                }
+            });
+
+            return newFolderItem;
+        }
+        return null;
+    }
+
+    protected JMenuItem getCreateSessionItem() {
 		if (multiple) return null;
 		
 		JMenuItem newFragSessionItem = new JMenuItem("  Create annotation session...");
