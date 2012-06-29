@@ -777,7 +777,7 @@ public class EntityContextMenu extends JPopupMenu {
         	OpenWithDefaultAppAction action = new OpenWithDefaultAppAction(rootedEntity.getEntity()) {
         		@Override
         		public String getName() {
-        			return "  System default";
+        			return "  View in System default";
         		}
         	};
         	return getActionItem(action);
