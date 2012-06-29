@@ -250,7 +250,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 
                 if (SystemInfo.isLinux || SystemInfo.isMac) {
                     if (runShellCommand("cp "+remoteFile+" "+downloadFile, downloadsDir) != 0) {
-                        throw new Exception("Error extracting archive: "+downloadFile.getAbsolutePath());
+                        throw new Exception("Error downloading archive: "+downloadFile.getAbsolutePath());
                     }
 
                     if (runShellCommand("tar xvfz "+downloadFile, downloadsDir) != 0) {
@@ -259,7 +259,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
                 }
                 else if (SystemInfo.isWindows) {
                     if (runShellCommand("copy "+remoteFile+" "+downloadFile, downloadsDir) != 0) {
-                        throw new Exception("Error extracting archive: "+downloadFile.getAbsolutePath());
+                        throw new Exception("Error downloading archive: "+downloadFile.getAbsolutePath());
                     }
 
                     FileUtil.zipUncompress(downloadFile, downloadsDir.getAbsolutePath());
