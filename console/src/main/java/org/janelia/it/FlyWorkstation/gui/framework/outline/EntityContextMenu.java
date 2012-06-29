@@ -610,7 +610,7 @@ public class EntityContextMenu extends JPopupMenu {
 									Object[] options = {"Yes", "No"};
 									int deleteConfirmation = JOptionPane.showOptionDialog(browser,
 											"Are you sure you want to permanently delete '" + ed.getChildEntity().getName()
-													+ "' and all orphaned items underneath it?", "Delete",
+													+ "' and all orphaned items inside it?", "Delete",
 											JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[1]);
 									if (deleteConfirmation != 0) {
 										toReallyDelete.remove(ed);
