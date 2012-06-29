@@ -86,7 +86,7 @@ public class FileMenu extends JMenu {
             }
         });
 
-        menuFileImport = new JMenuItem("Import...", 'I');
+        menuFileImport = new JMenuItem("Import From File Share...", 'I');
         menuFileImport.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 menuFileImport_actionPerformed();
