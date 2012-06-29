@@ -28,8 +28,7 @@ import javax.swing.table.TableColumn;
 import loci.formats.FormatException;
 import loci.formats.IFormatReader;
 import loci.formats.gui.BufferedImageReader;
-import loci.formats.in.APNGReader;
-import loci.formats.in.TiffReader;
+import loci.formats.in.*;
 
 import org.janelia.it.jacs.model.entity.Entity;
 
@@ -153,7 +152,7 @@ public class Utils {
     }
 
     /**
-     * Read an image using the ImageIO API. Currently supports TIFFs and PNGs.
+     * Read an image using the ImageIO API. Currently supports TIFFs, PNGs and JPEGs.
      * 
      * @param path
      * @return
@@ -163,12 +162,21 @@ public class Utils {
         try {
         	String format = path.substring(path.lastIndexOf(".")+1);
         	IFormatReader reader = null;
-        	if (format.equals("tif")) {
+        	if (format.equals("tif") || format.equals("tiff")) {
         		reader = new TiffReader();
         	}
         	else if (format.equals("png")) {
         		reader = new APNGReader();
         	}
+            else if (format.equals("jpg")||format.equals("jpeg")){
+                reader = new JPEGReader();
+            }
+            else if (format.equals("bmp")){
+                reader = new BMPReader();
+            }
+            else if (format.equals("gif")){
+                reader = new GIFReader();
+            }
         	else {
         		throw new FormatException("File format is not supported: "+format);
         	}
