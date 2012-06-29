@@ -194,6 +194,12 @@ public class GeneralSearchDialog extends ModalDialog {
     }
 	
     protected synchronized void saveResults() {
+
+		final SearchResults searchResults = resultsPanel.getSearchResults();
+    	final DynamicTable table = searchResults.getResultTreeMapping()==null?resultsPanel.getResultsTable():resultsPanel.getMappedResultsTable();
+    	if (table.getSelectedRows().isEmpty()) {
+    		table.getTable().getSelectionModel().setSelectionInterval(0, table.getRows().size()-1);
+    	}
     	
     	SimpleWorker worker = new SimpleWorker() {
 
@@ -221,8 +227,6 @@ public class GeneralSearchDialog extends ModalDialog {
 				}
 
 				List<Long> childIds = new ArrayList<Long>();
-				SearchResults searchResults = resultsPanel.getSearchResults();
-				DynamicTable table = searchResults.getResultTreeMapping()==null?resultsPanel.getResultsTable():resultsPanel.getMappedResultsTable();
 				
 				for(DynamicRow row : table.getSelectedRows()) {
 					Object o = row.getUserObject();
