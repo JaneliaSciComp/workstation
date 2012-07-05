@@ -6,13 +6,8 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
-import java.util.List;
-import java.util.concurrent.Callable;
-
-import javax.swing.JOptionPane;
-import javax.swing.ProgressMonitor;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -25,6 +20,10 @@ import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.types.*;
 import org.janelia.it.jacs.model.ontology.types.Enum;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import javax.swing.*;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * This action creates and saves an annotation, and adds a corresponding tag to the currently selected item in an IconDemoPanel.
@@ -98,9 +97,11 @@ public class AnnotateAction extends OntologyElementAction {
         	if (value==null) return;
         }
         else if (type instanceof Text) {
-            value = JOptionPane.showInputDialog(SessionMgr.getSessionMgr().getActiveBrowser(), 
-            		"Value:\n", term.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
-            if (value==null) return;
+            AnnotationBuilderDialog dialog = new AnnotationBuilderDialog();
+            value = dialog.getPathString();
+//            value = JOptionPane.showInputDialog(SessionMgr.getSessionMgr().getActiveBrowser(),
+//            		"Value:\n", term.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
+            if (value==null || value.equals("")) return;
         }
         
         final OntologyElement finalTerm = term;

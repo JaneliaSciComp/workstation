@@ -1,15 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
-import java.awt.Color;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.util.List;
-
-import javax.swing.*;
-import javax.swing.border.Border;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -17,6 +9,14 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+
+import javax.swing.*;
+import javax.swing.border.Border;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.util.List;
 
 /**
  * A tag cloud of Entity-based annotations which support context menu operations such as deletion.
@@ -77,8 +77,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
             editItem.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    final Object value = JOptionPane.showInputDialog(SessionMgr.getSessionMgr().getActiveBrowser(),
-                            "Value:\n", "Edit Annotation", JOptionPane.PLAIN_MESSAGE, null, null, tag.getValueString());
+                    final Object value = new AnnotationBuilderDialog().getPathString();
 
                     final List<RootedEntity> selectedEntities = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer()).getSelectedEntities();
                     for(RootedEntity rootedEntity: selectedEntities){

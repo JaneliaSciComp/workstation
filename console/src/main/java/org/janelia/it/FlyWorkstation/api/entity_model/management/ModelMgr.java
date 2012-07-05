@@ -1,10 +1,5 @@
 package org.janelia.it.FlyWorkstation.api.entity_model.management;
 
-import java.awt.Color;
-import java.util.*;
-
-import javax.swing.SwingUtilities;
-
 import org.apache.solr.client.solrj.SolrQuery;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.ActiveThreadModel;
@@ -28,6 +23,7 @@ import org.janelia.it.jacs.model.entity.EntityAttribute;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
 import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
 import org.janelia.it.jacs.model.tasks.Task;
@@ -35,6 +31,11 @@ import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
 import org.janelia.it.jacs.model.user_data.User;
 import org.janelia.it.jacs.model.user_data.prefs.UserPreference;
+
+import javax.swing.*;
+import java.awt.*;
+import java.util.*;
+import java.util.List;
 
 public class ModelMgr {
 	
@@ -239,6 +240,29 @@ public class ModelMgr {
             }
         }
     }
+
+    public TreeSet<String> getOntologyTermSet(OntologyRoot ontologyRoot){
+        TreeSet<String> ontologyElementTreeSet = new TreeSet<String>();
+        List<OntologyElement> list = ontologyRoot.getChildren();
+        list = ontologyWalker(list);
+        for(OntologyElement element:list){
+            ontologyElementTreeSet.add(element.getName());
+        }
+        return ontologyElementTreeSet;
+    }
+
+    public List<OntologyElement> ontologyWalker(List<OntologyElement> list){
+        List<OntologyElement> finalList = new ArrayList<OntologyElement>();
+        finalList.addAll(list);
+        for(OntologyElement element:list){
+
+            if(null!=element.getChildren()){
+                finalList.addAll(ontologyWalker(element.getChildren()));
+            }
+        }
+        return finalList;
+    }
+
 
     private OntologyKeyBindings loadOntologyKeyBindings(long ontologyId) {
     	String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyId;
