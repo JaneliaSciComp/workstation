@@ -50,7 +50,10 @@ public class AnnotationBuilderDialog extends JDialog{
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                pathString.append(comboBox.getSelectedItem().toString()).append(" - ");
+                int position = pathText.getCaretPosition();
+                if(null!=comboBox.getSelectedItem()){
+                    pathString.insert(position, comboBox.getSelectedItem().toString()+" - ");
+                }
                 comboBox.setSelectedItem(null);
                 pathText.setText(pathString.toString());
             }
@@ -111,10 +114,17 @@ public class AnnotationBuilderDialog extends JDialog{
 
         //Display the window.
         this.pack();
-        this.setVisible(true);
     }
 
     public String getPathString(){
         return pathString.toString();
+    }
+
+    public void setPathString(String pathString1){
+        pathString = new StringBuilder(pathString1);
+    }
+
+    public void setPathText(String pathText1){
+        pathText.setText(pathText1);
     }
 }

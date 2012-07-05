@@ -98,6 +98,7 @@ public class AnnotateAction extends OntologyElementAction {
         }
         else if (type instanceof Text) {
             AnnotationBuilderDialog dialog = new AnnotationBuilderDialog();
+            dialog.setVisible(true);
             value = dialog.getPathString();
 //            value = JOptionPane.showInputDialog(SessionMgr.getSessionMgr().getActiveBrowser(),
 //            		"Value:\n", term.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);

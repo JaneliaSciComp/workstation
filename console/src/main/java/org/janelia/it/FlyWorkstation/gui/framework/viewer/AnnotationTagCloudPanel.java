@@ -77,8 +77,11 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
             editItem.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    final Object value = new AnnotationBuilderDialog().getPathString();
-
+                    AnnotationBuilderDialog dialog = new AnnotationBuilderDialog();
+                    dialog.setPathString(tag.getValueString());
+                    dialog.setPathText(tag.getValueString());
+                    dialog.setVisible(true);
+                    final Object value = dialog.getPathString();
                     final List<RootedEntity> selectedEntities = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer()).getSelectedEntities();
                     for(RootedEntity rootedEntity: selectedEntities){
                         if(null!=value && !value.toString().isEmpty()){
