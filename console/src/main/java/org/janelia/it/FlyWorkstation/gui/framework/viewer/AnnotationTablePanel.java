@@ -129,7 +129,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
             	OntologyAnnotation annotation = (OntologyAnnotation)userObject;
             	
             	return getPopupMenu(e, annotation);
-	        };
+	        }
 	        
 
 			@Override
@@ -144,8 +144,8 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
         
         dynamicTable.getTable().addMouseListener(new MouseForwarder(this, "DynamicTable->AnnotationTablePanel"));
         
-        DynamicColumn keyCol = dynamicTable.addColumn(COLUMN_KEY, COLUMN_KEY, true, false, false, true);
-        DynamicColumn valueCol = dynamicTable.addColumn(COLUMN_VALUE, COLUMN_VALUE, true, false, false, true);
+        dynamicTable.addColumn(COLUMN_KEY, COLUMN_KEY, true, false, false, true);
+        dynamicTable.addColumn(COLUMN_VALUE, COLUMN_VALUE, true, false, false, true);
 	    
         for (OntologyAnnotation annotation : annotations) {
         	dynamicTable.addRow(annotation);
@@ -263,12 +263,11 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
                         final List<RootedEntity> selectedEntities = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer()).getSelectedEntities();
                         for(RootedEntity rootedEntity: selectedEntities){
                             if(null!=value && !value.toString().trim().isEmpty()){
-                                String tmpValue = annotation.getValueString();
                                 annotation.setValueString(value.toString());
                                 annotation.getEntity().setValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_VALUE_TERM, value.toString());
                                 String tmpName = annotation.getEntity().getName();
-                                tmpName = tmpName.replaceAll(tmpValue, value.toString());
-                                annotation.getEntity().setName(tmpName);
+                                String namePrefix = tmpName.substring(0,tmpName.indexOf("=")+2);
+                                annotation.getEntity().setName(namePrefix+value.toString());
                                 try {
                                     ModelMgr.getModelMgr().saveOrUpdateAnnotation(rootedEntity.getEntity(), annotation.getEntity());
                                 }

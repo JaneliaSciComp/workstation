@@ -82,12 +82,11 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
                     final List<RootedEntity> selectedEntities = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer()).getSelectedEntities();
                     for(RootedEntity rootedEntity: selectedEntities){
                         if(null!=value && !value.toString().isEmpty()){
-                            String tmpValue = tag.getValueString();
                             tag.setValueString(value.toString());
                             tag.getEntity().setValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_VALUE_TERM, value.toString());
                             String tmpName = tag.getEntity().getName();
-                            tmpName = tmpName.replaceAll(tmpValue, value.toString());
-                            tag.getEntity().setName(tmpName);
+                            String namePrefix = tmpName.substring(0,tmpName.indexOf("=")+2);
+                            tag.getEntity().setName(namePrefix+value.toString());
                             try {
                                 ModelMgr.getModelMgr().saveOrUpdateAnnotation(rootedEntity.getEntity(), tag.getEntity());
                             }
@@ -137,7 +136,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
 				label.setForeground(dimFgColor);
 			}
 		}
-		else if (currentSession == null) {
+		else {
 			// We're not even in a session, just display everything normally.
 		}
 		
