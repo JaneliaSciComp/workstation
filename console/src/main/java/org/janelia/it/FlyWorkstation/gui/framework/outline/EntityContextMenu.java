@@ -25,6 +25,9 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
+import org.janelia.it.jacs.model.tasks.*;
+import org.janelia.it.jacs.model.tasks.neuron.NeuronMergeTask;
+import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
@@ -83,6 +86,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getAddToRootFolderItem());
         add(getRenameItem());
         add(getErrorFlag());
+        add(getMergeItem());
 		add(getDeleteItem());
         
 		setNextAddRequiresSeparator(true);
@@ -680,7 +684,78 @@ public class EntityContextMenu extends JPopupMenu {
 		return deleteItem;
 	}
 
-	protected JMenuItem getOpenInFirstViewerItem() {
+    protected JMenuItem getMergeItem() {
+
+        // If multiple items are not selected then leave
+        if (!multiple) { return null; }
+
+        HashSet<Long> parentIds = new HashSet<Long>();
+        for(RootedEntity rootedEntity : rootedEntityList) {
+            // Add all parent ids to a collection if the selected items are owned by the person attempting the merge
+            if (null!=rootedEntity.getEntityData().getParentEntity() && EntityConstants.TYPE_NEURON_FRAGMENT.equals(rootedEntity.getEntity().getEntityType().getName())
+                    && rootedEntity.getEntity().getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+                parentIds.add(rootedEntity.getEntityData().getParentEntity().getId());
+            }
+            // if one of the selected entities has no parent or isn't owner by the user then leave; cannot merge
+            else {
+                return null;
+            }
+        }
+        // Anything but one parent id for selected entities should not allow merge
+        if (parentIds.size()!=1) { return null; }
+
+        JMenuItem mergeItem = new JMenuItem("  Merge "+rootedEntityList.size()+" selected entities");
+
+        mergeItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                SimpleWorker mergeTask = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        setProgress(1);
+
+                        try {
+                            Long parentId = null;
+                            HashSet<String> fragmentIds = new HashSet<String>();
+                            for(RootedEntity entity : rootedEntityList) {
+                                if (null==parentId) {
+                                    parentId = entity.getEntityData().getParentEntity().getId();
+                                }
+                                fragmentIds.add(entity.getEntityData().getChildEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_NUMBER));
+                            }
+                            // This should never happen
+                            if (null==parentId) { return;}
+                            NeuronMergeTask task = new NeuronMergeTask(new HashSet<Node>(), SessionMgr.getUsername(), new ArrayList<org.janelia.it.jacs.model.tasks.Event>(), new HashSet<TaskParameter>());
+                            task.setJobName("Neuron Merge Task");
+                            task.setParameter(NeuronMergeTask.PARAM_separationEntityId, parentId.toString());
+                            task.setParameter(NeuronMergeTask.PARAM_commaSeparatedNeuronFragmentList, Task.csvStringFromCollection(fragmentIds));
+                            task = (NeuronMergeTask) ModelMgr.getModelMgr().saveOrUpdateTask(task);
+                            ModelMgr.getModelMgr().submitJob("NeuronMerge", task.getObjectId());
+                        }
+                        catch (Exception e) {
+                            SessionMgr.getSessionMgr().handleException(e);
+                        }
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+
+                };
+                mergeTask.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Merge...", ""));
+                mergeTask.execute();
+            }
+        });
+
+        mergeItem.setEnabled(multiple);
+        return mergeItem;
+    }
+
+    protected JMenuItem getOpenInFirstViewerItem() {
 		if (multiple) return null;
 		if (StringUtils.isEmpty(rootedEntity.getUniqueId())) return null;
         JMenuItem copyMenuItem = new JMenuItem("  Open in first viewer");
