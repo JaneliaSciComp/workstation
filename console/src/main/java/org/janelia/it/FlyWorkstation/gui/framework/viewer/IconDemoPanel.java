@@ -1162,8 +1162,11 @@ public class IconDemoPanel extends Viewer {
 				imagesPanel.recalculateGrid();
 				imagesPanel.setScrollLoadingEnabled(true);
 				imagesPanel.loadUnloadImages();
+				
 				// Select the first entity
-				ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), getRootedEntities().get(0).getId(), true);
+				// KR: disabled this because it has unforeseen effects in the split picker. Maybe we can address that in the future.
+//				ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), getRootedEntities().get(0).getId(), true);
+				
 				// Finally, we're done, we can call the success callback
 				if (success != null) {
 					try {

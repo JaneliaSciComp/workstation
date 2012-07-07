@@ -26,5 +26,6 @@
 	<classpathentry kind="lib" path="lib/platform.jar"/>
 	<classpathentry kind="lib" path="lib/vlcj-1.3.0-b1.jar" sourcepath="/Users/rokickik/dev/vlcj-read-only/vlcj/build/vlcj-1.3.0-b1-sources.jar"/>
 	<classpathentry kind="lib" path="/shared/conf"/>
+	<classpathentry kind="lib" path="lib/swingx-all-1.6.3.jar"/>
 	<classpathentry kind="output" path="build/eclipse"/>
 </classpath>

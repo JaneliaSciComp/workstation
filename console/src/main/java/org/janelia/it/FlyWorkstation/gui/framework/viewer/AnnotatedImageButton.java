@@ -139,36 +139,42 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
         }
 
         StringBuffer ssb = new StringBuffer();
-        
-        final Entity rep = entity.getChildByAttributeName(EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE);
-        if (rep!=null) {
-        	if (EntityUtils.isInitialized(rep)) {
-        		ssb.append("Represented by ").append(rep.getName());	
-        	}
-        	else {
-        		SimpleWorker worker = new SimpleWorker() {
 
-        			private Entity loadedRep;
-        			
-					@Override
-					protected void doStuff() throws Exception {
-						loadedRep = ModelMgr.getModelMgr().getEntityById(rep.getId()+"");
-					}
-					
-					@Override
-					protected void hadSuccess() {
-		        		String subtitle = "Represented by "+loadedRep.getName();
-		        		setSubtitle(subtitle, 100);
-					}
-					
-					@Override
-					protected void hadError(Throwable error) {
-						SessionMgr.getSessionMgr().handleException(error);
-					}
-					
-				};
-	        	worker.execute();
-        	}
+        String crossLabel = entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_CROSS_LABEL);
+        if (crossLabel!=null) {
+        	ssb.append("Cross label: ").append(crossLabel);
+        }
+        else {
+            final Entity rep = entity.getChildByAttributeName(EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE);
+            if (rep!=null) {
+            	if (EntityUtils.isInitialized(rep)) {
+            		ssb.append("Represented by ").append(rep.getName());	
+            	}
+            	else {
+            		SimpleWorker worker = new SimpleWorker() {
+
+            			private Entity loadedRep;
+            			
+    					@Override
+    					protected void doStuff() throws Exception {
+    						loadedRep = ModelMgr.getModelMgr().getEntityById(rep.getId()+"");
+    					}
+    					
+    					@Override
+    					protected void hadSuccess() {
+    		        		String subtitle = "Represented by "+loadedRep.getName();
+    		        		setSubtitle(subtitle, 100);
+    					}
+    					
+    					@Override
+    					protected void hadError(Throwable error) {
+    						SessionMgr.getSessionMgr().handleException(error);
+    					}
+    					
+    				};
+    	        	worker.execute();
+            	}
+            }
         }
         
     	setTitle(tsb.toString(), 100);

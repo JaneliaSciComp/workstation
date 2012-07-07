@@ -47,6 +47,10 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  */
 public class SplitPickingPanel extends JPanel implements Refreshable {
 
+	/** Preference properties */
+    public static final String CROSS_PREFIX_PROPERTY = "SessionMgr.SplitPicker.PrefixProperty";
+    public static final String LAST_WORKING_FOLDER_ID_PROPERTY = "SessionMgr.SplitPicker.LastWorkingFolderIdProperty";
+    
 	/** Default directory for exports */
 	protected static final String DEFAULT_EXPORT_DIR = System.getProperty("user.home");
 	
@@ -66,6 +70,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	private final SplitGroupingDialog splitGroupingDialog;
 	private final JButton searchButton;
 	private final JButton groupButton;
+	private final JButton prefixButton;
 	private final JButton resultFolderButton;
 	private final IconDemoPanel crossesPanel;
 //	private final JTextField methodField;
@@ -77,7 +82,10 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	private RootedEntity groupAdFolder;
 	private RootedEntity groupDbdFolder;
 	private RootedEntity crossFolder;
-
+	private String crossPrefix;
+	private Integer nextSuffix;
+	private List<Entity> crosses;
+	
 	private Timer refreshTimer;
 	private Set<Long> runningTasks = Collections.synchronizedSet(new HashSet<Long>());
 	
@@ -178,10 +186,31 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		groupPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		mainPanel.add(groupPanel);
 
+
+		JPanel prefixPanel = new JPanel();
+		prefixPanel.setLayout(new BoxLayout(prefixPanel, BoxLayout.LINE_AXIS));
+		JLabel prefixLabel = new JLabel("4. Enter a label prefix: ");
+		prefixPanel.add(prefixLabel);
+
+
+		crossPrefix = (String)SessionMgr.getSessionMgr().getModelProperty(CROSS_PREFIX_PROPERTY);
+		prefixButton = new JButton(crossPrefix==null?"Enter prefix":crossPrefix);
+		prefixButton.setFocusable(false);
+		prefixButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				showPrefixEditingDialog();
+			}
+		});
+		prefixPanel.add(prefixButton);
+		prefixPanel.setPreferredSize(new Dimension(0, STEP_PANEL_HEIGHT));
+		prefixPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		mainPanel.add(prefixPanel);
+		
 		
 		JPanel computePanel = new JPanel();
 		computePanel.setLayout(new BoxLayout(computePanel, BoxLayout.LINE_AXIS));
-		JLabel computeLabel = new JLabel("4. Compute selected intersections: ");
+		JLabel computeLabel = new JLabel("5. Compute selected intersections: ");
 		computePanel.add(computeLabel);
 		JButton crossButton = new JButton("Compute");
 		crossButton.addActionListener(new ActionListener() {
@@ -191,33 +220,11 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Please choose a result folder first", "Error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}
-				SimpleWorker worker = new SimpleWorker() {
-					
-					@Override
-					protected void doStuff() throws Exception {
-						if (crossFolder==null) {
-							setCrossFolder(ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_CROSSES, true));
-						}
-						SwingUtilities.invokeLater(new Runnable() {
-							@Override
-							public void run() {
-								crossesPanel.loadEntity(getCrossFolder());
-							}
-						});
-						createCrosses(getCrossFolder());
-					}
-					
-					@Override
-					protected void hadSuccess() {
-					}
-					
-					@Override
-					protected void hadError(Throwable error) {
-						SessionMgr.getSessionMgr().handleException(error);
-					}
-				};
-				
-				worker.execute();
+				if (crossPrefix==null) {
+					JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Please choose a cross prefix first", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				createCrosses();
 			}
 		});
 		computePanel.add(crossButton);
@@ -254,7 +261,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		
 		JPanel exportPanel = new JPanel();
 		exportPanel.setLayout(new BoxLayout(exportPanel, BoxLayout.LINE_AXIS));
-		JLabel exportLabel = new JLabel("5. Export results to file: ");
+		JLabel exportLabel = new JLabel("6. Export results to file: ");
 		exportPanel.add(exportLabel);
 		JButton exportButton = new JButton("Export");
 		exportButton.addActionListener(new ActionListener() {
@@ -396,6 +403,54 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		};
 		
 		add(crossesPanel, BorderLayout.CENTER);
+		
+		loadExistingCrossSimulations();
+	}
+	
+	private void loadExistingCrossSimulations() {
+
+		SimpleWorker worker = new SimpleWorker() {
+
+			private List<Entity> crosses;
+			private Integer nextSuffix = 1;
+			
+			@Override
+			protected void doStuff() throws Exception {
+				crosses = ModelMgr.getModelMgr().getEntitiesByTypeName(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS);
+				for(Entity cross : crosses) {
+					if (!cross.getUser().getUserLogin().equals(SessionMgr.getUsername())) continue;
+					String label = cross.getValueByAttributeName(EntityConstants.ATTRIBUTE_CROSS_LABEL);
+					if (label==null) continue;
+					int di = label.lastIndexOf("-");
+					if (di>=0 && di<label.length()-2) {
+						String suffix = label.substring(di+1);
+						try {
+							int s = Integer.parseInt(suffix);
+							if (s>nextSuffix) {
+								nextSuffix = s;
+							}
+						}
+						catch (NumberFormatException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+			
+			@Override
+			protected void hadSuccess() {
+				SplitPickingPanel.this.crosses = crosses;
+				SplitPickingPanel.this.nextSuffix = nextSuffix;
+			}
+			
+			@Override
+			protected void hadError(Throwable error) {
+				SessionMgr.getSessionMgr().handleException(error);
+			}
+		};
+		
+		worker.execute();
+
 	}
 
 	private void setRefreshing(final boolean refreshing) {
@@ -473,6 +528,30 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	@Override
 	public void refresh() {
 
+		final Long lastWorkingFolderId = (Long)SessionMgr.getSessionMgr().getModelProperty(LAST_WORKING_FOLDER_ID_PROPERTY);
+		if (lastWorkingFolderId!=null) {
+			SimpleWorker workingFolderLoadingWorker = new SimpleWorker() {
+				Entity folder;
+				@Override
+				protected void doStuff() throws Exception {
+					folder = ModelMgr.getModelMgr().getEntityById(""+lastWorkingFolderId);
+				}
+				
+				@Override
+				protected void hadSuccess() {
+					if (folder!= null) {
+						setResultFolder(folder);
+					}
+				}
+				
+				@Override
+				protected void hadError(Throwable error) {
+					SessionMgr.getSessionMgr().handleException(error);
+				}
+			};
+			workingFolderLoadingWorker.execute();
+		}
+		
 		final IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_MAIN_VIEW);
 		final IconDemoPanel secViewer = (IconDemoPanel)SessionMgr.getBrowser().showSecViewer(); 
 		
@@ -501,10 +580,22 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		});
 	}
 
-	private void createCrosses(final RootedEntity resultFolder) {
+	private void showPrefixEditingDialog() {
 
-		if (SwingUtilities.isEventDispatchThread())
-			throw new RuntimeException("SplitPickingPanel.createCrosses must be called outside of EDT");
+		// Add button clicked
+		final String prefix = (String) JOptionPane.showInputDialog(SessionMgr.getBrowser(), 
+				"Cross Prefix (a unique identifier will be appended to this to create each cross label):\n",
+				"Set your cross prefix", JOptionPane.PLAIN_MESSAGE, null, null, crossPrefix);
+		if ((prefix == null) || (prefix.length() <= 0)) {
+			return;
+		}
+
+		crossPrefix = prefix;
+		prefixButton.setText(crossPrefix);
+		SessionMgr.getSessionMgr().setModelProperty(CROSS_PREFIX_PROPERTY, crossPrefix);
+	}
+	
+	private void createCrosses() {
 		
 		EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
 		final List<String> mainSelectionIds = esm.getSelectedEntitiesIds(EntitySelectionModel.CATEGORY_MAIN_VIEW);		
@@ -550,108 +641,139 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			return;
 		}
 
-		final Set<String> existingCrosses = new HashSet<String>();
-		for(Entity sample1 : samples1) {
-			for(Entity sample2 : samples2) {
-				String c1 = createCrossName(sample1, sample2);
-				String c2 = createCrossName(sample2, sample1);
-				if (crossesPanel.getRootedEntities()!=null) {
-					for(RootedEntity rootedEntity : crossesPanel.getRootedEntities()) {
-						String crossName = rootedEntity.getEntity().getName();
-						if (crossName.equals(c1) || crossName.equals(c2)) {
-							existingCrosses.add(crossName);
-						}
-					}
-				}
-			}
-		}
-		
-		final int numExisting = existingCrosses.size();
-		if (numExisting > 0) {
-			Object[] options = {"Yes", "No"};
-			String message = numCrosses==1 ? 
-					"The cross you have selected already exists in the result folder. Recompute it?" : 
-					numExisting+" out of "+numCrosses+" crosses already exist in the result folder. Recompute them?";
-			int deleteConfirmation = JOptionPane.showOptionDialog(SessionMgr.getBrowser(), message, "Recompute?",
-					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
-			if (deleteConfirmation == 0) {
-				existingCrosses.clear();
-			}
-		}
-		
-		if (existingCrosses.size()==numCrosses) return;
-		
 		SimpleWorker worker = new SimpleWorker() {
 
-			private Entity firstCross;
+			final Set<String> existingCrosses = new HashSet<String>();
 			
 			@Override
 			protected void doStuff() throws Exception {
-				
-				Entity parent = resultFolder.getEntity();
-				
-				List<Long> sampleIds1 = new ArrayList<Long>();
-				List<Long> sampleIds2 = new ArrayList<Long>();
-				List<Long> outputIds = new ArrayList<Long>();
-				
-				System.out.println("Processing "+numCrosses+" crosses");
-				
-				int i = 0;
-				for(Entity sample1 : samples1) {
-					for(Entity sample2 : samples2) {
-						setProgress(i++, numCrosses+1);
-						
-						String crossName = createCrossName(sample1, sample2);
-						if (existingCrosses.contains(crossName)) {
-							continue;
-						}
-						
-						Entity cross = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS, crossName);
-						
-						List<Long> childrenIds = new ArrayList<Long>();
-						childrenIds.add(sample1.getId());
-						childrenIds.add(sample2.getId());
-						ModelMgr.getModelMgr().addChildren(cross.getId(), childrenIds, EntityConstants.ATTRIBUTE_ENTITY);
-						
-						if (sample1.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
-							Entity rep = sample1.getChildByAttributeName(EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE);
-							sampleIds1.add(rep.getId());
-						}
-						else {
-							sampleIds1.add(sample1.getId());	
-						}
-						
-						if (sample2.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
-							Entity rep = sample2.getChildByAttributeName(EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE);
-							sampleIds2.add(rep.getId());
-						}
-						else {
-							sampleIds2.add(sample2.getId());	
-						}
-						
-						outputIds.add(cross.getId());
 
-						if (firstCross==null) {
-							firstCross = cross;
+				if (crossFolder==null) {
+					setCrossFolder(ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_CROSSES, true));
+				}
+
+				if (crossesPanel.getRootedEntities()!=null) {
+					for(Entity sample1 : samples1) {
+						for(Entity sample2 : samples2) {
+							String c1 = createCrossName(sample1, sample2);
+							String c2 = createCrossName(sample2, sample1);
+							for(Entity crossEntity : crosses) {
+								String crossName = crossEntity.getName();
+								if (crossName.equals(c1) || crossName.equals(c2)) {
+									existingCrosses.add(crossName);
+								}
+							}
 						}
 					}
 				}
-				
-				ModelMgr.getModelMgr().addChildren(parent.getId(), outputIds, EntityConstants.ATTRIBUTE_ENTITY);
-				startIntersections(sampleIds1, sampleIds2, outputIds);
 			}
 			
 			@Override
 			protected void hadSuccess() {
-				SessionMgr.getBrowser().getEntityOutline().refresh();
-				crossesPanel.refresh(new Callable<Void>() {
-					@Override
-					public Void call() throws Exception {
-						crossesPanel.scrollToBottom();
-						return null;
+				
+				final int numExisting = existingCrosses.size();
+				if (numExisting > 0) {
+					Object[] options = {"Yes", "No"};
+					String message = numCrosses==1 ? 
+							"You have already simulated this cross before. Recompute it?" : 
+							"You have already simulated "+numExisting+" out of these "+numCrosses+" crosses. Recompute them?";
+					int deleteConfirmation = JOptionPane.showOptionDialog(SessionMgr.getBrowser(), message, "Recompute?",
+							JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+					if (deleteConfirmation == 0) {
+						existingCrosses.clear();
 					}
-				});
-				setRefreshing(true);
+				}
+				
+				if (existingCrosses.size()==numCrosses) return;
+				
+				crossesPanel.loadEntity(getCrossFolder());
+				
+				SimpleWorker worker2 = new SimpleWorker() {
+
+					private Entity firstCross;
+					
+					@Override
+					protected void doStuff() throws Exception {
+						
+						Entity parent = getCrossFolder().getEntity();
+						
+						List<Long> sampleIds1 = new ArrayList<Long>();
+						List<Long> sampleIds2 = new ArrayList<Long>();
+						List<Long> outputIds = new ArrayList<Long>();
+						
+						System.out.println("Processing "+numCrosses+" crosses");
+						
+						int i = 0;
+						for(Entity sample1 : samples1) {
+							for(Entity sample2 : samples2) {
+								setProgress(i++, numCrosses+1);
+
+								ModelMgrUtils.loadLazyEntity(sample1, false);
+								ModelMgrUtils.loadLazyEntity(sample2, false);
+								
+								String crossName = createCrossName(sample1, sample2);
+								if (existingCrosses.contains(crossName)) {
+									continue;
+								}
+								
+								Entity cross = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS, crossName);
+								cross.setValueByAttributeName(EntityConstants.ATTRIBUTE_CROSS_LABEL, createNextCrossLabel());
+								ModelMgr.getModelMgr().saveOrUpdateEntity(cross);
+								
+								List<Long> childrenIds = new ArrayList<Long>();
+								childrenIds.add(sample1.getId());
+								childrenIds.add(sample2.getId());
+								ModelMgr.getModelMgr().addChildren(cross.getId(), childrenIds, EntityConstants.ATTRIBUTE_ENTITY);
+								
+								if (sample1.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
+									Entity rep = sample1.getChildByAttributeName(EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE);
+									sampleIds1.add(rep.getId());
+								}
+								else {
+									sampleIds1.add(sample1.getId());	
+								}
+								
+								if (sample2.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
+									Entity rep = sample2.getChildByAttributeName(EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE);
+									sampleIds2.add(rep.getId());
+								}
+								else {
+									sampleIds2.add(sample2.getId());	
+								}
+								
+								outputIds.add(cross.getId());
+
+								if (firstCross==null) {
+									firstCross = cross;
+								}
+							}
+						}
+						
+						ModelMgr.getModelMgr().addChildren(parent.getId(), outputIds, EntityConstants.ATTRIBUTE_ENTITY);
+						startIntersections(sampleIds1, sampleIds2, outputIds);
+					}
+					
+					@Override
+					protected void hadSuccess() {
+						SessionMgr.getBrowser().getEntityOutline().refresh();
+						crossesPanel.refresh(new Callable<Void>() {
+							@Override
+							public Void call() throws Exception {
+								crossesPanel.scrollToBottom();
+								return null;
+							}
+						});
+						setRefreshing(true);
+					}
+					
+					@Override
+					protected void hadError(Throwable error) {
+						SessionMgr.getSessionMgr().handleException(error);
+					}
+				};
+				
+				worker2.setProgressMonitor(new ProgressMonitor(SessionMgr.getSessionMgr().getActiveBrowser(), "Submitting jobs to the compute cluster...", "", 0, 100));
+				worker2.execute();
 			}
 			
 			@Override
@@ -660,7 +782,6 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			}
 		};
 		
-		worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getSessionMgr().getActiveBrowser(), "Submitting jobs to the compute cluster...", "", 0, 100));
 		worker.execute();
 	}
 
@@ -689,11 +810,35 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
         runningTasks.add(task.getObjectId());
         ModelMgr.getModelMgr().submitJob("ScreenSampleCrossService", task.getObjectId());
     }
+    
+    private String createNextCrossLabel() {
+    	if (crossPrefix == null || nextSuffix==null) {
+    		throw new IllegalStateException("Error creating cross label");
+    	}
+    	String crossLabel = crossPrefix+"-"+String.format("%05d", nextSuffix);
+    	nextSuffix++;
+    	return crossLabel;
+    }
 
 	private String createCrossName(Entity sample1, Entity sample2) {
-		String[] parts1 = sample1.getName().split("-");
-		String[] parts2 = sample2.getName().split("-");
-		return parts1[0]+"-x-"+parts2[0];
+
+		try {
+			ModelMgrUtils.loadLazyEntity(sample1, false);
+			ModelMgrUtils.loadLazyEntity(sample2, false);
+			
+			Entity balancedDbd = sample2.getChildByAttributeName(EntityConstants.ATTRIBUTE_BALANCED_FLYLINE);
+			if (balancedDbd != null) {
+					ModelMgrUtils.loadLazyEntity(balancedDbd, false);
+					sample2 = balancedDbd;
+			}
+	
+			String[] parts1 = sample1.getName().split("-");
+			String[] parts2 = sample2.getName().split("-");
+			return parts1[0]+"-x-"+parts2[0];
+		}
+		catch (Exception e) {
+			throw new IllegalStateException("Error creating cross name",e);
+		}
 	}
 	
 	private void setResultFolder(Entity entity) {
@@ -729,6 +874,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			
 			@Override
 			protected void hadSuccess() {
+				SessionMgr.getSessionMgr().setModelProperty(LAST_WORKING_FOLDER_ID_PROPERTY, workingFolder.getEntity().getId());
+				
 				final IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_MAIN_VIEW);
 				if (groupAdFolder==null && groupDbdFolder==null) {
 					if (repFolder!=null) {
@@ -843,7 +990,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		
 		chooseFolderMenu.show(resultFolderButton, 0, resultFolderButton.getHeight());
 	}
-
+	
     protected synchronized void exportResults() {
 
         JFileChooser chooser = new JFileChooser();
@@ -878,7 +1025,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
             return;
         }
         
-        final String[] exportColumns = { "CrossIdentifier",
+        final String[] exportColumns = { "FlyStoreParent1", "FlyStoreParent2", "FlyStoreLabel",
+        								 "CrossIdentifier",
         							     "OriginalADTransformantId", "OriginalADRobotId", 
         								 "OriginalDBDTransformantId","OriginalDBDRobotId",
         								 "BalancedADTransformantId", "BalancedADRobotId", 
@@ -936,12 +1084,26 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 
 						ModelMgrUtils.loadLazyEntity(flylineAd, false);
 						ModelMgrUtils.loadLazyEntity(flylineDbd, false);
+						
+						String crossLabel = crossEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_CROSS_LABEL);
 						Entity balancedAd = flylineAd.getChildByAttributeName(EntityConstants.ATTRIBUTE_BALANCED_FLYLINE);
 						Entity balancedDbd = flylineDbd.getChildByAttributeName(EntityConstants.ATTRIBUTE_BALANCED_FLYLINE);
 						String adRobotId = flylineAd.getValueByAttributeName(EntityConstants.ATTRIBUTE_ROBOT_ID);
 						String dbdRobotId = flylineDbd.getValueByAttributeName(EntityConstants.ATTRIBUTE_ROBOT_ID);
+						String balancedAdRobotId = balancedAd==null?"":balancedAd.getValueByAttributeName(EntityConstants.ATTRIBUTE_ROBOT_ID);
+						String balancedDbdRobotId = balancedDbd==null?"":balancedDbd.getValueByAttributeName(EntityConstants.ATTRIBUTE_ROBOT_ID);
 						
 						StringBuffer buf2 = new StringBuffer();
+						
+						// 3 standard columns for FlyStore import
+						buf2.append(adRobotId==null?"":adRobotId);
+						buf2.append("\t");
+						buf2.append(balancedDbdRobotId==null?"":balancedDbdRobotId);
+						buf2.append("\t");
+						buf2.append(crossLabel==null?"":crossLabel);
+						buf2.append("\t");
+						
+						// Other supporting columns
 						buf2.append(crossEntity.getName());
 						buf2.append("\t");
 						buf2.append(flylineAd.getName());
@@ -952,28 +1114,13 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 						buf2.append("\t");
 						buf2.append(dbdRobotId==null?"":dbdRobotId);
 						buf2.append("\t");
-
-						if (balancedAd==null) {
-							buf2.append("\t\t");
-						}
-						else {
-							String robotId = balancedAd.getValueByAttributeName(EntityConstants.ATTRIBUTE_ROBOT_ID);
-							buf2.append(balancedAd==null?"":balancedAd.getName());	
-							buf2.append("\t");
-							buf2.append(robotId==null?"":robotId);	
-							buf2.append("\t");
-						}
-						
-						if (balancedDbd==null) {
-							buf2.append("\t");
-						}
-						else {
-							String robotId = balancedDbd.getValueByAttributeName(EntityConstants.ATTRIBUTE_ROBOT_ID);
-							buf2.append(balancedDbd==null?"":balancedDbd.getName());	
-							buf2.append("\t");
-							buf2.append(robotId==null?"":robotId);
-						}
-						
+						buf2.append(balancedAd==null?"":balancedAd.getName());	
+						buf2.append("\t");
+						buf2.append(balancedAdRobotId==null?"":balancedAdRobotId);	
+						buf2.append("\t");
+						buf2.append(balancedDbd==null?"":balancedDbd.getName());	
+						buf2.append("\t");
+						buf2.append(balancedDbdRobotId==null?"":balancedDbdRobotId);
 						buf2.append("\n");
 						writer.write(buf2.toString());
 					}
