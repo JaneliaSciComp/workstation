@@ -79,12 +79,12 @@ public class DynamicImageButton extends AnnotatedImageButton {
 					iconDemoPanel.getHud().setImage(dynamicImagePanel.getMaxSizeImage());
 				}
 				// Register our image height
-				// TODO: Dynamic image height is hard to implement due to async issues. The height can potentially 
-				// change whenever a new image is loaded, or whatever the images are resized by the user. 
-//				if (dynamicImagePanel.getMaxSizeImage()!=null) {
-//					iconDemoPanel.getImagesPanel().registerImageHeight(dynamicImagePanel.getImage().getIconHeight());
-//					iconDemoPanel.getImagesPanel().recalculateGrid();
-//				}
+				if (dynamicImagePanel.getMaxSizeImage()!=null) {
+					double w = dynamicImagePanel.getImage().getIconWidth();
+					double h = dynamicImagePanel.getImage().getIconHeight();
+					setAspectRatio(w, h);
+					iconDemoPanel.getImagesPanel().recalculateGrid();
+				}
 				return null;
 			}
         	

@@ -132,7 +132,10 @@ public abstract class DynamicImagePanel extends JPanel {
 	    			setInvertedColors(true);
 	    		}
 	    		BufferedImage orig = inverted ? invertedMaxSizeImage : maxSizeImage;
-	            BufferedImage image = Utils.getScaledImage(orig, imageSize);
+        		int newWidth = imageSize;
+                double scale = (double) newWidth / (double) maxSizeImage.getWidth();
+                int newHeight = (int) Math.round(scale * maxSizeImage.getHeight());
+                BufferedImage image = Utils.getScaledImage(orig, newWidth, newHeight);
 	            imageLabel.setIcon(new ImageIcon(image));
     		}
     	}
@@ -144,31 +147,6 @@ public abstract class DynamicImagePanel extends JPanel {
 
         this.displaySize = imageSize;
         invalidate();
-	}
-
-	public synchronized void rescaleImage(double scale) {
-    	if (viewable) {
-    		if (maxSizeImage == null) {
-    			// Must be currently loading, in which case this method will get called again when the loading is done
-    		}
-    		else {
-	    		if (inverted && invertedMaxSizeImage == null) {
-	    			setInvertedColors(true);
-	    		}
-	    		BufferedImage orig = inverted ? invertedMaxSizeImage : maxSizeImage;
-	            BufferedImage image = Utils.getScaledImage(orig, scale);
-	            imageLabel.setIcon(new ImageIcon(image));
-	    		displaySize = Math.max(image.getWidth(), image.getHeight());
-    		}
-    	}
-    	else {
-    		if (maxSizeImage != null) {
-				System.out.println("Warning: nonviewable image has a non-null maxSizeImage in memory");
-    		}
-    	}
-    	
-		revalidate();
-		repaint();
 	}
 
     public synchronized void setInvertedColors(boolean inverted) {
@@ -250,7 +228,10 @@ public abstract class DynamicImagePanel extends JPanel {
             	maxSizeImage = Utils.readImage(imageFilename);
             	if (isCancelled()) return;
             	if (maxSize != null) {
-            		maxSizeImage = Utils.getScaledImage(maxSizeImage, maxSize);
+            		int newWidth = maxSize;
+                    double scale = (double) newWidth / (double) maxSizeImage.getWidth();
+                    int newHeight = (int) Math.round(scale * maxSizeImage.getHeight());
+            		maxSizeImage = Utils.getScaledImage(maxSizeImage, newWidth, newHeight);
             		displaySize = maxSize;
             	}
             	else {

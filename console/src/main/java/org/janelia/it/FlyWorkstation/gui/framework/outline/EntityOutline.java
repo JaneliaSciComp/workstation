@@ -295,6 +295,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	 * @param e
 	 */
 	protected void nodeClicked(MouseEvent e) {
+		this.currUniqueId = null;
 		selectNode(selectedTree.getCurrentNode());
 	}
 
@@ -447,6 +448,9 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		if (!uniqueId.equals(currUniqueId)) {
 			this.currUniqueId = uniqueId;
 			ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueId+"", true);
+		}
+		else {
+			return;
 		}
 		
 		DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();

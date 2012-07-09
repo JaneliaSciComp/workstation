@@ -1,5 +1,17 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.*;
+import javax.swing.table.TableCellEditor;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
@@ -13,17 +25,6 @@ import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
-
-import javax.swing.*;
-import javax.swing.table.TableCellEditor;
-import java.awt.*;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A panel that shows a bunch of annotations in a table. 
@@ -141,6 +142,14 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 	        	return null;
 	        }
         };
+        
+        dynamicTable.getScrollPane().setWheelScrollingEnabled(false);
+        dynamicTable.getScrollPane().addMouseWheelListener(new MouseWheelListener() {
+			@Override
+			public void mouseWheelMoved(MouseWheelEvent e) {
+				getParent().dispatchEvent(e);
+			}
+		});
         
         dynamicTable.getTable().addMouseListener(new MouseForwarder(this, "DynamicTable->AnnotationTablePanel"));
         

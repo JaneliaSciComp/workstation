@@ -374,7 +374,6 @@ public class IconDemoPanel extends Viewer {
 				currImageSize = imageSize;
 				imagesPanel.rescaleImages(imageSize);
 				imagesPanel.recalculateGrid();
-				imagesPanel.loadUnloadImages();
 			}
 		});
 		
@@ -788,7 +787,6 @@ public class IconDemoPanel extends Viewer {
 			public void actionPerformed(ActionEvent e) {
 				imagesPanel.setTitleVisbility(showTitlesButton.isSelected());
 				imagesPanel.recalculateGrid();
-				imagesPanel.loadUnloadImages();
 			}
 		});
 		showTitlesButton.addMouseListener(new MouseForwarder(toolBar, "ShowTitlesButton->JToolBar"));
@@ -804,7 +802,6 @@ public class IconDemoPanel extends Viewer {
 			public void actionPerformed(ActionEvent e) {
 				imagesPanel.setTagVisbility(showTagsButton.isSelected());
 				imagesPanel.recalculateGrid();
-				imagesPanel.loadUnloadImages();
 			}
 		});
 		showTagsButton.addMouseListener(new MouseForwarder(toolBar, "ShowTagsButton->JToolBar"));
@@ -1161,7 +1158,6 @@ public class IconDemoPanel extends Viewer {
 			public void run() {
 				imagesPanel.recalculateGrid();
 				imagesPanel.setScrollLoadingEnabled(true);
-				imagesPanel.loadUnloadImages();
 				
 				// Select the first entity
 				// KR: disabled this because it has unforeseen effects in the split picker. Maybe we can address that in the future.
@@ -1189,7 +1185,6 @@ public class IconDemoPanel extends Viewer {
 			public void run() {
 				imagesPanel.removeRootedEntity(rootedEntity);
 				imagesPanel.recalculateGrid();
-				imagesPanel.loadUnloadImages();
 				revalidate();
 				repaint();
 			}

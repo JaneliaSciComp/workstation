@@ -32,9 +32,11 @@ public class StaticImageButton extends AnnotatedImageButton {
 	public void rescaleImage(int width, int height) {
 		super.rescaleImage(width, height);
 		if (staticIcon!=null) {
-			if (width<staticIcon.getWidth() || height<staticIcon.getHeight()) { // Don't scale up icons
-				ImageIcon newIcon = new ImageIcon(Utils.getScaledImage(staticIcon, width));
-	        	label.setIcon(newIcon);
+			if (width<=staticIcon.getWidth()) { // Don't scale up icons
+	        	label.setIcon(new ImageIcon(Utils.getScaledImage(staticIcon, width)));
+			}
+			else {
+				label.setIcon(new ImageIcon(staticIcon));
 			}
 		}
 		label.setPreferredSize(new Dimension(width, height));
@@ -45,13 +47,25 @@ public class StaticImageButton extends AnnotatedImageButton {
 	public void setViewable(boolean viewable) {
 		if (viewable) {
 	    	this.staticIcon = Icons.getLargeIconAsBufferedImage(rootedEntity.getEntity());
-	    	label.setIcon(new ImageIcon(staticIcon));
-        	rescaleImage(iconDemoPanel.getImagesPanel().getCurrImageSize(), iconDemoPanel.getImagesPanel().getCurrImageSize());
+	    	
+			// Register our aspect ratio
+			double w = label.getIcon().getIconWidth();
+			double h = label.getIcon().getIconHeight();
+			setAspectRatio(w, h);
+			
+			int width = iconDemoPanel.getImagesPanel().getCurrImageSize();
+			if (width<=staticIcon.getWidth()) { // Don't scale up icons
+				label.setIcon(new ImageIcon(Utils.getScaledImage(staticIcon, width)));	
+			}
+			else {
+				label.setIcon(new ImageIcon(staticIcon));	
+			}
 		}
 		else {
 			this.staticIcon = null;
 	    	label.setIcon(Icons.getLoadingIcon());
 		}
+		
 		label.revalidate();
 		label.repaint();
 	}

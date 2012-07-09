@@ -759,7 +759,12 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 						crossesPanel.refresh(new Callable<Void>() {
 							@Override
 							public Void call() throws Exception {
-								crossesPanel.scrollToBottom();
+								SwingUtilities.invokeLater(new Runnable() {
+									@Override
+									public void run() {
+										crossesPanel.scrollToBottom();
+									}
+								});
 								return null;
 							}
 						});

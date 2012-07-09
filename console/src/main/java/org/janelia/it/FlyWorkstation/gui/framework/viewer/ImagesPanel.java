@@ -39,7 +39,7 @@ public class ImagesPanel extends JScrollPane {
     private final IconDemoPanel iconDemoPanel;
     private ScrollableGridPanel buttonsPanel;
 
-    private Integer maxImageHeight;
+    private Double lowestAspectRatio;
     private Integer currImageSize = DEFAULT_THUMBNAIL_SIZE;
     private Integer currTableHeight = DEFAULT_TABLE_HEIGHT;
     
@@ -117,7 +117,7 @@ public class ImagesPanel extends JScrollPane {
      * Create the image buttons, but leave the images unloaded for now.
      */
     public void setRootedEntities(List<RootedEntity> rootedEntities) {
-    	
+
         buttons.clear();
         for (Component component : buttonsPanel.getComponents()) {
             if (component instanceof AnnotatedImageButton) {
@@ -126,8 +126,8 @@ public class ImagesPanel extends JScrollPane {
             }
         }
 
-		ImageCache imageCache = SessionMgr.getBrowser().getImageCache();
-			
+    	this.lowestAspectRatio = null;
+
         for (int i = 0; i < rootedEntities.size(); i++) {
             final RootedEntity rootedEntity = rootedEntities.get(i);
             
@@ -138,7 +138,7 @@ public class ImagesPanel extends JScrollPane {
             String filepath = EntityUtils.getImageFilePath(rootedEntity.getEntity(), iconDemoPanel.getCurrImageRole());
             if (filepath != null) {
             	button = new DynamicImageButton(rootedEntity, iconDemoPanel);
-                ((DynamicImageButton)button).setCache(imageCache);
+                ((DynamicImageButton)button).setCache(SessionMgr.getBrowser().getImageCache());
             }
             else {
             	button = new StaticImageButton(rootedEntity, iconDemoPanel);
@@ -158,8 +158,6 @@ public class ImagesPanel extends JScrollPane {
             buttons.put(rootedEntity.getId(), button);
             buttonsPanel.add(button);
         }
-        
-        resetMaxImageHeight();
     }
     
     public void removeRootedEntity(RootedEntity rootedEntity) {
@@ -211,13 +209,14 @@ public class ImagesPanel extends JScrollPane {
         if (imageSize < MIN_THUMBNAIL_SIZE || imageSize > MAX_THUMBNAIL_SIZE) {
             return;
         }
-        if (currImageSize > imageSize) {
-        	resetMaxImageHeight();
-        }
         this.currImageSize = imageSize;
+
+        double aspectRatio = lowestAspectRatio==null?1.0:lowestAspectRatio;
+        
+		int imageHeight = (int)Math.round(imageSize/aspectRatio);
+		
         for (AnnotatedImageButton button : buttons.values()) {
         	try {
-        		int imageHeight = getMaxImageHeight()==null? imageSize : getMaxImageHeight();
                 button.rescaleImage(imageSize, imageHeight);
 	    	}
 	    	catch (Exception e) {
@@ -268,12 +267,7 @@ public class ImagesPanel extends JScrollPane {
 	}
 
 	public void scrollToBottom() {
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-			    getViewport().scrollRectToVisible(new Rectangle(0, buttonsPanel.getHeight(), 1, 1));
-			}
-		});
+	    getViewport().scrollRectToVisible(new Rectangle(0, buttonsPanel.getHeight(), 1, 1));
 	}
 	
 	public void scrollEntityToCenter(RootedEntity rootedEntity) {
@@ -358,17 +352,10 @@ public class ImagesPanel extends JScrollPane {
 		scrollButtonToTop(selected.get(0));
 	}
 	
-    public synchronized Integer getMaxImageHeight() {
-		return maxImageHeight;
-	}
-
-    public synchronized void resetMaxImageHeight() {
-    	this.maxImageHeight = null;
-    }
-    
-	public synchronized void registerImageHeight(Integer imageHeight) {
-		if (maxImageHeight==null || imageHeight>maxImageHeight) {
-			this.maxImageHeight = imageHeight;	
+	public synchronized void registerAspectRatio(Double aspectRatio) {
+		if (lowestAspectRatio==null || aspectRatio<lowestAspectRatio) {
+			this.lowestAspectRatio = aspectRatio;
+			rescaleImages(currImageSize);
 		}
 	}
 
@@ -477,8 +464,9 @@ public class ImagesPanel extends JScrollPane {
         	buttonsPanel.setColumns(numCols);
         }
 
-        buttonsPanel.revalidate();
-        buttonsPanel.repaint();
+//        buttonsPanel.revalidate();
+//        buttonsPanel.repaint();
+		loadUnloadImages();
     }
 
     public synchronized void loadUnloadImages() {

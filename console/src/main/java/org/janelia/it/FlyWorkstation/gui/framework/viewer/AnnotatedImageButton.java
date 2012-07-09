@@ -34,7 +34,7 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
     private AnnotationView annotationView;
     private boolean annotationsLoaded = false;
     private DragSource source;
-    
+    private double aspectRatio; 
     protected final IconDemoPanel iconDemoPanel;
     protected final RootedEntity rootedEntity;
     
@@ -269,6 +269,18 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
 	}
 
 	public void setViewable(boolean viewable) {
+	}
+	
+	public synchronized Double getAspectRatio() {
+		return aspectRatio;
+	}
+
+	public synchronized void setAspectRatio(double width, double height) {
+		double a = width/height;
+		if (a != this.aspectRatio) {
+			iconDemoPanel.getImagesPanel().registerAspectRatio(a);
+		}
+		this.aspectRatio = a;
 	}
 
 	@Override
