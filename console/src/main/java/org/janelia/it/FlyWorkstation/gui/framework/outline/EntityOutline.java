@@ -9,6 +9,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.outline;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.HashSet;
 import java.util.List;
@@ -31,8 +32,10 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.jacs.model.entity.*;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityAttribute;
+import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.entity.EntityType;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
@@ -181,6 +184,14 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			@Override
 			public JComponent getDropTargetComponent() {
 				return EntityOutline.this;
+			}
+		});
+
+		getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true),"enterAction");
+		getActionMap().put("enterAction",new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				selectEntityByUniqueId(getCurrUniqueId());
 			}
 		});
 	}

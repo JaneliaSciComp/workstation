@@ -1371,9 +1371,6 @@ public class IconDemoPanel extends Viewer {
 		
 		revalidate();
 		repaint();
-
-		// Focus on the panel so that it can receive keyboard input
-		requestFocusInWindow();
 	}
 
 	public RootedEntity getPreviousEntity() {
