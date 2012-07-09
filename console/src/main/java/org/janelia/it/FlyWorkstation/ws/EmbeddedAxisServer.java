@@ -58,19 +58,19 @@ public class EmbeddedAxisServer implements ModelMgrObserver {
 
 	@Override
 	public void entitySelected(String category, String entityId, boolean clearAll) {
-		Map<String,Object> parameters = new LinkedHashMap<String,Object>();
-		parameters.put("category",category);
-		parameters.put("entityId",entityId);
-		parameters.put("clearAll",clearAll);
-		SessionMgr.getSessionMgr().sendMessageToExternalClients("entitySelected", parameters);
+//		Map<String,Object> parameters = new LinkedHashMap<String,Object>();
+//		parameters.put("category",category);
+//		parameters.put("entityId",entityId);
+//		parameters.put("clearAll",clearAll);
+//		SessionMgr.getSessionMgr().sendMessageToExternalClients("entitySelected", parameters);
 	}
 
 	@Override
     public void entityDeselected(String category, String entityId) {
-		Map<String,Object> parameters = new LinkedHashMap<String,Object>();
-		parameters.put("category",category);
-		parameters.put("entityId",entityId);
-		SessionMgr.getSessionMgr().sendMessageToExternalClients("entityDeselected", parameters);
+//		Map<String,Object> parameters = new LinkedHashMap<String,Object>();
+//		parameters.put("category",category);
+//		parameters.put("entityId",entityId);
+//		SessionMgr.getSessionMgr().sendMessageToExternalClients("entityDeselected", parameters);
 	}
 	
 	@Override
