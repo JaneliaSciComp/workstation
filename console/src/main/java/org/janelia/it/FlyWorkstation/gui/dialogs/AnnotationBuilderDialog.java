@@ -50,6 +50,7 @@ public class AnnotationBuilderDialog extends JDialog{
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                pathString = new StringBuilder(pathText.getText());
                 int position = pathText.getCaretPosition();
                 if(null!=comboBox.getSelectedItem()){
                     pathString.insert(position, comboBox.getSelectedItem().toString()+" - ");
@@ -69,7 +70,7 @@ public class AnnotationBuilderDialog extends JDialog{
             }
         });
 
-        JButton closeButton = new JButton("Close");
+        JButton closeButton = new JButton("Cancel");
         closeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
