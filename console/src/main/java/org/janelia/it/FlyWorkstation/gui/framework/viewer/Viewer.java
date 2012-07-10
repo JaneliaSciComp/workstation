@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.List;
 
 import javax.swing.JPanel;
 
@@ -59,6 +60,12 @@ public abstract class Viewer extends JPanel implements Refreshable {
 	public void setTitle(String title) {
 		if (viewerContainer!=null) viewerContainer.setTitle(this, title);
 	}
+	
+	/**
+	 * Returns all RootedEntity objects loaded in the viewer.
+	 * @return
+	 */
+	public abstract List<RootedEntity> getRootedEntities();
 	
 	/**
 	 * Returns the RootedEntity with the given uniqueId, assuming that its currently loaded in the viewer.
