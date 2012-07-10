@@ -321,84 +321,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				}
 				
 				// This is a sample cross, attempt to select its parents in the other viewers
-				
-				Entity crossEntity = rootedEntity.getEntity();
-				Entity sourceEntity1 = null;
-				Entity sourceEntity2 = null;
-				
-				for(EntityData childEd : crossEntity.getOrderedEntityData()) {
-					if (!childEd.getEntityAttribute().getName().equals(EntityConstants.ATTRIBUTE_ENTITY)) continue;
-					if (sourceEntity1 == null) {
-						sourceEntity1 = childEd.getChildEntity();
-					}
-					else {
-						sourceEntity2 = childEd.getChildEntity();
-						break;
-					}
-				}
 
-				if (sourceEntity1==null || sourceEntity2==null) {
-					System.out.println("Error: incomplete sample cross entity: "+rootedEntityId);
-					return;
-				}
-				
-				final Entity finalEntity1 = sourceEntity1;
-				final Entity finalEntity2 = sourceEntity2;
-				
-				SimpleWorker worker = new SimpleWorker() {
-
-					private Entity sourceEntity1 = finalEntity1;
-					private Entity sourceEntity2 = finalEntity2;
-					
-					@Override
-					protected void doStuff() throws Exception {
-						if (!EntityUtils.isInitialized(sourceEntity1)) {
-							sourceEntity1 = ModelMgr.getModelMgr().getEntityById(""+sourceEntity1.getId());
-						}
-						if (!EntityUtils.isInitialized(sourceEntity2)) {
-							sourceEntity2 = ModelMgr.getModelMgr().getEntityById(""+sourceEntity2.getId());
-						}
-					}
-					
-					@Override
-					protected void hadSuccess() {
-						final IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_MAIN_VIEW);
-						if (mainViewer.getEntityById(""+sourceEntity1.getId()) == null) {
-							mainViewer.loadEntity(rootedEntity, new Callable<Void>() {
-								@Override
-								public Void call() throws Exception {
-									selectAndScroll(mainViewer, sourceEntity1.getId());	
-									return null;
-								}
-							});
-						}
-						else {
-							selectAndScroll(mainViewer, sourceEntity1.getId());	
-						}
-						
-						final IconDemoPanel secViewer = (IconDemoPanel)SessionMgr.getBrowser().showSecViewer();
-						if (secViewer.getEntityById(""+sourceEntity2.getId()) == null) {
-							secViewer.loadEntity(rootedEntity, new Callable<Void>() {
-								@Override
-								public Void call() throws Exception {
-									selectAndScroll(secViewer, sourceEntity2.getId());
-									return null;
-								}
-							});
-						}
-						else {
-							selectAndScroll(secViewer, sourceEntity2.getId());
-						}
-					}
-					
-					@Override
-					protected void hadError(Throwable error) {
-						SessionMgr.getSessionMgr().handleException(error);
-					}
-				};
-				
-				worker.execute();
-				
+				loadViewers();
 			}
 		};
 		
@@ -411,14 +335,15 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 
 		SimpleWorker worker = new SimpleWorker() {
 
-			private List<Entity> crosses;
+			private List<Entity> crosses = new ArrayList<Entity>();
 			private Integer nextSuffix = 1;
 			
 			@Override
 			protected void doStuff() throws Exception {
-				crosses = ModelMgr.getModelMgr().getEntitiesByTypeName(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS);
-				for(Entity cross : crosses) {
+				List<Entity> allCrosses = ModelMgr.getModelMgr().getEntitiesByTypeName(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS);
+				for(Entity cross : allCrosses) {
 					if (!cross.getUser().getUserLogin().equals(SessionMgr.getUsername())) continue;
+					crosses.add(cross);
 					String label = cross.getValueByAttributeName(EntityConstants.ATTRIBUTE_CROSS_LABEL);
 					if (label==null) continue;
 					int di = label.lastIndexOf("-");
@@ -742,10 +667,12 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 								}
 								
 								outputIds.add(cross.getId());
-
+								
 								if (firstCross==null) {
 									firstCross = cross;
 								}
+								
+								crosses.add(cross);
 							}
 						}
 						
@@ -897,30 +824,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					}
 				}
 				else {
-					if (splitLinesFolder != null) {
-						expandEntityOutline(splitLinesFolder.getUniqueId());
-					}
-					else if (repFolder != null) {
-						expandEntityOutline(repFolder.getUniqueId());
-					}
-					else {
-						expandEntityOutline(workingFolder.getUniqueId());	
-					}
-					
-					final IconDemoPanel secViewer = (IconDemoPanel)SessionMgr.getBrowser().showSecViewer();
-					if (groupAdFolder!=null) {
-	    				mainViewer.loadEntity(groupAdFolder);
-					}
-					else {
-						mainViewer.clear();
-					}
-					
-					if (groupDbdFolder!=null) {
-	    				secViewer.loadEntity(groupDbdFolder);
-					}
-					else {
-						secViewer.clear();
-					}
+					loadViewers();
 				}
 				
 				if (crossFolder!=null) {
@@ -933,10 +837,108 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				}
 			}
 			
-			private void expandEntityOutline(String uniqueId) {
-				final EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
-				DefaultMutableTreeNode node = entityOutline.getNodeByUniqueId(uniqueId);
-				entityOutline.getDynamicTree().navigateToNode(node);
+			@Override
+			protected void hadError(Throwable error) {
+				SessionMgr.getSessionMgr().handleException(error);
+			}
+		};
+		
+		worker.execute();
+	}
+
+	private void loadViewers() {
+
+		// Open the folders in the entity outline
+		if (splitLinesFolder != null) {
+			expandEntityOutline(splitLinesFolder.getUniqueId());
+		}
+		else if (repFolder != null) {
+			expandEntityOutline(repFolder.getUniqueId());
+		}
+		else {
+			expandEntityOutline(workingFolder.getUniqueId());	
+		}
+
+		// Get the parent lines
+		Entity entity1 = null;
+		Entity entity2 = null;
+		List<RootedEntity> selected = crossesPanel.getSelectedEntities();
+		if (selected!=null && selected.size()==1) {
+			Entity crossEntity = selected.get(0).getEntity();
+			for(EntityData childEd : crossEntity.getOrderedEntityData()) {
+				if (!childEd.getEntityAttribute().getName().equals(EntityConstants.ATTRIBUTE_ENTITY)) continue;
+				if (entity1 == null) {
+					entity1 = childEd.getChildEntity();
+				}
+				else {
+					entity2 = childEd.getChildEntity();
+					break;
+				}
+			}
+		}
+		
+		final Entity finalEntity1 = entity1;
+		final Entity finalEntity2 = entity2;
+		SimpleWorker worker = new SimpleWorker() {
+
+			private Entity sourceEntity1 = finalEntity1;
+			private Entity sourceEntity2 = finalEntity2;
+			
+			@Override
+			protected void doStuff() throws Exception {
+				if (sourceEntity1 != null && !EntityUtils.isInitialized(sourceEntity1)) {
+					sourceEntity1 = ModelMgr.getModelMgr().getEntityById(""+sourceEntity1.getId());
+				}
+				if (sourceEntity2 != null && !EntityUtils.isInitialized(sourceEntity2)) {
+					sourceEntity2 = ModelMgr.getModelMgr().getEntityById(""+sourceEntity2.getId());
+				}
+			}
+			
+			@Override
+			protected void hadSuccess() {
+				final IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_MAIN_VIEW);
+				final IconDemoPanel secViewer = (IconDemoPanel)SessionMgr.getBrowser().showSecViewer();
+				
+				if (groupAdFolder!=null) {
+					if (mainViewer.getContextRootedEntity()!=null && mainViewer.getContextRootedEntity().getEntityId().equals(groupAdFolder.getEntityId())) {
+						selectAndScroll(mainViewer, finalEntity1.getId());	
+					}
+					else {
+						mainViewer.loadEntity(groupAdFolder, new Callable<Void>() {
+							@Override
+							public Void call() throws Exception {
+								if (sourceEntity1!=null) {
+									selectAndScroll(mainViewer, finalEntity1.getId());	
+								}
+								return null;
+							}
+						});
+					}
+
+				}
+				else {
+					mainViewer.clear();
+				}
+				
+				if (groupDbdFolder!=null) {
+					if (secViewer.getContextRootedEntity()!=null && secViewer.getContextRootedEntity().getEntityId().equals(groupDbdFolder.getEntityId())) {
+						selectAndScroll(secViewer, finalEntity2.getId());	
+					}
+					else {
+						secViewer.loadEntity(groupDbdFolder, new Callable<Void>() {
+							@Override
+							public Void call() throws Exception {
+								if (sourceEntity2!=null) {
+									selectAndScroll(secViewer, finalEntity2.getId());	
+								}
+								return null;
+							}
+						});
+					}
+				}
+				else {
+					secViewer.clear();
+				}
 			}
 			
 			@Override
@@ -948,6 +950,13 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		worker.execute();
 	}
 
+	private void expandEntityOutline(String uniqueId) {
+		final EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
+		DefaultMutableTreeNode node = entityOutline.getNodeByUniqueId(uniqueId);
+		entityOutline.getDynamicTree().navigateToNode(node);
+	}
+	
+	
 	private void showPopupResultFolderMenu() {
 
 		JPopupMenu chooseFolderMenu = new JPopupMenu();

@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -157,6 +158,15 @@ public class TagCloudPanel<T> extends JPanel {
                     moreDoubleClicked(e);
 				}
             });
+        }
+        
+        
+        // This is to conserve space in the grid if none of the images have annotations
+        if (tags.isEmpty()) {
+        	setPreferredSize(new Dimension(0, 0));
+        }
+        else {
+        	setPreferredSize(null);
         }
         
         revalidate();

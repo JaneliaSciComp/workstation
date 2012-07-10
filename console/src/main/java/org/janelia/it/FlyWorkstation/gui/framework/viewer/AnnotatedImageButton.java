@@ -17,6 +17,7 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 
 /**
  * A DynamicImagePanel with a title on top and optional annotation tags underneath. Made to be aggregated in an 
@@ -64,11 +65,12 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         titleLabel.setOpaque(false);
 
-        subtitleLabel = new JLabel(" ");
+        subtitleLabel = new JLabel();
         subtitleLabel.setFocusable(false);
         subtitleLabel.setFont(new Font("Sans Serif", Font.PLAIN, 12));
         subtitleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         subtitleLabel.setOpaque(false);
+        subtitleLabel.setVisible(false);
 
         loadingLabel = new JLabel();
         loadingLabel.setOpaque(false);
@@ -196,6 +198,10 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
     }
 
     public void setSubtitle(String subtitle, int maxWidth) {
+    	if (StringUtils.isEmpty(subtitle)) {
+    		subtitleLabel.setVisible(false);
+    		return;
+    	}
     	// Subtle font size scaling 
     	int fontSize = (int)Math.round((double)maxWidth*0.003)+10;
     	Font titleLabelFont = new Font("Sans Serif", Font.PLAIN, fontSize);
@@ -203,13 +209,14 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
     	subtitleLabel.setPreferredSize(new Dimension(maxWidth, subtitleLabel.getFontMetrics(titleLabelFont).getHeight()));
     	subtitleLabel.setText(subtitle);
     	subtitleLabel.setToolTipText(subtitle);
+    	subtitleLabel.setVisible(true);
     }
     
     public abstract JComponent init(RootedEntity rootedEntity);
     
 	public synchronized void setTitleVisible(boolean visible) {
         titleLabel.setVisible(visible);
-        subtitleLabel.setVisible(visible);
+        subtitleLabel.setVisible(visible & !StringUtils.isEmpty(subtitleLabel.getText()));
     }
 
     public synchronized void setTagsVisible(boolean visible) {

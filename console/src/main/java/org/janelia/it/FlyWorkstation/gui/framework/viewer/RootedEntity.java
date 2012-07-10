@@ -40,6 +40,10 @@ public class RootedEntity {
 		return entityData.getChildEntity();
 	}
 	
+	public Long getEntityId() {
+		return entityData.getChildEntity()==null?null:entityData.getChildEntity().getId();
+	}
+	
 	public void updateEntity(Entity entity) {
 		entityData.setChildEntity(entity);
 	}
