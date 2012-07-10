@@ -23,6 +23,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.AnnotatedImageButton;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -529,22 +530,35 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		final List<Entity> samples1 = new ArrayList<Entity>();
 		final List<Entity> samples2 = new ArrayList<Entity>();
 
-		for(String mainSelectionId : mainSelectionIds) {
-			Entity sample1 = SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_MAIN_VIEW).getEntityById(mainSelectionId);
-			if (!sample1.getEntityType().getName().equals(EntityConstants.TYPE_SCREEN_SAMPLE) && !sample1.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
-				JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Not a Screen Sample or Fly Line: "+sample1.getName(), "Error", JOptionPane.ERROR_MESSAGE);
-				return;
+		// We iterate through all the entities in each viewer because we want to preserve the viewer order, 
+		// which the entity selection model does not do.
+		
+		Viewer mainViewer = SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_MAIN_VIEW);
+		for(RootedEntity rootedEntity : mainViewer.getRootedEntities()) {
+			for(String mainSelectionId : mainSelectionIds) {
+				if (rootedEntity.getId().equals(mainSelectionId)) {
+					Entity sample = rootedEntity.getEntity();
+					if (!sample.getEntityType().getName().equals(EntityConstants.TYPE_SCREEN_SAMPLE) && !sample.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
+						JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Not a Screen Sample or Fly Line: "+sample.getName(), "Error", JOptionPane.ERROR_MESSAGE);
+						return;
+					}
+					samples1.add(sample);	
+				}
 			}
-			samples1.add(sample1);
 		}
-
-		for(String secSelectionId : secSelectionIds) {
-			Entity sample2 = SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_SEC_VIEW).getEntityById(secSelectionId);
-			if (!sample2.getEntityType().getName().equals(EntityConstants.TYPE_SCREEN_SAMPLE) && !sample2.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
-				JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Not a Screen Sample or Fly Line: "+sample2.getName(), "Error", JOptionPane.ERROR_MESSAGE);
-				return;
+		
+		Viewer secViewer = SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_SEC_VIEW);
+		for(RootedEntity rootedEntity : secViewer.getRootedEntities()) {
+			for(String secSelectionId : secSelectionIds) {
+				if (rootedEntity.getId().equals(secSelectionId)) {
+					Entity sample = rootedEntity.getEntity();
+					if (!sample.getEntityType().getName().equals(EntityConstants.TYPE_SCREEN_SAMPLE) && !sample.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
+						JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Not a Screen Sample or Fly Line: "+sample.getName(), "Error", JOptionPane.ERROR_MESSAGE);
+						return;
+					}
+					samples2.add(sample);	
+				}
 			}
-			samples2.add(sample2);
 		}
 		
 		final int numCrosses = samples1.size() * samples2.size();
@@ -901,14 +915,16 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				
 				if (groupAdFolder!=null) {
 					if (mainViewer.getContextRootedEntity()!=null && mainViewer.getContextRootedEntity().getEntityId().equals(groupAdFolder.getEntityId())) {
-						selectAndScroll(mainViewer, finalEntity1.getId());	
+						if (sourceEntity1!=null) {
+							selectAndScroll(mainViewer, sourceEntity1.getId());	
+						}
 					}
 					else {
 						mainViewer.loadEntity(groupAdFolder, new Callable<Void>() {
 							@Override
 							public Void call() throws Exception {
 								if (sourceEntity1!=null) {
-									selectAndScroll(mainViewer, finalEntity1.getId());	
+									selectAndScroll(mainViewer, sourceEntity1.getId());	
 								}
 								return null;
 							}
@@ -922,14 +938,16 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				
 				if (groupDbdFolder!=null) {
 					if (secViewer.getContextRootedEntity()!=null && secViewer.getContextRootedEntity().getEntityId().equals(groupDbdFolder.getEntityId())) {
-						selectAndScroll(secViewer, finalEntity2.getId());	
+						if (sourceEntity2!=null) {
+							selectAndScroll(secViewer, sourceEntity2.getId());	
+						}
 					}
 					else {
 						secViewer.loadEntity(groupDbdFolder, new Callable<Void>() {
 							@Override
 							public Void call() throws Exception {
 								if (sourceEntity2!=null) {
-									selectAndScroll(secViewer, finalEntity2.getId());	
+									selectAndScroll(secViewer, sourceEntity2.getId());	
 								}
 								return null;
 							}
