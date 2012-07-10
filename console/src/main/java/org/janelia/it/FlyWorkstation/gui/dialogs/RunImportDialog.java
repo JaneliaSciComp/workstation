@@ -4,17 +4,13 @@ import loci.plugins.config.SpringUtilities;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
-import org.janelia.it.jacs.model.tasks.fileDiscovery.FileDiscoveryTask;
+import org.janelia.it.jacs.model.tasks.fileDiscovery.FileTreeLoaderPipelineTask;
 import org.janelia.it.jacs.model.user_data.Node;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -22,8 +18,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created with IntelliJ IDEA.
@@ -154,10 +148,10 @@ public class RunImportDialog extends ModalDialog{
             Task task;
             String owner = SessionMgr.getUsername();
 
-            process = "Import";
-            task = new FileDiscoveryTask(new HashSet<Node>(),
-                    owner, new ArrayList<Event>(), new HashSet<TaskParameter>(), path, topLevelFolderName, false);
-            task.setJobName("Import Task");
+            process = "FileTreeLoader";
+            task = new FileTreeLoaderPipelineTask(new HashSet<Node>(),
+                    owner, new ArrayList<Event>(), new HashSet<TaskParameter>(), path, topLevelFolderName);
+            task.setJobName("Import Files Task");
             task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
             taskID = task.getObjectId();
             ModelMgr.getModelMgr().submitJob(process, task.getObjectId());
