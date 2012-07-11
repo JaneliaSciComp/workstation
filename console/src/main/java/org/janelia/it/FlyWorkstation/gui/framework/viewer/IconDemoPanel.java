@@ -1401,11 +1401,9 @@ public class IconDemoPanel extends Viewer {
 			rootedEntityMap.put(rootedEntity.getId(), rootedEntity);
 			entityMap.put(rootedEntity.getEntity().getId(), rootedEntity.getEntity());
 			
-			Entity entity = rootedEntity.getEntity();
-			for(EntityData ed : entity.getEntityData()) {
-				String attrName = ed.getEntityAttribute().getName();
-				if (attrName.endsWith("Image")) {
-					imageRoles.add(attrName);
+			for(EntityData ed : rootedEntity.getEntity().getEntityData()) {
+				if (EntityUtils.hasImageRole(ed)) {
+					imageRoles.add(ed.getEntityAttribute().getName());
 				}
 			}
 		}
