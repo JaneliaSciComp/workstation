@@ -24,7 +24,7 @@ public class SearchMenu extends JMenu {
         searchMenuItem = new JMenuItem("Search");
         searchMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-            	SessionMgr.getSessionMgr().getActiveBrowser().getSearchDialog().showDialog();
+            	SessionMgr.getSessionMgr().getActiveBrowser().getGeneralSearchDialog().showDialog();
             }
         });
 

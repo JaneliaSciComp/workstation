@@ -1,15 +1,22 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs.search;
 
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
+import org.apache.solr.common.SolrDocument;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchAttribute.DataStore;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchAttribute.DataType;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.jacs.compute.api.support.EntityDocument;
 import org.janelia.it.jacs.compute.api.support.SageTerm;
 import org.janelia.it.jacs.compute.api.support.SolrUtils;
+import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityAttribute;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 
 /**
  * The configuration of search attributes available for query and display.
@@ -18,6 +25,15 @@ import org.janelia.it.jacs.model.entity.EntityAttribute;
  */
 public class SearchConfiguration {
 
+	/** Format for displaying dates */
+	protected static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm");
+
+	/** Format for displaying scores */
+	protected static final DecimalFormat decFormat = new DecimalFormat("#.##");
+    
+	/** Number of characters before cell values are truncated */
+	protected static final int MAX_CELL_LENGTH = 50;
+	
     /** Fields to use as columns */
     protected static final String[] columnFields = {"id", "name", "entity_type", "username", "creation_date", "updated_date", "annotations", "score"};
     
@@ -38,10 +54,12 @@ public class SearchConfiguration {
     
     // Data
     protected final Map<AttrGroup, List<SearchAttribute>> attributeGroups = new LinkedHashMap<AttrGroup, List<SearchAttribute>>();
+ 	protected final Map<String, SearchAttribute> attrByName = new HashMap<String, SearchAttribute>();
     protected List<SearchAttribute> attributes = new ArrayList<SearchAttribute>();
     protected Map<String, SageTerm> vocab;
     
     protected List<SearchConfigurationListener> listeners = new ArrayList<SearchConfigurationListener>();
+    protected boolean ready = false;
     
     public enum AttrGroup {
     	BASIC("Basic Attributes"),
@@ -70,7 +88,6 @@ public class SearchConfiguration {
 			@Override
 			protected void doStuff() throws Exception {
 			
-				
 				List<SearchAttribute> attrListBasic = new ArrayList<SearchAttribute>();
 				attributeGroups.put(AttrGroup.BASIC, attrListBasic);
 				for(int i=0; i<columnFields.length; i++) {
@@ -80,6 +97,7 @@ public class SearchConfiguration {
 					SearchAttribute attr = new SearchAttribute(name, label, columnDescriptions[i], dataType, columnIsInEntity[i]?DataStore.ENTITY:DataStore.SOLR, columnSortable[i]);
 					attrListBasic.add(attr);
 					attributes.add(attr);
+					attrByName.put(attr.getName(), attr);
 				}
 				
 				List<EntityAttribute> attrs = ModelMgr.getModelMgr().getEntityAttributes();
@@ -98,6 +116,7 @@ public class SearchConfiguration {
 					SearchAttribute attr = new SearchAttribute(name, label, label, DataType.STRING, DataStore.ENTITY_DATA, !name.endsWith("_txt"));
 					attrListExt.add(attr);
 					attributes.add(attr);
+					attrByName.put(attr.getName(), attr);
 				}
 				
 				vocab = ModelMgr.getModelMgr().getFlyLightVocabulary();
@@ -117,6 +136,7 @@ public class SearchConfiguration {
 					SearchAttribute attr = new SearchAttribute(name, label, sageTerm.getDefinition(), "date_time".equals(sageTerm.getDataType())?DataType.DATE:DataType.STRING, DataStore.SOLR, true);
 					attrListSage.add(attr);
 					attributes.add(attr);
+					attrByName.put(attr.getName(), attr);
 				}
 			}
 
@@ -134,20 +154,20 @@ public class SearchConfiguration {
         attrLoadingWorker.execute();
 	}
 	
+	public boolean isReady() {
+		return ready;
+	}
+
 	public List<SearchAttribute> getAttributes() {
 		return attributes;
 	}
 
 	public void setAttributes(List<SearchAttribute> attributes) {
 		this.attributes = attributes;
-	}	
-
-	public Map<String, SageTerm> getVocab() {
-		return vocab;
 	}
-
-	public void setVocab(Map<String, SageTerm> vocab) {
-		this.vocab = vocab;
+	
+	public SearchAttribute getAttributeByName(String name) {
+		return attrByName.get(name);
 	}
 
 	public Map<AttrGroup, List<SearchAttribute>> getAttributeGroups() {
@@ -159,9 +179,114 @@ public class SearchConfiguration {
 	}
 
 	protected void dataLoadComplete() {
+		this.ready  = true;
 		SearchConfigurationEvent evt = new SearchConfigurationEvent(this);
 		for(SearchConfigurationListener listener : listeners) {
 			listener.configurationChange(evt);
 		}
 	}
+	
+
+    /**
+     * Return the value of the specified column for the given object.
+     * @param userObject
+     * @param column
+     * @return
+     */
+	public String getValue(Object userObject, String fieldName) {
+		Entity entity = null;
+		SolrDocument doc  = null;
+		if (userObject instanceof EntityDocument)  {
+			EntityDocument entityDoc = (EntityDocument)userObject;	
+			entity = entityDoc.getEntity();
+			doc = entityDoc.getDocument();
+		}
+		else if (userObject instanceof Entity) {
+			entity = (Entity)userObject;
+		}
+		else {
+			throw new IllegalArgumentException("User object must be Entity or EntityDocument");
+		}
+		
+		if (entity == null) {
+			throw new IllegalArgumentException("Entity may not be null in user object="+userObject);
+		}
+		;
+		Object value = null;
+		if ("id".equals(fieldName)) {
+			value = entity.getId();
+		}
+		else if ("name".equals(fieldName)) {
+			value = entity.getName();
+		}
+		else if ("entity_type".equals(fieldName)) {
+			value = entity.getEntityType().getName();
+		}
+		else if ("username".equals(fieldName)) {
+			value = entity.getUser().getUserLogin();
+		}
+		else if ("creation_date".equals(fieldName)) {
+			value = entity.getCreationDate();
+		}
+		else if ("updated_date".equals(fieldName)) {
+			value = entity.getUpdatedDate();
+		}
+		else if (doc!=null) {
+			if ("annotations".equals(fieldName)) {
+				value = doc.getFieldValues(SessionMgr.getUsername()+"_annotations");
+			}
+			else {
+				value = doc.getFieldValues(fieldName);	
+			}
+		}
+		else {
+			throw new IllegalStateException("Unknown field '"+fieldName+"'");
+		}
+
+		return getFormattedFieldValue(value, fieldName);
+	}
+
+    /**
+     * Returns the human-readable label for the specified value in the given field. 
+     * @param fieldName
+     * @param value
+     * @return
+     */
+	protected String getFormattedFieldValue(Object value, String fieldName) {
+		if (value==null) return null;
+
+		// Convert to collection
+		Collection<Object> coll = null;
+		if (value instanceof Collection) {
+			coll = (Collection)value;
+    	}
+		else {
+			coll = new ArrayList<Object>();
+			coll.add(value);
+		}
+		
+		// Format every value in the collection
+		List<String> formattedValues = new ArrayList<String>();
+		for(Object v : coll) {
+			String formattedValue = v.toString();
+			if (v instanceof Date) {
+				formattedValue = df.format((Date)v);
+			}
+			else if (v instanceof Float) {
+				formattedValue = decFormat.format((Float)v);
+			}
+			else if (v instanceof Double) {
+				formattedValue = decFormat.format((Double)v);
+			}
+			else {
+				if ("tiling_pattern_txt".equals(fieldName)) {
+		    		formattedValue = StringUtils.underscoreToTitleCase(formattedValue);
+		    	}	
+			}
+			formattedValues.add(formattedValue);
+		}
+
+		// Combine values
+    	return StringUtils.getCommaDelimited(formattedValues, MAX_CELL_LENGTH);
+    }
 }

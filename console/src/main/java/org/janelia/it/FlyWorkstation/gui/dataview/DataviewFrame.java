@@ -111,7 +111,6 @@ public class DataviewFrame extends JFrame {
     }
 
     private void initData() {
-    	searchPane.getSolrPanel().init();
     	searchConfig.load();
     	entityTypePane.refresh();
     }

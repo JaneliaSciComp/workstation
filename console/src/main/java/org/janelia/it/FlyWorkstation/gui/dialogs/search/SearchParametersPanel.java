@@ -182,14 +182,17 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
         add(contentPanel, BorderLayout.CENTER);
     }
     
-	public void init() {
+	public void init(SearchConfiguration searchConfig) {
+		if (searchConfig.isReady()) {
+			this.searchConfig = searchConfig;
+	    	advancedSearchCheckbox.setEnabled(true);
+	    	revalidate();
+		}
 	}
 
     @Override
 	public void configurationChange(SearchConfigurationEvent evt) {
-    	searchConfig = evt.getSearchConfig();
-    	advancedSearchCheckbox.setEnabled(true);
-    	revalidate();
+    	init(evt.getSearchConfig());
 	}
     
 	/**

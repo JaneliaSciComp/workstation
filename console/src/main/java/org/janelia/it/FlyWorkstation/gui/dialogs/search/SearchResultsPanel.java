@@ -7,9 +7,6 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.Callable;
 
@@ -22,7 +19,6 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.FacetField.Count;
 import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrDocument;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchAttribute.DataStore;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchConfiguration.AttrGroup;
@@ -38,6 +34,7 @@ import org.janelia.it.jacs.compute.api.support.EntityDocument;
 import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
 import org.janelia.it.jacs.compute.api.support.SolrResults;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 
 /**
  * A general search results panel.
@@ -46,14 +43,6 @@ import org.janelia.it.jacs.model.entity.Entity;
  */
 public abstract class SearchResultsPanel extends JPanel implements SearchConfigurationListener, Refreshable {
 
-	/** Format for displaying dates */
-	protected static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm");
-
-	/** Format for displaying scores */
-	protected static final DecimalFormat decFormat = new DecimalFormat("#.##");
-    
-	/** Number of characters before cell values are truncated */
-	protected static final int MAX_CELL_LENGTH = 50;
 	
 	/** How many results to load at a time */
 	protected static final int PAGE_SIZE = 100;	
@@ -86,7 +75,6 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     // Search state
  	protected final SearchParametersPanel paramsPanel;
  	protected final Map<String, DynamicColumn> columnByName = new HashMap<String, DynamicColumn>();
- 	protected final Map<String, SearchAttribute> attrByName = new HashMap<String, SearchAttribute>();
  	protected final Map<String,Set<String>> filters = new HashMap<String,Set<String>>();
  	protected SearchConfiguration searchConfig;
     protected String sortField;
@@ -132,7 +120,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
         resultsTable = new DynamicTable() {
 			@Override
 			public Object getValue(Object userObject, DynamicColumn column) {				
-				return SearchResultsPanel.this.getValue(userObject, column);
+				return searchConfig.getValue(userObject, column.getName());
 			}
 			@Override
 			protected void loadMoreResults(Callable<Void> success) {
@@ -164,7 +152,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
         projectionTable = new DynamicTable() {
 			@Override
 			public Object getValue(Object userObject, DynamicColumn column) {
-				return SearchResultsPanel.this.getValue(userObject, column);
+				return searchConfig.getValue(userObject, column.getName());
 			}
 			@Override
 			protected void loadMoreResults(Callable<Void> success) {
@@ -275,17 +263,21 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
         
 		add(splitPane, BorderLayout.CENTER);
 	}
-
-    @Override
-	public void configurationChange(SearchConfigurationEvent evt) {
-    	searchConfig = evt.getSearchConfig();
-    	
+	
+	public void init(SearchConfiguration searchConfig) {
+		
+		if (!searchConfig.isReady()) return;
+		
+		this.searchConfig = searchConfig;
+		resultsTable.clearColumns();
+		projectionTable.clearColumns();
+		columnByName.clear();
+		
     	Map<AttrGroup, List<SearchAttribute>> attributeGroups = searchConfig.getAttributeGroups();
     	
     	for(SearchAttribute attr : attributeGroups.get(AttrGroup.BASIC)) {
 			DynamicColumn column = resultsTable.addColumn(attr.getName(), attr.getLabel(), !attr.getName().equals("id"), false, true, attr.isSortable());
 			columnByName.put(attr.getName(), column);
-			attrByName.put(attr.getName(), attr);
 			if (attr.getDataStore()==DataStore.ENTITY) {
 				projectionTable.addColumn(attr.getName(), attr.getLabel(), !attr.getName().equals("id"), false, true, false);	
 			}
@@ -294,17 +286,20 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     	for(SearchAttribute attr : attributeGroups.get(AttrGroup.EXT)) {
     		DynamicColumn column = resultsTable.addColumn(attr.getName(), attr.getLabel(), false, false, true, attr.isSortable());
     		columnByName.put(attr.getName(), column);
-    		attrByName.put(attr.getName(), attr);
     	}
 
 		for(SearchAttribute attr : attributeGroups.get(AttrGroup.SAGE)) {
 			DynamicColumn column = resultsTable.addColumn(attr.getName(), attr.getLabel(), false, false, true, attr.isSortable());
 			columnByName.put(attr.getName(), column);
-			attrByName.put(attr.getName(), attr);
 		}
 		
     	populateAttrs();
 		revalidate();
+	}
+
+    @Override
+	public void configurationChange(SearchConfigurationEvent evt) {
+    	init(evt.getSearchConfig());	
 	}
     
     public void documentSelected(EntityDocument doc) {
@@ -700,8 +695,10 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     		if (counts==null) continue;
     		
     		for(final Count count : ff.getValues()) {
-    			final SearchAttribute attr = attrByName.get(ff.getName());
-    			final String label = getFormattedFieldValue(attr, count.getName())+" ("+count.getCount()+")";
+    			
+    			final SearchAttribute attr = searchConfig.getAttributeByName(ff.getName());
+    			final String label = searchConfig.getFormattedFieldValue(count.getName(), attr.getName())+" ("+count.getCount()+")";
+    			
     			final JCheckBox checkBox = new JCheckBox(new AbstractAction(label) {
 					public void actionPerformed(ActionEvent e) {
 						JCheckBox cb = (JCheckBox) e.getSource();
@@ -786,66 +783,6 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 	}
 	
     /**
-     * Return the value of the specified column for the given object.
-     * @param userObject
-     * @param column
-     * @return
-     */
-	public Object getValue(Object userObject, DynamicColumn column) {
-		Entity entity = null;
-		SolrDocument doc  = null;
-		if (userObject instanceof EntityDocument)  {
-			EntityDocument entityDoc = (EntityDocument)userObject;	
-			entity = entityDoc.getEntity();
-			doc = entityDoc.getDocument();
-		}
-		else if (userObject instanceof Entity) {
-			entity = (Entity)userObject;
-		}
-		else {
-			throw new IllegalArgumentException("User object must be Entity or EntityDocument");
-		}
-		
-		if (entity == null) {
-			throw new IllegalArgumentException("Entity may not be null in user object="+userObject);
-		}
-		
-		String field = column.getName();
-		Object value = null;
-		if ("id".equals(field)) {
-			value = entity.getId();
-		}
-		else if ("name".equals(field)) {
-			value = entity.getName();
-		}
-		else if ("entity_type".equals(field)) {
-			value = entity.getEntityType().getName();
-		}
-		else if ("username".equals(field)) {
-			value = entity.getUser().getUserLogin();
-		}
-		else if ("creation_date".equals(field)) {
-			value = entity.getCreationDate();
-		}
-		else if ("updated_date".equals(field)) {
-			value = entity.getUpdatedDate();
-		}
-		else if (doc!=null) {
-			if ("annotations".equals(field)) {
-				value = doc.getFieldValues(SessionMgr.getUsername()+"_annotations");
-			}
-			else {
-				value = doc.getFieldValues(column.getName());	
-			}
-		}
-		else {
-			throw new IllegalStateException("Unknown field '"+field+"'");
-		}
-
-		return getFormattedFieldValue(attrByName.get(field), value);
-	}
-    
-    /**
      * Returns the human-readable label for the given field name.
      * @param fieldName
      * @return
@@ -860,78 +797,8 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     	else if ("username".equals(fieldName)) {
     		return "Owner";
     	}
-    	return underscoreToTitleCase(fieldName);
+    	return StringUtils.underscoreToTitleCase(fieldName);
     }
-
-    /**
-     * Returns the human-readable label for the specified value in the given field. 
-     * @param fieldName
-     * @param value
-     * @return
-     */
-	protected Object getFormattedFieldValue(SearchAttribute attr, Object value) {
-		if (value==null) return null;
-
-		// Convert to collection
-		Collection coll = null;
-		if (value instanceof Collection) {
-			coll = (Collection)value;
-    	}
-		else {
-			coll = new ArrayList<Object>();
-			coll.add(value);
-		}
-		
-		// Format every value in the collection
-		List<String> formattedValues = new ArrayList<String>();
-		for(Object v : coll) {
-			String formattedValue = v.toString();
-			if (v instanceof Date) {
-				formattedValue = df.format((Date)v);
-			}
-			else if (v instanceof Float) {
-				formattedValue = decFormat.format((Float)v);
-			}
-			else if (v instanceof Double) {
-				formattedValue = decFormat.format((Double)v);
-			}
-			else {
-				if ("tiling_pattern_txt".equals(attr.getName())) {
-		    		formattedValue = underscoreToTitleCase(formattedValue);
-		    	}	
-			}
-			formattedValues.add(formattedValue);
-		}
-
-		// Combine values
-    	return getCommaDelimited(formattedValues, MAX_CELL_LENGTH);
-    }
-    
-	protected String underscoreToTitleCase(String name) {
-    	String[] words = name.split("_");
-    	StringBuffer buf = new StringBuffer();
-    	for(String word : words) {
-    		char c = Character.toUpperCase(word.charAt(0));
-    		if (buf.length()>0) buf.append(' ');
-    		buf.append(c);
-    		buf.append(word.substring(1).toLowerCase());
-    	}
-    	return buf.toString();
-    }
-
-	protected String getCommaDelimited(Collection objs, int maxLength) {
-		if (objs==null) return null;
-		StringBuffer buf = new StringBuffer();
-		for(Object obj : objs) {
-			if (buf.length()+3>=maxLength) {
-				buf.append("...");
-				break;
-			}
-			if (buf.length()>0) buf.append(", ");
-			buf.append(obj.toString());
-		}
-		return buf.toString();
-	}
 
 	public DynamicTable getResultsTable() {
 		return resultsTable;

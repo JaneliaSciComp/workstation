@@ -373,6 +373,13 @@ public abstract class DynamicTable extends JPanel {
     	columns.add(col);
     	return col;
     }
+    
+    /**
+     * Clear the column configuration.
+     */
+    public void clearColumns() {
+    	columns.clear();
+    }
 
     /**
      * Get a list of all columns.

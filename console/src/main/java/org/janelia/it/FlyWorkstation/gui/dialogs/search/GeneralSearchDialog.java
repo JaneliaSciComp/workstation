@@ -60,7 +60,10 @@ public class GeneralSearchDialog extends ModalDialog {
     protected final JButton exportButton;
 	
     
-    public GeneralSearchDialog() {
+    public GeneralSearchDialog(SearchConfiguration searchConfig) {
+    	
+    	this.searchConfig = searchConfig;
+    	
     	setLayout(new BorderLayout());
         setTitle("Search");
         
@@ -71,7 +74,8 @@ public class GeneralSearchDialog extends ModalDialog {
         		resultsPanel.performSearch(clear, clear, true);
         	}
         };
-        
+        paramsPanel.init(searchConfig);
+        searchConfig.addConfigurationChangeListener(paramsPanel);
         add(paramsPanel, BorderLayout.NORTH);
         
         resultsPanel = new SearchResultsPanel(paramsPanel) {
@@ -86,12 +90,9 @@ public class GeneralSearchDialog extends ModalDialog {
         	}
     		
         };
-        add(resultsPanel, BorderLayout.CENTER);
-        
-        searchConfig = new SearchConfiguration();
-        searchConfig.addConfigurationChangeListener(paramsPanel);
+        resultsPanel.init(searchConfig);
         searchConfig.addConfigurationChangeListener(resultsPanel);
-        searchConfig.load();
+        add(resultsPanel, BorderLayout.CENTER);
         
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
@@ -151,7 +152,6 @@ public class GeneralSearchDialog extends ModalDialog {
 		setPreferredSize(new Dimension((int)(browser.getWidth()*0.8),(int)(browser.getHeight()*0.8)));
 
     	paramsPanel.getInputField().requestFocus();
-		paramsPanel.init();
 		
     	resultsPanel.performSearch(false, false, true);
 
@@ -354,7 +354,7 @@ public class GeneralSearchDialog extends ModalDialog {
 					for(EntityDocument entityDoc : results.getEntityDocuments()) {
 						buf = new StringBuffer();
 						for(DynamicColumn column : resultsPanel.getResultsTable().getDisplayedColumns()) {
-							Object value = resultsPanel.getValue(entityDoc, column);
+							Object value = searchConfig.getValue(entityDoc, column.getName());
 							if (value!=null) {
 								buf.append(value.toString());	
 							}

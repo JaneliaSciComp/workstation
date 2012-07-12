@@ -1,5 +1,20 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
+import java.awt.*;
+import java.awt.event.WindowEvent;
+import java.awt.print.PageFormat;
+import java.awt.print.PrinterJob;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import javax.swing.*;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.access.LoadRequestStatusObserverAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestState;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestStatus;
@@ -7,6 +22,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelection
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.*;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.GeneralSearchDialog;
+import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchConfiguration;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.*;
 import org.janelia.it.FlyWorkstation.gui.framework.search.SearchToolbar;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
@@ -26,20 +42,6 @@ import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableImage;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.WindowEvent;
-import java.awt.print.PageFormat;
-import java.awt.print.PrinterJob;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.File;
-import java.io.FilenameFilter;
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -104,7 +106,8 @@ public class Browser extends JFrame implements Cloneable {
     private AnnotationSessionPropertyDialog annotationSessionPropertyPanel;
     private RunImportDialog runImportDialog;
     private RunNeuronSeparationDialog runNeuronSeparationDialog;
-    private GeneralSearchDialog searchDialog;
+    private SearchConfiguration generalSearchConfig;
+    private GeneralSearchDialog generalSearchDialog;
     private PatternSearchDialog patternSearchDialog;
     private GiantFiberSearchDialog giantFiberSearchDialog;
     private String mostRecentFileOutlinePath;
@@ -257,10 +260,14 @@ public class Browser extends JFrame implements Cloneable {
         annotationSessionPropertyPanel = new AnnotationSessionPropertyDialog(entityOutline, ontologyOutline);
         runImportDialog = new RunImportDialog();
         runNeuronSeparationDialog = new RunNeuronSeparationDialog();
-        searchDialog = new GeneralSearchDialog();
+        
+
+        generalSearchConfig = new SearchConfiguration();
+        generalSearchConfig.load();
+        generalSearchDialog = new GeneralSearchDialog(generalSearchConfig);
 
         List<String> searchHistory = (List<String>) SessionMgr.getSessionMgr().getModelProperty(SEARCH_HISTORY);
-        searchDialog.setSearchHistory(searchHistory);
+        generalSearchDialog.setSearchHistory(searchHistory);
 
         patternSearchDialog = new PatternSearchDialog();
 
@@ -1179,7 +1186,7 @@ public class Browser extends JFrame implements Cloneable {
             position.setHorizontalRightDividerLocation(centerRightHorizontalSplitPane.getDividerLocation());
             
             SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, position);
-            SessionMgr.getSessionMgr().setModelProperty(SEARCH_HISTORY, searchDialog.getSearchHistory());
+            SessionMgr.getSessionMgr().setModelProperty(SEARCH_HISTORY, generalSearchDialog.getSearchHistory());
             
             dispose();
         }
@@ -1307,8 +1314,12 @@ public class Browser extends JFrame implements Cloneable {
         return giantFiberSearchDialog;
     }
 
-    public GeneralSearchDialog getSearchDialog() {
-		return searchDialog;
+    public SearchConfiguration getGeneralSearchConfig() {
+		return generalSearchConfig;
+	}
+
+	public GeneralSearchDialog getGeneralSearchDialog() {
+		return generalSearchDialog;
 	}
 
 	public String getMostRecentFileOutlinePath() {
