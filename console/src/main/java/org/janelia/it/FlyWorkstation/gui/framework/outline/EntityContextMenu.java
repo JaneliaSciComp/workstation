@@ -1,5 +1,19 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.*;
+import java.util.concurrent.Callable;
+
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
+import javax.swing.tree.DefaultMutableTreeNode;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
@@ -25,23 +39,13 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
-import org.janelia.it.jacs.model.tasks.*;
+import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.neuron.NeuronMergeTask;
 import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import java.awt.*;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Callable;
 
 /**
  * Context pop up menu for entities.
@@ -311,9 +315,28 @@ public class EntityContextMenu extends JPopupMenu {
 		if (multiple) return null;
 		JMenu relatedMenu = new JMenu("  Go to related");
 		Entity entity = rootedEntity.getEntity();
-		add(relatedMenu, getRelatedItem(entity, EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE, "Representative Sample"));
-		add(relatedMenu, getRelatedItem(entity, EntityConstants.ATTRIBUTE_ORIGINAL_FLYLINE, "Original Fly Line"));
-		add(relatedMenu, getRelatedItem(entity, EntityConstants.ATTRIBUTE_BALANCED_FLYLINE, "Balanced Fly Line"));
+
+		if (entity.getEntityType().getName().equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
+			List<String> upMapping = new ArrayList<String>();
+			upMapping.add(EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION);
+			upMapping.add(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
+			upMapping.add(EntityConstants.TYPE_SAMPLE);
+			List<String> downMapping = new ArrayList<String>();
+			add(relatedMenu, getRelatedSampleItem(entity, upMapping, downMapping));	
+		}
+		else if (entity.getEntityType().getName().equals(EntityConstants.TYPE_LSM_STACK)) {
+			List<String> upMapping = new ArrayList<String>();
+			upMapping.add(EntityConstants.TYPE_LSM_STACK_PAIR);
+			upMapping.add(EntityConstants.TYPE_SUPPORTING_DATA);
+			upMapping.add(EntityConstants.TYPE_SAMPLE);
+			List<String> downMapping = new ArrayList<String>();
+			add(relatedMenu, getRelatedSampleItem(entity, upMapping, downMapping));	
+		}
+		else if (entity.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
+			add(relatedMenu, getRelatedItem(entity, EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE, "Representative Sample"));
+			add(relatedMenu, getRelatedItem(entity, EntityConstants.ATTRIBUTE_ORIGINAL_FLYLINE, "Original Fly Line"));
+			add(relatedMenu, getRelatedItem(entity, EntityConstants.ATTRIBUTE_BALANCED_FLYLINE, "Balanced Fly Line"));	
+		}
         return relatedMenu;
 	}
 	
@@ -325,6 +348,44 @@ public class EntityContextMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 		        gotoEntity(ed.getChildEntity());
+			}
+		});
+        return relatedMenuItem;
+	}
+	
+	private JMenuItem getRelatedSampleItem(final Entity entity, final List<String> upMapping, final List<String> downMapping) {
+		
+        JMenuItem relatedMenuItem = new JMenuItem("Sample");
+        relatedMenuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				SimpleWorker worker = new SimpleWorker() {
+
+					private Entity sample;
+					
+					@Override
+					protected void doStuff() throws Exception {
+						List<Entity> mapped = ModelMgr.getModelMgr().getProjectedEntities(entity.getId(), upMapping, downMapping);
+						if (mapped.size()>1) {
+							System.out.println("Warning: got more than Sample for "+entity.getId());
+						}
+						if (mapped.isEmpty()) {
+							throw new Exception("Could not find Sample for "+entity.getName());
+						}
+						sample = mapped.get(0);
+					}
+					
+					@Override
+					protected void hadSuccess() {
+				        gotoEntity(sample);
+					}
+					
+					@Override
+					protected void hadError(Throwable error) {
+						SessionMgr.getSessionMgr().handleException(error);
+					}
+				};
+				worker.execute();
 			}
 		});
         return relatedMenuItem;

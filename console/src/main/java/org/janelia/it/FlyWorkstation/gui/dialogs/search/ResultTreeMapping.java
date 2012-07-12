@@ -18,8 +18,8 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
  */
 public class ResultTreeMapping {
 	
-	private List<EntityMapStep> upMapping = new ArrayList<EntityMapStep>();
-	private List<EntityMapStep> downMapping = new ArrayList<EntityMapStep>();
+	private List<EntityMapStep> upMappingSteps = new ArrayList<EntityMapStep>();
+	private List<EntityMapStep> downMappingSteps = new ArrayList<EntityMapStep>();
 	
 	public ResultTreeMapping(EntityTree entityTree, String uniqueId1, String uniqueId2) {
 		
@@ -48,7 +48,7 @@ public class ResultTreeMapping {
 			if (uniqueId.matches(".*?e_\\d+$")) {
 				EntityData entityData = entityTree.getEntityDataByUniqueId(uniqueId);
 				if (entityData!=null) {
-					upMapping.add(new EntityMapStep(entityData, true));
+					upMappingSteps.add(new EntityMapStep(entityData, true));
 				}
 			}	
 		}
@@ -59,7 +59,7 @@ public class ResultTreeMapping {
 			if (uniqueId.matches(".*?e_\\d+$")) {
 				EntityData entityData = entityTree.getEntityDataByUniqueId(uniqueId);
 				if (entityData!=null) {
-					downMapping.add(new EntityMapStep(entityData, false));
+					downMappingSteps.add(new EntityMapStep(entityData, false));
 				}
 			}	
 		}
@@ -67,6 +67,14 @@ public class ResultTreeMapping {
 
 	public List<MappedId> getProjectedIds(List<Long> entityIds) throws Exception {
 		if (entityIds==null||entityIds.isEmpty()) return new ArrayList<MappedId>();
+		List<String> upMapping = new ArrayList<String>();
+		List<String> downMapping = new ArrayList<String>();
+		for(EntityMapStep step : upMappingSteps) {
+			upMapping.add(step.getEntityType());
+		}
+		for(EntityMapStep step : downMappingSteps) {
+			downMapping.add(step.getEntityType());
+		}
 		return ModelMgr.getModelMgr().getProjectedResults(entityIds, upMapping, downMapping);
 	}
 	
@@ -84,10 +92,10 @@ public class ResultTreeMapping {
 
 	public String getDescription() {
 		StringBuffer desc = new StringBuffer();
-		for(EntityMapStep step : upMapping) {
+		for(EntityMapStep step : upMappingSteps) {
 			desc.append("<'"+step.getEntityType()+"'");
 		}
-		for(EntityMapStep step : downMapping) {
+		for(EntityMapStep step : downMappingSteps) {
 			desc.append(">'"+step.getEntityType()+"'");
 		}
 		return desc.toString();

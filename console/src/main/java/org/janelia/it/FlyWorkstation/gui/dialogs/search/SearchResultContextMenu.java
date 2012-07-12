@@ -10,6 +10,7 @@ import javax.swing.tree.TreeSelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.choose.EntityChooser;
+import org.janelia.it.FlyWorkstation.gui.dialogs.choose.MultiTreeEntityChooser;
 import org.janelia.it.FlyWorkstation.gui.framework.context_menu.AbstractContextMenu;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTree;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTreeCellRenderer;
@@ -69,7 +70,7 @@ public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
 				SimpleWorker worker = new SimpleWorker() {
 
 					List<List<Object>> paths = new ArrayList<List<Object>>();
-					EntityChooser entityChooser;
+					MultiTreeEntityChooser entityChooser;
 					
 					@Override
 					protected void doStuff() throws Exception {
@@ -90,8 +91,8 @@ public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
 							public int compare(List<Object> o1, List<Object> o2) {
 								Entity root1 = (Entity)o1.get(0);
 								Entity root2 = (Entity)o2.get(0);
-								// Order by id desc to get newest entities first
-								return root2.getId().compareTo(root1.getId());
+								// Order by id to get oldest entities first
+								return root1.getId().compareTo(root2.getId());
 							}
 						});
 					}
@@ -99,49 +100,54 @@ public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
 					@Override
 					protected void hadSuccess() {
 						
-						// TODO: add support for multiple paths 
-						List<Object> path = paths.get(0);
+						List<EntityTree> trees = new ArrayList<EntityTree>();
+						Map<EntityTree,String> startingPaths = new HashMap<EntityTree,String>();
 						
-						ExpansionState expansion = new ExpansionState();
-						expansion.addExpandedUniqueId("/");
-						
-						StringBuffer sb = new StringBuffer();
-						for(Object p : path) {
-							sb.append("/");
-							if (p instanceof Entity) {
-								sb.append("e_");
-								sb.append(((Entity)p).getId());	
-							}
-							else {	
-								sb.append("ed_");
-								sb.append(((EntityData)p).getId());	
-							}
+						for(List<Object> path : paths) {
+							ExpansionState expansion = new ExpansionState();
+							expansion.addExpandedUniqueId("/");
+							
+							StringBuffer sb = new StringBuffer();
+							for(Object p : path) {
+								sb.append("/");
+								if (p instanceof Entity) {
+									sb.append("e_");
+									sb.append(((Entity)p).getId());	
+								}
+								else {	
+									sb.append("ed_");
+									sb.append(((EntityData)p).getId());	
+								}
 
-							expansion.addExpandedUniqueId(sb.toString());
-						}
-						
-						String selected = sb.toString();
-						expansion.setSelectedUniqueId(selected);
-
-						EntityTree tree = new EntityTree(true);
-						tree.initializeTree((Entity)path.get(0));
-						tree.getDynamicTree().setCellRenderer(new EntityTreeCellRenderer() {
-							@Override
-							protected boolean isHighlighted(Entity entity2) {
-								return entity2.getId().equals(entity.getId());
+								expansion.addExpandedUniqueId(sb.toString());
 							}
 							
-						});
-						expansion.restoreExpansionState(tree.getDynamicTree(), true);
+							String selected = sb.toString();
+							expansion.setSelectedUniqueId(selected);
+
+							EntityTree tree = new EntityTree(true);
+							tree.initializeTree((Entity)path.get(0));
+							tree.getDynamicTree().setCellRenderer(new EntityTreeCellRenderer() {
+								@Override
+								protected boolean isHighlighted(Entity entity2) {
+									return entity2.getId().equals(entity.getId());
+								}
+								
+							});
+							expansion.restoreExpansionState(tree.getDynamicTree(), true);
+							
+							trees.add(tree);
+							startingPaths.put(tree, selected);
+						}
 						
-						entityChooser = new EntityChooser("Select relative", tree);
-						entityChooser.getEntityTree().getTree().getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+						entityChooser = new MultiTreeEntityChooser("Select relative", trees);
 						
 						int returnVal = entityChooser.showDialog(null);
 		                if (returnVal != EntityChooser.CHOOSE_OPTION) return;
 						String uniqueId = entityChooser.getUniqueIds().get(0);
-						
-						ResultTreeMapping projection = new ResultTreeMapping(entityChooser.getEntityTree(), selected, uniqueId);
+						EntityTree selectedTree = entityChooser.getSelectedTree();
+						String startingPath = startingPaths.get(selectedTree);
+						ResultTreeMapping projection = new ResultTreeMapping(selectedTree, startingPath, uniqueId);
 						searchResultsPanel.projectResults(projection);
 					}
 					

@@ -68,7 +68,7 @@ public interface EntityFacade {
     
     public Entity getAncestorWithType(Entity entity, String typeName) throws Exception;
     
-	public List<MappedId> getProjectedResults(List<Long> entityIds, List<EntityMapStep> upMapping, List<EntityMapStep> downMapping) throws Exception;
+	public List<MappedId> getProjectedResults(List<Long> entityIds, List<String> upMapping, List<String> downMapping) throws Exception;
 	
 	public List<List<Long>> searchTreeForNameStartingWith(Long rootId, String searchString) throws Exception;
 

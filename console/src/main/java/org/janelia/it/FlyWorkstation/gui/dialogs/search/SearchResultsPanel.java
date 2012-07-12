@@ -423,10 +423,10 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 
 			@Override
 			protected void hadSuccess() {
-				populateFacets(resultPage);
-	        	populateResultView(resultPage);
-		    	if (showLoading) resultsTable.showTable();
 		    	try {
+					populateFacets(resultPage);
+		        	populateResultView(resultPage);
+			    	if (showLoading) resultsTable.showTable();
 		    		if (success!=null) success.call();
 		    	}
 		    	catch (Exception e) {
@@ -676,8 +676,8 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     	
 		facetsPanel.removeAll();
 		
-    	SolrResults pageResults =  resultPage.getSolrResults();
-    	if (pageResults==null || pageResults.getResultList().isEmpty()) return;
+    	SolrResults pageResults = resultPage.getSolrResults();
+    	if (pageResults==null) return;
     	
     	QueryResponse qr = pageResults.getResponse();
     	for(final FacetField ff : qr.getFacetFields()) {

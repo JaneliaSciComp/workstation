@@ -163,7 +163,7 @@ public class EJBEntityFacade implements EntityFacade {
     	EJBFactory.getRemoteEntityBean().addChildren(SessionMgr.getUsername(), parentId, childrenIds, attributeName);
 	}
 	
-	public List<MappedId> getProjectedResults(List<Long> entityIds, List<EntityMapStep> upMapping, List<EntityMapStep> downMapping) throws Exception {
+	public List<MappedId> getProjectedResults(List<Long> entityIds, List<String> upMapping, List<String> downMapping) throws Exception {
 		return EJBFactory.getRemoteEntityBean().getProjectedResults(entityIds, upMapping, downMapping);
 	}
 	

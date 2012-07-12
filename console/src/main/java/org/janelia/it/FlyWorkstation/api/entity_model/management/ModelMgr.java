@@ -821,8 +821,19 @@ public class ModelMgr {
     	FacadeManager.getFacadeManager().getAnnotationFacade().addChildren(parentId, childrenIds, attributeName);
     }
     
-    public List<MappedId> getProjectedResults(List<Long> entityIds, List<EntityMapStep> upMapping, List<EntityMapStep> downMapping) throws Exception {
+    public List<MappedId> getProjectedResults(List<Long> entityIds, List<String> upMapping, List<String> downMapping) throws Exception {
     	return FacadeManager.getFacadeManager().getAnnotationFacade().getProjectedResults(entityIds, upMapping, downMapping);
+    }
+    
+    public List<Entity> getProjectedEntities(Long entityId, List<String> upMapping, List<String> downMapping) throws Exception {
+    	List<Long> startEntityIds = new ArrayList<Long>();
+    	startEntityIds.add(entityId);
+    	List<MappedId> mappedIds = getProjectedResults(startEntityIds, upMapping, downMapping);
+    	List<Long> entityIds = new ArrayList<Long>();
+    	for(MappedId mappedId : mappedIds) {
+    		entityIds.add(mappedId.getMappedId());
+    	}
+    	return getEntityByIds(entityIds);
     }
     
     public Object[] getPatternAnnotationQuantifierMapsFromSummary() throws Exception {

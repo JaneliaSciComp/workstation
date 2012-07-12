@@ -342,7 +342,7 @@ public class AggregateEntityFacade extends AggregateFacadeBase implements Entity
 	}
 	
 	@Override
-	public List<MappedId> getProjectedResults(List<Long> entityIds, List<EntityMapStep> upMapping, List<EntityMapStep> downMapping) throws Exception {
+	public List<MappedId> getProjectedResults(List<Long> entityIds, List<String> upMapping, List<String> downMapping) throws Exception {
 		throw new UnsupportedOperationException();
 	}
 }
