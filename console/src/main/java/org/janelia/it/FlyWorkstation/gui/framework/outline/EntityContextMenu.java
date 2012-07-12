@@ -197,16 +197,22 @@ public class EntityContextMenu extends JPopupMenu {
         return detailsMenuItem;
 	}
 
-	private void gotoEntity(final Entity entity) {
+	private void gotoEntity(final Entity entity, final String ancestorType) {
 		
 		Utils.setWaitingCursor(SessionMgr.getBrowser());
 		
 		SimpleWorker worker = new SimpleWorker() {
+		
+			private Entity targetEntity = entity;
+			private EntityDataPath chosen;
 			
 			@Override
 			protected void doStuff() throws Exception {
+				if (ancestorType!=null) {
+					targetEntity = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_SAMPLE);
+				}
 				// Find the best context to show the entity in
-				List<List<EntityData>> edPaths = ModelMgr.getModelMgr().getPathsToRoots(entity.getId());
+				List<List<EntityData>> edPaths = ModelMgr.getModelMgr().getPathsToRoots(targetEntity.getId());
 				List<EntityDataPath> paths = new ArrayList<EntityDataPath>();
 				for (List<EntityData> path : edPaths) {
 					if (ModelMgr.getModelMgr().hasAccess(path.get(0))) {
@@ -218,20 +224,17 @@ public class EntityContextMenu extends JPopupMenu {
 				}
 				sortPathsByPreference(paths);
 				
-				for(EntityDataPath edp : paths) {
-					System.out.println(""+edp);
-				}
-				
 				if (paths.isEmpty()) {
 					throw new Exception("Could not find the related entity");
 				}
 				
-				EntityDataPath chosen = paths.get(0);
-				SessionMgr.getBrowser().getEntityOutline().selectEntityByUniqueId(chosen.getUniqueId());
+				this.chosen = paths.get(0);
+				
 			}
 			
 			@Override
 			protected void hadSuccess() {
+				SessionMgr.getBrowser().getEntityOutline().selectEntityByUniqueId(chosen.getUniqueId());
 				Utils.setDefaultCursor(SessionMgr.getBrowser());
 			}
 			
@@ -315,22 +318,11 @@ public class EntityContextMenu extends JPopupMenu {
 		if (multiple) return null;
 		JMenu relatedMenu = new JMenu("  Go to related");
 		Entity entity = rootedEntity.getEntity();
-
-		if (entity.getEntityType().getName().equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
-			List<String> upMapping = new ArrayList<String>();
-			upMapping.add(EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION);
-			upMapping.add(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
-			upMapping.add(EntityConstants.TYPE_SAMPLE);
-			List<String> downMapping = new ArrayList<String>();
-			add(relatedMenu, getRelatedSampleItem(entity, upMapping, downMapping));	
-		}
-		else if (entity.getEntityType().getName().equals(EntityConstants.TYPE_LSM_STACK)) {
-			List<String> upMapping = new ArrayList<String>();
-			upMapping.add(EntityConstants.TYPE_LSM_STACK_PAIR);
-			upMapping.add(EntityConstants.TYPE_SUPPORTING_DATA);
-			upMapping.add(EntityConstants.TYPE_SAMPLE);
-			List<String> downMapping = new ArrayList<String>();
-			add(relatedMenu, getRelatedSampleItem(entity, upMapping, downMapping));	
+		String type = entity.getEntityType().getName();
+		if (type.equals(EntityConstants.TYPE_NEURON_FRAGMENT) || 
+				type.equals(EntityConstants.TYPE_LSM_STACK) || 
+				type.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
+			add(relatedMenu, getRelatedEntityItem("Sample", entity, EntityConstants.TYPE_SAMPLE));	
 		}
 		else if (entity.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
 			add(relatedMenu, getRelatedItem(entity, EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE, "Representative Sample"));
@@ -343,53 +335,58 @@ public class EntityContextMenu extends JPopupMenu {
 	private JMenuItem getRelatedItem(Entity entity, String attributeName, String label) {
 		final EntityData ed = entity.getEntityDataByAttributeName(attributeName);
 		if (ed==null) return null;
+		return getRelatedEntityItem(label, ed.getChildEntity(), null);
+	}
+
+	private JMenuItem getRelatedEntityItem(final String label, final Entity entity, final String ancestorType) {
+		if (entity==null) return null;
         JMenuItem relatedMenuItem = new JMenuItem(label);
         relatedMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-		        gotoEntity(ed.getChildEntity());
+				gotoEntity(entity, ancestorType);
 			}
 		});
         return relatedMenuItem;
 	}
 	
-	private JMenuItem getRelatedSampleItem(final Entity entity, final List<String> upMapping, final List<String> downMapping) {
-		
-        JMenuItem relatedMenuItem = new JMenuItem("Sample");
-        relatedMenuItem.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				SimpleWorker worker = new SimpleWorker() {
-
-					private Entity sample;
-					
-					@Override
-					protected void doStuff() throws Exception {
-						List<Entity> mapped = ModelMgr.getModelMgr().getProjectedEntities(entity.getId(), upMapping, downMapping);
-						if (mapped.size()>1) {
-							System.out.println("Warning: got more than Sample for "+entity.getId());
-						}
-						if (mapped.isEmpty()) {
-							throw new Exception("Could not find Sample for "+entity.getName());
-						}
-						sample = mapped.get(0);
-					}
-					
-					@Override
-					protected void hadSuccess() {
-				        gotoEntity(sample);
-					}
-					
-					@Override
-					protected void hadError(Throwable error) {
-						SessionMgr.getSessionMgr().handleException(error);
-					}
-				};
-				worker.execute();
-			}
-		});
-        return relatedMenuItem;
-	}
+//	private JMenuItem getRelatedProjectedItem(final Entity entity, final String label, final List<String> upMapping, final List<String> downMapping) {
+//		
+//        JMenuItem relatedMenuItem = new JMenuItem(label);
+//        relatedMenuItem.addActionListener(new ActionListener() {
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+//				SimpleWorker worker = new SimpleWorker() {
+//
+//					private Entity targetEntity;
+//					
+//					@Override
+//					protected void doStuff() throws Exception {
+//						List<Entity> mapped = ModelMgr.getModelMgr().getProjectedEntities(entity.getId(), upMapping, downMapping);
+//						if (mapped.size()>1) {
+//							System.out.println("Warning: got more than 1 "+label+" for "+entity.getId());
+//						}
+//						if (mapped.isEmpty()) {
+//							throw new Exception("Could not find "+label+" for "+entity.getName());
+//						}
+//						targetEntity = mapped.get(0);
+//					}
+//					
+//					@Override
+//					protected void hadSuccess() {
+//				        gotoEntity(targetEntity, null);
+//					}
+//					
+//					@Override
+//					protected void hadError(Throwable error) {
+//						SessionMgr.getSessionMgr().handleException(error);
+//					}
+//				};
+//				worker.execute();
+//			}
+//		});
+//        return relatedMenuItem;
+//	}
 	
 	protected JMenuItem getCopyNameToClipboardItem() {
 		if (multiple) return null;
