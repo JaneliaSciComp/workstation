@@ -97,10 +97,16 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
                     KeyboardShortcut shortcut = KeyboardShortcut.createShortcut(e);
 
                     if (keyBindButton.isSelected()) {
-
-                        // Set the key bind
-                        Action action = getActionForNode(selectedTree.getCurrentNode());
-                        SessionMgr.getKeyBindings().setBinding(shortcut, action);
+                    	Action action = getActionForNode(selectedTree.getCurrentNode());
+                    	
+                    	if (e.getKeyCode()==KeyEvent.VK_BACK_SPACE) {
+                    		// Clear the key binding
+                    		SessionMgr.getKeyBindings().setBinding(null, action);
+                    	}
+                    	else {
+                            // Set the key binding
+                    		SessionMgr.getKeyBindings().setBinding(shortcut, action);
+                    	}
 
                         // Refresh the entire tree (another key bind may have been overridden)
                         // TODO: this is very slow on large trees...
