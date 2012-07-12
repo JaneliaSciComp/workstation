@@ -1,14 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
@@ -92,7 +90,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	
 	public SplitPickingPanel() {
 	
-		setLayout(new BorderLayout());
+		setLayout(new GridBagLayout());
 		setBorder(BorderFactory.createLineBorder((Color)UIManager.get("windowBorder")));
 	
 		this.splitGroupingDialog = new SplitGroupingDialog(this);
@@ -101,9 +99,30 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
 		mainPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 0, 5));
 		
+		JPanel prefixPanel = new JPanel();
+		prefixPanel.setLayout(new BoxLayout(prefixPanel, BoxLayout.LINE_AXIS));
+		JLabel prefixLabel = new JLabel("1. Enter a personal label prefix: ");
+		prefixPanel.add(prefixLabel);
+
+
+		crossPrefix = (String)SessionMgr.getSessionMgr().getModelProperty(CROSS_PREFIX_PROPERTY);
+		prefixButton = new JButton(crossPrefix==null?"Enter prefix":crossPrefix);
+		prefixButton.setFocusable(false);
+		prefixButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				showPrefixEditingDialog();
+			}
+		});
+		prefixPanel.add(prefixButton);
+		prefixPanel.setPreferredSize(new Dimension(0, STEP_PANEL_HEIGHT));
+		prefixPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		mainPanel.add(prefixPanel);
+		
+		
 		JPanel folderPanel = new JPanel();
 		folderPanel.setLayout(new BoxLayout(folderPanel, BoxLayout.LINE_AXIS));
-		JLabel folderLabel = new JLabel("1. Choose a working folder: ");
+		JLabel folderLabel = new JLabel("2. Choose a working folder: ");
 		folderPanel.add(folderLabel);
 
 		resultFolderButton = new JButton("Choose result folder");
@@ -122,7 +141,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		
 		JPanel searchPanel = new JPanel();
 		searchPanel.setLayout(new BoxLayout(searchPanel, BoxLayout.LINE_AXIS));
-		JLabel searchLabel = new JLabel("2. Search for screen images: ");
+		JLabel searchLabel = new JLabel("3. Search for screen images: ");
 		searchPanel.add(searchLabel);
 		searchButton = new JButton("Search");
 		searchButton.setFocusable(false);
@@ -164,7 +183,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 
 		JPanel groupPanel = new JPanel();
 		groupPanel.setLayout(new BoxLayout(groupPanel, BoxLayout.LINE_AXIS));
-		JLabel groupLabel = new JLabel("3. Group by split lines:");
+		JLabel groupLabel = new JLabel("4. Group by split lines:");
 		groupPanel.add(groupLabel);
 		groupButton = new JButton("Group");
 		groupButton.setFocusable(false);
@@ -187,26 +206,6 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		groupPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		mainPanel.add(groupPanel);
 
-
-		JPanel prefixPanel = new JPanel();
-		prefixPanel.setLayout(new BoxLayout(prefixPanel, BoxLayout.LINE_AXIS));
-		JLabel prefixLabel = new JLabel("4. Enter a label prefix: ");
-		prefixPanel.add(prefixLabel);
-
-
-		crossPrefix = (String)SessionMgr.getSessionMgr().getModelProperty(CROSS_PREFIX_PROPERTY);
-		prefixButton = new JButton(crossPrefix==null?"Enter prefix":crossPrefix);
-		prefixButton.setFocusable(false);
-		prefixButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				showPrefixEditingDialog();
-			}
-		});
-		prefixPanel.add(prefixButton);
-		prefixPanel.setPreferredSize(new Dimension(0, STEP_PANEL_HEIGHT));
-		prefixPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-		mainPanel.add(prefixPanel);
 		
 		
 		JPanel computePanel = new JPanel();
@@ -285,8 +284,14 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		exportPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		mainPanel.add(exportPanel);
 		
-		
-		add(mainPanel, BorderLayout.NORTH);
+		GridBagConstraints c = new GridBagConstraints();
+		c.gridx = 0;
+		c.gridy = 0;
+		c.anchor = GridBagConstraints.FIRST_LINE_START;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.weightx = 1;
+		c.weighty = 0.01;
+		add(mainPanel, c);
 		
 		crossesPanel = new IconDemoPanel(EntitySelectionModel.CATEGORY_CROSS_VIEW) {
 			
@@ -327,7 +332,13 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			}
 		};
 		
-		add(crossesPanel, BorderLayout.CENTER);
+		c.gridx = 0;
+		c.gridy = 1;
+		c.anchor = GridBagConstraints.FIRST_LINE_START;
+		c.fill = GridBagConstraints.BOTH;
+		c.weightx = 1.0;
+		c.weighty = 1.0;
+		add(crossesPanel, c);
 		
 		loadExistingCrossSimulations();
 	}
