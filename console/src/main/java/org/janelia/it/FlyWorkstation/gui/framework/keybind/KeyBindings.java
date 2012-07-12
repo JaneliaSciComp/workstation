@@ -69,7 +69,9 @@ public class KeyBindings {
             bindings.remove(bind);
         }
         // Now we can add the new shortcut
-        bindings.put(shortcut, action);
+        if (shortcut!=null) {
+        	bindings.put(shortcut, action);
+        }
     }
 
     public void setBinding(KeyboardShortcut shortcut, Action action) {
