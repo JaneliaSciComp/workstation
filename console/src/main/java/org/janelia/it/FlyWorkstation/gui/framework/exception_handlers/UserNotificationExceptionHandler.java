@@ -1,20 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.framework.exception_handlers;
 
-import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.xml.InvalidXmlException;
-import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.xml.XMLSecurityException;
-import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.ConnectionStatusException;
-import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
-import org.janelia.it.FlyWorkstation.api.facade.roles.ExceptionHandler;
-import org.janelia.it.FlyWorkstation.api.stub.data.FatalCommError;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
-import org.janelia.it.FlyWorkstation.gui.util.MailDialogueBox;
-import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.FlyWorkstation.shared.util.text_component.StandardTextArea;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -24,7 +13,21 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.*;
-import java.util.List;
+
+import javax.swing.*;
+
+import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
+import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.xml.InvalidXmlException;
+import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.xml.XMLSecurityException;
+import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.ConnectionStatusException;
+import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.FlyWorkstation.api.facade.roles.ExceptionHandler;
+import org.janelia.it.FlyWorkstation.api.stub.data.FatalCommError;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.MailDialogueBox;
+import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.FlyWorkstation.shared.util.text_component.StandardTextArea;
 
 public class UserNotificationExceptionHandler implements ExceptionHandler {
 
@@ -130,7 +133,7 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
         messages[2] = "Please try again in several minutes";
 
         if (getEmailURL() != null) {
-            sendEmail(throwable, "FlyWorkstation", "Major Error -- Server " + ConsoleProperties.getString("console.ApplicationServer") + " cannot contact database!");
+            sendEmail(throwable, "FlyWorkstation", "Major Error -- Server " + EJBFactory.getAppServerName() + " cannot contact database!");
         }
         getOptionPane().showMessageDialog(getParentFrame(), messages, "ERROR!!", JOptionPane.ERROR_MESSAGE);
     }
@@ -319,7 +322,7 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
     private URL getEmailURL() {
         if (emailURL != null) return emailURL;
         // todo These features expect a bunch of helper jsps.  Fix this.
-        String appServer = ConsoleProperties.getString("console.ApplicationServer");
+        String appServer = EJBFactory.getAppServerName();
         if (appServer != null) {
             appServer = "http://" + appServer;
             try {

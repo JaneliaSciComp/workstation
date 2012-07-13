@@ -37,7 +37,7 @@ public class EJBFacadeManager extends FacadeManagerBase {
     } //only instantiated by FacadeManager.
 
     public Object[] getOpenDataSources() {
-        return new Object[]{System.getProperty("console.ApplicationServer")};
+        return new Object[]{EJBFactory.getAppServerName()};
     }
 
     @Override

@@ -45,11 +45,10 @@ public class EJBComputeFacade implements ComputeFacade {
         EJBFactory.getRemoteComputeBean().deleteTaskById(taskId);
     }
 
-
     @Override
     public void submitJob(String processDefName, Long taskId) throws Exception {
     	if (taskId == null) throw new IllegalArgumentException("Task id may not be null");
-        EJBFactory.getRemoteComputeBean().submitJob(processDefName, taskId);
+        EJBFactory.getRemoteComputeBean(true).submitJob(processDefName, taskId);
     }
     
     @Override
