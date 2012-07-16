@@ -42,7 +42,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
 	private DataFlavor[] flavors = new DataFlavor[1];
 	
 	public EntityTransferHandler() {
-		this.entityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline();
+		this.entityOutline = SessionMgr.getBrowser().getEntityOutline();
 		try {
 			String mimeType = DataFlavor.javaJVMLocalObjectMimeType + ";class=\""
 					+ Entity.class.getName() + "\"";
@@ -63,7 +63,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
 			// Only dealing with drag and drop for now
 			if (!support.isDrop()) return false;
 			if (!support.isDataFlavorSupported(nodesFlavor)) {
-				if (DEBUG) System.out.println("Disallow transfer because target node is a root");
+				if (DEBUG) System.out.println("Disallow transfer because data flavor "+nodesFlavor.getMimeType()+" is not supported");
 				return false;
 			}
 			

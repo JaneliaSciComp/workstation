@@ -142,10 +142,9 @@ public class ConsoleApp {
                     SessionMgr.getSessionMgr().systemExit();
                 }
             }
-            else {
-                System.out.println("Successfully logged in user "+SessionMgr.getUsername());
-            }
+            
             SessionMgr.getSessionMgr().loginUser();
+            
             if (!SessionMgr.getSessionMgr().isLoggedIn()) {
                 Object[] options = {"Enter Login", "Exit Program"};
                 final int answer = JOptionPane.showOptionDialog(null, "Please enter your login information.", "Information Required",

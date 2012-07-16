@@ -15,7 +15,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.tree.DynamicTree;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
 
@@ -212,13 +211,22 @@ public class OntologyTree extends JPanel {
 
     protected void refresh() {
     }
-    
+
     protected void addNodes(DefaultMutableTreeNode parentNode, OntologyElement element) {
+    	addNodes(parentNode, element, null);
+    }
+    
+    protected void addNodes(DefaultMutableTreeNode parentNode, OntologyElement element, Integer index) {
 
         // Add the node to the tree
         DefaultMutableTreeNode newNode;
         if (parentNode != null) {
-            newNode = selectedTree.addObject(parentNode, element);
+        	if (index==null) {
+        		newNode = selectedTree.addObject(parentNode, element);
+        	}
+        	else {
+        		newNode = selectedTree.addObject(parentNode, element, index);	
+        	}
         }
         else {
             // If the parent node is null, then the node is already in the tree as the root
@@ -228,7 +236,7 @@ public class OntologyTree extends JPanel {
         // Add the node's children.
         // They are available because the root was loaded with the eager-loading getOntologyTree() method.
         for (OntologyElement child : element.getChildren()) {
-            addNodes(newNode, child);
+            addNodes(newNode, child, index);
         }
     }
 

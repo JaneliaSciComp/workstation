@@ -15,25 +15,33 @@ import java.awt.*;
  */
 public class WrapLayout extends FlowLayout {
 
+	private boolean useSiblingWidth;
+	
     /**
      * Constructs a new <code>WrapLayout</code> with a left
      * alignment and a default 5-unit horizontal and vertical gap.
      */
     public WrapLayout() {
-        super();
+    	this(true);
+    }
+    
+    public WrapLayout(boolean useSiblingWidth) {
+    	super();
+        this.useSiblingWidth = useSiblingWidth;
     }
 
     /**
      * Constructs a new <code>FlowLayout</code> with the specified
      * alignment and a default 5-unit horizontal and vertical gap.
      * The value of the alignment argument must be one of
-     * <code>WrapLayout</code>, <code>WrapLayout</code>,
-     * or <code>WrapLayout</code>.
+     * <code>WrapLayout.LEFT</code>, <code>WrapLayout.CENTER</code>,
+     * or <code>WrapLayout.RIGHT</code>.
      *
      * @param align the alignment value
      */
-    public WrapLayout(int align) {
+    public WrapLayout(boolean useSiblingWidth, int align) {
         super(align);
+        this.useSiblingWidth = useSiblingWidth;
     }
 
     /**
@@ -48,8 +56,9 @@ public class WrapLayout extends FlowLayout {
      * @param hgap  the horizontal gap between components
      * @param vgap  the vertical gap between components
      */
-    public WrapLayout(int align, int hgap, int vgap) {
+    public WrapLayout(boolean useSiblingWidth, int align, int hgap, int vgap) {
         super(align, hgap, vgap);
+        this.useSiblingWidth = useSiblingWidth;
     }
 
     /**
@@ -91,24 +100,27 @@ public class WrapLayout extends FlowLayout {
     private Dimension layoutSize(Container target, boolean preferred) {
 
         synchronized (target.getTreeLock()) {
-            //  Each row must fit with the width allocated to the containter.
-            //  When the container width = 0, the preferred width of the container
-            //  has not yet been calculated so lets ask for the maximum.
 
-//            int targetWidth = target.getSize().width;
-//            if (targetWidth == 0) {
-//                targetWidth = Integer.MAX_VALUE;
-//            }
-
-            // Let's just use the max width of the other components
-            int targetWidth = 0;
-            for (Component c : target.getParent().getComponents()) {
-                if (c == target) continue;
-                if (!c.isVisible()) continue;
-                int cw = c.getPreferredSize().width;
-                if (cw > targetWidth) targetWidth = cw;
-            }
-
+        	int targetWidth = 0;
+        	if (useSiblingWidth) {
+	            // Use the max width of the other components
+	            for (Component c : target.getParent().getComponents()) {
+	                if (c == target) continue;
+	                if (!c.isVisible()) continue;
+	                int cw = c.getPreferredSize().width;
+	                if (cw > targetWidth) targetWidth = cw;
+	            }
+        	}
+        	else {
+                //  Each row must fit with the width allocated to the containter.
+                //  When the container width = 0, the preferred width of the container
+                //  has not yet been calculated so lets ask for the maximum.
+        		targetWidth = target.getParent().getSize().width;
+        		if (targetWidth == 0) {
+        			targetWidth = Integer.MAX_VALUE;
+        		}
+        	}
+        	
             int hgap = getHgap();
             int vgap = getVgap();
             Insets insets = target.getInsets();
