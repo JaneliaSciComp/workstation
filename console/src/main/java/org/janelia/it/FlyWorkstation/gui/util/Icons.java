@@ -197,10 +197,10 @@ public class Icons {
                 || EntityConstants.TYPE_ALIGNED_BRAIN_STACK.equals(type)) {
             return getIcon(large ? "file_large.png" : "images.png");
         }
-        else if (EntityConstants.TYPE_NEURON_FRAGMENT.equals(type)) {
+        else if (EntityConstants.TYPE_NEURON_FRAGMENT.equals(type) || EntityConstants.TYPE_CURATED_NEURON.equals(type)) {
             return getIcon(large ? "file_large.png" : "brick.png");
         }
-        else if (EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION.equals(type)) {
+        else if (EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION.equals(type) || EntityConstants.TYPE_CURATED_NEURON_COLLECTION.equals(type)) {
             return getIcon(large ? "folder_files_large.png" : "folder_brick.png");
         }
         else if (EntityConstants.TYPE_ONTOLOGY_ELEMENT.equals(type) || EntityConstants.TYPE_ONTOLOGY_ROOT.equals(type)) {
