@@ -1,5 +1,19 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.*;
+import java.util.concurrent.Callable;
+
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
+import javax.swing.tree.DefaultMutableTreeNode;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
@@ -32,17 +46,6 @@ import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import java.awt.*;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Callable;
 
 /**
  * Context pop up menu for entities.
@@ -767,13 +770,32 @@ public class EntityContextMenu extends JPopupMenu {
                     protected void doStuff() throws Exception {
                         setProgress(1);
                         Long parentId = null;
-                        HashSet<String> fragmentIds = new HashSet<String>();
+                        List<Entity> fragments = new ArrayList<Entity>();
                         for(RootedEntity entity : rootedEntityList) {
-                            if (null==parentId) {
-                                parentId = ModelMgr.getModelMgr().getAncestorWithType(entity.getEntity(), EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT).getId();
+                        	Long resultId = ModelMgr.getModelMgr().getAncestorWithType(entity.getEntity(), EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT).getId();
+                            if (parentId==null) {
+                                parentId = resultId;
                             }
-                            fragmentIds.add(entity.getEntityData().getChildEntity().getId().toString());
+                            else if (resultId==null || !parentId.equals(resultId)) {
+                            	throw new IllegalStateException("The selected neuron fragments are not part of the same neuron separation result: parentId="+parentId+" resultId="+resultId);
+                            }
+                            fragments.add(entity.getEntityData().getChildEntity());
                         }
+                        
+                        Collections.sort(fragments, new Comparator<Entity>() {
+							@Override
+							public int compare(Entity o1, Entity o2) {
+								Integer o1n = Integer.parseInt(o1.getValueByAttributeName(EntityConstants.ATTRIBUTE_NUMBER));
+								Integer o2n = Integer.parseInt(o2.getValueByAttributeName(EntityConstants.ATTRIBUTE_NUMBER));
+								return o1n.compareTo(o2n);
+							}
+						});
+                        
+                        HashSet<String> fragmentIds = new LinkedHashSet<String>();
+                        for(Entity fragment : fragments) {
+                        	fragmentIds.add(fragment.getId().toString());
+                        }
+                        
                         // This should never happen
                         if (null==parentId) { return;}
                         NeuronMergeTask task = new NeuronMergeTask(new HashSet<Node>(), SessionMgr.getUsername(), new ArrayList<org.janelia.it.jacs.model.tasks.Event>(), new HashSet<TaskParameter>());
