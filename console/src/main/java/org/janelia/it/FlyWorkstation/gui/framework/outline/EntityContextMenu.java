@@ -766,28 +766,22 @@ public class EntityContextMenu extends JPopupMenu {
                     @Override
                     protected void doStuff() throws Exception {
                         setProgress(1);
-
-                        try {
-                            Long parentId = null;
-                            HashSet<String> fragmentIds = new HashSet<String>();
-                            for(RootedEntity entity : rootedEntityList) {
-                                if (null==parentId) {
-                                    parentId = ModelMgr.getModelMgr().getAncestorWithType(entity.getEntity(), EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT).getId();
-                                }
-                                fragmentIds.add(entity.getEntityData().getChildEntity().getId().toString());
+                        Long parentId = null;
+                        HashSet<String> fragmentIds = new HashSet<String>();
+                        for(RootedEntity entity : rootedEntityList) {
+                            if (null==parentId) {
+                                parentId = ModelMgr.getModelMgr().getAncestorWithType(entity.getEntity(), EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT).getId();
                             }
-                            // This should never happen
-                            if (null==parentId) { return;}
-                            NeuronMergeTask task = new NeuronMergeTask(new HashSet<Node>(), SessionMgr.getUsername(), new ArrayList<org.janelia.it.jacs.model.tasks.Event>(), new HashSet<TaskParameter>());
-                            task.setJobName("Neuron Merge Task");
-                            task.setParameter(NeuronMergeTask.PARAM_separationEntityId, parentId.toString());
-                            task.setParameter(NeuronMergeTask.PARAM_commaSeparatedNeuronFragmentList, Task.csvStringFromCollection(fragmentIds));
-                            task = (NeuronMergeTask) ModelMgr.getModelMgr().saveOrUpdateTask(task);
-                            ModelMgr.getModelMgr().submitJob("NeuronMerge", task.getObjectId());
+                            fragmentIds.add(entity.getEntityData().getChildEntity().getId().toString());
                         }
-                        catch (Exception e) {
-                            SessionMgr.getSessionMgr().handleException(e);
-                        }
+                        // This should never happen
+                        if (null==parentId) { return;}
+                        NeuronMergeTask task = new NeuronMergeTask(new HashSet<Node>(), SessionMgr.getUsername(), new ArrayList<org.janelia.it.jacs.model.tasks.Event>(), new HashSet<TaskParameter>());
+                        task.setJobName("Neuron Merge Task");
+                        task.setParameter(NeuronMergeTask.PARAM_separationEntityId, parentId.toString());
+                        task.setParameter(NeuronMergeTask.PARAM_commaSeparatedNeuronFragmentList, Task.csvStringFromCollection(fragmentIds));
+                        task = (NeuronMergeTask) ModelMgr.getModelMgr().saveOrUpdateTask(task);
+                        ModelMgr.getModelMgr().submitJob("NeuronMerge", task.getObjectId());
                     }
 
                     @Override
@@ -800,7 +794,7 @@ public class EntityContextMenu extends JPopupMenu {
                     }
 
                 };
-                mergeTask.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Merge...", ""));
+
                 mergeTask.execute();
             }
         });
