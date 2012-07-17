@@ -1,19 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.*;
-import java.util.concurrent.Callable;
-
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
-import javax.swing.tree.DefaultMutableTreeNode;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
@@ -47,24 +33,35 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import java.awt.*;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Callable;
+
 /**
  * Context pop up menu for entities.
- * 
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class EntityContextMenu extends JPopupMenu {
 
 	protected static final Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
-	
+
 	protected final List<RootedEntity> rootedEntityList;
 	protected final RootedEntity rootedEntity;
 	protected final boolean multiple;
     private JMenu errorMenu;
     private OntologyRoot tmpErrorOntology = ModelMgr.ERROR_ONTOLOGY_ENTITY;
-	
+
 	// Internal state
 	protected boolean nextAddRequiresSeparator = false;
-	
+
 	public EntityContextMenu(List<RootedEntity> rootedEntityList) {
 		this.rootedEntityList = rootedEntityList;
 		this.rootedEntity = rootedEntityList.size()==1 ? rootedEntityList.get(0) : null;
@@ -84,15 +81,15 @@ public class EntityContextMenu extends JPopupMenu {
         add(getCopyIdToClipboardItem());
         add(getDetailsItem());
         add(getGotoRelatedItem());
-        
+
         setNextAddRequiresSeparator(true);
         add(getNewFolderItem());
         add(getAddToRootFolderItem());
         add(getRenameItem());
         add(getErrorFlag());
-//        add(getMergeItem());
+        add(getMergeItem());
 		add(getDeleteItem());
-        
+
 		setNextAddRequiresSeparator(true);
 		add(getOpenInFirstViewerItem());
 		add(getOpenInSecondViewerItem());
@@ -104,7 +101,7 @@ public class EntityContextMenu extends JPopupMenu {
 
         setNextAddRequiresSeparator(true);
         add(getSearchHereItem());
-        
+
 		setNextAddRequiresSeparator(true);
 		add(getCreateSessionItem());
         if ((SessionMgr.getUsername().equals("simpsonj") || SessionMgr.getUsername().equals("simpsonlab")) && !this.multiple){
@@ -184,7 +181,7 @@ public class EntityContextMenu extends JPopupMenu {
         titleMenuItem.setEnabled(false);
         return titleMenuItem;
 	}
-	
+
 	protected JMenuItem getDetailsItem() {
 		if (multiple) return null;
         JMenuItem detailsMenuItem = new JMenuItem("  View details");
@@ -198,14 +195,14 @@ public class EntityContextMenu extends JPopupMenu {
 	}
 
 	private void gotoEntity(final Entity entity, final String ancestorType) {
-		
+
 		Utils.setWaitingCursor(SessionMgr.getBrowser());
-		
+
 		SimpleWorker worker = new SimpleWorker() {
-		
+
 			private Entity targetEntity = entity;
 			private EntityDataPath chosen;
-			
+
 			@Override
 			protected void doStuff() throws Exception {
 				if (ancestorType!=null) {
@@ -218,38 +215,38 @@ public class EntityContextMenu extends JPopupMenu {
 					if (ModelMgr.getModelMgr().hasAccess(path.get(0))) {
 						EntityDataPath edp = new EntityDataPath(path);
 						if (!edp.isHidden()) {
-							paths.add(edp);	
+							paths.add(edp);
 						}
 					}
 				}
 				sortPathsByPreference(paths);
-				
+
 				if (paths.isEmpty()) {
 					throw new Exception("Could not find the related entity");
 				}
-				
+
 				this.chosen = paths.get(0);
-				
+
 			}
-			
+
 			@Override
 			protected void hadSuccess() {
 				SessionMgr.getBrowser().getEntityOutline().selectEntityByUniqueId(chosen.getUniqueId());
 				Utils.setDefaultCursor(SessionMgr.getBrowser());
 			}
-			
+
 			@Override
 			protected void hadError(Throwable error) {
 				Utils.setDefaultCursor(SessionMgr.getBrowser());
 				SessionMgr.getSessionMgr().handleException(error);
 			}
 		};
-		
+
 		worker.execute();
 	}
-	
+
 	private void sortPathsByPreference(List<EntityDataPath> paths) {
-		
+
 		Collections.sort(paths, new Comparator<EntityDataPath>() {
 			@Override
 			public int compare(EntityDataPath p1, EntityDataPath p2) {
@@ -267,15 +264,15 @@ public class EntityContextMenu extends JPopupMenu {
 				}
 				return c;
 			}
-			
+
 		});
 	}
-	
+
 	private class EntityDataPath {
 		private List<EntityData> path;
 		private String rootOwner;
 		private boolean isHidden = false;
-		
+
 		public EntityDataPath(List<EntityData> path) {
 			this.path = path;
 			EntityData first = path.get(0);
@@ -288,19 +285,19 @@ public class EntityContextMenu extends JPopupMenu {
 		public String getUniqueId() {
 			return EntityUtils.getUniqueIdFromParentEntityPath(path);
 		}
-		
+
 		@Override
 		public String toString() {
 			StringBuffer sb = new StringBuffer();
 			for(EntityData pathEd : path) {
 				if (sb.length()<=0) {
-					sb.append(" / "+pathEd.getParentEntity().getName());	
+					sb.append(" / "+pathEd.getParentEntity().getName());
 				}
 				sb.append(" / "+pathEd.getChildEntity().getName());
 			}
 			return sb.toString();
 		}
-		
+
 		public List<EntityData> getPath() {
 			return path;
 		}
@@ -313,25 +310,25 @@ public class EntityContextMenu extends JPopupMenu {
 			return isHidden;
 		}
 	}
-	
+
 	protected JMenuItem getGotoRelatedItem() {
 		if (multiple) return null;
 		JMenu relatedMenu = new JMenu("  Go to related");
 		Entity entity = rootedEntity.getEntity();
 		String type = entity.getEntityType().getName();
-		if (type.equals(EntityConstants.TYPE_NEURON_FRAGMENT) || 
-				type.equals(EntityConstants.TYPE_LSM_STACK) || 
+		if (type.equals(EntityConstants.TYPE_NEURON_FRAGMENT) ||
+				type.equals(EntityConstants.TYPE_LSM_STACK) ||
 				type.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
-			add(relatedMenu, getRelatedEntityItem("Sample", entity, EntityConstants.TYPE_SAMPLE));	
+			add(relatedMenu, getRelatedEntityItem("Sample", entity, EntityConstants.TYPE_SAMPLE));
 		}
 		else if (entity.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
 			add(relatedMenu, getRelatedItem(entity, EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE, "Representative Sample"));
 			add(relatedMenu, getRelatedItem(entity, EntityConstants.ATTRIBUTE_ORIGINAL_FLYLINE, "Original Fly Line"));
-			add(relatedMenu, getRelatedItem(entity, EntityConstants.ATTRIBUTE_BALANCED_FLYLINE, "Balanced Fly Line"));	
+			add(relatedMenu, getRelatedItem(entity, EntityConstants.ATTRIBUTE_BALANCED_FLYLINE, "Balanced Fly Line"));
 		}
         return relatedMenu;
 	}
-	
+
 	private JMenuItem getRelatedItem(Entity entity, String attributeName, String label) {
 		final EntityData ed = entity.getEntityDataByAttributeName(attributeName);
 		if (ed==null) return null;
@@ -349,9 +346,9 @@ public class EntityContextMenu extends JPopupMenu {
 		});
         return relatedMenuItem;
 	}
-	
+
 //	private JMenuItem getRelatedProjectedItem(final Entity entity, final String label, final List<String> upMapping, final List<String> downMapping) {
-//		
+//
 //        JMenuItem relatedMenuItem = new JMenuItem(label);
 //        relatedMenuItem.addActionListener(new ActionListener() {
 //			@Override
@@ -359,7 +356,7 @@ public class EntityContextMenu extends JPopupMenu {
 //				SimpleWorker worker = new SimpleWorker() {
 //
 //					private Entity targetEntity;
-//					
+//
 //					@Override
 //					protected void doStuff() throws Exception {
 //						List<Entity> mapped = ModelMgr.getModelMgr().getProjectedEntities(entity.getId(), upMapping, downMapping);
@@ -371,12 +368,12 @@ public class EntityContextMenu extends JPopupMenu {
 //						}
 //						targetEntity = mapped.get(0);
 //					}
-//					
+//
 //					@Override
 //					protected void hadSuccess() {
 //				        gotoEntity(targetEntity, null);
 //					}
-//					
+//
 //					@Override
 //					protected void hadError(Throwable error) {
 //						SessionMgr.getSessionMgr().handleException(error);
@@ -749,9 +746,8 @@ public class EntityContextMenu extends JPopupMenu {
 
         HashSet<Long> parentIds = new HashSet<Long>();
         for(RootedEntity rootedEntity : rootedEntityList) {
-            // Add all parent ids to a collection if the selected items are owned by the person attempting the merge
-            if (null!=rootedEntity.getEntityData().getParentEntity() && EntityConstants.TYPE_NEURON_FRAGMENT.equals(rootedEntity.getEntity().getEntityType().getName())
-                    && rootedEntity.getEntity().getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+            // Add all parent ids to a collection
+            if (null!=rootedEntity.getEntityData().getParentEntity() && EntityConstants.TYPE_NEURON_FRAGMENT.equals(rootedEntity.getEntity().getEntityType().getName())) {
                 parentIds.add(rootedEntity.getEntityData().getParentEntity().getId());
             }
             // if one of the selected entities has no parent or isn't owner by the user then leave; cannot merge
@@ -776,9 +772,9 @@ public class EntityContextMenu extends JPopupMenu {
                             HashSet<String> fragmentIds = new HashSet<String>();
                             for(RootedEntity entity : rootedEntityList) {
                                 if (null==parentId) {
-                                    parentId = entity.getEntityData().getParentEntity().getId();
+                                    parentId = ModelMgr.getModelMgr().getAncestorWithType(entity.getEntity(), EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT).getId();
                                 }
-                                fragmentIds.add(entity.getEntityData().getChildEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_NUMBER));
+                                fragmentIds.add(entity.getEntityData().getChildEntity().getId().toString());
                             }
                             // This should never happen
                             if (null==parentId) { return;}
