@@ -43,7 +43,7 @@ public class EJBFactory {
         icProperties.put(Context.URL_PKG_PREFIXES, URL_PKG_PREFIXES);
 
         if (!StringUtils.isEmpty(PIPELINE_PROVIDER_URL)) {
-	        icPropertiesPipelines.put(Context.PROVIDER_URL, PROVIDER_URL);
+	        icPropertiesPipelines.put(Context.PROVIDER_URL, PIPELINE_PROVIDER_URL);
 	        icPropertiesPipelines.put(Context.INITIAL_CONTEXT_FACTORY, INITIAL_CONTEXT_FACTORY);
 	        icPropertiesPipelines.put(Context.URL_PKG_PREFIXES, URL_PKG_PREFIXES);
         }
