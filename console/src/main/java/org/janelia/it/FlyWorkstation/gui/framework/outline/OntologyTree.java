@@ -236,7 +236,7 @@ public class OntologyTree extends JPanel {
         // Add the node's children.
         // They are available because the root was loaded with the eager-loading getOntologyTree() method.
         for (OntologyElement child : element.getChildren()) {
-            addNodes(newNode, child, index);
+            addNodes(newNode, child);
         }
     }
 
