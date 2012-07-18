@@ -1,19 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.*;
-import java.util.concurrent.Callable;
-
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
-import javax.swing.tree.DefaultMutableTreeNode;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
@@ -46,6 +32,17 @@ import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import java.awt.*;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * Context pop up menu for entities.
@@ -99,7 +96,8 @@ public class EntityContextMenu extends JPopupMenu {
 		add(getOpenInFinderItem());
         add(getOpenWithAppItem());
         add(getNeuronAnnotatorItem());
-        add(getVaa3dItem());
+        add(getVaa3dTriViewItem());
+        add(getVaa3d3dViewItem());
         add(getFijiViewerItem());
 
         setNextAddRequiresSeparator(true);
@@ -209,7 +207,7 @@ public class EntityContextMenu extends JPopupMenu {
 			@Override
 			protected void doStuff() throws Exception {
 				if (ancestorType!=null) {
-					targetEntity = ModelMgr.getModelMgr().getAncestorWithType(entity, EntityConstants.TYPE_SAMPLE);
+					targetEntity = ModelMgr.getModelMgr().getAncestorWithType(entity, ancestorType);
 				}
 				// Find the best context to show the entity in
 				List<List<EntityData>> edPaths = ModelMgr.getModelMgr().getPathsToRoots(targetEntity.getId());
@@ -329,6 +327,9 @@ public class EntityContextMenu extends JPopupMenu {
 			add(relatedMenu, getRelatedItem(entity, EntityConstants.ATTRIBUTE_ORIGINAL_FLYLINE, "Original Fly Line"));
 			add(relatedMenu, getRelatedItem(entity, EntityConstants.ATTRIBUTE_BALANCED_FLYLINE, "Balanced Fly Line"));
 		}
+        else if (EntityConstants.TYPE_ALIGNED_BRAIN_STACK.equals(type)) {
+            add(relatedMenu, getRelatedEntityItem(EntityConstants.TYPE_SCREEN_SAMPLE, entity, EntityConstants.TYPE_SCREEN_SAMPLE));
+        }
         return relatedMenu;
 	}
 
@@ -939,7 +940,7 @@ public class EntityContextMenu extends JPopupMenu {
             fijiMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
-                        ToolMgr.openFile(ToolMgr.TOOL_FIJI,path);
+                        ToolMgr.openFile(ToolMgr.TOOL_FIJI,path, null);
                     }
                     catch (Exception e) {
                         JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Could not launch this tool. " +
@@ -980,15 +981,15 @@ public class EntityContextMenu extends JPopupMenu {
         return null;
 	}
 
-	protected JMenuItem getVaa3dItem() {
+	protected JMenuItem getVaa3dTriViewItem() {
 		if (multiple) return null;
         final String path = EntityUtils.getDefault3dImageFilePath(rootedEntity.getEntity());
         if (path!=null) {
-            JMenuItem vaa3dMenuItem = new JMenuItem("  View in Vaa3D");
+            JMenuItem vaa3dMenuItem = new JMenuItem("  View in Vaa3D Tri-View");
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
-                        ToolMgr.openFile(ToolMgr.TOOL_VAA3D, path);
+                        ToolMgr.openFile(ToolMgr.TOOL_VAA3D, path, null);
                     }
                     catch (Exception e) {
                         JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Could not launch this tool. " +
@@ -1000,6 +1001,27 @@ public class EntityContextMenu extends JPopupMenu {
         }
         return null;
 	}
+
+    protected JMenuItem getVaa3d3dViewItem() {
+        if (multiple) return null;
+        final String path = EntityUtils.getDefault3dImageFilePath(rootedEntity.getEntity());
+        if (path!=null) {
+            JMenuItem vaa3dMenuItem = new JMenuItem("  View in Vaa3D 3D View");
+            vaa3dMenuItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
+                    try {
+                        ToolMgr.openFile(ToolMgr.TOOL_VAA3D, path, ToolMgr.MODE_3D);
+                    }
+                    catch (Exception e) {
+                        JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Could not launch this tool. " +
+                                "Please choose the appropriate file path from the Tools->Configure Tools area", "ToolInfo Launch ERROR", JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            });
+            return vaa3dMenuItem;
+        }
+        return null;
+    }
 
     protected JMenuItem getNewFolderItem() {
         if (multiple) return null;

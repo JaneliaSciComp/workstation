@@ -26,6 +26,8 @@ public class ToolMgr extends PreferenceManager {
     public static final String TOOL_FIJI    = "Fiji.app";
     public static final String TOOL_VAA3D   = "Vaa3d";
     public static final String TOOL_NA      = "Vaa3d - Neuron Annotator";
+
+    public static final String MODE_3D      = "3D View";
     public static String rootExecutablePath = ToolsMenu.class.getProtectionDomain().getCodeSource().getLocation().getPath();
 
     private static TreeMap<String, ToolInfo> toolTreeMap = new TreeMap<String, ToolInfo>();
@@ -262,12 +264,15 @@ public class ToolMgr extends PreferenceManager {
         }
     }
 
-    public static void openFile(String tool, String pathToTarget) throws Exception {
+    public static void openFile(String tool, String pathToTarget, String mode) throws Exception {
         ToolInfo tmpTool = getTool(tool);
         File tmpToolFile = new File(tmpTool.getPath());
         String exeCmd = tmpTool.getPath();
         if (TOOL_VAA3D.equals(tool)) {
             exeCmd = tmpTool.getPath()+" -i "+ PathTranslator.convertPath(pathToTarget);
+            if (MODE_3D.equals(mode)) {
+                exeCmd+=" -v";
+            }
         }
         if (TOOL_FIJI.equals(tool)) {
             if (tmpTool.getPath().endsWith(".app")) {
