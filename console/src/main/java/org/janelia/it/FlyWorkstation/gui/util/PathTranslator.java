@@ -6,7 +6,6 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 
 import java.io.File;
-import java.util.List;
 
 /**
  * Translate between paths to various mounted file resources.
@@ -20,7 +19,6 @@ public class PathTranslator {
     private static final String JACS_DATA_PATH_WINDOWS   = ConsoleProperties.getString("remote.defaultWindowsPath");
     private static final String JACS_DATA_MOUNT_MAC      = ConsoleProperties.getString("remote.remoteMacMount");
     private static final String JACS_DATA_MOUNT_WINDOWS  = ConsoleProperties.getString("remote.remoteWindowsMount");
-    private static String osSpecificRootPath;
 
     public static boolean isMounted() {
 
@@ -36,10 +34,15 @@ public class PathTranslator {
 
     /**
      * Converts the given path to the current platform. 
-     * @param filepath
-     * @return
+     * @param filepath original path to the item
+     * @return returns the most appropriate path to the file based on mount type and OS
      */
     public static String convertPath(String filepath) {
+        // This is a little optimization for Macs that have /groups mounted. It's faster than using /Volumes.
+        // Makes the assumption that all paths passed by the system are in the context of Linux
+        File jacsData = new File(JACS_DATA_PATH_LINUX);
+        if (jacsData.canRead()) return filepath;
+
         //System.out.println("convertPath() called with filepath="+filepath);
         // General filter for nfs vs /Volumes
         if (SystemInfo.isMac) {
@@ -52,7 +55,7 @@ public class PathTranslator {
                     offset=1;
                 }
                 //System.out.println("pathComponents offset="+offset+" length="+pathComponents.length);
-                String nfsStylePath="/" + pathComponents[0+offset] + "/" + pathComponents[1+offset] + "/" + pathComponents[2+offset];
+                String nfsStylePath="/" + pathComponents[offset] + "/" + pathComponents[1+offset] + "/" + pathComponents[2+offset];
                 File nfsStyleFile=new File(nfsStylePath);
                 if (nfsStyleFile.canRead()) {
                     //System.out.println("Returning nfs-style path="+filepath);
@@ -61,9 +64,9 @@ public class PathTranslator {
                     String macStylePath="/Volumes/"+pathComponents[2+offset];
                     File macStyleFile=new File(macStylePath);
                     if (macStyleFile.canRead()) {
-                        StringBuffer macFullPath=new StringBuffer(macStylePath);
+                        StringBuilder macFullPath=new StringBuilder(macStylePath);
                         for (int i=(3+offset);i<pathComponents.length;i++) {
-                            macFullPath.append("/"+pathComponents[i]);
+                            macFullPath.append("/").append(pathComponents[i]);
                         }
                         //System.out.println("Returning mac-style path="+macFullPath.toString());
                         return macFullPath.toString();
@@ -71,25 +74,8 @@ public class PathTranslator {
                         //System.out.println("Cannot read mac-style path="+macStyleFile.getAbsolutePath());
                     }
                 }
-            } else {
-                if (pathComponents==null) {
-                    //System.out.println("pathComponents is null");
-                } else {
-                    //System.out.println("pathComponents length="+pathComponents.length);
-                }
             }
-        } else {
-            //System.out.println("SystemInfo.isMac() false");
         }
-
-        // This is a little optimization for Macs that have /groups mounted. It's faster than using /Volumes.
-        File jacsData = new File(JACS_DATA_PATH_LINUX);
-        if (jacsData.canRead()) return filepath;
-
-//        if (SystemInfo.isMac) {
-//            return filepath.replace(JACS_DATA_PATH_LINUX, JACS_DATA_PATH_MAC);
-//        }
-//        else
 
         if (SystemInfo.isWindows) {
             filepath = filepath.replace(JACS_DATA_PATH_LINUX, JACS_DATA_PATH_WINDOWS);
@@ -99,23 +85,7 @@ public class PathTranslator {
     }
 
     /**
-     * Calls translatePathsToCurrentPlatform() for every entity in the given list.
-     *
-     * @param entities
-     * @return
-     */
-    public static List<Entity> translatePathsToCurrentPlatform(List<Entity> entities) {
-        for(Entity entity : entities) {
-            translatePathsToCurrentPlatform(entity);
-        }
-        return entities;
-    }
-
-    /**
      * Modify the given entity tree so that any file path attributes are appropriate for the current platform.
-     *
-     * @param entity
-     * @return
      */
     public static Entity translatePathsToCurrentPlatform(Entity entity) {
 

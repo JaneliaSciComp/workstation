@@ -1,18 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.*;
-import java.util.concurrent.Callable;
-
-import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumn;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
@@ -24,6 +11,17 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * Created by IntelliJ IDEA.
@@ -57,16 +55,11 @@ public class PatternSearchDialog extends ModalDialog {
     private static final int FT_INDEX_MAX=4;
     private static final int FT_INDEX_LINES=5;
 
-    private final JPanel mainPanel;
-    private final JPanel currentSetNamePanel;
     private final MinMaxSelectionRow globalMinMaxPanel;
     private final JTable filterTable;
     private final JScrollPane filterTableScrollPane;
-    private final JPanel savePanel;
-    private final JPanel statusPane;
 
     private final JLabel statusLabel;
-	private final JLabel currentSetNameLabel;
     private final JTextField currentSetTextField;
 
     private final SimpleWorker quantifierLoaderWorker;
@@ -141,9 +134,9 @@ public class PatternSearchDialog extends ModalDialog {
             add(intensityButton);
             add(distributionButton);
             minText=new JTextField(5);
-            minText.setText(new Double(0.0).toString());
+            minText.setText(Double.toString(0.0));
             maxText=new JTextField(5);
-            maxText.setText(new Double(100.0).toString());
+            maxText.setText(Double.toString(100.0));
             add(minText);
             add(maxText);
             lineCountText=new JTextField(7);
@@ -190,7 +183,6 @@ public class PatternSearchDialog extends ModalDialog {
                 setStatusMessage(abbreviation+": DISTRIBUTION type selected");
             }
             applyGlobalSettings();
-            return;
         }
         
         public String getDescription() {
@@ -201,10 +193,10 @@ public class PatternSearchDialog extends ModalDialog {
             return abbreviation;
         }
         
-        public void setLineCount(Long lineCount) {
-            lineCountText.setText(lineCount.toString());
-        }
-        
+//        public void setLineCount(Long lineCount) {
+//            lineCountText.setText(lineCount.toString());
+//        }
+//
         public void setModelState(MinMaxModel model) {
             minText.setText(model.min.toString());
             maxText.setText(model.max.toString());
@@ -221,12 +213,12 @@ public class PatternSearchDialog extends ModalDialog {
             if (minText==null || minText.getText()==null || minText.getText().trim().length()==0) {
                 model.min=0.0;
             } else {
-                model.min=new Double(minText.getText().toString());
+                model.min=new Double(minText.getText());
             }
             if (maxText==null || maxText.getText()==null || maxText.getText().trim().length()==0) {
                 model.max=0.0;
             } else {
-                model.max=new Double(maxText.getText().toString());
+                model.max=new Double(maxText.getText());
             }
             if (intensityButton.isSelected()) {
                 model.type=INTENSITY_TYPE;
@@ -236,7 +228,7 @@ public class PatternSearchDialog extends ModalDialog {
             return model;
         }
 
-    };
+    }
 
     public class MinMaxModel {
         public Double min;
@@ -246,11 +238,7 @@ public class PatternSearchDialog extends ModalDialog {
         @Override
         public boolean equals(Object o) {
             MinMaxModel other = (MinMaxModel)o;
-            if (min.equals(other.min) && max.equals(other.max) && type.equals(other.type)) {
-                return true;
-            } else {
-                return false;
-            }
+            return min.equals(other.min) && max.equals(other.max) && type.equals(other.type);
         }
     }
 
@@ -284,12 +272,12 @@ public class PatternSearchDialog extends ModalDialog {
 
         setTitle("Pattern Annotation Search");
 
-        mainPanel = new JPanel();
+        JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        currentSetNamePanel = new JPanel();
-        currentSetNameLabel = new JLabel("Name of set: ");
+        JPanel currentSetNamePanel = new JPanel();
+        JLabel currentSetNameLabel = new JLabel("Name of set: ");
         currentSetTextField = new JTextField(50);
         currentSetTextField.setText("");
         currentSetNamePanel.add(currentSetNameLabel);
@@ -304,9 +292,9 @@ public class PatternSearchDialog extends ModalDialog {
         mainPanel.add(filterTableScrollPane, Box.createVerticalGlue());
 
         Object[] statusObjects = createStatusObjects();
-        statusPane=(JPanel)statusObjects[0];
+        JPanel statusPane = (JPanel) statusObjects[0];
         statusLabel=(JLabel)statusObjects[1];
-        savePanel=createSavePanel();
+        JPanel savePanel = createSavePanel();
         mainPanel.add(savePanel, Box.createVerticalGlue());
         mainPanel.add(statusPane, Box.createVerticalGlue());
 
@@ -342,13 +330,11 @@ public class PatternSearchDialog extends ModalDialog {
     }
     
     private JTable createFilterTable() {
-        JTable filterTable=new JTable();
-        return filterTable;
+        return new JTable();
     }
     
     private JScrollPane createFilterTableScrollPane() {
-        JScrollPane scrollPane=new JScrollPane(filterTable);
-        return scrollPane;
+        return new JScrollPane(filterTable);
     }
     
     private int getNextFilterSetIndex() {
@@ -392,8 +378,7 @@ public class PatternSearchDialog extends ModalDialog {
     }
     
     private MinMaxSelectionRow createGlobalMinMaxPanel() {
-        MinMaxSelectionRow globalSettingsPanel=new MinMaxSelectionRow("Global", "Settings for all non-modified compartments");
-        return globalSettingsPanel;
+        return new MinMaxSelectionRow("Global", "Settings for all non-modified compartments");
     }
     
     private Object[] createStatusObjects() {
@@ -443,13 +428,9 @@ public class PatternSearchDialog extends ModalDialog {
 
             @Override
             public boolean isCellEditable(int row, int col) {
-                if (col==FT_INDEX_MIN ||
-                    col==FT_INDEX_MAX ||
-                    col==FT_INDEX_FILTERTYPE) {
-                    return true;
-                } else {
-                    return false;
-                }
+                return col == FT_INDEX_MIN ||
+                       col == FT_INDEX_MAX ||
+                       col == FT_INDEX_FILTERTYPE;
             }
 
             @Override
@@ -463,20 +444,15 @@ public class PatternSearchDialog extends ModalDialog {
                 MinMaxSelectionRow compartmentRow=minMaxRowMap.get(rowKey);
                 switch (columnIndex) {
                     case FT_INDEX_COMPARTMENT:
-                        String compartmentAbbreviation=compartmentRow.getAbbreviation();
-                        return compartmentAbbreviation;
+                        return compartmentRow.getAbbreviation();
                     case FT_INDEX_DESCRIPTION:
-                        String description=compartmentRow.getDescription();
-                        return description;
+                        return compartmentRow.getDescription();
                     case FT_INDEX_FILTERTYPE:
-                        String filterType=compartmentRow.getModelState().type;
-                        return filterType;
+                        return compartmentRow.getModelState().type;
                     case FT_INDEX_MIN:
-                        Double min=compartmentRow.getModelState().min;
-                        return min;
+                        return compartmentRow.getModelState().min;
                     case FT_INDEX_MAX:
-                        Double max=compartmentRow.getModelState().max;
-                        return max;
+                        return compartmentRow.getModelState().max;
                     case FT_INDEX_LINES:
                         Long lineCount=0L;
                         if (compartmentRow.lineCountText!=null) {
@@ -569,7 +545,7 @@ public class PatternSearchDialog extends ModalDialog {
     }
 
     SimpleWorker createQuantifierLoaderWorker() {
-        SimpleWorker quantifierLoaderWorker = new SimpleWorker() {
+        return new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
@@ -596,7 +572,6 @@ public class PatternSearchDialog extends ModalDialog {
                 setStatusMessage("Error during quantifier load");
             }
         };
-        return quantifierLoaderWorker;
     }
 
     protected void computeScores() {
@@ -715,7 +690,7 @@ public class PatternSearchDialog extends ModalDialog {
             return 0L;
         } else {
             List<Long> validSamples=getValidSamplesForCompartment(compartmentAbbreviation);
-            return new Long(validSamples.size());
+            return (long) validSamples.size();
         }
     }
 
@@ -723,7 +698,8 @@ public class PatternSearchDialog extends ModalDialog {
         List<Long> validSamples=new ArrayList<Long>();
         if (quantifierDataIsLoading) {
             return validSamples;
-        } else {
+        }
+        else {
             MinMaxSelectionRow compartmentRow=minMaxRowMap.get(compartmentAbbreviation);
             MinMaxModel state=compartmentRow.getModelState();
             Double min=state.min / 100.0;
@@ -736,7 +712,8 @@ public class PatternSearchDialog extends ModalDialog {
                         validSamples.add(sampleId);
                     }
                 }
-            } else if (state.type.equals(DISTRIBUTION_TYPE)) {
+            }
+            else if (state.type.equals(DISTRIBUTION_TYPE)) {
                 for (Long sampleId : distributionPercentileMap.keySet()) {
                     Map<String, Double> map=distributionPercentileMap.get(sampleId);
                     if (map==null) {
@@ -746,7 +723,7 @@ public class PatternSearchDialog extends ModalDialog {
                     if (value==null) {
                         System.err.println("distribution perc value is null for compartmentAbbr="+compartmentAbbreviation);
                     }
-                    if (value>=min && value <=max) {
+                    if (value!=null && value>=min && value <=max) {
                         validSamples.add(sampleId);
                     }
                 }
@@ -766,7 +743,7 @@ public class PatternSearchDialog extends ModalDialog {
 
     protected Set<Long> generateMembershipListForCurrentSet() {
         setStatusMessage("Computing result membership");
-        Long compartmentListSize=new Long(compartmentAbbreviationList.size());
+        Long compartmentListSize= (long) compartmentAbbreviationList.size();
         Set<Long> sampleSet=new HashSet<Long>();
         Map<Long, Long> sampleCompartmentCountMap=new HashMap<Long, Long>();
         for (String compartment : compartmentAbbreviationList) {
@@ -774,7 +751,7 @@ public class PatternSearchDialog extends ModalDialog {
             for (Long sampleId : samples) {
                 Long sampleCount=sampleCompartmentCountMap.get(sampleId);
                 if (sampleCount==null) {
-                    sampleCount=new Long(0L);
+                    sampleCount= 0L;
                 }
                 sampleCount++;
                 sampleCompartmentCountMap.put(sampleId, sampleCount);
