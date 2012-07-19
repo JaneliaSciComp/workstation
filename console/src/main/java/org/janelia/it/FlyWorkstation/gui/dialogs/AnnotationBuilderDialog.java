@@ -8,6 +8,8 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.TreeSet;
 
 /**
@@ -33,7 +35,7 @@ public class AnnotationBuilderDialog extends JDialog{
 
         annotationPanel.setLayout(new BoxLayout(annotationPanel, BoxLayout.PAGE_AXIS));
 
-        final JButton doneButton = new JButton("Done");
+        final JButton doneButton = new JButton("Save");
         doneButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -46,7 +48,7 @@ public class AnnotationBuilderDialog extends JDialog{
             }
         });
 
-        JButton addButton = new JButton("Add");
+        final JButton addButton = new JButton("Add");
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -57,6 +59,26 @@ public class AnnotationBuilderDialog extends JDialog{
                 }
                 comboBox.setSelectedItem(null);
                 pathText.setText(pathString.toString());
+            }
+        });
+
+        comboBox.getEditor().getEditorComponent().addKeyListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                char keyPressed = e.getKeyChar();
+                if (keyPressed == KeyEvent.VK_ENTER) {
+                    addButton.doClick();
+                }
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                //To change body of implemented methods use File | Settings | File Templates.
             }
         });
 
@@ -101,6 +123,7 @@ public class AnnotationBuilderDialog extends JDialog{
         annotationPanel.add(buttonPanel);
 
         createAndShowGUI();
+        comboBox.requestFocus();
     }
 
     private void createAndShowGUI() {
