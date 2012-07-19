@@ -464,8 +464,8 @@ public class ImagesPanel extends JScrollPane {
         	buttonsPanel.setColumns(numCols);
         }
 
-//        buttonsPanel.revalidate();
-//        buttonsPanel.repaint();
+        buttonsPanel.revalidate();
+        buttonsPanel.repaint();
 		loadUnloadImages();
     }
 

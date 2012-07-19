@@ -202,37 +202,46 @@ public class EntityContextMenu extends JPopupMenu {
 		SimpleWorker worker = new SimpleWorker() {
 
 			private Entity targetEntity = entity;
-			private EntityDataPath chosen;
+			private String uniqueId;
 
 			@Override
 			protected void doStuff() throws Exception {
 				if (ancestorType!=null) {
 					targetEntity = ModelMgr.getModelMgr().getAncestorWithType(entity, ancestorType);
 				}
-				// Find the best context to show the entity in
-				List<List<EntityData>> edPaths = ModelMgr.getModelMgr().getPathsToRoots(targetEntity.getId());
-				List<EntityDataPath> paths = new ArrayList<EntityDataPath>();
-				for (List<EntityData> path : edPaths) {
-					if (ModelMgr.getModelMgr().hasAccess(path.get(0))) {
-						EntityDataPath edp = new EntityDataPath(path);
-						if (!edp.isHidden()) {
-							paths.add(edp);
+				
+				final String currUniqueId = rootedEntity.getUniqueId();
+				final String targetId = targetEntity.getId().toString();
+				if (currUniqueId.contains(targetId)) {
+					// A little optimization, if you're already in the right subtree
+					this.uniqueId = currUniqueId.substring(0, currUniqueId.indexOf(targetId)+targetId.length());
+				}
+				else {
+					// Find the best context to show the entity in
+					List<List<EntityData>> edPaths = ModelMgr.getModelMgr().getPathsToRoots(targetEntity.getId());
+					List<EntityDataPath> paths = new ArrayList<EntityDataPath>();
+					for (List<EntityData> path : edPaths) {
+						if (ModelMgr.getModelMgr().hasAccess(path.get(0))) {
+							EntityDataPath edp = new EntityDataPath(path);
+							if (!edp.isHidden()) {
+								paths.add(edp);
+							}
 						}
 					}
+					sortPathsByPreference(paths);
+	
+					if (paths.isEmpty()) {
+						throw new Exception("Could not find the related entity");
+					}
+	
+					EntityDataPath chosen = paths.get(0);
+					this.uniqueId = chosen.getUniqueId();
 				}
-				sortPathsByPreference(paths);
-
-				if (paths.isEmpty()) {
-					throw new Exception("Could not find the related entity");
-				}
-
-				this.chosen = paths.get(0);
-
 			}
 
 			@Override
 			protected void hadSuccess() {
-				SessionMgr.getBrowser().getEntityOutline().selectEntityByUniqueId(chosen.getUniqueId());
+				SessionMgr.getBrowser().getEntityOutline().selectEntityByUniqueId(uniqueId);
 				Utils.setDefaultCursor(SessionMgr.getBrowser());
 			}
 
@@ -320,26 +329,26 @@ public class EntityContextMenu extends JPopupMenu {
 		if (type.equals(EntityConstants.TYPE_NEURON_FRAGMENT) ||
 				type.equals(EntityConstants.TYPE_LSM_STACK) ||
 				type.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
-			add(relatedMenu, getRelatedEntityItem("Sample", entity, EntityConstants.TYPE_SAMPLE));
+			add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_SAMPLE, EntityConstants.TYPE_SAMPLE));
 		}
 		else if (entity.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
-			add(relatedMenu, getRelatedItem(entity, EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE, "Representative Sample"));
-			add(relatedMenu, getRelatedItem(entity, EntityConstants.ATTRIBUTE_ORIGINAL_FLYLINE, "Original Fly Line"));
-			add(relatedMenu, getRelatedItem(entity, EntityConstants.ATTRIBUTE_BALANCED_FLYLINE, "Balanced Fly Line"));
+			add(relatedMenu, getChildEntityItem(entity, EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE));
+			add(relatedMenu, getChildEntityItem(entity, EntityConstants.ATTRIBUTE_ORIGINAL_FLYLINE));
+			add(relatedMenu, getChildEntityItem(entity, EntityConstants.ATTRIBUTE_BALANCED_FLYLINE));
 		}
         else if (EntityConstants.TYPE_ALIGNED_BRAIN_STACK.equals(type)) {
-            add(relatedMenu, getRelatedEntityItem(EntityConstants.TYPE_SCREEN_SAMPLE, entity, EntityConstants.TYPE_SCREEN_SAMPLE));
+            add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_SCREEN_SAMPLE, EntityConstants.TYPE_SCREEN_SAMPLE));
         }
         return relatedMenu;
 	}
 
-	private JMenuItem getRelatedItem(Entity entity, String attributeName, String label) {
+	private JMenuItem getChildEntityItem(Entity entity, String attributeName) {
 		final EntityData ed = entity.getEntityDataByAttributeName(attributeName);
 		if (ed==null) return null;
-		return getRelatedEntityItem(label, ed.getChildEntity(), null);
+		return getAncestorEntityItem(ed.getChildEntity(), null, attributeName);
 	}
 
-	private JMenuItem getRelatedEntityItem(final String label, final Entity entity, final String ancestorType) {
+	private JMenuItem getAncestorEntityItem(final Entity entity, final String ancestorType, final String label) {
 		if (entity==null) return null;
         JMenuItem relatedMenuItem = new JMenuItem(label);
         relatedMenuItem.addActionListener(new ActionListener() {
@@ -350,44 +359,6 @@ public class EntityContextMenu extends JPopupMenu {
 		});
         return relatedMenuItem;
 	}
-
-//	private JMenuItem getRelatedProjectedItem(final Entity entity, final String label, final List<String> upMapping, final List<String> downMapping) {
-//
-//        JMenuItem relatedMenuItem = new JMenuItem(label);
-//        relatedMenuItem.addActionListener(new ActionListener() {
-//			@Override
-//			public void actionPerformed(ActionEvent e) {
-//				SimpleWorker worker = new SimpleWorker() {
-//
-//					private Entity targetEntity;
-//
-//					@Override
-//					protected void doStuff() throws Exception {
-//						List<Entity> mapped = ModelMgr.getModelMgr().getProjectedEntities(entity.getId(), upMapping, downMapping);
-//						if (mapped.size()>1) {
-//							System.out.println("Warning: got more than 1 "+label+" for "+entity.getId());
-//						}
-//						if (mapped.isEmpty()) {
-//							throw new Exception("Could not find "+label+" for "+entity.getName());
-//						}
-//						targetEntity = mapped.get(0);
-//					}
-//
-//					@Override
-//					protected void hadSuccess() {
-//				        gotoEntity(targetEntity, null);
-//					}
-//
-//					@Override
-//					protected void hadError(Throwable error) {
-//						SessionMgr.getSessionMgr().handleException(error);
-//					}
-//				};
-//				worker.execute();
-//			}
-//		});
-//        return relatedMenuItem;
-//	}
 	
 	protected JMenuItem getCopyNameToClipboardItem() {
 		if (multiple) return null;

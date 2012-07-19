@@ -119,24 +119,4 @@ public class Annotations {
         
         return filteredMap;
     }
-
-    /**
-     * Returns all the annotations on the given entity, with the specified term.
-     * @param entity
-     * @param finalTerm
-     * @return
-     */
-	public List<OntologyAnnotation> getTermAnnotations(Entity entity, OntologyElement finalTerm) {
-		
-		List<OntologyAnnotation> matchingAnnotations = new ArrayList<OntologyAnnotation>();
-        for (OntologyAnnotation annotation : getAnnotations()) {
-        	if (entity.getId().equals(annotation.getTargetEntityId()) && 
-        			(annotation.getKeyEntityId().equals(finalTerm.getId()) || 
-        					(annotation.getValueEntityId()!=null && annotation.getValueEntityId().equals(finalTerm.getId())))) {
-        		matchingAnnotations.add(annotation);
-        	}
-        }
-		
-		return matchingAnnotations;
-	}
 }

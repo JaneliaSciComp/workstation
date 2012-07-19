@@ -6,10 +6,15 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
+import java.util.List;
+import java.util.concurrent.Callable;
+
+import javax.swing.JOptionPane;
+import javax.swing.ProgressMonitor;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
@@ -21,22 +26,20 @@ import org.janelia.it.jacs.model.ontology.types.*;
 import org.janelia.it.jacs.model.ontology.types.Enum;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 
-import javax.swing.*;
-import java.util.List;
-import java.util.concurrent.Callable;
-
 /**
  * This action creates and saves an annotation, and adds a corresponding tag to the currently selected item in an IconDemoPanel.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class AnnotateAction extends OntologyElementAction {
+	
     Callable<Void> doSuccess = null;
 
-    public AnnotateAction(){}
+    public AnnotateAction() {
+    }
 
-    public AnnotateAction(Callable<Void> callable){
-        doSuccess = callable;
+    public AnnotateAction(Callable<Void> doSuccess) {
+        this.doSuccess = doSuccess;
     }
 
     @Override
@@ -115,29 +118,14 @@ public class AnnotateAction extends OntologyElementAction {
 				int i=1;
 		        for(RootedEntity rootedEntity : selectedEntities) {
 		        	Entity entity = rootedEntity.getEntity();
-		        	
-		        	if (!(type instanceof Text)) {
-		        		// Non-text annotations are exclusive, so delete existing annotations first.
-			            Annotations annotations = ((IconDemoPanel)SessionMgr.getSessionMgr().getActiveBrowser().getActiveViewer()).getAnnotations();
-			        	List<OntologyAnnotation> existingAnnotations = annotations.getTermAnnotations(entity, finalTerm);
-			        	for(OntologyAnnotation existingAnnotation : existingAnnotations) {
-			        		if (existingAnnotation.getOwner().equals(SessionMgr.getUsername())) {
-			        			ModelMgr.getModelMgr().removeAnnotation(existingAnnotation.getId());
-			        		}
-			        	}
-		        	}
-		        	
-		        	// Create the new one
 		        	doAnnotation(entity, finalTerm, finalValue);
-		        	
-		        	// Update our progress
 		            setProgress(i++, selectedEntities.size());
 		        }
 			}
 
 			@Override
 			protected void hadSuccess() {
-				if(null!=doSuccess){
+				if (doSuccess != null) {
                     try {
                         doSuccess.call();
                     }
@@ -158,7 +146,7 @@ public class AnnotateAction extends OntologyElementAction {
         worker.execute();
     }
     
-    public void doAnnotation(Entity targetEntity, OntologyElement term, Object value) {
+    public void doAnnotation(Entity targetEntity, OntologyElement term, Object value) throws Exception {
 
         OntologyElementType type = term.getType();
         
@@ -181,21 +169,10 @@ public class AnnotateAction extends OntologyElementAction {
         Long keyEntityId = (keyEntity == null) ? null : keyEntity.getId();
         Long valueEntityId = (valueEntity == null) ? null : valueEntity.getId();
 
-        saveAnnotation(sessionId, targetEntity, keyEntityId, keyString, valueEntityId, valueString);
-    }
-
-    private void saveAnnotation(final Long sessionId, final Entity targetEntity, final Long keyEntityId, 
-    		final String keyString, final Long valueEntityId, final String valueString) {
-
         final OntologyAnnotation annotation = new OntologyAnnotation(
         		sessionId, targetEntity.getId(), keyEntityId, keyString, valueEntityId, valueString);
 
-        try {
-            Entity annotationEntity = ModelMgr.getModelMgr().createOntologyAnnotation(annotation);
-            System.out.println("Saved annotation as " + annotationEntity.getId());
-        }
-        catch (Exception e) {
-			SessionMgr.getSessionMgr().handleException(e);
-        }
+        Entity annotationEntity = ModelMgr.getModelMgr().createOntologyAnnotation(annotation);
+        System.out.println("Saved annotation as " + annotationEntity.getId());
     }
 }

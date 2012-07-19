@@ -6,9 +6,23 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.util.*;
+import java.util.concurrent.Callable;
+
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.api.entity_model.management.UserColorMapping;
 import org.janelia.it.FlyWorkstation.gui.application.SplashPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
@@ -26,16 +40,6 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-
-import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.BufferedImage;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Callable;
 
 /**
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of 
@@ -809,19 +813,19 @@ public class IconDemoPanel extends Viewer {
 
 		toolBar.addSeparator();
 		
-//		userButton = new JButton("Annotations from...");
-//		userButton.setIcon(Icons.getIcon("group.png"));
-//		userButton.setFocusable(false);
-//		userButton.addActionListener(new ActionListener() {
-//			@Override
-//			public void actionPerformed(ActionEvent e) {
-//				showPopupUserMenu();
-//			}
-//		});
-//		userButton.addMouseListener(new MouseForwarder(toolBar, "UserButton->JToolBar"));
-//		toolBar.add(userButton);
-//		
-//		toolBar.addSeparator();
+		userButton = new JButton("Annotations from...");
+		userButton.setIcon(Icons.getIcon("group.png"));
+		userButton.setFocusable(false);
+		userButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				showPopupUserMenu();
+			}
+		});
+		userButton.addMouseListener(new MouseForwarder(toolBar, "UserButton->JToolBar"));
+		toolBar.add(userButton);
+		
+		toolBar.addSeparator();
 		
 		imageRoleButton = new JButton("Image type...");
 		imageRoleButton.setIcon(Icons.getIcon("image.png"));
@@ -887,51 +891,51 @@ public class IconDemoPanel extends Viewer {
 		pathMenu.show(pathButton, 0, pathButton.getHeight());
 	}
 	
-//	private void showPopupUserMenu() {
-//
-//		final JPopupMenu userListMenu = new JPopupMenu();
-//
-//		UserColorMapping userColors = ModelMgr.getModelMgr().getUserColorMapping();
-//
-//		// Save the list of users so that when the function actually runs, the
-//		// users it affects are the same users that were displayed
-//		final List<String> savedUsers = new ArrayList<String>(allUsers);
-//
-//		JMenuItem allUsersMenuItem = new JCheckBoxMenuItem("All users", hiddenUsers.isEmpty());
-//		allUsersMenuItem.addActionListener(new ActionListener() {
-//			public void actionPerformed(ActionEvent e) {
-//				if (hiddenUsers.isEmpty()) {
-//					for (String username : savedUsers) {
-//						hiddenUsers.add(username);
-//					}
-//				} else {
-//					hiddenUsers.clear();
-//				}
-//				refreshAnnotations(null);
-//			}
-//		});
-//		userListMenu.add(allUsersMenuItem);
-//
-//		userListMenu.addSeparator();
-//
-//		for (final String username : savedUsers) {
-//			JMenuItem userMenuItem = new JCheckBoxMenuItem(username, !hiddenUsers.contains(username));
-//			userMenuItem.setBackground(userColors.getColor(username));
-//			userMenuItem.addActionListener(new ActionListener() {
-//				public void actionPerformed(ActionEvent e) {
-//					if (hiddenUsers.contains(username))
-//						hiddenUsers.remove(username);
-//					else
-//						hiddenUsers.add(username);
-//					refreshAnnotations(null);
-//				}
-//			});
-//			userMenuItem.setIcon(Icons.getIcon("user.png"));
-//			userListMenu.add(userMenuItem);
-//		}
-//
-//		userListMenu.show(userButton, 0, userButton.getHeight());
-//	}
+	private void showPopupUserMenu() {
+
+		final JPopupMenu userListMenu = new JPopupMenu();
+
+		UserColorMapping userColors = ModelMgr.getModelMgr().getUserColorMapping();
+
+		// Save the list of users so that when the function actually runs, the
+		// users it affects are the same users that were displayed
+		final List<String> savedUsers = new ArrayList<String>(allUsers);
+
+		JMenuItem allUsersMenuItem = new JCheckBoxMenuItem("All users", hiddenUsers.isEmpty());
+		allUsersMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (hiddenUsers.isEmpty()) {
+					for (String username : savedUsers) {
+						hiddenUsers.add(username);
+					}
+				} else {
+					hiddenUsers.clear();
+				}
+				refreshAnnotations(null);
+			}
+		});
+		userListMenu.add(allUsersMenuItem);
+
+		userListMenu.addSeparator();
+
+		for (final String username : savedUsers) {
+			JMenuItem userMenuItem = new JCheckBoxMenuItem(username, !hiddenUsers.contains(username));
+			userMenuItem.setBackground(userColors.getColor(username));
+			userMenuItem.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e) {
+					if (hiddenUsers.contains(username))
+						hiddenUsers.remove(username);
+					else
+						hiddenUsers.add(username);
+					refreshAnnotations(null);
+				}
+			});
+			userMenuItem.setIcon(Icons.getIcon("user.png"));
+			userListMenu.add(userMenuItem);
+		}
+
+		userListMenu.show(userButton, 0, userButton.getHeight());
+	}
 	
 	public void showLoadingIndicator() {
 		removeAll();
