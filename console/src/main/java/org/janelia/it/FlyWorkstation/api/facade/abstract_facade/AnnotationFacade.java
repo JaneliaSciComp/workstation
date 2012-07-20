@@ -16,6 +16,8 @@ public interface AnnotationFacade extends EntityFacade {
     public List<Entity> getAnnotationsForEntity(Long entityId) throws Exception;
 
     public List<Entity> getAnnotationsForEntities(List<Long> entityIds) throws Exception;
+    
+    public List<Entity> getAnnotationsForChildren(Long entityId) throws Exception;
 
     public List<Entity> getEntitiesForAnnotationSession(Long annotationSessionId) throws Exception;
 

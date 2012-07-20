@@ -27,6 +27,12 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
     }
 
     @Override
+    public List<Entity> getAnnotationsForChildren(Long parentId) throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().getAnnotationsForChildren(SessionMgr.getUsername(),
+        		parentId);
+    }
+    
+    @Override
     public List<Entity> getEntitiesForAnnotationSession(Long annotationSessionId) throws Exception {
         return EJBFactory.getRemoteAnnotationBean().getEntitiesForAnnotationSession(SessionMgr.getUsername(),
                 annotationSessionId);

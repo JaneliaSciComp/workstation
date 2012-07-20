@@ -702,6 +702,10 @@ public class ModelMgr {
     public List<Entity> getAnnotationsForEntities(List<Long> entityIds) throws Exception {
         return FacadeManager.getFacadeManager().getAnnotationFacade().getAnnotationsForEntities(entityIds);
     }
+    
+    public List<Entity> getAnnotationsForChildren(Long parentId) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().getAnnotationsForChildren(parentId);
+    }
 
     public void removeAllOntologyAnnotationsForSession(Long annotationSessionId) throws Exception {
         FacadeManager.getFacadeManager().getAnnotationFacade().removeAllOntologyAnnotationsForSession(annotationSessionId);

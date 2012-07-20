@@ -1124,11 +1124,7 @@ public class IconDemoPanel extends Viewer {
 			
 			@Override
 			protected void doStuff() throws Exception {
-				List<Entity> entities = new ArrayList<Entity>();
-				for(RootedEntity rootedEntity : getRootedEntities()) {
-					entities.add(rootedEntity.getEntity());
-				}
-				annotations.init(entities);
+				annotations.init(contextRootedEntity.getEntityId());
 			}
 			
 			@Override
@@ -1226,7 +1222,7 @@ public class IconDemoPanel extends Viewer {
 		annotationLoadingWorker = new SimpleWorker() {
 
 			protected void doStuff() throws Exception {
-				annotations.init(getDistinctEntities());
+				annotations.init(contextRootedEntity.getEntityId());
 			}
 
 			protected void hadSuccess() {

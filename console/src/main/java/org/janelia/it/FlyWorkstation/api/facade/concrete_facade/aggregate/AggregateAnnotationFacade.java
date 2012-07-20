@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.AnnotationFacade;
-import org.janelia.it.jacs.compute.api.support.EntityMapStep;
-import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 
@@ -60,6 +58,11 @@ public class AggregateAnnotationFacade extends AggregateEntityFacade implements 
         return returnList;
     }
 
+    @Override
+    public List<Entity> getAnnotationsForChildren(Long parentId) throws Exception {
+		throw new UnsupportedOperationException();
+    }
+    
     @Override
     public List<Entity> getEntitiesForAnnotationSession(Long annotationSessionId) throws Exception {
         Object[] aggregates = getAggregates();

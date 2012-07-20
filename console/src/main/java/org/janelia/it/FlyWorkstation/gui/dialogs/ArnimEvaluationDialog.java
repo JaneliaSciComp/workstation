@@ -103,7 +103,7 @@ public class ArnimEvaluationDialog extends ModalDialog {
 						
 						// TODO: should have a centralized way to do this
 						Annotations annotations = new Annotations();
-						annotations.init(ModelMgr.getModelMgr().getAnnotationsForEntity(entityId));
+						annotations.reload(entityId);
 						
 						String intensity = null;
 						String distribution = null;
