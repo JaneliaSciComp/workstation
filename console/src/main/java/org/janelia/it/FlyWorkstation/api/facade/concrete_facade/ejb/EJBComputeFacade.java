@@ -72,6 +72,11 @@ public class EJBComputeFacade implements ComputeFacade {
     }
 
     @Override
+    public List getUsers() throws Exception {
+        return EJBFactory.getRemoteComputeBean().getUsers();
+    }
+
+    @Override
     public User saveOrUpdateUser(User user) throws Exception {
         return EJBFactory.getRemoteComputeBean().saveOrUpdateUser(user);
     }

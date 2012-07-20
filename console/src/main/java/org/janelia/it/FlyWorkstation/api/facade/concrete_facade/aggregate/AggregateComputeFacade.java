@@ -127,6 +127,11 @@ public class AggregateComputeFacade extends AggregateFacadeBase implements Compu
     }
 
     @Override
+    public List getUsers() throws Exception {
+        return null;
+    }
+
+    @Override
     public User saveOrUpdateUser(User user) throws Exception {
         Object[] aggregates = getAggregates();
         List<User> returnList = new ArrayList<User>();

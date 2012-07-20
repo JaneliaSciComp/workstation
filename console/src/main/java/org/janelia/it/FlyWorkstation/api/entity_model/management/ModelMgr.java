@@ -14,7 +14,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.exception_handlers.PrintStackTraceHandler;
 import org.janelia.it.FlyWorkstation.shared.util.ThreadQueue;
-import org.janelia.it.jacs.compute.api.support.EntityMapStep;
 import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.compute.api.support.SageTerm;
 import org.janelia.it.jacs.compute.api.support.SolrResults;
@@ -798,6 +797,10 @@ public class ModelMgr {
 
     public User getUser() throws Exception {
         return FacadeManager.getFacadeManager().getComputeFacade().getUser();
+    }
+
+    public List getUsers() throws Exception{
+        return FacadeManager.getFacadeManager().getComputeFacade().getUsers();
     }
 
     public User saveOrUpdateUser(User user) throws Exception {

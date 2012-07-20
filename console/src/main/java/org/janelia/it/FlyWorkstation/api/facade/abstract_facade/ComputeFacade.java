@@ -31,6 +31,8 @@ public interface ComputeFacade {
 
     public User getUser() throws Exception;
 
+    public List getUsers() throws Exception;
+
     public User saveOrUpdateUser(User user) throws Exception;
 
     public void removePreferenceCategory(String preferenceCategory) throws Exception;
