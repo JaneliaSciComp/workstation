@@ -45,6 +45,7 @@ public class StaticImageButton extends AnnotatedImageButton {
 	}
 
 	public void setViewable(boolean viewable) {
+		super.setViewable(viewable);
 		if (viewable) {
 	    	this.staticIcon = Icons.getLargeIconAsBufferedImage(rootedEntity.getEntity());
 	    	

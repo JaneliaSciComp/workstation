@@ -404,6 +404,7 @@ public class IconDemoPanel extends Viewer {
 					SwingUtilities.invokeLater(new Runnable() {
 						@Override
 						public void run() {
+//							imagesPanel.loadUnloadImages();
 							reloadAnnotations(entityId);
 							filterEntities();
 						}
@@ -1021,8 +1022,9 @@ public class IconDemoPanel extends Viewer {
 		
 		entityLoadingWorker = new SimpleWorker() {
 
+			private List<RootedEntity> loadedRootedEntities = new ArrayList<RootedEntity>();
+			
 			protected void doStuff() throws Exception {
-				List<RootedEntity> loadedRootedEntities = new ArrayList<RootedEntity>();
 				for (RootedEntity rootedEntity : lazyRootedEntities) {
 					if (!EntityUtils.isInitialized(rootedEntity.getEntity())) {
 						System.out.println("Warning: had to load entity "+rootedEntity.getEntity().getId());
@@ -1035,10 +1037,10 @@ public class IconDemoPanel extends Viewer {
 					}
 					loadedRootedEntities.add(rootedEntity);
 				}
-				setRootedEntities(loadedRootedEntities);
 			}
 
 			protected void hadSuccess() {
+				setRootedEntities(loadedRootedEntities);
 				entityLoadDone(success);
 			}
 
@@ -1075,7 +1077,7 @@ public class IconDemoPanel extends Viewer {
 			}
 
 			protected void hadSuccess() {
-				rootedAncestors = ancestors;
+				setRootedAncestors(ancestors);
 			}
 
 			protected void hadError(Throwable error) {
@@ -1155,6 +1157,7 @@ public class IconDemoPanel extends Viewer {
 		
 		// Actually display everything
 		showImagePanel();
+		updateStatusBar();
 		
 		// Wait until everything is recomputed
 		SwingUtilities.invokeLater(new Runnable() {
@@ -1420,6 +1423,17 @@ public class IconDemoPanel extends Viewer {
 		if (!allImageRoles.contains(currImageRole)) {
 			currImageRole = EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE;
 		}
+	}
+	
+	private synchronized void setRootedAncestors(List<RootedEntity> rootedAncestors) {
+		this.rootedAncestors = rootedAncestors;
+		StringBuffer buf = new StringBuffer();
+		for(int i=rootedAncestors.size()-1; i>=0; i--) {
+			RootedEntity ancestor = rootedAncestors.get(i);
+			if (buf.length()>0) buf.append(" : ");
+			buf.append(ancestor.getEntity().getName());
+		}
+		setTitle(buf.toString());
 	}
 
 	public synchronized RootedEntity getLastSelectedEntity() {

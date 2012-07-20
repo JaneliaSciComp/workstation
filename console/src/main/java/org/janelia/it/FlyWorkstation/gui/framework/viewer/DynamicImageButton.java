@@ -69,6 +69,7 @@ public class DynamicImageButton extends AnnotatedImageButton {
 	}
 
 	public void setViewable(boolean viewable) {
+		super.setViewable(viewable);
         dynamicImagePanel.setViewable(viewable, new Callable<Void>() {
 			@Override
 			public Void call() throws Exception {

@@ -27,17 +27,19 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
  */
 public abstract class AnnotatedImageButton extends JToggleButton implements DragGestureListener { 
 	
-	private final JLabel titleLabel;
-	private final JLabel subtitleLabel;
-    private final JPanel mainPanel;
-    private final JPanel buttonPanel;
-    private final JLabel loadingLabel;
-    private AnnotationView annotationView;
-    private boolean annotationsLoaded = false;
-    private DragSource source;
-    private double aspectRatio; 
+	protected final JLabel titleLabel;
+	protected final JLabel subtitleLabel;
+	protected final JPanel mainPanel;
+    protected final JPanel buttonPanel;
+    protected final JLabel loadingLabel;
+    protected boolean viewable = false;
+    protected AnnotationView annotationView;
+    protected boolean annotationsLoaded = false;
+    protected DragSource source;
+    protected double aspectRatio; 
     protected final IconDemoPanel iconDemoPanel;
     protected final RootedEntity rootedEntity;
+    protected SimpleWorker annotationLoadingWorker;
     
     public AnnotatedImageButton(final RootedEntity rootedEntity, final IconDemoPanel iconDemoPanel) {
 
@@ -275,8 +277,50 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
 	public void setInvertedColors(boolean inverted) {
 	}
 
-	public void setViewable(boolean viewable) {
+	public void setViewable(boolean wantViewable) {
+//		
+//		if (wantViewable) {
+//			if (!this.viewable) {
+//				if (!annotationsLoaded) {
+//					annotationLoadingWorker = new LoadAnnotationsWorker();
+//					annotationLoadingWorker.execute();
+//				}
+//			}
+//			else {
+//				// TODO: Sync to viewer state here, instead of mass updating every button when the prefs change
+//			}
+//		}
+//		else {
+//			if (annotationLoadingWorker != null && !annotationLoadingWorker.isDone()) {
+//				annotationLoadingWorker.cancel(true);
+//				annotationLoadingWorker = null;
+//			}
+//			// TODO: Unload annotations here if we're worried about memory consumption
+//		}
+//		this.viewable = wantViewable;
 	}
+	
+	private class LoadAnnotationsWorker extends SimpleWorker {
+		
+		@Override
+		protected void doStuff() throws Exception {
+			iconDemoPanel.getAnnotations().reload(rootedEntity.getEntityId());					
+		}
+		
+		@Override
+		protected void hadSuccess() {
+			List<OntologyAnnotation> annotations = iconDemoPanel.getAnnotations().getFilteredAnnotationMap().get(rootedEntity.getEntityId());
+			showAnnotations(annotations);
+			revalidate();
+			repaint();
+			annotationLoadingWorker = null;
+		}
+		
+		@Override
+		protected void hadError(Throwable error) {
+			SessionMgr.getSessionMgr().handleException(error);
+		}
+	};
 	
 	public synchronized Double getAspectRatio() {
 		return aspectRatio;

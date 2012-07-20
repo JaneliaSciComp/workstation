@@ -11,8 +11,6 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
-import org.janelia.it.jacs.model.ontology.OntologyElement;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
  * Annotations about the entities which the user is currently interacting with.
@@ -21,24 +19,16 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  */
 public class Annotations {
 	
-    protected List<Entity> entities;
-    protected List<OntologyAnnotation> annotations;
+    protected List<OntologyAnnotation> annotations = new ArrayList<OntologyAnnotation>();
     protected AnnotationFilter filter;
     
 	public Annotations() {
-	}
-
-    public synchronized List<Entity> getEntities() {
-		return entities;
 	}
 	
     public synchronized void init(List<Entity> entities) {
     	
     	if (SwingUtilities.isEventDispatchThread()) throw new RuntimeException("Method must run outside of the EDT");
     	
-		this.entities = entities;
-		this.annotations = new ArrayList<OntologyAnnotation>();
-		
         List<Long> entityIds = new ArrayList<Long>();
         for (Entity entity : entities) {
             entityIds.add(entity.getId());
@@ -55,25 +45,36 @@ public class Annotations {
         }
     }
 
-    public synchronized void reload(Long entityId) {
+    public void reload(Long entityId) {
 
     	if (SwingUtilities.isEventDispatchThread()) throw new RuntimeException("Method must run outside of the EDT");
+
+		synchronized(this) {
+	    	// Remove all the annotations for this entity			
+	    	if (annotations!=null) {
+		    	List<OntologyAnnotation> copy = new ArrayList<OntologyAnnotation>(annotations);
+		    	for(OntologyAnnotation annotation : copy) {
+		    		if (annotation.getTargetEntityId()!=null && annotation.getTargetEntityId().equals(entityId)) {
+		    			annotations.remove(annotation);
+		    		}
+		    	}
+	    	}
+	    	else {
+	    		this.annotations = new ArrayList<OntologyAnnotation>();
+	    	}
+		}
     	
-    	// Remove all the annotations for this entity
-    	List<OntologyAnnotation> copy = new ArrayList<OntologyAnnotation>(annotations);
-    	for(OntologyAnnotation annotation : copy) {
-    		if (null!=annotation.getTargetEntityId() && annotation.getTargetEntityId().equals(entityId)) {
-    			annotations.remove(annotation);
-    		}
-    	}
     	
     	// Reload them
         try {
             for(Entity entityAnnot : ModelMgr.getModelMgr().getAnnotationsForEntity(entityId)) {
             	OntologyAnnotation annotation = new OntologyAnnotation();
             	annotation.init(entityAnnot);
-                if(null!=annotation.getTargetEntityId())
-            	    annotations.add(annotation);
+                if(annotation.getTargetEntityId()!=null) {
+                	synchronized(this) {
+                		annotations.add(annotation);
+                	}
+                }
             }
         }
         catch (Exception e) {
@@ -102,17 +103,12 @@ public class Annotations {
 
     public synchronized Map<Long, List<OntologyAnnotation>> getFilteredAnnotationMap() {
     	Map<Long, List<OntologyAnnotation>> filteredMap = new HashMap<Long, List<OntologyAnnotation>>();
-    	if (entities==null) return filteredMap;
     	
-        Map<Long, Entity> entityMap = EntityUtils.getEntityMap(entities);
-
         for (OntologyAnnotation annotation : getFilteredAnnotations()) {
-            Entity entity = entityMap.get(annotation.getTargetEntityId());
-            if (entity == null) continue;
-            List<OntologyAnnotation> oas = filteredMap.get(entity.getId());
+            List<OntologyAnnotation> oas = filteredMap.get(annotation.getTargetEntityId());
             if (oas == null) {
                 oas = new ArrayList<OntologyAnnotation>();
-                filteredMap.put(entity.getId(), oas);
+                filteredMap.put(annotation.getTargetEntityId(), oas);
             }
             oas.add(annotation);
         }
