@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
@@ -139,10 +140,10 @@ public class ImagesPanel extends JScrollPane {
             button.setTitleVisible(iconDemoPanel.areTitlesVisible());
             button.setTagsVisible(iconDemoPanel.areTagsVisible());
 
-//            if (buttonKeyListener != null) button.addKeyListener(buttonKeyListener);
-//            if (buttonMouseListener != null) button.addMouseListener(buttonMouseListener);
+            if (buttonKeyListener != null) button.addKeyListener(buttonKeyListener);
+            if (buttonMouseListener != null) button.addMouseListener(buttonMouseListener);
 
-//            button.addMouseListener(new MouseForwarder(this, "AnnotatedImageButton->ImagesPanel"));
+            button.addMouseListener(new MouseForwarder(this, "AnnotatedImageButton->ImagesPanel"));
 
             // Disable tab traversal, we will do it ourselves
             button.setFocusTraversalKeysEnabled(false);
