@@ -6,19 +6,6 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.event.*;
-import java.awt.image.BufferedImage;
-import java.util.*;
-import java.util.concurrent.Callable;
-
-import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
@@ -40,6 +27,16 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of 
@@ -1268,7 +1265,6 @@ public class IconDemoPanel extends Viewer {
 	 * the database.
 	 */
 	private synchronized void refreshAnnotations(Long entityId) {
-
 		// Refresh all user list
 		allUsers.clear();
 		for (OntologyAnnotation annotation : annotations.getAnnotations()) {
@@ -1276,11 +1272,13 @@ public class IconDemoPanel extends Viewer {
 				allUsers.add(annotation.getOwner());
 		}
 		Collections.sort(allUsers);
+        imagesPanel.refreshAnnotations(annotations);
 
-		if (entityId == null) {
+        if (entityId == null) {
 			imagesPanel.loadAnnotations(annotations);
-		} else {
-			imagesPanel.loadAnnotations(annotations, entityId);
+		}
+        else {
+			imagesPanel.loadAnnotationsForEntity(entityId);
 		}
 
 	}

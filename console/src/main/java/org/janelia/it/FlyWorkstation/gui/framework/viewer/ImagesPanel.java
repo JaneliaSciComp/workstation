@@ -1,20 +1,16 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.GridLayout;
-import java.awt.Rectangle;
-import java.awt.event.*;
-import java.util.*;
-
-import javax.swing.*;
-
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.*;
+import java.util.List;
 
 /**
  * Self-adjusting grid of images which may be resized together.
@@ -30,9 +26,10 @@ public class ImagesPanel extends JScrollPane {
 	public static final int MIN_TABLE_HEIGHT = 50;
 	public static final int DEFAULT_TABLE_HEIGHT = 200;
 	public static final int MAX_TABLE_HEIGHT = 500;
-	
+	private boolean unloadingImages = false;
     private final HashMap<String, AnnotatedImageButton> buttons = new LinkedHashMap<String, AnnotatedImageButton>();
-    
+    private Map<Long, List<OntologyAnnotation>> filteredAnnotationMap = new HashMap<Long, List<OntologyAnnotation>>();
+
     private KeyListener buttonKeyListener;
     private MouseListener buttonMouseListener;
     
@@ -42,9 +39,9 @@ public class ImagesPanel extends JScrollPane {
     private Double lowestAspectRatio;
     private Integer currImageSize = DEFAULT_THUMBNAIL_SIZE;
     private Integer currTableHeight = DEFAULT_TABLE_HEIGHT;
-    
+
     private Rectangle currViewRect;
-    
+
     // Listen for scroll events
     private final AdjustmentListener scrollListener = new AdjustmentListener() {
         @Override
@@ -73,8 +70,6 @@ public class ImagesPanel extends JScrollPane {
 
 	/**
      * Returns the button with the given entity.
-     *
-     * @return
      */
     public AnnotatedImageButton getButtonById(String id) {
         return buttons.get(id);
@@ -128,33 +123,30 @@ public class ImagesPanel extends JScrollPane {
 
     	this.lowestAspectRatio = null;
 
-        for (int i = 0; i < rootedEntities.size(); i++) {
-            final RootedEntity rootedEntity = rootedEntities.get(i);
-            
+        for (final RootedEntity rootedEntity : rootedEntities) {
             if (buttons.containsKey(rootedEntity.getId())) continue;
-            
-            AnnotatedImageButton button = null;
+
+            AnnotatedImageButton button;
 
             String filepath = EntityUtils.getImageFilePath(rootedEntity.getEntity(), iconDemoPanel.getCurrImageRole());
             if (filepath != null) {
-            	button = new DynamicImageButton(rootedEntity, iconDemoPanel);
-                ((DynamicImageButton)button).setCache(SessionMgr.getBrowser().getImageCache());
+                button = new DynamicImageButton(rootedEntity, iconDemoPanel);
+                ((DynamicImageButton) button).setCache(SessionMgr.getBrowser().getImageCache());
+            } else {
+                button = new StaticImageButton(rootedEntity, iconDemoPanel);
             }
-            else {
-            	button = new StaticImageButton(rootedEntity, iconDemoPanel);
-            }
-            
+
             button.setTitleVisible(iconDemoPanel.areTitlesVisible());
             button.setTagsVisible(iconDemoPanel.areTagsVisible());
-            
-            if (buttonKeyListener!=null) button.addKeyListener(buttonKeyListener);
-            if (buttonMouseListener!=null) button.addMouseListener(buttonMouseListener);
-            
-            button.addMouseListener(new MouseForwarder(this, "AnnotatedImageButton->ImagesPanel"));
-            
+
+//            if (buttonKeyListener != null) button.addKeyListener(buttonKeyListener);
+//            if (buttonMouseListener != null) button.addMouseListener(buttonMouseListener);
+
+//            button.addMouseListener(new MouseForwarder(this, "AnnotatedImageButton->ImagesPanel"));
+
             // Disable tab traversal, we will do it ourselves
             button.setFocusTraversalKeysEnabled(false);
-            
+
             buttons.put(rootedEntity.getId(), button);
             buttonsPanel.add(button);
         }
@@ -171,19 +163,23 @@ public class ImagesPanel extends JScrollPane {
      */
     public void loadAnnotations(Annotations annotations) {
         for (AnnotatedImageButton button : buttons.values()) {
-        	loadAnnotations(annotations, button.getRootedEntity().getEntity().getId());
+        	loadAnnotationsForEntity(button.getRootedEntity().getEntity().getId());
         }
+    }
+
+    public void refreshAnnotations(Annotations annotations) {
+        filteredAnnotationMap = annotations.getFilteredAnnotationMap();
     }
 
     /**
      * Show the given annotations on the appropriate images.
      */
-    public void loadAnnotations(final Annotations annotations, final Long entityId) {
+    public void loadAnnotationsForEntity(final Long entityId) {
     	SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
 		    	for (AnnotatedImageButton button : getButtonsByEntityId(entityId)) {
-		        	List<OntologyAnnotation> entityAnnotations = annotations.getFilteredAnnotationMap().get(entityId);
+		        	List<OntologyAnnotation> entityAnnotations = filteredAnnotationMap.get(entityId);
 		            button.showAnnotations(entityAnnotations);
 		    	}
 			}
@@ -203,7 +199,6 @@ public class ImagesPanel extends JScrollPane {
 	/**
      * Scale all the images to the given max size.
      *
-     * @param imageSize
      */
     public synchronized void rescaleImages(int imageSize) {
         if (imageSize < MIN_THUMBNAIL_SIZE || imageSize > MAX_THUMBNAIL_SIZE) {
@@ -276,11 +271,11 @@ public class ImagesPanel extends JScrollPane {
     	scrollButtonToCenter(selectedButton);
 	}
 	
-	public void scrollButtonToVisible(AnnotatedImageButton button) {
-    	if (button == null) return;
-	    getViewport().scrollRectToVisible(button.getBounds());
-	}
-	
+//	public void scrollButtonToVisible(AnnotatedImageButton button) {
+//    	if (button == null) return;
+//	    getViewport().scrollRectToVisible(button.getBounds());
+//	}
+//
 	public void scrollButtonToCenter(AnnotatedImageButton button) {
 
     	if (button == null) return;
@@ -406,9 +401,6 @@ public class ImagesPanel extends JScrollPane {
     /**
      * The identifier can be either a uniqueId (path) or just a simple entity id. In the latter case you may get 
      * multiple entities selected, if there are duplicates.
-     * @param selectedEntityId
-     * @param selection
-     * @param clearAll
      */
     public void setSelection(String selectedEntityId, boolean selection, boolean clearAll) {
     	if (clearAll) {
@@ -423,7 +415,7 @@ public class ImagesPanel extends JScrollPane {
 			}
     	}
 	    else {
-	        AnnotatedImageButton button = buttons.get(selectedEntityId.toString());
+	        AnnotatedImageButton button = buttons.get(selectedEntityId);
 	        if (button != null) {
 	        	setSelection(button, selection);
 	        }
@@ -470,6 +462,12 @@ public class ImagesPanel extends JScrollPane {
     }
 
     public synchronized void loadUnloadImages() {
+        if (unloadingImages) {
+            return;
+        }
+        else {
+            unloadingImages = true;
+        }
         SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
@@ -486,6 +484,7 @@ public class ImagesPanel extends JScrollPane {
 		        		SessionMgr.getSessionMgr().handleException(e);
 		        	}
 		        }
+                unloadingImages = false;
 			}
 		});
     }
