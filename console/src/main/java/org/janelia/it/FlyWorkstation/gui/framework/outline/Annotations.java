@@ -25,6 +25,10 @@ public class Annotations {
 	public Annotations() {
 	}
     
+	public synchronized void clear() {
+    	annotations.clear();
+	}
+	
     public synchronized void init(Long parentId) {
     	
     	if (SwingUtilities.isEventDispatchThread()) throw new RuntimeException("Method must run outside of the EDT");
@@ -61,7 +65,6 @@ public class Annotations {
 	    		this.annotations = new ArrayList<OntologyAnnotation>();
 	    	}
 		}
-    	
     	
     	// Reload them
         try {

@@ -6,6 +6,20 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
@@ -27,16 +41,6 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-
-import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.BufferedImage;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Callable;
 
 /**
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of 
@@ -67,8 +71,15 @@ public class IconDemoPanel extends Viewer {
 	protected JLabel statusLabel;
 	protected Hud hud;
 	
+	protected AtomicBoolean entityLoadInProgress = new AtomicBoolean(false);
+	protected AtomicBoolean annotationLoadInProgress = new AtomicBoolean(false);
+	protected AtomicBoolean ancestorLoadInProgress = new AtomicBoolean(false);
+	
 	// The parent entity which we are displaying children for
 	protected RootedEntity contextRootedEntity;
+	
+	// Are we just displaying a single "leaf" image, without children?
+	private boolean leafMode;
 	
 	// Ancestors of the parent entity
 	protected List<RootedEntity> rootedAncestors;
@@ -401,7 +412,6 @@ public class IconDemoPanel extends Viewer {
 					SwingUtilities.invokeLater(new Runnable() {
 						@Override
 						public void run() {
-//							imagesPanel.loadUnloadImages();
 							reloadAnnotations(entityId);
 							filterEntities();
 						}
@@ -980,12 +990,18 @@ public class IconDemoPanel extends Viewer {
 
 		if (lazyRootedEntities.isEmpty()) {
 			lazyRootedEntities.add(rootedEntity);
+			this.leafMode = true;
+		}
+		else {
+			this.leafMode = false;
 		}
 		
 		loadImageEntities(lazyRootedEntities, success); 
 	}
 
 	public void loadImageEntities(final List<RootedEntity> lazyRootedEntities) {
+		// TODO: revisit this, since it doesn't set contextRootedEntity
+		this.leafMode = false;
 		loadImageEntities(lazyRootedEntities, null);
 	}
 
@@ -993,6 +1009,10 @@ public class IconDemoPanel extends Viewer {
 
 		if (!SwingUtilities.isEventDispatchThread())
 			throw new RuntimeException("IconDemoPanel.entityLoadDone called outside of EDT");
+		
+		entityLoadInProgress.set(true);
+		annotationLoadInProgress.set(true);
+		ancestorLoadInProgress.set(true);
 		
 		// Indicate a load
 		showLoadingIndicator();
@@ -1046,7 +1066,40 @@ public class IconDemoPanel extends Viewer {
 			}
 		};
 		entityLoadingWorker.execute();
-		
+
+		annotationsInitWorker = new SimpleWorker() {
+			
+			@Override
+			protected void doStuff() throws Exception {
+				if (leafMode) {
+					annotations.clear();
+					annotations.reload(contextRootedEntity.getEntityId());
+				}
+				else {
+					annotations.init(contextRootedEntity.getEntityId());	
+				}
+			}
+			
+			@Override
+			protected void hadSuccess() {
+				
+				if (!entityLoadInProgress.get()) {
+					System.out.println("Refresh annotations by annotations init worker");
+					// Entity load finished before we did, so its safe to update the annotations
+					refreshAnnotations(null);
+					filterEntities();
+					imagesPanel.recalculateGrid();
+				}
+
+				annotationLoadInProgress.set(false);
+			}
+			
+			@Override
+			protected void hadError(Throwable error) {
+				SessionMgr.getSessionMgr().handleException(error);
+			}
+		};
+		annotationsInitWorker.execute();
 		
 		ancestorLoadingWorker = new SimpleWorker() {
 
@@ -1075,6 +1128,7 @@ public class IconDemoPanel extends Viewer {
 
 			protected void hadSuccess() {
 				setRootedAncestors(ancestors);
+				ancestorLoadInProgress.set(false);
 			}
 
 			protected void hadError(Throwable error) {
@@ -1116,38 +1170,6 @@ public class IconDemoPanel extends Viewer {
 		imagesPanel.resizeTables(imagesPanel.getCurrTableHeight());
 		imagesPanel.rescaleImages(imagesPanel.getCurrImageSize());
 		
-		// Begin annotation load
-		annotationsInitWorker = new SimpleWorker() {
-			
-			@Override
-			protected void doStuff() throws Exception {
-				annotations.init(contextRootedEntity.getEntityId());
-			}
-			
-			@Override
-			protected void hadSuccess() {
-				
-				refreshAnnotations(null);
-				filterEntities();
-
-				// Wait until everything is recomputed
-				SwingUtilities.invokeLater(new Runnable() {
-					@Override
-					public void run() {
-						imagesPanel.recalculateGrid();		
-					}
-				});
-				
-			}
-			
-			@Override
-			protected void hadError(Throwable error) {
-				SessionMgr.getSessionMgr().handleException(error);
-			}
-		};
-		annotationsInitWorker.execute();
-		
-		
 		// Actually display everything
 		showImagePanel();
 		updateStatusBar();
@@ -1156,12 +1178,21 @@ public class IconDemoPanel extends Viewer {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				imagesPanel.recalculateGrid();
-				imagesPanel.setScrollLoadingEnabled(true);
 				
 				// Select the first entity
 				// KR: disabled this because it has unforeseen effects in the split picker. Maybe we can address that in the future.
 //				ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), getRootedEntities().get(0).getId(), true);
+
+				if (!annotationLoadInProgress.get()) {
+					// Annotation load finished before we did, so we have to update the annotations too
+					System.out.println("Refresh annotations by entityLoadDone");
+					refreshAnnotations(null);
+					filterEntities();
+				}
+
+				imagesPanel.recalculateGrid();	
+				imagesPanel.setScrollLoadingEnabled(true);	
+				entityLoadInProgress.set(false);
 				
 				// Finally, we're done, we can call the success callback
 				if (success != null) {
@@ -1185,8 +1216,6 @@ public class IconDemoPanel extends Viewer {
 			public void run() {
 				imagesPanel.removeRootedEntity(rootedEntity);
 				imagesPanel.recalculateGrid();
-				revalidate();
-				repaint();
 			}
 		});
 	}
@@ -1206,32 +1235,6 @@ public class IconDemoPanel extends Viewer {
 		if (hideAnnotated!=null && hideAnnotated) {
 			imagesPanel.hideButtons(completed);	
 		}
-	}
-
-	/**
-	 * Reload the annotations from the database and then refresh the UI.
-	 */
-	public synchronized void reloadAnnotations() {
-
-		if (annotations == null || rootedEntities == null)
-			return;
-
-		annotationLoadingWorker = new SimpleWorker() {
-
-			protected void doStuff() throws Exception {
-				annotations.init(contextRootedEntity.getEntityId());
-			}
-
-			protected void hadSuccess() {
-				refreshAnnotations(null);
-			}
-
-			protected void hadError(Throwable error) {
-				SessionMgr.getSessionMgr().handleException(error);
-			}
-		};
-
-		annotationLoadingWorker.execute();
 	}
 
 	/**
@@ -1272,13 +1275,13 @@ public class IconDemoPanel extends Viewer {
 				allUsers.add(annotation.getOwner());
 		}
 		Collections.sort(allUsers);
-        imagesPanel.refreshAnnotations(annotations);
-
+        imagesPanel.setAnnotations(annotations);
+        
         if (entityId == null) {
-			imagesPanel.loadAnnotations(annotations);
+			imagesPanel.showAllAnnotations();
 		}
         else {
-			imagesPanel.loadAnnotationsForEntity(entityId);
+			imagesPanel.showAnnotationsForEntity(entityId);
 		}
 
 	}

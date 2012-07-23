@@ -1,17 +1,21 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.Rectangle;
+import java.awt.event.*;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.swing.*;
+
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
-import java.util.List;
 
 /**
  * Self-adjusting grid of images which may be resized together.
@@ -27,7 +31,7 @@ public class ImagesPanel extends JScrollPane {
 	public static final int MIN_TABLE_HEIGHT = 50;
 	public static final int DEFAULT_TABLE_HEIGHT = 200;
 	public static final int MAX_TABLE_HEIGHT = 500;
-	private boolean unloadingImages = false;
+	private AtomicBoolean loadUnloadImagesInProgress = new AtomicBoolean(false);
     private final HashMap<String, AnnotatedImageButton> buttons = new LinkedHashMap<String, AnnotatedImageButton>();
     private Map<Long, List<OntologyAnnotation>> filteredAnnotationMap = new HashMap<Long, List<OntologyAnnotation>>();
 
@@ -159,23 +163,23 @@ public class ImagesPanel extends JScrollPane {
     	buttons.remove(rootedEntity.getId());
     }
 
+    public void setAnnotations(Annotations annotations) {
+        filteredAnnotationMap = annotations.getFilteredAnnotationMap();
+    }
+    
     /**
      * Show the given annotations on the appropriate images.
      */
-    public void loadAnnotations(Annotations annotations) {
+    public void showAllAnnotations() {
         for (AnnotatedImageButton button : buttons.values()) {
-        	loadAnnotationsForEntity(button.getRootedEntity().getEntity().getId());
+        	showAnnotationsForEntity(button.getRootedEntity().getEntity().getId());
         }
     }
 
-    public void refreshAnnotations(Annotations annotations) {
-        filteredAnnotationMap = annotations.getFilteredAnnotationMap();
-    }
-
     /**
      * Show the given annotations on the appropriate images.
      */
-    public void loadAnnotationsForEntity(final Long entityId) {
+    public void showAnnotationsForEntity(final Long entityId) {
     	SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
@@ -272,11 +276,11 @@ public class ImagesPanel extends JScrollPane {
     	scrollButtonToCenter(selectedButton);
 	}
 	
-//	public void scrollButtonToVisible(AnnotatedImageButton button) {
-//    	if (button == null) return;
-//	    getViewport().scrollRectToVisible(button.getBounds());
-//	}
-//
+	public void scrollButtonToVisible(AnnotatedImageButton button) {
+    	if (button == null) return;
+	    getViewport().scrollRectToVisible(button.getBounds());
+	}
+
 	public void scrollButtonToCenter(AnnotatedImageButton button) {
 
     	if (button == null) return;
@@ -433,11 +437,18 @@ public class ImagesPanel extends JScrollPane {
 		return selected;
     }
     
+    public void repaintButtons() {
+        buttonsPanel.revalidate();
+        buttonsPanel.repaint();
+    }
+    
     /**
      * Set the number of columns in the grid layout based on the width of the parent component and the width of the
      * buttons.
      */
     public synchronized void recalculateGrid() {
+    	
+    	System.out.println("recalculateGrid");
     	
     	if (!SwingUtilities.isEventDispatchThread()) throw new RuntimeException("recalculateGrid called outside of EDT");
     	
@@ -457,21 +468,20 @@ public class ImagesPanel extends JScrollPane {
         	buttonsPanel.setColumns(numCols);
         }
 
-        buttonsPanel.revalidate();
-        buttonsPanel.repaint();
 		loadUnloadImages();
+		repaintButtons();
     }
 
-    public synchronized void loadUnloadImages() {
-        if (unloadingImages) {
+    public void loadUnloadImages() {
+        if (loadUnloadImagesInProgress.get()) {
+        	System.out.println("Ignore loadUnload");
             return;
         }
-        else {
-            unloadingImages = true;
-        }
+        loadUnloadImagesInProgress.compareAndSet(false, true);
         SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
+				System.out.println("loadUnloadImages start");
 		    	final JViewport viewPort = getViewport();
 		    	Rectangle viewRect = viewPort.getViewRect();
 		    	if (buttonsPanel.getColumns() == 1) {
@@ -485,7 +495,8 @@ public class ImagesPanel extends JScrollPane {
 		        		SessionMgr.getSessionMgr().handleException(e);
 		        	}
 		        }
-                unloadingImages = false;
+		        System.out.println("loadUnloadImages done");
+		        loadUnloadImagesInProgress.compareAndSet(true, false);
 			}
 		});
     }
@@ -496,8 +507,15 @@ public class ImagesPanel extends JScrollPane {
 			setLayout(new GridLayout(0, 2));
 			setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
 			setOpaque(false);
+			for(ComponentListener l : getComponentListeners()) {
+				removeComponentListener(l);
+			}
 		}
 		
+		@Override
+	    public synchronized void addComponentListener(ComponentListener l) {
+	    }
+	    
         @Override
         public Dimension getPreferredScrollableViewportSize() {
             return getPreferredSize();

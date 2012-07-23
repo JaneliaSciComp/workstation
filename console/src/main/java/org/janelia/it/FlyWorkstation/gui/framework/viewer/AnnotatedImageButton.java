@@ -278,49 +278,7 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
 	}
 
 	public void setViewable(boolean wantViewable) {
-//		
-//		if (wantViewable) {
-//			if (!this.viewable) {
-//				if (!annotationsLoaded) {
-//					annotationLoadingWorker = new LoadAnnotationsWorker();
-//					annotationLoadingWorker.execute();
-//				}
-//			}
-//			else {
-//				// TODO: Sync to viewer state here, instead of mass updating every button when the prefs change
-//			}
-//		}
-//		else {
-//			if (annotationLoadingWorker != null && !annotationLoadingWorker.isDone()) {
-//				annotationLoadingWorker.cancel(true);
-//				annotationLoadingWorker = null;
-//			}
-//			// TODO: Unload annotations here if we're worried about memory consumption
-//		}
-//		this.viewable = wantViewable;
 	}
-	
-	private class LoadAnnotationsWorker extends SimpleWorker {
-		
-		@Override
-		protected void doStuff() throws Exception {
-			iconDemoPanel.getAnnotations().reload(rootedEntity.getEntityId());					
-		}
-		
-		@Override
-		protected void hadSuccess() {
-			List<OntologyAnnotation> annotations = iconDemoPanel.getAnnotations().getFilteredAnnotationMap().get(rootedEntity.getEntityId());
-			showAnnotations(annotations);
-			revalidate();
-			repaint();
-			annotationLoadingWorker = null;
-		}
-		
-		@Override
-		protected void hadError(Throwable error) {
-			SessionMgr.getSessionMgr().handleException(error);
-		}
-	};
 	
 	public synchronized Double getAspectRatio() {
 		return aspectRatio;

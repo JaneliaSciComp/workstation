@@ -185,6 +185,9 @@ public abstract class DynamicImagePanel extends JPanel {
 				}
 			}
 			else {
+				if (!this.viewable) {
+					return;
+				}
 				if (loadWorker != null && !loadWorker.isDone()) {
 					loadWorker.cancel(true);
 					loadWorker = null;
@@ -196,6 +199,7 @@ public abstract class DynamicImagePanel extends JPanel {
 		    	// Show the loading label until the image needs to be loaded again
 		        setImageLabel(loadingLabel);
 				invalidate();
+				System.out.println("Unloaded "+imageFilename);
 				// Call the callback
 				try {
 					if (success!=null) success.call();
@@ -247,6 +251,7 @@ public abstract class DynamicImagePanel extends JPanel {
 
 		@Override
 		protected void hadSuccess() {
+			System.out.println("Load done "+imageFilename+" (cached="+imageCache.size()+")");
             loadDone();
             try {
             	if (success!=null) success.call();

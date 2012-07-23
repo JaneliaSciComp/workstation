@@ -93,6 +93,9 @@ public class ModelMgr {
         if (null!=mml && modelMgrObservers.contains(mml)) {modelMgrObservers.remove(mml);}
     }
 
+    public List<ModelMgrObserver> getModelMgrObservers() {
+    	return new ArrayList<ModelMgrObserver>(modelMgrObservers);
+    }
 
     public void registerExceptionHandler(ExceptionHandler handler) {
         FacadeManager.registerExceptionHandler(handler);
@@ -185,8 +188,8 @@ public class ModelMgr {
 //            for (Entity ontology : ontologies) {
 ////             if (readOnly && !ontology.isReadOnly()) ontology.makeReadOnly();
 //                this.ontologies.add(ontology);
-////                if (modelMgrObservers != null) {
-////                    Object[] listeners = modelMgrObservers.toArray();
+////                if (getModelMgrObservers() != null) {
+////                    Object[] listeners = getModelMgrObservers().toArray();
 ////                    for (Object listener : listeners) {
 ////                        ((ModelMgrObserver) listener).ontologyAdded(ontology);
 ////                    }
@@ -315,14 +318,14 @@ public class ModelMgr {
     		SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-			        for (ModelMgrObserver listener : modelMgrObservers) {
+			        for (ModelMgrObserver listener : getModelMgrObservers()) {
 			        	listener.ontologySelected(ontologyId);
 			        }
 				}
 			});
     	}
     	else {
-            for (ModelMgrObserver listener : modelMgrObservers) {
+            for (ModelMgrObserver listener : getModelMgrObservers()) {
             	listener.ontologySelected(ontologyId);
             }
     	}
@@ -333,14 +336,14 @@ public class ModelMgr {
     		SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-			        for (ModelMgrObserver listener : modelMgrObservers) {
+			        for (ModelMgrObserver listener : getModelMgrObservers()) {
 			        	listener.ontologyChanged(entityId);
 			        }
 				}
 			});
     	}
     	else {
-            for (ModelMgrObserver listener : modelMgrObservers) {
+            for (ModelMgrObserver listener : getModelMgrObservers()) {
             	listener.ontologyChanged(entityId);
             }
     	}
@@ -351,14 +354,14 @@ public class ModelMgr {
     		SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-			    	for (ModelMgrObserver listener : modelMgrObservers) {
+			    	for (ModelMgrObserver listener : getModelMgrObservers()) {
 						listener.entitySelected(category, identifier, clearAll);
 					}
 				}
 			});
     	}
     	else {
-        	for (ModelMgrObserver listener : modelMgrObservers) {
+        	for (ModelMgrObserver listener : getModelMgrObservers()) {
     			listener.entitySelected(category, identifier, clearAll);
     		}
     	}
@@ -369,14 +372,14 @@ public class ModelMgr {
     		SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-			    	for (ModelMgrObserver listener : modelMgrObservers) {
+			    	for (ModelMgrObserver listener : getModelMgrObservers()) {
 						listener.entityDeselected(category, identifier);
 					}
 				}
 			});
     	}
     	else {
-        	for (ModelMgrObserver listener : modelMgrObservers) {
+        	for (ModelMgrObserver listener : getModelMgrObservers()) {
     			listener.entityDeselected(category, identifier);
     		}
     	}
@@ -387,14 +390,14 @@ public class ModelMgr {
     		SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-			        for (ModelMgrObserver listener : modelMgrObservers) {
+			        for (ModelMgrObserver listener : getModelMgrObservers()) {
 			        	listener.entityChanged(entityId);
 			        }
 				}
 			});
     	}
     	else {
-            for (ModelMgrObserver listener : modelMgrObservers) {
+            for (ModelMgrObserver listener : getModelMgrObservers()) {
             	listener.entityChanged(entityId);
             }
     	}
@@ -405,14 +408,14 @@ public class ModelMgr {
     		SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-			        for (ModelMgrObserver listener : modelMgrObservers) {
+			        for (ModelMgrObserver listener : getModelMgrObservers()) {
 			        	listener.entityRemoved(entityId);
 			        }
 				}
 			});
     	}
     	else {
-            for (ModelMgrObserver listener : modelMgrObservers) {
+            for (ModelMgrObserver listener : getModelMgrObservers()) {
             	listener.entityRemoved(entityId);
             }
     	}
@@ -423,14 +426,14 @@ public class ModelMgr {
     		SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-			        for (ModelMgrObserver listener : modelMgrObservers) {
+			        for (ModelMgrObserver listener : getModelMgrObservers()) {
 			        	listener.entityDataRemoved(entityDataId);
 			        }
 				}
 			});
     	}
     	else {
-            for (ModelMgrObserver listener : modelMgrObservers) {
+            for (ModelMgrObserver listener : getModelMgrObservers()) {
             	listener.entityDataRemoved(entityDataId);
             }
     	}
@@ -440,7 +443,7 @@ public class ModelMgr {
     	if (SessionMgr.getSessionMgr().getExternalClientsByName(NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
     		return false;
     	}
-        for (ModelMgrObserver listener : modelMgrObservers) {
+        for (ModelMgrObserver listener : getModelMgrObservers()) {
         	listener.entityViewRequested(entityId);
         }
         return true;
@@ -451,14 +454,14 @@ public class ModelMgr {
     		SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-			        for (ModelMgrObserver listener : modelMgrObservers) {
+			        for (ModelMgrObserver listener : getModelMgrObservers()) {
 			        	listener.annotationsChanged(entityId);
 			        }
 				}
 			});
     	}
     	else {
-            for (ModelMgrObserver listener : modelMgrObservers) {
+            for (ModelMgrObserver listener : getModelMgrObservers()) {
             	listener.annotationsChanged(entityId);
             }
     	}
@@ -469,7 +472,7 @@ public class ModelMgr {
     		SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-			        for (ModelMgrObserver listener : modelMgrObservers) {
+			        for (ModelMgrObserver listener : getModelMgrObservers()) {
 			        	listener.sessionSelected(sessionId);
 			        }
 				}
@@ -477,7 +480,7 @@ public class ModelMgr {
     	}
     	else {
         	
-            for (ModelMgrObserver listener : modelMgrObservers) {
+            for (ModelMgrObserver listener : getModelMgrObservers()) {
             	listener.sessionSelected(sessionId);
             }
     	}
@@ -488,14 +491,14 @@ public class ModelMgr {
     		SwingUtilities.invokeLater(new Runnable() {
 				@Override
 				public void run() {
-			        for (ModelMgrObserver listener : modelMgrObservers) {
+			        for (ModelMgrObserver listener : getModelMgrObservers()) {
 			        	listener.sessionDeselected();
 			        }
 				}
 			});
     	}
     	else {
-            for (ModelMgrObserver listener : modelMgrObservers) {
+            for (ModelMgrObserver listener : getModelMgrObservers()) {
             	listener.sessionDeselected();
             }
     	}
@@ -859,8 +862,8 @@ public class ModelMgr {
 //          if (!genomeVersion.equals(gv)) gv.makeReadOnly();
 //      }
 //    FacadeManager.setGenomeVersionWithWorkSpaceId(genomeVersion.getID());
-//    if (modelMgrObservers!=null) {
-//       Object[] listeners=modelMgrObservers.toArray();
+//    if (getModelMgrObservers()!=null) {
+//       Object[] listeners=getModelMgrObservers().toArray();
 //        for (Object listener : listeners) {
 //            ((ModelMgrObserver) listener).workSpaceCreated(genomeVersion);
 //        }
@@ -869,8 +872,8 @@ public class ModelMgr {
 //
 //  private void workSpaceWasRemoved(GenomeVersion genomeVersion,Workspace workspace) {
 //    FacadeManager.setGenomeVersionWithWorkSpaceId(0);
-//    if (modelMgrObservers!=null) {
-//       Object[] listeners=modelMgrObservers.toArray();
+//    if (getModelMgrObservers()!=null) {
+//       Object[] listeners=getModelMgrObservers().toArray();
 //        for (Object listener : listeners) {
 //            ((ModelMgrObserver) listener).workSpaceRemoved(genomeVersion, workspace);
 //        }
