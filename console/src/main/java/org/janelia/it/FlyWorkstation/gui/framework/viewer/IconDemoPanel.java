@@ -1088,7 +1088,12 @@ public class IconDemoPanel extends Viewer {
 					// Entity load finished before we did, so its safe to update the annotations
 					refreshAnnotations(null);
 					filterEntities();
-					imagesPanel.recalculateGrid();
+					SwingUtilities.invokeLater(new Runnable() {
+						@Override
+						public void run() {
+							imagesPanel.recalculateGrid();
+						}
+					});
 				}
 
 				annotationLoadInProgress.set(false);
@@ -1214,6 +1219,10 @@ public class IconDemoPanel extends Viewer {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
+				RootedEntity next = getNextEntity();
+				if (next!=null) {
+					ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), next.getId(), true);	
+				}
 				imagesPanel.removeRootedEntity(rootedEntity);
 				imagesPanel.recalculateGrid();
 			}

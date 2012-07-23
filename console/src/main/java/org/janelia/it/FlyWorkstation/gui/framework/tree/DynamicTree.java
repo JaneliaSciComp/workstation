@@ -212,7 +212,7 @@ public class DynamicTree extends JPanel {
      * @param node
      * @param recurse
      */
-    protected void recreateChildNodes(DefaultMutableTreeNode node) {
+    public void recreateChildNodes(DefaultMutableTreeNode node) {
         throw new UnsupportedOperationException("This tree does not support child recreation");
     }
 

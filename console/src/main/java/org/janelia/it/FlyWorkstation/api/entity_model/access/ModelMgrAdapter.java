@@ -24,6 +24,11 @@ public class ModelMgrAdapter implements ModelMgrObserver {
 	public void entityChanged(long entityId) {
 		
 	}
+
+	@Override
+	public void entityChildrenChanged(long entityId) {
+		
+	}
 	
 	@Override
     public void entityRemoved(long entityId) {

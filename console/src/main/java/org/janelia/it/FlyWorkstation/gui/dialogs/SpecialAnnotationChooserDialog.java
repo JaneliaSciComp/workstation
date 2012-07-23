@@ -1,6 +1,18 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.*;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
+
+import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.AnnotateAction;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -11,17 +23,6 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.types.EnumText;
-
-import javax.swing.*;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumn;
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -78,12 +79,7 @@ public class SpecialAnnotationChooserDialog extends JFrame{
         };
         model.addTableModelListener(tableModelListener);
 
-        ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrObserver() {
-            @Override
-            public void ontologySelected(long rootId) {}
-
-            @Override
-            public void ontologyChanged(long rootId) {}
+        ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
 
             @Override
             public void entitySelected(String category, String entityId, boolean clearAll) {
@@ -118,30 +114,6 @@ public class SpecialAnnotationChooserDialog extends JFrame{
                     e.printStackTrace();
                 }
             }
-
-            @Override
-            public void entityDeselected(String category, String entityId) {}
-
-            @Override
-            public void entityChanged(long entityId) {}
-
-            @Override
-            public void entityRemoved(long entityId) {}
-
-            @Override
-            public void entityDataRemoved(long entityDataId) {}
-
-            @Override
-            public void entityViewRequested(long entityId) {}
-
-            @Override
-            public void annotationsChanged(long entityId) {}
-
-            @Override
-            public void sessionSelected(long sessionId) {}
-
-            @Override
-            public void sessionDeselected() {}
         });
 
         table.setPreferredScrollableViewportSize(new Dimension(500, 500));

@@ -438,8 +438,13 @@ public class ImagesPanel extends JScrollPane {
     }
     
     public void repaintButtons() {
-        buttonsPanel.revalidate();
-        buttonsPanel.repaint();
+    	SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+		        buttonsPanel.revalidate();
+		        buttonsPanel.repaint();
+			}
+		});
     }
     
     /**
@@ -474,14 +479,13 @@ public class ImagesPanel extends JScrollPane {
 
     public void loadUnloadImages() {
         if (loadUnloadImagesInProgress.get()) {
-        	System.out.println("Ignore loadUnload");
+        	System.out.println("Ignoring request to loadUnloadImages, since it is already in progress");
             return;
         }
         loadUnloadImagesInProgress.compareAndSet(false, true);
         SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				System.out.println("loadUnloadImages start");
 		    	final JViewport viewPort = getViewport();
 		    	Rectangle viewRect = viewPort.getViewRect();
 		    	if (buttonsPanel.getColumns() == 1) {
@@ -495,7 +499,6 @@ public class ImagesPanel extends JScrollPane {
 		        		SessionMgr.getSessionMgr().handleException(e);
 		        	}
 		        }
-		        System.out.println("loadUnloadImages done");
 		        loadUnloadImagesInProgress.compareAndSet(true, false);
 			}
 		});

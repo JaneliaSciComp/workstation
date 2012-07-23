@@ -70,7 +70,70 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 
 			@Override
 			public void entityChanged(final long entityId) {
-				refresh();
+				System.out.println("entityChanged..."+entityId);
+				SimpleWorker worker = new SimpleWorker() {
+					
+					private Entity entity;
+					
+					@Override
+					protected void doStuff() throws Exception {
+						 entity = ModelMgr.getModelMgr().getEntityById(entityId+"");
+					}
+					
+					@Override
+					protected void hadSuccess() {
+						Set<DefaultMutableTreeNode> nodes = getNodesByEntityId(entityId);
+						if (nodes == null) return;
+						for(final DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
+							System.out.println("entityChanged... updateEntity:"+node);
+							ModelMgrUtils.updateEntity(getEntity(node), entity);
+						}
+						revalidate();
+						repaint();
+					}
+					
+					@Override
+					protected void hadError(Throwable error) {
+						SessionMgr.getSessionMgr().handleException(error);
+					}
+				};
+				
+				worker.execute();
+			}
+			
+			@Override
+			public void entityChildrenChanged(final long entityId) {
+				System.out.println("entityChildrenChanged..."+entityId);
+				SimpleWorker worker = new SimpleWorker() {
+					private Set<DefaultMutableTreeNode> nodes;
+					
+					@Override
+					protected void doStuff() throws Exception {
+						nodes = getNodesByEntityId(entityId);
+						if (nodes == null) return;
+						for(final DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
+							ModelMgrUtils.refreshEntityAndChildren(getEntity(node));
+						}
+					}
+					
+					@Override
+					protected void hadSuccess() {
+						if (nodes == null) return;
+						for(final DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
+							getDynamicTree().recreateChildNodes(node);   
+							getDynamicTree().expand(node, true);
+						}
+						revalidate();
+						repaint();
+					}
+					
+					@Override
+					protected void hadError(Throwable error) {
+						SessionMgr.getSessionMgr().handleException(error);
+					}
+				};
+				
+				worker.execute();
 			}
 
 			@Override
@@ -84,6 +147,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 					if (parent!=null) {
 						parent.getEntityData().remove(entityData);
 					}
+					System.out.println("entityRemoved... remove node "+node);
 					removeNode(node);	
 				}
 			}
@@ -99,6 +163,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 					if (parent!=null) {
 						parent.getEntityData().remove(entityData);
 					}
+					System.out.println("entityDataRemoved... remove node "+node);
 					removeNode(node);	
 				}
 			}
@@ -454,6 +519,11 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			return;
 		}
 		
+		DefaultMutableTreeNode node2 = getNodeByUniqueId(uniqueId);
+		if (node!=node2) {
+			System.out.println("Warning: we have a node conflict!");
+		}
+		
 		DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
 		if (parentNode != null && !getTree().isExpanded(new TreePath(parentNode.getPath()))) {
 			getDynamicTree().expand(parentNode, true);
@@ -484,12 +554,12 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	private void loadEntityInViewer(String uniqueId) {
 		
 		if (uniqueId==null) return;
-		
+
 		DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
 		if (node==null) return;
 		
 		// This method would never be called on a node whose children are lazy
-		if (!selectedTree.childrenAreLoaded(node)) {
+		if (!getDynamicTree().childrenAreLoaded(node)) {
 			throw new IllegalStateException("Cannot display entity whose children are not loaded");
 		}
 		

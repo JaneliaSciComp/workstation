@@ -403,6 +403,24 @@ public class ModelMgr {
     	}
     }
 
+    public void notifyEntityChildrenChanged(final Long entityId) {
+    	if (!SwingUtilities.isEventDispatchThread()) {
+    		SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+			        for (ModelMgrObserver listener : getModelMgrObservers()) {
+			        	listener.entityChildrenChanged(entityId);
+			        }
+				}
+			});
+    	}
+    	else {
+            for (ModelMgrObserver listener : getModelMgrObservers()) {
+            	listener.entityChildrenChanged(entityId);
+            }
+    	}
+    }
+    
     public void notifyEntityRemoved(final Long entityId) {
     	if (!SwingUtilities.isEventDispatchThread()) {
     		SwingUtilities.invokeLater(new Runnable() {
@@ -604,6 +622,7 @@ public class ModelMgr {
 
     public void removeAnnotation(Long annotationId) throws Exception {
     	Entity annotationEntity = FacadeManager.getFacadeManager().getEntityFacade().getEntityById(annotationId.toString());
+    	if (annotationEntity==null || annotationEntity.getId()==null) return;
     	OntologyAnnotation annotation = new OntologyAnnotation();
     	annotation.init(annotationEntity);
         FacadeManager.getFacadeManager().getAnnotationFacade().removeAnnotation(annotationEntity.getId());
@@ -693,7 +712,7 @@ public class ModelMgr {
     public EntityData addEntityToParent(Entity parent, Entity entity, Integer index, String attrName) throws Exception {
     	EntityData ed = FacadeManager.getFacadeManager().getEntityFacade().addEntityToParent(parent, entity, index, attrName);
     	parent.getEntityData().add(ed);
-    	notifyEntityChanged(parent.getId());
+    	notifyEntityChildrenChanged(parent.getId());
     	return ed;
     }
     
@@ -829,6 +848,7 @@ public class ModelMgr {
     
     public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception {
     	FacadeManager.getFacadeManager().getAnnotationFacade().addChildren(parentId, childrenIds, attributeName);
+    	notifyEntityChildrenChanged(parentId);
     }
     
     public List<MappedId> getProjectedResults(List<Long> entityIds, List<String> upMapping, List<String> downMapping) throws Exception {

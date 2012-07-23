@@ -4,19 +4,26 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
-import org.janelia.it.jacs.model.ontology.OntologyElement;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
  * A dialog that may do something in the future.
@@ -36,11 +43,11 @@ public class ArnimEvaluationDialog extends ModalDialog {
 	
 	private JButton okButton;
 	private JButton cancelButton;
-    
-	
+    	
 	public ArnimEvaluationDialog() {
 
 		addListeners();
+		init();
 		
         okButton = new JButton("OK");
         okButton.setToolTipText("Close and save changes");
@@ -72,13 +79,6 @@ public class ArnimEvaluationDialog extends ModalDialog {
 	
 	private void init() {
 
-//		
-//		for(OntologyElement element : ModelMgr.getModelMgr().getCurrentOntology().getChildren()) {
-//			if (SCORE_INTENSITY_NAME.equals(element.getName())) {
-//				
-//			}
-//		}
-		
 	}
 	
 	private void addListeners() {
@@ -95,6 +95,8 @@ public class ArnimEvaluationDialog extends ModalDialog {
 				if (!ModelMgr.getModelMgr().getCurrentOntology().getName().equals(SCORE_ONTOLOGY_NAME)) {
 					return;
 				}
+
+				final EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
 				
 				SimpleWorker worker = new SimpleWorker() {
 					
@@ -124,39 +126,94 @@ public class ArnimEvaluationDialog extends ModalDialog {
 						
 						if (intensity!=null && distribution!=null) {
 							
-							int i = Integer.parseInt(""+intensity.charAt(1));
-							int d = Integer.parseInt(""+distribution.charAt(1));
+							// The current evaluation
+							int i = getValueFromAnnotation(intensity);
+							int d = getValueFromAnnotation(distribution);
+							System.out.println("int should be "+i);
+							System.out.println("dist should be "+d);
 							
-							Entity distFolder = null;
-							for(Entity parent : ModelMgr.getModelMgr().getParentEntities(entityId)) {
-								if (parent.getName().startsWith("Distribution")) {
-									distFolder = parent;
-									break;
+							// Current folders
+							DefaultMutableTreeNode distNode = null;
+							DefaultMutableTreeNode intNode = null;
+							DefaultMutableTreeNode compartmentNode = null;
+							
+							Set<DefaultMutableTreeNode> nodes = entityOutline.getNodesByEntityId(entityId);
+							if (nodes==null) {
+								System.out.println("Entity not found in tree: "+entityId);
+								return;
+							}
+							
+							for(DefaultMutableTreeNode node : nodes) {
+								DefaultMutableTreeNode parent = (DefaultMutableTreeNode)node.getParent();
+								Entity parentEntity = entityOutline.getEntity(parent);
+								if (parentEntity!=null && parentEntity.getName().startsWith("Distribution ")) {
+									DefaultMutableTreeNode grandparent = (DefaultMutableTreeNode)parent.getParent();	
+									Entity grandparentEntity = entityOutline.getEntity(grandparent);
+									if (grandparentEntity!=null && grandparentEntity.getName().startsWith("Intensity ")) {
+										distNode = parent;
+										intNode = grandparent;
+										compartmentNode = (DefaultMutableTreeNode)grandparent.getParent();
+										break;
+									}
 								}
 							}
 							
-							if (distFolder == null) return;
+							if (distNode==null || intNode==null || compartmentNode==null) {
+								throw new IllegalStateException("Sample not found in evaulation folder hierarchy");
+							}
 
-							Entity intFolder = null;
-							for(Entity parent : ModelMgr.getModelMgr().getParentEntities(entityId)) {
-								if (parent.getName().startsWith("Intensity")) {
-									intFolder = parent;
-									break;
+							Entity distEntity = entityOutline.getEntity(distNode);
+							Entity intEntity = entityOutline.getEntity(intNode);
+							Entity compartmentEntity = entityOutline.getEntity(compartmentNode);
+							int ci = getValueFromFolderName(intEntity);
+							int cd = getValueFromFolderName(distEntity);
+							
+							System.out.println("current compartment="+compartmentEntity.getName());
+							System.out.println("current int entity="+intEntity.getName() +" ("+ci+")");
+							System.out.println("current dist entity="+distEntity.getName() +" ("+cd+")");
+							
+							if (ci==i) {
+								if (cd==d) {
+									System.out.println("Correct folder placement");		
+								}
+								else {
+									System.out.println("Distribution folder needs updating");
+									Entity targetFolder = null;
+									for(Entity distChild : intEntity.getChildren()) {
+										if (distChild.getName().endsWith(""+d)) {
+											targetFolder = distChild;
+										}
+									}
+									if (targetFolder==null) {
+										throw new IllegalStateException("Cannot find appropriate distribution folder");
+									}
+									moveToFolder(entityId,distEntity,targetFolder);
 								}
 							}
-							
-							if (intFolder == null) return;
-							
-							String currDistFolderName = intFolder.getName();
-							int di = Integer.parseInt(currDistFolderName.substring(currDistFolderName.indexOf(' ')+1));
-							
-							
-							
-							
-							
+							else {
+								System.out.println("Both folders need updating");
+								if (!EntityUtils.areLoaded(compartmentEntity.getEntityData())) {
+									ModelMgrUtils.loadLazyEntity(compartmentEntity, false);
+								}
+								Entity targetFolder = null;
+								for(Entity intChild : compartmentEntity.getChildren()) {
+									if (intChild.getName().endsWith(""+i)) {
+										if (!EntityUtils.areLoaded(intChild.getEntityData())) {
+											ModelMgrUtils.loadLazyEntity(intChild, false);
+										}
+										for(Entity distChild : intChild.getChildren()) {
+											if (distChild.getName().endsWith(""+d)) {
+												targetFolder = distChild;
+											}
+										}
+									}
+								}
+								if (targetFolder==null) {
+									throw new IllegalStateException("Cannot find appropriate intensity and distribution folders");
+								}
+								moveToFolder(entityId,distEntity,targetFolder);
+							}
 						}
-						
-						
 					}
 					
 					@Override
@@ -174,6 +231,47 @@ public class ArnimEvaluationDialog extends ModalDialog {
 		});
 	}
 	
+	private void moveToFolder(long entityId, Entity currFolder, Entity targetFolder) throws Exception {
+		ModelMgr modelMgr = ModelMgr.getModelMgr();
+		// Add to new folder
+		List<Long> childrenIds = new ArrayList<Long>();
+		childrenIds.add(entityId);
+		modelMgr.addChildren(targetFolder.getId(), childrenIds, EntityConstants.ATTRIBUTE_ENTITY);
+		System.out.println("moved to folder "+targetFolder.getName()+" id="+targetFolder.getId());
+		// Remove from old folder
+		EntityData toDelete = null;
+		for(EntityData ed : currFolder.getEntityData()) {
+			if (ed.getChildEntity()!=null && ed.getChildEntity().getId()==entityId) {
+				toDelete = ed;
+			}
+		}
+		System.out.println("deleted from folder "+currFolder.getName()+" ed.id="+toDelete.getId());
+		if (toDelete!=null) {
+			modelMgr.removeEntityData(toDelete);
+		}
+	}
+	
+	private int getValueFromFolderName(Entity entity) {
+		return getValueFromFolderName(entity.getName());
+	}
+	
+	private int getValueFromFolderName(String folderName) {
+		return Integer.parseInt(""+folderName.charAt(folderName.length()-1));
+	}
+	
+	private int getValueFromAnnotation(String annotationValue) {
+		return Integer.parseInt(""+annotationValue.charAt(1));
+	}
+	
+	public String getKey(Entity compartmentEntity, Entity intEntity, Entity distEntity) {
+		int i = getValueFromFolderName(intEntity);
+		int d = getValueFromFolderName(distEntity);
+		return getKey(compartmentEntity.getName(),i,d);
+	}
+	
+	private String getKey(String compartment, int i, int d) {
+		return compartment+"/"+i+"/"+d;
+	}
     public void showDialog() {
         packAndShow();
     }

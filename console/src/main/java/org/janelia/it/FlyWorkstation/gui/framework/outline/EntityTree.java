@@ -328,6 +328,10 @@ public class EntityTree extends JPanel {
 		    	while(curr != null) {
 		    		if (node != curr) sb.insert(0, "/");
 		    		EntityData ed = getEntityData(curr);
+		    		if (ed==null) {
+		    			System.out.println("Encountered null EntityData while building unique id: "+sb);
+		    			return null;
+		    		}
 		    		String nodeId = ed.getId()==null ? "" : "ed_"+ed.getId();
 		    		nodeId += "/" + "e_"+ed.getChildEntity().getId();
 					sb.insert(0, nodeId);
