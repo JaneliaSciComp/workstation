@@ -141,8 +141,8 @@ public class ImagesPanel extends JScrollPane {
                 button = new StaticImageButton(rootedEntity, iconDemoPanel);
             }
 
-            button.setTitleVisible(iconDemoPanel.areTitlesVisible());
-            button.setTagsVisible(iconDemoPanel.areTagsVisible());
+            button.setTitleVisible(iconDemoPanel.getToolbar().areTitlesVisible());
+            button.setTagsVisible(iconDemoPanel.getToolbar().areTagsVisible());
 
             if (buttonKeyListener != null) button.addKeyListener(buttonKeyListener);
             if (buttonMouseListener != null) button.addMouseListener(buttonMouseListener);

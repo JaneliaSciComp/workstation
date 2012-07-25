@@ -18,10 +18,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.SplitGroupingDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenWithDefaultAppAction;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.AnnotatedImageButton;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.*;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -296,15 +293,14 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		crossesPanel = new IconDemoPanel(EntitySelectionModel.CATEGORY_CROSS_VIEW) {
 			
 			@Override
-			protected JToolBar createToolbar() {
+			protected IconDemoToolbar createToolbar() {
 				// Override to customize the toolbar
-				JToolBar toolbar = super.createToolbar();
-				toolbar.removeAll();
-				
-				toolbar.add(refreshButton);
-
-				toolbar.addSeparator();
-				toolbar.add(imageSizeSlider);
+				IconDemoToolbar toolbar = super.createToolbar();
+				JToolBar t = toolbar.getToolbar();
+				t.removeAll();
+				t.add(toolbar.getRefreshButton());
+				t.addSeparator();
+				t.add(toolbar.getImageSizeSlider());
 				return toolbar;
 			}
 			
@@ -508,9 +504,9 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 						// Resize images to 1 per row		
 						int fullWidth = SessionMgr.getBrowser().getViewersPanel().getWidth();
 						int padding = 100;
-						mainViewer.getImageSizeSlider().setValue((int)((double)fullWidth/2-padding));
-						secViewer.getImageSizeSlider().setValue((int)((double)fullWidth/2-padding));
-						crossesPanel.getImageSizeSlider().setValue(crossesPanel.getWidth()-padding);						
+						mainViewer.getToolbar().getImageSizeSlider().setValue((int)((double)fullWidth/2-padding));
+						secViewer.getToolbar().getImageSizeSlider().setValue((int)((double)fullWidth/2-padding));
+						crossesPanel.getToolbar().getImageSizeSlider().setValue(crossesPanel.getWidth()-padding);						
 					}
 				});
 			}
@@ -714,7 +710,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 								SwingUtilities.invokeLater(new Runnable() {
 									@Override
 									public void run() {
-										crossesPanel.scrollToBottom();
+										crossesPanel.getImagesPanel().scrollToBottom();
 									}
 								});
 								return null;

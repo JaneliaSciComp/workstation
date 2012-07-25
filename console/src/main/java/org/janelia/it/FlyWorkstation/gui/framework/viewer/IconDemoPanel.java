@@ -17,8 +17,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
@@ -57,20 +55,9 @@ public class IconDemoPanel extends Viewer {
 
 	protected final static int PAGE_SIZE = 500;
 	
+	// Main components
 	protected SplashPanel splashPanel;
-	
-	// Toolbar (TODO: move this into its own class)
-	protected JToolBar toolbar;
-	protected JButton prevButton;
-	protected JButton nextButton;
-	protected JButton pathButton;
-    protected JToggleButton invertButton;
-    protected JToggleButton showTitlesButton;
-	protected JButton imageRoleButton;
-	protected JToggleButton showTagsButton;
-	protected JButton refreshButton;
-	protected JButton userButton;
-	protected JSlider imageSizeSlider;
+	protected IconDemoToolbar iconDemoToolbar;
 	protected ImagesPanel imagesPanel;
 	
 	// Status bar
@@ -97,7 +84,6 @@ public class IconDemoPanel extends Viewer {
 	protected final Annotations annotations = new Annotations();
 	protected final List<String> allUsers = new ArrayList<String>();
 	protected final Set<String> hiddenUsers = new HashSet<String>();
-	protected int currImageSize;
 	protected int currTableHeight = ImagesPanel.DEFAULT_TABLE_HEIGHT;
 	protected final List<String> allImageRoles = new ArrayList<String>();
 	protected String currImageRole;
@@ -112,6 +98,7 @@ public class IconDemoPanel extends Viewer {
 	protected SimpleWorker ancestorLoadingWorker;
 	
 	// Listen for key strokes and execute the appropriate key bindings
+	// TODO: we should replace this with an action map in the future
 	protected KeyListener keyListener = new KeyAdapter() {
 		@Override
 		public void keyPressed(KeyEvent e) {
@@ -184,31 +171,58 @@ public class IconDemoPanel extends Viewer {
 		}
 	};
 
-	protected JPopupMenu getPopupMenu(AnnotatedImageButton button) {
+	// Listener for clicking on buttons
+	protected MouseListener buttonMouseListener = new MouseHandler() {
 
-		RootedEntity rootedEntity = button.getRootedEntity();
-		if (!button.isSelected()) {
-			ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), true);
-		}
-		
-		List<String> selectionIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());				
-		JPopupMenu popupMenu = null;
-		if (selectionIds.size()>1) {
-			List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
-			for (String entityId : selectionIds) {
-				rootedEntityList.add(getRootedEntityById(entityId));
+		@Override
+		protected void popupTriggered(MouseEvent e) {
+			if (e.isConsumed()) return;
+			AnnotatedImageButton button = getButtonAncestor(e.getComponent());
+			// Select the button first
+			RootedEntity rootedEntity = button.getRootedEntity();
+			if (!button.isSelected()) {
+				ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), true);
 			}
-			popupMenu = new EntityContextMenu(rootedEntityList);
-			((EntityContextMenu)popupMenu).addMenuItems();
+			getButtonPopupMenu().show(e.getComponent(), e.getX(), e.getY());
+			e.consume();
 		}
-		else {
-			popupMenu = new EntityContextMenu(rootedEntity);
-            ((EntityContextMenu)popupMenu).addMenuItems();
+
+		@Override
+		protected void doubleLeftClicked(MouseEvent e) {
+			if (e.isConsumed()) return;
+			AnnotatedImageButton button = getButtonAncestor(e.getComponent());
+			buttonDrillDown(button);
+			// Double-clicking an image in gallery view triggers an outline selection
+    		e.consume();
 		}
-        
+
+		@Override
+		public void mouseReleased(MouseEvent e) {
+			super.mouseReleased(e);
+			if (e.isConsumed()) return;
+			AnnotatedImageButton button = getButtonAncestor(e.getComponent());			
+			if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() != 1) {
+				return;
+			}
+			buttonSelection(button, (SystemInfo.isMac && e.isMetaDown()) || e.isControlDown(), e.isShiftDown());
+		}
+	};
+	
+	protected JPopupMenu getButtonPopupMenu() {
+		List<String> selectionIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
+		List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
+		for (String entityId : selectionIds) {
+			rootedEntityList.add(getRootedEntityById(entityId));
+		}
+		JPopupMenu popupMenu = new EntityContextMenu(rootedEntityList);
+		((EntityContextMenu)popupMenu).addMenuItems();
 		return popupMenu;
 	}
 	
+	/**
+	 * This is a separate method so that it can be overridden to accomodate other behavior patterns.
+	 * @param button
+	 */
 	protected void buttonDrillDown(AnnotatedImageButton button) {
 		RootedEntity rootedEntity = button.getRootedEntity();
 		RootedEntity contextRootedEntity = getContextRootedEntity();
@@ -270,37 +284,6 @@ public class IconDemoPanel extends Viewer {
 		}
 		return (AnnotatedImageButton)c;
 	}
-	
-	protected MouseListener buttonMouseListener = new MouseHandler() {
-
-		@Override
-		protected void popupTriggered(MouseEvent e) {
-			if (e.isConsumed()) return;
-			AnnotatedImageButton button = getButtonAncestor(e.getComponent());
-			getPopupMenu(button).show(e.getComponent(), e.getX(), e.getY());
-			e.consume();
-		}
-
-		@Override
-		protected void doubleLeftClicked(MouseEvent e) {
-			if (e.isConsumed()) return;
-			AnnotatedImageButton button = getButtonAncestor(e.getComponent());
-			buttonDrillDown(button);
-			// Double-clicking an image in gallery view triggers an outline selection
-    		e.consume();
-		}
-
-		@Override
-		public void mouseReleased(MouseEvent e) {
-			super.mouseReleased(e);
-			if (e.isConsumed()) return;
-			AnnotatedImageButton button = getButtonAncestor(e.getComponent());			
-			if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() != 1) {
-				return;
-			}
-			buttonSelection(button, (SystemInfo.isMac && e.isMetaDown()) || e.isControlDown(), e.isShiftDown());
-		}
-	};
 	
 	public IconDemoPanel(final String selectionCategory) {
 		this(null, selectionCategory);
@@ -367,12 +350,13 @@ public class IconDemoPanel extends Viewer {
 		splashPanel = new SplashPanel();
 		add(splashPanel);
 
-		toolbar = createToolbar();
+		iconDemoToolbar = createToolbar();
+		
 		imagesPanel = new ImagesPanel(this);
 		imagesPanel.setButtonKeyListener(keyListener);
 		imagesPanel.setButtonMouseListener(buttonMouseListener);
 		imagesPanel.addMouseListener(new MouseForwarder(this, "ImagesPanel->IconDemoPanel"));
-		toolbar.addMouseListener(new MouseForwarder(this, "JToolBar->IconDemoPanel"));
+		iconDemoToolbar.addMouseListener(new MouseForwarder(this, "JToolBar->IconDemoPanel"));
 		
 		prevPageButton = new JButton(Icons.getIcon("arrow_back.gif"));
 		prevPageButton.addActionListener(new ActionListener() {
@@ -407,20 +391,7 @@ public class IconDemoPanel extends Viewer {
 		statusBar.add(prevPageButton);
 		statusBar.add(nextPageButton);
 		
-		
-		imageSizeSlider.addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				JSlider source = (JSlider) e.getSource();
-				int imageSize = source.getValue();
-				if (currImageSize == imageSize) return;
-				currImageSize = imageSize;
-				imagesPanel.rescaleImages(imageSize);
-				imagesPanel.recalculateGrid();
-			}
-		});
-		
-		this.addKeyListener(getKeyListener());
+		addKeyListener(keyListener);
 
 		imagesPanel.addMouseListener(new MouseHandler() {
 			@Override
@@ -430,7 +401,38 @@ public class IconDemoPanel extends Viewer {
 				JMenuItem titleItem = new JMenuItem("" +contextRootedEntity.getEntity().getName());
 				titleItem.setEnabled(false);
 				popupMenu.add(titleItem);
-				popupMenu.add(getNewFolderItem());
+
+				JMenuItem newFolderItem = new JMenuItem("  Create new folder");
+				newFolderItem.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent actionEvent) {
+
+						// Add button clicked
+						String folderName = (String) JOptionPane.showInputDialog(IconDemoPanel.this, "Folder Name:\n",
+								"Create folder under " + contextRootedEntity.getEntity().getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
+						if ((folderName == null) || (folderName.length() <= 0)) {
+							return;
+						}
+
+						try {
+							// Update database
+							Entity parentFolder = contextRootedEntity.getEntity();
+							Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
+							ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder,
+									parentFolder.getMaxOrderIndex() + 1, EntityConstants.ATTRIBUTE_ENTITY);
+
+						} 
+						catch (Exception ex) {
+							SessionMgr.getSessionMgr().handleException(ex);
+						}
+					}
+				});
+
+				if (!contextRootedEntity.getEntity().getEntityType().getName().equals(EntityConstants.TYPE_FOLDER)
+						|| !contextRootedEntity.getEntity().getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+					newFolderItem.setEnabled(false);
+				}
+				
+				popupMenu.add(newFolderItem);
 				popupMenu.show(imagesPanel, e.getX(), e.getY());	
 			}
 		});
@@ -504,13 +506,12 @@ public class IconDemoPanel extends Viewer {
 			@Override
 			public void entityRemoved(long entityId) {
 				if (contextRootedEntity==null) return;
-				if (contextRootedEntity.getEntity()!=null && contextRootedEntity.getEntity().getId().equals(entityId)) {
+				if (contextRootedEntity.getEntity()!=null && contextRootedEntity.getEntityId().equals(entityId)) {
 					goParent();
 				}
 				else {
-					for(RootedEntity rootedEntity : pageRootedEntities) {
-						Entity entity = rootedEntity.getEntity();
-						if (entity.getId()!=null && entity.getId().equals(entityId)) {
+					for(RootedEntity rootedEntity : new ArrayList<RootedEntity>(pageRootedEntities)) {
+						if (rootedEntity.getEntityId().equals(entityId)) {
 							removeRootedEntity(rootedEntity);
 							return;
 						}
@@ -525,7 +526,7 @@ public class IconDemoPanel extends Viewer {
 					goParent();
 				}
 				else {
-					for(RootedEntity rootedEntity : pageRootedEntities) {
+					for(RootedEntity rootedEntity : new ArrayList<RootedEntity>(pageRootedEntities)) {
 						EntityData entityData = rootedEntity.getEntityData();
 						if (entityData.getId()!=null && entityData.getId().equals(entityDataId)) {
 							removeRootedEntity(rootedEntity);
@@ -589,7 +590,7 @@ public class IconDemoPanel extends Viewer {
 					if (currTableHeight == tableHeight) return;
 					currTableHeight = tableHeight;
 					imagesPanel.resizeTables(tableHeight);
-					imagesPanel.rescaleImages(currImageSize);
+					imagesPanel.rescaleImages(iconDemoToolbar.getCurrImageSize());
 					imagesPanel.recalculateGrid();
 					imagesPanel.scrollSelectedEntitiesToCenter();
 					imagesPanel.loadUnloadImages();
@@ -609,50 +610,128 @@ public class IconDemoPanel extends Viewer {
 			}
 		});
 	}
-
-	private JMenuItem getNewFolderItem() {
-
-		JMenuItem newFolderItem = new JMenuItem("  Create new folder");
-		newFolderItem.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent actionEvent) {
-
-				// Add button clicked
-				String folderName = (String) JOptionPane.showInputDialog(IconDemoPanel.this, "Folder Name:\n",
-						"Create folder under " + contextRootedEntity.getEntity().getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
-				if ((folderName == null) || (folderName.length() <= 0)) {
-					return;
-				}
-
-				try {
-					// Update database
-					Entity parentFolder = contextRootedEntity.getEntity();
-					Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
-					ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder,
-							parentFolder.getMaxOrderIndex() + 1, EntityConstants.ATTRIBUTE_ENTITY);
-
-				} 
-				catch (Exception ex) {
-					SessionMgr.getSessionMgr().handleException(ex);
-				}
-			}
-		});
-
-		if (!contextRootedEntity.getEntity().getEntityType().getName().equals(EntityConstants.TYPE_FOLDER)
-				|| !contextRootedEntity.getEntity().getUser().getUserLogin().equals(SessionMgr.getUsername())) {
-			newFolderItem.setEnabled(false);
-		}
-		return newFolderItem;
-	}
 	
-	protected List<RootedEntity> getRootedEntitiesForEntityId(long entityId) {
-		List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
-		if (pageRootedEntities==null) return rootedEntityList; 
-		for(RootedEntity rootedEntity : pageRootedEntities) {
-			if (rootedEntity.getEntity().getId().equals(entityId)) {
-				rootedEntityList.add(rootedEntity);
+	protected IconDemoToolbar createToolbar() {
+
+		return new IconDemoToolbar() {
+
+			protected void goBack() {
+				final EntitySelectionHistory history = getEntitySelectionHistory();
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						history.goBack();
+					}
+				});
 			}
-		}
-		return rootedEntityList;
+
+			protected void goForward() {
+				final EntitySelectionHistory history = getEntitySelectionHistory();
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						history.goForward();
+					}
+				});
+			}
+
+			protected void refresh() {
+				IconDemoPanel.this.refresh();
+			}
+
+			protected void showTitlesButtonPressed() {
+				imagesPanel.setTitleVisbility(showTitlesButton.isSelected());
+				imagesPanel.recalculateGrid();
+			}
+			
+			protected void showTagsButtonPressed() {
+				imagesPanel.setTagVisbility(showTagsButton.isSelected());
+				imagesPanel.recalculateGrid();
+			}
+			
+			protected void currImageSizeChanged(int imageSize) {
+				imagesPanel.rescaleImages(imageSize);
+				imagesPanel.recalculateGrid();
+			}
+			
+			protected JPopupMenu getPopupPathMenu() {
+				if (rootedAncestors==null) return null;
+				final JPopupMenu pathMenu = new JPopupMenu();
+				for (final RootedEntity ancestor : rootedAncestors) {
+					JMenuItem pathMenuItem = new JMenuItem(ancestor.getEntity().getName(), Icons.getIcon(ancestor.getEntity()));
+					pathMenuItem.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							goEntity(ancestor.getUniqueId());
+						}
+					});
+					pathMenuItem.setEnabled(pathMenu.getComponentCount()>0);
+					pathMenu.add(pathMenuItem);
+				}
+				return pathMenu;
+			}
+			
+			protected JPopupMenu getPopupUserMenu() {
+				final JPopupMenu userListMenu = new JPopupMenu();
+				UserColorMapping userColors = ModelMgr.getModelMgr().getUserColorMapping();
+
+				// Save the list of users so that when the function actually runs, the
+				// users it affects are the same users that were displayed
+				final List<String> savedUsers = new ArrayList<String>(allUsers);
+
+				JMenuItem allUsersMenuItem = new JCheckBoxMenuItem("All users", hiddenUsers.isEmpty());
+				allUsersMenuItem.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						if (hiddenUsers.isEmpty()) {
+							for (String username : savedUsers) {
+								hiddenUsers.add(username);
+							}
+						} else {
+							hiddenUsers.clear();
+						}
+						refreshAnnotations(null);
+					}
+				});
+				userListMenu.add(allUsersMenuItem);
+
+				userListMenu.addSeparator();
+
+				for (final String username : savedUsers) {
+					JMenuItem userMenuItem = new JCheckBoxMenuItem(username, !hiddenUsers.contains(username));
+					userMenuItem.setBackground(userColors.getColor(username));
+					userMenuItem.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							if (hiddenUsers.contains(username))
+								hiddenUsers.remove(username);
+							else
+								hiddenUsers.add(username);
+							refreshAnnotations(null);
+						}
+					});
+					userMenuItem.setIcon(Icons.getIcon("user.png"));
+					userListMenu.add(userMenuItem);
+				}
+				
+				return userListMenu;
+			}
+			
+			protected JPopupMenu getPopupImageRoleMenu() {
+
+				final JPopupMenu imageRoleListMenu = new JPopupMenu();
+				final List<String> imageRoles = new ArrayList<String>(allImageRoles);
+
+				for (final String imageRole : imageRoles) {
+					JMenuItem roleMenuItem = new JCheckBoxMenuItem(imageRole, imageRole.equals(currImageRole));
+					roleMenuItem.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							currImageRole = imageRole;
+							entityLoadDone(null);
+						}
+					});
+					imageRoleListMenu.add(roleMenuItem);
+				}
+				return imageRoleListMenu;
+			}
+		};
 	}
 
 	protected void entitySelected(String entityId, boolean clearAll) {
@@ -671,12 +750,9 @@ public class IconDemoPanel extends Viewer {
 		if (pageRootedEntities==null) return;
 		EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
 		int s = esm.getSelectedEntitiesIds(getSelectionCategory()).size();
-		statusLabel.setText(s+" of "+pageRootedEntities.size()+" selected");
+		statusLabel.setText(s+" of "+allRootedEntities.size()+" selected");
 	}
-	
-	public Hud getHud() {
-		return hud;
-	}
+
 	
 	private void updateHud() {
 		List<String> selectedIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
@@ -701,27 +777,8 @@ public class IconDemoPanel extends Viewer {
 		}
 	}
 	
-	private synchronized void goBack() {
-		final EntitySelectionHistory history = getEntitySelectionHistory();
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				history.goBack();
-			}
-		});
-	}
 
-	private synchronized void goForward() {
-		final EntitySelectionHistory history = getEntitySelectionHistory();
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				history.goForward();
-			}
-		});
-	}
-
-	private synchronized void goParent() {
+	public synchronized void goParent() {
 		final String selectedUniqueId = contextRootedEntity.getUniqueId();
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
@@ -737,7 +794,7 @@ public class IconDemoPanel extends Viewer {
 		});
 	}
 
-	private synchronized void goEntity(final String uniqueId) {
+	public synchronized void goEntity(final String uniqueId) {
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
@@ -763,249 +820,10 @@ public class IconDemoPanel extends Viewer {
 		loadImageEntities(page, null);
 	}
 
-	
-	protected JToolBar createToolbar() {
-
-		JToolBar toolBar = new JToolBar("Still draggable");
-		toolBar.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, (Color)UIManager.get("windowBorder")), BorderFactory.createEmptyBorder(0, 5, 2, 5)));
-		toolBar.setFloatable(true);
-		toolBar.setRollover(true);
-
-		prevButton = new JButton();
-		prevButton.setIcon(Icons.getIcon("arrow_back.gif"));
-		prevButton.setToolTipText("Go back in your browsing history");
-		prevButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
-		prevButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				goBack();
-			}
-		});
-		prevButton.addMouseListener(new MouseForwarder(toolBar, "PrevButton->JToolBar"));
-		toolBar.add(prevButton);
-
-		nextButton = new JButton();
-		nextButton.setIcon(Icons.getIcon("arrow_forward.gif"));
-		nextButton.setToolTipText("Go forward in your browsing history");
-		nextButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
-		nextButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				goForward();
-			}
-		});
-		nextButton.addMouseListener(new MouseForwarder(toolBar, "NextButton->JToolBar"));
-		toolBar.add(nextButton);
-
-		pathButton = new JButton();
-		pathButton.setIcon(Icons.getIcon("path.png"));
-		pathButton.setToolTipText("See the current location");
-		pathButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				showPopupPathMenu();
-			}
-		});
-		pathButton.addMouseListener(new MouseForwarder(toolBar, "ParentButton->JToolBar"));
-		toolBar.add(pathButton);
-
-		refreshButton = new JButton();
-		refreshButton.setIcon(Icons.getRefreshIcon());
-		refreshButton.setFocusable(false);
-		refreshButton.setToolTipText("Refresh the current view");
-		refreshButton.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
-		refreshButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				refresh();
-			}
-		});
-		refreshButton.addMouseListener(new MouseForwarder(toolBar, "RefreshButton->JToolBar"));
-		toolBar.add(refreshButton);
-
-		toolBar.addSeparator();
-
-        invertButton = new JToggleButton();
-        invertButton.setIcon(Icons.getIcon("invert.png"));
-        invertButton.setFocusable(false);
-        invertButton.setToolTipText("Invert the color space on all images");
-        invertButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                SessionMgr.getSessionMgr().setModelProperty(ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY,
-                        Boolean.valueOf(invertButton.isSelected()));
-            }
-        });
-        toolBar.add(invertButton);
-
-        showTitlesButton = new JToggleButton();
-		showTitlesButton.setIcon(Icons.getIcon("text_smallcaps.png"));
-		showTitlesButton.setFocusable(false);
-		showTitlesButton.setSelected(true);
-		showTitlesButton.setToolTipText("Show the image title above each image.");
-		showTitlesButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				imagesPanel.setTitleVisbility(showTitlesButton.isSelected());
-				imagesPanel.recalculateGrid();
-			}
-		});
-		showTitlesButton.addMouseListener(new MouseForwarder(toolBar, "ShowTitlesButton->JToolBar"));
-		toolBar.add(showTitlesButton);
-		
-		showTagsButton = new JToggleButton();
-		showTagsButton.setIcon(Icons.getIcon("page_white_stack.png"));
-		showTagsButton.setFocusable(false);
-		showTagsButton.setSelected(true);
-		showTagsButton.setToolTipText("Show annotations below each image");
-		showTagsButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				imagesPanel.setTagVisbility(showTagsButton.isSelected());
-				imagesPanel.recalculateGrid();
-			}
-		});
-		showTagsButton.addMouseListener(new MouseForwarder(toolBar, "ShowTagsButton->JToolBar"));
-		toolBar.add(showTagsButton);
-
-		toolBar.addSeparator();
-		
-		userButton = new JButton("Annotations from...");
-		userButton.setIcon(Icons.getIcon("group.png"));
-		userButton.setFocusable(false);
-		userButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				showPopupUserMenu();
-			}
-		});
-		userButton.addMouseListener(new MouseForwarder(toolBar, "UserButton->JToolBar"));
-		toolBar.add(userButton);
-		
-		toolBar.addSeparator();
-		
-		imageRoleButton = new JButton("Image type...");
-		imageRoleButton.setIcon(Icons.getIcon("image.png"));
-		imageRoleButton.setFocusable(false);
-		imageRoleButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				showPopupImageRoleMenu();
-			}
-		});
-		imageRoleButton.addMouseListener(new MouseForwarder(toolBar, "ImageRoleButton->JToolBar"));
-		toolBar.add(imageRoleButton);
-
-		toolBar.addSeparator();
-
-		imageSizeSlider = new JSlider(ImagesPanel.MIN_THUMBNAIL_SIZE, ImagesPanel.MAX_THUMBNAIL_SIZE,
-				ImagesPanel.DEFAULT_THUMBNAIL_SIZE);
-		imageSizeSlider.setFocusable(false);
-		imageSizeSlider.setMaximumSize(new Dimension(200, Integer.MAX_VALUE));
-		imageSizeSlider.setToolTipText("Image size percentage");
-		imageSizeSlider.addMouseListener(new MouseForwarder(toolBar, "ImageSizeSlider->JToolBar"));
-		toolBar.add(imageSizeSlider);
-
-		return toolBar;
-	}
-
-	private void showPopupImageRoleMenu() {
-
-		final JPopupMenu imageRoleListMenu = new JPopupMenu();
-		final List<String> imageRoles = new ArrayList<String>(allImageRoles);
-
-		for (final String imageRole : imageRoles) {
-			JMenuItem roleMenuItem = new JCheckBoxMenuItem(imageRole, imageRole.equals(currImageRole));
-			roleMenuItem.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					currImageRole = imageRole;
-					entityLoadDone(null);
-				}
-			});
-			imageRoleListMenu.add(roleMenuItem);
-		}
-
-		imageRoleListMenu.show(imageRoleButton, 0, imageRoleButton.getHeight());
-	}
-	
-	private void showPopupPathMenu() {
-
-		if (rootedAncestors==null) return;
-		
-		final JPopupMenu pathMenu = new JPopupMenu();
-
-		for (final RootedEntity ancestor : rootedAncestors) {
-			JMenuItem pathMenuItem = new JMenuItem(ancestor.getEntity().getName(), Icons.getIcon(ancestor.getEntity()));
-			pathMenuItem.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					goEntity(ancestor.getUniqueId());
-				}
-			});
-			pathMenuItem.setEnabled(pathMenu.getComponentCount()>0);
-			pathMenu.add(pathMenuItem);
-		}
-
-		pathMenu.show(pathButton, 0, pathButton.getHeight());
-	}
-	
-	private void showPopupUserMenu() {
-
-		final JPopupMenu userListMenu = new JPopupMenu();
-
-		UserColorMapping userColors = ModelMgr.getModelMgr().getUserColorMapping();
-
-		// Save the list of users so that when the function actually runs, the
-		// users it affects are the same users that were displayed
-		final List<String> savedUsers = new ArrayList<String>(allUsers);
-
-		JMenuItem allUsersMenuItem = new JCheckBoxMenuItem("All users", hiddenUsers.isEmpty());
-		allUsersMenuItem.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				if (hiddenUsers.isEmpty()) {
-					for (String username : savedUsers) {
-						hiddenUsers.add(username);
-					}
-				} else {
-					hiddenUsers.clear();
-				}
-				refreshAnnotations(null);
-			}
-		});
-		userListMenu.add(allUsersMenuItem);
-
-		userListMenu.addSeparator();
-
-		for (final String username : savedUsers) {
-			JMenuItem userMenuItem = new JCheckBoxMenuItem(username, !hiddenUsers.contains(username));
-			userMenuItem.setBackground(userColors.getColor(username));
-			userMenuItem.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					if (hiddenUsers.contains(username))
-						hiddenUsers.remove(username);
-					else
-						hiddenUsers.add(username);
-					refreshAnnotations(null);
-				}
-			});
-			userMenuItem.setIcon(Icons.getIcon("user.png"));
-			userListMenu.add(userMenuItem);
-		}
-
-		userListMenu.show(userButton, 0, userButton.getHeight());
-	}
-	
 	public void showLoadingIndicator() {
 		removeAll();
 		add(new JLabel(Icons.getLoadingIcon()));
 		this.updateUI();
-	}
-
-	public boolean areTitlesVisible() {
-		return showTitlesButton.isSelected();
-	}
-
-	public boolean areTagsVisible() {
-		return showTagsButton.isSelected();
 	}
 	
 	public void loadEntity(RootedEntity rootedEntity) {
@@ -1093,13 +911,12 @@ public class IconDemoPanel extends Viewer {
 	private synchronized void loadImageEntities(final List<RootedEntity> lazyRootedEntities, final Callable<Void> success) {
 
 		allRootedEntities = lazyRootedEntities;
-		
 		this.numPages = (int)Math.ceil((double)allRootedEntities.size() / (double)PAGE_SIZE);
 		
 		// Update back/forward navigation
 		EntitySelectionHistory history = getEntitySelectionHistory();
-		prevButton.setEnabled(history.isBackEnabled());
-		nextButton.setEnabled(history.isNextEnabled());
+		iconDemoToolbar.getPrevButton().setEnabled(history.isBackEnabled());
+		iconDemoToolbar.getNextButton().setEnabled(history.isNextEnabled());
 
 		loadImageEntities(0, success);
 	}
@@ -1231,8 +1048,8 @@ public class IconDemoPanel extends Viewer {
         if (tagTable==null) tagTable = false;
 
 		imagesPanel.setTagTable(tagTable);
-		imagesPanel.setTagVisbility(showTagsButton.isSelected());
-		imagesPanel.setTitleVisbility(showTitlesButton.isSelected());
+		imagesPanel.setTagVisbility(iconDemoToolbar.areTagsVisible());
+		imagesPanel.setTitleVisbility(iconDemoToolbar.areTitlesVisible());
 		imagesPanel.setInvertedColors(invertImages);
 		
 		// Since the images are not loaded yet, this will just resize the empty
@@ -1285,7 +1102,15 @@ public class IconDemoPanel extends Viewer {
 	protected void removeRootedEntity(final RootedEntity rootedEntity) {
 		int index = getRootedEntities().indexOf(rootedEntity);
 		if (index < 0) return;
-		getRootedEntities().remove(index);
+		
+		pageRootedEntities.remove(rootedEntity);
+		pageRootedEntityMap.remove(rootedEntity.getId());
+		entityMap.remove(rootedEntity.getEntityId());
+		allRootedEntities.remove(rootedEntity);
+		
+		this.numPages = (int)Math.ceil((double)allRootedEntities.size() / (double)PAGE_SIZE);
+		updatePagingStatus();
+		
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
@@ -1443,7 +1268,7 @@ public class IconDemoPanel extends Viewer {
 	public synchronized void showImagePanel() {
 
 		removeAll();
-		add(toolbar, BorderLayout.NORTH);
+		add(iconDemoToolbar, BorderLayout.NORTH);
 		add(imagesPanel, BorderLayout.CENTER);
 		add(statusBar, BorderLayout.SOUTH);
 		
@@ -1495,7 +1320,7 @@ public class IconDemoPanel extends Viewer {
 		allImageRoles.addAll(imageRoles);
 		Collections.sort(allImageRoles);
 		
-		imageRoleButton.setEnabled(!allImageRoles.isEmpty());
+		iconDemoToolbar.getImageRoleButton().setEnabled(!allImageRoles.isEmpty());
 		if (!allImageRoles.contains(currImageRole)) {
 			currImageRole = EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE;
 		}
@@ -1532,19 +1357,6 @@ public class IconDemoPanel extends Viewer {
 		return selectedEntities;
 	}
 	
-	public EntityData getEntityDataWithEntityId(Long entityId) {
-		for(RootedEntity rootedEntity : pageRootedEntities) {
-			if (rootedEntity.getEntity().getId().equals(entityId)) {
-				return rootedEntity.getEntityData();
-			}
-		}
-		return null;
-	}
-
-	public void scrollToBottom() {
-		imagesPanel.scrollToBottom();
-	}
-	
 	public String getCurrImageRole() {
 		return currImageRole;
 	}
@@ -1553,22 +1365,14 @@ public class IconDemoPanel extends Viewer {
 		return imagesPanel;
 	}
 
-	public JSlider getImageSizeSlider() {
-		return imageSizeSlider;
+	public IconDemoToolbar getToolbar() {
+		return iconDemoToolbar;
 	}
 
-	public SplashPanel getSplashPanel() {
-		return splashPanel;
+	public Hud getHud() {
+		return hud;
 	}
-
-	public KeyListener getKeyListener() {
-		return keyListener;
-	}
-
-	public double getCurrImageSizePercent() {
-		return currImageSize;
-	}
-
+	
 	public Annotations getAnnotations() {
 		return annotations;
 	}
@@ -1577,14 +1381,6 @@ public class IconDemoPanel extends Viewer {
 		return contextRootedEntity;
 	}
 
-	public List<Entity> getDistinctEntities() {
-		Map<Long,Entity> entities = new HashMap<Long,Entity>();
-		for(RootedEntity rootedEntity : pageRootedEntities) {
-			entities.put(rootedEntity.getEntity().getId(), rootedEntity.getEntity());
-		}
-		return new ArrayList<Entity>(entities.values());
-	}
-	
 	private List<RootedEntity> getRootedEntitiesById(String id) {
 		List<RootedEntity> res = new ArrayList<RootedEntity>();
 		if (pageRootedEntityMap==null) return res;

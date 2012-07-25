@@ -30,6 +30,11 @@ public class ModelMgrUtils {
         Set<Entity> childEntitySet = ModelMgr.getModelMgr().getChildEntities(entity.getId());
         EntityUtils.replaceChildNodes(entity, childEntitySet);
     }
+
+    public static void refreshChildren(Entity entity) throws Exception {
+        Set<Entity> childEntitySet = ModelMgr.getModelMgr().getChildEntities(entity.getId());
+        EntityUtils.replaceChildNodes(entity, childEntitySet);
+    }
     
     public static void loadLazyEntity(Entity entity, boolean recurse) throws Exception {
     	
@@ -56,31 +61,32 @@ public class ModelMgrUtils {
     }
     
     public static void updateEntity(Entity entity, Entity newEntity) {
-	
-		// Map old children onto new EDs, since the old children are initialized and the ones may not be
-		Map<Long,Entity> childMap = new HashMap<Long,Entity>();
-		for(EntityData ed : entity.getEntityData()) {
-			if (ed.getChildEntity()!=null) {
-				childMap.put(ed.getChildEntity().getId(), ed.getChildEntity());
-			}
-		}
-		entity.setEntityData(newEntity.getEntityData());
-		for(EntityData ed : entity.getEntityData()) {
-			if (ed.getChildEntity()!=null && !EntityUtils.isInitialized(ed.getChildEntity())) {
-				Entity child = childMap.get(ed.getChildEntity().getId());
-				if (child!=null) {
-					ed.setChildEntity(child);
+    	synchronized(entity) {
+			// Map old children onto new EDs, since the old children are initialized and the ones may not be
+			Map<Long,Entity> childMap = new HashMap<Long,Entity>();
+			for(EntityData ed : entity.getEntityData()) {
+				if (ed.getChildEntity()!=null) {
+					childMap.put(ed.getChildEntity().getId(), ed.getChildEntity());
 				}
 			}
-		}
-		
-		entity.setName(newEntity.getName());
-    	entity.setUpdatedDate(newEntity.getUpdatedDate());
-		entity.setCreationDate(newEntity.getCreationDate());
-		entity.setEntityStatus(newEntity.getEntityStatus());
-		entity.setEntityType(newEntity.getEntityType());
-		entity.setUser(newEntity.getUser());
-		entity.setEntityData(newEntity.getEntityData());
+			entity.setEntityData(newEntity.getEntityData());
+			for(EntityData ed : entity.getEntityData()) {
+				if (ed.getChildEntity()!=null && !EntityUtils.isInitialized(ed.getChildEntity()) && ed.getChildEntity().getId()!=null) {
+					Entity child = childMap.get(ed.getChildEntity().getId());
+					if (child!=null) {
+						ed.setChildEntity(child);
+					}
+				}
+			}
+			
+			entity.setName(newEntity.getName());
+	    	entity.setUpdatedDate(newEntity.getUpdatedDate());
+			entity.setCreationDate(newEntity.getCreationDate());
+			entity.setEntityStatus(newEntity.getEntityStatus());
+			entity.setEntityType(newEntity.getEntityType());
+			entity.setUser(newEntity.getUser());
+			entity.setEntityData(newEntity.getEntityData());
+    	}
     }
     
     public static Entity createNewCommonRoot(String folderName) throws Exception {

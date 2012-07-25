@@ -3,7 +3,6 @@ package org.janelia.it.FlyWorkstation.api.facade.abstract_facade;
 import java.util.List;
 import java.util.Set;
 
-import org.janelia.it.jacs.compute.api.support.EntityMapStep;
 import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityAttribute;

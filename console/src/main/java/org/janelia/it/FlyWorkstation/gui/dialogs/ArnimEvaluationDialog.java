@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -16,7 +17,6 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -230,22 +230,24 @@ public class ArnimEvaluationDialog extends ModalDialog {
 	}
 	
 	private void moveToFolder(long entityId, Entity currFolder, Entity targetFolder) throws Exception {
-		ModelMgr modelMgr = ModelMgr.getModelMgr();
-		// Add to new folder
-		List<Long> childrenIds = new ArrayList<Long>();
-		childrenIds.add(entityId);
-		modelMgr.addChildren(targetFolder.getId(), childrenIds, EntityConstants.ATTRIBUTE_ENTITY);
-		System.out.println("moved to folder "+targetFolder.getName()+" id="+targetFolder.getId());
-		// Remove from old folder
-		EntityData toDelete = null;
-		for(EntityData ed : currFolder.getEntityData()) {
-			if (ed.getChildEntity()!=null && ed.getChildEntity().getId()==entityId) {
-				toDelete = ed;
+		synchronized(currFolder) {
+			ModelMgr modelMgr = ModelMgr.getModelMgr();
+			// Add to new folder
+			List<Long> childrenIds = new ArrayList<Long>();
+			childrenIds.add(entityId);
+			modelMgr.addChildren(targetFolder.getId(), childrenIds, EntityConstants.ATTRIBUTE_ENTITY);
+			System.out.println("moved to folder "+targetFolder.getName()+" id="+targetFolder.getId());
+			// Remove from old folder
+			EntityData toDelete = null;
+			for(EntityData ed : new HashSet<EntityData>(currFolder.getEntityData())) {
+				if (ed.getChildEntity()!=null && ed.getChildEntity().getId()==entityId) {
+					toDelete = ed;
+				}
 			}
-		}
-		System.out.println("deleted from folder "+currFolder.getName()+" ed.id="+toDelete.getId());
-		if (toDelete!=null) {
-			modelMgr.removeEntityData(toDelete);
+			System.out.println("deleted from folder "+currFolder.getName()+" ed.id="+toDelete.getId());
+			if (toDelete!=null) {
+				modelMgr.removeEntityData(toDelete);
+			}
 		}
 	}
 	

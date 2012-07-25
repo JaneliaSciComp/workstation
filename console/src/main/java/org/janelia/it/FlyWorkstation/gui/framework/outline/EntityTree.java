@@ -552,7 +552,9 @@ public class EntityTree extends JPanel {
     	Entity entity = getEntity(node);
     	
     	if (node.getParent()==null) {
-    		System.out.println("EntityTree.removeNode: "+entity.getName()+" was already removed");
+        	if (entity!=null) {
+        		System.out.println("EntityTree.removeNode: "+entity.getName()+" was already removed");	
+        	}
     		return;
     	}
     	

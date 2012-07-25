@@ -112,7 +112,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 						nodes = getNodesByEntityId(entityId);
 						if (nodes == null) return;
 						for(final DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
-							ModelMgrUtils.refreshEntityAndChildren(getEntity(node));
+							ModelMgrUtils.refreshChildren(getEntity(node));
 						}
 					}
 					
