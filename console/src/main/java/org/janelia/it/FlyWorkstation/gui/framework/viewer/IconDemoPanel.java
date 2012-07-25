@@ -49,12 +49,17 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
  * 2) Entity selection and navigation
  * 3) Toolbar with various features 
  * 4) HUD display for currently selected image
+ * 5) Pagination
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class IconDemoPanel extends Viewer {
 
+	protected final static int PAGE_SIZE = 500;
+	
 	protected SplashPanel splashPanel;
+	
+	// Toolbar (TODO: move this into its own class)
 	protected JToolBar toolbar;
 	protected JButton prevButton;
 	protected JButton nextButton;
@@ -67,42 +72,44 @@ public class IconDemoPanel extends Viewer {
 	protected JButton userButton;
 	protected JSlider imageSizeSlider;
 	protected ImagesPanel imagesPanel;
+	
+	// Status bar
 	protected JPanel statusBar;
 	protected JLabel statusLabel;
+	protected JButton prevPageButton;
+	protected JButton nextPageButton;
+	protected JLabel pagingStatusLabel;
+	
+	// Hud dialog
 	protected Hud hud;
 	
+	// These members deal with the context and entities within it
+	protected RootedEntity contextRootedEntity;
+	protected List<RootedEntity> allRootedEntities;
+	protected List<RootedEntity> rootedAncestors;
+	protected int numPages;
+	
+	// These members deal with entities on the current page only
+	protected int currPage;
+	protected List<RootedEntity> pageRootedEntities;
+	protected Map<String,RootedEntity> pageRootedEntityMap;
+	protected Map<Long,Entity> entityMap;
+	protected final Annotations annotations = new Annotations();
+	protected final List<String> allUsers = new ArrayList<String>();
+	protected final Set<String> hiddenUsers = new HashSet<String>();
+	protected int currImageSize;
+	protected int currTableHeight = ImagesPanel.DEFAULT_TABLE_HEIGHT;
+	protected final List<String> allImageRoles = new ArrayList<String>();
+	protected String currImageRole;
+
+	// Tracking of loading operations
 	protected AtomicBoolean entityLoadInProgress = new AtomicBoolean(false);
 	protected AtomicBoolean annotationLoadInProgress = new AtomicBoolean(false);
 	protected AtomicBoolean ancestorLoadInProgress = new AtomicBoolean(false);
-	
-	// The parent entity which we are displaying children for
-	protected RootedEntity contextRootedEntity;
-	
-	// Are we just displaying a single "leaf" image, without children?
-	private boolean leafMode;
-	
-	// Ancestors of the parent entity
-	protected List<RootedEntity> rootedAncestors;
-	
-	// Children of the parent entity
-	protected List<RootedEntity> rootedEntities;
-	protected Map<String,RootedEntity> rootedEntityMap;
-	protected Map<Long,Entity> entityMap;
-	
-	protected int currImageSize;
-	protected int currTableHeight = ImagesPanel.DEFAULT_TABLE_HEIGHT;
-	
-	protected final List<String> allUsers = new ArrayList<String>();
-	protected final Set<String> hiddenUsers = new HashSet<String>();
-	protected final Annotations annotations = new Annotations();
-
-	protected final List<String> allImageRoles = new ArrayList<String>();
-	protected String currImageRole;
-	
-	private SimpleWorker entityLoadingWorker;
-	private SimpleWorker annotationLoadingWorker;
-	private SimpleWorker annotationsInitWorker;
-	private SimpleWorker ancestorLoadingWorker;
+	protected SimpleWorker entityLoadingWorker;
+	protected SimpleWorker annotationLoadingWorker;
+	protected SimpleWorker annotationsInitWorker;
+	protected SimpleWorker ancestorLoadingWorker;
 	
 	// Listen for key strokes and execute the appropriate key bindings
 	protected KeyListener keyListener = new KeyAdapter() {
@@ -119,7 +126,7 @@ public class IconDemoPanel extends Viewer {
 
 				// Ctrl-A or Meta-A to select all
 				if (e.getKeyCode() == KeyEvent.VK_A && ((SystemInfo.isMac && e.isMetaDown()) || (e.isControlDown()))) {
-					for (RootedEntity rootedEntity : rootedEntities) { 
+					for (RootedEntity rootedEntity : pageRootedEntities) { 
 						ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), false);
 					}
 					return;
@@ -367,15 +374,39 @@ public class IconDemoPanel extends Viewer {
 		imagesPanel.addMouseListener(new MouseForwarder(this, "ImagesPanel->IconDemoPanel"));
 		toolbar.addMouseListener(new MouseForwarder(this, "JToolBar->IconDemoPanel"));
 		
+		prevPageButton = new JButton(Icons.getIcon("arrow_back.gif"));
+		prevPageButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				goPrevPage();
+			}
+		});
+		
+		nextPageButton = new JButton(Icons.getIcon("arrow_forward.gif"));
+		nextPageButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				goNextPage();
+			}
+		});
+
+        statusLabel = new JLabel("");
+		pagingStatusLabel = new JLabel("");
+		
 		statusBar = new JPanel();
 		statusBar.setLayout(new BoxLayout(statusBar, BoxLayout.LINE_AXIS));
 		statusBar.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, (Color)UIManager.get("windowBorder")), BorderFactory.createEmptyBorder(0, 5, 2, 5)));
 		
 		statusBar.add(Box.createRigidArea(new Dimension(10,20)));
-        statusLabel = new JLabel("");
         statusBar.add(statusLabel);
         statusBar.add(Box.createRigidArea(new Dimension(10,20)));
         statusBar.add(new JSeparator(JSeparator.VERTICAL));
+        statusBar.add(Box.createHorizontalGlue());
+        statusBar.add(pagingStatusLabel);
+        statusBar.add(Box.createRigidArea(new Dimension(10,20)));
+		statusBar.add(prevPageButton);
+		statusBar.add(nextPageButton);
+		
 		
 		imageSizeSlider.addChangeListener(new ChangeListener() {
 			@Override
@@ -408,7 +439,7 @@ public class IconDemoPanel extends Viewer {
 
 			@Override
 			public void annotationsChanged(final long entityId) {
-				if (rootedEntities!=null) {
+				if (pageRootedEntities!=null) {
 					SwingUtilities.invokeLater(new Runnable() {
 						@Override
 						public void run() {
@@ -477,7 +508,7 @@ public class IconDemoPanel extends Viewer {
 					goParent();
 				}
 				else {
-					for(RootedEntity rootedEntity : rootedEntities) {
+					for(RootedEntity rootedEntity : pageRootedEntities) {
 						Entity entity = rootedEntity.getEntity();
 						if (entity.getId()!=null && entity.getId().equals(entityId)) {
 							removeRootedEntity(rootedEntity);
@@ -494,7 +525,7 @@ public class IconDemoPanel extends Viewer {
 					goParent();
 				}
 				else {
-					for(RootedEntity rootedEntity : rootedEntities) {
+					for(RootedEntity rootedEntity : pageRootedEntities) {
 						EntityData entityData = rootedEntity.getEntityData();
 						if (entityData.getId()!=null && entityData.getId().equals(entityDataId)) {
 							removeRootedEntity(rootedEntity);
@@ -615,8 +646,8 @@ public class IconDemoPanel extends Viewer {
 	
 	protected List<RootedEntity> getRootedEntitiesForEntityId(long entityId) {
 		List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
-		if (rootedEntities==null) return rootedEntityList; 
-		for(RootedEntity rootedEntity : rootedEntities) {
+		if (pageRootedEntities==null) return rootedEntityList; 
+		for(RootedEntity rootedEntity : pageRootedEntities) {
 			if (rootedEntity.getEntity().getId().equals(entityId)) {
 				rootedEntityList.add(rootedEntity);
 			}
@@ -637,10 +668,10 @@ public class IconDemoPanel extends Viewer {
 	}
 	
 	private void updateStatusBar() {
-		if (rootedEntities==null) return;
+		if (pageRootedEntities==null) return;
 		EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
 		int s = esm.getSelectedEntitiesIds(getSelectionCategory()).size();
-		statusLabel.setText(s+" of "+rootedEntities.size()+" selected");
+		statusLabel.setText(s+" of "+pageRootedEntities.size()+" selected");
 	}
 	
 	public Hud getHud() {
@@ -714,6 +745,24 @@ public class IconDemoPanel extends Viewer {
 			}
 		});
 	}
+
+	private void updatePagingStatus() {
+		prevPageButton.setEnabled(currPage>0);
+		nextPageButton.setEnabled(currPage<numPages-1);
+	}
+	
+	private synchronized void goPrevPage() {
+		int page = currPage-1;
+		if (page < 0) return;
+		loadImageEntities(page, null);
+	}
+	
+	private synchronized void goNextPage() {
+		int page = currPage+1;
+		if (page >= numPages) return;
+		loadImageEntities(page, null);
+	}
+
 	
 	protected JToolBar createToolbar() {
 
@@ -990,122 +1039,12 @@ public class IconDemoPanel extends Viewer {
 
 		if (lazyRootedEntities.isEmpty()) {
 			lazyRootedEntities.add(rootedEntity);
-			this.leafMode = true;
 		}
-		else {
-			this.leafMode = false;
-		}
-		
-		loadImageEntities(lazyRootedEntities, success); 
-	}
 
-	public void loadImageEntities(final List<RootedEntity> lazyRootedEntities) {
-		// TODO: revisit this, since it doesn't set contextRootedEntity
-		this.leafMode = false;
-		loadImageEntities(lazyRootedEntities, null);
-	}
-
-	private synchronized void loadImageEntities(final List<RootedEntity> lazyRootedEntities, final Callable<Void> success) {
-
-		if (!SwingUtilities.isEventDispatchThread())
-			throw new RuntimeException("IconDemoPanel.entityLoadDone called outside of EDT");
-		
-		entityLoadInProgress.set(true);
-		annotationLoadInProgress.set(true);
-		ancestorLoadInProgress.set(true);
-		
-		// Indicate a load
-		showLoadingIndicator();
-		
-		// Cancel previous loads
-		imagesPanel.cancelAllLoads();
-		if (entityLoadingWorker != null && !entityLoadingWorker.isDone()) {
-			entityLoadingWorker.disregard();
-		}
-		if (annotationsInitWorker != null && !annotationsInitWorker.isDone()) {
-			annotationsInitWorker.disregard();
-		}
 		if (ancestorLoadingWorker != null && !ancestorLoadingWorker.isDone()) {
 			ancestorLoadingWorker.disregard();
 		}
-		
-		// Update back/forward navigation
-		EntitySelectionHistory history = getEntitySelectionHistory();
-		prevButton.setEnabled(history.isBackEnabled());
-		nextButton.setEnabled(history.isNextEnabled());
 
-		// Temporarily disable scroll loading
-		imagesPanel.setScrollLoadingEnabled(false);
-		
-		entityLoadingWorker = new SimpleWorker() {
-
-			private List<RootedEntity> loadedRootedEntities = new ArrayList<RootedEntity>();
-			
-			protected void doStuff() throws Exception {
-				for (RootedEntity rootedEntity : lazyRootedEntities) {
-					if (!EntityUtils.isInitialized(rootedEntity.getEntity())) {
-						System.out.println("Warning: had to load entity "+rootedEntity.getEntity().getId());
-						rootedEntity.getEntityData().setChildEntity(ModelMgr.getModelMgr().getEntityById(rootedEntity.getEntity().getId()+""));
-					}
-					EntityData defaultImageEd = rootedEntity.getEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
-					if (defaultImageEd!= null && defaultImageEd.getValue() == null && defaultImageEd.getChildEntity()!=null) {
-						System.out.println("Warning: had to load default image "+rootedEntity.getEntity().getName());
-						defaultImageEd.setChildEntity(ModelMgr.getModelMgr().getEntityById(defaultImageEd.getChildEntity().getId() + ""));
-					}
-					loadedRootedEntities.add(rootedEntity);
-				}
-			}
-
-			protected void hadSuccess() {
-				setRootedEntities(loadedRootedEntities);
-				entityLoadDone(success);
-			}
-
-			protected void hadError(Throwable error) {
-				SessionMgr.getSessionMgr().handleException(error);
-			}
-		};
-		entityLoadingWorker.execute();
-
-		annotationsInitWorker = new SimpleWorker() {
-			
-			@Override
-			protected void doStuff() throws Exception {
-				if (leafMode) {
-					annotations.clear();
-					annotations.reload(contextRootedEntity.getEntityId());
-				}
-				else {
-					annotations.init(contextRootedEntity.getEntityId());	
-				}
-			}
-			
-			@Override
-			protected void hadSuccess() {
-				
-				if (!entityLoadInProgress.get()) {
-					System.out.println("Refresh annotations by annotations init worker");
-					// Entity load finished before we did, so its safe to update the annotations
-					refreshAnnotations(null);
-					filterEntities();
-					SwingUtilities.invokeLater(new Runnable() {
-						@Override
-						public void run() {
-							imagesPanel.recalculateGrid();
-						}
-					});
-				}
-
-				annotationLoadInProgress.set(false);
-			}
-			
-			@Override
-			protected void hadError(Throwable error) {
-				SessionMgr.getSessionMgr().handleException(error);
-			}
-		};
-		annotationsInitWorker.execute();
-		
 		ancestorLoadingWorker = new SimpleWorker() {
 
 			private List<RootedEntity> ancestors = new ArrayList<RootedEntity>();
@@ -1142,6 +1081,132 @@ public class IconDemoPanel extends Viewer {
 			}
 		};
 		ancestorLoadingWorker.execute();
+		
+		loadImageEntities(lazyRootedEntities, success); 
+	}
+
+	public void loadImageEntities(final List<RootedEntity> lazyRootedEntities) {
+		// TODO: revisit this, since it doesn't set contextRootedEntity
+		loadImageEntities(lazyRootedEntities, null);
+	}
+
+	private synchronized void loadImageEntities(final List<RootedEntity> lazyRootedEntities, final Callable<Void> success) {
+
+		allRootedEntities = lazyRootedEntities;
+		
+		this.numPages = (int)Math.ceil((double)allRootedEntities.size() / (double)PAGE_SIZE);
+		
+		// Update back/forward navigation
+		EntitySelectionHistory history = getEntitySelectionHistory();
+		prevButton.setEnabled(history.isBackEnabled());
+		nextButton.setEnabled(history.isNextEnabled());
+
+		loadImageEntities(0, success);
+	}
+	
+	private synchronized void loadImageEntities(final int pageNum, final Callable<Void> success) {
+
+		if (!SwingUtilities.isEventDispatchThread())
+			throw new RuntimeException("IconDemoPanel.entityLoadDone called outside of EDT");
+		
+		this.currPage = pageNum;
+		
+		int i = pageNum*PAGE_SIZE;
+		int j = i+PAGE_SIZE;
+		if (j>allRootedEntities.size()) {
+			j = allRootedEntities.size();
+		}
+
+		final List<RootedEntity> pageEntities = allRootedEntities.subList(i, j);
+		
+		entityLoadInProgress.set(true);
+		annotationLoadInProgress.set(true);
+		ancestorLoadInProgress.set(true);
+		
+		// Indicate a load
+		showLoadingIndicator();
+
+		pagingStatusLabel.setText("Page "+(pageNum+1)+" of "+numPages);
+		
+		
+		// Cancel previous loads
+		imagesPanel.cancelAllLoads();
+		if (entityLoadingWorker != null && !entityLoadingWorker.isDone()) {
+			entityLoadingWorker.disregard();
+		}
+		if (annotationsInitWorker != null && !annotationsInitWorker.isDone()) {
+			annotationsInitWorker.disregard();
+		}
+		
+		// Temporarily disable scroll loading
+		imagesPanel.setScrollLoadingEnabled(false);
+		
+		entityLoadingWorker = new SimpleWorker() {
+
+			private List<RootedEntity> loadedRootedEntities = new ArrayList<RootedEntity>();
+			
+			protected void doStuff() throws Exception {
+				for (RootedEntity rootedEntity : pageEntities) {
+					if (!EntityUtils.isInitialized(rootedEntity.getEntity())) {
+						System.out.println("Warning: had to load entity "+rootedEntity.getEntity().getId());
+						rootedEntity.getEntityData().setChildEntity(ModelMgr.getModelMgr().getEntityById(rootedEntity.getEntity().getId()+""));
+					}
+					EntityData defaultImageEd = rootedEntity.getEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
+					if (defaultImageEd!= null && defaultImageEd.getValue() == null && defaultImageEd.getChildEntity()!=null) {
+						System.out.println("Warning: had to load default image "+rootedEntity.getEntity().getName());
+						defaultImageEd.setChildEntity(ModelMgr.getModelMgr().getEntityById(defaultImageEd.getChildEntity().getId() + ""));
+					}
+					loadedRootedEntities.add(rootedEntity);
+				}
+			}
+
+			protected void hadSuccess() {
+				setRootedEntities(loadedRootedEntities);
+				entityLoadDone(success);
+			}
+
+			protected void hadError(Throwable error) {
+				SessionMgr.getSessionMgr().handleException(error);
+			}
+		};
+		entityLoadingWorker.execute();
+
+		annotationsInitWorker = new SimpleWorker() {
+			
+			@Override
+			protected void doStuff() throws Exception {
+				List<Long> entityIds = new ArrayList<Long>();
+				for(RootedEntity rootedEntity : pageEntities) {
+					entityIds.add(rootedEntity.getEntityId());
+				}
+				annotations.init(entityIds);
+			}
+			
+			@Override
+			protected void hadSuccess() {
+				
+				if (!entityLoadInProgress.get()) {
+					System.out.println("Refresh annotations by annotations init worker");
+					// Entity load finished before we did, so its safe to update the annotations
+					refreshAnnotations(null);
+					filterEntities();
+					SwingUtilities.invokeLater(new Runnable() {
+						@Override
+						public void run() {
+							imagesPanel.recalculateGrid();
+						}
+					});
+				}
+
+				annotationLoadInProgress.set(false);
+			}
+			
+			@Override
+			protected void hadError(Throwable error) {
+				SessionMgr.getSessionMgr().handleException(error);
+			}
+		};
+		annotationsInitWorker.execute();
 	}
 	
 	private synchronized void entityLoadDone(final Callable<Void> success) {
@@ -1174,10 +1239,15 @@ public class IconDemoPanel extends Viewer {
 		// buttons so that we can calculate the grid correctly
 		imagesPanel.resizeTables(imagesPanel.getCurrTableHeight());
 		imagesPanel.rescaleImages(imagesPanel.getCurrImageSize());
+
+		// Update selection
+		EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
+		esm.deselectAll(getSelectionCategory());
 		
 		// Actually display everything
 		showImagePanel();
 		updateStatusBar();
+		updatePagingStatus();
 		
 		// Wait until everything is recomputed
 		SwingUtilities.invokeLater(new Runnable() {
@@ -1251,7 +1321,7 @@ public class IconDemoPanel extends Viewer {
 	 */
 	public synchronized void reloadAnnotations(final Long entityId) {
 
-		if (annotations == null || rootedEntities == null)
+		if (annotations == null || pageRootedEntities == null)
 			return;
 
 		annotationLoadingWorker = new SimpleWorker() {
@@ -1358,8 +1428,8 @@ public class IconDemoPanel extends Viewer {
 
 	public synchronized void clear() {
 		this.contextRootedEntity = null;
-		this.rootedEntities = null;
-		this.rootedEntityMap = null;
+		this.pageRootedEntities = null;
+		this.pageRootedEntityMap = null;
 		this.entityMap = null;
 		
 		setTitle("");
@@ -1382,36 +1452,36 @@ public class IconDemoPanel extends Viewer {
 	}
 
 	public RootedEntity getPreviousEntity() {
-		int i = rootedEntities.indexOf(getLastSelectedEntity());
+		int i = pageRootedEntities.indexOf(getLastSelectedEntity());
 		if (i < 1) {
 			// Already at the beginning
 			return null;
 		}
-		return rootedEntities.get(i - 1);
+		return pageRootedEntities.get(i - 1);
 	}
 
 	public RootedEntity getNextEntity() {
-		int i = rootedEntities.indexOf(getLastSelectedEntity());
-		if (i > rootedEntities.size() - 2) {
+		int i = pageRootedEntities.indexOf(getLastSelectedEntity());
+		if (i > pageRootedEntities.size() - 2) {
 			// Already at the end
 			return null;
 		}
-		return rootedEntities.get(i + 1);
+		return pageRootedEntities.get(i + 1);
 	}
 
 	public synchronized List<RootedEntity> getRootedEntities() {
-		return rootedEntities;
+		return pageRootedEntities;
 	}
 
 	private synchronized void setRootedEntities(List<RootedEntity> rootedEntities) {
-		this.rootedEntities = rootedEntities;
-		this.rootedEntityMap = new HashMap<String,RootedEntity>();
+		this.pageRootedEntities = rootedEntities;
+		this.pageRootedEntityMap = new HashMap<String,RootedEntity>();
 		this.entityMap = new HashMap<Long,Entity>();
 		
 		Set<String> imageRoles = new HashSet<String>();
 		for(RootedEntity rootedEntity : rootedEntities) {
 			
-			rootedEntityMap.put(rootedEntity.getId(), rootedEntity);
+			pageRootedEntityMap.put(rootedEntity.getId(), rootedEntity);
 			entityMap.put(rootedEntity.getEntity().getId(), rootedEntity.getEntity());
 			
 			for(EntityData ed : rootedEntity.getEntity().getEntityData()) {
@@ -1452,8 +1522,8 @@ public class IconDemoPanel extends Viewer {
 
 	public synchronized List<RootedEntity> getSelectedEntities() {
 		List<RootedEntity> selectedEntities = new ArrayList<RootedEntity>();
-		if (rootedEntities==null) return selectedEntities;
-		for(RootedEntity rootedEntity : rootedEntities) {
+		if (pageRootedEntities==null) return selectedEntities;
+		for(RootedEntity rootedEntity : pageRootedEntities) {
 			AnnotatedImageButton button = imagesPanel.getButtonById(rootedEntity.getId());
 			if (button.isSelected()) {
 				selectedEntities.add(rootedEntity);
@@ -1463,7 +1533,7 @@ public class IconDemoPanel extends Viewer {
 	}
 	
 	public EntityData getEntityDataWithEntityId(Long entityId) {
-		for(RootedEntity rootedEntity : rootedEntities) {
+		for(RootedEntity rootedEntity : pageRootedEntities) {
 			if (rootedEntity.getEntity().getId().equals(entityId)) {
 				return rootedEntity.getEntityData();
 			}
@@ -1509,7 +1579,7 @@ public class IconDemoPanel extends Viewer {
 
 	public List<Entity> getDistinctEntities() {
 		Map<Long,Entity> entities = new HashMap<Long,Entity>();
-		for(RootedEntity rootedEntity : rootedEntities) {
+		for(RootedEntity rootedEntity : pageRootedEntities) {
 			entities.put(rootedEntity.getEntity().getId(), rootedEntity.getEntity());
 		}
 		return new ArrayList<Entity>(entities.values());
@@ -1517,13 +1587,13 @@ public class IconDemoPanel extends Viewer {
 	
 	private List<RootedEntity> getRootedEntitiesById(String id) {
 		List<RootedEntity> res = new ArrayList<RootedEntity>();
-		if (rootedEntityMap==null) return res;
-		RootedEntity re = rootedEntityMap.get(id);
+		if (pageRootedEntityMap==null) return res;
+		RootedEntity re = pageRootedEntityMap.get(id);
 		if (re!=null) {
 			res.add(re);
 		}
 		else {
-			for(RootedEntity rootedEntity : rootedEntities) {
+			for(RootedEntity rootedEntity : pageRootedEntities) {
 				if (rootedEntity.getEntity().getId().toString().equals(id)) {
 					res.add(rootedEntity);	
 				}
@@ -1534,18 +1604,18 @@ public class IconDemoPanel extends Viewer {
 	
 	@Override
 	public RootedEntity getRootedEntityById(String id) {
-		if (rootedEntityMap==null) return null;
-		return rootedEntityMap.get(id);
+		if (pageRootedEntityMap==null) return null;
+		return pageRootedEntityMap.get(id);
 	}
 	
 	@Override	
 	public Entity getEntityById(String id) {
-		if (entityMap==null && rootedEntityMap==null) return null;
+		if (entityMap==null && pageRootedEntityMap==null) return null;
 		try {
 			return entityMap.get(new Long(id));	
 		}
 		catch (Exception e) {
-			RootedEntity re = rootedEntityMap.get(id);
+			RootedEntity re = pageRootedEntityMap.get(id);
 			if (re!=null) return re.getEntity();
 		}
 		return null;

@@ -129,8 +129,6 @@ public class ArnimEvaluationDialog extends ModalDialog {
 							// The current evaluation
 							int i = getValueFromAnnotation(intensity);
 							int d = getValueFromAnnotation(distribution);
-							System.out.println("int should be "+i);
-							System.out.println("dist should be "+d);
 							
 							// Current folders
 							DefaultMutableTreeNode distNode = null;
@@ -169,8 +167,8 @@ public class ArnimEvaluationDialog extends ModalDialog {
 							int cd = getValueFromFolderName(distEntity);
 							
 							System.out.println("current compartment="+compartmentEntity.getName());
-							System.out.println("current int entity="+intEntity.getName() +" ("+ci+")");
-							System.out.println("current dist entity="+distEntity.getName() +" ("+cd+")");
+							System.out.println("current int="+intEntity.getName() +" ("+ci+" should be "+i+")");
+							System.out.println("current dist="+distEntity.getName() +" ("+cd+" should be "+d+")");
 							
 							if (ci==i) {
 								if (cd==d) {

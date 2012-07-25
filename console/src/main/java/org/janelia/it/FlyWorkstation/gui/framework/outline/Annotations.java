@@ -29,13 +29,29 @@ public class Annotations {
     	annotations.clear();
 	}
 	
+    public synchronized void init(List<Long> entityIds) {
+    	
+    	if (SwingUtilities.isEventDispatchThread()) throw new RuntimeException("Method must run outside of the EDT");
+    	
+        try {
+        	clear();
+            for(Entity entityAnnot : ModelMgr.getModelMgr().getAnnotationsForEntities(entityIds)) {
+            	OntologyAnnotation annotation = new OntologyAnnotation();
+            	annotation.init(entityAnnot);
+            	annotations.add(annotation);
+            }
+        }
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
+    }
+	
     public synchronized void init(Long parentId) {
     	
     	if (SwingUtilities.isEventDispatchThread()) throw new RuntimeException("Method must run outside of the EDT");
     	
-    	annotations.clear();
-    	
         try {
+        	clear();
             for(Entity entityAnnot : ModelMgr.getModelMgr().getAnnotationsForChildren(parentId)) {
             	OntologyAnnotation annotation = new OntologyAnnotation();
             	annotation.init(entityAnnot);

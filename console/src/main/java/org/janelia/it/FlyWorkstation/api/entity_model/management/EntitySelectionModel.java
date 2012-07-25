@@ -35,6 +35,11 @@ public class EntitySelectionModel {
 		return selected;
 	}
 	
+	public void deselectAll(String category) {
+		List<String> selected = getCategory(category);
+		selected.clear();
+	}
+	
 	public void selectEntity(String category, String identifier, boolean clearAll) {
 		List<String> selected = getCategory(category);
 		if (clearAll) {

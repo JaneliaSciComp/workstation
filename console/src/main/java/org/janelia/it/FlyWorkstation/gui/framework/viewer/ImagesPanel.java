@@ -453,8 +453,6 @@ public class ImagesPanel extends JScrollPane {
      */
     public synchronized void recalculateGrid() {
     	
-    	System.out.println("recalculateGrid");
-    	
     	if (!SwingUtilities.isEventDispatchThread()) throw new RuntimeException("recalculateGrid called outside of EDT");
     	
     	double maxButtonWidth = 0;
