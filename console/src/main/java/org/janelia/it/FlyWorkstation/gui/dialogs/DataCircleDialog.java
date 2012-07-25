@@ -33,14 +33,21 @@ public class DataCircleDialog extends JDialog {
             e.printStackTrace();
             SessionMgr.getSessionMgr().handleException(e);
         }
+
         userListModel = new DefaultTableModel();
         userListModel.addColumn("Users");
-        userListModel.addRow(userList.toArray());
-        JTable userTable = new JTable(userListModel);
+
+        for (int i = 0; i < userList.size(); i++) {
+            Object[] userString = {userList.get(i).getUserLogin()};
+            userListModel.addRow(userString);
+        }
+
+        final JTable userTable = new JTable(userListModel);
+        userTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
         dataCircleModel = new DefaultTableModel();
         dataCircleModel.addColumn("Users in your Circle");
-        JTable dataCircleTable = new JTable(dataCircleModel);
+        final JTable dataCircleTable = new JTable(dataCircleModel);
 
         backgroundPanel.setLayout(new BoxLayout(backgroundPanel, BoxLayout.PAGE_AXIS));
 
@@ -48,7 +55,7 @@ public class DataCircleDialog extends JDialog {
         doneButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                DataCircleDialog.this.setVisible(false);
             }
         });
 
@@ -56,7 +63,9 @@ public class DataCircleDialog extends JDialog {
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                Object[] userToAdd = {userListModel.getValueAt(userTable.getSelectedRow(), 0)};
+                dataCircleModel.addRow(userToAdd);
+                userListModel.removeRow(userTable.getSelectedRow());
             }
         });
 
@@ -64,7 +73,9 @@ public class DataCircleDialog extends JDialog {
         removeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                Object[] userToRemove = {dataCircleModel.getValueAt(dataCircleTable.getSelectedRow(), 0)};
+                userListModel.addRow(userToRemove);
+                dataCircleModel.removeRow(dataCircleTable.getSelectedRow());
             }
         });
 
@@ -72,7 +83,11 @@ public class DataCircleDialog extends JDialog {
         resetButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                while (dataCircleModel.getValueAt(0,0)!=null){
+                    Object[] moveUser = {dataCircleModel.getValueAt(0,0)};
+                    userListModel.addRow(moveUser);
+                    dataCircleModel.removeRow(0);
+                }
             }
         });
 
@@ -86,7 +101,9 @@ public class DataCircleDialog extends JDialog {
         JPanel topPanel = new JPanel();
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.X_AXIS));
         JPanel circleListPanel = new JPanel();
+        circleListPanel.add(dataCircleTable);
         JPanel userListPanel = new JPanel();
+        userListPanel.add(userTable);
         JPanel middleButtonPanel = new JPanel();
         TitledBorder circleListBorder = BorderFactory.createTitledBorder("Users in your circle");
         TitledBorder userListBorder = BorderFactory.createTitledBorder("Users");
