@@ -42,7 +42,7 @@ import uk.co.caprica.vlcj.player.embedded.FullScreenStrategy;
 import uk.co.caprica.vlcj.runtime.RuntimeUtil;
 import uk.co.caprica.vlcj.runtime.windows.WindowsCanvas;
 
-import com.sun.awt.AWTUtilities;
+//import com.sun.awt.AWTUtilities;
 import com.sun.jna.platform.WindowUtils;
 
 /**
@@ -187,7 +187,7 @@ public class TestPlayer extends VlcjTest {
 				}
 			};
 
-			AWTUtilities.setWindowOpaque(test, false); // Doesn't work in
+//			AWTUtilities.setWindowOpaque(test, false); // Doesn't work in
 														// full-screen exclusive
 														// mode, you would have
 														// to use 'simulated'
