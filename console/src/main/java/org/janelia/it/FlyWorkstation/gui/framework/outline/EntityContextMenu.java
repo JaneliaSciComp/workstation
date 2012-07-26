@@ -25,9 +25,11 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
+import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.neuron.NeuronMergeTask;
+import org.janelia.it.jacs.model.tasks.utility.GenericTask;
 import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.MailHelper;
@@ -87,9 +89,8 @@ public class EntityContextMenu extends JPopupMenu {
         add(getAddToRootFolderItem());
         add(getRenameItem());
         add(getErrorFlag());
-        add(getMergeItem());
 		add(getDeleteItem());
-
+        
 		setNextAddRequiresSeparator(true);
 		add(getOpenInFirstViewerItem());
 		add(getOpenInSecondViewerItem());
@@ -104,7 +105,10 @@ public class EntityContextMenu extends JPopupMenu {
         add(getSearchHereItem());
 
 		setNextAddRequiresSeparator(true);
+        add(getMergeItem());
+        add(getSortBySimilarityItem());
 		add(getCreateSessionItem());
+        
         if ((SessionMgr.getUsername().equals("simpsonj") || SessionMgr.getUsername().equals("simpsonlab")) && !this.multiple){
             add(getSpecialAnnotationSession());
         }
@@ -713,7 +717,7 @@ public class EntityContextMenu extends JPopupMenu {
 		
 		return deleteItem;
 	}
-
+	
     protected JMenuItem getMergeItem() {
 
         // If multiple items are not selected then leave
@@ -797,6 +801,68 @@ public class EntityContextMenu extends JPopupMenu {
         return mergeItem;
     }
 
+    protected JMenuItem getSortBySimilarityItem() {
+
+        // If multiple items are selected then leave
+        if (multiple) { return null; }
+
+        final Entity targetEntity = rootedEntity.getEntity();
+        
+        if (!targetEntity.getEntityType().getName().equals(EntityConstants.TYPE_ALIGNED_BRAIN_STACK) && 
+        		!targetEntity.getEntityType().getName().equals(EntityConstants.TYPE_IMAGE_3D)) {
+        	return null;
+        }
+        
+        String parentId = Utils.getParentIdFromUniqueId(rootedEntity.getUniqueId());
+        final Entity folder = SessionMgr.getBrowser().getEntityOutline().getEntityByUniqueId(parentId);
+        
+        if (!folder.getEntityType().getName().equals(EntityConstants.TYPE_FOLDER)) {
+        	return null;
+        }
+
+        JMenuItem sortItem = new JMenuItem("  Sort folder by similarity to this image");
+
+        sortItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+
+            	try {
+                	HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
+                	taskParameters.add(new TaskParameter("folder id", folder.getId().toString(), null));
+                	taskParameters.add(new TaskParameter("target stack id", targetEntity.getId().toString(), null));
+                	Task task = new GenericTask(new HashSet<Node>(), SessionMgr.getUsername(), new ArrayList<Event>(), 
+                			taskParameters, "sortBySimilarity", "Sort By Similarity");
+                    task.setJobName("Sort By Similarity Task");
+                    task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
+                    ModelMgr.getModelMgr().submitJob("SortBySimilarity", task.getObjectId());
+            	}
+            	catch (Exception e) {
+            		SessionMgr.getSessionMgr().handleException(e);
+            	}
+//                SimpleWorker mergeTask = new SimpleWorker() {
+//                	Task task;
+//                    @Override
+//                    protected void doStuff() throws Exception {
+//                    }
+//
+//                    @Override
+//                    protected void hadSuccess() {
+//                    	System.out.println("Submitted sort task: "+task.getObjectId());
+//                    }
+//
+//                    @Override
+//                    protected void hadError(Throwable error) {
+//                        SessionMgr.getSessionMgr().handleException(error);
+//                    }
+//                };
+//
+//                mergeTask.execute();
+            }
+        });
+
+        sortItem.setEnabled(ModelMgrUtils.isOwner(folder));
+        return sortItem;
+    }
+    
     protected JMenuItem getOpenInFirstViewerItem() {
 		if (multiple) return null;
 		if (StringUtils.isEmpty(rootedEntity.getUniqueId())) return null;
