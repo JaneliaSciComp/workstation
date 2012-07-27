@@ -4,6 +4,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelection
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.SpecialAnnotationChooserDialog;
+import org.janelia.it.FlyWorkstation.gui.dialogs.TaskDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.AnnotateAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenInFinderAction;
@@ -834,28 +835,14 @@ public class EntityContextMenu extends JPopupMenu {
                     task.setJobName("Sort By Similarity Task");
                     task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
                     ModelMgr.getModelMgr().submitJob("SortBySimilarity", task.getObjectId());
+                    
+                    TaskDetailsDialog dialog = SessionMgr.getBrowser().getTaskOutline().getDetailsDialog();
+                    dialog.showForTask(task);
+                    
             	}
             	catch (Exception e) {
             		SessionMgr.getSessionMgr().handleException(e);
             	}
-//                SimpleWorker mergeTask = new SimpleWorker() {
-//                	Task task;
-//                    @Override
-//                    protected void doStuff() throws Exception {
-//                    }
-//
-//                    @Override
-//                    protected void hadSuccess() {
-//                    	System.out.println("Submitted sort task: "+task.getObjectId());
-//                    }
-//
-//                    @Override
-//                    protected void hadError(Throwable error) {
-//                        SessionMgr.getSessionMgr().handleException(error);
-//                    }
-//                };
-//
-//                mergeTask.execute();
             }
         });
 

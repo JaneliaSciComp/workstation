@@ -1,14 +1,21 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
-import loci.plugins.config.SpringUtilities;
-import org.janelia.it.jacs.model.tasks.Task;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+
+import javax.swing.*;
+
+import loci.plugins.config.SpringUtilities;
+
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.jacs.model.tasks.Task;
 
 /**
  * A dialog for viewing details about a task.
@@ -18,8 +25,11 @@ import java.text.SimpleDateFormat;
 public class TaskDetailsDialog extends ModalDialog {
     
     protected static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm");
+    protected static final int REFRESH_DELAY_MS = 2000;
     
-    private JPanel attrPanel;
+    protected Long taskId;
+    protected JPanel attrPanel;
+    protected Timer refreshTimer;
     
     private JLabel addAttribute(String name) {
         JLabel nameLabel = new JLabel(name);
@@ -34,6 +44,8 @@ public class TaskDetailsDialog extends ModalDialog {
 
         setTitle("Task Details");
 
+    	add(Box.createHorizontalStrut(600), BorderLayout.NORTH);
+    	
         attrPanel = new JPanel(new SpringLayout());
         attrPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10), 
         		BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Task Properties")));
@@ -45,7 +57,8 @@ public class TaskDetailsDialog extends ModalDialog {
         okButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-	            setVisible(false);
+				endRefresh();
+				setVisible(false);
 			}
 		});
 
@@ -56,22 +69,62 @@ public class TaskDetailsDialog extends ModalDialog {
         buttonPane.add(okButton);
         
         add(buttonPane, BorderLayout.SOUTH);
+
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent we) {
+            	endRefresh();
+            }
+        });
+    }
+    
+    private void endRefresh() {
+		System.out.println("Stopping refresh");
+    	if (refreshTimer!=null) {
+    		if (refreshTimer.isRunning()) {
+    			refreshTimer.stop();
+    		}
+            refreshTimer = null;
+    	}
     }
     
     public void showForTask(Task task) {
 
+    	this.taskId = task.getObjectId();
+    	
     	attrPanel.removeAll();
+    	
         addAttribute("Name: ").setText(task.getDisplayName());
         addAttribute("Task Owner: ").setText(task.getOwner());
         addAttribute("Task Id: ").setText(task.getObjectId().toString());
-        addAttribute("Last Status: ").setText(task.getLastEvent().getDescription());
+        JLabel statusLabel = addAttribute("Last Status: ");
+        statusLabel.setText(task.getLastEvent().getDescription());
         
-        for(String key : task.getParameterKeySet()) {
-        	String value = task.getParameter(key);
-        	addAttribute(key).setText(value);
+        if (!task.isDone()) {
+        	statusLabel.setIcon(Icons.getLoadingIcon());
+            
+            if (refreshTimer==null || !refreshTimer.isRunning()) {
+            	refreshTimer = new Timer(REFRESH_DELAY_MS, new ActionListener() {
+    				@Override
+    				public void actionPerformed(ActionEvent e) {
+    					try {
+    						System.out.println("Refresh "+taskId);
+    						showForTask(ModelMgr.getModelMgr().getTaskById(taskId));	
+    					}
+    					catch (Exception error) {
+    						SessionMgr.getSessionMgr().handleException(error);
+    					}
+    				}
+    			});
+            	refreshTimer.setInitialDelay(REFRESH_DELAY_MS);
+            	refreshTimer.start(); 
+            }
         }
-
+        else {
+        	endRefresh();
+        }
+        
         SpringUtilities.makeCompactGrid(attrPanel, attrPanel.getComponentCount()/2, 2, 6, 6, 6, 6);
+		
         packAndShow();
     }
 }

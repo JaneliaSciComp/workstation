@@ -412,4 +412,8 @@ public class TaskOutline extends JPanel implements Refreshable {
 			this.selectedTask = task;	
 		}
     }
+
+	public TaskDetailsDialog getDetailsDialog() {
+		return detailsDialog;
+	}
 }
