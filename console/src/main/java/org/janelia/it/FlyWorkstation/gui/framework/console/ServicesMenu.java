@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import org.janelia.it.FlyWorkstation.gui.dialogs.DataCircleDialog;
+import org.janelia.it.FlyWorkstation.gui.dialogs.DataGroupDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 
 import javax.swing.*;
@@ -31,7 +31,7 @@ public class ServicesMenu extends JMenu {
         dataCircleMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JDialog dialog = new DataCircleDialog();
+                JDialog dialog = new DataGroupDialog();
                 dialog.setVisible(true);
             }
         });
