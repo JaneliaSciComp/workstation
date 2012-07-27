@@ -17,13 +17,13 @@ import java.util.List;
  * Date: 7/19/12
  * Time: 1:34 PM
  */
-public class DataCircleDialog extends JDialog {
+public class DataGroupDialog extends JDialog {
 
     private JPanel backgroundPanel = new JPanel();
     private DefaultTableModel userListModel;
     private DefaultTableModel dataCircleModel;
 
-    public DataCircleDialog(){
+    public DataGroupDialog(){
         super(SessionMgr.getBrowser(),"Data Circles", true);
         List<User> userList = null;
         try {
@@ -55,7 +55,7 @@ public class DataCircleDialog extends JDialog {
         doneButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                DataCircleDialog.this.setVisible(false);
+                DataGroupDialog.this.setVisible(false);
             }
         });
 
@@ -95,15 +95,17 @@ public class DataCircleDialog extends JDialog {
         closeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                DataCircleDialog.this.setVisible(false);
+                DataGroupDialog.this.setVisible(false);
             }
         });
-        JPanel topPanel = new JPanel();
-        topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.X_AXIS));
+        JPanel circleSetUpPanel = new JPanel();
+        circleSetUpPanel.setLayout(new BoxLayout(circleSetUpPanel, BoxLayout.X_AXIS));
         JPanel circleListPanel = new JPanel();
-        circleListPanel.add(dataCircleTable);
+        JScrollPane dataCirclePane = new JScrollPane(dataCircleTable);
+        circleListPanel.add(dataCirclePane);
         JPanel userListPanel = new JPanel();
-        userListPanel.add(userTable);
+        JScrollPane userListPane = new JScrollPane(userTable);
+        userListPanel.add(userListPane);
         JPanel middleButtonPanel = new JPanel();
         TitledBorder circleListBorder = BorderFactory.createTitledBorder("Users in your circle");
         TitledBorder userListBorder = BorderFactory.createTitledBorder("Users");
@@ -117,10 +119,10 @@ public class DataCircleDialog extends JDialog {
         buttonPanel.add(doneButton);
         buttonPanel.add(resetButton);
         buttonPanel.add(closeButton);
-        topPanel.add(circleListPanel);
-        topPanel.add(middleButtonPanel);
-        topPanel.add(userListPanel);
-        backgroundPanel.add(topPanel);
+        circleSetUpPanel.add(circleListPanel);
+        circleSetUpPanel.add(middleButtonPanel);
+        circleSetUpPanel.add(userListPanel);
+        backgroundPanel.add(circleSetUpPanel);
         backgroundPanel.add(buttonPanel);
 
         createAndShowGUI();
