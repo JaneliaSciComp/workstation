@@ -58,7 +58,7 @@ public class EJBComputeFacade implements ComputeFacade {
 
     @Override
     public List<Task> getUserParentTasks() throws Exception {
-        return EJBFactory.getRemoteComputeBean().getUserParentTasks(SessionMgr.getUsername());
+        return EJBFactory.getRemoteComputeBean().getRecentUserParentTasks(SessionMgr.getUsername());
     }
     
     @Override
