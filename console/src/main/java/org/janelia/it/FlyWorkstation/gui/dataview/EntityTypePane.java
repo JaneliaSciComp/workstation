@@ -122,8 +122,9 @@ public class EntityTypePane extends JScrollPane {
 
             @Override
             protected void doStuff() throws Exception {
-                List<EntityType> entityTypes = ModelMgr.getModelMgr().getEntityTypes();
-
+            	
+            	List<EntityType> entityTypes = ModelMgr.getModelMgr().getEntityTypes();
+                
                 DefaultMutableTreeNode root = new DefaultMutableTreeNode("EntityType");
 
                 for (EntityType entityType : entityTypes) {

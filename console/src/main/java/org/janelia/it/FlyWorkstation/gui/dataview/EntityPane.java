@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.dataview;
 import java.awt.BorderLayout;
 import java.util.List;
 
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
@@ -11,7 +12,6 @@ import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchConfiguration;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchResultsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
-import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
@@ -124,7 +124,54 @@ public class EntityPane extends JPanel {
         entityParentsPane.showEmpty();
         entityChildrenPane.showEmpty();
     }
-    
+
+
+	public void performSearchById(final Long entityId) {
+
+        SimpleWorker searchWorker = new SimpleWorker() {
+
+            private Entity entity;
+
+            protected void doStuff() throws Exception {
+                entity = ModelMgr.getModelMgr().getEntityById(""+entityId);
+            }
+
+            protected void hadSuccess() {
+                showEntity(entity);
+            }
+
+            protected void hadError(Throwable error) {
+                error.printStackTrace();
+                JOptionPane.showMessageDialog(EntityPane.this, "Error finding entity", "Entity Search Error", JOptionPane.ERROR_MESSAGE);
+            }
+        };
+
+        searchWorker.execute();
+	}
+
+	public void performSearchByName(final String entityName) {
+		
+        SimpleWorker searchWorker = new SimpleWorker() {
+
+            private List<Entity> entities;
+
+            protected void doStuff() throws Exception {
+                entities = ModelMgr.getModelMgr().getEntitiesByName(entityName);
+            }
+
+            protected void hadSuccess() {
+                showEntities(entities);
+            }
+
+            protected void hadError(Throwable error) {
+                error.printStackTrace();
+                JOptionPane.showMessageDialog(EntityPane.this, "Error finding entity", "Entity Search Error", JOptionPane.ERROR_MESSAGE);
+            }
+        };
+
+        searchWorker.execute();
+	}
+	
     public void performSearch(boolean clear) {
     	clearEntityDataPanes();
     	setActiveView(ResultViewType.SOLR);
@@ -152,6 +199,21 @@ public class EntityPane extends JPanel {
 	public void runGroovyCode(String code) {
     	clearEntityDataPanes();
     	setActiveView(ResultViewType.ENTITY);
+    	
+    	try {
+//
+//        	String[] roots = new String[] { "../groovy/src" };
+//        	GroovyScriptEngine gse = new GroovyScriptEngine(roots);
+//        	
+//        	Binding binding = new Binding();
+//        	binding.setVariable("m", ModelMgr.getModelMgr());
+//        	gse.run("hello.groovy", binding);
+//        	System.out.println(binding.getVariable("output"));
+    	}
+    	catch (Exception e) {
+    		e.printStackTrace();
+    	}
+    	
     	
     	// TODO: implement
 //    	entityListPane.showEntities(entities);

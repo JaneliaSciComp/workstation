@@ -1,8 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.dataview;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -20,6 +18,8 @@ import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchParametersPanel;
  */
 public abstract class SearchPane extends JPanel {
 	
+	private JPanel hibernatePanel;
+	private JTextField hibernateInput;
 	private SearchParametersPanel solrPanel; // haha, get it? 
 	private JPanel groovyPanel;
 	private JTextArea groovyArea;
@@ -28,7 +28,40 @@ public abstract class SearchPane extends JPanel {
 	public SearchPane(final SearchConfiguration searchConfig) {
 		
 		setLayout(new BorderLayout());
+
+		hibernatePanel = new JPanel(new BorderLayout());
+		JLabel titleLabel = new JLabel("Search by GUID or name: ");
 		
+		hibernateInput = new JTextField(40);
+		
+        JButton searchButton = new JButton("Search");
+        searchButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				performHibernateSearch(hibernateInput.getText());
+			}
+		});
+        
+        JPanel hibernateSearchPanel = new JPanel();
+        hibernateSearchPanel.setLayout(new BoxLayout(hibernateSearchPanel, BoxLayout.LINE_AXIS));
+        hibernateSearchPanel.add(titleLabel);
+        hibernateSearchPanel.add(hibernateInput);
+        hibernateSearchPanel.add(Box.createHorizontalStrut(5));
+        hibernateSearchPanel.add(searchButton);
+        
+        hibernatePanel = new JPanel();
+        hibernatePanel.setLayout(new GridBagLayout());
+        hibernatePanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 20, 20));
+        GridBagConstraints c = new GridBagConstraints();
+        
+        c.gridx = 0;
+        c.gridy = 0;
+        c.fill = GridBagConstraints.NONE;
+        c.anchor = GridBagConstraints.FIRST_LINE_START;
+        c.weightx = c.weighty = 1.0;
+        hibernatePanel.add(hibernateSearchPanel, c);
+        
+        
 		solrPanel = new SearchParametersPanel() {
         	@Override
         	public void performSearch(boolean clear) {
@@ -72,13 +105,16 @@ public abstract class SearchPane extends JPanel {
 		groovyPanel.add(groovyBody, BorderLayout.CENTER);
 		groovyPanel.add(groovyButtons, BorderLayout.SOUTH);
 		groovyPanel.setVisible(false);
-		
+
+		JPanel hibernateTab = new JPanel(new BorderLayout());
+		hibernateTab.add(hibernatePanel, BorderLayout.CENTER);
 		JPanel solrTab = new JPanel(new BorderLayout());
 		solrTab.add(solrPanel, BorderLayout.CENTER);
 		JPanel groovyTab = new JPanel(new BorderLayout());
 		groovyTab.add(groovyPanel, BorderLayout.CENTER);
 		
 		final JTabbedPane tabbedPane = new JTabbedPane();
+		tabbedPane.addTab("Hibernate Search", hibernateTab);
 		tabbedPane.addTab("Solr Search", solrTab);
 		tabbedPane.addTab("Groovy Search", groovyTab);
 		tabbedPane.addChangeListener(new ChangeListener() {
@@ -86,10 +122,17 @@ public abstract class SearchPane extends JPanel {
 			public void stateChanged(ChangeEvent e) {
 				switch (tabbedPane.getSelectedIndex()) {
 				case 0:
-					solrPanel.setVisible(true);
+					hibernatePanel.setVisible(true);
+					solrPanel.setVisible(false);
 					groovyPanel.setVisible(false);
 					break;
 				case 1:
+					hibernatePanel.setVisible(false);
+					solrPanel.setVisible(true);
+					groovyPanel.setVisible(false);
+					break;
+				case 2:
+					hibernatePanel.setVisible(false);
 					solrPanel.setVisible(false);
 					groovyPanel.setVisible(true);
 					break;
@@ -99,7 +142,8 @@ public abstract class SearchPane extends JPanel {
 		});
 		add(tabbedPane, BorderLayout.CENTER);
 	}
-
+	public abstract void performHibernateSearch(String searchString);
+	
 	public abstract void performSolrSearch(boolean clear);
 	
 	public abstract void performGroovySearch(String code);

@@ -80,6 +80,15 @@ public class DataviewFrame extends JFrame {
 
     	searchPane = new SearchPane(searchConfig) {
     		@Override
+    		public void performHibernateSearch(String searchString) {
+    			if (searchString.matches("\\d{19}")) {
+    				entityPane.performSearchById(new Long(searchString));
+    			}
+    			else {
+    				entityPane.performSearchByName(searchString);	
+    			}
+    		}
+    		@Override
     		public void performSolrSearch(boolean clear) {
     			entityPane.performSearch(clear);
     		}
