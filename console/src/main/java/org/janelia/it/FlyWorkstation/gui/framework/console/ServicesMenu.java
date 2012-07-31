@@ -27,7 +27,7 @@ public class ServicesMenu extends JMenu {
             }
         });
 
-        dataCircleMenuItem = new JMenuItem("Data Circle Manager...");
+        dataCircleMenuItem = new JMenuItem("Data Groups Manager...");
         dataCircleMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
