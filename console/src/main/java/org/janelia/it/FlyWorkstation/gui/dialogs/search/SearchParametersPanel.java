@@ -35,6 +35,7 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
     protected final JCheckBox advancedSearchCheckbox;
     protected final JPanel adhocPanel;
     protected final JPanel criteriaPanel;
+    protected final JButton searchButton;
     
     // Search state
     protected SearchConfiguration searchConfig;
@@ -52,7 +53,7 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
         inputField.setEditable(true);
         inputField.setToolTipText("Enter search terms...");
         
-        JButton searchButton = new JButton("Search");
+        searchButton = new JButton("Search");
         searchButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -346,6 +347,10 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
 
 	public JComboBox getInputField() {
 		return inputField;
+	}
+
+	public JButton getSearchButton() {
+		return searchButton;
 	}
 
 	public JCheckBox getAdvancedSearchCheckbox() {

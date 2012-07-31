@@ -1,8 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.dataview;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -34,8 +33,8 @@ public abstract class SearchPane extends JPanel {
 		
 		hibernateInput = new JTextField(40);
 		
-        JButton searchButton = new JButton("Search");
-        searchButton.addActionListener(new ActionListener() {
+		final JButton hibernateButton = new JButton("Search");
+        hibernateButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				performHibernateSearch(hibernateInput.getText());
@@ -47,7 +46,7 @@ public abstract class SearchPane extends JPanel {
         hibernateSearchPanel.add(titleLabel);
         hibernateSearchPanel.add(hibernateInput);
         hibernateSearchPanel.add(Box.createHorizontalStrut(5));
-        hibernateSearchPanel.add(searchButton);
+        hibernateSearchPanel.add(hibernateButton);
         
         hibernatePanel = new JPanel();
         hibernatePanel.setLayout(new GridBagLayout());
@@ -88,7 +87,7 @@ public abstract class SearchPane extends JPanel {
 		groovyBody.add(Box.createRigidArea(new Dimension(10,1)));
 		groovyBody.add(groovyExamples);
 
-		JButton groovyButton = new JButton("Execute Groovy Code");
+		final JButton groovyButton = new JButton("Execute Groovy Code");
 		groovyButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -141,6 +140,32 @@ public abstract class SearchPane extends JPanel {
 			}
 		});
 		add(tabbedPane, BorderLayout.CENTER);
+		
+
+    	getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true),"enterAction");
+    	getActionMap().put("enterAction",new AbstractAction("enterAction") {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				switch (tabbedPane.getSelectedIndex()) {
+				case 0:
+					hibernateButton.doClick(100);
+					break;
+				case 1:
+					solrPanel.getSearchButton().doClick(100);
+					break;
+				case 2:
+					groovyButton.doClick(100);
+					break;
+				}
+			}
+		});
+		addComponentListener(new ComponentAdapter() {
+			@Override
+			public void componentShown(ComponentEvent e) {
+			}
+		});
+		
+		
 	}
 	public abstract void performHibernateSearch(String searchString);
 	

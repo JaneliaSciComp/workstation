@@ -94,21 +94,20 @@ public class EntityPane extends JPanel {
         System.out.println("Populate data panes with " + entity);
         
         entityParentsPane.showLoading();
+        entityChildrenPane.showLoading();
         
-        loadTask = new SimpleWorker() {
+        SimpleWorker parentLoadTask = new SimpleWorker() {
 
             List<EntityData> eds;
 
             @Override
             protected void doStuff() throws Exception {
-            	ModelMgrUtils.loadLazyEntity(entity, false);
                 eds = ModelMgr.getModelMgr().getParentEntityDatas(entity.getId());
             }
 
             @Override
             protected void hadSuccess() {
-                entityChildrenPane.showEntityData(entity.getOrderedEntityData());
-                entityParentsPane.showEntityData(eds);
+            	entityParentsPane.showEntityData(eds);
             }
 
             @Override
@@ -116,8 +115,27 @@ public class EntityPane extends JPanel {
                 error.printStackTrace();
             }
         };
+        
+        SimpleWorker childLoadTask = new SimpleWorker() {
 
-        loadTask.execute();
+            @Override
+            protected void doStuff() throws Exception {
+            	ModelMgrUtils.loadLazyEntity(entity, false);
+            }
+
+            @Override
+            protected void hadSuccess() {
+            	entityChildrenPane.showEntityData(entity.getOrderedEntityData());
+            }
+
+            @Override
+            protected void hadError(Throwable error) {
+                error.printStackTrace();
+            }
+        };
+        
+        parentLoadTask.execute();
+        childLoadTask.execute();
     }
     
     public void clearEntityDataPanes() {

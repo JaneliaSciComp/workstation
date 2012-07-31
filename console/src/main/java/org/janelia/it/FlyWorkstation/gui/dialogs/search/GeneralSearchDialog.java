@@ -330,6 +330,7 @@ public class GeneralSearchDialog extends ModalDialog {
         }
 
         final SolrQueryBuilder builder = resultsPanel.getQueryBuilder(false);
+        final ResultTreeMapping projection = resultsPanel.getSearchResults().getResultTreeMapping();
         
     	SimpleWorker worker = new SimpleWorker() {
     		
@@ -339,11 +340,19 @@ public class GeneralSearchDialog extends ModalDialog {
 
 				StringBuffer buf = new StringBuffer();
 				for(DynamicColumn column : resultsPanel.getResultsTable().getDisplayedColumns()) {
+					if (buf.length()>0) buf.append("\t");
 					buf.append(column.getLabel());
-					buf.append("\t");
+				}
+				if (projection!=null) {
+					for(DynamicColumn column : resultsPanel.getMappedResultsTable().getDisplayedColumns()) {
+						buf.append("\t");
+						buf.append(column.getLabel());
+					}
 				}
 				buf.append("\n");
 				writer.write(buf.toString());
+				
+				SearchResults searchResults = new SearchResults();
 				
 				long numProcessed = 0;
 				int page = 0;
@@ -351,17 +360,78 @@ public class GeneralSearchDialog extends ModalDialog {
 					SolrResults results = resultsPanel.performSearch(builder, page, EXPORT_PAGE_SIZE);
 					long numFound = results.getResponse().getResults().getNumFound();
 					
+					ResultPage resultPage = new ResultPage(results);
+					searchResults.addPage(resultPage);
+								
+					if (projection!=null) {
+						resultPage.projectResults(projection, searchResults);
+					}
+					
 					for(EntityDocument entityDoc : results.getEntityDocuments()) {
-						buf = new StringBuffer();
-						for(DynamicColumn column : resultsPanel.getResultsTable().getDisplayedColumns()) {
-							Object value = searchConfig.getValue(entityDoc, column.getName());
-							if (value!=null) {
-								buf.append(value.toString());	
+						
+						
+						List<Entity> mappedDocs = null;
+						if (projection!=null) {
+							mappedDocs = resultPage.getMappedEntities(entityDoc.getEntity().getId());
+							
+							if (mappedDocs.isEmpty()) {
+								buf = new StringBuffer();
+								int i = 0;
+								for(DynamicColumn column : resultsPanel.getResultsTable().getDisplayedColumns()) {
+									Object value = searchConfig.getValue(entityDoc, column.getName());
+									if (i++>0) buf.append("\t");
+									if (value!=null) {
+										buf.append(value.toString());	
+									}
+									
+								}
+								buf.append("\n");
+								writer.write(buf.toString());
 							}
-							buf.append("\t");
+							else {
+								for(Entity mappedDoc : mappedDocs) {
+									
+									buf = new StringBuffer();
+									int i = 0;
+									for(DynamicColumn column : resultsPanel.getResultsTable().getDisplayedColumns()) {
+										Object value = searchConfig.getValue(entityDoc, column.getName());
+										if (i++>0) buf.append("\t");
+										if (value!=null) {
+											buf.append(value.toString());	
+										}
+										
+									}
+
+									if (projection!=null) {
+										for(DynamicColumn column : resultsPanel.getMappedResultsTable().getDisplayedColumns()) {
+											Object value = searchConfig.getValue(mappedDoc, column.getName());
+											buf.append("\t");
+											if (value!=null) {
+												buf.append(value.toString());	
+											}
+										}
+									}
+									
+									buf.append("\n");
+									writer.write(buf.toString());
+								}
+							}
 						}
-						buf.append("\n");
-						writer.write(buf.toString());
+						else {
+							buf = new StringBuffer();
+							int i = 0;
+							for(DynamicColumn column : resultsPanel.getResultsTable().getDisplayedColumns()) {
+								Object value = searchConfig.getValue(entityDoc, column.getName());
+								if (i++>0) buf.append("\t");
+								if (value!=null) {
+									buf.append(value.toString());	
+								}
+								
+							}
+							buf.append("\n");
+							writer.write(buf.toString());
+						}
+						
 						numProcessed++;
 						setProgress((int)numProcessed, (int)numFound);
 					}
