@@ -176,7 +176,7 @@ public class DynamicTree extends JPanel {
      * @param node
      */
     public void removeChildren(DefaultMutableTreeNode node) {
-
+    	
         int c = node.getChildCount();
         if (c==0) return;
         
@@ -189,8 +189,8 @@ public class DynamicTree extends JPanel {
         }
 
         node.removeAllChildren();
-
         getTreeModel().nodesWereRemoved(node, childIndices, removedChildren);
+//        System.out.println("DynamicTree.removeChildren - removed "+childIndices.length+" children from "+node);
     }
 
     /**

@@ -263,8 +263,8 @@ public class EntityTree extends JPanel {
             public void recreateChildNodes(DefaultMutableTreeNode node) {
                 Entity entity = getEntity(node);
                 ArrayList<EntityData> edList = new ArrayList<EntityData>(entity.getOrderedEntityData());
-                selectedTree.removeChildren(node);
-                addChildren(node, edList);
+                EntityTree.this.removeChildren(node);
+                EntityTree.this.addChildren(node, edList);
             }
 
             @Override
@@ -487,7 +487,7 @@ public class EntityTree extends JPanel {
         
         Entity entity = newEd.getChildEntity();
 //    	Entity parentEntity = getEntity(parentNode);
-//		System.out.println(indent+"EntityTree.addNodes - adding "+entity.getName()+" ("+newEd.getId()+") to "+(parentEntity==null?"ROOT":parentEntity.getName())+" at index:"+index);
+//		System.out.println(indent+"EntityTree.addNodes - adding "+entity.getName()+" ("+newEd.getId()+") to "+(getEntity(parentNode)==null?"ROOT":getEntity(parentNode).getName())+" at index:"+index);
         
         // Add to unique map
         String uniqueId = selectedTree.getUniqueId(newNode);
@@ -532,7 +532,7 @@ public class EntityTree extends JPanel {
     	if (newEd.getId()!=null) {
 	    	if (visitedEds.contains(newEd.getId())) {
 	    		if (!childDataList.isEmpty()) {
-//	    			System.out.println(indent+"EntityTree.addNodes - add lazy node to "+parentEntity.getName());
+//	    			System.out.println(indent+"EntityTree.addNodes - add lazy node to "+getEntity(parentNode).getName());
 	    			selectedTree.addObject(parentNode, new LazyTreeNode());	
 	    		}
 //	    		System.out.println(indent+"EntityTree.addNodes - already been at "+entity.getName()+" ("+newEd.getId()+")");
@@ -558,16 +558,29 @@ public class EntityTree extends JPanel {
     		return;
     	}
     	
-    	// Remove from all maps
-        String uniqueId = selectedTree.getUniqueId(node);
-        uniqueIdToNodeMap.remove(uniqueId);
-        Set<DefaultMutableTreeNode> nodes = entityIdToNodeMap.get(entity.getId());
-        nodes.remove(node);
-        nodes = entityDataIdToNodeMap.get(entityData.getId());
-        nodes.remove(node);
-        
+    	if (entityData!=null && entity!=null) {
+        	// Remove from all maps
+            String uniqueId = selectedTree.getUniqueId(node);
+            uniqueIdToNodeMap.remove(uniqueId);
+            Set<DefaultMutableTreeNode> nodes = entityIdToNodeMap.get(entity.getId());
+            nodes.remove(node);
+            nodes = entityDataIdToNodeMap.get(entityData.getId());
+            nodes.remove(node);
+    	}
+    	
         // Remove from the tree
         getDynamicTree().removeNode(node);
+    }
+    
+    public void removeChildren(DefaultMutableTreeNode node) {
+    	List<DefaultMutableTreeNode> childNodes = new ArrayList<DefaultMutableTreeNode>();
+        for (int i = 0; i < node.getChildCount(); i++) {
+            DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) node.getChildAt(i);
+            childNodes.add(childNode);
+        }
+        for(DefaultMutableTreeNode childNode : childNodes) {
+        	removeNode(childNode);	
+        }
     }
     
     private int addChildren(DefaultMutableTreeNode parentNode, List<EntityData> dataList) {
@@ -581,9 +594,8 @@ public class EntityTree extends JPanel {
     		indent.append("    ");
     	}
     	
-//    	Entity parentEntity = getEntity(parentNode);
-//		System.out.println(indent+"EntityTree.addChildren - add to "+parentEntity.getName()+" (visited:"+visitedEds.size()+")");
-		
+//		System.out.println(indent+"EntityTree.addChildren - add to "+getEntityData(parentNode));
+
         // Test for proxies
         if (!EntityUtils.areLoaded(dataList)) {
             selectedTree.addObject(parentNode, new LazyTreeNode());
