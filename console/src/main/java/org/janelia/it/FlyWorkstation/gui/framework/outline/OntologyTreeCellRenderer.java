@@ -49,11 +49,11 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
         this.ontologyOutline = ontologyOutline;
 
         cellPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-
+        cellPanel.setOpaque(false);
+        
         titleLabel = new JLabel(" ");
         titleLabel.setOpaque(true);
         titleLabel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 0));
-        titleLabel.setForeground(Color.black);
         cellPanel.add(titleLabel);
 
         typeLabel = new JLabel(" ");
@@ -68,8 +68,6 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
         foregroundNonSelectionColor = defaultRenderer.getTextNonSelectionColor();
         backgroundSelectionColor = defaultRenderer.getBackgroundSelectionColor();
         backgroundNonSelectionColor = defaultRenderer.getBackgroundNonSelectionColor();
-
-        cellPanel.setBackground(backgroundNonSelectionColor);
     }
 
     public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
@@ -81,11 +79,37 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
                 OntologyElement element = (OntologyElement) userObject;
                 Entity entity = element.getEntity();
 
-                // Enable panel?
+                // Set the colors
+
+                if (selected) {
+                	titleLabel.setForeground(foregroundSelectionColor);
+                	titleLabel.setBackground(backgroundSelectionColor);
+                }
+                else {
+                	titleLabel.setForeground(foregroundNonSelectionColor);
+                	titleLabel.setBackground(backgroundNonSelectionColor);
+                }
+
+                // Support drag and drop 
+                
+                JTree.DropLocation dropLocation = tree.getDropLocation();
+                if (dropLocation != null
+                        && dropLocation.getChildIndex() == -1
+                        && tree.getRowForPath(dropLocation.getPath()) == row) {
+                    titleLabel.setForeground(foregroundSelectionColor);
+                    titleLabel.setBackground(backgroundSelectionColor);
+                }
+                
+                // Set the icon
                 
                 cellPanel.setEnabled(tree.isEnabled());
+                if (leaf) titleLabel.setIcon(getLeafIcon());
+                else if (expanded) titleLabel.setIcon(getOpenIcon());
+                else titleLabel.setIcon(getClosedIcon());
+                ImageIcon ontologyIcon = Icons.getOntologyIcon(entity);
+                if (ontologyIcon != null) titleLabel.setIcon(ontologyIcon);
                 
-                // Set the labels
+                // Set everything else based on the entity properties
                 
                 titleLabel.setText(element.getEntity().getName());
 
@@ -121,35 +145,6 @@ public class OntologyTreeCellRenderer extends DefaultTreeCellRenderer implements
                     }
                 }
 
-                // Set the colors
-
-                if (selected) {
-                    titleLabel.setForeground(foregroundSelectionColor);
-                    titleLabel.setBackground(backgroundSelectionColor);
-                }
-                else {
-                    titleLabel.setForeground(foregroundNonSelectionColor);
-                    titleLabel.setBackground(backgroundNonSelectionColor);
-                }
-
-                // Support drag and drop 
-                
-                JTree.DropLocation dropLocation = tree.getDropLocation();
-                if (dropLocation != null
-                        && dropLocation.getChildIndex() == -1
-                        && tree.getRowForPath(dropLocation.getPath()) == row) {
-                    titleLabel.setForeground(foregroundSelectionColor);
-                    titleLabel.setBackground(backgroundSelectionColor);
-                }
-                
-                // Set the icon
-                
-                if (leaf) titleLabel.setIcon(getLeafIcon());
-                else if (expanded) titleLabel.setIcon(getOpenIcon());
-                else titleLabel.setIcon(getClosedIcon());
-                ImageIcon ontologyIcon = Icons.getOntologyIcon(entity);
-                if (ontologyIcon != null) titleLabel.setIcon(ontologyIcon);
-                
                 returnValue = cellPanel;
             }
         }

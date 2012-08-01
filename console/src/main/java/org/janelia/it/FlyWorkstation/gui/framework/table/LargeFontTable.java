@@ -24,12 +24,14 @@ public class LargeFontTable extends JTable {
 		
 		this.customFont = customFont;
 		
-		// Get the actual height of the custom font.
-		FontMetrics metrics = getFontMetrics(customFont);
-		customRowHeight = metrics.getHeight();
-		
-		// Set table row height to match font height.
-		setRowHeight(customRowHeight);
+		if (customFont!=null) {
+			// Get the actual height of the custom font.
+			FontMetrics metrics = getFontMetrics(customFont);
+			customRowHeight = metrics.getHeight();
+			
+			// Set table row height to match font height.
+			setRowHeight(customRowHeight);
+		}
 	}
 
 	/**
@@ -70,10 +72,12 @@ public class LargeFontTable extends JTable {
 		
 		// For labels we can also fix the size information
 		if (renderer instanceof JLabel) {
-			FontMetrics metrics = getFontMetrics(customFont);
-			JLabel dtcr = (JLabel)renderer;
-			int width = metrics.stringWidth(dtcr.getText());
-			c.setPreferredSize(new Dimension(width, getRowHeight()));
+			if (customFont!=null) {
+				FontMetrics metrics = getFontMetrics(customFont);
+				JLabel dtcr = (JLabel)renderer;
+				int width = metrics.stringWidth(dtcr.getText());
+				c.setPreferredSize(new Dimension(width, getRowHeight()));
+			}
 		}
 		
 		return c;

@@ -37,12 +37,11 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
     public EntityTreeCellRenderer() {
 
         cellPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-
+        cellPanel.setOpaque(false);
+        
         titleLabel = new JLabel(" ");
         titleLabel.setOpaque(true);
         titleLabel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 0));
-        titleLabel.setForeground(Color.black);
-        
         cellPanel.add(titleLabel);
 
         typeLabel = new JLabel(" ");
@@ -57,8 +56,6 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
         foregroundNonSelectionColor = defaultRenderer.getTextNonSelectionColor();
         backgroundSelectionColor = defaultRenderer.getBackgroundSelectionColor();
         backgroundNonSelectionColor = defaultRenderer.getBackgroundNonSelectionColor();
-
-        cellPanel.setBackground(backgroundNonSelectionColor);
     }
     
     public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded, boolean leaf, int row, boolean hasFocus) {
@@ -68,12 +65,12 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
             // Set the colors
 
             if (selected) {
-                titleLabel.setForeground(foregroundSelectionColor);
-                titleLabel.setBackground(backgroundSelectionColor);
+            	titleLabel.setForeground(foregroundSelectionColor);
+            	titleLabel.setBackground(backgroundSelectionColor);
             }
             else {
-                titleLabel.setForeground(foregroundNonSelectionColor);
-                titleLabel.setBackground(backgroundNonSelectionColor);
+            	titleLabel.setForeground(foregroundNonSelectionColor);
+            	titleLabel.setBackground(backgroundNonSelectionColor);
             }
 
             // Support drag and drop 

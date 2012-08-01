@@ -296,7 +296,6 @@ public class IconDemoPanel extends Viewer {
 		currImageRole = EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE;
 		
 		setBorder(BorderFactory.createEmptyBorder());
-		setBackground(Color.white);
 		setLayout(new BorderLayout());
 		setFocusable(true);
 
