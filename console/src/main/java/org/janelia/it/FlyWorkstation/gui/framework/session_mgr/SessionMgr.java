@@ -1,5 +1,15 @@
 package org.janelia.it.FlyWorkstation.gui.framework.session_mgr;
 
+import java.awt.Component;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.io.*;
+import java.text.ParseException;
+import java.util.*;
+
+import javax.swing.*;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.roles.ExceptionHandler;
@@ -13,15 +23,6 @@ import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.ws.EmbeddedAxisServer;
 import org.janelia.it.jacs.model.user_data.User;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
-import java.io.*;
-import java.util.*;
-import java.util.List;
 
 
 public class SessionMgr {
@@ -83,9 +84,14 @@ public class SessionMgr {
 //              PropertyMgr.getPropertyMgr().addPropertyCreationRule((PropertyCreationRule) rule);
 //          }
 //      }
-        if (getModelProperty(DISPLAY_LOOK_AND_FEEL) != null) {
+        
+        UIManager.installLookAndFeel("Synthetica BlackEye Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel");
+        
+        String lafName = (String) getModelProperty(DISPLAY_LOOK_AND_FEEL);
+        
+        if (lafName != null) {
             try {
-                setLookAndFeel((String) getModelProperty(DISPLAY_LOOK_AND_FEEL));
+            	setLookAndFeel(lafName);
             }
             catch (Exception ex) {
                 handleException(ex);
@@ -104,7 +110,7 @@ public class SessionMgr {
         // TODO: Bundle FIJI with Fly Workstation
     } //Singleton enforcement
 
-    private String getSafeModelProperty(String targetKey) {
+	private String getSafeModelProperty(String targetKey) {
         Object testValue = getModelProperty(targetKey);
         if (null==testValue || !(testValue instanceof String)) {
             return "";
@@ -372,7 +378,18 @@ public class SessionMgr {
 
     public void setLookAndFeel(String lookAndFeelClassName) {
         try {
-            UIManager.setLookAndFeel(lookAndFeelClassName);
+        	if (lookAndFeelClassName.contains("Synthetica")) {
+            	UIManager.setLookAndFeel(new de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel() {
+					@Override
+					protected void loadCustomXML() throws ParseException {
+						loadXMLConfig("/SyntheticaBlackEyeLookAndFeel.xml");
+					}
+            	});	
+        	}
+        	else {
+        		UIManager.setLookAndFeel(lookAndFeelClassName);	
+        	}
+            
             Set browserModels = browserModelsToBrowser.keySet();
             Object obj;
             for (Object browserModel : browserModels) {
