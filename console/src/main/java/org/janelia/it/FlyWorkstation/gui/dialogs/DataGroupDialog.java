@@ -1,8 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
-import com.jidesoft.grid.DefaultExpandableRow;
-import com.jidesoft.grid.DualTable;
-import com.jidesoft.grid.TableModelAdapter;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.user_data.User;
@@ -12,7 +10,6 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -23,7 +20,7 @@ import java.util.List;
  */
 public class DataGroupDialog extends JDialog {
 
-    private DualTable _dualTable;
+//    private DualTable _dualTable;
     private JPanel backgroundPanel = new JPanel();
     private DefaultTableModel userListModel;
     private DefaultTableModel dataCircleModel;
@@ -184,69 +181,69 @@ public class DataGroupDialog extends JDialog {
         this.pack();
     }
 
-    private java.util.List createTaskList(List<User> userList) {
-        java.util.List<Task> rows = new ArrayList<Task>();
-        for( User user: userList){
-            rows.add(new Task(user.getUserLogin()));
-        }
-        return rows;
-    }
+//    private java.util.List createTaskList(List<User> userList) {
+//        java.util.List<Task> rows = new ArrayList<Task>();
+//        for( User user: userList){
+//            rows.add(new Task(user.getUserLogin()));
+//        }
+//        return rows;
+//    }
 
-    private static class Task extends DefaultExpandableRow {
-        String name;
-
-
-        public Task() {
-        }
-
-
-        public Task(String name) {
-            this.name = name;
-
-        }
-
-        public Object getValueAt(int columnIndex) {
-            switch (columnIndex) {
-                case 0:
-                    return name;
-
-            }
-            return null;
-        }
-
-        @Override
-        public void setValueAt(Object value, int columnIndex) {
-            switch (columnIndex) {
-                case 0:
-                    name = "" + value;
-                    break;
-            }
-            super.setValueAt(value, columnIndex);
-        }
-    }
-
-    private static class TaskTableModelAdapter implements TableModelAdapter {
-        public TaskTableModelAdapter() {
-        }
-
-        public int getColumnCount() {
-            return 1;
-        }
-
-        public Class<?> getColumnClass(int columnIndex) {
-            switch (columnIndex) {
-                case 0:
-                    return String.class;
-            }
-            return Object.class;
-        }
-
-        public String getColumnName(int column) {
-            switch (column) {
-                case 0:
-                    return "User Name";
-            }
-            return null;
-        }
-    }
+//    private static class Task extends DefaultExpandableRow {
+//        String name;
+//
+//
+//        public Task() {
+//        }
+//
+//
+//        public Task(String name) {
+//            this.name = name;
+//
+//        }
+//
+//        public Object getValueAt(int columnIndex) {
+//            switch (columnIndex) {
+//                case 0:
+//                    return name;
+//
+//            }
+//            return null;
+//        }
+//
+//        @Override
+//        public void setValueAt(Object value, int columnIndex) {
+//            switch (columnIndex) {
+//                case 0:
+//                    name = "" + value;
+//                    break;
+//            }
+//            super.setValueAt(value, columnIndex);
+//        }
+//    }
+//
+//    private static class TaskTableModelAdapter implements TableModelAdapter {
+//        public TaskTableModelAdapter() {
+//        }
+//
+//        public int getColumnCount() {
+//            return 1;
+//        }
+//
+//        public Class<?> getColumnClass(int columnIndex) {
+//            switch (columnIndex) {
+//                case 0:
+//                    return String.class;
+//            }
+//            return Object.class;
+//        }
+//
+//        public String getColumnName(int column) {
+//            switch (column) {
+//                case 0:
+//                    return "User Name";
+//            }
+//            return null;
+//        }
+//    }
 }
