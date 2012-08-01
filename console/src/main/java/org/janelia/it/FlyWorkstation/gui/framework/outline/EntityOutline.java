@@ -70,7 +70,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 
 			@Override
 			public void entityChanged(final long entityId) {
-				System.out.println("entityChanged..."+entityId);
+				
 				SimpleWorker worker = new SimpleWorker() {
 					
 					private Entity entity;
@@ -85,7 +85,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 						Set<DefaultMutableTreeNode> nodes = getNodesByEntityId(entityId);
 						if (nodes == null) return;
 						for(final DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
-							System.out.println("entityChanged... updateEntity:"+node);
 							ModelMgrUtils.updateEntity(getEntity(node), entity);
 						}
 						revalidate();
@@ -103,7 +102,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			
 			@Override
 			public void entityChildrenChanged(final long entityId) {
-				System.out.println("entityChildrenChanged..."+entityId);
 				SimpleWorker worker = new SimpleWorker() {
 					private Set<DefaultMutableTreeNode> nodes;
 					
@@ -112,7 +110,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 						nodes = getNodesByEntityId(entityId);
 						if (nodes == null) return;
 						for(final DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
-							ModelMgrUtils.refreshChildren(getEntity(node));
+							ModelMgrUtils.refreshEntityAndChildren(getEntity(node));
 						}
 					}
 					
@@ -147,7 +145,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 					if (parent!=null) {
 						parent.getEntityData().remove(entityData);
 					}
-					System.out.println("entityRemoved... remove node "+node);
 					removeNode(node);	
 				}
 			}
@@ -163,7 +160,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 					if (parent!=null) {
 						parent.getEntityData().remove(entityData);
 					}
-					System.out.println("entityDataRemoved... remove node "+node);
 					removeNode(node);	
 				}
 			}
@@ -172,17 +168,14 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
         SessionMgr.getSessionMgr().addSessionModelListener(new SessionModelListener() {
             @Override
             public void browserAdded(BrowserModel browserModel) {
-
             }
 
             @Override
             public void browserRemoved(BrowserModel browserModel) {
-
             }
 
             @Override
             public void sessionWillExit() {
-
             }
 
             @Override
@@ -509,7 +502,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			currUniqueId = null;
 			return;
 		}
-
+		
 		String uniqueId = getDynamicTree().getUniqueId(node);
 		if (!uniqueId.equals(currUniqueId)) {
 			this.currUniqueId = uniqueId;
