@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -33,7 +34,7 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ArnimEvaluationDialog extends ModalDialog {
+public class ScreenEvaluationDialog extends ModalDialog {
 
 	private static final String SCORE_ONTOLOGY_NAME = "Expression Pattern Evaluation";
 	private static final String MAA_INTENSITY_NAME = "MAA Intensity Score";
@@ -44,10 +45,9 @@ public class ArnimEvaluationDialog extends ModalDialog {
 	private JButton okButton;
 	private JButton cancelButton;
     	
-	public ArnimEvaluationDialog() {
+	public ScreenEvaluationDialog() {
 
 		addListeners();
-		init();
 		
         okButton = new JButton("OK");
         okButton.setToolTipText("Close and save changes");
@@ -77,16 +77,16 @@ public class ArnimEvaluationDialog extends ModalDialog {
         add(buttonPane, BorderLayout.SOUTH);
 	}
 	
-	private void init() {
-
+	public boolean isAccessible() {
+		String username = SessionMgr.getUsername();
+		if (!"rokickik".equals(username) && !"saffordt".equals(username) && !"jenetta".equals(username)) {
+			return false;
+		}
+		return true;
 	}
 	
 	private void addListeners() {
 	
-		String username = SessionMgr.getUsername();
-		if (!"rokickik".equals(username) && !"saffordt".equals(username) && !"jenetta".equals(username)) {
-			return;
-		}
 		
 		ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
 			@Override
@@ -272,8 +272,8 @@ public class ArnimEvaluationDialog extends ModalDialog {
 	private String getKey(String compartment, int i, int d) {
 		return compartment+"/"+i+"/"+d;
 	}
+	
     public void showDialog() {
         packAndShow();
     }
-    
 }

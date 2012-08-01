@@ -110,7 +110,7 @@ public class Browser extends JFrame implements Cloneable {
     private GeneralSearchDialog generalSearchDialog;
     private PatternSearchDialog patternSearchDialog;
     private GiantFiberSearchDialog giantFiberSearchDialog;
-    private ArnimEvaluationDialog arnimEvaluationDialog;
+    private ScreenEvaluationDialog screenEvaluationDialog;
     private String mostRecentFileOutlinePath;
     private JTabbedPane icsTabPane = new JTabbedPane();
     private int rightDividerLocation;
@@ -220,22 +220,7 @@ public class Browser extends JFrame implements Cloneable {
 
         this.browserModel = browserModel;
         browserModel.addBrowserModelListener(new BrowserModelObserver());
-        SessionMgr.getSessionMgr().addSessionModelListener(modelListener);
-
-        if (menuBarClass == null) {
-            menuBar = new ConsoleMenuBar(this);
-        }
-        else {
-//            menuBar = (JMenuBar) menuBarClass.getConstructor(new Class[] { this.getClass() }).newInstance(new Object[] { this });
-            Constructor[] cons = menuBarClass.getConstructors();
-            for (Constructor con : cons) {
-//                System.out.println(con.toString());
-            }
-            menuBar = (JMenuBar) menuBarClass.getConstructor(new Class[]{this.getClass()}).newInstance(new Object[]{this});
-        }
-
-        setJMenuBar(menuBar);
-        
+        SessionMgr.getSessionMgr().addSessionModelListener(modelListener);        
         
 //        viewerPanel.setBorder(BorderFactory.createLineBorder(Color.black));
         searchToolbar = new SearchToolbar();
@@ -261,7 +246,6 @@ public class Browser extends JFrame implements Cloneable {
         annotationSessionPropertyPanel = new AnnotationSessionPropertyDialog(entityOutline, ontologyOutline);
         runImportDialog = new RunImportDialog();
         runNeuronSeparationDialog = new RunNeuronSeparationDialog();
-        
 
         generalSearchConfig = new SearchConfiguration();
         generalSearchConfig.load();
@@ -271,10 +255,8 @@ public class Browser extends JFrame implements Cloneable {
         generalSearchDialog.setSearchHistory(searchHistory);
 
         patternSearchDialog = new PatternSearchDialog();
-
         giantFiberSearchDialog = new GiantFiberSearchDialog();
-        
-        arnimEvaluationDialog = new ArnimEvaluationDialog();
+        screenEvaluationDialog = new ScreenEvaluationDialog();
         
         ontologyOutline.setPreferredSize(new Dimension());
 //        icsTabPane = new ICSTabPane(this);
@@ -334,6 +316,14 @@ public class Browser extends JFrame implements Cloneable {
 
         searchToolbar.setVisible(false);
 
+        if (menuBarClass == null) {
+            menuBar = new ConsoleMenuBar(this);
+        }
+        else {
+            menuBar = (JMenuBar) menuBarClass.getConstructor(new Class[]{this.getClass()}).newInstance(new Object[]{this});
+        }
+        setJMenuBar(menuBar);
+        
         // Collect the final components
         mainPanel.setLayout(layout);
         allPanelsView.setLayout(new BorderLayout());
@@ -1317,8 +1307,8 @@ public class Browser extends JFrame implements Cloneable {
         return giantFiberSearchDialog;
     }
     
-    public ArnimEvaluationDialog getArnimEvaluationDialog() {
-		return arnimEvaluationDialog;
+    public ScreenEvaluationDialog getScreenEvaluationDialog() {
+		return screenEvaluationDialog;
 	}
 
 	public SearchConfiguration getGeneralSearchConfig() {
