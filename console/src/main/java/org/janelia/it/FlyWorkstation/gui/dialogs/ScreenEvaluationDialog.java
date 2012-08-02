@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 import javax.swing.*;
 
@@ -14,10 +15,13 @@ import loci.plugins.config.SpringUtilities;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
+import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -34,6 +38,8 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ScreenEvaluationDialog extends ModalDialog {
+
+	private static final String SCREEN_EVAL_ORGANIZATION_PROPERTY = "ScreenEvaluationDialog.OrganizationBehavior";
 	
 	private static final String SCORE_ONTOLOGY_NAME = "Expression Pattern Evaluation";
 	private static final String TOP_LEVEL_FOLDER_NAME = "FlyLight Pattern Evaluation";
@@ -43,46 +49,87 @@ public class ScreenEvaluationDialog extends ModalDialog {
 	private static final String CA_INTENSITY_NAME = "CA Intensity Score";
 	private static final String CA_DISTRIBUTION_NAME = "CA Distribution Score";
 	
-	private static final String TOOLTIP_AUTO_MOVE = "Automatically move samples to the correct evaluation folder after annotation";
-	private static final String TOOLTIP_MOVE_NOW = "Move samples in the current folder to the correct folders";
-	
-	private JButton cancelButton;
-	private JCheckBox autoMoveCheckbox;
+	private JRadioButton askAfterNavigationRadioButton;
+	private JRadioButton autoMoveAfterAnnotationRadioButton;
+	private JRadioButton autoMoveAfterNavigationRadioButton;
 	private JButton moveButton;
 
 	private Map<String,Entity> compEntityMap = new HashMap<String,Entity>();
 	private Map<String,Entity> folderCache = new HashMap<String,Entity>();
 	private Map<String,Map<Long,String>> reverseFolderCache = new HashMap<String,Map<Long,String>>();
 	
-	public ScreenEvaluationDialog() {
+	private KeyStroke moveKeystroke = KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, SystemInfo.isMac?java.awt.Event.META_MASK:java.awt.Event.CTRL_MASK);
+	
+	private Browser browser;
+	
+	private boolean isCurrFolderDirty = false;
+	
+	public ScreenEvaluationDialog(Browser browser) {
 
+		this.browser = browser;
+		
 		if (!isAccessible()) return;
 
 		setModalityType(ModalityType.MODELESS);
 		
+		Integer behavior = (Integer)SessionMgr.getSessionMgr().getModelProperty(SCREEN_EVAL_ORGANIZATION_PROPERTY);
+		if (behavior==null) {
+			behavior = 2;
+			setBehaviorPreference(behavior);
+		}
+		
 		JPanel attrPanel = new JPanel(new SpringLayout());
         attrPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
 
-        JLabel autoMoveLabel = new JLabel("Automatically move samples upon annotation?");
-        autoMoveLabel.setToolTipText(TOOLTIP_AUTO_MOVE);
-        autoMoveCheckbox = new JCheckBox();
-        autoMoveCheckbox.setSelected(false);
-        autoMoveCheckbox.setToolTipText(TOOLTIP_AUTO_MOVE);
-        autoMoveCheckbox.addActionListener(new ActionListener() {
+        JLabel dirtyBitLabel = new JLabel("Alert when leaving folder");
+        askAfterNavigationRadioButton = new JRadioButton();
+        askAfterNavigationRadioButton.setSelected(behavior==0);
+        askAfterNavigationRadioButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				moveButton.setEnabled(!autoMoveCheckbox.isSelected());
+				setBehaviorPreference(0);
 			}
 		});
-        autoMoveLabel.setLabelFor(autoMoveCheckbox);
+        dirtyBitLabel.setLabelFor(askAfterNavigationRadioButton);
+        attrPanel.add(dirtyBitLabel);
+        attrPanel.add(askAfterNavigationRadioButton);
+        
+        JLabel autoMoveLabel = new JLabel("Automatically move samples upon annotation");
+        autoMoveAfterAnnotationRadioButton = new JRadioButton();
+        autoMoveAfterAnnotationRadioButton.setSelected(behavior==1);
+        autoMoveAfterAnnotationRadioButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				setBehaviorPreference(1);
+			}
+		});
+        autoMoveLabel.setLabelFor(autoMoveAfterAnnotationRadioButton);
         attrPanel.add(autoMoveLabel);
-        attrPanel.add(autoMoveCheckbox);
+        attrPanel.add(autoMoveAfterAnnotationRadioButton);
+
+        JLabel autoMoveNavLabel = new JLabel("Automatically move samples upon navigation");
+        autoMoveAfterNavigationRadioButton = new JRadioButton();
+        autoMoveAfterNavigationRadioButton.setSelected(behavior==2);
+        autoMoveAfterNavigationRadioButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				setBehaviorPreference(2);
+			}
+		});
+        autoMoveNavLabel.setLabelFor(autoMoveAfterNavigationRadioButton);
+        attrPanel.add(autoMoveNavLabel);
+        attrPanel.add(autoMoveAfterNavigationRadioButton);
+        
+        
+        ButtonGroup group = new ButtonGroup();
+        group.add(askAfterNavigationRadioButton);
+        group.add(autoMoveAfterAnnotationRadioButton);
+        group.add(autoMoveAfterNavigationRadioButton);
+        
         
         JLabel moveNowLabel = new JLabel("Move samples in current folder now");
-        moveNowLabel.setToolTipText(TOOLTIP_MOVE_NOW);
-        moveButton = new JButton("Move");
+        moveButton = new JButton("Move ("+KeymapUtil.getKeystrokeText(moveKeystroke)+")");
         moveButton.setEnabled(true);
-        moveButton.setToolTipText(TOOLTIP_MOVE_NOW);
         moveButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -95,27 +142,15 @@ public class ScreenEvaluationDialog extends ModalDialog {
 
         add(attrPanel, BorderLayout.CENTER);
         SpringUtilities.makeCompactGrid(attrPanel, attrPanel.getComponentCount()/2, 2, 6, 6, 6, 6);
-		
-        cancelButton = new JButton("Close");
-        cancelButton.setToolTipText("Close this dialog");
-        cancelButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-	            setVisible(false);
-			}
-		});
-
-        JPanel buttonPane = new JPanel();
-        buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
-        buttonPane.setBorder(BorderFactory.createEmptyBorder(20, 10, 10, 10));
-        buttonPane.add(Box.createHorizontalGlue());
-        buttonPane.add(cancelButton);
-        add(buttonPane, BorderLayout.SOUTH);
-        
+		        
         init();
         addListeners();
 	}
 
+	public void setBehaviorPreference(int behavior) {
+		SessionMgr.getSessionMgr().setModelProperty(SCREEN_EVAL_ORGANIZATION_PROPERTY, behavior);
+	}
+	
 	public void init() {
 
 		SimpleWorker worker = new SimpleWorker() {
@@ -163,51 +198,53 @@ public class ScreenEvaluationDialog extends ModalDialog {
 	
 	private void addListeners() {
 	
-		// TODO: move to after init
-//		KeyStroke accel = KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, SystemInfo.isMac?java.awt.Event.META_MASK:java.awt.Event.CTRL_MASK);
-//    	SessionMgr.getBrowser().getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(accel,"moveAction");
-//    	SessionMgr.getBrowser().getRootPane().getActionMap().put("moveAction",new AbstractAction("moveAction") {
-//			@Override
-//			public void actionPerformed(ActionEvent e) {
-//				organizeEntitiesInCurrentFolder();
-//			}
-//		});
+    	browser.getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(moveKeystroke,"moveAction");
+    	browser.getRootPane().getActionMap().put("moveAction",new AbstractAction("moveAction") {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				organizeEntitiesInCurrentFolder();
+			}
+		});
 		
 		ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
 			@Override
 			public void annotationsChanged(final long entityId) {
 				
-				if (!autoMoveCheckbox.isSelected()) {
-					return;
-				}
-				
 				if (!ModelMgr.getModelMgr().getCurrentOntology().getName().equals(SCORE_ONTOLOGY_NAME)) {
 					return;
 				}
 				
-				SimpleWorker worker = new SimpleWorker() {
-					
-					@Override
-					protected void doStuff() throws Exception {
-						organizeEntity(entityId);
-					}
-					
-					@Override
-					protected void hadSuccess() {
-					}
-					
-					@Override
-					protected void hadError(Throwable error) {
-						SessionMgr.getSessionMgr().handleException(error);
-					}
-				};
-				
-				worker.execute();
+				if (autoMoveAfterAnnotationRadioButton.isSelected()) {
+					SimpleWorker worker = new SimpleWorker() {
+						
+						@Override
+						protected void doStuff() throws Exception {
+							organizeEntity(entityId);
+						}
+						
+						@Override
+						protected void hadSuccess() {
+						}
+						
+						@Override
+						protected void hadError(Throwable error) {
+							SessionMgr.getSessionMgr().handleException(error);
+						}
+					};
+					worker.execute();
+				}
+				else {
+					isCurrFolderDirty = true;
+				}
 			}
 		});
 	}
 	
-	private void organizeEntitiesInCurrentFolder() {
+	public void organizeEntitiesInCurrentFolder() {
+		organizeEntitiesInCurrentFolder(null);
+	}
+	
+	public void organizeEntitiesInCurrentFolder(final Callable<Void> success) {
 		
 		final List<Long> entityIds = new ArrayList<Long>();
 		for(RootedEntity rootedEntity : SessionMgr.getBrowser().getActiveViewer().getRootedEntities()) {
@@ -229,6 +266,15 @@ public class ScreenEvaluationDialog extends ModalDialog {
 			
 			@Override
 			protected void hadSuccess() {
+				isCurrFolderDirty = false;
+				if (success!=null) {
+					try {
+						success.call();
+					}
+					catch (Exception e) {
+						hadError(e);
+					}
+				}
 			}
 			
 			@Override
@@ -240,7 +286,6 @@ public class ScreenEvaluationDialog extends ModalDialog {
 		worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getBrowser(), "Organizing...", "", 0, 100));
 		worker.execute();
 	}
-	
 	
 	private void organizeEntity(final Long entityId) throws Exception {
 		
@@ -358,8 +403,8 @@ public class ScreenEvaluationDialog extends ModalDialog {
 		// Remove from old folders
 		if (currEds!=null) {
 			for(EntityData currEd : currEds) {
-			System.out.println("deleted from folder "+currEd.getParentEntity().getName()+", ed.id="+currEd.getId());
-			modelMgr.removeEntityData(currEd);
+				System.out.println("deleted from folder "+currEd.getParentEntity().getName()+", ed.id="+currEd.getId());
+				modelMgr.removeEntityData(currEd);
 			}
 		}
 	}
@@ -410,4 +455,20 @@ public class ScreenEvaluationDialog extends ModalDialog {
     public void showDialog() {
         packAndShow();
     }
+
+	public boolean isCurrFolderDirty() {
+		return isCurrFolderDirty;
+	}
+
+	public void setCurrFolderDirty(boolean isCurrFolderDirty) {
+		this.isCurrFolderDirty = isCurrFolderDirty;
+	}
+	
+	public boolean isAskAfterNavigation() {
+		return askAfterNavigationRadioButton.isSelected();
+	}
+	
+	public boolean isAutoMoveAfterNavigation() {
+		return autoMoveAfterNavigationRadioButton.isSelected();
+	}
 }

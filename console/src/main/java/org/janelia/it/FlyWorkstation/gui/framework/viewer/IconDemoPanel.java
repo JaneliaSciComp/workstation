@@ -825,6 +825,7 @@ public class IconDemoPanel extends Viewer {
 		this.updateUI();
 	}
 	
+	@Override
 	public void loadEntity(RootedEntity rootedEntity) {
 		loadEntity(rootedEntity, null);
 	}

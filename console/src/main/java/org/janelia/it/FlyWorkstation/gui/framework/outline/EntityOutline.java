@@ -23,6 +23,7 @@ import javax.swing.tree.TreePath;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.dialogs.ScreenEvaluationDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
@@ -496,7 +497,41 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
     
 	private synchronized void selectNode(final DefaultMutableTreeNode node) {
 
-		final IconDemoPanel panel = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer());
+		// TODO: this should be encapsulated away from here somehow
+		ScreenEvaluationDialog screenEvaluationDialog = SessionMgr.getBrowser().getScreenEvaluationDialog();
+		boolean dirtyBit = screenEvaluationDialog.isCurrFolderDirty();
+		if (dirtyBit) {
+			screenEvaluationDialog.setCurrFolderDirty(false);
+			if (screenEvaluationDialog.isAutoMoveAfterNavigation()) {
+				screenEvaluationDialog.organizeEntitiesInCurrentFolder(new Callable<Void>() {
+					@Override
+					public Void call() throws Exception {
+						selectNode(node);
+						return null;
+					}
+				});
+				return;
+			}
+			else if (screenEvaluationDialog.isAskAfterNavigation()) {
+				Object[] options = {"Yes", "No", "Organize now"};
+				int c = JOptionPane.showOptionDialog(SessionMgr.getBrowser(),
+						"Are you sure you want to navigate away from this folder without organizing it?", "Navigate",
+						JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[2]);
+				if (c == 1) {
+					return;
+				}
+				else if (c == 2) {
+					screenEvaluationDialog.organizeEntitiesInCurrentFolder(new Callable<Void>() {
+						@Override
+						public Void call() throws Exception {
+							selectNode(node);
+							return null;
+						}
+					});
+					return;
+				}
+			}
+		}
 		
 		if (node == null) {
 			currUniqueId = null;
@@ -524,6 +559,8 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 
 		getDynamicTree().navigateToNode(node);
 
+		// TODO: this should be abstracted. The EntityOutline shouldn't know about the IconDemoPanel
+		final IconDemoPanel panel = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer());
 		panel.showLoadingIndicator();
 
 		final String finalCurrUniqueId = currUniqueId;
@@ -541,7 +578,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		else {
 			loadEntityInViewer(finalCurrUniqueId);
 		}
-
 	}
 	
 	private void loadEntityInViewer(String uniqueId) {
@@ -557,6 +593,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		}
 		
 		RootedEntity rootedEntity = new RootedEntity(uniqueId, getEntityData(node));
-		((IconDemoPanel)SessionMgr.getSessionMgr().getActiveBrowser().getActiveViewer()).loadEntity(rootedEntity);
+		SessionMgr.getSessionMgr().getActiveBrowser().getActiveViewer().loadEntity(rootedEntity);
 	}
 }

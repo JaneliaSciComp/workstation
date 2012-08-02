@@ -62,6 +62,12 @@ public abstract class Viewer extends JPanel implements Refreshable {
 	}
 	
 	/**
+	 * Display the given RootedEntity in the viewer.
+	 * @param rootedEntity
+	 */
+	public abstract void loadEntity(RootedEntity rootedEntity);
+	
+	/**
 	 * Returns all RootedEntity objects loaded in the viewer.
 	 * @return
 	 */

@@ -6,12 +6,10 @@ import java.awt.event.ActionListener;
 import javax.swing.JDialog;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import javax.swing.KeyStroke;
 
 import org.janelia.it.FlyWorkstation.gui.dialogs.DataGroupDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.ScreenEvaluationDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
 
 /**
  * Created by IntelliJ IDEA.
@@ -21,8 +19,6 @@ import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
  */
 public class ServicesMenu extends JMenu {
 
-	private KeyStroke screenEvalAccel = KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, SystemInfo.isMac?java.awt.Event.META_MASK:java.awt.Event.CTRL_MASK);
-	
     public ServicesMenu(final Browser browser) {
         super("Services");
 
@@ -53,7 +49,6 @@ public class ServicesMenu extends JMenu {
                     SessionMgr.getSessionMgr().getActiveBrowser().getScreenEvaluationDialog().showDialog();
                 }
             });
-            screenEvaluationMenuItem.setAccelerator(screenEvalAccel);
             
             add(screenEvaluationMenuItem);
         }
