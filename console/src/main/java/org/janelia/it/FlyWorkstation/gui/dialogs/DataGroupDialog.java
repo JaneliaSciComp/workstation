@@ -24,6 +24,8 @@ public class DataGroupDialog extends JDialog {
     private JPanel backgroundPanel = new JPanel();
     private DefaultTableModel userListModel;
     private DefaultTableModel dataCircleModel;
+    final DefaultTableModel dataGroups;
+
 
     public DataGroupDialog(){
         super(SessionMgr.getBrowser(),"Data Groups", true);
@@ -48,10 +50,10 @@ public class DataGroupDialog extends JDialog {
         userTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
         dataCircleModel = new DefaultTableModel();
-        dataCircleModel.addColumn("Users in your Circle");
+        dataCircleModel.addColumn("Users in your Group");
         final JTable dataCircleTable = new JTable(dataCircleModel);
         dataCircleTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-        backgroundPanel.setLayout(new BoxLayout(backgroundPanel, BoxLayout.PAGE_AXIS));
+        backgroundPanel.setLayout(new BoxLayout(backgroundPanel, BoxLayout.Y_AXIS));
 
         final JButton doneButton = new JButton("Save");
         doneButton.addActionListener(new ActionListener() {
@@ -100,46 +102,46 @@ public class DataGroupDialog extends JDialog {
                 DataGroupDialog.this.setVisible(false);
             }
         });
+
+        final JTextField dataGroupName = new JTextField();
+        TitledBorder dataGroupNameBorder = BorderFactory.createTitledBorder("Data Group Name");
+        dataGroupName.setBorder(dataGroupNameBorder);
+        backgroundPanel.add(dataGroupName);
         JPanel circleSetUpPanel = new JPanel();
         circleSetUpPanel.setLayout(new BoxLayout(circleSetUpPanel, BoxLayout.X_AXIS));
-        JPanel circleListPanel = new JPanel();
         JScrollPane dataCirclePane = new JScrollPane(dataCircleTable);
-        circleListPanel.add(dataCirclePane);
-        JPanel userListPanel = new JPanel();
         JScrollPane userListPane = new JScrollPane(userTable);
-        userListPanel.add(userListPane);
         JPanel middleButtonPanel = new JPanel();
-        TitledBorder circleListBorder = BorderFactory.createTitledBorder("Users in your circle");
-        TitledBorder userListBorder = BorderFactory.createTitledBorder("Users");
-        circleListPanel.setBorder(circleListBorder);
-        userListPanel.setBorder(userListBorder);
         middleButtonPanel.setLayout(new BoxLayout(middleButtonPanel, BoxLayout.PAGE_AXIS));
         middleButtonPanel.add(addButton);
         middleButtonPanel.add(removeButton);
-        circleSetUpPanel.add(circleListPanel);
+        circleSetUpPanel.add(dataCirclePane);
         circleSetUpPanel.add(middleButtonPanel);
-        circleSetUpPanel.add(userListPanel);
+        circleSetUpPanel.add(userListPane);
 //        backgroundPanel.add(circleSetUpPanel);
-
-        final DefaultTableModel dataGroups = new DefaultTableModel();
+        dataGroups = new DefaultTableModel();
+        dataGroups.addColumn("Existing Groups");
         final JTable dataGroupsTable = new JTable(dataGroups);
+        dataGroupsTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         JPanel dataGroupsTablePanel = new JPanel();
-        dataGroupsTablePanel.setLayout(new BoxLayout(dataGroupsTablePanel, BoxLayout.PAGE_AXIS));
         dataGroupsTablePanel.add(dataGroupsTable);
 
-        final JButton addGroupButton = new JButton("Add Group");
-        addButton.addActionListener(new ActionListener() {
+        final JButton addGroupButton = new JButton("+");
+        addGroupButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                dataGroups.addRow(new Object[]{""});
+                if(!dataGroupName.getText().equals("") && null!=dataGroupName.getText())
+                    dataGroups.addRow(new Object[]{dataGroupName.getText()});
+                dataGroupName.setText("");
             }
         });
 
-        final JButton removeGroupButton = new JButton("Remove Group");
-        removeButton.addActionListener(new ActionListener() {
+        final JButton removeGroupButton = new JButton("-");
+        removeGroupButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 dataGroups.removeRow(dataGroupsTable.getSelectedRow());
+                dataGroupName.setText("");
             }
         });
 
@@ -162,8 +164,6 @@ public class DataGroupDialog extends JDialog {
         buttonPanel.add(closeButton);
         backgroundPanel.add(buttonPanel);
 
-
-
         createAndShowGUI();
     }
 
@@ -171,7 +171,7 @@ public class DataGroupDialog extends JDialog {
         //Create and set up the window.
 
         this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        this.setResizable(true);
+        this.setResizable(false);
         this.setIconImage(SessionMgr.getBrowser().getIconImage());
         this.setLocationRelativeTo(SessionMgr.getBrowser());
         backgroundPanel.setOpaque(true); //content panes must be opaque

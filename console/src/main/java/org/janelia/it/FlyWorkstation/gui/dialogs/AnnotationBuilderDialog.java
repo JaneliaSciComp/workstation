@@ -25,7 +25,7 @@ public class AnnotationBuilderDialog extends JDialog{
     private StringBuilder pathString = new StringBuilder();
 
     public AnnotationBuilderDialog(){
-        super(SessionMgr.getBrowser(),"Path Annotation", true);
+        super(SessionMgr.getBrowser(),"Edit Value", true);
         TreeSet<String> ontologyTermSet = ModelMgr.getModelMgr().getOntologyTermSet(ModelMgr.getModelMgr().getCurrentOntology());
         final JComboBox comboBox = new JComboBox(ontologyTermSet.toArray());
         comboBox.setEditable(true);
