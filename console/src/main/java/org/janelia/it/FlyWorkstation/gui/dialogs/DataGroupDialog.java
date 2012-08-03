@@ -123,8 +123,10 @@ public class DataGroupDialog extends JDialog {
         dataGroups.addColumn("Existing Groups");
         final JTable dataGroupsTable = new JTable(dataGroups);
         dataGroupsTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        JScrollPane dataGroupsTablePane = new JScrollPane(dataGroupsTable);
         JPanel dataGroupsTablePanel = new JPanel();
-        dataGroupsTablePanel.add(dataGroupsTable);
+        dataGroupsTablePanel.setLayout(new BoxLayout(dataGroupsTablePanel, BoxLayout.PAGE_AXIS));
+        dataGroupsTablePanel.add(dataGroupsTablePane);
 
         final JButton addGroupButton = new JButton("+");
         addGroupButton.addActionListener(new ActionListener() {
@@ -144,9 +146,11 @@ public class DataGroupDialog extends JDialog {
                 dataGroupName.setText("");
             }
         });
-
-        dataGroupsTablePanel.add(addGroupButton);
-        dataGroupsTablePanel.add(removeGroupButton);
+        JPanel dataGroupsButtonPanel = new JPanel();
+        dataGroupsButtonPanel.setLayout(new BoxLayout(dataGroupsButtonPanel, BoxLayout.X_AXIS));
+        dataGroupsButtonPanel.add(addGroupButton);
+        dataGroupsButtonPanel.add(removeGroupButton);
+        dataGroupsTablePanel.add(dataGroupsButtonPanel);
 
 //        java.util.List taskList = createTaskList(userList);
 //        TableModelAdapter tableModelAdapter = new TaskTableModelAdapter();
