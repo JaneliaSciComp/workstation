@@ -233,7 +233,7 @@ public class EntityDetailsDialog extends ModalDialog {
 
 	            SolrQuery query = new SolrQuery("id:"+entityId);
 	            SolrResults results = ModelMgr.getModelMgr().searchSolr(query);
-	            this.doc = results.getEntityDocuments().iterator().next();
+	            this.doc = results.getEntityDocuments().isEmpty() ? null : results.getEntityDocuments().iterator().next();
 	            if (doc==null) {
 	            	this.entity = ModelMgr.getModelMgr().getEntityById(entityId+"");
 	            }
