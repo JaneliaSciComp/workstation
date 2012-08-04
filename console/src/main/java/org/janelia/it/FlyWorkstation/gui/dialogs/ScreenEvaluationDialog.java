@@ -166,7 +166,7 @@ public class ScreenEvaluationDialog extends ModalDialog {
 				}
 				
 				if (topLevelFolder==null) {
-					throw new IllegalStateException("Cannot find top-level folder named "+TOP_LEVEL_FOLDER_NAME);
+					return;
 				}
 				
 				ModelMgrUtils.loadLazyEntity(topLevelFolder, false);
@@ -190,7 +190,7 @@ public class ScreenEvaluationDialog extends ModalDialog {
 	
 	public boolean isAccessible() {
 		String username = SessionMgr.getUsername();
-		if (!"rokickik".equals(username) && !"saffordt".equals(username) && !"jenetta".equals(username)) {
+		if (!"jenetta".equals(username)) {
 			return false;
 		}
 		return true;
