@@ -316,7 +316,7 @@ public class FacadeManager {
         return PathTranslator.getMountHelpMessage();
     }
     
-    static public String getOsSpecificRootPath() {
-        return PathTranslator.getOsSpecificRootPath();
+    static public String getJacsDataPath() {
+        return PathTranslator.getJacsDataPath();
     }
 }

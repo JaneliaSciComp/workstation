@@ -52,7 +52,7 @@ public class ToolSettingsPanel extends JPanel implements PrefEditor {
     }
 
     public String getPanelGroup() {
-        return PrefController.SYSTEM_EDITOR;
+        return PrefController.APPLICATION_EDITOR;
     }
 
     public String getDescription() {

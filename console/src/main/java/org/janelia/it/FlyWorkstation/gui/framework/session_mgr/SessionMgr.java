@@ -11,6 +11,7 @@ import java.util.*;
 import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.FlyWorkstation.api.stub.data.SystemError;
@@ -19,6 +20,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.external_listener.ExternalLis
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyBindings;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
+import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.ws.EmbeddedAxisServer;
@@ -29,12 +31,14 @@ public class SessionMgr {
 
     public static String DISPLAY_FREE_MEMORY_METER_PROPERTY = "SessionMgr.DisplayFreeMemoryProperty";
     public static String DISPLAY_SUB_EDITOR_PROPERTY = "SessionMgr.DisplaySubEditorProperty";
-    
+    public static String JACS_DATA_PATH_PROPERTY = "SessionMgr.JacsDataPathProperty";
+    public static String JACS_INTERACTIVE_SERVER_PROPERTY = "SessionMgr.JacsInteractiveServerProperty";
+    public static String JACS_PIPELINE_SERVER_PROPERTY = "SessionMgr.JacsPipelineServerProperty";
     public static String USER_NAME = LoginProperties.SERVER_LOGIN_NAME;
     public static String USER_PASSWORD = LoginProperties.SERVER_LOGIN_PASSWORD;
     public static String USER_EMAIL = "UserEmail";
 
-    public static String DISPLAY_LOOK_AND_FEEL = "SessionMgr.DisplayLookAndFeel";
+    public static String DISPLAY_LOOK_AND_FEEL = "SessionMgr.JavaLookAndFeel";
 
     //  private static String PROPERTY_CREATION_RULES="SessionMgr.PropertyCreationRules";
     private static ModelMgr modelManager = ModelMgr.getModelMgr();
@@ -60,6 +64,7 @@ public class SessionMgr {
     private boolean isLoggedIn;
 
     private SessionMgr() {
+    	
         settingsFile = new File(prefsFile);
         try {
             settingsFile.createNewFile();  //only creates if does not exist
@@ -75,9 +80,17 @@ public class SessionMgr {
         }
 
         readSettingsFile();
-        if (getModelProperty(DISPLAY_FREE_MEMORY_METER_PROPERTY) == null)
+        EJBFactory.initFromModelProperties(sessionModel);
+        PathTranslator.initFromModelProperties(sessionModel);
+
+        if (getModelProperty(DISPLAY_FREE_MEMORY_METER_PROPERTY) == null) {
             setModelProperty(DISPLAY_FREE_MEMORY_METER_PROPERTY, true);
-        if (getModelProperty(DISPLAY_SUB_EDITOR_PROPERTY) == null) { setModelProperty(DISPLAY_SUB_EDITOR_PROPERTY, true); }
+        }
+        
+        if (getModelProperty(DISPLAY_SUB_EDITOR_PROPERTY) == null) { 
+        	setModelProperty(DISPLAY_SUB_EDITOR_PROPERTY, true); 
+        }
+        
 //      if (getModelProperty(PROPERTY_CREATION_RULES)!=null) {
 //        Set rules= (Set)getModelProperty(PROPERTY_CREATION_RULES);
 //          for (Object rule : rules) {
@@ -88,7 +101,6 @@ public class SessionMgr {
         UIManager.installLookAndFeel("Synthetica BlackEye Look and Feel", "de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel");
         
         String lafName = (String) getModelProperty(DISPLAY_LOOK_AND_FEEL);
-        
         if (lafName != null) {
             try {
             	setLookAndFeel(lafName);
@@ -98,8 +110,9 @@ public class SessionMgr {
             }
         }
         else {
-            setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            setLookAndFeel("de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel");
         }
+        
         String tempLogin = (String) getModelProperty(USER_NAME);
         String tempPassword = (String) getModelProperty(USER_PASSWORD);
         if (tempLogin != null && tempPassword != null) {
@@ -164,7 +177,11 @@ public class SessionMgr {
         return sessionManager;
     }
 
-    public Object setModelProperty(Object key, Object value) {
+    public SessionModel getSessionModel() {
+		return sessionModel;
+	}
+
+	public Object setModelProperty(Object key, Object value) {
         return sessionModel.setModelProperty(key, value);
     }
 

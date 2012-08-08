@@ -186,6 +186,9 @@ public class Icons {
         else if (EntityConstants.TYPE_IMAGE_2D.equals(type)) {
             return getIcon(large ? "file_large.png" : "image.png");
         }
+        else if (EntityConstants.TYPE_MYERS_NEURON_SEPARATION_FILE.equals(type)) {
+            return getIcon(large ? "file_large.png" : "image.png");
+        }
         else if (EntityConstants.TYPE_TEXT_FILE.equals(type)) {
             return getIcon(large ? "file_large.png" : "page_white.png");
         }
@@ -219,7 +222,10 @@ public class Icons {
             return getIcon(large ? "ano_large.png" : "ano_small.png");
         }
         else if (EntityConstants.TYPE_MOVIE.equals(type)) {
-            return getIcon(large ? "movie.png" : "ano_small.png");
+            return getIcon(large ? "file_large.png" : "movie.png");
+        }
+        else if (EntityConstants.TYPE_FILE.equals(type)) {
+            return getIcon(large ? "file_large.png" : "page_white.png");
         }
         
         return getIcon(large ? "error_large.png" : "bullet_error.png");

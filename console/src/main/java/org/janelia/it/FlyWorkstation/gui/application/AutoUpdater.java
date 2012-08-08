@@ -6,10 +6,7 @@ import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.gui.framework.exception_handlers.ExitHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.exception_handlers.UserNotificationExceptionHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
-import org.janelia.it.FlyWorkstation.gui.util.FakeProgressWorker;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
+import org.janelia.it.FlyWorkstation.gui.util.*;
 import org.janelia.it.jacs.compute.api.ComputeBeanRemote;
 import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.SystemCall;
@@ -74,7 +71,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 			}
 		});
 	}
-	
+
 	public void showVersionCheck() throws Exception {
 		
         ComputeBeanRemote computeBean = EJBFactory.getRemoteComputeBean();
@@ -91,8 +88,8 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
             File releaseNotesFile;
             if (SystemInfo.isMac) {
             	String suiteDir = "FlySuite_"+serverVersion;
-            	remoteFile = new File(FacadeManager.getOsSpecificRootPath(), "FlySuite/"+suiteDir+".tgz");
-            	releaseNotesFile = new File(FacadeManager.getOsSpecificRootPath(), "FlySuite/"+suiteDir+"/releaseNotes.txt");
+            	remoteFile = getJacsDataFile("FlySuite/"+suiteDir+".tgz");
+            	releaseNotesFile = getJacsDataFile("FlySuite/"+suiteDir+"/releaseNotes.txt");
         		downloadsDir = new File(System.getProperty("user.home"),"Downloads/");
             	downloadFile = new File(downloadsDir, remoteFile.getName());
             	extractedDir = new File(downloadsDir, suiteDir);
@@ -100,8 +97,8 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
         	}
         	else if (SystemInfo.isLinux) {
             	String suiteDir = "FlySuite_linux_"+serverVersion;
-            	remoteFile = new File(FacadeManager.getOsSpecificRootPath(), "FlySuite/"+suiteDir+".tgz");
-            	releaseNotesFile = new File(FacadeManager.getOsSpecificRootPath(), "FlySuite/"+suiteDir+"/releaseNotes.txt");
+            	remoteFile = getJacsDataFile("FlySuite/"+suiteDir+".tgz");
+            	releaseNotesFile = getJacsDataFile("FlySuite/"+suiteDir+"/releaseNotes.txt");
         		downloadsDir = new File("/tmp/");
             	downloadFile = new File(downloadsDir, remoteFile.getName());
             	extractedDir = new File(downloadsDir, suiteDir);
@@ -109,8 +106,8 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
         	}
             else if (SystemInfo.isWindows) {
                 String suiteDir = "FlySuite_windows_"+serverVersion;
-                remoteFile = new File(FacadeManager.getOsSpecificRootPath(), "FlySuite/"+suiteDir+".zip");
-                releaseNotesFile = new File(FacadeManager.getOsSpecificRootPath(), "FlySuite/"+suiteDir+"/releaseNotes.txt");
+                remoteFile = getJacsDataFile("FlySuite/"+suiteDir+".zip");
+                releaseNotesFile = getJacsDataFile("FlySuite/"+suiteDir+"/releaseNotes.txt");
                 downloadsDir = new File(SessionMgr.getSessionMgr().getApplicationOutputDirectory()+"/tmp/");
                 downloadFile = new File(downloadsDir, remoteFile.getName());
                 extractedDir = new File(downloadsDir, suiteDir);
@@ -119,8 +116,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
             else {
         		throw new IllegalStateException("Operation system not supported: "+SystemInfo.OS_NAME);
         	}
-        	
-        	
+            
         	if (!remoteFile.exists() || !remoteFile.canRead()) {
         		throw new Exception("Cannot access "+remoteFile.getAbsolutePath());
         	}
@@ -338,7 +334,12 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 		
 		return call.emulateCommandLine(args, null, dir, 3600);
 	}
-	
+
+    private File getJacsDataFile(String relativePath) {
+    	File file = new File(PathTranslator.JACS_DATA_PATH_LINUX, relativePath);
+    	return new File(PathTranslator.convertPath(file.getAbsolutePath()));
+    }
+    
     public static void main(final String[] args) {
 
         try {

@@ -122,7 +122,7 @@ public class EditMenu extends JMenu {
         menuPrefSystem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F3, InputEvent.CTRL_MASK, false));
         menuPrefSystem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                establishPrefController(PrefController.SYSTEM_EDITOR);
+                establishPrefController(PrefController.APPLICATION_EDITOR);
             }
         });
         menuSetPreferences.add(menuPrefSystem);

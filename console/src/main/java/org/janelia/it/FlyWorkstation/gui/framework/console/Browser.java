@@ -8,7 +8,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.FilenameFilter;
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -33,10 +32,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ImageCache;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerSplitPanel;
-import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.gui.util.JOutlookBar;
-import org.janelia.it.FlyWorkstation.gui.util.JOutlookBar2;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.gui.util.*;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableImage;
@@ -142,6 +138,11 @@ public class Browser extends JFrame implements Cloneable {
         }
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
+        }
+
+        // Check to see if NFS is accessible but not in use
+        if (!SessionMgr.getSessionMgr().getModelProperty(SessionMgr.JACS_DATA_PATH_PROPERTY).equals(PathTranslator.JACS_DATA_PATH_LINUX) && new File(PathTranslator.JACS_DATA_PATH_LINUX).canRead()) {
+        	JOptionPane.showMessageDialog(this, "NFS mount is available, but not configured. To improve performance, edit your data source preferences.", "WARNING", JOptionPane.ERROR_MESSAGE);
         }
     }
     

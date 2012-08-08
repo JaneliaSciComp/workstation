@@ -1,5 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.application;
 
+import java.util.MissingResourceException;
+
+import javax.swing.JOptionPane;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
@@ -11,12 +15,10 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ApplicationSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.panels.DataSourceSettings;
+import org.janelia.it.FlyWorkstation.gui.util.panels.SystemSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.server_status.ServerStatusReportManager;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
-
-import javax.swing.*;
-import java.util.MissingResourceException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -107,6 +109,7 @@ public class ConsoleApp {
 //                    client.gui.other.panels.BackupPanel.class);
             sessionMgr.registerPreferenceInterface(ApplicationSettingsPanel.class, ApplicationSettingsPanel.class);
             sessionMgr.registerPreferenceInterface(DataSourceSettings.class, DataSourceSettings.class);
+            sessionMgr.registerPreferenceInterface(SystemSettingsPanel.class, SystemSettingsPanel.class);
             sessionMgr.registerPreferenceInterface(ViewerSettingsPanel.class, ViewerSettingsPanel.class);
 //            sessionMgr.registerPreferenceInterface(ToolSettingsPanel.class, ToolSettingsPanel.class);
 //            sessionMgr.registerPreferenceInterface(

@@ -80,7 +80,7 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
     }
 
     public String getPanelGroup() {
-        return PrefController.SYSTEM_EDITOR;
+        return PrefController.APPLICATION_EDITOR;
     }
 
     public String getDescription() {
@@ -248,7 +248,7 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
         add(loginPanel);
         add(Box.createVerticalStrut(10));
         add(emailPanel);
-        add(Box.createVerticalStrut(10));
+        add(Box.createVerticalGlue());
         add(notePanel);
 
 //        addDirectoryButton = new JButton("Add to Current Directories");

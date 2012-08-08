@@ -115,7 +115,7 @@ public class FileMenu extends JMenu {
         menuPrefSystem = new JMenuItem("System...", 'S');
         menuPrefSystem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                establishPrefController(PrefController.SYSTEM_EDITOR);
+                establishPrefController(PrefController.APPLICATION_EDITOR);
             }
         });
         menuSetPreferences.add(menuPrefSystem);

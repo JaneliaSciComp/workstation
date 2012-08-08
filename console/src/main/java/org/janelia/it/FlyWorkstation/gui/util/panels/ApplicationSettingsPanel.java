@@ -43,7 +43,7 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
 
 
     public String getPanelGroup() {
-        return PrefController.SYSTEM_EDITOR;
+        return PrefController.APPLICATION_EDITOR;
     }
 
     private void jbInit() throws Exception {

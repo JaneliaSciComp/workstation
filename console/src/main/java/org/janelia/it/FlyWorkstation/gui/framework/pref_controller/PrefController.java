@@ -33,7 +33,7 @@ public class PrefController {
     private HashMap<Object, String> classToNameMap = new HashMap<Object, String>();
 
     private static final String DEFAULT = "Default";
-    public static final String SYSTEM_EDITOR = "System";
+    public static final String APPLICATION_EDITOR = "Application";
     public static final String VIEWER_EDITOR = "Viewer";
     public static final String TOOLS_EDITOR = "Tools";
     // List and offer the Panel Categories
