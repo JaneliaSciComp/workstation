@@ -218,7 +218,10 @@ public class Icons {
         else if (EntityConstants.TYPE_V3D_ANO_FILE.equals(type)) {
             return getIcon(large ? "ano_large.png" : "ano_small.png");
         }
-
+        else if (EntityConstants.TYPE_MOVIE.equals(type)) {
+            return getIcon(large ? "movie.png" : "ano_small.png");
+        }
+        
         return getIcon(large ? "error_large.png" : "bullet_error.png");
     }
 }
