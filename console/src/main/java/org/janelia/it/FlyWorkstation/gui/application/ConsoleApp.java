@@ -109,7 +109,7 @@ public class ConsoleApp {
 //                    client.gui.other.panels.BackupPanel.class);
             sessionMgr.registerPreferenceInterface(ApplicationSettingsPanel.class, ApplicationSettingsPanel.class);
             sessionMgr.registerPreferenceInterface(DataSourceSettings.class, DataSourceSettings.class);
-            sessionMgr.registerPreferenceInterface(SystemSettingsPanel.class, SystemSettingsPanel.class);
+//            sessionMgr.registerPreferenceInterface(SystemSettingsPanel.class, SystemSettingsPanel.class);
             sessionMgr.registerPreferenceInterface(ViewerSettingsPanel.class, ViewerSettingsPanel.class);
 //            sessionMgr.registerPreferenceInterface(ToolSettingsPanel.class, ToolSettingsPanel.class);
 //            sessionMgr.registerPreferenceInterface(

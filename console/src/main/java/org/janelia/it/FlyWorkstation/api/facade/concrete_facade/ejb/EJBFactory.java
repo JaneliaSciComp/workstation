@@ -14,8 +14,10 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 
 public class EJBFactory {
 	
-    private static final String DEFAULT_INTERACTIVE_SERVER = ConsoleProperties.getInstance().getProperty("default.interactive.server.url");
-    private static final String DEFAULT_PIPELINE_SERVER = ConsoleProperties.getInstance().getProperty("default.pipeline.server.url");
+//    private static final String DEFAULT_INTERACTIVE_SERVER = ConsoleProperties.getInstance().getProperty("default.interactive.server.url");
+//    private static final String DEFAULT_PIPELINE_SERVER = ConsoleProperties.getInstance().getProperty("default.pipeline.server.url");
+    private static final String INTERACTIVE_SERVER = ConsoleProperties.getInstance().getProperty("interactive.server.url");
+    private static final String PIPELINE_SERVER = ConsoleProperties.getInstance().getProperty("pipeline.server.url");
     private static final String INITIAL_CONTEXT_FACTORY = ConsoleProperties.getInstance().getProperty("initial.context.factory");
     private static final String URL_PKG_PREFIXES = ConsoleProperties.getInstance().getProperty("url.pkg.prefixes");
     private static final String REMOTE_ANNOTATION_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.annotation.jndi.name");
@@ -36,18 +38,21 @@ public class EJBFactory {
     public static void initFromModelProperties(SessionModel sessionModel) {
     	System.out.println("Initializing EJB Factory");
     	
-    	interactiveServer = (String)sessionModel.getModelProperty(SessionMgr.JACS_INTERACTIVE_SERVER_PROPERTY);
-    	pipelineServer = (String)sessionModel.getModelProperty(SessionMgr.JACS_PIPELINE_SERVER_PROPERTY);
+//    	interactiveServer = (String)sessionModel.getModelProperty(SessionMgr.JACS_INTERACTIVE_SERVER_PROPERTY);
+//    	pipelineServer = (String)sessionModel.getModelProperty(SessionMgr.JACS_PIPELINE_SERVER_PROPERTY);
+//    	
+//    	if (interactiveServer==null) {
+//    		interactiveServer = DEFAULT_INTERACTIVE_SERVER;
+//    		sessionModel.setModelProperty(SessionMgr.JACS_INTERACTIVE_SERVER_PROPERTY, interactiveServer);
+//    	}
+//    	
+//    	if (pipelineServer==null) {
+//    		pipelineServer = DEFAULT_PIPELINE_SERVER;
+//    		sessionModel.setModelProperty(SessionMgr.JACS_PIPELINE_SERVER_PROPERTY, pipelineServer);
+//    	}
     	
-    	if (interactiveServer==null) {
-    		interactiveServer = DEFAULT_INTERACTIVE_SERVER;
-    		sessionModel.setModelProperty(SessionMgr.JACS_INTERACTIVE_SERVER_PROPERTY, interactiveServer);
-    	}
-    	
-    	if (pipelineServer==null) {
-    		pipelineServer = DEFAULT_PIPELINE_SERVER;
-    		sessionModel.setModelProperty(SessionMgr.JACS_PIPELINE_SERVER_PROPERTY, pipelineServer);
-    	}
+    	interactiveServer = INTERACTIVE_SERVER;
+    	pipelineServer = PIPELINE_SERVER;
     	
     	String interactiveServerUrl = "jnp://"+interactiveServer+":1199";
     	String pipelineServerUrl = "jnp://"+pipelineServer+":1199";
