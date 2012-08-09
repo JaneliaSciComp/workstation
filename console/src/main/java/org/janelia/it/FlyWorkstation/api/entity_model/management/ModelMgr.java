@@ -821,7 +821,7 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getComputeFacade().getUser();
     }
 
-    public List getUsers() throws Exception{
+    public List<User> getUsers() throws Exception{
         return FacadeManager.getFacadeManager().getComputeFacade().getUsers();
     }
 

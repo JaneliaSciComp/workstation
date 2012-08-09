@@ -10,6 +10,7 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashSet;
@@ -71,7 +72,7 @@ public class DataGroupDialog extends JDialog {
         final JTable dataCircleTable = new JTable(dataCircleModel);
         dataCircleTable.setRowSorter(dataGroupSorter);
         dataCircleTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-        backgroundPanel.setLayout(new BoxLayout(backgroundPanel, BoxLayout.Y_AXIS));
+        backgroundPanel.setLayout(new BorderLayout());
 
         final JButton doneButton = new JButton("Save");
         doneButton.addActionListener(new ActionListener() {
@@ -135,10 +136,14 @@ public class DataGroupDialog extends JDialog {
             }
         });
 
-        final JTextField dataGroupName = new JTextField();
+        final JTextField dataGroupName = new JTextField(40);
         TitledBorder dataGroupNameBorder = BorderFactory.createTitledBorder("Data Group Name");
         dataGroupName.setBorder(dataGroupNameBorder);
-        backgroundPanel.add(dataGroupName);
+        JPanel namePanel = new JPanel();
+        namePanel.setLayout(new BoxLayout(namePanel, BoxLayout.X_AXIS));
+        namePanel.add(dataGroupName);
+        namePanel.add(Box.createHorizontalGlue());
+
         JPanel circleSetUpPanel = new JPanel();
         circleSetUpPanel.setLayout(new BoxLayout(circleSetUpPanel, BoxLayout.X_AXIS));
         JScrollPane dataCirclePane = new JScrollPane(dataCircleTable);
@@ -158,6 +163,7 @@ public class DataGroupDialog extends JDialog {
         JScrollPane dataGroupsTablePane = new JScrollPane(dataGroupsTable);
         JPanel dataGroupsTablePanel = new JPanel();
         dataGroupsTablePanel.setLayout(new BoxLayout(dataGroupsTablePanel, BoxLayout.PAGE_AXIS));
+        dataGroupsTablePanel.add(namePanel);
         dataGroupsTablePanel.add(dataGroupsTablePane);
 
         final JButton addGroupButton = new JButton("+");
@@ -193,14 +199,16 @@ public class DataGroupDialog extends JDialog {
 //        JPanel panel = new JPanel(new BorderLayout(4, 4));
 //        panel.add(_dualTable, BorderLayout.CENTER);
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,dataGroupsTablePanel,circleSetUpPanel);
-        backgroundPanel.add(splitPane);
+        backgroundPanel.add(splitPane, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
+        buttonPanel.setLayout(new BoxLayout(buttonPanel,BoxLayout.X_AXIS));
+        buttonPanel.add(Box.createHorizontalGlue());
         buttonPanel.add(doneButton);
         buttonPanel.add(resetButton);
         buttonPanel.add(closeButton);
-        backgroundPanel.add(buttonPanel);
+        buttonPanel.add(Box.createHorizontalGlue());
+        backgroundPanel.add(buttonPanel, BorderLayout.SOUTH);
 
         createAndShowGUI();
     }
@@ -219,69 +227,4 @@ public class DataGroupDialog extends JDialog {
         this.pack();
     }
 
-//    private java.util.List createTaskList(List<User> userList) {
-//        java.util.List<Task> rows = new ArrayList<Task>();
-//        for( User user: userList){
-//            rows.add(new Task(user.getUserLogin()));
-//        }
-//        return rows;
-//    }
-
-//    private static class Task extends DefaultExpandableRow {
-//        String name;
-//
-//
-//        public Task() {
-//        }
-//
-//
-//        public Task(String name) {
-//            this.name = name;
-//
-//        }
-//
-//        public Object getValueAt(int columnIndex) {
-//            switch (columnIndex) {
-//                case 0:
-//                    return name;
-//
-//            }
-//            return null;
-//        }
-//
-//        @Override
-//        public void setValueAt(Object value, int columnIndex) {
-//            switch (columnIndex) {
-//                case 0:
-//                    name = "" + value;
-//                    break;
-//            }
-//            super.setValueAt(value, columnIndex);
-//        }
-//    }
-//
-//    private static class TaskTableModelAdapter implements TableModelAdapter {
-//        public TaskTableModelAdapter() {
-//        }
-//
-//        public int getColumnCount() {
-//            return 1;
-//        }
-//
-//        public Class<?> getColumnClass(int columnIndex) {
-//            switch (columnIndex) {
-//                case 0:
-//                    return String.class;
-//            }
-//            return Object.class;
-//        }
-//
-//        public String getColumnName(int column) {
-//            switch (column) {
-//                case 0:
-//                    return "User Name";
-//            }
-//            return null;
-//        }
-//    }
 }

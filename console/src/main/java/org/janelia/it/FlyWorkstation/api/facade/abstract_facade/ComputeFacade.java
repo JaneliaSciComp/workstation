@@ -31,7 +31,7 @@ public interface ComputeFacade {
 
     public User getUser() throws Exception;
 
-    public List getUsers() throws Exception;
+    public List<User> getUsers() throws Exception;
 
     public User saveOrUpdateUser(User user) throws Exception;
 
