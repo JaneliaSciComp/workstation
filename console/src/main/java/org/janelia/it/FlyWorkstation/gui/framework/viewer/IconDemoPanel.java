@@ -23,6 +23,8 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelection
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.UserColorMapping;
 import org.janelia.it.FlyWorkstation.gui.application.SplashPanel;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.RemoveEntityAction;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.*;
@@ -134,6 +136,16 @@ public class IconDemoPanel extends Viewer {
 					if (selectedIds.size() != 1) return;
 					String selectedId = selectedIds.get(0);
 					ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, selectedId, true);
+					return;
+				}
+				
+				// Delete triggers deletion
+				if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+					List<RootedEntity> selected = getSelectedEntities();
+					if (selected.isEmpty()) return;
+					final Action action = new RemoveEntityAction(selected);
+					action.doAction();
+					e.consume();
 					return;
 				}
 

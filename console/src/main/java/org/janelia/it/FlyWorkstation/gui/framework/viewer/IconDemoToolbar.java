@@ -48,7 +48,6 @@ public abstract class IconDemoToolbar extends JPanel {
 		prevButton = new JButton();
 		prevButton.setIcon(Icons.getIcon("arrow_back.gif"));
 		prevButton.setToolTipText("Go back in your browsing history");
-//		prevButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
 		prevButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -60,8 +59,8 @@ public abstract class IconDemoToolbar extends JPanel {
 
 		nextButton = new JButton();
 		nextButton.setIcon(Icons.getIcon("arrow_forward.gif"));
+		nextButton.setFocusable(false);
 		nextButton.setToolTipText("Go forward in your browsing history");
-//		nextButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
 		nextButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -73,6 +72,7 @@ public abstract class IconDemoToolbar extends JPanel {
 
 		pathButton = new JButton();
 		pathButton.setIcon(Icons.getIcon("path-blue.png"));
+		pathButton.setFocusable(false);
 		pathButton.setToolTipText("See the current location");
 		pathButton.addActionListener(new ActionListener() {
 			@Override
@@ -87,7 +87,6 @@ public abstract class IconDemoToolbar extends JPanel {
 		refreshButton.setIcon(Icons.getRefreshIcon());
 		refreshButton.setFocusable(false);
 		refreshButton.setToolTipText("Refresh the current view");
-//		refreshButton.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
 		refreshButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
