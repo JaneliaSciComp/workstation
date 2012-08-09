@@ -6,7 +6,6 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModel;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.jacs.compute.api.*;
@@ -28,8 +27,8 @@ public class EJBFactory {
     private static final String REMOTE_GENOME_CONTEXT_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.genome.context.jndi.name");
     private static final String REMOTE_JOB_CONTROL_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.job.control.jndi.name");
     
-    private static Properties icProperties = new Properties();
-    private static Properties icPropertiesPipelines = new Properties();
+    private static Properties icInteractiveServerProperties = new Properties();
+    private static Properties icPipelineServerProperties = new Properties();
     
     private static String interactiveServer;
     private static String pipelineServer;
@@ -54,23 +53,25 @@ public class EJBFactory {
     	interactiveServer = INTERACTIVE_SERVER;
     	pipelineServer = PIPELINE_SERVER;
     	
+    	if (StringUtils.isEmpty(pipelineServer)) {
+    		pipelineServer = interactiveServer;
+    	}
+    	
     	String interactiveServerUrl = "jnp://"+interactiveServer+":1199";
     	String pipelineServerUrl = "jnp://"+pipelineServer+":1199";
     	
     	System.out.println("    Using interactive server: "+interactiveServerUrl);
     	System.out.println("    Using pipeline server: "+pipelineServerUrl);
     	
-    	icProperties.clear();
-        icProperties.put(Context.PROVIDER_URL, interactiveServerUrl);
-        icProperties.put(Context.INITIAL_CONTEXT_FACTORY, INITIAL_CONTEXT_FACTORY);
-        icProperties.put(Context.URL_PKG_PREFIXES, URL_PKG_PREFIXES);
+    	icInteractiveServerProperties.clear();
+        icInteractiveServerProperties.put(Context.PROVIDER_URL, interactiveServerUrl);
+        icInteractiveServerProperties.put(Context.INITIAL_CONTEXT_FACTORY, INITIAL_CONTEXT_FACTORY);
+        icInteractiveServerProperties.put(Context.URL_PKG_PREFIXES, URL_PKG_PREFIXES);
 
-        if (!StringUtils.isEmpty(pipelineServerUrl)) {
-        	icPropertiesPipelines.clear();
-	        icPropertiesPipelines.put(Context.PROVIDER_URL, pipelineServerUrl);
-	        icPropertiesPipelines.put(Context.INITIAL_CONTEXT_FACTORY, INITIAL_CONTEXT_FACTORY);
-	        icPropertiesPipelines.put(Context.URL_PKG_PREFIXES, URL_PKG_PREFIXES);
-        }
+    	icPipelineServerProperties.clear();
+        icPipelineServerProperties.put(Context.PROVIDER_URL, pipelineServerUrl);
+        icPipelineServerProperties.put(Context.INITIAL_CONTEXT_FACTORY, INITIAL_CONTEXT_FACTORY);
+        icPipelineServerProperties.put(Context.URL_PKG_PREFIXES, URL_PKG_PREFIXES);
     }
 
     public static String getAppServerName() {
@@ -84,10 +85,7 @@ public class EJBFactory {
      * @throws javax.naming.NamingException problem with the name
      */
     private static InitialContext createInitialContext(boolean remotePipeline) throws NamingException {
-    	if (remotePipeline && !StringUtils.isEmpty(pipelineServer)) {
-    		return new InitialContext(icPropertiesPipelines);
-    	}
-        return new InitialContext(icProperties);
+        return new InitialContext(remotePipeline ? icPipelineServerProperties : icInteractiveServerProperties);
     }
     
     /**
