@@ -47,21 +47,21 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
         expandAllButton.setActionCommand(EXPAND_ALL);
         expandAllButton.setToolTipText("Expand all the nodes in the tree.");
         expandAllButton.addActionListener(this);
-        expandAllButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
+//        expandAllButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
         toolBar.add(expandAllButton);
 
         collapseAllButton = new JButton(Icons.getCollapseAllIcon());
         collapseAllButton.setActionCommand(COLLAPSE_ALL);
         collapseAllButton.setToolTipText("Collapse all the nodes in the tree.");
         collapseAllButton.addActionListener(this);
-        collapseAllButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
+//        collapseAllButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
         toolBar.add(collapseAllButton);
 
         refreshButton = new JButton(Icons.getRefreshIcon());
         refreshButton.setActionCommand(REFRESH);
         refreshButton.setToolTipText("Refresh the data in the tree.");
         refreshButton.addActionListener(this);
-        refreshButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
+//        refreshButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
         toolBar.add(refreshButton);
         
         

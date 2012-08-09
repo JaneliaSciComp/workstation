@@ -81,7 +81,7 @@ public class TagCloudPanel<T> extends JPanel {
         tagLabel.setBorder(border);
         tagLabel.setFont(new Font("Sans Serif", Font.BOLD, 12));
         tagLabel.setOpaque(true);
-        tagLabel.setForeground(Color.black);
+//        tagLabel.setForeground(Color.black);
         return tagLabel;
     }
     
