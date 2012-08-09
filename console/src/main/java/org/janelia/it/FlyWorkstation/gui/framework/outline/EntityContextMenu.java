@@ -622,6 +622,8 @@ public class EntityContextMenu extends JPopupMenu {
 					@Override
 					protected void hadSuccess() {
 						
+						boolean confirmedAll = false;
+						
 						final Set<EntityData> toReallyDelete = new HashSet<EntityData>(toDelete);
 						for(EntityData ed : toDelete) {
 							Entity child = ed.getChildEntity();
@@ -645,14 +647,41 @@ public class EntityContextMenu extends JPopupMenu {
 									JOptionPane.showMessageDialog(browser, "No permission to delete "+ed.getChildEntity().getName(), "Error", JOptionPane.ERROR_MESSAGE);
 									toReallyDelete.remove(ed);
 								}
-								else {
-									Object[] options = {"Yes", "No"};
-									int deleteConfirmation = JOptionPane.showOptionDialog(browser,
-											"Are you sure you want to permanently delete '" + ed.getChildEntity().getName()
-													+ "' and all orphaned items inside it?", "Delete",
-											JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[1]);
-									if (deleteConfirmation != 0) {
-										toReallyDelete.remove(ed);
+								else if (!confirmedAll) {
+									
+									if (toDelete.size() > 1) {
+										Object[] options = {"Yes", "Yes to All", "No", "Cancel"};	
+										int r = JOptionPane.showOptionDialog(browser,
+												"Are you sure you want to permanently delete '" + ed.getChildEntity().getName()
+														+ "' and all orphaned items inside it?", "Delete",
+												JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[1]);
+										switch (r) {
+										case 0:
+											break;
+										case 1:
+											confirmedAll = true;
+											break;
+										case 2:
+											toReallyDelete.remove(ed);
+											break;
+										case 3:
+											return;
+										}
+									}
+									else {
+										Object[] options = {"Yes", "No", "Cancel"};
+										int r = JOptionPane.showOptionDialog(browser,
+												"Are you sure you want to permanently delete '" + ed.getChildEntity().getName()
+														+ "' and all orphaned items inside it?", "Delete",
+												JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[1]);
+										switch (r) {
+										case 0:
+											break;
+										case 1:
+											return;
+										case 2:
+											return;
+										}
 									}
 								}
 							}
