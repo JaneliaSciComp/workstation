@@ -3,14 +3,18 @@ package org.janelia.it.FlyWorkstation.gui.dialogs;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.jacs.model.user_data.DataGroup;
 import org.janelia.it.jacs.model.user_data.User;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashSet;
 import java.util.List;
+import java.util.TreeSet;
 
 /**
  * Created with IntelliJ IDEA.
@@ -25,7 +29,10 @@ public class DataGroupDialog extends JDialog {
     private DefaultTableModel userListModel;
     private DefaultTableModel dataCircleModel;
     final DefaultTableModel dataGroups;
-
+    TableRowSorter<DefaultTableModel> userListSorter;
+    TableRowSorter<DefaultTableModel> dataGroupSorter;
+    TreeSet<DataGroup> userGroups = new TreeSet<DataGroup>();
+    HashSet<User> usersInGroup = new HashSet<User>();
 
     public DataGroupDialog(){
         super(SessionMgr.getBrowser(),"Data Groups", true);
@@ -38,20 +45,31 @@ public class DataGroupDialog extends JDialog {
             SessionMgr.getSessionMgr().handleException(e);
         }
 
+        TreeSet<String> userSet = new TreeSet<String>();
+        if (userList != null) {
+            for(User user : userList){
+                userSet.add(user.getUserLogin());
+            }
+        }
+
         userListModel = new DefaultTableModel();
+        userListSorter = new TableRowSorter<DefaultTableModel>(userListModel);
         userListModel.addColumn("Users");
 
-        for (int i = 0; i < userList.size(); i++) {
-            Object[] userString = {userList.get(i).getUserLogin()};
+        for (String userLogin: userSet) {
+            Object[] userString = {userLogin};
             userListModel.addRow(userString);
         }
 
         final JTable userTable = new JTable(userListModel);
+        userTable.setRowSorter(userListSorter);
         userTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
 
         dataCircleModel = new DefaultTableModel();
+        dataGroupSorter = new TableRowSorter<DefaultTableModel>(dataCircleModel);
         dataCircleModel.addColumn("Users in your Group");
         final JTable dataCircleTable = new JTable(dataCircleModel);
+        dataCircleTable.setRowSorter(dataGroupSorter);
         dataCircleTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         backgroundPanel.setLayout(new BoxLayout(backgroundPanel, BoxLayout.Y_AXIS));
 
@@ -64,12 +82,21 @@ public class DataGroupDialog extends JDialog {
         });
 
         final JButton addButton = new JButton("<<<");
+        final List<User> finalUserList = userList;
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Object[] userToAdd = {userListModel.getValueAt(userTable.getSelectedRow(), 0)};
-                dataCircleModel.addRow(userToAdd);
-                userListModel.removeRow(userTable.getSelectedRow());
+                int[] fetchedRows = userTable.getSelectedRows();
+                for(int i : fetchedRows){
+                    Object[] userToAdd = {userListModel.getValueAt(i, 0)};
+                    dataCircleModel.addRow(userToAdd);
+                    if (finalUserList != null) {
+                        usersInGroup.add(finalUserList.get(i));
+                    }
+                }
+                for(int i = fetchedRows.length-1; i >=0 ; i--){
+                    userListModel.removeRow(fetchedRows[i]);
+                }
             }
         });
 
@@ -77,9 +104,14 @@ public class DataGroupDialog extends JDialog {
         removeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                Object[] userToRemove = {dataCircleModel.getValueAt(dataCircleTable.getSelectedRow(), 0)};
-                userListModel.addRow(userToRemove);
-                dataCircleModel.removeRow(dataCircleTable.getSelectedRow());
+                int[] fetchedRows = dataCircleTable.getSelectedRows();
+                for(int i : fetchedRows){
+                    Object[] userToRemove = {dataCircleModel.getValueAt(i, 0)};
+                    userListModel.addRow(userToRemove);
+                }
+                for(int i = fetchedRows.length-1; i >=0 ; i--){
+                    dataCircleModel.removeRow(fetchedRows[i]);
+                }
             }
         });
 
@@ -132,8 +164,10 @@ public class DataGroupDialog extends JDialog {
         addGroupButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(!dataGroupName.getText().equals("") && null!=dataGroupName.getText())
+                if(!dataGroupName.getText().equals("") && null!=dataGroupName.getText()){
                     dataGroups.addRow(new Object[]{dataGroupName.getText()});
+//                    userGroups.add(new DataGroup(dataGroupName.getText(), ))
+                }
                 dataGroupName.setText("");
             }
         });
