@@ -6,12 +6,13 @@
  */
 package org.janelia.it.FlyWorkstation.gui.dataview;
 
+import javax.swing.JFrame;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
+import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
-import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
-
-import javax.swing.*;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 
 /**
  * An graphical interface for viewing the Entity model: EntityTypes, EntityAttributes, Entities and EntityData.
@@ -35,9 +36,10 @@ public class DataviewApp {
         final ModelMgr modelMgr = ModelMgr.getModelMgr();
         modelMgr.registerFacadeManagerForProtocol(FacadeManager.getEJBProtocolString(), EJBFacadeManager.class, "JACS EJB Facade Manager");
         
-        // Make sure the user knows what server they're getting data from (which implies database Prod or Dev)
-        String provider = ConsoleProperties.getInstance().getProperty("provider.url");
-        provider = provider.substring(provider.indexOf("//")+2, provider.lastIndexOf(":"));
+        // This initializes the EJBFactory
+        SessionMgr.getSessionMgr();
+        
+        String provider = EJBFactory.getAppServerName();
 
         mainFrame = new DataviewFrame();
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
