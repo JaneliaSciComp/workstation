@@ -2370,7 +2370,7 @@ ToggleButton
       <color type="FOREGROUND" value="#CCCCCC" /> 
       <defaultsProperty key="Synthetica.toggleButton.border.insets" type="insets" value="9 9 9 9"/>
 
-      <string id="buttonBorder">blackeye/images/border.png</string>
+      <string id="buttonBorder">blackeye/images/button_hover3.png,blackeye/images/button_hover2.png,blackeye/images/button_hover.png,blackeye/images/button.png</string>
       <defaultsProperty key="Synthetica.toggleButton.border" type="idref" value="buttonBorder"/>
 
 	  <painter method="toggleButtonBackground" idref="syntheticaPainter" />
@@ -2388,7 +2388,7 @@ ToggleButton
     </state>
 
     <state value="SELECTED">
-      <string id="buttonBorder">blackeye/images/focus_button4.png</string>
+      <string id="buttonBorder">blackeye/images/button_selectedHover3.png,blackeye/images/button_selectedHover2.png,blackeye/images/button_selectedHover.png,blackeye/images/button_selected.png</string>
       <defaultsProperty key="Synthetica.toggleButton.border.selected" type="idref" value="buttonBorder"/>
 
 	  <painter method="toggleButtonBackground" idref="syntheticaPainter" />
