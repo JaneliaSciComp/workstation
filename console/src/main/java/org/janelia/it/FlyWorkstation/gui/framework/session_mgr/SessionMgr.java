@@ -40,6 +40,8 @@ public class SessionMgr {
 
     public static String DISPLAY_LOOK_AND_FEEL = "SessionMgr.JavaLookAndFeel";
 
+    public static boolean isDarkLook = false;
+    
     //  private static String PROPERTY_CREATION_RULES="SessionMgr.PropertyCreationRules";
     private static ModelMgr modelManager = ModelMgr.getModelMgr();
     private static SessionMgr sessionManager = new SessionMgr();
@@ -396,6 +398,7 @@ public class SessionMgr {
     public void setLookAndFeel(String lookAndFeelClassName) {
         try {
         	if (lookAndFeelClassName.contains("Synthetica")) {
+        		isDarkLook = true;
             	UIManager.setLookAndFeel(new de.javasoft.plaf.synthetica.SyntheticaBlackEyeLookAndFeel() {
 					@Override
 					protected void loadCustomXML() throws ParseException {
@@ -423,6 +426,10 @@ public class SessionMgr {
         }
     }
 
+    public boolean isDarkLook() {
+    	return isDarkLook;
+    }
+    
     public Browser getActiveBrowser() {
         return activeBrowser;
     }

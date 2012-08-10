@@ -1,11 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.GridLayout;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.event.*;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.*;
@@ -71,6 +69,9 @@ public class ImagesPanel extends JScrollPane {
     	buttonsPanel = new ScrollableGridPanel();
         setViewportView(buttonsPanel);
         setBorder(BorderFactory.createEmptyBorder());
+        if (!SessionMgr.getSessionMgr().isDarkLook()) {
+        	getViewport().setBackground(Color.white);
+		}
     }
 
 	/**

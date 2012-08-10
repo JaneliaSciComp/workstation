@@ -3,6 +3,9 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 import java.awt.*;
 import java.awt.dnd.*;
 import java.awt.event.MouseListener;
+import java.awt.image.BufferedImage;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.List;
 
 import javax.swing.*;
@@ -13,6 +16,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
@@ -25,7 +29,7 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class AnnotatedImageButton extends JToggleButton implements DragGestureListener { 
+public abstract class AnnotatedImageButton extends JPanel implements DragGestureListener { 
 	
 	protected final JLabel titleLabel;
 	protected final JLabel subtitleLabel;
@@ -41,8 +45,41 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
     protected final RootedEntity rootedEntity;
     protected SimpleWorker annotationLoadingWorker;
     
+    private static BufferedImage normalBorderImage;
+    private static BufferedImage selectedBorderImage;
+    private static Color normalBackground;
+    private static Color selectedBackground;
+    
+    static {
+    	try {
+    		// TODO: this should be done whenever the L&F changes, but currently we need to restart anyway, 
+    		// so it doesn't matter until that is fixed
+    		
+    		String normalBorder = "border_normal.png";
+    		String selectedBorder = "border_selected.png";
+    		normalBackground = new Color(241,241,241);
+    		selectedBackground = new Color(203,203,203);
+    		
+    		if (SessionMgr.getSessionMgr().isDarkLook()) {
+        		normalBorder = "border_dark_normal.png";
+        		selectedBorder = "border_dark_selected.png";
+        		normalBackground = null;
+        		selectedBackground = null;
+    		}
+    		
+    		normalBorderImage = Utils.toBufferedImage(Utils.getClasspathImage(normalBorder).getImage());
+    		selectedBorderImage = Utils.toBufferedImage(Utils.getClasspathImage(selectedBorder).getImage());
+    	}
+    	catch (Exception e) {
+    		SessionMgr.getSessionMgr().handleException(e);
+    	}
+    }
+    
     public AnnotatedImageButton(final RootedEntity rootedEntity, final IconDemoPanel iconDemoPanel) {
-
+    	    	
+    	normalBackground = getBackground();
+    	setBackground(normalBackground);
+    	
     	this.iconDemoPanel = iconDemoPanel;
     	this.rootedEntity = rootedEntity;
     	
@@ -302,5 +339,48 @@ public abstract class AnnotatedImageButton extends JToggleButton implements Drag
 
 	public IconDemoPanel getIconDemoPanel() {
 		return iconDemoPanel;
+	}
+	
+	private boolean selected;
+
+	public boolean isSelected() {
+		return selected;
+	}
+
+	public void setSelected(boolean selected) {
+		this.selected = selected;
+		
+		if (selected) {
+			if (selectedBackground!=null) setBackground(selectedBackground);
+		}
+		else {
+			if (normalBackground!=null) setBackground(normalBackground);
+		}
+		repaint();
+	}
+
+	@Override
+	protected void paintComponent(Graphics g) {
+
+		super.paintComponent(g);	
+		
+		BufferedImage borderImage = selected ? selectedBorderImage : normalBorderImage;
+		if (borderImage==null) return;
+		
+		int b = 10; // border width
+		int w = getWidth();
+		int h = getHeight();
+		int iw = borderImage.getWidth();
+		int ih = borderImage.getHeight();
+		
+		g.drawImage(borderImage, 0,   0,   b, b, 0,    0,    b,  b,  null); // top left
+		g.drawImage(borderImage, w-b, 0,   w, b, iw-b, 0,    iw, b,  null); // top right
+		g.drawImage(borderImage, 0,   h-b, b, h, 0,    ih-b, b,  ih, null); // bottom right
+		g.drawImage(borderImage, w-b, h-b, w, h, iw-b, ih-b, iw, ih, null); // bottom left
+		
+		g.drawImage(borderImage, b,   0,   w-b, b,   b,    0,    iw-b, b,    null); // top
+		g.drawImage(borderImage, 0,   b,   b,   h-b, 0,    b,    b,    ih-b, null); // left
+		g.drawImage(borderImage, b,   h-b, w-b, h,   b,    ih-b, iw-b, ih,   null); // bottom
+		g.drawImage(borderImage, w-b, b,   w,   h-b, iw-b, b,    iw,   ih-b, null); // right
 	}
 }
