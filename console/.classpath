@@ -29,5 +29,19 @@
 	<classpathentry kind="lib" path="lib/swingx-all-1.6.3.jar"/>
 	<classpathentry kind="lib" path="lib/synthetica.jar"/>
 	<classpathentry kind="lib" path="lib/syntheticaBlackEye.jar"/>
+	<classpathentry kind="lib" path="lib/syntheticaAluOxide.jar"/>
+	<classpathentry kind="lib" path="lib/syntheticaBlackMoon.jar"/>
+	<classpathentry kind="lib" path="lib/syntheticaBlackStar.jar"/>
+	<classpathentry kind="lib" path="lib/syntheticaBlueIce.jar"/>
+	<classpathentry kind="lib" path="lib/syntheticaBlueMoon.jar"/>
+	<classpathentry kind="lib" path="lib/syntheticaBlueSteel.jar"/>
+	<classpathentry kind="lib" path="lib/syntheticaClassy.jar"/>
+	<classpathentry kind="lib" path="lib/syntheticaGreenDream.jar"/>
+	<classpathentry kind="lib" path="lib/syntheticaMauveMetallic.jar"/>
+	<classpathentry kind="lib" path="lib/syntheticaOrangeMetallic.jar"/>
+	<classpathentry kind="lib" path="lib/syntheticaSilverMoon.jar"/>
+	<classpathentry kind="lib" path="lib/syntheticaSimple2D.jar"/>
+	<classpathentry kind="lib" path="lib/syntheticaSkyMetallic.jar"/>
+	<classpathentry kind="lib" path="lib/syntheticaWhiteVision.jar"/>
 	<classpathentry kind="output" path="build/eclipse"/>
 </classpath>

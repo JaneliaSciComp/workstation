@@ -1,18 +1,21 @@
 package org.janelia.it.FlyWorkstation.gui.util.panels;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.swing.*;
+
 import org.janelia.it.FlyWorkstation.gui.framework.navigation_tools.AutoNavigationMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.framework.roles.PrefEditor;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.HashMap;
-import java.util.Map;
 
 public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
     private boolean settingsChanged = false;
@@ -41,12 +44,16 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
         return "Set various browser preferences, including Look and Feel and layout settings.";
     }
 
-
     public String getPanelGroup() {
         return PrefController.APPLICATION_EDITOR;
     }
 
     private void jbInit() throws Exception {
+    	
+    	setPreferredSize(new Dimension(500, 600));
+    	
+    	JPanel mainPanel = new JPanel();
+    	
         JPanel pnlLayoutOptions = new JPanel();
         pnlLayoutOptions.setLayout(new BoxLayout(pnlLayoutOptions, BoxLayout.Y_AXIS));
         pnlLayoutOptions.setBorder(new javax.swing.border.TitledBorder("Browser Options"));
@@ -91,9 +98,9 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
         pnlLayoutOptions.add(Box.createVerticalStrut(5));
         pnlLayoutOptions.add(memoryUsage);
         pnlLayoutOptions.add(Box.createVerticalStrut(5));
-        this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        this.add(Box.createVerticalStrut(10));
-        this.add(pnlLayoutOptions);
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.add(Box.createVerticalStrut(10));
+        mainPanel.add(pnlLayoutOptions);
 
         JPanel popupPanel = new JPanel();
         popupPanel.setBorder(new javax.swing.border.TitledBorder("Pop-up Information Options"));
@@ -108,10 +115,9 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
         navComplete.setSelected(AutoNavigationMgr.getAutoNavigationMgr().isShowingNavigationCompleteMsgs());
         popupPanel.add(navComplete);
         popupPanel.add(Box.createVerticalStrut(5));
-        this.add(Box.createVerticalStrut(20));
-        this.add(popupPanel);
-
-
+        mainPanel.add(Box.createVerticalStrut(20));
+        mainPanel.add(popupPanel);
+        
         JPanel pnlLookAndFeelOptions = new JPanel();
         pnlLookAndFeelOptions.setBorder(new javax.swing.border.TitledBorder("Look and Feel Options"));
 
@@ -132,9 +138,14 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
             pnlLookAndFeelOptions.add(rb);
             pnlLookAndFeelOptions.add(Box.createVerticalStrut(15));
         }
-        this.add(Box.createVerticalStrut(20));
-        this.add(pnlLookAndFeelOptions);
-
+        mainPanel.add(Box.createVerticalStrut(20));
+        mainPanel.add(pnlLookAndFeelOptions);
+        
+        JScrollPane scrollPane = new JScrollPane();
+        scrollPane.setViewportView(mainPanel);
+        
+        setLayout(new BorderLayout());
+        add(scrollPane, BorderLayout.CENTER);
     }
 
     public void dispose() {
@@ -188,6 +199,7 @@ public class ApplicationSettingsPanel extends JPanel implements PrefEditor {
         AutoNavigationMgr.getAutoNavigationMgr().showNavigationCompleteMsgs(navComplete.isSelected());
         try {
             SessionMgr.getSessionMgr().setLookAndFeel(buttonToLookAndFeel.get(buttonGroup.getSelection()));
+            JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "You may need to restart the application to completely update the look and feel.", "Restart recommended", JOptionPane.INFORMATION_MESSAGE);
         }
         catch (Exception ex) {
             SessionMgr.getSessionMgr().handleException(ex);
