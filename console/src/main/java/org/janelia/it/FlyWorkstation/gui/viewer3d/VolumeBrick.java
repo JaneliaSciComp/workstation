@@ -1,5 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.IntBuffer;
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.util.gl2.GLUT;
@@ -49,13 +52,14 @@ public class VolumeBrick implements GLActor
 		while (data.hasRemaining()) {
 			data.put(0x00000000);
 		}
+		// Create simple synthetic image for testing.
 		// 0xAARRGGBB
-		setVoxelColor(0,0,0, 0x66ff0000);
+		setVoxelColor(0,0,0, 0x66ff0000); // ghostly red
 		setVoxelColor(0,0,1, 0x7700ff00);
 		setVoxelColor(0,0,2, 0x990000ff);
 		setVoxelColor(0,1,0, 0xbbff0000);
 		setVoxelColor(0,1,1, 0xdd00ff00);
-		setVoxelColor(0,1,2, 0xff0000ff);
+		setVoxelColor(0,1,2, 0xff0000ff); // opaque blue
         gl.glEnable(GL2.GL_TEXTURE_3D);
         gl.glBindTexture(GL2.GL_TEXTURE_3D, textureId);
 		gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_REPLACE);
@@ -69,6 +73,14 @@ public class VolumeBrick implements GLActor
 				GL2.GL_BGRA, // voxel component order
 				GL2.GL_UNSIGNED_INT_8_8_8_8_REV, // voxel component type
 				data.rewind());
+		// Create shader program
+		int vertexShader = gl.glCreateShader(GL2.GL_VERTEX_SHADER);
+		if (loadShader(vertexShader, "shaders/PassThroughVtx.glsl", gl))
+			System.out.println("loaded vertex shader");
+		int fragmentShader = gl.glCreateShader(GL2.GL_FRAGMENT_SHADER);
+		if (loadShader(fragmentShader, "shaders/PassThroughFrg.glsl", gl))
+			System.out.println("loaded fragment shader");		
+		// tidy up
 		gl.glPopAttrib();
 		bIsInitialized = true;
 	}
@@ -217,6 +229,41 @@ public class VolumeBrick implements GLActor
 		gl.glDeleteTextures(1, textureIds, 0);
 	}
 
+	private boolean loadShader(int shaderId, String resourceName, GL2 gl) {
+		try {
+			BufferedReader reader = new BufferedReader(
+					new InputStreamReader(
+							getClass().getResourceAsStream(
+									resourceName) ));
+			StringBuffer stringBuffer = new StringBuffer();
+			String line;
+			while ((line = reader.readLine()) != null) {
+				stringBuffer.append(line);
+			}
+			String progString = stringBuffer.toString();
+			gl.glShaderSource(shaderId, 1, new String[]{progString}, (int[])null, 0);
+			gl.glCompileShader(shaderId);
+			return true;
+		} catch (Exception exc) {
+			exc.printStackTrace();
+		}		
+		return false;
+	}
+	
+	private String loadShaderAsString(String resourceName) throws IOException 
+	{
+		BufferedReader reader = new BufferedReader(
+				new InputStreamReader(
+						getClass().getResourceAsStream(
+								resourceName) ));
+		StringBuffer stringBuffer = new StringBuffer();
+		String line;
+		while ((line = reader.readLine()) != null) {
+			stringBuffer.append(line);
+		}
+		return stringBuffer.toString();
+	}
+	
 	private void printPoints(double[] p1, double[] p2, double[] p3, double[] p4) {
 		printPoint(p1);
 		printPoint(p2);
