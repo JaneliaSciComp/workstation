@@ -15,7 +15,7 @@
 		    <fileset dir="${compute.module}/build/jars" includes="compute-client.jar"/>
 		    <fileset dir="${common.module}" includes="**/*.jar"/>
 			<fileset dir="${shared.module}/lib" includes="**/*.jar"/>
-			<fileset dir="${lib.dir}" includes="*.jar"/>
+			<fileset dir="${lib.dir}" includes="**/*.jar"/>
 		</path>
     	
     </target>
