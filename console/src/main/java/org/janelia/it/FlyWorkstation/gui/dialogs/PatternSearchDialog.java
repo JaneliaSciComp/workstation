@@ -10,7 +10,9 @@ import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.shared.annotation.DataDescriptor;
 import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
+import org.janelia.it.jacs.shared.annotation.RelativePatternAnnotationDataManager;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -69,19 +71,15 @@ public class PatternSearchDialog extends ModalDialog {
 
     static boolean quantifierDataIsLoading=false;
 
-    static protected Map<Long, Map<String,String>> sampleInfoMap=null;
-    static protected Map<Long, List<Double>> quantifierInfoMap=null;
-
-    static protected Map<Long, Map<String, Double>> intensityScoreMap=null;
-    static protected Map<Long, Map<String, Double>> distributionScoreMap=null;
-
-    static protected Map<Long, Map<String, Double>> intensityPercentileMap=null;
-    static protected Map<Long, Map<String, Double>> distributionPercentileMap=null;
+    static protected Map<Long, Map<String, Float>> intensityPercentileMap=new HashMap<Long, Map<String, Float>>();
+    static protected Map<Long, Map<String, Float>> distributionPercentileMap=new HashMap<Long, Map<String, Float>>();
 
     final List<String> compartmentAbbreviationList = PatternAnnotationDataManager.getCompartmentListInstance();
     boolean currentSetInitialized=false;
     final List<Boolean> currentListModified = new ArrayList<Boolean>();
     Set<Long> membershipSampleSet;
+
+    RelativePatternAnnotationDataManager relativeDataManager=null;
 
     public class PercentileScore implements Comparable {
 
@@ -178,9 +176,9 @@ public class PatternSearchDialog extends ModalDialog {
         public void actionPerformed(ActionEvent e) {
             String actionString=e.getActionCommand();
             if (actionString.equals(INTENSITY_TYPE)) {
-                setStatusMessage(abbreviation+": INTENSITY type selected");
+                setStatusMessage(abbreviation+": INTENSITY type selected", Color.WHITE);
             } else if (actionString.equals(DISTRIBUTION_TYPE)) {
-                setStatusMessage(abbreviation+": DISTRIBUTION type selected");
+                setStatusMessage(abbreviation+": DISTRIBUTION type selected", Color.WHITE);
             }
             applyGlobalSettings();
         }
@@ -192,11 +190,7 @@ public class PatternSearchDialog extends ModalDialog {
         public String getAbbreviation() {
             return abbreviation;
         }
-        
-//        public void setLineCount(Long lineCount) {
-//            lineCountText.setText(lineCount.toString());
-//        }
-//
+
         public void setModelState(MinMaxModel model) {
             minText.setText(model.min.toString());
             maxText.setText(model.max.toString());
@@ -391,7 +385,8 @@ public class PatternSearchDialog extends ModalDialog {
         return statusObjects;
     }
     
-    private void setStatusMessage(String message) {
+    private void setStatusMessage(String message, Color color) {
+        statusLabel.setForeground(color);
         statusLabel.setText(message);
     }
 
@@ -525,16 +520,17 @@ public class PatternSearchDialog extends ModalDialog {
     }
 
     protected void loadPatternAnnotationQuantifierMapsFromSummary() {
-        if (!quantifierDataIsLoading && (sampleInfoMap==null || quantifierInfoMap==null)) {
+        if (!quantifierDataIsLoading && relativeDataManager==null) {
             quantifierDataIsLoading=true;
             try {
                 Long startTime=new Date().getTime();
-                System.out.println("PatterSearchDialog loadPatternAnnotationQuantifierMapsFromSummary() start");
-                Object[] sampleMaps = ModelMgr.getModelMgr().getPatternAnnotationQuantifierMapsFromSummary();
-                sampleInfoMap = (Map<Long, Map<String,String>>)sampleMaps[0];
-                quantifierInfoMap = (Map<Long, List<Double>>)sampleMaps[1];
-                Long elapsedTime=new Date().getTime() - startTime;
-                System.out.println("PatterSearchDialog loadPatternAnnotationQuantifierMapsFromSummary() end - elapsedTime="+elapsedTime);
+                System.out.println("PatterSearchDialog getPatternAnnotationDataManager type="+RelativePatternAnnotationDataManager.RELATIVE_TYPE+" start");
+                relativeDataManager=(RelativePatternAnnotationDataManager)ModelMgr.getModelMgr().getPatternAnnotationDataManagerByType(RelativePatternAnnotationDataManager.RELATIVE_TYPE);
+                Long managerTime=new Date().getTime();
+                System.out.println("PatterSearchDialog getPatternAnnotationDataManager type="+RelativePatternAnnotationDataManager.RELATIVE_TYPE+" manager time="+(managerTime-startTime));
+                populatePercentileMaps();
+                Long populateTime=new Date().getTime();
+                System.out.println("PatterSearchDialog getPatternAnnotationDataManager type="+RelativePatternAnnotationDataManager.RELATIVE_TYPE+" populate time="+(populateTime-managerTime));
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
@@ -544,18 +540,44 @@ public class PatternSearchDialog extends ModalDialog {
         }
     }
 
+    protected void populatePercentileMaps() {
+        List<DataDescriptor> descriptorList=relativeDataManager.getDataDescriptors();
+        List<String> compartmentList=PatternAnnotationDataManager.getCompartmentListInstance();
+        for (DataDescriptor descriptor : descriptorList) {
+            Map<Long, List<Float>> scoreMap=relativeDataManager.getScoreMapByDescriptor(descriptor);
+            for (Long sampleId : scoreMap.keySet()) {
+                List<Float> scoreList=scoreMap.get(sampleId);
+                if (descriptor.getName().equals(RelativePatternAnnotationDataManager.INTENSITY_DATA)) {
+                    int compartmentIndex=0;
+                    Map<String,Float> scorePercMap=new HashMap<String, Float>();
+                    for (String compartmentName : compartmentList) {
+                        scorePercMap.put(compartmentName, scoreList.get(compartmentIndex));
+                        compartmentIndex++;
+                    }
+                    intensityPercentileMap.put(sampleId, scorePercMap);
+                } else if (descriptor.getName().equals(RelativePatternAnnotationDataManager.DISTRIBUTION_DATA)) {
+                    int compartmentIndex=0;
+                    Map<String,Float> scorePercMap=new HashMap<String, Float>();
+                    for (String compartmentName : compartmentList) {
+                        scorePercMap.put(compartmentName, scoreList.get(compartmentIndex));
+                        compartmentIndex++;
+                    }
+                    distributionPercentileMap.put(sampleId, scorePercMap);
+                } else {
+                    System.err.println("Do not recognize DataDescriptor name="+descriptor.getName());
+                }
+            }
+        }
+    }
+
     SimpleWorker createQuantifierLoaderWorker() {
         return new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
                 Utils.setWaitingCursor(PatternSearchDialog.this);
-                setStatusMessage("Loading quantifier maps...");
+                setStatusMessage("Loading quantifier maps...", Color.RED);
                 loadPatternAnnotationQuantifierMapsFromSummary();
-                setStatusMessage("Computing scores...");
-                computeScores();
-                setStatusMessage("Computing percentiles...");
-                computePercentiles();
                 refreshCompartmentTable();
                 currentSetInitialized=true;
             }
@@ -569,115 +591,9 @@ public class PatternSearchDialog extends ModalDialog {
             protected void hadError(Throwable error) {
                 Utils.setDefaultCursor(PatternSearchDialog.this);
                 SessionMgr.getSessionMgr().handleException(error);
-                setStatusMessage("Error during quantifier load");
+                setStatusMessage("Error during quantifier load", Color.RED);
             }
         };
-    }
-
-    protected void computeScores() {
-        long totalComputeCount=0;
-        if (intensityScoreMap==null) {
-            intensityScoreMap=new HashMap<Long, Map<String, Double>>();
-        }
-        if (distributionScoreMap==null) {
-            distributionScoreMap=new HashMap<Long, Map<String, Double>>();
-        }
-        for (Long sampleId : quantifierInfoMap.keySet()) {
-            List<Double> quantifierList = quantifierInfoMap.get(sampleId);
-            Map<String, Double> intensityMap = new HashMap<String, Double>();
-            Map<String, Double> distributionMap = new HashMap<String, Double>();
-            List<Double> globalList = new ArrayList<Double>();
-            List<Double> compartmentList = new ArrayList<Double>();
-            // We assume the compartment list here matches the order of the quantifierList
-            final int GLOBAL_LIST_SIZE=9;
-            for (int g=0;g<GLOBAL_LIST_SIZE;g++) {
-                globalList.add(quantifierList.get(g));
-            }
-            int compartmentCount=0;
-            for (String compartmentAbbreviation : compartmentAbbreviationList) {
-                compartmentList.clear();
-                int startPosition=GLOBAL_LIST_SIZE + compartmentCount*10;
-                int endPosition=startPosition+10;
-                for (int c=startPosition;c<endPosition;c++) {
-                    compartmentList.add(quantifierList.get(c));
-                }
-                Object[] scores =PatternAnnotationDataManager.getCompartmentScoresByQuantifiers(globalList, compartmentList);
-                totalComputeCount++;
-                intensityMap.put(compartmentAbbreviation, (Double)scores[0]);
-                distributionMap.put(compartmentAbbreviation, (Double)scores[1]);
-                compartmentCount++;
-            }
-            intensityScoreMap.put(sampleId, intensityMap);
-            distributionScoreMap.put(sampleId, distributionMap);
-        }
-        System.out.println("Total calls to getCompartmentScoresByQuantifiers() = "+totalComputeCount);
-    }
-
-    protected void computePercentiles() {
-        if (intensityPercentileMap==null) {
-            intensityPercentileMap=new HashMap<Long, Map<String, Double>>();
-        }
-        if (distributionPercentileMap==null) {
-            distributionPercentileMap=new HashMap<Long, Map<String, Double>>();
-        }
-        List<PercentileScore> intensityList = new ArrayList<PercentileScore>();
-        List<PercentileScore> distributionList = new ArrayList<PercentileScore>();
-        Map<Long, Double> percIntensityMap=new HashMap<Long, Double>();
-        Map<Long, Double> percDistMap=new HashMap<Long, Double>();
-        for (String compartmentAbbreviation : compartmentAbbreviationList) {
-            intensityList.clear();
-            distributionList.clear();
-            for (Long sampleId : intensityScoreMap.keySet()) {
-                Map<String, Double> intensityMap = intensityScoreMap.get(sampleId);
-                PercentileScore ps=new PercentileScore();
-                ps.sampleId=sampleId;
-                ps.score=intensityMap.get(compartmentAbbreviation);
-                intensityList.add(ps);
-            }
-            for (Long sampleId : distributionScoreMap.keySet()) {
-                Map<String, Double> distributionMap = distributionScoreMap.get(sampleId);
-                PercentileScore ps=new PercentileScore();
-                ps.sampleId=sampleId;
-                ps.score=distributionMap.get(compartmentAbbreviation);
-                distributionList.add(ps);
-            }
-            Collections.sort(intensityList);
-            Collections.sort(distributionList);
-            double listLength=intensityList.size()-1.0;
-
-            percIntensityMap.clear();
-            percDistMap.clear();
-
-            double index=0.0;
-            for (PercentileScore ps : intensityList) {
-                ps.score = index / listLength;
-                percIntensityMap.put(ps.sampleId, ps.score);
-                index+=1.0;
-            }
-            index=0.0;
-            for (PercentileScore ps : distributionList) {
-                ps.score = index / listLength;
-                percDistMap.put(ps.sampleId, ps.score);
-                index+=1.0;
-            }
-
-            for (Long sampleId : intensityScoreMap.keySet()) {
-                Map<String, Double> piMap=intensityPercentileMap.get(sampleId);
-                if (piMap==null) {
-                    piMap=new HashMap<String, Double>();
-                    intensityPercentileMap.put(sampleId, piMap);
-                }
-                piMap.put(compartmentAbbreviation, percIntensityMap.get(sampleId));
-            }
-            for (Long sampleId : distributionScoreMap.keySet()) {
-                Map<String, Double> pdMap=distributionPercentileMap.get(sampleId);
-                if (pdMap==null) {
-                    pdMap=new HashMap<String, Double>();
-                    distributionPercentileMap.put(sampleId, pdMap);
-                }
-                pdMap.put(compartmentAbbreviation, percDistMap.get(sampleId));
-            }
-        }
     }
 
     protected Long computeLineCountForCompartment(int rowIndex) {
@@ -697,6 +613,7 @@ public class PatternSearchDialog extends ModalDialog {
     List<Long> getValidSamplesForCompartment(String compartmentAbbreviation) {
         List<Long> validSamples=new ArrayList<Long>();
         if (quantifierDataIsLoading) {
+            System.out.println("getValidSamplesForCompartment: quantifierDataIsLoading=true so returning empty list");
             return validSamples;
         }
         else {
@@ -706,8 +623,9 @@ public class PatternSearchDialog extends ModalDialog {
             Double max=state.max / 100.0;
             if (state.type.equals(INTENSITY_TYPE)) {
                 for (Long sampleId : intensityPercentileMap.keySet()) {
-                    Map<String, Double> map=intensityPercentileMap.get(sampleId);
-                    Double value=map.get(compartmentAbbreviation);
+                    Map<String, Float> map=intensityPercentileMap.get(sampleId);
+                    Float value=map.get(compartmentAbbreviation);
+                    //System.out.println("Intensity : Compartment="+compartmentAbbreviation+" value="+value);
                     if (value>=min && value <=max) {
                         validSamples.add(sampleId);
                     }
@@ -715,20 +633,25 @@ public class PatternSearchDialog extends ModalDialog {
             }
             else if (state.type.equals(DISTRIBUTION_TYPE)) {
                 for (Long sampleId : distributionPercentileMap.keySet()) {
-                    Map<String, Double> map=distributionPercentileMap.get(sampleId);
+                    Map<String, Float> map=distributionPercentileMap.get(sampleId);
                     if (map==null) {
                         System.err.println("distributionPercentileMap is null for sampleId="+sampleId);
                     }
-                    Double value=map.get(compartmentAbbreviation);
+                    Float value=map.get(compartmentAbbreviation);
                     if (value==null) {
                         System.err.println("distribution perc value is null for compartmentAbbr="+compartmentAbbreviation);
                     }
+                    //System.out.println("Distribution: Compartment="+compartmentAbbreviation+" value="+value);
                     if (value!=null && value>=min && value <=max) {
                         validSamples.add(sampleId);
                     }
                 }
             }
+            else {
+                System.out.println("Do not recognize state.type="+state.type);
+            }
         }
+        //System.out.println("getValidSamplesForCompartment: returning list with member count="+validSamples.size());
         return validSamples;
     }
 
@@ -742,7 +665,7 @@ public class PatternSearchDialog extends ModalDialog {
     }
 
     protected Set<Long> generateMembershipListForCurrentSet() {
-        setStatusMessage("Computing result membership");
+        setStatusMessage("Computing result membership", Color.YELLOW);
         Long compartmentListSize= (long) compartmentAbbreviationList.size();
         Set<Long> sampleSet=new HashSet<Long>();
         Map<Long, Long> sampleCompartmentCountMap=new HashMap<Long, Long>();
@@ -763,7 +686,7 @@ public class PatternSearchDialog extends ModalDialog {
                 sampleSet.add(sampleId);
             }
         }
-        setStatusMessage("Result has " + sampleSet.size() + " members");
+        setStatusMessage("Result has " + sampleSet.size() + " members", Color.GREEN);
         return sampleSet;
     }
 
@@ -847,7 +770,7 @@ public class PatternSearchDialog extends ModalDialog {
         }
         globalMinMaxPanel.applyGlobalSettings();
         Utils.setDefaultCursor(PatternSearchDialog.this);
-        setStatusMessage("Ready");
+        setStatusMessage("Ready", Color.GREEN);
     }
 
 

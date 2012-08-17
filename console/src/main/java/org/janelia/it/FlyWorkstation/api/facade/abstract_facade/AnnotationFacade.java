@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
 
 /**
  * Created by IntelliJ IDEA.
@@ -34,5 +35,7 @@ public interface AnnotationFacade extends EntityFacade {
     public Object[] getPatternAnnotationQuantifierMapsFromSummary() throws Exception;
 
     public Object[] getMaskQuantifierMapsFromSummary(String maskFolderName) throws Exception;
+
+    public PatternAnnotationDataManager getPatternAnnotationDataManagerByType(String type) throws Exception;
 
 }

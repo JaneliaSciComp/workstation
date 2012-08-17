@@ -7,6 +7,7 @@ import java.util.Set;
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.AnnotationFacade;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
 
 /**
  * Created by IntelliJ IDEA.
@@ -133,6 +134,11 @@ public class AggregateAnnotationFacade extends AggregateEntityFacade implements 
 
     @Override
     public Object[] getMaskQuantifierMapsFromSummary(String maskFolderName) throws Exception {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public PatternAnnotationDataManager getPatternAnnotationDataManagerByType(String type) throws Exception {
         throw new UnsupportedOperationException();
     }
 

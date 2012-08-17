@@ -30,6 +30,7 @@ import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
 import org.janelia.it.jacs.model.user_data.User;
 import org.janelia.it.jacs.model.user_data.prefs.UserPreference;
+import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -872,6 +873,10 @@ public class ModelMgr {
 
     public Object[] getMaskQuantifierMapsFromSummary(String maskFolderName) throws Exception {
         return FacadeManager.getFacadeManager().getAnnotationFacade().getMaskQuantifierMapsFromSummary(maskFolderName);
+    }
+
+    public PatternAnnotationDataManager getPatternAnnotationDataManagerByType(String type) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().getPatternAnnotationDataManagerByType(type);
     }
 
     //  private void workSpaceWasCreated(GenomeVersion genomeVersion) {

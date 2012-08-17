@@ -6,6 +6,7 @@ import java.util.Set;
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.AnnotationFacade;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
 
 /**
  * Created by IntelliJ IDEA.
@@ -72,5 +73,9 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
 
     public Object[] getMaskQuantifierMapsFromSummary(String maskFolderName) throws Exception {
         return EJBFactory.getRemoteAnnotationBean().getMaskQuantifierMapsFromSummary(maskFolderName);
+    }
+
+    public PatternAnnotationDataManager getPatternAnnotationDataManagerByType(String type) throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().getPatternAnnotationDataManagerByType(type);
     }
 }
