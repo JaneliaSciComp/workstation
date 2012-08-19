@@ -1,8 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.util.gl2.GLUT;
@@ -19,6 +19,7 @@ public class VolumeBrick implements GLActor
     /**
      * Dimensions of rectangular volume, from centers of corner voxels, in world units.
      */
+    // Geometry parameters
     private double[] volumeMicrometers = {1.0, 2.0, 3.0};
     /**
      * Size of a single voxel, in world units.
@@ -28,9 +29,15 @@ public class VolumeBrick implements GLActor
      * Size of our opengl texture, which might be padded with extra voxels
      * to reach a multiple of 8
      */
+    // OpenGL state
     private int[] textureVoxels = {8,8,8};
 	IntBuffer data = Buffers.newDirectIntBuffer(textureVoxels[0]*textureVoxels[1]*textureVoxels[2]);
     private int textureId = 0;
+    int vertexShader = 0;
+    int fragmentShader = 0;
+    int shaderProgram = 0;
+    boolean haveShaders = false;
+    // 
     private MipRenderer renderer; // circular reference...
     private boolean bIsInitialized;
 
@@ -74,12 +81,37 @@ public class VolumeBrick implements GLActor
 				GL2.GL_UNSIGNED_INT_8_8_8_8_REV, // voxel component type
 				data.rewind());
 		// Create shader program
-		int vertexShader = gl.glCreateShader(GL2.GL_VERTEX_SHADER);
-		if (loadShader(vertexShader, "shaders/PassThroughVtx.glsl", gl))
+		vertexShader = gl.glCreateShader(GL2.GL_VERTEX_SHADER);
+		if (loadShader(vertexShader, "shaders/PassThroughVtx.glsl", gl)) {
 			System.out.println("loaded vertex shader");
-		int fragmentShader = gl.glCreateShader(GL2.GL_FRAGMENT_SHADER);
-		if (loadShader(fragmentShader, "shaders/PassThroughFrg.glsl", gl))
-			System.out.println("loaded fragment shader");		
+			fragmentShader = gl.glCreateShader(GL2.GL_FRAGMENT_SHADER);
+			if (loadShader(fragmentShader, "shaders/PassThroughFrg.glsl", gl)) {
+				System.out.println("loaded fragment shader");
+				shaderProgram = gl.glCreateProgram();
+				gl.glAttachShader(shaderProgram, vertexShader);
+				gl.glAttachShader(shaderProgram, fragmentShader);
+				gl.glLinkProgram(shaderProgram);
+				gl.glValidateProgram(shaderProgram);
+				IntBuffer intBuffer = IntBuffer.allocate(1);
+				gl.glGetProgramiv(shaderProgram, GL2.GL_LINK_STATUS, intBuffer);
+				if (intBuffer.get(0) != 1) {
+					gl.glGetProgramiv(shaderProgram, GL2.GL_INFO_LOG_LENGTH, intBuffer);
+					int size = intBuffer.get(0);
+					System.err.println("Program link error: ");
+					if (size > 0) {
+						ByteBuffer byteBuffer = ByteBuffer.allocate(size);
+						gl.glGetProgramInfoLog(shaderProgram, size, intBuffer, byteBuffer);
+						for (byte b : byteBuffer.array()) {
+							System.err.print((char)b);
+						}
+					} else {
+						System.out.println("Unknown");
+					}
+				}
+				else
+					haveShaders = true;
+			}
+		}
 		// tidy up
 		gl.glPopAttrib();
 		bIsInitialized = true;
@@ -109,7 +141,16 @@ public class VolumeBrick implements GLActor
         gl.glEnable(GL2.GL_BLEND);
         gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
         //
+        IntBuffer buffer = IntBuffer.allocate(1);
+    	gl.glGetIntegerv(GL2.GL_CURRENT_PROGRAM, buffer);
+        int previousShader = buffer.get();
+        if (haveShaders) {
+    		gl.glUseProgram(shaderProgram);
+    		gl.glUniform1i(gl.glGetUniformLocation(shaderProgram, "volumeTexture"), 0);
+        }
 		displayVolumeSlices(gl);
+        if (haveShaders)
+    		gl.glUseProgram(previousShader);
 		gl.glPopAttrib();
 	}
 	
@@ -239,29 +280,37 @@ public class VolumeBrick implements GLActor
 			String line;
 			while ((line = reader.readLine()) != null) {
 				stringBuffer.append(line);
+				stringBuffer.append("\n");
 			}
 			String progString = stringBuffer.toString();
+			// System.out.println(progString);
 			gl.glShaderSource(shaderId, 1, new String[]{progString}, (int[])null, 0);
 			gl.glCompileShader(shaderId);
+			
+			// query compile status and possibly read log
+			int[] status = new int[1];
+			gl.glGetShaderiv(shaderId, GL2.GL_COMPILE_STATUS, status, 0);
+			if (status[0] == GL2.GL_TRUE){
+				System.out.println(resourceName + ": successful");
+				// everything compiled successfully, no log
+			} 
+			else {
+				// compile failed, read the log and return it
+				gl.glGetShaderiv(shaderId, GL2.GL_INFO_LOG_LENGTH, status, 0);
+				int maxLogLength = status[0];
+				if (maxLogLength > 0) {
+					byte[] log = new byte[maxLogLength];
+					gl.glGetShaderInfoLog(shaderId, maxLogLength, status, 0, log, 0);
+					System.out.println(resourceName + ": " + new String(log, 0, status[0]));
+				} else
+					System.out.println(resourceName + ": "+ "unknown compilation error");
+				return false;
+			}
 			return true;
 		} catch (Exception exc) {
 			exc.printStackTrace();
 		}		
 		return false;
-	}
-	
-	private String loadShaderAsString(String resourceName) throws IOException 
-	{
-		BufferedReader reader = new BufferedReader(
-				new InputStreamReader(
-						getClass().getResourceAsStream(
-								resourceName) ));
-		StringBuffer stringBuffer = new StringBuffer();
-		String line;
-		while ((line = reader.readLine()) != null) {
-			stringBuffer.append(line);
-		}
-		return stringBuffer.toString();
 	}
 	
 	private void printPoints(double[] p1, double[] p2, double[] p3, double[] p4) {
