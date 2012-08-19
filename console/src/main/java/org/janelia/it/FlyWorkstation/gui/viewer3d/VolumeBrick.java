@@ -82,10 +82,10 @@ public class VolumeBrick implements GLActor
 				data.rewind());
 		// Create shader program
 		vertexShader = gl.glCreateShader(GL2.GL_VERTEX_SHADER);
-		if (loadShader(vertexShader, "shaders/PassThroughVtx.glsl", gl)) {
+		if (loadShader(vertexShader, "shaders/VoxelRayVtx.glsl", gl)) {
 			System.out.println("loaded vertex shader");
 			fragmentShader = gl.glCreateShader(GL2.GL_FRAGMENT_SHADER);
-			if (loadShader(fragmentShader, "shaders/PassThroughFrg.glsl", gl)) {
+			if (loadShader(fragmentShader, "shaders/VoxelRayFrg.glsl", gl)) {
 				System.out.println("loaded fragment shader");
 				shaderProgram = gl.glCreateProgram();
 				gl.glAttachShader(shaderProgram, vertexShader);
@@ -141,12 +141,22 @@ public class VolumeBrick implements GLActor
         gl.glEnable(GL2.GL_BLEND);
         gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
         //
-        IntBuffer buffer = IntBuffer.allocate(1);
-    	gl.glGetIntegerv(GL2.GL_CURRENT_PROGRAM, buffer);
-        int previousShader = buffer.get();
+        int previousShader = 0;
         if (haveShaders) {
+            IntBuffer buffer = IntBuffer.allocate(1);
+        	gl.glGetIntegerv(GL2.GL_CURRENT_PROGRAM, buffer);
+            previousShader = buffer.get();
     		gl.glUseProgram(shaderProgram);
+    		// The default texture unit is 0.  Pass through shader works without setting volumeTexture.
     		gl.glUniform1i(gl.glGetUniformLocation(shaderProgram, "volumeTexture"), 0);
+    		gl.glUniform3f(gl.glGetUniformLocation(shaderProgram, "textureVoxels"), 
+    				(float)textureVoxels[0], 
+    				(float)textureVoxels[1],
+    				(float)textureVoxels[2]);
+    		gl.glUniform3f(gl.glGetUniformLocation(shaderProgram, "voxelMicrometers"), 
+    				(float)voxelMicrometers[0], 
+    				(float)voxelMicrometers[1],
+    				(float)voxelMicrometers[2]);    		
         }
 		displayVolumeSlices(gl);
         if (haveShaders)

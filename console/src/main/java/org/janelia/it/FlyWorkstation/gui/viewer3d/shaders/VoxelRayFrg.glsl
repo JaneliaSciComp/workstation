@@ -9,12 +9,11 @@ uniform vec3 textureVoxels; // for computing voxel boundaries
 // The size of one voxel in micrometers: x, y, z
 uniform vec3 voxelMicrometers;
 
-// Location of this fragment in the reference frame of the openGl camera:
-//   origin is at camera
-//   view direction is along minus Z-axis
-//   Y-axis is up
+// Location of this fragment in the reference frame of the VolumeBrick:
+//   origin is at volume corner
+//   X, Y, Z along volume axes
 //   units are micrometers
-varying vec3 positionInCamera; // for ray tracing view vector
+varying vec3 cameraDirectionInVolume;
 
 void main()
 {
@@ -29,11 +28,11 @@ void main()
     // Modify alpha by ray traced voxel thickness //
     
     // Compute view vector and fragment position in voxel
-    vec3 eyeVec = normalize(-positionInCamera); // points TOWARD eye from this fragment
+    vec3 eyeVec = normalize(cameraDirectionInVolume); // points TOWARD eye from this fragment
     // Transform point into unit voxel coordinates
-    vec3 uvc = fract(dot(gl_TexCoord[0], textureVoxels));
+    vec3 uvc = fract(gl_TexCoord[0].xyz * textureVoxels);
     // Scale by voxel size to get units in micrometers
-    vec3 p = dot(uvc, voxelMicrometers);
+    vec3 p = uvc * voxelMicrometers;
 
 	// RAY TRACING    
     // Three axis-aligned plane equations define the voxel surface
@@ -42,11 +41,19 @@ void main()
     // ray tracing equations for axis aligned planes are so
     // simple, we will pack all three into single vec3s.  Sorry.
     vec3 planes = ceil(eyeVec * 0.99); // each component of "planes" is now either 0.0 or 1.0
-    planes = dot(planes, voxelMicrometers); // scale the 1.0 to actual voxel dimensions
+    planes = planes * voxelMicrometers; // scale the 1.0 to actual voxel dimensions
     // Here it is! Solve three ray-tracing equations at once:
-    vec3 distances = (p - planes) / eyeVec; // distance to each of three voxel boundaries
-    float thickness = min(distances); // This is how much voxel meat we are peering through.
-    
+    vec3 distances = (planes - p) / eyeVec; // distance to each of three voxel boundaries
+    float thickness = min(distances.x, min(distances.y, distances.z)); // This is how much voxel meat we are peering through.
+
+    // Now do the back side of the voxel
+    vec3 backPlanes = ceil(-eyeVec * 0.99);
+    backPlanes *= voxelMicrometers;
+    vec3 backDistances = (backPlanes - p) / eyeVec; // distance to each of three voxel boundaries
+    vec3 bd = -backDistances;
+    float backThickness = min(bd.x, min(bd.y, bd.z));
+    thickness += backThickness;
+
     // Convert thickness to opacity (alpha).
     // This is not so simple.
     // Cami helped me derive a formula with the desired shape.
@@ -59,9 +66,16 @@ void main()
     //   alpha(infinity) = 1.0
     //   alpha(t) smooth and continuous
     //   no trancendental functions
-    float a0 = gl_Color.a;
+    float a0 = gl_FragColor.a;
     // const float t0 = 1.0;
     float ta0 = thickness * a0;
     float alpha = ta0 / (1.0 - a0 + ta0); // 4 flops total.  No pow() required.
     gl_FragColor.a = alpha;
+    
+    // debugging only below
+    // gl_FragColor.a = a0;
+    // gl_FragColor.a = thickness;
+    // gl_FragColor.rgb = 0.5 * (distances + vec3(1.0, 1.0 ,1.0));
+    // gl_FragColor.rgb = planes;
+    // gl_FragColor.a = 1.0;
 }
