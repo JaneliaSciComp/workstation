@@ -760,6 +760,7 @@ public class IconDemoPanel extends Viewer {
 				}
 				hud.setTitle(button.getRootedEntity().getEntity().getName());
 				hud.setImage(bufferedImage);
+				hud.pack();
 				return; // There can be only one!
 			}
 		}

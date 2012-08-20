@@ -1,7 +1,18 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.*;
+import javax.swing.border.Border;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationBuilderDialog;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.RemoveAnnotationsAction;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -9,14 +20,6 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
-
-import javax.swing.*;
-import javax.swing.border.Border;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.util.List;
 
 /**
  * A tag cloud of Entity-based annotations which support context menu operations such as deletion.
@@ -54,64 +57,92 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
 
     @Override
     protected void showPopupMenu(final MouseEvent e, final OntologyAnnotation tag) {
-
+    	
+    	Viewer viewer = SessionMgr.getBrowser().getActiveViewer();
+		List<String> selectionIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(viewer.getSelectionCategory());
+		List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
+		for (String entityId : selectionIds) {
+			rootedEntityList.add(viewer.getRootedEntityById(entityId));
+		}
+		
+		
         JPopupMenu popupMenu = new JPopupMenu();
         popupMenu.setLightWeightPopupEnabled(true);
         
-        JMenuItem titleItem = new JMenuItem(tag.getEntity().getName());
-        titleItem.setEnabled(false);
-        popupMenu.add(titleItem);
-        
-    	if (SessionMgr.getUsername().equals(tag.getOwner())) {
-            JMenuItem deleteItem = new JMenuItem("  Delete annotation");
-            deleteItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent actionEvent) {
-                    deleteTag(tag);
-                }
-            });
-            popupMenu.add(deleteItem);
-    	}
+        if (rootedEntityList.size()>1) {
+            JMenuItem titleItem = new JMenuItem("(Multiple selected)");
+            titleItem.setEnabled(false);
+            popupMenu.add(titleItem);
+            
+        	if (SessionMgr.getUsername().equals(tag.getOwner())) {
+        		final RemoveAnnotationsAction action = new RemoveAnnotationsAction(tag.getKeyEntityId());
+                JMenuItem deleteItem = new JMenuItem("  "+action.getName());
+                deleteItem.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent actionEvent) {
+                    	action.doAction();
+                    }
+                });
+                popupMenu.add(deleteItem);
+        	}
+            
+        }
+        else {
+            JMenuItem titleItem = new JMenuItem(tag.getEntity().getName());
+            titleItem.setEnabled(false);
+            popupMenu.add(titleItem);
+            
+        	if (SessionMgr.getUsername().equals(tag.getOwner())) {
+                JMenuItem deleteItem = new JMenuItem("  Delete annotation");
+                deleteItem.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent actionEvent) {
+                        deleteTag(tag);
+                    }
+                });
+                popupMenu.add(deleteItem);
+        	}
 
-        if (null!=tag.getValueString()){
-            JMenuItem editItem = new JMenuItem("  Edit annotation");
-            editItem.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    AnnotationBuilderDialog dialog = new AnnotationBuilderDialog();
-                    dialog.setPathString(tag.getValueString());
-                    dialog.setPathText(tag.getValueString());
-                    dialog.setVisible(true);
-                    final Object value = dialog.getPathString();
-                    final List<RootedEntity> selectedEntities = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer()).getSelectedEntities();
-                    for(RootedEntity rootedEntity: selectedEntities){
-                        if(null!=value && !value.toString().isEmpty()){
-                            tag.setValueString(value.toString());
-                            tag.getEntity().setValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_VALUE_TERM, value.toString());
-                            String tmpName = tag.getEntity().getName();
-                            String namePrefix = tmpName.substring(0,tmpName.indexOf("=")+2);
-                            tag.getEntity().setName(namePrefix+value.toString());
-                            try {
-                                ModelMgr.getModelMgr().saveOrUpdateAnnotation(rootedEntity.getEntity(), tag.getEntity());
-                            }
-                            catch (Exception e1) {
-                                e1.printStackTrace();
-                                SessionMgr.getSessionMgr().handleException(e1);
+            if (null!=tag.getValueString()){
+                JMenuItem editItem = new JMenuItem("  Edit annotation");
+                editItem.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        AnnotationBuilderDialog dialog = new AnnotationBuilderDialog();
+                        dialog.setPathString(tag.getValueString());
+                        dialog.setPathText(tag.getValueString());
+                        dialog.setVisible(true);
+                        final Object value = dialog.getPathString();
+                        final List<RootedEntity> selectedEntities = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer()).getSelectedEntities();
+                        for(RootedEntity rootedEntity: selectedEntities){
+                            if(null!=value && !value.toString().isEmpty()){
+                                tag.setValueString(value.toString());
+                                tag.getEntity().setValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_VALUE_TERM, value.toString());
+                                String tmpName = tag.getEntity().getName();
+                                String namePrefix = tmpName.substring(0,tmpName.indexOf("=")+2);
+                                tag.getEntity().setName(namePrefix+value.toString());
+                                try {
+                                    ModelMgr.getModelMgr().saveOrUpdateAnnotation(rootedEntity.getEntity(), tag.getEntity());
+                                }
+                                catch (Exception e1) {
+                                    e1.printStackTrace();
+                                    SessionMgr.getSessionMgr().handleException(e1);
+                                }
                             }
                         }
                     }
+                });
+
+                popupMenu.add(editItem);
+            }
+
+            JMenuItem detailsItem = new JMenuItem("  View details");
+            detailsItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
+                	OntologyOutline.viewAnnotationDetails(tag);
                 }
             });
-
-            popupMenu.add(editItem);
+            popupMenu.add(detailsItem);
         }
-
-        JMenuItem detailsItem = new JMenuItem("  View details");
-        detailsItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-            	OntologyOutline.viewAnnotationDetails(tag);
-            }
-        });
-        popupMenu.add(detailsItem);
+        
 
         popupMenu.show(e.getComponent(), e.getX(), e.getY());
         e.consume();

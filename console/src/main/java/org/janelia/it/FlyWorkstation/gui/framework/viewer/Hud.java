@@ -28,7 +28,7 @@ public class Hud extends ModalDialog {
 			setVisible(false);
 		}
 		else {
-			packAndShow();	
+			packAndShow();
 		}
 	}
 	

@@ -9,7 +9,6 @@ package org.janelia.it.FlyWorkstation.gui.framework.outline;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.*;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,19 +23,14 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.KeyBindDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.choose.OntologyElementChooser;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.*;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
-import org.janelia.it.FlyWorkstation.gui.framework.actions.AnnotateAction;
-import org.janelia.it.FlyWorkstation.gui.framework.actions.NavigateToNodeAction;
-import org.janelia.it.FlyWorkstation.gui.framework.actions.OntologyElementAction;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -453,63 +447,9 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
             }
         }
         if (REMOVE_ANNOT_COMMAND.equals(command)) {
-            int deleteConfirmation = JOptionPane.showConfirmDialog(SessionMgr.getSessionMgr().getActiveBrowser(), "Are you sure you want to permanently remove annotations using this term in all selected entities?", "Remove Annotations", JOptionPane.YES_NO_OPTION);
-            if (deleteConfirmation != 0) {
-                return;
-            }
-
-            try {
-            	final List<String> selectedEntities = new ArrayList<String>(
-            			ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(
-            					SessionMgr.getBrowser().getActiveViewer().getSelectionCategory()));
-            	
-            	// TODO: this should really use the ModelMgr
-            	final IconDemoPanel iconDemoPanel = (IconDemoPanel)SessionMgr.getBrowser().getActiveViewer();
-            	final Annotations annotations = iconDemoPanel.getAnnotations();
-                final Map<Long, List<OntologyAnnotation>> annotationMap = annotations.getFilteredAnnotationMap();
-                
-                SimpleWorker worker = new SimpleWorker() {
-
-                    @Override
-                    protected void doStuff() throws Exception {
-                        OntologyElement element = getOntologyElement(selectedTree.getCurrentNode());
-
-                        int i=1;
-            			for(String selectedId : selectedEntities) {
-            				RootedEntity rootedEntity = iconDemoPanel.getRootedEntityById(selectedId);
-                            List<OntologyAnnotation> entityAnnotations = annotationMap.get(rootedEntity.getEntity().getId());
-                            if (entityAnnotations==null) {
-                            	continue;
-                            }
-                            for(OntologyAnnotation annotation : entityAnnotations) {
-                            	if (annotation.getKeyEntityId().equals(element.getEntity().getId())) {
-                            		ModelMgr.getModelMgr().removeAnnotation(annotation.getId());
-                            	}
-                            }
-        		            setProgress(i++, selectedEntities.size());
-                    	}
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-        				// No need to do anything
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        error.printStackTrace();
-                        JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Error removing annotations", "Error", JOptionPane.ERROR_MESSAGE);
-                    }
-                };
-
-                worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getSessionMgr().getActiveBrowser(), "Removing annotations", "", 0, 100));
-                worker.execute();
-                
-            }
-            catch (Exception ex) {
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Error removing annotations", "Error", JOptionPane.ERROR_MESSAGE);
-            }
+        	OntologyElement element = getOntologyElement(selectedTree.getCurrentNode());
+        	RemoveAnnotationsAction action = new RemoveAnnotationsAction((element.getType() instanceof EnumItem)?element.getParent().getId():element.getId());
+        	action.doAction();
         }
         else if (SHOW_MANAGER_COMMAND.equals(command)) {
             ontologyManager.showDialog();
