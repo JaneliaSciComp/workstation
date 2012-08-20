@@ -1,8 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.util.gl2.GLUT;
@@ -33,13 +30,10 @@ public class VolumeBrick implements GLActor
     private int[] textureVoxels = {8,8,8};
 	IntBuffer data = Buffers.newDirectIntBuffer(textureVoxels[0]*textureVoxels[1]*textureVoxels[2]);
     private int textureId = 0;
-    int vertexShader = 0;
-    int fragmentShader = 0;
-    int shaderProgram = 0;
-    boolean haveShaders = false;
-    // 
+    private VoxelRayShader shader = new VoxelRayShader();
     private MipRenderer renderer; // circular reference...
     private boolean bIsInitialized;
+    private boolean bUseShader = true;
 
     VolumeBrick(MipRenderer mipRenderer) {
     		renderer = mipRenderer;
@@ -61,10 +55,10 @@ public class VolumeBrick implements GLActor
 		}
 		// Create simple synthetic image for testing.
 		// 0xAARRGGBB
-		setVoxelColor(0,0,0, 0x66ff0000); // ghostly red
-		setVoxelColor(0,0,1, 0x7700ff00);
-		setVoxelColor(0,0,2, 0x990000ff);
-		setVoxelColor(0,1,0, 0xbbff0000);
+		setVoxelColor(0,0,0, 0x11ff0000); // ghostly red
+		setVoxelColor(0,0,1, 0x4400ff00);
+		setVoxelColor(0,0,2, 0x770000ff);
+		setVoxelColor(0,1,0, 0xaaff0000);
 		setVoxelColor(0,1,1, 0xdd00ff00);
 		setVoxelColor(0,1,2, 0xff0000ff); // opaque blue
         gl.glEnable(GL2.GL_TEXTURE_3D);
@@ -80,38 +74,8 @@ public class VolumeBrick implements GLActor
 				GL2.GL_BGRA, // voxel component order
 				GL2.GL_UNSIGNED_INT_8_8_8_8_REV, // voxel component type
 				data.rewind());
-		// Create shader program
-		vertexShader = gl.glCreateShader(GL2.GL_VERTEX_SHADER);
-		if (loadShader(vertexShader, "shaders/VoxelRayVtx.glsl", gl)) {
-			System.out.println("loaded vertex shader");
-			fragmentShader = gl.glCreateShader(GL2.GL_FRAGMENT_SHADER);
-			if (loadShader(fragmentShader, "shaders/VoxelRayFrg.glsl", gl)) {
-				System.out.println("loaded fragment shader");
-				shaderProgram = gl.glCreateProgram();
-				gl.glAttachShader(shaderProgram, vertexShader);
-				gl.glAttachShader(shaderProgram, fragmentShader);
-				gl.glLinkProgram(shaderProgram);
-				gl.glValidateProgram(shaderProgram);
-				IntBuffer intBuffer = IntBuffer.allocate(1);
-				gl.glGetProgramiv(shaderProgram, GL2.GL_LINK_STATUS, intBuffer);
-				if (intBuffer.get(0) != 1) {
-					gl.glGetProgramiv(shaderProgram, GL2.GL_INFO_LOG_LENGTH, intBuffer);
-					int size = intBuffer.get(0);
-					System.err.println("Program link error: ");
-					if (size > 0) {
-						ByteBuffer byteBuffer = ByteBuffer.allocate(size);
-						gl.glGetProgramInfoLog(shaderProgram, size, intBuffer, byteBuffer);
-						for (byte b : byteBuffer.array()) {
-							System.err.print((char)b);
-						}
-					} else {
-						System.out.println("Unknown");
-					}
-				}
-				else
-					haveShaders = true;
-			}
-		}
+		if (bUseShader)
+			shader.init(gl);
 		// tidy up
 		gl.glPopAttrib();
 		bIsInitialized = true;
@@ -123,9 +87,9 @@ public class VolumeBrick implements GLActor
 			init(gl);
 		// debugging objects showing useful boundaries of what we want to render
 		gl.glColor3d(1,1,1);
-		displayVoxelCenterBox(gl);
+		// displayVoxelCenterBox(gl);
 		gl.glColor3d(1,1,0.3);
-		displayVoxelCornerBox(gl);
+		// displayVoxelCornerBox(gl);
 		// a stack of transparent slices looks like a volume
 		gl.glPushAttrib(GL2.GL_LIGHTING_BIT | GL2.GL_TEXTURE_BIT | GL2.GL_ENABLE_BIT);
 		gl.glShadeModel(GL2.GL_FLAT);
@@ -141,26 +105,13 @@ public class VolumeBrick implements GLActor
         gl.glEnable(GL2.GL_BLEND);
         gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
         //
-        int previousShader = 0;
-        if (haveShaders) {
-            IntBuffer buffer = IntBuffer.allocate(1);
-        	gl.glGetIntegerv(GL2.GL_CURRENT_PROGRAM, buffer);
-            previousShader = buffer.get();
-    		gl.glUseProgram(shaderProgram);
-    		// The default texture unit is 0.  Pass through shader works without setting volumeTexture.
-    		gl.glUniform1i(gl.glGetUniformLocation(shaderProgram, "volumeTexture"), 0);
-    		gl.glUniform3f(gl.glGetUniformLocation(shaderProgram, "textureVoxels"), 
-    				(float)textureVoxels[0], 
-    				(float)textureVoxels[1],
-    				(float)textureVoxels[2]);
-    		gl.glUniform3f(gl.glGetUniformLocation(shaderProgram, "voxelMicrometers"), 
-    				(float)voxelMicrometers[0], 
-    				(float)voxelMicrometers[1],
-    				(float)voxelMicrometers[2]);    		
+        if (bUseShader) {
+        		shader.setUniforms(textureVoxels, voxelMicrometers);
+        		shader.load(gl);
         }
 		displayVolumeSlices(gl);
-        if (haveShaders)
-    		gl.glUseProgram(previousShader);
+		if (bUseShader)
+			shader.unload(gl);
 		gl.glPopAttrib();
 	}
 	
@@ -280,49 +231,6 @@ public class VolumeBrick implements GLActor
 		gl.glDeleteTextures(1, textureIds, 0);
 	}
 
-	private boolean loadShader(int shaderId, String resourceName, GL2 gl) {
-		try {
-			BufferedReader reader = new BufferedReader(
-					new InputStreamReader(
-							getClass().getResourceAsStream(
-									resourceName) ));
-			StringBuffer stringBuffer = new StringBuffer();
-			String line;
-			while ((line = reader.readLine()) != null) {
-				stringBuffer.append(line);
-				stringBuffer.append("\n");
-			}
-			String progString = stringBuffer.toString();
-			// System.out.println(progString);
-			gl.glShaderSource(shaderId, 1, new String[]{progString}, (int[])null, 0);
-			gl.glCompileShader(shaderId);
-			
-			// query compile status and possibly read log
-			int[] status = new int[1];
-			gl.glGetShaderiv(shaderId, GL2.GL_COMPILE_STATUS, status, 0);
-			if (status[0] == GL2.GL_TRUE){
-				System.out.println(resourceName + ": successful");
-				// everything compiled successfully, no log
-			} 
-			else {
-				// compile failed, read the log and return it
-				gl.glGetShaderiv(shaderId, GL2.GL_INFO_LOG_LENGTH, status, 0);
-				int maxLogLength = status[0];
-				if (maxLogLength > 0) {
-					byte[] log = new byte[maxLogLength];
-					gl.glGetShaderInfoLog(shaderId, maxLogLength, status, 0, log, 0);
-					System.out.println(resourceName + ": " + new String(log, 0, status[0]));
-				} else
-					System.out.println(resourceName + ": "+ "unknown compilation error");
-				return false;
-			}
-			return true;
-		} catch (Exception exc) {
-			exc.printStackTrace();
-		}		
-		return false;
-	}
-	
 	private void printPoints(double[] p1, double[] p2, double[] p3, double[] p4) {
 		printPoint(p1);
 		printPoint(p2);
