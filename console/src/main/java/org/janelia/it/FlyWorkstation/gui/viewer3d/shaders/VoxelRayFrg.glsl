@@ -33,15 +33,15 @@ void main()
     float tMax = -tMin;
     // Stupid fixed step ray trace
     vec4 color = vec4(0.0, 0.0, 0.0, 0.0);
-    const int maxSegments = 5; // Pass through up to 4 voxels
+    const int maxSegments = 5; // Pass ray through up to 5 voxels
     // float dT = 0.99 * (tMax - tMin) / float(maxSegments);
     t = tMin;
     // Which three of the six voxel bounding planes might a view ray cross?
     vec3 planes = ceil(eyeVec * 0.99); // each component of "planes" is now either 0.0 or 1.0
     planes = planes * voxelMicrometers; // scale the 1.0 to actual voxel dimensions
-    for(int i = 0; i < maxSegments; ++i) {
-        if (t >= tMax)
-            break;
+    // for(int i = 0; i < maxSegments; ++i) {
+    while (t < tMax) {
+        // if (t >= tMax) break;
         
         // Trace the view ray forward, toward the eye, until
         // we hit a voxel boundary
@@ -59,9 +59,11 @@ void main()
         float ta0 = dT * a0;
         float alpha = ta0 / (1.0 - a0 + ta0); // 4 flops total.  No pow() required.
         alpha = clamp(alpha, 0.0, 1.0);
+        float backAlpha = color.a * (1.0 - alpha); // From previous layers
         if (alpha > 0.0) {
-            color = alpha * tc + (1.0 - alpha) * color;
-            color.a = alpha + (1.0 - alpha) * a0;
+            float ratio = alpha / (alpha + backAlpha);
+            color = mix(color, tc, ratio);
+            color.a = alpha + backAlpha;
         }
         t += dT + 0.01;
     }
