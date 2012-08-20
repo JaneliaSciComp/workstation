@@ -3,10 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.dialogs;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
@@ -19,7 +16,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
@@ -63,6 +59,7 @@ public class ScreenEvaluationDialog extends ModalDialog {
 	private Browser browser;
 	
 	private boolean isCurrFolderDirty = false;
+	private Set<Long> dirtyEntities = new HashSet<Long>();
 	
 	public ScreenEvaluationDialog(Browser browser) {
 
@@ -235,6 +232,7 @@ public class ScreenEvaluationDialog extends ModalDialog {
 				}
 				else {
 					isCurrFolderDirty = true;
+					dirtyEntities.add(entityId);
 				}
 			}
 		});
@@ -246,19 +244,14 @@ public class ScreenEvaluationDialog extends ModalDialog {
 	
 	public void organizeEntitiesInCurrentFolder(final Callable<Void> success) {
 		
-		final List<Long> entityIds = new ArrayList<Long>();
-		for(RootedEntity rootedEntity : SessionMgr.getBrowser().getActiveViewer().getRootedEntities()) {
-			entityIds.add(rootedEntity.getEntityId());
-		}
-		
 		SimpleWorker worker = new SimpleWorker() {
 			
 			@Override
 			protected void doStuff() throws Exception {
-				int total = entityIds.size()+1;
+				int total = dirtyEntities.size()+1;
 				int curr = 1;
 				setProgress(curr, total);
-				for(Long entityId : entityIds) {
+				for(Long entityId : dirtyEntities) {
 					organizeEntity(entityId);
 					setProgress(++curr, total);
 				}
@@ -266,7 +259,7 @@ public class ScreenEvaluationDialog extends ModalDialog {
 			
 			@Override
 			protected void hadSuccess() {
-				isCurrFolderDirty = false;
+				setCurrFolderDirty(false);
 				if (success!=null) {
 					try {
 						success.call();
@@ -462,6 +455,9 @@ public class ScreenEvaluationDialog extends ModalDialog {
 
 	public void setCurrFolderDirty(boolean isCurrFolderDirty) {
 		this.isCurrFolderDirty = isCurrFolderDirty;
+		if (!isCurrFolderDirty) {
+			dirtyEntities.clear();
+		}
 	}
 	
 	public boolean isAskAfterNavigation() {
