@@ -17,7 +17,7 @@ import org.janelia.it.jacs.model.entity.EntityData;
 public class PathTranslator {
 
     public static final String JACS_DATA_PATH_MAC       = ConsoleProperties.getString("remote.defaultMacPath");
-    public static final String JACS_DATA_PATH_LINUX     = ConsoleProperties.getString("remote.defaultLinuxPath");
+    public static final String JACS_DATA_PATH_NFS     = ConsoleProperties.getString("remote.defaultLinuxPath");
     public static final String JACS_DATA_PATH_WINDOWS   = ConsoleProperties.getString("remote.defaultWindowsPath");
     public static final String JACS_DATA_MOUNT_MAC      = ConsoleProperties.getString("remote.remoteMacMount");
     public static final String JACS_DATA_MOUNT_WINDOWS  = ConsoleProperties.getString("remote.remoteWindowsMount");
@@ -30,7 +30,7 @@ public class PathTranslator {
 
     	jacsDataPath = (String)sessionModel.getModelProperty(SessionMgr.JACS_DATA_PATH_PROPERTY);
         if (jacsDataPath == null) {
-        	File jacsData = new File(PathTranslator.JACS_DATA_PATH_LINUX);
+        	File jacsData = new File(PathTranslator.JACS_DATA_PATH_NFS);
             if (jacsData.canRead()) {
             	jacsDataPath = jacsData.getAbsolutePath();	
             }
@@ -50,8 +50,8 @@ public class PathTranslator {
      */
     public static String convertPath(String filepath) {
 
-        if (!jacsDataPath.startsWith(JACS_DATA_PATH_LINUX)) {
-        	filepath = filepath.replace(JACS_DATA_PATH_LINUX, jacsDataPath);	
+        if (!jacsDataPath.startsWith(JACS_DATA_PATH_NFS)) {
+        	filepath = filepath.replace(JACS_DATA_PATH_NFS, jacsDataPath);	
         }
         
         if (SystemInfo.isWindows) {
@@ -90,8 +90,13 @@ public class PathTranslator {
     public static String getMountHelpMessage() {
         String message = "";
         if (SystemInfo.isMac) {
-            message = "The jacsData file share is not mounted. From Finder choose 'Go' and 'Connect to Server' " +
-                    "then enter '"+JACS_DATA_MOUNT_MAC+"' and press 'Connect'.";
+        	if (JACS_DATA_PATH_NFS.equals(jacsDataPath)) {
+        		message = "The jacsData file share is not mounted as "+jacsDataPath+". Please contact the Helpdesk.";
+        	}
+        	else {
+        		message = "The jacsData file share is not mounted. From Finder choose 'Go' and 'Connect to Server' " +
+                "then enter '"+JACS_DATA_MOUNT_MAC+"' and press 'Connect'.";	
+        	}
         }
         else if (SystemInfo.isLinux) {
             message = "The jacsData file share is not mounted as "+jacsDataPath+". Please contact the Helpdesk.";
@@ -105,7 +110,7 @@ public class PathTranslator {
 
     public static String getOsSpecificRootPath() {
         if (SystemInfo.isMac) { return PathTranslator.JACS_DATA_PATH_MAC; }
-        else if (SystemInfo.isLinux) { return PathTranslator.JACS_DATA_PATH_LINUX; }
+        else if (SystemInfo.isLinux) { return PathTranslator.JACS_DATA_PATH_NFS; }
         else if (SystemInfo.isWindows) {return PathTranslator.JACS_DATA_PATH_WINDOWS; }
         return "";
     }

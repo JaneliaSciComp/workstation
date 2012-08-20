@@ -215,7 +215,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
     				} catch (InterruptedException e) {
     					// Ignore
     				}
-    	    		System.exit(0);
+    				printPathAndExit("",0);
     			}
     		});
         }
@@ -250,7 +250,14 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 					FileUtil.deleteDirectory(extractedDir);
 				}
 
-                if (SystemInfo.isLinux || SystemInfo.isMac) {
+				if (SystemInfo.isWindows) {
+                    if (runShellCommand("copy "+remoteFile+" "+downloadFile, downloadsDir) != 0) {
+                        throw new Exception("Error downloading archive: "+downloadFile.getAbsolutePath());
+                    }
+
+                    FileUtil.zipUncompress(downloadFile, downloadsDir.getAbsolutePath());
+                }
+				else {
                     if (runShellCommand("cp "+remoteFile+" "+downloadFile, downloadsDir) != 0) {
                         throw new Exception("Error downloading archive: "+downloadFile.getAbsolutePath());
                     }
@@ -258,15 +265,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
                     if (runShellCommand("tar xvfz "+downloadFile, downloadsDir) != 0) {
                         throw new Exception("Error extracting archive: "+downloadFile.getAbsolutePath());
                     }
-                }
-                else if (SystemInfo.isWindows) {
-                    if (runShellCommand("copy "+remoteFile+" "+downloadFile, downloadsDir) != 0) {
-                        throw new Exception("Error downloading archive: "+downloadFile.getAbsolutePath());
-                    }
-
-                    FileUtil.zipUncompress(downloadFile, downloadsDir.getAbsolutePath());
-                }
-
+                } 
             }
 			
 			@Override
@@ -289,21 +288,21 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 					mainPane.revalidate();
 					mainPane.repaint();
 					Thread.sleep(1000);	
-					System.exit(75); // TEMP_FAILURE
+					printPathAndExit("",75); // TEMP_FAILURE
 				}
 				catch (InterruptedException e) {
 					// Ignore
 				}
 				catch (Exception e) {
 		            SessionMgr.getSessionMgr().handleException(e);
-					System.exit(1);
+		            printPathAndExit("",1);
 				}
 			}
 			
 			@Override
 			protected void hadError(Throwable error) {
 	            SessionMgr.getSessionMgr().handleException(error);
-				System.exit(1);
+	            printPathAndExit("",1);
 			}
 		};
 
@@ -342,10 +341,15 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 	}
 
     private File getJacsDataFile(String relativePath) {
-    	File file = new File(PathTranslator.JACS_DATA_PATH_LINUX, relativePath);
+    	File file = new File(PathTranslator.JACS_DATA_PATH_NFS, relativePath);
     	return new File(PathTranslator.convertPath(file.getAbsolutePath()));
     }
-    
+
+	private static void printPathAndExit(String path, int exitCode) {
+		System.out.println(path);
+		System.exit(exitCode);
+	}
+	
     public static void main(final String[] args) {
 
         try {
@@ -357,11 +361,10 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
             
         	AutoUpdater updater = new AutoUpdater();
             updater.checkVersions();
-            
         }
         catch (Exception ex) {
             SessionMgr.getSessionMgr().handleException(ex);
-			System.exit(1);
+			printPathAndExit("",1);
         }
     }
 }
