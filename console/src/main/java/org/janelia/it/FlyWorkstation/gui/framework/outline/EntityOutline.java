@@ -120,7 +120,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 						if (nodes == null) return;
 						for(final DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
 							getDynamicTree().recreateChildNodes(node);   
-							getDynamicTree().expand(node, true);
+							//getDynamicTree().expand(node, true);
 						}
 						revalidate();
 						repaint();
