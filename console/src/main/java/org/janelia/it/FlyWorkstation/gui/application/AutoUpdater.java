@@ -27,6 +27,12 @@ import java.util.MissingResourceException;
  */
 public class AutoUpdater extends JFrame implements PropertyChangeListener {
 
+    // Obligatory Mac garbage in case the user is cursed with that OS
+    static {
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", ConsoleProperties.getString("console.Title")+" Updater");
+        System.setProperty("apple.eawt.quitStrategy", "CLOSE_ALL_WINDOWS");
+    }
+
 	private static final int padding = 20;
 	
 	private JPanel mainPane;
