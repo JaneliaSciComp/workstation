@@ -30,7 +30,9 @@ public class TaskDetailsDialog extends ModalDialog {
     protected Long taskId;
     protected JPanel attrPanel;
     protected Timer refreshTimer;
-    
+    protected boolean closeUponTaskCompletion;
+    protected JButton okButton;
+   
     private JLabel addAttribute(String name) {
         JLabel nameLabel = new JLabel(name);
         JLabel valueLabel = new JLabel();
@@ -41,7 +43,12 @@ public class TaskDetailsDialog extends ModalDialog {
     }
     
     public TaskDetailsDialog() {
+    	this(false);
+    }
+    
+    public TaskDetailsDialog(boolean closeUponTaskCompletion) {
 
+    	this.closeUponTaskCompletion = closeUponTaskCompletion;
         setTitle("Task Details");
 
     	add(Box.createHorizontalStrut(600), BorderLayout.NORTH);
@@ -52,8 +59,8 @@ public class TaskDetailsDialog extends ModalDialog {
 
         add(attrPanel, BorderLayout.CENTER);
 
-        JButton okButton = new JButton("OK");
-        okButton.setToolTipText("Close and save changes");
+        okButton = new JButton("OK");
+        okButton.setToolTipText("Close and refresh the main window");
         okButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -84,12 +91,20 @@ public class TaskDetailsDialog extends ModalDialog {
     			refreshTimer.stop();
     		}
             refreshTimer = null;
+            if (closeUponTaskCompletion) {
+            	setVisible(false);
+            }
     	}
     }
-    
+
     public void showForTask(Task task) {
 
     	this.taskId = task.getObjectId();
+    	updateForTask(task);
+        packAndShow();
+    }
+    
+    public void updateForTask(Task task) {
     	
     	attrPanel.removeAll();
     	
@@ -99,32 +114,38 @@ public class TaskDetailsDialog extends ModalDialog {
         JLabel statusLabel = addAttribute("Last Status: ");
         statusLabel.setText(task.getLastEvent().getDescription());
         
-        if (!task.isDone()) {
-        	statusLabel.setIcon(Icons.getLoadingIcon());
-            
-            if (refreshTimer==null || !refreshTimer.isRunning()) {
-            	refreshTimer = new Timer(REFRESH_DELAY_MS, new ActionListener() {
-    				@Override
-    				public void actionPerformed(ActionEvent e) {
-    					try {
-    						System.out.println("Refresh "+taskId);
-    						showForTask(ModelMgr.getModelMgr().getTaskById(taskId));	
-    					}
-    					catch (Exception error) {
-    						SessionMgr.getSessionMgr().handleException(error);
-    					}
-    				}
-    			});
-            	refreshTimer.setInitialDelay(REFRESH_DELAY_MS);
-            	refreshTimer.start(); 
-            }
+        if (task.isDone()) {
+    		endRefresh();
+    		return;
         }
-        else {
-        	endRefresh();
+        
+    	statusLabel.setIcon(Icons.getLoadingIcon());
+        
+        if (refreshTimer==null || !refreshTimer.isRunning()) {
+        	refreshTimer = new Timer(REFRESH_DELAY_MS, new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					try {
+						System.out.println("Refresh "+taskId);
+						final Task updatedTask = ModelMgr.getModelMgr().getTaskById(taskId);
+						SwingUtilities.invokeLater(new Runnable() {
+							@Override
+							public void run() {
+								updateForTask(updatedTask);	
+							}
+						});
+						
+					}
+					catch (Exception error) {
+						SessionMgr.getSessionMgr().handleException(error);
+					}
+				}
+			});
+        	refreshTimer.setInitialDelay(REFRESH_DELAY_MS);
+        	refreshTimer.start(); 
         }
         
         SpringUtilities.makeCompactGrid(attrPanel, attrPanel.getComponentCount()/2, 2, 6, 6, 6, 6);
-		
-        packAndShow();
+        repaint();
     }
 }

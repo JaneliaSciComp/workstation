@@ -694,8 +694,9 @@ public class EntityContextMenu extends JPopupMenu {
                     task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
                     ModelMgr.getModelMgr().submitJob("SortBySimilarity", task.getObjectId());
                     
-                    TaskDetailsDialog dialog = SessionMgr.getBrowser().getTaskOutline().getDetailsDialog();
+                    final TaskDetailsDialog dialog = new TaskDetailsDialog(true);
                     dialog.showForTask(task);
+                    SessionMgr.getBrowser().getActiveViewer().refresh();
                     
             	}
             	catch (Exception e) {
