@@ -124,7 +124,7 @@ public class IconDemoPanel extends Viewer {
 				// Space on a single entity triggers a preview 
 				if (e.getKeyCode() == KeyEvent.VK_SPACE) {
 					updateHud();
-					hud.showDialog();
+					hud.toggleDialog();
 					e.consume();
 					return;
 				}
@@ -333,30 +333,7 @@ public class IconDemoPanel extends Viewer {
         });
 
 		hud = new Hud();
-		hud.getJDialog().addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent e) {
-				if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-					hud.hideDialog();
-				}
-				else {
-					RootedEntity rootedEntity = null;
-					if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_UP) {
-						rootedEntity = getPreviousEntity();
-					} 
-					else if (e.getKeyCode() == KeyEvent.VK_RIGHT || e.getKeyCode() == KeyEvent.VK_DOWN) {
-						rootedEntity = getNextEntity();
-					}
-					
-					if (rootedEntity==null) {
-						hud.hideDialog();
-						return;
-					}
-					ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(selectionCategory, rootedEntity.getId(), true);
-					updateHud();
-				}
-			}
-		});
+		hud.addKeyListener(keyListener);
 		
 		splashPanel = new SplashPanel();
 		add(splashPanel);

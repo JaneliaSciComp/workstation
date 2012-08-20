@@ -2,43 +2,38 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.image.BufferedImage;
 
-import javax.swing.*;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-
-import com.explodingpixels.macwidgets.HudWindow;
+import org.janelia.it.FlyWorkstation.gui.dialogs.ModalDialog;
 
 /**
  * A persistent heads-up display for a synchronized image. 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class Hud {
+public class Hud extends ModalDialog {
 
 	private Long entityId;
-	private HudWindow hud;
 	private JLabel previewLabel;
 	
 	public Hud() {
-		hud = new HudWindow();
-		hud.getJDialog().setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		
+		setModalityType(ModalityType.MODELESS);
 		previewLabel = new JLabel(new ImageIcon());
-		previewLabel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-		hud.getContentPane().add(previewLabel);
+		add(previewLabel);
 	}
 	
-	public void showDialog() {
-		hud.getJDialog().setLocationRelativeTo(SessionMgr.getSessionMgr().getActiveBrowser());
-		hud.getJDialog().setVisible(true);
+	public void toggleDialog() {
+		if (isVisible()) {
+			setVisible(false);
+		}
+		else {
+			packAndShow();	
+		}
 	}
 	
 	public void hideDialog() {
-		hud.getJDialog().setVisible(false);
-	}
-	
-	public JDialog getJDialog() {
-		return hud.getJDialog();
+		setVisible(false);
 	}
 	
 	public Long getEntityId() {
@@ -49,13 +44,8 @@ public class Hud {
 		this.entityId = entityId;
 	}
 
-	public void setTitle(String name) {
-		hud.getJDialog().setTitle(name);
-	}
-
 	public void setImage(BufferedImage bufferedImage) {
 		previewLabel.setIcon(bufferedImage==null?null:new ImageIcon(bufferedImage));
-		hud.getJDialog().pack();
 	}
 	
 }
