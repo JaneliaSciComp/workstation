@@ -18,12 +18,14 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.ImagesPanel;
 public class ViewerSettingsPanel extends JPanel implements PrefEditor {
     private boolean settingsChanged = false;
 
+    public static final String DISABLE_IMAGE_DRAG_PROPERTY = "SessionMgr.DisableImageDragProperty";
     public static final String INVERT_IMAGE_COLORS_PROPERTY = "SessionMgr.InvertImageColorProperty";
     public static final String ONLY_SESSION_ANNOTATIONS_PROPERTY = "SessionMgr.OnlySessionAnnotationsProperty";
     public static final String HIDE_ANNOTATED_PROPERTY = "SessionMgr.HideAnnotatedProperty";
     public static final String SHOW_ANNOTATION_TABLES_PROPERTY = "SessionMgr.ShowAnnotationTablesProperty";
     public static final String ANNOTATION_TABLES_HEIGHT_PROPERTY = "SessionMgr.AnnotationTablesHeightProperty";
     
+    JCheckBox disableImageDrag = new JCheckBox();
     JCheckBox invertColorSpace = new JCheckBox();
     JCheckBox onlySessionAnnotations = new JCheckBox();
     JCheckBox hideAnnotatedImages = new JCheckBox();
@@ -50,7 +52,34 @@ public class ViewerSettingsPanel extends JPanel implements PrefEditor {
     }
 
     private void jbInit() throws Exception {
+
+    	/*************** Interface Options ***************/
     	
+    	JPanel interfaceOptions = new JPanel();
+        interfaceOptions.setLayout(new BoxLayout(interfaceOptions, BoxLayout.Y_AXIS));
+        interfaceOptions.setBorder(new javax.swing.border.TitledBorder("Interface Options"));
+        
+        disableImageDrag.setText("Disable drag and drop in the image viewer");
+        disableImageDrag.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                settingsChanged = true;
+            }
+        });
+
+        if (sessionMgr.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY) == null) {
+        	sessionMgr.setModelProperty(DISABLE_IMAGE_DRAG_PROPERTY, Boolean.FALSE);
+        }
+        else {
+        	disableImageDrag.setSelected((Boolean) sessionMgr.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY));
+        }
+
+        interfaceOptions.add(Box.createVerticalStrut(5));
+        interfaceOptions.add(disableImageDrag);
+        interfaceOptions.add(Box.createVerticalStrut(5));
+        this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        this.add(Box.createVerticalStrut(10));
+        this.add(interfaceOptions);
+
     	/*************** Image Options ***************/
     	
     	JPanel imageOptions = new JPanel();
@@ -190,6 +219,9 @@ public class ViewerSettingsPanel extends JPanel implements PrefEditor {
 
     public String[] applyChanges() {
         settingsChanged = false;
+        if (disableImageDrag.isSelected() != (Boolean) sessionMgr.getModelProperty(DISABLE_IMAGE_DRAG_PROPERTY)) {
+            sessionMgr.setModelProperty(DISABLE_IMAGE_DRAG_PROPERTY, disableImageDrag.isSelected());
+        }
         if (invertColorSpace.isSelected() != (Boolean) sessionMgr.getModelProperty(INVERT_IMAGE_COLORS_PROPERTY)) {
             sessionMgr.setModelProperty(INVERT_IMAGE_COLORS_PROPERTY, invertColorSpace.isSelected());
         }

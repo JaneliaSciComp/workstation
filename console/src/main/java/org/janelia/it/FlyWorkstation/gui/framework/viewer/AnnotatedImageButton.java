@@ -2,10 +2,10 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.*;
 import java.awt.dnd.*;
+import java.awt.event.InputEvent;
+import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.List;
 
 import javax.swing.*;
@@ -16,6 +16,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -83,15 +84,18 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
     	this.iconDemoPanel = iconDemoPanel;
     	this.rootedEntity = rootedEntity;
     	
-    	this.source = new DragSource();
-    	source.createDefaultDragGestureRecognizer(this, DnDConstants.ACTION_LINK, this);
-    			
-		setTransferHandler(new EntityTransferHandler() {
-			@Override
-			public JComponent getDropTargetComponent() {
-				return AnnotatedImageButton.this;
-			}			
-		});
+    	Boolean disableImageDrag = (Boolean)SessionMgr.getSessionMgr().getModelProperty(ViewerSettingsPanel.DISABLE_IMAGE_DRAG_PROPERTY);
+    	if (disableImageDrag==null || disableImageDrag==false) {
+        	this.source = new DragSource();
+        	source.createDefaultDragGestureRecognizer(this, DnDConstants.ACTION_LINK, this);
+        			
+    		setTransferHandler(new EntityTransferHandler() {
+    			@Override
+    			public JComponent getDropTargetComponent() {
+    				return AnnotatedImageButton.this;
+    			}			
+    		});
+    	}
 				
         GridBagConstraints c = new GridBagConstraints();
         buttonPanel = new JPanel(new GridBagLayout());
@@ -331,7 +335,15 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
 
 	@Override
 	public void dragGestureRecognized(DragGestureEvent dge) {
-        if (!isSelected()) {
+		InputEvent inputevent = dge.getTriggerEvent();
+		boolean keyDown = false;
+        if (inputevent instanceof MouseEvent) {
+            MouseEvent mouseevent = (MouseEvent)inputevent;
+            if (mouseevent.isShiftDown() || mouseevent.isAltDown() || mouseevent.isAltGraphDown() || mouseevent.isControlDown() || mouseevent.isMetaDown()) {
+                keyDown = true;
+            }
+        }
+        if (!isSelected() && !keyDown) {
         	ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(iconDemoPanel.getSelectionCategory(), rootedEntity.getId(), true);
         }
 		getTransferHandler().exportAsDrag(this, dge.getTriggerEvent(), TransferHandler.LINK);

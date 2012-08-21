@@ -29,7 +29,7 @@ public class MouseHandler implements MouseListener {
             // Right click
         	popupTriggered(e);
         }
-        else if (e.getClickCount() % 2 == 0 && e.getButton() == MouseEvent.BUTTON1 && 
+        else if (e.getClickCount()>=2 && e.getClickCount() % 2 == 0 && e.getButton() == MouseEvent.BUTTON1 && 
         		(e.getModifiersEx() | InputEvent.BUTTON3_MASK) == InputEvent.BUTTON3_MASK) {
             // Double click
         	// We check for mod 2 because if the user is clicking fast, the click count may not get reset between double-clicks

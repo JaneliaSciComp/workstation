@@ -213,7 +213,7 @@ public class IconDemoPanel extends Viewer {
 			super.mouseReleased(e);
 			if (e.isConsumed()) return;
 			AnnotatedImageButton button = getButtonAncestor(e.getComponent());			
-			if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() != 1) {
+			if (e.getButton() != MouseEvent.BUTTON1 || e.getClickCount() < 0) {
 				return;
 			}
 			buttonSelection(button, (SystemInfo.isMac && e.isMetaDown()) || e.isControlDown(), e.isShiftDown());
