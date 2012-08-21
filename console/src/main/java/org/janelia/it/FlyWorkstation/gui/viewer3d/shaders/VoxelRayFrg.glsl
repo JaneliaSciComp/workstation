@@ -56,6 +56,7 @@ void main()
         vec4 tc = texture3D(volumeTexture, textureCoordinate + 0.5 * thickness * dTexDt);
         // Compute alpha opacity from thickness using formula Cami and I derived.
         float a0 = tc.a;
+        // a0 = pow(0.95 * a0, 6.0); // TODO temporary hack
         float ta0 = thickness * a0;
         float alpha = ta0 / (1.0 - a0 + ta0); // 4 flops total.  No pow() required.
         alpha = clamp(alpha, 0.0, 1.0);

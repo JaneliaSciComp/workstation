@@ -13,16 +13,16 @@ class MipRenderer implements GLEventListener
     
     // camera parameters
     Vec3 focusInGround = new Vec3(0,0,0);
-    Vec3 upInCamera = new Vec3(0,1,0);
-    Rotation R_ground_camera = new Rotation();
-    double defaultCameraFocusDistance = 20.0;
+    private Vec3 upInCamera = new Vec3(0,1,0);
+    private Rotation R_ground_camera = new Rotation();
+    private double defaultCameraFocusDistance = 20.0;
     double cameraFocusDistance = defaultCameraFocusDistance;
-    double distanceToScreenInPixels = 2000;
-    int widthInPixels = -1;
-    int heightInPixels = -1;
-    double defaultHeightInPixels = 400.0;
+    private double distanceToScreenInPixels = 2000;
+    private double defaultHeightInPixels = 400.0;
+    private double widthInPixels = defaultHeightInPixels;
+    private double heightInPixels = defaultHeightInPixels;
     // scene objects
-    Vector<GLActor> actors = new Vector<GLActor>();
+    private Vector<GLActor> actors = new Vector<GLActor>();
 
 
     public MipRenderer() {
@@ -30,11 +30,19 @@ class MipRenderer implements GLEventListener
     		actors.add(new VolumeBrick(this));
     }
     
+    public void addActor(GLActor actor) {
+    		actors.add(actor);
+    }
+    
     public void centerOnPixel(Point p) {
     		// System.out.println("center");
     		double dx =  p.x - widthInPixels/2.0;
     		double dy = heightInPixels/2.0 - p.y;
     		translatePixels(dx, dy, 0.0);
+    }
+    
+    public void clear() {
+    		actors.clear();
     }
     
     @Override
@@ -111,12 +119,24 @@ class MipRenderer implements GLEventListener
 			actor.display(gl);
     }
     
-    public void resetView() {
-    		// System.out.println(focusInGround);
-    		// System.out.println(R_ground_camera);
-    		focusInGround = new Vec3(0,0,0);
+    public void resetView() 
+    {
+    		// Adjust view to fit the actual objects present
+    		BoundingBox boundingBox = new BoundingBox();
+    		for (GLActor actor : actors) {
+    			boundingBox.include(actor.getBoundingBox());
+    		}
+    		if (boundingBox.isEmpty())
+    			boundingBox.include(new Vec3(0,0,0));
+    		focusInGround = boundingBox.getCenter();
     		R_ground_camera = new Rotation();
-    		cameraFocusDistance = defaultCameraFocusDistance * defaultHeightInPixels / heightInPixels;
+    		double heightInMicrometers = boundingBox.getHeight();
+    		if (! (heightInMicrometers >= 0.0)) // watch for NaN!
+    			heightInMicrometers = 2.0; // whatever
+    		// System.out.println("Focus = " + focusInGround);
+    		// System.out.println("Image height = " + heightInMicrometers);
+    		cameraFocusDistance = 1.05 * distanceToScreenInPixels * heightInMicrometers / heightInPixels;
+    		// cameraFocusDistance = defaultCameraFocusDistance * defaultHeightInPixels / heightInPixels;
     }
     
     @Override
@@ -169,7 +189,7 @@ class MipRenderer implements GLEventListener
 	}
 	
 	public void updateProjection(GL2 gl) {
-        gl.glViewport(0, 0, widthInPixels, heightInPixels);
+        gl.glViewport(0, 0, (int)widthInPixels, (int)heightInPixels);
         double verticalApertureInDegrees = 180.0/Math.PI * 2.0 * Math.abs(
         		Math.atan2(heightInPixels/2.0, distanceToScreenInPixels));
         gl.glPushAttrib(GL2.GL_TRANSFORM_BIT);

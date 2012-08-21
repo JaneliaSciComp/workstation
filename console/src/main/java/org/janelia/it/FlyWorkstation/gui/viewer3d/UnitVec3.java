@@ -27,6 +27,13 @@ public class UnitVec3 extends Vec3
 		super.set(2, z * scale);
 	}
 
+	/**
+	 * Negation is one of the few operations that preserves magnitude
+	 */
+	public UnitVec3 minus() {
+		return new UnitVec3().setElements(-x(), -y(), -z());
+	}
+	
 	protected UnitVec3 setElements(double x, double y, double z) {
 		super.set(0, x);
 		super.set(1, y);

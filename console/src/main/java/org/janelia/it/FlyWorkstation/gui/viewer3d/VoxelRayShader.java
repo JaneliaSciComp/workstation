@@ -21,10 +21,10 @@ public class VoxelRayShader
 		// Create shader program
 		vertexShader = gl.glCreateShader(GL2.GL_VERTEX_SHADER);
 		if (loadOneShader(vertexShader, "shaders/VoxelRayVtx.glsl", gl)) {
-			System.out.println("loaded vertex shader");
+			// System.out.println("loaded vertex shader");
 			fragmentShader = gl.glCreateShader(GL2.GL_FRAGMENT_SHADER);
 			if (loadOneShader(fragmentShader, "shaders/VoxelRayFrg.glsl", gl)) {
-				System.out.println("loaded fragment shader");
+				// System.out.println("loaded fragment shader");
 				shaderProgram = gl.glCreateProgram();
 				gl.glAttachShader(shaderProgram, vertexShader);
 				gl.glAttachShader(shaderProgram, fragmentShader);
@@ -98,7 +98,7 @@ public class VoxelRayShader
 			int[] status = new int[1];
 			gl.glGetShaderiv(shaderId, GL2.GL_COMPILE_STATUS, status, 0);
 			if (status[0] == GL2.GL_TRUE){
-				System.out.println(resourceName + ": successful");
+				// System.out.println(resourceName + ": successful");
 				// everything compiled successfully, no log
 			} 
 			else {

@@ -25,6 +25,17 @@ public class Vec3 extends SizedVector<Double>
 		return result;
 	}
 	
+	public Vec3 minus() {
+		return new Vec3(-x(), -y(), -z());
+	}
+	
+	public Vec3 minus(Vec3 rhs) {
+		return new Vec3(
+				x() - rhs.x(), 
+				y() - rhs.y(), 
+				z() - rhs.z());
+	}
+	
 	public void multEquals(double d) {
 		for (int i = 0; i < 3; ++i) {
 			this.set(i, this.get(i)*d);
@@ -50,6 +61,18 @@ public class Vec3 extends SizedVector<Double>
 		set(0, x() + rhs.x());
 		set(1, y() + rhs.y());
 		set(2, z() + rhs.z());
+	}
+	
+	public void setX(double x) {
+		set(0, x);
+	}
+	
+	public void setY(double y) {
+		set(1, y);
+	}
+	
+	public void setZ(double z) {
+		set(2, z);
 	}
 	
 	public Vec3 times(double rhs) {

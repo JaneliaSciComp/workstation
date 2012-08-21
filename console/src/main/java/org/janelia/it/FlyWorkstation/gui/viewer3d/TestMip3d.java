@@ -25,6 +25,13 @@ public class TestMip3d {
                 JLabel label = new JLabel("Test MipWidget");
                 frame.getContentPane().add(label);
                 Mip3d mipWidget = new Mip3d();
+                try {
+                		mipWidget.loadVolume("/Users/brunsc/smallRefTest.tif");
+                		// mipWidget.loadVolume("/Users/brunsc/projects/lsm_compression/GMR_18A04_AE_01_05_cmp.lsm");
+                	}
+                catch (Exception exc) {
+                		exc.printStackTrace();
+                }
                 frame.getContentPane().add(mipWidget);
 
                 //Display the window.

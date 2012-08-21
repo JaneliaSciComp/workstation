@@ -6,6 +6,7 @@ import javax.media.opengl.awt.GLCanvas;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
+import org.apache.commons.io.FilenameUtils;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,6 +15,11 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+import java.awt.image.BufferedImage;
+import loci.formats.IFormatReader;
+import loci.formats.gui.BufferedImageReader;
+import loci.formats.in.TiffReader;
+import loci.formats.in.ZeissLSMReader;
 
 public class Mip3d extends GLCanvas 
 implements MouseListener, MouseMotionListener, ActionListener,
@@ -64,6 +70,51 @@ implements MouseListener, MouseMotionListener, ActionListener,
 			popupMenu.show(event.getComponent(),
 					event.getX(), event.getY());
 		}
+	}
+	
+	public boolean loadVolume(String fileName) 
+	{
+		try {
+			String extension = FilenameUtils.getExtension(fileName).toUpperCase();
+			IFormatReader reader = null;
+			if (extension.startsWith("TIF")) {
+				// System.out.println("Tiff file name found!");
+				reader = new TiffReader();
+			} else if (extension.startsWith("LSM")) {
+				reader = new ZeissLSMReader();
+			}
+			if (reader == null)
+				return false;
+			BufferedImageReader in = new BufferedImageReader(reader);
+			in.setId(fileName);
+			int sx = in.getSizeX();
+			int sy = in.getSizeY();
+			int sz = in.getSizeZ();
+			int[] rgbArray = new int[sx*sy*sz];
+			int scanLineStride = sx;
+			for (int z = 0; z < sz; ++z) {
+				BufferedImage zSlice = in.openImage(z);
+				int zOffset = z * sx * sy;
+				zSlice.getRGB(0, 0, 
+					sx, sy,
+					rgbArray,
+					zOffset,
+					scanLineStride);
+			}
+			in.close();
+			VolumeBrick brick = new VolumeBrick(renderer);
+			brick.setVolumeDataComputeAlpha(sx, sy, sz, rgbArray);
+			brick.setVolumeMicrometers(sx, sy, sz);
+			brick.setVoxelMicrometers(1.0, 1.0, 1.0);
+			renderer.clear();
+			renderer.addActor(brick);
+			renderer.resetView();
+			return true;
+		}
+		catch (Exception exc) {
+			exc.printStackTrace();
+		}
+		return false;
 	}
 	
 	@Override
