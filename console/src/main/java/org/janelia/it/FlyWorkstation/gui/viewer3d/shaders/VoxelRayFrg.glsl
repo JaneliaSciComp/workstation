@@ -27,7 +27,7 @@ void main()
     vec3 dTexDPos = vec3(1.0,1.0,1.0) / textureVoxels / voxelMicrometers; // dTexCoord/dp
     vec3 dTexDt = dPosDt * dTexDPos; // dTexCoord/dt
 
-    const float minRayStep = 0.001; // To keep things moving forward a finite amount
+    const float minRayStep = 0.02; // To keep things moving forward a finite amount
     // Tracing ray proceeds from -1/2 to +1/2 voxel depth in principal viewing axis direction
     float tMin = 0.50 * dot(principalViewAxis, (vec3(1.0, 1.0, 1.0)/eyeVec)) + minRayStep;
     float tMax = -tMin;
@@ -48,25 +48,30 @@ void main()
         // Solve three ray-tracing equations in one vec3:
         vec3 distances = (planes - p) / eyeVec; // distance to each of three voxel boundaries
         // The shortest distance is the closest voxel boundary
+        // -minRayStep to avoid texture artifacts at voxel boundaries
         float thickness = min(distances.x, min(distances.y, distances.z)); // This is how much voxel meat we are peering through.
-        float dT = thickness + minRayStep;
+        // float dT = thickness + minRayStep;
         // actually use a texture coordinate halfway through the computed thickness,  
         // to work best with different texture interpolation methods. 
-        vec4 tc = texture3D(volumeTexture, textureCoordinate + 0.5 * dT * dTexDt);
+        vec4 tc = texture3D(volumeTexture, textureCoordinate + 0.5 * thickness * dTexDt);
         // Compute alpha opacity from thickness using formula Cami and I derived.
         float a0 = tc.a;
-        float ta0 = dT * a0;
+        float ta0 = thickness * a0;
         float alpha = ta0 / (1.0 - a0 + ta0); // 4 flops total.  No pow() required.
         alpha = clamp(alpha, 0.0, 1.0);
         float backAlpha = color.a * (1.0 - alpha); // From previous layers
         if (alpha > 0.0) {
+            // un-pre-multiply alpha component
+            tc /= tc.a;
             float ratio = alpha / (alpha + backAlpha);
             color = mix(color, tc, ratio);
             color.a = alpha + backAlpha;
         }
-        t += dT; // step into the next voxel
+        t += thickness + minRayStep; // step into the next voxel
     }
 
+    // re-pre-multiply alpha component
+    color.rgb *= color.a;
     gl_FragColor = color;
     
     // Debugging colorizations below

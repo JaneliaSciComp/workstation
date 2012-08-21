@@ -12,6 +12,12 @@ import javax.media.opengl.GL2;
  */
 public class VolumeBrick implements GLActor 
 {
+	public enum RenderMethod {MAXIMUM_INTENSITY, ALPHA_BLENDING};
+	private RenderMethod renderMethod = 
+		RenderMethod.ALPHA_BLENDING;
+		/// RenderMethod.MAXIMUM_INTENSITY;
+    private boolean bUseShader = true;
+	
     private GLUT glut = new GLUT();    
     /**
      * Dimensions of rectangular volume, from centers of corner voxels, in world units.
@@ -33,7 +39,6 @@ public class VolumeBrick implements GLActor
     private VoxelRayShader shader = new VoxelRayShader();
     private MipRenderer renderer; // circular reference...
     private boolean bIsInitialized;
-    private boolean bUseShader = true;
 
     VolumeBrick(MipRenderer mipRenderer) {
     		renderer = mipRenderer;
@@ -55,11 +60,20 @@ public class VolumeBrick implements GLActor
 		}
 		// Create simple synthetic image for testing.
 		// 0xAARRGGBB
+		/*
 		setVoxelColor(0,0,0, 0x11ff0000); // ghostly red
 		setVoxelColor(0,0,1, 0x4400ff00);
 		setVoxelColor(0,0,2, 0x770000ff);
 		setVoxelColor(0,1,0, 0xaaff0000);
 		setVoxelColor(0,1,1, 0xdd00ff00);
+		setVoxelColor(0,1,2, 0xff0000ff); // opaque blue
+		 */
+		// TESTING PREMULTIPLIED ALPHA
+		setVoxelColor(0,0,0, 0x11110000); // ghostly red
+		setVoxelColor(0,0,1, 0x44004400);
+		setVoxelColor(0,0,2, 0x77000077);
+		setVoxelColor(0,1,0, 0xaaaa0000);
+		setVoxelColor(0,1,1, 0xdd00dd00);
 		setVoxelColor(0,1,2, 0xff0000ff); // opaque blue
         gl.glEnable(GL2.GL_TEXTURE_3D);
         gl.glBindTexture(GL2.GL_TEXTURE_3D, textureId);
@@ -96,14 +110,25 @@ public class VolumeBrick implements GLActor
         gl.glDisable(GL2.GL_LIGHTING);
         gl.glEnable(GL2.GL_TEXTURE_3D);
         gl.glBindTexture(GL2.GL_TEXTURE_3D, textureId);
-        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MIN_FILTER, GL2.GL_NEAREST);
-        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MAG_FILTER, GL2.GL_NEAREST);
+        int interp 
+        		= GL2.GL_NEAREST; // discrete voxel cubes
+        		// = GL2.GL_LINEAR; // blended voxel edges
+        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MIN_FILTER, interp);
+        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MAG_FILTER, interp);
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_R, GL2.GL_CLAMP_TO_BORDER);
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_S, GL2.GL_CLAMP_TO_BORDER);
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_T, GL2.GL_CLAMP_TO_BORDER);
         // set blending to enable transparent voxels
-        gl.glEnable(GL2.GL_BLEND);
-        gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
+        if (renderMethod == RenderMethod.ALPHA_BLENDING) {
+        		gl.glEnable(GL2.GL_BLEND);
+        		gl.glBlendEquation(GL2.GL_FUNC_ADD);
+        		gl.glBlendFunc(GL2.GL_ONE, GL2.GL_ONE_MINUS_SRC_ALPHA);
+        }
+        else if (renderMethod == RenderMethod.MAXIMUM_INTENSITY) {
+    			gl.glEnable(GL2.GL_BLEND);
+    			gl.glBlendEquation(GL2.GL_MAX);
+    			gl.glBlendFunc(GL2.GL_ONE, GL2.GL_DST_ALPHA);
+        }
         //
         if (bUseShader) {
         		shader.setUniforms(textureVoxels, voxelMicrometers);

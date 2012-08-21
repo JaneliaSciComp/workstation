@@ -88,7 +88,8 @@ class MipRenderer implements GLEventListener
         GL2 gl = gLDrawable.getGL().getGL2();
         gl.glEnable(GL2.GL_FRAMEBUFFER_SRGB);
         gl.glEnable(GL2.GL_DEPTH_TEST);
-        gl.glClearColor(0.1f, 0.1f, 0.5f, 0.0f);
+        // gl.glClearColor(0.1f, 0.1f, 0.5f, 0.0f);
+        gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         gl.glShadeModel(GL2.GL_SMOOTH);
         gl.glEnable(GL2.GL_LIGHTING);
         gl.glEnable(GL2.GL_LIGHT0);
