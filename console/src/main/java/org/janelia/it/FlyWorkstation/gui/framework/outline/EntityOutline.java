@@ -499,11 +499,10 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 
 		// TODO: this should be encapsulated away from here somehow
 		ScreenEvaluationDialog screenEvaluationDialog = SessionMgr.getBrowser().getScreenEvaluationDialog();
-		boolean dirtyBit = screenEvaluationDialog.isCurrFolderDirty();
-		if (dirtyBit) {
+		if (screenEvaluationDialog.isCurrFolderDirty()) {
 			screenEvaluationDialog.setCurrFolderDirty(false);
 			if (screenEvaluationDialog.isAutoMoveAfterNavigation()) {
-				screenEvaluationDialog.organizeEntitiesInCurrentFolder(new Callable<Void>() {
+				screenEvaluationDialog.organizeEntitiesInCurrentFolder(true, new Callable<Void>() {
 					@Override
 					public Void call() throws Exception {
 						selectNode(node);
@@ -521,7 +520,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 					return;
 				}
 				else if (c == 2) {
-					screenEvaluationDialog.organizeEntitiesInCurrentFolder(new Callable<Void>() {
+					screenEvaluationDialog.organizeEntitiesInCurrentFolder(true, new Callable<Void>() {
 						@Override
 						public Void call() throws Exception {
 							selectNode(node);

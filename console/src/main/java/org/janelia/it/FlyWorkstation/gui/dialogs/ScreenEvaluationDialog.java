@@ -16,6 +16,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
@@ -48,13 +49,15 @@ public class ScreenEvaluationDialog extends ModalDialog {
 	private JRadioButton askAfterNavigationRadioButton;
 	private JRadioButton autoMoveAfterAnnotationRadioButton;
 	private JRadioButton autoMoveAfterNavigationRadioButton;
-	private JButton moveButton;
+	private JButton moveChangedButton;
+	private JButton moveAllButton;
 
 	private Map<String,Entity> compEntityMap = new HashMap<String,Entity>();
 	private Map<String,Entity> folderCache = new HashMap<String,Entity>();
 	private Map<String,Map<Long,String>> reverseFolderCache = new HashMap<String,Map<Long,String>>();
 	
-	private KeyStroke moveKeystroke = KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, SystemInfo.isMac?java.awt.Event.META_MASK:java.awt.Event.CTRL_MASK);
+	private KeyStroke moveChangedKeystroke = KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, SystemInfo.isMac?java.awt.Event.META_MASK:java.awt.Event.CTRL_MASK);
+	private KeyStroke moveAllKeystroke = KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_R, (SystemInfo.isMac?java.awt.Event.META_MASK:java.awt.Event.CTRL_MASK)|java.awt.Event.SHIFT_MASK);
 	
 	private Browser browser;
 	
@@ -124,19 +127,33 @@ public class ScreenEvaluationDialog extends ModalDialog {
         group.add(autoMoveAfterNavigationRadioButton);
         
         
-        JLabel moveNowLabel = new JLabel("Move samples in current folder now");
-        moveButton = new JButton("Move ("+KeymapUtil.getKeystrokeText(moveKeystroke)+")");
-        moveButton.setEnabled(true);
-        moveButton.addActionListener(new ActionListener() {
+        JLabel moveChangedLabel = new JLabel("Reorganize changed samples in current folder now");
+        moveChangedButton = new JButton("Move ("+KeymapUtil.getKeystrokeText(moveChangedKeystroke)+")");
+        moveChangedButton.setEnabled(true);
+        moveChangedButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				organizeEntitiesInCurrentFolder();
+				organizeEntitiesInCurrentFolder(true);
 			}
 		});
-        moveNowLabel.setLabelFor(moveButton);
-        attrPanel.add(moveNowLabel);
-        attrPanel.add(moveButton);
+        moveChangedLabel.setLabelFor(moveChangedButton);
+        attrPanel.add(moveChangedLabel);
+        attrPanel.add(moveChangedButton);
 
+        JLabel moveAllLabel = new JLabel("Reorganize all samples in current folder now");
+        moveAllButton = new JButton("Move ("+KeymapUtil.getKeystrokeText(moveAllKeystroke)+")");
+        moveAllButton.setEnabled(true);
+        moveAllButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				organizeEntitiesInCurrentFolder(false);
+			}
+		});
+        moveAllLabel.setLabelFor(moveAllButton);
+        attrPanel.add(moveAllLabel);
+        attrPanel.add(moveAllButton);
+
+        
         add(attrPanel, BorderLayout.CENTER);
         SpringUtilities.makeCompactGrid(attrPanel, attrPanel.getComponentCount()/2, 2, 6, 6, 6, 6);
 		        
@@ -187,7 +204,7 @@ public class ScreenEvaluationDialog extends ModalDialog {
 	
 	public boolean isAccessible() {
 		String username = SessionMgr.getUsername();
-		if (!"jenetta".equals(username)) {
+		if (!"jenetta".equals(username) && !"admin-jenetta".equals(username)) {
 			return false;
 		}
 		return true;
@@ -195,11 +212,21 @@ public class ScreenEvaluationDialog extends ModalDialog {
 	
 	private void addListeners() {
 	
-    	browser.getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(moveKeystroke,"moveAction");
-    	browser.getRootPane().getActionMap().put("moveAction",new AbstractAction("moveAction") {
+    	InputMap inputMap = browser.getRootPane().getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+    	inputMap.put(moveChangedKeystroke,"moveChangedAction");
+    	inputMap.put(moveAllKeystroke,"moveAllAction");
+    	
+    	ActionMap actionMap = browser.getRootPane().getActionMap();
+    	actionMap.put("moveChangedAction",new AbstractAction("moveChangedAction") {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				organizeEntitiesInCurrentFolder();
+				organizeEntitiesInCurrentFolder(true);
+			}
+		});
+    	actionMap.put("moveAllAction",new AbstractAction("moveAllAction") {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				organizeEntitiesInCurrentFolder(false);
 			}
 		});
 		
@@ -238,20 +265,30 @@ public class ScreenEvaluationDialog extends ModalDialog {
 		});
 	}
 	
-	public void organizeEntitiesInCurrentFolder() {
-		organizeEntitiesInCurrentFolder(null);
+	public void organizeEntitiesInCurrentFolder(boolean onlyChanged) {
+		organizeEntitiesInCurrentFolder(onlyChanged, null);
 	}
 	
-	public void organizeEntitiesInCurrentFolder(final Callable<Void> success) {
+	public void organizeEntitiesInCurrentFolder(boolean onlyChanged, final Callable<Void> success) {
+		
+		final List<Long> entityIds = new ArrayList<Long>();
+		if (onlyChanged) {
+			entityIds.addAll(dirtyEntities);
+		}
+		else {
+			for(RootedEntity rootedEntity : SessionMgr.getBrowser().getActiveViewer().getRootedEntities()) {
+				entityIds.add(rootedEntity.getEntityId());
+			}
+		}
 		
 		SimpleWorker worker = new SimpleWorker() {
 			
 			@Override
 			protected void doStuff() throws Exception {
-				int total = dirtyEntities.size()+1;
+				int total = entityIds.size()+1;
 				int curr = 1;
 				setProgress(curr, total);
-				for(Long entityId : dirtyEntities) {
+				for(Long entityId : entityIds) {
 					organizeEntity(entityId);
 					setProgress(++curr, total);
 				}
