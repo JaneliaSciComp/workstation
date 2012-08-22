@@ -280,15 +280,12 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
                     if (null==tmpPkgFiles || tmpPkgFiles.length<1) {
                         throw new Exception("Error retrieving update. "+packageDir);
                     }
-
-					// The last line of output is agree to be the downloaded package
-					System.out.println(packageDir.getAbsolutePath());
-					
+                    
 					mainLabel.setText("Update complete. Launching the FlyWorkstation...");
 					mainPane.revalidate();
 					mainPane.repaint();
 					Thread.sleep(1000);	
-					printPathAndExit("",75); // TEMP_FAILURE
+					printPathAndExit(packageDir.getAbsolutePath(),75); // TEMP_FAILURE
 				}
 				catch (InterruptedException e) {
 					// Ignore
