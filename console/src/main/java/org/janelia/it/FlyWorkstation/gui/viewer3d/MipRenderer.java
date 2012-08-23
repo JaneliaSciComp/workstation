@@ -13,17 +13,17 @@ class MipRenderer implements GLEventListener
     
     // camera parameters
     Vec3 focusInGround = new Vec3(0,0,0);
-    private Vec3 upInCamera = new Vec3(0,1,0);
+    private Vec3 upInCamera = new Vec3(0,-1,0);
     private Rotation R_ground_camera = new Rotation();
     private double defaultCameraFocusDistance = 20.0;
     double cameraFocusDistance = defaultCameraFocusDistance;
-    private double distanceToScreenInPixels = 2000;
+    private double distanceToScreenInPixels = 1500;
     private double defaultHeightInPixels = 400.0;
     private double widthInPixels = defaultHeightInPixels;
     private double heightInPixels = defaultHeightInPixels;
     // scene objects
     private Vector<GLActor> actors = new Vector<GLActor>();
-
+    private boolean bInvertColors = false;
 
     public MipRenderer() {
     		// actors.add(new TeapotActor());
@@ -38,7 +38,7 @@ class MipRenderer implements GLEventListener
     		// System.out.println("center");
     		double dx =  p.x - widthInPixels/2.0;
     		double dy = heightInPixels/2.0 - p.y;
-    		translatePixels(dx, dy, 0.0);
+    		translatePixels(-dx, dy, 0.0);
     }
     
     public void clear() {
@@ -49,22 +49,61 @@ class MipRenderer implements GLEventListener
     public void display(GLAutoDrawable gLDrawable) 
     {
         final GL2 gl = gLDrawable.getGL().getGL2();
-        gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
-        updateProjection(gl);
+	    gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        gl.glClear(GL2.GL_COLOR_BUFFER_BIT);
         gl.glPushAttrib(GL2.GL_TRANSFORM_BIT);
+        gl.glMatrixMode(GL2.GL_PROJECTION);
+        gl.glPushMatrix();
+        updateProjection(gl);
         gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glPushMatrix();
         		gl.glLoadIdentity();
         		Vec3 f = focusInGround;
         		Vec3 u = R_ground_camera.times(upInCamera);
-        		Vec3 c = f.plus(R_ground_camera.times(new Vec3(0,0,cameraFocusDistance)));
+        		Vec3 c = f.plus(R_ground_camera.times(new Vec3(0,0,-cameraFocusDistance)));
         		glu.gluLookAt(c.x(), c.y(), c.z(), // camera in ground
         					  f.x(), f.y(), f.z(), // focus in ground
         					  u.x(), u.y(), u.z()); // up vector in ground
         		for (GLActor actor : actors)
         			actor.display(gl);
+        gl.glMatrixMode(GL2.GL_PROJECTION);
+        gl.glPopMatrix();
+        gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glPopMatrix();
         gl.glPopAttrib();
+        if (bInvertColors) {
+        // if (true) {
+        		// Paint one coat of exclusive-or white paint over everything to invert all the colors.
+            gl.glPushAttrib(GL2.GL_TRANSFORM_BIT | GL2.GL_ENABLE_BIT);
+            gl.glDisable(GL2.GL_LIGHTING);
+            gl.glDisable(GL2.GL_TEXTURE_3D);
+            gl.glMatrixMode(GL2.GL_MODELVIEW);
+            gl.glPushMatrix();
+            gl.glLoadIdentity();
+            gl.glMatrixMode(GL2.GL_PROJECTION);
+            gl.glPushMatrix();
+            gl.glLoadIdentity();
+            glu.gluOrtho2D(-1, 1, -1, 1);
+            gl.glColor3d(1,1,1);
+            // gl.glEnable(GL2.GL_COLOR_LOGIC_OP);
+            // gl.glLogicOp(GL2.GL_XOR);
+            gl.glEnable(GL2.GL_BLEND);
+            gl.glBlendEquation(GL2.GL_FUNC_ADD);
+            gl.glBlendFunc(GL2.GL_ONE_MINUS_DST_COLOR, GL2.GL_ZERO);
+            gl.glBegin(GL2.GL_QUADS);
+            		gl.glVertex2d( 1.0,  1.0);
+            		gl.glVertex2d(-1.0,  1.0);
+            		gl.glVertex2d(-1.0, -1.0);
+            		gl.glVertex2d( 1.0, -1.0);
+            gl.glEnd();
+            gl.glDisable(GL2.GL_COLOR_LOGIC_OP);
+            gl.glMatrixMode(GL2.GL_PROJECTION);
+            gl.glPopMatrix();
+            gl.glMatrixMode(GL2.GL_MODELVIEW);
+            gl.glPopMatrix();
+            // gl.glDisable(GL2.GL_COLOR_LOGIC_OP);
+            gl.glPopAttrib();
+        }
         gl.glFlush();
     }
  
@@ -95,9 +134,8 @@ class MipRenderer implements GLEventListener
     		// System.out.println("init() called");
         GL2 gl = gLDrawable.getGL().getGL2();
         gl.glEnable(GL2.GL_FRAMEBUFFER_SRGB);
-        gl.glEnable(GL2.GL_DEPTH_TEST);
-        // gl.glClearColor(0.1f, 0.1f, 0.5f, 0.0f);
-        gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        /*
+        // gl.glEnable(GL2.GL_DEPTH_TEST);
         gl.glShadeModel(GL2.GL_SMOOTH);
         gl.glEnable(GL2.GL_LIGHTING);
         gl.glEnable(GL2.GL_LIGHT0);
@@ -115,6 +153,7 @@ class MipRenderer implements GLEventListener
         gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_DIFFUSE, light0Diffuse, 0);
         gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_SPECULAR, light0Specular, 0);
         gl.glLightModelfv(GL2.GL_LIGHT_MODEL_AMBIENT, lightAmbient, 0);
+        */
 		for (GLActor actor : actors)
 			actor.init(gl);
     }
@@ -135,7 +174,7 @@ class MipRenderer implements GLEventListener
     			heightInMicrometers = 2.0; // whatever
     		// System.out.println("Focus = " + focusInGround);
     		// System.out.println("Image height = " + heightInMicrometers);
-    		cameraFocusDistance = 1.02 * distanceToScreenInPixels * heightInMicrometers / heightInPixels;
+    		cameraFocusDistance = 1.05 * distanceToScreenInPixels * heightInMicrometers / heightInPixels;
     		// cameraFocusDistance = defaultCameraFocusDistance * defaultHeightInPixels / heightInPixels;
     }
     
@@ -168,7 +207,7 @@ class MipRenderer implements GLEventListener
 		double dragDistance = Math.sqrt(dy*dy + dx*dx + dz*dz);
 		if (dragDistance <= 0.0)
 			return;
-		UnitVec3 rotationAxis = new UnitVec3(dy, dx, dz);
+		UnitVec3 rotationAxis = new UnitVec3(dy, -dx, dz);
 		double windowSize = Math.sqrt(
 				widthInPixels*widthInPixels 
 				+ heightInPixels*heightInPixels);
@@ -184,7 +223,7 @@ class MipRenderer implements GLEventListener
 
 	public void translatePixels(double dx, double dy, double dz) {
 		// trackball translate
-		Vec3 t = new Vec3(dx, dy, dz).times(glUnitsPerPixel());
+		Vec3 t = new Vec3(-dx, -dy, dz).times(glUnitsPerPixel());
 		focusInGround.plusEquals(R_ground_camera.times(t));
 	}
 	
@@ -198,8 +237,8 @@ class MipRenderer implements GLEventListener
         final float h = (float) widthInPixels / (float) heightInPixels;
         glu.gluPerspective(verticalApertureInDegrees,
         		h, 
-        		0.3 * cameraFocusDistance, 
-        		3.0 * cameraFocusDistance);
+        		0.5 * cameraFocusDistance, 
+        		2.0 * cameraFocusDistance);
         gl.glPopAttrib();
 	}
 	

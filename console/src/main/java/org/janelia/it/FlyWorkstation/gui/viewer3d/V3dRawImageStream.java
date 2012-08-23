@@ -8,8 +8,6 @@ import java.util.Iterator;
 import java.util.zip.DataFormatException;
 
 public class V3dRawImageStream 
-implements Iterable<V3dRawImageStream.Slice>,
-Iterator<V3dRawImageStream.Slice>
 {
 	public static final String V3DRAW_MAGIC_COOKIE = 
 		"raw_image_stack_by_hpeng";
@@ -36,11 +34,20 @@ Iterator<V3dRawImageStream.Slice>
 		}
 	}
 	
+	public int getDimension(int index) {
+		return dimensions[index];
+	}
+	
+	public int getPixelBytes() {
+		return pixelBytes;
+	}
+	
 	private void loadHeader() 
 	throws IOException, DataFormatException
 	{
 		// header is 43 bytes long
-		ByteBuffer buffer = ByteBuffer.allocateDirect(43);
+		byte[] buffer0 = new byte[43];
+		ByteBuffer buffer = ByteBuffer.wrap(buffer0);
 		inStream.read(buffer.array(), 0, 43);
 		buffer.rewind();
 		// Parse file type header string (24 bytes)
@@ -50,7 +57,8 @@ Iterator<V3dRawImageStream.Slice>
 					"Vaa3D raw file header mismatch: " + headerKey);
 		}
 		// Parse data endian (one byte)
-		char endianChar = buffer.getChar(); // read endianness
+		buffer.position(24);
+		char endianChar = (char)buffer.get(); // read endianness
 		if (endianChar == 'B')
 			endian = ByteOrder.BIG_ENDIAN;
 		else if (endianChar == 'L')
@@ -60,13 +68,11 @@ Iterator<V3dRawImageStream.Slice>
 					"Unrecognized endian field: " + endianChar);
 		buffer.order(endian); // affects interpretation of subsequent multi-byte numbers
 		// Parse number of bytes per pixel
-		inStream.read(buffer.array(), 0, 2); // read number of bytes per pixel
 		pixelBytes = buffer.getShort();
-		if ( (pixelBytes < 0) || (pixelBytes > 4) )
+		if ( (pixelBytes <= 0) || (pixelBytes > 4) )
 			throw new DataFormatException(
 					"Illegal number of pixel bytes: " + pixelBytes);
 		// Parse dimensions of volume - four four-byte values = 16 bytes
-		inStream.read(buffer.array(), 0, 16);
 		dimensions = new int[]{
 				buffer.getInt(),
 				buffer.getInt(),
@@ -82,54 +88,42 @@ Iterator<V3dRawImageStream.Slice>
 		return currentSlice;
 	}
 	
-	@Override
-	public boolean hasNext() {
-		int sliceCount = dimensions[2] * dimensions[3];
-		return currentSlice.getSliceIndex() < (sliceCount - 1);
-	}
-
-	@Override
-	public Iterator<Slice> iterator() {
-		return this;
-	}
-
 	public void loadNextSlice() 
 	throws IOException
 	{
 		currentSlice.read(inStream);
 	}
 	
-	@Override
-	public Slice next() 
-	{
-		try {
-			currentSlice.read(inStream);
-		}
-		catch (Exception exc) {
-			exc.printStackTrace();
-		}
-		return currentSlice;
-	}
-
-	@Override
-	public void remove() {
-		throw new UnsupportedOperationException();
-	}
-
 	class Slice 
 	{
 		private int sliceByteCount;
 		private ByteBuffer sliceBuffer;
 		private int sliceIndex;
+		private int sx, sy, pixelBytes;
 		
 		public Slice(int sizeX, int sizeY, int pixelBytes) {
 			sliceByteCount = sizeX * sizeY * pixelBytes;
-			sliceBuffer = ByteBuffer.allocateDirect(sliceByteCount);
+			byte[] buffer0 = new byte[sliceByteCount];
+			sliceBuffer = ByteBuffer.wrap(buffer0);
 			sliceIndex = -1;
+			sx = sizeX;
+			sy = sizeY;
+			this.pixelBytes = pixelBytes;
 		}
 		
 		public int getSliceIndex() {
 			return sliceIndex;
+		}
+		
+		public int getValue(int x, int y) {
+			int index = x + sx * y;
+			if (pixelBytes == 1) {
+				return sliceBuffer.get(index);
+			}
+			else if (pixelBytes == 2)
+				return sliceBuffer.getShort(index);
+			else
+				return sliceBuffer.getInt(index);
 		}
 		
 		public void read(InputStream inStream) 

@@ -124,12 +124,14 @@ public class VolumeBrick implements GLActor
         if (renderMethod == RenderMethod.ALPHA_BLENDING) {
         		gl.glEnable(GL2.GL_BLEND);
         		gl.glBlendEquation(GL2.GL_FUNC_ADD);
+        		// Weight source by GL_ONE because we are using premultiplied alpha.
         		gl.glBlendFunc(GL2.GL_ONE, GL2.GL_ONE_MINUS_SRC_ALPHA);
         }
         else if (renderMethod == RenderMethod.MAXIMUM_INTENSITY) {
     			gl.glEnable(GL2.GL_BLEND);
-    			gl.glBlendEquation(GL2.GL_MAX);
+    			gl.glBlendEquation(GL2.GL_MAX);    				
     			gl.glBlendFunc(GL2.GL_ONE, GL2.GL_DST_ALPHA);
+    			// gl.glBlendFunc(GL2.GL_ONE_MINUS_DST_COLOR, GL2.GL_ZERO); // inverted?  http://stackoverflow.com/questions/2656905/opengl-invert-framebuffer-pixels
         }
         if (bUseShader) {
         		shader.setUniforms(textureVoxels, voxelMicrometers);
@@ -177,7 +179,7 @@ public class VolumeBrick implements GLActor
 		// or backward.
 		// "InGround" means in the WORLD object reference frame.
 		// (the view vector in the EYE reference frame is always [0,0,-1])
-		Vec3 viewVectorInGround = renderer.getRotation().times(new Vec3(0,0,-1));
+		Vec3 viewVectorInGround = renderer.getRotation().times(new Vec3(0,0,1));
 		// Compute the principal axis of the view direction; that's the direction we will slice along.
 		CoordinateAxis a1 = CoordinateAxis.X; // First guess principal axis is X.  Who knows?
 		Vec3 vv = viewVectorInGround;

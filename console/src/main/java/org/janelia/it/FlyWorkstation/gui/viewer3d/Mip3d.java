@@ -3,7 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLCanvas;
-import javax.media.opengl.awt.GLJPanel;
+import javax.media.opengl.awt.GLJPanel; // In case we need Swing version
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
@@ -58,7 +58,7 @@ implements MouseListener, MouseMotionListener, ActionListener,
 	public void actionPerformed(ActionEvent arg0) {
 		System.out.println("reset view");
 		renderer.resetView();
-		display();
+		repaint();
 	}
 	
 	public boolean loadVolume(String fileName)
@@ -107,16 +107,16 @@ implements MouseListener, MouseMotionListener, ActionListener,
     			mode = InteractionMode.TRANSLATE;
     		
     		if (mode == InteractionMode.TRANSLATE) {
-    			renderer.translatePixels(-dPos.x, dPos.y, 0);
-    			display();
+    			renderer.translatePixels(dPos.x, dPos.y, 0);
+    			repaint();
     		}
     		else if (mode == InteractionMode.ROTATE) {
     			renderer.rotatePixels(dPos.x, dPos.y, 0);
-    			display();
+    			repaint();
     		}
     		else if (mode == InteractionMode.ZOOM) {
     			renderer.zoomPixels(p1, p0);
-    			display();
+    			repaint();
     		}
     		
     		previousMousePos = p1;
@@ -131,7 +131,7 @@ implements MouseListener, MouseMotionListener, ActionListener,
 		// Double click to center
 		if (event.getClickCount() == 2) {
 			renderer.centerOnPixel(event.getPoint());
-			display();
+			repaint();
 		}
 	}
 
@@ -158,7 +158,10 @@ implements MouseListener, MouseMotionListener, ActionListener,
 		int notches = event.getWheelRotation();
 		double zoomRatio = Math.pow(2.0, notches/50.0);
 		renderer.zoom(zoomRatio);
-		display();
+		// Java does not seem to coalesce mouse wheel events,
+		// giving the appearance of sluggishness.  So call repaint(),
+		// not display().
+		repaint();
 	}
 	
 }
