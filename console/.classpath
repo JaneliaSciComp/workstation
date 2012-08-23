@@ -14,6 +14,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/SAAJ"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/GWT"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Jogl"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Xuggler"/>
 	<classpathentry kind="lib" path="lib/owlapi-bin.jar"/>
 	<classpathentry kind="lib" path="lib/jai_codec.jar"/>
 	<classpathentry kind="lib" path="lib/jai_core.jar"/>

@@ -20,13 +20,12 @@ public class TestMip3d {
             public void run() {
                 JFrame frame = new JFrame("Test MipWidget");
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-                //Add the ubiquitous "Hello World" label.
                 JLabel label = new JLabel("Test MipWidget");
                 frame.getContentPane().add(label);
                 Mip3d mipWidget = new Mip3d();
                 try {
-                		mipWidget.loadVolume("/Users/brunsc/smallRefTest.tif");
+                		// mipWidget.loadVolume("/Users/brunsc/smallRefTest.tif");
+                		mipWidget.loadVolume("/Users/brunsc/projects/fast_load/test_dir/fastLoad/ConsolidatedSignal2_25.mp4");
                 		// mipWidget.loadVolume("/Users/brunsc/projects/lsm_compression/GMR_18A04_AE_01_05_cmp.lsm");
                 	}
                 catch (Exception exc) {

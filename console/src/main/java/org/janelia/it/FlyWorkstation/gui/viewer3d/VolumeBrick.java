@@ -13,6 +13,12 @@ import javax.media.opengl.GL2;
 public class VolumeBrick implements GLActor 
 {
 	public enum RenderMethod {MAXIMUM_INTENSITY, ALPHA_BLENDING};
+	public enum TextureColorSpace {
+		COLOR_SPACE_LINEAR, // R,G,B values are proportional to photons collected
+		COLOR_SPACE_SRGB // R,G,B values are already gamma corrected for display on computer monitors
+	};
+
+	// Vary these parameters to taste
 	// Rendering variables
 	private RenderMethod renderMethod = 
 		// RenderMethod.ALPHA_BLENDING;
@@ -20,7 +26,9 @@ public class VolumeBrick implements GLActor
     private int interpolationMethod =
     		GL2.GL_LINEAR; // blending across voxel edges
     		// GL2.GL_NEAREST; // discrete cube shaped voxels
-    private boolean bUseShader = false;
+    private boolean bUseShader = false; // whether to ray trace voxels
+    // Color space is linear for most microscopy LSM, TIFF and V3DRAW files
+    private TextureColorSpace textureColorSpace = TextureColorSpace.COLOR_SPACE_LINEAR;
 	
     private GLUT glut = new GLUT();    
     /**
@@ -276,6 +284,13 @@ public class VolumeBrick implements GLActor
 				new Double(p[2]).toString());
 	}
 	
+	public void setTextureColorSpace(TextureColorSpace colorSpace) {
+		if (colorSpace != textureColorSpace) {
+			textureColorSpace = colorSpace;
+			bTextureNeedsUpload = true;
+		}
+	}
+	
 	/**
 	 * Colors are already premultiplied by alpha.
 	 * Colors are assumed to be completely saturated.
@@ -333,6 +348,19 @@ public class VolumeBrick implements GLActor
 		bUseSyntheticData = false;
 	}
 	
+	public void setVolumeData(int sx, int sy, int sz, IntBuffer rgbaBuffer) 
+	{
+		textureVoxels = new int[]{sx, sy, sz};
+		data = rgbaBuffer;
+		bTextureNeedsUpload = true;
+		bUseSyntheticData = false;
+	}
+	
+	public void setVolumeData(int sx, int sy, int sz, int[] intArray) 
+	{
+		setVolumeData(sx, sy, sz, Buffers.newDirectIntBuffer(intArray));
+	}
+
 	public void setVolumeMicrometers(double x, double y, double z) {
 		volumeMicrometers[0] = x;
 		volumeMicrometers[1] = y;
@@ -371,9 +399,12 @@ public class VolumeBrick implements GLActor
 		int sx = textureVoxels[0];
 		int sy = textureVoxels[1];
 		int sz = textureVoxels[2];
+		int internalFormat = GL2.GL_RGBA8;
+		if (textureColorSpace == TextureColorSpace.COLOR_SPACE_SRGB)
+			internalFormat = GL2.GL_SRGB8_ALPHA8;
 		gl.glTexImage3D(GL2.GL_TEXTURE_3D, 
 				0, // mipmap level
-				GL2.GL_RGBA8, // number of bytes per voxel
+				internalFormat, // bytes per pixel, plus somehow srgb info
 				sx, // width 
 				sy, // height
 				sz, // depth

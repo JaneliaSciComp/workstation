@@ -116,7 +116,7 @@ class MipRenderer implements GLEventListener
         gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_SPECULAR, light0Specular, 0);
         gl.glLightModelfv(GL2.GL_LIGHT_MODEL_AMBIENT, lightAmbient, 0);
 		for (GLActor actor : actors)
-			actor.display(gl);
+			actor.init(gl);
     }
     
     public void resetView() 
@@ -135,7 +135,7 @@ class MipRenderer implements GLEventListener
     			heightInMicrometers = 2.0; // whatever
     		// System.out.println("Focus = " + focusInGround);
     		// System.out.println("Image height = " + heightInMicrometers);
-    		cameraFocusDistance = 1.05 * distanceToScreenInPixels * heightInMicrometers / heightInPixels;
+    		cameraFocusDistance = 1.02 * distanceToScreenInPixels * heightInMicrometers / heightInPixels;
     		// cameraFocusDistance = defaultCameraFocusDistance * defaultHeightInPixels / heightInPixels;
     }
     
