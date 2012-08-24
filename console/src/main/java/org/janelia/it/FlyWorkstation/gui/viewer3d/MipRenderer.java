@@ -23,11 +23,10 @@ class MipRenderer implements GLEventListener
     private double heightInPixels = defaultHeightInPixels;
     // scene objects
     private Vector<GLActor> actors = new Vector<GLActor>();
-    private boolean bInvertColors = false;
 
     public MipRenderer() {
-    		// actors.add(new TeapotActor());
-    		actors.add(new VolumeBrick(this));
+    		// actors.add(new TeapotActor()); // solid shading is not supported right now
+    		actors.add(new VolumeBrick(this)); // Test volume with six voxels
     }
     
     public void addActor(GLActor actor) {
@@ -71,39 +70,6 @@ class MipRenderer implements GLEventListener
         gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glPopMatrix();
         gl.glPopAttrib();
-        if (bInvertColors) {
-        // if (true) {
-        		// Paint one coat of exclusive-or white paint over everything to invert all the colors.
-            gl.glPushAttrib(GL2.GL_TRANSFORM_BIT | GL2.GL_ENABLE_BIT);
-            gl.glDisable(GL2.GL_LIGHTING);
-            gl.glDisable(GL2.GL_TEXTURE_3D);
-            gl.glMatrixMode(GL2.GL_MODELVIEW);
-            gl.glPushMatrix();
-            gl.glLoadIdentity();
-            gl.glMatrixMode(GL2.GL_PROJECTION);
-            gl.glPushMatrix();
-            gl.glLoadIdentity();
-            glu.gluOrtho2D(-1, 1, -1, 1);
-            gl.glColor3d(1,1,1);
-            // gl.glEnable(GL2.GL_COLOR_LOGIC_OP);
-            // gl.glLogicOp(GL2.GL_XOR);
-            gl.glEnable(GL2.GL_BLEND);
-            gl.glBlendEquation(GL2.GL_FUNC_ADD);
-            gl.glBlendFunc(GL2.GL_ONE_MINUS_DST_COLOR, GL2.GL_ZERO);
-            gl.glBegin(GL2.GL_QUADS);
-            		gl.glVertex2d( 1.0,  1.0);
-            		gl.glVertex2d(-1.0,  1.0);
-            		gl.glVertex2d(-1.0, -1.0);
-            		gl.glVertex2d( 1.0, -1.0);
-            gl.glEnd();
-            gl.glDisable(GL2.GL_COLOR_LOGIC_OP);
-            gl.glMatrixMode(GL2.GL_PROJECTION);
-            gl.glPopMatrix();
-            gl.glMatrixMode(GL2.GL_MODELVIEW);
-            gl.glPopMatrix();
-            // gl.glDisable(GL2.GL_COLOR_LOGIC_OP);
-            gl.glPopAttrib();
-        }
         gl.glFlush();
     }
  
@@ -134,26 +100,6 @@ class MipRenderer implements GLEventListener
     		// System.out.println("init() called");
         GL2 gl = gLDrawable.getGL().getGL2();
         gl.glEnable(GL2.GL_FRAMEBUFFER_SRGB);
-        /*
-        // gl.glEnable(GL2.GL_DEPTH_TEST);
-        gl.glShadeModel(GL2.GL_SMOOTH);
-        gl.glEnable(GL2.GL_LIGHTING);
-        gl.glEnable(GL2.GL_LIGHT0);
-        // gl.glEnable(GL2.GL_CULL_FACE);
-        gl.glEnable(GL2.GL_COLOR_MATERIAL);
-        float[] specColor = {1f,1f,1f,1f};
-        float[] shininess = {50f};
-        gl.glMaterialfv (GL2.GL_FRONT, GL2.GL_SPECULAR, specColor, 0);
-        gl.glMaterialfv(GL2.GL_FRONT, GL2.GL_SHININESS, shininess, 0);
-        float[] light0Pos = {1f,1f,1f,0f};
-        float[] light0Diffuse = {1f,1f,1f,1f};
-        float[] light0Specular = {1f,1f,1f,1f};
-        float[] lightAmbient = {1f,1f,1f,0f};
-        gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_POSITION, light0Pos, 0);
-        gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_DIFFUSE, light0Diffuse, 0);
-        gl.glLightfv(GL2.GL_LIGHT0, GL2.GL_SPECULAR, light0Specular, 0);
-        gl.glLightModelfv(GL2.GL_LIGHT_MODEL_AMBIENT, lightAmbient, 0);
-        */
 		for (GLActor actor : actors)
 			actor.init(gl);
     }
@@ -223,7 +169,7 @@ class MipRenderer implements GLEventListener
 
 	public void translatePixels(double dx, double dy, double dz) {
 		// trackball translate
-		Vec3 t = new Vec3(-dx, -dy, dz).times(glUnitsPerPixel());
+		Vec3 t = new Vec3(-dx, -dy, -dz).times(glUnitsPerPixel());
 		focusInGround.plusEquals(R_ground_camera.times(t));
 	}
 	

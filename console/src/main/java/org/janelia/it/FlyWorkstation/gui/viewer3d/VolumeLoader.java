@@ -133,7 +133,7 @@ public class VolumeLoader
 				in.setId(fileName);
 				loadLociReader(in);
 			}
-			else if (extension.startsWith("V3DRAW")) {
+			else if (extension.startsWith("V3D")) {
 				InputStream v3dRawStream = new BufferedInputStream(
 								new FileInputStream(fileName));
 				loadV3dRaw(v3dRawStream);

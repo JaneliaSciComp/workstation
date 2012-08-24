@@ -4,17 +4,26 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.Iterator;
 import java.util.zip.DataFormatException;
 
 public class V3dRawImageStream 
 {
-	public static final String V3DRAW_MAGIC_COOKIE = 
-		"raw_image_stack_by_hpeng";
+	public enum Format {
+		FORMAT_PENG_RAW, // Original uncompressed format
+		FORMAT_MURPHY_PBD, // Compressed data region, same header
+		FORMAT_MYERS_PBD; // Modification by Gene Myers
+	}
+	
+	public static final String[] V3DRAW_MAGIC_COOKIE = {
+		"raw_image_stack_by_hpeng",
+		"v3d_volume_pkbitdf_encod",
+		"v3d_stack_pkbit_by_gene1"
+	};
 	
 	private InputStream inStream;
 	// File metadata fields
 	private String headerKey;
+	private Format format;
 	private int pixelBytes = 0;
 	private ByteOrder endian = ByteOrder.LITTLE_ENDIAN;
 	private int[] dimensions = {0,0,0,0};
@@ -52,7 +61,15 @@ public class V3dRawImageStream
 		buffer.rewind();
 		// Parse file type header string (24 bytes)
 		headerKey = new String(buffer.array(), 0, 24);
-		if (! headerKey.equals(V3DRAW_MAGIC_COOKIE)) {
+		format = null;
+		for (Format f : Format.values()) {
+			if (headerKey.equals(V3DRAW_MAGIC_COOKIE[f.ordinal()])) {
+				format = f;
+				break;
+			}
+		}
+		if (format == null)
+		{
 			throw new DataFormatException(
 					"Vaa3D raw file header mismatch: " + headerKey);
 		}
@@ -78,10 +95,25 @@ public class V3dRawImageStream
 				buffer.getInt(),
 				buffer.getInt(),
 				buffer.getInt()};
-		// End of header!
+		// End of header.
 		// Allocate slice
-		currentSlice = new Slice(dimensions[0], dimensions[1], pixelBytes);
-		currentSlice.read(inStream);
+		currentSlice = new Slice(dimensions[0], dimensions[1], 
+				pixelBytes);
+		
+		// TODO - wrap inStream, if compressed format
+		if (format == Format.FORMAT_MURPHY_PBD) {
+			if (pixelBytes == 1)
+				inStream = new Pbd8InputStream(inStream);
+			else
+				throw new IllegalArgumentException("Loading 16-bit pbd is not yet implemented");
+		}
+		else if (format == Format.FORMAT_MYERS_PBD) {
+			throw new IllegalArgumentException("Loading Myers' pbd is not yet implemented");
+			// inStream = new PbdMyers1InputStream(inStream);
+		}
+		else if (format == Format.FORMAT_PENG_RAW) {
+			inStream = new PassThroughInputStream(inStream); // for testing
+		}
 	}
 	
 	public Slice getCurrentSlice() {
@@ -99,15 +131,15 @@ public class V3dRawImageStream
 		private int sliceByteCount;
 		private ByteBuffer sliceBuffer;
 		private int sliceIndex;
-		private int sx, sy, pixelBytes;
+		private int sx, pixelBytes;
 		
-		public Slice(int sizeX, int sizeY, int pixelBytes) {
+		public Slice(int sizeX, int sizeY, int pixelBytes) 
+		{
 			sliceByteCount = sizeX * sizeY * pixelBytes;
 			byte[] buffer0 = new byte[sliceByteCount];
 			sliceBuffer = ByteBuffer.wrap(buffer0);
 			sliceIndex = -1;
 			sx = sizeX;
-			sy = sizeY;
 			this.pixelBytes = pixelBytes;
 		}
 		
@@ -115,7 +147,8 @@ public class V3dRawImageStream
 			return sliceIndex;
 		}
 		
-		public int getValue(int x, int y) {
+		public int getValue(int x, int y) 
+		{
 			int index = x + sx * y;
 			if (pixelBytes == 1) {
 				return sliceBuffer.get(index);

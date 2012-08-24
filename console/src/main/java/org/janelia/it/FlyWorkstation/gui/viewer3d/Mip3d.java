@@ -3,7 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLCanvas;
-import javax.media.opengl.awt.GLJPanel; // In case we need Swing version
+// import javax.media.opengl.awt.GLJPanel; // In case we need Swing version
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
@@ -56,7 +56,7 @@ implements MouseListener, MouseMotionListener, ActionListener,
 
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
-		System.out.println("reset view");
+		// System.out.println("reset view");
 		renderer.resetView();
 		repaint();
 	}
@@ -83,7 +83,6 @@ implements MouseListener, MouseMotionListener, ActionListener,
 					event.getX(), event.getY());
 		}
 	}
-	
 	
 	@Override
     public void mouseDragged(MouseEvent event)
@@ -163,5 +162,4 @@ implements MouseListener, MouseMotionListener, ActionListener,
 		// not display().
 		repaint();
 	}
-	
 }
