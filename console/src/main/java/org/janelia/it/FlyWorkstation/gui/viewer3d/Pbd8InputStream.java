@@ -1,6 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -15,18 +14,8 @@ import java.nio.ByteBuffer;
  * @author brunsc
  *
  */
-public class Pbd8InputStream extends FilterInputStream 
+public class Pbd8InputStream extends PbdInputStream 
 {
-	enum State {
-		STATE_BEGIN, // Ready to start new run of bytes
-		STATE_LITERAL, // Within a run of direct copying
-		STATE_DIFFERENCE, // Within a run of difference encoding
-		STATE_DIFFERENCE_SUBPIXEL, // Part way through unpacking a single compressed difference byte
-		STATE_REPEAT // Within a run of runlength encoding
-	}
-	private State state = State.STATE_BEGIN;
-	
-	private int leftToFill = 0; // How many bytes left in the current run
 	private final byte mask = 0x0003;
 	private byte decompressionPrior = 0; // Value of locally canonical voxel
 	private byte repeatValue = 0; // Current repeat run value
@@ -40,30 +29,6 @@ public class Pbd8InputStream extends FilterInputStream
 		super(in);
 	}
 		
-	@Override
-	public void mark(int readLimit) {}
-	
-	@Override
-	public boolean markSupported() {
-		return false;
-	}
-	
-	@Override
-	public int read() 
-	throws IOException
-	{
-		byte[] b = new byte[1];
-		read(b, 0, 1);
-		return b[0] & 0xff;
-	}
-	
-	@Override
-	public int read(byte[] b) 
-	throws IOException
-	{
-		return read(b, 0, b.length);
-	}
-	
 	@Override
 	public int read(byte[] b, int off, int len) 
 	throws IOException
@@ -106,7 +71,6 @@ public class Pbd8InputStream extends FilterInputStream
 			}
 			else if (state == State.STATE_DIFFERENCE)
 			{
-				// TODO - difference bytes might overflow OUT buffer
 				while ( (leftToFill > 0) && out.hasRemaining() ) {
 	                fillNumber = (leftToFill < 4 ? leftToFill : 4);
 	                byte sourceChar = (byte)in.read();
@@ -135,7 +99,8 @@ public class Pbd8InputStream extends FilterInputStream
 	                			leftToFill--;
 	                		} else {
 	                			// Ouch, output buffer ended in the middle of unpacking one byte
-	                			state = State.STATE_DIFFERENCE_SUBPIXEL;	                			
+	                			state = State.STATE_DIFFERENCE_SUBPIXEL;
+	                			break;
 	                		}
 	                }
 
@@ -155,7 +120,8 @@ public class Pbd8InputStream extends FilterInputStream
                 			leftToFill--;
                 		} else {
                 			// Ouch, output buffer ended in the middle of unpacking one byte AGAIN
-                			state = State.STATE_DIFFERENCE_SUBPIXEL;	                			
+                			state = State.STATE_DIFFERENCE_SUBPIXEL;
+                			break;
                 		}
                 }
 			}
@@ -169,14 +135,10 @@ public class Pbd8InputStream extends FilterInputStream
 					state = State.STATE_BEGIN;
 				decompressionPrior = repeatValue;
 			}
+			else {
+				throw new IOException("Unexpected state");
+			}
 		}
 		return out.position();
-	}
-	
-	@Override
-	public void reset() 
-	throws IOException
-	{
-		throw new IOException();
 	}
 }

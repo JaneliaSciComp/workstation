@@ -98,21 +98,23 @@ public class V3dRawImageStream
 		// End of header.
 		// Allocate slice
 		currentSlice = new Slice(dimensions[0], dimensions[1], 
-				pixelBytes);
+				pixelBytes, endian);
 		
-		// TODO - wrap inStream, if compressed format
+		// wrap inStream, if compressed format
 		if (format == Format.FORMAT_MURPHY_PBD) {
 			if (pixelBytes == 1)
 				inStream = new Pbd8InputStream(inStream);
 			else
-				throw new IllegalArgumentException("Loading 16-bit pbd is not yet implemented");
+				inStream = new Pbd16InputStream(inStream, endian);
 		}
 		else if (format == Format.FORMAT_MYERS_PBD) {
+			// TODO
 			throw new IllegalArgumentException("Loading Myers' pbd is not yet implemented");
 			// inStream = new PbdMyers1InputStream(inStream);
 		}
 		else if (format == Format.FORMAT_PENG_RAW) {
-			inStream = new PassThroughInputStream(inStream); // for testing
+			// leave instream alone. it is not compressed.
+			// inStream = new BufferedInputStream(inStream); // for testing
 		}
 	}
 	
@@ -133,11 +135,12 @@ public class V3dRawImageStream
 		private int sliceIndex;
 		private int sx, pixelBytes;
 		
-		public Slice(int sizeX, int sizeY, int pixelBytes) 
+		public Slice(int sizeX, int sizeY, int pixelBytes, ByteOrder byteOrder) 
 		{
 			sliceByteCount = sizeX * sizeY * pixelBytes;
 			byte[] buffer0 = new byte[sliceByteCount];
 			sliceBuffer = ByteBuffer.wrap(buffer0);
+			sliceBuffer.order(byteOrder);
 			sliceIndex = -1;
 			sx = sizeX;
 			this.pixelBytes = pixelBytes;
