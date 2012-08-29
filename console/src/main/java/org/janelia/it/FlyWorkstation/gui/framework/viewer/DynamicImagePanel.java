@@ -281,11 +281,12 @@ public abstract class DynamicImagePanel extends JPanel {
         else if (error.getCause()!=null && (error.getCause() instanceof FormatException)) {
         	System.out.println("Image format not supported for: "+imageFilename);
             errorLabel.setText("Image format not supported");
+            error.printStackTrace();
         }
         else {
         	System.out.println("Image could not be loaded: "+imageFilename);
             errorLabel.setText("Image could not be loaded");
-            SessionMgr.getSessionMgr().handleException(error);
+            error.printStackTrace();
         }
         setImageLabel(errorLabel);
         revalidate();
