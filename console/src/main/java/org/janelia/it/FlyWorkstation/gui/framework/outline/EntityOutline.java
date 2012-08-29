@@ -330,7 +330,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 
 		// Clicked on what node?
 		final DefaultMutableTreeNode node = selectedTree.getCurrentNode();
-		selectNode(node);
 
 		// Create context menu
 		final EntityOutlineContextMenu popupMenu = new EntityOutlineContextMenu(node, selectedTree.getUniqueId(node));
