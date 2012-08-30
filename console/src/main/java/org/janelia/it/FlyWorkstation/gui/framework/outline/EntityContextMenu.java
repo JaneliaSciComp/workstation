@@ -17,6 +17,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
+import org.janelia.it.FlyWorkstation.gui.dialogs.ScreenEvaluationDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.SpecialAnnotationChooserDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.TaskDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.*;
@@ -87,6 +88,7 @@ public class EntityContextMenu extends JPopupMenu {
         setNextAddRequiresSeparator(true);
         add(getNewFolderItem());
         add(getAddToRootFolderItem());
+        add(getAddToSplitPickingSessionItem());
         add(getRenameItem());
         add(getErrorFlag());
 		add(getDeleteItem());
@@ -459,6 +461,114 @@ public class EntityContextMenu extends JPopupMenu {
 //
 //    }
 
+    private void addToSplitFolder(Entity commonRoot) throws Exception {
+		
+		final List<Long> ads = new ArrayList<Long>();
+		final List<Long> dbds = new ArrayList<Long>();
+		
+		for(RootedEntity re : rootedEntityList) {
+			String splitPart = re.getEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_SPLIT_PART);
+			if ("AD".equals(splitPart)) {
+				ads.add(re.getEntityId());
+			}
+			else if ("DBD".equals(splitPart)) {
+				dbds.add(re.getEntityId());
+			}
+		}
+		
+		RootedEntity workingFolder = new RootedEntity(commonRoot);
+		RootedEntity splitLinesFolder = ModelMgrUtils.getChildFolder(workingFolder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES, true);
+		
+		if (!ads.isEmpty()) {
+			RootedEntity adFolder = ModelMgrUtils.getChildFolder(splitLinesFolder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_AD, true);
+			ModelMgr.getModelMgr().addChildren(adFolder.getEntityId(), ads, EntityConstants.ATTRIBUTE_ENTITY);
+		}
+		
+		if (!dbds.isEmpty()) {
+			RootedEntity dbdFolder = ModelMgrUtils.getChildFolder(splitLinesFolder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_DBD, true);
+			ModelMgr.getModelMgr().addChildren(dbdFolder.getEntityId(), dbds, EntityConstants.ATTRIBUTE_ENTITY);
+		}
+    }
+    
+	protected JMenu getAddToSplitPickingSessionItem() {
+
+		if (!ScreenEvaluationDialog.isAccessible()) {
+			return null;
+		}
+		
+		JMenu newFolderMenu = new JMenu("  Add to screen picking folder");
+		
+		List<EntityData> rootEds = SessionMgr.getBrowser().getEntityOutline().getRootEntity().getOrderedEntityData();
+		
+		for(final EntityData rootEd : rootEds) {
+			final Entity commonRoot = rootEd.getChildEntity();
+			if (!commonRoot.getUser().getUserLogin().equals(SessionMgr.getUsername())) continue;
+			
+			JMenuItem commonRootItem = new JMenuItem(commonRoot.getName());
+			commonRootItem.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent actionEvent) {
+					SimpleWorker worker = new SimpleWorker() {
+						@Override
+						protected void doStuff() throws Exception {
+							addToSplitFolder(commonRoot);
+						}
+						@Override
+						protected void hadSuccess() {
+							SessionMgr.getBrowser().getEntityOutline().refresh(true, null);
+						}
+						@Override
+						protected void hadError(Throwable error) {
+							SessionMgr.getSessionMgr().handleException(error);
+						}
+					};
+					worker.execute();
+				}
+			});
+			
+			newFolderMenu.add(commonRootItem);
+		}
+		
+		newFolderMenu.addSeparator();
+		
+		JMenuItem createNewItem = new JMenuItem("Create new...");
+		
+		createNewItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent actionEvent) {
+
+				// Add button clicked
+				final String folderName = (String) JOptionPane.showInputDialog(browser, "Folder Name:\n",
+						"Create split picking folder", JOptionPane.PLAIN_MESSAGE, null, null, null);
+				if ((folderName == null) || (folderName.length() <= 0)) {
+					return;
+				}
+
+				SimpleWorker worker = new SimpleWorker() {
+					private Entity newFolder;
+					@Override
+					protected void doStuff() throws Exception {
+						// Update database
+						newFolder = ModelMgrUtils.createNewCommonRoot(folderName);
+						addToSplitFolder(newFolder);
+					}
+					@Override
+					protected void hadSuccess() {
+						// Update Tree UI
+						SessionMgr.getBrowser().getEntityOutline().refresh(true, null);
+					}
+					@Override
+					protected void hadError(Throwable error) {
+						SessionMgr.getSessionMgr().handleException(error);
+					}
+				};
+				worker.execute();
+			}
+		});
+		
+		newFolderMenu.add(createNewItem);
+		
+		return newFolderMenu;
+	}
+	
 	protected JMenu getAddToRootFolderItem() {
 
 		if (!multiple && rootedEntity.getEntity()!=null && rootedEntity.getEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)!=null) {

@@ -202,7 +202,7 @@ public class ScreenEvaluationDialog extends ModalDialog {
 		worker.execute();
 	}
 	
-	public boolean isAccessible() {
+	public static boolean isAccessible() {
 		String username = SessionMgr.getUsername();
 		if (!"jenetta".equals(username) && !"admin-jenetta".equals(username)) {
 			return false;

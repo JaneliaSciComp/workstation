@@ -154,7 +154,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					
 					@Override
 					protected void doStuff() throws Exception {
-						repFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_REPRESENTATIVES, true);
+						repFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_REPRESENTATIVES, true);						
 					}
 					
 					@Override
@@ -807,19 +807,19 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		SimpleWorker worker = new SimpleWorker() {
 			@Override
 			protected void doStuff() throws Exception {
-				repFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_REPRESENTATIVES, false);
-				splitLinesFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_SPLIT_LINES, false);	
+				repFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_REPRESENTATIVES, true);
+				splitLinesFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_SPLIT_LINES, true);	
 				if (splitLinesFolder!=null) {
-					groupAdFolder = ModelMgrUtils.getChildFolder(splitLinesFolder, FOLDER_NAME_SPLIT_LINES_AD, false);
+					groupAdFolder = ModelMgrUtils.getChildFolder(splitLinesFolder, FOLDER_NAME_SPLIT_LINES_AD, true);
 					if (groupAdFolder!=null) {
 						ModelMgrUtils.refreshEntityAndChildren(groupAdFolder.getEntity());
 					}
-					groupDbdFolder = ModelMgrUtils.getChildFolder(splitLinesFolder, FOLDER_NAME_SPLIT_LINES_DBD, false);	
+					groupDbdFolder = ModelMgrUtils.getChildFolder(splitLinesFolder, FOLDER_NAME_SPLIT_LINES_DBD, true);	
 					if (groupDbdFolder!=null) {
 						ModelMgrUtils.refreshEntityAndChildren(groupDbdFolder.getEntity());
 					}
 				}
-				crossFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_CROSSES, false);	
+				crossFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_CROSSES, true);	
 				if (crossFolder!=null) {
 					ModelMgrUtils.refreshEntityAndChildren(crossFolder.getEntity());
 				}
@@ -995,7 +995,12 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			JMenuItem commonRootItem = new JMenuItem(commonRoot.getName());
 			commonRootItem.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent actionEvent) {
-					setResultFolder(commonRoot);
+					try {
+						setResultFolder(commonRoot);
+					}
+					catch (Exception e) {
+						SessionMgr.getSessionMgr().handleException(e);
+					}
 				}
 			});
 			
@@ -1017,7 +1022,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				}
 
 				try {
-					setResultFolder(ModelMgrUtils.createNewCommonRoot(folderName));	
+					setResultFolder(ModelMgrUtils.createNewCommonRoot(folderName));
 				}
 				catch (Exception e) {
 					SessionMgr.getSessionMgr().handleException(e);
