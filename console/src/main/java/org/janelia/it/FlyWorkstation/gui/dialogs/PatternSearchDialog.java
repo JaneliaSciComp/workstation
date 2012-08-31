@@ -10,9 +10,7 @@ import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.shared.annotation.DataDescriptor;
-import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
-import org.janelia.it.jacs.shared.annotation.RelativePatternAnnotationDataManager;
+import org.janelia.it.jacs.shared.annotation.*;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -36,6 +34,10 @@ public class PatternSearchDialog extends ModalDialog {
     private static final String INTENSITY_TYPE="Intensity";
     private static final String DISTRIBUTION_TYPE="Distribution";
     private static final String GLOBAL = "Global";
+
+    private static final Long MAX_LOADING_WAIT_MS = 120000L; // 2 minutes
+
+    final Color DARK_GREEN = new Color(0,120,0);
 
     private RootedEntity outputFolder;
     
@@ -71,33 +73,13 @@ public class PatternSearchDialog extends ModalDialog {
 
     static boolean quantifierDataIsLoading=false;
 
-    static protected Map<Long, Map<String, Float>> intensityPercentileMap=new HashMap<Long, Map<String, Float>>();
-    static protected Map<Long, Map<String, Float>> distributionPercentileMap=new HashMap<Long, Map<String, Float>>();
+    Map<String, List<DataDescriptor>> managerDescriptorMap=new HashMap<String, List<DataDescriptor>>();
 
-    final List<String> compartmentAbbreviationList = PatternAnnotationDataManager.getCompartmentListInstance();
+    List<String> compartmentAbbreviationList=new ArrayList<String>();
+
     boolean currentSetInitialized=false;
     final List<Boolean> currentListModified = new ArrayList<Boolean>();
-    Set<Long> membershipSampleSet;
-
-    RelativePatternAnnotationDataManager relativeDataManager=null;
-
-    public class PercentileScore implements Comparable {
-
-        public Long sampleId;
-        public Double score;
-
-        @Override
-        public int compareTo(Object o) {
-            PercentileScore other=(PercentileScore)o;
-            if (score > other.score) {
-                return 1;
-            } else if (score < other.score) {
-                return -1;
-            } else {
-                return 0;
-            }
-        }
-    }
+    FilterResult filterResult;
 
     private class MinMaxSelectionRow extends JPanel implements ActionListener {
         String abbreviation;
@@ -170,7 +152,9 @@ public class PatternSearchDialog extends ModalDialog {
                     compartmentRow.setModelState(state);
                 }
             }
-            refreshCompartmentTable();
+            try {
+                refreshCompartmentTable();
+            } catch (Exception ex) {}
         }
 
         public void actionPerformed(ActionEvent e) {
@@ -199,7 +183,6 @@ public class PatternSearchDialog extends ModalDialog {
             } else if (model.type.equals(DISTRIBUTION_TYPE)) {
                 distributionButton.setSelected(true);
             }
-            //updateLineCount();
         }
         
         public MinMaxModel getModelState() {
@@ -252,7 +235,7 @@ public class PatternSearchDialog extends ModalDialog {
                                                        boolean hasFocus, int row, int column) {
             Component cell=super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
             if (currentListModified.get(row)) {
-                cell.setBackground(new Color(100,255,100));
+                cell.setBackground(DARK_GREEN);
                 cell.setForeground(filterTable.getForeground());
             } else {
                 cell.setForeground(filterTable.getForeground());
@@ -295,9 +278,6 @@ public class PatternSearchDialog extends ModalDialog {
         add(mainPanel, BorderLayout.NORTH);
 
         quantifierLoaderWorker=createQuantifierLoaderWorker();
-
-        initializeCurrentListModified();
-
     }
 
     private JPanel createSavePanel() {
@@ -344,13 +324,14 @@ public class PatternSearchDialog extends ModalDialog {
     }
 
     private void createOpenFilterSet(String filterSetName) {
-        Map<String, MinMaxModel> openFilterSetMap=new HashMap<String, MinMaxModel>();
-        MinMaxModel globalModel=getOpenMinMaxModelInstance();
+        Map<String, MinMaxModel> openFilterSetMap = new HashMap<String, MinMaxModel>();
+        MinMaxModel globalModel = getOpenMinMaxModelInstance();
         openFilterSetMap.put(GLOBAL, globalModel);
-        List<String> compartmentAbbreviationList= PatternAnnotationDataManager.getCompartmentListInstance();
-        for (String compartmentName : compartmentAbbreviationList) {
-            MinMaxModel compartmentModel=getOpenMinMaxModelInstance();
-            openFilterSetMap.put(compartmentName, compartmentModel);
+        if (compartmentAbbreviationList != null) {
+            for (String compartmentName : compartmentAbbreviationList) {
+                MinMaxModel compartmentModel = getOpenMinMaxModelInstance();
+                openFilterSetMap.put(compartmentName, compartmentModel);
+            }
         }
         filterSetMap.put(filterSetName, openFilterSetMap);
     }
@@ -401,15 +382,18 @@ public class PatternSearchDialog extends ModalDialog {
     
     private void init() {
         quantifierLoaderWorker.execute();
-        String initialFilterName="Set "+getNextFilterSetIndex();
+        packAndShow();
+    }
+
+    private void initFilters() throws Exception {
+        String initialFilterName = "Set " + getNextFilterSetIndex();
         currentSetTextField.setText(initialFilterName);
         createOpenFilterSet(initialFilterName);
         setCurrentFilterModel(filterSetMap.get(initialFilterName));
         setupFilterTable();
-        packAndShow();
     }
 
-    private void setupFilterTable() {
+    private void setupFilterTable() throws Exception {
         tableModel = new DefaultTableModel(filterTableColumnNames, filterTableColumnNames.length) {
             @Override
             public int getRowCount() {
@@ -477,7 +461,9 @@ public class PatternSearchDialog extends ModalDialog {
                     }
                     state.min=newValue;
                     compartmentRow.setModelState(state);
-                    updateRowImpactOnCounts(row);
+                    try {
+                        updateRowImpactOnCounts(row);
+                    } catch (Exception ex) {}
                 } else if (col==FT_INDEX_MAX) {
                     Double newValue=new Double(value.toString());
                     if (newValue>100.0) {
@@ -488,11 +474,15 @@ public class PatternSearchDialog extends ModalDialog {
                     }
                     state.max=newValue;
                     compartmentRow.setModelState(state);
-                    updateRowImpactOnCounts(row);
+                    try {
+                        updateRowImpactOnCounts(row);
+                    } catch (Exception ex) {}
                 } else if (col==FT_INDEX_FILTERTYPE) {
                     state.type=(String)value;
                     compartmentRow.setModelState(state);
-                    updateRowImpactOnCounts(row);
+                    try {
+                        updateRowImpactOnCounts(row);
+                    } catch (Exception ex) {}
                 }
                 if (currentSetInitialized) {
                     MinMaxModel globalState=globalMinMaxPanel.getModelState();
@@ -520,53 +510,32 @@ public class PatternSearchDialog extends ModalDialog {
     }
 
     protected void loadPatternAnnotationQuantifierMapsFromSummary() {
-        if (!quantifierDataIsLoading && relativeDataManager==null) {
+        if (!quantifierDataIsLoading) {
             quantifierDataIsLoading=true;
             try {
                 Long startTime=new Date().getTime();
-                System.out.println("PatterSearchDialog getPatternAnnotationDataManager type="+RelativePatternAnnotationDataManager.RELATIVE_TYPE+" start");
-                relativeDataManager=(RelativePatternAnnotationDataManager)ModelMgr.getModelMgr().getPatternAnnotationDataManagerByType(RelativePatternAnnotationDataManager.RELATIVE_TYPE);
-                Long managerTime=new Date().getTime();
-                System.out.println("PatterSearchDialog getPatternAnnotationDataManager type="+RelativePatternAnnotationDataManager.RELATIVE_TYPE+" manager time="+(managerTime-startTime));
-                populatePercentileMaps();
-                Long populateTime=new Date().getTime();
-                System.out.println("PatterSearchDialog getPatternAnnotationDataManager type="+RelativePatternAnnotationDataManager.RELATIVE_TYPE+" populate time="+(populateTime-managerTime));
+                int loadingState=ModelMgr.getModelMgr().patternSearchGetState();
+                while(loadingState==PatternAnnotationDataManager.STATE_LOADING && (new Date().getTime() - startTime)<MAX_LOADING_WAIT_MS) {
+                    Thread.sleep(1000);
+                    loadingState=ModelMgr.getModelMgr().patternSearchGetState();
+                }
+                if (loadingState!=PatternAnnotationDataManager.STATE_READY) {
+                    throw new Exception(("Pattern Annotation loading timeout"));
+                }
+                Long endTime=new Date().getTime();
+                Long loadingTime=endTime-startTime;
+                System.out.println("PatterSearchDialog : Pattern Annotation loading time="+loadingTime+" ms");
+                compartmentAbbreviationList=ModelMgr.getModelMgr().patternSearchGetCompartmentList(RelativePatternAnnotationDataManager.RELATIVE_TYPE);
+                List<DataDescriptor> relativeDescriptorList=ModelMgr.getModelMgr().patternSearchGetDataDescriptors(RelativePatternAnnotationDataManager.RELATIVE_TYPE);
+                managerDescriptorMap.put(RelativePatternAnnotationDataManager.RELATIVE_TYPE, relativeDescriptorList);
+                initializeCurrentListModified();
+                initFilters();
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
             quantifierDataIsLoading=false;
         } else {
             System.out.println("PatternSearchDialog loadPatternAnnotationQuantifierMapsFromSummary() - maps already loaded");
-        }
-    }
-
-    protected void populatePercentileMaps() {
-        List<DataDescriptor> descriptorList=relativeDataManager.getDataDescriptors();
-        List<String> compartmentList=PatternAnnotationDataManager.getCompartmentListInstance();
-        for (DataDescriptor descriptor : descriptorList) {
-            Map<Long, List<Float>> scoreMap=relativeDataManager.getScoreMapByDescriptor(descriptor);
-            for (Long sampleId : scoreMap.keySet()) {
-                List<Float> scoreList=scoreMap.get(sampleId);
-                if (descriptor.getName().equals(RelativePatternAnnotationDataManager.INTENSITY_DATA)) {
-                    int compartmentIndex=0;
-                    Map<String,Float> scorePercMap=new HashMap<String, Float>();
-                    for (String compartmentName : compartmentList) {
-                        scorePercMap.put(compartmentName, scoreList.get(compartmentIndex));
-                        compartmentIndex++;
-                    }
-                    intensityPercentileMap.put(sampleId, scorePercMap);
-                } else if (descriptor.getName().equals(RelativePatternAnnotationDataManager.DISTRIBUTION_DATA)) {
-                    int compartmentIndex=0;
-                    Map<String,Float> scorePercMap=new HashMap<String, Float>();
-                    for (String compartmentName : compartmentList) {
-                        scorePercMap.put(compartmentName, scoreList.get(compartmentIndex));
-                        compartmentIndex++;
-                    }
-                    distributionPercentileMap.put(sampleId, scorePercMap);
-                } else {
-                    System.err.println("Do not recognize DataDescriptor name="+descriptor.getName());
-                }
-            }
         }
     }
 
@@ -605,57 +574,12 @@ public class PatternSearchDialog extends ModalDialog {
         if (quantifierDataIsLoading) {
             return 0L;
         } else {
-            List<Long> validSamples=getValidSamplesForCompartment(compartmentAbbreviation);
-            return (long) validSamples.size();
+            Map<String, Long> countMap=filterResult.getCountMap();
+            return countMap.get(compartmentAbbreviation);
         }
     }
 
-    List<Long> getValidSamplesForCompartment(String compartmentAbbreviation) {
-        List<Long> validSamples=new ArrayList<Long>();
-        if (quantifierDataIsLoading) {
-            System.out.println("getValidSamplesForCompartment: quantifierDataIsLoading=true so returning empty list");
-            return validSamples;
-        }
-        else {
-            MinMaxSelectionRow compartmentRow=minMaxRowMap.get(compartmentAbbreviation);
-            MinMaxModel state=compartmentRow.getModelState();
-            Double min=state.min / 100.0;
-            Double max=state.max / 100.0;
-            if (state.type.equals(INTENSITY_TYPE)) {
-                for (Long sampleId : intensityPercentileMap.keySet()) {
-                    Map<String, Float> map=intensityPercentileMap.get(sampleId);
-                    Float value=map.get(compartmentAbbreviation);
-                    //System.out.println("Intensity : Compartment="+compartmentAbbreviation+" value="+value);
-                    if (value>=min && value <=max) {
-                        validSamples.add(sampleId);
-                    }
-                }
-            }
-            else if (state.type.equals(DISTRIBUTION_TYPE)) {
-                for (Long sampleId : distributionPercentileMap.keySet()) {
-                    Map<String, Float> map=distributionPercentileMap.get(sampleId);
-                    if (map==null) {
-                        System.err.println("distributionPercentileMap is null for sampleId="+sampleId);
-                    }
-                    Float value=map.get(compartmentAbbreviation);
-                    if (value==null) {
-                        System.err.println("distribution perc value is null for compartmentAbbr="+compartmentAbbreviation);
-                    }
-                    //System.out.println("Distribution: Compartment="+compartmentAbbreviation+" value="+value);
-                    if (value!=null && value>=min && value <=max) {
-                        validSamples.add(sampleId);
-                    }
-                }
-            }
-            else {
-                System.out.println("Do not recognize state.type="+state.type);
-            }
-        }
-        //System.out.println("getValidSamplesForCompartment: returning list with member count="+validSamples.size());
-        return validSamples;
-    }
-
-    protected void refreshCompartmentTable() {
+    protected void refreshCompartmentTable() throws Exception {
         List<Integer> rowUpdateList=new ArrayList<Integer>();
         for (int rowIndex=0;rowIndex<compartmentAbbreviationList.size();rowIndex++) {
             rowUpdateList.add(rowIndex);
@@ -664,46 +588,57 @@ public class PatternSearchDialog extends ModalDialog {
         filterTableScrollPane.update(filterTableScrollPane.getGraphics());
     }
 
-    protected Set<Long> generateMembershipListForCurrentSet() {
-        setStatusMessage("Computing result membership", Color.YELLOW);
-        Long compartmentListSize= (long) compartmentAbbreviationList.size();
-        Set<Long> sampleSet=new HashSet<Long>();
-        Map<Long, Long> sampleCompartmentCountMap=new HashMap<Long, Long>();
-        for (String compartment : compartmentAbbreviationList) {
-            List<Long> samples=getValidSamplesForCompartment(compartment);
-            for (Long sampleId : samples) {
-                Long sampleCount=sampleCompartmentCountMap.get(sampleId);
-                if (sampleCount==null) {
-                    sampleCount= 0L;
+    protected FilterResult generateMembershipListForCurrentSet() throws Exception {
+
+        FilterResult emptyFilterResult=new FilterResult();
+        // Check if we are still loading
+        if (quantifierDataIsLoading) {
+            return emptyFilterResult; // just return empty set
+        }
+
+        // New code - we need to construct a list of DataFilters which describe, for both Intensity and
+        // Distribution, the min/max settings from the gui. The trick with the DataFilter set is that
+        // we don't need to include one for compartments in which the settings are wide-open.
+        Map<DataDescriptor, Set<DataFilter>> filterMap=new HashMap<DataDescriptor, Set<DataFilter>>();
+
+        for (DataDescriptor dataDescriptor : managerDescriptorMap.get(RelativePatternAnnotationDataManager.RELATIVE_TYPE)) {
+            Float dMin=dataDescriptor.getMin();
+            Float dMax=dataDescriptor.getMax();
+            Set<DataFilter> filterSet=new HashSet<DataFilter>();
+            for (String compartment : compartmentAbbreviationList) {
+                MinMaxSelectionRow row=minMaxRowMap.get(compartment);
+                MinMaxModel rowState=row.getModelState();
+                String rowType=rowState.type;
+                Float rowMin=rowState.min.floatValue();
+                Float rowMax=rowState.max.floatValue();
+                if (dataDescriptor.getName().equals(rowType)) {
+                    if (rowMin>dMin || rowMax<dMax) {
+                        DataFilter filter=new DataFilter(compartment, rowMin, rowMax);
+                        filterSet.add(filter);
+                    }
                 }
-                sampleCount++;
-                sampleCompartmentCountMap.put(sampleId, sampleCount);
             }
+            filterMap.put(dataDescriptor, filterSet);
         }
-        for (Long sampleId : sampleCompartmentCountMap.keySet()) {
-            Long count=sampleCompartmentCountMap.get(sampleId);
-            if (count.equals(compartmentListSize)) {
-                sampleSet.add(sampleId);
-            }
-        }
-        setStatusMessage("Result has " + sampleSet.size() + " members", Color.GREEN);
-        return sampleSet;
+
+        FilterResult filterResult=ModelMgr.getModelMgr().patternSearchGetFilteredResults(RelativePatternAnnotationDataManager.RELATIVE_TYPE, filterMap);
+        return filterResult;
     }
 
-    protected void updateRowImpactOnCounts(int rowIndex) {
+    protected void updateRowImpactOnCounts(int rowIndex) throws Exception {
         List<Integer> rowList=new ArrayList<Integer>();
         rowList.add(rowIndex);
         updateRowImpactOnCounts(rowList);
     }
 
-    protected void updateRowImpactOnCounts(List<Integer> rowList) {
+    protected void updateRowImpactOnCounts(List<Integer> rowList) throws Exception {
+        filterResult=generateMembershipListForCurrentSet();
         for (int rowIndex : rowList) {
             String rowKey=compartmentAbbreviationList.get(rowIndex);
             MinMaxSelectionRow compartmentRow=minMaxRowMap.get(rowKey);
             Long updatedLineCount=computeLineCountForCompartment(rowIndex);
             compartmentRow.lineCountText.setText(updatedLineCount.toString());
         }
-        membershipSampleSet=generateMembershipListForCurrentSet();
     }
 
     protected synchronized void saveCurrentSet() {
@@ -727,8 +662,7 @@ public class PatternSearchDialog extends ModalDialog {
                     newRootedFolder = new RootedEntity(newFolder);
             	}
             	
-                ModelMgr.getModelMgr().addChildren(newFolder.getId(), 
-                		new ArrayList<Long>(membershipSampleSet), EntityConstants.ATTRIBUTE_ENTITY);
+                ModelMgr.getModelMgr().addChildren(newFolder.getId(), filterResult.getSampleList(), EntityConstants.ATTRIBUTE_ENTITY);
             }
 
             @Override
@@ -759,7 +693,7 @@ public class PatternSearchDialog extends ModalDialog {
     }
 
     protected void resetSearchState() {
-        membershipSampleSet.clear();
+        filterResult.clear();
         MinMaxModel globalModel=globalMinMaxPanel.getModelState();
         globalModel.min=0.0;
         globalModel.max=100.0;

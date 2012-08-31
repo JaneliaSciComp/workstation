@@ -1,11 +1,15 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.AnnotationFacade;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.shared.annotation.DataDescriptor;
+import org.janelia.it.jacs.shared.annotation.DataFilter;
+import org.janelia.it.jacs.shared.annotation.FilterResult;
 import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
 
 /**
@@ -67,15 +71,34 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
                 annotationSessionId);
     }
 
+    @Override
     public Object[] getPatternAnnotationQuantifierMapsFromSummary() throws Exception {
         return EJBFactory.getRemoteAnnotationBean().getPatternAnnotationQuantifierMapsFromSummary();
     }
 
+    @Override
     public Object[] getMaskQuantifierMapsFromSummary(String maskFolderName) throws Exception {
         return EJBFactory.getRemoteAnnotationBean().getMaskQuantifierMapsFromSummary(maskFolderName);
     }
 
-    public PatternAnnotationDataManager getPatternAnnotationDataManagerByType(String type) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getPatternAnnotationDataManagerByType(type);
+    @Override
+    public List<DataDescriptor> patternSearchGetDataDescriptors(String type) throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().patternSearchGetDataDescriptors(type);
     }
+
+    @Override
+    public int patternSearchGetState() throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().patternSearchGetState();
+    }
+
+    @Override
+    public List<String> patternSearchGetCompartmentList(String type) throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().patternSearchGetCompartmentList(type);
+    }
+
+    @Override
+    public FilterResult patternSearchGetFilteredResults(String type, Map<DataDescriptor, Set<DataFilter>> filterMap) throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().patternSearchGetFilteredResults(type, filterMap);
+    }
+
 }

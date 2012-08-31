@@ -1,9 +1,14 @@
 package org.janelia.it.FlyWorkstation.api.facade.abstract_facade;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.shared.annotation.DataDescriptor;
+import org.janelia.it.jacs.shared.annotation.DataFilter;
+import org.janelia.it.jacs.shared.annotation.FilterResult;
 import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
 
 /**
@@ -36,6 +41,12 @@ public interface AnnotationFacade extends EntityFacade {
 
     public Object[] getMaskQuantifierMapsFromSummary(String maskFolderName) throws Exception;
 
-    public PatternAnnotationDataManager getPatternAnnotationDataManagerByType(String type) throws Exception;
+    public List<DataDescriptor> patternSearchGetDataDescriptors(String type) throws Exception;
+
+    public int patternSearchGetState() throws Exception;
+
+    public List<String> patternSearchGetCompartmentList(String type) throws Exception;
+
+    public FilterResult patternSearchGetFilteredResults(String type, Map<DataDescriptor, Set<DataFilter>> filterMap) throws Exception;
 
 }

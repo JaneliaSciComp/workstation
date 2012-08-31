@@ -30,6 +30,9 @@ import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
 import org.janelia.it.jacs.model.user_data.User;
 import org.janelia.it.jacs.model.user_data.prefs.UserPreference;
+import org.janelia.it.jacs.shared.annotation.DataDescriptor;
+import org.janelia.it.jacs.shared.annotation.DataFilter;
+import org.janelia.it.jacs.shared.annotation.FilterResult;
 import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
 
 import javax.swing.*;
@@ -883,9 +886,22 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getAnnotationFacade().getMaskQuantifierMapsFromSummary(maskFolderName);
     }
 
-    public PatternAnnotationDataManager getPatternAnnotationDataManagerByType(String type) throws Exception {
-        return FacadeManager.getFacadeManager().getAnnotationFacade().getPatternAnnotationDataManagerByType(type);
+    public List<DataDescriptor> patternSearchGetDataDescriptors(String type) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().patternSearchGetDataDescriptors(type);
     }
+
+    public int patternSearchGetState() throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().patternSearchGetState();
+    }
+
+    public List<String> patternSearchGetCompartmentList(String type) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().patternSearchGetCompartmentList(type);
+    }
+
+    public FilterResult patternSearchGetFilteredResults(String type, Map<DataDescriptor, Set<DataFilter>> filterMap) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().patternSearchGetFilteredResults(type, filterMap);
+    }
+
 
     //  private void workSpaceWasCreated(GenomeVersion genomeVersion) {
 //    Set genomeVersions=getGenomeVersions();
