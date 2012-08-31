@@ -272,8 +272,6 @@ public class PrefController {
      */
     private void applyButton_actionPerformed() {
         propagateApplyChanges();
-        SessionMgr.getSessionMgr().loginUser();
-        // Not the best order of operations
         SessionMgr.getSessionMgr().saveUserSettings();
         if (!SessionMgr.getSessionMgr().isLoggedIn() || null==SessionMgr.getSessionMgr().getUserEmail()) {
             Object[] options = {"Fix Login", "Exit Program"};
@@ -295,7 +293,6 @@ public class PrefController {
      */
     private void okButton_actionPerformed() {
         propagateApplyChanges();
-        SessionMgr.getSessionMgr().loginUser();
         if (!SessionMgr.getSessionMgr().isLoggedIn() || null==SessionMgr.getSessionMgr().getUserEmail()) {
             Object[] options = {"Fix Login", "Exit Program"};
             final int answer = JOptionPane.showOptionDialog(null, "Please correct your login or email information.", "Login Information Invalid",

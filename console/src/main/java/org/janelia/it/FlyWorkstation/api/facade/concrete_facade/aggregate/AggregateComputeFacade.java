@@ -1,14 +1,14 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.aggregate;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.ComputeFacade;
 import org.janelia.it.FlyWorkstation.api.stub.data.DuplicateDataException;
 import org.janelia.it.FlyWorkstation.api.stub.data.NoDataException;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.user_data.User;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -174,6 +174,16 @@ public class AggregateComputeFacade extends AggregateFacadeBase implements Compu
         throw new NoDataException();
     }
 
+    @Override
+    public void beginSession() {
+    	throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    public void endSession(String username) {
+    	throw new UnsupportedOperationException();
+    }
+    
     @Override
     public void removePreferenceCategory(String preferenceCategory) throws Exception {
         Object[] aggregates = getAggregates();

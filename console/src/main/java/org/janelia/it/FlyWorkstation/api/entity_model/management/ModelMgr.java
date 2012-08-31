@@ -844,7 +844,15 @@ public class ModelMgr {
     }
 
     public boolean loginUser() throws Exception {
-        return FacadeManager.getFacadeManager().getComputeFacade().loginUser();
+        boolean c = FacadeManager.getFacadeManager().getComputeFacade().loginUser();
+        if (c) {
+        	FacadeManager.getFacadeManager().getComputeFacade().beginSession();
+        }
+        return c;
+    }
+    
+    public void logoutUser(String username) throws Exception {
+    	FacadeManager.getFacadeManager().getComputeFacade().endSession(username);
     }
     
     public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception {

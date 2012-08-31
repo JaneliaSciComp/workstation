@@ -40,4 +40,8 @@ public interface ComputeFacade {
 	public void stopContinuousExecution(Long taskId) throws Exception;
 
     public boolean loginUser() throws Exception;
+    
+    public void beginSession();
+    
+    public void endSession(String username);
 }

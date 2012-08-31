@@ -64,6 +64,7 @@ public class SessionMgr {
     private String appName, appVersion;
     private Date sessionCreationTime;
     private boolean isLoggedIn;
+    private String loggedInUser;
 
     private SessionMgr() {
     	
@@ -377,8 +378,13 @@ public class SessionMgr {
         sessionModel.systemWillExit();
         writeSettings(); // Saves user preferences.
         sessionModel.removeAllBrowserModels();
+        
+        logoutUser();
+        System.out.println("Logged out.");
+        
         System.err.println("Memory in use at exit: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000000f + " MB");
         System.err.flush();
+        
         modelManager.prepareForSystemExit();
         System.exit(errorlevel);
     }
@@ -561,19 +567,34 @@ public class SessionMgr {
 
     public boolean loginUser() {
         try {
+        	if (isLoggedIn()) {
+        		logoutUser();
+        	}
             isLoggedIn =  ModelMgr.getModelMgr().loginUser();
+            loggedInUser = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
             return isLoggedIn;
         }
         catch (Exception e) {
+        	isLoggedIn = false;
+        	loggedInUser = null;
             throw new SystemError("Cannot authenticate login. The server may be down. Please try again later.");
         }
+    }
+    
+    public void logoutUser() {
+    	try {
+    		ModelMgr.getModelMgr().logoutUser(loggedInUser);
+    		isLoggedIn = false;
+        	loggedInUser = null;
+    	}
+    	catch (Exception ex) {
+    		ex.printStackTrace();
+    	}
     }
 
     public boolean isLoggedIn() {
         return isLoggedIn;
     }
-
-
 
     public String getApplicationOutputDirectory() {
         return prefsDir;
@@ -581,7 +602,7 @@ public class SessionMgr {
 
     class MyBrowserListener extends WindowAdapter {
         public void windowClosed(WindowEvent e) {
-            e.getWindow().removeWindowListener(this);
+        	e.getWindow().removeWindowListener(this);
             SessionMgr.getSessionMgr().saveUserSettings();
         }
 

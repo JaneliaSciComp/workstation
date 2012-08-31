@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.ComputeFacade;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.user_data.User;
 
@@ -87,7 +88,19 @@ public class EJBComputeFacade implements ComputeFacade {
         		(String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME),
                 (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_PASSWORD));
     }
-
+    
+    @Override
+    public void beginSession() {
+        EJBFactory.getRemoteComputeBean().beginSession(
+        		(String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME),
+                ConsoleProperties.getString("console.versionNumber"));
+    }
+    
+    @Override
+    public void endSession(String username) {
+    	EJBFactory.getRemoteComputeBean().endSession(username);
+    }
+    
     @Override
     public void removePreferenceCategory(String preferenceCategory) throws Exception {
         EJBFactory.getRemoteComputeBean().removePreferenceCategory(preferenceCategory);
