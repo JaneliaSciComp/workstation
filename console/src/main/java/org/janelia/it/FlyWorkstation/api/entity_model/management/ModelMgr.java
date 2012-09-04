@@ -898,7 +898,7 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getAnnotationFacade().patternSearchGetCompartmentList(type);
     }
 
-    public FilterResult patternSearchGetFilteredResults(String type, Map<DataDescriptor, Set<DataFilter>> filterMap) throws Exception {
+    public FilterResult patternSearchGetFilteredResults(String type, Map<String, Set<DataFilter>> filterMap) throws Exception {
         return FacadeManager.getFacadeManager().getAnnotationFacade().patternSearchGetFilteredResults(type, filterMap);
     }
 

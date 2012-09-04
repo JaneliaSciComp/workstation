@@ -71,7 +71,7 @@ public class PatternSearchDialog extends ModalDialog {
     private final Map<String, Map<String, MinMaxModel>> filterSetMap=new HashMap<String, Map<String, MinMaxModel>>();
     private final Map<String, MinMaxSelectionRow> minMaxRowMap=new HashMap<String, MinMaxSelectionRow>();
 
-    static boolean quantifierDataIsLoading=false;
+    static boolean quantifierDataIsLoading=true; // we want to initialize this to true until loading is done
 
     Map<String, List<DataDescriptor>> managerDescriptorMap=new HashMap<String, List<DataDescriptor>>();
 
@@ -511,32 +511,31 @@ public class PatternSearchDialog extends ModalDialog {
 
     protected void loadPatternAnnotationQuantifierMapsFromSummary() {
         if (!quantifierDataIsLoading) {
-            quantifierDataIsLoading=true;
-            try {
-                Long startTime=new Date().getTime();
-                int loadingState=ModelMgr.getModelMgr().patternSearchGetState();
-                while(loadingState==PatternAnnotationDataManager.STATE_LOADING && (new Date().getTime() - startTime)<MAX_LOADING_WAIT_MS) {
-                    Thread.sleep(1000);
-                    loadingState=ModelMgr.getModelMgr().patternSearchGetState();
-                }
-                if (loadingState!=PatternAnnotationDataManager.STATE_READY) {
-                    throw new Exception(("Pattern Annotation loading timeout"));
-                }
-                Long endTime=new Date().getTime();
-                Long loadingTime=endTime-startTime;
-                System.out.println("PatterSearchDialog : Pattern Annotation loading time="+loadingTime+" ms");
-                compartmentAbbreviationList=ModelMgr.getModelMgr().patternSearchGetCompartmentList(RelativePatternAnnotationDataManager.RELATIVE_TYPE);
-                List<DataDescriptor> relativeDescriptorList=ModelMgr.getModelMgr().patternSearchGetDataDescriptors(RelativePatternAnnotationDataManager.RELATIVE_TYPE);
-                managerDescriptorMap.put(RelativePatternAnnotationDataManager.RELATIVE_TYPE, relativeDescriptorList);
-                initializeCurrentListModified();
-                initFilters();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-            quantifierDataIsLoading=false;
-        } else {
-            System.out.println("PatternSearchDialog loadPatternAnnotationQuantifierMapsFromSummary() - maps already loaded");
+            quantifierDataIsLoading = true;
         }
+        try {
+            Long startTime = new Date().getTime();
+            int loadingState = ModelMgr.getModelMgr().patternSearchGetState();
+            while (loadingState == PatternAnnotationDataManager.STATE_LOADING && (new Date().getTime() - startTime) < MAX_LOADING_WAIT_MS) {
+                Thread.sleep(1000);
+                loadingState = ModelMgr.getModelMgr().patternSearchGetState();
+            }
+            if (loadingState != PatternAnnotationDataManager.STATE_READY) {
+                throw new Exception(("Pattern Annotation loading timeout"));
+            }
+            Long endTime = new Date().getTime();
+            Long loadingTime = endTime - startTime;
+            System.out.println("PatterSearchDialog : Pattern Annotation loading time=" + loadingTime + " ms");
+            compartmentAbbreviationList = ModelMgr.getModelMgr().patternSearchGetCompartmentList(RelativePatternAnnotationDataManager.RELATIVE_TYPE);
+            List<DataDescriptor> relativeDescriptorList = ModelMgr.getModelMgr().patternSearchGetDataDescriptors(RelativePatternAnnotationDataManager.RELATIVE_TYPE);
+            managerDescriptorMap.put(RelativePatternAnnotationDataManager.RELATIVE_TYPE, relativeDescriptorList);
+            initializeCurrentListModified();
+            initFilters();
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        quantifierDataIsLoading = false;
     }
 
     SimpleWorker createQuantifierLoaderWorker() {
@@ -575,7 +574,14 @@ public class PatternSearchDialog extends ModalDialog {
             return 0L;
         } else {
             Map<String, Long> countMap=filterResult.getCountMap();
-            return countMap.get(compartmentAbbreviation);
+            Long countMapValue=countMap.get(compartmentAbbreviation);
+            if (countMapValue==null) {
+                // We assume this is benign because the requested compartment was not in the filter criteria, so we
+                // simply return the total number of entries as the unfiltered result
+                return filterResult.getTotalSampleCount();
+            } else {
+                return countMapValue;
+            }
         }
     }
 
@@ -593,13 +599,14 @@ public class PatternSearchDialog extends ModalDialog {
         FilterResult emptyFilterResult=new FilterResult();
         // Check if we are still loading
         if (quantifierDataIsLoading) {
+            System.out.println("returning emptyFilterResult because quantifierDataIsLoading");
             return emptyFilterResult; // just return empty set
         }
 
         // New code - we need to construct a list of DataFilters which describe, for both Intensity and
         // Distribution, the min/max settings from the gui. The trick with the DataFilter set is that
         // we don't need to include one for compartments in which the settings are wide-open.
-        Map<DataDescriptor, Set<DataFilter>> filterMap=new HashMap<DataDescriptor, Set<DataFilter>>();
+        Map<String, Set<DataFilter>> filterMap=new HashMap<String, Set<DataFilter>>();
 
         for (DataDescriptor dataDescriptor : managerDescriptorMap.get(RelativePatternAnnotationDataManager.RELATIVE_TYPE)) {
             Float dMin=dataDescriptor.getMin();
@@ -618,10 +625,12 @@ public class PatternSearchDialog extends ModalDialog {
                     }
                 }
             }
-            filterMap.put(dataDescriptor, filterSet);
+            filterMap.put(dataDescriptor.getName(), filterSet);
         }
 
         FilterResult filterResult=ModelMgr.getModelMgr().patternSearchGetFilteredResults(RelativePatternAnnotationDataManager.RELATIVE_TYPE, filterMap);
+        setStatusMessage("Result has " + filterResult.getSampleList().size()+" members", Color.GREEN);
+
         return filterResult;
     }
 

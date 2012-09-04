@@ -47,6 +47,6 @@ public interface AnnotationFacade extends EntityFacade {
 
     public List<String> patternSearchGetCompartmentList(String type) throws Exception;
 
-    public FilterResult patternSearchGetFilteredResults(String type, Map<DataDescriptor, Set<DataFilter>> filterMap) throws Exception;
+    public FilterResult patternSearchGetFilteredResults(String type, Map<String, Set<DataFilter>> filterMap) throws Exception;
 
 }

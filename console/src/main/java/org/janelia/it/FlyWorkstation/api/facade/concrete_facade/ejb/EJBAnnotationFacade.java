@@ -97,7 +97,7 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
     }
 
     @Override
-    public FilterResult patternSearchGetFilteredResults(String type, Map<DataDescriptor, Set<DataFilter>> filterMap) throws Exception {
+    public FilterResult patternSearchGetFilteredResults(String type, Map<String, Set<DataFilter>> filterMap) throws Exception {
         return EJBFactory.getRemoteAnnotationBean().patternSearchGetFilteredResults(type, filterMap);
     }
 

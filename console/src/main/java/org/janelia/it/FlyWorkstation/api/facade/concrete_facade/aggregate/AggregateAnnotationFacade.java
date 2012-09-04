@@ -157,7 +157,7 @@ public class AggregateAnnotationFacade extends AggregateEntityFacade implements 
     }
 
     @Override
-    public FilterResult patternSearchGetFilteredResults(String type, Map<DataDescriptor, Set<DataFilter>> filterMap) throws Exception {
+    public FilterResult patternSearchGetFilteredResults(String type, Map<String, Set<DataFilter>> filterMap) throws Exception {
         throw new UnsupportedOperationException();
     }
 
