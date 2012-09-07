@@ -66,7 +66,7 @@ public class ConsoleApp {
             sessionMgr.setNewBrowserSize(.8f);
             sessionMgr.setNewBrowserMenuBar(ConsoleMenuBar.class);
             sessionMgr.startExternalHttpListener(30000);
-            sessionMgr.startAxisServer(30001);
+            sessionMgr.startAxisServer(ConsoleProperties.getString("console.WebServiceURL"));
             sessionMgr.setModelProperty("ShowInternalDataSourceInDialogs", internal);
             sessionMgr.setModelProperty(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY, false);
             sessionMgr.setModelProperty(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY, false);

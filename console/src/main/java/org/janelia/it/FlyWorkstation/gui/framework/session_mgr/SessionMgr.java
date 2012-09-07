@@ -469,9 +469,9 @@ public class SessionMgr {
         }
     }
 
-    public void startAxisServer(int port) {
+    public void startAxisServer(String url) {
     	try {
-	        if (axisServer == null) axisServer = new EmbeddedAxisServer(port);
+	        if (axisServer == null) axisServer = new EmbeddedAxisServer(url);
 	        axisServer.start();
     	}
     	catch (Exception e) {

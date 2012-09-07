@@ -16,17 +16,17 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
  */
 public class EmbeddedAxisServer implements ModelMgrObserver {
     
-    private final int port;
+    private final String baseUrl;
     private Endpoint obs;
     private Endpoint cds;
     
-    public EmbeddedAxisServer(int port) throws Exception {
-    	this.port = port;
+    public EmbeddedAxisServer(String baseUrl) throws Exception {
+    	this.baseUrl = baseUrl==null?"http://localhost:30001":baseUrl;
     }
 
     public void start() {
-        obs = Endpoint.publish("http://localhost:"+port+"/axis2/services/obs", new ConsoleObserverImpl());
-        cds = Endpoint.publish("http://localhost:"+port+"/axis2/services/cds", new ConsoleDataServiceImpl());
+        obs = Endpoint.publish(baseUrl+"/axis2/services/obs", new ConsoleObserverImpl());
+        cds = Endpoint.publish(baseUrl+"/axis2/services/cds", new ConsoleDataServiceImpl());
     }
 
     public void stop() {
