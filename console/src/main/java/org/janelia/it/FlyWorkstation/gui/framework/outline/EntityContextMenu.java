@@ -963,14 +963,17 @@ public class EntityContextMenu extends JPopupMenu {
                         if (result!=null) {
                         	ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(result.getId());
 	                        
+                        	// TODO: in the future, this check won't be necessary, since all separations will be fast loading
                         	boolean fastLoad = false;
                         	for(Entity child : ModelMgr.getModelMgr().getChildEntities(result.getId())) {
                         		if (child.getName().equals("Supporting Files")) {
                         			for(Entity grandchild : ModelMgr.getModelMgr().getChildEntities(child.getId())) {
                                 		if (grandchild.getName().equals("Fast Load")) {
                                 			fastLoad = true;
+                                			break;
                                 		}
                         			}
+                        			if (fastLoad) break;
                         		}
                         	}
                         	
