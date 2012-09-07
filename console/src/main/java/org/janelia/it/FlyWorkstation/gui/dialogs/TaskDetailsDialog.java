@@ -15,6 +15,7 @@ import loci.plugins.config.SpringUtilities;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 
 /**
@@ -108,41 +109,43 @@ public class TaskDetailsDialog extends ModalDialog {
     	
     	attrPanel.removeAll();
     	
-        addAttribute("Name: ").setText(task.getDisplayName());
+        addAttribute("Name: ").setText(task.getJobName());
         addAttribute("Task Owner: ").setText(task.getOwner());
-        addAttribute("Task Id: ").setText(task.getObjectId().toString());
         JLabel statusLabel = addAttribute("Last Status: ");
         statusLabel.setText(task.getLastEvent().getDescription());
         
         if (task.isDone()) {
+        	if (task.getLastEvent().getEventType().equals(Event.ERROR_EVENT)) {
+        		closeUponTaskCompletion = false;
+        	}
     		endRefresh();
-    		return;
         }
+        else {
+        	statusLabel.setIcon(Icons.getLoadingIcon());
         
-    	statusLabel.setIcon(Icons.getLoadingIcon());
-        
-        if (refreshTimer==null || !refreshTimer.isRunning()) {
-        	refreshTimer = new Timer(REFRESH_DELAY_MS, new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					try {
-						System.out.println("Refresh "+taskId);
-						final Task updatedTask = ModelMgr.getModelMgr().getTaskById(taskId);
-						SwingUtilities.invokeLater(new Runnable() {
-							@Override
-							public void run() {
-								updateForTask(updatedTask);	
-							}
-						});
-						
+	        if (refreshTimer==null || !refreshTimer.isRunning()) {
+	        	refreshTimer = new Timer(REFRESH_DELAY_MS, new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						try {
+							System.out.println("Refresh "+taskId);
+							final Task updatedTask = ModelMgr.getModelMgr().getTaskById(taskId);
+							SwingUtilities.invokeLater(new Runnable() {
+								@Override
+								public void run() {
+									updateForTask(updatedTask);	
+								}
+							});
+							
+						}
+						catch (Exception error) {
+							SessionMgr.getSessionMgr().handleException(error);
+						}
 					}
-					catch (Exception error) {
-						SessionMgr.getSessionMgr().handleException(error);
-					}
-				}
-			});
-        	refreshTimer.setInitialDelay(REFRESH_DELAY_MS);
-        	refreshTimer.start(); 
+				});
+	        	refreshTimer.setInitialDelay(REFRESH_DELAY_MS);
+	        	refreshTimer.start(); 
+	        }
         }
         
         SpringUtilities.makeCompactGrid(attrPanel, attrPanel.getComponentCount()/2, 2, 6, 6, 6, 6);
