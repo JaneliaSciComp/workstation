@@ -951,7 +951,7 @@ public class EntityContextMenu extends JPopupMenu {
 		if (multiple) return null;
         final String entityType = rootedEntity.getEntity().getEntityType().getName();
         if (entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT) || entityType.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
-            JMenuItem vaa3dMenuItem = new JMenuItem("  View in Vaa3D (Neuron Annotator)");
+            JMenuItem vaa3dMenuItem = new JMenuItem("  View in Neuron Annotator");
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
@@ -960,9 +960,35 @@ public class EntityContextMenu extends JPopupMenu {
                             result = ModelMgr.getModelMgr().getAncestorWithType(result, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT);
                         }
 
-                        if (result != null && ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(result.getId())) {
-                            // Success
-                            return;
+                        if (result!=null) {
+                        	ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(result.getId());
+	                        
+                        	boolean fastLoad = false;
+                        	for(Entity child : ModelMgr.getModelMgr().getChildEntities(result.getId())) {
+                        		if (child.getName().equals("Supporting Files")) {
+                        			for(Entity grandchild : ModelMgr.getModelMgr().getChildEntities(child.getId())) {
+                                		if (grandchild.getName().equals("Fast Load")) {
+                                			fastLoad = true;
+                                		}
+                        			}
+                        		}
+                        	}
+                        	
+                        	if (fastLoad) {
+	                        	// This is a fast loading separation. Ensure all files are copied from archive.
+	                        	String filePath = result.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH)+"/archive";
+	                        	
+		                    	HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
+		                    	taskParameters.add(new TaskParameter("file path", filePath, null));
+		                    	Task task = new GenericTask(new HashSet<Node>(), SessionMgr.getUsername(), new ArrayList<Event>(), 
+		                    			taskParameters, "syncFromArchive", "Sync From Archive");
+		                        task.setJobName("Sync From Archive Task");
+		                        task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
+		                        ModelMgr.getModelMgr().submitJob("SyncFromArchive", task.getObjectId());
+		                        
+		                        final TaskDetailsDialog dialog = new TaskDetailsDialog(true);
+		                        dialog.showForTask(task);
+                        	}
                         }
                     }
                     catch (Exception e) {
