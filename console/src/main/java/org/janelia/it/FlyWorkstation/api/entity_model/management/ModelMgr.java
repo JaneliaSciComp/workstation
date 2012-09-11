@@ -33,7 +33,6 @@ import org.janelia.it.jacs.model.user_data.prefs.UserPreference;
 import org.janelia.it.jacs.shared.annotation.DataDescriptor;
 import org.janelia.it.jacs.shared.annotation.DataFilter;
 import org.janelia.it.jacs.shared.annotation.FilterResult;
-import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -43,7 +42,7 @@ import java.util.List;
 public class ModelMgr {
 	
 	// TODO: externalize these properties
-	private static final String NEURON_ANNOTATOR_CLIENT_NAME = "NeuronAnnotator";
+	public static final String NEURON_ANNOTATOR_CLIENT_NAME = "NeuronAnnotator";
 	public static final String CATEGORY_KEYBINDS_GENERAL = "Keybind:General";
     public static final String CATEGORY_KEYBINDS_ONTOLOGY = "Keybind:Ontology:";
     public static OntologyRoot ERROR_ONTOLOGY_ENTITY = null;

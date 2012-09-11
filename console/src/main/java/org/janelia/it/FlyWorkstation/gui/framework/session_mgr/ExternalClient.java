@@ -6,9 +6,6 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.session_mgr;
 
-import java.net.URL;
-import java.util.Map;
-
 import org.apache.axiom.om.OMAbstractFactory;
 import org.apache.axiom.om.OMElement;
 import org.apache.axiom.om.OMFactory;
@@ -22,6 +19,9 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+
+import java.net.URL;
+import java.util.Map;
 
 /**
  * An external program that registers in hopes of receiving events from the workstation. Registration is a two-step 
@@ -130,7 +130,7 @@ public class ExternalClient {
 				failures++;
 				if (failures >= MAX_CONSECUTIVE_FAILURES) {
 					System.out.println("Removing client "+targetEPR.getAddress()+
-							" because it exceeded max number of consecutive failures ("+failures+">"+MAX_CONSECUTIVE_FAILURES+")");
+							" because it exceeded max number of consecutive failures ("+failures+">="+MAX_CONSECUTIVE_FAILURES+")");
 					SessionMgr.getSessionMgr().removeExternalClientByPort(clientPort);
 				}
 			}

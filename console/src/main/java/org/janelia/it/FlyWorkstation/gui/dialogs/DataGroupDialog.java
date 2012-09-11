@@ -102,19 +102,20 @@ public class DataGroupDialog extends JDialog {
 
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,getDataGroupsTablePanel(),getCircleSetUpPanel());
-        splitPane.setMaximumSize(new Dimension(1000,500));
+        splitPane.setMaximumSize(new Dimension(600,500));
         backgroundPanel.add(splitPane, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setMaximumSize(new Dimension(1000,500));
-        buttonPanel.setLayout(new BoxLayout(buttonPanel,BoxLayout.X_AXIS));
+        buttonPanel.setMaximumSize(new Dimension(600,500));
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
         buttonPanel.add(Box.createHorizontalGlue());
         buttonPanel.add(doneButton);
         buttonPanel.add(resetButton);
         buttonPanel.add(closeButton);
         buttonPanel.add(Box.createHorizontalGlue());
         backgroundPanel.add(buttonPanel, BorderLayout.SOUTH);
-        backgroundPanel.setMaximumSize(new Dimension(1000,500));
+        backgroundPanel.setMaximumSize(new Dimension(600, 500));
+        this.setMaximumSize(new Dimension(600,500));
         createAndShowGUI();
     }
 
