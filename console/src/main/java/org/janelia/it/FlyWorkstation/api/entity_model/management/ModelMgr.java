@@ -62,7 +62,7 @@ public class ModelMgr {
     private OntologyRoot selectedOntology;
     private OntologyKeyBindings ontologyKeyBindings;
     private AnnotationSession annotationSession;
-    
+    private OntologyAnnotation currentSelectedOntologyAnnotation=null;
     
     static {
         // Register an exception handler.
@@ -225,6 +225,14 @@ public class ModelMgr {
 		    else
 		    	notifyAnnotationSessionSelected(annotationSession.getId());
         }
+    }
+
+    public OntologyAnnotation getCurrentSelectedOntologyAnnotation() {
+        return currentSelectedOntologyAnnotation;
+    }
+
+    public void setCurrentSelectedOntologyAnnotation(OntologyAnnotation currentSelectedOntologyAnnotation) {
+        this.currentSelectedOntologyAnnotation = currentSelectedOntologyAnnotation;
     }
 
     public OntologyRoot getCurrentOntology() {
@@ -841,6 +849,7 @@ public class ModelMgr {
     	return FacadeManager.getFacadeManager().getSolrFacade().searchSolr(query);
     }
     
+    //todo "Flylight"? Maybe we can refctor out this explicit project knowledge?  Is there a nice, clean abstraction for this?
     public Map<String, SageTerm> getFlyLightVocabulary() throws Exception {
     	return FacadeManager.getFacadeManager().getSolrFacade().getFlyLightVocabulary();
     }

@@ -1,15 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
-import java.awt.Color;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.*;
-import javax.swing.border.Border;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.RemoveAnnotationsAction;
@@ -20,6 +10,15 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+
+import javax.swing.*;
+import javax.swing.border.Border;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A tag cloud of Entity-based annotations which support context menu operations such as deletion.
@@ -130,9 +129,17 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
                         }
                     }
                 });
-
                 popupMenu.add(editItem);
             }
+
+            JMenuItem copyItem = new JMenuItem("  Copy Annotation");
+            copyItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent actionEvent) {
+                    ModelMgr.getModelMgr().setCurrentSelectedOntologyAnnotation(tag);
+                }
+            });
+            popupMenu.add(copyItem);
 
             JMenuItem detailsItem = new JMenuItem("  View details");
             detailsItem.addActionListener(new ActionListener() {

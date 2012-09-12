@@ -29,7 +29,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 
     // Obligatory Mac garbage in case the user is cursed with that OS
     static {
-        System.setProperty("com.apple.mrj.application.apple.menu.about.name", ConsoleProperties.getString("console.Title")+" Updater");
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Workstation AutoUpdate");
         System.setProperty("apple.eawt.quitStrategy", "CLOSE_ALL_WINDOWS");
     }
 
@@ -45,6 +45,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 	private File packageDir=null;
 	
 	public AutoUpdater() {
+        setTitle("Workstation AutoUpdate");
         getContentPane().setLayout(new BorderLayout());
         setSize(400, 200);
         mainPane = new JPanel(new BorderLayout());
@@ -60,7 +61,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 		mainPane.add(mainLabel, BorderLayout.CENTER);
 		
 		mainPane.revalidate();
-		mainPane.repaint();
+		repaint();
 		
 		Thread.sleep(300);
 		
@@ -348,15 +349,13 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 	}
 	
     public static void main(final String[] args) {
-
+        AutoUpdater updater = new AutoUpdater();
         try {
             ConsoleProperties.load();
-            
             final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
             sessionMgr.registerExceptionHandler(new UserNotificationExceptionHandler());
             sessionMgr.registerExceptionHandler(new ExitHandler());
             
-        	AutoUpdater updater = new AutoUpdater();
             updater.checkVersions();
         }
         catch (Exception ex) {

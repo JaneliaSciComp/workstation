@@ -22,6 +22,7 @@ import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
 import org.janelia.it.jacs.model.tasks.Event;
@@ -63,7 +64,7 @@ public class EntityContextMenu extends JPopupMenu {
 	// Internal state
 	protected boolean nextAddRequiresSeparator = false;
 
-	public EntityContextMenu(List<RootedEntity> rootedEntityList) {
+    public EntityContextMenu(List<RootedEntity> rootedEntityList) {
 		this.rootedEntityList = rootedEntityList;
 		this.rootedEntity = rootedEntityList.size()==1 ? rootedEntityList.get(0) : null;
 		this.multiple = rootedEntityList.size()>1;
@@ -80,6 +81,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getTitleItem());
         add(getCopyNameToClipboardItem());
         add(getCopyIdToClipboardItem());
+        add(getPasteAnnotationItem());
         add(getDetailsItem());
         add(getGotoRelatedItem());
 
@@ -282,7 +284,33 @@ public class EntityContextMenu extends JPopupMenu {
 		});
 	}
 
-	private class EntityDataPath {
+    public JMenuItem getPasteAnnotationItem() {
+        // If no curent annotation item selected then do nothing
+        if (null==ModelMgr.getModelMgr().getCurrentSelectedOntologyAnnotation()) { return null; }
+        JMenuItem pasteItem = new JMenuItem("  Paste Annotation");
+        pasteItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                try {
+                    final List<RootedEntity> selectedEntities = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer()).getSelectedEntities();
+                    OntologyAnnotation baseAnnotation = ModelMgr.getModelMgr().getCurrentSelectedOntologyAnnotation();
+                    for (RootedEntity entity : selectedEntities) {
+                        AnnotationSession tmpSession = ModelMgr.getModelMgr().getCurrentAnnotationSession();
+                        OntologyAnnotation tmpAnnotation = new OntologyAnnotation((null==tmpSession)?null:tmpSession.getId(),
+                                entity.getEntityId(), baseAnnotation.getKeyEntityId(), baseAnnotation.getKeyString(),
+                                baseAnnotation.getValueEntityId(),baseAnnotation.getValueString());
+                        ModelMgr.getModelMgr().createOntologyAnnotation(tmpAnnotation);
+                    }
+                }
+                catch (Exception e) {
+                    SessionMgr.getSessionMgr().handleException(e);
+                }
+            }
+        });
+        return pasteItem;
+    }
+
+    private class EntityDataPath {
 		private List<EntityData> path;
 		private String rootOwner;
 		private boolean isHidden = false;
