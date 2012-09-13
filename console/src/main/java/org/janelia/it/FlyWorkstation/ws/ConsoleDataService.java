@@ -73,6 +73,10 @@ public interface ConsoleDataService extends Remote {
     		@WebParam(name = "entityId") long entityId)
     		throws RemoteException;
 
+    public Entity getEntityAndChildren(
+            @WebParam(name = "entityId") long entityId)
+            throws RemoteException;
+
 	public Entity getEntityTree(
 			@WebParam(name = "entityId") long entityId) 
 			throws RemoteException;

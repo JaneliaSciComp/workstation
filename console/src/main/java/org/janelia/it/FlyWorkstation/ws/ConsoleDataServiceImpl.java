@@ -156,6 +156,10 @@ public class ConsoleDataServiceImpl {
         return PathTranslator.translatePathsToCurrentPlatform(ModelMgr.getModelMgr().getEntityById(""+entityId));
     }
 
+    public Entity getEntityAndChildren(long entityId) throws Exception {
+        return PathTranslator.translatePathsToCurrentPlatform(ModelMgr.getModelMgr().getEntityAndChildren(entityId));
+    }
+
 	public Entity getEntityTree(long entityId) throws Exception {
         return PathTranslator.translatePathsToCurrentPlatform(ModelMgr.getModelMgr().getEntityTree(entityId));
     }

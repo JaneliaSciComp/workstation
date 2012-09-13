@@ -46,6 +46,11 @@ public class EJBEntityFacade implements EntityFacade {
     }
 
     @Override
+    public Entity getEntityAndChildren(Long entityId) {
+        return EJBFactory.getRemoteEntityBean().getEntityAndChildren(entityId);
+    }
+
+    @Override
     public ArrayList<Entity> getEntitiesByName(String entityName) {
         return new ArrayList<Entity>(EJBFactory.getRemoteEntityBean().getEntitiesByName(entityName));
     }

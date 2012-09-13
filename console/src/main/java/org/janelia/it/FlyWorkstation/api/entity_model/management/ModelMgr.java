@@ -683,6 +683,10 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().getSystemCommonRootEntitiesByTypeName(entityTypeName);
     }
 
+    public Entity getEntityAndChildren(long entityId) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().getEntityAndChildren(entityId);
+    }
+
     public Entity getEntityTree(long entityId) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().getEntityTree(entityId);
     }

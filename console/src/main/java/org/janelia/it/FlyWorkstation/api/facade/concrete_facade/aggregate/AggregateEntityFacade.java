@@ -101,6 +101,26 @@ public class AggregateEntityFacade extends AggregateFacadeBase implements Entity
     }
 
     @Override
+    public Entity getEntityAndChildren(Long entityId) throws Exception {
+        Object[] aggregates = getAggregates();
+        List<Entity> returnList = new ArrayList<Entity>();
+        Entity tmpEntity;
+        for (Object aggregate : aggregates) {
+            tmpEntity = ((EntityFacade) aggregate).getEntityAndChildren(entityId);
+            if (null != tmpEntity) {
+                returnList.add(tmpEntity);
+            }
+        }
+        if (1 < returnList.size()) {
+            throw new DuplicateDataException();
+        }
+        if (1 == returnList.size()) {
+            return returnList.get(0);
+        }
+        return null;
+    }
+
+    @Override
     public List<Entity> getEntitiesByName(String entityName) {
         Object[] aggregates = getAggregates();
         List<Entity> returnList = new ArrayList<Entity>();
