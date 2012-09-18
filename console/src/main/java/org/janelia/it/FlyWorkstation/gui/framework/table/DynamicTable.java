@@ -360,6 +360,10 @@ public abstract class DynamicTable extends JPanel {
     protected void backgroundClicked() {
     }
     
+    public DynamicColumn addColumn(String label) {
+    	return addColumn(label, label, true, false, false, false);
+    }
+    
     /**
      * Add a column to the table.
      * @param name

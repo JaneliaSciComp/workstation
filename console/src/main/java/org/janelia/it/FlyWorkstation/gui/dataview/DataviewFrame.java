@@ -33,7 +33,7 @@ public class DataviewFrame extends JFrame {
     public DataviewFrame() {
 
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        setPreferredSize(new Dimension((int) (screenSize.width * realEstatePercent), (int) (screenSize.height * realEstatePercent)));
+        setPreferredSize(new Dimension((int) (screenSize.width * realEstatePercent), (int) (screenSize.height * realEstatePercent) - 50));
 
         JProgressBar progressBar = new JProgressBar();
         progressBar.setIndeterminate(true);

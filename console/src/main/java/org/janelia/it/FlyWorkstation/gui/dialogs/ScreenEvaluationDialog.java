@@ -12,6 +12,7 @@ import loci.plugins.config.SpringUtilities;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.access.Accessibility;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
@@ -34,7 +35,7 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class ScreenEvaluationDialog extends ModalDialog {
+public class ScreenEvaluationDialog extends ModalDialog implements Accessibility {
 
 	private static final String SCREEN_EVAL_ORGANIZATION_PROPERTY = "ScreenEvaluationDialog.OrganizationBehavior";
 	
@@ -200,14 +201,6 @@ public class ScreenEvaluationDialog extends ModalDialog {
 		};
 		
 		worker.execute();
-	}
-	
-	public static boolean isAccessible() {
-		String username = SessionMgr.getUsername();
-		if (!"jenetta".equals(username) && !"admin-jenetta".equals(username)) {
-			return false;
-		}
-		return true;
 	}
 	
 	private void addListeners() {
@@ -503,5 +496,13 @@ public class ScreenEvaluationDialog extends ModalDialog {
 	
 	public boolean isAutoMoveAfterNavigation() {
 		return autoMoveAfterNavigationRadioButton.isSelected();
+	}
+	
+	public boolean isAccessible() {
+		String username = SessionMgr.getUsername();
+		if (!"jenetta".equals(username) && !"admin-jenetta".equals(username)) {
+			return false;
+		}
+		return true;
 	}
 }

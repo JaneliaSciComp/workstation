@@ -518,7 +518,7 @@ public class EntityContextMenu extends JPopupMenu {
     
 	protected JMenu getAddToSplitPickingSessionItem() {
 
-		if (!ScreenEvaluationDialog.isAccessible()) {
+		if (!SessionMgr.getBrowser().getScreenEvaluationDialog().isAccessible()) {
 			return null;
 		}
 		

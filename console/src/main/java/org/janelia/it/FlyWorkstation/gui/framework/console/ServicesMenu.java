@@ -1,13 +1,17 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import org.janelia.it.FlyWorkstation.gui.dialogs.DataGroupDialog;
-import org.janelia.it.FlyWorkstation.gui.dialogs.ScreenEvaluationDialog;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
+import javax.swing.JDialog;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+
+import org.janelia.it.FlyWorkstation.gui.dialogs.DataGroupDialog;
+import org.janelia.it.FlyWorkstation.gui.dialogs.DataSetListDialog;
+import org.janelia.it.FlyWorkstation.gui.dialogs.ScreenEvaluationDialog;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 
 /**
  * Created by IntelliJ IDEA.
@@ -39,17 +43,26 @@ public class ServicesMenu extends JMenu {
         });
         add(neuronSeparationMenuItem);
 
-        ScreenEvaluationDialog screenEvaluationDialog = browser.getScreenEvaluationDialog();
-
+        final ScreenEvaluationDialog screenEvaluationDialog = browser.getScreenEvaluationDialog();
         if (screenEvaluationDialog.isAccessible()) {
-        	JMenuItem screenEvaluationMenuItem = new JMenuItem("Screen Evaluation...");
-            screenEvaluationMenuItem.addActionListener(new ActionListener() {
+        	JMenuItem menuItem = new JMenuItem("Screen Evaluation...");
+            menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
-                    SessionMgr.getSessionMgr().getActiveBrowser().getScreenEvaluationDialog().showDialog();
+                	screenEvaluationDialog.showDialog();
                 }
             });
-            
-            add(screenEvaluationMenuItem);
+            add(menuItem);
+        }
+
+        final DataSetListDialog dataSetListDialog = browser.getDataSetListDialog();
+        if (dataSetListDialog.isAccessible()) {
+        	JMenuItem menuItem = new JMenuItem("Data Sets...");
+            menuItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
+                	dataSetListDialog.showDialog();
+                }
+            });
+            add(menuItem);
         }
     }
 }
