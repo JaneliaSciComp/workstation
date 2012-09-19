@@ -1,13 +1,14 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
 import java.awt.BorderLayout;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
 
 import javax.swing.*;
 
-import loci.plugins.config.SpringUtilities;
+import net.miginfocom.swing.MigLayout;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.access.Accessibility;
@@ -34,10 +35,6 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
     private JLabel magnificationLabel;
     private JLabel opticalResLabel;
     private JLabel pipelineLabel;
-    private JLabel mergeAlgorithmsLabel;
-    private JLabel stitchAlgorithmsLabel;
-    private JLabel alignmentAlgorithmsLabel;
-    private JLabel analysisAlgorithmsLabel;
     
     private JTextField nameInput;
     private JComboBox magnificationInput;
@@ -56,13 +53,9 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
     	this.parentDialog = parentDialog;
     	
         setTitle("Data Set Definition");
-
-    	add(Box.createHorizontalStrut(800), BorderLayout.NORTH);
     	
-        attrPanel = new JPanel(new SpringLayout());
-        attrPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10), 
-        		BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Data Set Definition")));
-
+        attrPanel = new JPanel(new MigLayout("wrap 2, ins 20"));
+        
         add(attrPanel, BorderLayout.CENTER);
 
         JButton cancelButton = new JButton("Cancel");
@@ -97,16 +90,27 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
     	showForDataSet(null);
     }
     
+    private Font separatorFont = new Font("Sans Serif", Font.BOLD, 12);
+    
+    public void addSeparator(JPanel panel, String text) {
+    	JLabel label = new JLabel(text);
+    	label.setFont(separatorFont);
+    	panel.add(label, "split 2, span, gaptop 10lp");
+    	panel.add(new JSeparator(SwingConstants.HORIZONTAL), "growx, wrap, gaptop 10lp");
+    }
+    
     public void showForDataSet(final Entity dataSetEntity) {
 
     	this.dataSetEntity = dataSetEntity;
 
     	attrPanel.removeAll();
     	
+    	addSeparator(attrPanel, "Data Set Attributes");
+    	
         nameLabel = new JLabel("Data Set Name: ");
-        nameInput = new JTextField();
+        nameInput = new JTextField(40);
         nameLabel.setLabelFor(nameInput);
-        attrPanel.add(nameLabel);
+        attrPanel.add(nameLabel, "gap para");
         attrPanel.add(nameInput);
         
         magnificationLabel = new JLabel("Magnification: ");
@@ -115,7 +119,7 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
         magnificationInput.addItem(DataSetAttributes.MAGNIFICATION_40X);
         magnificationInput.addItem(DataSetAttributes.MAGNIFICATION_63X);
         magnificationLabel.setLabelFor(magnificationInput);
-        attrPanel.add(magnificationLabel);
+        attrPanel.add(magnificationLabel, "gap para");
         attrPanel.add(magnificationInput);
 
         opticalResLabel = new JLabel("Optical Resolution: ");
@@ -127,7 +131,7 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
         opticalResInput.addItem(DataSetAttributes.OPTICAL_RESOLUTION_3x3x38);
         opticalResInput.addItem(DataSetAttributes.OPTICAL_RESOLUTION_19x19x38);
         opticalResLabel.setLabelFor(opticalResInput);
-        attrPanel.add(opticalResLabel);
+        attrPanel.add(opticalResLabel, "gap para");
         attrPanel.add(opticalResInput);
 
         pipelineLabel = new JLabel("Pipeline Template: ");
@@ -136,32 +140,21 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
         pipelineInput.addItem(DataSetAttributes.PIPELINE_FLYLIGHT);
         pipelineInput.addItem(DataSetAttributes.PIPELINE_LEET);
         pipelineLabel.setLabelFor(pipelineInput);
-        attrPanel.add(pipelineLabel);
+        attrPanel.add(pipelineLabel, "gap para");
         attrPanel.add(pipelineInput);
-
-        mergeAlgorithmsLabel = new JLabel("Merge Algorithms: ");
-        JPanel mergePanel = createCheckboxes("Merge Algorithm", MergeAlgorithm.values(), mergeCheckboxes);
-        mergeAlgorithmsLabel.setLabelFor(mergePanel);
-        attrPanel.add(mergeAlgorithmsLabel);
-        attrPanel.add(mergePanel);
         
-        stitchAlgorithmsLabel = new JLabel("Stitching Algorithms: ");
-        JPanel stitchPanel = createCheckboxes("Stitch Algorithm", StitchAlgorithm.values(), stitchCheckboxes);
-        stitchAlgorithmsLabel.setLabelFor(stitchPanel);
-        attrPanel.add(stitchAlgorithmsLabel);
-        attrPanel.add(stitchPanel);
+        addSeparator(attrPanel, "Merge Algorithms");
+        addCheckboxes("Merge Algorithm", MergeAlgorithm.values(), mergeCheckboxes, attrPanel);
+        
+        addSeparator(attrPanel, "Stitching Algorithms");
+        addCheckboxes("Stitch Algorithm", StitchAlgorithm.values(), stitchCheckboxes, attrPanel);
 
-        alignmentAlgorithmsLabel = new JLabel("Alignment Algorithms: ");
-        JPanel alignmentPanel = createCheckboxes("Alignment Algorithm", AlignmentAlgorithm.values(), alignmentCheckboxes);
-        alignmentAlgorithmsLabel.setLabelFor(alignmentPanel);
-        attrPanel.add(alignmentAlgorithmsLabel);
-        attrPanel.add(alignmentPanel);
+        addSeparator(attrPanel, "Alignment Algorithms");
+        addCheckboxes("Alignment Algorithm", AlignmentAlgorithm.values(), alignmentCheckboxes, attrPanel);
 
-        analysisAlgorithmsLabel = new JLabel("Analysis Algorithms: ");
-        JPanel analysisPanel = createCheckboxes("Analysis Algorithm", AnalysisAlgorithm.values(), analysisCheckboxes);
-        mergeAlgorithmsLabel.setLabelFor(analysisPanel);
-        attrPanel.add(analysisAlgorithmsLabel);
-        attrPanel.add(analysisPanel);
+        addSeparator(attrPanel, "Analysis Algorithms");
+        addCheckboxes("Analysis Algorithm", AnalysisAlgorithm.values(), analysisCheckboxes, attrPanel);
+        
         
         if (dataSetEntity!=null) {
         	nameInput.setText(dataSetEntity.getName());
@@ -182,8 +175,6 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
             applyCheckboxValues(mergeCheckboxes, MergeAlgorithm.FLYLIGHT.toString());
             applyCheckboxValues(stitchCheckboxes, StitchAlgorithm.FLYLIGHT.toString());
         }
-        
-        SpringUtilities.makeCompactGrid(attrPanel, attrPanel.getComponentCount()/2, 2, 6, 6, 6, 6);
         
         packAndShow();
     }
@@ -229,20 +220,13 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
 		worker.execute();
     }
 
-    private JPanel createCheckboxes(final String title, final Object[] choices, final HashMap<String,JCheckBox> checkboxes) {
-
-        
-    	JPanel panel = new JPanel();
-    	panel.setLayout(new BoxLayout(panel, BoxLayout.PAGE_AXIS));
-    	
+    private void addCheckboxes(final String title, final Object[] choices, final HashMap<String,JCheckBox> checkboxes, final JPanel panel) {
     	for(Object choice : choices) {
     		NamedEnum namedEnum = ((NamedEnum)choice);
     		JCheckBox checkBox = new JCheckBox(namedEnum.getName());
     		checkboxes.put(namedEnum.toString(), checkBox);
-        	panel.add(checkBox);
+        	panel.add(checkBox, "gap para, span 2");
     	}
-    	
-    	return panel;
     }
     
     private void applyCheckboxValues(final HashMap<String,JCheckBox> checkboxes, String selected) {

@@ -32,7 +32,7 @@ import org.janelia.it.jacs.model.entity.cv.*;
 public class DataSetListDialog extends ModalDialog implements Accessibility {
 
     private JLabel loadingLabel;
-    private JPanel attributePanel;
+    private JPanel mainPanel;
     private DynamicTable dynamicTable;
     private DataSetDialog dataSetDialog;
     
@@ -48,16 +48,10 @@ public class DataSetListDialog extends ModalDialog implements Accessibility {
         loadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
         loadingLabel.setVerticalAlignment(SwingConstants.CENTER);
         
-        attributePanel = new JPanel(new BorderLayout());
-        attributePanel.setBorder(
-        		BorderFactory.createCompoundBorder(
-        				BorderFactory.createCompoundBorder(
-    							BorderFactory.createEmptyBorder(10, 10, 0, 10), 
-    							BorderFactory.createTitledBorder(BorderFactory.createEmptyBorder(), "My Data Sets")),
-        		BorderFactory.createEmptyBorder(0, 0, 10, 0)));
-    	attributePanel.add(loadingLabel, BorderLayout.CENTER);
+        mainPanel = new JPanel(new BorderLayout());
+    	mainPanel.add(loadingLabel, BorderLayout.CENTER);
     	
-    	add(attributePanel, BorderLayout.CENTER);
+    	add(mainPanel, BorderLayout.CENTER);
         
         dynamicTable = new DynamicTable(true, false) {
             @Override
@@ -195,8 +189,8 @@ public class DataSetListDialog extends ModalDialog implements Accessibility {
     
     public void reloadData() {
 
-    	attributePanel.removeAll();
-    	attributePanel.add(loadingLabel, BorderLayout.CENTER);
+    	mainPanel.removeAll();
+    	mainPanel.add(loadingLabel, BorderLayout.CENTER);
     	
         SimpleWorker worker = new SimpleWorker() {
 
@@ -221,17 +215,17 @@ public class DataSetListDialog extends ModalDialog implements Accessibility {
 		        }
 		        
 		        dynamicTable.updateTableModel();
-		        attributePanel.removeAll();
-		        attributePanel.add(dynamicTable, BorderLayout.CENTER);
-		        attributePanel.revalidate();
+		        mainPanel.removeAll();
+		        mainPanel.add(dynamicTable, BorderLayout.CENTER);
+		        mainPanel.revalidate();
 			}
 			
 			@Override
 			protected void hadError(Throwable error) {
 				SessionMgr.getSessionMgr().handleException(error);
-				attributePanel.removeAll();
-		        attributePanel.add(dynamicTable, BorderLayout.CENTER);
-		        attributePanel.revalidate();
+				mainPanel.removeAll();
+		        mainPanel.add(dynamicTable, BorderLayout.CENTER);
+		        mainPanel.revalidate();
 			}
 		};
 		worker.execute();

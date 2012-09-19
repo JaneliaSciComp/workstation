@@ -45,5 +45,6 @@
 	<classpathentry kind="lib" path="lib/syntheticaSimple2D.jar"/>
 	<classpathentry kind="lib" path="lib/syntheticaSkyMetallic.jar"/>
 	<classpathentry kind="lib" path="lib/syntheticaWhiteVision.jar"/>
+	<classpathentry kind="lib" path="lib/miglayout-4.0-swing.jar"/>
 	<classpathentry kind="output" path="build/eclipse"/>
 </classpath>

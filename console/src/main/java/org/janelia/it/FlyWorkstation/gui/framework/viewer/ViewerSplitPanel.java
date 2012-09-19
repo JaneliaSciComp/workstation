@@ -77,7 +77,9 @@ public class ViewerSplitPanel extends JPanel implements ViewerContainer {
 	@Override
 	public void setTitle(Viewer viewer, String title) {
 		ViewerPane viewerPane = getViewerPane(viewer);
-		viewerPane.setTitle(title);
+		if (viewerPane!=null) {
+			viewerPane.setTitle(title);
+		}
 	}
 	
 	public Viewer getActiveViewer() {
