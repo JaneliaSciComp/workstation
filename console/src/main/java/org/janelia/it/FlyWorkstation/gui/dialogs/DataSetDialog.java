@@ -7,6 +7,8 @@ import java.awt.event.ActionListener;
 import java.util.HashMap;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -17,7 +19,9 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.entity.cv.*;
+import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.entity.cv.NamedEnum;
+import org.janelia.it.jacs.model.entity.cv.PipelineProcess;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 
 /**
@@ -30,21 +34,12 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
 	private DataSetListDialog parentDialog;
 	
     private JPanel attrPanel;
-    
     private JLabel nameLabel;
-    private JLabel magnificationLabel;
-    private JLabel opticalResLabel;
-    private JLabel pipelineLabel;
-    
     private JTextField nameInput;
-    private JComboBox magnificationInput;
-    private JComboBox opticalResInput;
-    private JComboBox pipelineInput;
-    
-    private HashMap<String,JCheckBox> mergeCheckboxes = new HashMap<String,JCheckBox>();
-    private HashMap<String,JCheckBox> stitchCheckboxes = new HashMap<String,JCheckBox>();
-    private HashMap<String,JCheckBox> alignmentCheckboxes = new HashMap<String,JCheckBox>();
-    private HashMap<String,JCheckBox> analysisCheckboxes = new HashMap<String,JCheckBox>();
+    private JLabel identifierLabel;
+    private JTextField identifierInput;
+    private JCheckBox sageSyncCheckbox;
+    private HashMap<String,JCheckBox> processCheckboxes = new HashMap<String,JCheckBox>();
     
     private Entity dataSetEntity;
    
@@ -99,6 +94,10 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
     	panel.add(new JSeparator(SwingConstants.HORIZONTAL), "growx, wrap, gaptop 10lp");
     }
     
+    private String getDataSetIdentifier() {
+    	return SessionMgr.getUsername()+"_"+nameInput.getText().toLowerCase().replaceAll("\\W", "_");
+    }
+    
     public void showForDataSet(final Entity dataSetEntity) {
 
     	this.dataSetEntity = dataSetEntity;
@@ -109,71 +108,46 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
     	
         nameLabel = new JLabel("Data Set Name: ");
         nameInput = new JTextField(40);
+        
+        nameInput.getDocument().addDocumentListener(new DocumentListener() {
+        	  public void changedUpdate(DocumentEvent e) {
+        		  identifierInput.setText(getDataSetIdentifier());
+        	  }
+        	  public void removeUpdate(DocumentEvent e) {
+        		  identifierInput.setText(getDataSetIdentifier());
+        	  }
+        	  public void insertUpdate(DocumentEvent e) {
+        		  identifierInput.setText(getDataSetIdentifier());
+        	  }
+        });
+        
         nameLabel.setLabelFor(nameInput);
         attrPanel.add(nameLabel, "gap para");
         attrPanel.add(nameInput);
-        
-        magnificationLabel = new JLabel("Magnification: ");
-        magnificationInput = new JComboBox();
-        magnificationInput.addItem(DataSetAttributes.MAGNIFICATION_20X);
-        magnificationInput.addItem(DataSetAttributes.MAGNIFICATION_40X);
-        magnificationInput.addItem(DataSetAttributes.MAGNIFICATION_63X);
-        magnificationLabel.setLabelFor(magnificationInput);
-        attrPanel.add(magnificationLabel, "gap para");
-        attrPanel.add(magnificationInput);
 
-        opticalResLabel = new JLabel("Optical Resolution: ");
-        opticalResInput = new JComboBox();
-        opticalResInput.setEditable(true);
-        opticalResInput.addItem(DataSetAttributes.OPTICAL_RESOLUTION_62x62x1);
-        opticalResInput.addItem(DataSetAttributes.OPTICAL_RESOLUTION_52x52x1);
-        opticalResInput.addItem(DataSetAttributes.OPTICAL_RESOLUTION_3x3x58);
-        opticalResInput.addItem(DataSetAttributes.OPTICAL_RESOLUTION_3x3x38);
-        opticalResInput.addItem(DataSetAttributes.OPTICAL_RESOLUTION_19x19x38);
-        opticalResLabel.setLabelFor(opticalResInput);
-        attrPanel.add(opticalResLabel, "gap para");
-        attrPanel.add(opticalResInput);
-
-        pipelineLabel = new JLabel("Pipeline Template: ");
-        pipelineInput = new JComboBox();
-        pipelineInput.setEditable(true);
-        pipelineInput.addItem(DataSetAttributes.PIPELINE_FLYLIGHT);
-        pipelineInput.addItem(DataSetAttributes.PIPELINE_LEET);
-        pipelineLabel.setLabelFor(pipelineInput);
-        attrPanel.add(pipelineLabel, "gap para");
-        attrPanel.add(pipelineInput);
+        identifierLabel = new JLabel("Data Set Identifier: ");
+        identifierInput = new JTextField(40);
+        identifierInput.setEditable(false);
+        identifierLabel.setLabelFor(identifierInput);
+        attrPanel.add(identifierLabel, "gap para");
+        attrPanel.add(identifierInput);
         
-        addSeparator(attrPanel, "Merge Algorithms");
-        addCheckboxes("Merge Algorithm", MergeAlgorithm.values(), mergeCheckboxes, attrPanel);
+        sageSyncCheckbox = new JCheckBox("Synchronize images from SAGE");
+        attrPanel.add(sageSyncCheckbox, "gap para, span 2");
         
-        addSeparator(attrPanel, "Stitching Algorithms");
-        addCheckboxes("Stitch Algorithm", StitchAlgorithm.values(), stitchCheckboxes, attrPanel);
-
-        addSeparator(attrPanel, "Alignment Algorithms");
-        addCheckboxes("Alignment Algorithm", AlignmentAlgorithm.values(), alignmentCheckboxes, attrPanel);
-
-        addSeparator(attrPanel, "Analysis Algorithms");
-        addCheckboxes("Analysis Algorithm", AnalysisAlgorithm.values(), analysisCheckboxes, attrPanel);
-        
+        addSeparator(attrPanel, "Pipelines");
+        addCheckboxes("Pipelines", PipelineProcess.values(), processCheckboxes, attrPanel);
         
         if (dataSetEntity!=null) {
         	nameInput.setText(dataSetEntity.getName());
-            magnificationInput.setSelectedItem(dataSetEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_MAGNIFICATION));
-            opticalResInput.setSelectedItem(dataSetEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION));
-            pipelineInput.setSelectedItem(dataSetEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_PIPELINE_PROCESS));
-            
-            applyCheckboxValues(mergeCheckboxes, dataSetEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_MERGE_ALGORITHMS));
-            applyCheckboxValues(stitchCheckboxes, dataSetEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_STITCH_ALGORITHMS));
-            applyCheckboxValues(alignmentCheckboxes, dataSetEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_ALIGNMENT_ALGORITHMS));
-            applyCheckboxValues(analysisCheckboxes, dataSetEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_ANALYSIS_ALGORITHMS));
+        	if (dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAGE_SYNC)!=null) {
+        		sageSyncCheckbox.setSelected(true);
+        	}
+            applyCheckboxValues(processCheckboxes, dataSetEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_PIPELINE_PROCESS));
         }
         else {
         	nameInput.setText("");
-            magnificationInput.setSelectedIndex(0);
-            opticalResInput.setSelectedIndex(0);
-            pipelineInput.setSelectedIndex(0);
-            applyCheckboxValues(mergeCheckboxes, MergeAlgorithm.FLYLIGHT.toString());
-            applyCheckboxValues(stitchCheckboxes, StitchAlgorithm.FLYLIGHT.toString());
+            applyCheckboxValues(processCheckboxes, PipelineProcess.FlyLightUnaligned.toString());
         }
         
         packAndShow();
@@ -190,17 +164,25 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
 				if (dataSetEntity==null) {
 					dataSetEntity = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_DATA_SET, nameInput.getText());
 				}
+				else {
+					dataSetEntity.setName(nameInput.getText());	
+				}
 				
-				dataSetEntity.setName(nameInput.getText());
-				dataSetEntity.setValueByAttributeName(EntityConstants.ATTRIBUTE_MAGNIFICATION, magnificationInput.getSelectedItem().toString());
-				dataSetEntity.setValueByAttributeName(EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION, opticalResInput.getSelectedItem().toString());
-				dataSetEntity.setValueByAttributeName(EntityConstants.ATTRIBUTE_PIPELINE_PROCESS, pipelineInput.getSelectedItem().toString());
-				dataSetEntity.setValueByAttributeName(EntityConstants.ATTRIBUTE_MERGE_ALGORITHMS, getCheckboxValues(mergeCheckboxes));
-				dataSetEntity.setValueByAttributeName(EntityConstants.ATTRIBUTE_STITCH_ALGORITHMS, getCheckboxValues(stitchCheckboxes));
-				dataSetEntity.setValueByAttributeName(EntityConstants.ATTRIBUTE_ALIGNMENT_ALGORITHMS, getCheckboxValues(alignmentCheckboxes));
-				dataSetEntity.setValueByAttributeName(EntityConstants.ATTRIBUTE_ANALYSIS_ALGORITHMS, getCheckboxValues(analysisCheckboxes));
+				dataSetEntity.setValueByAttributeName(EntityConstants.ATTRIBUTE_DATA_SET_IDENTIFIER, getDataSetIdentifier());
+				dataSetEntity.setValueByAttributeName(EntityConstants.ATTRIBUTE_PIPELINE_PROCESS, getCheckboxValues(processCheckboxes));
 				
-				ModelMgr.getModelMgr().saveOrUpdateEntity(dataSetEntity);
+				if (sageSyncCheckbox.isSelected()) {
+					dataSetEntity.setValueByAttributeName(EntityConstants.ATTRIBUTE_SAGE_SYNC, EntityConstants.ATTRIBUTE_SAGE_SYNC);	
+					ModelMgr.getModelMgr().saveOrUpdateEntity(dataSetEntity);
+				}
+				else {
+					ModelMgr.getModelMgr().saveOrUpdateEntity(dataSetEntity);
+					EntityData sageSyncEd = dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAGE_SYNC);
+					if (sageSyncEd!=null) {
+						ModelMgr.getModelMgr().removeEntityData(sageSyncEd);
+						dataSetEntity.getEntityData().remove(sageSyncEd);
+					}
+				}
 			}
 			
 			@Override

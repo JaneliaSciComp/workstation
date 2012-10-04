@@ -22,7 +22,8 @@ import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.entity.cv.*;
+import org.janelia.it.jacs.model.entity.cv.NamedEnum;
+import org.janelia.it.jacs.model.entity.cv.PipelineProcess;
 
 /**
  * A dialog for viewing all the data sets that a user has access to.
@@ -63,17 +64,8 @@ public class DataSetListDialog extends ModalDialog implements Accessibility {
                     }
                     else {
                     	String value = dataSetEntity.getValueByAttributeName(column.getName());
-                    	if (EntityConstants.ATTRIBUTE_MERGE_ALGORITHMS.equals(column.getName())) {
-                    		return decodeEnumList(MergeAlgorithm.class, value);
-                    	}
-                    	else if (EntityConstants.ATTRIBUTE_STITCH_ALGORITHMS.equals(column.getName())) {
-                    		return decodeEnumList(StitchAlgorithm.class, value);
-                    	}
-                    	else if (EntityConstants.ATTRIBUTE_ALIGNMENT_ALGORITHMS.equals(column.getName())) {
-                    		return decodeEnumList(AlignmentAlgorithm.class, value);
-                    	}
-                    	else if (EntityConstants.ATTRIBUTE_ANALYSIS_ALGORITHMS.equals(column.getName())) {
-                    		return decodeEnumList(AnalysisAlgorithm.class, value);
+                    	if (EntityConstants.ATTRIBUTE_PIPELINE_PROCESS.equals(column.getName())) {
+                    		return decodeEnumList(PipelineProcess.class, value);
                     	}
                     	else {
                     		return value;	
@@ -140,13 +132,7 @@ public class DataSetListDialog extends ModalDialog implements Accessibility {
         };
         
         dynamicTable.addColumn("Name");
-        dynamicTable.addColumn(EntityConstants.ATTRIBUTE_MAGNIFICATION);
-        dynamicTable.addColumn(EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION);
         dynamicTable.addColumn(EntityConstants.ATTRIBUTE_PIPELINE_PROCESS);
-        dynamicTable.addColumn(EntityConstants.ATTRIBUTE_MERGE_ALGORITHMS);
-        dynamicTable.addColumn(EntityConstants.ATTRIBUTE_STITCH_ALGORITHMS);
-        dynamicTable.addColumn(EntityConstants.ATTRIBUTE_ALIGNMENT_ALGORITHMS);
-        dynamicTable.addColumn(EntityConstants.ATTRIBUTE_ANALYSIS_ALGORITHMS);
 
         JButton addButton = new JButton("Add new");
         addButton.setToolTipText("Add a new data set definition");
@@ -181,7 +167,7 @@ public class DataSetListDialog extends ModalDialog implements Accessibility {
     	reloadData();
 
 		Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
-		setPreferredSize(new Dimension((int)(browser.getWidth()*0.5),(int)(browser.getHeight()*0.5)));
+		setPreferredSize(new Dimension((int)(browser.getWidth()*0.4),(int)(browser.getHeight()*0.4)));
 		
         // Show dialog and wait
         packAndShow();
