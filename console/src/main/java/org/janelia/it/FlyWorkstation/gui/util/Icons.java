@@ -177,7 +177,7 @@ public class Icons {
         else if (EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT.equals(type)) {
             return getIcon(large ? "folder_files_large.png" : "bricks.png");
         }
-        else if (EntityConstants.TYPE_LSM_STACK_PAIR.equals(type)) {
+        else if (EntityConstants.TYPE_IMAGE_TILE.equals(type)||EntityConstants.TYPE_LSM_STACK_PAIR.equals(type)) {
             return getIcon(large ? "folder_files_large.png" : "page_copy.png");
         }
         else if (EntityConstants.TYPE_TIF_2D.equals(type)) {
@@ -226,6 +226,9 @@ public class Icons {
         }
         else if (EntityConstants.TYPE_FILE.equals(type)) {
             return getIcon(large ? "file_large.png" : "page_white.png");
+        }
+        else if (EntityConstants.TYPE_PIPELINE_RUN.equals(type)) {
+            return getIcon(large ? "folder_files_large.png" : "folder_go.png");
         }
         
         return getIcon(large ? "error_large.png" : "bullet_error.png");
