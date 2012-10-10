@@ -1,5 +1,10 @@
 package org.janelia.it.FlyWorkstation.api.entity_model.management;
 
+import java.awt.Color;
+import java.util.*;
+
+import javax.swing.SwingUtilities;
+
 import org.apache.solr.client.solrj.SolrQuery;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.ActiveThreadModel;
@@ -33,11 +38,6 @@ import org.janelia.it.jacs.model.user_data.prefs.UserPreference;
 import org.janelia.it.jacs.shared.annotation.DataDescriptor;
 import org.janelia.it.jacs.shared.annotation.DataFilter;
 import org.janelia.it.jacs.shared.annotation.FilterResult;
-
-import javax.swing.*;
-import java.awt.*;
-import java.util.*;
-import java.util.List;
 
 public class ModelMgr {
 	
@@ -873,6 +873,10 @@ public class ModelMgr {
     public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception {
     	FacadeManager.getFacadeManager().getAnnotationFacade().addChildren(parentId, childrenIds, attributeName);
     	notifyEntityChildrenChanged(parentId);
+    }
+    
+    public Entity createDataSet(String dataSetName) throws Exception {
+    	return FacadeManager.getFacadeManager().getAnnotationFacade().createDataSet(dataSetName);
     }
     
     public List<MappedId> getProjectedResults(List<Long> entityIds, List<String> upMapping, List<String> downMapping) throws Exception {

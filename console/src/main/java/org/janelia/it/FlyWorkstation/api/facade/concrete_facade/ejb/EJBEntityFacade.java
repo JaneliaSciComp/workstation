@@ -170,5 +170,4 @@ public class EJBEntityFacade implements EntityFacade {
 	public List<MappedId> getProjectedResults(List<Long> entityIds, List<String> upMapping, List<String> downMapping) throws Exception {
 		return EJBFactory.getRemoteEntityBean().getProjectedResults(entityIds, upMapping, downMapping);
 	}
-	
 }

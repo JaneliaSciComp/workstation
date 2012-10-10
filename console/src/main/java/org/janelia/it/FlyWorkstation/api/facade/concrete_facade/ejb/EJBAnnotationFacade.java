@@ -10,7 +10,6 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.shared.annotation.DataDescriptor;
 import org.janelia.it.jacs.shared.annotation.DataFilter;
 import org.janelia.it.jacs.shared.annotation.FilterResult;
-import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
 
 /**
  * Created by IntelliJ IDEA.
@@ -101,4 +100,8 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
         return EJBFactory.getRemoteAnnotationBean().patternSearchGetFilteredResults(type, filterMap);
     }
 
+    @Override
+    public Entity createDataSet(String dataSetName) throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().createDataSet(SessionMgr.getUsername(), dataSetName);
+    }
 }

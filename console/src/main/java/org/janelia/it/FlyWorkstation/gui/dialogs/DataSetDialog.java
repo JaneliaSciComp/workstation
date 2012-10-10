@@ -22,6 +22,7 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.cv.NamedEnum;
 import org.janelia.it.jacs.model.entity.cv.PipelineProcess;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 
 /**
@@ -94,8 +95,10 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
     	panel.add(new JSeparator(SwingConstants.HORIZONTAL), "growx, wrap, gaptop 10lp");
     }
     
-    private String getDataSetIdentifier() {
-    	return SessionMgr.getUsername()+"_"+nameInput.getText().toLowerCase().replaceAll("\\W", "_");
+    private void updateDataSetIdentifier() {
+    	if (dataSetEntity==null) {
+    		identifierInput.setText(EntityUtils.createDataSetIdentifierFromName(SessionMgr.getUsername(), nameInput.getText()));
+    	} 
     }
     
     public void showForDataSet(final Entity dataSetEntity) {
@@ -111,13 +114,13 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
         
         nameInput.getDocument().addDocumentListener(new DocumentListener() {
         	  public void changedUpdate(DocumentEvent e) {
-        		  identifierInput.setText(getDataSetIdentifier());
+        		  updateDataSetIdentifier();
         	  }
         	  public void removeUpdate(DocumentEvent e) {
-        		  identifierInput.setText(getDataSetIdentifier());
+        		  updateDataSetIdentifier();
         	  }
         	  public void insertUpdate(DocumentEvent e) {
-        		  identifierInput.setText(getDataSetIdentifier());
+        		  updateDataSetIdentifier();
         	  }
         });
         
@@ -140,6 +143,10 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
         
         if (dataSetEntity!=null) {
         	nameInput.setText(dataSetEntity.getName());
+        	String dataSetIdentifier = dataSetEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_DATA_SET_IDENTIFIER);
+			if (dataSetIdentifier!=null) {
+				identifierInput.setText(dataSetIdentifier);
+	    	}		
         	if (dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAGE_SYNC)!=null) {
         		sageSyncCheckbox.setSelected(true);
         	}
@@ -161,14 +168,14 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
 
 			@Override
 			protected void doStuff() throws Exception {
+				
 				if (dataSetEntity==null) {
-					dataSetEntity = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_DATA_SET, nameInput.getText());
+					dataSetEntity = ModelMgr.getModelMgr().createDataSet(nameInput.getText());
 				}
 				else {
 					dataSetEntity.setName(nameInput.getText());	
 				}
 				
-				dataSetEntity.setValueByAttributeName(EntityConstants.ATTRIBUTE_DATA_SET_IDENTIFIER, getDataSetIdentifier());
 				dataSetEntity.setValueByAttributeName(EntityConstants.ATTRIBUTE_PIPELINE_PROCESS, getCheckboxValues(processCheckboxes));
 				
 				if (sageSyncCheckbox.isSelected()) {

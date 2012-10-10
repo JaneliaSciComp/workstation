@@ -4,12 +4,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.shared.annotation.DataDescriptor;
 import org.janelia.it.jacs.shared.annotation.DataFilter;
 import org.janelia.it.jacs.shared.annotation.FilterResult;
-import org.janelia.it.jacs.shared.annotation.PatternAnnotationDataManager;
 
 /**
  * Created by IntelliJ IDEA.
@@ -48,5 +46,8 @@ public interface AnnotationFacade extends EntityFacade {
     public List<String> patternSearchGetCompartmentList(String type) throws Exception;
 
     public FilterResult patternSearchGetFilteredResults(String type, Map<String, Set<DataFilter>> filterMap) throws Exception;
-
+    
+	public Entity createDataSet(String dataSetName) throws Exception;
+	
+	
 }
