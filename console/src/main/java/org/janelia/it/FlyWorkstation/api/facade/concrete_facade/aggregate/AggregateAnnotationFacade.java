@@ -165,5 +165,10 @@ public class AggregateAnnotationFacade extends AggregateEntityFacade implements 
 	public Entity createDataSet(String dataSetName) throws Exception {
         throw new UnsupportedOperationException();
 	}
+    
+    @Override
+    public List<Entity> getDataSets() throws Exception {
+        throw new UnsupportedOperationException();
+	}
 
 }

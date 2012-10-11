@@ -591,6 +591,10 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().getEntitiesByTypeName(entityTypeName);
     }
 
+    public List<Entity> getDataSets() throws Exception {
+    	return FacadeManager.getFacadeManager().getAnnotationFacade().getDataSets();
+    }
+    
     public boolean deleteEntityById(Long entityId) throws Exception {
         boolean success = FacadeManager.getFacadeManager().getEntityFacade().deleteEntityById(entityId);
         notifyEntityRemoved(entityId);

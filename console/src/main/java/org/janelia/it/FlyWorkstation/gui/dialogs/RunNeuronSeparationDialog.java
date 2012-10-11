@@ -1,24 +1,30 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+
+import javax.swing.*;
+
 import loci.plugins.config.SpringUtilities;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.fileDiscovery.MCFODataPipelineTask;
 import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
 import org.janelia.it.jacs.model.user_data.Node;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.HashSet;
 
 /**
  * A dialog for starting a continuous neuron separation pipeline task which runs every N minutes and discovers new files
@@ -40,6 +46,7 @@ public class RunNeuronSeparationDialog extends ModalDialog {
 	private static final String DEFAULT_RERUN_INTERVAL_VALUE = "1";
 	private static final int DEFAULT_STATUS_CHECK_INTERVAL_SECS = 30;
 	
+	private static final String TOOLTIP_DATA_SET        = "Name of the data set to add discovered samples to";
 	private static final String TOOLTIP_INPUT_DIR       = "Root directory of the tree that should be loaded into the database";
 	private static final String TOOLTIP_TOP_LEVEL_FOLDER= "Name of the folder which should be loaded with the data";
 	private static final String TOOLTIP_RERUN_INTERVAL  = "Once a run is complete, how soon should we re-run it?";
@@ -50,6 +57,7 @@ public class RunNeuronSeparationDialog extends ModalDialog {
     private final JTextField inputDirectoryField;
     private final JTextField topLevelFolderField;
     private final JTextField rerunIntervalField;
+    private final JComboBox dataSetCombo;
     private final ButtonGroup scaleGroup;
     private final JRadioButton dayRadioButton;
     private final JRadioButton minuteRadioButton;
@@ -82,6 +90,15 @@ public class RunNeuronSeparationDialog extends ModalDialog {
         attrPanel.add(inputDirectoryLabel);
         attrPanel.add(inputDirectoryField);
 
+
+        JLabel dataSetLabel = new JLabel("Data Set");
+        dataSetLabel.setToolTipText(TOOLTIP_DATA_SET);
+        dataSetCombo = new JComboBox();
+        dataSetCombo.setToolTipText(TOOLTIP_DATA_SET);
+        dataSetLabel.setLabelFor(dataSetCombo);
+        attrPanel.add(dataSetLabel);
+        attrPanel.add(dataSetCombo);
+        
         JLabel rerunIntervalLabel = new JLabel("Re-run Interval");
         rerunIntervalLabel.setToolTipText(TOOLTIP_RERUN_INTERVAL);
         rerunIntervalField = new JTextField(5);
@@ -178,6 +195,9 @@ public class RunNeuronSeparationDialog extends ModalDialog {
     	final String topLevelFolderName = topLevelFolderField.getText();
     	final boolean runContinously = runContinuouslyCheckBox.isSelected();
 
+    	Entity dataSet = (Entity)dataSetCombo.getSelectedItem();
+    	final String dataSetIdentifier = dataSet.getValueByAttributeName(EntityConstants.ATTRIBUTE_DATA_SET_IDENTIFIER);
+    	
     	int rerunMins = 0;
     	try {
     		rerunMins = Integer.parseInt(rerunIntervalField.getText());
@@ -216,7 +236,7 @@ public class RunNeuronSeparationDialog extends ModalDialog {
 
 			@Override
 			protected void doStuff() throws Exception {
-				startSeparation(inputDirPath, null, topLevelFolderName, loopTimerInMinutes, refresh, runContinously);
+				startSeparation(inputDirPath, null, topLevelFolderName, dataSetIdentifier, loopTimerInMinutes, refresh, runContinously);
 			}
 			
 			@Override
@@ -241,6 +261,27 @@ public class RunNeuronSeparationDialog extends ModalDialog {
     }
     
     public void showDialog() {
+    	
+    	SimpleWorker worker = new SimpleWorker() {
+    		List<Entity> dataSets;
+			@Override
+			protected void doStuff() throws Exception {
+				dataSets = ModelMgr.getModelMgr().getDataSets();
+			}
+			@Override
+			protected void hadSuccess() {
+				dataSetCombo.removeAllItems();
+				for(Entity dataSetEntity : dataSets) {
+					dataSetCombo.addItem(dataSetEntity);
+				}
+			}
+			@Override
+			protected void hadError(Throwable error) {
+				SessionMgr.getSessionMgr().handleException(error);
+			}
+		};
+		worker.execute();
+    	
         packAndShow();
     }
 
@@ -250,7 +291,7 @@ public class RunNeuronSeparationDialog extends ModalDialog {
      * @param loopTimerInMinutes how long to wait before re-running
      * @param refresh refresh entities which were already created?
      */
-    private void startSeparation(String path, String linkingDirName, String topLevelFolderName,
+    private void startSeparation(String path, String linkingDirName, String topLevelFolderName, String dataSetIdentifier, 
     		int loopTimerInMinutes, boolean refresh, boolean runContinously) {
 
     	try {
@@ -262,6 +303,8 @@ public class RunNeuronSeparationDialog extends ModalDialog {
             process = "NMSDataPipeline";
             task = new MCFODataPipelineTask(new HashSet<Node>(), owner, new ArrayList<Event>(), 
             		new HashSet<TaskParameter>(), inputDirList, topLevelFolderName, false, false, refresh, null);
+            task.setParameter("run mode", "INCOMPLETE");
+            task.setParameter("data set identifier", dataSetIdentifier);
             task.setJobName("Neuron Merge Separation Task");
             task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
 

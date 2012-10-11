@@ -104,4 +104,10 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
     public Entity createDataSet(String dataSetName) throws Exception {
         return EJBFactory.getRemoteAnnotationBean().createDataSet(SessionMgr.getUsername(), dataSetName);
     }
+
+    @Override
+    public List<Entity> getDataSets() throws Exception {
+    	return EJBFactory.getRemoteAnnotationBean().getUserDataSets(SessionMgr.getUsername());
+	}
+
 }

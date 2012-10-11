@@ -184,10 +184,8 @@ public class DataSetListDialog extends ModalDialog implements Accessibility {
         	
 			@Override
 			protected void doStuff() throws Exception {
-				for(Entity dataSetEntity : ModelMgr.getModelMgr().getEntitiesByTypeName(EntityConstants.TYPE_DATA_SET)) {
-					if (ModelMgrUtils.isOwner(dataSetEntity)) {
-						dataSetEntities.add(dataSetEntity);
-					}
+				for(Entity dataSetEntity : ModelMgr.getModelMgr().getDataSets()) {
+					dataSetEntities.add(dataSetEntity);
 				}
 			}
 			
