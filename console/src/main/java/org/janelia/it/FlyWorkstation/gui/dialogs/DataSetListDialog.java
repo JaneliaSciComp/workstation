@@ -18,7 +18,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicTable;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
