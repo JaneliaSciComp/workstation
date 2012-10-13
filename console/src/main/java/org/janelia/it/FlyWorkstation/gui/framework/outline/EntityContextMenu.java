@@ -1029,9 +1029,6 @@ public class EntityContextMenu extends JPopupMenu {
 		                        task.setJobName("Sync From Archive Task");
 		                        task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
 		                        ModelMgr.getModelMgr().submitJob("SyncFromArchive", task.getObjectId());
-		                        
-		                        final TaskDetailsDialog dialog = new TaskDetailsDialog(true);
-		                        dialog.showForTask(task);
                         	}
                         }
                     }
