@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -107,7 +108,7 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
 
     @Override
     public List<Entity> getDataSets() throws Exception {
-    	return EJBFactory.getRemoteAnnotationBean().getUserDataSets(SessionMgr.getUsername());
+    	return EJBFactory.getRemoteAnnotationBean().getUserDataSets(Arrays.asList(SessionMgr.getUsername()));
 	}
 
 }
