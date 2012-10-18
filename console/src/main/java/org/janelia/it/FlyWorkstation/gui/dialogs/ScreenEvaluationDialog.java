@@ -25,6 +25,8 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.janelia.it.jacs.shared.screen.ScreenEvalConstants;
+import org.janelia.it.jacs.shared.screen.ScreenEvalUtils;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
@@ -38,14 +40,6 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
 public class ScreenEvaluationDialog extends ModalDialog implements Accessibility {
 
 	private static final String SCREEN_EVAL_ORGANIZATION_PROPERTY = "ScreenEvaluationDialog.OrganizationBehavior";
-	
-	private static final String SCORE_ONTOLOGY_NAME = "Expression Pattern Evaluation";
-	private static final String TOP_LEVEL_FOLDER_NAME = "FlyLight Pattern Evaluation";
-	
-	private static final String MAA_INTENSITY_NAME = "MAA Intensity Score";
-	private static final String MAA_DISTRIBUTION_NAME = "MAA Distribution Score";
-	private static final String CA_INTENSITY_NAME = "CA Intensity Score";
-	private static final String CA_DISTRIBUTION_NAME = "CA Distribution Score";
 	
 	private JRadioButton askAfterNavigationRadioButton;
 	private JRadioButton autoMoveAfterAnnotationRadioButton;
@@ -174,7 +168,7 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 			protected void doStuff() throws Exception {
 				
 				Entity topLevelFolder = null;
-				for(Entity entity : ModelMgr.getModelMgr().getEntitiesByName(TOP_LEVEL_FOLDER_NAME)) {
+				for(Entity entity : ModelMgr.getModelMgr().getEntitiesByName(ScreenEvalConstants.TOP_LEVEL_FOLDER_NAME)) {
 					if (ModelMgrUtils.isOwner(entity)) {
 						topLevelFolder = entity;
 					}
@@ -227,7 +221,7 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 			@Override
 			public void annotationsChanged(final long entityId) {
 				
-				if (!ModelMgr.getModelMgr().getCurrentOntology().getName().equals(SCORE_ONTOLOGY_NAME)) {
+				if (!ModelMgr.getModelMgr().getCurrentOntology().getName().equals(ScreenEvalConstants.SCORE_ONTOLOGY_NAME)) {
 					return;
 				}
 				
@@ -321,16 +315,16 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 		String intensity = null;
 		String distribution = null;
 		for(OntologyAnnotation annotation : annotations.getAnnotations()) {
-			if (intensity==null && MAA_INTENSITY_NAME.equals(annotation.getKeyString())) {
+			if (intensity==null && ScreenEvalConstants.MAA_INTENSITY_NAME.equals(annotation.getKeyString())) {
 				intensity = annotation.getValueString();
 			}
-			else if (CA_INTENSITY_NAME.equals(annotation.getKeyString())) {
+			else if (ScreenEvalConstants.CA_INTENSITY_NAME.equals(annotation.getKeyString())) {
 				intensity = annotation.getValueString();
 			}
-			if (distribution==null && MAA_DISTRIBUTION_NAME.equals(annotation.getKeyString())) {
+			if (distribution==null && ScreenEvalConstants.MAA_DISTRIBUTION_NAME.equals(annotation.getKeyString())) {
 				distribution = annotation.getValueString();
 			}
-			else if (CA_DISTRIBUTION_NAME.equals(annotation.getKeyString())) {
+			else if (ScreenEvalConstants.CA_DISTRIBUTION_NAME.equals(annotation.getKeyString())) {
 				distribution = annotation.getValueString();
 			}
 		}
@@ -338,8 +332,8 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 		if (intensity!=null && distribution!=null) {
 
 			// The latest evaluation
-			int i = getValueFromAnnotation(intensity);
-			int d = getValueFromAnnotation(distribution);
+			int i = ScreenEvalUtils.getValueFromAnnotation(intensity);
+			int d = ScreenEvalUtils.getValueFromAnnotation(distribution);
 			
 			// The entity 
 			Entity entity = ModelMgr.getModelMgr().getEntityById(entityId+"");
@@ -359,17 +353,17 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 				}
 				currEds.add(parentEd);
 				if (ci==null || ci!=i) {
-					ci = getIntensityValueFromKey(key);
+					ci = ScreenEvalUtils.getIntensityValueFromKey(key);
 				}
 				if (cd==null || cd!=d) {
-					cd = getDistributionValueFromKey(key);
+					cd = ScreenEvalUtils.getDistributionValueFromKey(key);
 				}
 			}
 			
 			if (ci==null || cd==null) return;
 			
-			String oldKey = getKey(compartment, ci, cd);
-			String newKey = getKey(compartment, i, d);
+			String oldKey = ScreenEvalUtils.getKey(compartment, ci, cd);
+			String newKey = ScreenEvalUtils.getKey(compartment, i, d);
 			System.out.println("  Old: "+oldKey);
 			System.out.println("  New: "+newKey);
 
@@ -395,15 +389,15 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 			}
 			
 			for(Entity intChild : compartmentEntity.getChildren()) {
-				int i = getValueFromFolderName(intChild);
+				int i = ScreenEvalUtils.getValueFromFolderName(intChild);
 				
 				if (!EntityUtils.areLoaded(intChild.getEntityData())) {
 					ModelMgrUtils.loadLazyEntity(intChild, false);
 				}
 				
 				for(Entity distChild : intChild.getChildren()) {
-					int d = getValueFromFolderName(distChild);
-					String key = getKey(compartment, i, d);
+					int d = ScreenEvalUtils.getValueFromFolderName(distChild);
+					String key = ScreenEvalUtils.getKey(compartment, i, d);
 					distCache.put(distChild.getId(), key);
 					System.out.println("    "+key+" = "+distChild.getId());
 					folderCache.put(key, distChild);
@@ -429,49 +423,6 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 				System.out.println("deleted from folder "+currEd.getParentEntity().getName()+", ed.id="+currEd.getId());
 				modelMgr.removeEntityData(currEd);
 			}
-		}
-	}
-	
-	private int getValueFromFolderName(Entity entity) {
-		return getValueFromFolderName(entity.getName());
-	}
-	
-	private int getValueFromFolderName(String folderName) {
-		return Integer.parseInt(""+folderName.charAt(folderName.length()-1));
-	}
-	
-	private int getValueFromAnnotation(String annotationValue) {
-		return Integer.parseInt(""+annotationValue.charAt(1));
-	}
-	
-	public String getKey(Entity compartmentEntity, Entity intEntity, Entity distEntity) {
-		int i = getValueFromFolderName(intEntity);
-		int d = getValueFromFolderName(distEntity);
-		return getKey(compartmentEntity.getName(),i,d);
-	}
-	
-	private String getKey(String compartment, int i, int d) {
-		return compartment+"/"+i+"/"+d;
-	}
-
-
-	private Integer getIntensityValueFromKey(String key) {
-		try {
-			String[] parts = key.split("/");
-			return Integer.parseInt(parts[1]);	
-		}
-		catch (Exception e) {
-			return null;
-		}
-	}
-
-	private Integer getDistributionValueFromKey(String key) {
-		try {
-			String[] parts = key.split("/");
-			return Integer.parseInt(parts[2]);	
-		}
-		catch (Exception e) {
-			return null;
 		}
 	}
 	

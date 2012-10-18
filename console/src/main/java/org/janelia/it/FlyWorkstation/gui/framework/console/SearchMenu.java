@@ -1,11 +1,14 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
-
-import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.KeyStroke;
+
+import org.janelia.it.FlyWorkstation.gui.dialogs.MAASearchDialog;
+import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
 
 /**
  * Created by IntelliJ IDEA.
@@ -14,41 +17,46 @@ import java.awt.event.ActionListener;
  * Time: 3:47 PM
  */
 public class SearchMenu extends JMenu {
-    private JMenuItem searchMenuItem;
-    private JMenuItem patternSearchMenuItem;
-    private JMenuItem giantFiberSearchMenuItem;
 
-    public SearchMenu(Browser console) {
+    public SearchMenu(final Browser browser) {
         super("Search");
 
-        searchMenuItem = new JMenuItem("Search");
+        JMenuItem searchMenuItem = new JMenuItem("Search");
         searchMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-            	SessionMgr.getSessionMgr().getActiveBrowser().getGeneralSearchDialog().showDialog();
+            	browser.getGeneralSearchDialog().showDialog();
             }
         });
-
-        patternSearchMenuItem = new JMenuItem("Pattern Annotation Search");
+        searchMenuItem.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, SystemInfo.isMac?java.awt.Event.META_MASK:java.awt.Event.CTRL_MASK));
+        add(searchMenuItem);
+        
+        JMenuItem patternSearchMenuItem = new JMenuItem("Pattern Annotation Search");
         patternSearchMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                SessionMgr.getSessionMgr().getActiveBrowser().getPatternSearchDialog().showDialog();
+                browser.getPatternSearchDialog().showDialog();
             }
         });
+        add(patternSearchMenuItem);
 
-        giantFiberSearchMenuItem = new JMenuItem("Giant Fiber Mask Search");
+        JMenuItem giantFiberSearchMenuItem = new JMenuItem("Giant Fiber Mask Search");
         giantFiberSearchMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                SessionMgr.getSessionMgr().getActiveBrowser().getGiantFiberSearchDialog().showDialog();
+                browser.getGiantFiberSearchDialog().showDialog();
             }
         });
-        
-        searchMenuItem.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F, SystemInfo.isMac?java.awt.Event.META_MASK:java.awt.Event.CTRL_MASK));
-        
-        // Add the tools
-        add(searchMenuItem);
-        add(patternSearchMenuItem);
         add(giantFiberSearchMenuItem);
+
+        final MAASearchDialog maaSearchDialog = browser.getMAASearchDialog();
+        if (maaSearchDialog.isAccessible()) {
+        	JMenuItem menuItem = new JMenuItem("MAA Screen Search...");
+            menuItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
+                	maaSearchDialog.showDialog();
+                }
+            });
+            add(menuItem);
+        }
     }
 }

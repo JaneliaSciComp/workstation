@@ -53,7 +53,7 @@ public class ServicesMenu extends JMenu {
             });
             add(menuItem);
         }
-
+        
         final DataSetListDialog dataSetListDialog = browser.getDataSetListDialog();
         if (dataSetListDialog.isAccessible()) {
         	JMenuItem menuItem = new JMenuItem("Data Sets...");

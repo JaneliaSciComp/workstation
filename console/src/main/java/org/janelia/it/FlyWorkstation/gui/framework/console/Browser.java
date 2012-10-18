@@ -107,6 +107,7 @@ public class Browser extends JFrame implements Cloneable {
     private PatternSearchDialog patternSearchDialog;
     private GiantFiberSearchDialog giantFiberSearchDialog;
     private ScreenEvaluationDialog screenEvaluationDialog;
+    private MAASearchDialog maaSearchDialog;
     private DataSetListDialog dataSetListDialog;
     private String mostRecentFileOutlinePath;
     private JTabbedPane icsTabPane = new JTabbedPane();
@@ -261,6 +262,7 @@ public class Browser extends JFrame implements Cloneable {
         patternSearchDialog = new PatternSearchDialog();
         giantFiberSearchDialog = new GiantFiberSearchDialog();
         screenEvaluationDialog = new ScreenEvaluationDialog(this);
+        maaSearchDialog = new MAASearchDialog(this);
         dataSetListDialog = new DataSetListDialog();
         
         ontologyOutline.setPreferredSize(new Dimension());
@@ -1316,6 +1318,10 @@ public class Browser extends JFrame implements Cloneable {
 		return screenEvaluationDialog;
 	}
 
+    public MAASearchDialog getMAASearchDialog() {
+    	return maaSearchDialog;
+    }
+    
     public DataSetListDialog getDataSetListDialog() {
 		return dataSetListDialog;
 	}
