@@ -17,6 +17,8 @@ import org.janelia.it.FlyWorkstation.gui.framework.access.Accessibility;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
+import org.janelia.it.FlyWorkstation.gui.util.FolderUtils;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -36,6 +38,7 @@ public class MAASearchDialog extends ModalDialog implements Accessibility,Action
 	
 	private Map<String,List<JCheckBox>> intCheckBoxMap = new HashMap<String,List<JCheckBox>>();
 	private Map<String,List<JCheckBox>> distCheckBoxMap = new HashMap<String,List<JCheckBox>>();
+	private Map<String,JLabel> compCountLabelMap = new HashMap<String,JLabel>();
 	
 	private Map<String,Entity> compEntityMap = new LinkedHashMap<String,Entity>();
 	private Map<String,Integer> countMap;
@@ -48,7 +51,8 @@ public class MAASearchDialog extends ModalDialog implements Accessibility,Action
 	private JButton resetButton;
 	private JTextField folderNameField;
 	private JButton okButton;
-	
+
+    private RootedEntity outputFolder;
 	private Browser browser;
    
     public MAASearchDialog(Browser browser) {
@@ -58,11 +62,10 @@ public class MAASearchDialog extends ModalDialog implements Accessibility,Action
 		this.browser = browser;
 
 		setTitle("MAA Screen Search");
-		setModalityType(ModalityType.MODELESS);
 		setPreferredSize(new Dimension(800,800));
         setLayout(new BorderLayout());
     	
-        scorePanel = new JPanel(new MigLayout("wrap 3, ins 20", "[left][center][center]"));
+        scorePanel = new JPanel(new MigLayout("wrap 4, ins 20", "[left][center][center][left]"));
         scrollPane = new JScrollPane();
         scrollPane.setViewportView(scorePanel);
         scrollPane.getVerticalScrollBar().setUnitIncrement(50);
@@ -122,9 +125,15 @@ public class MAASearchDialog extends ModalDialog implements Accessibility,Action
     }
     
     public void showDialog() {
+    	this.outputFolder = null;
         packAndShow();
     }
 
+    public void showDialog(RootedEntity outputFolder) {
+    	this.outputFolder = outputFolder;
+        packAndShow();
+    }
+    
 	public void init() {
 
 		SimpleWorker worker = new SimpleWorker() {
@@ -160,6 +169,7 @@ public class MAASearchDialog extends ModalDialog implements Accessibility,Action
 				scorePanel.add(new JLabel("Compartment"));
 				scorePanel.add(new JLabel("Intensity"));
 		        scorePanel.add(new JLabel("Distribution"));
+		        scorePanel.add(new JLabel("Selected"));
 				
 				for(String compartment : compEntityMap.keySet()) {
 
@@ -188,6 +198,10 @@ public class MAASearchDialog extends ModalDialog implements Accessibility,Action
 					}
 					scorePanel.add(distCheckboxPanel);
 					distCheckBoxMap.put(compartment, distCheckBoxes);
+					
+					JLabel countLabel = new JLabel();
+					scorePanel.add(countLabel, "gapleft 5lp");
+					compCountLabelMap.put(compartment, countLabel);
 				}
 				
 				scrollPane.revalidate();
@@ -216,7 +230,6 @@ public class MAASearchDialog extends ModalDialog implements Accessibility,Action
 			protected void doStuff() throws Exception {
 
 				for(String compartment : compEntityMap.keySet()) {
-					System.out.println("MAASearchDialog: loading "+compartment);
 					Entity compEntity = compEntityMap.get(compartment);
 					ModelMgrUtils.loadLazyEntity(compEntity, false);
 
@@ -303,6 +316,8 @@ public class MAASearchDialog extends ModalDialog implements Accessibility,Action
 				}
 			}
 
+			compCountLabelMap.get(compartment).setText(compChecked?compCount+"":"");
+
 			if (compChecked) {
 				if (min == null || compCount < min) {
 					min = compCount;
@@ -344,27 +359,8 @@ public class MAASearchDialog extends ModalDialog implements Accessibility,Action
     		
 			@Override
 			protected void doStuff() throws Exception {
-
-				String folderName = folderNameField.getText();
-
-				List<EntityData> rootEds = SessionMgr.getBrowser().getEntityOutline().getRootEntity().getOrderedEntityData();
-				for(EntityData rootEd : rootEds) {
-					final Entity commonRoot = rootEd.getChildEntity();
-					if (!commonRoot.getUser().getUserLogin().equals(SessionMgr.getUsername())) continue;
-					if (commonRoot.getName().equals(folderName)) {
-						this.saveFolder = commonRoot;
-					}
-				}
-				
-				if (saveFolder == null) {
-					// No existing folder, so create a new one
-					this.saveFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
-					saveFolder.addAttributeAsTag(EntityConstants.ATTRIBUTE_COMMON_ROOT);
-					saveFolder = ModelMgr.getModelMgr().saveOrUpdateEntity(saveFolder);	
-				}
-				
-				List<Long> sampleIds = getSelectedSamples();
-				ModelMgr.getModelMgr().addChildren(saveFolder.getId(), sampleIds, EntityConstants.ATTRIBUTE_ENTITY);
+				saveFolder = FolderUtils.saveEntitiesToFolder(outputFolder==null?null:outputFolder.getEntity(), 
+						folderNameField.getText(), getSelectedSamples());
 			}
 
 			@Override
@@ -374,12 +370,12 @@ public class MAASearchDialog extends ModalDialog implements Accessibility,Action
 					@Override
 					public Void call() throws Exception {
 		        		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, "/e_"+saveFolder.getId(), true);	
+				    	Utils.setDefaultCursor(MAASearchDialog.this);
+			            setVisible(false);
 						return null;
 					}
 					
 				});
-		    	Utils.setDefaultCursor(MAASearchDialog.this);
-	            setVisible(false);
 			}
 			
 			@Override
@@ -392,37 +388,6 @@ public class MAASearchDialog extends ModalDialog implements Accessibility,Action
     	Utils.setWaitingCursor(MAASearchDialog.this);
 		worker.execute();
     }
-
-	private List<Long> getSampleEvals(String key) throws Exception {
-	
-		List<Long> samples = cachedSampleEvals.get(key);
-		
-		if (samples==null) {
-			Entity distFolder = folderMap.get(key);
-			
-			List<Long> maskIds = new ArrayList<Long>();
-			for(EntityData ed : distFolder.getEntityData()) {
-				if (ed.getChildEntity()!=null) {
-					maskIds.add(ed.getChildEntity().getId());
-				}
-			}
-
-			List<String> upMapping = new ArrayList<String>();
-			List<String> downMapping = new ArrayList<String>();
-			upMapping.add(EntityConstants.TYPE_FOLDER);
-			upMapping.add(EntityConstants.TYPE_SCREEN_SAMPLE);
-			List<MappedId> mappedIds = ModelMgr.getModelMgr().getProjectedResults(maskIds, upMapping, downMapping);
-			
-			samples = new ArrayList<Long>();
-			for(MappedId mappedId : mappedIds) {
-				samples.add(mappedId.getMappedId());
-			}
-
-			cachedSampleEvals.put(key, samples);
-		}
-		
-		return samples;
-	}
 	
 	private List<Long> getSelectedSamples() throws Exception {
 
@@ -474,9 +439,11 @@ public class MAASearchDialog extends ModalDialog implements Accessibility,Action
 			if (compChecked) {
 				if (consensus==null) {
 					consensus = compSampleIds;
+					System.out.println("Consensus is now: "+consensus.size());
 				}
 				else {
 					consensus.retainAll(compSampleIds);
+					System.out.println("Consensus is now: "+consensus.size()+" (filtered by "+compSampleIds.size()+")");
 				}
 			}
 		}
@@ -484,6 +451,41 @@ public class MAASearchDialog extends ModalDialog implements Accessibility,Action
 		return new ArrayList<Long>(consensus);
 	}
 
+	private List<Long> getSampleEvals(String key) throws Exception {
+	
+		List<Long> samples = cachedSampleEvals.get(key);
+		
+		if (samples==null) {
+			samples = new ArrayList<Long>();
+			
+			Entity distFolder = folderMap.get(key);
+			List<Long> maskIds = new ArrayList<Long>();
+			for(EntityData ed : distFolder.getEntityData()) {
+				if (ed.getChildEntity()!=null) {
+					maskIds.add(ed.getChildEntity().getId());
+				}
+			}
+			
+			if (!maskIds.isEmpty()) {
+				List<String> upMapping = new ArrayList<String>();
+				List<String> downMapping = new ArrayList<String>();
+				upMapping.add(EntityConstants.TYPE_FOLDER);
+				upMapping.add(EntityConstants.TYPE_SCREEN_SAMPLE);
+				List<MappedId> mappedIds = ModelMgr.getModelMgr().getProjectedResults(maskIds, upMapping, downMapping);
+				for(MappedId mappedId : mappedIds) {
+					samples.add(mappedId.getMappedId());
+				}
+			}
+			
+			cachedSampleEvals.put(key, samples);
+			System.out.println("  Got "+samples.size()+" samples for "+key);
+		}
+		else {
+			System.out.println("  Got "+samples.size()+" samples for "+key+" (cached)");
+		}
+		
+		return samples;
+	}
 	
 	public boolean isAccessible() {
 		String username = SessionMgr.getUsername();

@@ -120,6 +120,9 @@ public class ModelMgrUtils {
 		}
 		
 		RootedEntity child = parent.getChild(repFolderEd);
+		if (!EntityUtils.areLoaded(child.getEntity().getEntityData())) {
+			ModelMgrUtils.loadLazyEntity(child.getEntity(), false);
+		}
 		return child;
 	}
 

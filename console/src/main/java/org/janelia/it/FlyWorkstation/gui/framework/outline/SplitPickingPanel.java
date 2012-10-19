@@ -65,6 +65,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	
 	private final SplitGroupingDialog splitGroupingDialog;
 	private final JButton searchButton;
+	private final JButton maaSearchButton;
 	private final JButton groupButton;
 	private final JButton prefixButton;
 	private final JButton resultFolderButton;
@@ -140,7 +141,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		searchPanel.setLayout(new BoxLayout(searchPanel, BoxLayout.LINE_AXIS));
 		JLabel searchLabel = new JLabel("3. Search for screen images: ");
 		searchPanel.add(searchLabel);
-		searchButton = new JButton("Search");
+		searchButton = new JButton("Pattern Search");
 		searchButton.setFocusable(false);
 		searchButton.addActionListener(new ActionListener() {
 			@Override
@@ -173,6 +174,41 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			}
 		});
 		searchPanel.add(searchButton);
+		
+		maaSearchButton = new JButton("MAA Search");
+		maaSearchButton.setFocusable(false);
+		maaSearchButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (workingFolder==null) {
+					JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Please choose a working folder first", "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				
+				SimpleWorker worker = new SimpleWorker() {
+					
+					@Override
+					protected void doStuff() throws Exception {
+						repFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_REPRESENTATIVES, true);						
+					}
+					
+					@Override
+					protected void hadSuccess() {
+						SessionMgr.getBrowser().getEntityOutline().selectEntityByUniqueId(repFolder.getUniqueId());
+						SessionMgr.getSessionMgr().getActiveBrowser().getMAASearchDialog().showDialog(repFolder);
+					}
+					
+					@Override
+					protected void hadError(Throwable error) {
+						SessionMgr.getSessionMgr().handleException(error);
+					}
+				};
+				
+				worker.execute();
+			}
+		});
+		searchPanel.add(maaSearchButton);
+		
 		searchPanel.setPreferredSize(new Dimension(0, STEP_PANEL_HEIGHT));
 		searchPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		mainPanel.add(searchPanel);

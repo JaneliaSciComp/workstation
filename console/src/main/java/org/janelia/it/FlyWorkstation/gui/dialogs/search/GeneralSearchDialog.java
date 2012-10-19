@@ -25,6 +25,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicRow;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicTable;
+import org.janelia.it.FlyWorkstation.gui.util.FolderUtils;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.compute.api.support.EntityDocument;
@@ -207,27 +208,8 @@ public class GeneralSearchDialog extends ModalDialog {
     		
 			@Override
 			protected void doStuff() throws Exception {
-
-				String folderName = folderNameField.getText();
-
-				List<EntityData> rootEds = SessionMgr.getBrowser().getEntityOutline().getRootEntity().getOrderedEntityData();
-				for(EntityData rootEd : rootEds) {
-					final Entity commonRoot = rootEd.getChildEntity();
-					if (!commonRoot.getUser().getUserLogin().equals(SessionMgr.getUsername())) continue;
-					if (commonRoot.getName().equals(folderName)) {
-						this.saveFolder = commonRoot;
-					}
-				}
 				
-				if (saveFolder == null) {
-					// No existing folder, so create a new one
-					this.saveFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
-					saveFolder.addAttributeAsTag(EntityConstants.ATTRIBUTE_COMMON_ROOT);
-					saveFolder = ModelMgr.getModelMgr().saveOrUpdateEntity(saveFolder);	
-				}
-
 				List<Long> childIds = new ArrayList<Long>();
-				
 				for(DynamicRow row : table.getSelectedRows()) {
 					Object o = row.getUserObject();
 					Entity entity = null;
@@ -240,7 +222,7 @@ public class GeneralSearchDialog extends ModalDialog {
 					childIds.add(entity.getId());
 				}
 				
-				ModelMgr.getModelMgr().addChildren(saveFolder.getId(), childIds, EntityConstants.ATTRIBUTE_ENTITY);
+				saveFolder = FolderUtils.saveEntitiesToCommonRoot(folderNameField.getText(), childIds);
 			}
 			
 			@Override
@@ -250,12 +232,12 @@ public class GeneralSearchDialog extends ModalDialog {
 					@Override
 					public Void call() throws Exception {
 		        		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, "/e_"+saveFolder.getId(), true);	
+				    	Utils.setDefaultCursor(GeneralSearchDialog.this);
+			            setVisible(false);
 						return null;
 					}
 					
 				});
-		    	Utils.setDefaultCursor(GeneralSearchDialog.this);
-	            setVisible(false);
 			}
 			
 			@Override
