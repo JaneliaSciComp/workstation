@@ -1,11 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import javax.swing.JOptionPane;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -15,6 +9,11 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+
+import javax.swing.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * This action removes an entity from some parent. If the entity becomes an orphan, then it is completely deleted.
@@ -126,8 +125,8 @@ public class RemoveEntityAction implements Action {
 							if (toDelete.size() > 1) {
 								Object[] options = {"Yes", "Yes to All", "No", "Cancel"};	
 								int r = JOptionPane.showOptionDialog(browser,
-										"Are you sure you want to permanently delete '" + ed.getChildEntity().getName()
-												+ "' and all orphaned items inside it?", "Delete",
+										"Are you sure you want to permanently delete\n'" + ed.getChildEntity().getName()
+												+ "'\nand all orphaned items inside it?", "Delete",
 										JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[1]);
 								switch (r) {
 								case 0:
@@ -145,8 +144,8 @@ public class RemoveEntityAction implements Action {
 							else {
 								Object[] options = {"Yes", "No", "Cancel"};
 								int r = JOptionPane.showOptionDialog(browser,
-										"Are you sure you want to permanently delete '" + ed.getChildEntity().getName()
-												+ "' and all orphaned items inside it?", "Delete",
+										"Are you sure you want to permanently delete\n'" + ed.getChildEntity().getName()
+												+ "'\nand all orphaned items inside it?", "Delete",
 										JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[1]);
 								switch (r) {
 								case 0:
