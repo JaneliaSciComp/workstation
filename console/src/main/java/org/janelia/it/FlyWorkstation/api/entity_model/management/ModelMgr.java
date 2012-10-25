@@ -616,6 +616,16 @@ public class ModelMgr {
         }
     }
     
+    public void deleteEntityTree(Long id, boolean unlinkMultipleParents) {
+        try {
+            FacadeManager.getFacadeManager().getEntityFacade().deleteEntityTree(id, unlinkMultipleParents);
+            notifyEntityRemoved(id);
+        }
+        catch (Exception e) {
+            handleException(e);
+        }
+    }
+    
     public Entity createOntologyRoot(String ontologyName) throws Exception {
         return FacadeManager.getFacadeManager().getOntologyFacade().createOntologyRoot(ontologyName);
     }
@@ -734,7 +744,11 @@ public class ModelMgr {
     	notifyEntityChildrenChanged(parent.getId());
     	return ed;
     }
-    
+
+    public long getNumDescendantsAnnotated(Long entityId) throws Exception {
+        return FacadeManager.getFacadeManager().getAnnotationFacade().getNumDescendantsAnnotated(entityId);
+    }
+
     public List<Entity> getAnnotationsForEntity(Long entityId) throws Exception {
         return FacadeManager.getFacadeManager().getAnnotationFacade().getAnnotationsForEntity(entityId);
     }

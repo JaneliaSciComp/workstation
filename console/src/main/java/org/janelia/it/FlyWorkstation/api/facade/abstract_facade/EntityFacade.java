@@ -55,6 +55,8 @@ public interface EntityFacade {
 
     public void deleteEntityTree(Long entityId) throws Exception;
 
+    public void deleteEntityTree(Long entityId, boolean unlinkMultipleParents) throws Exception;
+    
     public Entity cloneEntityTree(Long entityId, String rootName) throws Exception;
 
     public Entity createEntity(String entityTypeName, String entityName) throws Exception;

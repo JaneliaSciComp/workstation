@@ -42,6 +42,7 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
         add(getRenameItem());
         add(getDeleteItem());
         add(getDeleteTreeItem());
+        add(getUnlinkAndDeleteTreeItem());
         setNextAddRequiresSeparator(true);
     	add(getOpenInFinderItem());
     	add(getOpenWithAppItem());
@@ -183,6 +184,79 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 	    	            for (Entity entity : toDelete) {
 	    	            	System.out.println("Deleting "+entity.getId());
     	                    ModelMgr.getModelMgr().deleteEntityTree(entity.getId());
+	    	            }
+	                }
+
+	                @Override
+	                protected void hadSuccess() {
+	                    if (didSu) {
+	        	            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, realUsername);
+	                    }
+	                	Utils.setDefaultCursor(DataviewApp.getMainFrame());
+//	    	            reshow();
+	                }
+
+	                @Override
+	                protected void hadError(Throwable error) {
+	                    SessionMgr.getSessionMgr().handleException(error);
+	                }
+
+	            };
+
+	            loadTask.execute();
+			}
+		});
+        
+        return deleteTreeMenuItem;
+	}
+
+	private JMenuItem getUnlinkAndDeleteTreeItem() {
+
+		String name = isMultipleSelection() ? "Unlink and delete entity trees" : "Unlink and delete entity tree";
+		
+        JMenuItem deleteTreeMenuItem = new JMenuItem("  "+name);
+        deleteTreeMenuItem.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+	            int deleteConfirmation = confirm("Are you sure you want to unlink and delete " + getSelectedElements().size() + " entities and all their descendants?");
+	            if (deleteConfirmation != 0) {
+	                return;
+	            }
+
+	            final List<Entity> toDelete = new ArrayList<Entity>(getSelectedElements());
+
+            	boolean su = false;
+	            for (Entity entity : toDelete) {
+                	if (!SessionMgr.getUsername().equals(entity.getUser().getUserLogin())) {
+        	            int overrideConfirmation = confirm("Override owner "+entity.getUser().getUserLogin()+" to delete "+entity.getName()+"?");
+        	            if (overrideConfirmation != 0) {
+        	                continue;
+        	            }
+        	            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, entity.getUser().getUserLogin());
+        	            su = true;
+        	            break;
+                	}
+	            }
+	            
+	            final boolean didSu = su;
+	            final String realUsername = SessionMgr.getUsername();
+	            
+	            Utils.setWaitingCursor(DataviewApp.getMainFrame());
+	            
+	            SimpleWorker loadTask = new SimpleWorker() {
+
+	                @Override
+	                protected void doStuff() throws Exception {
+	    	            // Update database
+	    	            for (Entity entity : toDelete) {
+	    	            	long numAnnotated = ModelMgr.getModelMgr().getNumDescendantsAnnotated(entity.getId());
+	    	            	if (numAnnotated>0) {
+	    	            		throw new Exception("Cannnot delete entity tree because "+numAnnotated+" descendants are annotated");
+		                	}
+		                	
+	    	            	System.out.println("Deleting "+entity.getId());
+    	                    ModelMgr.getModelMgr().deleteEntityTree(entity.getId(), true);
 	    	            }
 	                }
 

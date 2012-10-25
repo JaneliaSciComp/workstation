@@ -24,6 +24,11 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
     public List<Entity> getAnnotationsForEntity(Long entityId) throws Exception {
         return EJBFactory.getRemoteAnnotationBean().getAnnotationsForEntity(SessionMgr.getUsername(), entityId);
     }
+    
+    @Override
+    public long getNumDescendantsAnnotated(Long entityId) throws Exception {
+    	return EJBFactory.getRemoteAnnotationBean().getNumDescendantsAnnotated(entityId);
+	}
 
     @Override
     public List<Entity> getAnnotationsForEntities(List<Long> entityIds) throws Exception {
