@@ -41,12 +41,22 @@ public abstract class SearchPane extends JPanel {
 			}
 		});
         
+		final JButton clearButton = new JButton("Clear");
+        clearButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				hibernateInput.setText("");
+			}
+		});
+        
         JPanel hibernateSearchPanel = new JPanel();
         hibernateSearchPanel.setLayout(new BoxLayout(hibernateSearchPanel, BoxLayout.LINE_AXIS));
         hibernateSearchPanel.add(titleLabel);
         hibernateSearchPanel.add(hibernateInput);
         hibernateSearchPanel.add(Box.createHorizontalStrut(5));
         hibernateSearchPanel.add(hibernateButton);
+        hibernateSearchPanel.add(Box.createHorizontalStrut(5));
+        hibernateSearchPanel.add(clearButton);
         
         hibernatePanel = new JPanel();
         hibernatePanel.setLayout(new GridBagLayout());
@@ -164,9 +174,8 @@ public abstract class SearchPane extends JPanel {
 			public void componentShown(ComponentEvent e) {
 			}
 		});
-		
-		
 	}
+	
 	public abstract void performHibernateSearch(String searchString);
 	
 	public abstract void performSolrSearch(boolean clear);
