@@ -1,11 +1,10 @@
 package org.janelia.it.FlyWorkstation.api.facade.facade_mgr;
 
-import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.aggregate.AggregateFacadeManager;
+import java.util.*;
+
 import org.janelia.it.FlyWorkstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.FlyWorkstation.api.stub.data.NoDataException;
 import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
-
-import java.util.*;
 
 public class FacadeManager {
 
@@ -42,7 +41,7 @@ public class FacadeManager {
 //            System.out.println("FacadeManager:: Error!! - Protocol set has not been added to the system");
 //            System.exit(1);
 //        }
-        registerFacade(AGGREGATE_PROTOCOL, AggregateFacadeManager.class);
+//        registerFacade(AGGREGATE_PROTOCOL, AggregateFacadeManager.class);
     }
 
     private FacadeManager() {
