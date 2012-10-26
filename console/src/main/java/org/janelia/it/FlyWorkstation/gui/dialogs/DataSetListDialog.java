@@ -218,6 +218,7 @@ public class DataSetListDialog extends ModalDialog implements Accessibility {
     	
     	StringBuffer buf = new StringBuffer();
     	for(String key : list.split(",")) {
+    		if (key.isEmpty()) continue;
     		try {
     			String value = ((NamedEnum)Enum.valueOf(enumType, key)).getName();
     			if (buf.length()>0) buf.append(", ");
