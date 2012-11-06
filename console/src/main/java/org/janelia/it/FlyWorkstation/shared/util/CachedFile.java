@@ -111,7 +111,7 @@ public class CachedFile {
         if (localPath.startsWith(rootPath)) {
             final int rootWithTimestampLength =
                     rootPath.length() + TIMESTAMP_LENGTH;
-            if (localPath.length() > TIMESTAMP_LENGTH) {
+            if (localPath.length() > rootWithTimestampLength) {
                 final String relativePath =
                         localPath.substring(rootWithTimestampLength);
                 this.relativePath = getNormalizedPath(relativePath);
