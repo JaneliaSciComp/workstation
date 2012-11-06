@@ -993,7 +993,6 @@ public class IconDemoPanel extends Viewer {
 			protected void hadSuccess() {
 				
 				if (!entityLoadInProgress.get()) {
-					System.out.println("Refresh annotations by annotations init worker");
 					// Entity load finished before we did, so its safe to update the annotations
 					refreshAnnotations(null);
 					filterEntities();
@@ -1067,7 +1066,6 @@ public class IconDemoPanel extends Viewer {
 
 				if (!annotationLoadInProgress.get()) {
 					// Annotation load finished before we did, so we have to update the annotations too
-					System.out.println("Refresh annotations by entityLoadDone");
 					refreshAnnotations(null);
 					filterEntities();
 				}

@@ -29,7 +29,7 @@ public class ImagesPanel extends JScrollPane {
 	public static final int MIN_TABLE_HEIGHT = 50;
 	public static final int DEFAULT_TABLE_HEIGHT = 200;
 	public static final int MAX_TABLE_HEIGHT = 500;
-	private AtomicBoolean loadUnloadImagesInProgress = new AtomicBoolean(false);
+	private AtomicBoolean loadUnloadImagesInterrupt = new AtomicBoolean(false);
     private final HashMap<String, AnnotatedImageButton> buttons = new LinkedHashMap<String, AnnotatedImageButton>();
     private Map<Long, List<OntologyAnnotation>> filteredAnnotationMap = new HashMap<Long, List<OntologyAnnotation>>();
 
@@ -224,6 +224,8 @@ public class ImagesPanel extends JScrollPane {
 	    		SessionMgr.getSessionMgr().handleException(e);
 	    	}
         }
+        
+        loadUnloadImages();
     }
 
     public synchronized void resizeTables(int tableHeight) {
@@ -476,21 +478,31 @@ public class ImagesPanel extends JScrollPane {
 		repaintButtons();
     }
 
+    private Date lastQueueDate = new Date();
+    
     public void loadUnloadImages() {
-        if (loadUnloadImagesInProgress.get()) {
-        	System.out.println("Ignoring request to loadUnloadImages, since it is already in progress");
-            return;
-        }
-        loadUnloadImagesInProgress.compareAndSet(false, true);
+    	loadUnloadImagesInterrupt.set(true);
+    	final Date queueDate = new Date();
+    	lastQueueDate = queueDate;
         SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
+				if (queueDate.before(lastQueueDate)) {
+					System.out.println("Ignoring duplicate request to loadUnloadImages");
+					return;
+				}
+//				System.out.println("loadUnloadImages");
+				loadUnloadImagesInterrupt.set(false);
 		    	final JViewport viewPort = getViewport();
 		    	Rectangle viewRect = viewPort.getViewRect();
 		    	if (buttonsPanel.getColumns() == 1) {
 		    		viewRect.setSize(viewRect.width, viewRect.height+100);
 		    	}
 		        for(AnnotatedImageButton button : buttons.values()) {
+		        	if (loadUnloadImagesInterrupt.get()) {
+		        		System.out.println("Interrupted loadUnloadImages");
+		        		return;
+		        	}
 		        	try {
 		        		button.setViewable(viewRect.intersects(button.getBounds()));
 		        	}
@@ -498,7 +510,6 @@ public class ImagesPanel extends JScrollPane {
 		        		SessionMgr.getSessionMgr().handleException(e);
 		        	}
 		        }
-		        loadUnloadImagesInProgress.compareAndSet(true, false);
 			}
 		});
     }
