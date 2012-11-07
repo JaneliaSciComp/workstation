@@ -3,9 +3,12 @@ package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.ComputeFacade;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
+import org.janelia.it.jacs.compute.api.ComputeBeanRemote;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.user_data.User;
 
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
 import java.util.List;
 
 /**
@@ -73,8 +76,9 @@ public class EJBComputeFacade implements ComputeFacade {
     }
 
     @Override
-    public List getUsers() throws Exception {
-        return EJBFactory.getRemoteComputeBean().getUsers();
+    public List<User> getUsers() throws Exception {
+        //noinspection unchecked
+        return (List<User>) EJBFactory.getRemoteComputeBean().getUsers();
     }
 
     @Override
@@ -84,9 +88,25 @@ public class EJBComputeFacade implements ComputeFacade {
 
     @Override
     public boolean loginUser() throws Exception {
-        return EJBFactory.getRemoteComputeBean().login(
-        		(String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME),
-                (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_PASSWORD));
+        final SessionMgr mgr = SessionMgr.getSessionMgr();
+        final String userName = (String)
+                mgr.getModelProperty(SessionMgr.USER_NAME);
+        final String password = (String)
+                mgr.getModelProperty(SessionMgr.USER_PASSWORD);
+        final ComputeBeanRemote compute = EJBFactory.getRemoteComputeBean();
+        final boolean isValidLogin = compute.login(userName, password);
+
+        // set default authenticator for all http requests
+        if (isValidLogin) {
+            Authenticator.setDefault(new Authenticator() {
+                protected PasswordAuthentication getPasswordAuthentication() {
+                    return new PasswordAuthentication(userName,
+                                                      password.toCharArray());
+                }
+            });
+        }
+
+        return isValidLogin;
     }
     
     @Override
