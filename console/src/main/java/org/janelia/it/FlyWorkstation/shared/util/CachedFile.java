@@ -210,10 +210,10 @@ public class CachedFile {
             LOG.info("copyRemoteFile: copied " + remoteFileUrl + " to " +
                      localFile.getAbsolutePath());
 
-        } catch (IOException e) {
+        } catch (Throwable t) {
             throw new IllegalStateException(
                     "failed to copy " + remoteFileUrl +
-                    " to " + localFile.getAbsolutePath());
+                    " to " + localFile.getAbsolutePath(), t);
         } finally {
 
             if (input != null) {
@@ -288,20 +288,22 @@ public class CachedFile {
             final int minLength = rootPath.length() + TIMESTAMP_LENGTH;
             final String path = parent.getCanonicalPath();
 
+            boolean logRemoval = LOG.isInfoEnabled();
+
             if ((path.length() >= minLength) && path.startsWith(rootPath)) {
                 final File[] children = parent.listFiles();
                 if ((children != null) && (children.length == 0)) {
+                    logRemoval = false;
                     if (parent.delete()) {
                         removeEmptyCacheParent(parent);
                     } else {
                         LOG.warn("removeEmptyCacheParent: failed to remove " +
                                  path);
                     }
-                } else {
-                    LOG.warn("removeEmptyCacheParent: non-empty parent " +
-                             path);
                 }
-            } else {
+            }
+
+            if (logRemoval) {
                 LOG.info("removeEmptyCacheParent: removed " +
                          removedFileOrDirectory.getAbsolutePath());
             }
@@ -315,7 +317,11 @@ public class CachedFile {
     private static final long ONE_KILOBYTE = 1024;
 
     private static final int EOF = -1;
-    private static final int BUFFER_SIZE = 64 * 1024 * 1024; // 64Mb
+
+    // Use 2Mb buffer to reduce likelihood of out of memory errors
+    // when concurrent threads are loading images.
+    // Most of the dynamic image files are around 1Mb.
+    private static final int BUFFER_SIZE = 2 * 1024 * 1024; // 2Mb
 
     private static final String TIMESTAMP_PATTERN =
             "yyyyMMdd-hhmmssSSS";
