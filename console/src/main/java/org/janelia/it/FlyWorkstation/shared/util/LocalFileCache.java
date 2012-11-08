@@ -59,6 +59,14 @@ public class LocalFileCache {
         }
 
         this.rootDirectory = new File(canonicalParent, CACHE_DIRECTORY_NAME);
+        if (! rootDirectory.exists()) {
+            if (! rootDirectory.mkdirs()) {
+                throw new IllegalStateException(
+                        "cannot create root cache directory " +
+                        rootDirectory.getAbsolutePath());
+            }
+        }
+
         if (kilobyteCapacity < 1) {
             this.kilobyteCapacity = 1;
         } else {
@@ -106,7 +114,25 @@ public class LocalFileCache {
         this.relativePathToBuilderMap =
                 new ConcurrentHashMap<String, CachedFileBuilder>();
 
-        validateAndLoadCacheFromFilesystem();
+        if (rootDirectory.canWrite()) {
+
+            // load cache from a separate thread so that we don't
+            // bog down application start up
+            Thread loadThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    loadCacheFromFilesystem();
+                }
+            }, "local-file-cache-load-thread");
+            loadThread.start();
+
+        } else {
+            throw new IllegalStateException(
+                    "root cache directory " + rootDirectory.getAbsolutePath() +
+                    " is not writable");
+        }
+
+        LOG.info("<init>: exit");
     }
 
     /**
@@ -218,40 +244,23 @@ public class LocalFileCache {
     }
 
     /**
-     * Validates the root cache directory and then registers any existing
-     * files in this cache.
+     * Registers any existing local files in this cache.
      *
      * NOTE: After load, cache usage (ordering) will simply reflect
      *       directory traversal order.
-     *
-     * @throws IllegalStateException
-     *   if any errors occur during the load.
      */
-    private void validateAndLoadCacheFromFilesystem()
-            throws IllegalStateException {
+    private void loadCacheFromFilesystem() {
 
-        if (! rootDirectory.exists()) {
-            if (! rootDirectory.mkdirs()) {
-                throw new IllegalStateException(
-                        "cannot create root cache directory " +
-                        rootDirectory.getAbsolutePath());
-            }
-        }
-
-        if (rootDirectory.canWrite()) {
-            registerFileInCache(rootDirectory);
-        } else {
-            throw new IllegalStateException(
-                    "root cache directory " + rootDirectory.getAbsolutePath() +
-                    " is not writable");
-        }
+        registerFileInCache(rootDirectory);
 
         final long usedKb = getNumberOfKilobytes();
         final long totalKb = getKilobyteCapacity();
-        final int usedPercentage = (int) (((double) usedKb / (double) totalKb) * 100) ;
-        LOG.info("validateAndLoadCacheFromFilesystem: loaded " + this +
-                 ", " + usedPercentage + "% full (" + getNumberOfKilobytes() + "/" +
-                 getKilobyteCapacity() + " kilobytes)");
+        final int usedPercentage = (int)
+                (((double) usedKb / (double) totalKb) * 100);
+
+        LOG.info("loadCacheFromFilesystem: loaded " + this +
+                ", " + usedPercentage + "% full (" + getNumberOfKilobytes() + "/" +
+                getKilobyteCapacity() + " kilobytes)");
     }
 
     /**
