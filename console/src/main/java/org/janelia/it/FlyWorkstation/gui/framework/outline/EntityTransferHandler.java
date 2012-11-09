@@ -90,7 +90,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
 			else if (sourceComponent instanceof AnnotatedImageButton) {
             	List<String> selectedEntities = new ArrayList<String>(
             			ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(
-            					SessionMgr.getBrowser().getActiveViewer().getSelectionCategory()));
+            					SessionMgr.getBrowser().getViewerManager().getActiveViewer().getSelectionCategory()));
             	IconDemoPanel iconDemoPanel = ((AnnotatedImageButton)sourceComponent).getIconDemoPanel();
 				for(String selectedId : selectedEntities) {
 					RootedEntity rootedEntity = iconDemoPanel.getRootedEntityById(selectedId);
@@ -222,10 +222,9 @@ public abstract class EntityTransferHandler extends TransferHandler {
 			}
 		}
 		else if (sourceComponent instanceof AnnotatedImageButton) {
-			String category = SessionMgr.getBrowser().getActiveViewer().getSelectionCategory();
+			Viewer viewer = SessionMgr.getBrowser().getViewerManager().getActiveViewer();
 			final List<String> selectedEntities = new ArrayList<String>(
-        			ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(category));
-			Viewer viewer = SessionMgr.getBrowser().getViewerForCategory(category);
+        			ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(viewer.getSelectionCategory()));
 			for(String selectedId : selectedEntities) {
 				RootedEntity matchingEntity = viewer.getRootedEntityById(selectedId);
 				if (matchingEntity == null) {

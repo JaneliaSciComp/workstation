@@ -263,7 +263,7 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 			entityIds.addAll(dirtyEntities);
 		}
 		else {
-			for(RootedEntity rootedEntity : SessionMgr.getBrowser().getActiveViewer().getRootedEntities()) {
+			for(RootedEntity rootedEntity : SessionMgr.getBrowser().getViewerManager().getActiveViewer().getRootedEntities()) {
 				entityIds.add(rootedEntity.getEntityId());
 			}
 		}

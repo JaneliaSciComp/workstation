@@ -2,9 +2,12 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 
 import javax.swing.*;
 import javax.swing.border.Border;
+
+import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 
 /**
  * The main viewer panel that contains two viewers: a main viewer and a secondary viewer that may be closed (and begins
@@ -36,21 +39,27 @@ public class ViewerSplitPanel extends JPanel implements ViewerContainer {
 		normalBorder = BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(normalColor, 1), BorderFactory.createLineBorder(panelColor, 1));
 		focusBorder = BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(focusColor, 1), BorderFactory.createLineBorder(focusColor, 1));
 		
-		mainViewerPane = new ViewerPane(false);
+		mainViewerPane = new ViewerPane(this, EntitySelectionModel.CATEGORY_MAIN_VIEW, false);
 		mainViewerPane.setTitle("");
-		secViewerPane = new ViewerPane(true) {
+        add(mainViewerPane, BorderLayout.CENTER);
+        
+		secViewerPane = new ViewerPane(this, EntitySelectionModel.CATEGORY_SEC_VIEW, true) {
 			@Override
 			protected void closeButtonPressed() {
-				setSecViewer(null);
+				setSecViewerVisible(false);
 			}
 		};
 		secViewerPane.setTitle("");
 		
-		this.mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, mainViewerPane, secViewerPane);
+		this.mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false);
 		mainSplitPane.setOneTouchExpandable(false);
 		mainSplitPane.setBorder(BorderFactory.createEmptyBorder());
-        
-        setSecViewer(null);
+		
+		Dimension minimumSize = new Dimension(20, 0);
+		mainViewerPane.setMinimumSize(minimumSize);
+		secViewerPane.setMinimumSize(minimumSize);
+		
+        setActiveViewerPane(mainViewerPane);
 	}
 	
 	public JSplitPane getMainSplitPane() {
@@ -58,9 +67,11 @@ public class ViewerSplitPanel extends JPanel implements ViewerContainer {
 	}
 
 	@Override
-	public void setAsActive(Viewer viewer) {
-		activeViewerPane = getViewerPane(viewer);
-
+	public void setActiveViewerPane(ViewerPane viewerPane) {
+		
+		activeViewerPane = viewerPane;	
+		
+		// Update borders
 		if (activeViewerPane==mainViewerPane) {
 			secViewerPane.setBorder(normalBorder);
 			mainViewerPane.setBorder(focusBorder);
@@ -70,41 +81,28 @@ public class ViewerSplitPanel extends JPanel implements ViewerContainer {
 			secViewerPane.setBorder(focusBorder);
 		}
 		else {
-			throw new IllegalArgumentException("Unknown viewer with class "+viewer.getClass().getName());
+			throw new IllegalArgumentException("Unknown ViewerPane with class "+viewerPane.getClass().getName());
 		}
 	}
 
 	@Override
-	public void setTitle(Viewer viewer, String title) {
-		ViewerPane viewerPane = getViewerPane(viewer);
-		if (viewerPane!=null) {
-			viewerPane.setTitle(title);
-		}
-	}
-	
-	public Viewer getActiveViewer() {
-		return activeViewerPane.getViewer();
-	}
-	
-	public Viewer getMainViewer() {
-		return mainViewerPane.getViewer();
+	public ViewerPane getActiveViewerPane() {
+		return activeViewerPane;
 	}
 
-	public Viewer getSecViewer() {
-		return secViewerPane.getViewer();
+	public ViewerPane getMainViewerPane() {
+		return mainViewerPane;
 	}
 
-	public void setMainViewer(Viewer viewer) {
-		mainViewerPane.setViewer(viewer);
-		mainViewerPane.setVisible(viewer!=null);
-		setAsActive(viewer);
+	public ViewerPane getSecViewerPane() {
+		return secViewerPane;
 	}
-	
-	public void setSecViewer(Viewer viewer) {
-		secViewerPane.setViewer(viewer);
-		secViewerPane.setVisible(viewer!=null);
+
+	public void setSecViewerVisible(boolean visible) {
+
+		secViewerPane.setVisible(visible);
 		
-		if (viewer!=null) {
+		if (visible) {
 			if (mainViewerOnly) {
 				remove(mainViewerPane);
 				mainSplitPane.setLeftComponent(mainViewerPane);
@@ -138,18 +136,6 @@ public class ViewerSplitPanel extends JPanel implements ViewerContainer {
 					mainViewerPane.getViewer().refresh();
 				}
 			});	
-		}
-	}
-
-	private ViewerPane getViewerPane(Viewer viewer) {
-		if (mainViewerPane.getViewer()==viewer) {
-			return mainViewerPane;
-		}
-		else if (secViewerPane.getViewer()==viewer) {
-			return secViewerPane;
-		}
-		else {
-			throw new IllegalArgumentException("Unknown viewer with class "+viewer.getClass().getName());
 		}
 	}
 }

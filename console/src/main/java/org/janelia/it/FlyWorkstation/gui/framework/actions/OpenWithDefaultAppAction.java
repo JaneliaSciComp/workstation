@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
+import java.awt.Desktop;
 import java.io.File;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -55,19 +56,7 @@ public class OpenWithDefaultAppAction implements Action {
 				throw new Exception("Cannot access "+file.getAbsolutePath());
 			}
 			
-			StringBuffer cmd = new StringBuffer();
-			if (SystemInfo.isMac) {
-				cmd.append("/usr/bin/open ");
-				cmd.append(file.getAbsolutePath());
-			}
-			else if (SystemInfo.isLinux) {
-				cmd.append("gnome-open ");
-				cmd.append(file.getAbsolutePath());
-			}
-			
-			if (Runtime.getRuntime().exec(cmd.toString()).waitFor() != 0) {
-				throw new Exception("Error opening file: "+file.getAbsolutePath());
-			}
+			Desktop.getDesktop().open(file);
 		}
 		catch (Exception e) {
 			SessionMgr.getSessionMgr().handleException(e);

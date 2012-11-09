@@ -303,7 +303,8 @@ public class SessionOutline extends JPanel implements Refreshable {
     	
 		dynamicTable.navigateToRowWithObject(session);
 
-		final IconDemoPanel panel = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer());
+		// TODO: update this so that it uses the ViewerManager API instead
+		final IconDemoPanel panel = ((IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getActiveViewer(IconDemoPanel.class));
 		
 		if (session != null) {
 			panel.showLoadingIndicator();

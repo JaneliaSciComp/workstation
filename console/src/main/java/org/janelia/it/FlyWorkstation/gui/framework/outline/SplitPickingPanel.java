@@ -69,7 +69,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	private final JButton groupButton;
 	private final JButton prefixButton;
 	private final JButton resultFolderButton;
-	private final IconDemoPanel crossesPanel;
+	private final IconDemoPanel crossesViewer;
 //	private final JTextField methodField;
 //	private final JTextField blurField;
 	
@@ -326,7 +326,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		c.weighty = 0.01;
 		add(mainPanel, c);
 		
-		crossesPanel = new IconDemoPanel(EntitySelectionModel.CATEGORY_CROSS_VIEW) {
+		ViewerPane crossesPane = new ViewerPane(null, EntitySelectionModel.CATEGORY_CROSS_VIEW, false);
+		crossesViewer = new IconDemoPanel(crossesPane) {
 			
 			@Override
 			protected IconDemoToolbar createToolbar() {
@@ -363,6 +364,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				loadViewers();
 			}
 		};
+		crossesPane.setViewer(crossesViewer);
 		
 		c.gridx = 0;
 		c.gridy = 1;
@@ -370,7 +372,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		c.fill = GridBagConstraints.BOTH;
 		c.weightx = 1.0;
 		c.weighty = 1.0;
-		add(crossesPanel, c);
+		add(crossesPane, c);
 		
 		loadExistingCrossSimulations();
 	}
@@ -462,7 +464,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 								}
 								
 								if (!doneTasks.isEmpty()) {
-									crossesPanel.refresh();
+									crossesViewer.refresh();
 								}
 								
 								for(Long doneTaskId : doneTasks) {
@@ -521,28 +523,28 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			workingFolderLoadingWorker.execute();
 		}
 		
-		final IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_MAIN_VIEW);
-		final IconDemoPanel secViewer = (IconDemoPanel)SessionMgr.getBrowser().showSecViewer(); 
+		final IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getMainViewer(IconDemoPanel.class);
+		final IconDemoPanel secViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getSecViewer(IconDemoPanel.class); 
 		
 		SessionMgr.getBrowser().getCenterRightHorizontalSplitPane().setDividerLocation(0.66);
 		
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-				SessionMgr.getBrowser().getViewersPanel().getMainSplitPane().setDividerLocation(0.5);
+				SessionMgr.getBrowser().getViewerManager().getViewerContainer().getMainSplitPane().setDividerLocation(0.5);
 				
 				// Refresh the image viewer
-				crossesPanel.refresh();
+				crossesViewer.refresh();
 				
 				SwingUtilities.invokeLater(new Runnable() {
 					@Override
 					public void run() {
 						// Resize images to 1 per row		
-						int fullWidth = SessionMgr.getBrowser().getViewersPanel().getWidth();
+						int fullWidth = SessionMgr.getBrowser().getViewerManager().getViewerContainer().getWidth();
 						int padding = 100;
 						mainViewer.getToolbar().getImageSizeSlider().setValue((int)((double)fullWidth/2-padding));
 						secViewer.getToolbar().getImageSizeSlider().setValue((int)((double)fullWidth/2-padding));
-						crossesPanel.getToolbar().getImageSizeSlider().setValue(crossesPanel.getWidth()-padding);						
+						crossesViewer.getToolbar().getImageSizeSlider().setValue(crossesViewer.getWidth()-padding);						
 					}
 				});
 			}
@@ -576,7 +578,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		// We iterate through all the entities in each viewer because we want to preserve the viewer order, 
 		// which the entity selection model does not do.
 		
-		Viewer mainViewer = SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_MAIN_VIEW);
+		Viewer mainViewer = SessionMgr.getBrowser().getViewerManager().getViewerForCategory(EntitySelectionModel.CATEGORY_MAIN_VIEW);
 		for(RootedEntity rootedEntity : mainViewer.getRootedEntities()) {
 			for(String mainSelectionId : mainSelectionIds) {
 				if (rootedEntity.getId().equals(mainSelectionId)) {
@@ -590,7 +592,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			}
 		}
 		
-		Viewer secViewer = SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_SEC_VIEW);
+		Viewer secViewer = SessionMgr.getBrowser().getViewerManager().getViewerForCategory(EntitySelectionModel.CATEGORY_SEC_VIEW);
 		for(RootedEntity rootedEntity : secViewer.getRootedEntities()) {
 			for(String secSelectionId : secSelectionIds) {
 				if (rootedEntity.getId().equals(secSelectionId)) {
@@ -634,7 +636,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					setCrossFolder(ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_CROSSES, true));
 				}
 
-				if (crossesPanel.getRootedEntities()!=null) {
+				if (crossesViewer.getRootedEntities()!=null) {
 					for(Entity sample1 : samples1) {
 						for(Entity sample2 : samples2) {
 							String c1 = createCrossName(sample1, sample2);
@@ -668,7 +670,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				
 				if (existingCrosses.size()==numCrosses) return;
 				
-				crossesPanel.loadEntity(getCrossFolder());
+				crossesViewer.loadEntity(getCrossFolder());
 				
 				SimpleWorker worker2 = new SimpleWorker() {
 
@@ -740,13 +742,13 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					@Override
 					protected void hadSuccess() {
 						SessionMgr.getBrowser().getEntityOutline().refresh();
-						crossesPanel.refresh(new Callable<Void>() {
+						crossesViewer.refresh(new Callable<Void>() {
 							@Override
 							public Void call() throws Exception {
 								SwingUtilities.invokeLater(new Runnable() {
 									@Override
 									public void run() {
-										crossesPanel.getImagesPanel().scrollToBottom();
+										crossesViewer.getImagesPanel().scrollToBottom();
 									}
 								});
 								return null;
@@ -865,7 +867,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			protected void hadSuccess() {
 				SessionMgr.getSessionMgr().setModelProperty(LAST_WORKING_FOLDER_ID_PROPERTY, workingFolder.getEntity().getId());
 				
-				final IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_MAIN_VIEW);
+				final IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getViewerForCategory(EntitySelectionModel.CATEGORY_MAIN_VIEW);
 				if (groupAdFolder==null && groupDbdFolder==null) {
 					if (repFolder!=null) {
 						expandEntityOutline(repFolder.getUniqueId());
@@ -875,7 +877,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 						expandEntityOutline(workingFolder.getUniqueId());
 						mainViewer.clear();
 					}
-					IconDemoPanel secViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_SEC_VIEW);
+					IconDemoPanel secViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getViewerForCategory(EntitySelectionModel.CATEGORY_SEC_VIEW);
 					if (secViewer!=null) {
 						secViewer.clear();
 					}
@@ -885,10 +887,10 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				}
 				
 				if (crossFolder!=null) {
-					crossesPanel.loadEntity(crossFolder);	
+					crossesViewer.loadEntity(crossFolder);	
 				}
 				else {
-					crossesPanel.clear();
+					crossesViewer.clear();
 					revalidate();
 					repaint();
 				}
@@ -919,7 +921,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		// Get the parent lines
 		Entity entity1 = null;
 		Entity entity2 = null;
-		List<RootedEntity> selected = crossesPanel.getSelectedEntities();
+		List<RootedEntity> selected = crossesViewer.getSelectedEntities();
 		if (selected!=null && selected.size()==1) {
 			Entity crossEntity = selected.get(0).getEntity();
 			for(EntityData childEd : crossEntity.getOrderedEntityData()) {
@@ -953,8 +955,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			
 			@Override
 			protected void hadSuccess() {
-				final IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_MAIN_VIEW);
-				final IconDemoPanel secViewer = (IconDemoPanel)SessionMgr.getBrowser().showSecViewer();
+				final IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getMainViewer(IconDemoPanel.class);
+				final IconDemoPanel secViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getSecViewer(IconDemoPanel.class);
 				
 				if (groupAdFolder!=null) {
 					if (mainViewer.getContextRootedEntity()!=null && mainViewer.getContextRootedEntity().getEntityId().equals(groupAdFolder.getEntityId())) {
@@ -1127,9 +1129,9 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				writer.write(buf.toString());
 
 
-				long numTotal = crossesPanel.getRootedEntities().size();
+				long numTotal = crossesViewer.getRootedEntities().size();
 				long numProcessed = 0;
-				for(RootedEntity crossRootedEntity : crossesPanel.getRootedEntities()) {
+				for(RootedEntity crossRootedEntity : crossesViewer.getRootedEntities()) {
 					
 					ModelMgrUtils.refreshEntityAndChildren(crossRootedEntity.getEntity());
 					

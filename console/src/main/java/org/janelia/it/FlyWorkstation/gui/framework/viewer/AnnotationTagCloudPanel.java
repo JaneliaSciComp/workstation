@@ -1,5 +1,15 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
+import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.*;
+import javax.swing.border.Border;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.RemoveAnnotationsAction;
@@ -10,15 +20,6 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
-
-import javax.swing.*;
-import javax.swing.border.Border;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A tag cloud of Entity-based annotations which support context menu operations such as deletion.
@@ -57,7 +58,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
     @Override
     protected void showPopupMenu(final MouseEvent e, final OntologyAnnotation tag) {
     	
-    	Viewer viewer = SessionMgr.getBrowser().getActiveViewer();
+    	Viewer viewer = SessionMgr.getBrowser().getViewerManager().getActiveViewer();
 		List<String> selectionIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(viewer.getSelectionCategory());
 		List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
 		for (String entityId : selectionIds) {
@@ -110,7 +111,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
                         dialog.setPathText(tag.getValueString());
                         dialog.setVisible(true);
                         final Object value = dialog.getPathString();
-                        final List<RootedEntity> selectedEntities = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer()).getSelectedEntities();
+                        final List<RootedEntity> selectedEntities = SessionMgr.getBrowser().getViewerManager().getActiveViewer().getSelectedEntities();
                         for(RootedEntity rootedEntity: selectedEntities){
                             if(null!=value && !value.toString().isEmpty()){
                                 tag.setValueString(value.toString());

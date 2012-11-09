@@ -271,7 +271,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
                         dialog.setPathText(annotation.getValueString());
                         dialog.setVisible(true);
                         final Object value = dialog.getPathString();
-                        final List<RootedEntity> selectedEntities = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer()).getSelectedEntities();
+                        final List<RootedEntity> selectedEntities = SessionMgr.getBrowser().getViewerManager().getActiveViewer().getSelectedEntities();
                         for(RootedEntity rootedEntity: selectedEntities){
                             if(null!=value && !value.toString().trim().isEmpty()){
                                 annotation.setValueString(value.toString());

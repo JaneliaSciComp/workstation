@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.application;
 import java.util.MissingResourceException;
 
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
@@ -15,7 +16,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ApplicationSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.panels.DataSourceSettings;
-import org.janelia.it.FlyWorkstation.gui.util.panels.SystemSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.server_status.ServerStatusReportManager;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -42,7 +42,12 @@ public class ConsoleApp {
     }
 
     public static void main(final String[] args) {
-        newBrowser();
+    	SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+		        newBrowser();
+			}
+		});
     }
 
     private static void newBrowser() {

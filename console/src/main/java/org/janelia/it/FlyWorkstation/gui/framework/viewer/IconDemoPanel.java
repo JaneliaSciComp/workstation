@@ -75,7 +75,6 @@ public class IconDemoPanel extends Viewer {
 	// These members deal with the context and entities within it
 	protected RootedEntity contextRootedEntity;
 	protected List<RootedEntity> allRootedEntities;
-	protected List<RootedEntity> rootedAncestors;
 	protected int numPages;
 	
 	// These members deal with entities on the current page only
@@ -93,11 +92,9 @@ public class IconDemoPanel extends Viewer {
 	// Tracking of loading operations
 	protected AtomicBoolean entityLoadInProgress = new AtomicBoolean(false);
 	protected AtomicBoolean annotationLoadInProgress = new AtomicBoolean(false);
-	protected AtomicBoolean ancestorLoadInProgress = new AtomicBoolean(false);
 	protected SimpleWorker entityLoadingWorker;
 	protected SimpleWorker annotationLoadingWorker;
 	protected SimpleWorker annotationsInitWorker;
-	protected SimpleWorker ancestorLoadingWorker;
 	
 	// Listen for key strokes and execute the appropriate key bindings
 	// TODO: we should replace this with an action map in the future
@@ -297,13 +294,9 @@ public class IconDemoPanel extends Viewer {
 		return (AnnotatedImageButton)c;
 	}
 	
-	public IconDemoPanel(final String selectionCategory) {
-		this(null, selectionCategory);
-	}
-	
-	public IconDemoPanel(final ViewerSplitPanel viewerContainer, final String selectionCategory) {
+	public IconDemoPanel(ViewerPane viewerPane) {
 
-		super(viewerContainer, selectionCategory);
+		super(viewerPane);
 		
 		currImageRole = EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE;
 		
@@ -339,12 +332,12 @@ public class IconDemoPanel extends Viewer {
 		add(splashPanel);
 
 		iconDemoToolbar = createToolbar();
+		iconDemoToolbar.addMouseListener(new MouseForwarder(this, "JToolBar->IconDemoPanel"));
 		
 		imagesPanel = new ImagesPanel(this);
 		imagesPanel.setButtonKeyListener(keyListener);
 		imagesPanel.setButtonMouseListener(buttonMouseListener);
 		imagesPanel.addMouseListener(new MouseForwarder(this, "ImagesPanel->IconDemoPanel"));
-		iconDemoToolbar.addMouseListener(new MouseForwarder(this, "JToolBar->IconDemoPanel"));
 		
 		prevPageButton = new JButton(Icons.getIcon("arrow_back.gif"));
 		prevPageButton.addActionListener(new ActionListener() {
@@ -442,14 +435,14 @@ public class IconDemoPanel extends Viewer {
 			
 			@Override
 			public void entitySelected(String category, String entityId, boolean clearAll) {
-				if (category.equals(selectionCategory)) {
+				if (category.equals(getSelectionCategory())) {
 					IconDemoPanel.this.entitySelected(entityId, clearAll);
 				}
 			}
 
 			@Override
 			public void entityDeselected(String category, String entityId) {
-				if (category.equals(selectionCategory)) {
+				if (category.equals(getSelectionCategory())) {
 					IconDemoPanel.this.entityDeselected(entityId);
 				}
 			}
@@ -604,7 +597,7 @@ public class IconDemoPanel extends Viewer {
 		return new IconDemoToolbar() {
 
 			protected void goBack() {
-				final EntitySelectionHistory history = getEntitySelectionHistory();
+				final EntitySelectionHistory history = getViewerPane().getEntitySelectionHistory();
 				SwingUtilities.invokeLater(new Runnable() {
 					@Override
 					public void run() {
@@ -614,7 +607,7 @@ public class IconDemoPanel extends Viewer {
 			}
 
 			protected void goForward() {
-				final EntitySelectionHistory history = getEntitySelectionHistory();
+				final EntitySelectionHistory history = getViewerPane().getEntitySelectionHistory();
 				SwingUtilities.invokeLater(new Runnable() {
 					@Override
 					public void run() {
@@ -643,13 +636,14 @@ public class IconDemoPanel extends Viewer {
 			}
 			
 			protected JPopupMenu getPopupPathMenu() {
+				List<RootedEntity> rootedAncestors = getViewerPane().getRootedAncestors();
 				if (rootedAncestors==null) return null;
 				final JPopupMenu pathMenu = new JPopupMenu();
 				for (final RootedEntity ancestor : rootedAncestors) {
 					JMenuItem pathMenuItem = new JMenuItem(ancestor.getEntity().getName(), Icons.getIcon(ancestor.getEntity()));
 					pathMenuItem.addActionListener(new ActionListener() {
 						public void actionPerformed(ActionEvent e) {
-							goEntity(ancestor.getUniqueId());
+							ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, ancestor.getUniqueId(), true);
 						}
 					});
 					pathMenuItem.setEnabled(pathMenu.getComponentCount()>0);
@@ -783,15 +777,6 @@ public class IconDemoPanel extends Viewer {
 		});
 	}
 
-	public synchronized void goEntity(final String uniqueId) {
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, uniqueId, true);	
-			}
-		});
-	}
-
 	private void updatePagingStatus() {
 		prevPageButton.setEnabled(currPage>0);
 		nextPageButton.setEnabled(currPage<numPages-1);
@@ -809,6 +794,7 @@ public class IconDemoPanel extends Viewer {
 		loadImageEntities(page, null);
 	}
 
+	@Override
 	public void showLoadingIndicator() {
 		removeAll();
 		add(new JLabel(Icons.getLoadingIcon()));
@@ -826,9 +812,6 @@ public class IconDemoPanel extends Viewer {
 		if (contextRootedEntity==null) return;
 		
 		Entity entity = contextRootedEntity.getEntity();
-
-		getEntitySelectionHistory().pushHistory(contextRootedEntity.getUniqueId());
-		setTitle(entity.getName());
 		
 		List<EntityData> eds = entity.getOrderedEntityData();
 		List<EntityData> children = new ArrayList<EntityData>();
@@ -849,46 +832,10 @@ public class IconDemoPanel extends Viewer {
 			lazyRootedEntities.add(rootedEntity);
 		}
 
-		if (ancestorLoadingWorker != null && !ancestorLoadingWorker.isDone()) {
-			ancestorLoadingWorker.disregard();
-		}
-
-		ancestorLoadingWorker = new SimpleWorker() {
-
-			private List<RootedEntity> ancestors = new ArrayList<RootedEntity>();
-				
-			protected void doStuff() throws Exception {
-				List<String> uniqueIds = EntityUtils.getPathFromUniqueId(contextRootedEntity.getUniqueId());
-				List<Long> entityIds = new ArrayList<Long>();
-				for(String uniqueId : uniqueIds) {
-					entityIds.add(EntityUtils.getEntityIdFromUniqueId(uniqueId));
-				}
-				Map<Long,Entity>entityMap = EntityUtils.getEntityMap(ModelMgr.getModelMgr().getEntityByIds(entityIds));
-
-				for(String uniqueId : uniqueIds) {
-					Long entityId = EntityUtils.getEntityIdFromUniqueId(uniqueId);
-					Entity entity = entityMap.get(entityId);
-					if (entity!=null) {
-						EntityData entityData = new EntityData();
-						entityData.setChildEntity(entity);
-						ancestors.add(new RootedEntity(uniqueId, entityData));
-					}
-				}
-				
-				Collections.reverse(ancestors);
-			}
-
-			protected void hadSuccess() {
-				setRootedAncestors(ancestors);
-				ancestorLoadInProgress.set(false);
-			}
-
-			protected void hadError(Throwable error) {
-				SessionMgr.getSessionMgr().handleException(error);
-				
-			}
-		};
-		ancestorLoadingWorker.execute();
+		// Update back/forward navigation
+		EntitySelectionHistory history = getViewerPane().getEntitySelectionHistory();
+		iconDemoToolbar.getPrevButton().setEnabled(history.isBackEnabled());
+		iconDemoToolbar.getNextButton().setEnabled(history.isNextEnabled());
 		
 		loadImageEntities(lazyRootedEntities, success); 
 	}
@@ -902,12 +849,6 @@ public class IconDemoPanel extends Viewer {
 
 		allRootedEntities = lazyRootedEntities;
 		this.numPages = (int)Math.ceil((double)allRootedEntities.size() / (double)PAGE_SIZE);
-		
-		// Update back/forward navigation
-		EntitySelectionHistory history = getEntitySelectionHistory();
-		iconDemoToolbar.getPrevButton().setEnabled(history.isBackEnabled());
-		iconDemoToolbar.getNextButton().setEnabled(history.isNextEnabled());
-
 		loadImageEntities(0, success);
 	}
 	
@@ -928,7 +869,6 @@ public class IconDemoPanel extends Viewer {
 		
 		entityLoadInProgress.set(true);
 		annotationLoadInProgress.set(true);
-		ancestorLoadInProgress.set(true);
 		
 		// Indicate a load
 		showLoadingIndicator();
@@ -1060,10 +1000,6 @@ public class IconDemoPanel extends Viewer {
 			@Override
 			public void run() {
 				
-				// Select the first entity
-				// KR: disabled this because it has unforeseen effects in the split picker. Maybe we can address that in the future.
-//				ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), getRootedEntities().get(0).getId(), true);
-
 				if (!annotationLoadInProgress.get()) {
 					// Annotation load finished before we did, so we have to update the annotations too
 					refreshAnnotations(null);
@@ -1245,7 +1181,7 @@ public class IconDemoPanel extends Viewer {
 		this.pageRootedEntityMap = null;
 		this.entityMap = null;
 		
-		setTitle("");
+		getViewerPane().setTitle("");
 		removeAll();
 		add(splashPanel, BorderLayout.CENTER);
 		
@@ -1313,17 +1249,6 @@ public class IconDemoPanel extends Viewer {
 			currImageRole = EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE;
 		}
 	}
-	
-	private synchronized void setRootedAncestors(List<RootedEntity> rootedAncestors) {
-		this.rootedAncestors = rootedAncestors;
-		StringBuffer buf = new StringBuffer();
-		for(int i=rootedAncestors.size()-1; i>=0; i--) {
-			RootedEntity ancestor = rootedAncestors.get(i);
-			if (buf.length()>0) buf.append(" : ");
-			buf.append(ancestor.getEntity().getName());
-		}
-		setTitle(buf.toString());
-	}
 
 	public synchronized RootedEntity getLastSelectedEntity() {
 		String entityId = ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityId(getSelectionCategory());
@@ -1333,7 +1258,8 @@ public class IconDemoPanel extends Viewer {
 		return button.getRootedEntity();
 	}
 
-	public synchronized List<RootedEntity> getSelectedEntities() {
+	@Override
+	public List<RootedEntity> getSelectedEntities() {
 		List<RootedEntity> selectedEntities = new ArrayList<RootedEntity>();
 		if (pageRootedEntities==null) return selectedEntities;
 		for(RootedEntity rootedEntity : pageRootedEntities) {

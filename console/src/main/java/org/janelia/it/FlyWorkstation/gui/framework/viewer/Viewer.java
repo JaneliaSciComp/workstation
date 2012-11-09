@@ -6,13 +6,11 @@ import java.util.List;
 
 import javax.swing.JPanel;
 
-import org.janelia.it.FlyWorkstation.gui.framework.outline.EntitySelectionHistory;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
 import org.janelia.it.jacs.model.entity.Entity;
 
 /**
- * A viewer panel that is refreshable and can be placed inside a ViewerContainer. Has its own entity selection 
- * category and associated selection history. 
+ * A viewer panel that is refreshable and can be placed inside a ViewerPane.
  * 
  * A viewer must also be able to lookup and return the Entities and RootedEntities that it is currently displaying.
  * 
@@ -20,49 +18,42 @@ import org.janelia.it.jacs.model.entity.Entity;
  */
 public abstract class Viewer extends JPanel implements Refreshable {
 
-	private ViewerContainer viewerContainer;
-	private String selectionCategory;
-	private EntitySelectionHistory entitySelectionHistory;
+	private final ViewerPane viewerPane;
 
-	public Viewer(String selectionCategory) {
-		this(null, selectionCategory);
-	}
-	
-	public Viewer(ViewerContainer viewerContainer, String selectionCategory) {
-		this.viewerContainer = viewerContainer;
-		this.selectionCategory = selectionCategory;
-		this.entitySelectionHistory = new EntitySelectionHistory();
-
+	public Viewer(final ViewerPane viewerPane) {
+		this.viewerPane = viewerPane;
 		addMouseListener(new MouseAdapter() {
 			@Override
-			public void mouseReleased(MouseEvent e) {
+			public void mousePressed(MouseEvent e) {
 				setAsActive();
 			}
 		});
 	}
 	
-	/**
-	 * Returns the selection category of this viewer in the EntitySelectionModel.
-	 * @return EntitySelectionModel.CATEGORY_*
-	 */
 	public String getSelectionCategory() {
-		return selectionCategory;
-	}
-
-	public EntitySelectionHistory getEntitySelectionHistory() {
-		return entitySelectionHistory;
+		return viewerPane.getSelectionCategory();
 	}
 
 	public void setAsActive() {
-		if (viewerContainer!=null) viewerContainer.setAsActive(this);
+		viewerPane.setAsActive();
 	}
 	
-	public void setTitle(String title) {
-		if (viewerContainer!=null) viewerContainer.setTitle(this, title);
+	public ViewerPane getViewerPane() {
+		return viewerPane;
 	}
 	
 	/**
-	 * Display the given RootedEntity in the viewer.
+	 * Clear the view.
+	 */
+	public abstract void clear();
+	
+	/**
+	 * Clear the view and display a loading indicator. 
+	 */
+	public abstract void showLoadingIndicator();
+	
+	/**
+	 * Display the given RootedEntity in the viewer. 
 	 * @param rootedEntity
 	 */
 	public abstract void loadEntity(RootedEntity rootedEntity);
@@ -72,6 +63,13 @@ public abstract class Viewer extends JPanel implements Refreshable {
 	 * @return
 	 */
 	public abstract List<RootedEntity> getRootedEntities();
+	
+	
+	/**
+	 * Returns all RootedEntity objected which are currently selected in the viewer.
+	 * @return
+	 */
+	public abstract List<RootedEntity> getSelectedEntities();
 	
 	/**
 	 * Returns the RootedEntity with the given uniqueId, assuming that its currently loaded in the viewer.

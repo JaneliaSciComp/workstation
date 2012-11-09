@@ -14,13 +14,11 @@ import java.util.Set;
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTreeCellRenderer;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.SelectionTreePanel;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.SplitPickingPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.FakeProgressWorker;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
@@ -267,10 +265,8 @@ public class SplitGroupingDialog extends ModalDialog {
 			@Override
 			protected void hadSuccess() {
 				SessionMgr.getBrowser().getEntityOutline().expandByUniqueId(splitLinesFolder.getUniqueId());
-				final IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerForCategory(EntitySelectionModel.CATEGORY_MAIN_VIEW);
-				mainViewer.loadEntity(groupAdFolder);
-				final IconDemoPanel secViewer = (IconDemoPanel)SessionMgr.getBrowser().showSecViewer();
-				secViewer.loadEntity(groupDbdFolder);
+				SessionMgr.getBrowser().getViewerManager().showEntityInMainViewer(groupAdFolder);
+				SessionMgr.getBrowser().getViewerManager().showEntityInSecViewer(groupDbdFolder);
 			}
 			
 			@Override

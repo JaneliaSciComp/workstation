@@ -1,12 +1,13 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JPopupMenu;
+import javax.swing.JSlider;
+import javax.swing.JToggleButton;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -20,84 +21,20 @@ import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class IconDemoToolbar extends JPanel {
+public abstract class IconDemoToolbar extends ViewerToolbar {
 
-	protected JToolBar toolbar;
-	protected JButton prevButton;
-	protected JButton nextButton;
-	protected JButton pathButton;
     protected JToggleButton invertButton;
     protected JToggleButton showTitlesButton;
 	protected JButton imageRoleButton;
 	protected JToggleButton showTagsButton;
-	protected JButton refreshButton;
 	protected JButton userButton;
 	protected JSlider imageSizeSlider;
 	
 	protected int currImageSize;
 	
 	public IconDemoToolbar() {
-		super(new BorderLayout());	
-
-		toolbar = new JToolBar();
-		toolbar.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, (Color)UIManager.get("windowBorder")), BorderFactory.createEmptyBorder(0, 5, 2, 5)));
-		toolbar.setFloatable(false);
-		toolbar.setRollover(true);
-		add(toolbar);
-
-		prevButton = new JButton();
-		prevButton.setIcon(Icons.getIcon("arrow_back.gif"));
-		prevButton.setToolTipText("Go back in your browsing history");
-		prevButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				goBack();
-			}
-		});
-		prevButton.addMouseListener(new MouseForwarder(toolbar, "PrevButton->JToolBar"));
-		toolbar.add(prevButton);
-
-		nextButton = new JButton();
-		nextButton.setIcon(Icons.getIcon("arrow_forward.gif"));
-		nextButton.setFocusable(false);
-		nextButton.setToolTipText("Go forward in your browsing history");
-		nextButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				goForward();
-			}
-		});
-		nextButton.addMouseListener(new MouseForwarder(toolbar, "NextButton->JToolBar"));
-		toolbar.add(nextButton);
-
-		pathButton = new JButton();
-		pathButton.setIcon(Icons.getIcon("path-blue.png"));
-		pathButton.setFocusable(false);
-		pathButton.setToolTipText("See the current location");
-		pathButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				showPopupPathMenu();
-			}
-		});
-		pathButton.addMouseListener(new MouseForwarder(toolbar, "ParentButton->JToolBar"));
-		toolbar.add(pathButton);
-
-		refreshButton = new JButton();
-		refreshButton.setIcon(Icons.getRefreshIcon());
-		refreshButton.setFocusable(false);
-		refreshButton.setToolTipText("Refresh the current view");
-		refreshButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				refresh();
-			}
-		});
-		refreshButton.addMouseListener(new MouseForwarder(toolbar, "RefreshButton->JToolBar"));
-		toolbar.add(refreshButton);
-
-		toolbar.addSeparator();
-
+		super();
+		
         invertButton = new JToggleButton();
         invertButton.setIcon(Icons.getIcon("invert.png"));
         invertButton.setFocusable(false);
@@ -189,9 +126,6 @@ public abstract class IconDemoToolbar extends JPanel {
 		});
 	}
 	
-	protected abstract void goBack();
-	protected abstract void goForward();
-	protected abstract void refresh();
 	protected abstract void showTitlesButtonPressed();
 	protected abstract void showTagsButtonPressed();
 	protected abstract void currImageSizeChanged(int imageSize);
@@ -199,11 +133,6 @@ public abstract class IconDemoToolbar extends JPanel {
 	protected abstract JPopupMenu getPopupUserMenu();
 	protected abstract JPopupMenu getPopupImageRoleMenu();
 	
-	private void showPopupPathMenu() {
-		JPopupMenu menu = getPopupPathMenu();
-		if (menu==null) return;
-		menu.show(pathButton, 0, pathButton.getHeight());
-	}
 	
 	private void showPopupUserMenu() {
 		JPopupMenu menu = getPopupUserMenu();
@@ -225,22 +154,6 @@ public abstract class IconDemoToolbar extends JPanel {
 		return showTagsButton.isSelected();
 	}
 
-	public JToolBar getToolbar() {
-		return toolbar;
-	}
-
-	public JButton getPrevButton() {
-		return prevButton;
-	}
-
-	public JButton getNextButton() {
-		return nextButton;
-	}
-
-	public JButton getPathButton() {
-		return pathButton;
-	}
-
 	public JToggleButton getInvertButton() {
 		return invertButton;
 	}
@@ -255,10 +168,6 @@ public abstract class IconDemoToolbar extends JPanel {
 
 	public JToggleButton getShowTagsButton() {
 		return showTagsButton;
-	}
-
-	public JButton getRefreshButton() {
-		return refreshButton;
 	}
 
 	public JButton getUserButton() {

@@ -17,7 +17,6 @@ import javax.swing.*;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.LoadRequestStatusObserverAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestState;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestStatus;
-import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.*;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.GeneralSearchDialog;
@@ -28,10 +27,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModelListenerAdapter;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ImageCache;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerSplitPanel;
 import org.janelia.it.FlyWorkstation.gui.util.*;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
@@ -78,7 +74,7 @@ public class Browser extends JFrame implements Cloneable {
     private JPanel allPanelsView = new JPanel();
     private JPanel collapsedOutlineView = new JPanel();
     private JPanel mainPanel = new JPanel();
-    private ViewerSplitPanel viewerPanel;
+    private ViewerManager viewerManager;
     private final ImageCache imageCache = new ImageCache();
     private CardLayout layout = new CardLayout();
     private JMenuBar menuBar;
@@ -132,8 +128,7 @@ public class Browser extends JFrame implements Cloneable {
         enableEvents(AWTEvent.WINDOW_EVENT_MASK);
         this.realEstatePercent = realEstatePercent;
 
-        viewerPanel = new ViewerSplitPanel();
-        viewerPanel.setMainViewer(new IconDemoPanel(viewerPanel, EntitySelectionModel.CATEGORY_MAIN_VIEW));
+        viewerManager = new ViewerManager();
         
         try {
             jbInit(browserModel);
@@ -148,14 +143,14 @@ public class Browser extends JFrame implements Cloneable {
         }
     }
     
-    public Viewer showSecViewer() {
-    	Viewer secViewer = viewerPanel.getSecViewer();
-		if (secViewer==null) {
-			secViewer = new IconDemoPanel(viewerPanel, EntitySelectionModel.CATEGORY_SEC_VIEW);
-			viewerPanel.setSecViewer(secViewer);
-		}
-		return secViewer;
-    }
+//    public Viewer showSecViewer() {
+//    	Viewer secViewer = viewerPanel.getSecViewer();
+//		if (secViewer==null) {
+//			secViewer = new IconDemoPanel(viewerPanel, EntitySelectionModel.CATEGORY_SEC_VIEW);
+//			viewerPanel.setSecViewer(secViewer);
+//		}
+//		return secViewer;
+//    }
 
     /**
      * Use given coordinates of the top left point and passed realEstatePercent (0-1.0).
@@ -280,8 +275,7 @@ public class Browser extends JFrame implements Cloneable {
         		JComponent comp = outlookBar.getBar(outlookBar.getVisibleBarName());
 				
 				// clear the main viewer 
-				final IconDemoPanel panel = (IconDemoPanel)Browser.this.getMainViewer();
-				panel.clear();
+				Browser.this.getViewerManager().getMainViewer(null).clear();
 				
 				// refresh the outline being selected
         		if (comp instanceof Refreshable) {
@@ -304,7 +298,7 @@ public class Browser extends JFrame implements Cloneable {
         rightPanel.addPanel(Icons.getIcon("page.png"), "Ontology", "Displays an ontology for annotation", ontologyOutline);
         rightPanel.addPanel(Icons.getIcon("page_copy.png"), "Split Picking Tool", "Allows for simulation of flyline crosses", new SplitPickingPanel());
         
-        centerRightHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, viewerPanel, rightPanel);
+        centerRightHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, viewerManager.getViewerContainer(), rightPanel);
         centerRightHorizontalSplitPane.setMinimumSize(new Dimension(200, 0));
         centerRightHorizontalSplitPane.setOpaque(true);
         centerRightHorizontalSplitPane.setDividerSize(10);
@@ -1242,37 +1236,9 @@ public class Browser extends JFrame implements Cloneable {
         }
     }
 
-
-    // TODO: this was refactored but clients just cast the result to IconDemoPanel for now. At some point we need to 
-    // go through every usage of this method and make sure the cast to IconDemoPanel is appropriate, or if additional
-    // checks need to be made.
-    public Viewer getActiveViewer() {
-        return viewerPanel.getActiveViewer();
-    }
-    
-    public Viewer getMainViewer() {
-        return viewerPanel.getMainViewer();
-    }
-    
-    public Viewer getSecViewer() {
-        return viewerPanel.getSecViewer();
-    }
-    
-    public ViewerSplitPanel getViewersPanel() {
-    	return viewerPanel;
-    }
-    
-    public Viewer getViewerForCategory(String category) {
-    	if (getMainViewer().getSelectionCategory().equals(category)) {
-    		return getMainViewer();
-    	}
-    	else if (getSecViewer()!=null && getSecViewer().getSelectionCategory().equals(category)) {
-    		return getSecViewer();
-    	}
-    	else {
-    		throw new IllegalArgumentException("Unknown viewer category: "+category);
-    	}
-    }
+    public ViewerManager getViewerManager() {
+		return viewerManager;
+	}
 
     public Refreshable getActiveOutline() {
     	return (Refreshable)outlookBar.getVisibleBarComponent();

@@ -8,16 +8,15 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 public interface ViewerContainer {
 	
 	/**
-	 * Set the given viewer as active. The viewer must be contained in the container.
+	 * Set the given viewer pane as active. 
 	 * @param viewer
 	 */
-	public void setAsActive(Viewer viewer);
+	public void setActiveViewerPane(ViewerPane viewerPane);
 	
 	/**
-	 * Set the title of the given viewer. The viewer must be contained in the container.
-	 * @param viewer
-	 * @param title
+	 * Returns the active viewer pane which contains the active viewer.
+	 * @return
 	 */
-	public void setTitle(Viewer viewer, String title);
-
+	public ViewerPane getActiveViewerPane();
+	
 }

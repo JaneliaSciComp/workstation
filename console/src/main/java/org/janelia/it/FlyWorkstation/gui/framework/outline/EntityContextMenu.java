@@ -11,9 +11,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tool_manager.ToolMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
@@ -291,7 +289,7 @@ public class EntityContextMenu extends JPopupMenu {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 try {
-                    final List<RootedEntity> selectedEntities = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer()).getSelectedEntities();
+                    final List<RootedEntity> selectedEntities = SessionMgr.getBrowser().getViewerManager().getActiveViewer().getSelectedEntities();
                     OntologyAnnotation baseAnnotation = ModelMgr.getModelMgr().getCurrentSelectedOntologyAnnotation();
                     for (RootedEntity entity : selectedEntities) {
                         AnnotationSession tmpSession = ModelMgr.getModelMgr().getCurrentAnnotationSession();
@@ -836,7 +834,7 @@ public class EntityContextMenu extends JPopupMenu {
                     
                     final TaskDetailsDialog dialog = new TaskDetailsDialog(true);
                     dialog.showForTask(task);
-                    SessionMgr.getBrowser().getActiveViewer().refresh();
+                    SessionMgr.getBrowser().getViewerManager().getActiveViewer().refresh();
                     
             	}
             	catch (Exception e) {
@@ -852,7 +850,7 @@ public class EntityContextMenu extends JPopupMenu {
     protected JMenuItem getOpenInFirstViewerItem() {
 		if (multiple) return null;
 		if (StringUtils.isEmpty(rootedEntity.getUniqueId())) return null;
-        JMenuItem copyMenuItem = new JMenuItem("  Open in first viewer");
+        JMenuItem copyMenuItem = new JMenuItem("  Open in first pane");
         
         copyMenuItem.addActionListener(new ActionListener() {
 			@Override
@@ -868,9 +866,7 @@ public class EntityContextMenu extends JPopupMenu {
 					
 					@Override
 					protected void hadSuccess() {
-						Viewer mainViewer = SessionMgr.getBrowser().getMainViewer();
-			            ((IconDemoPanel)mainViewer).loadEntity(rootedEntity);
-			            mainViewer.setAsActive();
+						SessionMgr.getBrowser().getViewerManager().showEntityInMainViewer(rootedEntity);
 			            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, rootedEntity.getUniqueId(), true);
 					}
 					
@@ -888,7 +884,7 @@ public class EntityContextMenu extends JPopupMenu {
 	protected JMenuItem getOpenInSecondViewerItem() {
 		if (multiple) return null;
 		if (StringUtils.isEmpty(rootedEntity.getUniqueId())) return null;
-        JMenuItem copyMenuItem = new JMenuItem("  Open in second viewer");
+        JMenuItem copyMenuItem = new JMenuItem("  Open in second pane");
         
         copyMenuItem.addActionListener(new ActionListener() {
 			@Override
@@ -904,9 +900,7 @@ public class EntityContextMenu extends JPopupMenu {
 					
 					@Override
 					protected void hadSuccess() {
-						Viewer secViewer = SessionMgr.getBrowser().showSecViewer();
-			            ((IconDemoPanel)secViewer).loadEntity(rootedEntity);
-			            secViewer.setAsActive();
+						SessionMgr.getBrowser().getViewerManager().showEntityInSecViewer(rootedEntity);
 			            ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, rootedEntity.getUniqueId(), true);
 					}
 					

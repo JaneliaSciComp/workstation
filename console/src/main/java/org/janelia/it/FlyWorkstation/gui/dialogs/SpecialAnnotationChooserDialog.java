@@ -29,8 +29,6 @@ import java.util.List;
  * Date: 6/12/12
  * Time: 10:28 AM
  */
-
-
 public class SpecialAnnotationChooserDialog extends JFrame{
 
     private static JPanel annotationPanel = new JPanel();
@@ -93,7 +91,7 @@ public class SpecialAnnotationChooserDialog extends JFrame{
 
                     if(!category.equals("outline") && clearAll && annotations.size()!=0){
 
-                        List<OntologyAnnotation> annotations1 = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer()).getAnnotations().getAnnotations();
+                        List<OntologyAnnotation> annotations1 = ((IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getActiveViewer(IconDemoPanel.class)).getAnnotations().getAnnotations();
                         int i = 0;
                         for(OntologyAnnotation annotation:annotations1){
                             if(model.getValueAt(i,0).toString().trim().equals(annotation.getKeyString())){
@@ -128,7 +126,7 @@ public class SpecialAnnotationChooserDialog extends JFrame{
                     @Override
                     protected void doStuff() throws Exception {
 
-                        final List<RootedEntity> selectedEntities = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer()).getSelectedEntities();
+                        final List<RootedEntity> selectedEntities = ((IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getActiveViewer(IconDemoPanel.class)).getSelectedEntities();
                         for(RootedEntity rootedEntity: selectedEntities){
                             if(null!=rootedEntity){
                                 List<Entity> annotations = ModelMgr.getModelMgr().getAnnotationsForEntity(rootedEntity.getEntity().getId());

@@ -29,7 +29,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
@@ -40,7 +39,7 @@ import org.janelia.it.jacs.model.entity.EntityType;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
- * The entity tree which lives in the right-hand "Data" panel and drives the IconDemoPanel.
+ * The entity tree which lives in the right-hand "Data" panel and drives the viewers. 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -556,10 +555,8 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		}
 
 		getDynamicTree().navigateToNode(node);
-
-		// TODO: this should be abstracted. The EntityOutline shouldn't know about the IconDemoPanel
-		final IconDemoPanel panel = ((IconDemoPanel)SessionMgr.getBrowser().getActiveViewer());
-		panel.showLoadingIndicator();
+		
+		SessionMgr.getBrowser().getViewerManager().getActiveViewer().showLoadingIndicator();
 
 		final String finalCurrUniqueId = currUniqueId;
 		
@@ -591,6 +588,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		}
 		
 		RootedEntity rootedEntity = new RootedEntity(uniqueId, getEntityData(node));
-		SessionMgr.getSessionMgr().getActiveBrowser().getActiveViewer().loadEntity(rootedEntity);
+		SessionMgr.getBrowser().getViewerManager().showEntityInActiveViewer(rootedEntity);
 	}
 }
