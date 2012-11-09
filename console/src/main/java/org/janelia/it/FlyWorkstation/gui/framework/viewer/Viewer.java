@@ -84,5 +84,11 @@ public abstract class Viewer extends JPanel implements Refreshable {
 	 * @return
 	 */
 	public abstract Entity getEntityById(String id);
+
+	/**
+	 * Called when the viewer is about to close forever. This is an opportunity to clean up any listeners or 
+	 * open resources. 
+	 */
+	public abstract void close();
 	
 }

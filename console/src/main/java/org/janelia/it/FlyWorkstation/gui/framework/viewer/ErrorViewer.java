@@ -36,6 +36,7 @@ public class ErrorViewer extends Viewer {
 	protected JTextArea textArea;
 	protected JScrollPane scrollPane;
 	protected RootedEntity contextRootedEntity;
+	protected SessionModelListener sessionModelListener;
 	
 	public ErrorViewer(ViewerPane viewerPane) {
 		super(viewerPane);
@@ -57,7 +58,7 @@ public class ErrorViewer extends Viewer {
 
 		textArea.addMouseListener(new MouseForwarder(this, "JTextPane->ErrorViewer"));
         
-        SessionMgr.getSessionMgr().addSessionModelListener(new SessionModelListener() {
+		sessionModelListener = new SessionModelListener() {
             @Override
             public void browserAdded(BrowserModel browserModel) {
             }
@@ -76,7 +77,8 @@ public class ErrorViewer extends Viewer {
                     ErrorViewer.this.clear();
                 }
             }
-        });
+        };
+        SessionMgr.getSessionMgr().addSessionModelListener(sessionModelListener);
 	}
 
 	protected ViewerToolbar createToolbar() {
@@ -216,6 +218,10 @@ public class ErrorViewer extends Viewer {
 		
 		revalidate();
 		repaint();
+	}
+
+	public void close() {
+		SessionMgr.getSessionMgr().removeSessionModelListener(sessionModelListener);
 	}
 
 	@Override

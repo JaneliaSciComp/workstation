@@ -7,6 +7,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
+import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.UserColorMapping;
@@ -92,6 +93,10 @@ public class IconDemoPanel extends Viewer {
 	protected SimpleWorker entityLoadingWorker;
 	protected SimpleWorker annotationLoadingWorker;
 	protected SimpleWorker annotationsInitWorker;
+	
+	// Listeners
+	protected SessionModelListener sessionModelListener;
+	protected ModelMgrObserver modelMgrObserver;
 	
 	// Listen for key strokes and execute the appropriate key bindings
 	// TODO: we should replace this with an action map in the future
@@ -301,7 +306,7 @@ public class IconDemoPanel extends Viewer {
 		setLayout(new BorderLayout());
 		setFocusable(true);
 
-        SessionMgr.getSessionMgr().addSessionModelListener(new SessionModelListener() {
+		sessionModelListener = new SessionModelListener() {
             @Override
             public void browserAdded(BrowserModel browserModel) {
             }
@@ -320,7 +325,8 @@ public class IconDemoPanel extends Viewer {
                     IconDemoPanel.this.clear();
                 }
             }
-        });
+        };
+        SessionMgr.getSessionMgr().addSessionModelListener(sessionModelListener);
 
 		hud = new Hud();
 		hud.addKeyListener(keyListener);
@@ -415,7 +421,7 @@ public class IconDemoPanel extends Viewer {
 			}
 		});
 		
-		ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
+		modelMgrObserver = new ModelMgrAdapter() {
 
 			@Override
 			public void annotationsChanged(final long entityId) {
@@ -513,8 +519,9 @@ public class IconDemoPanel extends Viewer {
 					}
 				}
 			}
-		});
-
+		};
+		ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
+				
 		this.addComponentListener(new ComponentAdapter() {
 			@Override
 			public void componentResized(ComponentEvent e) {
@@ -1184,6 +1191,11 @@ public class IconDemoPanel extends Viewer {
 		
 		revalidate();
 		repaint();
+	}
+	
+	public void close() {
+		SessionMgr.getSessionMgr().removeSessionModelListener(sessionModelListener);
+		ModelMgr.getModelMgr().removeModelMgrObserver(modelMgrObserver);
 	}
 
 	public synchronized void showImagePanel() {

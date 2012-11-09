@@ -101,6 +101,11 @@ public class ViewerPane extends JPanel {
 	}
 
 	public void setViewer(Viewer viewer) {
+		
+		if (this.viewer!=null) {
+			this.viewer.close();
+		}
+		
 		clearViewer();
 		this.viewer = viewer;
 		if (viewer!=null) {
