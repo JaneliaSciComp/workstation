@@ -1,17 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.*;
-import javax.swing.table.TableCellEditor;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
@@ -25,6 +13,15 @@ import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+
+import javax.swing.*;
+import javax.swing.table.TableCellEditor;
+import java.awt.*;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A panel that shows a bunch of annotations in a table. 
@@ -241,7 +238,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 	        titleItem.setEnabled(false);
 	        popupMenu.add(titleItem);
 
-            JMenuItem copyMenuItem = new JMenuItem("  Copy to clipboard");
+            JMenuItem copyMenuItem = new JMenuItem("  Copy to Clipboard");
             copyMenuItem.addActionListener(new ActionListener() {
     			@Override
     			public void actionPerformed(ActionEvent e) {
@@ -252,7 +249,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 	        popupMenu.add(copyMenuItem);
 
 	    	if (SessionMgr.getUsername().equals(annotation.getOwner())) {
-	            JMenuItem deleteItem = new JMenuItem("  Delete annotation");
+	            JMenuItem deleteItem = new JMenuItem("  Delete Annotation");
 	            deleteItem.addActionListener(new ActionListener() {
 	                public void actionPerformed(ActionEvent actionEvent) {
 	                	deleteAnnotation(annotation);
@@ -262,7 +259,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 	    	}
 
             if (null!=annotation.getValueString()){
-                JMenuItem editItem = new JMenuItem("  Edit annotation");
+                JMenuItem editItem = new JMenuItem("  Edit Annotation");
                 editItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
@@ -294,7 +291,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
                 popupMenu.add(editItem);
             }
 
-	        JMenuItem detailsItem = new JMenuItem("  View details");
+	        JMenuItem detailsItem = new JMenuItem("  View Details");
 	        detailsItem.addActionListener(new ActionListener() {
 	            public void actionPerformed(ActionEvent actionEvent) {
 	            	OntologyOutline.viewAnnotationDetails(annotation);
@@ -304,7 +301,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 			
 		}
 		else {
-	        JMenuItem titleMenuItem = new JMenuItem("(Multiple items selected)");
+	        JMenuItem titleMenuItem = new JMenuItem("(Multiple Items Selected)");
 	        titleMenuItem.setEnabled(false);
 	        popupMenu.add(titleMenuItem);
 	        
@@ -315,7 +312,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
             }
 	        
 	    	if (SessionMgr.getUsername().equals(annotation.getOwner())) {
-	            JMenuItem deleteItem = new JMenuItem("  Delete annotations");
+	            JMenuItem deleteItem = new JMenuItem("  Delete Annotations");
 	            deleteItem.addActionListener(new ActionListener() {
 	                public void actionPerformed(ActionEvent actionEvent) {
 	                	deleteAnnotations(toDeleteList);

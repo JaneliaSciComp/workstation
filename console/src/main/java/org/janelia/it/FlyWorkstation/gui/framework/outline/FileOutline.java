@@ -187,7 +187,7 @@ public class FileOutline extends JScrollPane implements Cloneable {
 
     private void getImagePopupMenu(final File treePath, MouseEvent e) {
         actionPopup = new JPopupMenu();
-        JMenuItem vaa3dMenuItem = new JMenuItem("Show in Vaa3D");
+        JMenuItem vaa3dMenuItem = new JMenuItem("Show In Vaa3D");
         vaa3dMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 String tmpCmd = "/Users/" + SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME) + "/Dev/NeuroAnnotator/vaa3d/v3d64.app/Contents/MacOS/v3d64 -f " + treePath.getAbsolutePath();

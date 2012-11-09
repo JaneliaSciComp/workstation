@@ -1,17 +1,15 @@
 package org.janelia.it.FlyWorkstation.gui.framework.context_menu;
 
-import java.awt.Toolkit;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
+import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
-
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
-
-import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
-import org.janelia.it.jacs.shared.utils.StringUtils;
 
 /**
  * A common base class for supporting single and multiple-selection context menus.
@@ -81,7 +79,7 @@ public abstract class AbstractContextMenu<T> extends JPopupMenu {
 	
 	protected JMenuItem getCopyToClipboardItem() {
 		if (selectedElements.size()>1) return null;
-        JMenuItem copyMenuItem = new JMenuItem("  Copy to clipboard");
+        JMenuItem copyMenuItem = new JMenuItem("  Copy To Clipboard");
         copyMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {

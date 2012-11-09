@@ -6,25 +6,13 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.event.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
-
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.KeyBindDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.choose.OntologyElementChooser;
-import org.janelia.it.FlyWorkstation.gui.framework.actions.*;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.*;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
@@ -39,6 +27,16 @@ import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
 import org.janelia.it.jacs.model.ontology.types.*;
 import org.janelia.it.jacs.model.ontology.types.Enum;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
 
 
 /**
@@ -263,7 +261,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
         titleMenuItem.setEnabled(false);
         popupMenu.add(titleMenuItem);
         
-        JMenuItem assignShortcutMenuItem = new JMenuItem("  Assign shortcut...");
+        JMenuItem assignShortcutMenuItem = new JMenuItem("  Assign Shortcut...");
         assignShortcutMenuItem.addActionListener(this);
         assignShortcutMenuItem.setActionCommand(BIND_EDIT_COMMAND);
         popupMenu.add(assignShortcutMenuItem);
@@ -302,14 +300,14 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
         	
             // Disallow deletion of root nodes. You've gotta use the OntologyManager for that.
             if (curr.getParent() != null) {
-            	JMenuItem removeNodeMenuItem = new JMenuItem("  Delete term from ontology");
+            	JMenuItem removeNodeMenuItem = new JMenuItem("  Delete Term From Ontology");
                 removeNodeMenuItem.addActionListener(this);
                 removeNodeMenuItem.setActionCommand(REMOVE_COMMAND);
                 popupMenu.add(removeNodeMenuItem);
             }
         }
 
-    	JMenuItem removeAnnotNodeMenuItem = new JMenuItem("  Remove from all selected entities");
+    	JMenuItem removeAnnotNodeMenuItem = new JMenuItem("  Remove From All Selected Entities");
     	removeAnnotNodeMenuItem.addActionListener(this);
     	removeAnnotNodeMenuItem.setActionCommand(REMOVE_ANNOT_COMMAND);
         popupMenu.add(removeAnnotNodeMenuItem);

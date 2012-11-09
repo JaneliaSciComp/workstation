@@ -1,9 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.dataview;
 
+import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
-import javax.swing.*;
 
 /**
  * The menu bar for the dataviewer.
@@ -33,7 +32,7 @@ public class DataviewMenuBar extends JMenuBar {
         searchMenu.setMnemonic('S');
         add(searchMenu);
 
-        JMenuItem menuFileSearchById = new JMenuItem("Search by entity id...");
+        JMenuItem menuFileSearchById = new JMenuItem("Search By Entity Id...");
         menuFileSearchById.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 final String entityId = (String) JOptionPane.showInputDialog(dataview, "Entity id: ", "Search by entity id", JOptionPane.PLAIN_MESSAGE, null, null, null);
@@ -42,7 +41,7 @@ public class DataviewMenuBar extends JMenuBar {
         });
         searchMenu.add(menuFileSearchById);
 
-        JMenuItem menuFileSearchByName = new JMenuItem("Search by entity name...");
+        JMenuItem menuFileSearchByName = new JMenuItem("Search By Entity Name...");
         menuFileSearchByName.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 final String entityName = (String) JOptionPane.showInputDialog(dataview, "Entity name: ", "Search by entity name", JOptionPane.PLAIN_MESSAGE, null, null, null);

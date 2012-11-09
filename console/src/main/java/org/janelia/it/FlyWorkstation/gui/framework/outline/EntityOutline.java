@@ -6,20 +6,6 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Callable;
-
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreePath;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
@@ -37,6 +23,19 @@ import org.janelia.it.jacs.model.entity.EntityAttribute;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Callable;
 
 /**
  * The entity tree which lives in the right-hand "Data" panel and drives the viewers. 
@@ -282,7 +281,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		private JMenuItem getNewRootFolderItem() {
 			if (multiple) return null;
 			
-			JMenuItem newFolderItem = new JMenuItem("  Create new top-level folder");
+			JMenuItem newFolderItem = new JMenuItem("  Create New Top-Level Folder");
 			newFolderItem.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent actionEvent) {
 

@@ -1,10 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.gui.util.MailDialogueBox;
-import org.janelia.it.FlyWorkstation.shared.util.text_component.StandardTextArea;
-import org.janelia.it.jacs.shared.utils.MailHelper;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -18,7 +14,7 @@ import java.awt.event.ActionListener;
  */
 public class HelpMenu extends JMenu {
 
-    JMenuItem bugReport = new JMenuItem("Report a bug");
+    JMenuItem bugReport = new JMenuItem("Report A Bug");
 
     public HelpMenu(Browser console) {
         super("Help");

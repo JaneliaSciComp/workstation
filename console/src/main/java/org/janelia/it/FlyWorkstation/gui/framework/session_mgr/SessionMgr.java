@@ -1,15 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.session_mgr;
 
-import java.awt.Component;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
-import java.io.*;
-import java.text.ParseException;
-import java.util.*;
-
-import javax.swing.*;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
@@ -26,6 +16,16 @@ import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.ws.EmbeddedAxisServer;
 import org.janelia.it.jacs.model.user_data.User;
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.io.*;
+import java.text.ParseException;
+import java.util.*;
+import java.util.List;
+
 
 public class SessionMgr {
 
@@ -37,6 +37,7 @@ public class SessionMgr {
     public static String USER_NAME = LoginProperties.SERVER_LOGIN_NAME;
     public static String USER_PASSWORD = LoginProperties.SERVER_LOGIN_PASSWORD;
     public static String USER_EMAIL = "UserEmail";
+    public static String CACHE_SIZE_PROPERTY = "SessionMgr.CacheSize";
 
     public static String DISPLAY_LOOK_AND_FEEL = "SessionMgr.JavaLookAndFeel";
 
@@ -139,6 +140,10 @@ public class SessionMgr {
         if (tempLogin != null && tempPassword != null) {
             PropertyConfigurator.getProperties().setProperty(USER_NAME, tempLogin);
             PropertyConfigurator.getProperties().setProperty(USER_PASSWORD, tempPassword);
+        }
+        Integer tmpCache = (Integer) getModelProperty(CACHE_SIZE_PROPERTY);
+        if (null!=tmpCache) {
+            PropertyConfigurator.getProperties().setProperty(CACHE_SIZE_PROPERTY, tmpCache.toString());
         }
         sessionCreationTime = new Date();
         // TODO: Bundle FIJI with Fly Workstation
@@ -630,6 +635,16 @@ public class SessionMgr {
             }
         }
         return null;
+    }
+
+    public static Integer getCacheSize() {
+        if (null!=SessionMgr.getSessionMgr().getModelProperty(SessionMgr.CACHE_SIZE_PROPERTY)) {
+            Integer cacheSize = (Integer)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.CACHE_SIZE_PROPERTY);
+            if (null != cacheSize){
+                return cacheSize;
+            }
+        }
+        return ConsoleProperties.getInt(SessionMgr.CACHE_SIZE_PROPERTY);
     }
 
     public static Browser getBrowser() {

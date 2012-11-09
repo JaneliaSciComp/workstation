@@ -1,14 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.KeyStroke;
-
 import org.janelia.it.FlyWorkstation.gui.dialogs.MAASearchDialog;
 import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
  * Created by IntelliJ IDEA.
@@ -50,7 +47,7 @@ public class SearchMenu extends JMenu {
 
         final MAASearchDialog maaSearchDialog = browser.getMAASearchDialog();
         if (maaSearchDialog.isAccessible()) {
-        	JMenuItem menuItem = new JMenuItem("MAA Screen Search...");
+        	JMenuItem menuItem = new JMenuItem("MAA Screen Search");
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                 	maaSearchDialog.showDialog();

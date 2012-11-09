@@ -1,14 +1,16 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
+import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.DataSourceSelector;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManagerBase;
+import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
-import org.janelia.it.FlyWorkstation.gui.util.panels.DataSourceSettings;
+import org.janelia.it.FlyWorkstation.gui.util.panels.DataSourceSettingsPanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -40,6 +42,7 @@ public class FileMenu extends JMenu {
     JMenuItem menuListOpen;
     JMenuItem setLoginMI;
     JMenuItem menuFileImport;
+    JMenuItem menuViewDetails;
     private JMenu menuSetPreferences;
     private JMenuItem menuPrefSystem;
     private JMenuItem menuPrefViewer;
@@ -59,12 +62,13 @@ public class FileMenu extends JMenu {
         this.setMnemonic('F');
         this.browser = browser;
         SessionMgr.getSessionMgr().addSessionModelListener(new MySessionModelListener());
+//        ModelMgr.getModelMgr().addModelMgrObserver(new MyModelManagerObserver());
         //This puts login and password info into the console properties.  Checking the login
         // save checkbox writes out to the session-persistent collection object.
         browser.getBrowserModel().setModelProperty("LOGIN", SessionMgr.getSessionMgr().getModelProperty("LOGIN"));
         browser.getBrowserModel().setModelProperty("PASSWORD", SessionMgr.getSessionMgr().getModelProperty("PASSWORD"));
 
-        menuOpenDataSource = new JMenuItem("Open Data Source...", 'D');
+        menuOpenDataSource = new JMenuItem("Open Data Source", 'D');
         menuOpenDataSource.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, InputEvent.CTRL_MASK, false));
         menuOpenDataSource.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -72,36 +76,47 @@ public class FileMenu extends JMenu {
             }
         });
 
-        setLoginMI = new JMenuItem("Set Login...", 'o');
+        setLoginMI = new JMenuItem("Set Login", 'o');
         setLoginMI.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 setLogin();
             }
         });
 
-        menuListOpen = new JMenuItem("List Open Data Sources...", 'L');
+        menuListOpen = new JMenuItem("List Open Data Sources", 'L');
         menuListOpen.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 menuListOpen_actionPerformed();
             }
         });
 
-        menuFileImport = new JMenuItem("Import From File Share...", 'I');
+        menuFileImport = new JMenuItem("Import Files", 'I');
         menuFileImport.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 menuFileImport_actionPerformed();
             }
         });
-        add(menuFileImport);
 
         menuSetPreferences = new JMenu("Preferences");
         menuSetPreferences.setMnemonic('P');
-        add(menuSetPreferences);
 
-        menuFilePrint = new JMenuItem("Print Screen...", 'P');
+        menuFilePrint = new JMenuItem("Print Screen", 'P');
         menuFilePrint.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 filePrint_actionPerformed();
+            }
+        });
+
+        menuViewDetails = new JMenuItem("View Details");
+        menuViewDetails.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, java.awt.Event.META_MASK));
+        menuViewDetails.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    viewDetails_actionPerformed(e, FacadeManager.getEJBProtocolString(), null);
+                }
+                catch (Exception e1) {
+                    SessionMgr.getSessionMgr().handleException(e1);
+                }
             }
         });
 
@@ -112,7 +127,7 @@ public class FileMenu extends JMenu {
             }
         });
 
-        menuPrefSystem = new JMenuItem("System...", 'S');
+        menuPrefSystem = new JMenuItem("System", 'S');
         menuPrefSystem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 establishPrefController(PrefController.APPLICATION_EDITOR);
@@ -120,7 +135,7 @@ public class FileMenu extends JMenu {
         });
         menuSetPreferences.add(menuPrefSystem);
 
-        menuPrefViewer = new JMenuItem("Viewer...", 'V');
+        menuPrefViewer = new JMenuItem("Viewer", 'V');
         menuPrefViewer.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 establishPrefController(PrefController.VIEWER_EDITOR);
@@ -243,7 +258,9 @@ public class FileMenu extends JMenu {
     }
 
     private void addMenuItems() {
+        removeAll();
         add(setLoginMI);
+        add(menuFileImport);
         add(new JSeparator());
 //        add(menuListOpen);
 //        add(menuFileImport);
@@ -258,7 +275,7 @@ public class FileMenu extends JMenu {
     }
 
     private void setLogin() {
-        PrefController.getPrefController().getPrefInterface(DataSourceSettings.class, browser);
+        PrefController.getPrefController().getPrefInterface(DataSourceSettingsPanel.class, browser);
     }
 
     private void menuFileImport_actionPerformed(){
@@ -280,7 +297,7 @@ public class FileMenu extends JMenu {
         if (SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME) == null || SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME).equals("") && ModelMgr.getModelMgr().getNumberOfLoadedOntologies() == 0) {
             int answer = JOptionPane.showConfirmDialog(browser, "Please enter your Workstation login information.", "Information Required", JOptionPane.OK_CANCEL_OPTION);
             if (answer == JOptionPane.CANCEL_OPTION) return;
-            PrefController.getPrefController().getPrefInterface(DataSourceSettings.class, browser);
+            PrefController.getPrefController().getPrefInterface(DataSourceSettingsPanel.class, browser);
         }
         // Double check.  Exit if still empty or not useful.
         if (SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME) == null || SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME).equals("") && ModelMgr.getModelMgr().getNumberOfLoadedOntologies() == 0) {
@@ -292,6 +309,13 @@ public class FileMenu extends JMenu {
         else dss.setDataSource(facadeManager, dataSource);
         ((JMenuItem) e.getSource()).setEnabled(//disable the menu if the protocol cannot support multiple datasources
                 FacadeManager.canProtocolAddMoreDataSources(protocol));
+    }
+
+
+    private void viewDetails_actionPerformed(ActionEvent e, String protocol, Object dataSource) throws Exception {
+        new EntityDetailsDialog().showForEntity(
+                ModelMgr.getModelMgr().getEntityById(
+                        ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityId(EntitySelectionModel.CATEGORY_OUTLINE)));
     }
 
 
@@ -386,14 +410,20 @@ public class FileMenu extends JMenu {
         }
     }
 
-//    class MyModelManagerObserver extends ModelMgrObserverAdapter {
+//    class MyModelManagerObserver extends ModelMgrAdapter{
 //        @Override
-//        public void ontologySelected(Entity ontology) {
-//            super.ontologySelected(ontology);
+//        public void entitySelected(String category, String entityId, boolean clearAll) {
+//            addedMenus.add(menuViewDetails);
+//            addMenuItems();
 //        }
 //
+//        @Override
+//        public void entityDeselected(String category, String entityId) {
+//            addedMenus.remove(menuViewDetails);
+//            addMenuItems();
+//        }
 //    }
-
+//
     class MySessionModelListener implements SessionModelListener {
         public void browserAdded(BrowserModel browserModel) {
         }

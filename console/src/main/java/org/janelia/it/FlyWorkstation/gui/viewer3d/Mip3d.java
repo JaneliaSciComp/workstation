@@ -49,7 +49,7 @@ implements MouseListener, MouseMotionListener, ActionListener,
         	addMouseWheelListener(this);
         	// Context menu for resetting view
         	popupMenu = new JPopupMenu();
-        	JMenuItem resetViewItem = new JMenuItem("Reset view");
+        	JMenuItem resetViewItem = new JMenuItem("Reset View");
         	resetViewItem.addActionListener(this);
         	popupMenu.add(resetViewItem);
 	}

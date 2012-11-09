@@ -1,15 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
-import java.awt.Color;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.*;
-import javax.swing.border.Border;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.RemoveAnnotationsAction;
@@ -20,6 +10,15 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+
+import javax.swing.*;
+import javax.swing.border.Border;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A tag cloud of Entity-based annotations which support context menu operations such as deletion.
@@ -70,7 +69,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
         popupMenu.setLightWeightPopupEnabled(true);
         
         if (rootedEntityList.size()>1) {
-            JMenuItem titleItem = new JMenuItem("(Multiple selected)");
+            JMenuItem titleItem = new JMenuItem("(Multiple Selected)");
             titleItem.setEnabled(false);
             popupMenu.add(titleItem);
             
@@ -92,7 +91,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
             popupMenu.add(titleItem);
             
         	if (SessionMgr.getUsername().equals(tag.getOwner())) {
-                JMenuItem deleteItem = new JMenuItem("  Delete annotation");
+                JMenuItem deleteItem = new JMenuItem("  Delete Annotation");
                 deleteItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
                         deleteTag(tag);
@@ -102,7 +101,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
         	}
 
             if (null!=tag.getValueString()){
-                JMenuItem editItem = new JMenuItem("  Edit annotation");
+                JMenuItem editItem = new JMenuItem("  Edit Annotation");
                 editItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
@@ -142,7 +141,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
             });
             popupMenu.add(copyItem);
 
-            JMenuItem detailsItem = new JMenuItem("  View details");
+            JMenuItem detailsItem = new JMenuItem("  View Details");
             detailsItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                 	OntologyOutline.viewAnnotationDetails(tag);

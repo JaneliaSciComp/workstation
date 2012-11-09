@@ -6,17 +6,6 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.BorderLayout;
-import java.awt.Dialog.ModalityType;
-import java.awt.Dimension;
-import java.awt.event.*;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.File;
-import java.util.List;
-
-import javax.swing.*;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.ModalDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -25,6 +14,16 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
 import org.semanticweb.owlapi.model.OWLException;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.util.List;
 
 /**
  * A dialog for managing ontologies that can be loaded into the OntologyOutline.
@@ -141,12 +140,12 @@ public class OntologyManager extends ModalDialog implements ActionListener, Prop
         mi.setActionCommand(ONTOLOGY_LOAD_COMMAND);
         privateMenu.add(mi);
 
-        mi = new JMenuItem("Clone (create a private copy)");
+        mi = new JMenuItem("Clone (Create A Private Copy)");
         mi.addActionListener(OntologyManager.this);
         mi.setActionCommand(ONTOLOGY_CLONE_COMMAND);
         privateMenu.add(mi);
 
-        mi = new JMenuItem("Share (create a public copy)");
+        mi = new JMenuItem("Share (Create A Public Copy)");
         mi.addActionListener(OntologyManager.this);
         mi.setActionCommand(ONTOLOGY_SHARE_COMMAND);
         privateMenu.add(mi);
@@ -164,7 +163,7 @@ public class OntologyManager extends ModalDialog implements ActionListener, Prop
         mi.setActionCommand(ONTOLOGY_LOAD_COMMAND);
         publicMenu.add(mi);
 
-        mi = new JMenuItem("Clone (create a private copy)");
+        mi = new JMenuItem("Clone (Create A Private Copy)");
         mi.addActionListener(OntologyManager.this);
         mi.setActionCommand(ONTOLOGY_CLONE_COMMAND);
         publicMenu.add(mi);

@@ -6,21 +6,6 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.BorderLayout;
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.util.*;
-import java.util.Timer;
-
-import javax.swing.*;
-import javax.swing.plaf.basic.BasicTreeUI;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreePath;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.TaskDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
@@ -31,6 +16,19 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
+import java.awt.*;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.util.*;
+import java.util.List;
+import java.util.Timer;
 
 /**
  * Provides a tree of the user's Tasks and provides ways to manipulate and view them.
@@ -269,7 +267,7 @@ public class TaskTreeOutline extends JPanel {
 	        titleMenuItem.setEnabled(false);
 	        popupMenu.add(titleMenuItem);
 	        
-	        JMenuItem copyMenuItem = new JMenuItem("  Copy to clipboard");
+	        JMenuItem copyMenuItem = new JMenuItem("  Copy To Clipboard");
 	        copyMenuItem.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
@@ -300,7 +298,7 @@ public class TaskTreeOutline extends JPanel {
             	}
             }
 
-            JMenuItem deleteMenuItem = new JMenuItem("  View details");
+            JMenuItem deleteMenuItem = new JMenuItem("  View Details");
             deleteMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
 					detailsDialog.showForTask(selectedTask);
@@ -309,7 +307,7 @@ public class TaskTreeOutline extends JPanel {
             popupMenu.add(deleteMenuItem);
 		}
 		else {
-	        JMenuItem titleMenuItem = new JMenuItem("(Multiple items selected)");
+	        JMenuItem titleMenuItem = new JMenuItem("(Multiple Items Selected)");
 	        titleMenuItem.setEnabled(false);
 	        popupMenu.add(titleMenuItem);
 		}

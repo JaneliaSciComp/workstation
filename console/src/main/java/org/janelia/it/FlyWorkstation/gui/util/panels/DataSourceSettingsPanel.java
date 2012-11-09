@@ -5,6 +5,7 @@ import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.framework.roles.PrefEditor;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.gui.util.swing_models.CollectionJListModel;
 import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
 import org.janelia.it.FlyWorkstation.shared.util.text_component.StandardTextField;
@@ -21,24 +22,32 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class DataSourceSettings extends JPanel implements PrefEditor {
+public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
     private String userLogin = "";
     private String userPassword = "";
     private String userEmail = "";
+    private Integer cacheSize;
     private boolean settingsChanged = false;
     private JFrame parentFrame;
+    JLabel requiredField = new JLabel("* indicates a required field");
+
     JPanel loginPanel = new JPanel();
-    JPanel emailPanel = new JPanel();
-//    JPanel requiredPanel = new JPanel();
+    TitledBorder loginBorder;
     JPasswordField passwordTextField;
     JLabel passwordLabel = new JLabel("* Password:");
     JLabel loginLabel = new JLabel("* User Name:");
-    JLabel emailLabel = new JLabel("* Email Address:");
-    JLabel requiredField = new JLabel("* indicates a required field");
     JTextField loginTextField = new StandardTextField();
+
+    JPanel emailPanel = new JPanel();
+    TitledBorder emailBorder;
+    JLabel emailLabel = new JLabel("* Email Address:");
     JTextField emailTextField = new StandardTextField();
-    TitledBorder titledBorder2;
-    TitledBorder titledBorder3;
+
+    //    JPanel requiredPanel = new JPanel();
+    JPanel diskCachePanel = new JPanel();
+    TitledBorder diskCacheBorder;
+    JLabel diskCacheLabel = new JLabel("Disk Cache Size (GB)");
+    JSlider diskCacheSlider = new JSlider(0,1000);
 
     private static final String LOCATION_PROP_NAME = "XmlGenomeVersionLocation";
 //    private static final int PREFERRED_JLIST_HEIGHT = 165;
@@ -59,7 +68,7 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
     private JButton removeDirectoryButton = new JButton("Remove Selected Directory");
     private static final int MAX_DIR_LENGTH = 60;
 
-    public DataSourceSettings(JFrame parentFrame) {
+    public DataSourceSettingsPanel(JFrame parentFrame) {
         this.parentFrame = parentFrame;
         try {
             userLogin = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
@@ -68,6 +77,8 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
             if (userPassword == null) userPassword = "";
             userEmail = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL);
             if (userEmail == null) userEmail = "";
+            cacheSize = SessionMgr.getCacheSize();
+            if (null==cacheSize) cacheSize = ConsoleProperties.getInt(SessionMgr.CACHE_SIZE_PROPERTY);
             jbInit();
         }
         catch (Exception ex) {
@@ -102,7 +113,10 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
 
     public boolean hasChanged() {
         // If not equal to original values, they have changed.
-        if (!userLogin.equals(loginTextField.getText().trim()) || !userPassword.equals(new String(passwordTextField.getPassword())) || !userEmail.equals(new String(emailTextField.getText().trim())))
+        if (!userLogin.equals(loginTextField.getText().trim()) ||
+            !userPassword.equals(new String(passwordTextField.getPassword())) ||
+            !userEmail.equals(new String(emailTextField.getText().trim())) ||
+            !cacheSize.equals(diskCacheSlider.getValue()))
             settingsChanged = true;
         return settingsChanged;
     }
@@ -116,12 +130,16 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
         userLogin = loginTextField.getText().trim();
         userPassword = new String(passwordTextField.getPassword());
         userEmail = emailTextField.getText().trim();
+        cacheSize = diskCacheSlider.getValue();
 
-        if ((!userLogin.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME))) || (!userPassword.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_PASSWORD))) ||
-                (!userEmail.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL)))) {
+        if ((!userLogin.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME))) ||
+            (!userPassword.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_PASSWORD))) ||
+            (!userEmail.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL))) ||
+            (!cacheSize.equals(SessionMgr.getCacheSize()))) {
             SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, userLogin);
             SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_PASSWORD, userPassword);
             SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_EMAIL, userEmail);
+            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.CACHE_SIZE_PROPERTY, cacheSize);
             boolean loginSuccess = SessionMgr.getSessionMgr().loginUser();
             if (!loginSuccess) {
 
@@ -207,9 +225,9 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
             public void focusLost(FocusEvent e) {
             }
         });
-        titledBorder2 = new TitledBorder("Workstation Login Information");
+        loginBorder = new TitledBorder("Workstation Login Information");
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        loginPanel.setBorder(titledBorder2);
+        loginPanel.setBorder(loginBorder);
         loginPanel.setLayout(new BoxLayout(loginPanel, BoxLayout.Y_AXIS));
         loginPanel.setMaximumSize(new Dimension(600, 100));
         JPanel userPassPanel = new JPanel();
@@ -225,8 +243,8 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
         loginPanel.add(userPassPanel);
         loginPanel.add(Box.createVerticalStrut(10));
 
-        titledBorder3 = new TitledBorder("Email Address");
-        emailPanel.setBorder(titledBorder3);
+        emailBorder = new TitledBorder("Email Address");
+        emailPanel.setBorder(emailBorder);
         emailPanel.setLayout(new BoxLayout(emailPanel, BoxLayout.X_AXIS));
         emailPanel.setMaximumSize(new Dimension(600, 100));
         JPanel userEmailPanel = new JPanel();
@@ -239,6 +257,21 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
         emailPanel.add(userEmailPanel);
         emailPanel.add(Box.createVerticalStrut(10));
 
+        diskCacheBorder = new TitledBorder("Disk Cache");
+        diskCachePanel.setBorder(diskCacheBorder);
+        diskCachePanel.setLayout(new BoxLayout(diskCachePanel, BoxLayout.X_AXIS));
+        diskCachePanel.setMaximumSize(new Dimension(600, 50));
+        diskCacheSlider.setMajorTickSpacing(100);
+        diskCacheSlider.setMinorTickSpacing(50);
+        diskCacheSlider.setPaintTicks(true);
+        diskCacheSlider.setPaintLabels(true);
+        diskCacheSlider.setSnapToTicks(true);
+        diskCachePanel.add(diskCacheLabel);
+        diskCachePanel.add(Box.createHorizontalStrut(10));
+        diskCachePanel.add(diskCacheSlider);
+        diskCachePanel.add(Box.createHorizontalStrut(10));
+        diskCacheSlider.setValue(cacheSize);
+
         JPanel notePanel = new JPanel();
         notePanel.setMaximumSize(new Dimension(600,100));
         notePanel.setLayout(new BoxLayout(notePanel, BoxLayout.X_AXIS));
@@ -248,6 +281,8 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
         add(loginPanel);
         add(Box.createVerticalStrut(10));
         add(emailPanel);
+        add(Box.createVerticalStrut(10));
+        add(diskCachePanel);
         add(Box.createVerticalGlue());
         add(notePanel);
 
@@ -392,7 +427,7 @@ public class DataSourceSettings extends JPanel implements PrefEditor {
 //            } // User entered something.
 //        }
 //        catch (MalformedURLException ex) {
-//            JOptionPane.showMessageDialog(DataSourceSettings.this, "The typed URL is not valid", "Error", JOptionPane.ERROR_MESSAGE);
+//            JOptionPane.showMessageDialog(DataSourceSettingsPanel.this, "The typed URL is not valid", "Error", JOptionPane.ERROR_MESSAGE);
 //            return;
 //        }
 //        this.repaint();

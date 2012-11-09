@@ -6,18 +6,6 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.event.*;
-import java.awt.image.BufferedImage;
-import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.swing.*;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
@@ -41,6 +29,15 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of 
@@ -383,7 +380,7 @@ public class IconDemoPanel extends Viewer {
 				titleItem.setEnabled(false);
 				popupMenu.add(titleItem);
 
-				JMenuItem newFolderItem = new JMenuItem("  Create new folder");
+				JMenuItem newFolderItem = new JMenuItem("  Create New Folder");
 				newFolderItem.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent actionEvent) {
 
@@ -660,7 +657,7 @@ public class IconDemoPanel extends Viewer {
 				// users it affects are the same users that were displayed
 				final List<String> savedUsers = new ArrayList<String>(allUsers);
 
-				JMenuItem allUsersMenuItem = new JCheckBoxMenuItem("All users", hiddenUsers.isEmpty());
+				JMenuItem allUsersMenuItem = new JCheckBoxMenuItem("All Users", hiddenUsers.isEmpty());
 				allUsersMenuItem.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
 						if (hiddenUsers.isEmpty()) {

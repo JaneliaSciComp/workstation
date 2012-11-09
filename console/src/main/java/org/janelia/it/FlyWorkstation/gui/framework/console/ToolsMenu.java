@@ -30,7 +30,7 @@ public class ToolsMenu extends JMenu implements ToolListener {
         this.setMnemonic('T');
         this.parentFrame = console;
         ToolMgr.getToolMgr().registerPrefMgrListener(this);
-        toolsConfiguration = new JMenuItem("Configure Tools...");
+        toolsConfiguration = new JMenuItem("Configure Tools");
         toolsConfiguration.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 try {

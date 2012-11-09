@@ -15,7 +15,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefControlle
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ApplicationSettingsPanel;
-import org.janelia.it.FlyWorkstation.gui.util.panels.DataSourceSettings;
+import org.janelia.it.FlyWorkstation.gui.util.panels.DataSourceSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.server_status.ServerStatusReportManager;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -113,7 +113,7 @@ public class ConsoleApp {
 //                    client.gui.other.panels.BackupPanel.class,
 //                    client.gui.other.panels.BackupPanel.class);
             sessionMgr.registerPreferenceInterface(ApplicationSettingsPanel.class, ApplicationSettingsPanel.class);
-            sessionMgr.registerPreferenceInterface(DataSourceSettings.class, DataSourceSettings.class);
+            sessionMgr.registerPreferenceInterface(DataSourceSettingsPanel.class, DataSourceSettingsPanel.class);
 //            sessionMgr.registerPreferenceInterface(SystemSettingsPanel.class, SystemSettingsPanel.class);
             sessionMgr.registerPreferenceInterface(ViewerSettingsPanel.class, ViewerSettingsPanel.class);
 //            sessionMgr.registerPreferenceInterface(ToolSettingsPanel.class, ToolSettingsPanel.class);
@@ -144,7 +144,7 @@ public class ConsoleApp {
                 final int answer = JOptionPane.showOptionDialog(null, "Please enter your login and email information.", "Information Required",
                         JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
                 if (answer == 0) {
-                    PrefController.getPrefController().getPrefInterface(DataSourceSettings.class, null);
+                    PrefController.getPrefController().getPrefInterface(DataSourceSettingsPanel.class, null);
                 }
                 else {
                     SessionMgr.getSessionMgr().systemExit();
@@ -158,7 +158,7 @@ public class ConsoleApp {
                 final int answer = JOptionPane.showOptionDialog(null, "Please enter your login information.", "Information Required",
                         JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
                 if (answer == 0) {
-                    PrefController.getPrefController().getPrefInterface(DataSourceSettings.class, null);
+                    PrefController.getPrefController().getPrefInterface(DataSourceSettingsPanel.class, null);
                 }
                 else {
                     SessionMgr.getSessionMgr().systemExit();

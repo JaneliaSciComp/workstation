@@ -188,7 +188,7 @@ public class EntityContextMenu extends JPopupMenu {
 
 	protected JMenuItem getDetailsItem() {
 		if (multiple) return null;
-        JMenuItem detailsMenuItem = new JMenuItem("  View details");
+        JMenuItem detailsMenuItem = new JMenuItem("  View Details");
         detailsMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -395,7 +395,7 @@ public class EntityContextMenu extends JPopupMenu {
 	
 	protected JMenuItem getCopyNameToClipboardItem() {
 		if (multiple) return null;
-        JMenuItem copyMenuItem = new JMenuItem("  Copy name to clipboard");
+        JMenuItem copyMenuItem = new JMenuItem("  Copy Name To Clipboard");
         copyMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -408,7 +408,7 @@ public class EntityContextMenu extends JPopupMenu {
 
 	protected JMenuItem getCopyIdToClipboardItem() {
 		if (multiple) return null;
-        JMenuItem copyMenuItem = new JMenuItem("  Copy GUID to clipboard");
+        JMenuItem copyMenuItem = new JMenuItem("  Copy GUID To Clipboard");
         copyMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -451,7 +451,7 @@ public class EntityContextMenu extends JPopupMenu {
 
     protected JMenu getErrorFlag(){
         if (multiple) return null;
-        errorMenu = new JMenu("  Report a problem with this data");
+        errorMenu = new JMenu("  Report A Problem With This Data");
         addBadDataButtons();
         return errorMenu;
     }
@@ -557,7 +557,7 @@ public class EntityContextMenu extends JPopupMenu {
 		
 		newFolderMenu.addSeparator();
 		
-		JMenuItem createNewItem = new JMenuItem("Create new...");
+		JMenuItem createNewItem = new JMenuItem("Create New...");
 		
 		createNewItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent actionEvent) {
@@ -640,7 +640,7 @@ public class EntityContextMenu extends JPopupMenu {
 		
 		newFolderMenu.addSeparator();
 		
-		JMenuItem createNewItem = new JMenuItem("Create new...");
+		JMenuItem createNewItem = new JMenuItem("Create New...");
 		
 		createNewItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent actionEvent) {
@@ -734,7 +734,7 @@ public class EntityContextMenu extends JPopupMenu {
         // Anything but one parent id for selected entities should not allow merge
         if (parentIds.size()!=1) { return null; }
 
-        JMenuItem mergeItem = new JMenuItem("  Merge "+rootedEntityList.size()+" selected entities");
+        JMenuItem mergeItem = new JMenuItem("  Merge "+rootedEntityList.size()+" Selected Entities");
 
         mergeItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
@@ -817,7 +817,7 @@ public class EntityContextMenu extends JPopupMenu {
         	return null;
         }
 
-        JMenuItem sortItem = new JMenuItem("  Sort folder by similarity to this image");
+        JMenuItem sortItem = new JMenuItem("  Sort Folder By Similarity To This Image");
 
         sortItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
@@ -850,7 +850,7 @@ public class EntityContextMenu extends JPopupMenu {
     protected JMenuItem getOpenInFirstViewerItem() {
 		if (multiple) return null;
 		if (StringUtils.isEmpty(rootedEntity.getUniqueId())) return null;
-        JMenuItem copyMenuItem = new JMenuItem("  Open in first pane");
+        JMenuItem copyMenuItem = new JMenuItem("  Open In First Pane");
         
         copyMenuItem.addActionListener(new ActionListener() {
 			@Override
@@ -884,7 +884,7 @@ public class EntityContextMenu extends JPopupMenu {
 	protected JMenuItem getOpenInSecondViewerItem() {
 		if (multiple) return null;
 		if (StringUtils.isEmpty(rootedEntity.getUniqueId())) return null;
-        JMenuItem copyMenuItem = new JMenuItem("  Open in second pane");
+        JMenuItem copyMenuItem = new JMenuItem("  Open In Second Pane");
         
         copyMenuItem.addActionListener(new ActionListener() {
 			@Override
@@ -974,7 +974,7 @@ public class EntityContextMenu extends JPopupMenu {
 		if (multiple) return null;
         final String entityType = rootedEntity.getEntity().getEntityType().getName();
         if (entityType.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT) || entityType.equals(EntityConstants.TYPE_NEURON_FRAGMENT)) {
-            JMenuItem vaa3dMenuItem = new JMenuItem("  View in Neuron Annotator");
+            JMenuItem vaa3dMenuItem = new JMenuItem("  View In Neuron Annotator");
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
@@ -1043,7 +1043,7 @@ public class EntityContextMenu extends JPopupMenu {
 		if (multiple) return null;
         final String path = EntityUtils.getDefault3dImageFilePath(rootedEntity.getEntity());
         if (path!=null) {
-            JMenuItem vaa3dMenuItem = new JMenuItem("  View in Vaa3D Tri-View");
+            JMenuItem vaa3dMenuItem = new JMenuItem("  View In Vaa3D Tri-View");
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
@@ -1064,7 +1064,7 @@ public class EntityContextMenu extends JPopupMenu {
         if (multiple) return null;
         final String path = EntityUtils.getDefault3dImageFilePath(rootedEntity.getEntity());
         if (path!=null) {
-            JMenuItem vaa3dMenuItem = new JMenuItem("  View in Vaa3D 3D View");
+            JMenuItem vaa3dMenuItem = new JMenuItem("  View In Vaa3D 3D View");
             vaa3dMenuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
@@ -1084,7 +1084,7 @@ public class EntityContextMenu extends JPopupMenu {
     protected JMenuItem getNewFolderItem() {
         if (multiple) return null;
         if (EntityConstants.TYPE_FOLDER.equals(rootedEntity.getEntity().getEntityType().getName())) {
-            JMenuItem newFolderItem = new JMenuItem("  Create new folder");
+            JMenuItem newFolderItem = new JMenuItem("  Create New Folder");
             newFolderItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
 
@@ -1117,7 +1117,7 @@ public class EntityContextMenu extends JPopupMenu {
     protected JMenuItem getCreateSessionItem() {
 		if (multiple) return null;
 		
-		JMenuItem newFragSessionItem = new JMenuItem("  Create annotation session...");
+		JMenuItem newFragSessionItem = new JMenuItem("  Create Annotation Session...");
 		newFragSessionItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent actionEvent) {
 
@@ -1151,7 +1151,7 @@ public class EntityContextMenu extends JPopupMenu {
 
 	protected JMenuItem getSearchHereItem() {
 		if (multiple) return null;
-        JMenuItem searchHereMenuItem = new JMenuItem("  Search here");
+        JMenuItem searchHereMenuItem = new JMenuItem("  Search Here");
         searchHereMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
                 try {

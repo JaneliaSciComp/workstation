@@ -315,7 +315,7 @@ public abstract class DynamicTable extends JPanel {
 	        
 			// Items which are  only available when selecting a single cell
 			if (allowRightClickCellSelection) {
-		        JMenuItem copyMenuItem = new JMenuItem("  Copy to clipboard");
+		        JMenuItem copyMenuItem = new JMenuItem("  Copy To Clipboard");
 		        copyMenuItem.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
@@ -327,7 +327,7 @@ public abstract class DynamicTable extends JPanel {
 			}
 		}
 		else {
-	        JMenuItem titleMenuItem = new JMenuItem("(Multiple items selected)");
+	        JMenuItem titleMenuItem = new JMenuItem("(Multiple Items Selected)");
 	        titleMenuItem.setEnabled(false);
 	        popupMenu.add(titleMenuItem);
 		}

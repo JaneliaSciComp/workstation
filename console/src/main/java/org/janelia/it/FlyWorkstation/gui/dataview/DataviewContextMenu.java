@@ -1,13 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.dataview;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenInFinderAction;
@@ -20,6 +12,12 @@ import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Context pop up menu for entities in the data viewer.
@@ -56,7 +54,7 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 	
 	protected JMenuItem getDetailsItem() {
 		final Entity entity = getSelectedElement();
-        JMenuItem detailsMenuItem = new JMenuItem("  View details");
+        JMenuItem detailsMenuItem = new JMenuItem("  View Details");
         detailsMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {

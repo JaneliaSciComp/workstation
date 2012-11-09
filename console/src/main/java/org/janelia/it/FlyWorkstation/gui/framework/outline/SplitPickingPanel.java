@@ -1,18 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.FileWriter;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Callable;
-
-import javax.swing.*;
-import javax.swing.Timer;
-import javax.swing.tree.DefaultMutableTreeNode;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.SplitGroupingDialog;
@@ -31,6 +18,18 @@ import org.janelia.it.jacs.model.tasks.utility.GenericTask;
 import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.shared.file_chooser.FileChooser;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+
+import javax.swing.*;
+import javax.swing.Timer;
+import javax.swing.tree.DefaultMutableTreeNode;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileWriter;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * A panel that may be inserted into the right-most view pane and serves as a workflow driver for the GAL4 split line 
@@ -1047,7 +1046,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		
 		chooseFolderMenu.addSeparator();
 		
-		JMenuItem createNewItem = new JMenuItem("Create new...");
+		JMenuItem createNewItem = new JMenuItem("Create New...");
 		
 		createNewItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent actionEvent) {

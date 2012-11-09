@@ -1,22 +1,21 @@
 package org.janelia.it.FlyWorkstation.gui.dataview;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.util.List;
-
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreeModel;
-import javax.swing.tree.TreePath;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.EntityAttribute;
 import org.janelia.it.jacs.model.entity.EntityType;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreePath;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.util.List;
 
 /**
  * The left-hand panel which lists the Entity types and their attributes.
@@ -65,7 +64,7 @@ public class EntityTypePane extends JScrollPane {
 
         if (node.isRoot()) {
 
-            JMenuItem addTypeMenuItem = new JMenuItem("Add entity type");
+            JMenuItem addTypeMenuItem = new JMenuItem("Add Entity Type");
             addTypeMenuItem.addActionListener(new ActionListener() {
     			@Override
     			public void actionPerformed(ActionEvent e) {
@@ -88,7 +87,7 @@ public class EntityTypePane extends JScrollPane {
 
         	final EntityType entityType = (EntityType)node.getUserObject();
         	
-            JMenuItem addAttrMenuItem = new JMenuItem("Add attribute");
+            JMenuItem addAttrMenuItem = new JMenuItem("Add Attribute");
             addAttrMenuItem.addActionListener(new ActionListener() {
     			@Override
     			public void actionPerformed(ActionEvent e) {
