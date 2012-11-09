@@ -28,7 +28,19 @@ public class ViewerManager {
 		}
 		return viewer;
 	}
-	
+
+	public ViewerPane getActiveViewerPane() {
+		return viewerContainer.getActiveViewerPane();
+	}
+
+	public ViewerPane getMainViewerPane() {
+		return viewerContainer.getMainViewerPane();
+	}
+
+	public ViewerPane getSecViewerPane() {
+		return viewerContainer.getSecViewerPane();
+	}
+
 	public Viewer getActiveViewer(Class viewerClass) {
 		ViewerPane viewerPane = viewerContainer.getActiveViewerPane();
 		ensureViewerClass(viewerPane, viewerClass);
