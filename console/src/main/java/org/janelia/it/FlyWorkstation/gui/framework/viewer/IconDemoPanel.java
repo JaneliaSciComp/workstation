@@ -1324,7 +1324,18 @@ public class IconDemoPanel extends Viewer {
 	@Override
 	public RootedEntity getRootedEntityById(String id) {
 		if (pageRootedEntityMap==null) return null;
-		return pageRootedEntityMap.get(id);
+		RootedEntity re = pageRootedEntityMap.get(id);
+		if (re!=null) {
+			return re;
+		}
+		else {
+			for(RootedEntity rootedEntity : pageRootedEntities) {
+				if (rootedEntity.getEntity().getId().toString().equals(id)) {
+					return rootedEntity;	
+				}
+			}	
+		}
+		return null;
 	}
 	
 	@Override	

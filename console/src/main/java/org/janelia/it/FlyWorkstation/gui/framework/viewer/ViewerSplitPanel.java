@@ -116,8 +116,8 @@ public class ViewerSplitPanel extends JPanel implements ViewerContainer {
 						mainSplitPane.setDividerLocation(0.5);
 					}
 				});	
+				mainViewerOnly = false;
 			}
-			mainViewerOnly = false;
 		}
 		else {
 			mainViewerOnly = true;
@@ -126,16 +126,6 @@ public class ViewerSplitPanel extends JPanel implements ViewerContainer {
 	        add(mainViewerPane, BorderLayout.CENTER);
 			revalidate();
 			repaint();
-		}
-
-		if (mainViewerPane.getViewer()!=null) {
-			SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-					// always refresh the main viewer if something changes with the secondary viewer
-					mainViewerPane.getViewer().refresh();
-				}
-			});	
 		}
 	}
 }

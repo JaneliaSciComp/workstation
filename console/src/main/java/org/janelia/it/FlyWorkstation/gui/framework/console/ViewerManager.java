@@ -54,6 +54,7 @@ public class ViewerManager {
 	}
 
 	public Viewer getSecViewer(Class viewerClass) {
+		viewerContainer.setSecViewerVisible(true);
 		ViewerPane viewerPane = viewerContainer.getSecViewerPane();
 		ensureViewerClass(viewerPane, viewerClass);
 		return viewerPane.getViewer();
