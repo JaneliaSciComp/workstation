@@ -11,6 +11,7 @@ import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 
@@ -264,26 +265,23 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         AnnotationBuilderDialog dialog = new AnnotationBuilderDialog();
-                        dialog.setPathString(annotation.getValueString());
-                        dialog.setPathText(annotation.getValueString());
+                        dialog.setAnnotationValue(annotation.getValueString());
+                        dialog.setAnnotationTextField(annotation.getValueString());
                         dialog.setVisible(true);
-                        final Object value = dialog.getPathString();
-                        final List<RootedEntity> selectedEntities = SessionMgr.getBrowser().getViewerManager().getActiveViewer().getSelectedEntities();
-                        for(RootedEntity rootedEntity: selectedEntities){
-                            if(null!=value && !value.toString().trim().isEmpty()){
-                                annotation.setValueString(value.toString());
-                                annotation.getEntity().setValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_VALUE_TERM, value.toString());
-                                String tmpName = annotation.getEntity().getName();
-                                String namePrefix = tmpName.substring(0,tmpName.indexOf("=")+2);
-                                annotation.getEntity().setName(namePrefix+value.toString());
-                                try {
-                                    ModelMgr.getModelMgr().saveOrUpdateAnnotation(rootedEntity.getEntity(), annotation.getEntity());
-                                }
-                                catch (Exception e1) {
-                                    e1.printStackTrace();
-                                    SessionMgr.getSessionMgr().handleException(e1);
-                                }
-                            }
+                        String value = dialog.getAnnotationValue();
+                        if (null==value) { value=""; }
+                        annotation.setValueString(value);
+                        annotation.getEntity().setValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_VALUE_TERM, value);
+                        String tmpName = annotation.getEntity().getName();
+                        String namePrefix = tmpName.substring(0,tmpName.indexOf("=")+2);
+                        annotation.getEntity().setName(namePrefix+value);
+                        try {
+                            Entity tmpAnnotatedEntity = ModelMgr.getModelMgr().getEntityById(annotation.getTargetEntityId().toString());
+                            ModelMgr.getModelMgr().saveOrUpdateAnnotation(tmpAnnotatedEntity, annotation.getEntity());
+                        }
+                        catch (Exception e1) {
+                            e1.printStackTrace();
+                            SessionMgr.getSessionMgr().handleException(e1);
                         }
                     }
                 });

@@ -21,8 +21,8 @@ import java.util.TreeSet;
 public class AnnotationBuilderDialog extends JDialog{
 
     private JPanel annotationPanel = new JPanel();
-    private JTextField pathText;
-    private StringBuilder pathString = new StringBuilder();
+    private JTextField annotationTextField;
+    private StringBuilder annotationValue = new StringBuilder();
 
     public AnnotationBuilderDialog(){
         super(SessionMgr.getBrowser(),"Edit Value", true);
@@ -31,7 +31,7 @@ public class AnnotationBuilderDialog extends JDialog{
         comboBox.setEditable(true);
         comboBox.setSelectedItem(null);
         AutoCompleteDecorator.decorate(comboBox);
-        pathText = new JTextField();
+        annotationTextField = new JTextField();
 
         annotationPanel.setLayout(new BoxLayout(annotationPanel, BoxLayout.PAGE_AXIS));
 
@@ -39,10 +39,10 @@ public class AnnotationBuilderDialog extends JDialog{
         doneButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                pathString = new StringBuilder(pathText.getText());
-                if(pathString.toString().endsWith(" - ")){
-                    int lastIndex = pathString.lastIndexOf(" - ");
-                    pathString = pathString.delete(lastIndex,lastIndex+3);
+                annotationValue = new StringBuilder(annotationTextField.getText());
+                if(annotationValue.toString().endsWith(" - ")){
+                    int lastIndex = annotationValue.lastIndexOf(" - ");
+                    annotationValue = annotationValue.delete(lastIndex,lastIndex+3);
                 }
                 AnnotationBuilderDialog.this.setVisible(false);
             }
@@ -52,13 +52,13 @@ public class AnnotationBuilderDialog extends JDialog{
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                pathString = new StringBuilder(pathText.getText());
-                int position = pathText.getCaretPosition();
+                annotationValue = new StringBuilder(annotationTextField.getText());
+                int position = annotationTextField.getCaretPosition();
                 if(null!=comboBox.getSelectedItem()){
-                    pathString.insert(position, comboBox.getSelectedItem().toString()+" - ");
+                    annotationValue.insert(position, comboBox.getSelectedItem().toString()+" - ");
                 }
                 comboBox.setSelectedItem(null);
-                pathText.setText(pathString.toString());
+                annotationTextField.setText(annotationValue.toString());
             }
         });
 
@@ -86,9 +86,9 @@ public class AnnotationBuilderDialog extends JDialog{
         resetButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                pathString = new StringBuilder();
+                annotationValue = new StringBuilder();
                 comboBox.setSelectedItem(null);
-                pathText.setText(pathString.toString());
+                annotationTextField.setText(annotationValue.toString());
             }
         });
 
@@ -96,8 +96,8 @@ public class AnnotationBuilderDialog extends JDialog{
         closeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                pathString = new StringBuilder();
-                pathText.setText("");
+                annotationValue = new StringBuilder();
+                annotationTextField.setText("");
                 AnnotationBuilderDialog.this.setVisible(false);
             }
         });
@@ -108,7 +108,7 @@ public class AnnotationBuilderDialog extends JDialog{
         TitledBorder titledBorder2 = BorderFactory.createTitledBorder("Term to be Added");
         textBox.setLayout(new BoxLayout(textBox, BoxLayout.PAGE_AXIS));
         comboBoxPanel.setLayout(new BoxLayout(comboBoxPanel, BoxLayout.PAGE_AXIS));
-        textBox.add(pathText);
+        textBox.add(annotationTextField);
         textBox.setBorder(titledBorder1);
         comboBoxPanel.add(comboBox);
         comboBoxPanel.setBorder(titledBorder2);
@@ -140,15 +140,15 @@ public class AnnotationBuilderDialog extends JDialog{
         this.pack();
     }
 
-    public String getPathString(){
-        return pathString.toString();
+    public String getAnnotationValue(){
+        return annotationValue.toString();
     }
 
-    public void setPathString(String pathString1){
-        pathString = new StringBuilder(pathString1);
+    public void setAnnotationValue(String pathString1){
+        annotationValue = new StringBuilder(pathString1);
     }
 
-    public void setPathText(String pathText1){
-        pathText.setText(pathText1);
+    public void setAnnotationTextField(String pathText1){
+        annotationTextField.setText(pathText1);
     }
 }
