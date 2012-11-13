@@ -1,26 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.*;
-import java.util.concurrent.Callable;
-
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
-import javax.swing.tree.DefaultMutableTreeNode;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.SpecialAnnotationChooserDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.TaskDetailsDialog;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.*;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -47,6 +32,19 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import java.awt.*;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Callable;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+
 /**
  * Context pop up menu for entities.
  *
@@ -69,7 +67,9 @@ public class EntityContextMenu extends JPopupMenu {
 		this.rootedEntityList = rootedEntityList;
 		this.rootedEntity = rootedEntityList.size()==1 ? rootedEntityList.get(0) : null;
 		this.multiple = rootedEntityList.size()>1;
-		checkNotNull(rootedEntity, "Rooted entity cannot be null");
+		if (!multiple) {
+            checkNotNull(rootedEntity, "Rooted entity cannot be null");
+        }
 	}
 
 	public EntityContextMenu(RootedEntity rootedEntity) {
@@ -358,12 +358,14 @@ public class EntityContextMenu extends JPopupMenu {
 
 	protected JMenuItem getGotoRelatedItem() {
 		if (multiple) return null;
-		JMenu relatedMenu = new JMenu("  Go to related");
+		JMenu relatedMenu = new JMenu("  Go To Related");
 		Entity entity = rootedEntity.getEntity();
 		String type = entity.getEntityType().getName();
 		if (type.equals(EntityConstants.TYPE_NEURON_FRAGMENT) ||
 				type.equals(EntityConstants.TYPE_LSM_STACK) ||
-				type.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
+				type.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)||
+                type.equals(EntityConstants.TYPE_CURATED_NEURON)||
+                type.equals(EntityConstants.TYPE_CURATED_NEURON_COLLECTION)) {
 			add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_SAMPLE, EntityConstants.TYPE_SAMPLE));
 		}
 		else if (entity.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
@@ -529,7 +531,7 @@ public class EntityContextMenu extends JPopupMenu {
 			return null;
 		}
 		
-		JMenu newFolderMenu = new JMenu("  Add to screen picking folder");
+		JMenu newFolderMenu = new JMenu("  Add To Screen Picking Folder");
 		
 		List<EntityData> rootEds = SessionMgr.getBrowser().getEntityOutline().getRootEntity().getOrderedEntityData();
 		
@@ -608,7 +610,7 @@ public class EntityContextMenu extends JPopupMenu {
 			return null;
 		}
 		
-		JMenu newFolderMenu = new JMenu("  Add to top-level folder");
+		JMenu newFolderMenu = new JMenu("  Add To Top-Level Folder");
 		
 		List<EntityData> rootEds = SessionMgr.getBrowser().getEntityOutline().getRootEntity().getOrderedEntityData();
 		
