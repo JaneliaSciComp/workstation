@@ -366,8 +366,9 @@ public class EntityContextMenu extends JPopupMenu {
 				type.equals(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)||
                 type.equals(EntityConstants.TYPE_CURATED_NEURON)||
                 type.equals(EntityConstants.TYPE_CURATED_NEURON_COLLECTION)) {
-			add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_SAMPLE, EntityConstants.TYPE_SAMPLE));
-		}
+            add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT));
+            add(relatedMenu, getAncestorEntityItem(entity, EntityConstants.TYPE_SAMPLE, EntityConstants.TYPE_SAMPLE));
+        }
 		else if (entity.getEntityType().getName().equals(EntityConstants.TYPE_FLY_LINE)) {
 			add(relatedMenu, getChildEntityItem(entity, EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE));
 			add(relatedMenu, getChildEntityItem(entity, EntityConstants.ATTRIBUTE_ORIGINAL_FLYLINE));
