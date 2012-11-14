@@ -78,7 +78,6 @@ public class AnnotationBuilderDialog extends JDialog{
 
             @Override
             public void keyReleased(KeyEvent e) {
-                //To change body of implemented methods use File | Settings | File Templates.
             }
         });
 
