@@ -12,10 +12,10 @@ import com.xuggle.xuggler.IStreamCoder;
 import loci.formats.FormatException;
 import loci.formats.IFormatReader;
 import loci.formats.gui.BufferedImageReader;
-import loci.formats.in.TiffReader;
-import loci.formats.in.ZeissLSMReader;
+import loci.formats.in.*;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeBrick.TextureColorSpace;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.scaled_image.ScaledImage;
 
 import java.util.zip.DataFormatException;
 import java.awt.image.BufferedImage;
@@ -35,17 +35,20 @@ public class VolumeLoader
 	public boolean loadLociReader(BufferedImageReader in) 
 	throws IOException, FormatException
 	{
-		sx = in.getSizeX();
-		sy = in.getSizeY();
+        //int origSx = in.getSizeX();
+        //int origSy = in.getSizeY();
+		sx = in.getSizeX()/4;
+		sy = in.getSizeY()/4;
 		sz = in.getSizeZ();
 		argbIntArray = new int[sx*sy*sz];
 		// rgbaBuffer = Buffers.newDirectIntBuffer(intArray);
-		int scanLineStride = sx;
-		for (int z = 0; z < sz; ++z) {
+		int scanLineStride = sx;//origSx;
+		for (int z = 0; z < sz; z++) {
 			BufferedImage zSlice = in.openImage(z);
+            //zSlice = new ScaledImage( sx, sy, zSlice );
 			int zOffset = z * sx * sy;
-			// int[] pixels = ((DataBufferInt)zSlice.getData().getDataBuffer()).getData();
-			zSlice.getRGB(0, 0, 
+			//int[] pixels = ((DataBufferInt)zSlice.getData().getDataBuffer()).getData();
+			zSlice.getRGB(0, 0,
 				sx, sy,
 				argbIntArray,
 				zOffset,
@@ -127,7 +130,7 @@ public class VolumeLoader
 				reader = new TiffReader();
 			} else if (extension.startsWith("LSM")) {
 				reader = new ZeissLSMReader();
-			}
+ 			}
 			if (reader != null) {
 				BufferedImageReader in = new BufferedImageReader(reader);
 				in.setId(fileName);
@@ -215,6 +218,9 @@ public class VolumeLoader
 	 * Similar to Vaa3D.  In other words, alpha = max(R,G,B)
 	 */
 	public void setAlphaToSaturateColors(TextureColorSpace space) {
+        if ( space == null )
+            return;
+
 		// Use modified alpha value for sRGB textures
 		int[] alphaMap = new int[256];
 		alphaMap = new int[256];

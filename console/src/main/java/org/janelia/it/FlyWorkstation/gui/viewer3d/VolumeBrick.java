@@ -262,6 +262,7 @@ public class VolumeBrick implements GLActor
 		gl.glDeleteTextures(1, textureIds, 0);
 	}
 
+    @Override
 	public BoundingBox getBoundingBox() {
 		BoundingBox result = new BoundingBox();
 		Vec3 half = new Vec3(0,0,0);
@@ -297,9 +298,9 @@ public class VolumeBrick implements GLActor
 	 * Colors are already premultiplied by alpha.
 	 * Colors are assumed to be completely saturated.
 	 * So alpha component will be computed from largest RGB component.
-	 * @param w width/x dimension in voxels
-	 * @param h height/y dimension in voxels
-	 * @param d depth/z dimension in voxels
+	 * @param sx width/x dimension in voxels
+	 * @param sy height/y dimension in voxels
+	 * @param sz depth/z dimension in voxels
 	 * @param rgbArray RGBA pixel data as integers
 	 */
 	public void setVolumeDataComputeAlpha(int sx, int sy, int sz, int[] rgbArray)

@@ -751,7 +751,7 @@ public class IconDemoPanel extends Viewer {
 			final AnnotatedImageButton button = imagesPanel.getButtonById(re.getId());
 			if (button instanceof DynamicImageButton) {
 				final DynamicImageButton d = (DynamicImageButton)button;
-				hud.setEntityId(re.getEntity().getId());
+                hud.setEntity( re.getEntity() );
 				BufferedImage bufferedImage = d.getDynamicImagePanel().getMaxSizeImage();
 				if (bufferedImage==null) {
 					return;

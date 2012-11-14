@@ -4,10 +4,11 @@ import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLCanvas;
 // import javax.media.opengl.awt.GLJPanel; // In case we need Swing version
+import javax.media.opengl.awt.GLJPanel;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
-import java.awt.Point;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -17,8 +18,8 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 
 public class Mip3d 
-extends GLCanvas 
-// extends GLJPanel // in case lightweight widget is required
+//extends GLCanvas // in case heavyweight widget is preferred
+extends GLJPanel // in case lightweight widget is required
 implements MouseListener, MouseMotionListener, ActionListener,
 	MouseWheelListener
 {
@@ -39,20 +40,21 @@ implements MouseListener, MouseMotionListener, ActionListener,
 	}
 	
 	public Mip3d()
-	{
-    		super(capabilities);
-    		renderer = new MipRenderer();
-        	addGLEventListener(renderer);
-        	setSize(400, 400);
-        	addMouseListener(this);
-        	addMouseMotionListener(this);
-        	addMouseWheelListener(this);
-        	// Context menu for resetting view
-        	popupMenu = new JPopupMenu();
-        	JMenuItem resetViewItem = new JMenuItem("Reset View");
-        	resetViewItem.addActionListener(this);
-        	popupMenu.add(resetViewItem);
-	}
+    {
+        super(capabilities);
+        renderer = new MipRenderer();
+        addGLEventListener(renderer);
+        setPreferredSize( new Dimension( 400, 400 ) );
+
+        addMouseListener(this);
+        addMouseMotionListener(this);
+        addMouseWheelListener(this);
+        // Context menu for resetting view
+        popupMenu = new JPopupMenu();
+        JMenuItem resetViewItem = new JMenuItem("Reset view");
+        resetViewItem.addActionListener(this);
+        popupMenu.add(resetViewItem);
+    }
 
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
@@ -63,11 +65,11 @@ implements MouseListener, MouseMotionListener, ActionListener,
 	
 	public boolean loadVolume(String fileName)
 	{
+        renderer.clear();
 		VolumeLoader volumeLoader = new VolumeLoader();
 		if (volumeLoader.loadVolume(fileName)) {
 			VolumeBrick brick = new VolumeBrick(renderer);
 			volumeLoader.populateBrick(brick);
-			renderer.clear();
 			renderer.addActor(brick);
 			renderer.resetView();
 			return true;
