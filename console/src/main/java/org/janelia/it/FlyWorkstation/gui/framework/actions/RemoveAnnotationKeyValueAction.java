@@ -1,12 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import javax.swing.JOptionPane;
-import javax.swing.ProgressMonitor;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -16,27 +9,31 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 
+import javax.swing.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 /**
  * This action removes an entity from some parent. If the entity becomes an orphan, then it is completely deleted.
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class RemoveAnnotationsAction implements Action {
+public class RemoveAnnotationKeyValueAction implements Action {
 
 	private List<String> selectedEntities;
-	private Long keyEntityId;
+	private OntologyAnnotation tag;
 
-	public RemoveAnnotationsAction(Long keyTermId) {
-    	selectedEntities = new ArrayList<String>(
-    			ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(
-    					SessionMgr.getBrowser().getViewerManager().getActiveViewer().getSelectionCategory()));
-    	
-		this.keyEntityId = keyTermId;
-	}
-	
+    public RemoveAnnotationKeyValueAction(OntologyAnnotation tag) {
+        selectedEntities = new ArrayList<String>(
+                ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(
+                        SessionMgr.getBrowser().getViewerManager().getActiveViewer().getSelectionCategory()));
+        this.tag = tag;
+    }
+
     @Override
     public String getName() {
-    	return selectedEntities.size()>1?"Delete annotation from "+selectedEntities.size()+" entities":"Delete annotation";
+    	return selectedEntities.size()>1?"Delete \""+tag.toString()+"\" Annotation From "+selectedEntities.size()+" Entities":"Delete Annotation";
     }
 	
     @Override
@@ -72,7 +69,7 @@ public class RemoveAnnotationsAction implements Action {
                             	continue;
                             }
                             for(OntologyAnnotation annotation : entityAnnotations) {
-                            	if (annotation.getKeyEntityId().equals(keyEntityId)) {
+                            	if (annotation.toString().equals(tag.toString())) {
                             		ModelMgr.getModelMgr().removeAnnotation(annotation.getId());
                             	}
                             }
@@ -91,7 +88,7 @@ public class RemoveAnnotationsAction implements Action {
                     }
                 };
 
-                worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getSessionMgr().getActiveBrowser(), "Deleting annotations", "", 0, 100));
+                worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getSessionMgr().getActiveBrowser(), "Deleting Annotations", "", 0, 100));
                 worker.execute();
         	}
         }

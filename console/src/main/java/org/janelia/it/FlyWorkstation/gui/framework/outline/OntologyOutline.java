@@ -446,7 +446,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
         }
         if (REMOVE_ANNOT_COMMAND.equals(command)) {
         	OntologyElement element = getOntologyElement(selectedTree.getCurrentNode());
-        	RemoveAnnotationsAction action = new RemoveAnnotationsAction((element.getType() instanceof EnumItem)?element.getParent().getId():element.getId());
+        	RemoveAnnotationTermAction action = new RemoveAnnotationTermAction((element.getType() instanceof EnumItem)?element.getParent().getId():element.getId(), element.getName());
         	action.doAction();
         }
         else if (SHOW_MANAGER_COMMAND.equals(command)) {

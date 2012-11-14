@@ -2,7 +2,8 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationBuilderDialog;
-import org.janelia.it.FlyWorkstation.gui.framework.actions.RemoveAnnotationsAction;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.RemoveAnnotationKeyValueAction;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.RemoveAnnotationTermAction;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -75,15 +76,42 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
             popupMenu.add(titleItem);
             
         	if (SessionMgr.getUsername().equals(tag.getOwner())) {
-        		final RemoveAnnotationsAction action = new RemoveAnnotationsAction(tag.getKeyEntityId());
-                JMenuItem deleteItem = new JMenuItem("  "+action.getName());
-                deleteItem.addActionListener(new ActionListener() {
+        		final RemoveAnnotationTermAction termAction = new RemoveAnnotationTermAction(tag.getKeyEntityId(), tag.getKeyString());
+                JMenuItem deleteByTermItem = new JMenuItem("  "+termAction.getName());
+                deleteByTermItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {
-                    	action.doAction();
+                        termAction.doAction();
                     }
                 });
-                popupMenu.add(deleteItem);
-        	}
+                popupMenu.add(deleteByTermItem);
+
+                try {
+                    String tmpOntKeyId = tag.getEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_ANNOTATION_ONTOLOGY_KEY_ENTITY_ID);
+                    Entity tmpOntologyTerm = ModelMgr.getModelMgr().getEntityById(tmpOntKeyId);
+                    if (null!=tmpOntologyTerm) {
+                        String tmpOntologyTermType = tmpOntologyTerm.getValueByAttributeName(EntityConstants.ATTRIBUTE_ONTOLOGY_TERM_TYPE);
+                        if (EntityConstants.VALUE_ONTOLOGY_TERM_TYPE_ENUM.equals(tmpOntologyTermType) ||
+                                EntityConstants.VALUE_ONTOLOGY_TERM_TYPE_ENUM_TEXT.equals(tmpOntologyTermType)||
+                                EntityConstants.VALUE_ONTOLOGY_TERM_TYPE_INTERVAL.equals(tmpOntologyTermType)||
+                                EntityConstants.VALUE_ONTOLOGY_TERM_TYPE_TEXT.equals(tmpOntologyTermType)) {
+                            final RemoveAnnotationKeyValueAction valueAction = new RemoveAnnotationKeyValueAction(tag);
+                            JMenuItem deleteByValueItem = new JMenuItem("  "+valueAction.getName());
+                            deleteByValueItem.addActionListener(new ActionListener() {
+                                public void actionPerformed(ActionEvent actionEvent) {
+                                    valueAction.doAction();
+                                }
+                            });
+                            popupMenu.add(deleteByValueItem);
+                        }
+                    }
+                    else {
+                        System.out.println("Cannot create menu item because ontology term no longer exists.");
+                    }
+                }
+                catch (Exception e1) {
+                    SessionMgr.getSessionMgr().handleException(e1);
+                }
+            }
             
         }
         else {
