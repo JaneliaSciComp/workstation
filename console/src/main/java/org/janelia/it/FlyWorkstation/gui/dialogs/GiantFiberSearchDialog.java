@@ -1,5 +1,19 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.util.*;
+import java.util.concurrent.Callable;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
@@ -13,18 +27,8 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.annotation.MaskAnnotationDataManager;
-
-import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumn;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.File;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Callable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by IntelliJ IDEA.
@@ -33,7 +37,9 @@ import java.util.concurrent.Callable;
  * Time: 1:40 PM
  */
 public class GiantFiberSearchDialog extends ModalDialog {
-
+	
+	private static final Logger log = LoggerFactory.getLogger(GiantFiberSearchDialog.class);
+	
     private static final String INTENSITY_TYPE="Intensity";
     private static final String DISTRIBUTION_TYPE="Distribution";
     private static final String GLOBAL = "Global";
@@ -346,18 +352,22 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
     public GiantFiberSearchDialog() throws Exception {
 
+        log.info("Begin loading");
+        
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
             protected void doStuff() throws Exception {
-                System.out.println("Starting GiantFiberSearchDialog constructor worker thread");
                 setTitle("Giant Fiber Compartment Search");
                 File maskSummaryFile = getMaskSummaryFile();
                 File maskNameIndexFile = getMaskNameIndexFile();
                 maskManager.loadMaskCompartmentList(maskNameIndexFile);
                 maskManager.loadMaskSummaryFile(maskSummaryFile);
                 compartmentAbbreviationList = maskManager.getCompartmentListInstance();
+            }
 
+            @Override
+            protected void hadSuccess() {
                 mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
                 mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
@@ -379,11 +389,9 @@ public class GiantFiberSearchDialog extends ModalDialog {
                 add(mainPanel, BorderLayout.NORTH);
 
                 initializeCurrentListModified();
-            }
-
-            @Override
-            protected void hadSuccess() {
                 setStatusMessage("Done loading resources.");
+                
+                log.info("Completed loading, dialog ready.");
             }
 
             @Override
@@ -691,18 +699,18 @@ public class GiantFiberSearchDialog extends ModalDialog {
             quantifierDataIsLoading=true;
             try {
                 Long startTime=new Date().getTime();
-                System.out.println("GiantFiberSearchDialog getMaskQuantifierMapsFromSummary() start");
+//                System.out.println("GiantFiberSearchDialog getMaskQuantifierMapsFromSummary() start");
                 Object[] sampleMaps = ModelMgr.getModelMgr().getMaskQuantifierMapsFromSummary(GIANT_FIBER_FOLDER_NAME);
                 sampleInfoMap = (Map<Long, Map<String,String>>)sampleMaps[0];
                 quantifierInfoMap = (Map<Long, List<Double>>)sampleMaps[1];
                 Long elapsedTime=new Date().getTime() - startTime;
-                System.out.println("GiantFiberSearchDialog getMaskQuantifierMapsFromSummary() end - elapsedTime="+elapsedTime);
+//                System.out.println("GiantFiberSearchDialog getMaskQuantifierMapsFromSummary() end - elapsedTime="+elapsedTime);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
             quantifierDataIsLoading=false;
         } else {
-            System.out.println("GiantFiberSearchDialog getMaskQuantifierMapsFromSummary() - maps already loaded");
+//            System.out.println("GiantFiberSearchDialog getMaskQuantifierMapsFromSummary() - maps already loaded");
         }
     }
 
@@ -772,7 +780,7 @@ public class GiantFiberSearchDialog extends ModalDialog {
             intensityScoreMap.put(sampleId, intensityMap);
             distributionScoreMap.put(sampleId, distributionMap);
         }
-        System.out.println("Total calls to getCompartmentScoresByQuantifiers() = "+totalComputeCount);
+//        System.out.println("Total calls to getCompartmentScoresByQuantifiers() = "+totalComputeCount);
     }
 
     protected void computePercentiles() {
@@ -961,16 +969,15 @@ public class GiantFiberSearchDialog extends ModalDialog {
 
             @Override
             protected void doStuff() throws Exception {
-                Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, currentSetTextField.getText());
-
+            	
+            	Entity newFolder = null;
                 if (outputFolder!=null) {
-                    newFolder = ModelMgr.getModelMgr().saveOrUpdateEntity(newFolder);
+                	newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, currentSetTextField.getText());
                     EntityData childEd = ModelMgr.getModelMgr().addEntityToParent(outputFolder.getEntity(), newFolder, outputFolder.getEntity().getMaxOrderIndex()+1, EntityConstants.ATTRIBUTE_ENTITY);
                     newRootedFolder = outputFolder.getChild(childEd);
                 }
                 else {
-                    newFolder.addAttributeAsTag(EntityConstants.ATTRIBUTE_COMMON_ROOT);
-                    newFolder = ModelMgr.getModelMgr().saveOrUpdateEntity(newFolder);
+                	newFolder = ModelMgr.getModelMgr().createCommonRoot(currentSetTextField.getText());
                     newRootedFolder = new RootedEntity(newFolder);
                 }
 

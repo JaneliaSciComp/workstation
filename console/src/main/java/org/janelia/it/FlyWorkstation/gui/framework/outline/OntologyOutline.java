@@ -6,13 +6,25 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.event.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Callable;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.KeyBindDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.choose.OntologyElementChooser;
-import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.*;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeymapUtil;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
@@ -27,16 +39,8 @@ import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
 import org.janelia.it.jacs.model.ontology.types.*;
 import org.janelia.it.jacs.model.ontology.types.Enum;
-
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.Callable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -47,6 +51,8 @@ import java.util.concurrent.Callable;
  */
 public class OntologyOutline extends OntologyTree implements ActionListener, Refreshable {
 
+	private static final Logger log = LoggerFactory.getLogger(OntologyOutline.class);
+	
     private static final String ADD_COMMAND = "add";
     private static final String REMOVE_COMMAND = "remove";
     private static final String REMOVE_ANNOT_COMMAND = "removeAnnotations";
@@ -194,12 +200,12 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
                     if (null == lastSessionId) {
                         java.util.List<OntologyRoot> roots = privateTable.getOntologyRoots();
                         if (roots != null && !roots.isEmpty()) {
-                        	System.out.println("Loading the user's first private ontology");
+                        	log.info("Loading the user's first private ontology");
                         	ModelMgr.getModelMgr().setCurrentOntology(roots.get(0));
                         }
                     }
                     else {
-                    	System.out.println("Loading last used ontology "+lastSessionId);
+                    	log.info("Loading last used ontology "+lastSessionId);
                     	try {
 	                    	Entity ontology = ModelMgr.getModelMgr().getOntologyTree(Long.valueOf(lastSessionId));
 	                    	if (ontology!=null) {

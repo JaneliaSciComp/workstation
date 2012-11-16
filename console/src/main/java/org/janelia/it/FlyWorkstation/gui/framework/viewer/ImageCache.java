@@ -1,10 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.image.BufferedImage;
-import java.util.Collections;
-import java.util.Map;
 
-import org.janelia.it.FlyWorkstation.shared.util.LRUCache;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 /**
  * An constrained-size image cache with an LRU eviction policy. 
@@ -13,31 +12,41 @@ import org.janelia.it.FlyWorkstation.shared.util.LRUCache;
  */
 public class ImageCache {
 
-	public static final int DEFAULT_CACHE_SIZE = 500;
+	public static final int MAX_NUM_IMAGES = 500; // 500 images total
+//	public static final int MAX_PIXELS_CACHED = 1048576 * 1024; // 1 GB of 8-bit images
 	
-	private final Map<String, BufferedImage> cache;
+	private final Cache<String, BufferedImage> cache;
 
 	public ImageCache() {
-		this(DEFAULT_CACHE_SIZE);
+		this(MAX_NUM_IMAGES);
 	}
 	
 	public ImageCache(int size) {
-		this.cache = Collections.synchronizedMap(new LRUCache<String, BufferedImage>(size));
+//		Weigher weigher = new Weigher<String, BufferedImage>() {
+//			public int weigh(String filename, BufferedImage image) {
+//	            return image.getData().getWidth()*image.getData().getHeight();
+//	          }
+//		};
+		this.cache = CacheBuilder.newBuilder()
+			.concurrencyLevel(16)
+			.maximumSize(size)
+			// weight is better, but running the Weigher may impact performance and should be profiled before use
+//			.weigher(weigher)
+//			.maximumWeight(size)
+			.softValues()
+			.build();
 	}
 	
 	public boolean contains(String identifier) {
-		return cache.containsKey(identifier);
+		return cache.getIfPresent(identifier)!=null;
 	}
 	
 	public BufferedImage get(String identifier) {
-		return cache.get(identifier);
+		return cache.getIfPresent(identifier);
 	}
 	
 	public BufferedImage put(String identifier, BufferedImage image) {
-		return cache.put(identifier, image);
-	}
-	
-	public int size() {
-		return cache.size();
+		cache.put(identifier, image);
+		return image;
 	}
 }

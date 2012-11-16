@@ -1,5 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.framework.tool_manager;
 
+import java.awt.Desktop;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.*;
+
 import org.janelia.it.FlyWorkstation.gui.framework.console.ToolsMenu;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -9,12 +15,8 @@ import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.shared.preferences.InfoObject;
 import org.janelia.it.FlyWorkstation.shared.preferences.PrefMgrListener;
 import org.janelia.it.FlyWorkstation.shared.preferences.PreferenceManager;
-
-import java.awt.*;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntelliJ IDEA.
@@ -23,6 +25,9 @@ import java.util.*;
  * Time: 10:39 AM
  */
 public class ToolMgr extends PreferenceManager {
+	
+	private static final Logger log = LoggerFactory.getLogger(ToolMgr.class);
+	
     public static final String TOOL_FIJI    = "Fiji.app";
     public static final String TOOL_VAA3D   = "Vaa3d";
     public static final String TOOL_NA      = "Vaa3d - Neuron Annotator";
@@ -171,10 +176,11 @@ public class ToolMgr extends PreferenceManager {
         }
 
         // Todo Remove this evil hack
-        System.out.println("Base root executable path  = "+rootExecutablePath);
         rootExecutablePath=rootExecutablePath.substring(0,rootExecutablePath.lastIndexOf(File.separator)+1);
 //      rootExecutablePath="/Applications/FlySuite.app/Contents/Resources/workstation.jar";
 
+        log.info("Base root executable path: "+rootExecutablePath);
+        
         String vaa3dExePath="";
         if (SystemInfo.isMac || SystemInfo.isWindows) {
             vaa3dExePath = rootExecutablePath+"vaa3d64.app/Contents/MacOS/vaa3d64";

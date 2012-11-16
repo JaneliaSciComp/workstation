@@ -15,7 +15,7 @@ import org.janelia.it.jacs.shared.annotation.FilterResult;
  * Date: 8/8/11
  * Time: 9:33 AM
  */
-public interface AnnotationFacade extends EntityFacade {
+public interface AnnotationFacade {
 	
     public List<Entity> getAnnotationsForEntity(Long entityId) throws Exception;
 

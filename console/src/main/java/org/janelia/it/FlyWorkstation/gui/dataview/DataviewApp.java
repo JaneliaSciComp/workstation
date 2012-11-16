@@ -8,7 +8,6 @@ package org.janelia.it.FlyWorkstation.gui.dataview;
 
 import javax.swing.JFrame;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
@@ -33,8 +32,7 @@ public class DataviewApp {
 
     private static void newDataviewer() throws Exception {
     	
-        final ModelMgr modelMgr = ModelMgr.getModelMgr();
-        modelMgr.registerFacadeManagerForProtocol(FacadeManager.getEJBProtocolString(), EJBFacadeManager.class, "JACS EJB Facade Manager");
+        FacadeManager.registerFacade(FacadeManager.getEJBProtocolString(), EJBFacadeManager.class, "JACS EJB Facade Manager");
         
         // This initializes the EJBFactory
         SessionMgr.getSessionMgr();

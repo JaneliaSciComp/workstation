@@ -1,11 +1,26 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.*;
+import java.util.concurrent.Callable;
+
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
+import javax.swing.tree.DefaultMutableTreeNode;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.SpecialAnnotationChooserDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.TaskDetailsDialog;
-import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.*;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -21,7 +36,6 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
-import org.janelia.it.jacs.model.ontology.OntologyRoot;
 import org.janelia.it.jacs.model.tasks.Event;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.TaskParameter;
@@ -31,19 +45,6 @@ import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import java.awt.*;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Callable;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Context pop up menu for entities.
@@ -58,7 +59,6 @@ public class EntityContextMenu extends JPopupMenu {
 	protected final RootedEntity rootedEntity;
 	protected final boolean multiple;
     private JMenu errorMenu;
-    private OntologyRoot tmpErrorOntology = ModelMgr.ERROR_ONTOLOGY_ENTITY;
 
 	// Internal state
 	protected boolean nextAddRequiresSeparator = false;
@@ -121,8 +121,8 @@ public class EntityContextMenu extends JPopupMenu {
 
     private void addBadDataButtons() {
 
-        if (null!=tmpErrorOntology){
-            List<OntologyElement> ontologyElements = tmpErrorOntology.getChildren();
+        if (null!=ModelMgr.getModelMgr().getErrorOntology()){
+            List<OntologyElement> ontologyElements = ModelMgr.getModelMgr().getErrorOntology().getChildren();
             for(final OntologyElement element: ontologyElements){
                 errorMenu.add(new JMenuItem(element.getName())).addActionListener(new ActionListener() {
                     @Override
@@ -230,7 +230,7 @@ public class EntityContextMenu extends JPopupMenu {
 					List<List<EntityData>> edPaths = ModelMgr.getModelMgr().getPathsToRoots(targetEntity.getId());
 					List<EntityDataPath> paths = new ArrayList<EntityDataPath>();
 					for (List<EntityData> path : edPaths) {
-						if (ModelMgr.getModelMgr().hasAccess(path.get(0))) {
+						if (ModelMgrUtils.hasAccess(path.get(0))) {
 							EntityDataPath edp = new EntityDataPath(path);
 							if (!edp.isHidden()) {
 								paths.add(edp);
@@ -440,10 +440,7 @@ public class EntityContextMenu extends JPopupMenu {
                 }
 	            
 	            try {
-	            	// Make sure we have the latest entity, then we can rename it
-	            	Entity dbEntity = ModelMgr.getModelMgr().getEntityById(""+rootedEntity.getEntity().getId());
-	            	dbEntity.setName(newName);
-	            	ModelMgr.getModelMgr().saveOrUpdateEntity(dbEntity);
+	            	ModelMgr.getModelMgr().renameEntity(rootedEntity.getEntity(), newName);
 	            }
                 catch (Exception ex) {
                     ex.printStackTrace();
@@ -573,7 +570,7 @@ public class EntityContextMenu extends JPopupMenu {
 
 				// Add button clicked
 				final String folderName = (String) JOptionPane.showInputDialog(browser, "Folder Name:\n",
-						"Create split picking folder", JOptionPane.PLAIN_MESSAGE, null, null, null);
+						"Create Split Picking Folder", JOptionPane.PLAIN_MESSAGE, null, null, null);
 				if ((folderName == null) || (folderName.length() <= 0)) {
 					return;
 				}
@@ -583,7 +580,7 @@ public class EntityContextMenu extends JPopupMenu {
 					@Override
 					protected void doStuff() throws Exception {
 						// Update database
-						newFolder = ModelMgrUtils.createNewCommonRoot(folderName);
+						newFolder = ModelMgr.getModelMgr().createCommonRoot(folderName);
 						addToSplitFolder(newFolder);
 					}
 					@Override
@@ -662,11 +659,10 @@ public class EntityContextMenu extends JPopupMenu {
 				}
 
 				SimpleWorker worker = new SimpleWorker() {
-					private Entity newFolder;
 					@Override
 					protected void doStuff() throws Exception {
 						// Update database
-						newFolder = ModelMgrUtils.createNewCommonRoot(folderName);
+						Entity newFolder = ModelMgr.getModelMgr().createCommonRoot(folderName);
 						
 						List<Long> ids = new ArrayList<Long>();
 						for(RootedEntity rootedEntity : rootedEntityList) {
@@ -1012,9 +1008,11 @@ public class EntityContextMenu extends JPopupMenu {
 	                        
                         	// TODO: in the future, this check won't be necessary, since all separations will be fast loading
                         	boolean fastLoad = false;
-                        	for(Entity child : ModelMgr.getModelMgr().getChildEntities(result.getId())) {
+                        	ModelMgr.getModelMgr().loadLazyEntity(result, false);
+                        	for(Entity child : result.getChildren()) {
                         		if (child.getName().equals("Supporting Files")) {
-                        			for(Entity grandchild : ModelMgr.getModelMgr().getChildEntities(child.getId())) {
+                        			ModelMgr.getModelMgr().loadLazyEntity(child, false);
+                        			for(Entity grandchild : child.getChildren()) {
                                 		if (grandchild.getName().equals("Fast Load")) {
                                 			fastLoad = true;
                                 			break;

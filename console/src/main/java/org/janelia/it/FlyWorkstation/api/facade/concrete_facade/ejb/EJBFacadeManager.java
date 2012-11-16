@@ -9,7 +9,6 @@ import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.ConnectionStatus;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManagerBase;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.LoginProperties;
 import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
-import org.janelia.it.jacs.model.entity.EntityConstants;
 
 public class EJBFacadeManager extends FacadeManagerBase {
     private static Class[] createMethodArgumentsClass = new Class[0];
@@ -126,18 +125,6 @@ public class EJBFacadeManager extends FacadeManagerBase {
     @Override
     public String getServerName() {
         return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    public EntityFacade getFacade(String entityTypeName) throws Exception {
-        if (EntityConstants.TYPE_ONTOLOGY_ROOT.equals(entityTypeName) || EntityConstants.TYPE_ONTOLOGY_ELEMENT.equals(entityTypeName)) {
-            return getOntologyFacade();
-        }
-        else if (EntityConstants.TYPE_ANNOTATION.equals(entityTypeName)) {
-            return getAnnotationFacade();
-        }
-        else {
-            return getEntityFacade();
-        }
     }
 
     private String getUsername() {

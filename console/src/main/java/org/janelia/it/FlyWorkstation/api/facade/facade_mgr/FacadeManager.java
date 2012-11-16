@@ -143,17 +143,7 @@ public class FacadeManager {
     }
 
     static public FacadeManagerBase getFacadeManager() {
-        try {
-            FacadeManagerBase concreteFacade = (FacadeManagerBase) concreteFacades.get(getProtocol());
-            if (concreteFacade != null) return concreteFacade;
-            concreteFacade = (FacadeManagerBase) ((Class) concreteFacadesClasses.get(getProtocol())).newInstance();
-            concreteFacades.put(getProtocol(), concreteFacade);
-            return concreteFacade;
-        }
-        catch (Exception e) {
-            handleException(e);
-        }
-        return null;
+    	return getFacadeManager(getProtocol());
     }
 
     static public FacadeManagerBase getFacadeManager(String protocol) {
@@ -296,7 +286,10 @@ public class FacadeManager {
     }
 
     static public void handleException(Throwable throwable) {
-        if (exceptionHandlers == null) return;
+        if (exceptionHandlers == null) {
+        	throwable.printStackTrace();
+        	return;
+        }
         if (throwable instanceof NoDataException) return;
         for (Enumeration e = exceptionHandlers.elements(); e.hasMoreElements(); )
             ((ExceptionHandler) e.nextElement()).handleException(throwable);

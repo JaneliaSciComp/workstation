@@ -1,15 +1,15 @@
 package org.janelia.it.FlyWorkstation.api.entity_model.management;
 
 import java.awt.Color;
+import java.awt.EventQueue;
 import java.util.*;
+import java.util.concurrent.Executor;
 
 import javax.swing.SwingUtilities;
 
 import org.apache.solr.client.solrj.SolrQuery;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
-import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.ActiveThreadModel;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
-import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.InUseProtocolListener;
 import org.janelia.it.FlyWorkstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.FlyWorkstation.api.stub.data.NoDataException;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.OntologyKeyBind;
@@ -18,7 +18,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.exception_handlers.PrintStackTraceHandler;
-import org.janelia.it.FlyWorkstation.shared.util.ThreadQueue;
 import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.compute.api.support.SageTerm;
 import org.janelia.it.jacs.compute.api.support.SolrResults;
@@ -38,53 +37,62 @@ import org.janelia.it.jacs.model.user_data.prefs.UserPreference;
 import org.janelia.it.jacs.shared.annotation.DataDescriptor;
 import org.janelia.it.jacs.shared.annotation.DataFilter;
 import org.janelia.it.jacs.shared.annotation.FilterResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.eventbus.AsyncEventBus;
+import com.google.common.eventbus.EventBus;
 
 public class ModelMgr {
+	
+	private static final Logger log = LoggerFactory.getLogger(ModelMgr.class);
 	
 	// TODO: externalize these properties
 	public static final String NEURON_ANNOTATOR_CLIENT_NAME = "NeuronAnnotator";
 	public static final String CATEGORY_KEYBINDS_GENERAL = "Keybind:General";
     public static final String CATEGORY_KEYBINDS_ONTOLOGY = "Keybind:Ontology:";
-    public static OntologyRoot ERROR_ONTOLOGY_ENTITY = null;
     
     private static ModelMgr modelManager = new ModelMgr();
-    private boolean readOnly;
-    private final List<ModelMgrObserver> modelMgrObservers = new ArrayList<ModelMgrObserver>();
-    private boolean modelAvailable;
     
-    private Set<Entity> ontologies = new HashSet<Entity>();
-    private ThreadQueue threadQueue;
-    private ThreadQueue notificationQueue;
-    private ResourceBundle modelMgrResourceBundle;
-    
-    private EntitySelectionModel entitySelectionModel = new EntitySelectionModel();
-    private UserColorMapping userColorMapping = new UserColorMapping();
+    private final EventBus modelEventBus;
+    private final EntityModel entityModel;
+    private final EntitySelectionModel entitySelectionModel;
+    private final UserColorMapping userColorMapping;
+
     private OntologyRoot selectedOntology;
     private OntologyKeyBindings ontologyKeyBindings;
     private AnnotationSession annotationSession;
-    private OntologyAnnotation currentSelectedOntologyAnnotation=null;
+    private OntologyAnnotation currentSelectedOntologyAnnotation;
+    
+    public OntologyRoot ERROR_ONTOLOGY = null;
+    
+    private final List<ModelMgrObserver> modelMgrObservers = new ArrayList<ModelMgrObserver>();
+    
     
     static {
         // Register an exception handler.
         ModelMgr.getModelMgr().registerExceptionHandler(new PrintStackTraceHandler());
     }
 
-    {
-        try {
-//       String propsFile = PropertyConfigurator.getProperties().getProperty("console.ModelMgrProperties");
-//       modelMgrResourceBundle = ResourceBundle.getBundle(propsFile);
-        }
-        catch (java.util.MissingResourceException mre) {
-            System.out.println("ModelMgr: Error! - Cannot find resource files.  Resource directory must be on the classpath!!  Exiting..");
-            System.exit(1);
-        }
-    }
-
     private ModelMgr() {
-        FacadeManager.addInUseProtocolListener(new MyInUseProtocolListener());
+		this.entityModel = new EntityModel();
+		this.entitySelectionModel = new EntitySelectionModel();
+		this.userColorMapping = new UserColorMapping();
+		this.modelEventBus = new AsyncEventBus("awt", new Executor() {
+			public void execute(Runnable cmd) {
+				if (EventQueue.isDispatchThread()) {
+					cmd.run();
+				} 
+				else {
+					EventQueue.invokeLater(cmd);
+				}
+			}
+		});
+        
+        
     } //Singleton enforcement
 
-    static public ModelMgr getModelMgr() {
+    public static ModelMgr getModelMgr() {
         return modelManager;
     }
 
@@ -112,7 +120,7 @@ public class ModelMgr {
         SimpleWorker worker = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                ERROR_ONTOLOGY_ENTITY = getOntology(getErrorOntology().getId());
+                ERROR_ONTOLOGY = getOntology(getErrorOntologyEntity().getId());
             }
 
             @Override
@@ -127,44 +135,7 @@ public class ModelMgr {
         };
         worker.execute();
     }
-
-    /**
-     * Override the read-only state to true for all Ontologies
-     */
-
-    public void makeReadOnly() {
-        readOnly = true;
-    }
-
-    public boolean isMultiThreaded() {
-        String mt = modelMgrResourceBundle.getString("MultiThreadedServerCalls");
-        return mt != null && mt.equalsIgnoreCase("TRUE");
-    }
-
-
-    public void registerFacadeManagerForProtocol(String protocol, Class facadeClass, String displayName) {
-        FacadeManager.registerFacade(protocol, facadeClass, displayName);
-    }
-
-    public ThreadQueue getLoaderThreadQueue() {
-        if (threadQueue == null)
-            if (isMultiThreaded()) threadQueue = new ThreadQueue(6, "LoaderGroup", Thread.MIN_PRIORITY, true);
-            else threadQueue = new ThreadQueue(0, "LoaderGroup", Thread.NORM_PRIORITY, true);
-        return threadQueue;
-    }
-
-    public ThreadQueue getNotificationQueue() {
-        if (notificationQueue == null) if (isMultiThreaded())
-            notificationQueue = new ThreadQueue(1, "NotificationThreads", Thread.MIN_PRIORITY, false);
-        else notificationQueue = new ThreadQueue(0, "NotificationThreads", Thread.NORM_PRIORITY, false);
-        return notificationQueue;
-    }
-
-
-    public ActiveThreadModel getActiveThreadModel() {
-        return ActiveThreadModel.getActiveThreadModel();
-    }
-
+    
     public void handleException(Throwable throwable) {
         if (throwable instanceof NoDataException) return;
         FacadeManager.handleException(throwable);
@@ -173,45 +144,6 @@ public class ModelMgr {
     public UserColorMapping getUserColorMapping() {
 		return userColorMapping;
 	}
-
-	public void removeAllOntologies() {
-        ontologies = null;
-    }
-//    public Set<Entity> getOntologies() {
-//        if (ontologyLookupNeeded) {
-//            OntologyFacade locator;
-//            try {
-//                locator = FacadeManager.getFacadeManager().getOntologyFacade();
-//            }
-//            catch (Exception ex) {
-//                handleException(ex);
-//                return new HashSet<Entity>(0);
-//            }
-//            List<Entity> ontologies = locator.getOntologies();
-//            for (Entity ontology : ontologies) {
-////             if (readOnly && !ontology.isReadOnly()) ontology.makeReadOnly();
-//                this.ontologies.add(ontology);
-////                if (getModelMgrObservers() != null) {
-////                    Object[] listeners = getModelMgrObservers().toArray();
-////                    for (Object listener : listeners) {
-////                        ((ModelMgrObserver) listener).ontologyAdded(ontology);
-////                    }
-////                }
-//            }
-//            ontologyLookupNeeded = false;
-//        }
-//        return new HashSet<Entity>(ontologies);
-//    }
-
-    /**
-     * Will NOT Force load of Ontologies
-     */
-    public int getNumberOfLoadedOntologies() {
-        if (ontologies == null) {
-            return 0;
-        }
-        return ontologies.size();
-    }
 
     public AnnotationSession getCurrentAnnotationSession() {
         return annotationSession;
@@ -240,14 +172,12 @@ public class ModelMgr {
     }
 
     public void setCurrentOntology(OntologyRoot ontology) {
-        if(ontology == null){
+        if (ontology == null){
             SessionMgr.getSessionMgr().setModelProperty("lastSelectedOntology", null);
         }
-
-        else{
+        else {
             if(selectedOntology == null || !selectedOntology.getId().equals(ontology.getId()) || !selectedOntology.isFullyLoaded()) {
                 SessionMgr.getSessionMgr().setModelProperty("lastSelectedOntology", ontology.getId().toString());
-                modelAvailable = true;
                 selectedOntology = ontology;
                 notifyOntologySelected(ontology.getId());
             }
@@ -275,7 +205,6 @@ public class ModelMgr {
         }
         return finalList;
     }
-
 
     private OntologyKeyBindings loadOntologyKeyBindings(long ontologyId) {
     	String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyId;
@@ -538,14 +467,6 @@ public class ModelMgr {
     }
 
 
-    public boolean modelsDoUniquenessChecking() {
-        String uc = modelMgrResourceBundle.getString("UniquenessCheckingOfEntities");
-        return uc != null && uc.equalsIgnoreCase("TRUE");
-    }
-
-    public boolean isModelAvailable() {
-        return modelAvailable;
-    }
 
 	public EntitySelectionModel getEntitySelectionModel() {
 		return entitySelectionModel;
@@ -558,17 +479,22 @@ public class ModelMgr {
 	public List<EntityAttribute> getEntityAttributes() {
         return FacadeManager.getFacadeManager().getEntityFacade().getEntityAttributes();
     }
-	
+
+	// TODO: find usages and replace with call to getEntityById(Long)
     public Entity getEntityById(String entityId) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().getEntityById(entityId);
+        return getEntityById(new Long(entityId));
+    }
+    
+    public Entity getEntityById(Long entityId) throws Exception {
+        return entityModel.getEntityById(entityId);
     }
     
     public List<Entity> getEntityByIds(List<Long> entityIds) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().getEntitiesById(entityIds);
+        return entityModel.getEntitiesById(entityIds);
     }
 
-    public List<Entity> getEntitiesByName(String entityName) {
-        return FacadeManager.getFacadeManager().getEntityFacade().getEntitiesByName(entityName);
+    public List<Entity> getEntitiesByName(String entityName) throws Exception {
+        return entityModel.getEntitiesByName(entityName);
     }
 
     public List<List<EntityData>> getPathsToRoots(Long entityId) throws Exception {
@@ -594,36 +520,33 @@ public class ModelMgr {
     public List<Entity> getDataSets() throws Exception {
     	return FacadeManager.getFacadeManager().getAnnotationFacade().getDataSets();
     }
+
+    public Entity createCommonRoot(String name) throws Exception {
+        return entityModel.createCommonRootFolder(name);
+    }
     
-    public boolean deleteEntityById(Long entityId) throws Exception {
-        boolean success = FacadeManager.getFacadeManager().getEntityFacade().deleteEntityById(entityId);
+    public void demoteCommonRootToFolder(Entity commonRoot) throws Exception {
+    	 entityModel.demoteCommonRootToFolder(commonRoot);
+    }
+    
+    public void deleteEntityById(Long entityId) throws Exception {
+        entityModel.deleteEntity(entityModel.getEntityById(entityId));
         notifyEntityRemoved(entityId);
-        return success;
     }
 
     public void removeEntityData(EntityData ed) throws Exception {
-        FacadeManager.getFacadeManager().getEntityFacade().removeEntityData(ed);
+    	entityModel.deleteEntityData(ed);
         notifyEntityDataRemoved(ed.getId());
     }
     
-    public void deleteEntityTree(Long id) {
-        try {
-            FacadeManager.getFacadeManager().getEntityFacade().deleteEntityTree(id);
-            notifyEntityRemoved(id);
-        }
-        catch (Exception e) {
-            handleException(e);
-        }
+    public void deleteEntityTree(Long id) throws Exception {
+    	entityModel.deleteEntityTree(entityModel.getEntityById(id));
+        notifyEntityRemoved(id);
     }
     
-    public void deleteEntityTree(Long id, boolean unlinkMultipleParents) {
-        try {
-            FacadeManager.getFacadeManager().getEntityFacade().deleteEntityTree(id, unlinkMultipleParents);
-            notifyEntityRemoved(id);
-        }
-        catch (Exception e) {
-            handleException(e);
-        }
+    public void deleteEntityTree(Long id, boolean unlinkMultipleParents) throws Exception {
+        FacadeManager.getFacadeManager().getEntityFacade().deleteEntityTree(id, unlinkMultipleParents);
+        notifyEntityRemoved(id);
     }
     
     public Entity createOntologyRoot(String ontologyName) throws Exception {
@@ -643,7 +566,6 @@ public class ModelMgr {
         notifyAnnotationsChanged(annotation.getTargetEntityId());
         return annotationEntity;
     }
-
 
     public void removeAnnotation(Long annotationId) throws Exception {
     	Entity annotationEntity = FacadeManager.getFacadeManager().getEntityFacade().getEntityById(annotationId.toString());
@@ -686,15 +608,14 @@ public class ModelMgr {
     	}
     	
     	return null;
-    	
     }
 
-    public List<Entity> getUserCommonRootEntitiesByTypeName(String entityTypeName) {
-        return FacadeManager.getFacadeManager().getEntityFacade().getUserCommonRootEntitiesByTypeName(entityTypeName);
-    }
-    
-    public List<Entity> getSystemCommonRootEntitiesByTypeName(String entityTypeName) {
-        return FacadeManager.getFacadeManager().getEntityFacade().getSystemCommonRootEntitiesByTypeName(entityTypeName);
+	public void invalidateCache(Entity entity, boolean recurse) {
+		entityModel.invalidate(entity, recurse);
+	}
+	
+    public List<Entity> getCommonRootEntities() throws Exception {
+        return entityModel.getCommonRoots();
     }
 
     public Entity getEntityAndChildren(long entityId) throws Exception {
@@ -702,11 +623,25 @@ public class ModelMgr {
     }
 
     public Entity getEntityTree(long entityId) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().getEntityTree(entityId);
+        return entityModel.getEntityTree(entityId);
     }
 
-    public Set<Entity> getChildEntities(Long parentEntityId) {
-        return FacadeManager.getFacadeManager().getEntityFacade().getChildEntities(parentEntityId);
+    public Entity refreshChildren(Entity entity) throws Exception {
+    	entityModel.refreshChildren(entity);
+    	return entityModel.getEntityById(entity.getId());
+    }
+
+    public Entity refreshEntity(Entity entity) throws Exception {
+    	return entityModel.reload(entity);
+    }
+    
+    public Entity refreshEntityAndChildren(Entity entity) throws Exception {
+    	entityModel.refreshChildren(entity);
+    	return entityModel.reload(entity);
+    }
+    
+    public void loadLazyEntity(Entity entity, boolean recurse) throws Exception {
+    	entityModel.loadLazyEntity(entity, recurse);
     }
 
     public List<Entity> getPrivateOntologies() throws Exception {
@@ -717,10 +652,14 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getOntologyFacade().getPublicOntologies();
     }
 
-    public Entity getErrorOntology() throws Exception{
+    public Entity getErrorOntologyEntity() throws Exception{
         return FacadeManager.getFacadeManager().getOntologyFacade().getErrorOntology();
     }
 
+    public OntologyRoot getErrorOntology() {
+    	return ERROR_ONTOLOGY;
+    }
+    
     public Entity publishOntology(Long ontologyEntityId, String rootName) throws Exception {
         return FacadeManager.getFacadeManager().getOntologyFacade().publishOntology(ontologyEntityId, rootName);
     }
@@ -735,12 +674,17 @@ public class ModelMgr {
     }
 
     public Entity createEntity(String entityTypeName, String entityName) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().createEntity(entityTypeName, entityName);
+        return entityModel.createEntity(entityTypeName, entityName);
+    }
+
+    public EntityData addEntityToParent(Entity parent, Entity entity) throws Exception {
+    	EntityData ed = entityModel.addEntityToParent(parent, entity);
+    	notifyEntityChildrenChanged(parent.getId());
+    	return ed;
     }
 
     public EntityData addEntityToParent(Entity parent, Entity entity, Integer index, String attrName) throws Exception {
-    	EntityData ed = FacadeManager.getFacadeManager().getEntityFacade().addEntityToParent(parent, entity, index, attrName);
-    	parent.getEntityData().add(ed);
+    	EntityData ed = entityModel.addEntityToParent(parent, entity, index, attrName);
     	notifyEntityChildrenChanged(parent.getId());
     	return ed;
     }
@@ -766,11 +710,11 @@ public class ModelMgr {
     }
 
     public void createEntityType(String typeName) throws Exception {
-    	FacadeManager.getFacadeManager().getAnnotationFacade().createEntityType(typeName);
+    	FacadeManager.getFacadeManager().getEntityFacade().createEntityType(typeName);
     }
     
     public void createEntityAttribute(String typeName, String attrName) throws Exception {
-    	FacadeManager.getFacadeManager().getAnnotationFacade().createEntityAttribute(typeName, attrName);
+    	FacadeManager.getFacadeManager().getEntityFacade().createEntityAttribute(typeName, attrName);
     }
     
     public List<Entity> getEntitiesForAnnotationSession(Long annotationSessionId) throws Exception {
@@ -790,21 +734,33 @@ public class ModelMgr {
     }
 
     public Entity getAncestorWithType(Entity entity, String type) throws Exception {
-        return FacadeManager.getFacadeManager().getAnnotationFacade().getAncestorWithType(entity, type);
+        return FacadeManager.getFacadeManager().getEntityFacade().getAncestorWithType(entity, type);
     }
 
     public List<List<Long>> searchTreeForNameStartingWith(Long rootId, String searchString) throws Exception {
-        return FacadeManager.getFacadeManager().getAnnotationFacade().searchTreeForNameStartingWith(rootId, searchString);
+        return FacadeManager.getFacadeManager().getEntityFacade().searchTreeForNameStartingWith(rootId, searchString);
     }
     
-    public Entity saveOrUpdateEntity(Entity entity) throws Exception {
-        Entity newEntity = FacadeManager.getFacadeManager().getEntityFacade().saveEntity(entity);
+    public Entity renameEntity(Entity entity, String newName) throws Exception {
+    	Entity newEntity = entityModel.renameEntity(entity, newName);
+        if (newEntity!=null) notifyEntityChanged(newEntity.getId());
+        return newEntity;
+    }
+
+    public Entity setAttributeAsTag(Entity entity, String attributeName) throws Exception {
+    	Entity newEntity = entityModel.setAttributeAsTag(entity, attributeName);
+        if (newEntity!=null) notifyEntityChanged(newEntity.getId());
+        return newEntity;
+    }
+    
+    public Entity setAttributeValue(Entity entity, String attributeName, String attributeValue) throws Exception {
+    	Entity newEntity = entityModel.setAttributeValue(entity, attributeName, attributeValue);
         if (newEntity!=null) notifyEntityChanged(newEntity.getId());
         return newEntity;
     }
 
     public Entity saveOrUpdateAnnotation(Entity annotatedEntity, Entity annotation) throws Exception {
-        Entity newAnnotation = FacadeManager.getFacadeManager().getAnnotationFacade().saveEntity(annotation);
+        Entity newAnnotation = FacadeManager.getFacadeManager().getEntityFacade().saveEntity(annotation);
         if(newAnnotation!=null) notifyAnnotationsChanged(annotatedEntity.getId());
         return newAnnotation;
     }
@@ -867,7 +823,7 @@ public class ModelMgr {
     }
 
     public SolrResults searchSolr(SolrQuery query) throws Exception {
-    	System.out.println("Searching SOLR: "+query.getQuery()+" start="+query.getStart()+" rows="+query.getRows());
+    	log.info("Searching SOLR: "+query.getQuery()+" start="+query.getStart()+" rows="+query.getRows());
     	return FacadeManager.getFacadeManager().getSolrFacade().searchSolr(query);
     }
     
@@ -889,7 +845,7 @@ public class ModelMgr {
     }
     
     public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception {
-    	FacadeManager.getFacadeManager().getAnnotationFacade().addChildren(parentId, childrenIds, attributeName);
+    	entityModel.addChildren(parentId, childrenIds, attributeName);
     	notifyEntityChildrenChanged(parentId);
     }
     
@@ -898,7 +854,7 @@ public class ModelMgr {
     }
     
     public List<MappedId> getProjectedResults(List<Long> entityIds, List<String> upMapping, List<String> downMapping) throws Exception {
-    	return FacadeManager.getFacadeManager().getAnnotationFacade().getProjectedResults(entityIds, upMapping, downMapping);
+    	return FacadeManager.getFacadeManager().getEntityFacade().getProjectedResults(entityIds, upMapping, downMapping);
     }
     
     public List<Entity> getProjectedEntities(Long entityId, List<String> upMapping, List<String> downMapping) throws Exception {
@@ -936,7 +892,18 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getAnnotationFacade().patternSearchGetFilteredResults(type, filterMap);
     }
 
+    public void registerOnEventBus(Object object) {
+    	modelEventBus.register(object);
+    }
+    
+    public void unregisterOnEventBus(Object object) {
+    	modelEventBus.unregister(object);
+    }
 
+    public void postOnEventBus(Object object) {
+    	modelEventBus.post(object);
+    }
+    
     //  private void workSpaceWasCreated(GenomeVersion genomeVersion) {
 //    Set genomeVersions=getGenomeVersions();
 //    GenomeVersion gv;
@@ -981,27 +948,9 @@ public class ModelMgr {
 //       }
 //    }
 //
-    class MyInUseProtocolListener implements InUseProtocolListener {
-        public void protocolAddedToInUseList(String protocol) {
-        }
-
-        public void protocolRemovedFromInUseList(String protocol) {
-        }
-    }
 
 	public Color getUserAnnotationColor(String username) {
 		return userColorMapping.getColor(username);
-	}
-	
-	// TODO: move this to a security module
-	public boolean hasAccess(Entity entity) {
-		String ul = entity.getUser().getUserLogin();
-		return (User.SYSTEM_USER_LOGIN.equals(ul) || SessionMgr.getUsername().equals(ul));
-	}
-	
-	public boolean hasAccess(EntityData entityData) {
-		String ul = entityData.getUser().getUserLogin();
-		return (User.SYSTEM_USER_LOGIN.equals(ul) || SessionMgr.getUsername().equals(ul));
 	}
 }
 

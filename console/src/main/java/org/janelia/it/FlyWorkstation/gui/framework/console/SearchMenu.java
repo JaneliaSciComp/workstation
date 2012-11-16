@@ -46,7 +46,7 @@ public class SearchMenu extends JMenu {
         add(giantFiberSearchMenuItem);
 
         final MAASearchDialog maaSearchDialog = browser.getMAASearchDialog();
-        if (maaSearchDialog.isAccessible()) {
+        if (maaSearchDialog!=null && maaSearchDialog.isAccessible()) {
         	JMenuItem menuItem = new JMenuItem("MAA Screen Search");
             menuItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {

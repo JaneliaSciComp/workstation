@@ -1,5 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs.search;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.*;
+
+import javax.swing.JMenuItem;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.choose.EntityChooser;
@@ -10,13 +16,9 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTreeCellRendere
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
-
-import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.*;
 
 /**
  * Context menu for general search results.
@@ -76,7 +78,7 @@ public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
 						for(List<Object> path : allPaths) {
 							if (!path.isEmpty()) {
 								Entity root = ((Entity)path.get(0));
-								if (ModelMgr.getModelMgr().hasAccess(root)) {
+								if (ModelMgrUtils.hasAccess(root)) {
 									paths.add(path);
 								}
 							}

@@ -170,8 +170,7 @@ public class RemoveEntityAction implements Action {
 						setProgress(1);
 						for(EntityData ed : toReallyDelete) {
 							if (removeRootTag.contains(ed)) {
-								EntityData rootTagEd = ed.getChildEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT);
-								ModelMgr.getModelMgr().removeEntityData(rootTagEd);
+								ModelMgr.getModelMgr().demoteCommonRootToFolder(ed.getChildEntity());
 							}
 							else if (removeReference.contains(ed)) {
 								ModelMgr.getModelMgr().removeEntityData(ed);

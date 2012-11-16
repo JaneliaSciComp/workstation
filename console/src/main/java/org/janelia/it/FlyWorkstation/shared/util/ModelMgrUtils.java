@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.shared.util;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -8,6 +9,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.user_data.User;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
@@ -25,31 +27,13 @@ public class ModelMgrUtils {
     	}
 	}
 
+	// TODO: find usages and use ModelMgr directly
     public static void refreshEntityAndChildren(Entity entity) throws Exception {
-    	ModelMgrUtils.updateEntity(entity, ModelMgr.getModelMgr().getEntityById(entity.getId()+""));
-        Set<Entity> childEntitySet = ModelMgr.getModelMgr().getChildEntities(entity.getId());
-        EntityUtils.replaceChildNodes(entity, childEntitySet);
+    	ModelMgr.getModelMgr().refreshEntityAndChildren(entity);
     }
-
-    public static void refreshChildren(Entity entity) throws Exception {
-        Set<Entity> childEntitySet = ModelMgr.getModelMgr().getChildEntities(entity.getId());
-        EntityUtils.replaceChildNodes(entity, childEntitySet);
-    }
-    
+	// TODO: find usages and use ModelMgr directly
     public static void loadLazyEntity(Entity entity, boolean recurse) throws Exception {
-    	
-        if (!EntityUtils.areLoaded(entity.getEntityData())) {
-            Set<Entity> childEntitySet = ModelMgr.getModelMgr().getChildEntities(entity.getId());
-            EntityUtils.replaceChildNodes(entity, childEntitySet);
-        }
-
-        if (recurse) {
-            for (EntityData ed : entity.getEntityData()) {
-                if (ed.getChildEntity() != null) {
-                    loadLazyEntity(ed.getChildEntity(), true);
-                }
-            }
-        }
+    	ModelMgr.getModelMgr().loadLazyEntity(entity, recurse);
     }
     
     public static boolean isOwner(Entity entity) {
@@ -59,42 +43,17 @@ public class ModelMgrUtils {
     	}
     	return entity.getUser().getUserLogin().equals(SessionMgr.getUsername());
     }
-    
-    public static void updateEntity(Entity entity, Entity newEntity) {
-    	synchronized(entity) {
-			// Map old children onto new EDs, since the old children are initialized and the ones may not be
-			Map<Long,Entity> childMap = new HashMap<Long,Entity>();
-			for(EntityData ed : entity.getEntityData()) {
-				if (ed.getChildEntity()!=null) {
-					childMap.put(ed.getChildEntity().getId(), ed.getChildEntity());
-				}
-			}
-			entity.setEntityData(newEntity.getEntityData());
-			for(EntityData ed : entity.getEntityData()) {
-				if (ed.getChildEntity()!=null && !EntityUtils.isInitialized(ed.getChildEntity()) && ed.getChildEntity().getId()!=null) {
-					Entity child = childMap.get(ed.getChildEntity().getId());
-					if (child!=null) {
-						ed.setChildEntity(child);
-					}
-				}
-			}
-			
-			entity.setName(newEntity.getName());
-	    	entity.setUpdatedDate(newEntity.getUpdatedDate());
-			entity.setCreationDate(newEntity.getCreationDate());
-			entity.setEntityStatus(newEntity.getEntityStatus());
-			entity.setEntityType(newEntity.getEntityType());
-			entity.setUser(newEntity.getUser());
-			entity.setEntityData(newEntity.getEntityData());
-    	}
-    }
-    
-    public static Entity createNewCommonRoot(String folderName) throws Exception {
-    	Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
-		newFolder.addAttributeAsTag(EntityConstants.ATTRIBUTE_COMMON_ROOT);
-		return ModelMgr.getModelMgr().saveOrUpdateEntity(newFolder);
-    }
 
+	public static boolean hasAccess(Entity entity) {
+		String ul = entity.getUser().getUserLogin();
+		return (User.SYSTEM_USER_LOGIN.equals(ul) || SessionMgr.getUsername().equals(ul));
+	}
+	
+	public static boolean hasAccess(EntityData entityData) {
+		String ul = entityData.getUser().getUserLogin();
+		return (User.SYSTEM_USER_LOGIN.equals(ul) || SessionMgr.getUsername().equals(ul));
+	}
+	
     public static EntityData addChild(Entity parent, Entity child) throws Exception {
 		EntityData newEntityData = parent.addChildEntity(child);
 		EntityData savedEntityData = ModelMgr.getModelMgr().saveOrUpdateEntityData(newEntityData);
@@ -105,14 +64,13 @@ public class ModelMgrUtils {
 	public static RootedEntity getChildFolder(RootedEntity parent, String name, boolean createIfMissing) throws Exception {
 		Entity entity = parent.getEntity();
 		if (!EntityUtils.areLoaded(entity.getEntityData())) {
-			ModelMgrUtils.loadLazyEntity(entity, false);
+			ModelMgr.getModelMgr().loadLazyEntity(entity, false);
 		}
 		EntityData repFolderEd = EntityUtils.findChildEntityDataWithName(entity, name);
 		if (repFolderEd == null) {
 			if (createIfMissing) {
 				Entity repFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, name);
-				repFolder = ModelMgr.getModelMgr().saveOrUpdateEntity(repFolder);
-	            repFolderEd = ModelMgr.getModelMgr().addEntityToParent(entity, repFolder, entity.getMaxOrderIndex()==null?0:entity.getMaxOrderIndex()+1, EntityConstants.ATTRIBUTE_ENTITY);
+	            repFolderEd = ModelMgr.getModelMgr().addEntityToParent(entity, repFolder);
 			}
 			else {
 				return null;
@@ -121,7 +79,7 @@ public class ModelMgrUtils {
 		
 		RootedEntity child = parent.getChild(repFolderEd);
 		if (!EntityUtils.areLoaded(child.getEntity().getEntityData())) {
-			ModelMgrUtils.loadLazyEntity(child.getEntity(), false);
+			ModelMgr.getModelMgr().loadLazyEntity(child.getEntity(), false);
 		}
 		return child;
 	}
@@ -144,7 +102,7 @@ public class ModelMgrUtils {
         
         if (!found || !ignoreNested) {
     		if (!EntityUtils.areLoaded(entity.getEntityData())) {
-    			ModelMgrUtils.loadLazyEntity(entity, !ignoreNested);
+    			ModelMgr.getModelMgr().loadLazyEntity(entity, !ignoreNested);
     		}
             for (EntityData entityData : entity.getOrderedEntityData()) {
                 Entity child = entityData.getChildEntity();

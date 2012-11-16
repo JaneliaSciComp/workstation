@@ -36,8 +36,6 @@ public abstract class FacadeManagerBase {
 
     public abstract String getServerName();
 
-    public abstract EntityFacade getFacade(String entityTypeName) throws Exception;
-
     /**
      * Return the open datasources for the facade. toString will be used to display the sources
      */

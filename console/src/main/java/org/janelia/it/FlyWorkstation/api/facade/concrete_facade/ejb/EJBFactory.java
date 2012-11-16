@@ -10,8 +10,12 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModel;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.jacs.compute.api.*;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class EJBFactory {
+	
+	private static final Logger log = LoggerFactory.getLogger(EJBFactory.class);
 	
 //    private static final String DEFAULT_INTERACTIVE_SERVER = ConsoleProperties.getInstance().getProperty("default.interactive.server.url");
 //    private static final String DEFAULT_PIPELINE_SERVER = ConsoleProperties.getInstance().getProperty("default.pipeline.server.url");
@@ -35,7 +39,6 @@ public class EJBFactory {
 
     
     public static void initFromModelProperties(SessionModel sessionModel) {
-    	System.out.println("Initializing EJB Factory");
     	
 //    	interactiveServer = (String)sessionModel.getModelProperty(SessionMgr.JACS_INTERACTIVE_SERVER_PROPERTY);
 //    	pipelineServer = (String)sessionModel.getModelProperty(SessionMgr.JACS_PIPELINE_SERVER_PROPERTY);
@@ -60,8 +63,8 @@ public class EJBFactory {
     	String interactiveServerUrl = "jnp://"+interactiveServer+":1199";
     	String pipelineServerUrl = "jnp://"+pipelineServer+":1199";
     	
-    	System.out.println("    Using interactive server: "+interactiveServerUrl);
-    	System.out.println("    Using pipeline server: "+pipelineServerUrl);
+    	log.info("Using interactive server: "+interactiveServerUrl);
+    	log.info("Using pipeline server: "+pipelineServerUrl);
     	
     	icInteractiveServerProperties.clear();
         icInteractiveServerProperties.put(Context.PROVIDER_URL, interactiveServerUrl);

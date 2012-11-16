@@ -8,6 +8,8 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModel;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Translate between paths to various mounted file resources.
@@ -16,6 +18,8 @@ import org.janelia.it.jacs.model.entity.EntityData;
  */
 public class PathTranslator {
 
+	private static final Logger log = LoggerFactory.getLogger(PathTranslator.class);
+	
     public static final String JACS_DATA_PATH_MAC       = ConsoleProperties.getString("remote.defaultMacPath");
     public static final String JACS_DATA_PATH_NFS     = ConsoleProperties.getString("remote.defaultLinuxPath");
     public static final String JACS_DATA_PATH_WINDOWS   = ConsoleProperties.getString("remote.defaultWindowsPath");
@@ -26,8 +30,7 @@ public class PathTranslator {
     
     
     public static void initFromModelProperties(SessionModel sessionModel) {
-    	System.out.println("Initializing Path Translator");
-
+    	
     	jacsDataPath = (String)sessionModel.getModelProperty(SessionMgr.JACS_DATA_PATH_PROPERTY);
         if (jacsDataPath == null) {
         	File jacsData = new File(PathTranslator.JACS_DATA_PATH_NFS);
@@ -40,7 +43,7 @@ public class PathTranslator {
             sessionModel.setModelProperty(SessionMgr.JACS_DATA_PATH_PROPERTY, jacsDataPath);
         }
         
-        System.out.println("    Using JACS data path: "+jacsDataPath);
+        log.info("Using JACS data path: "+jacsDataPath);
     }
     
     /**

@@ -294,13 +294,13 @@ public class FileMenu extends JMenu {
 
     private void fileOpen_actionPerformed(ActionEvent e, String protocol, Object dataSource) {
         browser.repaint();
-        if (SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME) == null || SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME).equals("") && ModelMgr.getModelMgr().getNumberOfLoadedOntologies() == 0) {
+        if (SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME) == null || SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME).equals("")) {
             int answer = JOptionPane.showConfirmDialog(browser, "Please enter your Workstation login information.", "Information Required", JOptionPane.OK_CANCEL_OPTION);
             if (answer == JOptionPane.CANCEL_OPTION) return;
             PrefController.getPrefController().getPrefInterface(DataSourceSettingsPanel.class, browser);
         }
         // Double check.  Exit if still empty or not useful.
-        if (SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME) == null || SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME).equals("") && ModelMgr.getModelMgr().getNumberOfLoadedOntologies() == 0) {
+        if (SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME) == null || SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME).equals("")) {
             return;
         }
         DataSourceSelector dss = FacadeManager.getDataSourceSelectorForProtocol(protocol);

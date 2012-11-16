@@ -1,5 +1,15 @@
 package org.janelia.it.FlyWorkstation.gui.framework.session_mgr;
 
+import java.awt.Component;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.io.*;
+import java.text.ParseException;
+import java.util.*;
+
+import javax.swing.*;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
@@ -15,20 +25,14 @@ import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.ws.EmbeddedAxisServer;
 import org.janelia.it.jacs.model.user_data.User;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
-import java.io.*;
-import java.text.ParseException;
-import java.util.*;
-import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class SessionMgr {
 
+	private static final Logger log = LoggerFactory.getLogger(SessionMgr.class);
+	
     public static String DISPLAY_FREE_MEMORY_METER_PROPERTY = "SessionMgr.DisplayFreeMemoryProperty";
     public static String DISPLAY_SUB_EDITOR_PROPERTY = "SessionMgr.DisplaySubEditorProperty";
     public static String JACS_DATA_PATH_PROPERTY = "SessionMgr.JacsDataPathProperty";
@@ -79,7 +83,7 @@ public class SessionMgr {
                 settingsFile.createNewFile();  //only creates if does not exist
             }
             catch (IOException ioEx1) {
-                System.err.println("Cannot create settings file!! " + ioEx1.getMessage());
+            	log.error("Cannot create settings file!! " + ioEx1.getMessage());
             }
         }
 
@@ -303,13 +307,6 @@ public class SessionMgr {
     }
 
     /**
-     * Makes whole model read-only
-     */
-    public void makeReadOnly() {
-        modelManager.makeReadOnly();
-    }
-
-    /**
      * Register an editor for a model type
      *
      */
@@ -385,10 +382,8 @@ public class SessionMgr {
         sessionModel.removeAllBrowserModels();
         
         logoutUser();
-        System.out.println("Logged out.");
-        
-        System.err.println("Memory in use at exit: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000000f + " MB");
-        System.err.flush();
+        log.info("Logged out");
+        log.info("Memory in use at exit: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000000f + " MB");
         
         modelManager.prepareForSystemExit();
         System.exit(errorlevel);
@@ -506,7 +501,6 @@ public class SessionMgr {
             browser.closeAllViews();
             browser.getBrowserModel().reset();
         }
-        ModelMgr.getModelMgr().removeAllOntologies();
         FacadeManager.resetFacadeManager();
     }
 
@@ -542,13 +536,13 @@ public class SessionMgr {
 
     private void writeSettings() {
         try {
-            System.out.println("Saving user settings.");
             settingsFile.delete();
             ObjectOutputStream ostream = new ObjectOutputStream(new FileOutputStream(settingsFile));
             ostream.writeInt(1);  //stream format
             ostream.writeObject(sessionModel.getModelProperties());
             ostream.flush();
             ostream.close();
+        	log.info("Saving user settings to "+settingsFile.getAbsolutePath());
         }
         catch (IOException ioEx) {
             handleException(ioEx);

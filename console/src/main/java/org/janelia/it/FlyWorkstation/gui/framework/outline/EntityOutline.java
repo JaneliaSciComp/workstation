@@ -6,7 +6,23 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Callable;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
+import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChangeEvent;
+import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityRemoveEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.ScreenEvaluationDialog;
@@ -17,25 +33,15 @@ import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityAttribute;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreePath;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.Callable;
+import com.google.common.eventbus.Subscribe;
 
 /**
  * The entity tree which lives in the right-hand "Data" panel and drives the viewers. 
@@ -43,14 +49,17 @@ import java.util.concurrent.Callable;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public abstract class EntityOutline extends EntityTree implements Cloneable, Refreshable {
-
+	
+	private static final Logger log = LoggerFactory.getLogger(EntityOutline.class);
+	
 	private String currUniqueId;
-
+	
 	public EntityOutline() {
 		super(true);
 		this.setMinimumSize(new Dimension(400, 400));
 		showLoadingIndicator();
-
+		
+		ModelMgr.getModelMgr().registerOnEventBus(this);
 		ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
 
 			@Override
@@ -64,102 +73,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			public void entityDeselected(String category, String entityId) {
 				if (EntitySelectionModel.CATEGORY_OUTLINE.equals(category)) {
 					getTree().clearSelection();
-				}
-			}
-
-			@Override
-			public void entityChanged(final long entityId) {
-				
-				SimpleWorker worker = new SimpleWorker() {
-					
-					private Entity entity;
-					
-					@Override
-					protected void doStuff() throws Exception {
-						 entity = ModelMgr.getModelMgr().getEntityById(entityId+"");
-					}
-					
-					@Override
-					protected void hadSuccess() {
-						Set<DefaultMutableTreeNode> nodes = getNodesByEntityId(entityId);
-						if (nodes == null) return;
-						for(final DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
-							ModelMgrUtils.updateEntity(getEntity(node), entity);
-						}
-						revalidate();
-						repaint();
-					}
-					
-					@Override
-					protected void hadError(Throwable error) {
-						SessionMgr.getSessionMgr().handleException(error);
-					}
-				};
-				
-				worker.execute();
-			}
-			
-			@Override
-			public void entityChildrenChanged(final long entityId) {
-				SimpleWorker worker = new SimpleWorker() {
-					private Set<DefaultMutableTreeNode> nodes;
-					
-					@Override
-					protected void doStuff() throws Exception {
-						nodes = getNodesByEntityId(entityId);
-						if (nodes == null) return;
-						for(final DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
-							ModelMgrUtils.refreshEntityAndChildren(getEntity(node));
-						}
-					}
-					
-					@Override
-					protected void hadSuccess() {
-						if (nodes == null) return;
-						for(final DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
-							getDynamicTree().recreateChildNodes(node);   
-							//getDynamicTree().expand(node, true);
-						}
-						revalidate();
-						repaint();
-					}
-					
-					@Override
-					protected void hadError(Throwable error) {
-						SessionMgr.getSessionMgr().handleException(error);
-					}
-				};
-				
-				worker.execute();
-			}
-
-			@Override
-			public void entityRemoved(long entityId) {
-				Set<DefaultMutableTreeNode> nodes = getNodesByEntityId(entityId);
-				if (nodes == null) return;
-				for(DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
-					DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
-					Entity parent = getEntity(parentNode);
-					EntityData entityData = getEntityData(node);
-					if (parent!=null) {
-						parent.getEntityData().remove(entityData);
-					}
-					removeNode(node);	
-				}
-			}
-
-			@Override
-			public void entityDataRemoved(long entityDataId) {
-				Set<DefaultMutableTreeNode> nodes = getNodesByEntityDataId(entityDataId);
-				if (nodes == null) return;
-				for(DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
-					DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
-					Entity parent = getEntity(parentNode);
-					EntityData entityData = getEntityData(node);
-					if (parent!=null) {
-						parent.getEntityData().remove(entityData);
-					}
-					removeNode(node);	
 				}
 			}
 		});
@@ -187,7 +100,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	}
 
 	public void init(List<Entity> entityRootList) {
-
+		
 		EntityType rootType = new EntityType();
 		rootType.setName("");
 		rootType.setAttributes(new HashSet<EntityAttribute>());
@@ -252,6 +165,40 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			}
 		});
 	}
+
+	@Subscribe 
+	public void entityChanged(EntityChangeEvent event) {
+		Entity entity = event.getEntity();
+		Set<DefaultMutableTreeNode> nodes = getNodesByEntityId(entity.getId());
+		if (nodes == null) return;
+		for(final DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
+			Entity treeEntity = getEntity(node);
+			if (entity!=treeEntity) {
+				log.warn("EntityOutline: Instance mismatch: "+entity.getName()+
+	    				" (cached="+System.identityHashCode(entity)+") vs (this="+System.identityHashCode(treeEntity)+")");
+				getEntityData(node).setChildEntity(entity);
+			}
+			getDynamicTree().recreateChildNodes(node); 
+		}
+		revalidate();
+		repaint();
+	}
+
+	@Subscribe 
+	public void entityRemoved(EntityRemoveEvent event) {
+		Entity entity = event.getEntity();
+		Set<DefaultMutableTreeNode> nodes = getNodesByEntityId(entity.getId());
+		if (nodes == null) return;
+		for(DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
+			DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
+			Entity parent = getEntity(parentNode);
+			EntityData entityData = getEntityData(node);
+			if (parent!=null) {
+				parent.getEntityData().remove(entityData);
+			}
+			removeNode(node);	
+		}
+	}
 	
 	/**
 	 * Override this method to load the root list. This method will be called in
@@ -259,7 +206,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	 * 
 	 * @return
 	 */
-	public abstract List<Entity> loadRootList();
+	public abstract List<Entity> loadRootList() throws Exception;
 
 	private class EntityOutlineContextMenu extends EntityContextMenu {
 
@@ -286,31 +233,36 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 				public void actionPerformed(ActionEvent actionEvent) {
 
 					// Add button clicked
-					String folderName = (String) JOptionPane.showInputDialog(browser, "Folder Name:\n",
+					final String folderName = (String) JOptionPane.showInputDialog(browser, "Folder Name:\n",
 							"Create top-level folder", JOptionPane.PLAIN_MESSAGE, null, null, null);
 					if ((folderName == null) || (folderName.length() <= 0)) {
 						return;
 					}
 
-					try {
-						// Update database
-						Entity newFolder = ModelMgrUtils.createNewCommonRoot(folderName);
-
-						// Update Tree UI
-						final Long newFolderId = newFolder.getId();
-						refresh(true, new Callable<Void>() {
-							@Override
-							public Void call() throws Exception {
-								selectEntityByUniqueId("/e_"+newFolderId);
-								return null;
-							}
-						});
-						
-					} catch (Exception ex) {
-						ex.printStackTrace();
-						JOptionPane.showMessageDialog(browser, "Error creating folder", "Error",
-								JOptionPane.ERROR_MESSAGE);
-					}
+					SimpleWorker worker = new SimpleWorker() {
+						private Entity newFolder;
+						@Override
+						protected void doStuff() throws Exception {
+							// Update database
+							newFolder = ModelMgr.getModelMgr().createCommonRoot(folderName);
+						}
+						@Override
+						protected void hadSuccess() {
+							// Update Tree UI
+							refresh(true, new Callable<Void>() {
+								@Override
+								public Void call() throws Exception {
+									selectEntityByUniqueId("/e_"+newFolder.getId());
+									return null;
+								}
+							});
+						}
+						@Override
+						protected void hadError(Throwable error) {
+							SessionMgr.getSessionMgr().handleException(error);
+						}
+					};
+					worker.execute();
 				}
 			});
 
@@ -396,6 +348,9 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			private List<Entity> rootList;
 
 			protected void doStuff() throws Exception {
+				for(Entity root : getRootEntity().getChildren()) {
+					ModelMgr.getModelMgr().invalidateCache(root, true);
+				}
 				rootList = loadRootList();
 			}
 

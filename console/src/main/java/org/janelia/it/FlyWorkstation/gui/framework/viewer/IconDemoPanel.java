@@ -6,8 +6,22 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.swing.*;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
+import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChangeEvent;
+import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityRemoveEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.UserColorMapping;
@@ -22,7 +36,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.FlyWorkstation.gui.util.*;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
-import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -30,15 +43,10 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.awt.image.BufferedImage;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicBoolean;
+import com.google.common.eventbus.Subscribe;
 
 /**
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of 
@@ -52,7 +60,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class IconDemoPanel extends Viewer {
-
+	
+	private static final Logger log = LoggerFactory.getLogger(IconDemoPanel.class);
+	
 	protected final static int PAGE_SIZE = 500;
 	
 	// Main components
@@ -231,7 +241,7 @@ public class IconDemoPanel extends Viewer {
 	}
 	
 	/**
-	 * This is a separate method so that it can be overridden to accomodate other behavior patterns.
+	 * This is a separate method so that it can be overridden to accommodate other behavior patterns.
 	 * @param button
 	 */
 	protected void buttonDrillDown(AnnotatedImageButton button) {
@@ -401,9 +411,7 @@ public class IconDemoPanel extends Viewer {
 							// Update database
 							Entity parentFolder = contextRootedEntity.getEntity();
 							Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
-							ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder,
-									parentFolder.getMaxOrderIndex() + 1, EntityConstants.ATTRIBUTE_ENTITY);
-
+							ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder);	
 						} 
 						catch (Exception ex) {
 							SessionMgr.getSessionMgr().handleException(ex);
@@ -449,78 +457,9 @@ public class IconDemoPanel extends Viewer {
 					IconDemoPanel.this.entityDeselected(entityId);
 				}
 			}
-
-			@Override
-			public void entityChanged(final long entityId) {
-				if (contextRootedEntity==null) return;
-				if (contextRootedEntity.getEntity().getId().equals(entityId)) {
-					refresh();	
-				}
-				else {
-					SimpleWorker worker = new SimpleWorker() {
-						private Entity newEntity;
-						
-						@Override
-						protected void doStuff() throws Exception {
-							newEntity = ModelMgr.getModelMgr().getEntityById(entityId+"");
-						}
-						
-						@Override
-						protected void hadSuccess() {
-							for(AnnotatedImageButton button : imagesPanel.getButtonsByEntityId(entityId)) {
-								RootedEntity rootedEntity = button.getRootedEntity();
-								if (rootedEntity != null) {
-									ModelMgrUtils.updateEntity(rootedEntity.getEntity(), newEntity);	
-									button.refresh(rootedEntity);
-									button.setViewable(true);
-								}
-							}
-						}
-						
-						@Override
-						protected void hadError(Throwable error) {
-							SessionMgr.getSessionMgr().handleException(error);
-						}
-					};
-					
-					worker.execute();
-				}
-			}
-			
-			@Override
-			public void entityRemoved(long entityId) {
-				if (contextRootedEntity==null) return;
-				if (contextRootedEntity.getEntity()!=null && contextRootedEntity.getEntityId().equals(entityId)) {
-					goParent();
-				}
-				else {
-					for(RootedEntity rootedEntity : new ArrayList<RootedEntity>(pageRootedEntities)) {
-						if (rootedEntity.getEntityId().equals(entityId)) {
-							removeRootedEntity(rootedEntity);
-							return;
-						}
-					}	
-				}
-			}
-
-			@Override
-			public void entityDataRemoved(long entityDataId) {
-				if (contextRootedEntity==null) return;
-				if (contextRootedEntity.getEntityData().getId()!=null && contextRootedEntity.getEntityData().getId().equals(entityDataId)) {
-					goParent();
-				}
-				else {
-					for(RootedEntity rootedEntity : new ArrayList<RootedEntity>(pageRootedEntities)) {
-						EntityData entityData = rootedEntity.getEntityData();
-						if (entityData.getId()!=null && entityData.getId().equals(entityDataId)) {
-							removeRootedEntity(rootedEntity);
-							return;
-						}
-					}
-				}
-			}
 		};
 		ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
+		ModelMgr.getModelMgr().registerOnEventBus(this);
 				
 		this.addComponentListener(new ComponentAdapter() {
 			@Override
@@ -595,6 +534,50 @@ public class IconDemoPanel extends Viewer {
 			}
 		});
 	}
+
+	@Subscribe 
+	public void entityChanged(EntityChangeEvent event) {
+		Entity entity = event.getEntity();
+		if (contextRootedEntity==null) return;
+		if (contextRootedEntity.getEntity().getId().equals(entity.getId())) {
+			refresh();	
+		}
+		else {
+			for(AnnotatedImageButton button : imagesPanel.getButtonsByEntityId(entity.getId())) {
+				RootedEntity rootedEntity = button.getRootedEntity();
+				if (rootedEntity != null) {
+
+					Entity buttonEntity = rootedEntity.getEntity();
+					if (entity!=buttonEntity) {
+						log.warn("IconDemoPanel: Instance mismatch: "+entity.getName()+
+			    				" (cached="+System.identityHashCode(entity)+") vs (this="+System.identityHashCode(buttonEntity)+")");
+						rootedEntity.setEntity(entity);
+					}
+					
+					button.refresh(rootedEntity);
+					button.setViewable(true);
+				}
+			}
+		}
+	}
+
+	@Subscribe 
+	public void entityRemoved(EntityRemoveEvent event) {
+		Entity entity = event.getEntity();
+		if (contextRootedEntity==null) return;
+		if (contextRootedEntity.getEntity()!=null && contextRootedEntity.getEntityId().equals(entity.getId())) {
+			goParent();
+		}
+		else {
+			for(RootedEntity rootedEntity : new ArrayList<RootedEntity>(pageRootedEntities)) {
+				if (rootedEntity.getEntityId().equals(entity.getId())) {
+					removeRootedEntity(rootedEntity);
+					return;
+				}
+			}	
+		}
+	}
+	
 	
 	protected IconDemoToolbar createToolbar() {
 
@@ -1148,10 +1131,13 @@ public class IconDemoPanel extends Viewer {
 			RootedEntity rootedEntity = contextRootedEntity;
 			
 			protected void doStuff() throws Exception {
-				Entity entity = ModelMgr.getModelMgr().getEntityById(rootedEntity.getEntity().getId()+"");
-				if (entity==null) return;
-				ModelMgrUtils.loadLazyEntity(entity, false);
-				rootedEntity.getEntityData().setChildEntity(entity);
+				Entity buttonEntity = rootedEntity.getEntity();
+				Entity entity = ModelMgr.getModelMgr().refreshEntity(rootedEntity.getEntity());
+				if (entity!=buttonEntity) {
+					log.warn("IconDemoPanel: Instance mismatch: "+entity.getName()+
+		    				" (cached="+System.identityHashCode(entity)+") vs (this="+System.identityHashCode(buttonEntity)+")");
+					rootedEntity.setEntity(entity);
+				}
 			}
 
 			protected void hadSuccess() {

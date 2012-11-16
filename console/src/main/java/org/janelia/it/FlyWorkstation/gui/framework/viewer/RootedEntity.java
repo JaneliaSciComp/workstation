@@ -44,7 +44,7 @@ public class RootedEntity {
 		return entityData.getChildEntity()==null?null:entityData.getChildEntity().getId();
 	}
 	
-	public void updateEntity(Entity entity) {
+	public void setEntity(Entity entity) {
 		entityData.setChildEntity(entity);
 	}
 	

@@ -76,10 +76,7 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
                 }
 	            
 	            try {
-	            	// Make sure we have the latest entity, then we can rename it
-	            	Entity dbEntity = ModelMgr.getModelMgr().getEntityById(""+entity.getId());
-	            	dbEntity.setName(newName);
-	            	ModelMgr.getModelMgr().saveOrUpdateEntity(dbEntity);
+	            	ModelMgr.getModelMgr().renameEntity(entity, newName);
 	            }
                 catch (Exception error) {
                 	SessionMgr.getSessionMgr().handleException(error);
@@ -113,11 +110,7 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 	                protected void doStuff() throws Exception {
     		            // Update database
     		            for (Entity entity : toDelete) {
-    		                boolean success = ModelMgr.getModelMgr().deleteEntityById(entity.getId());
-    		                if (!success) {
-    		                	SessionMgr.getSessionMgr().handleException(
-    		                			new Exception("Error deleting entity with id=" + entity.getId()));
-    		                }
+    		                ModelMgr.getModelMgr().deleteEntityById(entity.getId());
     		            }
 	                }
 

@@ -49,9 +49,7 @@ public class FolderUtils {
 
 		if (saveFolder == null) {
 			// No existing folder, so create a new one
-			saveFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, commonRootName);
-			saveFolder.addAttributeAsTag(EntityConstants.ATTRIBUTE_COMMON_ROOT);
-			saveFolder = ModelMgr.getModelMgr().saveOrUpdateEntity(saveFolder);	
+			saveFolder = ModelMgr.getModelMgr().createCommonRoot(commonRootName);
 		}
 
 		saveEntities(saveFolder, entityIds);

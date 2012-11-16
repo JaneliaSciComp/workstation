@@ -80,8 +80,6 @@ public class ToolSettingsPanel extends JPanel implements PrefEditor {
         List delayedChanges = new ArrayList();
         try {
             if (directoryLocationModel.isModified()) {
-                if (ModelMgr.getModelMgr().getNumberOfLoadedOntologies() > 0)
-                    delayedChanges.add("Changing the XML Directories");
                 setNewDirectoryLocations(directoryLocationModel.getList());
             } // Change required.
         } // End try to save changes.

@@ -28,6 +28,8 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.screen.ScreenEvalConstants;
 import org.janelia.it.jacs.shared.screen.ScreenEvalUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A dialog for searching Arnim's MAA annotations. 
@@ -35,6 +37,8 @@ import org.janelia.it.jacs.shared.screen.ScreenEvalUtils;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class MAASearchDialog extends ModalDialog implements Accessibility,ActionListener {
+	
+	private static final Logger log = LoggerFactory.getLogger(MAASearchDialog.class);
 	
 	private Map<String,List<JCheckBox>> intCheckBoxMap = new HashMap<String,List<JCheckBox>>();
 	private Map<String,List<JCheckBox>> distCheckBoxMap = new HashMap<String,List<JCheckBox>>();
@@ -136,14 +140,16 @@ public class MAASearchDialog extends ModalDialog implements Accessibility,Action
     
 	public void init() {
 
+		log.info("Begin loading");
+		
 		SimpleWorker worker = new SimpleWorker() {
 			
 			@Override
 			protected void doStuff() throws Exception {
 				
 				Entity topLevelFolder = null;
-				for(Entity entity : ModelMgr.getModelMgr().getEntitiesByName(ScreenEvalConstants.TOP_LEVEL_FOLDER_NAME)) {
-					if (ModelMgrUtils.isOwner(entity)) {
+				for(Entity entity : ModelMgr.getModelMgr().getCommonRootEntities()) {
+					if (entity.getName().equals(ScreenEvalConstants.TOP_LEVEL_FOLDER_NAME) && ModelMgrUtils.isOwner(entity)) {
 						topLevelFolder = entity;
 					}
 				}
@@ -253,6 +259,7 @@ public class MAASearchDialog extends ModalDialog implements Accessibility,Action
 				MAASearchDialog.this.folderMap = this.folderMap;
 				okButton.setEnabled(true);
 				updateSampleCount();
+				log.info("Completed loading, "+countMap.size()+" counts, dialog is ready");
 			}
 			
 			@Override

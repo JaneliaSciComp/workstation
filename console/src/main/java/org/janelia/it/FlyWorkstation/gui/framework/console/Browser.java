@@ -230,12 +230,8 @@ public class Browser extends JFrame implements Cloneable {
 		
         entityOutline = new EntityOutline() {
 			@Override
-			public List<Entity> loadRootList() {
-				List<Entity> rootList = ModelMgr.getModelMgr().getUserCommonRootEntitiesByTypeName(EntityConstants.TYPE_FOLDER);
-				if (!"system".equals(SessionMgr.getUsername())) {
-					rootList.addAll(ModelMgr.getModelMgr().getSystemCommonRootEntitiesByTypeName(EntityConstants.TYPE_FOLDER));	
-				}
-				return rootList;
+			public List<Entity> loadRootList() throws Exception {
+				return ModelMgr.getModelMgr().getCommonRootEntities();
 			}
 		};
 		

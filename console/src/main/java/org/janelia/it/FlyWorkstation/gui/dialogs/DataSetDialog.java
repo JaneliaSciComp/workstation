@@ -176,14 +176,12 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
 					dataSetEntity.setName(nameInput.getText());	
 				}
 				
-				dataSetEntity.setValueByAttributeName(EntityConstants.ATTRIBUTE_PIPELINE_PROCESS, getCheckboxValues(processCheckboxes));
+				ModelMgr.getModelMgr().setAttributeValue(dataSetEntity, EntityConstants.ATTRIBUTE_PIPELINE_PROCESS, getCheckboxValues(processCheckboxes));
 				
 				if (sageSyncCheckbox.isSelected()) {
-					dataSetEntity.setValueByAttributeName(EntityConstants.ATTRIBUTE_SAGE_SYNC, EntityConstants.ATTRIBUTE_SAGE_SYNC);	
-					ModelMgr.getModelMgr().saveOrUpdateEntity(dataSetEntity);
+					ModelMgr.getModelMgr().setAttributeAsTag(dataSetEntity, EntityConstants.ATTRIBUTE_SAGE_SYNC);
 				}
 				else {
-					ModelMgr.getModelMgr().saveOrUpdateEntity(dataSetEntity);
 					EntityData sageSyncEd = dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAGE_SYNC);
 					if (sageSyncEd!=null) {
 						ModelMgr.getModelMgr().removeEntityData(sageSyncEd);

@@ -234,7 +234,6 @@ public class EntityTree extends JPanel {
             @Override
             public void loadLazyNodeData(DefaultMutableTreeNode node, boolean recurse) throws Exception {
                 Entity entity = getEntity(node);
-                
                 if (recurse == true) {
                 	// It's much faster to load the entire subtree in one go
             	
@@ -486,8 +485,8 @@ public class EntityTree extends JPanel {
         }
         
         Entity entity = newEd.getChildEntity();
-//    	Entity parentEntity = getEntity(parentNode);
-//		System.out.println(indent+"EntityTree.addNodes - adding "+entity.getName()+" ("+newEd.getId()+") to "+(getEntity(parentNode)==null?"ROOT":getEntity(parentNode).getName())+" at index:"+index);
+        
+//		System.out.println(indent+"EntityTree.addNodes - adding "+entity.getName()+" (@"+System.identityHashCode(entity)+", ed.id="+newEd.getId()+") to "+(getEntity(parentNode)==null?"ROOT":getEntity(parentNode).getName())+" at index:"+index);
         
         // Add to unique map
         String uniqueId = selectedTree.getUniqueId(newNode);

@@ -16,6 +16,8 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OntologyElementAction;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Maintains a set of key bindings for the user. Maps KeyboardShortcuts to Actions. Enforces a one-to-one mapping,
@@ -24,7 +26,9 @@ import org.janelia.it.jacs.model.ontology.OntologyRoot;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class KeyBindings {
-
+	
+	private static final Logger log = LoggerFactory.getLogger(KeyBindings.class);
+	
     private Map<KeyboardShortcut, Action> generalBindings;
     private Map<KeyboardShortcut, Action> ontologyBindings;
 
@@ -108,7 +112,7 @@ public class KeyBindings {
      */
     public void loadOntologyKeybinds(OntologyRoot root, Map<Long, Action> entityActionMap) {
 
-        System.out.println("Loading key bindings for ontology "+root.getId());
+        log.info("Loading key bindings for ontology: "+root.getId());
 
         ontologyBindings.clear();
 

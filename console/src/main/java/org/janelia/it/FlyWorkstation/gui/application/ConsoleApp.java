@@ -19,6 +19,8 @@ import org.janelia.it.FlyWorkstation.gui.util.panels.DataSourceSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.server_status.ServerStatusReportManager;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by IntelliJ IDEA.
@@ -28,11 +30,13 @@ import org.janelia.it.FlyWorkstation.shared.util.Utils;
  * This is the main
  */
 public class ConsoleApp {
-
+	
+	private static final Logger log = LoggerFactory.getLogger(ConsoleApp.class);
+	
     static {
-        System.out.println("Java version: " + System.getProperty("java.version"));
+    	log.info("Java version: " + System.getProperty("java.version"));
         java.security.ProtectionDomain pd = ConsoleApp.class.getProtectionDomain();
-        System.out.println("Code Source: " + pd.getCodeSource().getLocation());
+        log.debug("Code Source: " + pd.getCodeSource().getLocation());
         // Establish some OS-specific stuff
         // Set these, Mac may use - // take the menu bar off the jframe
 //        System.setProperty("apple.laf.useScreenMenuBar", "true");
@@ -58,6 +62,10 @@ public class ConsoleApp {
 
         // Prime the tool-specific properties before the Session is invoked
         ConsoleProperties.load();
+        
+        // Protocol Registration - Adding more than one type should automatically switch over to the Aggregate Facade
+        FacadeManager.registerFacade(FacadeManager.getEJBProtocolString(), EJBFacadeManager.class, "JACS EJB Facade Manager");
+        
         final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
         try {
             //Browser Setup
@@ -80,11 +88,8 @@ public class ConsoleApp {
             sessionMgr.registerExceptionHandler(new UserNotificationExceptionHandler());
             sessionMgr.registerExceptionHandler(new ExitHandler()); //should be last so that other handlers can complete first.
         	
-            // Protocol Registration - Adding more than one type should automatically switch over to the Aggregate Facade
             final ModelMgr modelMgr = ModelMgr.getModelMgr();
-            modelMgr.registerFacadeManagerForProtocol(FacadeManager.getEJBProtocolString(), EJBFacadeManager.class, "JACS EJB Facade Manager");
             modelMgr.initErrorOntology();
-            // Model Observers
             modelMgr.addModelMgrObserver(sessionMgr.getAxisServer());
             
             // Editor Registration
@@ -165,7 +170,7 @@ public class ConsoleApp {
                 }
             }
             else {
-                System.out.println("Successfully logged in user "+SessionMgr.getUsername());
+            	log.info("Successfully logged in user "+SessionMgr.getUsername());
             }
 
         	// Make sure we can access the data mount
