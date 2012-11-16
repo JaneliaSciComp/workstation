@@ -14,6 +14,8 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Self-adjusting grid of images which may be resized together.
@@ -21,7 +23,9 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ImagesPanel extends JScrollPane {
-
+	
+	private static final Logger log = LoggerFactory.getLogger(ImagesPanel.class);
+	
     public static final int MIN_THUMBNAIL_SIZE = 100;
     public static final int DEFAULT_THUMBNAIL_SIZE = 300;
     public static final int MAX_THUMBNAIL_SIZE = 1000;
@@ -453,10 +457,12 @@ public class ImagesPanel extends JScrollPane {
     /**
      * Set the number of columns in the grid layout based on the width of the parent component and the width of the
      * buttons.
+     * 
+     * This method must be called in the EDT.
      */
     public synchronized void recalculateGrid() {
     	
-    	if (!SwingUtilities.isEventDispatchThread()) throw new RuntimeException("recalculateGrid called outside of EDT");
+    	log.debug("Recalculating image grid");
     	
     	double maxButtonWidth = 0;
         for (AnnotatedImageButton button : buttons.values()) {
@@ -469,13 +475,13 @@ public class ImagesPanel extends JScrollPane {
         
         int fullWidth = getSize().width - getVerticalScrollBar().getWidth();
         
-        int numCols = (int) Math.floor((double)fullWidth / maxButtonWidth);
-        if (numCols > 0) {
-        	buttonsPanel.setColumns(numCols);
-        }
+        int numCols = (int)Math.max(Math.floor((double)fullWidth / maxButtonWidth),1);
+    	if (buttonsPanel.getColumns()!=numCols) {
+    		buttonsPanel.setColumns(numCols);	
+    		repaintButtons();
+    	}
 
 		loadUnloadImages();
-		repaintButtons();
     }
 
     private Date lastQueueDate = new Date();
@@ -488,10 +494,10 @@ public class ImagesPanel extends JScrollPane {
 			@Override
 			public void run() {
 				if (queueDate.before(lastQueueDate)) {
-					System.out.println("Ignoring duplicate request to loadUnloadImages");
+					log.debug("Ignoring duplicate request");
 					return;
 				}
-//				System.out.println("loadUnloadImages");
+				log.debug("Loading/unloading image buttons");
 				loadUnloadImagesInterrupt.set(false);
 		    	final JViewport viewPort = getViewport();
 		    	Rectangle viewRect = viewPort.getViewRect();
@@ -500,7 +506,7 @@ public class ImagesPanel extends JScrollPane {
 		    	}
 		        for(AnnotatedImageButton button : buttons.values()) {
 		        	if (loadUnloadImagesInterrupt.get()) {
-		        		System.out.println("Interrupted loadUnloadImages");
+		        		log.debug("Interrupted");
 		        		return;
 		        	}
 		        	try {

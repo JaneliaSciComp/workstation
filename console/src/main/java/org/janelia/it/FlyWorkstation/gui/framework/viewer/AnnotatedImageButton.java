@@ -294,6 +294,8 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
         c.anchor = GridBagConstraints.PAGE_START;
         c.weighty = 1;
         buttonPanel.add((JPanel)annotationView, c);
+        
+        buttonPanel.revalidate();
     }
     
     public RootedEntity getRootedEntity() {

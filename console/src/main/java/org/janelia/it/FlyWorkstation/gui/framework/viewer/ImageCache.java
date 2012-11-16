@@ -49,4 +49,8 @@ public class ImageCache {
 		cache.put(identifier, image);
 		return image;
 	}
+	
+	public void invalidateAll() {
+		cache.invalidateAll();
+	}
 }

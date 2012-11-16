@@ -84,7 +84,6 @@ public class DynamicImageButton extends AnnotatedImageButton {
 					double w = dynamicImagePanel.getImage().getIconWidth();
 					double h = dynamicImagePanel.getImage().getIconHeight();
 					setAspectRatio(w, h);
-					iconDemoPanel.getImagesPanel().repaintButtons();
 				}
 				return null;
 			}

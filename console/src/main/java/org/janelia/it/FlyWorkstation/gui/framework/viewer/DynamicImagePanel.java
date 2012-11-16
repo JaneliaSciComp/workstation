@@ -166,13 +166,12 @@ public abstract class DynamicImagePanel extends JPanel {
     /**
      * Tell the panel if its image should be viewable. When this is set to false, the images can be released from
      * memory to save space. When it's set to true, the image will be reloaded from disk if necessary.
+     * 
+     * This method must be called from the EDT.
+     * 
      * @param wantViewable
      */
 	public synchronized void setViewable(boolean wantViewable, Callable success) {
-		
-		if (!SwingUtilities.isEventDispatchThread()) {
-			throw new IllegalStateException("DynamicImagePanel.setViewable must be called from EDT");
-		}
 		
 		if (imageFilename!=null) {
 			if (wantViewable) {
@@ -198,7 +197,6 @@ public abstract class DynamicImagePanel extends JPanel {
 		    	imageLabel.setIcon(null);
 		    	// Show the loading label until the image needs to be loaded again
 		        setImageLabel(loadingLabel);
-				invalidate();
 				// Call the callback
 				try {
 					if (success!=null) success.call();
@@ -268,8 +266,6 @@ public abstract class DynamicImagePanel extends JPanel {
     private synchronized void loadDone() {
         setImageLabel(imageLabel);
         syncToViewerState();
-        revalidate();
-        repaint();
         loadWorker = null;
     }
     

@@ -46,6 +46,7 @@ public class ConsoleApp {
     }
 
     public static void main(final String[] args) {
+//    	Toolkit.getDefaultToolkit().getSystemEventQueue().push(new TimedEventQueue());
     	SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
