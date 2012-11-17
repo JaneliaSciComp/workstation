@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.tree;
 
+import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
@@ -28,7 +29,6 @@ public class LazyTreeNodeLoader extends SimpleWorker {
      */
     public void loadSynchronously() throws Exception {
         dynamicTree.loadLazyNodeData(node, recurse);
-        dynamicTree.recreateChildNodes(node);
         doneLoading();
     }
     
@@ -39,8 +39,14 @@ public class LazyTreeNodeLoader extends SimpleWorker {
 
     @Override
     protected void hadSuccess() {
-        dynamicTree.recreateChildNodes(node);
-        doneLoading();
+    	// Queue this up so that it runs after all entity events have a chance to resolve
+    	SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				doneLoading();
+			}
+		});
+    	
     }
 
     @Override

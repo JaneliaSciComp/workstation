@@ -6,7 +6,7 @@
     <file>flyworkstation.log</file>
     <append>false</append>
     <encoder>
-      <pattern>%date %level [%thread] %logger{10} [%file:%line] %msg%n</pattern>
+      <pattern>%date %level [%logger] %msg%n</pattern>
     </encoder>
   </appender>
 
@@ -19,6 +19,7 @@
   </appender>
 
   <logger name="org.janelia.it.FlyWorkstation" level="INFO"/>
+  <logger name="org.janelia.it.FlyWorkstation.gui.framework.outline" level="INFO"/>
   <logger name="org.janelia.it.FlyWorkstation.api" level="INFO"/>
   <logger name="loci" level="INFO"/>
   

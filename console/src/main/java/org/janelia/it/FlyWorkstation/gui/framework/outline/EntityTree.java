@@ -23,6 +23,9 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+
 /**
  * A tree of Entities that may load lazily. Manages all the asynchronous loading and tree updating that happens in the
  * case of lazy nodes.
@@ -38,8 +41,8 @@ public class EntityTree extends JPanel {
     private SimpleWorker loadingWorker;
 	private EntityData rootEntityData;
     
-	private Map<Long,Set<DefaultMutableTreeNode>> entityDataIdToNodeMap = new HashMap<Long,Set<DefaultMutableTreeNode>>();
-	private Map<Long,Set<DefaultMutableTreeNode>> entityIdToNodeMap = new HashMap<Long,Set<DefaultMutableTreeNode>>();
+	private Multimap<Long,DefaultMutableTreeNode> entityDataIdToNodeMap = HashMultimap.<Long,DefaultMutableTreeNode>create();
+	private Multimap<Long,DefaultMutableTreeNode> entityIdToNodeMap = HashMultimap.<Long,DefaultMutableTreeNode>create();
 	private Map<String,DefaultMutableTreeNode> uniqueIdToNodeMap = new HashMap<String,DefaultMutableTreeNode>();
 	
     public EntityTree() {
@@ -374,7 +377,7 @@ public class EntityTree extends JPanel {
      * @return
      */
     public Set<Entity> getEntitiesById(Long entityId) {
-    	Set<DefaultMutableTreeNode> nodes = entityIdToNodeMap.get(entityId);
+    	Collection<DefaultMutableTreeNode> nodes = entityIdToNodeMap.get(entityId);
     	Set<Entity> entities = new HashSet<Entity>();
     	if (nodes==null) return entities;
     	for(DefaultMutableTreeNode node : nodes) {
@@ -389,7 +392,7 @@ public class EntityTree extends JPanel {
      * @return
      */
     public Set<EntityData> getEntityDatasById(Long entityDataId) {
-    	Set<DefaultMutableTreeNode> nodes = entityDataIdToNodeMap.get(entityDataId);
+    	Collection<DefaultMutableTreeNode> nodes = entityDataIdToNodeMap.get(entityDataId);
     	Set<EntityData> entityDatas = new HashSet<EntityData>();
     	if (nodes==null) return entityDatas;
     	for(DefaultMutableTreeNode node : nodes) {
@@ -403,7 +406,7 @@ public class EntityTree extends JPanel {
      * @param entityId
      * @return
      */
-    public Set<DefaultMutableTreeNode> getNodesByEntityId(Long entityId) {
+    public Collection<DefaultMutableTreeNode> getNodesByEntityId(Long entityId) {
     	return entityIdToNodeMap.get(entityId);
     }
     
@@ -412,7 +415,7 @@ public class EntityTree extends JPanel {
      * @param entityDataId
      * @return
      */
-    public Set<DefaultMutableTreeNode> getNodesByEntityDataId(Long entityDataId) {
+    public Collection<DefaultMutableTreeNode> getNodesByEntityDataId(Long entityDataId) {
     	return entityDataIdToNodeMap.get(entityDataId);
     }
 
@@ -494,19 +497,11 @@ public class EntityTree extends JPanel {
         uniqueIdToNodeMap.put(uniqueId, newNode);
         
         // Add to duplicate maps
-        Set<DefaultMutableTreeNode> nodes = entityIdToNodeMap.get(entity.getId());
-        if (nodes==null) {
-        	nodes = new HashSet<DefaultMutableTreeNode>();
-        	entityIdToNodeMap.put(entity.getId(), nodes);
-        }
-        nodes.add(newNode);
+        Collection<DefaultMutableTreeNode> nodes = entityIdToNodeMap.get(entity.getId());
+        entityIdToNodeMap.put(entity.getId(), newNode);
         
         nodes = entityDataIdToNodeMap.get(newEd.getId());
-        if (nodes==null) {
-        	nodes = new HashSet<DefaultMutableTreeNode>();
-        	entityDataIdToNodeMap.put(newEd.getId(), nodes);
-        }
-        nodes.add(newNode);
+        entityDataIdToNodeMap.put(newEd.getId(), newNode);
         
         // Get children
         
@@ -561,10 +556,8 @@ public class EntityTree extends JPanel {
         	// Remove from all maps
             String uniqueId = selectedTree.getUniqueId(node);
             uniqueIdToNodeMap.remove(uniqueId);
-            Set<DefaultMutableTreeNode> nodes = entityIdToNodeMap.get(entity.getId());
-            nodes.remove(node);
-            nodes = entityDataIdToNodeMap.get(entityData.getId());
-            nodes.remove(node);
+            entityIdToNodeMap.remove(entity.getId(), node);
+            entityDataIdToNodeMap.remove(entity.getId(), node);
     	}
     	
         // Remove from the tree

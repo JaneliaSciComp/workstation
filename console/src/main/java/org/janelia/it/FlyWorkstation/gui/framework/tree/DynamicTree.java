@@ -13,18 +13,13 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.concurrent.CancellationException;
 
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeWillExpandListener;
-import javax.swing.text.Position;
 import javax.swing.tree.*;
-
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
 
 /**
  * A reusable tree component with toolbar features and an extended API.
@@ -37,7 +32,6 @@ public class DynamicTree extends JPanel {
     protected final JTree tree;
     protected boolean lazyLoading;
     protected DynamicTreeToolbar toolbar;
-    protected LazyTreeSearcher searcher;
     
     public DynamicTree(Object userObject) {
         this(userObject, true, false);
@@ -538,79 +532,6 @@ public class DynamicTree extends JPanel {
                 scrolled = true;
             }
         }
-    }
-
-    /**
-     * Select the node containing the given search string. If bias is null then we search forward starting with the
-     * current node. If the current node contains the searchString then we don't move. If the bias is Forward then we
-     * start searching in the node after the selected one. If bias is Backward then we look backwards from the node
-     * before the selected one.
-     *
-     * @param searchString
-     * @param bias
-     */
-    public void navigateToNodeStartingWith(String searchString, Position.Bias bias, boolean skipStartingNode) {
-		
-        TreePath selectionPath = tree.getSelectionPath();
-        DefaultMutableTreeNode startingNode = (selectionPath == null) ? null : (DefaultMutableTreeNode) selectionPath.getLastPathComponent();
-        
-        if (startingNode == null) {
-        	// Nothing is selected, so start with the root, but don't skip it
-        	startingNode = getRootNode();
-        	skipStartingNode = false;
-        }
-        
-        if (searcher != null && !searcher.isDone()) {
-        	searcher.cancel(true);
-        	// Wait for it to actually finish, since we don't want to have multiple threads modifying the tree 
-        	try {
-        		searcher.get();
-        	} catch (CancellationException e) {
-        		// Expected
-        	} catch (Exception e) {
-        		e.printStackTrace();
-        	}
-        }
-        
-        searcher = new LazyTreeSearcher(this, searchString, startingNode, bias, skipStartingNode) {
-
-			@Override
-        	protected void foundNode(DefaultMutableTreeNode matchingNode) {
-        		if (isCancelled()) return;
-	            navigateToNode(matchingNode);
-	            setNotSearching();
-			}
-
-			@Override
-        	protected void noMatches() {
-        		if (isCancelled()) return;
-        		setNotSearching();
-        	}
-        	
-			@Override
-			protected void hadError(Throwable error) {
-				error.printStackTrace();
-				if (isCancelled()) return;
-				JOptionPane.showMessageDialog(DynamicTree.this, "Error searching tree", "Error", JOptionPane.ERROR_MESSAGE);
-				setNotSearching();
-			}
-        	
-        };
-        
-        setSearching();
-        searcher.execute();
-    }
-    
-    private void setSearching() {
-        if (!isLazyLoading()) return;
-    	Utils.setWaitingCursor(DynamicTree.this);
-        toolbar.setSpinning(true);
-    }
-    
-    private void setNotSearching() {
-    	if (!isLazyLoading()) return;
-    	Utils.setDefaultCursor(DynamicTree.this);
-		toolbar.setSpinning(false);
     }
 
     /**

@@ -369,7 +369,7 @@ public class EntityModel {
      * 
      * @param entityTypeName
      * @param entityName
-     * @return cache-normalized entity
+     * @return canonical entity instance
      * @throws Exception
      */
     public Entity createEntity(String entityTypeName, String entityName) throws Exception {
@@ -387,17 +387,18 @@ public class EntityModel {
      * 
      * @param entity
      * @param newName
-     * @return cache-normalized entity
+     * @return canonical entity instance
      * @throws Exception
      */
     public Entity renameEntity(Entity entity, String newName) throws Exception {
     	checkIfCanonicalEntity(entity);
+    	Entity canonicalEntity = null;
     	synchronized(this) {
 	    	Entity newEntity = entityFacade.getEntityById(entity.getId()+"");
 	    	newEntity.setName(newName);
-	    	entityFacade.saveEntity(newEntity);
-	    	return putOrUpdate(newEntity);
+	    	canonicalEntity = putOrUpdate(entityFacade.saveEntity(newEntity));
     	}
+    	return canonicalEntity;
     }
     
     /**
@@ -406,16 +407,18 @@ public class EntityModel {
      * 
      * @param entity
      * @param attributeName
-     * @return cache-normalized entity
+     * @return canonical entity instance
      * @throws Exception
      */
     public Entity setAttributeAsTag(Entity entity, String attributeName) throws Exception {
     	checkIfCanonicalEntity(entity);
+    	Entity canonicalEntity = null;
     	synchronized(this) {
-	    	entity.addAttributeAsTag(attributeName);
-	        Entity newEntity = entityFacade.saveEntity(entity);
-	    	return putOrUpdate(newEntity);
+    		Entity newEntity = entityFacade.getEntityById(entity.getId()+"");
+    		newEntity.addAttributeAsTag(attributeName);
+	    	canonicalEntity = putOrUpdate(entityFacade.saveEntity(newEntity));
     	}
+    	return canonicalEntity;
     }
     
     /**
@@ -424,18 +427,39 @@ public class EntityModel {
      * @param entity
      * @param attributeName
      * @param attributeValue
-     * @return cache-normalized entity
+     * @return canonical entity instance
      * @throws Exception
      */
     public Entity setAttributeValue(Entity entity, String attributeName, String attributeValue) throws Exception {
     	checkIfCanonicalEntity(entity);
+    	Entity canonicalEntity = null;
     	synchronized(this) {
-	    	entity.setValueByAttributeName(attributeName, attributeValue);
-	        Entity newEntity = entityFacade.saveEntity(entity);
-	    	return putOrUpdate(newEntity);
+    		Entity newEntity = entityFacade.getEntityById(entity.getId()+"");
+    		newEntity.setValueByAttributeName(attributeName, attributeValue);
+	    	canonicalEntity = putOrUpdate(entityFacade.saveEntity(newEntity));
     	}
+    	return canonicalEntity;
     }
     
+    /**
+     * Generic save. Use of this method should be avoided whenever possible. However, it can be useful for bulk 
+     * changes to entity data objects. 
+     * 
+     * @param entity
+     * @return canonical entity instance
+     * @throws Exception
+     */
+	public Entity saveEntity(Entity entity) throws Exception {
+    	checkIfCanonicalEntity(entity);
+    	Entity canonicalEntity = null;
+    	synchronized(this) {
+	    	canonicalEntity = putOrUpdate(entityFacade.saveEntity(entity));
+    	}
+    	// Need to notify here, because the changes were made to the canonical entity (TODO: disallow this?)
+    	notifyEntityChanged(canonicalEntity);
+    	return canonicalEntity;
+	}
+	
     /**
      * Delete the given EntityData object.
      * 
@@ -458,6 +482,25 @@ public class EntityModel {
     	if (parent!=null) {
     		notifyEntityChanged(parent);
     	}
+    }
+
+    /**
+     * Delete all of the specified EntityData objects from the given Entity.
+     * 
+     * This method generates an EntityChanged event.
+     * 
+     * @param entityData
+     * @throws Exception
+     */
+    public void deleteBulkEntityData(Entity parent, Collection<EntityData> toDelete) throws Exception {
+    	checkIfCanonicalEntity(parent);
+    	synchronized(this) {
+    		for(EntityData entityData : toDelete) {
+    	    	entityFacade.removeEntityData(entityData);
+    	    	parent.getEntityData().remove(entityData);
+    		}
+    	}
+		notifyEntityChanged(parent);
     }
     
     /**

@@ -21,8 +21,9 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.FolderUtils;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.shared.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by IntelliJ IDEA.
@@ -32,6 +33,8 @@ import org.janelia.it.jacs.shared.annotation.*;
  */
 public class PatternSearchDialog extends ModalDialog {
     
+	private static final Logger log = LoggerFactory.getLogger(PatternSearchDialog.class);
+	
     private static final String INTENSITY_TYPE="Intensity";
     private static final String DISTRIBUTION_TYPE="Distribution";
     private static final String GLOBAL = "Global";
@@ -81,6 +84,8 @@ public class PatternSearchDialog extends ModalDialog {
     boolean currentSetInitialized=false;
     final List<Boolean> currentListModified = new ArrayList<Boolean>();
     FilterResult filterResult;
+    
+    private RootedEntity saveFolder;
 
     private class MinMaxSelectionRow extends JPanel implements ActionListener {
         String abbreviation;
@@ -376,14 +381,12 @@ public class PatternSearchDialog extends ModalDialog {
     	showDialog(null);
     }
 
-    public void showDialog(RootedEntity outputFolder) {
+    public RootedEntity showDialog(RootedEntity outputFolder) {
     	this.outputFolder = outputFolder;
-    	init();
-    }
-    
-    private void init() {
+    	this.saveFolder = null;
         quantifierLoaderWorker.execute();
         packAndShow();
+    	return saveFolder;
     }
 
     private void initFilters() throws Exception {
@@ -526,7 +529,7 @@ public class PatternSearchDialog extends ModalDialog {
             }
             Long endTime = new Date().getTime();
             Long loadingTime = endTime - startTime;
-            System.out.println("PatterSearchDialog : Pattern Annotation loading time=" + loadingTime + " ms");
+            log.info("PatterSearchDialog : Pattern Annotation loading time=" + loadingTime + " ms");
             compartmentAbbreviationList = ModelMgr.getModelMgr().patternSearchGetCompartmentList(RelativePatternAnnotationDataManager.RELATIVE_TYPE);
             List<DataDescriptor> relativeDescriptorList = ModelMgr.getModelMgr().patternSearchGetDataDescriptors(RelativePatternAnnotationDataManager.RELATIVE_TYPE);
             managerDescriptorMap.put(RelativePatternAnnotationDataManager.RELATIVE_TYPE, relativeDescriptorList);
@@ -600,7 +603,7 @@ public class PatternSearchDialog extends ModalDialog {
         FilterResult emptyFilterResult=new FilterResult();
         // Check if we are still loading
         if (quantifierDataIsLoading) {
-            System.out.println("returning emptyFilterResult because quantifierDataIsLoading");
+            log.info("returning emptyFilterResult because quantifierDataIsLoading");
             return emptyFilterResult; // just return empty set
         }
 
@@ -655,12 +658,11 @@ public class PatternSearchDialog extends ModalDialog {
 
         SimpleWorker worker = new SimpleWorker() {
 
-            private Entity saveFolder;
-
             @Override
             protected void doStuff() throws Exception {
-				saveFolder = FolderUtils.saveEntitiesToFolder(outputFolder==null?null:outputFolder.getEntity(), 
-						currentSetTextField.getText(), filterResult.getSampleList());
+            	List<Long> samples = new ArrayList<Long>(new LinkedHashSet<Long>(filterResult.getSampleList()));
+				saveFolder = FolderUtils.saveEntitiesToFolder(outputFolder==null?null:outputFolder, 
+						currentSetTextField.getText(), samples);
             }
 
             @Override
@@ -669,7 +671,8 @@ public class PatternSearchDialog extends ModalDialog {
                 entityOutline.refresh(true, new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
-                    	ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, "/e_"+saveFolder.getId(), true);
+                    	ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(
+                    			EntitySelectionModel.CATEGORY_OUTLINE, saveFolder.getUniqueId(), true);
                         Utils.setDefaultCursor(PatternSearchDialog.this);
                         setVisible(false);
                         resetSearchState();

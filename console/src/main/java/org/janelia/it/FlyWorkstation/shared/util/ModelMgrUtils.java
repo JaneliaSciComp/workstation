@@ -1,6 +1,8 @@
 package org.janelia.it.FlyWorkstation.shared.util;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
@@ -11,6 +13,8 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.user_data.User;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utilities for dealing with Entities via the ModelMgr. In general, most of these methods access the database and 
@@ -19,7 +23,9 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ModelMgrUtils {
-
+	
+	private static final Logger log = LoggerFactory.getLogger(ModelMgrUtils.class);
+	
 	public static final void loadChild(Entity entity, String attrName) throws Exception {
     	EntityData ed = entity.getEntityDataByAttributeName(attrName);
     	if (ed != null) {
@@ -113,5 +119,40 @@ public class ModelMgrUtils {
         }
 
         return items;
+    }
+
+    public static void removeAllChildren(Entity entity) throws Exception {
+    	List<EntityData> toDelete = new ArrayList<EntityData>();
+        for (EntityData ed : new ArrayList<EntityData>(entity.getEntityData())) {
+        	if (ed.getChildEntity()!=null) {
+        		toDelete.add(ed);
+        	}
+        }
+        ModelMgr.getModelMgr().deleteBulkEntityData(entity,toDelete);
+    }
+    
+    /**
+     * Update the ordering of the children of the given entity, to reflect the ordering provided by the comparator.
+     * @param entity
+     * @param comparator
+     * @throws Exception
+     */
+    public static void fixOrderIndicies(Entity entity, Comparator<EntityData> comparator) throws Exception {
+    	List<EntityData> orderedData = new ArrayList<EntityData>();
+		for(EntityData ed : entity.getEntityData()) {
+			if (ed.getChildEntity()!=null) {
+				orderedData.add(ed);
+			}
+		}
+    	Collections.sort(orderedData, comparator);
+		
+    	int orderIndex = 0;
+		for(EntityData ed : orderedData) {
+			if (ed.getOrderIndex()==null || orderIndex!=ed.getOrderIndex()) {
+				ed.setOrderIndex(orderIndex);
+			}
+			orderIndex++;
+		}
+		ModelMgr.getModelMgr().saveOrUpdateEntity(entity);
     }
 }

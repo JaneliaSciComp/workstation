@@ -200,12 +200,12 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
                     if (null == lastSessionId) {
                         java.util.List<OntologyRoot> roots = privateTable.getOntologyRoots();
                         if (roots != null && !roots.isEmpty()) {
-                        	log.info("Loading the user's first private ontology");
+                        	log.info("Loading the user's first private ontology: "+roots.get(0).getId());
                         	ModelMgr.getModelMgr().setCurrentOntology(roots.get(0));
                         }
                     }
                     else {
-                    	log.info("Loading last used ontology "+lastSessionId);
+                    	log.info("Loading last used ontology: "+lastSessionId);
                     	try {
 	                    	Entity ontology = ModelMgr.getModelMgr().getOntologyTree(Long.valueOf(lastSessionId));
 	                    	if (ontology!=null) {

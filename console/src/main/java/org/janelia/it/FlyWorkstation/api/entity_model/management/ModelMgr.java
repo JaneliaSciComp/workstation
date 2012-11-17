@@ -538,6 +538,13 @@ public class ModelMgr {
     	entityModel.deleteEntityData(ed);
         notifyEntityDataRemoved(ed.getId());
     }
+
+    public void deleteBulkEntityData(Entity parent, Collection<EntityData> toDelete) throws Exception {
+    	entityModel.deleteBulkEntityData(parent, toDelete);
+    	for(EntityData ed : toDelete) {
+    		notifyEntityDataRemoved(ed.getId());
+    	}
+    }
     
     public void deleteEntityTree(Long id) throws Exception {
     	entityModel.deleteEntityTree(entityModel.getEntityById(id));
@@ -763,6 +770,12 @@ public class ModelMgr {
         Entity newAnnotation = FacadeManager.getFacadeManager().getEntityFacade().saveEntity(annotation);
         if(newAnnotation!=null) notifyAnnotationsChanged(annotatedEntity.getId());
         return newAnnotation;
+    }
+
+    public Entity saveOrUpdateEntity(Entity entity) throws Exception {
+    	Entity newEntity = entityModel.saveEntity(entity);
+    	if (newEntity!=null) notifyEntityChanged(newEntity.getId());
+        return newEntity;
     }
     
     public EntityData saveOrUpdateEntityData(EntityData newEntityData) throws Exception {

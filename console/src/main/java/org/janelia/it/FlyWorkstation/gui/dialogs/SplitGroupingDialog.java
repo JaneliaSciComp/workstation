@@ -6,10 +6,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -27,6 +24,11 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
 
 /**
  * A dialog that pops up from the SplitPickingPanel and allows the user to group Screen Samples in one folder into 
@@ -36,12 +38,14 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  */
 public class SplitGroupingDialog extends ModalDialog {
 
+	private static final Logger log = LoggerFactory.getLogger(SplitGroupingDialog.class);
+	
 	private JButton okButton;
 	private JButton cancelButton;
 	private SelectionTreePanel<Entity> splitAdTreePanel;
     private SelectionTreePanel<Entity> splitDbdTreePanel;
-    
 	private final SplitPickingPanel splitPickingPanel;
+	private List<Entity> represented;
 
 	public SplitGroupingDialog(final SplitPickingPanel splitPickingPanel) {
 
@@ -136,37 +140,10 @@ public class SplitGroupingDialog extends ModalDialog {
         
 		SimpleWorker worker = new SimpleWorker() {
 			
-			private List<Entity> represented;
-			
 			@Override
 			protected void doStuff() throws Exception {
-
 				RootedEntity repFolder = splitPickingPanel.getRepFolder();
-				
-				// Try to get it from the entity tree, in case it's already partially loaded
-				Entity repEntity = null;
-				Set<Entity> repEntities = SessionMgr.getBrowser().getEntityOutline().getEntitiesById(repFolder.getEntity().getId());
-				for(Entity entity : repEntities) {
-					if (EntityUtils.isInitialized(repEntities)) {
-						repEntity = entity;
-					}
-				}
-				
-				if (repEntity==null) {
-					repEntity = ModelMgr.getModelMgr().getEntityById(repFolder.getEntity().getId()+"");
-				}
-				
-		    	List<Entity> screenSamples = ModelMgrUtils.getDescendantsOfType(repEntity, EntityConstants.TYPE_SCREEN_SAMPLE, true);  
-		    	
-		    	List<Long> entityIds = new ArrayList<Long>();
-		    	for(Entity screenSample : screenSamples) {
-		    		Set<Long> parentIds = ModelMgr.getModelMgr().getParentIdsForAttribute(screenSample.getId(), EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE);
-		    		if (!parentIds.isEmpty()) {
-		    			entityIds.addAll(parentIds);
-		    		}
-		    	}
-		    	
-		    	represented = ModelMgr.getModelMgr().getEntityByIds(entityIds);
+		    	represented = getRepresentedFlylines(ModelMgr.getModelMgr().getEntityById(repFolder.getEntity().getId()+""));
 			}
 
 			@Override
@@ -214,52 +191,15 @@ public class SplitGroupingDialog extends ModalDialog {
 				if (splitPickingPanel.getSplitLinesFolder()==null) {
 					splitPickingPanel.setSplitLinesFolder(ModelMgrUtils.getChildFolder(splitPickingPanel.getWorkingFolder(), SplitPickingPanel.FOLDER_NAME_SPLIT_LINES, true));
 				}
-				splitLinesFolder = splitPickingPanel.getSplitLinesFolder();
-					
+				
+				saveRepresentedGroupings(splitAdTreePanel.getItems(), splitDbdTreePanel.getItems(), splitLinesFolder);
+
 				if (splitPickingPanel.getGroupAdFolder()==null) {
-					splitPickingPanel.setGroupAdFolder(ModelMgrUtils.getChildFolder(splitLinesFolder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_AD, true));
+					splitPickingPanel.setGroupAdFolder(ModelMgrUtils.getChildFolder(splitLinesFolder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_AD, false));
 				}
 				if (splitPickingPanel.getGroupDbdFolder()==null) {
-					splitPickingPanel.setGroupDbdFolder(ModelMgrUtils.getChildFolder(splitLinesFolder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_DBD, true));
+					splitPickingPanel.setGroupDbdFolder(ModelMgrUtils.getChildFolder(splitLinesFolder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_DBD, false));
 				}
-				
-		    	groupAdFolder = splitPickingPanel.getGroupAdFolder();
-		    	groupDbdFolder = splitPickingPanel.getGroupDbdFolder();
-		    	
-		    	List<Long> newSplitAdIds = new ArrayList<Long>();
-		    	List<Long> newSplitDbdIds = new ArrayList<Long>();
-		    	
-	            for (Entity rep : splitAdTreePanel.getItems()) {
-	            	newSplitAdIds.add(rep.getId());
-	            }
-	            for (Entity rep : splitDbdTreePanel.getItems()) {
-	            	newSplitDbdIds.add(rep.getId());
-	            }
-	            
-	            // Remove current 
-	            for (EntityData ed : new ArrayList<EntityData>(groupAdFolder.getEntity().getEntityData())) {
-	            	if (ed.getChildEntity()!=null) {
-	            		groupAdFolder.getEntity().getEntityData().remove(ed);
-	            		ModelMgr.getModelMgr().removeEntityData(ed);
-	            	}
-	            }
-	            for (EntityData ed : new ArrayList<EntityData>(groupDbdFolder.getEntity().getEntityData())) {
-	            	if (ed.getChildEntity()!=null) {
-	            		groupDbdFolder.getEntity().getEntityData().remove(ed);
-	            		ModelMgr.getModelMgr().removeEntityData(ed);
-	            	}
-	            }
-	            
-	            // Add new 
-		    	if (!newSplitAdIds.isEmpty()) {
-		    		ModelMgr.getModelMgr().addChildren(groupAdFolder.getEntity().getId(), newSplitAdIds, EntityConstants.ATTRIBUTE_ENTITY);
-		    	}
-		    	if (!newSplitDbdIds.isEmpty()) {
-		    		ModelMgr.getModelMgr().addChildren(groupDbdFolder.getEntity().getId(), newSplitDbdIds, EntityConstants.ATTRIBUTE_ENTITY);
-		    	}
-		    
-		    	ModelMgrUtils.refreshEntityAndChildren(groupAdFolder.getEntity());
-		    	ModelMgrUtils.refreshEntityAndChildren(groupDbdFolder.getEntity());
 			}
 			
 			@Override
@@ -277,5 +217,60 @@ public class SplitGroupingDialog extends ModalDialog {
 
 		worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getSessionMgr().getActiveBrowser(), "Saving groups...", "", 0, 100));
 		worker.execute();
+    }
+
+    public List<Entity> getRepresentedFlylines(Entity folder) throws Exception {
+
+    	List<Entity> screenSamples = ModelMgrUtils.getDescendantsOfType(folder, EntityConstants.TYPE_SCREEN_SAMPLE, true);  
+    	
+    	List<Long> entityIds = new ArrayList<Long>();
+    	for(Entity screenSample : screenSamples) {
+    		Set<Long> parentIds = ModelMgr.getModelMgr().getParentIdsForAttribute(screenSample.getId(), EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE);
+    		if (!parentIds.isEmpty()) {
+    			entityIds.addAll(parentIds);
+    		}
+    	}
+    	
+    	return ModelMgr.getModelMgr().getEntityByIds(entityIds);
+    }
+    
+    public void saveRepresentedGroupings(List<Entity> representedAd, List<Entity> representedDbd, RootedEntity folder) throws Exception {
+
+    	RootedEntity groupAdFolder = ModelMgrUtils.getChildFolder(folder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_AD, true);
+    	RootedEntity groupDbdFolder = ModelMgrUtils.getChildFolder(folder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_DBD, true);
+
+    	groupAdFolder.getEntityData().setOrderIndex(0);
+    	groupDbdFolder.getEntityData().setOrderIndex(1);
+    	ModelMgr.getModelMgr().saveOrUpdateEntityData(groupAdFolder.getEntityData());
+    	ModelMgr.getModelMgr().saveOrUpdateEntityData(groupDbdFolder.getEntityData());
+    	ModelMgrUtils.fixOrderIndicies(folder.getEntity(),new Comparator<EntityData>() {
+			@Override
+			public int compare(EntityData o1, EntityData o2) {
+				return ComparisonChain.start()
+				.compare(o1.getOrderIndex(), o2.getOrderIndex(), Ordering.natural().nullsLast())
+					.compare(o1.getId(), o2.getId()).result();
+			}
+		});
+    	
+    	log.info("Saving {} represented AD lines to {}",representedAd.size(),groupAdFolder.getId());
+    	log.info("Saving {} represented DBD lines to {}",representedDbd.size(),groupDbdFolder.getId());
+    	
+    	List<Long> newSplitAdIds = EntityUtils.getEntityIdList(representedAd);
+    	List<Long> newSplitDbdIds = EntityUtils.getEntityIdList(representedDbd);
+    	
+        // Remove current 
+    	ModelMgrUtils.removeAllChildren(groupAdFolder.getEntity());
+    	ModelMgrUtils.removeAllChildren(groupDbdFolder.getEntity());
+        
+        // Add new 
+    	if (!newSplitAdIds.isEmpty()) {
+    		ModelMgr.getModelMgr().addChildren(groupAdFolder.getEntity().getId(), newSplitAdIds, EntityConstants.ATTRIBUTE_ENTITY);
+    	}
+    	if (!newSplitDbdIds.isEmpty()) {
+    		ModelMgr.getModelMgr().addChildren(groupDbdFolder.getEntity().getId(), newSplitDbdIds, EntityConstants.ATTRIBUTE_ENTITY);
+    	}
+    
+    	ModelMgrUtils.refreshEntityAndChildren(groupAdFolder.getEntity());
+    	ModelMgrUtils.refreshEntityAndChildren(groupDbdFolder.getEntity());
     }
 }

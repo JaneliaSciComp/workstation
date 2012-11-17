@@ -25,6 +25,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicRow;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicTable;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.FolderUtils;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -32,7 +33,6 @@ import org.janelia.it.jacs.compute.api.support.EntityDocument;
 import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
 import org.janelia.it.jacs.compute.api.support.SolrResults;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.file_chooser.FileChooser;
 import org.janelia.it.jacs.shared.utils.StringUtils;
@@ -204,7 +204,7 @@ public class GeneralSearchDialog extends ModalDialog {
     	
     	SimpleWorker worker = new SimpleWorker() {
 
-    		private Entity saveFolder;
+    		private RootedEntity saveFolder;
     		
 			@Override
 			protected void doStuff() throws Exception {
@@ -231,7 +231,7 @@ public class GeneralSearchDialog extends ModalDialog {
 				entityOutline.refresh(true, new Callable<Void>() {
 					@Override
 					public Void call() throws Exception {
-		        		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, "/e_"+saveFolder.getId(), true);	
+		        		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, saveFolder.getUniqueId(), true);	
 				    	Utils.setDefaultCursor(GeneralSearchDialog.this);
 			            setVisible(false);
 						return null;

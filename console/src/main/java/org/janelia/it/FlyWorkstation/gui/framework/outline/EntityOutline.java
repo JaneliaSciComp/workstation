@@ -11,9 +11,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
@@ -22,6 +22,7 @@ import javax.swing.tree.TreePath;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChangeEvent;
+import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChildrenLoadedEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityRemoveEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
@@ -169,7 +170,8 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	@Subscribe 
 	public void entityChanged(EntityChangeEvent event) {
 		Entity entity = event.getEntity();
-		Set<DefaultMutableTreeNode> nodes = getNodesByEntityId(entity.getId());
+		log.debug("Entity changed: '{}'",entity.getName());
+		Collection<DefaultMutableTreeNode> nodes = getNodesByEntityId(entity.getId());
 		if (nodes == null) return;
 		for(final DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
 			Entity treeEntity = getEntity(node);
@@ -178,16 +180,16 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	    				" (cached="+System.identityHashCode(entity)+") vs (this="+System.identityHashCode(treeEntity)+")");
 				getEntityData(node).setChildEntity(entity);
 			}
+			log.debug("Recreating children of {}",getDynamicTree().getUniqueId(node));
 			getDynamicTree().recreateChildNodes(node); 
 		}
-		revalidate();
-		repaint();
 	}
 
 	@Subscribe 
 	public void entityRemoved(EntityRemoveEvent event) {
 		Entity entity = event.getEntity();
-		Set<DefaultMutableTreeNode> nodes = getNodesByEntityId(entity.getId());
+		log.debug("Entity removed: '{}'",entity.getName());
+		Collection<DefaultMutableTreeNode> nodes = getNodesByEntityId(entity.getId());
 		if (nodes == null) return;
 		for(DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
 			DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
@@ -197,6 +199,16 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 				parent.getEntityData().remove(entityData);
 			}
 			removeNode(node);	
+		}
+	}
+
+	@Subscribe 
+	public void entityChildrenLoaded(EntityChildrenLoadedEvent event) {
+		Entity entity = event.getEntity();
+		log.debug("Got "+entity.getChildren().size()+" children for '"+entity.getName()+"'");
+		for(DefaultMutableTreeNode node : getNodesByEntityId(entity.getId())) {
+			log.debug("Recreating children of {}",getDynamicTree().getUniqueId(node));
+			getDynamicTree().recreateChildNodes(node);	
 		}
 	}
 	
@@ -400,7 +412,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			DefaultMutableTreeNode ancestor = getNodeByUniqueId(ancestorId);
 			if (ancestor==null) {
 				// Give up, can't find the entity with this uniqueId
-				System.out.println("EntityOutline.expandByUniqueId: cannot locate "+uniqueId);
+				log.warn("expandByUniqueId cannot locate "+uniqueId);
 				return;
 			}
 			if (!getDynamicTree().childrenAreLoaded(ancestor)) {
@@ -430,7 +442,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			DefaultMutableTreeNode ancestor = getNodeByUniqueId(ancestorId);
 			if (ancestor==null) {
 				// Give up, can't find the entity with this uniqueId
-				System.out.println("EntityOutline.selectEntityByUniqueId: cannot locate "+uniqueId);
+				log.warn("selectEntityByUniqueId cannot locate "+uniqueId);
 				return;
 			}
 			if (!getDynamicTree().childrenAreLoaded(ancestor)) {
@@ -500,7 +512,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		
 		DefaultMutableTreeNode node2 = getNodeByUniqueId(uniqueId);
 		if (node!=node2) {
-			System.out.println("Warning: we have a node conflict!");
+			log.error("We have a node conflict. This should never happen!");
 		}
 		
 		DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();

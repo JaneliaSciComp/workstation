@@ -32,23 +32,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A dialog for searching Arnim's MAA annotations. 
- *
+ * A dialog for searching Arnim's MAA annotations.
+ * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class MAASearchDialog extends ModalDialog implements Accessibility,ActionListener {
-	
+public class MAASearchDialog extends ModalDialog implements Accessibility, ActionListener {
+
 	private static final Logger log = LoggerFactory.getLogger(MAASearchDialog.class);
-	
-	private Map<String,List<JCheckBox>> intCheckBoxMap = new HashMap<String,List<JCheckBox>>();
-	private Map<String,List<JCheckBox>> distCheckBoxMap = new HashMap<String,List<JCheckBox>>();
-	private Map<String,JLabel> compCountLabelMap = new HashMap<String,JLabel>();
-	
-	private Map<String,Entity> compEntityMap = new LinkedHashMap<String,Entity>();
-	private Map<String,Integer> countMap;
-	private Map<String,Entity> folderMap;
-	private Map<String,List<Long>> cachedSampleEvals = new HashMap<String,List<Long>>();
-	
+
+	private Map<String, List<JCheckBox>> intCheckBoxMap = new HashMap<String, List<JCheckBox>>();
+	private Map<String, List<JCheckBox>> distCheckBoxMap = new HashMap<String, List<JCheckBox>>();
+	private Map<String, JLabel> compCountLabelMap = new HashMap<String, JLabel>();
+
+	private Map<String, Entity> compEntityMap = new LinkedHashMap<String, Entity>();
+	private Map<String, Integer> countMap;
+	private Map<String, Entity> folderMap;
+	private Map<String, List<Long>> cachedSampleEvals = new HashMap<String, List<Long>>();
+
 	private JScrollPane scrollPane;
 	private JPanel scorePanel;
 	private JLabel selectionLabel;
@@ -56,194 +56,199 @@ public class MAASearchDialog extends ModalDialog implements Accessibility,Action
 	private JTextField folderNameField;
 	private JButton okButton;
 
-    private RootedEntity outputFolder;
+	private RootedEntity outputFolder;
 	private Browser browser;
-   
-    public MAASearchDialog(Browser browser) {
+	private RootedEntity saveFolder;
 
-		if (!isAccessible()) return;
-		
+	public MAASearchDialog(Browser browser) {
+
+		if (!isAccessible())
+			return;
+
 		this.browser = browser;
 
 		setTitle("MAA Screen Search");
-		setPreferredSize(new Dimension(800,800));
-        setLayout(new BorderLayout());
-    	
-        scorePanel = new JPanel(new MigLayout("wrap 4, ins 20", "[left][center][center][left]"));
-        scrollPane = new JScrollPane();
-        scrollPane.setViewportView(scorePanel);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(50);
-        add(scrollPane, BorderLayout.CENTER);
-        
-        JPanel buttonPane = new JPanel();
-        buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
-        buttonPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        
-        selectionLabel = new JLabel("");
-        buttonPane.add(selectionLabel);
+		setPreferredSize(new Dimension(800, 800));
+		setLayout(new BorderLayout());
 
-        this.resetButton = new JButton("Reset");
-        resetButton.setVisible(false);
-        resetButton.setToolTipText("Reset all checkboxes");
-        resetButton.addActionListener(new ActionListener() {
+		scorePanel = new JPanel(new MigLayout("wrap 4, ins 20", "[left][center][center][left]"));
+		scrollPane = new JScrollPane();
+		scrollPane.setViewportView(scorePanel);
+		scrollPane.getVerticalScrollBar().setUnitIncrement(50);
+		add(scrollPane, BorderLayout.CENTER);
+
+		JPanel buttonPane = new JPanel();
+		buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
+		buttonPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+		selectionLabel = new JLabel("");
+		buttonPane.add(selectionLabel);
+
+		this.resetButton = new JButton("Reset");
+		resetButton.setVisible(false);
+		resetButton.setToolTipText("Reset all checkboxes");
+		resetButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				resetCheckboxes();
 			}
 		});
-        buttonPane.add(resetButton);        
-        
-        buttonPane.add(Box.createHorizontalGlue());        
-        
+		buttonPane.add(resetButton);
+
+		buttonPane.add(Box.createHorizontalGlue());
+
 		JLabel folderNameLabel = new JLabel("Save selected objects in folder: ");
 		buttonPane.add(folderNameLabel);
-		
-        folderNameField = new JTextField(10);
-        folderNameField.setToolTipText("Enter the folder name to save the results in");
-        folderNameField.setMaximumSize(new Dimension(400,20));
-        buttonPane.add(folderNameField);
-        
-        this.okButton = new JButton("Save");
-        okButton.setEnabled(false);
-        okButton.setToolTipText("Save the results");
-        okButton.addActionListener(new ActionListener() {
+
+		folderNameField = new JTextField(10);
+		folderNameField.setToolTipText("Enter the folder name to save the results in");
+		folderNameField.setMaximumSize(new Dimension(400, 20));
+		buttonPane.add(folderNameField);
+
+		this.okButton = new JButton("Save");
+		okButton.setEnabled(false);
+		okButton.setToolTipText("Save the results");
+		okButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				saveResults();
 			}
 		});
-        buttonPane.add(okButton);
-        
-        JButton cancelButton = new JButton("Close");
-        cancelButton.setToolTipText("Close this dialog without saving results");
-        cancelButton.addActionListener(new ActionListener() {
+		buttonPane.add(okButton);
+
+		JButton cancelButton = new JButton("Close");
+		cancelButton.setToolTipText("Close this dialog without saving results");
+		cancelButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-	            setVisible(false);
+				setVisible(false);
 			}
 		});
-        buttonPane.add(cancelButton);
-        
-        add(buttonPane, BorderLayout.SOUTH);
-    	init();
-    }
-    
-    public void showDialog() {
-    	this.outputFolder = null;
-        packAndShow();
-    }
+		buttonPane.add(cancelButton);
 
-    public void showDialog(RootedEntity outputFolder) {
-    	this.outputFolder = outputFolder;
-        packAndShow();
-    }
-    
+		add(buttonPane, BorderLayout.SOUTH);
+		init();
+	}
+
+	public void showDialog() {
+		this.outputFolder = null;
+		packAndShow();
+	}
+
+	public RootedEntity showDialog(RootedEntity outputFolder) {
+		this.outputFolder = outputFolder;
+		this.saveFolder = null;
+		packAndShow();
+		return saveFolder;
+	}
+
 	public void init() {
 
 		log.info("Begin loading");
-		
+
 		SimpleWorker worker = new SimpleWorker() {
-			
+
 			@Override
 			protected void doStuff() throws Exception {
-				
+
 				Entity topLevelFolder = null;
-				for(Entity entity : ModelMgr.getModelMgr().getCommonRootEntities()) {
-					if (entity.getName().equals(ScreenEvalConstants.TOP_LEVEL_FOLDER_NAME) && ModelMgrUtils.isOwner(entity)) {
+				for (Entity entity : ModelMgr.getModelMgr().getCommonRootEntities()) {
+					if (entity.getName().equals(ScreenEvalConstants.TOP_LEVEL_FOLDER_NAME)
+							&& ModelMgrUtils.isOwner(entity)) {
 						topLevelFolder = entity;
 					}
 				}
-				
-				if (topLevelFolder==null) {
+
+				if (topLevelFolder == null) {
 					return;
 				}
-				
+
 				ModelMgrUtils.loadLazyEntity(topLevelFolder, false);
-				for(Entity child : topLevelFolder.getOrderedChildren()) {
+				for (Entity child : topLevelFolder.getOrderedChildren()) {
 					compEntityMap.put(child.getName(), child);
 				}
 			}
-			
+
 			@Override
 			protected void hadSuccess() {
-				
-				if (countMap==null || folderMap==null) {
+
+				if (countMap == null || folderMap == null) {
 					loadCounts();
 				}
-				
+
 				scorePanel.removeAll();
 				scorePanel.add(new JLabel("Compartment"));
 				scorePanel.add(new JLabel("Intensity"));
-		        scorePanel.add(new JLabel("Distribution"));
-		        scorePanel.add(new JLabel("Selected"));
-				
-				for(String compartment : compEntityMap.keySet()) {
+				scorePanel.add(new JLabel("Distribution"));
+				scorePanel.add(new JLabel("Selected"));
+
+				for (String compartment : compEntityMap.keySet()) {
 
 					JLabel label = new JLabel(compartment);
 					scorePanel.add(label);
-					
+
 					List<JCheckBox> intCheckBoxes = new ArrayList<JCheckBox>();
 					JPanel intCheckboxPanel = new JPanel();
-					for(int i=0; i<=5; i++) {
-						JCheckBox checkBox = new JCheckBox(""+i);
+					for (int i = 0; i <= 5; i++) {
+						JCheckBox checkBox = new JCheckBox("" + i);
 						checkBox.addActionListener(MAASearchDialog.this);
 						intCheckboxPanel.add(checkBox);
 						intCheckBoxes.add(checkBox);
-						
+
 					}
 					scorePanel.add(intCheckboxPanel);
 					intCheckBoxMap.put(compartment, intCheckBoxes);
-					
+
 					List<JCheckBox> distCheckBoxes = new ArrayList<JCheckBox>();
 					JPanel distCheckboxPanel = new JPanel();
-					for(int d=0; d<=5; d++) {
-						JCheckBox checkBox = new JCheckBox(""+d);
+					for (int d = 0; d <= 5; d++) {
+						JCheckBox checkBox = new JCheckBox("" + d);
 						checkBox.addActionListener(MAASearchDialog.this);
 						distCheckboxPanel.add(checkBox);
 						distCheckBoxes.add(checkBox);
 					}
 					scorePanel.add(distCheckboxPanel);
 					distCheckBoxMap.put(compartment, distCheckBoxes);
-					
+
 					JLabel countLabel = new JLabel();
 					scorePanel.add(countLabel, "gapleft 5lp");
 					compCountLabelMap.put(compartment, countLabel);
 				}
-				
+
 				scrollPane.revalidate();
 				scrollPane.repaint();
 			}
-			
+
 			@Override
 			protected void hadError(Throwable error) {
 				SessionMgr.getSessionMgr().handleException(error);
 			}
 		};
-		
+
 		worker.execute();
 	}
 
 	public void loadCounts() {
 
 		selectionLabel.setText("Loading sample counts...");
-		
+
 		SimpleWorker worker = new SimpleWorker() {
-			
-			private Map<String,Integer> countMap = new HashMap<String,Integer>();
-			private Map<String,Entity> folderMap = new HashMap<String,Entity>();
-			
+
+			private Map<String, Integer> countMap = new HashMap<String, Integer>();
+			private Map<String, Entity> folderMap = new HashMap<String, Entity>();
+
 			@Override
 			protected void doStuff() throws Exception {
 
-				for(String compartment : compEntityMap.keySet()) {
+				for (String compartment : compEntityMap.keySet()) {
 					Entity compEntity = compEntityMap.get(compartment);
 					ModelMgrUtils.loadLazyEntity(compEntity, false);
 
-					for(Entity intFolder : compEntity.getOrderedChildren()) {
+					for (Entity intFolder : compEntity.getOrderedChildren()) {
 						ModelMgrUtils.loadLazyEntity(intFolder, false);
 						int i = ScreenEvalUtils.getValueFromFolderName(intFolder);
 
-						for(Entity distFolder : intFolder.getOrderedChildren()) {
+						for (Entity distFolder : intFolder.getOrderedChildren()) {
 							int d = ScreenEvalUtils.getValueFromFolderName(distFolder);
 							String key = ScreenEvalUtils.getKey(compartment, i, d);
 							countMap.put(key, distFolder.getChildren().size());
@@ -252,32 +257,33 @@ public class MAASearchDialog extends ModalDialog implements Accessibility,Action
 					}
 				}
 			}
-			
+
 			@Override
 			protected void hadSuccess() {
 				MAASearchDialog.this.countMap = this.countMap;
 				MAASearchDialog.this.folderMap = this.folderMap;
 				okButton.setEnabled(true);
 				updateSampleCount();
-				log.info("Completed loading, "+countMap.size()+" counts, dialog is ready");
+				log.info("Completed loading, " + countMap.size() + " counts, dialog is ready");
 			}
-			
+
 			@Override
 			protected void hadError(Throwable error) {
 				SessionMgr.getSessionMgr().handleException(error);
 			}
 		};
-		
+
 		worker.execute();
 	}
-	
-    @Override
+
+	@Override
 	public void actionPerformed(ActionEvent e) {
-    	updateSampleCount();
-    }
-    
-    private void updateSampleCount() {
-    	if (countMap==null) return;
+		updateSampleCount();
+	}
+
+	private void updateSampleCount() {
+		if (countMap == null)
+			return;
 
 		Integer min = null;
 
@@ -323,7 +329,7 @@ public class MAASearchDialog extends ModalDialog implements Accessibility,Action
 				}
 			}
 
-			compCountLabelMap.get(compartment).setText(compChecked?compCount+"":"");
+			compCountLabelMap.get(compartment).setText(compChecked ? compCount + "" : "");
 
 			if (compChecked) {
 				if (min == null || compCount < min) {
@@ -332,41 +338,39 @@ public class MAASearchDialog extends ModalDialog implements Accessibility,Action
 			}
 		}
 
-		resetButton.setVisible(min!=null);
-		selectionLabel.setText(min==null?"":"At most "+min+" sample"+(min==1?"":"s"));
+		resetButton.setVisible(min != null);
+		selectionLabel.setText(min == null ? "" : "At most " + min + " sample" + (min == 1 ? "" : "s"));
 	}
-    
-    private void resetCheckboxes() {
 
-		for(String compartment : compEntityMap.keySet()) {
-			 List<JCheckBox> intCheckboxes = intCheckBoxMap.get(compartment);
-			 for(int i=0; i<intCheckboxes.size(); i++) {
-				 JCheckBox intCheckbox = intCheckboxes.get(i);
-				 intCheckbox.setSelected(false);
-				 List<JCheckBox> distCheckboxes = distCheckBoxMap.get(compartment);
-				 for(int d=0; d<distCheckboxes.size(); d++) {
-					 JCheckBox distCheckbox = distCheckboxes.get(d);		 
-					 distCheckbox.setSelected(false);
-				 }
-			 }
+	private void resetCheckboxes() {
+
+		for (String compartment : compEntityMap.keySet()) {
+			List<JCheckBox> intCheckboxes = intCheckBoxMap.get(compartment);
+			for (int i = 0; i < intCheckboxes.size(); i++) {
+				JCheckBox intCheckbox = intCheckboxes.get(i);
+				intCheckbox.setSelected(false);
+				List<JCheckBox> distCheckboxes = distCheckBoxMap.get(compartment);
+				for (int d = 0; d < distCheckboxes.size(); d++) {
+					JCheckBox distCheckbox = distCheckboxes.get(d);
+					distCheckbox.setSelected(false);
+				}
+			}
 		}
-		
+
 		updateSampleCount();
-    }
-    
+	}
+
 	protected synchronized void saveResults() {
 
-		if (countMap==null || folderMap==null) {
+		if (countMap == null || folderMap == null) {
 			throw new IllegalStateException("Cannot save results before entity load is complete");
 		}
-		
-    	SimpleWorker worker = new SimpleWorker() {
 
-    		private Entity saveFolder;
-    		
+		SimpleWorker worker = new SimpleWorker() {
+
 			@Override
 			protected void doStuff() throws Exception {
-				saveFolder = FolderUtils.saveEntitiesToFolder(outputFolder==null?null:outputFolder.getEntity(), 
+				saveFolder = FolderUtils.saveEntitiesToFolder(outputFolder == null ? null : outputFolder,
 						folderNameField.getText(), getSelectedSamples());
 			}
 
@@ -376,30 +380,30 @@ public class MAASearchDialog extends ModalDialog implements Accessibility,Action
 				entityOutline.refresh(true, new Callable<Void>() {
 					@Override
 					public Void call() throws Exception {
-		        		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, "/e_"+saveFolder.getId(), true);	
-				    	Utils.setDefaultCursor(MAASearchDialog.this);
-			            setVisible(false);
+						ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(
+								EntitySelectionModel.CATEGORY_OUTLINE, saveFolder.getUniqueId(), true);
+						Utils.setDefaultCursor(MAASearchDialog.this);
+						setVisible(false);
 						return null;
 					}
-					
 				});
 			}
-			
+
 			@Override
 			protected void hadError(Throwable error) {
 				SessionMgr.getSessionMgr().handleException(error);
-		    	Utils.setDefaultCursor(MAASearchDialog.this);
+				Utils.setDefaultCursor(MAASearchDialog.this);
 			}
 		};
 
-    	Utils.setWaitingCursor(MAASearchDialog.this);
+		Utils.setWaitingCursor(MAASearchDialog.this);
 		worker.execute();
-    }
-	
+	}
+
 	private List<Long> getSelectedSamples() throws Exception {
 
 		Set<Long> consensus = null;
-		
+
 		for (String compartment : compEntityMap.keySet()) {
 			Set<Long> compSampleIds = new LinkedHashSet<Long>();
 			boolean compChecked = false;
@@ -442,58 +446,56 @@ public class MAASearchDialog extends ModalDialog implements Accessibility,Action
 					}
 				}
 			}
-			
+
 			if (compChecked) {
-				if (consensus==null) {
+				if (consensus == null) {
 					consensus = compSampleIds;
-					System.out.println("Consensus is now: "+consensus.size());
-				}
-				else {
+					log.info("Consensus is now: " + consensus.size());
+				} else {
 					consensus.retainAll(compSampleIds);
-					System.out.println("Consensus is now: "+consensus.size()+" (filtered by "+compSampleIds.size()+")");
+					log.info("Consensus is now: " + consensus.size() + " (filtered by " + compSampleIds.size() + ")");
 				}
 			}
 		}
-		
+
 		return new ArrayList<Long>(consensus);
 	}
 
 	private List<Long> getSampleEvals(String key) throws Exception {
-	
+
 		List<Long> samples = cachedSampleEvals.get(key);
-		
-		if (samples==null) {
+
+		if (samples == null) {
 			samples = new ArrayList<Long>();
-			
+
 			Entity distFolder = folderMap.get(key);
 			List<Long> maskIds = new ArrayList<Long>();
-			for(EntityData ed : distFolder.getEntityData()) {
-				if (ed.getChildEntity()!=null) {
+			for (EntityData ed : distFolder.getEntityData()) {
+				if (ed.getChildEntity() != null) {
 					maskIds.add(ed.getChildEntity().getId());
 				}
 			}
-			
+
 			if (!maskIds.isEmpty()) {
 				List<String> upMapping = new ArrayList<String>();
 				List<String> downMapping = new ArrayList<String>();
 				upMapping.add(EntityConstants.TYPE_FOLDER);
 				upMapping.add(EntityConstants.TYPE_SCREEN_SAMPLE);
 				List<MappedId> mappedIds = ModelMgr.getModelMgr().getProjectedResults(maskIds, upMapping, downMapping);
-				for(MappedId mappedId : mappedIds) {
+				for (MappedId mappedId : mappedIds) {
 					samples.add(mappedId.getMappedId());
 				}
 			}
-			
+
 			cachedSampleEvals.put(key, samples);
-			System.out.println("  Got "+samples.size()+" samples for "+key);
+			log.info("Got " + samples.size() + " samples for " + key);
+		} else {
+			log.info("Got " + samples.size() + " samples for " + key + " (cached)");
 		}
-		else {
-			System.out.println("  Got "+samples.size()+" samples for "+key+" (cached)");
-		}
-		
+
 		return samples;
 	}
-	
+
 	public boolean isAccessible() {
 		String username = SessionMgr.getUsername();
 		if (!"jenetta".equals(username) && !"admin-jenetta".equals(username)) {

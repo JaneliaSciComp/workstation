@@ -2,12 +2,26 @@ package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileWriter;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Callable;
+
+import javax.swing.*;
+import javax.swing.Timer;
+
+import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChangeEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.SplitGroupingDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenWithDefaultAppAction;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.*;
+import org.janelia.it.FlyWorkstation.gui.util.IndeterminateProgressMonitor;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -20,18 +34,10 @@ import org.janelia.it.jacs.model.tasks.utility.GenericTask;
 import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.shared.file_chooser.FileChooser;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import javax.swing.Timer;
-import javax.swing.tree.DefaultMutableTreeNode;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.FileWriter;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Callable;
+import com.google.common.eventbus.Subscribe;
 
 /**
  * A panel that may be inserted into the right-most view pane and serves as a workflow driver for the GAL4 split line 
@@ -44,6 +50,8 @@ import java.util.concurrent.Callable;
  */
 public class SplitPickingPanel extends JPanel implements Refreshable {
 
+	private static final Logger log = LoggerFactory.getLogger(SplitPickingPanel.class);
+	
 	/** Preference properties */
     public static final String CROSS_PREFIX_PROPERTY = "SessionMgr.SplitPicker.PrefixProperty";
     public static final String LAST_WORKING_FOLDER_ID_PROPERTY = "SessionMgr.SplitPicker.LastWorkingFolderIdProperty";
@@ -163,8 +171,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					
 					@Override
 					protected void hadSuccess() {
-						SessionMgr.getBrowser().getEntityOutline().selectEntityByUniqueId(repFolder.getUniqueId());
-						SessionMgr.getSessionMgr().getActiveBrowser().getPatternSearchDialog().showDialog(repFolder);
+						final RootedEntity saveFolder = SessionMgr.getSessionMgr().getActiveBrowser().getPatternSearchDialog().showDialog(repFolder);
+						createLocalGrouping(saveFolder);
 					}
 					
 					@Override
@@ -197,8 +205,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					
 					@Override
 					protected void hadSuccess() {
-						SessionMgr.getBrowser().getEntityOutline().selectEntityByUniqueId(repFolder.getUniqueId());
-						SessionMgr.getSessionMgr().getActiveBrowser().getMAASearchDialog().showDialog(repFolder);
+						final RootedEntity saveFolder = SessionMgr.getSessionMgr().getActiveBrowser().getMAASearchDialog().showDialog(repFolder);
+						createLocalGrouping(saveFolder);
 					}
 					
 					@Override
@@ -355,7 +363,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				
 				final RootedEntity rootedEntity = getRootedEntityById(rootedEntityId);
 				if (rootedEntity == null) {
-					System.out.println("SplitPickingPanel.entitySelected: cannot find entity with id="+rootedEntityId);
+					log.warn("SplitPickingPanel.entitySelected: cannot find entity with id="+rootedEntityId);
 					return;
 				}
 				if (!rootedEntity.getEntity().getEntityType().getName().equals(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS)) {
@@ -376,8 +384,76 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		c.weightx = 1.0;
 		c.weighty = 1.0;
 		add(crossesPane, c);
-		
+
+		ModelMgr.getModelMgr().registerOnEventBus(this);
 		loadExistingCrossSimulations();
+	}
+	
+	private void createLocalGrouping(final RootedEntity saveFolder) {
+		
+		if (saveFolder==null) return;
+		log.info("Creating split groups for "+saveFolder.getEntity().getName());
+		
+		SimpleWorker groupingWorker = new SimpleWorker() {
+
+			private RootedEntity localGroupAdFolder;
+			private RootedEntity localGroupDbdFolder;
+			
+			@Override
+			protected void doStuff() throws Exception {
+				setProgress(1);
+
+				getProgressMonitor().setNote("Loading data");
+				
+				ModelMgrUtils.loadLazyEntity(saveFolder.getEntity(), false);
+				
+				getProgressMonitor().setNote("Getting representative samples");
+				
+				log.info("Getting represented fly lines...");
+				List<Entity> represented = splitGroupingDialog.getRepresentedFlylines(saveFolder.getEntity());
+				log.info("Got {} represented fly lines ",represented.size());
+
+				getProgressMonitor().setNote("Grouping representative samples");
+				
+				List<Entity> repAd = new ArrayList<Entity>();
+				List<Entity> repDbd = new ArrayList<Entity>();
+				for(Entity rep : represented) {
+					String splitPart = rep.getValueByAttributeName(EntityConstants.ATTRIBUTE_SPLIT_PART);
+					if ("AD".equals(splitPart)) {
+						repAd.add(rep);
+					}
+					else if ("DBD".equals(splitPart)) {
+						repDbd.add(rep);
+					}
+				}
+
+				getProgressMonitor().setNote("Saving split lines");
+				
+				splitGroupingDialog.saveRepresentedGroupings(repAd, repDbd, saveFolder);
+				localGroupAdFolder = ModelMgrUtils.getChildFolder(saveFolder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_AD, false);
+				localGroupDbdFolder = ModelMgrUtils.getChildFolder(saveFolder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_DBD, false);
+
+				getProgressMonitor().close();
+			}
+			
+			@Override
+			protected void hadSuccess() {
+				SessionMgr.getBrowser().getEntityOutline().expandByUniqueId(saveFolder.getUniqueId());
+				SessionMgr.getBrowser().getViewerManager().showEntityInMainViewer(localGroupAdFolder);
+				SessionMgr.getBrowser().getViewerManager().showEntityInSecViewer(localGroupDbdFolder);
+			}
+			
+			@Override
+			protected void hadError(Throwable error) {
+				SessionMgr.getSessionMgr().handleException(error);
+			}
+		};
+
+		IndeterminateProgressMonitor pm = new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Organizing results", "");
+		pm.setMillisToDecideToPopup(0);
+		pm.setMillisToPopup(0);
+		groupingWorker.setProgressMonitor(pm);
+		groupingWorker.execute();
 	}
 	
 	private void loadExistingCrossSimulations() {
@@ -712,7 +788,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 						List<Long> sampleIds2 = new ArrayList<Long>();
 						List<Long> outputIds = new ArrayList<Long>();
 						
-						System.out.println("Processing "+numCrosses+" crosses");
+						log.info("Processing "+numCrosses+" crosses");
 						
 						int i = 0;
 						for(Entity sample1 : samples1) {
@@ -822,7 +898,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
         task.setJobName("Screen Sample Cross Service");
         task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
         
-        System.out.println("Submitting task "+task.getDisplayName()+" id="+task.getObjectId());
+        log.info("Submitting task "+task.getDisplayName()+" id="+task.getObjectId());
         
         runningTasks.add(task.getObjectId());
         ModelMgr.getModelMgr().submitJob("ScreenSampleCrossService", task.getObjectId());
@@ -935,6 +1011,19 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		worker.execute();
 	}
 
+	@Subscribe 
+	public void entityChanged(EntityChangeEvent event) {
+		Entity entity = event.getEntity();
+		if (entity.getId().equals(repFolder.getEntityId())) {
+			log.debug("Representatives folder changed: '{}'",entity.getName());
+			
+			
+			
+			
+			
+		}
+	}
+	
 	private void loadViewers() {
 
 		// Open the folders in the entity outline
@@ -1043,15 +1132,6 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		worker.execute();
 	}
 
-	private void expandEntityOutline(final String uniqueId) {
-
-		final EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
-		DefaultMutableTreeNode node = entityOutline.getNodeByUniqueId(uniqueId);
-		entityOutline.getDynamicTree().navigateToNode(node);
-		System.out.println("expandEntityOutline "+uniqueId+" = "+node);
-	}
-	
-	
 	private void showPopupResultFolderMenu() {
 		
 		checkNotNull(splitPickingFolder, "Root folder must be defined");
@@ -1265,6 +1345,10 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
     	worker.setProgressMonitor(new ProgressMonitor(SessionMgr.getBrowser(), "Exporting data", "", 0, 100));
 		worker.execute();
     }
+
+	private void expandEntityOutline(final String uniqueId) {
+		SessionMgr.getBrowser().getEntityOutline().expandByUniqueId(uniqueId);
+	}
     
 	private String commafy(List<Long> list) {
 		StringBuffer sb = new StringBuffer();

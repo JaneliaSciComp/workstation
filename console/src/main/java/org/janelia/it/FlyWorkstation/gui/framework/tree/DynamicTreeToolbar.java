@@ -23,8 +23,6 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
     private static final String EXPAND_ALL = "expand_all";
     private static final String COLLAPSE_ALL = "collapse_all";
     private static final String REFRESH = "refresh";
-    private static final String NEXT_MATCH = "next_match";
-    private static final String PREVIOUS_MATCH = "previous_match";
 
     private final DynamicTree tree;
     private JTextField textField;
@@ -64,48 +62,6 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
         refreshButton.setFocusable(false);
         toolBar.add(refreshButton);
         
-        
-//        toolBar.addSeparator();
-//
-//        JLabel label = new JLabel("Find:");
-//        toolBar.add(label);
-//
-//        textField = new JTextField(); 
-//        textField.setColumns(10);
-//        textField.addActionListener(this);
-//        JPanel innerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-//        innerPanel.add(textField);
-//        toolBar.add(innerPanel);
-//
-//        textField.getDocument().addDocumentListener(new DocumentListener() {
-//            public void changedUpdate(DocumentEvent e) {
-//                tree.navigateToNodeStartingWith(textField.getText(), Bias.Forward, false);
-//            }
-//
-//            public void removeUpdate(DocumentEvent e) {
-//                changedUpdate(e);
-//            }
-//
-//            public void insertUpdate(DocumentEvent e) {
-//                changedUpdate(e);
-//            }
-//        });
-        
-//        JButton button = new JButton("Next");
-//        button.setActionCommand(NEXT_MATCH);
-//        button.setToolTipText("Find the next occurence of the phrase.");
-//        button.addActionListener(this);
-//        innerPanel.add(button);
-//
-//        button = new JButton("Previous");
-//        button.setActionCommand(PREVIOUS_MATCH);
-//        button.setToolTipText("Find the previous occurence of the phrase.");
-//        button.addActionListener(this);
-//        innerPanel.add(button);
-//
-//        spinner = new JLabel();
-//        innerPanel.add(spinner);
-        
         add(toolBar, BorderLayout.PAGE_START);
     }
 
@@ -140,13 +96,6 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
         }
         else if (REFRESH.equals(cmd)) {
         	tree.refresh();
-        }
-        else if (NEXT_MATCH.equals(cmd)) {
-            tree.navigateToNodeStartingWith(textField.getText(), Bias.Forward, true);
-
-        }
-        else if (PREVIOUS_MATCH.equals(cmd)) {
-            tree.navigateToNodeStartingWith(textField.getText(), Bias.Backward, true);
         }
     }
 
