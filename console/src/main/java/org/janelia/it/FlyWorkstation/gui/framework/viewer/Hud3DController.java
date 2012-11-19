@@ -84,11 +84,12 @@ public class Hud3DController implements ActionListener {
     
     public void entityUpdate() {
         locateInputFile();
-        hud.set3DEnabled(filename != null);
-        if ( filename == null ) {
-            hud.set2D();
-        }
+        hud.set3DEnabled( filename != null );
         hud.handleRenderSelection();
+    }
+
+    public boolean is3DReady() {
+        return filename != null;
     }
 
     private void restoreMip3dToUi() {
@@ -101,10 +102,15 @@ public class Hud3DController implements ActionListener {
             hud.repaint();
         }
         else {
-            JOptionPane.showMessageDialog(hud, "No 3D file found for entity " + hud.getEntity().getName() +
-                    ".  Reverting to 2D.");
-            hud.set2D();
+            no3DAvailable();
         }
+    }
+
+    private void no3DAvailable() {
+        JOptionPane.showMessageDialog(hud, "No 3D file found for entity " + hud.getEntity().getName() +
+                ".  Reverting to 2D.");
+        hud.set3DEnabled( false );
+        hud.handleRenderSelection();
     }
 
     /** Find the input file name. If there is no such file, the filename will be set to null. */
@@ -114,6 +120,15 @@ public class Hud3DController implements ActionListener {
             filename = entityFilenameFetcher.fetchFilename(
                     hud.getEntity(), EntityFilenameFetcher.FilenameType.IMAGE_3d
             );
+
+//            if ( filename == null ) {
+//                for ( EntityData entityData: hud.getEntity().getEntityData() ) {
+//                    EntityAttribute ea = entityData.getEntityAttribute();
+//                    if ( "File Path".equals( ea.getName() ) ) {
+//                        filename = entityData.getValue();
+//                    }
+//                }
+//            }
         }
         else {
             filename = null;
@@ -152,8 +167,13 @@ public class Hud3DController implements ActionListener {
         /** This is done in the event thread. */
         @Override
         protected void done() {
-            mip3d.loadVolume(filename);
-            restoreMip3dToUi();
+            if ( filename != null ) {
+                mip3d.loadVolume(filename);
+                restoreMip3dToUi();
+            }
+            else {
+                no3DAvailable();
+            }
         }
 
     }

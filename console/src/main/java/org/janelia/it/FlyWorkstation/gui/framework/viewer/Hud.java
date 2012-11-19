@@ -28,24 +28,19 @@ public class Hud extends ModalDialog {
 		setModalityType(ModalityType.MODELESS);
         setLayout( new BorderLayout() );
 		previewLabel = new JLabel(new ImageIcon());
-        //init3dCapability();
+        init3dCapability();
 
         add(previewLabel, BorderLayout.CENTER);
 	}
-
-    public void set2D() {
-        if ( render3DCheckbox != null ) {
-            render3DCheckbox.setSelected( false );
-        }
-        handleRenderSelection();
-    }
 
     public void toggleDialog() {
 		if (isVisible()) {
 			hideDialog();
 		}
 		else {
-            render();
+            if ( entity != null ) {
+                render();
+            }
 		}
 	}
 	
@@ -62,16 +57,30 @@ public class Hud extends ModalDialog {
 
     public void setEntity( Entity entity ) {
         this.entity = entity;
-        dirtyEntityFor3D = true;
-        if (render3DCheckbox != null ) {
-            render3DCheckbox.setSelected(false);
-            hud3DController.entityUpdate();
+        if ( entity == null ) {
+            dirtyEntityFor3D = false;
+        }
+        else {
+            dirtyEntityFor3D = true;
+            if (render3DCheckbox != null ) {
+                render3DCheckbox.setSelected(false);
+                hud3DController.entityUpdate();
+            }
         }
     }
     
     public void set3DEnabled( boolean flag ) {
         if ( render3DCheckbox != null ) {
             render3DCheckbox.setEnabled( flag );
+            if ( previewLabel.getIcon() == null ) {
+                // In this case, no 2D image exists, and the checkbox for 3D is locked at true.
+                render3DCheckbox.setEnabled( false );
+                render3DCheckbox.setSelected( true );
+            }
+            else {
+                // In this case, 2D exists.  Need to reset the checkbox for 2D use, for now.
+                render3DCheckbox.setSelected( false );
+            }
         }
     }
 
@@ -89,8 +98,8 @@ public class Hud extends ModalDialog {
 	}
 
     public void handleRenderSelection() {
-        if ( mayRender3D() ) {
-            setup3D();
+        if ( shouldRender3D() ) {
+            prepare3D();
         }
         else {
             this.remove(mip3d);
@@ -116,13 +125,13 @@ public class Hud extends ModalDialog {
     }
 
     private void render() {
-        setup3D();
+        prepare3D();
         packAndShow();
     }
 
-    private void setup3D() {
-        if ( mayRender3D() ) {
-            this.remove(previewLabel);
+    private void prepare3D() {
+        if ( shouldRender3D() ) {
+            this.remove( previewLabel );
             if ( dirtyEntityFor3D ) {
                 try {
                     if ( hud3DController != null ) {
@@ -134,7 +143,8 @@ public class Hud extends ModalDialog {
                 } catch ( Exception ex ) {
                     JOptionPane.showMessageDialog( this, "Failed to load 3D image." );
                     ex.printStackTrace();
-                    set2D();
+                    set3DEnabled( false );
+                    handleRenderSelection();
 
                 }
             }
@@ -143,11 +153,18 @@ public class Hud extends ModalDialog {
                     hud3DController.set3dWidget();
                 }
             }
+
         }
     }
 
-    private boolean mayRender3D() {
-        return render3DCheckbox != null  &&  render3DCheckbox.isEnabled() && render3DCheckbox.isSelected();
+    private boolean shouldRender3D() {
+        boolean rtnVal = render3DCheckbox != null  &&  render3DCheckbox.isEnabled() && render3DCheckbox.isSelected();
+        if ( !rtnVal ) {
+            if ( hud3DController.is3DReady()  &&  (this.previewLabel.getIcon() == null) ) {
+                rtnVal = true;
+            }
+        }
+        return rtnVal;
     }
 
 }

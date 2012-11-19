@@ -724,7 +724,7 @@ public class IconDemoPanel extends Viewer {
 
 	
 	private void updateHud() {
-		List<String> selectedIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
+  		List<String> selectedIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
 		if (selectedIds.size() != 1) {
 			hud.hideDialog();
 			return;
@@ -733,6 +733,7 @@ public class IconDemoPanel extends Viewer {
 		for(RootedEntity re : getRootedEntitiesById(selectedId)) {
 			final AnnotatedImageButton button = imagesPanel.getButtonById(re.getId());
 			if (button instanceof DynamicImageButton) {
+                // todo: move some of this into hud.  LLF
 				final DynamicImageButton d = (DynamicImageButton)button;
                 hud.setEntity( re.getEntity() );
 				BufferedImage bufferedImage = d.getDynamicImagePanel().getMaxSizeImage();
@@ -744,7 +745,27 @@ public class IconDemoPanel extends Viewer {
 				hud.pack();
 				return; // There can be only one!
 			}
+//            else {
+//                EntityData entityData = re.getEntityData();
+//                if ( entityData != null   &&  entityData.getParentEntity() != null ) {
+//                    Entity parentEntity = entityData.getParentEntity();
+//                    if ( "Fast Load".equals( parentEntity.getName() )  &&  "ConsolidatedSignal2_25.mp4".equals( re.getEntity().getName() ) ) {
+//                        // In a fast-load entity.
+//                        System.out.println( "Entity: " + re.getEntity().getName() );
+//                        System.out.println("Child entity: " + entityData.getChildEntity().getName() );
+//
+//                        hud.set3DEnabled( true );
+//                        hud.setImage( null );
+//                        hud.setTitle( re.getEntity().getName() );
+//                        hud.setEntity( re.getEntity() );
+//                        hud.pack();
+//                        return;
+//                    }
+//                }
+//            }
 		}
+        // Made it here -> hud not changed.  Need to eliminate old hud entity and ensure proper state.
+        hud.setEntity( null );
 	}
 	
 
