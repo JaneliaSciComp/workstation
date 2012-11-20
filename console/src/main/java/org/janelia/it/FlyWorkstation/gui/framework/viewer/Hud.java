@@ -26,9 +26,9 @@ public class Hud extends ModalDialog {
     public Hud() {
         dirtyEntityFor3D = true;
 		setModalityType(ModalityType.MODELESS);
-        setLayout( new BorderLayout() );
+        setLayout(new BorderLayout());
 		previewLabel = new JLabel(new ImageIcon());
-        init3dCapability();
+        init3dGui();
 
         add(previewLabel, BorderLayout.CENTER);
 	}
@@ -68,8 +68,14 @@ public class Hud extends ModalDialog {
             }
         }
     }
-    
-    public void set3DEnabled( boolean flag ) {
+
+    /**
+     * This is a controller-callback method to allow or disallow the user from attempting to switch
+     * to 3D mode.
+     *
+     * @param flag T=allow; F=disallow
+     */
+    public void set3dModeEnabled(boolean flag) {
         if ( render3DCheckbox != null ) {
             render3DCheckbox.setEnabled( flag );
             if ( previewLabel.getIcon() == null ) {
@@ -88,18 +94,19 @@ public class Hud extends ModalDialog {
         return entity;
     }
 
-//	public void setEntityId(Long entityId) {
-//		this.entityId = entityId;
-//        this.dirtyEntityFor3D = true;
-//	}
-
+    /**
+     * This convenience method lets a previously-known buffered image be handed to this widget, without the
+     * need to read it from here.
+     *
+     * @param bufferedImage will be used for 2D.
+     */
 	public void setImage(BufferedImage bufferedImage) {
 		previewLabel.setIcon(bufferedImage == null ? null : new ImageIcon(bufferedImage));
 	}
 
     public void handleRenderSelection() {
         if ( shouldRender3D() ) {
-            prepare3D();
+            renderIn3D();
         }
         else {
             this.remove(mip3d);
@@ -109,7 +116,39 @@ public class Hud extends ModalDialog {
         this.repaint();
     }
 
-    private void init3dCapability() {
+    private void render() {
+        if ( shouldRender3D() ) {
+            renderIn3D();
+        }
+        packAndShow();
+    }
+
+    private void renderIn3D() {
+        this.remove( previewLabel );
+        if ( dirtyEntityFor3D ) {
+            try {
+                if ( hud3DController != null ) {
+                    hud3DController.setUiBusyMode();
+                    hud3DController.load3d();
+                    dirtyEntityFor3D = hud3DController.isDirty();
+                }
+
+            } catch ( Exception ex ) {
+                JOptionPane.showMessageDialog( this, "Failed to load 3D image." );
+                ex.printStackTrace();
+                set3dModeEnabled(false);
+                handleRenderSelection();
+
+            }
+        }
+        else {
+            if ( hud3DController != null ) {
+                hud3DController.set3dWidget();
+            }
+        }
+    }
+
+    private void init3dGui() {
         mip3d = new Mip3d();
         hud3DController = new Hud3DController(this, mip3d);
         render3DCheckbox = new JCheckBox( "3D" );
@@ -122,39 +161,6 @@ public class Hud extends ModalDialog {
         menuLikePanel.setLayout( new BorderLayout() );
         menuLikePanel.add( render3DCheckbox, BorderLayout.EAST );
         add(menuLikePanel, BorderLayout.NORTH);
-    }
-
-    private void render() {
-        prepare3D();
-        packAndShow();
-    }
-
-    private void prepare3D() {
-        if ( shouldRender3D() ) {
-            this.remove( previewLabel );
-            if ( dirtyEntityFor3D ) {
-                try {
-                    if ( hud3DController != null ) {
-                        hud3DController.setUiBusyMode();
-                        hud3DController.load3d();
-                        dirtyEntityFor3D = hud3DController.isDirty();
-                    }
-
-                } catch ( Exception ex ) {
-                    JOptionPane.showMessageDialog( this, "Failed to load 3D image." );
-                    ex.printStackTrace();
-                    set3DEnabled( false );
-                    handleRenderSelection();
-
-                }
-            }
-            else {
-                if ( hud3DController != null ) {
-                    hud3DController.set3dWidget();
-                }
-            }
-
-        }
     }
 
     private boolean shouldRender3D() {

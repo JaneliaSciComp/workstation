@@ -84,7 +84,7 @@ public class Hud3DController implements ActionListener {
     
     public void entityUpdate() {
         locateInputFile();
-        hud.set3DEnabled( filename != null );
+        hud.set3dModeEnabled(filename != null);
         hud.handleRenderSelection();
     }
 
@@ -109,7 +109,7 @@ public class Hud3DController implements ActionListener {
     private void no3DAvailable() {
         JOptionPane.showMessageDialog(hud, "No 3D file found for entity " + hud.getEntity().getName() +
                 ".  Reverting to 2D.");
-        hud.set3DEnabled( false );
+        hud.set3dModeEnabled(false);
         hud.handleRenderSelection();
     }
 
@@ -121,14 +121,6 @@ public class Hud3DController implements ActionListener {
                     hud.getEntity(), EntityFilenameFetcher.FilenameType.IMAGE_3d
             );
 
-//            if ( filename == null ) {
-//                for ( EntityData entityData: hud.getEntity().getEntityData() ) {
-//                    EntityAttribute ea = entityData.getEntityAttribute();
-//                    if ( "File Path".equals( ea.getName() ) ) {
-//                        filename = entityData.getValue();
-//                    }
-//                }
-//            }
         }
         else {
             filename = null;
