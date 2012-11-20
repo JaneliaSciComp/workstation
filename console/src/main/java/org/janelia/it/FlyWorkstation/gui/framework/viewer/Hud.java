@@ -149,18 +149,24 @@ public class Hud extends ModalDialog {
     }
 
     private void init3dGui() {
-        mip3d = new Mip3d();
-        hud3DController = new Hud3DController(this, mip3d);
-        render3DCheckbox = new JCheckBox( "3D" );
-        render3DCheckbox.setSelected( false ); // Always startup as false.
-        render3DCheckbox.addActionListener(hud3DController);
-        render3DCheckbox.setFont( render3DCheckbox.getFont().deriveFont( 9.0f ));
-        render3DCheckbox.setBorderPainted(false);
+        try {
+            mip3d = new Mip3d();
+            hud3DController = new Hud3DController(this, mip3d);
+            render3DCheckbox = new JCheckBox( "3D" );
+            render3DCheckbox.setSelected( false ); // Always startup as false.
+            render3DCheckbox.addActionListener(hud3DController);
+            render3DCheckbox.setFont( render3DCheckbox.getFont().deriveFont( 9.0f ));
+            render3DCheckbox.setBorderPainted(false);
 
-        JPanel menuLikePanel = new JPanel();
-        menuLikePanel.setLayout( new BorderLayout() );
-        menuLikePanel.add( render3DCheckbox, BorderLayout.EAST );
-        add(menuLikePanel, BorderLayout.NORTH);
+            JPanel menuLikePanel = new JPanel();
+            menuLikePanel.setLayout( new BorderLayout() );
+            menuLikePanel.add( render3DCheckbox, BorderLayout.EAST );
+            add(menuLikePanel, BorderLayout.NORTH);
+        } catch ( Exception ex ) {
+            // Turn off the 3d capability if exception.
+            render3DCheckbox = null;
+            ex.printStackTrace();
+        }
     }
 
     private boolean shouldRender3D() {

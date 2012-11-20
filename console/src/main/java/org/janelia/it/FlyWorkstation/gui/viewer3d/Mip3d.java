@@ -25,9 +25,19 @@ implements MouseListener, MouseMotionListener, ActionListener,
 {
 	private static final long serialVersionUID = 1L;
 	// setup OpenGL Version 2
-	static GLProfile profile = GLProfile.get(GLProfile.GL2);
-	static GLCapabilities capabilities = new GLCapabilities(profile);
+	static GLProfile profile = null;
+	static GLCapabilities capabilities = null;
 
+    static {
+        try {
+            profile = GLProfile.get(GLProfile.GL2);
+            capabilities = new GLCapabilities(profile);
+        } catch ( Throwable th ) {
+            profile = null;
+            capabilities = null;
+            System.out.println("ERROR: JOGL is unavailable.  No 3D images will be shown.");
+        }
+    }
 	private Point previousMousePos;
 	private boolean bMouseIsDragging = false;
 	private MipRenderer renderer;
