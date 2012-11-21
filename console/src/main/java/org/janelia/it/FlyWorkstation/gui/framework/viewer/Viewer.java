@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import javax.swing.JPanel;
 
@@ -34,7 +35,7 @@ public abstract class Viewer extends JPanel implements Refreshable {
 		return viewerPane.getSelectionCategory();
 	}
 
-	public void setAsActive() {
+	public void setAsActive() {		
 		viewerPane.setAsActive();
 	}
 	
@@ -57,6 +58,13 @@ public abstract class Viewer extends JPanel implements Refreshable {
 	 * @param rootedEntity
 	 */
 	public abstract void loadEntity(RootedEntity rootedEntity);
+	
+	/**
+	 * Display the given RootedEntity in the viewer, and then call the callback.
+	 * @param rootedEntity
+	 * @param success
+	 */
+	public abstract void loadEntity(RootedEntity rootedEntity, final Callable<Void> success);
 	
 	/**
 	 * Returns all RootedEntity objects loaded in the viewer.

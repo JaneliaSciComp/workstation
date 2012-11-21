@@ -107,6 +107,11 @@ public class SessionOutline extends JPanel implements Refreshable {
         });
     }
 
+	@Override
+	public void totalRefresh() {
+		refresh();
+	}
+	
     public void showLoadingIndicator() {
         tablePanel.removeAll();
         tablePanel.add(new JLabel(Icons.getLoadingIcon()));

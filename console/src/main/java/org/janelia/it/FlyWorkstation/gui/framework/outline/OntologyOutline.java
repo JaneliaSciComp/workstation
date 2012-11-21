@@ -332,7 +332,7 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
             action.doAction();
         }
     }
-    
+
     /**
      * Reload the data for the current tree.
      */
@@ -352,6 +352,11 @@ public class OntologyOutline extends OntologyTree implements ActionListener, Ref
 			});
     	}
     }
+    
+	@Override
+	public void totalRefresh() {
+		refresh();
+	}
     
     protected void createNewTree(OntologyRoot root) {
 

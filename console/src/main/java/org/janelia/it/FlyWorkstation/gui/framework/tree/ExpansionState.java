@@ -10,7 +10,6 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
@@ -26,7 +25,7 @@ public class ExpansionState {
 	private final Set<String> expanded = new HashSet<String>();
 	private String selected;
 	
-	private final Set<SimpleWorker> workers = Collections.synchronizedSet(new HashSet<SimpleWorker>());
+	private final Set<String> workers = Collections.synchronizedSet(new HashSet<String>());
 	boolean startedAllWorkers = false;
 	boolean calledSuccess = false;
 
@@ -79,27 +78,21 @@ public class ExpansionState {
 		if (!dynamicTree.childrenAreLoaded(node)) {
 		
 			Utils.setWaitingCursor(dynamicTree);
-			
-			SimpleWorker loadingWorker = new LazyTreeNodeLoader(dynamicTree, node, false) {
-
-				protected void doneLoading() {
+		    
+			dynamicTree.expandNodeWithLazyChildren(node, new Callable<Void>() {
+				@Override
+				public Void call() throws Exception {
 					Utils.setDefaultCursor(dynamicTree);
 					restoreExpansionState(dynamicTree, node, restoreSelection, success);
-					workers.remove(this);
+					workers.remove(uniqueId);
 					// The last worker to finish calls the success function
 					callSuccessFunction(success);
+					return null;
 				}
-
-				@Override
-				protected void hadError(Throwable error) {
-					Utils.setDefaultCursor(dynamicTree);
-					SessionMgr.getSessionMgr().handleException(error);
-					workers.remove(this);
-				}
-			};
-
-			workers.add(loadingWorker);
-			loadingWorker.execute();
+				
+			});
+        	
+			workers.add(uniqueId);
 			
 			return;
 		}

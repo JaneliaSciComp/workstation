@@ -95,7 +95,7 @@ public class DynamicTreeToolbar extends JPanel implements ActionListener {
             expandAllButton.setEnabled(true);
         }
         else if (REFRESH.equals(cmd)) {
-        	tree.refresh();
+        	tree.totalRefresh();
         }
     }
 

@@ -106,7 +106,7 @@ public class ErrorViewer extends Viewer {
 			}
 
 			protected void refresh() {
-				ErrorViewer.this.refresh();
+				ErrorViewer.this.totalRefresh();
 			}
 			
 			protected JPopupMenu getPopupPathMenu() {
@@ -175,6 +175,12 @@ public class ErrorViewer extends Viewer {
 	public void refresh() {
 		refresh(null);
 	}
+
+	@Override
+	public void totalRefresh() {
+		// TODO: implement this with invalidate
+		refresh();
+	}
 	
 	public void refresh(final Callable<Void> successCallback) {
 
@@ -189,7 +195,7 @@ public class ErrorViewer extends Viewer {
 			protected void doStuff() throws Exception {
 				Entity entity = ModelMgr.getModelMgr().getEntityById(rootedEntity.getEntity().getId()+"");
 				if (entity==null) return;
-				ModelMgrUtils.loadLazyEntity(entity, false);
+				ModelMgr.getModelMgr().loadLazyEntity(entity, false);
 				rootedEntity.getEntityData().setChildEntity(entity);
 			}
 
@@ -213,7 +219,7 @@ public class ErrorViewer extends Viewer {
 	public synchronized void clear() {
 		this.contextRootedEntity = null;
 		
-		getViewerPane().setTitle("");
+		getViewerPane().setTitle(" ");
 		removeAll();
 		
 		revalidate();

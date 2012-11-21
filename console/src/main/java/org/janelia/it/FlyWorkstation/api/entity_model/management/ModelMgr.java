@@ -617,6 +617,10 @@ public class ModelMgr {
     	return null;
     }
 
+	public void invalidateCache(Collection<Entity> entities, boolean recurse) {
+		entityModel.invalidate(entities, recurse);
+	}
+	
 	public void invalidateCache(Entity entity, boolean recurse) {
 		entityModel.invalidate(entity, recurse);
 	}
@@ -625,8 +629,8 @@ public class ModelMgr {
         return entityModel.getCommonRoots();
     }
 
-    public Entity getEntityAndChildren(long entityId) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().getEntityAndChildren(entityId);
+    public Entity getEntityAndChildren(long entityId) throws Exception {    	
+        return entityModel.getEntityAndChildren(entityId);
     }
 
     public Entity getEntityTree(long entityId) throws Exception {

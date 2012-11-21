@@ -3,6 +3,8 @@ package org.janelia.it.FlyWorkstation.gui.dialogs.search;
 import java.util.*;
 
 import org.janelia.it.jacs.model.entity.Entity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Manages a set of search results, including the loaded pages of Solr results, and result tree mapping.
@@ -10,6 +12,8 @@ import org.janelia.it.jacs.model.entity.Entity;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class SearchResults {
+	
+	private static final Logger log = LoggerFactory.getLogger(SearchResults.class);
 	
 	protected final List<ResultPage> pages = new ArrayList<ResultPage>();
 	protected final Set<Long> allResultIds = new HashSet<Long>();
@@ -70,7 +74,7 @@ public class SearchResults {
     	for(Entity entity : resultPage.getSolrResults().getResultList()) {
     		Long entityId = entity.getId();
     		if (allResultIds.contains(entityId)) {
-    			System.out.println("WARNING: Duplicate id found in results: "+entityId);
+    			log.warn("Duplicate id found in results: "+entityId);
     		}
     		allResultIds.add(entityId);
     		resultIdToRowIndex.put(entityId, allResultIds.size()-1);
@@ -90,7 +94,7 @@ public class SearchResults {
 		for(Entity mappedEntity : resultPage.getMappedResults()) {
 			Long mappedId = mappedEntity.getId();
     		if (allMappedIds.contains(mappedId)) {
-    			System.out.println("WARNING: Duplicate id found in mapping: "+mappedId);
+    			log.warn("Duplicate id found in mapping: "+mappedId);
     		}
 			allMappedIds.add(mappedId);
 			mappedIdToRowIndex.put(mappedId, allMappedIds.size()-1);

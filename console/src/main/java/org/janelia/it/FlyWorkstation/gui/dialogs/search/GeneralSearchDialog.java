@@ -228,7 +228,7 @@ public class GeneralSearchDialog extends ModalDialog {
 			@Override
 			protected void hadSuccess() {
 				final EntityOutline entityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline();
-				entityOutline.refresh(true, new Callable<Void>() {
+				entityOutline.totalRefresh(true, new Callable<Void>() {
 					@Override
 					public Void call() throws Exception {
 		        		ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, saveFolder.getUniqueId(), true);	

@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
 import java.lang.reflect.Constructor;
+import java.util.concurrent.Callable;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.*;
@@ -92,24 +93,36 @@ public class ViewerManager {
 		return viewerPane.getViewer();
     }
     
-	public void showEntityInViewerPane(RootedEntity rootedEntity, ViewerPane viewerPane) {
+	public void showEntityInViewerPane(RootedEntity rootedEntity, ViewerPane viewerPane, Callable<Void> callable) {
 		Class<?> viewerClass = getViewerClass(rootedEntity);
 		ensureViewerClass(viewerPane, viewerClass);
 		viewerContainer.setActiveViewerPane(viewerPane);
-		viewerPane.loadEntity(rootedEntity);
+		viewerPane.loadEntity(rootedEntity, callable);
 	}
 
+	public void showEntityInActiveViewer(RootedEntity rootedEntity, Callable<Void> callable) {
+		showEntityInViewerPane(rootedEntity, viewerContainer.getActiveViewerPane(), callable);
+	}
+	
+	public void showEntityInMainViewer(RootedEntity rootedEntity, Callable<Void> callable) {
+		showEntityInViewerPane(rootedEntity, viewerContainer.getMainViewerPane(), callable);
+	}
+	
+	public void showEntityInSecViewer(RootedEntity rootedEntity, Callable<Void> callable) {
+		viewerContainer.setSecViewerVisible(true);
+		showEntityInViewerPane(rootedEntity, viewerContainer.getSecViewerPane(), callable);
+	}
+	
 	public void showEntityInActiveViewer(RootedEntity rootedEntity) {
-		showEntityInViewerPane(rootedEntity, viewerContainer.getActiveViewerPane());
+		showEntityInActiveViewer(rootedEntity, null);
 	}
 	
 	public void showEntityInMainViewer(RootedEntity rootedEntity) {
-		showEntityInViewerPane(rootedEntity, viewerContainer.getMainViewerPane());
+		showEntityInMainViewer(rootedEntity, null);
 	}
 	
 	public void showEntityInSecViewer(RootedEntity rootedEntity) {
-		viewerContainer.setSecViewerVisible(true);
-		showEntityInViewerPane(rootedEntity, viewerContainer.getSecViewerPane());
+		showEntityInSecViewer(rootedEntity, null);
 	}
 	
 	private Class getViewerClass(RootedEntity rootedEntity) {

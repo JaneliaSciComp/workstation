@@ -35,6 +35,8 @@ import org.janelia.it.jacs.compute.api.support.SolrQueryBuilder;
 import org.janelia.it.jacs.compute.api.support.SolrResults;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A general search results panel.
@@ -43,6 +45,7 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
  */
 public abstract class SearchResultsPanel extends JPanel implements SearchConfigurationListener, Refreshable {
 
+	private static final Logger log = LoggerFactory.getLogger(SearchResultsPanel.class);
 	
 	/** How many results to load at a time */
 	protected static final int PAGE_SIZE = 100;	
@@ -320,7 +323,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 	        	if (row<firstRow) firstRow = row;
     		}
     		else {
-    			System.out.println("WARNING: row index not found for "+entity.getId());
+    			log.warn("Row index not found for "+entity.getId());
     		}
     	}
     	table.scrollRectToVisible(table.getCellRect(firstRow, 1, true));
@@ -338,7 +341,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 	        	if (row<firstRow) firstRow = row;
     		}
     		else {
-    			System.out.println("WARNING: row index not found for "+mappedEntity.getId());
+    			log.warn("Row index not found for "+mappedEntity.getId());
     		}
     	}   
     	table.scrollRectToVisible(table.getCellRect(firstRow, 1, true));
@@ -365,7 +368,12 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     public void refresh() {
     	performSearch(false, false, true);
     }
-    
+
+	@Override
+	public void totalRefresh() {
+		refresh();
+	}
+	
 	public void performSearch(boolean clearFilters, boolean clearSort, boolean showLoading) {
     	if (clearFilters) {
     		filters.clear();
@@ -548,7 +556,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     protected void populateProjectionView(ResultPage resultPage) {
 
     	if (resultPage.getMappedResults()==null) {
-    		System.out.println("WARNING: populateProjectionView called with null projected results");
+    		log.warn("populateProjectionView called with null projected results");
     		return;
     	}
 

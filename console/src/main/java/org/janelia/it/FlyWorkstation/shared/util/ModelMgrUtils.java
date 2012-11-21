@@ -13,8 +13,6 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.user_data.User;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Utilities for dealing with Entities via the ModelMgr. In general, most of these methods access the database and 
@@ -24,23 +22,12 @@ import org.slf4j.LoggerFactory;
  */
 public class ModelMgrUtils {
 	
-	private static final Logger log = LoggerFactory.getLogger(ModelMgrUtils.class);
-	
 	public static final void loadChild(Entity entity, String attrName) throws Exception {
     	EntityData ed = entity.getEntityDataByAttributeName(attrName);
     	if (ed != null) {
     		ed.setChildEntity(ModelMgr.getModelMgr().getEntityById(ed.getChildEntity().getId()+""));
     	}
 	}
-
-	// TODO: find usages and use ModelMgr directly
-    public static void refreshEntityAndChildren(Entity entity) throws Exception {
-    	ModelMgr.getModelMgr().refreshEntityAndChildren(entity);
-    }
-	// TODO: find usages and use ModelMgr directly
-    public static void loadLazyEntity(Entity entity, boolean recurse) throws Exception {
-    	ModelMgr.getModelMgr().loadLazyEntity(entity, recurse);
-    }
     
     public static boolean isOwner(Entity entity) {
     	if (entity==null) throw new IllegalArgumentException("Entity is null");

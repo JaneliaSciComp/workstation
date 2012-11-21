@@ -323,17 +323,12 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
     }
 
 	private int runShellCommand(String command, File dir) throws Exception {
-
-		//System.out.println("RUN: "+command);
 		
 		String[] args = command.split("\\s+");
 
         StringBuffer stdout = new StringBuffer();
         StringBuffer stderr = new StringBuffer();
         SystemCall call = new SystemCall(stdout, stderr);
-
-        //System.out.println("STDOUT: "+stdout);
-		//System.out.println("STDERR: "+stderr);
 		
 		return call.emulateCommandLine(args, null, dir, 3600);
 	}

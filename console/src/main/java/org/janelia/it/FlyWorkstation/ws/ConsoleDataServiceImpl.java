@@ -15,7 +15,6 @@ import java.util.Map;
 import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.OntologyKeyBindings;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
@@ -25,6 +24,8 @@ import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -39,16 +40,18 @@ import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 @SOAPBinding(style = SOAPBinding.Style.RPC)
 public class ConsoleDataServiceImpl {
 
+	private static final Logger log = LoggerFactory.getLogger(ConsoleDataServiceImpl.class);
+	
 	public int reservePort(String clientName) {
         int port = SessionMgr.getSessionMgr().addExternalClient(clientName);
-		System.out.println("Reserving port "+port+" for client "+clientName);
+		log.info("Reserving port "+port+" for client "+clientName);
 		return port;
 	}
 	
 	public void registerClient(int port, String endpointUrl) throws Exception {
     	ExternalClient client = SessionMgr.getSessionMgr().getExternalClientByPort(port);
     	client.init(endpointUrl);
-		System.out.println("Initialized client on port "+port+" with endpoint "+endpointUrl);
+    	log.info("Initialized client on port "+port+" with endpoint "+endpointUrl);
 
 		Map<String,Object> parameters = new HashMap<String,Object>();
 		

@@ -94,6 +94,12 @@ public abstract class EntityListPane extends JPanel implements SearchConfigurati
         }
     }
 
+	@Override
+	public void totalRefresh() {
+		// TODO: implement this with invalidate
+		refresh();
+	}
+	
     /**
      * Async method for loading and displaying entities of a given type.
      */

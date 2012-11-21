@@ -15,6 +15,8 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An image panel that supports dynamic loading/unloading of image data to conserve memory usage when the panel is not
@@ -23,7 +25,9 @@ import org.janelia.it.FlyWorkstation.shared.util.Utils;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public abstract class DynamicImagePanel extends JPanel {
-
+	
+	private static final Logger log = LoggerFactory.getLogger(DynamicImagePanel.class);
+	
 	protected final String imageFilename;
     protected final Integer maxSize;
     protected BufferedImage maxSizeImage;
@@ -141,7 +145,7 @@ public abstract class DynamicImagePanel extends JPanel {
     	}
     	else {
     		if (maxSizeImage != null) {
-				System.out.println("Warning: nonviewable image has a non-null maxSizeImage in memory");
+				log.warn("Non-viewable image has a non-null maxSizeImage in memory");
     		}
     	}
 
@@ -271,16 +275,16 @@ public abstract class DynamicImagePanel extends JPanel {
     
     private synchronized void loadError(Throwable error) {
         if (error instanceof FileNotFoundException) {
-        	System.out.println("File not found: "+imageFilename);
+        	log.warn("File not found: "+imageFilename);
         	errorLabel.setText("File not found");
         }
         else if (error.getCause()!=null && (error.getCause() instanceof FormatException)) {
-        	System.out.println("Image format not supported for: "+imageFilename);
+        	log.warn("Image format not supported for: "+imageFilename);
             errorLabel.setText("Image format not supported");
             error.printStackTrace();
         }
         else {
-        	System.out.println("Image could not be loaded: "+imageFilename);
+        	log.warn("Image could not be loaded: "+imageFilename);
             errorLabel.setText("Image could not be loaded");
             error.printStackTrace();
         }

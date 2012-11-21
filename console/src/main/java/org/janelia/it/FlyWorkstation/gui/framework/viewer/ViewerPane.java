@@ -47,7 +47,7 @@ public class ViewerPane extends JPanel {
 		this.selectionCategory = selectionCategory;
 		this.entitySelectionHistory = new EntitySelectionHistory();
 		
-        titleLabel = new JLabel("");
+        titleLabel = new JLabel(" ");
         titleLabel.setBorder(BorderFactory.createEmptyBorder(1, 5, 3, 0));
         titleLabel.setFont(titleLabelFont);
         titleLabel.setHorizontalAlignment(SwingConstants.LEFT);
@@ -138,6 +138,10 @@ public class ViewerPane extends JPanel {
 	public void setAsActive() {
 		if (viewerContainer!=null) viewerContainer.setActiveViewerPane(this);
 	}
+	
+	public boolean isActive() {
+		return this.equals(viewerContainer.getActiveViewerPane());
+	}
 
 	public ViewerContainer getViewerContainer() {
 		return viewerContainer;
@@ -149,8 +153,21 @@ public class ViewerPane extends JPanel {
 	
 	public synchronized void loadEntity(RootedEntity rootedEntity, final Callable<Void> success) {
 
+		if (rootedEntity==null) return;
+		
+		if (contextRootedEntity!=null && rootedEntity.getId().equals(contextRootedEntity.getId())) {
+			if (success!=null) {
+				try {
+					success.call();	
+				}
+				catch (Exception e) {
+					SessionMgr.getSessionMgr().handleException(e);
+				}
+			}
+			return;
+		}
+		
 		this.contextRootedEntity = rootedEntity;
-		if (contextRootedEntity==null) return;
 		
 		Entity entity = contextRootedEntity.getEntity();
 
@@ -198,7 +215,7 @@ public class ViewerPane extends JPanel {
 		};
 		ancestorLoadingWorker.execute();
 		
-		viewer.loadEntity(rootedEntity);
+		viewer.loadEntity(rootedEntity, success);
 	}
 
 	private synchronized void setRootedAncestors(List<RootedEntity> rootedAncestors) {

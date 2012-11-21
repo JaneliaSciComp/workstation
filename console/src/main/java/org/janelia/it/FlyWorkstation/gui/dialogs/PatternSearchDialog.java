@@ -86,6 +86,7 @@ public class PatternSearchDialog extends ModalDialog {
     FilterResult filterResult;
     
     private RootedEntity saveFolder;
+	private boolean returnInsteadOfSaving = false;
 
     private class MinMaxSelectionRow extends JPanel implements ActionListener {
         String abbreviation;
@@ -378,17 +379,42 @@ public class PatternSearchDialog extends ModalDialog {
     }
 
     public void showDialog() {
+		this.returnInsteadOfSaving = false;
     	showDialog(null);
     }
 
     public RootedEntity showDialog(RootedEntity outputFolder) {
     	this.outputFolder = outputFolder;
     	this.saveFolder = null;
+		this.returnInsteadOfSaving = false;
         quantifierLoaderWorker.execute();
         packAndShow();
     	return saveFolder;
     }
+	
+	public List<Long> showDialog(boolean returnInsteadOfSaving) {
+		this.outputFolder = null;
+		this.saveFolder = null;
+		this.returnInsteadOfSaving = true;
+		packAndShow();
+		try {
+			List<Long> results = new ArrayList<Long>();
+			List<Long> allResults = filterResult.getSampleList();
+			if (allResults!=null) {
+				results.addAll(new LinkedHashSet<Long>(allResults));
+			}
+			return allResults;
+		}
+		catch (Exception e) {
+			SessionMgr.getSessionMgr().handleException(e);
+			return new ArrayList<Long>();
+		}
+	}
 
+	public String getSaveFolderName() {
+		return currentSetTextField.getText();
+	}
+	
     private void initFilters() throws Exception {
         String initialFilterName = "Set " + getNextFilterSetIndex();
         currentSetTextField.setText(initialFilterName);
@@ -656,6 +682,11 @@ public class PatternSearchDialog extends ModalDialog {
 
     protected synchronized void saveResults() {
 
+		if (returnInsteadOfSaving) {
+            setVisible(false);
+			return;
+		}
+		
         SimpleWorker worker = new SimpleWorker() {
 
             @Override
@@ -668,7 +699,7 @@ public class PatternSearchDialog extends ModalDialog {
             @Override
             protected void hadSuccess() {
                 final EntityOutline entityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline();
-                entityOutline.refresh(true, new Callable<Void>() {
+                entityOutline.totalRefresh(true, new Callable<Void>() {
                     @Override
                     public Void call() throws Exception {
                     	ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(

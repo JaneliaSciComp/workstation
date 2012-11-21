@@ -95,6 +95,11 @@ public class TaskOutline extends JPanel implements Refreshable {
     	loadTasks();
 	}
 
+	@Override
+	public void totalRefresh() {
+		refresh();
+	}
+	
 	public synchronized void showLoadingIndicator() {
         tablePanel.removeAll();
         tablePanel.add(new JLabel(Icons.getLoadingIcon()));

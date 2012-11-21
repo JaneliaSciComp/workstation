@@ -11,19 +11,17 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
-import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChangeEvent;
-import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChildrenLoadedEvent;
-import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityRemoveEvent;
+import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.ScreenEvaluationDialog;
@@ -31,7 +29,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
-import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -166,51 +163,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			}
 		});
 	}
-
-	@Subscribe 
-	public void entityChanged(EntityChangeEvent event) {
-		Entity entity = event.getEntity();
-		log.debug("Entity changed: '{}'",entity.getName());
-		Collection<DefaultMutableTreeNode> nodes = getNodesByEntityId(entity.getId());
-		if (nodes == null) return;
-		for(final DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
-			Entity treeEntity = getEntity(node);
-			if (entity!=treeEntity) {
-				log.warn("EntityOutline: Instance mismatch: "+entity.getName()+
-	    				" (cached="+System.identityHashCode(entity)+") vs (this="+System.identityHashCode(treeEntity)+")");
-				getEntityData(node).setChildEntity(entity);
-			}
-			log.debug("Recreating children of {}",getDynamicTree().getUniqueId(node));
-			getDynamicTree().recreateChildNodes(node); 
-		}
-	}
-
-	@Subscribe 
-	public void entityRemoved(EntityRemoveEvent event) {
-		Entity entity = event.getEntity();
-		log.debug("Entity removed: '{}'",entity.getName());
-		Collection<DefaultMutableTreeNode> nodes = getNodesByEntityId(entity.getId());
-		if (nodes == null) return;
-		for(DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
-			DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
-			Entity parent = getEntity(parentNode);
-			EntityData entityData = getEntityData(node);
-			if (parent!=null) {
-				parent.getEntityData().remove(entityData);
-			}
-			removeNode(node);	
-		}
-	}
-
-	@Subscribe 
-	public void entityChildrenLoaded(EntityChildrenLoadedEvent event) {
-		Entity entity = event.getEntity();
-		log.debug("Got "+entity.getChildren().size()+" children for '"+entity.getName()+"'");
-		for(DefaultMutableTreeNode node : getNodesByEntityId(entity.getId())) {
-			log.debug("Recreating children of {}",getDynamicTree().getUniqueId(node));
-			getDynamicTree().recreateChildNodes(node);	
-		}
-	}
 	
 	/**
 	 * Override this method to load the root list. This method will be called in
@@ -261,7 +213,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 						@Override
 						protected void hadSuccess() {
 							// Update Tree UI
-							refresh(true, new Callable<Void>() {
+							totalRefresh(true, new Callable<Void>() {
 								@Override
 								public Void call() throws Exception {
 									selectEntityByUniqueId("/e_"+newFolder.getId());
@@ -337,21 +289,46 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	protected void nodeDoubleClicked(MouseEvent e) {
 	}
 
-	/**
-	 * Reload the data for the current tree.
-	 */
+	@Subscribe 
+	public void entityInvalidated(EntityInvalidationEvent event) {
+		log.debug("Some entities were invalidated so we're refreshing the tree");
+		final ExpansionState expansionState = new ExpansionState();
+		expansionState.storeExpansionState(getDynamicTree());
+		refresh(false, true, expansionState, null);
+	}
+
 	@Override
 	public void refresh() {
-		refresh(true, null);
+		refresh(false, null);
+	}
+
+	@Override
+	public void totalRefresh() {
+		totalRefresh(true, null);
 	}
 
 	public void refresh(final boolean restoreState, final Callable<Void> success) {
 		final ExpansionState expansionState = new ExpansionState();
 		expansionState.storeExpansionState(getDynamicTree());
-		refresh(restoreState, expansionState, success);
+		refresh(false, restoreState, expansionState, success);
 	}
 	
-	public void refresh(final boolean restoreState, final ExpansionState expansionState, final Callable<Void> success) {
+	public void totalRefresh(final boolean restoreState, final Callable<Void> success) {
+		final ExpansionState expansionState = new ExpansionState();
+		expansionState.storeExpansionState(getDynamicTree());
+		refresh(true, restoreState, expansionState, success);
+	}
+	
+	private AtomicBoolean refreshInProgress = new AtomicBoolean(false);
+	
+	public void refresh(final boolean invalidateCache, final boolean restoreState, final ExpansionState expansionState, final Callable<Void> success) {
+		
+		if (refreshInProgress.getAndSet(true)) {
+			log.debug("Skipping refresh, since there is one already in progress");
+			return;
+		}
+		
+		log.debug("Starting a whole tree refresh");
 		
 		showLoadingIndicator();
 		
@@ -360,8 +337,8 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			private List<Entity> rootList;
 
 			protected void doStuff() throws Exception {
-				for(Entity root : getRootEntity().getChildren()) {
-					ModelMgr.getModelMgr().invalidateCache(root, true);
+				if (invalidateCache) {
+					ModelMgr.getModelMgr().invalidateCache(getRootEntity().getChildren(), true);
 				}
 				rootList = loadRootList();
 			}
@@ -377,11 +354,12 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 							public Void call() throws Exception {
 								showTree();
 								if (success!=null) success.call();
+								refreshInProgress.set(false);
+								log.debug("Tree refresh complete");
 								return null;
 							}
 						});
 					}
-					
 				}
 				catch (Exception e) {
 					hadError(e);
@@ -389,6 +367,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			}
 
 			protected void hadError(Throwable error) {
+				refreshInProgress.set(false);
 				error.printStackTrace();
 				JOptionPane.showMessageDialog(EntityOutline.this, "Error loading data outline", "Data Load Error",
 						JOptionPane.ERROR_MESSAGE);
@@ -417,13 +396,14 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			}
 			if (!getDynamicTree().childrenAreLoaded(ancestor)) {
 				// Load the children before displaying them
-				SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, ancestor, false) {
+				getDynamicTree().expandNodeWithLazyChildren(ancestor, new Callable<Void>() {
 					@Override
-					protected void doneLoading() {
+					public Void call() throws Exception {
 						expandByUniqueId(uniqueId);
+						return null;
 					}
-				};
-				loadingWorker.execute();
+					
+				});
 				return;
 			}
 		}
@@ -447,13 +427,14 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			}
 			if (!getDynamicTree().childrenAreLoaded(ancestor)) {
 				// Load the children before displaying them
-				SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, ancestor, false) {
+				getDynamicTree().expandNodeWithLazyChildren(ancestor, new Callable<Void>() {
 					@Override
-					protected void doneLoading() {
+					public Void call() throws Exception {
 						selectEntityByUniqueId(uniqueId);
+						return null;
 					}
-				};
-				loadingWorker.execute();
+					
+				});
 				return;
 			}
 		}
@@ -509,8 +490,16 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		else {
 			return;
 		}
+
+		log.debug("Selecting node {}",uniqueId);
 		
 		DefaultMutableTreeNode node2 = getNodeByUniqueId(uniqueId);
+		
+		if (node2==null) {
+			log.warn("selectNode cannot locate "+uniqueId);
+			return;
+		}
+		
 		if (node!=node2) {
 			log.error("We have a node conflict. This should never happen!");
 		}
@@ -521,20 +510,20 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		}
 
 		getDynamicTree().navigateToNode(node);
-		
-		SessionMgr.getBrowser().getViewerManager().getActiveViewer().showLoadingIndicator();
 
 		final String finalCurrUniqueId = currUniqueId;
 		
 		if (!getDynamicTree().childrenAreLoaded(node)) {
+			SessionMgr.getBrowser().getViewerManager().getActiveViewer().showLoadingIndicator();
 			// Load the children before displaying them
-			SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node, false) {
+        	getDynamicTree().expandNodeWithLazyChildren(node, new Callable<Void>() {
 				@Override
-				protected void doneLoading() {
+				public Void call() throws Exception {
 					loadEntityInViewer(finalCurrUniqueId);
+					return null;
 				}
-			};
-			loadingWorker.execute();
+				
+			});
 		} 
 		else {
 			loadEntityInViewer(finalCurrUniqueId);

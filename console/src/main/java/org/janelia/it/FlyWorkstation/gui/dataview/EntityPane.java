@@ -120,7 +120,7 @@ public class EntityPane extends JPanel {
 
             @Override
             protected void doStuff() throws Exception {
-            	ModelMgrUtils.loadLazyEntity(entity, false);
+            	ModelMgr.getModelMgr().loadLazyEntity(entity, false);
             }
 
             @Override

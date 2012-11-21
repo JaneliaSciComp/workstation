@@ -8,18 +8,19 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 /**
  * A worker thread which loads the children or ancestors for a node in a DynamicTree. 
  * 
+ * TODO: this class can probably be removed because most of the complexity it encapsulated has been rendered obsolete
+ * by the new EntityModel.
+ * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class LazyTreeNodeLoader extends SimpleWorker {
 
     private final DynamicTree dynamicTree;
     private final DefaultMutableTreeNode node;
-    private final boolean recurse;
 
-    public LazyTreeNodeLoader(DynamicTree dynamicTree, DefaultMutableTreeNode node, boolean recurse) {
+    public LazyTreeNodeLoader(DynamicTree dynamicTree, DefaultMutableTreeNode node) {
         this.dynamicTree = dynamicTree;
         this.node = node;
-        this.recurse = recurse;
     }
 
     /**
@@ -28,13 +29,13 @@ public class LazyTreeNodeLoader extends SimpleWorker {
      * @throws Exception
      */
     public void loadSynchronously() throws Exception {
-        dynamicTree.loadLazyNodeData(node, recurse);
+        dynamicTree.loadLazyNodeData(node);
         doneLoading();
     }
     
     @Override
     protected void doStuff() throws Exception {
-        dynamicTree.loadLazyNodeData(node, recurse);
+		dynamicTree.loadLazyNodeData(node);	
     }
 
     @Override

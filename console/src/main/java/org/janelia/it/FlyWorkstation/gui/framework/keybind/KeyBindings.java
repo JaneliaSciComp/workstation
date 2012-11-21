@@ -127,20 +127,20 @@ public class KeyBindings {
                     long entityId = bind.getOntologyTermId();
                     Action action = entityActionMap.get(entityId);
                     if (action == null) {
-                        System.out.println("Ontology does not have an action for element " + entityId);
+                        log.warn("Ontology does not have an action for element " + entityId);
                     }
                     else {
                         ontologyBindings.put(shortcut, action);
                     }
                 }
                 catch (Exception e) {
-                    System.out.println("Could not load key binding from user preference '" + bind.getKey() + "'.");
+                	log.error("Could not load key binding from user preference '" + bind.getKey() + "'.",e);
                     e.printStackTrace();
                 }
             }
         }
         catch (Exception e) {
-            System.out.println("Could not load user's key binding preferences");
+        	log.error("Could not load user's key binding preferences",e);
             SessionMgr.getSessionMgr().handleException(e);
         }
     }
@@ -150,7 +150,7 @@ public class KeyBindings {
      */
     public void saveOntologyKeybinds(OntologyRoot root) {
 
-        System.out.println("Saving key bindings for ontology "+root.getId());
+    	log.info("Saving key bindings for ontology "+root.getId());
 
         OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(SessionMgr.getUsername(), root.getId());
         try {
@@ -165,7 +165,7 @@ public class KeyBindings {
             ModelMgr.getModelMgr().saveOntologyKeyBindings(ontologyKeyBindings);
         }
         catch (Exception e) {
-            System.out.println("Could not save user's key binding preferences");
+        	log.error("Could not save user's key binding preferences",e);
             SessionMgr.getSessionMgr().handleException(e);
         }
     }
@@ -179,7 +179,7 @@ public class KeyBindings {
             ModelMgr.getModelMgr().removeOntologyKeyBindings(root.getId());
         }
         catch (Exception e) {
-            System.out.println("Could not delete key binding preferences for defunct ontology " + root.getName());
+            log.error("Could not delete key binding preferences for defunct ontology " + root.getName(),e);
             SessionMgr.getSessionMgr().handleException(e);
         }
     }

@@ -53,5 +53,6 @@
 	<classpathentry kind="lib" path="lib/logging/logback-core-1.0.7.jar"/>
 	<classpathentry kind="lib" path="lib/logging/perf4j-0.9.16-logbackonly.jar"/>
 	<classpathentry kind="lib" path="lib/logging/slf4j-api-1.6.6.jar"/>
+	<classpathentry kind="lib" path="lib/Jogl"/>
 	<classpathentry kind="output" path="build/eclipse"/>
 </classpath>

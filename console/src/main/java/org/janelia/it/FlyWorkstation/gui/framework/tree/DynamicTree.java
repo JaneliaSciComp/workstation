@@ -13,6 +13,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -21,13 +22,15 @@ import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeWillExpandListener;
 import javax.swing.tree.*;
 
+import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
+
 /**
  * A reusable tree component with toolbar features and an extended API.
  *
  * @author saffordt
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DynamicTree extends JPanel {
+public class DynamicTree extends JPanel implements Refreshable {
 
     protected final JTree tree;
     protected boolean lazyLoading;
@@ -93,7 +96,7 @@ public class DynamicTree extends JPanel {
                 if (isLazyLoading()) {
                     final DefaultMutableTreeNode node = (DefaultMutableTreeNode) event.getPath().getLastPathComponent();
                     if (!childrenAreLoaded(node)) {
-                        expandNodeWithLazyChildren(node);
+                        expandNodeWithLazyChildren(node, null);
                     }
                 }
             }
@@ -184,7 +187,6 @@ public class DynamicTree extends JPanel {
 
         node.removeAllChildren();
         getTreeModel().nodesWereRemoved(node, childIndices, removedChildren);
-//        System.out.println("DynamicTree.removeChildren - removed "+childIndices.length+" children from "+node);
     }
 
     /**
@@ -193,9 +195,8 @@ public class DynamicTree extends JPanel {
      * Call this in a worker thread.
      *
      * @param node
-     * @param recurse
      */
-    public void loadLazyNodeData(DefaultMutableTreeNode node, boolean recurse) throws Exception {
+    public void loadLazyNodeData(DefaultMutableTreeNode node) throws Exception {
         throw new UnsupportedOperationException("This tree does not support lazy loading");
     }
 
@@ -239,7 +240,7 @@ public class DynamicTree extends JPanel {
      *
      * @param node
      */
-    public void expandNodeWithLazyChildren(DefaultMutableTreeNode node) {
+    public void expandNodeWithLazyChildren(DefaultMutableTreeNode node, Callable<Void> success) {
     }
 
     /**
@@ -537,8 +538,17 @@ public class DynamicTree extends JPanel {
     /**
      * Override this method to provide refresh behavior. The default implementation does nothing. 
      */
-	protected void refresh() {
+    @Override
+	public void refresh() {
 	}
+	
+    /**
+     * Override this method to provide total refresh behavior. The default implementation does nothing. 
+     */
+    @Override
+	public void totalRefresh() {
+    }
+    
 }
 
 

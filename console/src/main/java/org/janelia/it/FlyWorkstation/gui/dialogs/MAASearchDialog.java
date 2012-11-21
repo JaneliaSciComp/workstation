@@ -59,6 +59,7 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 	private RootedEntity outputFolder;
 	private Browser browser;
 	private RootedEntity saveFolder;
+	private boolean returnInsteadOfSaving = false;
 
 	public MAASearchDialog(Browser browser) {
 
@@ -132,16 +133,36 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 
 	public void showDialog() {
 		this.outputFolder = null;
+		this.returnInsteadOfSaving = false;
 		packAndShow();
 	}
 
 	public RootedEntity showDialog(RootedEntity outputFolder) {
 		this.outputFolder = outputFolder;
 		this.saveFolder = null;
+		this.returnInsteadOfSaving = false;
 		packAndShow();
 		return saveFolder;
 	}
+	
+	public List<Long> showDialog(boolean returnInsteadOfSaving) {
+		this.outputFolder = null;
+		this.saveFolder = null;
+		this.returnInsteadOfSaving = true;
+		packAndShow();
+		try {
+			return getSelectedSamples();
+		}
+		catch (Exception e) {
+			SessionMgr.getSessionMgr().handleException(e);
+			return new ArrayList<Long>();
+		}
+	}
 
+	public String getSaveFolderName() {
+		return folderNameField.getText();
+	}
+	
 	public void init() {
 
 		log.info("Begin loading");
@@ -163,7 +184,7 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 					return;
 				}
 
-				ModelMgrUtils.loadLazyEntity(topLevelFolder, false);
+				ModelMgr.getModelMgr().loadLazyEntity(topLevelFolder, false);
 				for (Entity child : topLevelFolder.getOrderedChildren()) {
 					compEntityMap.put(child.getName(), child);
 				}
@@ -242,10 +263,10 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 
 				for (String compartment : compEntityMap.keySet()) {
 					Entity compEntity = compEntityMap.get(compartment);
-					ModelMgrUtils.loadLazyEntity(compEntity, false);
+					ModelMgr.getModelMgr().loadLazyEntity(compEntity, false);
 
 					for (Entity intFolder : compEntity.getOrderedChildren()) {
-						ModelMgrUtils.loadLazyEntity(intFolder, false);
+						ModelMgr.getModelMgr().loadLazyEntity(intFolder, false);
 						int i = ScreenEvalUtils.getValueFromFolderName(intFolder);
 
 						for (Entity distFolder : intFolder.getOrderedChildren()) {
@@ -362,6 +383,11 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 
 	protected synchronized void saveResults() {
 
+		if (returnInsteadOfSaving) {
+			setVisible(false);
+			return;
+		}
+		
 		if (countMap == null || folderMap == null) {
 			throw new IllegalStateException("Cannot save results before entity load is complete");
 		}
@@ -377,7 +403,7 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 			@Override
 			protected void hadSuccess() {
 				final EntityOutline entityOutline = SessionMgr.getSessionMgr().getActiveBrowser().getEntityOutline();
-				entityOutline.refresh(true, new Callable<Void>() {
+				entityOutline.totalRefresh(true, new Callable<Void>() {
 					@Override
 					public Void call() throws Exception {
 						ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(

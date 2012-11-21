@@ -9,6 +9,9 @@ import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
+import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChangeEvent;
+import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChildrenLoadedEvent;
+import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityRemoveEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.DynamicTree;
@@ -17,14 +20,17 @@ import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
 import org.janelia.it.FlyWorkstation.gui.util.FakeProgressWorker;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
+import com.google.common.eventbus.Subscribe;
 
 /**
  * A tree of Entities that may load lazily. Manages all the asynchronous loading and tree updating that happens in the
@@ -33,7 +39,9 @@ import com.google.common.collect.Multimap;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class EntityTree extends JPanel {
-
+	
+	private static final Logger log = LoggerFactory.getLogger(EntityTree.class);
+	
     protected final JPanel treesPanel;
     protected DynamicTree selectedTree;
     protected boolean lazy;
@@ -55,6 +63,8 @@ public class EntityTree extends JPanel {
         this.lazy = lazy;
         treesPanel = new JPanel(new BorderLayout());
         add(treesPanel, BorderLayout.CENTER);
+        
+        ModelMgr.getModelMgr().registerOnEventBus(this);
     }
 
     public Entity getRootEntity() {
@@ -143,6 +153,55 @@ public class EntityTree extends JPanel {
         showTree();
     }
 
+	@Subscribe 
+	public void entityChanged(EntityChangeEvent event) {
+		Entity entity = event.getEntity();
+		Collection<DefaultMutableTreeNode> nodes = getNodesByEntityId(entity.getId());
+		if (nodes == null) return;
+		log.debug("Entity affecting {} nodes was changed: '{}'",nodes.size(),entity.getName());	
+		
+		for(final DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
+			Entity treeEntity = getEntity(node);
+			if (entity!=treeEntity) {
+				log.warn("EntityOutline: Instance mismatch: "+entity.getName()+
+	    				" (cached="+System.identityHashCode(entity)+") vs (this="+System.identityHashCode(treeEntity)+")");
+				getEntityData(node).setChildEntity(entity);
+			}
+			log.debug("Recreating children of {}, {}",entity,getDynamicTree().getUniqueId(node));
+			getDynamicTree().recreateChildNodes(node); 
+		}
+	}
+
+	@Subscribe 
+	public void entityRemoved(EntityRemoveEvent event) {
+		Entity entity = event.getEntity();
+		Collection<DefaultMutableTreeNode> nodes = getNodesByEntityId(entity.getId());
+		if (nodes == null) return;
+		log.debug("Entity affecting {} nodes was removed: '{}'",nodes.size(),entity.getName());	
+		
+		for(DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
+			DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
+			Entity parent = getEntity(parentNode);
+			EntityData entityData = getEntityData(node);
+			if (parent!=null) {
+				parent.getEntityData().remove(entityData);
+			}
+			removeNode(node);	
+		}
+	}
+
+	@Subscribe 
+	public void entityChildrenLoaded(EntityChildrenLoadedEvent event) {
+		Entity entity = event.getEntity();
+		Collection<DefaultMutableTreeNode> nodes = getNodesByEntityId(entity.getId());
+		if (nodes == null) return;
+		log.debug("Entity affecting {} nodes had children loaded: '{}'",nodes.size(),entity.getName());	
+		for(DefaultMutableTreeNode node : nodes) {
+			log.debug("Recreating children of {}",getDynamicTree().getUniqueId(node));
+			getDynamicTree().recreateChildNodes(node);	
+		}
+	}
+	
     public DynamicTree getDynamicTree() {
         return selectedTree;
     }
@@ -221,13 +280,42 @@ public class EntityTree extends JPanel {
             }
 
             @Override
-            public void expandNodeWithLazyChildren(final DefaultMutableTreeNode node) {
-
-                SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node, false) {
+            public void expandNodeWithLazyChildren(final DefaultMutableTreeNode node, final Callable<Void> success) {
+            	
+            	log.debug("expandNodeWithLazyChildren {}",getEntity(node).getName());	
+            	
+            	if (EntityUtils.areLoaded(getEntity(node).getEntityData())) {
+            		SwingUtilities.invokeLater(new Runnable() {
+						@Override
+						public void run() {
+		                	log.debug("expandNodeWithLazyChildren completed, from cache: {}",getEntity(node).getName());	
+		        			getDynamicTree().recreateChildNodes(node);
+		                    SwingUtilities.updateComponentTreeUI(EntityTree.this);
+		                    if (success!=null) {
+		                    	try {
+		                    		success.call();
+		                    	}
+		                    	catch (Exception e) {
+		                    		SessionMgr.getSessionMgr().handleException(e);
+		                    	}
+		                    }
+						}
+					});
+            		return;
+            	}
+            	
+                SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node) {
                     protected void doneLoading() {
-                        // Re-expand the node because the model was updated
-                        expand(node, true);
+                    	log.debug("expandNodeWithLazyChildren completed, from database: {}",getEntity(node).getName());	
                         SwingUtilities.updateComponentTreeUI(EntityTree.this);
+	                    if (success!=null) {
+	                    	try {
+	                    		success.call();
+	                    	}
+	                    	catch (Exception e) {
+	                    		SessionMgr.getSessionMgr().handleException(e);
+	                    	}
+	                    }
                     }
                 };
 
@@ -235,38 +323,35 @@ public class EntityTree extends JPanel {
             }
 
             @Override
-            public void loadLazyNodeData(DefaultMutableTreeNode node, boolean recurse) throws Exception {
+            public void loadLazyNodeData(DefaultMutableTreeNode node) throws Exception {
                 Entity entity = getEntity(node);
-                if (recurse == true) {
-                	// It's much faster to load the entire subtree in one go
-            	
-                	Entity fullEntity = ModelMgr.getModelMgr().getEntityTree(entity.getId());	
-
-                    Map<Long, Entity> childEntityMap = new HashMap<Long, Entity>();
-                    for (EntityData ed : fullEntity.getEntityData()) {
-                    	Entity childEntity = ed.getChildEntity();
-                    	if (childEntity == null) continue;
-                        childEntityMap.put(childEntity.getId(), childEntity);
-                    }
-
-                    // Replace the entity data with real objects
-                    for (EntityData ed : entity.getEntityData()) {
-                        if (ed.getChildEntity() != null) {
-                            ed.setChildEntity(childEntityMap.get(ed.getChildEntity().getId()));
-                        }
-                    }
-                }
-                else {
-                	ModelMgrUtils.loadLazyEntity(entity, false);	
-                }
+            	ModelMgr.getModelMgr().loadLazyEntity(entity, false);
             }
 
             @Override
             public void recreateChildNodes(DefaultMutableTreeNode node) {
                 Entity entity = getEntity(node);
+                log.debug("recreateChildNodes {}",entity);
+                
                 ArrayList<EntityData> edList = new ArrayList<EntityData>(entity.getOrderedEntityData());
-                EntityTree.this.removeChildren(node);
+
+            	List<DefaultMutableTreeNode> childNodes = new ArrayList<DefaultMutableTreeNode>();
+                for (int i = 0; i < node.getChildCount(); i++) {
+                    DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) node.getChildAt(i);
+                    childNodes.add(childNode);
+                }
+                
+                log.debug("Adding {} children",edList.size());
                 EntityTree.this.addChildren(node, edList);
+
+                
+                // The old children (typically a LazyTreeNode) are not removed until after the new children are added
+                // in order to avoid a flickering on the tree when opening a lazy node.
+                
+                log.debug("Removing {} children",childNodes.size());
+                for(DefaultMutableTreeNode childNode : childNodes) {
+                	EntityTree.this.removeNode(childNode);	
+                }
             }
 
             @Override
@@ -331,7 +416,7 @@ public class EntityTree extends JPanel {
 		    		if (node != curr) sb.insert(0, "/");
 		    		EntityData ed = getEntityData(curr);
 		    		if (ed==null) {
-		    			System.out.println("Encountered null EntityData while building unique id: "+sb);
+		    			log.warn("Encountered null EntityData while building unique id: "+sb);
 		    			return null;
 		    		}
 		    		String nodeId = ed.getId()==null ? "" : "ed_"+ed.getId();
@@ -350,6 +435,11 @@ public class EntityTree extends JPanel {
 			@Override
 			public void refresh() {
 				EntityTree.this.refresh();
+			}
+			
+			@Override
+			public void totalRefresh() {
+				EntityTree.this.totalRefresh();
 			}
         };
 
@@ -371,6 +461,12 @@ public class EntityTree extends JPanel {
 	public void refresh() {
     }
 
+	/**
+	 * Override to provide total refresh behavior. Default implementation does nothing.
+	 */
+	public void totalRefresh() {
+    }
+	
     /**
      * Get all the entity objects in the tree with the given id.
      * @param entityId
@@ -407,7 +503,8 @@ public class EntityTree extends JPanel {
      * @return
      */
     public Collection<DefaultMutableTreeNode> getNodesByEntityId(Long entityId) {
-    	return entityIdToNodeMap.get(entityId);
+    	return ImmutableList.copyOf(entityIdToNodeMap.get(entityId));
+//    	return new ArrayList<DefaultMutableTreeNode>(entityIdToNodeMap.get(entityId));
     }
     
     /**
@@ -486,21 +583,14 @@ public class EntityTree extends JPanel {
             // If the parent node is null, then the node is already in the tree as the root
             newNode = selectedTree.getRootNode();
         }
-        
+
         Entity entity = newEd.getChildEntity();
-        
-//		System.out.println(indent+"EntityTree.addNodes - adding "+entity.getName()+" (@"+System.identityHashCode(entity)+", ed.id="+newEd.getId()+") to "+(getEntity(parentNode)==null?"ROOT":getEntity(parentNode).getName())+" at index:"+index);
-        
-        // Add to unique map
         String uniqueId = selectedTree.getUniqueId(newNode);
-//        System.out.println(indent+""+entity.getName()+" (uniqueId="+uniqueId+")");
+    	log.debug("EntityTree.addNodes: {}, {}",entity,uniqueId);
+
+        // Add to maps
         uniqueIdToNodeMap.put(uniqueId, newNode);
-        
-        // Add to duplicate maps
-        Collection<DefaultMutableTreeNode> nodes = entityIdToNodeMap.get(entity.getId());
         entityIdToNodeMap.put(entity.getId(), newNode);
-        
-        nodes = entityDataIdToNodeMap.get(newEd.getId());
         entityDataIdToNodeMap.put(newEd.getId(), newNode);
         
         // Get children
@@ -547,15 +637,19 @@ public class EntityTree extends JPanel {
     	
     	if (node.getParent()==null) {
         	if (entity!=null) {
-        		System.out.println("EntityTree.removeNode: "+entity.getName()+" was already removed");	
+        		log.warn("EntityTree.removeNode: "+entity.getName()+" was already removed");	
         	}
     		return;
     	}
     	
+    	removeChildren(node);
+    	
     	if (entityData!=null && entity!=null) {
-        	// Remove from all maps
             String uniqueId = selectedTree.getUniqueId(node);
-            uniqueIdToNodeMap.remove(uniqueId);
+        	log.debug("EntityTree.removeNode: {}, {}",entity,uniqueId);
+        	
+        	// Remove from all maps
+//            uniqueIdToNodeMap.remove(uniqueId);
             entityIdToNodeMap.remove(entity.getId(), node);
             entityDataIdToNodeMap.remove(entity.getId(), node);
     	}

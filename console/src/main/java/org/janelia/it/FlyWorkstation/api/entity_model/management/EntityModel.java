@@ -3,12 +3,8 @@ package org.janelia.it.FlyWorkstation.api.entity_model.management;
 import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentSkipListSet;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChangeEvent;
-import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChildrenLoadedEvent;
-import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityCreateEvent;
-import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityRemoveEvent;
+import org.janelia.it.FlyWorkstation.api.entity_model.events.*;
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.EntityFacade;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -37,8 +33,8 @@ import com.google.common.cache.CacheBuilder;
  *    instance is updated with new information. Duplicate instances are always discarded. The canonical instance (cached
  *    instance) is returned by most methods, and clients can synchronize with the cache by using those instances.
  * 
- * 3) Invalidating a given entity ensures that the next time that entity is requested it will be loaded anew from the
- *    data source. Invalidating does not remove an entity from the cache, because other clients may still be using it.
+ * 3) Invalidating a given entity removes it from the cache entirely. Clients are encouraged to listen for the 
+ *    corresponding EntityInvalidationEvent, and discard their references to invalidated entities. 
  *    
  * 4) Updates to the cache are atomic (synchronized to the EntityModel instance).
  * 
@@ -54,12 +50,10 @@ public class EntityModel {
 	
 	private final EntityFacade entityFacade;
 	private final Cache<Long,Entity> entityCache;
-	private final ConcurrentSkipListSet<Long> invalidated;
 	
 	public EntityModel() {
 		this.entityFacade = FacadeManager.getFacadeManager().getEntityFacade();
 		this.entityCache = CacheBuilder.newBuilder().softValues().build();
-		this.invalidated = new ConcurrentSkipListSet<Long>();
 	}
 
 	/**
@@ -101,9 +95,12 @@ public class EntityModel {
 			Entity canonicalEntity = entityCache.getIfPresent(entity.getId());
 			if (canonicalEntity!=null) {
 				if (!EntityUtils.areEqual(canonicalEntity, entity)) {
-					log.debug("Updating {} (@{})",canonicalEntity.getName(),System.identityHashCode(canonicalEntity));
+					log.debug("Updating cached instance {} (@{})",canonicalEntity.getName(),System.identityHashCode(canonicalEntity));
 					EntityUtils.updateEntity(canonicalEntity, entity);	
 					notifyEntityChanged(canonicalEntity);
+				}
+				else {
+					log.debug("Returning cached instance {} (@{})",canonicalEntity.getName(),System.identityHashCode(canonicalEntity));
 				}
 			}
 			else {
@@ -159,6 +156,28 @@ public class EntityModel {
 		}
 		return putEntities;
 	}
+
+    /**
+     * Invalidate any number of entities in the cache, so that they will be reloaded on the next request. 
+     * 
+     * @param entity
+     * @param recurse
+     */
+	public void invalidate(Collection<Entity> entities, boolean recurse) {
+		Map<Long,Entity> visited = new HashMap<Long,Entity>();
+		for(Entity entity : entities) {
+			if (!EntityUtils.isInitialized(entity)) continue;
+			log.debug("Invalidating entity '{}' (@{})",entity.getName(),System.identityHashCode(entity));
+			if (recurse) {
+				invalidate(entity, visited);
+			}
+			else {
+				entityCache.invalidate(entity.getId());
+				visited.put(entity.getId(), entity);
+			}
+		}
+		notifyEntitiesInvalidated(visited.values());
+	}
 	
     /**
      * Invalidate the entity in the cache, so that it will be reloaded on the next request. 
@@ -167,20 +186,24 @@ public class EntityModel {
      * @param recurse
      */
 	public void invalidate(Entity entity, boolean recurse) {
+		if (!EntityUtils.isInitialized(entity)) return;
+		log.debug("Invalidating entity '{}' (@{})",entity.getName(),System.identityHashCode(entity));
+		Map<Long,Entity> visited = new HashMap<Long,Entity>();
 		if (recurse) {
-			invalidate(entity, new HashSet<Long>());
+			invalidate(entity, visited);
 		}
 		else {
-			if (!EntityUtils.isInitialized(entity)) return;
-			invalidated.add(entity.getId());
+			entityCache.invalidate(entity.getId());
+			visited.put(entity.getId(), entity);
 		}
+		notifyEntitiesInvalidated(visited.values());
 	}
 	
-	private void invalidate(Entity entity, Set<Long> visited) {
-		if (visited.contains(entity.getId())) return;
+	private void invalidate(Entity entity, Map<Long,Entity> visited) {
+		if (visited.containsKey(entity.getId())) return;
 		if (!EntityUtils.isInitialized(entity)) return;
-		visited.add(entity.getId());
-		invalidated.add(entity.getId());
+		visited.put(entity.getId(), entity);
+		entityCache.invalidate(entity.getId());
 		for(Entity child : entity.getChildren()) {
 			invalidate(child, visited);
 		}
@@ -218,7 +241,6 @@ public class EntityModel {
 	public Entity reloadById(Long entityId) throws Exception {
 		synchronized (this) {
 			Entity entity = entityFacade.getEntityById(entityId+"");
-			invalidated.remove(entity.getId());
 			return putOrUpdate(entity);
 		}
 	}
@@ -233,7 +255,6 @@ public class EntityModel {
 	public List<Entity> reloadById(List<Long> entityIds) throws Exception {
 		synchronized (this) {
 	        List<Entity> entities = entityFacade.getEntitiesById(entityIds);
-	        invalidated.removeAll(entityIds);
 	        return putOrUpdateAll(entities);
 		}
 	}
@@ -246,17 +267,13 @@ public class EntityModel {
 	 * @throws Exception
 	 */
 	public Entity getEntityById(final long entityId) throws Exception {
-		if (!invalidated.contains(entityId)) {
-			Entity entity = entityCache.getIfPresent(entityId);
-			if (entity!=null) {
-				return entity;
-			}
+		Entity entity = entityCache.getIfPresent(entityId);
+		if (entity!=null) {
+			log.debug("Returning cached entity {}",entity.getId());
+			return entity;
 		}
 		synchronized (this) {
-			invalidated.remove(entityId);
-			Entity entity = entityFacade.getEntityById(entityId+"");
-			entity = putOrUpdate(entity);
-			return entity;
+			return putOrUpdate(entityFacade.getEntityById(entityId+""));
 		}
 	}
 	
@@ -274,12 +291,10 @@ public class EntityModel {
     	
     	for(Iterator<Long> i = unfound.iterator(); i.hasNext(); ) {
     		Long entityId = i.next();
-    		if (!invalidated.contains(entityId)) {
-        		Entity e = entityCache.getIfPresent(entityId);
-        		if (e!=null) {
-            		entityMap.put(e.getId(),e);
-            		i.remove();
-        		}
+    		Entity e = entityCache.getIfPresent(entityId);
+    		if (e!=null) {
+        		entityMap.put(e.getId(),e);
+        		i.remove();
     		}
     	}
 
@@ -289,7 +304,6 @@ public class EntityModel {
 		        for(Entity entity : putOrUpdateAll(remaining)) {
 			        entityMap.put(entity.getId(), entity);
 		        }
-		        invalidated.removeAll(entityIds);
 			}
     	}
         
@@ -313,7 +327,21 @@ public class EntityModel {
 		Entity entity = entityFacade.getEntityTree(entityId);
 		return putOrUpdate(entity, true);
 	}
-
+	
+	/**
+	 * Retrieve an entity with its children loaded.
+	 * @return
+	 */
+	public Entity getEntityAndChildren(long entityId) throws Exception {
+		synchronized (this) {
+			Entity entity = getEntityById(entityId);
+			if (!EntityUtils.areLoaded(entity.getEntityData())) {
+				refreshChildren(entity);
+			}
+			return entity;
+		}
+	}
+	
 	/**
 	 * Retrieve entities with the given name from the database, and cache all the entities. 
 	 * 
@@ -337,7 +365,6 @@ public class EntityModel {
         synchronized (this) {
         	Set<Entity> childEntitySet = entityFacade.getChildEntities(entity.getId());
         	putOrUpdateAll(childEntitySet);
-        	invalidated.removeAll(EntityUtils.getEntityIdList(childEntitySet));
         }
         putOrUpdate(entity);
         notifyEntityChildrenLoaded(entity);
@@ -352,18 +379,29 @@ public class EntityModel {
      * @throws Exception
      */
     public void loadLazyEntity(Entity entity, boolean recurse) throws Exception {
-        if (!EntityUtils.areLoaded(entity.getEntityData())) {
-        	refreshChildren(entity);
-        }
+    	log.debug("Loading lazy entity '{}' (recurse={})",entity.getName(),recurse);
         if (recurse) {
-            for (EntityData ed : entity.getEntityData()) {
-                if (ed.getChildEntity() != null) {
-                    loadLazyEntity(ed.getChildEntity(), true);
-                }
+            loadLazyEntity(entity, new HashSet<Long>());
+        }
+        else {
+            if (!EntityUtils.areLoaded(entity.getEntityData())) {
+            	refreshChildren(entity);
             }
         }
     }
-	
+
+    private void loadLazyEntity(Entity entity, Set<Long> visited) throws Exception {
+		if (visited.contains(entity.getId())) return;
+		if (!EntityUtils.isInitialized(entity)) return;
+		visited.add(entity.getId());
+        if (!EntityUtils.areLoaded(entity.getEntityData())) {
+        	refreshChildren(entity);
+        }
+		for(Entity child : entity.getChildren()) {
+			loadLazyEntity(child, visited);
+		}
+    }
+    
     /**
      * Create a new entity with the given type and name, and cache it.
      * 
@@ -664,4 +702,7 @@ public class EntityModel {
 		ModelMgr.getModelMgr().postOnEventBus(new EntityRemoveEvent(entity));
 	}
 
+	private void notifyEntitiesInvalidated(Collection<Entity> entities) {
+		ModelMgr.getModelMgr().postOnEventBus(new EntityInvalidationEvent(entities));
+	}
 }

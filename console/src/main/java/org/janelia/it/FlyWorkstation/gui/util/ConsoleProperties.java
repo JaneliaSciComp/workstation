@@ -13,6 +13,9 @@ import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Dynamic properties loaded from console.properties.
  *
@@ -20,6 +23,8 @@ import java.util.Set;
  */
 public class ConsoleProperties extends Properties {
 
+	private static final Logger log = LoggerFactory.getLogger(ConsoleProperties.class);
+	
     private static ConsoleProperties me;
     private static Set<String> fileNames = new HashSet<String>();
 
@@ -282,7 +287,7 @@ public class ConsoleProperties extends Properties {
             in = cl.getResourceAsStream(propertiesFileName);
         }
         if (in == null) {
-            System.out.println("Could not read properties file: " + propertiesFileName);
+             log.error("Could not read properties file: " + propertiesFileName);
         }
         try {
             properties.load(in);
@@ -291,7 +296,7 @@ public class ConsoleProperties extends Properties {
             }
         }
         catch (Exception e) {
-            System.out.println("Could not read properties file: " + propertiesFileName);
+        	log.error("Could not read properties file: " + propertiesFileName);
         }
         return properties;
     }

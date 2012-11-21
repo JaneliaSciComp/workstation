@@ -14,10 +14,11 @@ import java.util.concurrent.Callable;
 import javax.swing.*;
 import javax.swing.Timer;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChangeEvent;
+import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.dialogs.SplitGroupingDialog;
+import org.janelia.it.FlyWorkstation.gui.dialogs.MAASearchDialog;
+import org.janelia.it.FlyWorkstation.gui.dialogs.PatternSearchDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenWithDefaultAppAction;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.*;
@@ -37,6 +38,8 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
 import com.google.common.eventbus.Subscribe;
 
 /**
@@ -60,8 +63,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	protected static final String DEFAULT_EXPORT_DIR = System.getProperty("user.home");
 	
 	public static final String FOLDER_NAME_SPLIT_PICKING = "Split Picking";
-	public static final String FOLDER_NAME_REPRESENTATIVES = "Representatives";
-	public static final String FOLDER_NAME_SPLIT_LINES = "Split Lines";
+	public static final String FOLDER_NAME_SEARCH_RESULTS = "Search Results";
 	public static final String FOLDER_NAME_SPLIT_LINES_AD = "AD";
 	public static final String FOLDER_NAME_SPLIT_LINES_DBD = "DBD";
 	public static final String FOLDER_NAME_CROSSES = "Crosses";
@@ -73,10 +75,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	private static final int INTERSECTION_METHOD = 0;
 	private static final int KERNEL_SIZE = 3;
 	
-	private final SplitGroupingDialog splitGroupingDialog;
 	private final JButton searchButton;
 	private final JButton maaSearchButton;
-	private final JButton groupButton;
 	private final JButton prefixButton;
 	private final JButton resultFolderButton;
 	private final IconDemoPanel crossesViewer;
@@ -85,10 +85,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	
 	private RootedEntity splitPickingFolder;
 	private RootedEntity workingFolder;
-	private RootedEntity repFolder;
-	private RootedEntity splitLinesFolder;
-	private RootedEntity groupAdFolder;
-	private RootedEntity groupDbdFolder;
+	private RootedEntity searchResultsFolder;
 	private RootedEntity crossFolder;
 	private String crossPrefix;
 	private Integer nextSuffix;
@@ -102,8 +99,6 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		setLayout(new GridBagLayout());
 		setBorder(BorderFactory.createLineBorder((Color)UIManager.get("windowBorder")));
 	
-		this.splitGroupingDialog = new SplitGroupingDialog(this);
-		
 		JPanel mainPanel = new JPanel();
 		mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.PAGE_AXIS));
 		mainPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 0, 5));
@@ -166,13 +161,14 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					
 					@Override
 					protected void doStuff() throws Exception {
-						repFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_REPRESENTATIVES, true);						
+						searchResultsFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_SEARCH_RESULTS, true);						
 					}
 					
 					@Override
 					protected void hadSuccess() {
-						final RootedEntity saveFolder = SessionMgr.getSessionMgr().getActiveBrowser().getPatternSearchDialog().showDialog(repFolder);
-						createLocalGrouping(saveFolder);
+						PatternSearchDialog dialog = SessionMgr.getSessionMgr().getActiveBrowser().getPatternSearchDialog();
+						List<Long> sampleIds  = dialog.showDialog(true);
+						createLocalGrouping(sampleIds, dialog.getSaveFolderName());
 					}
 					
 					@Override
@@ -200,13 +196,14 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					
 					@Override
 					protected void doStuff() throws Exception {
-						repFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_REPRESENTATIVES, true);						
+						searchResultsFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_SEARCH_RESULTS, true);						
 					}
 					
 					@Override
 					protected void hadSuccess() {
-						final RootedEntity saveFolder = SessionMgr.getSessionMgr().getActiveBrowser().getMAASearchDialog().showDialog(repFolder);
-						createLocalGrouping(saveFolder);
+						MAASearchDialog dialog = SessionMgr.getSessionMgr().getActiveBrowser().getMAASearchDialog();
+						List<Long> sampleIds = dialog.showDialog(true);
+						createLocalGrouping(sampleIds, dialog.getSaveFolderName());
 					}
 					
 					@Override
@@ -224,37 +221,10 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		searchPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		mainPanel.add(searchPanel);
 		
-
-		JPanel groupPanel = new JPanel();
-		groupPanel.setLayout(new BoxLayout(groupPanel, BoxLayout.LINE_AXIS));
-		JLabel groupLabel = new JLabel("4. Group by split lines:");
-		groupPanel.add(groupLabel);
-		groupButton = new JButton("Group");
-		groupButton.setFocusable(false);
-		groupButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				if (getWorkingFolder()==null) {
-					JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Please choose a result folder first", "Error", JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				if (getRepFolder()==null) {
-					JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Please search for representatives first", "Error", JOptionPane.ERROR_MESSAGE);
-					return;
-				}
-				splitGroupingDialog.showDialog();	
-			}
-		});
-		groupPanel.add(groupButton);
-		groupPanel.setPreferredSize(new Dimension(0, STEP_PANEL_HEIGHT));
-		groupPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-		mainPanel.add(groupPanel);
-
-		
 		
 		JPanel computePanel = new JPanel();
 		computePanel.setLayout(new BoxLayout(computePanel, BoxLayout.LINE_AXIS));
-		JLabel computeLabel = new JLabel("5. Compute selected intersections: ");
+		JLabel computeLabel = new JLabel("4. Compute selected intersections: ");
 		computePanel.add(computeLabel);
 		JButton crossButton = new JButton("Compute");
 		crossButton.addActionListener(new ActionListener() {
@@ -305,7 +275,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		
 		JPanel exportPanel = new JPanel();
 		exportPanel.setLayout(new BoxLayout(exportPanel, BoxLayout.LINE_AXIS));
-		JLabel exportLabel = new JLabel("6. Export results to file: ");
+		JLabel exportLabel = new JLabel("5. Export results to file: ");
 		exportPanel.add(exportLabel);
 		JButton exportButton = new JButton("Export");
 		exportButton.addActionListener(new ActionListener() {
@@ -372,7 +342,13 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				
 				// This is a sample cross, attempt to select its parents in the other viewers
 
+				log.warn("SplitPickingPanel.entitySelected: loading viewers with sample cross, id="+rootedEntityId);
 				loadViewers();
+			}
+
+			@Override	
+			public void setAsActive() {
+				// This viewer cannot be activated
 			}
 		};
 		crossesPane.setViewer(crossesViewer);
@@ -387,73 +363,6 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 
 		ModelMgr.getModelMgr().registerOnEventBus(this);
 		loadExistingCrossSimulations();
-	}
-	
-	private void createLocalGrouping(final RootedEntity saveFolder) {
-		
-		if (saveFolder==null) return;
-		log.info("Creating split groups for "+saveFolder.getEntity().getName());
-		
-		SimpleWorker groupingWorker = new SimpleWorker() {
-
-			private RootedEntity localGroupAdFolder;
-			private RootedEntity localGroupDbdFolder;
-			
-			@Override
-			protected void doStuff() throws Exception {
-				setProgress(1);
-
-				getProgressMonitor().setNote("Loading data");
-				
-				ModelMgrUtils.loadLazyEntity(saveFolder.getEntity(), false);
-				
-				getProgressMonitor().setNote("Getting representative samples");
-				
-				log.info("Getting represented fly lines...");
-				List<Entity> represented = splitGroupingDialog.getRepresentedFlylines(saveFolder.getEntity());
-				log.info("Got {} represented fly lines ",represented.size());
-
-				getProgressMonitor().setNote("Grouping representative samples");
-				
-				List<Entity> repAd = new ArrayList<Entity>();
-				List<Entity> repDbd = new ArrayList<Entity>();
-				for(Entity rep : represented) {
-					String splitPart = rep.getValueByAttributeName(EntityConstants.ATTRIBUTE_SPLIT_PART);
-					if ("AD".equals(splitPart)) {
-						repAd.add(rep);
-					}
-					else if ("DBD".equals(splitPart)) {
-						repDbd.add(rep);
-					}
-				}
-
-				getProgressMonitor().setNote("Saving split lines");
-				
-				splitGroupingDialog.saveRepresentedGroupings(repAd, repDbd, saveFolder);
-				localGroupAdFolder = ModelMgrUtils.getChildFolder(saveFolder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_AD, false);
-				localGroupDbdFolder = ModelMgrUtils.getChildFolder(saveFolder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_DBD, false);
-
-				getProgressMonitor().close();
-			}
-			
-			@Override
-			protected void hadSuccess() {
-				SessionMgr.getBrowser().getEntityOutline().expandByUniqueId(saveFolder.getUniqueId());
-				SessionMgr.getBrowser().getViewerManager().showEntityInMainViewer(localGroupAdFolder);
-				SessionMgr.getBrowser().getViewerManager().showEntityInSecViewer(localGroupDbdFolder);
-			}
-			
-			@Override
-			protected void hadError(Throwable error) {
-				SessionMgr.getSessionMgr().handleException(error);
-			}
-		};
-
-		IndeterminateProgressMonitor pm = new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Organizing results", "");
-		pm.setMillisToDecideToPopup(0);
-		pm.setMillisToPopup(0);
-		groupingWorker.setProgressMonitor(pm);
-		groupingWorker.execute();
 	}
 	
 	private void loadExistingCrossSimulations() {
@@ -504,6 +413,12 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	}
 
 	private void setRefreshing(final boolean refreshing) {
+		if (refreshing) {
+			log.info("Enabling auto refresh");
+		}
+		else {
+			log.info("Disabling auto refresh");
+		}
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
@@ -516,6 +431,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 					refreshTimer = new Timer(REFRESH_DELAY, new ActionListener() {
 						@Override
 						public void actionPerformed(ActionEvent e) {
+							
+							log.info("Waiting for {} task(s)",runningTasks.size());
 							
 							synchronized (runningTasks) {
 								if (runningTasks.isEmpty()) {
@@ -543,7 +460,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 								}
 								
 								if (!doneTasks.isEmpty()) {
-									crossesViewer.refresh();
+									// Some tasks were completed in this iteration. Refresh the viewer to get the images.
+									crossesViewer.totalRefresh();
 								}
 								
 								for(Long doneTaskId : doneTasks) {
@@ -578,6 +496,9 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	@Override
 	public void refresh() {
 		
+		MAASearchDialog maaSearchDialog = SessionMgr.getSessionMgr().getActiveBrowser().getMAASearchDialog();
+		maaSearchButton.setVisible(maaSearchDialog!=null && maaSearchDialog.isAccessible());
+		
 		final IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getMainViewer(IconDemoPanel.class);
 		final IconDemoPanel secViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getSecViewer(IconDemoPanel.class); 
 		
@@ -590,9 +511,9 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			protected void doStuff() throws Exception {
 				
 				for(Entity entity : ModelMgr.getModelMgr().getCommonRootEntities()) {
-					if (FOLDER_NAME_SPLIT_PICKING.equals(entity.getName())) {
+					if (FOLDER_NAME_SPLIT_PICKING.equals(entity.getName()) && ModelMgrUtils.isOwner(entity)) {
 						splitPickingFolderEntity = entity;
-						ModelMgrUtils.loadLazyEntity(entity, false);
+						ModelMgr.getModelMgr().loadLazyEntity(entity, false);
 					}
 				}
 				
@@ -605,11 +526,13 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			protected void hadSuccess() {
 
 				splitPickingFolder = new RootedEntity(splitPickingFolderEntity);
-				expandEntityOutline(splitPickingFolder.getUniqueId());
-
-				SwingUtilities.invokeLater(new Runnable() {
+				
+				SessionMgr.getBrowser().getEntityOutline().refresh(true, new Callable<Void>() {
 					@Override
-					public void run() {		
+					public Void call() throws Exception {
+
+						expandEntityOutline(splitPickingFolder.getUniqueId());
+						
 						final Long lastWorkingFolderId = (Long)SessionMgr.getSessionMgr().getModelProperty(LAST_WORKING_FOLDER_ID_PROPERTY);
 						if (lastWorkingFolderId!=null) {
 							for(EntityData childEd : splitPickingFolderEntity.getEntityData()) {
@@ -621,29 +544,32 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 							}
 						}
 						
-						if (resultFolderEntityData==null) return;
-						setWorkingFolderEntity(resultFolderEntityData);
+						if (resultFolderEntityData!=null) {
+							setWorkingFolderEntity(resultFolderEntityData);
+							
+							// Refresh the image viewer
+							crossesViewer.refresh();	
+
+							// Resize the viewers
+							SwingUtilities.invokeLater(new Runnable() {
+								@Override
+								public void run() {
+									// Resize viewers
+									SessionMgr.getBrowser().getCenterRightHorizontalSplitPane().setDividerLocation(0.66);
+									SessionMgr.getBrowser().getViewerManager().getViewerContainer().getMainSplitPane().setDividerLocation(0.5);
+									// Resize images to 1 per row		
+									int fullWidth = SessionMgr.getBrowser().getViewerManager().getViewerContainer().getWidth();
+									int padding = 100;
+									mainViewer.getToolbar().getImageSizeSlider().setValue((int)((double)fullWidth/2-padding));
+									secViewer.getToolbar().getImageSizeSlider().setValue((int)((double)fullWidth/2-padding));
+									crossesViewer.getToolbar().getImageSizeSlider().setValue(crossesViewer.getWidth()-padding);		
+								}
+							});
+						}
 						
-						SessionMgr.getBrowser().getCenterRightHorizontalSplitPane().setDividerLocation(0.66);
-						SessionMgr.getBrowser().getViewerManager().getViewerContainer().getMainSplitPane().setDividerLocation(0.5);
-						
-						// Refresh the image viewer
-						crossesViewer.refresh(new Callable<Void>() {
-							@Override
-							public Void call() throws Exception {
-								// Resize images to 1 per row		
-								int fullWidth = SessionMgr.getBrowser().getViewerManager().getViewerContainer().getWidth();
-								int padding = 100;
-								mainViewer.getToolbar().getImageSizeSlider().setValue((int)((double)fullWidth/2-padding));
-								secViewer.getToolbar().getImageSizeSlider().setValue((int)((double)fullWidth/2-padding));
-								crossesViewer.getToolbar().getImageSizeSlider().setValue(crossesViewer.getWidth()-padding);		
-								return null;
-							}
-						});		
+						return null;
 					}
-				});
-				
-				
+				});	
 			}
 			
 			@Override
@@ -654,6 +580,17 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		refreshWorker.execute();
 	}
 
+	@Override
+	public void totalRefresh() {
+		// TODO: implement this with invalidate
+		refresh();
+	}
+	
+	@Subscribe 
+	public void entityInvalidated(EntityInvalidationEvent event) {
+		// TODO: implement this to update the entities	
+	}
+	
 	private void showPrefixEditingDialog() {
 
 		// Add button clicked
@@ -667,6 +604,78 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		crossPrefix = prefix;
 		prefixButton.setText(crossPrefix);
 		SessionMgr.getSessionMgr().setModelProperty(CROSS_PREFIX_PROPERTY, crossPrefix);
+	}
+
+	private void createLocalGrouping(final List<Long> sampleIds, final String saveFolderName) {
+		
+		if (sampleIds==null ||  sampleIds.isEmpty()) return;
+		log.info("Creating split groups for "+sampleIds.size()+" samples");
+		
+		SimpleWorker groupingWorker = new SimpleWorker() {
+
+			private RootedEntity saveFolder;
+			private RootedEntity localGroupAdFolder;
+			private RootedEntity localGroupDbdFolder;
+			
+			@Override
+			protected void doStuff() throws Exception {
+				setProgress(1);
+
+				getProgressMonitor().setNote("Loading data");
+				
+				List<Entity> samples = ModelMgr.getModelMgr().getEntityByIds(sampleIds);
+				
+				getProgressMonitor().setNote("Getting representative samples");
+				
+				log.info("Getting represented fly lines...");
+				List<Entity> represented = getRepresentedFlylines(samples);
+				log.info("Got {} represented fly lines ",represented.size());
+
+				getProgressMonitor().setNote("Grouping representative samples");
+				
+				List<Entity> repAd = new ArrayList<Entity>();
+				List<Entity> repDbd = new ArrayList<Entity>();
+				for(Entity rep : represented) {
+					String splitPart = rep.getValueByAttributeName(EntityConstants.ATTRIBUTE_SPLIT_PART);
+					if ("AD".equals(splitPart)) {
+						repAd.add(rep);
+					}
+					else if ("DBD".equals(splitPart)) {
+						repDbd.add(rep);
+					}
+				}
+
+				getProgressMonitor().setNote("Saving split lines");
+				
+				Entity saveFolderEntity = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, saveFolderName);
+				EntityData saveFolderEd = ModelMgr.getModelMgr().addEntityToParent(searchResultsFolder.getEntity(), saveFolderEntity);
+				saveFolder = searchResultsFolder.getChild(saveFolderEd);
+				
+				saveRepresentedGroupings(repAd, repDbd, saveFolder);
+				localGroupAdFolder = ModelMgrUtils.getChildFolder(saveFolder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_AD, false);
+				localGroupDbdFolder = ModelMgrUtils.getChildFolder(saveFolder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_DBD, false);
+
+				getProgressMonitor().close();
+			}
+			
+			@Override
+			protected void hadSuccess() {
+				SessionMgr.getBrowser().getEntityOutline().expandByUniqueId(saveFolder.getUniqueId());
+				SessionMgr.getBrowser().getViewerManager().showEntityInMainViewer(localGroupAdFolder);
+				SessionMgr.getBrowser().getViewerManager().showEntityInSecViewer(localGroupDbdFolder);
+			}
+			
+			@Override
+			protected void hadError(Throwable error) {
+				SessionMgr.getSessionMgr().handleException(error);
+			}
+		};
+
+		IndeterminateProgressMonitor pm = new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Organizing results", "");
+		pm.setMillisToDecideToPopup(0);
+		pm.setMillisToPopup(0);
+		groupingWorker.setProgressMonitor(pm);
+		groupingWorker.execute();
 	}
 	
 	private void createCrosses() {
@@ -795,8 +804,8 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 							for(Entity sample2 : samples2) {
 								setProgress(i++, numCrosses+1);
 
-								ModelMgrUtils.loadLazyEntity(sample1, false);
-								ModelMgrUtils.loadLazyEntity(sample2, false);
+								ModelMgr.getModelMgr().loadLazyEntity(sample1, false);
+								ModelMgr.getModelMgr().loadLazyEntity(sample2, false);
 								
 								String crossName = createCrossName(sample1, sample2);
 								if (existingCrosses.contains(crossName)) {
@@ -916,12 +925,12 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	private String createCrossName(Entity sample1, Entity sample2) {
 
 		try {
-			ModelMgrUtils.loadLazyEntity(sample1, false);
-			ModelMgrUtils.loadLazyEntity(sample2, false);
+			ModelMgr.getModelMgr().loadLazyEntity(sample1, false);
+			ModelMgr.getModelMgr().loadLazyEntity(sample2, false);
 			
 			Entity balancedDbd = sample2.getChildByAttributeName(EntityConstants.ATTRIBUTE_BALANCED_FLYLINE);
 			if (balancedDbd != null) {
-					ModelMgrUtils.loadLazyEntity(balancedDbd, false);
+				ModelMgr.getModelMgr().loadLazyEntity(balancedDbd, false);
 					sample2 = balancedDbd;
 			}
 	
@@ -937,10 +946,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	private void setWorkingFolderEntity(final EntityData workingFolderEntityEd) {
 		
 		workingFolder = null;
-		repFolder = null;
-		splitLinesFolder = null;
-		groupAdFolder = null;
-		groupDbdFolder = null;
+		searchResultsFolder = null;
 		crossFolder = null;
 		
 		workingFolder = splitPickingFolder.getChild(workingFolderEntityEd);
@@ -949,21 +955,20 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		SimpleWorker worker = new SimpleWorker() {
 			@Override
 			protected void doStuff() throws Exception {
-				repFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_REPRESENTATIVES, true);
-				splitLinesFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_SPLIT_LINES, true);	
-				if (splitLinesFolder!=null) {
-					groupAdFolder = ModelMgrUtils.getChildFolder(splitLinesFolder, FOLDER_NAME_SPLIT_LINES_AD, true);
-					if (groupAdFolder!=null) {
-						ModelMgrUtils.refreshEntityAndChildren(groupAdFolder.getEntity());
-					}
-					groupDbdFolder = ModelMgrUtils.getChildFolder(splitLinesFolder, FOLDER_NAME_SPLIT_LINES_DBD, true);	
-					if (groupDbdFolder!=null) {
-						ModelMgrUtils.refreshEntityAndChildren(groupDbdFolder.getEntity());
+				searchResultsFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_SEARCH_RESULTS, true);
+				
+				// Load in all search results
+				ModelMgr.getModelMgr().loadLazyEntity(searchResultsFolder.getEntity(), false);
+				for(Entity searchResultFolderEntity : searchResultsFolder.getEntity().getChildren()) {
+					ModelMgr.getModelMgr().loadLazyEntity(searchResultFolderEntity, false);	
+					for(Entity domainFolderEntity : searchResultFolderEntity.getChildren()) {
+						ModelMgr.getModelMgr().loadLazyEntity(domainFolderEntity, false);	
 					}
 				}
+				
 				crossFolder = ModelMgrUtils.getChildFolder(workingFolder, FOLDER_NAME_CROSSES, true);	
 				if (crossFolder!=null) {
-					ModelMgrUtils.refreshEntityAndChildren(crossFolder.getEntity());
+					ModelMgr.getModelMgr().refreshEntityAndChildren(crossFolder.getEntity());
 				}
 			}
 			
@@ -973,33 +978,22 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				
 				SessionMgr.getSessionMgr().setModelProperty(LAST_WORKING_FOLDER_ID_PROPERTY, workingFolder.getEntity().getId());
 				
-				final IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getMainViewer(IconDemoPanel.class);
-				if (groupAdFolder==null && groupDbdFolder==null) {
-					if (repFolder!=null) {
-						expandEntityOutline(repFolder.getUniqueId());
-						mainViewer.loadEntity(repFolder);
-					}
-					else {
-						expandEntityOutline(workingFolder.getUniqueId());
-						mainViewer.clear();
-					}
-					IconDemoPanel secViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getSecViewer(IconDemoPanel.class);
-					if (secViewer!=null) {
-						secViewer.clear();
-					}
+				if (crossFolder!=null) {
+					log.info("Loading into cross viewer: {}",crossFolder.getId());
+					crossesViewer.loadEntity(crossFolder, new Callable<Void>() {
+						@Override
+						public Void call() throws Exception {
+							updateViewers();
+							return null;
+						}
+					});	
 				}
 				else {
-					loadViewers();
+					log.info("Clearing cross viewer");
+					crossesViewer.clear();
+					updateViewers();
 				}
 				
-				if (crossFolder!=null) {
-					crossesViewer.loadEntity(crossFolder);	
-				}
-				else {
-					crossesViewer.clear();
-					revalidate();
-					repaint();
-				}
 			}
 			
 			@Override
@@ -1010,28 +1004,29 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		
 		worker.execute();
 	}
+	
+	private void updateViewers() {
 
-	@Subscribe 
-	public void entityChanged(EntityChangeEvent event) {
-		Entity entity = event.getEntity();
-		if (entity.getId().equals(repFolder.getEntityId())) {
-			log.debug("Representatives folder changed: '{}'",entity.getName());
-			
-			
-			
-			
-			
+		if (splitPickingFolder==null || workingFolder==null || searchResultsFolder==null) {
+			IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getMainViewer(IconDemoPanel.class);
+			IconDemoPanel secViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getSecViewer(IconDemoPanel.class);
+			mainViewer.clear();
+			if (secViewer!=null) {
+				secViewer.clear();
+			}
+		}
+		else {
+			loadViewers();
 		}
 	}
 	
 	private void loadViewers() {
 
+		log.info("Loading viewers with working folder {}",workingFolder.getUniqueId());
+		
 		// Open the folders in the entity outline
-		if (splitLinesFolder != null) {
-			expandEntityOutline(splitLinesFolder.getUniqueId());
-		}
-		else if (repFolder != null) {
-			expandEntityOutline(repFolder.getUniqueId());
+		if (searchResultsFolder != null) {
+			expandEntityOutline(searchResultsFolder.getUniqueId());
 		}
 		else {
 			expandEntityOutline(workingFolder.getUniqueId());	
@@ -1061,15 +1056,43 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 
 			private Entity sourceEntity1 = finalEntity1;
 			private Entity sourceEntity2 = finalEntity2;
+			private RootedEntity adFolder;
+			private RootedEntity dbdFolder;
 			
 			@Override
 			protected void doStuff() throws Exception {
-				if (sourceEntity1 != null && !EntityUtils.isInitialized(sourceEntity1)) {
-					sourceEntity1 = ModelMgr.getModelMgr().getEntityById(""+sourceEntity1.getId());
+				if (sourceEntity1 != null) {
+					if (!EntityUtils.isInitialized(sourceEntity1)) {
+						sourceEntity1 = ModelMgr.getModelMgr().getEntityById(""+sourceEntity1.getId());
+					}
+					log.info("Parent line 1 is {}",sourceEntity1.getName());
+					adFolder = findDomainFolderContainingEntity(searchResultsFolder, sourceEntity1.getId(), FOLDER_NAME_SPLIT_LINES_AD);
 				}
-				if (sourceEntity2 != null && !EntityUtils.isInitialized(sourceEntity2)) {
-					sourceEntity2 = ModelMgr.getModelMgr().getEntityById(""+sourceEntity2.getId());
+				if (sourceEntity2 != null) {
+					if (!EntityUtils.isInitialized(sourceEntity2)) {
+						sourceEntity2 = ModelMgr.getModelMgr().getEntityById(""+sourceEntity2.getId());
+					}
+					log.info("Parent line 2 is {}",sourceEntity1.getName());
+					dbdFolder = findDomainFolderContainingEntity(searchResultsFolder, sourceEntity2.getId(), FOLDER_NAME_SPLIT_LINES_DBD);
 				}
+				if (adFolder==null && dbdFolder==null) {
+					log.info("No cross is selected, so selecting latest search result");
+					// Nothing is selected, so just load the last search result.
+					RootedEntity latestResult = searchResultsFolder.getLatestChildOfType(EntityConstants.TYPE_FOLDER);
+					if (latestResult==null) return;
+					adFolder = ModelMgrUtils.getChildFolder(latestResult, FOLDER_NAME_SPLIT_LINES_AD, false);
+					dbdFolder = ModelMgrUtils.getChildFolder(latestResult, FOLDER_NAME_SPLIT_LINES_DBD, false);
+				}
+			}
+			
+			private RootedEntity findDomainFolderContainingEntity(RootedEntity root, long entityId, String domainName) {
+				for(RootedEntity searchResultFolder : root.getRootedChildren()) {
+					RootedEntity domainFolder = searchResultFolder.getChildByName(domainName);
+					for(Entity flylineEntity : domainFolder.getEntity().getChildren()) {
+						if (flylineEntity.getId().equals(entityId)) return domainFolder;
+					}
+				}
+				return null;
 			}
 			
 			@Override
@@ -1077,46 +1100,34 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				final IconDemoPanel mainViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getMainViewer(IconDemoPanel.class);
 				final IconDemoPanel secViewer = (IconDemoPanel)SessionMgr.getBrowser().getViewerManager().getSecViewer(IconDemoPanel.class);
 				
-				if (groupAdFolder!=null) {
-					if (mainViewer.getContextRootedEntity()!=null && mainViewer.getContextRootedEntity().getEntityId().equals(groupAdFolder.getEntityId())) {
-						if (sourceEntity1!=null) {
-							selectAndScroll(mainViewer, sourceEntity1.getId());	
-						}
-					}
-					else {
-						mainViewer.loadEntity(groupAdFolder, new Callable<Void>() {
-							@Override
-							public Void call() throws Exception {
-								if (sourceEntity1!=null) {
-									selectAndScroll(mainViewer, sourceEntity1.getId());	
-								}
-								return null;
+				if (adFolder!=null) {
+					log.info("Got AD folder: {}",adFolder.getUniqueId());
+					SessionMgr.getBrowser().getViewerManager().showEntityInMainViewer(adFolder, new Callable<Void>() {
+						@Override
+						public Void call() throws Exception {
+							if (sourceEntity1!=null) {
+								selectAndScroll(mainViewer, sourceEntity1.getId());	
 							}
-						});
-					}
+							return null;
+						}
+					});
 
 				}
 				else {
 					mainViewer.clear();
 				}
 				
-				if (groupDbdFolder!=null) {
-					if (secViewer.getContextRootedEntity()!=null && secViewer.getContextRootedEntity().getEntityId().equals(groupDbdFolder.getEntityId())) {
-						if (sourceEntity2!=null) {
-							selectAndScroll(secViewer, sourceEntity2.getId());	
-						}
-					}
-					else {
-						secViewer.loadEntity(groupDbdFolder, new Callable<Void>() {
-							@Override
-							public Void call() throws Exception {
-								if (sourceEntity2!=null) {
-									selectAndScroll(secViewer, sourceEntity2.getId());	
-								}
-								return null;
+				if (dbdFolder!=null) {
+					log.info("Got DBD folder: {}",adFolder.getUniqueId());
+					SessionMgr.getBrowser().getViewerManager().showEntityInSecViewer(dbdFolder, new Callable<Void>() {
+						@Override
+						public Void call() throws Exception {
+							if (sourceEntity2!=null) {
+								selectAndScroll(secViewer, sourceEntity2.getId());	
 							}
-						});
-					}
+							return null;
+						}
+					});
 				}
 				else {
 					secViewer.clear();
@@ -1185,7 +1196,60 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 		
 		chooseFolderMenu.show(resultFolderButton, 0, resultFolderButton.getHeight());
 	}
-	
+
+    public List<Entity> getRepresentedFlylines(List<Entity> screenSamples) throws Exception {
+
+    	List<Long> entityIds = new ArrayList<Long>();
+    	for(Entity screenSample : screenSamples) {
+    		Set<Long> parentIds = ModelMgr.getModelMgr().getParentIdsForAttribute(screenSample.getId(), EntityConstants.ATTRIBUTE_REPRESENTATIVE_SAMPLE);
+    		if (!parentIds.isEmpty()) {
+    			entityIds.addAll(parentIds);
+    		}
+    	}
+    	
+    	return ModelMgr.getModelMgr().getEntityByIds(entityIds);
+    }
+    
+    public void saveRepresentedGroupings(List<Entity> representedAd, List<Entity> representedDbd, RootedEntity folder) throws Exception {
+
+    	RootedEntity groupAdFolder = ModelMgrUtils.getChildFolder(folder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_AD, true);
+    	RootedEntity groupDbdFolder = ModelMgrUtils.getChildFolder(folder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_DBD, true);
+
+    	groupAdFolder.getEntityData().setOrderIndex(0);
+    	groupDbdFolder.getEntityData().setOrderIndex(1);
+    	ModelMgr.getModelMgr().saveOrUpdateEntityData(groupAdFolder.getEntityData());
+    	ModelMgr.getModelMgr().saveOrUpdateEntityData(groupDbdFolder.getEntityData());
+    	ModelMgrUtils.fixOrderIndicies(folder.getEntity(),new Comparator<EntityData>() {
+			@Override
+			public int compare(EntityData o1, EntityData o2) {
+				return ComparisonChain.start()
+				.compare(o1.getOrderIndex(), o2.getOrderIndex(), Ordering.natural().nullsLast())
+					.compare(o1.getId(), o2.getId()).result();
+			}
+		});
+    	
+    	log.info("Saving {} represented AD lines to {}",representedAd.size(),groupAdFolder.getId());
+    	log.info("Saving {} represented DBD lines to {}",representedDbd.size(),groupDbdFolder.getId());
+    	
+    	List<Long> newSplitAdIds = EntityUtils.getEntityIdList(representedAd);
+    	List<Long> newSplitDbdIds = EntityUtils.getEntityIdList(representedDbd);
+    	
+        // Remove current 
+    	ModelMgrUtils.removeAllChildren(groupAdFolder.getEntity());
+    	ModelMgrUtils.removeAllChildren(groupDbdFolder.getEntity());
+        
+        // Add new 
+    	if (!newSplitAdIds.isEmpty()) {
+    		ModelMgr.getModelMgr().addChildren(groupAdFolder.getEntity().getId(), newSplitAdIds, EntityConstants.ATTRIBUTE_ENTITY);
+    	}
+    	if (!newSplitDbdIds.isEmpty()) {
+    		ModelMgr.getModelMgr().addChildren(groupDbdFolder.getEntity().getId(), newSplitDbdIds, EntityConstants.ATTRIBUTE_ENTITY);
+    	}
+    
+    	ModelMgr.getModelMgr().refreshEntityAndChildren(groupAdFolder.getEntity());
+    	ModelMgr.getModelMgr().refreshEntityAndChildren(groupDbdFolder.getEntity());
+    }
+    
     protected synchronized void exportResults() {
 
         JFileChooser chooser = new JFileChooser();
@@ -1246,7 +1310,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 				long numProcessed = 0;
 				for(RootedEntity crossRootedEntity : crossesViewer.getRootedEntities()) {
 					
-					ModelMgrUtils.refreshEntityAndChildren(crossRootedEntity.getEntity());
+					ModelMgr.getModelMgr().refreshEntityAndChildren(crossRootedEntity.getEntity());
 					
 					Entity crossEntity = ModelMgr.getModelMgr().getEntityTree(crossRootedEntity.getEntity().getId());
 					
@@ -1268,17 +1332,17 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 						}
 						
 						if (flylineAd == null) {
-							System.out.println("Could not find AD line for screen sample "+crossEntity.getName());
+							log.warn("Could not find AD line for screen sample "+crossEntity.getName());
 							continue;
 						}
 							
 						if (flylineDbd == null) {
-							System.out.println("Could not find DBD line for screen sample "+crossEntity.getName());
+							log.warn("Could not find DBD line for screen sample "+crossEntity.getName());
 							continue;
 						}
 
-						ModelMgrUtils.loadLazyEntity(flylineAd, false);
-						ModelMgrUtils.loadLazyEntity(flylineDbd, false);
+						ModelMgr.getModelMgr().loadLazyEntity(flylineAd, false);
+						ModelMgr.getModelMgr().loadLazyEntity(flylineDbd, false);
 						
 						String crossLabel = crossEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_CROSS_LABEL);
 						Entity balancedAd = flylineAd.getChildByAttributeName(EntityConstants.ATTRIBUTE_BALANCED_FLYLINE);
@@ -1368,35 +1432,11 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 	}
 
 	public RootedEntity getRepFolder() {
-		return repFolder;
+		return searchResultsFolder;
 	}
 
 	public void setRepFolder(RootedEntity repFolder) {
-		this.repFolder = repFolder;
-	}
-
-	public RootedEntity getSplitLinesFolder() {
-		return splitLinesFolder;
-	}
-
-	public void setSplitLinesFolder(RootedEntity splitLinesFolder) {
-		this.splitLinesFolder = splitLinesFolder;
-	}
-
-	public RootedEntity getGroupAdFolder() {
-		return groupAdFolder;
-	}
-
-	public void setGroupAdFolder(RootedEntity groupAdFolder) {
-		this.groupAdFolder = groupAdFolder;
-	}
-
-	public RootedEntity getGroupDbdFolder() {
-		return groupDbdFolder;
-	}
-
-	public void setGroupDbdFolder(RootedEntity groupDbdFolder) {
-		this.groupDbdFolder = groupDbdFolder;
+		this.searchResultsFolder = repFolder;
 	}
 
 	public RootedEntity getCrossFolder() {

@@ -6,6 +6,8 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.compute.api.support.SolrResults;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * One page of results, treated as a unit for performance reasons.  
@@ -13,6 +15,8 @@ import org.janelia.it.jacs.model.entity.Entity;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ResultPage {
+	
+	private static final Logger log = LoggerFactory.getLogger(ResultPage.class);
 	
 	private SolrResults solrResults;
 	private Map<Long,Entity> resultEntityById = new HashMap<Long,Entity>();
@@ -79,7 +83,7 @@ public class ResultPage {
 				resultEntities.add(resultEntity);
 			}
 			else {
-				System.out.println("WARNING: cannot find result entity "+mappedId.getOriginalId());
+				log.warn("Cannot find result entity "+mappedId.getOriginalId());
 			}
 		}
 
@@ -94,7 +98,7 @@ public class ResultPage {
 				mappedEntities.add(mappedEntity);
 			}
 			else {
-				System.out.println("WARNING: cannot find mapped entity "+mappedId.getMappedId());
+				log.warn("Cannot find mapped entity "+mappedId.getMappedId());
 			}
 		}
 		

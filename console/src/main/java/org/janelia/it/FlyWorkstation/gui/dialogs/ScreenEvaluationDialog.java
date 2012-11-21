@@ -28,6 +28,8 @@ import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.screen.ScreenEvalConstants;
 import org.janelia.it.jacs.shared.screen.ScreenEvalUtils;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A dialog that may do something in the future.
@@ -38,7 +40,9 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ScreenEvaluationDialog extends ModalDialog implements Accessibility {
-
+	
+	private static final Logger log = LoggerFactory.getLogger(ScreenEvaluationDialog.class);
+	
 	private static final String SCREEN_EVAL_ORGANIZATION_PROPERTY = "ScreenEvaluationDialog.OrganizationBehavior";
 	
 	private JRadioButton askAfterNavigationRadioButton;
@@ -178,7 +182,7 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 					return;
 				}
 				
-				ModelMgrUtils.loadLazyEntity(topLevelFolder, false);
+				ModelMgr.getModelMgr().loadLazyEntity(topLevelFolder, false);
 				for(Entity child : topLevelFolder.getOrderedChildren()) {
 					compEntityMap.put(child.getName(), child);
 				}
@@ -306,7 +310,7 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 	
 	private void organizeEntity(final Long entityId) throws Exception {
 		
-		System.out.println("ScreenEvaluationDialog.organizeEntity: "+entityId);
+		log.info("ScreenEvaluationDialog.organizeEntity: "+entityId);
 		
 		// TODO: should have a centralized way to do this
 		Annotations annotations = new Annotations();
@@ -364,8 +368,8 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 			
 			String oldKey = ScreenEvalUtils.getKey(compartment, ci, cd);
 			String newKey = ScreenEvalUtils.getKey(compartment, i, d);
-			System.out.println("  Old: "+oldKey);
-			System.out.println("  New: "+newKey);
+			log.info("  Old: "+oldKey);
+			log.info("  New: "+newKey);
 
 			if (!oldKey.equals(newKey) || currEds.size()>1) {
 				Entity distNew = folderCache.get(newKey);
@@ -379,27 +383,27 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 		Map<Long,String> distCache = reverseFolderCache.get(compartment);
 		
 		if (distCache==null) {
-			System.out.println("  Caching folders for "+compartment);
+			log.info("  Caching folders for "+compartment);
 			distCache = new HashMap<Long,String>();
 
 			Entity compartmentEntity = compEntityMap.get(compartment);
 			
 			if (!EntityUtils.areLoaded(compartmentEntity.getEntityData())) {
-				ModelMgrUtils.loadLazyEntity(compartmentEntity, false);	
+				ModelMgr.getModelMgr().loadLazyEntity(compartmentEntity, false);	
 			}
 			
 			for(Entity intChild : compartmentEntity.getChildren()) {
 				int i = ScreenEvalUtils.getValueFromFolderName(intChild);
 				
 				if (!EntityUtils.areLoaded(intChild.getEntityData())) {
-					ModelMgrUtils.loadLazyEntity(intChild, false);
+					ModelMgr.getModelMgr().loadLazyEntity(intChild, false);
 				}
 				
 				for(Entity distChild : intChild.getChildren()) {
 					int d = ScreenEvalUtils.getValueFromFolderName(distChild);
 					String key = ScreenEvalUtils.getKey(compartment, i, d);
 					distCache.put(distChild.getId(), key);
-					System.out.println("    "+key+" = "+distChild.getId());
+					log.info("    "+key+" = "+distChild.getId());
 					folderCache.put(key, distChild);
 				}
 			}
@@ -416,11 +420,11 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 		List<Long> childrenIds = new ArrayList<Long>();
 		childrenIds.add(entityId);
 		modelMgr.addChildren(targetFolder.getId(), childrenIds, EntityConstants.ATTRIBUTE_ENTITY);
-		System.out.println("added to folder "+targetFolder.getName()+" id="+targetFolder.getId());
+		log.info("added to folder "+targetFolder.getName()+" id="+targetFolder.getId());
 		// Remove from old folders
 		if (currEds!=null) {
 			for(EntityData currEd : currEds) {
-				System.out.println("deleted from folder "+currEd.getParentEntity().getName()+", ed.id="+currEd.getId());
+				log.info("deleted from folder "+currEd.getParentEntity().getName()+", ed.id="+currEd.getId());
 				modelMgr.removeEntityData(currEd);
 			}
 		}

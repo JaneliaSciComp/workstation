@@ -1,5 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
+import java.util.List;
+import java.util.concurrent.Callable;
+
+import javax.swing.JOptionPane;
+import javax.swing.ProgressMonitor;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
@@ -12,10 +18,8 @@ import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.types.*;
 import org.janelia.it.jacs.model.ontology.types.Enum;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-
-import javax.swing.*;
-import java.util.List;
-import java.util.concurrent.Callable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This action creates and saves an annotation, and adds a corresponding tag to the currently selected item in an IconDemoPanel.
@@ -23,6 +27,8 @@ import java.util.concurrent.Callable;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class AnnotateAction extends OntologyElementAction {
+	
+	private static final Logger log = LoggerFactory.getLogger(AnnotateAction.class);
 	
     Callable<Void> doSuccess = null;
 
@@ -40,7 +46,7 @@ public class AnnotateAction extends OntologyElementAction {
         
         if (selectedEntities.isEmpty()) {
             // Cannot annotate nothing
-            System.out.println("AnnotateAction called without an entity being selected");
+            log.warn("AnnotateAction called without an entity being selected");
             return;
         }
 
@@ -164,6 +170,6 @@ public class AnnotateAction extends OntologyElementAction {
         		sessionId, targetEntity.getId(), keyEntityId, keyString, valueEntityId, valueString);
 
         Entity annotationEntity = ModelMgr.getModelMgr().createOntologyAnnotation(annotation);
-        System.out.println("Saved annotation as " + annotationEntity.getId());
+        log.info("Saved annotation as " + annotationEntity.getId());
     }
 }

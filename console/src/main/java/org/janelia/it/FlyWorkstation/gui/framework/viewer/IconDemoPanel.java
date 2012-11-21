@@ -21,6 +21,7 @@ import javax.swing.*;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChangeEvent;
+import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityRemoveEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
@@ -538,19 +539,23 @@ public class IconDemoPanel extends Viewer {
 	@Subscribe 
 	public void entityChanged(EntityChangeEvent event) {
 		Entity entity = event.getEntity();
-		if (contextRootedEntity==null) return;
+		if (contextRootedEntity==null) {
+			return;
+		}
 		if (contextRootedEntity.getEntity().getId().equals(entity.getId())) {
-			refresh();	
+			log.debug("({}) Reloading because context entity was changed: '{}'",getSelectionCategory(),entity.getName());	
+			loadEntity(contextRootedEntity, null);	
 		}
 		else {
 			for(AnnotatedImageButton button : imagesPanel.getButtonsByEntityId(entity.getId())) {
+				log.debug("({}) Refreshing button because entity was changed: '{}'",getSelectionCategory(),entity.getName());	
+				
 				RootedEntity rootedEntity = button.getRootedEntity();
 				if (rootedEntity != null) {
-
 					Entity buttonEntity = rootedEntity.getEntity();
 					if (entity!=buttonEntity) {
-						log.warn("IconDemoPanel: Instance mismatch: "+entity.getName()+
-			    				" (cached="+System.identityHashCode(entity)+") vs (this="+System.identityHashCode(buttonEntity)+")");
+						log.warn("({}) entityChanged: Instance mismatch: "+entity.getName()+
+			    				" (cached="+System.identityHashCode(entity)+") vs (this="+System.identityHashCode(buttonEntity)+")",getSelectionCategory());
 						rootedEntity.setEntity(entity);
 					}
 					
@@ -577,7 +582,32 @@ public class IconDemoPanel extends Viewer {
 			}	
 		}
 	}
-	
+
+	@Subscribe 
+	public void entityInvalidated(EntityInvalidationEvent event) {
+		
+		if (contextRootedEntity==null) return;
+		boolean affected = false;
+		for (Entity entity : event.getInvalidatedEntities()) {
+			if (contextRootedEntity.getEntity()!=null && contextRootedEntity.getEntityId().equals(entity.getId())) {
+				affected = true;
+				break;
+			}
+			else {
+				for(final RootedEntity rootedEntity : new ArrayList<RootedEntity>(pageRootedEntities)) {
+					if (rootedEntity.getEntityId().equals(entity.getId())) {
+						affected = true;
+						break;
+					}
+				}	
+				if (affected) break;
+			}
+		}
+		if (affected) {
+			log.debug("({}) Some entities were invalidated so we're refreshing the viewer", getSelectionCategory());	
+			refresh(false, null);
+		}
+	}
 	
 	protected IconDemoToolbar createToolbar() {
 
@@ -604,7 +634,7 @@ public class IconDemoPanel extends Viewer {
 			}
 
 			protected void refresh() {
-				IconDemoPanel.this.refresh();
+				IconDemoPanel.this.totalRefresh();
 			}
 
 			protected void showTitlesButtonPressed() {
@@ -794,13 +824,16 @@ public class IconDemoPanel extends Viewer {
 	public void loadEntity(RootedEntity rootedEntity) {
 		loadEntity(rootedEntity, null);
 	}
-	
+
+	@Override
 	public synchronized void loadEntity(RootedEntity rootedEntity, final Callable<Void> success) {
 		
 		this.contextRootedEntity = rootedEntity;
 		if (contextRootedEntity==null) return;
 		
 		Entity entity = contextRootedEntity.getEntity();
+
+		log.debug("loadEntity {} (@{})",entity.getName(),System.identityHashCode(entity));
 		
 		List<EntityData> eds = entity.getOrderedEntityData();
 		List<EntityData> children = new ArrayList<EntityData>();
@@ -884,12 +917,12 @@ public class IconDemoPanel extends Viewer {
 			protected void doStuff() throws Exception {
 				for (RootedEntity rootedEntity : pageEntities) {
 					if (!EntityUtils.isInitialized(rootedEntity.getEntity())) {
-						System.out.println("Warning: had to load entity "+rootedEntity.getEntity().getId());
+						log.warn("Had to load entity "+rootedEntity.getEntity().getId());
 						rootedEntity.getEntityData().setChildEntity(ModelMgr.getModelMgr().getEntityById(rootedEntity.getEntity().getId()+""));
 					}
 					EntityData defaultImageEd = rootedEntity.getEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
 					if (defaultImageEd!= null && defaultImageEd.getValue() == null && defaultImageEd.getChildEntity()!=null) {
-						System.out.println("Warning: had to load default image "+rootedEntity.getEntity().getName());
+						log.warn("Had to load default image "+rootedEntity.getEntity().getName());
 						defaultImageEd.setChildEntity(ModelMgr.getModelMgr().getEntityById(defaultImageEd.getChildEntity().getId() + ""));
 					}
 					loadedRootedEntities.add(rootedEntity);
@@ -950,7 +983,7 @@ public class IconDemoPanel extends Viewer {
 			throw new RuntimeException("IconDemoPanel.entityLoadDone called outside of EDT");
 
 		if (getRootedEntities()==null) {
-			System.out.println("Warning: rooted entity list is null upon calling entityLoadDone");
+			log.warn("Rooted entity list is null upon calling entityLoadDone");
 			return;
 		}
 		
@@ -1102,15 +1135,37 @@ public class IconDemoPanel extends Viewer {
 		}
 
 	}
-	
+
 	@Override
 	public void refresh() {
-		refresh(null);
+		refresh(false, null);
+	}
+
+	@Override
+	public void totalRefresh() {
+		refresh(true, null);
+	}
+
+	public void refresh(final Callable<Void> successCallback) {
+		refresh(false, successCallback);
 	}
 	
-	public void refresh(final Callable<Void> successCallback) {
-
+	public void totalRefresh(final Callable<Void> successCallback) {
+		refresh(true, successCallback);
+	}
+	
+	private AtomicBoolean refreshInProgress = new AtomicBoolean(false);
+	
+	public void refresh(final boolean invalidateCache, final Callable<Void> successCallback) {
+		
 		if (contextRootedEntity==null) return;
+
+		if (refreshInProgress.getAndSet(true)) {
+			log.debug("Skipping refresh, since there is one already in progress");
+			return;
+		}
+		
+		log.debug("Starting a refresh");
 		
 		final List<String> selectedIds = new ArrayList<String>(ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory()));
 		final Callable<Void> success = new Callable<Void>() {
@@ -1133,33 +1188,39 @@ public class IconDemoPanel extends Viewer {
 			RootedEntity rootedEntity = contextRootedEntity;
 			
 			protected void doStuff() throws Exception {
-				Entity buttonEntity = rootedEntity.getEntity();
-				Entity entity = ModelMgr.getModelMgr().refreshEntity(rootedEntity.getEntity());
-				if (entity!=buttonEntity) {
-					log.warn("IconDemoPanel: Instance mismatch: "+entity.getName()+
-		    				" (cached="+System.identityHashCode(entity)+") vs (this="+System.identityHashCode(buttonEntity)+")");
-					rootedEntity.setEntity(entity);
+				if (invalidateCache) {
+					ModelMgr.getModelMgr().invalidateCache(rootedEntity.getEntity(), true);
 				}
+				Entity entity = ModelMgr.getModelMgr().getEntityAndChildren(rootedEntity.getEntity().getId());
+				rootedEntity.setEntity(entity);
 			}
 
 			protected void hadSuccess() {
-				if (rootedEntity.getEntity()==null) {
-					clear();
-					if (success!=null) {
-						try {
-							success.call();
+				SwingUtilities.invokeLater(new Runnable() {
+					@Override
+					public void run() {
+						if (rootedEntity.getEntity()==null) {
+							clear();
+							if (success!=null) {
+								try {
+									success.call();
+								}
+								catch (Exception e) {
+									hadError(e);
+								}
+							}
 						}
-						catch (Exception e) {
-							hadError(e);
+						else {
+							loadEntity(rootedEntity, success);	
 						}
+						refreshInProgress.set(false);
+						log.debug("Refresh complete");
 					}
-				}
-				else {
-					loadEntity(rootedEntity, success);	
-				}
+				});
 			}
 
 			protected void hadError(Throwable error) {
+				refreshInProgress.set(false);
 				SessionMgr.getSessionMgr().handleException(error);
 			}
 		};
@@ -1168,22 +1229,26 @@ public class IconDemoPanel extends Viewer {
 	}
 
 	public synchronized void clear() {
+
+		// TODO: move this to the ViewerPane
+		
 		this.contextRootedEntity = null;
 		this.pageRootedEntities = null;
 		this.pageRootedEntityMap = null;
 		this.entityMap = null;
 		
-		getViewerPane().setTitle("");
+		getViewerPane().setTitle(" ");
 		removeAll();
 		add(splashPanel, BorderLayout.CENTER);
 		
-		revalidate();
-		repaint();
+		getViewerPane().revalidate();
+		getViewerPane().repaint();
 	}
 	
 	public void close() {
 		SessionMgr.getSessionMgr().removeSessionModelListener(sessionModelListener);
 		ModelMgr.getModelMgr().removeModelMgrObserver(modelMgrObserver);
+		ModelMgr.getModelMgr().unregisterOnEventBus(this);
 	}
 
 	public synchronized void showImagePanel() {
@@ -1338,4 +1403,13 @@ public class IconDemoPanel extends Viewer {
 		}
 		return null;
 	}
+
+	@Override	
+	public void setAsActive() {		
+		super.setAsActive();
+		if (contextRootedEntity!=null) {
+			ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, contextRootedEntity.getId(), true);
+		}
+	}
+	
 }

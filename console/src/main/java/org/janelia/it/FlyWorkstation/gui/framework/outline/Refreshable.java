@@ -1,11 +1,19 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 /**
- * Some that can be freshed and refreshed ad infinitum.
+ * Something that can be refreshed.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public interface Refreshable {
 
+	/**
+	 * Refresh the display.
+	 */
 	public void refresh();
+	
+	/**
+	 * Refresh the display with the latest data from the database.
+	 */
+	public void totalRefresh();
 }

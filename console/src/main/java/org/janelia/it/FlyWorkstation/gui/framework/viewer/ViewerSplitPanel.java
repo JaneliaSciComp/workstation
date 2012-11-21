@@ -40,7 +40,7 @@ public class ViewerSplitPanel extends JPanel implements ViewerContainer {
 		focusBorder = BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(focusColor, 1), BorderFactory.createLineBorder(focusColor, 1));
 		
 		mainViewerPane = new ViewerPane(this, EntitySelectionModel.CATEGORY_MAIN_VIEW, false);
-		mainViewerPane.setTitle("");
+		mainViewerPane.setTitle(" ");
         add(mainViewerPane, BorderLayout.CENTER);
         
 		secViewerPane = new ViewerPane(this, EntitySelectionModel.CATEGORY_SEC_VIEW, true) {
@@ -49,7 +49,7 @@ public class ViewerSplitPanel extends JPanel implements ViewerContainer {
 				setSecViewerVisible(false);
 			}
 		};
-		secViewerPane.setTitle("");
+		secViewerPane.setTitle(" ");
 		
 		this.mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false);
 		mainSplitPane.setOneTouchExpandable(false);

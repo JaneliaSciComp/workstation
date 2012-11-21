@@ -1,10 +1,10 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import org.apache.log4j.Logger;
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -57,7 +57,7 @@ public class EntityFilenameFetcher {
             @Override
             protected void doStuff() throws Exception {
                 if (entity != null  &&  EntityUtils.isInitialized(entity)) {
-                    ModelMgrUtils.loadLazyEntity(entity, false);
+                	ModelMgr.getModelMgr().loadLazyEntity(entity, false);
                 }
             }
 

@@ -510,7 +510,7 @@ public class EntityContextMenu extends JPopupMenu {
 		}
 		
 		RootedEntity workingFolder = new RootedEntity(commonRoot);
-		RootedEntity splitLinesFolder = ModelMgrUtils.getChildFolder(workingFolder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES, true);
+		RootedEntity splitLinesFolder = ModelMgrUtils.getChildFolder(workingFolder, SplitPickingPanel.FOLDER_NAME_SEARCH_RESULTS, true);
 		
 		if (!ads.isEmpty()) {
 			RootedEntity adFolder = ModelMgrUtils.getChildFolder(splitLinesFolder, SplitPickingPanel.FOLDER_NAME_SPLIT_LINES_AD, true);
@@ -547,7 +547,7 @@ public class EntityContextMenu extends JPopupMenu {
 						}
 						@Override
 						protected void hadSuccess() {
-							SessionMgr.getBrowser().getEntityOutline().refresh(true, null);
+							SessionMgr.getBrowser().getEntityOutline().totalRefresh(true, null);
 						}
 						@Override
 						protected void hadError(Throwable error) {
@@ -586,7 +586,7 @@ public class EntityContextMenu extends JPopupMenu {
 					@Override
 					protected void hadSuccess() {
 						// Update Tree UI
-						SessionMgr.getBrowser().getEntityOutline().refresh(true, null);
+						SessionMgr.getBrowser().getEntityOutline().totalRefresh(true, null);
 					}
 					@Override
 					protected void hadError(Throwable error) {
@@ -630,7 +630,7 @@ public class EntityContextMenu extends JPopupMenu {
 						}
 						@Override
 						protected void hadSuccess() {
-							SessionMgr.getBrowser().getEntityOutline().refresh(true, null);
+							SessionMgr.getBrowser().getEntityOutline().totalRefresh(true, null);
 						}
 						@Override
 						protected void hadError(Throwable error) {
@@ -673,7 +673,7 @@ public class EntityContextMenu extends JPopupMenu {
 					@Override
 					protected void hadSuccess() {
 						// Update Tree UI
-						SessionMgr.getBrowser().getEntityOutline().refresh(true, null);
+						SessionMgr.getBrowser().getEntityOutline().totalRefresh(true, null);
 					}
 					@Override
 					protected void hadError(Throwable error) {
@@ -861,11 +861,10 @@ public class EntityContextMenu extends JPopupMenu {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				SimpleWorker worker = new SimpleWorker() {
-					
 					@Override
 					protected void doStuff() throws Exception {
 						if (EntityUtils.isInitialized(rootedEntity.getEntity())) {
-							ModelMgrUtils.loadLazyEntity(rootedEntity.getEntity(), false);
+							ModelMgr.getModelMgr().loadLazyEntity(rootedEntity.getEntity(), false);
 						}
 					}
 					
@@ -899,7 +898,7 @@ public class EntityContextMenu extends JPopupMenu {
 					@Override
 					protected void doStuff() throws Exception {
 						if (EntityUtils.isInitialized(rootedEntity.getEntity())) {
-							ModelMgrUtils.loadLazyEntity(rootedEntity.getEntity(), false);
+							ModelMgr.getModelMgr().loadLazyEntity(rootedEntity.getEntity(), false);
 						}
 					}
 					
@@ -1132,13 +1131,16 @@ public class EntityContextMenu extends JPopupMenu {
 				final String uniqueId = rootedEntity.getUniqueId();
 				if (uniqueId == null) return;
 				
-				EntityOutline entityOutline = SessionMgr.getBrowser().getEntityOutline();
-				DefaultMutableTreeNode node = entityOutline.getNodeByUniqueId(uniqueId);
-				
-				SimpleWorker loadingWorker = new LazyTreeNodeLoader(entityOutline.getDynamicTree(), node, true) {
+				SimpleWorker loadingWorker = new SimpleWorker() {
+					private List<Entity> entities;
+					@Override
+					protected void doStuff() throws Exception {
+						ModelMgr.getModelMgr().loadLazyEntity(entity, true);
+						entities = entity.getDescendantsOfType(EntityConstants.TYPE_NEURON_FRAGMENT, true);
+					}
 
-					protected void doneLoading() {
-						List<Entity> entities = entity.getDescendantsOfType(EntityConstants.TYPE_NEURON_FRAGMENT, true);
+					@Override
+					protected void hadSuccess() {
 						browser.getAnnotationSessionPropertyDialog().showForNewSession(entity.getName(), entities);
 					}
 
