@@ -151,7 +151,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
                         String namePrefix = tmpName.substring(0,tmpName.indexOf("=")+2);
                         tag.getEntity().setName(namePrefix+value);
                         try {
-                            Entity tmpAnnotatedEntity = ModelMgr.getModelMgr().getEntityById(tag.getTargetEntityId().toString());
+                            Entity tmpAnnotatedEntity = ModelMgr.getModelMgr().getEntityById(tag.getTargetEntityId());
                             ModelMgr.getModelMgr().saveOrUpdateAnnotation(tmpAnnotatedEntity, tag.getEntity());
                         }
                         catch (Exception e1) {

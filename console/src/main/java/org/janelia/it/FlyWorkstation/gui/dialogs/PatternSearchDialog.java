@@ -396,14 +396,17 @@ public class PatternSearchDialog extends ModalDialog {
 		this.outputFolder = null;
 		this.saveFolder = null;
 		this.returnInsteadOfSaving = true;
+        quantifierLoaderWorker.execute();
 		packAndShow();
 		try {
 			List<Long> results = new ArrayList<Long>();
-			List<Long> allResults = filterResult.getSampleList();
-			if (allResults!=null) {
-				results.addAll(new LinkedHashSet<Long>(allResults));
+			if (filterResult!=null) {
+				List<Long> allResults = filterResult.getSampleList();
+				if (allResults!=null) {
+					results.addAll(new LinkedHashSet<Long>(allResults));
+				}
 			}
-			return allResults;
+			return results;
 		}
 		catch (Exception e) {
 			SessionMgr.getSessionMgr().handleException(e);

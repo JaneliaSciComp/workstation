@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
-import java.awt.*;
+import java.awt.BorderLayout;
 import java.awt.image.BufferedImage;
 
 import javax.swing.*;
@@ -8,6 +8,8 @@ import javax.swing.*;
 import org.janelia.it.FlyWorkstation.gui.dialogs.ModalDialog;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A persistent heads-up display for a synchronized image. 
@@ -16,6 +18,8 @@ import org.janelia.it.jacs.model.entity.Entity;
  */
 public class Hud extends ModalDialog {
 
+	private static final Logger log = LoggerFactory.getLogger(Hud.class);
+	
     private Entity entity;
     private boolean dirtyEntityFor3D;
 	private JLabel previewLabel;
@@ -149,6 +153,10 @@ public class Hud extends ModalDialog {
     }
 
     private void init3dGui() {
+    	if (!Mip3d.isAvailable()) {
+    		log.error("Cannot initialize 3D HUD because 3D MIP viewer is not available");
+    		return;
+    	}
         try {
             mip3d = new Mip3d();
             hud3DController = new Hud3DController(this, mip3d);
@@ -165,14 +173,14 @@ public class Hud extends ModalDialog {
         } catch ( Exception ex ) {
             // Turn off the 3d capability if exception.
             render3DCheckbox = null;
-            ex.printStackTrace();
+            log.error("Error initializing 3D HUD",ex);
         }
     }
 
     private boolean shouldRender3D() {
         boolean rtnVal = render3DCheckbox != null  &&  render3DCheckbox.isEnabled() && render3DCheckbox.isSelected();
         if ( !rtnVal ) {
-            if ( hud3DController.is3DReady()  &&  (this.previewLabel.getIcon() == null) ) {
+            if ( hud3DController != null &&  hud3DController.is3DReady()  &&  (this.previewLabel.getIcon() == null) ) {
                 rtnVal = true;
             }
         }

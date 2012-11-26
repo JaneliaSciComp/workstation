@@ -193,10 +193,9 @@ public class ErrorViewer extends Viewer {
 			RootedEntity rootedEntity = contextRootedEntity;
 			
 			protected void doStuff() throws Exception {
-				Entity entity = ModelMgr.getModelMgr().getEntityById(rootedEntity.getEntity().getId()+"");
+				Entity entity = ModelMgr.getModelMgr().getEntityById(rootedEntity.getEntity().getId());
 				if (entity==null) return;
-				ModelMgr.getModelMgr().loadLazyEntity(entity, false);
-				rootedEntity.getEntityData().setChildEntity(entity);
+				rootedEntity.setEntity(ModelMgr.getModelMgr().loadLazyEntity(entity, false));
 			}
 
 			protected void hadSuccess() {

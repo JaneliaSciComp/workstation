@@ -156,7 +156,7 @@ public class ConsoleDataServiceImpl {
 	}
 	
     public Entity getEntityById(long entityId) throws Exception {
-        return PathTranslator.translatePathsToCurrentPlatform(ModelMgr.getModelMgr().getEntityById(""+entityId));
+        return PathTranslator.translatePathsToCurrentPlatform(ModelMgr.getModelMgr().getEntityById(entityId));
     }
 
     public Entity getEntityAndChildren(long entityId) throws Exception {
@@ -171,12 +171,12 @@ public class ConsoleDataServiceImpl {
 //        return ModelMgr.getModelMgr().getEntityTypes();
 //    }
 
-    public Entity[] getParentEntityArray(long childEntityId) {
+    public Entity[] getParentEntityArray(long childEntityId) throws Exception {
     	List<Entity> list = ModelMgr.getModelMgr().getParentEntities(childEntityId);
     	return list.toArray(new Entity[0]);
     }
     
-    public EntityData[] getParentEntityDataArray(long childEntityId) {
+    public EntityData[] getParentEntityDataArray(long childEntityId) throws Exception {
     	List<EntityData> list = ModelMgr.getModelMgr().getParentEntityDatas(childEntityId);
     	return list.toArray(new EntityData[0]);
     }

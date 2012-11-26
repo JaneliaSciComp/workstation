@@ -328,7 +328,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			return;
 		}
 		
-		log.debug("Starting a whole tree refresh");
+		log.debug("Starting whole tree refresh");
 		
 		showLoadingIndicator();
 		

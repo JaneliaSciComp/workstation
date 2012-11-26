@@ -182,7 +182,7 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 					return;
 				}
 				
-				ModelMgr.getModelMgr().loadLazyEntity(topLevelFolder, false);
+				topLevelFolder = ModelMgr.getModelMgr().loadLazyEntity(topLevelFolder, false);
 				for(Entity child : topLevelFolder.getOrderedChildren()) {
 					compEntityMap.put(child.getName(), child);
 				}
@@ -340,7 +340,7 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 			int d = ScreenEvalUtils.getValueFromAnnotation(distribution);
 			
 			// The entity 
-			Entity entity = ModelMgr.getModelMgr().getEntityById(entityId+"");
+			Entity entity = ModelMgr.getModelMgr().getEntityById(entityId);
 			String compartment = entity.getName();
 			
 			List<EntityData> parentEds = ModelMgr.getModelMgr().getParentEntityDatas(entityId);
@@ -389,14 +389,14 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 			Entity compartmentEntity = compEntityMap.get(compartment);
 			
 			if (!EntityUtils.areLoaded(compartmentEntity.getEntityData())) {
-				ModelMgr.getModelMgr().loadLazyEntity(compartmentEntity, false);	
+				compartmentEntity = ModelMgr.getModelMgr().loadLazyEntity(compartmentEntity, false);	
 			}
 			
 			for(Entity intChild : compartmentEntity.getChildren()) {
 				int i = ScreenEvalUtils.getValueFromFolderName(intChild);
 				
 				if (!EntityUtils.areLoaded(intChild.getEntityData())) {
-					ModelMgr.getModelMgr().loadLazyEntity(intChild, false);
+					intChild = ModelMgr.getModelMgr().loadLazyEntity(intChild, false);
 				}
 				
 				for(Entity distChild : intChild.getChildren()) {

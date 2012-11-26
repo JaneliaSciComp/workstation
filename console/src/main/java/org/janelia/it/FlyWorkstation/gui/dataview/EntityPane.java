@@ -118,14 +118,16 @@ public class EntityPane extends JPanel {
         
         SimpleWorker childLoadTask = new SimpleWorker() {
 
+        	private Entity fullEntity;
+        	
             @Override
             protected void doStuff() throws Exception {
-            	ModelMgr.getModelMgr().loadLazyEntity(entity, false);
+            	fullEntity = ModelMgr.getModelMgr().loadLazyEntity(entity, false);
             }
 
             @Override
             protected void hadSuccess() {
-            	entityChildrenPane.showEntityData(entity.getOrderedEntityData());
+            	entityChildrenPane.showEntityData(fullEntity.getOrderedEntityData());
             }
 
             @Override
@@ -151,7 +153,7 @@ public class EntityPane extends JPanel {
             private Entity entity;
 
             protected void doStuff() throws Exception {
-                entity = ModelMgr.getModelMgr().getEntityById(""+entityId);
+                entity = ModelMgr.getModelMgr().getEntityById(entityId);
             }
 
             protected void hadSuccess() {

@@ -164,9 +164,6 @@ public class EJBEntityFacade implements EntityFacade {
     public Entity getAncestorWithType(Entity entity, String typeName) throws Exception {
     	return EJBFactory.getRemoteEntityBean().getAncestorWithType(entity, typeName);
     }
-	public List<List<Long>> searchTreeForNameStartingWith(Long rootId, String searchString) throws Exception {
-    	return EJBFactory.getRemoteEntityBean().searchTreeForNameStartingWith(rootId, searchString);
-	}
 
 	public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception {
     	EJBFactory.getRemoteEntityBean().addChildren(SessionMgr.getUsername(), parentId, childrenIds, attributeName);

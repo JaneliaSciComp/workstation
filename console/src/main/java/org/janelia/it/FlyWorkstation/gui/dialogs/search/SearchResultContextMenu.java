@@ -180,7 +180,7 @@ public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
 		
 		for (EntityData parentEd : parents) {
 			Entity parent = parentEd.getParentEntity();
-			parent = ModelMgr.getModelMgr().getEntityById(parent.getId().toString());
+			parent = ModelMgr.getModelMgr().getEntityById(parent.getId());
 			List<List<Object>> parentPaths = getRootPaths(parent, visited);
 			for(List<Object> parentPath : parentPaths) {
 				parentPath.add(parentEd);

@@ -864,7 +864,7 @@ public class EntityContextMenu extends JPopupMenu {
 					@Override
 					protected void doStuff() throws Exception {
 						if (EntityUtils.isInitialized(rootedEntity.getEntity())) {
-							ModelMgr.getModelMgr().loadLazyEntity(rootedEntity.getEntity(), false);
+							rootedEntity.setEntity(ModelMgr.getModelMgr().loadLazyEntity(rootedEntity.getEntity(), false));
 						}
 					}
 					
@@ -898,7 +898,7 @@ public class EntityContextMenu extends JPopupMenu {
 					@Override
 					protected void doStuff() throws Exception {
 						if (EntityUtils.isInitialized(rootedEntity.getEntity())) {
-							ModelMgr.getModelMgr().loadLazyEntity(rootedEntity.getEntity(), false);
+							rootedEntity.setEntity(ModelMgr.getModelMgr().loadLazyEntity(rootedEntity.getEntity(), false));
 						}
 					}
 					
@@ -1007,10 +1007,10 @@ public class EntityContextMenu extends JPopupMenu {
 	                        
                         	// TODO: in the future, this check won't be necessary, since all separations will be fast loading
                         	boolean fastLoad = false;
-                        	ModelMgr.getModelMgr().loadLazyEntity(result, false);
+                        	result = ModelMgr.getModelMgr().loadLazyEntity(result, false);
                         	for(Entity child : result.getChildren()) {
                         		if (child.getName().equals("Supporting Files")) {
-                        			ModelMgr.getModelMgr().loadLazyEntity(child, false);
+                        			child = ModelMgr.getModelMgr().loadLazyEntity(child, false);
                         			for(Entity grandchild : child.getChildren()) {
                                 		if (grandchild.getName().equals("Fast Load")) {
                                 			fastLoad = true;
@@ -1132,16 +1132,17 @@ public class EntityContextMenu extends JPopupMenu {
 				if (uniqueId == null) return;
 				
 				SimpleWorker loadingWorker = new SimpleWorker() {
+					private Entity fullEntity;
 					private List<Entity> entities;
 					@Override
 					protected void doStuff() throws Exception {
-						ModelMgr.getModelMgr().loadLazyEntity(entity, true);
-						entities = entity.getDescendantsOfType(EntityConstants.TYPE_NEURON_FRAGMENT, true);
+						fullEntity = ModelMgr.getModelMgr().loadLazyEntity(entity, true);
+						entities = fullEntity.getDescendantsOfType(EntityConstants.TYPE_NEURON_FRAGMENT, true);
 					}
 
 					@Override
 					protected void hadSuccess() {
-						browser.getAnnotationSessionPropertyDialog().showForNewSession(entity.getName(), entities);
+						browser.getAnnotationSessionPropertyDialog().showForNewSession(fullEntity.getName(), entities);
 					}
 
 					@Override

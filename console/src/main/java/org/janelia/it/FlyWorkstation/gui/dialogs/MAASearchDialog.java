@@ -184,7 +184,7 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 					return;
 				}
 
-				ModelMgr.getModelMgr().loadLazyEntity(topLevelFolder, false);
+				topLevelFolder = ModelMgr.getModelMgr().loadLazyEntity(topLevelFolder, false);
 				for (Entity child : topLevelFolder.getOrderedChildren()) {
 					compEntityMap.put(child.getName(), child);
 				}
@@ -263,10 +263,10 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 
 				for (String compartment : compEntityMap.keySet()) {
 					Entity compEntity = compEntityMap.get(compartment);
-					ModelMgr.getModelMgr().loadLazyEntity(compEntity, false);
+					compEntity = ModelMgr.getModelMgr().loadLazyEntity(compEntity, false);
 
 					for (Entity intFolder : compEntity.getOrderedChildren()) {
-						ModelMgr.getModelMgr().loadLazyEntity(intFolder, false);
+						intFolder = ModelMgr.getModelMgr().loadLazyEntity(intFolder, false);
 						int i = ScreenEvalUtils.getValueFromFolderName(intFolder);
 
 						for (Entity distFolder : intFolder.getOrderedChildren()) {
@@ -428,7 +428,7 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 
 	private List<Long> getSelectedSamples() throws Exception {
 
-		Set<Long> consensus = null;
+		Set<Long> consensus = new HashSet<Long>();
 
 		for (String compartment : compEntityMap.keySet()) {
 			Set<Long> compSampleIds = new LinkedHashSet<Long>();
@@ -474,8 +474,8 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 			}
 
 			if (compChecked) {
-				if (consensus == null) {
-					consensus = compSampleIds;
+				if (consensus.isEmpty()) {
+					consensus.addAll(compSampleIds);
 					log.info("Consensus is now: " + consensus.size());
 				} else {
 					consensus.retainAll(compSampleIds);

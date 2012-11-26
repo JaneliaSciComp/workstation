@@ -167,12 +167,12 @@ public class EntityDataPane extends JPanel {
                     Entity child = data.getChildEntity();
                     if (child != null && !EntityUtils.isInitialized(child)) {
                     	System.out.println("Fetching child "+child.getId());
-                        data.setChildEntity(ModelMgr.getModelMgr().getEntityById(child.getId().toString()));
+                        data.setChildEntity(ModelMgr.getModelMgr().getEntityById(child.getId()));
                     }
                     Entity parent = data.getParentEntity();
                     if (parent != null && !EntityUtils.isInitialized(parent)) {
                     	System.out.println("Fetching parent "+parent.getId());
-                        data.setParentEntity(ModelMgr.getModelMgr().getEntityById(parent.getId().toString()));
+                        data.setParentEntity(ModelMgr.getModelMgr().getEntityById(parent.getId()));
                     }
                     if (isCancelled()) return;
                 }

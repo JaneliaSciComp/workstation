@@ -202,7 +202,7 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
             			
     					@Override
     					protected void doStuff() throws Exception {
-    						loadedRep = ModelMgr.getModelMgr().getEntityById(rep.getId()+"");
+    						loadedRep = ModelMgr.getModelMgr().getEntityById(rep.getId());
     					}
     					
     					@Override

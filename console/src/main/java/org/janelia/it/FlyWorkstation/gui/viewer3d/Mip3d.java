@@ -1,21 +1,18 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.event.*;
+
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
-import javax.media.opengl.awt.GLCanvas;
-// import javax.media.opengl.awt.GLJPanel; // In case we need Swing version
 import javax.media.opengl.awt.GLJPanel;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Mip3d 
 //extends GLCanvas // in case heavyweight widget is preferred
@@ -23,6 +20,8 @@ extends GLJPanel // in case lightweight widget is required
 implements MouseListener, MouseMotionListener, ActionListener,
 	MouseWheelListener
 {
+	private static final Logger log = LoggerFactory.getLogger(Mip3d.class);
+	
 	private static final long serialVersionUID = 1L;
 	// setup OpenGL Version 2
 	static GLProfile profile = null;
@@ -35,9 +34,14 @@ implements MouseListener, MouseMotionListener, ActionListener,
         } catch ( Throwable th ) {
             profile = null;
             capabilities = null;
-            System.out.println("ERROR: JOGL is unavailable.  No 3D images will be shown.");
+            log.warn("JOGL is unavailable. No 3D images will be shown.");
         }
     }
+
+	public static boolean isAvailable() {
+		return capabilities!=null;
+	}
+	
 	private Point previousMousePos;
 	private boolean bMouseIsDragging = false;
 	private MipRenderer renderer;
@@ -65,7 +69,7 @@ implements MouseListener, MouseMotionListener, ActionListener,
         resetViewItem.addActionListener(this);
         popupMenu.add(resetViewItem);
     }
-
+	
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		// System.out.println("reset view");

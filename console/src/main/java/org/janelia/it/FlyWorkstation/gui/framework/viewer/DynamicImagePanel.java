@@ -269,6 +269,7 @@ public abstract class DynamicImagePanel extends JPanel {
 
     private synchronized void loadDone() {
         setImageLabel(imageLabel);
+        revalidate();
         syncToViewerState();
         loadWorker = null;
     }

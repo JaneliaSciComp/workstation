@@ -5,6 +5,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import java.util.*;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.events.*;
+import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.AnnotationFacade;
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.EntityFacade;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -48,10 +49,12 @@ public class EntityModel {
 
 	private static final Logger log = LoggerFactory.getLogger(EntityModel.class);
 	
+	private final AnnotationFacade annotationFacade;
 	private final EntityFacade entityFacade;
 	private final Cache<Long,Entity> entityCache;
 	
 	public EntityModel() {
+		this.annotationFacade = FacadeManager.getFacadeManager().getAnnotationFacade();
 		this.entityFacade = FacadeManager.getFacadeManager().getEntityFacade();
 		this.entityCache = CacheBuilder.newBuilder().softValues().build();
 	}
@@ -91,6 +94,10 @@ public class EntityModel {
 	 * @return canonical entity instance
 	 */
 	private Entity putOrUpdate(Entity entity) {
+		if (!EntityUtils.isInitialized(entity) || entity.getEntityType()==null) {
+			// This is an uninitialized entity, which cannot go into the cache
+			return null;
+		}
 		synchronized (this) {
 			Entity canonicalEntity = entityCache.getIfPresent(entity.getId());
 			if (canonicalEntity!=null) {
@@ -376,18 +383,21 @@ public class EntityModel {
      * 
      * @param entity
      * @param recurse
+     * @return canonical entity instance
      * @throws Exception
      */
-    public void loadLazyEntity(Entity entity, boolean recurse) throws Exception {
-    	log.debug("Loading lazy entity '{}' (recurse={})",entity.getName(),recurse);
+    public Entity loadLazyEntity(Entity entity, boolean recurse) throws Exception {
+    	Entity retEntity = getEntityById(entity.getId());
+    	log.debug("Loading lazy entity '{}' (recurse={})",retEntity.getName(),recurse);
         if (recurse) {
-            loadLazyEntity(entity, new HashSet<Long>());
+            loadLazyEntity(retEntity, new HashSet<Long>());
         }
         else {
-            if (!EntityUtils.areLoaded(entity.getEntityData())) {
-            	refreshChildren(entity);
+            if (!EntityUtils.areLoaded(retEntity.getEntityData())) {
+            	refreshChildren(retEntity);
             }
         }
+        return retEntity;
     }
 
     private void loadLazyEntity(Entity entity, Set<Long> visited) throws Exception {
@@ -498,10 +508,38 @@ public class EntityModel {
     	return canonicalEntity;
 	}
 	
+	/**
+	 * Generic save. Use of this method should be avoided whenever possible. 
+	 * 
+	 * @param entityData
+	 * @return EntityData with canonical parent/child entity instances
+	 * @throws Exception
+	 */
+	public EntityData saveEntityData(EntityData entityData) throws Exception {
+		EntityData savedEd = entityFacade.saveEntityDataForEntity(entityData);
+		
+		Entity parent = savedEd.getParentEntity();
+		if (parent!=null) {
+			Entity canonicalParent = entityCache.getIfPresent(parent.getId());
+			if (canonicalParent != null) {
+				savedEd.setParentEntity(canonicalParent);
+				notifyEntityChanged(canonicalParent);	
+			}
+		}
+
+		Entity child = savedEd.getChildEntity();
+		if (child!=null) {
+			Entity canonicalChild = entityCache.getIfPresent(child.getId());
+			if (canonicalChild != null) {
+				savedEd.setChildEntity(canonicalChild);
+			}
+		}
+		
+		return savedEd;
+	}
+	
     /**
      * Delete the given EntityData object.
-     * 
-     * This method may generate an EntityChanged event.
      * 
      * @param entityData
      * @throws Exception
@@ -538,7 +576,9 @@ public class EntityModel {
     	    	parent.getEntityData().remove(entityData);
     		}
     	}
-		notifyEntityChanged(parent);
+    	if (parent!=null && parent.getId()!=null) {
+    		notifyEntityChanged(parent);
+    	}
     }
     
     /**
@@ -555,7 +595,7 @@ public class EntityModel {
 	    	entityFacade.deleteEntityById(entity.getId());
     		entityCache.invalidate(entity);
     	}
-    	notifyEntityDeleted(entity);
+    	notifyEntityRemoved(entity);
     }
 
     /**
@@ -572,7 +612,7 @@ public class EntityModel {
 	    	entityFacade.deleteEntityTree(entity.getId());
 			entityCache.invalidate(entity);
     	}
-    	notifyEntityDeleted(entity);
+    	notifyEntityRemoved(entity);
     }
     
     /**
@@ -636,7 +676,7 @@ public class EntityModel {
 	 * Create a new common root folder and cache it. 
 	 * 
 	 * @param folderName
-	 * @return cache-normalized entity
+	 * @return canonical entity instance
 	 * @throws Exception
 	 */
     public Entity createCommonRootFolder(String folderName) throws Exception {
@@ -667,7 +707,7 @@ public class EntityModel {
     /**
      * Returns all the common roots that the user has access to. 
      * 
-     * @return cache-normalized entities
+     * @return canonical entity instances
      * @throws Exception
      */
     public List<Entity> getCommonRoots() throws Exception {
@@ -686,23 +726,114 @@ public class EntityModel {
 		return commonRoots;
     }
     
+    /**
+     * Returns the first ancestor of the given type that it can find. 
+     * 
+     * @param entity
+     * @param typeName
+     * @return canonical entity instances
+     * @throws Exception
+     */
+    public Entity getAncestorWithType(Entity entity, String typeName) throws Exception {
+    	Entity ancestor = entityFacade.getAncestorWithType(entity, typeName);
+    	return putOrUpdate(ancestor);
+    }
+
+    /**
+     * Returns all of the parents of the given entity.
+     * 
+     * @param childEntityId
+     * @return canonical entity instances
+     */
+    public List<Entity> getParentEntities(Long childEntityId) throws Exception {
+    	return putOrUpdateAll(entityFacade.getParentEntities(childEntityId));
+    }
+
+    /**
+     * Returns all of the entity datas providing links to the parents of the given entity.
+     * @param childEntityId
+     * @return
+     */
+    public List<EntityData> getParentEntityDatas(Long childEntityId) throws Exception {
+    	List<EntityData> entities = new ArrayList<EntityData>();
+        for(EntityData parentEd : entityFacade.getParentEntityDatas(childEntityId)) {
+        	Entity child = parentEd.getChildEntity();
+        	if (child!=null && EntityUtils.isInitialized(child)) {
+	        	parentEd.setChildEntity(putOrUpdate(child));
+	        	// TODO: use the canonical EntityData instances as well, if possible
+	        	entities.add(parentEd);
+        	}
+        }
+        return entities;
+    }
+    
+    /**
+     * Returns all of the entities of a given type. Be very careful calling this method, since certain types have 
+     * many millions of members!
+     * 
+     * @param entityTypeName
+     * @return canonical entity instances
+     */
+    public List<Entity> getEntitiesByTypeName(String entityTypeName) {
+        return putOrUpdateAll(entityFacade.getEntitiesByTypeName(entityTypeName));
+    }
+
+    /**
+     * Returns all data set entities for the current user.
+     * 
+     * @return canonical entity instances
+     * @throws Exception
+     */
+    public List<Entity> getDataSets() throws Exception {
+    	return putOrUpdateAll(annotationFacade.getDataSets());
+    }
+    
+    /**
+     * Clone and return the given entity tree.
+     * 
+     * @param entityId
+     * @param rootName
+     * @return
+     * @throws Exception
+     */
+    public Entity cloneEntityTree(Long entityId, String rootName) throws Exception {
+    	Entity clone = entityFacade.cloneEntityTree(entityId, rootName);
+    	return putOrUpdate(clone, true);
+    }
+    
+    /**
+     * Create a new data set with the given name, for the current user.
+     * 
+     * @param dataSetName
+     * @return
+     * @throws Exception
+     */
+    public Entity createDataSet(String dataSetName) throws Exception {
+    	return putOrUpdate(annotationFacade.createDataSet(dataSetName));
+    }
+    
 	private void notifyEntityChildrenLoaded(Entity entity) {
+		log.debug("Generating EntityChildrenLoadedEvent for {}",entity.getId());
 		ModelMgr.getModelMgr().postOnEventBus(new EntityChildrenLoadedEvent(entity));
 	}
 	
 	private void notifyEntityCreated(Entity entity) {
+		log.debug("Generating EntityCreateEvent for {}",entity.getId());
 		ModelMgr.getModelMgr().postOnEventBus(new EntityCreateEvent(entity));
 	}
 
 	private void notifyEntityChanged(Entity entity) {
+		log.debug("Generating EntityChangeEvent for {}",entity.getId());
 		ModelMgr.getModelMgr().postOnEventBus(new EntityChangeEvent(entity));
 	}
 
-	private void notifyEntityDeleted(Entity entity) {
+	private void notifyEntityRemoved(Entity entity) {
+		log.debug("Generating EntityRemoveEvent for {}",entity.getId());
 		ModelMgr.getModelMgr().postOnEventBus(new EntityRemoveEvent(entity));
 	}
 
 	private void notifyEntitiesInvalidated(Collection<Entity> entities) {
+		log.debug("Generating EntityInvalidationEvent with {} entities",entities.size());
 		ModelMgr.getModelMgr().postOnEventBus(new EntityInvalidationEvent(entities));
 	}
 }

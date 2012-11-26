@@ -25,7 +25,7 @@ public class ModelMgrUtils {
 	public static final void loadChild(Entity entity, String attrName) throws Exception {
     	EntityData ed = entity.getEntityDataByAttributeName(attrName);
     	if (ed != null) {
-    		ed.setChildEntity(ModelMgr.getModelMgr().getEntityById(ed.getChildEntity().getId()+""));
+    		ed.setChildEntity(ModelMgr.getModelMgr().getEntityById(ed.getChildEntity().getId()));
     	}
 	}
     
@@ -57,7 +57,8 @@ public class ModelMgrUtils {
 	public static RootedEntity getChildFolder(RootedEntity parent, String name, boolean createIfMissing) throws Exception {
 		Entity entity = parent.getEntity();
 		if (!EntityUtils.areLoaded(entity.getEntityData())) {
-			ModelMgr.getModelMgr().loadLazyEntity(entity, false);
+			entity = ModelMgr.getModelMgr().loadLazyEntity(entity, false);
+			parent.setEntity(entity);
 		}
 		EntityData repFolderEd = EntityUtils.findChildEntityDataWithName(entity, name);
 		if (repFolderEd == null) {
@@ -72,7 +73,7 @@ public class ModelMgrUtils {
 		
 		RootedEntity child = parent.getChild(repFolderEd);
 		if (!EntityUtils.areLoaded(child.getEntity().getEntityData())) {
-			ModelMgr.getModelMgr().loadLazyEntity(child.getEntity(), false);
+			child.setEntity(ModelMgr.getModelMgr().loadLazyEntity(child.getEntity(), false));
 		}
 		return child;
 	}
@@ -95,7 +96,7 @@ public class ModelMgrUtils {
         
         if (!found || !ignoreNested) {
     		if (!EntityUtils.areLoaded(entity.getEntityData())) {
-    			ModelMgr.getModelMgr().loadLazyEntity(entity, !ignoreNested);
+    			entity = ModelMgr.getModelMgr().loadLazyEntity(entity, !ignoreNested);
     		}
             for (EntityData entityData : entity.getOrderedEntityData()) {
                 Entity child = entityData.getChildEntity();

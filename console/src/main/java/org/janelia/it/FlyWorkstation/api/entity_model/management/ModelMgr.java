@@ -466,8 +466,6 @@ public class ModelMgr {
         FacadeManager.getFacadeManager().prepareForSystemExit();
     }
 
-
-
 	public EntitySelectionModel getEntitySelectionModel() {
 		return entitySelectionModel;
 	}
@@ -480,7 +478,6 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().getEntityAttributes();
     }
 
-	// TODO: find usages and replace with call to getEntityById(Long)
     public Entity getEntityById(String entityId) throws Exception {
         return getEntityById(new Long(entityId));
     }
@@ -501,12 +498,12 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getEntityFacade().getPathsToRoots(entityId);
     }
 
-    public List<Entity> getParentEntities(Long childEntityId) {
-        return FacadeManager.getFacadeManager().getEntityFacade().getParentEntities(childEntityId);
+    public List<Entity> getParentEntities(Long childEntityId) throws Exception {
+        return entityModel.getParentEntities(childEntityId);
     }
 
-    public List<EntityData> getParentEntityDatas(Long childEntityId) {
-        return FacadeManager.getFacadeManager().getEntityFacade().getParentEntityDatas(childEntityId);
+    public List<EntityData> getParentEntityDatas(Long childEntityId) throws Exception {
+        return entityModel.getParentEntityDatas(childEntityId);
     }
     
     public Set<Long> getParentIdsForAttribute(long childEntityId, String attributeName) {
@@ -514,11 +511,11 @@ public class ModelMgr {
     }
     
     public List<Entity> getEntitiesByTypeName(String entityTypeName) {
-        return FacadeManager.getFacadeManager().getEntityFacade().getEntitiesByTypeName(entityTypeName);
+        return entityModel.getEntitiesByTypeName(entityTypeName);
     }
 
     public List<Entity> getDataSets() throws Exception {
-    	return FacadeManager.getFacadeManager().getAnnotationFacade().getDataSets();
+    	return entityModel.getDataSets();
     }
 
     public Entity createCommonRoot(String name) throws Exception {
@@ -651,8 +648,8 @@ public class ModelMgr {
     	return entityModel.reload(entity);
     }
     
-    public void loadLazyEntity(Entity entity, boolean recurse) throws Exception {
-    	entityModel.loadLazyEntity(entity, recurse);
+    public Entity loadLazyEntity(Entity entity, boolean recurse) throws Exception {
+    	return entityModel.loadLazyEntity(entity, recurse);
     }
 
     public List<Entity> getPrivateOntologies() throws Exception {
@@ -681,7 +678,7 @@ public class ModelMgr {
     }
 
     public Entity cloneEntityTree(Long entityId, String rootName) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().cloneEntityTree(entityId, rootName);
+        return entityModel.cloneEntityTree(entityId, rootName);
     }
 
     public Entity createEntity(String entityTypeName, String entityName) throws Exception {
@@ -690,6 +687,7 @@ public class ModelMgr {
 
     public EntityData addEntityToParent(Entity parent, Entity entity) throws Exception {
     	EntityData ed = entityModel.addEntityToParent(parent, entity);
+    	log.info("addEntityToParent created ed "+ed.getId()+" parent:"+ed.getParentEntity()+" child:"+ed.getChildEntity());
     	notifyEntityChildrenChanged(parent.getId());
     	return ed;
     }
@@ -745,11 +743,7 @@ public class ModelMgr {
     }
 
     public Entity getAncestorWithType(Entity entity, String type) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().getAncestorWithType(entity, type);
-    }
-
-    public List<List<Long>> searchTreeForNameStartingWith(Long rootId, String searchString) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().searchTreeForNameStartingWith(rootId, searchString);
+        return entityModel.getAncestorWithType(entity, type);
     }
     
     public Entity renameEntity(Entity entity, String newName) throws Exception {
@@ -771,7 +765,7 @@ public class ModelMgr {
     }
 
     public Entity saveOrUpdateAnnotation(Entity annotatedEntity, Entity annotation) throws Exception {
-        Entity newAnnotation = FacadeManager.getFacadeManager().getEntityFacade().saveEntity(annotation);
+        Entity newAnnotation = entityModel.saveEntity(annotation);
         if(newAnnotation!=null) notifyAnnotationsChanged(annotatedEntity.getId());
         return newAnnotation;
     }
@@ -783,7 +777,7 @@ public class ModelMgr {
     }
     
     public EntityData saveOrUpdateEntityData(EntityData newEntityData) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().saveEntityDataForEntity(newEntityData);
+        return entityModel.saveEntityData(newEntityData);
     }
 
     public Task saveOrUpdateTask(Task task) throws Exception {
@@ -867,22 +861,11 @@ public class ModelMgr {
     }
     
     public Entity createDataSet(String dataSetName) throws Exception {
-    	return FacadeManager.getFacadeManager().getAnnotationFacade().createDataSet(dataSetName);
+    	return entityModel.createDataSet(dataSetName);
     }
     
     public List<MappedId> getProjectedResults(List<Long> entityIds, List<String> upMapping, List<String> downMapping) throws Exception {
     	return FacadeManager.getFacadeManager().getEntityFacade().getProjectedResults(entityIds, upMapping, downMapping);
-    }
-    
-    public List<Entity> getProjectedEntities(Long entityId, List<String> upMapping, List<String> downMapping) throws Exception {
-    	List<Long> startEntityIds = new ArrayList<Long>();
-    	startEntityIds.add(entityId);
-    	List<MappedId> mappedIds = getProjectedResults(startEntityIds, upMapping, downMapping);
-    	List<Long> entityIds = new ArrayList<Long>();
-    	for(MappedId mappedId : mappedIds) {
-    		entityIds.add(mappedId.getMappedId());
-    	}
-    	return getEntityByIds(entityIds);
     }
     
     public Object[] getPatternAnnotationQuantifierMapsFromSummary() throws Exception {
@@ -921,54 +904,7 @@ public class ModelMgr {
     	modelEventBus.post(object);
     }
     
-    //  private void workSpaceWasCreated(GenomeVersion genomeVersion) {
-//    Set genomeVersions=getGenomeVersions();
-//    GenomeVersion gv;
-//      for (Object genomeVersion1 : genomeVersions) {
-//          gv = (GenomeVersion) genomeVersion1;
-//          if (!genomeVersion.equals(gv)) gv.makeReadOnly();
-//      }
-//    FacadeManager.setGenomeVersionWithWorkSpaceId(genomeVersion.getID());
-//    if (getModelMgrObservers()!=null) {
-//       Object[] listeners=getModelMgrObservers().toArray();
-//        for (Object listener : listeners) {
-//            ((ModelMgrObserver) listener).workSpaceCreated(genomeVersion);
-//        }
-//    }
-//  }
-//
-//  private void workSpaceWasRemoved(GenomeVersion genomeVersion,Workspace workspace) {
-//    FacadeManager.setGenomeVersionWithWorkSpaceId(0);
-//    if (getModelMgrObservers()!=null) {
-//       Object[] listeners=getModelMgrObservers().toArray();
-//        for (Object listener : listeners) {
-//            ((ModelMgrObserver) listener).workSpaceRemoved(genomeVersion, workspace);
-//        }
-//    }
-//  }
-//
-//  class MyOntologyObserver extends OntologyObserverAdapter {
-//       private Set observedGenomeVersions=new HashSet();
-//
-//       void addGenomeVersionToObserve(GenomeVersion genomeVersion) {
-//          if (observedGenomeVersions.contains(genomeVersion)) return;
-//          observedGenomeVersions.add(genomeVersion);
-//          genomeVersion.addGenomeVersionObserver(this);
-//       }
-//
-//       public void noteWorkspaceCreated(GenomeVersion genomeVersion, Workspace workspace){
-//          workSpaceWasCreated(genomeVersion);
-//       }
-//
-//       public void noteWorkspaceRemoved(GenomeVersion genomeVersion, Workspace workspace){
-//          workSpaceWasRemoved(genomeVersion,workspace);
-//       }
-//    }
-//
-
 	public Color getUserAnnotationColor(String username) {
 		return userColorMapping.getColor(username);
 	}
 }
-
-

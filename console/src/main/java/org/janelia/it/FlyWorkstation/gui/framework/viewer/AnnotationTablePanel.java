@@ -276,7 +276,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
                         String namePrefix = tmpName.substring(0,tmpName.indexOf("=")+2);
                         annotation.getEntity().setName(namePrefix+value);
                         try {
-                            Entity tmpAnnotatedEntity = ModelMgr.getModelMgr().getEntityById(annotation.getTargetEntityId().toString());
+                            Entity tmpAnnotatedEntity = ModelMgr.getModelMgr().getEntityById(annotation.getTargetEntityId());
                             ModelMgr.getModelMgr().saveOrUpdateAnnotation(tmpAnnotatedEntity, annotation.getEntity());
                         }
                         catch (Exception e1) {

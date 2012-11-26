@@ -734,6 +734,7 @@ public class IconDemoPanel extends Viewer {
 	}
 
 	protected void entitySelected(String entityId, boolean clearAll) {
+		log.debug("selecting {} in {} viewer",entityId,getSelectionCategory());
 		imagesPanel.setSelection(entityId, true, clearAll);
 		updateHud();
 		updateStatusBar();
@@ -752,7 +753,6 @@ public class IconDemoPanel extends Viewer {
 		statusLabel.setText(s+" of "+allRootedEntities.size()+" selected");
 	}
 
-	
 	private void updateHud() {
   		List<String> selectedIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
 		if (selectedIds.size() != 1) {
@@ -918,12 +918,12 @@ public class IconDemoPanel extends Viewer {
 				for (RootedEntity rootedEntity : pageEntities) {
 					if (!EntityUtils.isInitialized(rootedEntity.getEntity())) {
 						log.warn("Had to load entity "+rootedEntity.getEntity().getId());
-						rootedEntity.getEntityData().setChildEntity(ModelMgr.getModelMgr().getEntityById(rootedEntity.getEntity().getId()+""));
+						rootedEntity.getEntityData().setChildEntity(ModelMgr.getModelMgr().getEntityById(rootedEntity.getEntity().getId()));
 					}
 					EntityData defaultImageEd = rootedEntity.getEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
 					if (defaultImageEd!= null && defaultImageEd.getValue() == null && defaultImageEd.getChildEntity()!=null) {
 						log.warn("Had to load default image "+rootedEntity.getEntity().getName());
-						defaultImageEd.setChildEntity(ModelMgr.getModelMgr().getEntityById(defaultImageEd.getChildEntity().getId() + ""));
+						defaultImageEd.setChildEntity(ModelMgr.getModelMgr().getEntityById(defaultImageEd.getChildEntity().getId()));
 					}
 					loadedRootedEntities.add(rootedEntity);
 				}
@@ -1133,7 +1133,6 @@ public class IconDemoPanel extends Viewer {
         else {
 			imagesPanel.showAnnotationsForEntity(entityId);
 		}
-
 	}
 
 	@Override

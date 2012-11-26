@@ -105,7 +105,7 @@ public class EntityTree extends JPanel {
 
             protected void doStuff() throws Exception {
                 if (lazy) {
-                    rootEntity = ModelMgr.getModelMgr().getEntityById(rootId.toString());
+                    rootEntity = ModelMgr.getModelMgr().getEntityById(rootId);
                 }
                 else {
                     rootEntity = ModelMgr.getModelMgr().getEntityTree(rootId);
@@ -325,7 +325,7 @@ public class EntityTree extends JPanel {
             @Override
             public void loadLazyNodeData(DefaultMutableTreeNode node) throws Exception {
                 Entity entity = getEntity(node);
-            	ModelMgr.getModelMgr().loadLazyEntity(entity, false);
+            	entity = ModelMgr.getModelMgr().loadLazyEntity(entity, false);
             }
 
             @Override
