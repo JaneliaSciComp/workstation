@@ -1,6 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
-import org.apache.log4j.Logger;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
@@ -9,6 +8,8 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by IntelliJ IDEA.
@@ -19,11 +20,13 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  * This class acts as a mediator to find a specific type of filename associated with the given entity.
  */
 public class EntityFilenameFetcher {
-    private Logger logger = Logger.getLogger( EntityFilenameFetcher.class );
+	
+	private static final Logger log = LoggerFactory.getLogger(EntityFilenameFetcher.class);
+	
     public enum FilenameType { IMAGE_3d }
     public String fetchFilename( Entity entity, FilenameType type ) {
         if ( entity == null ) {
-            logger.info("Null entity passed in, for type " + type);
+            log.debug("Null entity passed in, for type " + type);
             return null;
         }
         if ( type == FilenameType.IMAGE_3d ) {
@@ -34,13 +37,13 @@ public class EntityFilenameFetcher {
             }
             String imageFilePath = EntityUtils.getImageFilePath(entity, EntityConstants.ATTRIBUTE_DEFAULT_FAST_3D_IMAGE);
 
-            logger.debug( entity.getId() );
-            logger.debug( entity.getName() );
-            logger.debug( imageFilePath );
+            log.debug( "{}", entity.getId() );
+            log.debug( "{}", entity.getName() );
+            log.debug( "{}", imageFilePath );
 
             if ( imageFilePath != null ) {
                 imageFilePath = PathTranslator.convertPath( imageFilePath );
-                logger.debug( "The 3D image is at " + imageFilePath);
+                log.debug( "The 3D image is at " + imageFilePath);
             }
             return imageFilePath;
         }
@@ -73,7 +76,7 @@ public class EntityFilenameFetcher {
         worker.execute();
         while ( ! worker.isDone() ) {
             if ( worker.isCancelled() ) {
-                logger.error("Entity load cancelled.");
+                log.error("Entity load cancelled.");
             }
         }
     }

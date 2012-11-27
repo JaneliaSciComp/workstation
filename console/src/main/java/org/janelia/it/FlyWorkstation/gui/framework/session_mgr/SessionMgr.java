@@ -73,6 +73,8 @@ public class SessionMgr {
 
     private SessionMgr() {
     	
+    	log.info("Initializing Session Manager");
+    	
         settingsFile = new File(prefsFile);
         try {
             settingsFile.createNewFile();  //only creates if does not exist

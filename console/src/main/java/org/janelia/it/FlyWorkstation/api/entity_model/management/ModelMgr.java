@@ -75,6 +75,9 @@ public class ModelMgr {
     }
 
     private ModelMgr() {
+    	
+    	log.info("Initializing Model Manager");
+    	
 		this.entityModel = new EntityModel();
 		this.entitySelectionModel = new EntitySelectionModel();
 		this.userColorMapping = new UserColorMapping();
