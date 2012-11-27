@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.application;
 
 import org.apache.commons.io.FileUtils;
+import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.gui.framework.exception_handlers.ExitHandler;
@@ -10,6 +11,8 @@ import org.janelia.it.FlyWorkstation.gui.util.*;
 import org.janelia.it.jacs.compute.api.ComputeBeanRemote;
 import org.janelia.it.jacs.shared.utils.FileUtil;
 import org.janelia.it.jacs.shared.utils.SystemCall;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -27,6 +30,8 @@ import java.util.MissingResourceException;
  */
 public class AutoUpdater extends JFrame implements PropertyChangeListener {
 
+	private static final Logger log = LoggerFactory.getLogger(AutoUpdater.class);
+	
     // Obligatory Mac garbage in case the user is cursed with that OS
     static {
         System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Workstation AutoUpdate");
@@ -45,6 +50,15 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 	private File packageDir=null;
 	
 	public AutoUpdater() {
+		
+        ConsoleProperties.load();
+        
+        FacadeManager.registerFacade(FacadeManager.getEJBProtocolString(), EJBFacadeManager.class, "JACS EJB Facade Manager");
+        
+        final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
+        sessionMgr.registerExceptionHandler(new UserNotificationExceptionHandler());
+        sessionMgr.registerExceptionHandler(new ExitHandler());        
+        
         setTitle("Workstation AutoUpdate");
         getContentPane().setLayout(new BorderLayout());
         setSize(400, 200);
@@ -85,6 +99,9 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
         final String serverVersion = computeBean.getAppVersion();
         final String clientVersion = ConsoleProperties.getString("console.versionNumber");
 
+        log.info("Client version: {}",clientVersion);
+        log.info("Server version: {}",serverVersion);
+        
     	if (!FacadeManager.isDataSourceConnectivityValid()) {
     		String message = FacadeManager.getDataSourceHelpInformation();
     		throw new MissingResourceException(message, ConsoleApp.class.getName(), "Missing Data Mount");
@@ -92,8 +109,11 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
     	
         if (!serverVersion.equals(clientVersion)) {
 
+            log.info("Client/server versions do not match");
+            
             File releaseNotesFile;
             if (SystemInfo.isMac) {
+            	log.info("Configuring for Mac...");
             	String suiteDir = "FlySuite_"+serverVersion;
             	remoteFile = getJacsDataFile("FlySuite/"+suiteDir+".tgz");
             	releaseNotesFile = getJacsDataFile("FlySuite/"+suiteDir+"/releaseNotes.txt");
@@ -103,7 +123,8 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
             	packageDir = new File(extractedDir, "FlySuite.app");
         	}
         	else if (SystemInfo.isLinux) {
-            	String suiteDir = "FlySuite_linux_"+serverVersion;
+        		log.info("Configuring for Linux...");
+        		String suiteDir = "FlySuite_linux_"+serverVersion;
             	remoteFile = getJacsDataFile("FlySuite/"+suiteDir+".tgz");
             	releaseNotesFile = getJacsDataFile("FlySuite/"+suiteDir+"/releaseNotes.txt");
         		downloadsDir = new File("/tmp/");
@@ -112,6 +133,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
             	packageDir = extractedDir;
         	}
             else if (SystemInfo.isWindows) {
+            	log.info("Configuring for Windows...");
                 String suiteDir = "FlySuite_windows_"+serverVersion;
                 remoteFile = getJacsDataFile("FlySuite/"+suiteDir+".zip");
                 releaseNotesFile = getJacsDataFile("FlySuite/"+suiteDir+"/releaseNotes.txt");
@@ -123,6 +145,13 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
             else {
         		throw new IllegalStateException("Operation system not supported: "+SystemInfo.OS_NAME);
         	}
+            
+            
+            log.info("  remoteFile: {}",remoteFile);
+            log.info("  downloadsDir: {}",downloadsDir);
+            log.info("  downloadFile: {}",downloadFile);
+            log.info("  extractedDir: {}",extractedDir);
+            log.info("  packageDir: {}",packageDir);
             
         	if (!remoteFile.exists() || !remoteFile.canRead()) {
         		throw new Exception("Cannot access "+remoteFile.getAbsolutePath());
@@ -158,6 +187,9 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
             attrPanel.add(latestVersionValueLabel, c);
             
             if (releaseNotesFile.exists() && releaseNotesFile.canRead()) {
+            	
+            	log.info("Found release notes at {}",releaseNotesFile);
+            	
             	JLabel releaseNotesKeyLabel = new JLabel("Release Notes: ");
             	c.gridx = 0;
             	c.gridy = 2;
@@ -173,11 +205,12 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
             
             mainPane.add(attrPanel, BorderLayout.CENTER);
             
-            JButton okButton = new JButton("Update");
+            final JButton okButton = new JButton("Update");
             okButton.setToolTipText("Update and launch the FlyWorkstation");
             okButton.addActionListener(new ActionListener() {
     			@Override
     			public void actionPerformed(ActionEvent e) {
+    				okButton.setVisible(false);
     				update();
     			}
     		});
@@ -204,6 +237,8 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
     		mainPane.repaint();
         }
         else {
+        	log.info("Already at latest version");
+        	
         	mainLabel.setText("Already at latest version. Launching...");
         	mainPane.revalidate();
     		mainPane.repaint();
@@ -234,15 +269,22 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
     	mainPane.add(mainLabel, BorderLayout.NORTH);
     	
     	progressBar = new JProgressBar(1, 100);
-    	mainPane.add(progressBar, BorderLayout.CENTER);
+    	
+    	JPanel progressPanel = new JPanel();
+    	progressPanel.add(progressBar);
+    	
+    	mainPane.add(progressPanel, BorderLayout.CENTER);
     	mainPane.revalidate();
-		mainPane.repaint();
+    	mainPane.repaint();
 		
+    	pack();
+        setLocationRelativeTo(null);
+    	
 		SimpleWorker updater = new FakeProgressWorker() {
 
 			@Override
 			protected void doStuff() throws Exception {
-							
+				
 				if (downloadFile.exists()) {
 					FileUtil.deleteDirectory(downloadFile);
 				}
@@ -252,17 +294,22 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 				}
 
 				if (SystemInfo.isWindows) {
+					
+					log.info("Downloading update from {}",remoteFile);
                     if (runShellCommand("copy "+remoteFile+" "+downloadFile, downloadsDir) != 0) {
                         throw new Exception("Error downloading archive: "+downloadFile.getAbsolutePath());
                     }
 
+                    log.info("Unzipping {}",downloadFile);
                     FileUtil.zipUncompress(downloadFile, downloadsDir.getAbsolutePath());
                 }
 				else {
+					log.info("Downloading update from {}",remoteFile);
                     if (runShellCommand("cp "+remoteFile+" "+downloadFile, downloadsDir) != 0) {
                         throw new Exception("Error downloading archive: "+downloadFile.getAbsolutePath());
                     }
 
+                    log.info("Decompressing {}",downloadFile);
                     if (runShellCommand("tar xvfz "+downloadFile, downloadsDir) != 0) {
                         throw new Exception("Error extracting archive: "+downloadFile.getAbsolutePath());
                     }
@@ -281,6 +328,8 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
                     if (null==tmpPkgFiles || tmpPkgFiles.length<1) {
                         throw new Exception("Error retrieving update. "+packageDir);
                     }
+                    
+                    log.info("Update is ready");
                     
 					mainLabel.setText("Update complete. Launching the FlyWorkstation...");
 					mainPane.revalidate();
@@ -344,13 +393,8 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 	}
 	
     public static void main(final String[] args) {
-        AutoUpdater updater = new AutoUpdater();
         try {
-            ConsoleProperties.load();
-            final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
-            sessionMgr.registerExceptionHandler(new UserNotificationExceptionHandler());
-            sessionMgr.registerExceptionHandler(new ExitHandler());
-            
+        	AutoUpdater updater = new AutoUpdater();
             updater.checkVersions();
         }
         catch (Exception ex) {
