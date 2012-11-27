@@ -484,7 +484,7 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 			}
 		}
 
-		return new ArrayList<Long>(consensus);
+		return new ArrayList<Long>(new LinkedHashSet<Long>(consensus));
 	}
 
 	private List<Long> getSampleEvals(String key) throws Exception {

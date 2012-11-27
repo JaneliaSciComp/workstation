@@ -761,8 +761,8 @@ public class EntityModel {
         	if (child!=null && EntityUtils.isInitialized(child)) {
 	        	parentEd.setChildEntity(putOrUpdate(child));
 	        	// TODO: use the canonical EntityData instances as well, if possible
-	        	entities.add(parentEd);
         	}
+        	entities.add(parentEd);
         }
         return entities;
     }
