@@ -463,8 +463,14 @@ public class EntityModel {
     	Entity canonicalEntity = null;
     	synchronized(this) {
     		Entity newEntity = entityFacade.getEntityById(entity.getId()+"");
-    		newEntity.addAttributeAsTag(attributeName);
-	    	canonicalEntity = putOrUpdate(entityFacade.saveEntity(newEntity));
+    		String value = newEntity.getValueByAttributeName(attributeName);
+    		if (value==null || !value.equals(attributeName)) {
+    			newEntity.addAttributeAsTag(attributeName);
+    			canonicalEntity = putOrUpdate(entityFacade.saveEntity(newEntity));	
+    		}
+    		else {
+    			canonicalEntity = getEntityById(entity.getId());
+    		}
     	}
     	return canonicalEntity;
     }

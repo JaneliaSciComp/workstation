@@ -128,6 +128,12 @@ public class DataSetListDialog extends ModalDialog implements Accessibility {
         		
         		return menu;
         	}
+        	
+			@Override
+			protected void rowDoubleClicked(int row) {
+    			final Entity dataSetEntity = (Entity)getRows().get(row).getUserObject();
+				dataSetDialog.showForDataSet(dataSetEntity);
+			}
         };
         
         dynamicTable.addColumn("Name");
