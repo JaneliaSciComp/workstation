@@ -16,6 +16,7 @@ import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.OntologyKeyBindings;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.ExternalClient;
@@ -87,11 +88,11 @@ public class ConsoleDataServiceImpl {
     }
     
     public Entity[] getAnnotationsForEntity(long entityId) throws Exception {
-        return ModelMgr.getModelMgr().getAnnotationsForEntity(entityId).toArray(new Entity[0]);
+    	return ModelMgr.getModelMgr().getAnnotationsForEntity(entityId).toArray(new Entity[0]);
     }
 
     public Entity[] getAnnotationsForEntities(Long[] entityIds) throws Exception {
-        return ModelMgr.getModelMgr().getAnnotationsForEntities(Arrays.asList(entityIds)).toArray(new Entity[0]);
+    	return ModelMgr.getModelMgr().getAnnotationsForEntities(Arrays.asList(entityIds)).toArray(new Entity[0]);
     }
 	
 //    public List<Entity> getAnnotationsForSession(Long annotationSessionId) throws Exception {
@@ -156,15 +157,15 @@ public class ConsoleDataServiceImpl {
 	}
 	
     public Entity getEntityById(long entityId) throws Exception {
-        return PathTranslator.translatePathsToCurrentPlatform(ModelMgr.getModelMgr().getEntityById(entityId));
+        return PathTranslator.translatePathsToCurrentPlatform(FacadeManager.getFacadeManager().getEntityFacade().getEntityById(""+entityId));
     }
 
     public Entity getEntityAndChildren(long entityId) throws Exception {
-        return PathTranslator.translatePathsToCurrentPlatform(ModelMgr.getModelMgr().getEntityAndChildren(entityId));
+        return PathTranslator.translatePathsToCurrentPlatform(FacadeManager.getFacadeManager().getEntityFacade().getEntityAndChildren(entityId));
     }
 
 	public Entity getEntityTree(long entityId) throws Exception {
-        return PathTranslator.translatePathsToCurrentPlatform(ModelMgr.getModelMgr().getEntityTree(entityId));
+        return PathTranslator.translatePathsToCurrentPlatform(FacadeManager.getFacadeManager().getEntityFacade().getEntityTree(entityId));
     }
 
 //    public List<EntityType> getEntityTypes() {
@@ -179,6 +180,10 @@ public class ConsoleDataServiceImpl {
     public EntityData[] getParentEntityDataArray(long childEntityId) throws Exception {
     	List<EntityData> list = ModelMgr.getModelMgr().getParentEntityDatas(childEntityId);
     	return list.toArray(new EntityData[0]);
+    }
+    
+    public Entity getAncestorWithType(long entityId, String type) throws Exception {
+    	return ModelMgr.getModelMgr().getAncestorWithType(ModelMgr.getModelMgr().getEntityById(entityId), type);
     }
     
 //    public EntityData saveEntityDataForEntity(EntityData newData) throws Exception {

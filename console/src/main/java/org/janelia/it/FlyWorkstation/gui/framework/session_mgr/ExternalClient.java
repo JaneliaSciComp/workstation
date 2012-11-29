@@ -6,11 +6,13 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.session_mgr;
 
+import java.net.URL;
+import java.util.Map;
+
 import org.apache.axiom.om.OMAbstractFactory;
 import org.apache.axiom.om.OMElement;
 import org.apache.axiom.om.OMFactory;
 import org.apache.axiom.om.OMNamespace;
-import org.apache.axis2.AxisFault;
 import org.apache.axis2.addressing.EndpointReference;
 import org.apache.axis2.client.Options;
 import org.apache.axis2.client.ServiceClient;
@@ -19,9 +21,8 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-
-import java.net.URL;
-import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An external program that registers in hopes of receiving events from the workstation. Registration is a two-step 
@@ -33,6 +34,8 @@ import java.util.Map;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ExternalClient {
+	
+	private static final Logger log = LoggerFactory.getLogger(ExternalClient.class);
 	
 	private static HttpClient httpClient;
 	static {
@@ -86,15 +89,13 @@ public class ExternalClient {
 
     	final ServiceClient client = getNewClient();
     	
-        System.out.print("Sending "+operationName+" message to "+ name+" ... ");
-        
     	if (targetEPR == null) {
-            System.out.println("no end point!");
+            log.error("External client {} on port {} has no end point",name,clientPort);
     		throw new IllegalStateException("init(String endpointUrl) must be called on the ExternalClient before any other methods.");
     	}
     	
-        System.out.println("at "+ targetEPR.getAddress());
-        
+    	log.info("Sending {} message to endpoint {}",operationName,targetEPR.getAddress());
+    	
         OMFactory fac = OMAbstractFactory.getOMFactory();
         OMNamespace ns = fac.createOMNamespace(namespace, "ns");
         final OMElement operation = fac.createOMElement(operationName, ns);
@@ -122,14 +123,10 @@ public class ExternalClient {
 			
 			@Override
 			protected void hadError(Throwable error) {
-				System.out.println("Error sending message to "+targetEPR.getAddress()+
-						" : "+error.getClass().getName()+"/"+error.getMessage());
-				if (!(error instanceof AxisFault)) {
-					error.printStackTrace();
-				}
+				log.error("Error sending message to "+targetEPR.getAddress(),error);
 				failures++;
 				if (failures >= MAX_CONSECUTIVE_FAILURES) {
-					System.out.println("Removing client "+targetEPR.getAddress()+
+					log.info("Removing client "+targetEPR.getAddress()+
 							" because it exceeded max number of consecutive failures ("+failures+">="+MAX_CONSECUTIVE_FAILURES+")");
 					SessionMgr.getSessionMgr().removeExternalClientByPort(clientPort);
 				}

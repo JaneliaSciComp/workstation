@@ -43,6 +43,8 @@ import org.janelia.it.jacs.model.user_data.Node;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Context pop up menu for entities.
@@ -51,6 +53,8 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
  */
 public class EntityContextMenu extends JPopupMenu {
 
+	private static final Logger log = LoggerFactory.getLogger(EntityContextMenu.class);
+	
 	protected static final Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
 
 	protected final List<RootedEntity> rootedEntityList;
@@ -988,11 +992,13 @@ public class EntityContextMenu extends JPopupMenu {
                         if (result!=null) {
                         	// Check that there is a valid NA instance running
                             if (SessionMgr.getSessionMgr().getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
+                            	log.debug("Client {} is not running. Starting a new instance.",ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
                                 ToolMgr.runTool(ToolMgr.TOOL_NA);
                                 boolean notRunning = true;
                                 int killCount = 0;
                                 while (notRunning && killCount<2) {
                                     if (SessionMgr.getSessionMgr().getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
+                                    	log.debug("Waiting for {} to start.",ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
                                         Thread.sleep(3000);
                                         killCount++;
                                     }
@@ -1001,6 +1007,8 @@ public class EntityContextMenu extends JPopupMenu {
                                     }
                                 }
                             }
+                            
+                            log.debug("Requesting entity view in Neuron Annotator: "+result.getId());
                             ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(result.getId());
 	                        
                         	// TODO: in the future, this check won't be necessary, since all separations will be fast loading
@@ -1020,6 +1028,8 @@ public class EntityContextMenu extends JPopupMenu {
                         	}
                         	
                         	if (fastLoad) {
+                        		log.debug("Found fastLoad files. Syncing from archive...");
+                        		
 	                        	// This is a fast loading separation. Ensure all files are copied from archive.
 	                        	String filePath = result.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH)+"/archive";
 	                        	

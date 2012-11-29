@@ -560,7 +560,7 @@ public class IconDemoPanel extends Viewer {
 					}
 					
 					button.refresh(rootedEntity);
-					button.setViewable(true);
+					imagesPanel.rescaleImages(imagesPanel.getCurrImageSize());
 				}
 			}
 		}

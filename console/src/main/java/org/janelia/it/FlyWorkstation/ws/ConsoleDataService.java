@@ -88,6 +88,11 @@ public interface ConsoleDataService extends Remote {
     public EntityData[] getParentEntityDataArray(
     		@WebParam(name = "childEntityId") long childEntityId)
     		throws RemoteException;
+
+    public Entity getAncestorWithType(
+    		@WebParam(name = "entityId") long entityId, 
+    		@WebParam(name = "type") String type) 
+    		throws RemoteException;
     
     public String getUserAnnotationColor(
     		@WebParam(name = "username") String username)
