@@ -282,7 +282,7 @@ public class EntityTree extends JPanel {
             @Override
             public void expandNodeWithLazyChildren(final DefaultMutableTreeNode node, final Callable<Void> success) {
             	
-            	log.debug("expandNodeWithLazyChildren {}",getEntity(node).getName());	
+            	log.debug("expandNodeWithLazyChildren: {}",getEntity(node).getName());	
             	
             	if (EntityUtils.areLoaded(getEntity(node).getEntityData())) {
             		SwingUtilities.invokeLater(new Runnable() {
@@ -331,7 +331,7 @@ public class EntityTree extends JPanel {
             @Override
             public void recreateChildNodes(DefaultMutableTreeNode node) {
                 Entity entity = getEntity(node);
-                log.debug("recreateChildNodes {}",entity);
+                log.debug("recreateChildNodes: {}",entity);
                 
                 ArrayList<EntityData> edList = new ArrayList<EntityData>(entity.getOrderedEntityData());
 
@@ -341,14 +341,14 @@ public class EntityTree extends JPanel {
                     childNodes.add(childNode);
                 }
                 
-                log.debug("Adding {} children",edList.size());
+                log.trace("Adding {} children",edList.size());
                 EntityTree.this.addChildren(node, edList);
 
                 
                 // The old children (typically a LazyTreeNode) are not removed until after the new children are added
                 // in order to avoid a flickering on the tree when opening a lazy node.
                 
-                log.debug("Removing {} children",childNodes.size());
+                log.trace("Removing {} children",childNodes.size());
                 for(DefaultMutableTreeNode childNode : childNodes) {
                 	EntityTree.this.removeNode(childNode);	
                 }
@@ -586,7 +586,7 @@ public class EntityTree extends JPanel {
 
         Entity entity = newEd.getChildEntity();
         String uniqueId = selectedTree.getUniqueId(newNode);
-    	log.debug("EntityTree.addNodes: {}, {}",entity,uniqueId);
+    	log.trace("EntityTree.addNodes: {}, {}",entity,uniqueId);
 
         // Add to maps
         uniqueIdToNodeMap.put(uniqueId, newNode);
@@ -646,7 +646,7 @@ public class EntityTree extends JPanel {
     	
     	if (entityData!=null && entity!=null) {
             String uniqueId = selectedTree.getUniqueId(node);
-        	log.debug("EntityTree.removeNode: {}, {}",entity,uniqueId);
+        	log.trace("EntityTree.removeNode: {}, {}",entity,uniqueId);
         	
         	// Remove from all maps
 //            uniqueIdToNodeMap.remove(uniqueId);

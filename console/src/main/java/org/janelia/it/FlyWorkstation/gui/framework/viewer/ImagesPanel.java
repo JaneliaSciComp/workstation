@@ -462,7 +462,7 @@ public class ImagesPanel extends JScrollPane {
      */
     public synchronized void recalculateGrid() {
     	
-    	log.debug("Recalculating image grid");
+    	log.trace("Recalculating image grid");
     	
     	double maxButtonWidth = 0;
         for (AnnotatedImageButton button : buttons.values()) {
@@ -494,10 +494,10 @@ public class ImagesPanel extends JScrollPane {
 			@Override
 			public void run() {
 				if (queueDate.before(lastQueueDate)) {
-					log.debug("Ignoring duplicate request");
+					log.trace("Ignoring duplicate loadUnloadImages request");
 					return;
 				}
-				log.debug("Loading/unloading image buttons");
+				log.trace("Running loadUnloadImages");
 				loadUnloadImagesInterrupt.set(false);
 		    	final JViewport viewPort = getViewport();
 		    	Rectangle viewRect = viewPort.getViewRect();
@@ -506,7 +506,7 @@ public class ImagesPanel extends JScrollPane {
 		    	}
 		        for(AnnotatedImageButton button : buttons.values()) {
 		        	if (loadUnloadImagesInterrupt.get()) {
-		        		log.debug("Interrupted");
+		        		log.trace("loadUnloadImages interrupted");
 		        		return;
 		        	}
 		        	try {

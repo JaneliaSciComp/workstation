@@ -328,7 +328,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			return;
 		}
 		
-		log.debug("Starting whole tree refresh");
+		log.debug("Starting whole tree refresh (invalidateCache={}, restoreState={})",invalidateCache,restoreState);
 		
 		showLoadingIndicator();
 		
@@ -347,6 +347,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 				try {
 					init(rootList);
 					currUniqueId = null;
+					refreshInProgress.set(false);
 					
 					if (restoreState) {
 						expansionState.restoreExpansionState(getDynamicTree(), true, new Callable<Void>() {
@@ -354,7 +355,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 							public Void call() throws Exception {
 								showTree();
 								if (success!=null) success.call();
-								refreshInProgress.set(false);
 								log.debug("Tree refresh complete");
 								return null;
 							}
@@ -368,7 +368,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 
 			protected void hadError(Throwable error) {
 				refreshInProgress.set(false);
-				error.printStackTrace();
+				log.error("Tree refresh encountered error",error);
 				JOptionPane.showMessageDialog(EntityOutline.this, "Error loading data outline", "Data Load Error",
 						JOptionPane.ERROR_MESSAGE);
 				init(null);
