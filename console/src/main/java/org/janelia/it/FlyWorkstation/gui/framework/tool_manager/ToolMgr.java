@@ -1,11 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.tool_manager;
 
-import java.awt.Desktop;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.*;
-
 import org.janelia.it.FlyWorkstation.gui.framework.console.ToolsMenu;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -17,6 +11,12 @@ import org.janelia.it.FlyWorkstation.shared.preferences.PrefMgrListener;
 import org.janelia.it.FlyWorkstation.shared.preferences.PreferenceManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.awt.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -49,6 +49,12 @@ public class ToolMgr extends PreferenceManager {
         SessionMgr.getSessionMgr().addSessionModelListener(new MySessionModelListener());
         initializeMasterInfoObjects();
         resetWorkingCollections();
+
+        // Temporary code to clean up a NA deficiency
+        ToolInfo tmpTool = toolTreeMap.get(TOOL_NA);
+        if (null!=tmpTool && !tmpTool.getPath().endsWith(" -na")) {
+            tmpTool.setPath(tmpTool.getPath()+" -na");
+        }
     }
 
     public static ToolMgr getToolMgr() {
