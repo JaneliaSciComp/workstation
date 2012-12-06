@@ -6,7 +6,7 @@
     <file>flyworkstation.log</file>
     <append>false</append>
     <encoder>
-      <pattern>%date %level [%logger] %msg%n</pattern>
+      <pattern>%date [%thread] %level [%logger] %msg%n</pattern>
     </encoder>
   </appender>
 
@@ -14,7 +14,7 @@
     <!-- encoders are assigned the type
          ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
     <encoder>
-      <pattern>%d{HH:mm:ss.SSS} %-5level [%logger] %msg%n</pattern>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level [%logger] %msg%n</pattern>
     </encoder>
   </appender>
 
