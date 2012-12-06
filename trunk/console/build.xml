@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project name="console" default="build">
+
+    <!-- need to set this here to override standard location (parallel to src) -->
+    <property name="test.src.dir" value="${basedir}/src/test/java"/>
+
+    <!-- Import all the generic module targets -->
+    <import file="../buildprocess/build-module.xml"/>
+	
+    <target name="set-common-properties" depends="build-module-init.set-common-properties">
+
+    	<property name="build.jar" value="${build.jars.dir}/workstation.jar"/>
+    	<property name="build.jar.lib.dir" value="${build.jars.dir}/workstation_lib"/>
+    	
+		<path id="compile.classpath">
+	        <fileset dir="${model.module}/build/jars" includes="jacs-model.jar" />
+	        <fileset dir="${shared.module}/build/jars" includes="jacs-shared.jar" />
+		    <fileset dir="${compute.module}/build/jars" includes="compute-client.jar"/>
+		    <fileset dir="${common.module}" includes="**/*.jar"/>
+			<fileset dir="${shared.module}/lib" includes="**/*.jar"/>
+			<fileset dir="${lib.dir}" includes="**/*.jar"/>
+		</path>
+
+        <path id="compile.classpath.additional">
+            <path refid="compile.classpath"/>
+        </path>
+
+        <path id="test.run.classpath.additional">
+        </path>
+
+    </target>
+
+	<target name="local-compile" depends="set-common-properties, setup, make-classes-dir, make-lib-dir, make-jars-dir" if="src.dir.exists">
+
+        <delete dir="${build.classes.dir}" />
+    	<mkdir dir="${build.classes.dir}"/>
+        <javac srcdir="${src.dir}/main/java" destdir="${build.classes.dir}"
+               debug="${compile.debug}" optimize="${compile.optimize}" deprecation="${compile.deprecation}">
+            <classpath refid="compile.classpath"/>
+            <include name="**/*.java"/>
+        </javac>
+
+		<copy todir="${build.classes.dir}">
+		    <fileset dir="${src.dir}/main/java" excludes="**/*.java"/>
+		</copy>
+			
+	</target>
+	 
+	<target name="build" depends="local-compile">
+	</target>
+	
+	<target name="build-run-jar" depends="build">
+        
+        <delete dir="${build.jar.lib.dir}" />
+    	<mkdir dir="${build.jar.lib.dir}"/>
+		
+		<copy todir="${build.jar.lib.dir}" flatten="true">
+		    <fileset dir="${model.module}/build/jars/" includes="**/*.jar"/>
+		    <fileset dir="${shared.module}/build/jars/" includes="**/*.jar"/>
+		    <fileset dir="${compute.module}/build/jars/" includes="**/*.jar"/>
+		    <fileset dir="${common.module}" includes="**/*.jar"/>
+		    <fileset dir="${shared.module}/lib" includes="**/*.jar"/>
+		    <fileset dir="${lib.dir}" includes="**/*.jar"/>
+		</copy>
+
+		<path id="jar.classpath">
+			<fileset dir="${build.jar.lib.dir}" includes="**/*.jar"/>
+		</path>
+		    	
+		<manifestclasspath property="manifest.classpath" jarfile="${build.jar}">
+			<classpath refid="jar.classpath"/>
+		</manifestclasspath> 
+		
+        <jar destfile="${build.jar}">
+            <manifest>
+                <attribute name="Main-Class" value="org.janelia.it.FlyWorkstation.gui.application.ConsoleApp"/>
+                <attribute name="Class-Path" value="${manifest.classpath}"/>
+            </manifest>
+            <fileset dir="${build.classes.dir}"/>
+            <fileset dir="${model.module}/build/classes"/>
+            <fileset dir="${shared.module}/build/classes"/>
+            <fileset dir="${basedir}/src/main/resources"/>
+        </jar>
+        	
+    </target>
+	
+</project>

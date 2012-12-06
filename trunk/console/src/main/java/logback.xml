@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration>
+
+  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+    <file>flyworkstation.log</file>
+    <append>false</append>
+    <encoder>
+      <pattern>%date [%thread] %level [%logger] %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <!-- encoders are assigned the type
+         ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level [%logger] %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <logger name="org.janelia.it.FlyWorkstation" level="INFO"/>
+  <logger name="org.janelia.it.FlyWorkstation.gui" level="INFO"/>
+  <logger name="org.janelia.it.FlyWorkstation.api" level="INFO"/>
+  <logger name="loci" level="WARN"/>
+  
+  <!-- Strictly speaking, the level attribute is not necessary since -->
+  <!-- the level of the root level is set to DEBUG by default.       -->
+  <root level="INFO">          
+    <appender-ref ref="STDOUT" />
+    <appender-ref ref="FILE" />
+  </root>  
+  
+</configuration>
