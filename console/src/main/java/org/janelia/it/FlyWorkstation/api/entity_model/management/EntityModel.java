@@ -94,7 +94,7 @@ public class EntityModel {
 	 * @return canonical entity instance
 	 */
 	private Entity putOrUpdate(Entity entity) {
-		if (!EntityUtils.isInitialized(entity) || entity.getEntityType()==null) {
+		if (entity==null || !EntityUtils.isInitialized(entity) || entity.getEntityType()==null) {
 			// This is an uninitialized entity, which cannot go into the cache
 			return null;
 		}
