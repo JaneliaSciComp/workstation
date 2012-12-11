@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.shared.util;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -312,7 +313,7 @@ public class CachedFile {
 
     }
 
-    private static final Logger LOG = Logger.getLogger(CachedFile.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CachedFile.class);
 
     private static final long ONE_KILOBYTE = 1024;
 

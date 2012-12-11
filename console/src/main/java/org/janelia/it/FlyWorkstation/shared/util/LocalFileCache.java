@@ -3,7 +3,8 @@ package org.janelia.it.FlyWorkstation.shared.util;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.googlecode.concurrentlinkedhashmap.EvictionListener;
 import com.googlecode.concurrentlinkedhashmap.Weigher;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -350,7 +351,7 @@ public class LocalFileCache {
         }
     }
 
-    private static final Logger LOG = Logger.getLogger(LocalFileCache.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LocalFileCache.class);
 
     private static final String CACHE_DIRECTORY_NAME = ".jacs-file-cache";
 }
