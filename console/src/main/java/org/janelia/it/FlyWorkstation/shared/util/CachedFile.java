@@ -8,8 +8,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.concurrent.Callable;
 
 /**
@@ -21,16 +19,11 @@ import java.util.concurrent.Callable;
  * <p>
  * Each cached file is stored within a nested set of directories as follows:
  * <pre>
- *     [root cache directory]/[retrieval time directory]/[relative path]/[file]
+ *     [local root directory]/[relative path]/[file]
  * </pre>
  * <p>
- * The retreival time directory is inserted to ensure that no race
- * condition is introduced by removing a file from the cache at the
- * same time it is being re-added to the cache.
- * </p>
- * <p>
  * The relative path directory is inserted to allow the cache to be
- * reloaded from local disk at start-up.
+ * reloaded from local disk at start-up and to support cached directories.
  * </p>
  *
  * @author Eric Trautman
@@ -45,14 +38,7 @@ public class CachedFile {
         return(path.replace('\\','/'));
     }
 
-    /**
-     * @return a new timestamp directory name based on the current time.
-     */
-    public static String buildTimestampName() {
-        return TIMESTAMP_FORMAT.format(new Date());
-    }
-
-    private File cacheRootDirectory;
+    private File localRootDirectory;
     private URL remoteFileUrl;
     private String relativePath;
     private File localFile;
@@ -61,21 +47,22 @@ public class CachedFile {
      * Constructs a cached file instance that needs to be retrieved
      * from a remote location.
      *
-     * @param  remoteFileUrl  identifies location of the remote file.
+     * @param  localRootDirectory  the local root directory for
+     *                             this cached file (to which the
+     *                             file's relative path is applied).
+     * @param  remoteFileUrl       identifies location of the remote file.
      *
      * @throws IllegalStateException
      *   if the file cannot be cached locally.
      */
-    public CachedFile(File cacheRootDirectory,
+    public CachedFile(File localRootDirectory,
                       URL remoteFileUrl)
             throws IllegalStateException {
 
-        this.cacheRootDirectory = cacheRootDirectory;
+        this.localRootDirectory = localRootDirectory;
         this.remoteFileUrl = remoteFileUrl;
         this.relativePath = getNormalizedPath(remoteFileUrl.getPath());
-        final File timestampDirectory = new File(cacheRootDirectory,
-                                                 buildTimestampName());
-        this.localFile = new File(timestampDirectory,
+        this.localFile = new File(localRootDirectory,
                                   this.relativePath);
 
         if (! this.localFile.exists()) {
@@ -88,8 +75,9 @@ public class CachedFile {
      * Constructs a cached file instance from a file that has previously
      * been cached.
      *
-     * @param  cacheRootDirectory  the root directory that contains all
-     *                             cached files.
+     * @param  localRootDirectory  the local root directory containing
+     *                             this cached file (from which the
+     *                             file's relative path is derived).
      * @param  localFile           the pre-existing locally cached file.
      *
      * @throws IOException
@@ -98,23 +86,21 @@ public class CachedFile {
      * @throws IllegalArgumentException
      *   if the cache root directory does not contain the specified file.
      */
-    public CachedFile(File cacheRootDirectory,
+    public CachedFile(File localRootDirectory,
                       File localFile)
             throws IOException, IllegalArgumentException {
 
-        this.cacheRootDirectory = cacheRootDirectory;
+        this.localRootDirectory = localRootDirectory;
         this.localFile = localFile;
         this.relativePath = null;
         this.remoteFileUrl = null;
 
-        final String rootPath = cacheRootDirectory.getCanonicalPath();
+        final String rootPath = localRootDirectory.getCanonicalPath();
         final String localPath = localFile.getCanonicalPath();
         if (localPath.startsWith(rootPath)) {
-            final int rootWithTimestampLength =
-                    rootPath.length() + TIMESTAMP_LENGTH;
-            if (localPath.length() > rootWithTimestampLength) {
-                final String relativePath =
-                        localPath.substring(rootWithTimestampLength);
+            final int rootLength = rootPath.length();
+            if (localPath.length() > rootLength) {
+                final String relativePath = localPath.substring(rootLength);
                 this.relativePath = getNormalizedPath(relativePath);
             }
         }
@@ -285,8 +271,8 @@ public class CachedFile {
         File parent = removedFileOrDirectory.getParentFile();
         if ((parent != null) && parent.isDirectory()) {
 
-            final String rootPath = cacheRootDirectory.getCanonicalPath();
-            final int minLength = rootPath.length() + TIMESTAMP_LENGTH;
+            final String rootPath = localRootDirectory.getCanonicalPath();
+            final int minLength = rootPath.length();
             final String path = parent.getCanonicalPath();
 
             boolean logRemoval = LOG.isInfoEnabled();
@@ -324,10 +310,4 @@ public class CachedFile {
     // Most of the dynamic image files are around 1Mb.
     private static final int BUFFER_SIZE = 2 * 1024 * 1024; // 2Mb
 
-    private static final String TIMESTAMP_PATTERN =
-            "yyyyMMdd-hhmmssSSS";
-    private static final int TIMESTAMP_LENGTH =
-            TIMESTAMP_PATTERN.length() + 1;
-    private static final SimpleDateFormat TIMESTAMP_FORMAT =
-            new SimpleDateFormat(TIMESTAMP_PATTERN);
 }

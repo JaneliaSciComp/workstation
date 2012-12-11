@@ -34,7 +34,7 @@ public class CachedFileTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         LOG.info("setUp: entry ----------------------------------------");
-        final String ts = CachedFile.buildTimestampName();
+        final String ts = LocalFileCache.buildTimestampName();
         testCacheRootDirectory = new File("test-cache-" + ts);
         rootPath = testCacheRootDirectory.getAbsolutePath();
         if (testCacheRootDirectory.mkdir()) {
@@ -54,7 +54,12 @@ public class CachedFileTest extends TestCase {
 
     public void testRemoteLoadAndDelete() throws Exception {
         final URL remoteFileUrl = testRemoteFile.toURI().toURL();
-        CachedFile cachedFile = new CachedFile(testCacheRootDirectory,
+
+        final File rootWithTimestampDirectory =
+                new File(testCacheRootDirectory,
+                         LocalFileCache.buildTimestampName());
+
+        CachedFile cachedFile = new CachedFile(rootWithTimestampDirectory,
                                                remoteFileUrl);
 
         File localFile = cachedFile.getLocalFile();
@@ -88,7 +93,7 @@ public class CachedFileTest extends TestCase {
 
     public void testLocalLoadAndDelete() throws Exception {
         File tsDirectory = new File(testCacheRootDirectory,
-                                    CachedFile.buildTimestampName());
+                                    LocalFileCache.buildTimestampName());
         if (! tsDirectory.mkdir()) {
             fail("failed to create " + tsDirectory.getAbsolutePath());
         }
@@ -97,7 +102,7 @@ public class CachedFileTest extends TestCase {
         File localFile = new File(tsDirectory, cachedLocalFileName);
         copyFile(testRemoteFile, localFile);
 
-        CachedFile cachedFile = new CachedFile(testCacheRootDirectory,
+        CachedFile cachedFile = new CachedFile(tsDirectory,
                                                localFile);
 
         File cachedLocalFile = cachedFile.getLocalFile();
@@ -134,7 +139,7 @@ public class CachedFileTest extends TestCase {
      */
     public static File createFile(int numberOfKilobytes) throws IOException {
         final long numberOfBytes = numberOfKilobytes * 1024;
-        final String name = "test-" + CachedFile.buildTimestampName() + ".txt";
+        final String name = "test-" + LocalFileCache.buildTimestampName() + ".txt";
         File file = new File(name);
 
         final int lineLength = name.length() + 1;

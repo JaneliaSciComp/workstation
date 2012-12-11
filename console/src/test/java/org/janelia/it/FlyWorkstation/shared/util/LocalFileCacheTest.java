@@ -35,7 +35,7 @@ public class LocalFileCacheTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         LOG.info("setUp: entry ----------------------------------------");
-        final String ts = CachedFile.buildTimestampName();
+        final String ts = LocalFileCache.buildTimestampName();
         cacheRootParentDirectory = new File("test-cache-" + ts);
         final String path = cacheRootParentDirectory.getAbsolutePath();
         if (cacheRootParentDirectory.mkdir()) {
