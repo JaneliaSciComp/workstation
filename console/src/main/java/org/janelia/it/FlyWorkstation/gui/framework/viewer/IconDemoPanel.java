@@ -133,8 +133,7 @@ public class IconDemoPanel extends Viewer {
 				
 				// Space on a single entity triggers a preview 
 				if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-					updateHud();
-					hud.toggleDialog();
+                    handleHudRequest();
 					e.consume();
 					return;
 				}
@@ -238,10 +237,20 @@ public class IconDemoPanel extends Viewer {
 		}
 		JPopupMenu popupMenu = new EntityContextMenu(rootedEntityList);
 		((EntityContextMenu)popupMenu).addMenuItems();
+
+        JMenuItem toggleHudMI = new JMenuItem("  Show in Lightbox");
+        toggleHudMI.addActionListener( new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                handleHudRequest();
+            }
+        });
+        popupMenu.addSeparator();
+        popupMenu.add(toggleHudMI);
 		return popupMenu;
 	}
-	
-	/**
+
+    /**
 	 * This is a separate method so that it can be overridden to accommodate other behavior patterns.
 	 * @param button
 	 */
@@ -753,7 +762,13 @@ public class IconDemoPanel extends Viewer {
 		statusLabel.setText(s+" of "+allRootedEntities.size()+" selected");
 	}
 
-	private void updateHud() {
+    /** This should be called by any handler that wishes to show/unshow the HUD. */
+    private void handleHudRequest() {
+        updateHud();
+        hud.toggleDialog();
+    }
+
+    private void updateHud() {
   		List<String> selectedIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
 		if (selectedIds.size() != 1) {
 			hud.hideDialog();
