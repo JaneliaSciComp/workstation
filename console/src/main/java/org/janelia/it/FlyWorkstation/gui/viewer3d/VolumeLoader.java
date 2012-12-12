@@ -15,8 +15,8 @@ import loci.formats.gui.BufferedImageReader;
 import loci.formats.in.*;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeBrick.TextureColorSpace;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.scaled_image.ScaledImage;
 
+import java.awt.image.DataBuffer;
 import java.util.zip.DataFormatException;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
@@ -250,9 +250,12 @@ public class VolumeLoader
 	{
 		// System.out.println("Reading frame " + frameIndex);
 		int offset = frameIndex * sx * sy;
-		image.getRGB(0, 0, sx, sy,
-				argbIntArray, 
-				offset, sx);
+        image.getRGB(0, 0, sx, sy,
+                argbIntArray,
+                offset, sx);
+//        new FilteredImage( image ).getRGB(0, 0, sx, sy,
+//				argbIntArray,
+//				offset, sx);
 	}
 	
 	private void zeroColors() {
@@ -260,5 +263,57 @@ public class VolumeLoader
 		for (int v = 0; v < numVoxels; ++v)
 			argbIntArray[v] = 0;
 	}
-	
+
+    public static class FilteredImage extends BufferedImage {
+        private BufferedImage wrappedImage;
+        public FilteredImage( BufferedImage wrappedImage ) {
+            super( wrappedImage.getWidth(), wrappedImage.getHeight(), wrappedImage.getType() );
+            this.wrappedImage = wrappedImage;
+        }
+
+        public int[] getRGB(int startX, int startY, int w, int h,
+                            int[] rgbArray, int offset, int scansize) {
+            int yoff  = offset;
+            int off;
+            Object data;
+            int nbands = wrappedImage.getRaster().getNumBands();
+            int dataType = wrappedImage.getRaster().getDataBuffer().getDataType();
+            switch (dataType) {
+                case DataBuffer.TYPE_BYTE:
+                    data = new byte[nbands];
+                    break;
+                case DataBuffer.TYPE_USHORT:
+                    data = new short[nbands];
+                    break;
+                case DataBuffer.TYPE_INT:
+                    data = new int[nbands];
+                    break;
+                case DataBuffer.TYPE_FLOAT:
+                    data = new float[nbands];
+                    break;
+                case DataBuffer.TYPE_DOUBLE:
+                    data = new double[nbands];
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown data buffer type: "+
+                            dataType);
+            }
+
+            if (rgbArray == null) {
+                rgbArray = new int[offset+h*scansize];
+            }
+
+            for (int y = startY; y < startY+h; y++, yoff+=scansize) {
+                off = yoff;
+                for (int x = startX; x < startX+w; x++) {
+                    int dataElement = wrappedImage.getColorModel().getRGB(wrappedImage.getRaster().getDataElements(x,
+                            y,
+                            data));
+                    rgbArray[off++] = dataElement & 0xFF0000; // Filter to only red.
+                }
+            }
+
+            return rgbArray;
+        }
+    }
 }
