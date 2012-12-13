@@ -72,7 +72,9 @@ public class IconDemoPanel extends Viewer {
 	protected JLabel statusLabel;
 	protected JButton prevPageButton;
 	protected JButton nextPageButton;
-	protected JLabel pagingStatusLabel;
+    protected JButton endPageButton;
+    protected JButton startPageButton;
+    protected JLabel pagingStatusLabel;
 	
 	// Hud dialog
 	protected Hud hud;
@@ -374,6 +376,22 @@ public class IconDemoPanel extends Viewer {
 			}
 		});
 
+        startPageButton = new JButton(Icons.getIcon("arrow_double_left.png"));
+        startPageButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                goStartPage();
+            }
+        });
+
+        endPageButton = new JButton(Icons.getIcon("arrow_double_right.png"));
+        endPageButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                goEndPage();
+            }
+        });
+
         statusLabel = new JLabel("");
 		pagingStatusLabel = new JLabel("");
 		
@@ -388,10 +406,12 @@ public class IconDemoPanel extends Viewer {
         statusBar.add(Box.createHorizontalGlue());
         statusBar.add(pagingStatusLabel);
         statusBar.add(Box.createRigidArea(new Dimension(10,20)));
-		statusBar.add(prevPageButton);
+		statusBar.add(startPageButton);
+        statusBar.add(prevPageButton);
 		statusBar.add(nextPageButton);
-		
-		addKeyListener(keyListener);
+        statusBar.add(endPageButton);
+
+        addKeyListener(keyListener);
 
 		imagesPanel.addMouseListener(new MouseHandler() {
 			@Override
@@ -808,9 +828,11 @@ public class IconDemoPanel extends Viewer {
 	}
 
 	private void updatePagingStatus() {
-		prevPageButton.setEnabled(currPage>0);
+		startPageButton.setEnabled(currPage!=0);
+        prevPageButton.setEnabled(currPage>0);
 		nextPageButton.setEnabled(currPage<numPages-1);
-	}
+        endPageButton.setEnabled(currPage!=numPages-1);
+    }
 	
 	private synchronized void goPrevPage() {
 		int page = currPage-1;
@@ -824,7 +846,15 @@ public class IconDemoPanel extends Viewer {
 		loadImageEntities(page, null);
 	}
 
-	@Override
+    private synchronized void goStartPage() {
+        loadImageEntities(0, null);
+    }
+
+    private synchronized void goEndPage() {
+        loadImageEntities(numPages-1, null);
+    }
+
+    @Override
 	public void showLoadingIndicator() {
 		removeAll();
 		add(new JLabel(Icons.getLoadingIcon()));
