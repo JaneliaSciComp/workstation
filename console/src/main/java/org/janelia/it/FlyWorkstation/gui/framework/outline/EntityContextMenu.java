@@ -1005,7 +1005,13 @@ public class EntityContextMenu extends JPopupMenu {
                                     }
                                 }
                             }
-                            
+
+                            if (SessionMgr.getSessionMgr().getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
+                                JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Could not get Neuron Annotator to launch and connect. " +
+                                        "Please contact support.", "Launch ERROR", JOptionPane.ERROR_MESSAGE);
+                                return;
+                            }
+
                             log.debug("Requesting entity view in Neuron Annotator: "+result.getId());
                             ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(result.getId());
 	                        
