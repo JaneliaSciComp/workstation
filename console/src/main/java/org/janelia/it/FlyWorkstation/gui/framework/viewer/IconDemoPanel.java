@@ -6,18 +6,7 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.event.*;
-import java.awt.image.BufferedImage;
-import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.swing.*;
-
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChangeEvent;
@@ -47,7 +36,14 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.Subscribe;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of 
@@ -238,7 +234,7 @@ public class IconDemoPanel extends Viewer {
 		JPopupMenu popupMenu = new EntityContextMenu(rootedEntityList);
 		((EntityContextMenu)popupMenu).addMenuItems();
 
-        JMenuItem toggleHudMI = new JMenuItem("  Show in Lightbox");
+        JMenuItem toggleHudMI = new JMenuItem("  Show in Lightbox (Space Bar)");
         toggleHudMI.addActionListener( new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
