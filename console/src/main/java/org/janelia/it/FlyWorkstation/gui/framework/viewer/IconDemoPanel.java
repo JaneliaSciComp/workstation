@@ -361,7 +361,8 @@ public class IconDemoPanel extends Viewer {
 		imagesPanel.addMouseListener(new MouseForwarder(this, "ImagesPanel->IconDemoPanel"));
 		
 		prevPageButton = new JButton(Icons.getIcon("arrow_back.gif"));
-		prevPageButton.addActionListener(new ActionListener() {
+		prevPageButton.setToolTipText("Back A Page");
+        prevPageButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				goPrevPage();
@@ -369,7 +370,8 @@ public class IconDemoPanel extends Viewer {
 		});
 		
 		nextPageButton = new JButton(Icons.getIcon("arrow_forward.gif"));
-		nextPageButton.addActionListener(new ActionListener() {
+        nextPageButton.setToolTipText("Forward A Page");
+        nextPageButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				goNextPage();
@@ -377,6 +379,7 @@ public class IconDemoPanel extends Viewer {
 		});
 
         startPageButton = new JButton(Icons.getIcon("arrow_double_left.png"));
+        startPageButton.setToolTipText("Jump To Start");
         startPageButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -385,6 +388,7 @@ public class IconDemoPanel extends Viewer {
         });
 
         endPageButton = new JButton(Icons.getIcon("arrow_double_right.png"));
+        endPageButton.setToolTipText("Jump To End");
         endPageButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
