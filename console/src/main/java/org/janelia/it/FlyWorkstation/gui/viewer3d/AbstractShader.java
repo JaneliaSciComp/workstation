@@ -15,9 +15,9 @@ import java.nio.IntBuffer;
 
 public abstract class AbstractShader
 {
-    int vertexShader = 0;
-    int fragmentShader = 0;
-    int shaderProgram = 0;
+    private int vertexShader = 0;
+    private int fragmentShader = 0;
+    private int shaderProgram = 0;
 
     private static final String LINE_ENDING = System.getProperty( "line.separator" );
 
@@ -37,15 +37,15 @@ public abstract class AbstractShader
         loadOneShader(fragmentShader, getFragmentShader(), gl);
 
         // System.out.println("loaded fragment shader");
-        shaderProgram = gl.glCreateProgram();
-        gl.glAttachShader(shaderProgram, vertexShader);
-        gl.glAttachShader(shaderProgram, fragmentShader);
-        gl.glLinkProgram(shaderProgram);
-        gl.glValidateProgram(shaderProgram);
+        setShaderProgram(gl.glCreateProgram());
+        gl.glAttachShader(getShaderProgram(), vertexShader);
+        gl.glAttachShader(getShaderProgram(), fragmentShader);
+        gl.glLinkProgram(getShaderProgram());
+        gl.glValidateProgram(getShaderProgram());
         IntBuffer intBuffer = IntBuffer.allocate(1);
-        gl.glGetProgramiv(shaderProgram, GL2.GL_LINK_STATUS, intBuffer);
+        gl.glGetProgramiv(getShaderProgram(), GL2.GL_LINK_STATUS, intBuffer);
         if (intBuffer.get(0) != 1) {
-            gl.glGetProgramiv(shaderProgram, GL2.GL_INFO_LOG_LENGTH, intBuffer);
+            gl.glGetProgramiv(getShaderProgram(), GL2.GL_INFO_LOG_LENGTH, intBuffer);
             int size = intBuffer.get(0);
             StringBuilder errBuilder = new StringBuilder();
             errBuilder.append("Problem with fragment shader ")
@@ -54,7 +54,7 @@ public abstract class AbstractShader
                     .append(LINE_ENDING);
             if (size > 0) {
                 ByteBuffer byteBuffer = ByteBuffer.allocate(size);
-                gl.glGetProgramInfoLog(shaderProgram, size, intBuffer, byteBuffer);
+                gl.glGetProgramInfoLog(getShaderProgram(), size, intBuffer, byteBuffer);
                 for (byte b : byteBuffer.array()) {
                     errBuilder.append((char) b);
                 }
@@ -114,6 +114,14 @@ public abstract class AbstractShader
 
 		}
 	}
+
+    public int getShaderProgram() {
+        return shaderProgram;
+    }
+
+    public void setShaderProgram(int shaderProgram) {
+        this.shaderProgram = shaderProgram;
+    }
 
     /** Throws this exception to indicate that a shader creation (load/compile/whatever) failed. */
     public static class ShaderCreationException extends Exception {

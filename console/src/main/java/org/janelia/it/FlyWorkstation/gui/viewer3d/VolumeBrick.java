@@ -26,7 +26,7 @@ public class VolumeBrick implements GLActor
     private int interpolationMethod =
     		GL2.GL_LINEAR; // blending across voxel edges
     		// GL2.GL_NEAREST; // discrete cube shaped voxels
-    private boolean bUseShader = false; // whether to ray trace voxels
+    private boolean bUseShader = true; // whether to ray trace voxels
     // Color space is linear for most microscopy LSM, TIFF and V3DRAW files
     private TextureColorSpace textureColorSpace = TextureColorSpace.COLOR_SPACE_LINEAR;
 	
@@ -40,6 +40,8 @@ public class VolumeBrick implements GLActor
      * Size of a single voxel, in world units.
      */
     private double[] voxelMicrometers = {1.0, 1.0, 1.0};
+
+    private float[] colorMask = { 1.0f, 1.0f, 1.0f };
     /**
      * Size of our opengl texture, which might be padded with extra voxels
      * to reach a multiple of 8
@@ -58,7 +60,25 @@ public class VolumeBrick implements GLActor
     VolumeBrick(MipRenderer mipRenderer) {
     		renderer = mipRenderer;
     }
-    
+
+    /**
+     * This should be called to filter in/out the three channels.  Set any of these to 0.0f to turn off that
+     * channel.  Conversely, set any to 1.0 to turn on that channel.  It is also possible (but currently not
+     * advised) to use intermediate values.  Please do not use negative values, as such will be rejected.
+     */
+    public void setColorMask( float red, float green, float blue ) {
+        if ( red < 0.0f  ||  green < 0.0f  ||  blue < 0.0f ) {
+            throw new RuntimeException( "Invalid, negative value(s) provided." );
+        }
+        colorMask[ 0 ] = red;
+        colorMask[ 1 ] = green;
+        colorMask[ 2 ] = blue;
+    }
+
+    public float[] getColorMask() {
+        return colorMask;
+    }
+
 	@Override
 	public void init(GL2 gl) {
 		gl.glPushAttrib(GL2.GL_TEXTURE_BIT | GL2.GL_ENABLE_BIT);
@@ -131,25 +151,26 @@ public class VolumeBrick implements GLActor
 
         // set blending to enable transparent voxels
         if (renderMethod == RenderMethod.ALPHA_BLENDING) {
-        		gl.glEnable(GL2.GL_BLEND);
-        		gl.glBlendEquation(GL2.GL_FUNC_ADD);
-        		// Weight source by GL_ONE because we are using premultiplied alpha.
-        		gl.glBlendFunc(GL2.GL_ONE, GL2.GL_ONE_MINUS_SRC_ALPHA);
+            gl.glEnable(GL2.GL_BLEND);
+            gl.glBlendEquation(GL2.GL_FUNC_ADD);
+            // Weight source by GL_ONE because we are using premultiplied alpha.
+            gl.glBlendFunc(GL2.GL_ONE, GL2.GL_ONE_MINUS_SRC_ALPHA);
         }
         else if (renderMethod == RenderMethod.MAXIMUM_INTENSITY) {
-    			gl.glEnable(GL2.GL_BLEND);
-    			gl.glBlendEquation(GL2.GL_MAX);    				
-    			gl.glBlendFunc(GL2.GL_ONE, GL2.GL_DST_ALPHA);
-    			// gl.glBlendFunc(GL2.GL_ONE_MINUS_DST_COLOR, GL2.GL_ZERO); // inverted?  http://stackoverflow.com/questions/2656905/opengl-invert-framebuffer-pixels
+    	    gl.glEnable(GL2.GL_BLEND);
+            gl.glBlendEquation(GL2.GL_MAX);
+            gl.glBlendFunc(GL2.GL_ONE, GL2.GL_DST_ALPHA);
+            // gl.glBlendFunc(GL2.GL_ONE_MINUS_DST_COLOR, GL2.GL_ZERO); // inverted?  http://stackoverflow.com/questions/2656905/opengl-invert-framebuffer-pixels
         }
         if (bUseShader) {
-        		shader.setUniforms(textureVoxels, voxelMicrometers);
-        		shader.load(gl);
+            shader.setColorMask( colorMask );
+            shader.load(gl);
         }
 
         displayVolumeSlices(gl);
-		if (bUseShader)
-			shader.unload(gl);
+		if (bUseShader) {
+            shader.unload(gl);
+        }
 		gl.glPopAttrib();
 	}
 	
@@ -244,20 +265,20 @@ public class VolumeBrick implements GLActor
 			// double c = xi / (double)sx;
 			// gl.glColor3d(c, c, c);
 			// draw the quadrilateral as a triangle strip with 4 points
-			// (somehow GL_QUADS never works correctly for me)
-			gl.glBegin(GL2.GL_TRIANGLE_STRIP);
-				gl.glTexCoord3d(t00[0], t00[1], t00[2]);
-				gl.glVertex3d(p00[0], p00[1], p00[2]);
-				
-				gl.glTexCoord3d(t10[0], t10[1], t10[2]);
-				gl.glVertex3d(p10[0], p10[1], p10[2]);
-				
-				gl.glTexCoord3d(t01[0], t01[1], t01[2]);
-				gl.glVertex3d(p01[0], p01[1], p01[2]);
-				
-				gl.glTexCoord3d(t11[0], t11[1], t11[2]);
-				gl.glVertex3d(p11[0], p11[1], p11[2]);
-			gl.glEnd();
+            // (somehow GL_QUADS never works correctly for me)
+            gl.glBegin(GL2.GL_TRIANGLE_STRIP);
+            gl.glTexCoord3d(t00[0], t00[1], t00[2]);
+            gl.glVertex3d(p00[0], p00[1], p00[2]);
+
+            gl.glTexCoord3d(t10[0], t10[1], t10[2]);
+            gl.glVertex3d(p10[0], p10[1], p10[2]);
+
+            gl.glTexCoord3d(t01[0], t01[1], t01[2]);
+            gl.glVertex3d(p01[0], p01[1], p01[2]);
+
+            gl.glTexCoord3d(t11[0], t11[1], t11[2]);
+            gl.glVertex3d(p11[0], p11[1], p11[2]);
+            gl.glEnd();
 			boolean bDebug = false;
 			if (bDebug)
 				printPoints(t00, t10, t01, t11);
@@ -288,12 +309,12 @@ public class VolumeBrick implements GLActor
 		printPoint(p3);
 		printPoint(p4);
 	}
-	
-	private void printPoint(double[] p) {
-		System.out.println(
-				new Double(p[0]).toString() + ", " +
-				new Double(p[1]).toString() + ", " +
-				new Double(p[2]).toString());
+
+    private void printPoint(double[] p) {
+        System.out.println(
+                new Double(p[0]).toString() + ", " +
+                        new Double(p[1]).toString() + ", " +
+                        new Double(p[2]).toString());
 	}
 	
 	public void setTextureColorSpace(TextureColorSpace colorSpace) {
@@ -390,6 +411,11 @@ public class VolumeBrick implements GLActor
 		voxelMicrometers[1] = y;
 		voxelMicrometers[2] = z;
 	}
+
+    /** Call this when the brick is to be re-shown after an absense. */
+    public void refresh() {
+        bTextureNeedsUpload = true;
+    }
 	
 	private double[] textureCoordinateFromXyz(double[] xyz) {
 		double[] tc = {xyz[0], xyz[1], xyz[2]}; // micrometers, origin at center
