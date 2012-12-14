@@ -49,10 +49,11 @@ public class VolumeBrick implements GLActor
 	IntBuffer data = Buffers.newDirectIntBuffer(textureVoxels[0]*textureVoxels[1]*textureVoxels[2]);
     private int textureId = 0;
     private boolean bTextureNeedsUpload = false;
-    private VoxelRayShader shader = new VoxelRayShader();
+    //private VoxelRayShader shader = new VoxelRayShader();
+    private ColorFilterShader shader = new ColorFilterShader();
     private MipRenderer renderer; // circular reference...
     private boolean bIsInitialized;
-    private boolean bUseSyntheticData = true;
+    private boolean bUseSyntheticData = false;
 
     VolumeBrick(MipRenderer mipRenderer) {
     		renderer = mipRenderer;
@@ -91,8 +92,14 @@ public class VolumeBrick implements GLActor
 		}
 		if (bTextureNeedsUpload)
 			uploadTexture(gl);
-		if (bUseShader)
-			shader.init(gl);
+		if (bUseShader) {
+            try {
+                shader.init(gl);
+            } catch ( Exception ex ) {
+                ex.printStackTrace();
+                bUseShader = false;
+            }
+        }
 		// tidy up
 		gl.glPopAttrib();
 		bIsInitialized = true;
@@ -114,12 +121,14 @@ public class VolumeBrick implements GLActor
 		gl.glShadeModel(GL2.GL_FLAT);
         gl.glDisable(GL2.GL_LIGHTING);
         gl.glEnable(GL2.GL_TEXTURE_3D);
+
         gl.glBindTexture(GL2.GL_TEXTURE_3D, textureId);
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MIN_FILTER, interpolationMethod);
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MAG_FILTER, interpolationMethod);
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_R, GL2.GL_CLAMP_TO_BORDER);
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_S, GL2.GL_CLAMP_TO_BORDER);
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_T, GL2.GL_CLAMP_TO_BORDER);
+
         // set blending to enable transparent voxels
         if (renderMethod == RenderMethod.ALPHA_BLENDING) {
         		gl.glEnable(GL2.GL_BLEND);
@@ -137,13 +146,11 @@ public class VolumeBrick implements GLActor
         		shader.setUniforms(textureVoxels, voxelMicrometers);
         		shader.load(gl);
         }
-		displayVolumeSlices(gl);
+
+        displayVolumeSlices(gl);
 		if (bUseShader)
 			shader.unload(gl);
 		gl.glPopAttrib();
-
-		// System.out.println("Focus = " + renderer.focusInGround);
-		// System.out.println("Camera distance = " + renderer.cameraFocusDistance);
 	}
 	
 	// Debugging object with corners at the center of
@@ -166,7 +173,7 @@ public class VolumeBrick implements GLActor
 		glut.glutWireCube(1);
 		gl.glPopMatrix();		
 	}
-	
+
 	/**
 	 * Volume rendering by painting a series of transparent,
 	 * one-voxel-thick slices, in back-to-front painter's algorithm
@@ -174,6 +181,7 @@ public class VolumeBrick implements GLActor
 	 * @param gl
 	 */
 	public void displayVolumeSlices(GL2 gl) {
+
 		// Get the view vector, so we can choose the slice direction,
 		// along one of the three principal axes(X,Y,Z), and either forward
 		// or backward.
@@ -254,7 +262,8 @@ public class VolumeBrick implements GLActor
 			if (bDebug)
 				printPoints(t00, t10, t01, t11);
 		}
-	}
+
+    }
 
 	@Override
 	public void dispose(GL2 gl) {
@@ -392,6 +401,7 @@ public class VolumeBrick implements GLActor
 			// Rescale from voxels to texture units (range 0-1)
 			tc[i] /= textureVoxels[i]; // texture units
 		}
+
 		return tc;
 	}
 	
@@ -415,5 +425,7 @@ public class VolumeBrick implements GLActor
 				GL2.GL_BGRA, // voxel component order
 				GL2.GL_UNSIGNED_INT_8_8_8_8_REV, // voxel component type
 				data.rewind());
+
+        bTextureNeedsUpload = false;
 	}
 }
