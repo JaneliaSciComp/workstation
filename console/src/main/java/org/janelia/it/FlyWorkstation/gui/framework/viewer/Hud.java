@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
-import java.awt.BorderLayout;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 
 import javax.swing.*;
@@ -19,12 +19,15 @@ import org.slf4j.LoggerFactory;
 public class Hud extends ModalDialog {
 
 	private static final Logger log = LoggerFactory.getLogger(Hud.class);
-	
+    public static final String RED_GREEN_BLUE_CONTROL = "rgb";
+    public static final String THREE_D_CONTROL = "3D";
+
     private Entity entity;
     private boolean dirtyEntityFor3D;
 	private JLabel previewLabel;
     private Mip3d mip3d;
     private JCheckBox render3DCheckbox;
+    private JButton rgbButton;
     private Hud3DController hud3DController;
     
     public Hud() {
@@ -73,6 +76,11 @@ public class Hud extends ModalDialog {
         }
     }
 
+    /** Filters RGB characteristics of rendering in 3D. */
+    public void setRgbValues() {
+        mip3d.setRgbValues();
+    }
+
     /**
      * This is a controller-callback method to allow or disallow the user from attempting to switch
      * to 3D mode.
@@ -91,6 +99,7 @@ public class Hud extends ModalDialog {
                 // In this case, 2D exists.  Need to reset the checkbox for 2D use, for now.
                 render3DCheckbox.setSelected( false );
             }
+
         }
     }
 
@@ -111,10 +120,16 @@ public class Hud extends ModalDialog {
     public void handleRenderSelection() {
         if ( shouldRender3D() ) {
             renderIn3D();
+            if ( this.rgbButton != null ) {
+                rgbButton.setEnabled( true );
+            }
         }
         else {
             this.remove(mip3d);
             this.add(previewLabel, BorderLayout.CENTER);
+            if ( this.rgbButton != null ) {
+                rgbButton.setEnabled( false );
+            }
         }
         this.validate();
         this.repaint();
@@ -160,15 +175,28 @@ public class Hud extends ModalDialog {
         try {
             mip3d = new Mip3d();
             hud3DController = new Hud3DController(this, mip3d);
-            render3DCheckbox = new JCheckBox( "3D" );
+            render3DCheckbox = new JCheckBox( THREE_D_CONTROL );
             render3DCheckbox.setSelected( false ); // Always startup as false.
             render3DCheckbox.addActionListener(hud3DController);
             render3DCheckbox.setFont( render3DCheckbox.getFont().deriveFont( 9.0f ));
             render3DCheckbox.setBorderPainted(false);
+            render3DCheckbox.setActionCommand( THREE_D_CONTROL );
+
+            rgbButton = new JButton( RED_GREEN_BLUE_CONTROL );
+            rgbButton.setFont( rgbButton.getFont().deriveFont( 9.0f ) );
+            rgbButton.addActionListener( hud3DController );
+            rgbButton.setBorderPainted( false );
+            rgbButton.setActionCommand( RED_GREEN_BLUE_CONTROL );
+            rgbButton.setEnabled( false );
+
+            JPanel rightSidePanel = new JPanel();
+            rightSidePanel.setLayout( new FlowLayout() );
+            rightSidePanel.add( rgbButton );
+            rightSidePanel.add( render3DCheckbox );
 
             JPanel menuLikePanel = new JPanel();
             menuLikePanel.setLayout( new BorderLayout() );
-            menuLikePanel.add( render3DCheckbox, BorderLayout.EAST );
+            menuLikePanel.add( rightSidePanel, BorderLayout.EAST );
             add(menuLikePanel, BorderLayout.NORTH);
         } catch ( Exception ex ) {
             // Turn off the 3d capability if exception.
@@ -180,7 +208,7 @@ public class Hud extends ModalDialog {
     private boolean shouldRender3D() {
         boolean rtnVal = render3DCheckbox != null  &&  render3DCheckbox.isEnabled() && render3DCheckbox.isSelected();
         if ( !rtnVal ) {
-            if ( hud3DController != null &&  hud3DController.is3DReady()  &&  (this.previewLabel.getIcon() == null) ) {
+            if ( hud3DController != null  &&  hud3DController.is3DReady()  &&  (this.previewLabel.getIcon() == null) ) {
                 rtnVal = true;
             }
         }
