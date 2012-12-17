@@ -3,11 +3,14 @@ package org.janelia.it.FlyWorkstation.shared.util;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.googlecode.concurrentlinkedhashmap.EvictionListener;
 import com.googlecode.concurrentlinkedhashmap.Weigher;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -21,6 +24,7 @@ import java.util.concurrent.Executors;
 public class LocalFileCache {
 
     private File rootDirectory;
+    private int rootWithTimestampLength;
     private int kilobyteCapacity;
 
     private ConcurrentLinkedHashMap<String, CachedFile>
@@ -113,6 +117,13 @@ public class LocalFileCache {
         // builders since items are removed as soon as build completes
         this.relativePathToBuilderMap =
                 new ConcurrentHashMap<String, CachedFileBuilder>();
+
+        // save static length of all retrieval time directory paths here
+        // so that it does not need to be recalculated over and over
+        final String rootDirectoryAbsolutePath =
+                this.rootDirectory.getAbsolutePath();
+        this.rootWithTimestampLength =
+                rootDirectoryAbsolutePath.length() + TIMESTAMP_LENGTH;
 
         if (rootDirectory.canWrite()) {
 
@@ -251,7 +262,15 @@ public class LocalFileCache {
      */
     private void loadCacheFromFilesystem() {
 
-        registerFileInCache(rootDirectory);
+        File[] children = rootDirectory.listFiles();
+        if (children != null) {
+            // only register files in retrieval timestamp directories under root
+            for (File child : children) {
+                if (child.isDirectory()) {
+                    registerFileInCache(child);
+                }
+            }
+        }
 
         final long usedKb = getNumberOfKilobytes();
         final long totalKb = getKilobyteCapacity();
@@ -289,12 +308,24 @@ public class LocalFileCache {
 
         } else if (file.canRead()) {
             try {
-                CachedFile cachedFile = new CachedFile(rootDirectory, file);
-                relativePathToCachedFileMap.put(cachedFile.getRelativePath(),
-                                                cachedFile);
+                final String absoluteFilePath = file.getAbsolutePath();
+                if (absoluteFilePath.length() > rootWithTimestampLength) {
+                    final String rootWithTimestampPath =
+                            absoluteFilePath.substring(0, rootWithTimestampLength);
+                    final File rootWithTimestampDirectory =
+                            new File(rootWithTimestampPath);
+                    CachedFile cachedFile =
+                            new CachedFile(rootWithTimestampDirectory, file);
+                    relativePathToCachedFileMap.put(
+                            cachedFile.getRelativePath(),
+                            cachedFile);
+                } else {
+                    LOG.warn("registerFileInCache: ignoring " +
+                             file.getAbsolutePath());
+                }
             } catch (Exception e) {
                 LOG.warn("registerFileInCache: failed to load " +
-                        file.getAbsolutePath(), e);
+                         file.getAbsolutePath(), e);
             }
         }
     }
@@ -327,7 +358,18 @@ public class LocalFileCache {
             CachedFile cachedFile =
                     relativePathToCachedFileMap.get(relativePath);
             if (cachedFile == null) {
-                cachedFile = new CachedFile(rootDirectory, remoteFileUrl);
+
+                // Each cached file is stored within a nested set of directories as follows:
+                //   [root cache directory]/[retrieval time directory]/[relative path]/[file]
+                //
+                // The retreival time directory is inserted to ensure that no race
+                // condition is introduced by removing a file from the cache at the
+                // same time it is being re-added to the cache.
+                final File rootWithTimestampDirectory =
+                        new File(rootDirectory, buildTimestampName());
+
+                cachedFile = new CachedFile(rootWithTimestampDirectory,
+                                            remoteFileUrl);
 
                 // check for catastrophic case of file larger than entire cache
                 final long kilobytes = cachedFile.getKilobytes();
@@ -350,7 +392,20 @@ public class LocalFileCache {
         }
     }
 
-    private static final Logger LOG = Logger.getLogger(LocalFileCache.class);
+    /**
+     * @return a new timestamp directory name based on the current time.
+     */
+    protected static String buildTimestampName() {
+        return TIMESTAMP_FORMAT.format(new Date());
+    }
+
+    private static final Logger LOG = LoggerFactory.getLogger(LocalFileCache.class);
 
     private static final String CACHE_DIRECTORY_NAME = ".jacs-file-cache";
+    private static final String TIMESTAMP_PATTERN =
+            "yyyyMMdd-hhmmssSSS";
+    private static final int TIMESTAMP_LENGTH =
+            TIMESTAMP_PATTERN.length() + 1;
+    private static final SimpleDateFormat TIMESTAMP_FORMAT =
+            new SimpleDateFormat(TIMESTAMP_PATTERN);
 }

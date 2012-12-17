@@ -1,16 +1,14 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
-import java.awt.Dimension;
-import java.awt.Point;
+import java.awt.*;
 import java.awt.event.*;
 
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLJPanel;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
+import org.janelia.it.FlyWorkstation.gui.util.panels.ChannelSelectionPanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +18,7 @@ extends GLJPanel // in case lightweight widget is required
 implements MouseListener, MouseMotionListener, ActionListener,
 	MouseWheelListener
 {
-	private static final Logger log = LoggerFactory.getLogger(Mip3d.class);
+    private static final Logger log = LoggerFactory.getLogger(Mip3d.class);
 	
 	private static final long serialVersionUID = 1L;
 	// setup OpenGL Version 2
@@ -68,6 +66,16 @@ implements MouseListener, MouseMotionListener, ActionListener,
         JMenuItem resetViewItem = new JMenuItem("Reset view");
         resetViewItem.addActionListener(this);
         popupMenu.add(resetViewItem);
+    }
+
+    //todo consider making these RGB value setting a preference, rather than this drill-in-setter.
+    public void setRgbValues() {
+        renderer.setRgbValues();
+        repaint();
+    }
+
+    public void refresh() {
+        renderer.refresh();
     }
 	
 	@Override
@@ -178,4 +186,5 @@ implements MouseListener, MouseMotionListener, ActionListener,
 		// not display().
 		repaint();
 	}
+
 }

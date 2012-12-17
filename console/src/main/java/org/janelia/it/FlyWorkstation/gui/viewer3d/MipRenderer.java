@@ -1,14 +1,21 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
+import org.janelia.it.FlyWorkstation.gui.util.panels.ChannelSelectionPanel;
+
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.glu.GLU;
-import java.awt.Point;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Vector;
  
 class MipRenderer implements GLEventListener
 {
+    public static final int RGBDIALOG_WIDTH = 300;
+    public static final int RGBDIALOG_HEIGHT = 150;
     private GLU glu = new GLU();
     
     // camera parameters
@@ -43,7 +50,7 @@ class MipRenderer implements GLEventListener
     public void clear() {
     		actors.clear();
     }
-    
+
     @Override
     public void display(GLAutoDrawable gLDrawable) 
     {
@@ -123,7 +130,7 @@ class MipRenderer implements GLEventListener
     		cameraFocusDistance = 1.05 * distanceToScreenInPixels * heightInMicrometers / heightInPixels;
     		// cameraFocusDistance = defaultCameraFocusDistance * defaultHeightInPixels / heightInPixels;
     }
-    
+
     @Override
     public void reshape(GLAutoDrawable gLDrawable, int x, int y, int width, int height) 
     {
@@ -147,7 +154,7 @@ class MipRenderer implements GLEventListener
         gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glLoadIdentity();
     }
-    
+
 	public void rotatePixels(double dx, double dy, double dz) {
 		// Rotate like a trackball
 		double dragDistance = Math.sqrt(dy*dy + dx*dx + dz*dz);
@@ -209,5 +216,66 @@ class MipRenderer implements GLEventListener
 		double zoomRatio = 1.0 + dC/denom;
 		zoom(zoomRatio);
 	}
+
+    public void refresh() {
+        getVolumeBrick().refresh();
+    }
+
+    //todo consider making RGB setting a preference rather than this drill-in setter.
+    public void setRgbValues() {
+
+        final VolumeBrick volumeBrick = getVolumeBrick();
+
+        if ( volumeBrick != null ) {
+            float[] colorMask = volumeBrick.getColorMask();
+            final JDialog rgbPopup = new JDialog();
+            rgbPopup.setSize( new Dimension(RGBDIALOG_WIDTH, RGBDIALOG_HEIGHT) );
+            rgbPopup.setTitle("Red, Green or Blue Channels");
+            rgbPopup.setLayout( new BorderLayout() );
+            final ChannelSelectionPanel channelSelectionPanel = new ChannelSelectionPanel( colorMask );
+
+            JButton cancelButton = new JButton( "Cancel" );
+            cancelButton.setActionCommand( "Cancel" );
+            JButton okButton = new JButton( "OK" );
+            okButton.setActionCommand("OK");
+
+            JPanel buttonPanel = new JPanel();
+            buttonPanel.setLayout( new FlowLayout() );
+            buttonPanel.add( okButton );
+            buttonPanel.add( cancelButton );
+
+            ActionListener buttonListener = new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    rgbPopup.setVisible( false );
+                    if ( ((AbstractButton)e.getSource()).getActionCommand().equals( "OK" ) ) {
+                        float[] rgbChoices = channelSelectionPanel.getRgbChoices();
+                        volumeBrick.setColorMask( rgbChoices[ 0 ], rgbChoices[ 1 ], rgbChoices[ 2 ] );
+                    }
+                }
+            };
+
+            cancelButton.addActionListener( buttonListener );
+            okButton.addActionListener( buttonListener );
+
+            rgbPopup.add( channelSelectionPanel, BorderLayout.CENTER );
+            rgbPopup.add( buttonPanel, BorderLayout.SOUTH );
+            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            int locX = (int)screenSize.getWidth() / 4 - (RGBDIALOG_WIDTH / 2);
+            int locY = (int)screenSize.getHeight() / 2 - (RGBDIALOG_HEIGHT / 2);
+            rgbPopup.setLocation( locX, locY );
+            rgbPopup.setVisible(true);
+        }
+    }
+
+    private VolumeBrick getVolumeBrick() {
+        VolumeBrick volumeBrick = null;
+        for ( GLActor actor: actors ) {
+            if ( actor instanceof VolumeBrick ) {
+                volumeBrick = ((VolumeBrick)actor);
+            }
+        }
+        return volumeBrick;
+    }
 
 }

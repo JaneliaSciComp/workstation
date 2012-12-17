@@ -6,18 +6,7 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.event.*;
-import java.awt.image.BufferedImage;
-import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.swing.*;
-
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChangeEvent;
@@ -47,7 +36,14 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.Subscribe;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of 
@@ -76,7 +72,9 @@ public class IconDemoPanel extends Viewer {
 	protected JLabel statusLabel;
 	protected JButton prevPageButton;
 	protected JButton nextPageButton;
-	protected JLabel pagingStatusLabel;
+    protected JButton endPageButton;
+    protected JButton startPageButton;
+    protected JLabel pagingStatusLabel;
 	
 	// Hud dialog
 	protected Hud hud;
@@ -133,8 +131,7 @@ public class IconDemoPanel extends Viewer {
 				
 				// Space on a single entity triggers a preview 
 				if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-					updateHud();
-					hud.toggleDialog();
+                    handleHudRequest();
 					e.consume();
 					return;
 				}
@@ -238,10 +235,20 @@ public class IconDemoPanel extends Viewer {
 		}
 		JPopupMenu popupMenu = new EntityContextMenu(rootedEntityList);
 		((EntityContextMenu)popupMenu).addMenuItems();
+
+        JMenuItem toggleHudMI = new JMenuItem("  Show in Lightbox (Space Bar)");
+        toggleHudMI.addActionListener( new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                handleHudRequest();
+            }
+        });
+        popupMenu.addSeparator();
+        popupMenu.add(toggleHudMI);
 		return popupMenu;
 	}
-	
-	/**
+
+    /**
 	 * This is a separate method so that it can be overridden to accommodate other behavior patterns.
 	 * @param button
 	 */
@@ -354,7 +361,8 @@ public class IconDemoPanel extends Viewer {
 		imagesPanel.addMouseListener(new MouseForwarder(this, "ImagesPanel->IconDemoPanel"));
 		
 		prevPageButton = new JButton(Icons.getIcon("arrow_back.gif"));
-		prevPageButton.addActionListener(new ActionListener() {
+		prevPageButton.setToolTipText("Back A Page");
+        prevPageButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				goPrevPage();
@@ -362,12 +370,31 @@ public class IconDemoPanel extends Viewer {
 		});
 		
 		nextPageButton = new JButton(Icons.getIcon("arrow_forward.gif"));
-		nextPageButton.addActionListener(new ActionListener() {
+        nextPageButton.setToolTipText("Forward A Page");
+        nextPageButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				goNextPage();
 			}
 		});
+
+        startPageButton = new JButton(Icons.getIcon("arrow_double_left.png"));
+        startPageButton.setToolTipText("Jump To Start");
+        startPageButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                goStartPage();
+            }
+        });
+
+        endPageButton = new JButton(Icons.getIcon("arrow_double_right.png"));
+        endPageButton.setToolTipText("Jump To End");
+        endPageButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                goEndPage();
+            }
+        });
 
         statusLabel = new JLabel("");
 		pagingStatusLabel = new JLabel("");
@@ -383,10 +410,12 @@ public class IconDemoPanel extends Viewer {
         statusBar.add(Box.createHorizontalGlue());
         statusBar.add(pagingStatusLabel);
         statusBar.add(Box.createRigidArea(new Dimension(10,20)));
-		statusBar.add(prevPageButton);
+		statusBar.add(startPageButton);
+        statusBar.add(prevPageButton);
 		statusBar.add(nextPageButton);
-		
-		addKeyListener(keyListener);
+        statusBar.add(endPageButton);
+
+        addKeyListener(keyListener);
 
 		imagesPanel.addMouseListener(new MouseHandler() {
 			@Override
@@ -753,7 +782,13 @@ public class IconDemoPanel extends Viewer {
 		statusLabel.setText(s+" of "+allRootedEntities.size()+" selected");
 	}
 
-	private void updateHud() {
+    /** This should be called by any handler that wishes to show/unshow the HUD. */
+    private void handleHudRequest() {
+        updateHud();
+        hud.toggleDialog();
+    }
+
+    private void updateHud() {
   		List<String> selectedIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
 		if (selectedIds.size() != 1) {
 			hud.hideDialog();
@@ -797,9 +832,11 @@ public class IconDemoPanel extends Viewer {
 	}
 
 	private void updatePagingStatus() {
-		prevPageButton.setEnabled(currPage>0);
+		startPageButton.setEnabled(currPage!=0);
+        prevPageButton.setEnabled(currPage>0);
 		nextPageButton.setEnabled(currPage<numPages-1);
-	}
+        endPageButton.setEnabled(currPage!=numPages-1);
+    }
 	
 	private synchronized void goPrevPage() {
 		int page = currPage-1;
@@ -813,7 +850,15 @@ public class IconDemoPanel extends Viewer {
 		loadImageEntities(page, null);
 	}
 
-	@Override
+    private synchronized void goStartPage() {
+        loadImageEntities(0, null);
+    }
+
+    private synchronized void goEndPage() {
+        loadImageEntities(numPages-1, null);
+    }
+
+    @Override
 	public void showLoadingIndicator() {
 		removeAll();
 		add(new JLabel(Icons.getLoadingIcon()));
