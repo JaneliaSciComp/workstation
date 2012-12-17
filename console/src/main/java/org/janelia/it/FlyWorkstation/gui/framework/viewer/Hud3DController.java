@@ -35,10 +35,17 @@ public class Hud3DController implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        hud.handleRenderSelection();
+        AbstractButton aButton = (AbstractButton)e.getSource();
+        if ( aButton.getActionCommand().equals( Hud.RED_GREEN_BLUE_CONTROL) ) {
+            hud.setRgbValues();
+        }
+        else if ( aButton.getActionCommand().equals( Hud.THREE_D_CONTROL ) ) {
+            hud.handleRenderSelection();
+        }
     }
 
     public void set3dWidget() {
+        mip3d.refresh();
         hud.add( mip3d, BorderLayout.CENTER );
     }
 

@@ -39,7 +39,6 @@
     <orderEntry type="library" name="Hibernate" level="project" />
     <orderEntry type="library" name="SAAJ" level="project" />
     <orderEntry type="module" module-name="Shared" />
-    <orderEntry type="module" module-name="Compute" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>
@@ -190,8 +189,16 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" scope="TEST" name="Maven: junit:junit:3.8.1" level="project" />
     <orderEntry type="library" name="Logging" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../compute/build/jars/compute-client.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
   <component name="org.twodividedbyzero.idea.findbugs">
     <option name="_basePreferences">

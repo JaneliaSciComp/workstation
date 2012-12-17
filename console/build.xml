@@ -3,7 +3,6 @@
 
     <!-- need to set this here to override standard location (parallel to src) -->
     <property name="test.src.dir" value="${basedir}/src/test/java"/>
-    <property name="test.log4j.config" value="${basedir}/src/test/resources/log4j.xml"/>
 
     <!-- Import all the generic module targets -->
     <import file="../buildprocess/build-module.xml"/>

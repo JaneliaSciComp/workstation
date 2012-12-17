@@ -1,12 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
-import java.io.File;
-
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+
+import java.io.File;
 
 /**
  * Given an entity with a File Path, reveal the path in Finder.
@@ -32,13 +32,13 @@ public class OpenInFinderAction implements Action {
 	@Override
 	public String getName() {
 		if (SystemInfo.isMac) {
-			return "Reveal in Finder";
+			return "Reveal In Finder";
 		}
 		else if (SystemInfo.isLinux) {
-			return "Reveal in File Manager";
+			return "Reveal In File Manager";
 		}
         else if (SystemInfo.isWindows) {
-            return "Reveal in Windows Explorer";
+            return "Reveal In Windows Explorer";
         }
 		return null;
 	}
