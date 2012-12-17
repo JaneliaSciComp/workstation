@@ -383,7 +383,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 	}
 
     private File getJacsDataFile(String relativePath) {
-    	File file = new File(PathTranslator.JACS_DATA_PATH_NFS, relativePath);
+    	File file = new File(PathTranslator.getOsSpecificRootPath(), relativePath);
     	return new File(PathTranslator.convertPath(file.getAbsolutePath()));
     }
 
