@@ -378,8 +378,13 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
         StringBuffer stdout = new StringBuffer();
         StringBuffer stderr = new StringBuffer();
         SystemCall call = new SystemCall(stdout, stderr);
-		
-		return call.emulateCommandLine(args, null, dir, 3600);
+
+        try {
+		    return call.emulateCommandLine(args, null, dir, 3600);
+        } catch ( Exception ex ) {
+            log.error( "Failed to execute command '" + command + "', exception " + ex.getMessage() + " thrown." );
+            throw ex;
+        }
 	}
 
     private File getJacsDataFile(String relativePath) {
