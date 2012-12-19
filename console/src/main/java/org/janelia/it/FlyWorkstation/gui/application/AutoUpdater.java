@@ -296,7 +296,8 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 				if (SystemInfo.isWindows) {
 					
 					log.info("Downloading update from {}",remoteFile);
-                    if (runShellCommand("copy "+remoteFile+" "+downloadFile, downloadsDir) != 0) {
+
+                    if (runShellCommand("xcopy /S/Y "+remoteFile.getAbsolutePath()+" "+downloadFile.getParentFile().getAbsolutePath() + "\\", downloadsDir.getParentFile()) != 0) {
                         throw new Exception("Error downloading archive: "+downloadFile.getAbsolutePath());
                     }
 
@@ -380,7 +381,11 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
         SystemCall call = new SystemCall(stdout, stderr);
 
         try {
-		    return call.emulateCommandLine(args, null, dir, 3600);
+		    int result = call.emulateCommandLine(args, null, dir, 3600);
+            if ( result != 0 ) {
+                log.error("Command " + command + " failed.  Error=" + result);
+            }
+            return result;
         } catch ( Exception ex ) {
             log.error( "Failed to execute command '" + command + "', exception " + ex.getMessage() + " thrown." );
             throw ex;
