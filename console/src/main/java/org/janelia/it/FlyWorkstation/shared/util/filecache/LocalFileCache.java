@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.shared.util;
+package org.janelia.it.FlyWorkstation.shared.util.filecache;
 
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.googlecode.concurrentlinkedhashmap.EvictionListener;
@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,6 +34,8 @@ public class LocalFileCache {
             relativePathToBuilderMap;
 
     private ExecutorService removalServices;
+
+    private boolean isLoadFromDiskComplete;
 
     /**
      * Creates a new local cache whose physical storage is within the
@@ -175,6 +178,18 @@ public class LocalFileCache {
     }
 
     /**
+     * Sets the maximum number of kilobytes to be maintained in this cache
+     * and eagerly evicts files until it shrinks to the appropriate size.
+     *
+     * @param  kilobyteCapacity  maximum cache capacity in kilobytes.
+     */
+    public void setKilobyteCapacity(int kilobyteCapacity) {
+        LOG.info("setKilobyteCapacity: entry, kilobyteCapacity={}", kilobyteCapacity);
+        relativePathToCachedFileMap.setCapacity(kilobyteCapacity);
+        this.kilobyteCapacity = kilobyteCapacity;
+    }
+
+    /**
      * @param  remoteFileUrl  remote URL for the file.
      *
      * @return the local cached instance of the specified remote file.
@@ -182,8 +197,12 @@ public class LocalFileCache {
      * @throws FileNotCacheableException
      *   if the file cannot be cached locally.
      */
-    public File get(URL remoteFileUrl)
+    public File getFile(URL remoteFileUrl)
             throws FileNotCacheableException {
+
+        if (! isLoadFromDiskComplete) {
+            waitForLocalFilesystemLoadToComplete();
+        }
 
         final String relativePath =
                 CachedFile.getNormalizedPath(remoteFileUrl.getPath());
@@ -192,8 +211,8 @@ public class LocalFileCache {
             CachedFileBuilder builder = getBuilder(remoteFileUrl,
                                                    relativePath);
             try {
-                cachedFile = builder.build();
-            } catch (IllegalStateException e) {
+                cachedFile = builder.loadFile();
+            } catch (Exception e) {
                 throw new FileNotCacheableException(
                         "failed to cache " + remoteFileUrl, e);
             }
@@ -206,6 +225,56 @@ public class LocalFileCache {
         }
 
         return localFile;
+    }
+
+    /**
+     * @param  remoteDirectoryUrl  remote URL for the directory
+     *                             (path must end with '/').
+     * @param  webDavClient        client to use for WebDAV queries.
+     *
+     * @return the local cached instance of the specified remote directory.
+
+     * @throws IllegalArgumentException
+     *   if the directory path does not end with '/'.
+
+     * @throws FileNotCacheableException
+     *   if the directory cannot be cached locally.
+     */
+    public File getDirectory(URL remoteDirectoryUrl,
+                             WebDavClient webDavClient)
+            throws IllegalArgumentException, FileNotCacheableException {
+
+        if (! isLoadFromDiskComplete) {
+            waitForLocalFilesystemLoadToComplete();
+        }
+
+        String relativePath =
+                CachedFile.getNormalizedPath(remoteDirectoryUrl.getPath());
+        if (relativePath.charAt(relativePath.length() - 1) != '/') {
+            throw new IllegalArgumentException(
+                    "directory path '" + relativePath +
+                    " does not end with '/'");
+        }
+
+        CachedFile cachedDirectory =
+                relativePathToCachedFileMap.get(relativePath);
+        if (cachedDirectory == null) {
+            CachedFileBuilder builder = getBuilder(remoteDirectoryUrl,
+                                                   relativePath);
+            try {
+                cachedDirectory = builder.loadDirectory(webDavClient);
+            } catch (Exception e) {
+                throw new FileNotCacheableException(
+                        "failed to cache directory " + remoteDirectoryUrl, e);
+            }
+        }
+        final File localDirectory = cachedDirectory.getLocalFile();
+        if (! localDirectory.exists()) {
+            throw new FileNotCacheableException(
+                    "local cache directory missing for " + remoteDirectoryUrl);
+        }
+
+        return localDirectory;
     }
 
     /**
@@ -260,7 +329,12 @@ public class LocalFileCache {
      * NOTE: After load, cache usage (ordering) will simply reflect
      *       directory traversal order.
      */
-    private void loadCacheFromFilesystem() {
+    protected void loadCacheFromFilesystem() {
+
+        isLoadFromDiskComplete = false;
+
+        // remove entries from map but leave actual files on disk alone
+        relativePathToCachedFileMap.clear();
 
         File[] children = rootDirectory.listFiles();
         if (children != null) {
@@ -271,6 +345,8 @@ public class LocalFileCache {
                 }
             }
         }
+
+        isLoadFromDiskComplete = true;
 
         final long usedKb = getNumberOfKilobytes();
         final long totalKb = getKilobyteCapacity();
@@ -331,16 +407,63 @@ public class LocalFileCache {
     }
 
     /**
+     * Blocks until cache load completes or until maximum wait time is reached.
+     *
+     * @throws FileNotCacheableException
+     *   if the maximum wait time is exceeded.
+     */
+    private void waitForLocalFilesystemLoadToComplete()
+            throws FileNotCacheableException {
+
+        final int maxAttempts = 10;
+        final long waitMilliseconds = 500;
+        for (int i = 0; i < maxAttempts; i++) {
+            try {
+                Thread.sleep(waitMilliseconds);
+                if (isLoadFromDiskComplete) {
+                    break;
+                }
+            } catch (InterruptedException e) {
+                throw new FileNotCacheableException(
+                        "cache file system load interrupted", e);
+            }
+        }
+
+        if (! isLoadFromDiskComplete) {
+            final long totalWait = (maxAttempts * waitMilliseconds) / 1000;
+            throw new FileNotCacheableException(
+                    "cache file system load not complete after waiting " +
+                    totalWait + " seconds");
+        }
+    }
+
+    /**
+     * <p>
      * Internal class to facilitate synchronizing retrieval of a
-     * specific remote file without delaying retrieval of other files.
+     * specific remote file or directory without delaying retrieval
+     * of other files.
+     * </p>
+     * <p>
+     * Each cached file/directory is stored within a nested set of
+     * directories as follows:
+     * <pre>
+     *     [root cache directory]/[retrieval time directory]/[relative path]
+     * </pre>
+     * The retreival time directory is inserted to ensure that no race
+     * condition is introduced by removing a file from the cache at the
+     * same time it is being re-added to the cache.
+     * </p>
      */
     private class CachedFileBuilder {
-        private URL remoteFileUrl;
+        private URL remoteUrl;
+        private File timestampRootDirectory;
         private String relativePath;
 
-        private CachedFileBuilder(URL remoteFileUrl,
-                                  String relativePath) {
-            this.remoteFileUrl = remoteFileUrl;
+        public CachedFileBuilder(URL remoteUrl,
+                                 String relativePath) {
+            this.remoteUrl = remoteUrl;
+            this.timestampRootDirectory = new File(rootDirectory,
+                                                   buildTimestampName());
             this.relativePath = relativePath;
         }
 
@@ -352,44 +475,109 @@ public class LocalFileCache {
          * @throws IllegalStateException
          *   if the file cannot be cached.
          */
-        private synchronized CachedFile build()
+        public synchronized CachedFile loadFile()
                 throws IllegalStateException {
 
-            CachedFile cachedFile =
-                    relativePathToCachedFileMap.get(relativePath);
-            if (cachedFile == null) {
-
-                // Each cached file is stored within a nested set of directories as follows:
-                //   [root cache directory]/[retrieval time directory]/[relative path]/[file]
-                //
-                // The retreival time directory is inserted to ensure that no race
-                // condition is introduced by removing a file from the cache at the
-                // same time it is being re-added to the cache.
-                final File rootWithTimestampDirectory =
-                        new File(rootDirectory, buildTimestampName());
-
-                cachedFile = new CachedFile(rootWithTimestampDirectory,
-                                            remoteFileUrl);
-
-                // check for catastrophic case of file larger than entire cache
-                final long kilobytes = cachedFile.getKilobytes();
-                if (kilobytes > kilobyteCapacity) {
-                    removalServices.submit(cachedFile.getRemovalTask());
-                    relativePathToBuilderMap.remove(relativePath);
-                    throw new IllegalStateException(
-                            kilobytes +
-                            " kilobyte file exceeds cache capacity of " +
-                            kilobyteCapacity +
-                            " kilobytes, scheduled removal of " +
-                            cachedFile.getLocalFile().getAbsolutePath());
+            CachedFile cachedFile;
+            try {
+                cachedFile = relativePathToCachedFileMap.get(relativePath);
+                if (cachedFile == null) {
+                    cachedFile = loadFile(relativePath, remoteUrl);
                 }
-
-                relativePathToCachedFileMap.put(relativePath, cachedFile);
-                // remove builder now that the file is in the primary cache
+            } finally {
+                // make sure builder is removed after load
                 relativePathToBuilderMap.remove(relativePath);
             }
+
             return cachedFile;
         }
+
+        /**
+         * Ensures remote directory is only retrieved once.
+         *
+         * @throws WebDavRetrievalException
+         *   if information about the remote directory cannot be retrieved.
+         *
+         * @throws IllegalStateException
+         *   if the directory cannot be cached.
+         */
+        public synchronized CachedFile loadDirectory(WebDavClient webDavClient)
+                throws WebDavRetrievalException, IllegalStateException {
+
+            CachedFile cachedDirectory;
+            try {
+                List<WebDavFile> webDavFileList =
+                        webDavClient.findAllInternalFiles(remoteUrl);
+
+                // TODO: apply filters (depth, pattern, ...)
+
+                // TODO: consider distributing retrieval to multiple threads
+                URL fileUrl;
+                String fileRelativePath;
+                CachedFile cachedFile;
+                for (WebDavFile webDavFile : webDavFileList) {
+                    fileUrl = webDavFile.getUrl();
+                    fileRelativePath = fileUrl.getPath();
+                    cachedFile = relativePathToCachedFileMap.get(fileRelativePath);
+                    if (cachedFile == null) {
+                        if (webDavFile.getKilobytes() < kilobyteCapacity) {
+                            loadFile(fileRelativePath, fileUrl);
+                        } else {
+                            LOG.warn(webDavFile.getKilobytes() +
+                                     " kilobyte file " +
+                                     fileUrl + " exceeds cache capacity of " +
+                                     kilobyteCapacity + " kilobytes, skipping load");
+                        }
+                    } else {
+                        cachedFile.moveLocalFile(timestampRootDirectory);
+                    }
+                }
+
+                final File localDirectory =
+                        new File(timestampRootDirectory + relativePath);
+                try {
+                    cachedDirectory = new CachedFile(timestampRootDirectory,
+                                                     localDirectory);
+                    relativePathToCachedFileMap.put(relativePath,
+                                                    cachedDirectory);
+                } catch (IOException e) {
+                    throw new IllegalStateException(
+                            "failed to create cache entry for " +
+                            localDirectory.getAbsolutePath());
+                }
+
+            } finally {
+                // make sure builder is removed after load
+                relativePathToBuilderMap.remove(relativePath);
+            }
+
+            return cachedDirectory;
+        }
+
+        private CachedFile loadFile(String fileRelativePath,
+                                    URL fileUrl)
+                throws IllegalStateException {
+
+            CachedFile cachedFile = new CachedFile(timestampRootDirectory,
+                                                   fileUrl);
+
+            // check for catastrophic case of file larger than entire cache
+            final long kilobytes = cachedFile.getKilobytes();
+            if (kilobytes > kilobyteCapacity) {
+                removalServices.submit(cachedFile.getRemovalTask());
+                throw new IllegalStateException(
+                        kilobytes +
+                        " kilobyte file exceeds cache capacity of " +
+                        kilobyteCapacity +
+                        " kilobytes, scheduled removal of " +
+                        cachedFile.getLocalFile().getAbsolutePath());
+            }
+
+            relativePathToCachedFileMap.put(fileRelativePath, cachedFile);
+
+            return cachedFile;
+        }
+
     }
 
     /**

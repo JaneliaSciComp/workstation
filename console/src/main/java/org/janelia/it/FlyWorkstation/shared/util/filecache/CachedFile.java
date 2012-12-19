@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.shared.util;
+package org.janelia.it.FlyWorkstation.shared.util.filecache;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,8 +13,7 @@ import java.util.concurrent.Callable;
 /**
  * <p>
  * This class encapsulates the information about a cached file.
- * It ensures that the file is only retrieved once when concurrent requests
- * are made and supports removal of the file when evicted from the cache.
+ * It supports removal of the file when evicted from the cache.
  * </p>
  * <p>
  * Each cached file is stored within a nested set of directories as follows:
@@ -36,6 +35,27 @@ public class CachedFile {
      */
     public static String getNormalizedPath(String path) {
         return(path.replace('\\','/'));
+    }
+
+    /**
+     * Creates any missing parent directories for the specified file.
+     *
+     * @param  child  file whose parents directroies need to exist.
+     *
+     * @throws IllegalStateException
+     *   if the parent directories do not exist and cannot be created.
+     */
+    public static void createParentDirectroiesIfNeccesary(File child)
+            throws IllegalStateException {
+
+        final File parent = child.getParentFile();
+        if (! parent.exists()) {
+            if (! parent.mkdirs()) {
+                throw new IllegalStateException(
+                        "failed to create directory " +
+                        parent.getAbsolutePath());
+            }
+        }
     }
 
     private File localRootDirectory;
@@ -166,6 +186,32 @@ public class CachedFile {
     }
 
     /**
+     * Moves this cached file to a different physical location.
+     *
+     * @param  toLocalRootDirectory  new directory location.
+     *
+     * @throws IllegalStateException
+     *   if the file cannot be moved.
+     */
+    public synchronized void moveLocalFile(File toLocalRootDirectory)
+            throws IllegalStateException {
+
+        if (! toLocalRootDirectory.equals(localRootDirectory)) {
+            File movedFile = new File(toLocalRootDirectory, relativePath);
+            createParentDirectroiesIfNeccesary(movedFile);
+
+            if (localFile.renameTo(movedFile)) {
+                localRootDirectory = toLocalRootDirectory;
+                localFile = movedFile;
+            } else {
+                throw new IllegalStateException(
+                        "failed to rename " + localFile.getAbsolutePath() +
+                        " to " + movedFile.getAbsolutePath());
+            }
+        }
+    }
+
+    /**
      * Copies the remote file into the local cache storage.
      *
      * @throws IllegalStateException
@@ -173,12 +219,7 @@ public class CachedFile {
      */
     private void copyRemoteFile() throws IllegalStateException {
 
-        final File parent = localFile.getParentFile();
-        if (! parent.mkdirs()) {
-            throw new IllegalStateException(
-                    "failed to create directory " +
-                            parent.getAbsolutePath());
-        }
+        createParentDirectroiesIfNeccesary(localFile);
 
         InputStream input = null;
         FileOutputStream output = null;

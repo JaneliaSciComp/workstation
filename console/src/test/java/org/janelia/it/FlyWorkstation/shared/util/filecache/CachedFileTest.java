@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.shared.util;
+package org.janelia.it.FlyWorkstation.shared.util.filecache;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
@@ -42,11 +42,14 @@ public class CachedFileTest extends TestCase {
         } else {
             throw new IllegalStateException("failed to create " + rootPath);
         }
-        testRemoteFile = createFile(1);
+        final File parentDirectory = (new File(".")).getCanonicalFile();
+        testRemoteFile = createFile(parentDirectory, 1);
+        LOG.info("setUp: exit ----------------------------------------");
     }
 
     @Override
     protected void tearDown() throws Exception {
+        LOG.info("tearDown: entry --------------------------------------");
         deleteFile(testCacheRootDirectory);
         deleteFile(testRemoteFile);
         LOG.info("tearDown: exit --------------------------------------");
@@ -137,10 +140,11 @@ public class CachedFileTest extends TestCase {
      * @throws IOException
      *   if the file cannot be created.
      */
-    public static File createFile(int numberOfKilobytes) throws IOException {
+    public static File createFile(File parentDirectory,
+                                  int numberOfKilobytes) throws IOException {
         final long numberOfBytes = numberOfKilobytes * 1024;
         final String name = "test-" + LocalFileCache.buildTimestampName() + ".txt";
-        File file = new File(name);
+        File file = new File(parentDirectory, name);
 
         final int lineLength = name.length() + 1;
         FileWriter out = null;

@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.shared.util;
+package org.janelia.it.FlyWorkstation.shared.util.filecache;
 
 /**
  * Thrown when a file cannot be cached.

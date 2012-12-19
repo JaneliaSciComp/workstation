@@ -3,8 +3,9 @@ package org.janelia.it.FlyWorkstation;
 
 import junit.framework.Test;
 import junit.framework.TestSuite;
-import org.janelia.it.FlyWorkstation.shared.util.CachedFileTest;
-import org.janelia.it.FlyWorkstation.shared.util.LocalFileCacheTest;
+import org.janelia.it.FlyWorkstation.shared.util.filecache.CachedFileTest;
+import org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileCacheTest;
+import org.janelia.it.FlyWorkstation.shared.util.filecache.WebDavPathMapTest;
 
 public class ConsoleModuleTestSuite extends TestSuite {
 
@@ -17,6 +18,9 @@ public class ConsoleModuleTestSuite extends TestSuite {
         TestSuite suite = new TestSuite();
         suite.addTestSuite(CachedFileTest.class);
         suite.addTestSuite(LocalFileCacheTest.class);
+        // TODO: enable WebDAVClientTest once authentication can be managed
+//        suite.addTestSuite(WebDavClientTest.class);
+        suite.addTestSuite(WebDavPathMapTest.class);
         return suite;
     }
 
