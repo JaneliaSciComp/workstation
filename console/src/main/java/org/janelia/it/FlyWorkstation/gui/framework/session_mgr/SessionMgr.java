@@ -24,6 +24,7 @@ import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.ws.EmbeddedAxisServer;
+import org.janelia.it.jacs.model.user_data.SubjectRelationship;
 import org.janelia.it.jacs.model.user_data.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,8 +70,9 @@ public class SessionMgr {
     private String appName, appVersion;
     private Date sessionCreationTime;
     private boolean isLoggedIn;
-    private String loggedInUser;
-
+    private String loggedInSubjectName;
+    private User loggedInUser;
+    
     private SessionMgr() {
     	
     	log.info("Initializing Session Manager");
@@ -558,7 +560,7 @@ public class SessionMgr {
 
     public User getUser() {
         try {
-            return ModelMgr.getModelMgr().getUser();
+            return loggedInUser;
         }
         catch (Exception e) {
             handleException(e);
@@ -572,20 +574,22 @@ public class SessionMgr {
         		logoutUser();
         	}
             isLoggedIn =  ModelMgr.getModelMgr().loginUser();
-            loggedInUser = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
+            loggedInSubjectName = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
+            loggedInUser = ModelMgr.getModelMgr().getUser();
             return isLoggedIn;
         }
         catch (Exception e) {
         	isLoggedIn = false;
-        	loggedInUser = null;
+        	loggedInSubjectName = null;
             throw new SystemError("Cannot authenticate login. The server may be down. Please try again later.");
         }
     }
     
     public void logoutUser() {
     	try {
-    		ModelMgr.getModelMgr().logoutUser(loggedInUser);
+    		ModelMgr.getModelMgr().logoutUser(loggedInSubjectName);
     		isLoggedIn = false;
+        	loggedInSubjectName = null;
         	loggedInUser = null;
     	}
     	catch (Exception ex) {
@@ -612,6 +616,40 @@ public class SessionMgr {
         }
     }
 
+    public static boolean currentUserIsInGroup(String groupName) {
+    	User user = SessionMgr.getSessionMgr().getUser();
+    	for(SubjectRelationship relation : user.getGroupRelationships()) {
+    		if (relation.getGroup().getName().equals(groupName)) {
+    			return true;
+    		}
+    	}
+    	return false;
+    }
+
+	public static List<String> getSubjectKeys() {
+		List<String> subjectKeys = new ArrayList<String>();
+    	User user = SessionMgr.getSessionMgr().getUser();
+    	subjectKeys.add(user.getKey());
+    	for(SubjectRelationship relation : user.getGroupRelationships()) {
+    		subjectKeys.add(relation.getGroup().getKey());
+    	}
+    	return subjectKeys;
+	}
+    
+    public static String getSubjectKey() {
+        try {
+            String username = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
+            if (username.startsWith("admin-")) username = username.replaceFirst("admin-", "");
+            if (!username.contains(":")) {
+            	username = "user:"+username;
+            }
+            return username;
+        }
+        catch (Exception e) {
+            return null;
+        }
+    }
+    
     public static String getUsername() {
         try {
             String username = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);

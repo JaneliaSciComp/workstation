@@ -8,6 +8,7 @@ import java.util.Set;
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.AnnotationFacade;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityActorPermission;
 import org.janelia.it.jacs.shared.annotation.DataDescriptor;
 import org.janelia.it.jacs.shared.annotation.DataFilter;
 import org.janelia.it.jacs.shared.annotation.FilterResult;
@@ -22,7 +23,7 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
 
     @Override
     public List<Entity> getAnnotationsForEntity(Long entityId) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getAnnotationsForEntity(SessionMgr.getUsername(), entityId);
+        return EJBFactory.getRemoteAnnotationBean().getAnnotationsForEntity(SessionMgr.getSubjectKey(), entityId);
     }
     
     @Override
@@ -32,31 +33,31 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
 
     @Override
     public List<Entity> getAnnotationsForEntities(List<Long> entityIds) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getAnnotationsForEntities(SessionMgr.getUsername(),
+        return EJBFactory.getRemoteAnnotationBean().getAnnotationsForEntities(SessionMgr.getSubjectKey(),
                 entityIds);
     }
 
     @Override
     public List<Entity> getAnnotationsForChildren(Long parentId) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getAnnotationsForChildren(SessionMgr.getUsername(),
+        return EJBFactory.getRemoteAnnotationBean().getAnnotationsForChildren(SessionMgr.getSubjectKey(),
         		parentId);
     }
     
     @Override
     public List<Entity> getEntitiesForAnnotationSession(Long annotationSessionId) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getEntitiesForAnnotationSession(SessionMgr.getUsername(),
+        return EJBFactory.getRemoteAnnotationBean().getEntitiesForAnnotationSession(SessionMgr.getSubjectKey(),
                 annotationSessionId);
     }
 
     @Override
     public List<Entity> getAnnotationsForSession(Long annotationSessionId) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getAnnotationsForSession(SessionMgr.getUsername(),
+        return EJBFactory.getRemoteAnnotationBean().getAnnotationsForSession(SessionMgr.getSubjectKey(),
                 annotationSessionId);
     }
 
     @Override
     public List<Entity> getCategoriesForAnnotationSession(Long annotationSessionId) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getCategoriesForAnnotationSession(SessionMgr.getUsername(),
+        return EJBFactory.getRemoteAnnotationBean().getCategoriesForAnnotationSession(SessionMgr.getSubjectKey(),
                 annotationSessionId);
     }
 
@@ -67,12 +68,12 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
     
     @Override
     public void removeAnnotation(Long annotationId) throws Exception {
-        EJBFactory.getRemoteAnnotationBean().removeOntologyAnnotation(SessionMgr.getUsername(), annotationId);
+        EJBFactory.getRemoteAnnotationBean().removeOntologyAnnotation(SessionMgr.getSubjectKey(), annotationId);
     }
 
     @Override
     public void removeAllOntologyAnnotationsForSession(Long annotationSessionId) throws Exception {
-        EJBFactory.getRemoteAnnotationBean().removeAllOntologyAnnotationsForSession(SessionMgr.getUsername(),
+        EJBFactory.getRemoteAnnotationBean().removeAllOntologyAnnotationsForSession(SessionMgr.getSubjectKey(),
                 annotationSessionId);
     }
 
@@ -108,12 +109,11 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
 
     @Override
     public Entity createDataSet(String dataSetName) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().createDataSet(SessionMgr.getUsername(), dataSetName);
+        return EJBFactory.getRemoteAnnotationBean().createDataSet(SessionMgr.getSubjectKey(), dataSetName);
     }
 
     @Override
     public List<Entity> getDataSets() throws Exception {
-    	return EJBFactory.getRemoteAnnotationBean().getUserDataSets(Arrays.asList(SessionMgr.getUsername()));
+    	return EJBFactory.getRemoteAnnotationBean().getUserDataSets(Arrays.asList(SessionMgr.getSubjectKey()));
 	}
-
 }

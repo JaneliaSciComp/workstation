@@ -48,9 +48,9 @@ public class Neo4jBatchExporter {
 		this.edgesStream = new PrintStream(edgesFile);
 	}
 	
-	public void printCSV(String username) throws IOException {
+	public void printCSV(String username) throws Exception {
 		
-		List<Entity> roots = annotationBean.getCommonRootEntitiesByTypeName(username, "Folder");
+		List<Entity> roots = annotationBean.getCommonRootEntities(username);
 		
 		for(Entity root : roots) {
 			System.out.println("Processing "+root.getName());
@@ -118,12 +118,17 @@ public class Neo4jBatchExporter {
 		}
 		
 		for(EntityData ed : edges.values()) {
-			Entity child = entityBean.getEntityById(ed.getChildEntity().getId()+"");
-			Color edgeColor = darkGrey;
-			int weight = 1 + edgeCounts.get(child.getId());
-			edgesStream.print(getEdgeCSV(ed.getId().toString(), ed.getEntityAttribute().getName(), 
-					entity.getId().toString(), child.getId().toString(), edgeColor, weight, "solid"));
-			printEntityTreeToBuffers(child);
+			try {
+				Entity child = entityBean.getEntityById(null, ed.getChildEntity().getId());
+				Color edgeColor = darkGrey;
+				int weight = 1 + edgeCounts.get(child.getId());
+				edgesStream.print(getEdgeCSV(ed.getId().toString(), ed.getEntityAttribute().getName(), 
+						entity.getId().toString(), child.getId().toString(), edgeColor, weight, "solid"));
+				printEntityTreeToBuffers(child);
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -192,7 +197,7 @@ public class Neo4jBatchExporter {
 	public static void main(String[] args) throws Exception {
 	
 		Neo4jBatchExporter e = new Neo4jBatchExporter(new File("/Users/rokickik"));
-		e.printCSV("system");
+		e.printCSV("group:flylight");
 		
 	}
 }

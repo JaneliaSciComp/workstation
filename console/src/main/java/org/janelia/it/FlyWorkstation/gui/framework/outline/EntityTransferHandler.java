@@ -173,8 +173,8 @@ public abstract class EntityTransferHandler extends TransferHandler {
 		
 		// Disallow transfer if target node is not owned by the user
 		Entity targetEntity = entityOutline.getEntity(targetNode);
-		if (!ModelMgrUtils.isOwner(targetEntity)) {
-			log.debug("Disallow transfer because user is not owner of target");
+		if (!ModelMgrUtils.hasWriteAccess(targetEntity)) {
+			log.debug("Disallow transfer because user does not have write access to the target");
 			return false;
 		}
 

@@ -21,10 +21,10 @@ public class JAXBSerializer {
 	    context.createMarshaller().marshal(entity, file);
 	}
 
-	public static void seralizeCommonRoots(String username, File dir) throws JAXBException {
-		List<Entity> roots = EJBFactory.getRemoteAnnotationBean().getCommonRootEntitiesByTypeName(username, "Folder");
+	public static void seralizeCommonRoots(String username, File dir) throws Exception {
+		List<Entity> roots = EJBFactory.getRemoteAnnotationBean().getCommonRootEntities(username);
 		for(Entity root : roots) {
-			Entity tree = EJBFactory.getRemoteEntityBean().getEntityTree(root.getId());
+			Entity tree = EJBFactory.getRemoteEntityBean().getEntityTree(username, root.getId());
 			File file = new File(dir, "commonRoot-"+root.getId()+".xml");
 			JAXBSerializer.serializeUsingJAXB(tree, file);
 		}
@@ -35,7 +35,7 @@ public class JAXBSerializer {
 	 */
 	public static void main(String[] args) throws Exception {
 
-		JAXBSerializer.seralizeCommonRoots("rokickik", new File("/Users/rokickik/serialize"));
+		JAXBSerializer.seralizeCommonRoots("user:rokickik", new File("/Users/rokickik/serialize"));
 		
 		
 	}

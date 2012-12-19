@@ -9,6 +9,7 @@ import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.AnnotationFacade
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.EntityFacade;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.ForbiddenEntity;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -247,7 +248,7 @@ public class EntityModel {
 	 */
 	public Entity reloadById(Long entityId) throws Exception {
 		synchronized (this) {
-			Entity entity = entityFacade.getEntityById(entityId+"");
+			Entity entity = entityFacade.getEntityById(entityId);
 			return putOrUpdate(entity);
 		}
 	}
@@ -280,7 +281,7 @@ public class EntityModel {
 			return entity;
 		}
 		synchronized (this) {
-			return putOrUpdate(entityFacade.getEntityById(entityId+""));
+			return putOrUpdate(entityFacade.getEntityById(entityId));
 		}
 	}
 	
@@ -332,6 +333,7 @@ public class EntityModel {
      */
 	public Entity getEntityTree(long entityId) throws Exception {
 		Entity entity = entityFacade.getEntityTree(entityId);
+		replaceUnloadedChildrenWithForbiddenEntities(entity, true);
 		return putOrUpdate(entity, true);
 	}
 	
@@ -350,18 +352,6 @@ public class EntityModel {
 	}
 	
 	/**
-	 * Retrieve entities with the given name from the database, and cache all the entities. 
-	 * 
-	 * @param entityName
-	 * @return canonical entity instances
-	 * @throws Exception
-	 */
-	public List<Entity> getEntitiesByName(String entityName) throws Exception {
-		List<Entity> entities = FacadeManager.getFacadeManager().getEntityFacade().getEntitiesByName(entityName);	
-		return putOrUpdateAll(entities);
-	}
-	
-	/**
 	 * Retrieve the children of the given entity from the database, and update the cache. 
 	 * 
 	 * @param entity
@@ -374,6 +364,7 @@ public class EntityModel {
         	putOrUpdateAll(childEntitySet);
         }
         putOrUpdate(entity);
+        replaceUnloadedChildrenWithForbiddenEntities(entity, false);
         notifyEntityChildrenLoaded(entity);
     }
     
@@ -411,7 +402,19 @@ public class EntityModel {
 			loadLazyEntity(child, visited);
 		}
     }
-    
+
+	/**
+	 * Retrieve entities with the given name from the database, and cache all the entities. 
+	 * 
+	 * @param entityName
+	 * @return canonical entity instances
+	 * @throws Exception
+	 */
+	public List<Entity> getEntitiesByName(String entityName) throws Exception {
+		List<Entity> entities = FacadeManager.getFacadeManager().getEntityFacade().getEntitiesByName(entityName);	
+		return putOrUpdateAll(entities);
+	}
+	
     /**
      * Create a new entity with the given type and name, and cache it.
      * 
@@ -442,7 +445,7 @@ public class EntityModel {
     	checkIfCanonicalEntity(entity);
     	Entity canonicalEntity = null;
     	synchronized(this) {
-	    	Entity newEntity = entityFacade.getEntityById(entity.getId()+"");
+	    	Entity newEntity = entityFacade.getEntityById(entity.getId());
 	    	newEntity.setName(newName);
 	    	canonicalEntity = putOrUpdate(entityFacade.saveEntity(newEntity));
     	}
@@ -462,10 +465,10 @@ public class EntityModel {
     	checkIfCanonicalEntity(entity);
     	Entity canonicalEntity = null;
     	synchronized(this) {
-    		Entity newEntity = entityFacade.getEntityById(entity.getId()+"");
+    		Entity newEntity = entityFacade.getEntityById(entity.getId());
     		String value = newEntity.getValueByAttributeName(attributeName);
     		if (value==null || !value.equals(attributeName)) {
-    			newEntity.addAttributeAsTag(attributeName);
+    			EntityUtils.addAttributeAsTag(newEntity, attributeName);
     			canonicalEntity = putOrUpdate(entityFacade.saveEntity(newEntity));	
     		}
     		else {
@@ -488,7 +491,7 @@ public class EntityModel {
     	checkIfCanonicalEntity(entity);
     	Entity canonicalEntity = null;
     	synchronized(this) {
-    		Entity newEntity = entityFacade.getEntityById(entity.getId()+"");
+    		Entity newEntity = entityFacade.getEntityById(entity.getId());
     		newEntity.setValueByAttributeName(attributeName, attributeValue);
 	    	canonicalEntity = putOrUpdate(entityFacade.saveEntity(newEntity));
     	}
@@ -689,7 +692,7 @@ public class EntityModel {
     	Entity newFolder = null;
     	synchronized(this) {
 	    	newFolder = entityFacade.createEntity(EntityConstants.TYPE_FOLDER, folderName);
-			newFolder.addAttributeAsTag(EntityConstants.ATTRIBUTE_COMMON_ROOT);
+	    	EntityUtils.addAttributeAsTag(newFolder, EntityConstants.ATTRIBUTE_COMMON_ROOT);
 			newFolder = entityFacade.saveEntity(newFolder);
     	}
 		return putOrUpdate(newFolder);
@@ -717,19 +720,10 @@ public class EntityModel {
      * @throws Exception
      */
     public List<Entity> getCommonRoots() throws Exception {
-		List<Entity> commonRoots = new ArrayList<Entity>();
     	synchronized (this) {
-    		List<Entity> userRoots = entityFacade.getUserCommonRootEntitiesByTypeName(EntityConstants.TYPE_FOLDER);
-    		commonRoots.addAll(putOrUpdateAll(userRoots));
+    		List<Entity> userRoots = entityFacade.getCommonRootEntities();
+    		return putOrUpdateAll(userRoots);
     	}
-		if (!"system".equals(SessionMgr.getUsername())) {
-	    	synchronized (this) {
-    			List<Entity> systemRoots = entityFacade.getSystemCommonRootEntitiesByTypeName(EntityConstants.TYPE_FOLDER);	
-    			commonRoots.addAll(putOrUpdateAll(systemRoots));
-	    	}
-		
-		}
-		return commonRoots;
     }
     
     /**
@@ -780,7 +774,7 @@ public class EntityModel {
      * @param entityTypeName
      * @return canonical entity instances
      */
-    public List<Entity> getEntitiesByTypeName(String entityTypeName) {
+    public List<Entity> getEntitiesByTypeName(String entityTypeName) throws Exception {
         return putOrUpdateAll(entityFacade.getEntitiesByTypeName(entityTypeName));
     }
 
@@ -816,6 +810,24 @@ public class EntityModel {
      */
     public Entity createDataSet(String dataSetName) throws Exception {
     	return putOrUpdate(annotationFacade.createDataSet(dataSetName));
+    }
+
+    /**
+     * Replace any uninitialized children with forbidden place-holders. The assumption is that we tried to 
+     * load the children already, and the ones that didn't come back must be inaccessible to the current user.
+     * @param parent
+     */
+    private void replaceUnloadedChildrenWithForbiddenEntities(Entity parent, boolean recurse) {
+        for(EntityData ed : parent.getEntityData()) {
+        	if (ed.getChildEntity()!=null) {
+	        	if (!EntityUtils.isInitialized(ed.getChildEntity())) {
+	        		ed.setChildEntity(new ForbiddenEntity(ed.getChildEntity()));
+	        	}
+	        	else if (recurse) {
+	        		replaceUnloadedChildrenWithForbiddenEntities(ed.getChildEntity(), true);
+	        	}
+        	}
+        }
     }
     
 	private void notifyEntityChildrenLoaded(Entity entity) {

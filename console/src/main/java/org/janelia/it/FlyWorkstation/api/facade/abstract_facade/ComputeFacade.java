@@ -1,9 +1,10 @@
 package org.janelia.it.FlyWorkstation.api.facade.abstract_facade;
 
-import org.janelia.it.jacs.model.tasks.Task;
-import org.janelia.it.jacs.model.user_data.User;
-
 import java.util.List;
+
+import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.model.user_data.Subject;
+import org.janelia.it.jacs.model.user_data.User;
 
 /**
  * Created by IntelliJ IDEA.
@@ -31,7 +32,7 @@ public interface ComputeFacade {
 
     public User getUser() throws Exception;
 
-    public List<User> getUsers() throws Exception;
+    public List<Subject> getSubjects() throws Exception;
 
     public User saveOrUpdateUser(User user) throws Exception;
 

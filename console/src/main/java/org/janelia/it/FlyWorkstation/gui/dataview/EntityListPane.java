@@ -275,7 +275,7 @@ public abstract class EntityListPane extends JPanel implements SearchConfigurati
 			value = entity.getEntityType().getName();
 		}
 		else if ("username".equals(field)) {
-			value = entity.getUser().getUserLogin();
+			value = entity.getOwnerKey();
 		}
 		else if ("creation_date".equals(field)) {
 			value = df.format(entity.getCreationDate());

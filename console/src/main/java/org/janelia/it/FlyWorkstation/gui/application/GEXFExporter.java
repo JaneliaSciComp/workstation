@@ -53,9 +53,9 @@ public class GEXFExporter {
 		this.edgesStream = new PrintStream(edgesFile);
 	}
 	
-	public void printGEXF(String username) throws IOException {
+	public void printGEXF(String username) throws Exception {
 		
-		List<Entity> roots = annotationBean.getCommonRootEntitiesByTypeName(username, "Folder");
+		List<Entity> roots = annotationBean.getCommonRootEntities(username);
 		
 		for(Entity root : roots) {
 //			Entity tree = annotationBean.getEntityTree(root.getId());
@@ -127,12 +127,17 @@ public class GEXFExporter {
 		}
 		
 		for(EntityData ed : edges.values()) {
-			Entity child = entityBean.getEntityById(ed.getChildEntity().getId()+"");
-			Color edgeColor = darkGrey;
-			int weight = 1 + edgeCounts.get(child.getId());
-			edgesStream.print(getEdgeXML(ed.getId().toString(), ed.getEntityAttribute().getName(), 
-					entity.getId().toString(), child.getId().toString(), edgeColor, weight, "solid"));
-			printEntityTreeToBuffers(child);
+			try {
+				Entity child = entityBean.getEntityById(null, ed.getChildEntity().getId());
+				Color edgeColor = darkGrey;
+				int weight = 1 + edgeCounts.get(child.getId());
+				edgesStream.print(getEdgeXML(ed.getId().toString(), ed.getEntityAttribute().getName(), 
+						entity.getId().toString(), child.getId().toString(), edgeColor, weight, "solid"));
+				printEntityTreeToBuffers(child);
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		
 		if (includeAnnotations) {
@@ -150,7 +155,7 @@ public class GEXFExporter {
 				entityIds.add(entity.getId());
 			}
 			
-			List<Entity> annotations = annotationBean.getAnnotationsForEntities(root.getUser().getUserLogin(), entityIds);
+			List<Entity> annotations = annotationBean.getAnnotationsForEntities(root.getOwnerKey(), entityIds);
 			for(Entity annotationEntity : annotations) {
 				OntologyAnnotation annotation = new OntologyAnnotation();
 				annotation.init(annotationEntity);
@@ -259,7 +264,7 @@ public class GEXFExporter {
 	public static void main(String[] args) throws Exception {
 	
 		GEXFExporter e = new GEXFExporter(new File("/Users/rokickik/jacs.gexf"));
-		e.printGEXF("system");
+		e.printGEXF("group:flylight");
 		
 	}
 }

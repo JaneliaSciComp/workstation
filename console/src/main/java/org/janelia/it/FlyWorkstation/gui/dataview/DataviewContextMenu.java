@@ -151,12 +151,12 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 
             	boolean su = false;
 	            for (Entity entity : toDelete) {
-                	if (!SessionMgr.getUsername().equals(entity.getUser().getUserLogin())) {
-        	            int overrideConfirmation = confirm("Override owner "+entity.getUser().getUserLogin()+" to delete "+entity.getName()+"?");
+                	if (!SessionMgr.getSubjectKey().equals(entity.getOwnerKey())) {
+        	            int overrideConfirmation = confirm("Override owner "+entity.getOwnerKey()+" to delete "+entity.getName()+"?");
         	            if (overrideConfirmation != 0) {
         	                continue;
         	            }
-        	            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, entity.getUser().getUserLogin());
+        	            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, entity.getOwnerKey());
         	            su = true;
         	            break;
                 	}
@@ -219,12 +219,12 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 
             	boolean su = false;
 	            for (Entity entity : toDelete) {
-                	if (!SessionMgr.getUsername().equals(entity.getUser().getUserLogin())) {
-        	            int overrideConfirmation = confirm("Override owner "+entity.getUser().getUserLogin()+" to delete "+entity.getName()+"?");
+                	if (!SessionMgr.getSubjectKey().equals(entity.getOwnerKey())) {
+        	            int overrideConfirmation = confirm("Override owner "+entity.getOwnerKey()+" to delete "+entity.getName()+"?");
         	            if (overrideConfirmation != 0) {
         	                continue;
         	            }
-        	            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, entity.getUser().getUserLogin());
+        	            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, entity.getOwnerKey());
         	            su = true;
         	            break;
                 	}

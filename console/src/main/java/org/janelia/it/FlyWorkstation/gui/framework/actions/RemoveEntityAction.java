@@ -1,5 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.swing.JOptionPane;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -9,11 +15,6 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
-
-import javax.swing.*;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * This action removes an entity from some parent. If the entity becomes an orphan, then it is completely deleted.
@@ -44,7 +45,7 @@ public class RemoveEntityAction implements Action {
 		
 		// Pre-screen the selections to ensure we have permission to delete everything 
 		for(EntityData ed : new HashSet<EntityData>(toDelete)) {
-			if (ed.getUser()!=null && !ed.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+			if (ed.getOwnerKey()!=null && !ed.getOwnerKey().equals(SessionMgr.getSubjectKey())) {
 				JOptionPane.showMessageDialog(browser, "Do not have permission to delete "+ed.getChildEntity().getName(), "Error", JOptionPane.ERROR_MESSAGE);
 				toDelete.remove(ed);
 			}
@@ -102,21 +103,21 @@ public class RemoveEntityAction implements Action {
 					Entity child = ed.getChildEntity();
 					if (removeRootTag.contains(ed)) {
 						// Must own the root in order to de-root it
-						if (!child.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+						if (!child.getOwnerKey().equals(SessionMgr.getSubjectKey())) {
 							JOptionPane.showMessageDialog(browser, "No permission to remove "+ed.getChildEntity().getName(), "Error", JOptionPane.ERROR_MESSAGE);
 							toReallyDelete.remove(ed);
 						}
 					}
 					else if (removeReference.contains(ed)) {
 						// Must own the reference to remove it
-						if (!ed.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+						if (!ed.getOwnerKey().equals(SessionMgr.getSubjectKey())) {
 							JOptionPane.showMessageDialog(browser, "No permission to remove "+ed.getChildEntity().getName(), "Error", JOptionPane.ERROR_MESSAGE);
 							toReallyDelete.remove(ed);
 						}
 					}
 					else if (removeTree.contains(ed)) {
 						// Must own the tree root to delete it
-						if (!ed.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+						if (!ed.getOwnerKey().equals(SessionMgr.getSubjectKey())) {
 							JOptionPane.showMessageDialog(browser, "No permission to delete "+ed.getChildEntity().getName(), "Error", JOptionPane.ERROR_MESSAGE);
 							toReallyDelete.remove(ed);
 						}

@@ -97,7 +97,7 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
     
     private void updateDataSetIdentifier() {
     	if (dataSetEntity==null) {
-    		identifierInput.setText(EntityUtils.createDataSetIdentifierFromName(SessionMgr.getUsername(), nameInput.getText()));
+    		identifierInput.setText(EntityUtils.createDataSetIdentifierFromName(SessionMgr.getSubjectKey(), nameInput.getText()));
     	} 
     }
     
@@ -192,7 +192,7 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
 			
 			@Override
 			protected void hadSuccess() {	
-				parentDialog.reloadData();
+				parentDialog.refresh();
 				Utils.setDefaultCursor(DataSetDialog.this);
 		    	setVisible(false);
 			}

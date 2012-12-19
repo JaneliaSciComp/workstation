@@ -134,7 +134,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	private EntityData addTopLevelEntity(Entity rootEntity, Entity entity) {
 		EntityData ed = rootEntity.addChildEntity(entity);
 		ed.setOrderIndex(rootEntity.getMaxOrderIndex() + 1);
-		ed.setUser(entity.getUser());
+		ed.setOwnerKey(entity.getOwnerKey());
 		return ed;
 	}
 
@@ -512,6 +512,8 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		getDynamicTree().navigateToNode(node);
 
 		final String finalCurrUniqueId = currUniqueId;
+		
+		// TODO: should decouple this somehow
 		
 		if (!getDynamicTree().childrenAreLoaded(node)) {
 			SessionMgr.getBrowser().getViewerManager().getActiveViewer().showLoadingIndicator();

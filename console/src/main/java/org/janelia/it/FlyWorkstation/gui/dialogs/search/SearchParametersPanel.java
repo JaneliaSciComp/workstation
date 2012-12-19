@@ -205,7 +205,10 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
 		searchString = (String)inputField.getSelectedItem();
 		
 		SolrQueryBuilder builder = new SolrQueryBuilder();
-		builder.setUsername(SessionMgr.getUsername());
+		for(String subjectKey : SessionMgr.getSubjectKeys()) {
+			builder.addOwnerKey(subjectKey);
+		}
+		
 		builder.setSearchString(searchString);
 		
 		if (searchRoot!=null) {

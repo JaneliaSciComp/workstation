@@ -1,15 +1,17 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
+import java.util.List;
+
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.ComputeFacade;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.jacs.compute.api.ComputeBeanRemote;
+import org.janelia.it.jacs.model.entity.EntityActorPermission;
 import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.User;
-
-import java.net.Authenticator;
-import java.net.PasswordAuthentication;
-import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -57,28 +59,27 @@ public class EJBComputeFacade implements ComputeFacade {
     
     @Override
     public List<Task> getUserTasks() throws Exception {
-        return EJBFactory.getRemoteComputeBean().getUserTasks(SessionMgr.getUsername());
+        return EJBFactory.getRemoteComputeBean().getUserTasks(SessionMgr.getSubjectKey());
     }
 
     @Override
     public List<Task> getUserParentTasks() throws Exception {
-        return EJBFactory.getRemoteComputeBean().getRecentUserParentTasks(SessionMgr.getUsername());
+        return EJBFactory.getRemoteComputeBean().getRecentUserParentTasks(SessionMgr.getSubjectKey());
     }
     
     @Override
     public List<Task> getUserTasksByType(String taskName) throws Exception {
-        return EJBFactory.getRemoteComputeBean().getUserTasksByType(taskName, SessionMgr.getUsername());
+        return EJBFactory.getRemoteComputeBean().getUserTasksByType(taskName, SessionMgr.getSubjectKey());
     }
 
     @Override
     public User getUser() throws Exception {
-        return EJBFactory.getRemoteComputeBean().getUserByName(SessionMgr.getUsername());
+        return EJBFactory.getRemoteComputeBean().getUserByNameOrKey(SessionMgr.getSubjectKey());
     }
 
     @Override
-    public List<User> getUsers() throws Exception {
-        //noinspection unchecked
-        return (List<User>) EJBFactory.getRemoteComputeBean().getUsers();
+    public List<Subject> getSubjects() throws Exception {
+        return (List<Subject>) EJBFactory.getRemoteComputeBean().getSubjects();
     }
 
     @Override

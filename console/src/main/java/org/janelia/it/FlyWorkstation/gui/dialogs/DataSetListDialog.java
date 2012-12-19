@@ -13,6 +13,7 @@ import javax.swing.*;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.access.Accessibility;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicTable;
@@ -29,7 +30,7 @@ import org.janelia.it.jacs.model.entity.cv.PipelineProcess;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class DataSetListDialog extends ModalDialog implements Accessibility {
+public class DataSetListDialog extends ModalDialog implements Accessibility, Refreshable {
 
     private JLabel loadingLabel;
     private JPanel mainPanel;
@@ -73,6 +74,7 @@ public class DataSetListDialog extends ModalDialog implements Accessibility {
                 }
                 return null;
 			}
+            
         	@Override
         	protected JPopupMenu createPopupMenu(MouseEvent e) {
         		JPopupMenu menu = super.createPopupMenu(e);
@@ -80,50 +82,50 @@ public class DataSetListDialog extends ModalDialog implements Accessibility {
         		if (menu!=null) {
         			JTable table = getTable();
         			ListSelectionModel lsm = table.getSelectionModel();
-            		if (lsm.getMinSelectionIndex() == lsm.getMaxSelectionIndex()) { 
-            			final Entity dataSetEntity = (Entity)getRows().get(table.getSelectedRow()).getUserObject();
-        		        
-            			JMenuItem editItem = new JMenuItem("  Edit");
-        		        editItem.addActionListener(new ActionListener() {
-        					@Override
-        					public void actionPerformed(ActionEvent e) {
-        						dataSetDialog.showForDataSet(dataSetEntity);
-        					}
-        				});
-        		        menu.add(editItem);
-        		        
-        		        JMenuItem deleteItem = new JMenuItem("  Delete");
-        		        deleteItem.addActionListener(new ActionListener() {
-        					@Override
-        					public void actionPerformed(ActionEvent e) {
-        						
-        						Utils.setWaitingCursor(DataSetListDialog.this);
+            		if (lsm.getMinSelectionIndex() != lsm.getMaxSelectionIndex()) return menu;
+            		
+        			final Entity dataSetEntity = (Entity)getRows().get(table.getSelectedRow()).getUserObject();
+    		        
+        			JMenuItem editItem = new JMenuItem("  Edit");
+    		        editItem.addActionListener(new ActionListener() {
+    					@Override
+    					public void actionPerformed(ActionEvent e) {
+    						dataSetDialog.showForDataSet(dataSetEntity);
+    					}
+    				});
+    		        menu.add(editItem);
+    		        
+    		        JMenuItem deleteItem = new JMenuItem("  Delete");
+    		        deleteItem.addActionListener(new ActionListener() {
+    					@Override
+    					public void actionPerformed(ActionEvent e) {
+    						
+    						Utils.setWaitingCursor(DataSetListDialog.this);
 
-        				        SimpleWorker worker = new SimpleWorker() {
+    				        SimpleWorker worker = new SimpleWorker() {
 
-        							@Override
-        							protected void doStuff() throws Exception {
-        								ModelMgr.getModelMgr().deleteEntityById(dataSetEntity.getId());
-        							}
-        							
-        							@Override
-        							protected void hadSuccess() {
-        								Utils.setDefaultCursor(DataSetListDialog.this);
-        								reloadData();
-        							}
-        							
-        							@Override
-        							protected void hadError(Throwable error) {
-        								SessionMgr.getSessionMgr().handleException(error);
-        								Utils.setDefaultCursor(DataSetListDialog.this);
-        								reloadData();
-        							}
-        						};
-        						worker.execute();
-        					}
-        				});
-        		        menu.add(deleteItem);
-            		}
+    							@Override
+    							protected void doStuff() throws Exception {
+    								ModelMgr.getModelMgr().deleteEntityById(dataSetEntity.getId());
+    							}
+    							
+    							@Override
+    							protected void hadSuccess() {
+    								Utils.setDefaultCursor(DataSetListDialog.this);
+    								loadDataSets();
+    							}
+    							
+    							@Override
+    							protected void hadError(Throwable error) {
+    								SessionMgr.getSessionMgr().handleException(error);
+    								Utils.setDefaultCursor(DataSetListDialog.this);
+    								loadDataSets();
+    							}
+    						};
+    						worker.execute();
+    					}
+    				});
+    		        menu.add(deleteItem);
         		}
         		
         		return menu;
@@ -169,7 +171,7 @@ public class DataSetListDialog extends ModalDialog implements Accessibility {
     
     public void showDialog() {
 
-    	reloadData();
+    	loadDataSets();
 
 		Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
 		setPreferredSize(new Dimension((int)(browser.getWidth()*0.4),(int)(browser.getHeight()*0.4)));
@@ -178,7 +180,7 @@ public class DataSetListDialog extends ModalDialog implements Accessibility {
         packAndShow();
     }
     
-    public void reloadData() {
+    private void loadDataSets() {
 
     	mainPanel.removeAll();
     	mainPanel.add(loadingLabel, BorderLayout.CENTER);
@@ -235,6 +237,14 @@ public class DataSetListDialog extends ModalDialog implements Accessibility {
     		}
     	}
     	return buf.toString();
+    }
+
+    public void refresh() {
+    	loadDataSets();
+    }
+
+    public void totalRefresh() {
+    	throw new UnsupportedOperationException();
     }
     
     public boolean isAccessible() {

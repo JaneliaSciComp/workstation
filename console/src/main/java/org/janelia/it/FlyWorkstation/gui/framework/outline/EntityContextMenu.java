@@ -114,7 +114,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getSortBySimilarityItem());
 		add(getCreateSessionItem());
         
-        if ((SessionMgr.getUsername().equals("simpsonj") || SessionMgr.getUsername().equals("simpsonlab")) && !this.multiple){
+        if ((SessionMgr.getSubjectKey().equals("user:simpsonj") || SessionMgr.getSubjectKey().equals("group:simpsonlab")) && !this.multiple){
             add(getSpecialAnnotationSession());
         }
 	}
@@ -230,11 +230,9 @@ public class EntityContextMenu extends JPopupMenu {
 					List<List<EntityData>> edPaths = ModelMgr.getModelMgr().getPathsToRoots(targetEntity.getId());
 					List<EntityDataPath> paths = new ArrayList<EntityDataPath>();
 					for (List<EntityData> path : edPaths) {
-						if (ModelMgrUtils.hasAccess(path.get(0))) {
-							EntityDataPath edp = new EntityDataPath(path);
-							if (!edp.isHidden()) {
-								paths.add(edp);
-							}
+						EntityDataPath edp = new EntityDataPath(path);
+						if (!edp.isHidden()) {
+							paths.add(edp);
 						}
 					}
 					sortPathsByPreference(paths);
@@ -271,10 +269,10 @@ public class EntityContextMenu extends JPopupMenu {
 			public int compare(EntityDataPath p1, EntityDataPath p2) {
 				Integer p1Score = 0;
 				Integer p2Score = 0;
-				p1Score += "system".equals(p1.getRootOwner())?2:0;
-				p2Score += "system".equals(p2.getRootOwner())?2:0;
-				p1Score += SessionMgr.getUsername().equals(p1.getRootOwner())?1:0;
-				p2Score += SessionMgr.getUsername().equals(p2.getRootOwner())?1:0;
+				p1Score += p1.getRootOwner().startsWith("group:")?2:0;
+				p2Score += p2.getRootOwner().startsWith("group:")?2:0;
+				p1Score += SessionMgr.getSubjectKey().equals(p1.getRootOwner())?1:0;
+				p2Score += SessionMgr.getSubjectKey().equals(p2.getRootOwner())?1:0;
 				EntityData e1 = p1.getPath().get(0);
 				EntityData e2 = p2.getPath().get(0);
 				int c = p2Score.compareTo(p1Score);
@@ -321,7 +319,7 @@ public class EntityContextMenu extends JPopupMenu {
 		public EntityDataPath(List<EntityData> path) {
 			this.path = path;
 			EntityData first = path.get(0);
-			this.rootOwner = first.getParentEntity().getUser().getUserLogin();
+			this.rootOwner = first.getParentEntity().getOwnerKey();
 			for (EntityData ed : path) {
 				if (EntityUtils.isHidden(ed)) this.isHidden = true;
 			}
@@ -449,7 +447,7 @@ public class EntityContextMenu extends JPopupMenu {
 				
             }
         });
-		if (!rootedEntity.getEntity().getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+		if (!rootedEntity.getEntity().getOwnerKey().equals(SessionMgr.getSubjectKey())) {
 			renameItem.setEnabled(false);
 		}
         return renameItem;
@@ -535,7 +533,7 @@ public class EntityContextMenu extends JPopupMenu {
 		
 		for(final EntityData rootEd : rootEds) {
 			final Entity commonRoot = rootEd.getChildEntity();
-			if (!commonRoot.getUser().getUserLogin().equals(SessionMgr.getUsername())) continue;
+			if (!commonRoot.getOwnerKey().equals(SessionMgr.getSubjectKey())) continue;
 			
 			JMenuItem commonRootItem = new JMenuItem(commonRoot.getName());
 			commonRootItem.addActionListener(new ActionListener() {
@@ -614,7 +612,7 @@ public class EntityContextMenu extends JPopupMenu {
 		
 		for(EntityData rootEd : rootEds) {
 			final Entity commonRoot = rootEd.getChildEntity();
-			if (!commonRoot.getUser().getUserLogin().equals(SessionMgr.getUsername())) continue;
+			if (!commonRoot.getOwnerKey().equals(SessionMgr.getSubjectKey())) continue;
 			
 			JMenuItem commonRootItem = new JMenuItem(commonRoot.getName());
 			commonRootItem.addActionListener(new ActionListener() {
@@ -711,7 +709,7 @@ public class EntityContextMenu extends JPopupMenu {
 
 		for(RootedEntity rootedEntity : rootedEntityList) {
 			EntityData entityData = rootedEntity.getEntityData();
-			if (entityData!=null && entityData.getUser()!=null && !entityData.getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+			if (entityData!=null && entityData.getOwnerKey()!=null && !entityData.getOwnerKey().equals(SessionMgr.getSubjectKey())) {
 				deleteItem.setEnabled(false);
 				break;
 			}
@@ -776,7 +774,7 @@ public class EntityContextMenu extends JPopupMenu {
                         
                         // This should never happen
                         if (null==parentId) { return;}
-                        NeuronMergeTask task = new NeuronMergeTask(new HashSet<Node>(), SessionMgr.getUsername(), new ArrayList<org.janelia.it.jacs.model.tasks.Event>(), new HashSet<TaskParameter>());
+                        NeuronMergeTask task = new NeuronMergeTask(new HashSet<Node>(), SessionMgr.getSubjectKey(), new ArrayList<org.janelia.it.jacs.model.tasks.Event>(), new HashSet<TaskParameter>());
                         task.setJobName("Neuron Merge Task");
                         task.setParameter(NeuronMergeTask.PARAM_separationEntityId, parentId.toString());
                         task.setParameter(NeuronMergeTask.PARAM_commaSeparatedNeuronFragmentList, Task.csvStringFromCollection(fragmentIds));
@@ -831,7 +829,7 @@ public class EntityContextMenu extends JPopupMenu {
                 	HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
                 	taskParameters.add(new TaskParameter("folder id", folder.getId().toString(), null));
                 	taskParameters.add(new TaskParameter("target stack id", targetEntity.getId().toString(), null));
-                	Task task = new GenericTask(new HashSet<Node>(), SessionMgr.getUsername(), new ArrayList<Event>(), 
+                	Task task = new GenericTask(new HashSet<Node>(), SessionMgr.getSubjectKey(), new ArrayList<Event>(), 
                 			taskParameters, "sortBySimilarity", "Sort By Similarity");
                     task.setJobName("Sort By Similarity Task");
                     task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
@@ -848,7 +846,7 @@ public class EntityContextMenu extends JPopupMenu {
             }
         });
 
-        sortItem.setEnabled(ModelMgrUtils.isOwner(folder));
+        sortItem.setEnabled(ModelMgrUtils.hasWriteAccess(folder));
         return sortItem;
     }
     
@@ -1039,7 +1037,7 @@ public class EntityContextMenu extends JPopupMenu {
 	                        	
 		                    	HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
 		                    	taskParameters.add(new TaskParameter("file path", filePath, null));
-		                    	Task task = new GenericTask(new HashSet<Node>(), SessionMgr.getUsername(), new ArrayList<Event>(), 
+		                    	Task task = new GenericTask(new HashSet<Node>(), SessionMgr.getSubjectKey(), new ArrayList<Event>(), 
 		                    			taskParameters, "syncFromArchive", "Sync From Archive");
 		                        task.setJobName("Sync From Archive Task");
 		                        task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
@@ -1149,7 +1147,7 @@ public class EntityContextMenu extends JPopupMenu {
 					@Override
 					protected void doStuff() throws Exception {
 						fullEntity = ModelMgr.getModelMgr().loadLazyEntity(entity, true);
-						entities = fullEntity.getDescendantsOfType(EntityConstants.TYPE_NEURON_FRAGMENT, true);
+						entities = EntityUtils.getDescendantsOfType(fullEntity, EntityConstants.TYPE_NEURON_FRAGMENT, true);
 					}
 
 					@Override

@@ -298,7 +298,7 @@ public class RunNeuronSeparationDialog extends ModalDialog {
     		String inputDirList = path;
         	String process;
         	Task task;
-        	String owner = SessionMgr.getUsername();
+        	String owner = SessionMgr.getSubjectKey();
         	
             process = "NMSDataPipeline";
             task = new MCFODataPipelineTask(new HashSet<Node>(), owner, new ArrayList<Event>(), 

@@ -1,50 +1,98 @@
 package org.janelia.it.FlyWorkstation.shared.util;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityActorPermission;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.user_data.User;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
  * Utilities for dealing with Entities via the ModelMgr. In general, most of these methods access the database and 
- * should be called from a worker thread, not from the EDT.
+ * should be called from a worker thread, not from the EDT. The exception are methods which describe the current user's
+ * read/write access permissions to entities. Those used cached data and may be called from the EDT.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ModelMgrUtils {
 	
-	public static final void loadChild(Entity entity, String attrName) throws Exception {
-    	EntityData ed = entity.getEntityDataByAttributeName(attrName);
-    	if (ed != null) {
-    		ed.setChildEntity(ModelMgr.getModelMgr().getEntityById(ed.getChildEntity().getId()));
-    	}
+	/**
+	 * Returns the subject name part of a given subject key. For example, for "group:flylight", this will return "flylight".
+	 * @param subjectKey
+	 * @return
+	 */
+	public static String getNameFromSubjectKey(String subjectKey) {
+		if (subjectKey==null) return null;
+		return subjectKey.substring(subjectKey.indexOf(':')+1);
 	}
     
+	/**
+	 * Returns true if the user owns the given entity. 
+	 * @param entity
+	 * @return
+	 */
     public static boolean isOwner(Entity entity) {
     	if (entity==null) throw new IllegalArgumentException("Entity is null");
-    	if (entity.getUser()==null) {
-    		throw new IllegalArgumentException("Entity's user is null");
-    	}
-    	return entity.getUser().getUserLogin().equals(SessionMgr.getUsername());
+    	if (entity.getOwnerKey()==null) throw new IllegalArgumentException("Entity's owner is null");
+    	return entity.getOwnerKey().equals(SessionMgr.getSubjectKey());
     }
 
-	public static boolean hasAccess(Entity entity) {
-		String ul = entity.getUser().getUserLogin();
-		return (User.SYSTEM_USER_LOGIN.equals(ul) || SessionMgr.getUsername().equals(ul));
+    /**
+     * Returns true if the user is authorized to read the given entity, either because they are the owner, or 
+     * because they or one of their groups has read permission.
+     * @param entity
+     * @return
+     */
+	public static boolean hasReadAccess(Entity entity) {
+		String ownerKey = entity.getOwnerKey();
+		
+		// Special case for fake entities which do not exist in the database
+		if (ownerKey==null) return true;
+		
+		// User or any of their groups grant read access
+		Set<String> subjectKeys = new HashSet<String>(SessionMgr.getSubjectKeys());
+		if  (subjectKeys.contains(ownerKey)) return true;
+		
+		// Check explicit permission grants
+		for(EntityActorPermission eap : entity.getEntityActorPermissions()) {
+			if (subjectKeys.contains(eap.getSubjectKey())) {
+				if (eap.getPermissions().contains("r")) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
-	
-	public static boolean hasAccess(EntityData entityData) {
-		String ul = entityData.getUser().getUserLogin();
-		return (User.SYSTEM_USER_LOGIN.equals(ul) || SessionMgr.getUsername().equals(ul));
+
+    /**
+     * Returns true if the user is authorized to write the given entity, either because they are the owner, or 
+     * because they or one of their groups has write permission.
+     * @param entity
+     * @return
+     */
+	public static boolean hasWriteAccess(Entity entity) {
+		String ownerKey = entity.getOwnerKey();
+		
+		// Special case for fake entities which do not exist in the database. 
+		if (ownerKey==null) return false;
+		
+		// Only being the owner grants write access
+		if (isOwner(entity)) return true;
+
+		// Check explicit permission grants
+		Set<String> subjectKeys = new HashSet<String>(SessionMgr.getSubjectKeys());
+		for(EntityActorPermission eap : entity.getEntityActorPermissions()) {
+			if (subjectKeys.contains(eap.getSubjectKey())) {
+				if (eap.getPermissions().contains("w")) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 	
     public static EntityData addChild(Entity parent, Entity child) throws Exception {

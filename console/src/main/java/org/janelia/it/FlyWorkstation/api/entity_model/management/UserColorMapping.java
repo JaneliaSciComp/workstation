@@ -44,22 +44,22 @@ public class UserColorMapping {
 	 * Get a distinct color for the given username. The color will persist while this class is in memory, but it may 
 	 * be different on the next run of the application. This is similar to how MS Word assigns colors to users in its
 	 * Track Changes mode. 
-	 * @param username
+	 * @param subjectKey
 	 * @return
 	 */
-    public Color getColor(String username) {
-    	if (!userColors.containsKey(username)) {
-    		Color color = username.equals(SessionMgr.getUsername()) ? currentUserColor : nextColor();
-    		userColors.put(username, color);
+    public Color getColor(String subjectKey) {
+    	if (!userColors.containsKey(subjectKey)) {
+    		Color color = subjectKey.equals(SessionMgr.getSubjectKey()) ? currentUserColor : nextColor();
+    		userColors.put(subjectKey, color);
     	}
-    	return userColors.get(username);
+    	return userColors.get(subjectKey);
     }
     
     /**
      * Returns the set of usernames which have been registered and assigned a unique color. 
      * @return
      */
-    public Set<String> getUsernames() {
+    public Set<String> getSubjectKeys() {
     	return userColors.keySet();
     }
 }

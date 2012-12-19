@@ -454,8 +454,8 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 	}
 	
 	public boolean isAccessible() {
-		String username = SessionMgr.getUsername();
-		if (!"jenetta".equals(username) && !"admin-jenetta".equals(username)) {
+		String username = SessionMgr.getSubjectKey();
+		if (!"user:jenetta".equals(username)) {
 			return false;
 		}
 		return true;

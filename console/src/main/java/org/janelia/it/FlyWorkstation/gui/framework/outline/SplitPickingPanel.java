@@ -376,7 +376,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			protected void doStuff() throws Exception {
 				List<Entity> allCrosses = ModelMgr.getModelMgr().getEntitiesByTypeName(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS);
 				for(Entity cross : allCrosses) {
-					if (!cross.getUser().getUserLogin().equals(SessionMgr.getUsername())) continue;
+					if (!cross.getOwnerKey().equals(SessionMgr.getSubjectKey())) continue;
 					crosses.add(cross);
 					String label = cross.getValueByAttributeName(EntityConstants.ATTRIBUTE_CROSS_LABEL);
 					if (label==null) continue;
@@ -511,7 +511,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			protected void doStuff() throws Exception {
 				
 				for(Entity entity : ModelMgr.getModelMgr().getCommonRootEntities()) {
-					if (FOLDER_NAME_SPLIT_PICKING.equals(entity.getName()) && ModelMgrUtils.isOwner(entity)) {
+					if (FOLDER_NAME_SPLIT_PICKING.equals(entity.getName()) && ModelMgrUtils.hasWriteAccess(entity)) {
 						splitPickingFolderEntity = ModelMgr.getModelMgr().loadLazyEntity(entity, false);
 						break;
 					}
@@ -904,7 +904,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
     	taskParameters.add(new TaskParameter("intersection method", method, null));
     	taskParameters.add(new TaskParameter("kernel size", kernelSize, null));
     	
-    	Task task = new GenericTask(new HashSet<Node>(), "system", new ArrayList<Event>(), 
+    	Task task = new GenericTask(new HashSet<Node>(), crossFolder.getEntity().getOwnerKey(), new ArrayList<Event>(), 
     			taskParameters, "screenSampleCrossService", "Screen Sample Cross Service");
         task.setJobName("Screen Sample Cross Service");
         task = ModelMgr.getModelMgr().saveOrUpdateTask(task);

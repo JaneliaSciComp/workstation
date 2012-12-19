@@ -26,6 +26,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.FlyWorkstation.gui.util.*;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
+import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -450,7 +451,7 @@ public class IconDemoPanel extends Viewer {
 				});
 
 				if (!contextRootedEntity.getEntity().getEntityType().getName().equals(EntityConstants.TYPE_FOLDER)
-						|| !contextRootedEntity.getEntity().getUser().getUserLogin().equals(SessionMgr.getUsername())) {
+						|| !contextRootedEntity.getEntity().getOwnerKey().equals(SessionMgr.getSubjectKey())) {
 					newFolderItem.setEnabled(false);
 				}
 				
@@ -1166,8 +1167,9 @@ public class IconDemoPanel extends Viewer {
 		// Refresh all user list
 		allUsers.clear();
 		for (OntologyAnnotation annotation : annotations.getAnnotations()) {
-			if (!allUsers.contains(annotation.getOwner()))
-				allUsers.add(annotation.getOwner());
+			String name = ModelMgrUtils.getNameFromSubjectKey(annotation.getOwner());
+			if (!allUsers.contains(name))
+				allUsers.add(name);
 		}
 		Collections.sort(allUsers);
         imagesPanel.setAnnotations(annotations);

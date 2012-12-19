@@ -52,5 +52,4 @@ public interface AnnotationFacade {
 	public Entity createDataSet(String dataSetName) throws Exception;
 	
 	public List<Entity> getDataSets() throws Exception;
-	
 }

@@ -224,7 +224,7 @@ public class EntityDataPane extends JPanel {
             Vector<String> rowData = new Vector<String>();
             rowData.add((entityData.getEntityAttribute() == null) ? "" : entityData.getEntityAttribute().getName());
             rowData.add(entityData.getId().toString());
-            rowData.add((entityData.getUser() == null) ? "" : entityData.getUser().getUserLogin());
+            rowData.add((entityData.getOwnerKey() == null) ? "" : entityData.getOwnerKey());
             rowData.add((entityData.getUpdatedDate() == null) ? "" : entityData.getUpdatedDate().toString());
             rowData.add((entityData.getOrderIndex() == null) ? "" : entityData.getOrderIndex().toString());
             if (showParent) {

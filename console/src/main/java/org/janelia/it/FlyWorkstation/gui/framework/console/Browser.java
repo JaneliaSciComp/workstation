@@ -10,10 +10,12 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.swing.*;
 
+import com.google.common.collect.ComparisonChain;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.LoadRequestStatusObserverAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestState;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestStatus;
@@ -30,6 +32,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListe
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ImageCache;
 import org.janelia.it.FlyWorkstation.gui.util.*;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
+import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableImage;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -230,7 +233,16 @@ public class Browser extends JFrame implements Cloneable {
         entityOutline = new EntityOutline() {
 			@Override
 			public List<Entity> loadRootList() throws Exception {
-				return ModelMgr.getModelMgr().getCommonRootEntities();
+				List<Entity> roots = ModelMgr.getModelMgr().getCommonRootEntities();
+				Collections.sort(roots, new Comparator<Entity>(){
+					public int compare(Entity o1, Entity o2) {
+						return ComparisonChain.start()
+							.compareTrueFirst(ModelMgrUtils.isOwner(o1), ModelMgrUtils.isOwner(o2))
+							.compare(o1.getOwnerKey(), o2.getOwnerKey())
+							.compare(o1.getId(), o2.getId()).result();
+					}
+				});
+				return roots;
 			}
 		};
 		

@@ -47,7 +47,7 @@ public class FolderUtils {
 		List<EntityData> rootEds = SessionMgr.getBrowser().getEntityOutline().getRootEntity().getOrderedEntityData();
 		for(EntityData rootEd : rootEds) {
 			final Entity commonRoot = rootEd.getChildEntity();
-			if (!commonRoot.getUser().getUserLogin().equals(SessionMgr.getUsername())) continue;
+			if (!commonRoot.getOwnerKey().equals(SessionMgr.getSubjectKey())) continue;
 			if (commonRoot.getName().equals(commonRootName)) {
 				saveFolder = commonRoot;
 			}

@@ -26,34 +26,34 @@ public class EJBOntologyFacade extends EJBEntityFacade implements OntologyFacade
 
     @Override
     public Entity createOntologyAnnotation(OntologyAnnotation annotation) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().createOntologyAnnotation(SessionMgr.getUsername(), annotation);
+        return EJBFactory.getRemoteAnnotationBean().createOntologyAnnotation(SessionMgr.getSubjectKey(), annotation);
     }
     
     @Override
     public void removeOntologyAnnotation(Long annotationId) throws Exception {
-        EJBFactory.getRemoteAnnotationBean().removeOntologyAnnotation(SessionMgr.getUsername(), annotationId);
+        EJBFactory.getRemoteAnnotationBean().removeOntologyAnnotation(SessionMgr.getSubjectKey(), annotationId);
     }
 
     @Override
     public Entity createOntologyRoot(String ontologyName) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().createOntologyRoot(SessionMgr.getUsername(), ontologyName);
+        return EJBFactory.getRemoteAnnotationBean().createOntologyRoot(SessionMgr.getSubjectKey(), ontologyName);
     }
 
     @Override
     public EntityData createOntologyTerm(Long parentEntityId, String label, OntologyElementType type, Integer orderIndex) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().createOntologyTerm(SessionMgr.getUsername(),
+        return EJBFactory.getRemoteAnnotationBean().createOntologyTerm(SessionMgr.getSubjectKey(),
                 parentEntityId, label, type, orderIndex);
     }
 
     @Override
     public Entity getOntologyTree(Long rootEntityId) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getOntologyTree(SessionMgr.getUsername(),
+        return EJBFactory.getRemoteAnnotationBean().getOntologyTree(SessionMgr.getSubjectKey(),
                 rootEntityId);
     }
 
     @Override
     public List<Entity> getPrivateOntologies() throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().getPrivateOntologies(SessionMgr.getUsername());
+        return EJBFactory.getRemoteAnnotationBean().getPrivateOntologies(SessionMgr.getSubjectKey());
     }
 
     @Override
@@ -68,11 +68,11 @@ public class EJBOntologyFacade extends EJBEntityFacade implements OntologyFacade
 
     @Override
     public Entity publishOntology(Long ontologyEntityId, String rootName) throws Exception {
-        return EJBFactory.getRemoteAnnotationBean().publishOntology(SessionMgr.getUsername(), ontologyEntityId, rootName);
+        return EJBFactory.getRemoteAnnotationBean().publishOntology(SessionMgr.getSubjectKey(), ontologyEntityId, rootName);
     }
 
     @Override
     public void removeOntologyTerm(Long termEntityId) throws Exception {
-        EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(SessionMgr.getUsername(), termEntityId);
+        EJBFactory.getRemoteAnnotationBean().removeOntologyTerm(SessionMgr.getSubjectKey(), termEntityId);
     }
 }

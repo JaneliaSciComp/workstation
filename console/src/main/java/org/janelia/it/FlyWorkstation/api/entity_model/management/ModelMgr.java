@@ -21,10 +21,7 @@ import org.janelia.it.FlyWorkstation.shared.exception_handlers.PrintStackTraceHa
 import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.compute.api.support.SageTerm;
 import org.janelia.it.jacs.compute.api.support.SolrResults;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityAttribute;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.entity.EntityType;
+import org.janelia.it.jacs.model.entity.*;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
@@ -32,6 +29,7 @@ import org.janelia.it.jacs.model.ontology.types.OntologyElementType;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
+import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.User;
 import org.janelia.it.jacs.model.user_data.prefs.UserPreference;
 import org.janelia.it.jacs.shared.annotation.DataDescriptor;
@@ -214,7 +212,7 @@ public class ModelMgr {
     	User user = SessionMgr.getSessionMgr().getUser();
         Map<String, UserPreference> prefs = user.getCategoryPreferences(category);
 
-        OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(user.getUserLogin(), ontologyId);
+        OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(user.getKey(), ontologyId);
         for (UserPreference pref : prefs.values()) {
             ontologyKeyBindings.addBinding(pref.getName(), Long.parseLong(pref.getValue()));
         }
@@ -473,11 +471,11 @@ public class ModelMgr {
 		return entitySelectionModel;
 	}
 	
-	public List<EntityType> getEntityTypes() {
+	public List<EntityType> getEntityTypes() throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().getEntityTypes();
     }
 
-	public List<EntityAttribute> getEntityAttributes() {
+	public List<EntityAttribute> getEntityAttributes() throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().getEntityAttributes();
     }
 
@@ -509,11 +507,11 @@ public class ModelMgr {
         return entityModel.getParentEntityDatas(childEntityId);
     }
     
-    public Set<Long> getParentIdsForAttribute(long childEntityId, String attributeName) {
+    public Set<Long> getParentIdsForAttribute(long childEntityId, String attributeName) throws Exception {
     	return FacadeManager.getFacadeManager().getEntityFacade().getParentIdsForAttribute(childEntityId, attributeName);
     }
     
-    public List<Entity> getEntitiesByTypeName(String entityTypeName) {
+    public List<Entity> getEntitiesByTypeName(String entityTypeName) throws Exception {
         return entityModel.getEntitiesByTypeName(entityTypeName);
     }
 
@@ -575,7 +573,7 @@ public class ModelMgr {
     }
 
     public void removeAnnotation(Long annotationId) throws Exception {
-    	Entity annotationEntity = FacadeManager.getFacadeManager().getEntityFacade().getEntityById(annotationId.toString());
+    	Entity annotationEntity = FacadeManager.getFacadeManager().getEntityFacade().getEntityById(annotationId);
     	if (annotationEntity==null || annotationEntity.getId()==null) return;
     	OntologyAnnotation annotation = new OntologyAnnotation();
     	annotation.init(annotationEntity);
@@ -824,20 +822,24 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getComputeFacade().getUser();
     }
 
-    public List<User> getUsers() throws Exception{
-        return FacadeManager.getFacadeManager().getComputeFacade().getUsers();
+    public List<Subject> getSubjects() throws Exception{
+        return FacadeManager.getFacadeManager().getComputeFacade().getSubjects();
     }
 
     public User saveOrUpdateUser(User user) throws Exception {
         return FacadeManager.getFacadeManager().getComputeFacade().saveOrUpdateUser(user);
     }
 
+    public EntityActorPermission saveOrUpdatePermission(EntityActorPermission eap) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().saveOrUpdatePermission(eap);
+    }
+    
     public void removePreferenceCategory(String category) throws Exception {
         FacadeManager.getFacadeManager().getComputeFacade().removePreferenceCategory(category);
     }
 
     public SolrResults searchSolr(SolrQuery query) throws Exception {
-    	log.info("Searching SOLR: "+query.getQuery()+" start="+query.getStart()+" rows="+query.getRows());
+    	log.debug("Searching SOLR: "+query.getQuery()+" start="+query.getStart()+" rows="+query.getRows());
     	return FacadeManager.getFacadeManager().getSolrFacade().searchSolr(query);
     }
     
@@ -865,6 +867,17 @@ public class ModelMgr {
     
     public Entity createDataSet(String dataSetName) throws Exception {
     	return entityModel.createDataSet(dataSetName);
+    }
+    
+    public EntityActorPermission grantPermissions(Long entityId, String subjectKey, String permissions, boolean recursive) throws Exception {
+    	EntityActorPermission eap = FacadeManager.getFacadeManager().getEntityFacade().grantPermissions(entityId, subjectKey, permissions, recursive);
+    	entityModel.reloadById(entityId);
+    	return eap;
+    }
+
+    public void revokePermissions(Long entityId, String subjectKey, boolean recursive) throws Exception {
+    	FacadeManager.getFacadeManager().getEntityFacade().revokePermissions(entityId, subjectKey, recursive);
+    	entityModel.reloadById(entityId);
     }
     
     public List<MappedId> getProjectedResults(List<Long> entityIds, List<String> upMapping, List<String> downMapping) throws Exception {

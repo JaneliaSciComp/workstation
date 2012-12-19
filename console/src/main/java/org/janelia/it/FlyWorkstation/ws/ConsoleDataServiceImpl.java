@@ -157,7 +157,7 @@ public class ConsoleDataServiceImpl {
 	}
 	
     public Entity getEntityById(long entityId) throws Exception {
-        return PathTranslator.translatePathsToCurrentPlatform(FacadeManager.getFacadeManager().getEntityFacade().getEntityById(""+entityId));
+        return PathTranslator.translatePathsToCurrentPlatform(FacadeManager.getFacadeManager().getEntityFacade().getEntityById(entityId));
     }
 
     public Entity getEntityAndChildren(long entityId) throws Exception {

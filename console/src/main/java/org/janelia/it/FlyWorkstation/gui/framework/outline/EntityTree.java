@@ -20,6 +20,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
 import org.janelia.it.FlyWorkstation.gui.util.FakeProgressWorker;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -148,7 +149,7 @@ public class EntityTree extends JPanel {
 
         createNewTree(rootEd);
         
-        addNodes(null, rootEd);
+        addNodes(null, rootEd, 0);
 
         showTree();
     }
@@ -504,7 +505,6 @@ public class EntityTree extends JPanel {
      */
     public Collection<DefaultMutableTreeNode> getNodesByEntityId(Long entityId) {
     	return ImmutableList.copyOf(entityIdToNodeMap.get(entityId));
-//    	return new ArrayList<DefaultMutableTreeNode>(entityIdToNodeMap.get(entityId));
     }
     
     /**
@@ -549,19 +549,6 @@ public class EntityTree extends JPanel {
     		return getEntity(parentNode);
     	}
     	return null;
-    }
-
-    protected void addNodes(DefaultMutableTreeNode parentNode, EntityData newEd) {
-    	addNodes(parentNode, newEd, new HashSet<Long>(), 0);
-    }
-    		
-    private void addNodes(DefaultMutableTreeNode parentNode, EntityData newEd, Set<Long> visitedEds, int level) {
-    	if (parentNode==null) {
-        	addNodes(parentNode, newEd, 0);
-    	}
-    	else {
-    		addNodes(parentNode, newEd, parentNode.getChildCount());	
-    	}
     }
 
     protected void addNodes(DefaultMutableTreeNode parentNode, EntityData newEd, int index) {
@@ -616,18 +603,46 @@ public class EntityTree extends JPanel {
     	if (newEd.getId()!=null) {
 	    	if (visitedEds.contains(newEd.getId())) {
 	    		if (!childDataList.isEmpty()) {
-//	    			System.out.println(indent+"EntityTree.addNodes - add lazy node to "+getEntity(parentNode).getName());
+	    			log.trace(indent+"EntityTree.addNodes - add lazy node to "+getEntity(parentNode).getName());
 	    			selectedTree.addObject(parentNode, new LazyTreeNode());	
 	    		}
-//	    		System.out.println(indent+"EntityTree.addNodes - already been at "+entity.getName()+" ("+newEd.getId()+")");
+	    		log.trace(indent+"EntityTree.addNodes - already been at "+entity.getName()+" ("+newEd.getId()+")");
 	    		return;
 	    	}
 	    	nextVisitedEds.add(newEd.getId());
     	}
     	
-    	// Add children
-        
         addChildren(newNode, childDataList, nextVisitedEds, level);
+    }
+    
+    private int addChildren(DefaultMutableTreeNode parentNode, List<EntityData> dataList) {
+    	return addChildren(parentNode, dataList, new HashSet<Long>(), 0);
+    }
+    
+    private int addChildren(DefaultMutableTreeNode parentNode, List<EntityData> dataList, Set<Long> visitedEds, int level) {
+
+    	StringBuffer indent = new StringBuffer();
+    	for(int i=0; i<level; i++) {
+    		indent.append("    ");
+    	}
+    	
+		log.trace(indent+"EntityTree.addChildren - add to "+getEntityData(parentNode));
+
+        // Test for proxies
+        if (!EntityUtils.areLoaded(dataList)) {
+            selectedTree.addObject(parentNode, new LazyTreeNode());
+            return 1;
+        }
+    	
+        int c = 0;
+        for (EntityData entityData : dataList) {
+            if (entityData.getChildEntity() != null) {
+            	if (EntityUtils.isHidden(entityData) || !ModelMgrUtils.hasReadAccess(entityData.getChildEntity())) continue;
+                addNodes(parentNode, entityData, c++, visitedEds, level+1);
+            }
+        }
+                
+        return c;
     }
 
     protected synchronized void removeNode(DefaultMutableTreeNode node) {
@@ -649,7 +664,8 @@ public class EntityTree extends JPanel {
         	log.trace("EntityTree.removeNode: {}, {}",entity,uniqueId);
         	
         	// Remove from all maps
-//            uniqueIdToNodeMap.remove(uniqueId);
+        	log.info("Removing "+uniqueId);
+            uniqueIdToNodeMap.remove(uniqueId);
             entityIdToNodeMap.remove(entity.getId(), node);
             entityDataIdToNodeMap.remove(entity.getId(), node);
     	}
@@ -667,35 +683,5 @@ public class EntityTree extends JPanel {
         for(DefaultMutableTreeNode childNode : childNodes) {
         	removeNode(childNode);	
         }
-    }
-    
-    private int addChildren(DefaultMutableTreeNode parentNode, List<EntityData> dataList) {
-    	return addChildren(parentNode, dataList, new HashSet<Long>(), 0);
-    }
-    
-    private int addChildren(DefaultMutableTreeNode parentNode, List<EntityData> dataList, Set<Long> visitedEds, int level) {
-
-    	StringBuffer indent = new StringBuffer();
-    	for(int i=0; i<level; i++) {
-    		indent.append("    ");
-    	}
-    	
-//		System.out.println(indent+"EntityTree.addChildren - add to "+getEntityData(parentNode));
-
-        // Test for proxies
-        if (!EntityUtils.areLoaded(dataList)) {
-            selectedTree.addObject(parentNode, new LazyTreeNode());
-            return 1;
-        }
-    	
-        int c = 0;
-        for (EntityData entityData : dataList) {
-            if (entityData.getChildEntity() != null) {
-            	if (EntityUtils.isHidden(entityData)) continue;
-                addNodes(parentNode, entityData, c++, visitedEds, level+1);
-            }
-        }
-                
-        return c;
     }
 }

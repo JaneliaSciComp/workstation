@@ -11,6 +11,7 @@ import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchAttribute.DataStor
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchAttribute.DataType;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.jacs.compute.api.support.EntityDocument;
 import org.janelia.it.jacs.compute.api.support.SageTerm;
 import org.janelia.it.jacs.compute.api.support.SolrUtils;
@@ -223,7 +224,7 @@ public class SearchConfiguration {
 			value = entity.getEntityType().getName();
 		}
 		else if ("username".equals(fieldName)) {
-			value = entity.getUser().getUserLogin();
+			value = ModelMgrUtils.getNameFromSubjectKey(entity.getOwnerKey());
 		}
 		else if ("creation_date".equals(fieldName)) {
 			value = entity.getCreationDate();
@@ -233,7 +234,16 @@ public class SearchConfiguration {
 		}
 		else if (doc!=null) {
 			if ("annotations".equals(fieldName)) {
-				value = doc.getFieldValues(SessionMgr.getUsername()+"_annotations");
+				StringBuffer sb = new StringBuffer();
+				for(String subjectKey : SessionMgr.getSubjectKeys()) {
+					String fieldNamePrefix = SolrUtils.getFormattedName(subjectKey);
+					Object v = doc.getFieldValues(fieldNamePrefix+"_annotations");
+					if (v!=null) {
+						if (sb.length()>0) sb.append(" ");
+						sb.append(getFormattedFieldValue(v, fieldName));
+					}
+				}
+				value = sb.toString();
 			}
 			else {
 				value = doc.getFieldValues(fieldName);	

@@ -146,7 +146,7 @@ public class RunImportDialog extends ModalDialog{
         try {
             String process;
             Task task;
-            String owner = SessionMgr.getUsername();
+            String owner = SessionMgr.getSubjectKey();
 
             process = "FileTreeLoader";
             task = new FileTreeLoaderPipelineTask(new HashSet<Node>(),

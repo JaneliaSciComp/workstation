@@ -50,5 +50,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Guava"/>
 	<classpathentry kind="lib" path="lib/Jogl"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Logging"/>
+	<classpathentry kind="lib" path="lib/jackrabbit-webdav-2.5.2.jar"/>
 	<classpathentry kind="output" path="build/eclipse"/>
 </classpath>

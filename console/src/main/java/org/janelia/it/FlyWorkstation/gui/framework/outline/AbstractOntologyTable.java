@@ -38,7 +38,7 @@ public abstract class AbstractOntologyTable extends AbstractEntityTable {
             for (Entity entity : entities) {
                 Vector<String> rowData = new Vector<String>();
                 rowData.add(entity.getName());
-                rowData.add((entity.getUser() == null) ? "" : entity.getUser().getUserLogin());
+                rowData.add((entity.getOwnerKey() == null) ? "" : entity.getOwnerKey());
                 rowData.add((entity.getCreationDate() == null) ? "" : entity.getCreationDate().toString());
                 rowData.add((entity.getUpdatedDate() == null) ? "" : entity.getUpdatedDate().toString());
                 data.add(rowData);

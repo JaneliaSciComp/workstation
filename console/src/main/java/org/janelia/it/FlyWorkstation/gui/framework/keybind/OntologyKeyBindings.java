@@ -29,9 +29,9 @@ public class OntologyKeyBindings {
 	public OntologyKeyBindings() {
 	}
 	
-	public OntologyKeyBindings(String user, Long ontologyId) {
+	public OntologyKeyBindings(String subjectKey, Long ontologyId) {
 		super();
-		this.user = user;
+		this.user = subjectKey;
 		this.ontologyId = ontologyId;
 	}
 	

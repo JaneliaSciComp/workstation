@@ -77,10 +77,7 @@ public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
 						List<List<Object>> allPaths = getRootPaths(entity, new HashSet<Long>());
 						for(List<Object> path : allPaths) {
 							if (!path.isEmpty()) {
-								Entity root = ((Entity)path.get(0));
-								if (ModelMgrUtils.hasAccess(root)) {
-									paths.add(path);
-								}
+								paths.add(path);
 							}
 						}
 						if (paths.isEmpty()) {

@@ -249,7 +249,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
     		});
 	        popupMenu.add(copyMenuItem);
 
-	    	if (SessionMgr.getUsername().equals(annotation.getOwner())) {
+	    	if (SessionMgr.getSubjectKey().equals(annotation.getOwner())) {
 	            JMenuItem deleteItem = new JMenuItem("  Delete Annotation");
 	            deleteItem.addActionListener(new ActionListener() {
 	                public void actionPerformed(ActionEvent actionEvent) {

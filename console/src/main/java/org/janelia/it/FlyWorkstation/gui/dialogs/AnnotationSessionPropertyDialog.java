@@ -33,6 +33,7 @@ import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.ontology.types.Tag;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**
  * A dialog for creating a new annotation session, or editing an existing one.
@@ -94,7 +95,7 @@ public class AnnotationSessionPropertyDialog extends ModalDialog {
                         for (EntityData entityData : entityChooser.getChosenElements()) {
                         	Entity entity = entityData.getChildEntity();
                         	Entity entityTree = ModelMgr.getModelMgr().getEntityTree(entity.getId());
-                            List<Entity> descs = entityTree.getDescendantsOfType(EntityConstants.TYPE_NEURON_FRAGMENT, true);
+                            List<Entity> descs = EntityUtils.getDescendantsOfType(entityTree, EntityConstants.TYPE_NEURON_FRAGMENT, true);
                             entities.addAll(descs);
                         }
                     }
@@ -281,7 +282,7 @@ public class AnnotationSessionPropertyDialog extends ModalDialog {
             String categoryIds = Task.csvStringFromCollection(categoryIdList);
 
             if (task == null) {
-                task = new AnnotationSessionTask(null, SessionMgr.getUsername(), null, null);
+                task = new AnnotationSessionTask(null, SessionMgr.getSubjectKey(), null, null);
             }
 
             task.setParameter(AnnotationSessionTask.PARAM_sessionName, nameValueField.getText());

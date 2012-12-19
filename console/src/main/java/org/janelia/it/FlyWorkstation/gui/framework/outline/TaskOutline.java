@@ -328,7 +328,7 @@ public class TaskOutline extends JPanel implements Refreshable {
         final List<Task> toCancel = new ArrayList<Task>();
         for (int i : dynamicTable.getTable().getSelectedRows()) {
         	Task task = tasks.get(i);
-            if (!task.getOwner().equals(SessionMgr.getUsername())) {
+            if (!task.getOwner().equals(SessionMgr.getSubjectKey())) {
                 JOptionPane.showMessageDialog(consoleFrame, 
                 		"Only the owner may cancel a task", "Cannot Cancel", JOptionPane.ERROR_MESSAGE);
                 return;
@@ -360,7 +360,7 @@ public class TaskOutline extends JPanel implements Refreshable {
         final List<Task> toDelete = new ArrayList<Task>();
         for (int i : dynamicTable.getTable().getSelectedRows()) {
         	Task task = tasks.get(i);
-            if (!task.getOwner().equals(SessionMgr.getUsername())) {
+            if (!task.getOwner().equals(SessionMgr.getSubjectKey())) {
                 JOptionPane.showMessageDialog(consoleFrame, 
                 		"Only the owner may delete a task", "Cannot Delete", JOptionPane.ERROR_MESSAGE);
                 return;

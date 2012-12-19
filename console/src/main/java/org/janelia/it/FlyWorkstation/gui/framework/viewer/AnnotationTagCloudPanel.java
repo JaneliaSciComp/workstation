@@ -80,7 +80,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
             titleItem.setEnabled(false);
             popupMenu.add(titleItem);
             
-        	if (SessionMgr.getUsername().equals(tag.getOwner())) {
+        	if (SessionMgr.getSubjectKey().equals(tag.getOwner())) {
         		final RemoveAnnotationTermAction termAction = new RemoveAnnotationTermAction(tag.getKeyEntityId(), tag.getKeyString());
                 JMenuItem deleteByTermItem = new JMenuItem("  "+termAction.getName());
                 deleteByTermItem.addActionListener(new ActionListener() {
@@ -124,7 +124,7 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
             titleItem.setEnabled(false);
             popupMenu.add(titleItem);
             
-        	if (SessionMgr.getUsername().equals(tag.getOwner())) {
+        	if (SessionMgr.getSubjectKey().equals(tag.getOwner())) {
                 JMenuItem deleteItem = new JMenuItem("  Delete Annotation");
                 deleteItem.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent actionEvent) {

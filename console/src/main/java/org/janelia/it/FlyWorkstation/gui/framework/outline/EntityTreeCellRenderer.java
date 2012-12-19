@@ -15,6 +15,7 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeCellRenderer;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -106,10 +107,11 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
             titleLabel.setIcon(null);
             metaLabel.setText("");
             
+            EntityData ed = null;
             Entity entity = null;
             
             if (userObject instanceof EntityData) {
-            	EntityData ed = (EntityData)userObject;
+            	ed = (EntityData)userObject;
                 entity = (Entity)ed.getChildEntity();
             }
             else if (userObject instanceof Entity) {
@@ -118,22 +120,7 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
             
             if (entity!= null) {
                 
-                DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();                
-                Entity parent = null;
-                if (parentNode != null) {
-                    Object parentUserObject = parentNode.getUserObject();
-                	if (parentUserObject instanceof EntityData) {
-                		EntityData parentEd = (EntityData)parentUserObject;
-                		parent = parentEd.getChildEntity();
-                		
-                	}
-                	else if (parentUserObject instanceof Entity) {
-                		parent = (Entity)parentUserObject;
-                	}
-                }
-                
                 String entityTypeName = entity.getEntityType().getName();
-                String parentEntityTypeName = parent == null ? "" : parent.getEntityType().getName();
                 
                 // Set the labels
                 titleLabel.setText(entity.getName());
@@ -141,9 +128,9 @@ public class EntityTreeCellRenderer extends DefaultTreeCellRenderer implements T
                 titleLabel.setToolTipText(entityTypeName);
 
                 String dateStr = entity.getUpdatedDate()==null?"":df.format(entity.getUpdatedDate());
-                String ownerStr = entity.getUser()==null?"":entity.getUser().getUserLogin();
+                String ownerStr = ModelMgrUtils.getNameFromSubjectKey(entity.getOwnerKey());
                 
-                if (parentEntityTypeName.equals(EntityConstants.TYPE_SAMPLE)) {
+            	if (ed!=null && ed.getEntityAttribute()!=null && ed.getEntityAttribute().getName().equals(EntityConstants.ATTRIBUTE_RESULT)) {
                 	typeLabel.setText(dateStr+" "+ownerStr);
                 }
                 else {
