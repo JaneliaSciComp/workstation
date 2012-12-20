@@ -41,24 +41,7 @@ public class WebDavClient {
         managerParams.setMaxTotalConnections(maxTotalConnections);            // default is 20
         this.httpClient = new HttpClient(mgr);
 
-        PasswordAuthentication defaultAuthentication =
-                Authenticator.requestPasswordAuthentication(
-                        null,
-                        null,
-                        -1,
-                        null,
-                        null,
-                        null);
-        if (defaultAuthentication != null) {
-            final String userName = defaultAuthentication.getUserName();
-            final char[] password = defaultAuthentication.getPassword();
-            if ((userName != null) && (password != null)) {
-                final UsernamePasswordCredentials credentials =
-                        new UsernamePasswordCredentials(userName,
-                                                        String.valueOf(password));
-                setCredentials(credentials);
-            }
-        }
+        setCredentialsUsingAuthenticator();
 
         final HttpState clientState = this.httpClient.getState();
         final Credentials savedCredentials =
@@ -88,6 +71,34 @@ public class WebDavClient {
                  credentials.getUserName());
         final HttpState clientState = this.httpClient.getState();
         clientState.setCredentials(AuthScope.ANY, credentials);
+    }
+
+    /**
+     * Uses the {@link Authenticator} default credentials as the
+     * default credentials for all WebDAV requests.
+     */
+    public void setCredentialsUsingAuthenticator() {
+
+        PasswordAuthentication defaultAuthentication =
+                Authenticator.requestPasswordAuthentication(
+                        null,
+                        null,
+                        -1,
+                        null,
+                        null,
+                        null);
+
+        if (defaultAuthentication != null) {
+            final String userName = defaultAuthentication.getUserName();
+            final char[] password = defaultAuthentication.getPassword();
+            if ((userName != null) && (password != null)) {
+
+                final UsernamePasswordCredentials credentials =
+                        new UsernamePasswordCredentials(userName,
+                                String.valueOf(password));
+                setCredentials(credentials);
+            }
+        }
     }
 
     /**
@@ -129,15 +140,14 @@ public class WebDavClient {
         List<WebDavFile> webDavFileList = new ArrayList<WebDavFile>(1024);
         PropFindMethod method = null;
         try {
+
             final String href = url.toString();
 
             if (! href.endsWith("/")) {
-                throw new IllegalArgumentException(
+                throw new WebDavRetrievalException (
                         "URL '" + href +
                         "' must end with a '/' to be used for directory retrieval");
             }
-
-            // TODO: handle 403, unauthorized by reload creds and then retry
 
             method = new PropFindMethod(href, WebDavFile.PROPERTY_NAMES, depth);
             final int responseCode = httpClient.executeMethod(method);
@@ -152,8 +162,13 @@ public class WebDavClient {
                     }
                 }
             } else {
-                LOG.warn("find: response code " + responseCode + " returned for " + url);
+                throw new WebDavRetrievalException(
+                        responseCode + " response code returned for " + url,
+                        responseCode);
             }
+
+        } catch (WebDavRetrievalException e) {
+            throw e;
         } catch (Exception e) {
             throw new WebDavRetrievalException(
                     "failed to retrieve WebDAV information for " + url, e);

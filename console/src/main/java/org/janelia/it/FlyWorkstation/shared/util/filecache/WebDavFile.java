@@ -7,10 +7,10 @@ import org.apache.jackrabbit.webdav.property.*;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Comparator;
 
 /**
- * TODO: add javadoc
+ * Encapsulates minimum amount of information for a remote
+ * file accesible through WebDAV.
  *
  * @author Eric Trautman
  */
@@ -20,20 +20,31 @@ public class WebDavFile {
     private boolean isDirectory;
     private Long contentLength;
 
-    public WebDavFile(URL baseUrl,
+    /**
+     * Parses the specified WebDAV PROPFIND response 'fragment' to
+     * populate this file's attributes.
+     *
+     * @param  directoryUrl         the full URL for the directory that
+     *                              contains the file.
+     * @param  multiStatusResponse  the PROPFIND response for the file.
+     *
+     * @throws IllegalArgumentException
+     *   if a file specific URL cannot be constructed.
+     */
+    public WebDavFile(URL directoryUrl,
                       MultiStatusResponse multiStatusResponse)
             throws IllegalArgumentException {
 
-        int baseLength = baseUrl.getPath().length();
+        int baseLength = directoryUrl.getPath().length();
         final String href = multiStatusResponse.getHref();
 
         if (href.length() > baseLength) {
             try {
-                this.url = new URL(baseUrl, href.substring(baseLength));
+                this.url = new URL(directoryUrl, href.substring(baseLength));
             } catch (MalformedURLException e) {
                 throw new IllegalArgumentException(
-                        "failed to construct file URL from baseUrl " +
-                        baseUrl + " and href " + href, e);
+                        "failed to construct file URL from directoryUrl " +
+                        directoryUrl + " and href " + href, e);
             }
         }
 
@@ -108,23 +119,10 @@ public class WebDavFile {
     private static final long ONE_KILOBYTE = 1024;
     private static final String COLLECTION = "collection";
 
-    public static final Comparator<WebDavFile> LENGTH_COMPARATOR = new Comparator<WebDavFile>() {
-        @Override
-        public int compare(WebDavFile o1, WebDavFile o2) {
-            if (o1.contentLength == null) {
-                if (o2.contentLength == null) {
-                    return 0;
-                } else {
-                    return -1;
-                }
-            } else if (o2.contentLength == null) {
-                return 1;
-            } else {
-                return o1.contentLength.compareTo(o2.contentLength);
-            }
-        }
-    };
-
+    /**
+     * The set of WebDAV properties required to populate a
+     * {@link WebDavFile} instance.
+     */
     public static final DavPropertyNameSet PROPERTY_NAMES;
     static {
         DavPropertyNameSet nameSet = new DavPropertyNameSet();

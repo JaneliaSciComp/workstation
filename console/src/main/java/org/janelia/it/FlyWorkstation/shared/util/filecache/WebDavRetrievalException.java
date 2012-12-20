@@ -7,8 +7,25 @@ package org.janelia.it.FlyWorkstation.shared.util.filecache;
  */
 public class WebDavRetrievalException extends RuntimeException {
 
+    private Integer statusCode;
+
+    public WebDavRetrievalException(String message) {
+        super(message);
+    }
+
+    public WebDavRetrievalException(String message,
+                                    int statusCode) {
+        super(message);
+        this.statusCode = statusCode;
+    }
+
     public WebDavRetrievalException(String message,
                                     Throwable cause) {
         super(message, cause);
     }
+
+    public Integer getStatusCode() {
+        return statusCode;
+    }
+
 }

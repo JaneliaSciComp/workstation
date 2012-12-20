@@ -1,17 +1,13 @@
 package org.janelia.it.FlyWorkstation.shared.util.filecache;
 
+import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.http.HttpStatus;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.net.URL;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -21,7 +17,8 @@ import java.util.List;
  */
 public class WebDavClientTest extends TestCase {
 
-    private UsernamePasswordCredentials credentials;
+    private WebDavClient client;
+    private URL testUrl;
 
     public WebDavClientTest(String testName) {
         super(testName);
@@ -33,42 +30,59 @@ public class WebDavClientTest extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
+        client = new WebDavClient(100, 100);
+        testUrl = new URL("http://jacs.int.janelia.org/WebDAV/opt/jacs-webdav-test/");
+    }
 
-        // TODO: set up test WebDAV directory that does not require authentication
-
-        BufferedReader in = null;
+    public void testWithoutCredentials() throws Exception {
         try {
-            in = new BufferedReader(new FileReader(new File("/tmp/creds")));
-            final String username = in.readLine();
-            final String password = in.readLine();
-            this.credentials = new UsernamePasswordCredentials(username,
-                                                               password);
-        } finally {
-            if (in != null) {
-                in.close();
-            }
+            client.findImmediateInternalFiles(testUrl);
+            Assert.fail("request for " + testUrl +
+                        " should have failed without credentials");
+        } catch (WebDavRetrievalException e) {
+            Assert.assertEquals(
+                    "invalid status code returned for unauthorized request",
+                    new Integer(HttpStatus.SC_UNAUTHORIZED),
+                    e.getStatusCode());
         }
     }
 
-    @Override
-    protected void tearDown() throws Exception {
-    }
+    public void testWithCredentials() throws Exception {
 
-    public void testFind() throws Exception {
+        // --------------------------------------------------------
+        // NOTE:
+        //
+        //   These credentials are maintained on the jacs server in
+        //     /opt/jacs-webdav-test/.htpasswd
+        //
+        //   The user file was created using the htpasswd utility.
+        //   The Apache server configuration in /etc/httpd/conf.d/
+        //   references the user file to limit access to the
+        //   /opt/jacs-webdav-test/ directory.
+        //
+        //   This allows us to hard code the password here without
+        //   worrying about security risks.
+        // --------------------------------------------------------
 
-        WebDavClient client = new WebDavClient(100, 100);
+        final UsernamePasswordCredentials credentials =
+                new UsernamePasswordCredentials("testuser",
+                                                "testuser");
         client.setCredentials(credentials);
 
-        URL url = new URL("http://jacs.int.janelia.org/jacsData/bin/");
+        List<WebDavFile> fileList =
+                client.findImmediateInternalFiles(testUrl);
+        final int immediateSize = fileList.size();
 
-        List<WebDavFile> fileList = client.findImmediateInternalFiles(url);
-        Collections.sort(fileList, WebDavFile.LENGTH_COMPARATOR);
-        LOG.info("fileList: {}", fileList);
+        Assert.assertTrue("no immediate files found for " + testUrl,
+                          immediateSize > 0);
 
-        fileList = client.findAllInternalFiles(url);
-        LOG.info("fileList: {}", fileList);
+        fileList = client.findAllInternalFiles(testUrl);
+        final int allSize = fileList.size();
+
+        Assert.assertTrue("all file count (" + allSize +
+                          ") is not greater than immediate file count (" +
+                          immediateSize + ") for " + testUrl,
+                          allSize > immediateSize);
     }
 
-    private static final Logger LOG =
-            LoggerFactory.getLogger(WebDavClientTest.class);
 }
