@@ -76,7 +76,7 @@ public class DynamicImageButton extends AnnotatedImageButton {
 				// This is a bit of a hack. Whenever an image loads, check if its the image expected in the HUD, and
 				// updated the HUD if necessary.
 				if (rootedEntity.getEntity().getId().equals(iconDemoPanel.getHud().getEntityId())) {
-                    iconDemoPanel.getHud().setEntityAndToggleDialog(rootedEntity.getEntity());
+//                    iconDemoPanel.getHud().setEntity(rootedEntity.getEntity());
 //					iconDemoPanel.getHud().setTitle(getRootedEntity().getEntity().getName());
 //					iconDemoPanel.getHud().setImage(dynamicImagePanel.getMaxSizeImage());
 				}

@@ -266,7 +266,7 @@ public class Hud extends ModalDialog {
             rgbButton = new JButton( RED_GREEN_BLUE_CONTROL );
             rgbButton.setFont( rgbButton.getFont().deriveFont( 9.0f ) );
             rgbButton.addActionListener( hud3DController );
-            rgbButton.setBorderPainted( false );
+            rgbButton.setBorderPainted( true );
             rgbButton.setActionCommand( RED_GREEN_BLUE_CONTROL );
             rgbButton.setEnabled( false );
 
