@@ -77,36 +77,12 @@ public class Hud extends ModalDialog {
 		return entity.getId();
 	}
 
-    public void setEntity( Entity entity ) {
-        logger.info( "HUD: entity type is " + entity.getEntityType().getName() );
-        this.entity = entity;
-        if ( entity == null ) {
-            dirtyEntityFor3D = false;
-        }
-        else {
-            boolean imageEstablished = false;
-            try {
-                imageEstablished = establishImage();
-            } catch ( Exception ex ) {
-                ex.printStackTrace();
-            }
+    public void setEntityAndToggleDialog(Entity entity) {
+        setEntityAndToggleDialog( entity, true );
+    }
 
-            if ( imageEstablished ) {
-                dirtyEntityFor3D = true;
-                if (render3DCheckbox != null ) {
-                    render3DCheckbox.setSelected(false);
-                    hud3DController.entityUpdate();
-                }
-                setTitle(entity.getName());
-                pack();
-                toggleDialog();
-            }
-            else {
-                JOptionPane.showMessageDialog( SessionMgr.getBrowser(), "Sorry, no image to display." );
-                logger.info( "No image established for " + entity.getName() + ":" + entity.getEntityType() );
-            }
-        }
-
+    public void setEntity(Entity entity) {
+        setEntityAndToggleDialog( entity, false );
     }
 
     /** Filters RGB characteristics of rendering in 3D. */
@@ -158,20 +134,46 @@ public class Hud extends ModalDialog {
         this.repaint();
     }
 
-    /**
-     * Move the image to where it needs to go.  May be called by client, for specific use case.
-     *
-     * @param bufferedImage will be used for 2D.
-     */
-    public void setImage(BufferedImage bufferedImage) {
-        logger.info("Client call to setImage.");
+    public void setEntityAndToggleDialog(Entity entity, boolean toggle) {
+        logger.info( "HUD: entity type is {}", entity.getEntityType().getName() );
+        this.entity = entity;
+        if ( entity == null ) {
+            dirtyEntityFor3D = false;
+        }
+        else {
+            boolean imageEstablished = false;
+            try {
+                imageEstablished = establishImage();
+            } catch ( Exception ex ) {
+                ex.printStackTrace();
+            }
+
+            if ( imageEstablished ) {
+                dirtyEntityFor3D = true;
+                if (render3DCheckbox != null ) {
+                    render3DCheckbox.setSelected(false);
+                    hud3DController.entityUpdate();
+                }
+                setTitle(entity.getName());
+                pack();
+
+                if ( toggle ) {
+                    toggleDialog();
+                }
+            }
+            else {
+                JOptionPane.showMessageDialog( SessionMgr.getBrowser(), "Sorry, no image to display." );
+                logger.info( "No image established for {}:{}", entity.getName(), entity.getEntityType() );
+            }
+        }
+
     }
 
     private boolean establishImage() throws Exception {
         boolean rtnVal = true;
         String imagePath = EntityUtils.getImageFilePath( entity, EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE );
         if ( imagePath == null ) {
-            logger.info("No image path for " + entity.getName() + ":" + entity.getId());
+            logger.info("No image path for {}:{}" , entity.getName(), entity.getId());
             rtnVal = false;
         }
         else {
@@ -193,7 +195,7 @@ public class Hud extends ModalDialog {
 
             // No image loaded or cached.  Do nada.
             if ( image == null ) {
-                logger.info("No image read for " + entity.getName() + ":" + entity.getId() + ":" + imagePath);
+                logger.info("No image read for {}:{}", entity.getId(), imagePath);
                 rtnVal = false;
             }
             else {

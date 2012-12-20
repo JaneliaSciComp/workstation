@@ -19,7 +19,6 @@ import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.entity.EntityType;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.tasks.Event;
@@ -215,12 +214,12 @@ public class EntityContextMenu extends JPopupMenu {
             Entity entity = rootedEntity.getEntity();
             if (! entity.getEntityType().getName().equals(EntityConstants.TYPE_FOLDER) ) {
                 toggleHudMI = new JMenuItem("  Show in Lightbox");
-                toggleHudMI.addActionListener( new ActionListener() {
+                toggleHudMI.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        if ( rootedEntity != null ) {
+                        if (rootedEntity != null) {
                             Entity entity = rootedEntity.getEntity();
-                            Hud.getSingletonInstance().setEntity(entity);
+                            Hud.getSingletonInstance().setEntityAndToggleDialog(entity);
                         }
                     }
                 });

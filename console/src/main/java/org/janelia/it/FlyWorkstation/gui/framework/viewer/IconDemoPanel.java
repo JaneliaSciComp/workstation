@@ -40,7 +40,6 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -132,7 +131,7 @@ public class IconDemoPanel extends Viewer {
 				
 				// Space on a single entity triggers a preview 
 				if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-                    handleHudRequest();
+                    updateHud( true );
 					e.consume();
 					return;
 				}
@@ -182,7 +181,8 @@ public class IconDemoPanel extends Viewer {
 						ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(getSelectionCategory(), rootedEntity.getId(), clearAll);
 						imagesPanel.scrollEntityToCenter(rootedEntity);
 						button.requestFocus();
-					}
+                        updateHud( false );
+                    }
 				}
 			}
 
@@ -780,15 +780,11 @@ public class IconDemoPanel extends Viewer {
 		if (pageRootedEntities==null) return;
 		EntitySelectionModel esm = ModelMgr.getModelMgr().getEntitySelectionModel();
 		int s = esm.getSelectedEntitiesIds(getSelectionCategory()).size();
-		statusLabel.setText(s+" of "+allRootedEntities.size()+" selected");
+		statusLabel.setText(s + " of " + allRootedEntities.size() + " selected");
 	}
 
     /** This should be called by any handler that wishes to show/unshow the HUD. */
-    private void handleHudRequest() {
-        updateHud();
-    }
-
-    private void updateHud() {
+    private void updateHud( boolean toggle ) {
   		List<String> selectedIds = ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(getSelectionCategory());
 		if (selectedIds.size() != 1) {
 			hud.hideDialog();
@@ -804,30 +800,34 @@ public class IconDemoPanel extends Viewer {
                 break;   // Only one.
 			}
 		}
-        hud.setEntity( entity );
+        if ( toggle ) {
+            hud.setEntityAndToggleDialog(entity);
+        }
+        else {
+            hud.setEntity(entity);
+        }
 	}
 	
 
 	public synchronized void goParent() {
 		final String selectedUniqueId = contextRootedEntity.getUniqueId();
 		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				String parentId = Utils.getParentIdFromUniqueId(selectedUniqueId);
-				if (StringUtils.isEmpty(parentId)) {
-					clear();
-				}
-				else {
-					ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, parentId, true);	
-				}
-			}
-		});
+            @Override
+            public void run() {
+                String parentId = Utils.getParentIdFromUniqueId(selectedUniqueId);
+                if (StringUtils.isEmpty(parentId)) {
+                    clear();
+                } else {
+                    ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(EntitySelectionModel.CATEGORY_OUTLINE, parentId, true);
+                }
+            }
+        });
 	}
 
 	private void updatePagingStatus() {
 		startPageButton.setEnabled(currPage!=0);
         prevPageButton.setEnabled(currPage>0);
-		nextPageButton.setEnabled(currPage<numPages-1);
+		nextPageButton.setEnabled(currPage < numPages - 1);
         endPageButton.setEnabled(currPage!=numPages-1);
     }
 	

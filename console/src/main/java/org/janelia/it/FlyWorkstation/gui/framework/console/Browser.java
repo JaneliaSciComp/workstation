@@ -1157,7 +1157,7 @@ public class Browser extends JFrame implements Cloneable {
 //                    statusBar.setDescription("Current Selection: " +
 //                                             description);
 //                } else {
-//                    descriptionObserver.setEntity(newSelection);
+//                    descriptionObserver.setEntityAndToggleDialog(newSelection);
 //                    lrs.addLoadRequestStatusObserver(descriptionObserver, true);
 //                    statusBar.setDescription(
 //                            "Current Selection: Loading Properties");
