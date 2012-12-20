@@ -10,6 +10,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.*;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tool_manager.ToolMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.Hud;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
@@ -18,6 +19,7 @@ import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.entity.EntityType;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;
 import org.janelia.it.jacs.model.tasks.Event;
@@ -113,7 +115,10 @@ public class EntityContextMenu extends JPopupMenu {
         add(getMergeItem());
         add(getSortBySimilarityItem());
 		add(getCreateSessionItem());
-        
+
+        setNextAddRequiresSeparator(true);
+        add(getHudMenuItem());
+
         if ((SessionMgr.getSubjectKey().equals("user:simpsonj") || SessionMgr.getSubjectKey().equals("group:simpsonlab")) && !this.multiple){
             add(getSpecialAnnotationSession());
         }
@@ -203,6 +208,27 @@ public class EntityContextMenu extends JPopupMenu {
 		});
         return detailsMenuItem;
 	}
+
+    protected JMenuItem getHudMenuItem() {
+        JMenuItem toggleHudMI = null;
+        if ( rootedEntity != null  &&  rootedEntity.getEntity() != null ) {
+            Entity entity = rootedEntity.getEntity();
+            if (! entity.getEntityType().getName().equals(EntityConstants.TYPE_FOLDER) ) {
+                toggleHudMI = new JMenuItem("  Show in Lightbox");
+                toggleHudMI.addActionListener( new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        if ( rootedEntity != null ) {
+                            Entity entity = rootedEntity.getEntity();
+                            Hud.getSingletonInstance().setEntity(entity);
+                        }
+                    }
+                });
+            }
+        }
+
+        return toggleHudMI;
+    }
 
 	private void gotoEntity(final Entity entity, final String ancestorType) {
 

@@ -6,8 +6,13 @@ import java.awt.image.BufferedImage;
 import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.gui.dialogs.ModalDialog;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,8 +34,18 @@ public class Hud extends ModalDialog {
     private JCheckBox render3DCheckbox;
     private JButton rgbButton;
     private Hud3DController hud3DController;
+    private Logger logger = LoggerFactory.getLogger( Hud.class );
+
+    private static Hud instance;
+
+    public static Hud getSingletonInstance() {
+        if ( instance == null ) {
+            instance = new Hud();
+        }
+        return instance;
+    }
     
-    public Hud() {
+    private Hud() {
         dirtyEntityFor3D = true;
 		setModalityType(ModalityType.MODELESS);
         setLayout(new BorderLayout());
@@ -63,17 +78,35 @@ public class Hud extends ModalDialog {
 	}
 
     public void setEntity( Entity entity ) {
+        logger.info( "HUD: entity type is " + entity.getEntityType().getName() );
         this.entity = entity;
         if ( entity == null ) {
             dirtyEntityFor3D = false;
         }
         else {
-            dirtyEntityFor3D = true;
-            if (render3DCheckbox != null ) {
-                render3DCheckbox.setSelected(false);
-                hud3DController.entityUpdate();
+            boolean imageEstablished = false;
+            try {
+                imageEstablished = establishImage();
+            } catch ( Exception ex ) {
+                ex.printStackTrace();
+            }
+
+            if ( imageEstablished ) {
+                dirtyEntityFor3D = true;
+                if (render3DCheckbox != null ) {
+                    render3DCheckbox.setSelected(false);
+                    hud3DController.entityUpdate();
+                }
+                setTitle(entity.getName());
+                pack();
+                toggleDialog();
+            }
+            else {
+                JOptionPane.showMessageDialog( SessionMgr.getBrowser(), "Sorry, no image to display." );
+                logger.info( "No image established for " + entity.getName() + ":" + entity.getEntityType() );
             }
         }
+
     }
 
     /** Filters RGB characteristics of rendering in 3D. */
@@ -107,16 +140,6 @@ public class Hud extends ModalDialog {
         return entity;
     }
 
-    /**
-     * This convenience method lets a previously-known buffered image be handed to this widget, without the
-     * need to read it from here.
-     *
-     * @param bufferedImage will be used for 2D.
-     */
-	public void setImage(BufferedImage bufferedImage) {
-		previewLabel.setIcon(bufferedImage == null ? null : new ImageIcon(bufferedImage));
-	}
-
     public void handleRenderSelection() {
         if ( shouldRender3D() ) {
             renderIn3D();
@@ -133,6 +156,62 @@ public class Hud extends ModalDialog {
         }
         this.validate();
         this.repaint();
+    }
+
+    /**
+     * Move the image to where it needs to go.  May be called by client, for specific use case.
+     *
+     * @param bufferedImage will be used for 2D.
+     */
+    public void setImage(BufferedImage bufferedImage) {
+        logger.info("Client call to setImage.");
+    }
+
+    private boolean establishImage() throws Exception {
+        boolean rtnVal = true;
+        String imagePath = EntityUtils.getImageFilePath( entity, EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE );
+        if ( imagePath == null ) {
+            logger.info("No image path for " + entity.getName() + ":" + entity.getId());
+            rtnVal = false;
+        }
+        else {
+
+            BufferedImage image = null;
+            SessionMgr sessionMgr = SessionMgr.getSessionMgr();
+            Boolean invertImage =
+                    (Boolean) sessionMgr.getModelProperty(ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY);
+            ImageCache ic = SessionMgr.getBrowser().getImageCache();
+            if ( ic != null ) {
+                image = ic.get( imagePath );
+            }
+
+            // Ensure we have an image.
+            if ( image == null ) {
+                logger.info("In HUD: must load image.");
+                image = Utils.readImage( imagePath );
+            }
+
+            // No image loaded or cached.  Do nada.
+            if ( image == null ) {
+                logger.info("No image read for " + entity.getName() + ":" + entity.getId() + ":" + imagePath);
+                rtnVal = false;
+            }
+            else {
+                // May need to invert the colors to conform to the current settings.
+                if ( invertImage ) {
+                    image = Utils.invertImage( image );
+                }
+
+                if ( ic != null ) {
+                    ic.put( imagePath, image );
+                }
+
+                previewLabel.setIcon( image == null ? null : new ImageIcon( image ) );
+
+            }
+
+        }
+        return  rtnVal;
     }
 
     private void render() {

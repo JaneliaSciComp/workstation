@@ -237,15 +237,15 @@ public class IconDemoPanel extends Viewer {
 		JPopupMenu popupMenu = new EntityContextMenu(rootedEntityList);
 		((EntityContextMenu)popupMenu).addMenuItems();
 
-        JMenuItem toggleHudMI = new JMenuItem("  Show in Lightbox (Space Bar)");
-        toggleHudMI.addActionListener( new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                handleHudRequest();
-            }
-        });
-        popupMenu.addSeparator();
-        popupMenu.add(toggleHudMI);
+//        JMenuItem toggleHudMI = new JMenuItem("  Show in Lightbox (Space Bar)");
+//        toggleHudMI.addActionListener( new ActionListener() {
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                handleHudRequest();
+//            }
+//        });
+//        popupMenu.addSeparator();
+//        popupMenu.add(toggleHudMI);
 		return popupMenu;
 	}
 
@@ -347,7 +347,7 @@ public class IconDemoPanel extends Viewer {
         };
         SessionMgr.getSessionMgr().addSessionModelListener(sessionModelListener);
 
-		hud = new Hud();
+		hud = Hud.getSingletonInstance();
 		hud.addKeyListener(keyListener);
 		
 		splashPanel = new SplashPanel();
@@ -766,13 +766,13 @@ public class IconDemoPanel extends Viewer {
 	protected void entitySelected(String entityId, boolean clearAll) {
 		log.debug("selecting {} in {} viewer",entityId,getSelectionCategory());
 		imagesPanel.setSelection(entityId, true, clearAll);
-		updateHud();
+//		updateHud();
 		updateStatusBar();
 	}
 
 	public void entityDeselected(String entityId) {
 		imagesPanel.setSelection(entityId, false, false);
-		updateHud();
+//		updateHud();
 		updateStatusBar();
 	}
 	
@@ -786,7 +786,6 @@ public class IconDemoPanel extends Viewer {
     /** This should be called by any handler that wishes to show/unshow the HUD. */
     private void handleHudRequest() {
         updateHud();
-        hud.toggleDialog();
     }
 
     private void updateHud() {
@@ -795,24 +794,17 @@ public class IconDemoPanel extends Viewer {
 			hud.hideDialog();
 			return;
 		}
+        Entity entity = null;
 		String selectedId = selectedIds.get(0);
 		for(RootedEntity re : getRootedEntitiesById(selectedId)) {
+            // Get the image from the annotated image button which is also a Dynamic Image Button.
 			final AnnotatedImageButton button = imagesPanel.getButtonById(re.getId());
 			if (button instanceof DynamicImageButton) {
-				final DynamicImageButton d = (DynamicImageButton)button;
-                hud.setEntity( re.getEntity() );
-				BufferedImage bufferedImage = d.getDynamicImagePanel().getMaxSizeImage();
-				if (bufferedImage==null) {
-					return;
-				}
-				hud.setTitle(button.getRootedEntity().getEntity().getName());
-				hud.setImage(bufferedImage);
-				hud.pack();
-				return; // There can be only one!
+                entity = re.getEntity();
+                break;   // Only one.
 			}
 		}
-        // Made it here -> hud not changed.  Need to eliminate old hud entity and ensure proper state.
-        hud.setEntity( null );
+        hud.setEntity( entity );
 	}
 	
 
