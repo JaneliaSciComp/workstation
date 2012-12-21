@@ -8,7 +8,6 @@ import org.janelia.it.FlyWorkstation.api.entity_model.events.*;
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.AnnotationFacade;
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.EntityFacade;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.ForbiddenEntity;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;

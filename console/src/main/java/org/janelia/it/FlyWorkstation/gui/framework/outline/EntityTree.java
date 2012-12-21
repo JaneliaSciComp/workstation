@@ -664,8 +664,9 @@ public class EntityTree extends JPanel {
         	log.trace("EntityTree.removeNode: {}, {}",entity,uniqueId);
         	
         	// Remove from all maps
-        	log.info("Removing "+uniqueId);
-            uniqueIdToNodeMap.remove(uniqueId);
+        	if (uniqueIdToNodeMap.get(uniqueId)==node) {
+        		uniqueIdToNodeMap.remove(uniqueId);	
+        	}
             entityIdToNodeMap.remove(entity.getId(), node);
             entityDataIdToNodeMap.remove(entity.getId(), node);
     	}
