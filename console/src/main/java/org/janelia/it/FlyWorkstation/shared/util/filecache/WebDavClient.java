@@ -105,32 +105,48 @@ public class WebDavClient {
      * Finds all files immediately within the specified directory
      * (but does not recurse into sub-directories).
      *
-     * @param  url  directory URL.
+     * @param  directoryUrl  directory URL.
      *
      * @return list of immediate files in the directory.
      *
      * @throws WebDavRetrievalException
      *   if the directory information cannot be retrieved.
      */
-    public List<WebDavFile> findImmediateInternalFiles(URL url)
+    public List<WebDavFile> findImmediateInternalFiles(URL directoryUrl)
             throws WebDavRetrievalException {
-        return findInternalFiles(url, DavConstants.DEPTH_1);
+        return findInternalFiles(directoryUrl, DavConstants.DEPTH_1);
     }
 
     /**
      * Finds all files within the specified directory
      * including those in sub-directories.
      *
-     * @param  url  directory URL.
+     * @param  directoryUrl  directory URL.
      *
      * @return list of all files in the directory or its children.
      *
      * @throws WebDavRetrievalException
      *   if the directory information cannot be retrieved.
      */
-    public List<WebDavFile> findAllInternalFiles(URL url)
+    public List<WebDavFile> findAllInternalFiles(URL directoryUrl)
             throws WebDavRetrievalException {
-        return findInternalFiles(url, DavConstants.DEPTH_INFINITY);
+        return findInternalFiles(directoryUrl, DavConstants.DEPTH_INFINITY);
+    }
+
+    /**
+     * @param  directoryUrl  directory URL.
+     *
+     * @return true if the remote directory can be read; otherwise false.
+     */
+    public boolean canReadDirectory(URL directoryUrl) {
+        boolean canRead = false;
+        try {
+            findInternalFiles(directoryUrl, DavConstants.DEPTH_0);
+            canRead = true;
+        } catch (WebDavRetrievalException e) {
+            LOG.error("failed to access " + directoryUrl, e);
+        }
+        return canRead;
     }
 
     private List<WebDavFile> findInternalFiles(URL url,
