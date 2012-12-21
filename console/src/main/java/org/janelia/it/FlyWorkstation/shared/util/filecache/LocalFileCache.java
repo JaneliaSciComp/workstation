@@ -92,6 +92,10 @@ public class LocalFileCache {
                     LOG.warn("weightOf: truncating weight for " +
                             kiloBytes + " Kb file " + value);
                     kiloBytes = Integer.MAX_VALUE;
+                } else if (kiloBytes == 0) {
+                    // zero weights are not supported,
+                    // so we need to set empty file weight to 1
+                    kiloBytes = 1;
                 }
                 return (int) kiloBytes;
             }
@@ -591,7 +595,7 @@ public class LocalFileCache {
 
     private static final String CACHE_DIRECTORY_NAME = ".jacs-file-cache";
     private static final String TIMESTAMP_PATTERN =
-            "yyyyMMdd-hhmmssSSS";
+            "yyyyMMdd-HHmmssSSS";
     private static final int TIMESTAMP_LENGTH =
             TIMESTAMP_PATTERN.length() + 1;
     private static final SimpleDateFormat TIMESTAMP_FORMAT =
