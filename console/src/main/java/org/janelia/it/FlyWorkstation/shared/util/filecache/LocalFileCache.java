@@ -12,9 +12,11 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This class manages a local file cache with a defined physical
@@ -33,6 +35,7 @@ public class LocalFileCache {
     private ConcurrentHashMap<String, CachedFileBuilder>
             relativePathToBuilderMap;
 
+    private int maxNumberOfDirectoryLoadThreads;
     private ExecutorService removalServices;
 
     private boolean isLoadFromDiskComplete;
@@ -100,6 +103,10 @@ public class LocalFileCache {
                 return (int) kiloBytes;
             }
         };
+
+        // max number of threads to use for bulk loading
+        // directories with many files into cache
+        this.maxNumberOfDirectoryLoadThreads = 10;
 
         // separate thread pool for removing files that expire from the cache
         this.removalServices = Executors.newFixedThreadPool(4);
@@ -515,7 +522,11 @@ public class LocalFileCache {
 
                 // TODO: apply filters (depth, pattern, ...)
 
-                // TODO: consider distributing retrieval to multiple threads
+                ExecutorService loadServices = null;
+                if (webDavFileList.size() > maxNumberOfDirectoryLoadThreads) {
+                    loadServices = Executors.newFixedThreadPool(maxNumberOfDirectoryLoadThreads);
+                }
+
                 URL fileUrl;
                 String fileRelativePath;
                 CachedFile cachedFile;
@@ -525,7 +536,18 @@ public class LocalFileCache {
                     cachedFile = relativePathToCachedFileMap.get(fileRelativePath);
                     if (cachedFile == null) {
                         if (webDavFile.getKilobytes() < kilobyteCapacity) {
-                            loadFile(fileRelativePath, fileUrl);
+                            if (loadServices == null) {
+                                loadFile(fileRelativePath, fileUrl);
+                            } else {
+                                final URL fUrl = fileUrl;
+                                final String fPath = fileRelativePath;
+                                loadServices.submit(new Callable<Object>() {
+                                    @Override
+                                    public Object call() throws Exception {
+                                        return loadFile(fPath, fUrl);
+                                    }
+                                });
+                            }
                         } else {
                             LOG.warn(webDavFile.getKilobytes() +
                                      " kilobyte file " +
@@ -534,6 +556,18 @@ public class LocalFileCache {
                         }
                     } else {
                         cachedFile.moveLocalFile(timestampRootDirectory);
+                    }
+                }
+
+                if (loadServices != null) {
+                    LOG.info("loadDirectory: waiting for load of {}", remoteUrl);
+                    try {
+                        loadServices.shutdown();
+                        loadServices.awaitTermination(1, TimeUnit.MINUTES);
+                    } catch (InterruptedException e) {
+                        LOG.error("loadDirectory: interrupted load of " + remoteUrl, e);
+                        throw new IllegalStateException(
+                                "load of " + remoteUrl + " was interrupted");
                     }
                 }
 

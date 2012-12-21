@@ -51,9 +51,14 @@ public class CachedFile {
         final File parent = child.getParentFile();
         if (! parent.exists()) {
             if (! parent.mkdirs()) {
-                throw new IllegalStateException(
-                        "failed to create directory " +
-                        parent.getAbsolutePath());
+                // check again for parent existence in case another thread
+                // created the directory while this thread was attempting
+                // to create it
+                if (! parent.exists()) {
+                    throw new IllegalStateException(
+                            "failed to create directory " +
+                                    parent.getAbsolutePath());
+                }
             }
         }
     }
