@@ -758,9 +758,8 @@ public class EntityModel {
     	List<EntityData> entities = new ArrayList<EntityData>();
         for(EntityData parentEd : entityFacade.getParentEntityDatas(childEntityId)) {
         	Entity child = parentEd.getChildEntity();
-        	if (child!=null && EntityUtils.isInitialized(child)) {
-	        	parentEd.setChildEntity(putOrUpdate(child));
-	        	// TODO: use the canonical EntityData instances as well, if possible
+        	if (child != null) {
+        		parentEd.setChildEntity(getEntityById(child.getId()));
         	}
         	entities.add(parentEd);
         }

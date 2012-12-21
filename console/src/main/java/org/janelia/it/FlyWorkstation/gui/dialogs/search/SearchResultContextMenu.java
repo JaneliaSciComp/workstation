@@ -16,7 +16,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTreeCellRendere
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 
@@ -144,8 +143,13 @@ public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
 						String uniqueId = entityChooser.getUniqueIds().get(0);
 						EntityTree selectedTree = entityChooser.getSelectedTree();
 						String startingPath = startingPaths.get(selectedTree);
-						ResultTreeMapping projection = new ResultTreeMapping(selectedTree, startingPath, uniqueId);
-						searchResultsPanel.projectResults(projection);
+						if (startingPath.equals(uniqueId)) {
+							hadError(new Exception("Cannot map entity to itself."));
+						}
+						else {
+							ResultTreeMapping projection = new ResultTreeMapping(selectedTree, startingPath, uniqueId);
+							searchResultsPanel.projectResults(projection);	
+						}
 					}
 					
 					@Override
