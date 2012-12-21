@@ -98,6 +98,9 @@ public class EntityModel {
 			// This is an uninitialized entity, which cannot go into the cache
 			return null;
 		}
+		if (!EntityUtils.isInitialized(entity.getEntityActorPermissions())) {
+			return null;
+		}
 		synchronized (this) {
 			Entity canonicalEntity = entityCache.getIfPresent(entity.getId());
 			if (canonicalEntity!=null) {

@@ -619,8 +619,6 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			
 			@Override
 			protected void doStuff() throws Exception {
-				setProgress(1);
-
 				getProgressMonitor().setNote("Loading data");
 				
 				List<Entity> samples = ModelMgr.getModelMgr().getEntityByIds(sampleIds);

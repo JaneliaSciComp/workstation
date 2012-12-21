@@ -63,9 +63,6 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 
 	public MAASearchDialog(Browser browser) {
 
-		if (!isAccessible())
-			return;
-
 		this.browser = browser;
 
 		setTitle("MAA Screen Search");
@@ -132,12 +129,18 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 	}
 
 	public void showDialog() {
+
+		if (!isAccessible()) return;
+		
 		this.outputFolder = null;
 		this.returnInsteadOfSaving = false;
 		packAndShow();
 	}
 
 	public RootedEntity showDialog(RootedEntity outputFolder) {
+		
+		if (!isAccessible()) return null;
+		
 		this.outputFolder = outputFolder;
 		this.saveFolder = null;
 		this.returnInsteadOfSaving = false;
@@ -146,6 +149,10 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 	}
 	
 	public List<Long> showDialog(boolean returnInsteadOfSaving) {
+
+		if (!isAccessible())
+			return new ArrayList<Long>();
+		
 		this.outputFolder = null;
 		this.saveFolder = null;
 		this.returnInsteadOfSaving = true;
@@ -506,7 +513,10 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 				List<String> upMapping = new ArrayList<String>();
 				List<String> downMapping = new ArrayList<String>();
 				upMapping.add(EntityConstants.TYPE_FOLDER);
+				// TODO: this will be necessary (along with other changes) once Sean's entity restructuring is complete
+				//upMapping.add(EntityConstants.TYPE_FOLDER);
 				upMapping.add(EntityConstants.TYPE_SCREEN_SAMPLE);
+				log.trace("Got " + maskIds.size() + " masks for " + key);
 				List<MappedId> mappedIds = ModelMgr.getModelMgr().getProjectedResults(maskIds, upMapping, downMapping);
 				for (MappedId mappedId : mappedIds) {
 					samples.add(mappedId.getMappedId());
@@ -524,6 +534,7 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 
 	public boolean isAccessible() {
 		if (!"user:jenetta".equals(SessionMgr.getSubjectKey())) {
+			log.info("User "+SessionMgr.getSubjectKey()+" is not user:jenetta");
 			return false;
 		}
 		return true;

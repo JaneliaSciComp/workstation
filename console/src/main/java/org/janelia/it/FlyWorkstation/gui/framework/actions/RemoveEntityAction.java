@@ -59,8 +59,6 @@ public class RemoveEntityAction implements Action {
 				
 			@Override
 			protected void doStuff() throws Exception {
-				setProgress(1);
-				
 				for(EntityData ed : toDelete) {
 					Entity child = ed.getChildEntity();
 					List<EntityData> eds = ModelMgr.getModelMgr().getParentEntityDatas(ed.getChildEntity().getId());
@@ -168,7 +166,6 @@ public class RemoveEntityAction implements Action {
 				SimpleWorker removeTask = new SimpleWorker() {
 					@Override
 					protected void doStuff() throws Exception {
-						setProgress(1);
 						for(EntityData ed : toReallyDelete) {
 							if (removeRootTag.contains(ed)) {
 								ModelMgr.getModelMgr().demoteCommonRootToFolder(ed.getChildEntity());
