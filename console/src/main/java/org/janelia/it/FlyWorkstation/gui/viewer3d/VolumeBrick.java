@@ -290,6 +290,11 @@ public class VolumeBrick implements GLActor
 	public void dispose(GL2 gl) {
 		int[] textureIds = {textureId};
 		gl.glDeleteTextures(1, textureIds, 0);
+		// Retarded JOGL GLJPanel frequently reallocates the GL context
+		// during resize. So we need to be ready to reinitialize everything.
+		textureId = 0;
+		bTextureNeedsUpload = true;
+		bIsInitialized = false;
 	}
 
     @Override
