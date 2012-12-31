@@ -187,10 +187,15 @@ public class Hud extends ModalDialog {
                 image = ic.get( imagePath );
             }
 
-            // Ensure we have an image.
+            // Ensure we have an image and that it is cached.
             if ( image == null ) {
                 logger.info("In HUD: must load image.");
                 image = Utils.readImage( imagePath );
+
+                if ( ic != null ) {
+                    ic.put( imagePath, image );
+                }
+
             }
 
             // No image loaded or cached.  Do nada.
@@ -204,11 +209,8 @@ public class Hud extends ModalDialog {
                     image = Utils.invertImage( image );
                 }
 
-                if ( ic != null ) {
-                    ic.put( imagePath, image );
-                }
-
-                previewLabel.setIcon( image == null ? null : new ImageIcon( image ) );
+                ImageIcon imageIcon = new ImageIcon(image);
+                previewLabel.setIcon( image == null ? null : imageIcon);
 
             }
 
