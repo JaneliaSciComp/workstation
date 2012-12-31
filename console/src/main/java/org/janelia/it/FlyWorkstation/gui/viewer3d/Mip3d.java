@@ -8,7 +8,6 @@ import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLJPanel;
 import javax.swing.*;
 
-import org.janelia.it.FlyWorkstation.gui.util.panels.ChannelSelectionPanel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
