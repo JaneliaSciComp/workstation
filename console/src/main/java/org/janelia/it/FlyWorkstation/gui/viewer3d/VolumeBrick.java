@@ -4,6 +4,7 @@ import java.nio.IntBuffer;
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.util.gl2.GLUT;
 import javax.media.opengl.GL2;
+import javax.media.opengl.GL4;
 
 /**
  * VolumeTexture class draws a transparent rectangular volume with a 3D opengl texture
@@ -26,7 +27,7 @@ public class VolumeBrick implements GLActor
     private int interpolationMethod =
     		GL2.GL_LINEAR; // blending across voxel edges
     		// GL2.GL_NEAREST; // discrete cube shaped voxels
-    private boolean bUseShader = true; // whether to ray trace voxels
+    private boolean bUseShader = true; // whether to load whatever shader is defined.
     // Color space is linear for most microscopy LSM, TIFF and V3DRAW files
     private TextureColorSpace textureColorSpace = TextureColorSpace.COLOR_SPACE_LINEAR;
 	
@@ -81,6 +82,12 @@ public class VolumeBrick implements GLActor
 
 	@Override
 	public void init(GL2 gl) {
+        /* TEMP *
+        String vend = gl.glGetString( GL2.GL_VENDOR );
+        String ver = gl.glGetString( GL2.GL_VERSION );
+        String rend = gl.glGetString( GL2.GL_RENDERER );
+        System.out.println("Vendor=" + vend + ", Version=" + ver + ", renderer=" + rend + ", extensions are "+gl.glGetString(GL2.GL_EXTENSIONS));
+         * TEMP */
 		gl.glPushAttrib(GL2.GL_TEXTURE_BIT | GL2.GL_ENABLE_BIT);
 		int[] textureIds = {0};
 		gl.glGenTextures(1, textureIds, 0);
@@ -449,7 +456,7 @@ public class VolumeBrick implements GLActor
 		gl.glTexImage3D(GL2.GL_TEXTURE_3D, 
 				0, // mipmap level
 				internalFormat, // bytes per pixel, plus somehow srgb info
-				sx, // width 
+				sx, // width
 				sy, // height
 				sz, // depth
 				0, // border 
