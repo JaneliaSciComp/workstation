@@ -4,8 +4,6 @@
  */
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
-import org.omg.CORBA.PUBLIC_MEMBER;
-
 import javax.media.opengl.GL2;
 import java.nio.IntBuffer;
 
