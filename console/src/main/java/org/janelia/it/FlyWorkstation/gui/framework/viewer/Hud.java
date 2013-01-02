@@ -7,6 +7,7 @@ import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.gui.dialogs.ModalDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -190,7 +191,7 @@ public class Hud extends ModalDialog {
             // Ensure we have an image and that it is cached.
             if ( image == null ) {
                 logger.info("In HUD: must load image.");
-                image = Utils.readImage( imagePath );
+                image = Utils.readImage(PathTranslator.convertPath( imagePath ) );
 
                 if ( ic != null ) {
                     ic.put( imagePath, image );
