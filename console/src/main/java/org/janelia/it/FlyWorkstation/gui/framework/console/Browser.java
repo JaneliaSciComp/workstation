@@ -31,6 +31,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ImageCache;
 import org.janelia.it.FlyWorkstation.gui.util.*;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
@@ -59,6 +60,7 @@ public class Browser extends JFrame implements Cloneable {
     public static final String VIEW_SEARCH = "Search Toolbar";
     public static final String VIEW_OUTLINES = "Outlines Section";
     public static final String VIEW_ONTOLOGY = "Ontology Section";
+    public static final String VIEW_ALIGNBOARD = "Alignment Board";
     public static final String BAR_DATA = "Data";
     public static final String BAR_SESSIONS = "Sessions";
     public static final String BAR_TASKS = "Services";
@@ -304,8 +306,16 @@ public class Browser extends JFrame implements Cloneable {
         VerticalPanelPicker rightPanel = new VerticalPanelPicker();
         rightPanel.addPanel(Icons.getIcon("page.png"), "Ontology", "Displays an ontology for annotation", ontologyOutline);
         rightPanel.addPanel(Icons.getIcon("page_copy.png"), "Split Picking Tool", "Allows for simulation of flyline crosses", new SplitPickingPanel());
-        
-        centerRightHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, viewerManager.getViewerContainer(), rightPanel);
+
+        // TEMPORARY for demo
+        Mip3d mip3dPanel = new Mip3d();
+        /* LLF: commenting until full functionality achieved.
+        mip3dPanel.loadVolume( "/Volumes/jacsData/filestore/system/Separation/770/082/1791083407929770082/separate/fastLoad/ConsolidatedSignal2_25.mp4" );
+        */
+        JSplitPane verticalRightSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, false, rightPanel, mip3dPanel );
+        verticalRightSplitPane.setDividerLocation( 1.0 );   // LLF: collapsing bottom component until full functionality achieved.
+
+        centerRightHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, viewerManager.getViewerContainer(), verticalRightSplitPane);
         centerRightHorizontalSplitPane.setMinimumSize(new Dimension(200, 0));
         centerRightHorizontalSplitPane.setOpaque(true);
         centerRightHorizontalSplitPane.setDividerSize(10);
@@ -1323,6 +1333,11 @@ public class Browser extends JFrame implements Cloneable {
         else if (VIEW_ONTOLOGY.equals(viewComponentKey)) {
             centerRightHorizontalSplitPane.getRightComponent().setVisible(!centerRightHorizontalSplitPane.getRightComponent().isVisible());
             centerRightHorizontalSplitPane.setDividerLocation(centerRightHorizontalSplitPane.getLastDividerLocation());
+        }
+        else if (VIEW_ALIGNBOARD.equals(viewComponentKey)) {
+            JSplitPane rightVertSplitPane = (JSplitPane)centerRightHorizontalSplitPane.getRightComponent();
+            rightVertSplitPane.getBottomComponent().setVisible(! rightVertSplitPane.getBottomComponent().isVisible() );
+            rightVertSplitPane.setDividerLocation(rightVertSplitPane.getLastDividerLocation());
         }
     }
 
