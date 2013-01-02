@@ -148,8 +148,6 @@ public class EntityActorPermissionDialog extends ModalDialog implements Accessib
         attrPanel.add(recursiveCheckbox, "gap para, span 2");
         
         packAndShow();
-        
-        parentDialog.transferFocus();
     }
     
     private void saveAndClose() {
@@ -203,7 +201,7 @@ public class EntityActorPermissionDialog extends ModalDialog implements Accessib
 		    	setVisible(false);
 			}
 		};
-		worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Granting permissions...", ""));
+		worker.setProgressMonitor(new IndeterminateProgressMonitor(parentDialog, "Granting permissions...", ""));
 		worker.execute();
     }
 

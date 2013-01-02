@@ -87,6 +87,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getCopyIdToClipboardItem());
         add(getPasteAnnotationItem());
         add(getDetailsItem());
+        add(getPermissionItem());
         add(getGotoRelatedItem());
 
         setNextAddRequiresSeparator(true);
@@ -208,6 +209,19 @@ public class EntityContextMenu extends JPopupMenu {
         return detailsMenuItem;
 	}
 
+	protected JMenuItem getPermissionItem() {
+		if (multiple) return null;
+		if (!ModelMgrUtils.isOwner(rootedEntity.getEntity())) return null;
+        JMenuItem detailsMenuItem = new JMenuItem("  Change Permissions");
+        detailsMenuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+		        new EntityDetailsDialog().showForRootedEntity(rootedEntity, EntityDetailsDialog.TAB_NAME_PERMISSIONS);
+			}
+		});
+        return detailsMenuItem;
+	}
+	
     protected JMenuItem getHudMenuItem() {
         JMenuItem toggleHudMI = null;
         if ( rootedEntity != null  &&  rootedEntity.getEntity() != null ) {

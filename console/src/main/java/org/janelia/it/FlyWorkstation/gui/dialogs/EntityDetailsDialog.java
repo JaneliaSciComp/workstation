@@ -57,9 +57,14 @@ public class EntityDetailsDialog extends ModalDialog implements Accessibility, R
     private static final String PERMISSIONS_COLUMN_TYPE = "Type";
     private static final String PERMISSIONS_COLUMN_PERMS = "Permissions";
     
+    public static final String TAB_NAME_ATTRIBUTES = "Attributes";
+    public static final String TAB_NAME_PERMISSIONS = "Permissions";
+    public static final String TAB_NAME_ANNOTATIONS = "Annotations";
+    
     private static final String OWNER_PERMISSION = "owner";
     
     private JTabbedPane tabbedPane;
+    private List<String> tabNames = new ArrayList<String>();
     
     private JLabel attributesLoadingLabel;
     private JPanel attributesPanel;
@@ -86,6 +91,10 @@ public class EntityDetailsDialog extends ModalDialog implements Accessibility, R
 
         setModalityType(ModalityType.MODELESS);
 
+        tabNames.add(TAB_NAME_ATTRIBUTES);
+        tabNames.add(TAB_NAME_PERMISSIONS);
+        tabNames.add(TAB_NAME_ANNOTATIONS);
+        
         modelMgrAdapter = new ModelMgrAdapter() {
 			@Override
 			public void annotationsChanged(final long entityId) {
@@ -132,7 +141,7 @@ public class EntityDetailsDialog extends ModalDialog implements Accessibility, R
         attributesTable.addColumn(ATTRIBUTES_COLUMN_KEY, ATTRIBUTES_COLUMN_KEY, true, false, false, true);
         attributesTable.addColumn(ATTRIBUTES_COLUMN_VALUE, ATTRIBUTES_COLUMN_VALUE, true, false, false, true);
 
-        tabbedPane.addTab("Attributes", Icons.getIcon("table.png"), attributesPanel, "The data entity's attributes");
+        tabbedPane.addTab(TAB_NAME_ATTRIBUTES, Icons.getIcon("table.png"), attributesPanel, "The data entity's attributes");
         
         
         // Permissions tab
@@ -187,7 +196,7 @@ public class EntityDetailsDialog extends ModalDialog implements Accessibility, R
         			}
         			else if (ModelMgrUtils.isOwner(entity)) {
 	    		        	
-	        			JMenuItem editItem = new JMenuItem("  Edit");
+	        			JMenuItem editItem = new JMenuItem("  Edit Permission");
 	    		        editItem.addActionListener(new ActionListener() {
 	    					@Override
 	    					public void actionPerformed(ActionEvent e) {
@@ -196,7 +205,7 @@ public class EntityDetailsDialog extends ModalDialog implements Accessibility, R
 	    				});
 	    		        menu.add(editItem);
     		        
-	    		        JMenuItem deleteItem = new JMenuItem("  Delete");
+	    		        JMenuItem deleteItem = new JMenuItem("  Delete Permission");
 	    		        deleteItem.addActionListener(new ActionListener() {
 	    					@Override
 	    					public void actionPerformed(ActionEvent e) {
@@ -235,7 +244,7 @@ public class EntityDetailsDialog extends ModalDialog implements Accessibility, R
 	    								refresh();
 	    							}
 	    						};
-	    						worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Revoking permissions...", ""));
+	    						worker.setProgressMonitor(new IndeterminateProgressMonitor(EntityDetailsDialog.this, "Revoking permissions...", ""));
 	    						worker.execute();
 	    					}
 	    				});
@@ -312,22 +321,27 @@ public class EntityDetailsDialog extends ModalDialog implements Accessibility, R
         
         add(buttonPane, BorderLayout.SOUTH);
     }
-
+    
     public void showForRootedEntity(RootedEntity rootedEntity) {
+    	showForRootedEntity(rootedEntity, TAB_NAME_ATTRIBUTES);
+    }
+    
+    public void showForRootedEntity(RootedEntity rootedEntity, String defaultTab) {
     	EntityData entityData = rootedEntity.getEntityData();
-    	showForEntity(rootedEntity.getEntity(), entityData.getEntityAttribute().getName());
+    	showForEntity(rootedEntity.getEntity(), entityData.getEntityAttribute().getName(), defaultTab);
     }
 
     public void showForEntity(final Entity entity) {
-    	showForEntity(entity, null);
+    	showForEntity(entity, TAB_NAME_ATTRIBUTES);
     }
     
-    private void showForEntity(final Entity entity, final String role) {
+    public void showForEntity(final Entity entity, final String defaultTab) {
+    	showForEntity(entity, null, defaultTab);
+    }
+    
+    private void showForEntity(final Entity entity, final String role, String defaultTab) {
 
     	this.role = role;
-    	
-    	// Do not allow non-owners to add permissions
-    	addPermissionButton.setVisible(ModelMgrUtils.isOwner(entity));
     	
 		Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
 		setPreferredSize(new Dimension((int)(browser.getWidth()*0.5),(int)(browser.getHeight()*0.8)));
@@ -337,6 +351,9 @@ public class EntityDetailsDialog extends ModalDialog implements Accessibility, R
 
         // Register this dialog as a model observer
         ModelMgr.getModelMgr().addModelMgrObserver(modelMgrAdapter);
+        
+        // Select the default tab
+        tabbedPane.setSelectedIndex(tabNames.indexOf(defaultTab));
         
         // Show dialog and wait
         packAndShow();
@@ -439,7 +456,9 @@ public class EntityDetailsDialog extends ModalDialog implements Accessibility, R
 			@Override
 			protected void hadSuccess() {	
 				setSubjects(subjects);
-				addPermissionButton.setEnabled(true);
+		    	
+		    	// Do not allow non-owners to add permissions
+		    	addPermissionButton.setEnabled(ModelMgrUtils.isOwner(entity));
 			}
 			
 			@Override
