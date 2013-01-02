@@ -699,7 +699,24 @@ public class EntityModel {
     	}
 		return putOrUpdate(newFolder);
     }
-    
+
+    /**
+     * Create a new Alignment board and cache it.
+     *
+     * @param boardName Name of the Alignment Board
+     * @return canonical entity instance
+     * @throws Exception
+     */
+    public Entity createAlignmentBoard(String boardName) throws Exception {
+        Entity boardEntity = null;
+        synchronized(this) {
+            boardEntity = entityFacade.createEntity(EntityConstants.TYPE_ALIGNMENT_BOARD, boardName);
+            EntityUtils.addAttributeAsTag(boardEntity, EntityConstants.ATTRIBUTE_COMMON_ROOT);
+            boardEntity = entityFacade.saveEntity(boardEntity);
+        }
+        return putOrUpdate(boardEntity);
+    }
+
     /**
      * Demote a common root so that it becomes an ordinary folder.
      * 

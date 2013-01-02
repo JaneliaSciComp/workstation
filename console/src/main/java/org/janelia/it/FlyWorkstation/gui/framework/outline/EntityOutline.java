@@ -6,20 +6,7 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.util.HashSet;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreePath;
-
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
@@ -39,7 +26,18 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.Subscribe;
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.util.HashSet;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The entity tree which lives in the right-hand "Data" panel and drives the viewers. 
@@ -51,8 +49,9 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	private static final Logger log = LoggerFactory.getLogger(EntityOutline.class);
 	
 	private String currUniqueId;
-	
-	public EntityOutline() {
+    private JMenuItem newAlignmentBoardItem;
+
+    public EntityOutline() {
 		super(true);
 		this.setMinimumSize(new Dimension(400, 400));
 		showLoadingIndicator();
@@ -172,16 +171,17 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	 */
 	public abstract List<Entity> loadRootList() throws Exception;
 
-	private class EntityOutlineContextMenu extends EntityContextMenu {
+    private class EntityOutlineContextMenu extends EntityContextMenu {
 
 		public EntityOutlineContextMenu(DefaultMutableTreeNode node, String uniqueId) {
 			super(new RootedEntity(uniqueId, getEntityData(node)));
 		}
-		
-		public void addRootMenuItems() {
-			add(getRootItem());
-			add(getNewRootFolderItem());
-		}
+
+        public void addRootMenuItems() {
+            add(getRootItem());
+            add(getNewRootFolderItem());
+            add(getNewAlignmentBoardItem());
+        }
 
 		protected JMenuItem getRootItem() {
 	        JMenuItem titleMenuItem = new JMenuItem("Data");
@@ -232,7 +232,52 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 
 			return newFolderItem;
 		}
-	}
+
+        public JMenuItem getNewAlignmentBoardItem() {
+            if (multiple) return null;
+
+            JMenuItem newFolderItem = new JMenuItem("  Create New Alignment Board");
+            newFolderItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
+
+                    // Add button clicked
+                    final String boardName = (String) JOptionPane.showInputDialog(browser, "Board Name:\n",
+                            "Create Alignment Board", JOptionPane.PLAIN_MESSAGE, null, null, null);
+                    if ((boardName == null) || (boardName.length() <= 0)) {
+                        return;
+                    }
+
+                    SimpleWorker worker = new SimpleWorker() {
+                        private Entity newBoard;
+                        @Override
+                        protected void doStuff() throws Exception {
+                            // Update database
+                            newBoard = ModelMgr.getModelMgr().createAlignmentBoard(boardName);
+                        }
+                        @Override
+                        protected void hadSuccess() {
+                            // Update Tree UI
+                            totalRefresh(true, new Callable<Void>() {
+                                @Override
+                                public Void call() throws Exception {
+                                    selectEntityByUniqueId("/e_" + newBoard.getId());
+                                    return null;
+                                }
+                            });
+                        }
+                        @Override
+                        protected void hadError(Throwable error) {
+                            SessionMgr.getSessionMgr().handleException(error);
+                        }
+                    };
+                    worker.execute();
+                }
+            });
+
+            return newFolderItem;
+        }
+
+    }
 
 	/**
 	 * Override this method to show a popup menu when the user right clicks a

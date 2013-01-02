@@ -1,12 +1,7 @@
 package org.janelia.it.FlyWorkstation.api.entity_model.management;
 
-import java.awt.Color;
-import java.awt.EventQueue;
-import java.util.*;
-import java.util.concurrent.Executor;
-
-import javax.swing.SwingUtilities;
-
+import com.google.common.eventbus.AsyncEventBus;
+import com.google.common.eventbus.EventBus;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
@@ -38,8 +33,11 @@ import org.janelia.it.jacs.shared.annotation.FilterResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.AsyncEventBus;
-import com.google.common.eventbus.EventBus;
+import javax.swing.*;
+import java.awt.*;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Executor;
 
 public class ModelMgr {
 	
@@ -522,7 +520,11 @@ public class ModelMgr {
     public Entity createCommonRoot(String name) throws Exception {
         return entityModel.createCommonRootFolder(name);
     }
-    
+
+    public Entity createAlignmentBoard(String name) throws Exception {
+        return entityModel.createAlignmentBoard(name);
+    }
+
     public void demoteCommonRootToFolder(Entity commonRoot) throws Exception {
     	 entityModel.demoteCommonRootToFolder(commonRoot);
     }
