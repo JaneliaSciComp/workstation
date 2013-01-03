@@ -156,6 +156,9 @@ public class Icons {
         String type = entity.getEntityType().getName();
         
         if (EntityConstants.TYPE_FOLDER.equals(type)) {
+        	if (entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_IS_PROTECTED)!=null) {
+        		return getIcon(large ? "folder_large.png" : "folder_key.png");	
+        	}
             return getIcon(large ? "folder_large.png" : "folder.png");
         }
         else if (EntityConstants.TYPE_SAMPLE.equals(type)
