@@ -16,6 +16,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.List;
+import java.util.TreeMap;
 
 /**
  * The left-hand panel which lists the Entity types and their attributes.
@@ -123,10 +124,14 @@ public class EntityTypePane extends JScrollPane {
             protected void doStuff() throws Exception {
             	
             	List<EntityType> entityTypes = ModelMgr.getModelMgr().getEntityTypes();
-                
+                TreeMap<String, EntityType> sortedCollection = new TreeMap<String, EntityType>();
+                for (EntityType entityType : entityTypes) {
+                    sortedCollection.put(entityType.getName(),entityType);
+                }
+
                 DefaultMutableTreeNode root = new DefaultMutableTreeNode("EntityType");
 
-                for (EntityType entityType : entityTypes) {
+                for (EntityType entityType : sortedCollection.values()) {
                     DefaultMutableTreeNode entityTypeNode = new DefaultMutableTreeNode(entityType) {
                         @Override
                         public String toString() {

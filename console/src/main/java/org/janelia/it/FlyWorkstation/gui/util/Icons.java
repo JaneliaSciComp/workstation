@@ -1,16 +1,14 @@
 package org.janelia.it.FlyWorkstation.gui.util;
 
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+
+import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
-
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
 
 /**
  * Retrieve icons in the classpath by filename. 
@@ -233,7 +231,10 @@ public class Icons {
         else if (EntityConstants.TYPE_PIPELINE_RUN.equals(type)) {
             return getIcon(large ? "folder_files_large.png" : "folder_go.png");
         }
-        
+        else if (EntityConstants.TYPE_ALIGNMENT_BOARD.equals(type)) {
+            return getIcon(large ? "folder_graphite_palette_large.png" : "folder_graphite_palette.png");
+        }
+
         return getIcon(large ? "error_large.png" : "bullet_error.png");
     }
 }
