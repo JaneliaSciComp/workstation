@@ -37,6 +37,8 @@ import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableImage;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created by IntelliJ IDEA.
@@ -45,6 +47,9 @@ import org.janelia.it.jacs.model.entity.Entity;
  * Time: 12:29 PM
  */
 public class Browser extends JFrame implements Cloneable {
+    
+    private static final Logger log = LoggerFactory.getLogger(Browser.class);
+    
     //    private static Hashtable editorTypeToConstructorRegistry = new MultiHash();
 //    private static Hashtable editorClassToSubEditorClassRegistry =
 //            new MultiHash();
@@ -307,15 +312,23 @@ public class Browser extends JFrame implements Cloneable {
         rightPanel.addPanel(Icons.getIcon("page.png"), "Ontology", "Displays an ontology for annotation", ontologyOutline);
         rightPanel.addPanel(Icons.getIcon("page_copy.png"), "Split Picking Tool", "Allows for simulation of flyline crosses", new SplitPickingPanel());
 
+        Component rightComponent = null;
         // TEMPORARY for demo
-        Mip3d mip3dPanel = new Mip3d();
-        /* LLF: commenting until full functionality achieved.
-        mip3dPanel.loadVolume( "/Volumes/jacsData/filestore/system/Separation/770/082/1791083407929770082/separate/fastLoad/ConsolidatedSignal2_25.mp4" );
-        */
-        JSplitPane verticalRightSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, false, rightPanel, mip3dPanel );
-        verticalRightSplitPane.setDividerLocation( 1.0 );   // LLF: collapsing bottom component until full functionality achieved.
+        try {
+            Mip3d mip3dPanel = new Mip3d();
+            /* LLF: commenting until full functionality achieved.
+            mip3dPanel.loadVolume( "/Volumes/jacsData/filestore/system/Separation/770/082/1791083407929770082/separate/fastLoad/ConsolidatedSignal2_25.mp4" );
+            */
+            JSplitPane verticalRightSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, false, rightPanel, mip3dPanel );
+            verticalRightSplitPane.setDividerLocation( 1.0 );   // LLF: collapsing bottom component until full functionality achieved.
+            rightComponent = verticalRightSplitPane;
+        }
+        catch (Exception e) {
+            log.error("Could not initialize Mip3d panel",e);
+            rightComponent = rightPanel;
+        }
 
-        centerRightHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, viewerManager.getViewerContainer(), verticalRightSplitPane);
+        centerRightHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, viewerManager.getViewerContainer(), rightComponent);
         centerRightHorizontalSplitPane.setMinimumSize(new Dimension(200, 0));
         centerRightHorizontalSplitPane.setOpaque(true);
         centerRightHorizontalSplitPane.setDividerSize(10);
