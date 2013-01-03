@@ -342,6 +342,7 @@ public class EntityDetailsDialog extends ModalDialog implements Accessibility, R
     private void showForEntity(final Entity entity, final String role, String defaultTab) {
 
     	this.role = role;
+    	this.entity = entity;
     	
 		Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
 		setPreferredSize(new Dimension((int)(browser.getWidth()*0.5),(int)(browser.getHeight()*0.8)));
