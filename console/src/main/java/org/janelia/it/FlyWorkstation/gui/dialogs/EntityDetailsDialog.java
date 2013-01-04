@@ -152,9 +152,6 @@ public class EntityDetailsDialog extends ModalDialog implements Accessibility, R
         permissionsLoadingLabel.setHorizontalAlignment(SwingConstants.CENTER);
         permissionsLoadingLabel.setVerticalAlignment(SwingConstants.CENTER);
 
-        permissionsPanel = new JPanel(new BorderLayout());
-        permissionsPanel.add(permissionsLoadingLabel, BorderLayout.CENTER);
-    	
         permissionsTable = new DynamicTable(true, false) {
             @Override
 			public Object getValue(Object userObject, DynamicColumn column) {
@@ -264,6 +261,7 @@ public class EntityDetailsDialog extends ModalDialog implements Accessibility, R
         permissionsTable.addColumn(PERMISSIONS_COLUMN_SUBJECT, PERMISSIONS_COLUMN_SUBJECT, true, false, false, true);
         permissionsTable.addColumn(PERMISSIONS_COLUMN_TYPE, PERMISSIONS_COLUMN_TYPE, true, false, false, true);
         permissionsTable.addColumn(PERMISSIONS_COLUMN_PERMS, PERMISSIONS_COLUMN_PERMS, true, false, false, true);
+
         
         addPermissionButton = new JButton("Grant permission");
         addPermissionButton.setEnabled(false);
@@ -280,8 +278,10 @@ public class EntityDetailsDialog extends ModalDialog implements Accessibility, R
         permissionsButtonPane.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
         permissionsButtonPane.add(addPermissionButton);
         permissionsButtonPane.add(Box.createHorizontalGlue());
-        
+
+        permissionsPanel = new JPanel(new BorderLayout());
         permissionsPanel.add(permissionsButtonPane, BorderLayout.NORTH);
+        permissionsPanel.add(permissionsTable, BorderLayout.CENTER);
         
         tabbedPane.addTab("Permissions", Icons.getIcon("group.png"), permissionsPanel, "Who has access to the this data entity");
         
@@ -457,9 +457,7 @@ public class EntityDetailsDialog extends ModalDialog implements Accessibility, R
 			@Override
 			protected void hadSuccess() {	
 				setSubjects(subjects);
-		    	
-		    	// Do not allow non-owners to add permissions
-		    	addPermissionButton.setEnabled(ModelMgrUtils.isOwner(entity));
+                addPermissionButton.setEnabled(ModelMgrUtils.isOwner(entity));
 			}
 			
 			@Override
@@ -471,9 +469,6 @@ public class EntityDetailsDialog extends ModalDialog implements Accessibility, R
     }
     
     private void loadPermissions() {
-
-    	permissionsPanel.removeAll();
-    	permissionsPanel.add(permissionsLoadingLabel, BorderLayout.CENTER);
     	
         SimpleWorker permissionsLoadingWorker = new SimpleWorker() {
 
@@ -498,19 +493,11 @@ public class EntityDetailsDialog extends ModalDialog implements Accessibility, R
 					permissionsTable.addRow(eap);
 				}
 				permissionsTable.updateTableModel();
-				permissionsPanel.removeAll();
-				permissionsPanel.add(permissionsButtonPane, BorderLayout.NORTH);
-				permissionsPanel.add((JPanel)permissionsTable, BorderLayout.CENTER);
-				permissionsPanel.revalidate();
 			}
 			
 			@Override
 			protected void hadError(Throwable error) {
 				SessionMgr.getSessionMgr().handleException(error);
-				permissionsPanel.removeAll();
-				permissionsPanel.add(permissionsButtonPane, BorderLayout.NORTH);
-				permissionsPanel.add((JPanel)permissionsTable, BorderLayout.CENTER);
-				permissionsPanel.revalidate();
 			}
 		};
 		permissionsLoadingWorker.execute();
