@@ -35,7 +35,7 @@ implements MouseListener, MouseMotionListener, ActionListener,
         }
     }
 
-	public static boolean isAvailable() {
+    public static boolean isAvailable() {
 		return capabilities!=null;
 	}
 	
@@ -43,6 +43,7 @@ implements MouseListener, MouseMotionListener, ActionListener,
 	private boolean bMouseIsDragging = false;
 	private MipRenderer renderer;
 	public JPopupMenu popupMenu;
+    private boolean clearOnLoad = true;
 
 	public enum InteractionMode {
 		ROTATE,
@@ -83,10 +84,15 @@ implements MouseListener, MouseMotionListener, ActionListener,
 		renderer.resetView();
 		repaint();
 	}
+
+    public void setClearOnLoad(boolean clearOnLoad) {
+        this.clearOnLoad = clearOnLoad;
+    }
 	
 	public boolean loadVolume(String fileName)
 	{
-        renderer.clear();
+        if (clearOnLoad)
+            renderer.clear();
 		VolumeLoader volumeLoader = new VolumeLoader();
 		if (volumeLoader.loadVolume(fileName)) {
 			VolumeBrick brick = new VolumeBrick(renderer);

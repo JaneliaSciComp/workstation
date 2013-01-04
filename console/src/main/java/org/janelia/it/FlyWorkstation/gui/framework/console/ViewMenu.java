@@ -15,7 +15,7 @@ public class ViewMenu extends JMenu {
     Browser console;
     JMenuItem ontologyMenuItem;
     JMenuItem dataMenuItem;
-    JMenuItem alignBoardItem;
+    //JMenuItem alignBoardItem;
 
     public ViewMenu(Browser console) {
         super("View");
@@ -40,7 +40,7 @@ public class ViewMenu extends JMenu {
 
         /*
           LLF: commenting until full functionality achieved.
-
+         *
         alignBoardItem = new JCheckBoxMenuItem("Alignment Board", true);
         alignBoardItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {

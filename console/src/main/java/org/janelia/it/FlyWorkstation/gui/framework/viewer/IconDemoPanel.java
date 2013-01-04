@@ -237,15 +237,6 @@ public class IconDemoPanel extends Viewer {
 		JPopupMenu popupMenu = new EntityContextMenu(rootedEntityList);
 		((EntityContextMenu)popupMenu).addMenuItems();
 
-//        JMenuItem toggleHudMI = new JMenuItem("  Show in Lightbox (Space Bar)");
-//        toggleHudMI.addActionListener( new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                handleHudRequest();
-//            }
-//        });
-//        popupMenu.addSeparator();
-//        popupMenu.add(toggleHudMI);
 		return popupMenu;
 	}
 

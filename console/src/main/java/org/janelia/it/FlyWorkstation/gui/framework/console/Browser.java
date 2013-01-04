@@ -29,6 +29,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModelListenerAdapter;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.AlignmentBoardViewerPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ImageCache;
 import org.janelia.it.FlyWorkstation.gui.util.*;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
@@ -315,16 +316,18 @@ public class Browser extends JFrame implements Cloneable {
         Component rightComponent = null;
         // TEMPORARY for demo
         try {
-            Mip3d mip3dPanel = new Mip3d();
+
             /* LLF: commenting until full functionality achieved.
             mip3dPanel.loadVolume( "/Volumes/jacsData/filestore/system/Separation/770/082/1791083407929770082/separate/fastLoad/ConsolidatedSignal2_25.mp4" );
             */
-            JSplitPane verticalRightSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, false, rightPanel, mip3dPanel );
-            verticalRightSplitPane.setDividerLocation( 1.0 );   // LLF: collapsing bottom component until full functionality achieved.
+            JSplitPane verticalRightSplitPane = new JSplitPane(
+                    JSplitPane.VERTICAL_SPLIT, false, rightPanel, AlignmentBoardViewerPanel.getSingletonInstance()
+            );
+            //verticalRightSplitPane.setDividerLocation( 1.0 );   // LLF: collapsing bottom component until full functionality achieved.
             rightComponent = verticalRightSplitPane;
         }
         catch (Exception e) {
-            log.error("Could not initialize Mip3d panel",e);
+            log.error("Could not initialize alignment viewer panel",e);
             rightComponent = rightPanel;
         }
 

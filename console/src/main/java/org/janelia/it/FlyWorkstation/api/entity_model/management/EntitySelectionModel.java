@@ -17,7 +17,8 @@ public class EntitySelectionModel {
 	public static final String CATEGORY_MAIN_VIEW = "mainViewer";
 	public static final String CATEGORY_SEC_VIEW = "secViewer";
 	public static final String CATEGORY_CROSS_VIEW = "crossViewer";
-	
+    public static final String CATEGORY_ALIGNMENT_BOARD_VIEW = "alignmentBoardViewer"; //LLF
+
 	private final Map<String, List<String>> selectionModels = new HashMap<String, List<String>>();
 	
 	public EntitySelectionModel() {

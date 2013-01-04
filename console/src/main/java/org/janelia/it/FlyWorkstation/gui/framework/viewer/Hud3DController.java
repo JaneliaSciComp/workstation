@@ -25,7 +25,7 @@ public class Hud3DController implements ActionListener {
     private String filename;
     private JLabel busyLabel;
     private EntityFilenameFetcher entityFilenameFetcher;
-    private Hud3DController.Load3dSwingWorker load3dSwingWorker;
+    private Load3dSwingWorker load3dSwingWorker;
 
     public Hud3DController(Hud hud, Mip3d mip3d) {
         this.hud = hud;
@@ -51,7 +51,14 @@ public class Hud3DController implements ActionListener {
 
     /** Hook for re-loading. */
     public void load3d() {
-        load3dSwingWorker = new Load3dSwingWorker();
+        load3dSwingWorker = new Load3dSwingWorker( mip3d, filename ) {
+            public void filenameSufficient() {
+                Hud3DController.this.restoreMip3dToUi();
+            }
+            public void filenameUnavailable() {
+                Hud3DController.this.no3DAvailable();
+            }
+        };
         load3dSwingWorker.execute();
     }
 
@@ -125,7 +132,7 @@ public class Hud3DController implements ActionListener {
         if ( hud.getEntity() != null ) {
             // Doing 3D.  Need to locate the file.
             filename = entityFilenameFetcher.fetchFilename(
-                    hud.getEntity(), EntityFilenameFetcher.FilenameType.IMAGE_3d
+                    hud.getEntity(), EntityFilenameFetcher.FilenameType.IMAGE_FAST_3d
             );
 
         }
@@ -150,30 +157,4 @@ public class Hud3DController implements ActionListener {
         hud.repaint();
     }
 
-    private class Load3dSwingWorker extends SwingWorker<Boolean,Boolean> {
-        /**
-         * This "background-thread" method of the worker will return false if the entity has NOT been properly
-         * shown, indicating it is still 'dirty' (as in not fully interpreted as current).
-         *
-         * @return False to indicate that the entity has been processed and made current.
-         * @throws Exception
-         */
-        @Override
-        protected Boolean doInBackground() throws Exception {
-            return false; // Not dirty
-        }
-
-        /** This is done in the event thread. */
-        @Override
-        protected void done() {
-            if ( filename != null ) {
-                mip3d.loadVolume(filename);
-                restoreMip3dToUi();
-            }
-            else {
-                no3DAvailable();
-            }
-        }
-
-    }
 }

@@ -24,6 +24,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.*;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tool_manager.ToolMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.AlignmentBoardViewerPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Hud;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
@@ -120,7 +121,8 @@ public class EntityContextMenu extends JPopupMenu {
 
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
-
+        add(getCreateAlignBrdVwItem());
+        
         if ((SessionMgr.getSubjectKey().equals("user:simpsonj") || SessionMgr.getSubjectKey()
                 .equals("group:simpsonlab")) && !this.multiple) {
             add(getSpecialAnnotationSession());
@@ -366,6 +368,29 @@ public class EntityContextMenu extends JPopupMenu {
             }
         });
         return pasteItem;
+    }
+
+    /** Makes the item for showing the entity in its own viewer iff the entity type is correct. */
+    public JMenuItem getCreateAlignBrdVwItem() {
+        JMenuItem alignBrdVwItem = null;
+        if (rootedEntity != null && rootedEntity.getEntity() != null) {
+            Entity entity = rootedEntity.getEntity();
+            if (entity.getEntityType().getName().equals(EntityConstants.TYPE_ALIGNMENT_BOARD)) {
+                alignBrdVwItem = new JMenuItem("  Show in alignment board viewer");
+                alignBrdVwItem.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        if (rootedEntity != null) {
+                            Entity entity = rootedEntity.getEntity();
+                            AlignmentBoardViewerPanel panel = AlignmentBoardViewerPanel.getSingletonInstance();
+                            panel.addViewer(rootedEntity, entity);
+                        }
+                    }
+                });
+            }
+        }
+
+        return alignBrdVwItem;
     }
 
     private class EntityDataPath {

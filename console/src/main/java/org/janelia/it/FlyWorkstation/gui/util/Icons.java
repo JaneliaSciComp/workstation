@@ -210,6 +210,10 @@ public class Icons {
         else if (EntityConstants.TYPE_ONTOLOGY_ELEMENT.equals(type) || EntityConstants.TYPE_ONTOLOGY_ROOT.equals(type)) {
             return getOntologyIcon(entity);
         }
+        else if (EntityConstants.TYPE_ALIGNMENT_BOARD.equals(type)) {
+            //todo get the ideal alignment board icon.
+            return getIcon(large ? "folder_files_large.png" : "folder_page.png");
+        }
         else if (EntityConstants.TYPE_ANNOTATION.equals(type)) {
             return getIcon("page_white_edit.png");
         }

@@ -23,23 +23,21 @@ public class EntityFilenameFetcher {
 	
 	private static final Logger log = LoggerFactory.getLogger(EntityFilenameFetcher.class);
 	
-    public enum FilenameType { IMAGE_3d }
+    public enum FilenameType {IMAGE_FAST_3d, NEURON_FRAGMENT_3d}
     public String fetchFilename( Entity entity, FilenameType type ) {
         if ( entity == null ) {
             log.debug("Null entity passed in, for type " + type);
             return null;
         }
-        if ( type == FilenameType.IMAGE_3d ) {
-
+        String entityConstantFileType = getEntityConstantFileType(type);
+        if ( entityConstantFileType != null ) {
             ensureEntityLoaded( entity );
             for (EntityData ed: entity.getEntityData()) {
                 ensureEntityLoaded(ed.getChildEntity());
             }
-            String imageFilePath = EntityUtils.getImageFilePath(entity, EntityConstants.ATTRIBUTE_DEFAULT_FAST_3D_IMAGE);
 
-            log.debug( "{}", entity.getId() );
-            log.debug( "{}", entity.getName() );
-            log.debug( "{}", imageFilePath );
+            String imageFilePath = EntityUtils.getImageFilePath(entity, entityConstantFileType);
+            log.debug( "For entity {}, got file {}", entity.getId(), imageFilePath );
 
             if ( imageFilePath != null ) {
                 imageFilePath = PathTranslator.convertPath( imageFilePath );
@@ -50,6 +48,18 @@ public class EntityFilenameFetcher {
         else {
             // In future, other types will be added, and must be handled.
             throw new IllegalArgumentException( "File type " + type + " not yet implemented." );
+        }
+    }
+
+    private String getEntityConstantFileType( FilenameType type ) {
+        if ( type == FilenameType.IMAGE_FAST_3d ) {
+            return EntityConstants.ATTRIBUTE_DEFAULT_FAST_3D_IMAGE;
+        }
+        else if ( type == FilenameType.NEURON_FRAGMENT_3d) {
+            return EntityConstants.ATTRIBUTE_DEFAULT_3D_IMAGE;
+        }
+        else {
+            return null;
         }
     }
 

@@ -49,7 +49,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	private static final Logger log = LoggerFactory.getLogger(EntityOutline.class);
 	
 	private String currUniqueId;
-    private JMenuItem newAlignmentBoardItem;
 
     public EntityOutline() {
 		super(true);

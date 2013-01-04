@@ -71,25 +71,18 @@ public class DynamicImageButton extends AnnotatedImageButton {
 	public void setViewable(boolean viewable) {
 		super.setViewable(viewable);
         dynamicImagePanel.setViewable(viewable, new Callable<Void>() {
-			@Override
-			public Void call() throws Exception {
-				// This is a bit of a hack. Whenever an image loads, check if its the image expected in the HUD, and
-				// updated the HUD if necessary.
-				if (rootedEntity.getEntity().getId().equals(iconDemoPanel.getHud().getEntityId())) {
-//                    iconDemoPanel.getHud().setEntity(rootedEntity.getEntity());
-//					iconDemoPanel.getHud().setTitle(getRootedEntity().getEntity().getName());
-//					iconDemoPanel.getHud().setImage(dynamicImagePanel.getMaxSizeImage());
-				}
-				// Register our image height
-				if (dynamicImagePanel.getMaxSizeImage()!=null) {
-					double w = dynamicImagePanel.getImage().getIconWidth();
-					double h = dynamicImagePanel.getImage().getIconHeight();
-					setAspectRatio(w, h);
-				}
-				return null;
-			}
-        	
-		});
+            @Override
+            public Void call() throws Exception {
+                // Register our image height
+                if (dynamicImagePanel.getMaxSizeImage()!=null) {
+                    double w = dynamicImagePanel.getImage().getIconWidth();
+                    double h = dynamicImagePanel.getImage().getIconHeight();
+                    setAspectRatio(w, h);
+                }
+                return null;
+            }
+
+        });
 	}
 
 	public DynamicImagePanel getDynamicImagePanel() {
