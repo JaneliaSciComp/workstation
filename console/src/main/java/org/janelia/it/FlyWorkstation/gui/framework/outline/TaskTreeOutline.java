@@ -375,7 +375,7 @@ public class TaskTreeOutline extends JPanel {
         for(TreePath path : dynamicTree.getTree().getSelectionPaths()) {
         	DefaultMutableTreeNode node = (DefaultMutableTreeNode)path.getLastPathComponent();
         	Task task = (Task)node.getUserObject();
-            if (!task.getOwner().equals(SessionMgr.getSubjectKey())) {
+            if (!task.getOwner().equals(SessionMgr.getUsername())) {
                 JOptionPane.showMessageDialog(consoleFrame, 
                 		"Only the owner may delete a task", "Cannot Delete", JOptionPane.ERROR_MESSAGE);
                 return;
