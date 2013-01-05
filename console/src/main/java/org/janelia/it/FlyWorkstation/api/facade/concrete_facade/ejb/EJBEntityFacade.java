@@ -92,7 +92,7 @@ public class EJBEntityFacade implements EntityFacade {
     
     @Override
     public Set<Entity> getChildEntities(Long parentEntityId) throws Exception {
-        return EJBFactory.getRemoteEntityBean().getChildEntities(null, parentEntityId);
+        return EJBFactory.getRemoteEntityBean().getChildEntities(SessionMgr.getSubjectKey(), parentEntityId);
     }
 
     @Override

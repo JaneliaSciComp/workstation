@@ -616,6 +616,10 @@ public class ModelMgr {
     	
     	return null;
     }
+    
+    public void invalidateCache() {
+        entityModel.invalidateAllSilently();
+    }
 
 	public void invalidateCache(Collection<Entity> entities, boolean recurse) {
 		entityModel.invalidate(entities, recurse);

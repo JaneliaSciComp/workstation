@@ -166,6 +166,13 @@ public class EntityModel {
 		}
 		return putEntities;
 	}
+	
+	/**
+	 * Clear the entire cache without raising any events. This is basically only useful for changing logins.  
+	 */
+	public void invalidateAllSilently() {
+	    entityCache.invalidateAll();
+	}
 
     /**
      * Invalidate any number of entities in the cache, so that they will be reloaded on the next request. 
@@ -212,6 +219,7 @@ public class EntityModel {
 	private void invalidate(Entity entity, Map<Long,Entity> visited) {
 		if (visited.containsKey(entity.getId())) return;
 		if (!EntityUtils.isInitialized(entity)) return;
+		if (entity instanceof ForbiddenEntity) return;
 		visited.put(entity.getId(), entity);
 		entityCache.invalidate(entity.getId());
 		for(Entity child : entity.getChildren()) {
@@ -364,9 +372,9 @@ public class EntityModel {
         synchronized (this) {
         	Set<Entity> childEntitySet = entityFacade.getChildEntities(entity.getId());
         	putOrUpdateAll(childEntitySet);
+            putOrUpdate(entity);
+            replaceUnloadedChildrenWithForbiddenEntities(entity, false);
         }
-        putOrUpdate(entity);
-        replaceUnloadedChildrenWithForbiddenEntities(entity, false);
         notifyEntityChildrenLoaded(entity);
     }
     
@@ -380,7 +388,8 @@ public class EntityModel {
      * @throws Exception
      */
     public Entity loadLazyEntity(Entity entity, boolean recurse) throws Exception {
-    	Entity retEntity = getEntityById(entity.getId());
+        Entity retEntity = putOrUpdate(entity);
+//    	Entity retEntity = getEntityById(entity.getId());
     	log.debug("Loading lazy entity '{}' (recurse={})",retEntity.getName(),recurse);
         if (recurse) {
             loadLazyEntity(retEntity, new HashSet<Long>());

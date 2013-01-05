@@ -151,11 +151,10 @@ public class EntityActorPermissionDialog extends ModalDialog implements Accessib
     }
     
     private void saveAndClose() {
-    	
-    	Utils.setWaitingCursor(EntityActorPermissionDialog.this);
+        
+    	Utils.setWaitingCursor(parentDialog);
     	
     	final Subject subject = (Subject)subjectCombobox.getSelectedItem();
-    	
     	final boolean recursive = recursiveCheckbox.isSelected();
     	
     	if (recursive) {
@@ -190,19 +189,19 @@ public class EntityActorPermissionDialog extends ModalDialog implements Accessib
 				if (recursive) {
 					ModelMgr.getModelMgr().invalidateCache(entity, true);
 				}
-				Utils.setDefaultCursor(EntityActorPermissionDialog.this);
-		    	setVisible(false);
+				Utils.setDefaultCursor(parentDialog);
 			}
 			
 			@Override
 			protected void hadError(Throwable error) {
 				SessionMgr.getSessionMgr().handleException(error);
-				Utils.setDefaultCursor(EntityActorPermissionDialog.this);
-		    	setVisible(false);
+				Utils.setDefaultCursor(parentDialog);
 			}
 		};
 		worker.setProgressMonitor(new IndeterminateProgressMonitor(parentDialog, "Granting permissions...", ""));
 		worker.execute();
+
+        setVisible(false);
     }
 
 	public boolean isAccessible() {

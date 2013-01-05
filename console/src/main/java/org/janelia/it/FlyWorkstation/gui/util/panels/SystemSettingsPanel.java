@@ -15,7 +15,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.roles.PrefEditor;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
-import org.janelia.it.FlyWorkstation.shared.util.text_component.StandardTextField;
 
 public class SystemSettingsPanel extends JPanel implements PrefEditor {
 	

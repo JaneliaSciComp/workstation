@@ -572,6 +572,7 @@ public class SessionMgr {
         try {
         	if (isLoggedIn()) {
         		logoutUser();
+        		ModelMgr.getModelMgr().invalidateCache();
         	}
             isLoggedIn =  ModelMgr.getModelMgr().loginUser();
             loggedInSubjectName = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);

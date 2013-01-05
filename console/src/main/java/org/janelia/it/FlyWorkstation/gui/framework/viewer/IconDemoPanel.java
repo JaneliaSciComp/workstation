@@ -868,7 +868,7 @@ public class IconDemoPanel extends Viewer {
 		List<EntityData> children = new ArrayList<EntityData>();
 		for(EntityData ed : eds) {
 			Entity child = ed.getChildEntity();
-			if (!EntityUtils.isHidden(ed) && child!=null) {
+			if (!EntityUtils.isHidden(ed) && child!=null && !(child instanceof ForbiddenEntity)) {
 				children.add(ed);
 			}
 		}

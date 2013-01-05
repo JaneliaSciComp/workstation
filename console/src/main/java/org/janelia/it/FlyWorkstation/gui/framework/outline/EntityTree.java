@@ -18,6 +18,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.tree.DynamicTree;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNode;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.LazyTreeNodeLoader;
 import org.janelia.it.FlyWorkstation.gui.util.FakeProgressWorker;
+import org.janelia.it.FlyWorkstation.gui.util.ForbiddenEntity;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
@@ -327,6 +328,7 @@ public class EntityTree extends JPanel {
             public void loadLazyNodeData(DefaultMutableTreeNode node) throws Exception {
                 Entity entity = getEntity(node);
             	entity = ModelMgr.getModelMgr().loadLazyEntity(entity, false);
+
             }
 
             @Override
@@ -637,7 +639,7 @@ public class EntityTree extends JPanel {
         int c = 0;
         for (EntityData entityData : dataList) {
             if (entityData.getChildEntity() != null) {
-            	if (EntityUtils.isHidden(entityData) || !ModelMgrUtils.hasReadAccess(entityData.getChildEntity())) continue;
+            	if (EntityUtils.isHidden(entityData) || (entityData.getChildEntity() instanceof ForbiddenEntity) || !ModelMgrUtils.hasReadAccess(entityData.getChildEntity())) continue;
                 addNodes(parentNode, entityData, c++, visitedEds, level+1);
             }
         }
