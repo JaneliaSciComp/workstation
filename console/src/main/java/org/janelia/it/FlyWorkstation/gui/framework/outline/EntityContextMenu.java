@@ -542,7 +542,7 @@ public class EntityContextMenu extends JPopupMenu {
         });
 
         Entity entity = rootedEntity.getEntity();
-        if (!ModelMgrUtils.isOwner(entity)
+        if (!ModelMgrUtils.hasWriteAccess(entity)
                 || entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_IS_PROTECTED) != null) {
             renameItem.setEnabled(false);
         }
@@ -636,7 +636,7 @@ public class EntityContextMenu extends JPopupMenu {
 
         for (final EntityData rootEd : rootEds) {
             final Entity commonRoot = rootEd.getChildEntity();
-            if (!ModelMgrUtils.isOwner(commonRoot))
+            if (!ModelMgrUtils.hasWriteAccess(commonRoot))
                 continue;
 
             JMenuItem commonRootItem = new JMenuItem(commonRoot.getName());
@@ -722,7 +722,7 @@ public class EntityContextMenu extends JPopupMenu {
 
         for (EntityData rootEd : rootEds) {
             final Entity commonRoot = rootEd.getChildEntity();
-            if (!ModelMgrUtils.isOwner(commonRoot))
+            if (!ModelMgrUtils.hasWriteAccess(commonRoot))
                 continue;
 
             JMenuItem commonRootItem = new JMenuItem(commonRoot.getName());
@@ -827,7 +827,8 @@ public class EntityContextMenu extends JPopupMenu {
 
         for (RootedEntity rootedEntity : rootedEntityList) {
             Entity entity = rootedEntity.getEntity();
-            if (!ModelMgrUtils.isOwner(entity)
+            Entity parent = rootedEntity.getEntityData().getParentEntity();
+            if ((parent!=null && parent.getId()!=null && !ModelMgrUtils.hasWriteAccess(parent))
                     || entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_IS_PROTECTED) != null) {
                 deleteItem.setEnabled(false);
                 break;

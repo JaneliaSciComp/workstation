@@ -41,6 +41,12 @@ public class RemoveEntityAction implements Action {
 		final Set<EntityData> toDelete = new HashSet<EntityData>();
 		for(RootedEntity rootedEntity : rootedEntityList) {
 			toDelete.add(rootedEntity.getEntityData());
+			
+			Entity parent = rootedEntity.getEntityData().getParentEntity();
+			if (parent!=null && parent.getValueByAttributeName(EntityConstants.ATTRIBUTE_IS_PROTECTED)!=null) {
+			    JOptionPane.showMessageDialog(browser, "Cannot remove items from a protected folder", "Error", JOptionPane.ERROR_MESSAGE);
+			    return;
+			}
 		}
 		
 		// Pre-screen the selections to ensure we have permission to delete everything 

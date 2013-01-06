@@ -6,7 +6,6 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityActorPermission;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
@@ -31,68 +30,33 @@ public class ModelMgrUtils {
 	}
     
 	/**
-	 * Returns true if the user owns the given entity. 
+	 * Returns true if the current user owns the given entity. 
 	 * @param entity
 	 * @return
 	 */
     public static boolean isOwner(Entity entity) {
-    	if (entity==null) throw new IllegalArgumentException("Entity is null");
-    	if (entity.getOwnerKey()==null) throw new IllegalArgumentException("Entity's owner is null");
-    	return entity.getOwnerKey().equals(SessionMgr.getSubjectKey());
+        return EntityUtils.isOwner(entity, SessionMgr.getSubjectKeys());
     }
 
     /**
-     * Returns true if the user is authorized to read the given entity, either because they are the owner, or 
+     * Returns true if the current user is authorized to read the given entity, either because they are the owner, or 
      * because they or one of their groups has read permission.
      * @param entity
      * @return
      */
 	public static boolean hasReadAccess(Entity entity) {
-		String ownerKey = entity.getOwnerKey();
-		
-		// Special case for fake entities which do not exist in the database
-		if (ownerKey==null) return true;
-		
-		// User or any of their groups grant read access
-		Set<String> subjectKeys = new HashSet<String>(SessionMgr.getSubjectKeys());
-		if  (subjectKeys.contains(ownerKey)) return true;
-		
-		// Check explicit permission grants
-		for(EntityActorPermission eap : entity.getEntityActorPermissions()) {
-			if (subjectKeys.contains(eap.getSubjectKey())) {
-				if (eap.getPermissions().contains("r")) {
-					return true;
-				}
-			}
-		}
-		return false;
+	    return EntityUtils.hasReadAccess(entity, SessionMgr.getSubjectKeys());
 	}
 
     /**
-     * Returns true if the user is authorized to write the given entity, either because they are the owner, or 
+     * Returns true if the current user is authorized to write the given entity, either because they are the owner, or 
      * because they or one of their groups has write permission.
      * @param entity
      * @return
      */
 	public static boolean hasWriteAccess(Entity entity) {
-		String ownerKey = entity.getOwnerKey();
-		
-		// Special case for fake entities which do not exist in the database. 
-		if (ownerKey==null) return false;
-		
-		// Only being the owner grants write access
-		if (isOwner(entity)) return true;
-
-		// Check explicit permission grants
-		Set<String> subjectKeys = new HashSet<String>(SessionMgr.getSubjectKeys());
-		for(EntityActorPermission eap : entity.getEntityActorPermissions()) {
-			if (subjectKeys.contains(eap.getSubjectKey())) {
-				if (eap.getPermissions().contains("w")) {
-					return true;
-				}
-			}
-		}
-		return false;
+        return EntityUtils.hasWriteAccess(entity, SessionMgr.getSubjectKeys());
+	    
 	}
 	
     public static EntityData addChild(Entity parent, Entity child) throws Exception {
