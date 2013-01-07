@@ -4,12 +4,14 @@ import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,7 +63,11 @@ public class AlignmentBoardViewer extends Viewer {
 
     @Override
     public void showLoadingIndicator() {
-        //To change body of implemented methods use File | Settings | File Templates.
+        removeAll();
+        add(new JLabel(Icons.getLoadingIcon()));
+        this.updateUI();
+        revalidate();
+        repaint();
     }
 
     @Override
@@ -114,10 +120,11 @@ public class AlignmentBoardViewer extends Viewer {
         logger.info("Refresh called.");
 
         if (alignmentBoard != null) {
+            setLayout(new BorderLayout());
+            showLoadingIndicator();
+
             if ( mip3d == null ) {
                 mip3d = new Mip3d();
-                setLayout(new BorderLayout());
-                add(mip3d, BorderLayout.CENTER);
             }
 
             mip3d.refresh();
@@ -146,6 +153,11 @@ public class AlignmentBoardViewer extends Viewer {
                     Load3dSwingWorker loadWorker = new Load3dSwingWorker( mip3d, filename ) {
                         @Override
                         public void filenameSufficient() {
+                            // Add this last.  "show-loading" removes it.  This way, it is shown only
+                            // when it becomes un-busy.
+                            AlignmentBoardViewer.this.removeAll();
+                            add(mip3d, BorderLayout.CENTER);
+
                             revalidate();
                             repaint();
                         }
