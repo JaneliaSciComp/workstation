@@ -5,6 +5,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -38,6 +39,7 @@ public class AlignmentBoardViewer extends Viewer {
 
     public AlignmentBoardViewer(ViewerPane viewerPane) {
         super(viewerPane);
+        setLayout(new BorderLayout());
     }
 
     public void setAlignmentBoard( RootedEntity albRootedEntity, Entity alignmentBoard ) {
@@ -65,7 +67,7 @@ public class AlignmentBoardViewer extends Viewer {
     public void showLoadingIndicator() {
         removeAll();
         add(new JLabel(Icons.getLoadingIcon()));
-        this.updateUI();
+        //this.updateUI();
         revalidate();
         repaint();
     }
@@ -120,7 +122,6 @@ public class AlignmentBoardViewer extends Viewer {
         logger.info("Refresh called.");
 
         if (alignmentBoard != null) {
-            setLayout(new BorderLayout());
             showLoadingIndicator();
 
             if ( mip3d == null ) {
@@ -140,7 +141,8 @@ public class AlignmentBoardViewer extends Viewer {
             }
 
             //  Next, speak the volumes.
-            for ( Entity displayable: displayableList) {
+            final List<String> filenames = new ArrayList<String>();
+            for ( Entity displayable: displayableList ) {
                 // Find this displayable entity's file name of interest.
                 EntityFilenameFetcher filenameFetcher = new EntityFilenameFetcher();
                 String filename = filenameFetcher.fetchFilename(
@@ -150,22 +152,40 @@ public class AlignmentBoardViewer extends Viewer {
                                 EntityFilenameFetcher.FilenameType.IMAGE_FAST_3d
                 );
                 if ( filename != null ) {
-                    Load3dSwingWorker loadWorker = new Load3dSwingWorker( mip3d, filename ) {
-                        @Override
-                        public void filenameSufficient() {
-                            // Add this last.  "show-loading" removes it.  This way, it is shown only
-                            // when it becomes un-busy.
-                            AlignmentBoardViewer.this.removeAll();
-                            add(mip3d, BorderLayout.CENTER);
-
-                            revalidate();
-                            repaint();
-                        }
-                    };
-                    loadWorker.execute();
+                    filenames.add( filename );
                 }
                 mip3d.setClearOnLoad(false);
             }
+
+            SimpleWorker loadWorker = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    for ( String filename: filenames ) {
+                        mip3d.loadVolume( filename );
+                    }
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    // Add this last.  "show-loading" removes it.  This way, it is shown only
+                    // when it becomes un-busy.
+                    AlignmentBoardViewer.this.removeAll();
+                    add(mip3d, BorderLayout.CENTER);
+
+                    revalidate();
+                    repaint();
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    AlignmentBoardViewer.this.removeAll();
+                    revalidate();
+                    repaint();
+                    SessionMgr.getSessionMgr().handleException( error );
+                }
+            };
+
+            loadWorker.execute();
 
         }
     }
