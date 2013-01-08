@@ -66,7 +66,6 @@ public class Browser extends JFrame implements Cloneable {
     public static final String VIEW_SEARCH = "Search Toolbar";
     public static final String VIEW_OUTLINES = "Outlines Section";
     public static final String VIEW_ONTOLOGY = "Ontology Section";
-    public static final String VIEW_ALIGNBOARD = "Alignment Board";
     public static final String BAR_DATA = "Data";
     public static final String BAR_SESSIONS = "Sessions";
     public static final String BAR_TASKS = "Services";
@@ -76,7 +75,6 @@ public class Browser extends JFrame implements Cloneable {
     private static int RGB_TYPE_BYTES_PER_PIXEL = 4;
     private static int PRINT_OVERHEAD_SIZE = 1000000;
     private static Class menuBarClass;
-    private JSplitPane jSplitPaneRightVertical;
     private JSplitPane centerLeftHorizontalSplitPane;
     private JSplitPane centerRightHorizontalSplitPane;
     private JSplitPane jSplitPaneBottom;
@@ -974,10 +972,6 @@ public class Browser extends JFrame implements Cloneable {
             //centerLeftHorizontalSplitPane.repaint();
         }
 
-        if (jSplitPaneRightVertical != null) {
-            jSplitPaneRightVertical.removeAll();
-        }
-
         allPanelsView.removeAll();
     }
 
@@ -1349,11 +1343,6 @@ public class Browser extends JFrame implements Cloneable {
         else if (VIEW_ONTOLOGY.equals(viewComponentKey)) {
             centerRightHorizontalSplitPane.getRightComponent().setVisible(!centerRightHorizontalSplitPane.getRightComponent().isVisible());
             centerRightHorizontalSplitPane.setDividerLocation(centerRightHorizontalSplitPane.getLastDividerLocation());
-        }
-        else if (VIEW_ALIGNBOARD.equals(viewComponentKey)) {
-            JSplitPane rightVertSplitPane = (JSplitPane)centerRightHorizontalSplitPane.getRightComponent();
-            rightVertSplitPane.getBottomComponent().setVisible(! rightVertSplitPane.getBottomComponent().isVisible() );
-            rightVertSplitPane.setDividerLocation(rightVertSplitPane.getLastDividerLocation());
         }
     }
 

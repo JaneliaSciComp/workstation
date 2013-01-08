@@ -121,7 +121,7 @@ public class EntityContextMenu extends JPopupMenu {
 
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
-        add(getCreateAlignBrdVwItem());
+//        add(getCreateAlignBrdVwItem());
         
         if ((SessionMgr.getSubjectKey().equals("user:simpsonj") || SessionMgr.getSubjectKey()
                 .equals("group:simpsonlab")) && !this.multiple) {
@@ -370,28 +370,28 @@ public class EntityContextMenu extends JPopupMenu {
         return pasteItem;
     }
 
-    /** Makes the item for showing the entity in its own viewer iff the entity type is correct. */
-    public JMenuItem getCreateAlignBrdVwItem() {
-        JMenuItem alignBrdVwItem = null;
-        if (rootedEntity != null && rootedEntity.getEntity() != null) {
-            Entity entity = rootedEntity.getEntity();
-            if (entity.getEntityType().getName().equals(EntityConstants.TYPE_ALIGNMENT_BOARD)) {
-                alignBrdVwItem = new JMenuItem("  Show in alignment board viewer");
-                alignBrdVwItem.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        if (rootedEntity != null) {
-                            Entity entity = rootedEntity.getEntity();
-                            AlignmentBoardViewerPanel panel = AlignmentBoardViewerPanel.getSingletonInstance();
-                            panel.addViewer(rootedEntity, entity);
-                        }
-                    }
-                });
-            }
-        }
-
-        return alignBrdVwItem;
-    }
+//    /** Makes the item for showing the entity in its own viewer iff the entity type is correct. */
+//    public JMenuItem getCreateAlignBrdVwItem() {
+//        JMenuItem alignBrdVwItem = null;
+//        if (rootedEntity != null && rootedEntity.getEntity() != null) {
+//            Entity entity = rootedEntity.getEntity();
+//            if (entity.getEntityType().getName().equals(EntityConstants.TYPE_ALIGNMENT_BOARD)) {
+//                alignBrdVwItem = new JMenuItem("  Show in alignment board viewer");
+//                alignBrdVwItem.addActionListener(new ActionListener() {
+//                    @Override
+//                    public void actionPerformed(ActionEvent e) {
+//                        if (rootedEntity != null) {
+//                            Entity entity = rootedEntity.getEntity();
+//                            AlignmentBoardViewerPanel panel = AlignmentBoardViewerPanel.getSingletonInstance();
+//                            panel.addViewer(rootedEntity, entity);
+//                        }
+//                    }
+//                });
+//            }
+//        }
+//
+//        return alignBrdVwItem;
+//    }
 
     private class EntityDataPath {
         private List<EntityData> path;

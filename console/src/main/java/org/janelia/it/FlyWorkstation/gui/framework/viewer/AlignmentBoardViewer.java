@@ -82,7 +82,8 @@ public class AlignmentBoardViewer extends Viewer {
     public void loadEntity(RootedEntity rootedEntity, Callable<Void> success) {
         loadEntity(rootedEntity);
         try {
-            success.call();
+            if ( success != null )
+                success.call();
         } catch (Exception ex) {
             SessionMgr.getSessionMgr().handleException(ex);
         }
@@ -141,10 +142,11 @@ public class AlignmentBoardViewer extends Viewer {
             }
 
             //  Next, speak the volumes.
+            mip3d.setClearOnLoad( true );
             final List<String> filenames = new ArrayList<String>();
+            EntityFilenameFetcher filenameFetcher = new EntityFilenameFetcher();
             for ( Entity displayable: displayableList ) {
                 // Find this displayable entity's file name of interest.
-                EntityFilenameFetcher filenameFetcher = new EntityFilenameFetcher();
                 String filename = filenameFetcher.fetchFilename(
                         displayable,
                         displayable.getEntityType().getName().equals( EntityConstants.TYPE_NEURON_FRAGMENT ) ?
@@ -154,7 +156,6 @@ public class AlignmentBoardViewer extends Viewer {
                 if ( filename != null ) {
                     filenames.add( filename );
                 }
-                mip3d.setClearOnLoad(false);
             }
 
             SimpleWorker loadWorker = new SimpleWorker() {
@@ -162,6 +163,9 @@ public class AlignmentBoardViewer extends Viewer {
                 protected void doStuff() throws Exception {
                     for ( String filename: filenames ) {
                         mip3d.loadVolume( filename );
+                        // After first volume has been loaded, set the unset clear flag, so subsequent
+                        // ones are overloaded.
+                        mip3d.setClearOnLoad(false);
                     }
                 }
 

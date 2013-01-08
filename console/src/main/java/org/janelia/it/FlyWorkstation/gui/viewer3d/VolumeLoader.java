@@ -141,7 +141,10 @@ System.out.println("FILENAME: " + fileName);
 				// assume all mpegs are in sRGB color space
 				colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;				
 			}
-			
+            else {
+                throw new RuntimeException("Extension type " + extension + " not yet implemented.");
+            }
+
 			// Because we use premultiplied transparency...
 			setAlphaToSaturateColors(colorSpace);
 			

@@ -38,18 +38,6 @@ public class ViewMenu extends JMenu {
         });
         dataMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, java.awt.Event.META_MASK));
 
-        /*
-          LLF: commenting until full functionality achieved.
-         *
-        alignBoardItem = new JCheckBoxMenuItem("Alignment Board", true);
-        alignBoardItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                viewActionPerformed(Browser.VIEW_ALIGNBOARD);
-            }
-        });
-        alignBoardItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, java.awt.Event.META_MASK));
-        */
-
         addMenuItems();
     }
 
@@ -57,10 +45,7 @@ public class ViewMenu extends JMenu {
         removeAll();
         add(dataMenuItem);
         add(ontologyMenuItem);
-        /*
-        LLF: commenting until full functionality achieved.
-        add(alignBoardItem);
-        */
+
     }
 
     private void viewActionPerformed(String viewComponent) {
