@@ -186,9 +186,7 @@ public class EntityActorPermissionDialog extends ModalDialog implements Accessib
 			@Override
 			protected void hadSuccess() {	
 				parentDialog.refresh();
-				if (recursive) {
-					ModelMgr.getModelMgr().invalidateCache(entity, true);
-				}
+				ModelMgr.getModelMgr().invalidateCache(entity, recursive);
 				Utils.setDefaultCursor(parentDialog);
 			}
 			

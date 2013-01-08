@@ -454,10 +454,6 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 	}
 	
 	public boolean isAccessible() {
-		if (!"user:jenetta".equals(SessionMgr.getSubjectKey())) {
-			log.info("User "+SessionMgr.getSubjectKey()+" is not user:jenetta");
-			return false;
-		}
-		return true;
+		return "user:jenetta".equals(SessionMgr.getSubjectKey());
 	}
 }

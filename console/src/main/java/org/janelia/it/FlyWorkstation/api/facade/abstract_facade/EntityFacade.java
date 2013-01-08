@@ -70,6 +70,8 @@ public interface EntityFacade {
 
 	public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception;
 
+	public Set<EntityActorPermission> getFullPermissions(Long entityId) throws Exception;
+	
     public EntityActorPermission grantPermissions(Long entityId, String granteeKey, String permissions, boolean recursive) throws Exception;
     
     public void revokePermissions(Long entityId, String revokeeKey, boolean recursive) throws Exception;

@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.util;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 import javax.swing.*;
 import java.awt.image.BufferedImage;
@@ -154,7 +155,7 @@ public class Icons {
         String type = entity.getEntityType().getName();
         
         if (EntityConstants.TYPE_FOLDER.equals(type)) {
-        	if (entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_IS_PROTECTED)!=null) {
+        	if (EntityUtils.isProtected(entity)) {
         		return getIcon(large ? "folder_large.png" : "folder_key.png");	
         	}
             return getIcon(large ? "folder_large.png" : "folder.png");

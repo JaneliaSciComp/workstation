@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Implements a unified Entity model for client-side operations. All changes to the model should go through
@@ -174,10 +175,23 @@ public class EntityModel {
 	    entityCache.invalidateAll();
 	}
 
+	/**
+     * Invalidate any number of entities in the cache, so that they will be reloaded on the next request. 
+	 * 
+	 * @param entityIds
+	 */
+	public void invalidate(Collection<Long> entityIds) {
+	    ImmutableMap<Long,Entity> presentMap = entityCache.getAllPresent(entityIds);
+	    for(Entity entity : presentMap.values()) {
+	        entityCache.invalidate(entity.getId());
+	    }
+	    notifyEntitiesInvalidated(presentMap.values());
+	}
+	
     /**
      * Invalidate any number of entities in the cache, so that they will be reloaded on the next request. 
      * 
-     * @param entity
+     * @param entities
      * @param recurse
      */
 	public void invalidate(Collection<Entity> entities, boolean recurse) {

@@ -56,9 +56,8 @@ public class ModelMgrUtils {
      */
 	public static boolean hasWriteAccess(Entity entity) {
         return EntityUtils.hasWriteAccess(entity, SessionMgr.getSubjectKeys());
-	    
 	}
-	
+    
     public static EntityData addChild(Entity parent, Entity child) throws Exception {
 		EntityData newEntityData = parent.addChildEntity(child);
 		EntityData savedEntityData = ModelMgr.getModelMgr().saveOrUpdateEntityData(newEntityData);

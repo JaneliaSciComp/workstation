@@ -344,6 +344,11 @@ public abstract class EntityTransferHandler extends TransferHandler {
 			log.debug("processing ed order={}",ed.getOrderIndex());
 			if ((ed.getOrderIndex() == null) || (ed.getOrderIndex() != index)) {
 				ed.setOrderIndex(index);
+				
+				// Remember actual entities
+				Entity parent = ed.getParentEntity();
+				Entity child = ed.getChildEntity();
+				
 				// For performance reasons, we have to replace the parent with a fake id-only entity. Otherwise, it 
 				// tries to transfer the entire object graph every time, and it gradually grinds to a halt, since the 
 				// object graph grows at some insane rate.
@@ -351,9 +356,17 @@ public abstract class EntityTransferHandler extends TransferHandler {
 				fakeParentEntity.setId(parentEntity.getId());
 				ed.setParentEntity(fakeParentEntity);
 
+				Entity fakeChildEntity = new Entity();
+				fakeChildEntity.setId(child.getId());
+				ed.setChildEntity(fakeChildEntity);
+				
 				log.debug("will save ED {} with index={}",ed.getId(),index);
 				EntityData savedEd = ModelMgr.getModelMgr().saveOrUpdateEntityData(ed);
 				log.debug("saved ED {}",savedEd.getId());
+				
+				// Restore actual entities
+				ed.setParentEntity(parent);
+				ed.setChildEntity(child);
 			}
 			index++;
 		}

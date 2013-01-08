@@ -1,8 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import javax.swing.JOptionPane;
 
@@ -12,9 +10,14 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.IndeterminateProgressMonitor;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityActorPermission;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.model.tasks.Task;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 
 /**
  * This action removes an entity from some parent. If the entity becomes an orphan, then it is completely deleted.
@@ -37,18 +40,17 @@ public class RemoveEntityAction implements Action {
     @Override
     public void doAction() {
         final Browser browser = SessionMgr.getBrowser();
-
+        
 		final Set<EntityData> toDelete = new HashSet<EntityData>();
 		for(RootedEntity rootedEntity : rootedEntityList) {
 			toDelete.add(rootedEntity.getEntityData());
-			
 			Entity parent = rootedEntity.getEntityData().getParentEntity();
-			if (parent!=null && parent.getValueByAttributeName(EntityConstants.ATTRIBUTE_IS_PROTECTED)!=null) {
+			if (parent!=null && EntityUtils.isProtected(parent)) {
 			    JOptionPane.showMessageDialog(browser, "Cannot remove items from a protected folder", "Error", JOptionPane.ERROR_MESSAGE);
 			    return;
 			}
 		}
-		
+        
 		// Pre-screen the selections to ensure we have permission to delete everything 
 		for(EntityData ed : new HashSet<EntityData>(toDelete)) {
 			if (ed.getOwnerKey()!=null && !ed.getOwnerKey().equals(SessionMgr.getSubjectKey())) {
@@ -56,50 +58,88 @@ public class RemoveEntityAction implements Action {
 				toDelete.remove(ed);
 			}
 		}
-			
+		
 		SimpleWorker verifyTask = new SimpleWorker() {
 
 			private Set<EntityData> removeTree = new HashSet<EntityData>();
 			private Set<EntityData> removeReference = new HashSet<EntityData>();
 			private Set<EntityData> removeRootTag = new HashSet<EntityData>();
+            private Map<EntityData,String> sharedNameMap = new HashMap<EntityData,String>();
+            private Set<Long> invalidIdSet = new HashSet<Long>();
 				
 			@Override
 			protected void doStuff() throws Exception {
+			    
 				for(EntityData ed : toDelete) {
 					Entity child = ed.getChildEntity();
-					List<EntityData> eds = ModelMgr.getModelMgr().getParentEntityDatas(ed.getChildEntity().getId());
-					// Determine deletion type
-					if (child.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)!=null) {
-						// Common root
-						if (eds.isEmpty()) {
-							// No references to this root, so delete the entire tree
-							removeTree.add(ed);
-						}
-						else if (ed.getId()==null) {
-							// User wants to delete the root, so just remove the tag, but leave the tree intact
-							removeRootTag.add(ed);
-						}
-						else {
-							// User wants to delete a reference to the root
-							removeReference.add(ed);
-						}
-					}
-					else {
-						if (eds.size() > 1) {
-							// Just remove the reference
-							removeReference.add(ed);
-						}
-						else {
-							// Only 1 reference left, so delete the entire tree
-							removeTree.add(ed);
-						}
-					}
+	                
+					List<EntityData> parentEds = ModelMgr.getModelMgr().getParentEntityDatas(child.getId());
+
+					// To be technically correct, this should check for any eds owned by members of the owner group, if
+					// the entity is owned by a group. However, groups can't login, so presumably this deletion 
+					// action will never be run on a group-owned entity.
+			        Set<EntityData> ownedEds = new HashSet<EntityData>();
+			        for(EntityData parentEd : parentEds) {
+			            invalidIdSet.add(parentEd.getParentEntity().getId());
+			            if (ModelMgrUtils.isOwner(parentEd.getParentEntity())) {
+			                ownedEds.add(parentEd);
+			            }
+			        }
+					
+			        // Determine deletion type
+			        if (ModelMgrUtils.hasWriteAccess(child)) {
+
+	                    if (child.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)!=null) {
+	                        // Common root
+	                        if (ownedEds.isEmpty()) {
+	                            // No owned references to this root, so delete the entire tree. If there are non-owned 
+	                            // references, the user will be warned about them before the tree is deleted.
+	                            removeTree.add(ed);
+	                        }
+	                        else if (ed.getId()==null) {
+	                            // User wants to delete the root, but it's referenced elsewhere. So let's just remove the 
+	                            // common root tag, but leave the tree intact, so that it remains in the other places it 
+	                            // is referenced.
+	                            removeRootTag.add(ed);
+	                        }
+	                        else {
+	                            // User wants to delete a reference to the root.
+	                            removeReference.add(ed);
+	                        }
+	                    }
+	                    else {
+	                        if (ownedEds.size() > 1) {
+	                            // Just remove the reference
+	                            removeReference.add(ed);
+	                        }
+	                        else {
+	                            // Only 1 reference left, so delete the entire tree
+	                            removeTree.add(ed);
+	                        }
+	                    }
+	                    
+	                    if (removeTree.contains(ed)) {
+	                        // When removing a tree, we need to check if its shared, and ask the user if they want to really delete a shared object.
+	                        List<String> sharedNames = new ArrayList<String>();
+	                        Set<EntityActorPermission> permissions = ModelMgr.getModelMgr().getFullPermissions(child.getId());
+	                        for(EntityActorPermission permission : permissions) {
+	                            sharedNames.add(permission.getSubjectName());
+	                        }
+	                        Collections.sort(sharedNames);
+	                        sharedNameMap.put(ed, Task.csvStringFromCollection(sharedNames));
+	                    }
+			        }
+			        else {
+			            removeReference.add(ed);
+			        }
+					
+					
 				}
 			}
 			
 			@Override
 			protected void hadSuccess() {
-				
+		        
 				boolean confirmedAll = false;
 				
 				final Set<EntityData> toReallyDelete = new HashSet<EntityData>(toDelete);
@@ -126,12 +166,24 @@ public class RemoveEntityAction implements Action {
 							toReallyDelete.remove(ed);
 						}
 						else if (!confirmedAll) {
-							
+						    
+						    String sharedNames = sharedNameMap.get(ed);
+						    StringBuilder message = new StringBuilder();
+						    if (!StringUtils.isEmpty(sharedNames)) {
+						        message.append(ed.getChildEntity().getName());
+						        message.append(" is currently shared with the following users: ");
+						        message.append(sharedNames);
+						        message.append(".\nAre you sure you want to permanently delete it?");
+						    }
+						    else {
+						        message.append("Are you sure you want to permanently delete\n '");
+						        message.append(ed.getChildEntity().getName());    
+						        message.append("'\nand all orphaned items inside it?");
+						    }
+						    
 							if (toDelete.size() > 1) {
 								Object[] options = {"Yes", "Yes to All", "No", "Cancel"};	
-								int r = JOptionPane.showOptionDialog(browser,
-										"Are you sure you want to permanently delete\n'" + ed.getChildEntity().getName()
-												+ "'\nand all orphaned items inside it?", "Delete",
+								int r = JOptionPane.showOptionDialog(browser, message.toString(), "Delete",
 										JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[1]);
 								switch (r) {
 								case 0:
@@ -148,9 +200,7 @@ public class RemoveEntityAction implements Action {
 							}
 							else {
 								Object[] options = {"Yes", "No", "Cancel"};
-								int r = JOptionPane.showOptionDialog(browser,
-										"Are you sure you want to permanently delete\n'" + ed.getChildEntity().getName()
-												+ "'\nand all orphaned items inside it?", "Delete",
+								int r = JOptionPane.showOptionDialog(browser, message.toString(), "Delete",
 										JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, null, options, options[1]);
 								switch (r) {
 								case 0:
@@ -190,6 +240,7 @@ public class RemoveEntityAction implements Action {
 
 					@Override
 					protected void hadSuccess() {
+					    ModelMgr.getModelMgr().invalidate(invalidIdSet);
 					}
 
 					@Override

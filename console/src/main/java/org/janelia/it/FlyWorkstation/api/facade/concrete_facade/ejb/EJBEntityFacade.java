@@ -60,7 +60,7 @@ public class EJBEntityFacade implements EntityFacade {
     @Override
     public List<List<EntityData>> getPathsToRoots(Long entityId) throws Exception {
     	Entity entity = EJBFactory.getRemoteEntityBean().getEntityById(SessionMgr.getSubjectKey(), entityId);
-    	return EJBFactory.getRemoteEntityBean().getPathsToRoots(SessionMgr.getSubjectKey(), entity);
+    	return EJBFactory.getRemoteEntityBean().getPathsToRoots(SessionMgr.getSubjectKey(), entity.getId());
     }
     
     @Override
@@ -137,12 +137,12 @@ public class EJBEntityFacade implements EntityFacade {
 
     @Override
     public EntityData addEntityToParent(Entity parent, Entity entity, Integer index, String attrName) throws Exception {
-        return EJBFactory.getRemoteEntityBean().addEntityToParent(SessionMgr.getSubjectKey(), parent, entity, index, attrName);
+        return EJBFactory.getRemoteEntityBean().addEntityToParent(SessionMgr.getSubjectKey(), parent.getId(), entity.getId(), index, attrName);
     }
     
     @Override
     public void removeEntityData(EntityData ed) throws Exception {
-        EJBFactory.getRemoteEntityBean().deleteEntityData(SessionMgr.getSubjectKey(), ed);
+        EJBFactory.getRemoteEntityBean().deleteEntityData(SessionMgr.getSubjectKey(), ed.getId());
     }
 
     public void createEntityType(String typeName) throws Exception {
@@ -154,7 +154,7 @@ public class EJBEntityFacade implements EntityFacade {
     }
     
     public Entity getAncestorWithType(Entity entity, String typeName) throws Exception {
-    	return EJBFactory.getRemoteEntityBean().getAncestorWithType(SessionMgr.getSubjectKey(), entity, typeName);
+    	return EJBFactory.getRemoteEntityBean().getAncestorWithType(SessionMgr.getSubjectKey(), entity.getId(), typeName);
     }
 
 	public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception {
@@ -165,6 +165,10 @@ public class EJBEntityFacade implements EntityFacade {
 		return EJBFactory.getRemoteEntityBean().getProjectedResults(SessionMgr.getSubjectKey(), entityIds, upMapping, downMapping);
 	}
 
+	public Set<EntityActorPermission> getFullPermissions(Long entityId) throws Exception {
+	    return EJBFactory.getRemoteEntityBean().getFullPermissions(SessionMgr.getSubjectKey(), entityId);
+	}
+	
     @Override
     public EntityActorPermission grantPermissions(Long entityId, String granteeKey, String permissions, boolean recursive) throws Exception {
     	return EJBFactory.getRemoteEntityBean().grantPermissions(SessionMgr.getSubjectKey(), entityId, granteeKey, permissions, recursive);

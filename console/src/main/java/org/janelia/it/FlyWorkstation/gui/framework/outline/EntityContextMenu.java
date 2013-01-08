@@ -542,8 +542,7 @@ public class EntityContextMenu extends JPopupMenu {
         });
 
         Entity entity = rootedEntity.getEntity();
-        if (!ModelMgrUtils.hasWriteAccess(entity)
-                || entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_IS_PROTECTED) != null) {
+        if (!ModelMgrUtils.hasWriteAccess(entity) || EntityUtils.isProtected(entity)) {
             renameItem.setEnabled(false);
         }
 
@@ -807,8 +806,7 @@ public class EntityContextMenu extends JPopupMenu {
 
         for (RootedEntity rootedEntity : rootedEntityList) {
             EntityData ed = rootedEntity.getEntityData();
-            if (ed.getId() == null
-                    && ed.getChildEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT) == null) {
+            if (ed.getId() == null && EntityUtils.isCommonRoot(ed.getChildEntity())) {
                 // Fake ED, not a common root, this must be part of an
                 // annotation session.
                 // TODO: this check could be done more robustly
@@ -828,10 +826,24 @@ public class EntityContextMenu extends JPopupMenu {
         for (RootedEntity rootedEntity : rootedEntityList) {
             Entity entity = rootedEntity.getEntity();
             Entity parent = rootedEntity.getEntityData().getParentEntity();
-            if ((parent!=null && parent.getId()!=null && !ModelMgrUtils.hasWriteAccess(parent))
-                    || entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_IS_PROTECTED) != null) {
+            if (ModelMgrUtils.hasWriteAccess(entity)) {
+                // User can delete because they own this entity
+                deleteItem.setEnabled(true);
+                // Unless it is protected
+                if (EntityUtils.isProtected(entity)) {
+                    deleteItem.setEnabled(false);
+                }
+                // Or its parent is protected
+                if (parent!=null && parent.getId()!=null && EntityUtils.isProtected(parent)) {
+                    deleteItem.setEnabled(false);
+                }
+            }
+            else {
                 deleteItem.setEnabled(false);
-                break;
+                // User can't delete unless they own the parent
+                if (parent!=null && parent.getId()!=null && ModelMgrUtils.hasWriteAccess(parent)) {
+                    deleteItem.setEnabled(true);
+                }
             }
         }
 

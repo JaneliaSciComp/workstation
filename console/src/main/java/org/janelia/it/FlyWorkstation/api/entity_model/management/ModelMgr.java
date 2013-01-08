@@ -625,6 +625,10 @@ public class ModelMgr {
 		entityModel.invalidate(entities, recurse);
 	}
 	
+	public void invalidate(Collection<Long> entityIds) {
+	    entityModel.invalidate(entityIds);
+	}
+	
 	public void invalidateCache(Entity entity, boolean recurse) {
 		entityModel.invalidate(entity, recurse);
 	}
@@ -873,6 +877,10 @@ public class ModelMgr {
     
     public Entity createDataSet(String dataSetName) throws Exception {
     	return entityModel.createDataSet(dataSetName);
+    }
+    
+    public Set<EntityActorPermission> getFullPermissions(Long entityId) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().getFullPermissions(entityId);
     }
     
     public EntityActorPermission grantPermissions(Long entityId, String subjectKey, String permissions, boolean recursive) throws Exception {
