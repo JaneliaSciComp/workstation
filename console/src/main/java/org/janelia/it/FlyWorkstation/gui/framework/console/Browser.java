@@ -29,10 +29,8 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModelListenerAdapter;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.AlignmentBoardViewerPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ImageCache;
 import org.janelia.it.FlyWorkstation.gui.util.*;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
@@ -116,7 +114,6 @@ public class Browser extends JFrame implements Cloneable {
     private String mostRecentFileOutlinePath;
     private JTabbedPane icsTabPane = new JTabbedPane();
     private int rightDividerLocation;
-    private int jSplitPaneRightVerticalSplitLocation;
     private JMenu editorMenu;
     private boolean showSubEditorWhenAvailable = true;
     private StatusBar statusBar = new StatusBar();
@@ -311,23 +308,7 @@ public class Browser extends JFrame implements Cloneable {
         rightPanel.addPanel(Icons.getIcon("page.png"), "Ontology", "Displays an ontology for annotation", ontologyOutline);
         rightPanel.addPanel(Icons.getIcon("page_copy.png"), "Split Picking Tool", "Allows for simulation of flyline crosses", new SplitPickingPanel());
 
-        Component rightComponent = null;
-        // TEMPORARY for demo
-        try {
-
-            /* LLF: commenting until full functionality achieved.
-            mip3dPanel.loadVolume( "/Volumes/jacsData/filestore/system/Separation/770/082/1791083407929770082/separate/fastLoad/ConsolidatedSignal2_25.mp4" );
-            */
-            JSplitPane verticalRightSplitPane = new JSplitPane(
-                    JSplitPane.VERTICAL_SPLIT, false, rightPanel, AlignmentBoardViewerPanel.getSingletonInstance()
-            );
-            //verticalRightSplitPane.setDividerLocation( 1.0 );   // LLF: collapsing bottom component until full functionality achieved.
-            rightComponent = verticalRightSplitPane;
-        }
-        catch (Exception e) {
-            log.error("Could not initialize alignment viewer panel",e);
-            rightComponent = rightPanel;
-        }
+        Component rightComponent = rightPanel;
 
         centerRightHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, viewerManager.getViewerContainer(), rightComponent);
         centerRightHorizontalSplitPane.setMinimumSize(new Dimension(200, 0));
