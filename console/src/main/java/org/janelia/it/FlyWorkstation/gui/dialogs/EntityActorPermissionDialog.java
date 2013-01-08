@@ -144,7 +144,8 @@ public class EntityActorPermissionDialog extends ModalDialog implements Accessib
 
     	addSeparator(attrPanel, "Options");
 
-    	recursiveCheckbox = new JCheckBox("Apply permissions to all data in tree");
+    	recursiveCheckbox = new JCheckBox("Apply permission changes to all subfolders");
+    	recursiveCheckbox.setSelected(true);
         attrPanel.add(recursiveCheckbox, "gap para, span 2");
         
         packAndShow();
@@ -156,17 +157,6 @@ public class EntityActorPermissionDialog extends ModalDialog implements Accessib
     	
     	final Subject subject = (Subject)subjectCombobox.getSelectedItem();
     	final boolean recursive = recursiveCheckbox.isSelected();
-    	
-    	if (recursive) {
-
-			Object[] options = {"Yes", "No"};
-			String message = "Are you sure you want to apply the permissions to all data in this tree? This could take a long time.";
-			int deleteConfirmation = JOptionPane.showOptionDialog(EntityActorPermissionDialog.this, message, "Apply permissions recursively?",
-					JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
-			if (deleteConfirmation != 0) {
-				return;
-			}
-    	}
     	
         SimpleWorker worker = new SimpleWorker() {
 

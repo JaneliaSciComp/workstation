@@ -50,14 +50,6 @@ public class RemoveEntityAction implements Action {
 			    return;
 			}
 		}
-        
-		// Pre-screen the selections to ensure we have permission to delete everything 
-		for(EntityData ed : new HashSet<EntityData>(toDelete)) {
-			if (ed.getOwnerKey()!=null && !ed.getOwnerKey().equals(SessionMgr.getSubjectKey())) {
-				JOptionPane.showMessageDialog(browser, "Do not have permission to delete "+ed.getChildEntity().getName(), "Error", JOptionPane.ERROR_MESSAGE);
-				toDelete.remove(ed);
-			}
-		}
 		
 		SimpleWorker verifyTask = new SimpleWorker() {
 
@@ -146,23 +138,20 @@ public class RemoveEntityAction implements Action {
 				for(EntityData ed : toDelete) {
 					Entity child = ed.getChildEntity();
 					if (removeRootTag.contains(ed)) {
-						// Must own the root in order to de-root it
-						if (!child.getOwnerKey().equals(SessionMgr.getSubjectKey())) {
-							JOptionPane.showMessageDialog(browser, "No permission to remove "+ed.getChildEntity().getName(), "Error", JOptionPane.ERROR_MESSAGE);
+					    if (!ModelMgrUtils.hasWriteAccess(child)) {
+							JOptionPane.showMessageDialog(browser, "No permission to remove "+child.getName(), "Error", JOptionPane.ERROR_MESSAGE);
 							toReallyDelete.remove(ed);
 						}
 					}
 					else if (removeReference.contains(ed)) {
-						// Must own the reference to remove it
-						if (!ed.getOwnerKey().equals(SessionMgr.getSubjectKey())) {
-							JOptionPane.showMessageDialog(browser, "No permission to remove "+ed.getChildEntity().getName(), "Error", JOptionPane.ERROR_MESSAGE);
+					    if (!ModelMgrUtils.hasWriteAccess(ed.getParentEntity())) {
+							JOptionPane.showMessageDialog(browser, "No permission to remove "+child.getName(), "Error", JOptionPane.ERROR_MESSAGE);
 							toReallyDelete.remove(ed);
 						}
 					}
 					else if (removeTree.contains(ed)) {
-						// Must own the tree root to delete it
-						if (!ed.getOwnerKey().equals(SessionMgr.getSubjectKey())) {
-							JOptionPane.showMessageDialog(browser, "No permission to delete "+ed.getChildEntity().getName(), "Error", JOptionPane.ERROR_MESSAGE);
+					    if (!ModelMgrUtils.hasWriteAccess(child)) {
+							JOptionPane.showMessageDialog(browser, "No permission to delete "+child.getName(), "Error", JOptionPane.ERROR_MESSAGE);
 							toReallyDelete.remove(ed);
 						}
 						else if (!confirmedAll) {

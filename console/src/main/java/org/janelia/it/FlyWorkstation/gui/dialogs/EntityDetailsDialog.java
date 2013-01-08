@@ -209,10 +209,10 @@ public class EntityDetailsDialog extends ModalDialog implements Accessibility, R
 	    						
 	    						Utils.setWaitingCursor(EntityDetailsDialog.this);
 
-    							Object[] options = {"All data in tree", "Just this entity", "Cancel"};
-    							String message = "Remove the permissions from all data in this tree, or just this entity?";
+    							Object[] options = {"All subfolders", "Just this entity", "Cancel"};
+    							String message = "Remove this permission from all subfolders, or just this entity?";
     							final int removeConfirmation = JOptionPane.showOptionDialog(EntityDetailsDialog.this, message, "Apply permissions recursively?",
-    									JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+    									JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
     							if (removeConfirmation == 2) {
     								return;
     							}
