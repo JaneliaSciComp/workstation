@@ -1,8 +1,18 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
+import java.awt.BorderLayout;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.Callable;
+
+import javax.swing.JLabel;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.LayersPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
@@ -11,14 +21,6 @@ import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.Callable;
 
 /**
  * Created with IntelliJ IDEA.
@@ -158,6 +160,13 @@ public class AlignmentBoardViewer extends Viewer {
                 }
             }
 
+            
+            // Activate the layers panel for controlling visibility. This code might have to be moved elsewhere. 
+            LayersPanel layersPanel = SessionMgr.getBrowser().getLayersPanel();
+            layersPanel.showEntities(alignmentBoard.getOrderedChildren());
+            SessionMgr.getBrowser().selectRightPanel(layersPanel);
+            
+            
             SimpleWorker loadWorker = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {

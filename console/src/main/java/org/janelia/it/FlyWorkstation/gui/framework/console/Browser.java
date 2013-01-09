@@ -15,7 +15,6 @@ import java.util.List;
 
 import javax.swing.*;
 
-import com.google.common.collect.ComparisonChain;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.LoadRequestStatusObserverAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestState;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestStatus;
@@ -38,6 +37,8 @@ import org.janelia.it.FlyWorkstation.shared.util.PrintableImage;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ComparisonChain;
 
 /**
  * Created by IntelliJ IDEA.
@@ -100,7 +101,12 @@ public class Browser extends JFrame implements Cloneable {
     private SessionOutline sessionOutline;
     private EntityOutline entityOutline;
     private TaskOutline taskOutline;
+
+    private VerticalPanelPicker rightPanel;
     private OntologyOutline ontologyOutline;
+    private LayersPanel layersPanel;
+    private SplitPickingPanel splitPickingPanel;
+        
     private AnnotationSessionPropertyDialog annotationSessionPropertyPanel;
     private RunImportDialog runImportDialog;
     private RunNeuronSeparationDialog runNeuronSeparationDialog;
@@ -303,11 +309,15 @@ public class Browser extends JFrame implements Cloneable {
         if (null == consolePosition) {
             consolePosition = getNewBrowserPosition();
         }
-
-        VerticalPanelPicker rightPanel = new VerticalPanelPicker();
+        
+        layersPanel = new LayersPanel();
+        splitPickingPanel = new SplitPickingPanel();
+        
+        rightPanel = new VerticalPanelPicker();
         rightPanel.addPanel(Icons.getIcon("page.png"), "Ontology", "Displays an ontology for annotation", ontologyOutline);
-        rightPanel.addPanel(Icons.getIcon("page_copy.png"), "Split Picking Tool", "Allows for simulation of flyline crosses", new SplitPickingPanel());
-
+        rightPanel.addPanel(Icons.getIcon("palette.png"), "Layers", "Adjust alignment board layers", layersPanel);
+        rightPanel.addPanel(Icons.getIcon("page_copy.png"), "Split Picking Tool", "Allows for simulation of flyline crosses", splitPickingPanel);
+        
         Component rightComponent = rightPanel;
 
         centerRightHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, viewerManager.getViewerContainer(), rightComponent);
@@ -1258,6 +1268,26 @@ public class Browser extends JFrame implements Cloneable {
     
     public OntologyOutline getOntologyOutline() {
         return ontologyOutline;
+    }
+
+    public void selectRightPanel(JPanel panel) {
+        rightPanel.showPanel(panel);
+    }
+    
+    public LayersPanel getLayersPanel() {
+        return layersPanel;
+    }
+
+    public void setLayersPanel(LayersPanel layersPanel) {
+        this.layersPanel = layersPanel;
+    }
+
+    public SplitPickingPanel getSplitPickingPanel() {
+        return splitPickingPanel;
+    }
+
+    public void setSplitPickingPanel(SplitPickingPanel splitPickingPanel) {
+        this.splitPickingPanel = splitPickingPanel;
     }
 
     public SessionOutline getAnnotationSessionOutline() {
