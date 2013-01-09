@@ -14,9 +14,13 @@ public class VolumeBrickShader extends AbstractShader {
     private static final float[] SHOW_ALL  = new float[] {
         1.0f, 1.0f, 1.0f
     };
+    private static final int VOL_TEX_OFFSET = 0;
+    private static final int MASK_TEX_OFFSET = 1;
 
     private int previousShader = 0;
     private float[] rgb;
+
+    private boolean volumeMaskApplied = false;
 
     @Override
     public String getVertexShader() {
@@ -29,13 +33,18 @@ public class VolumeBrickShader extends AbstractShader {
     }
 
     public void load(GL2 gl) {
-        IntBuffer buffer = IntBuffer.allocate(1);
-        gl.glGetIntegerv(GL2.GL_CURRENT_PROGRAM, buffer);
+        IntBuffer buffer = IntBuffer.allocate( 1 );
+        gl.glGetIntegerv( GL2.GL_CURRENT_PROGRAM, buffer );
         previousShader = buffer.get();
-        gl.glUseProgram( getShaderProgram() );
-        gl.glUniform1i(gl.glGetUniformLocation(getShaderProgram(), "volumeTexture"), 0);
-        pushFilterUniform(gl);
+        int shaderProgram = getShaderProgram();
+        gl.glUseProgram( shaderProgram );
 
+        gl.glUniform1i( gl.glGetUniformLocation( shaderProgram, "volumeTexture" ), VOL_TEX_OFFSET );
+        if ( volumeMaskApplied ) {
+            gl.glUniform1i( gl.glGetUniformLocation( shaderProgram, "maskingTexture" ), MASK_TEX_OFFSET );
+        }
+        pushFilterUniform( gl, shaderProgram );
+        pushMaskUniform( gl, shaderProgram );
 
     }
 
@@ -47,13 +56,28 @@ public class VolumeBrickShader extends AbstractShader {
         this.rgb = rgb;
     }
 
+    /** Calling this implies that all steps for setting up this special texture have been carried out. */
+    public void setVolumeMaskApplied() {
+        volumeMaskApplied = true;
+    }
+
     public void unload(GL2 gl) {
         gl.glUseProgram(previousShader);
     }
 
-    private void pushFilterUniform(GL2 gl) {
+    private void pushMaskUniform(GL2 gl, int shaderProgram) {
+        // Need to push uniform for masking parameter.
+        int hasMaskLoc = gl.glGetUniformLocation(shaderProgram, "hasMaskingTexture");
+        if ( hasMaskLoc == -1 ) {
+            throw new RuntimeException( "Failed to find masking texture flag location." );
+        }
+        gl.glUniform1i( hasMaskLoc, 0 );  // Always false at this point.
+
+    }
+
+    private void pushFilterUniform(GL2 gl, int shaderProgram) {
         // Need to push uniform for the filtering parameter.
-        int colorMaskLocation = gl.glGetUniformLocation(getShaderProgram(), "colorMask");
+        int colorMaskLocation = gl.glGetUniformLocation(shaderProgram, "colorMask");
         if ( colorMaskLocation == -1 ) {
             throw new RuntimeException( "Failed to find color mask uniform location." );
         }
@@ -73,6 +97,7 @@ public class VolumeBrickShader extends AbstractShader {
                 localrgb[2],
                 1.0f
         );
+
     }
 
 }

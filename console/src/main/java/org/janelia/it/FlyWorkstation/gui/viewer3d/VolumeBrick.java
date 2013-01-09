@@ -1,6 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.util.gl2.GLUT;
 import javax.media.opengl.GL2;
@@ -12,7 +15,9 @@ import javax.media.opengl.GL2;
  */
 public class VolumeBrick implements GLActor 
 {
-	public enum RenderMethod {MAXIMUM_INTENSITY, ALPHA_BLENDING};
+    private static final int MASKING_TEXTURE_OFFSET = 1;  // After the last primary object offset.
+
+    public enum RenderMethod {MAXIMUM_INTENSITY, ALPHA_BLENDING};
 	public enum TextureColorSpace {
 		COLOR_SPACE_LINEAR, // R,G,B values are proportional to photons collected
 		COLOR_SPACE_SRGB // R,G,B values are already gamma corrected for display on computer monitors
@@ -49,10 +54,12 @@ public class VolumeBrick implements GLActor
     // OpenGL state
     private int[] textureVoxels = {8,8,8};
 	IntBuffer data = Buffers.newDirectIntBuffer(textureVoxels[0]*textureVoxels[1]*textureVoxels[2]);
-    private int textureId = 0;
-    private boolean bTextureNeedsUpload = false;
+    private int mainObjectTextureId = 0;
+    private boolean bMainObjectTextureNeedsUpload = false;
 
     private VolumeBrickShader volumeBrickShader = new VolumeBrickShader();
+
+    private List<MaskingDataBean> maskingDataBeans;
 
     private MipRenderer renderer; // circular reference...
     private boolean bIsInitialized;
@@ -82,41 +89,21 @@ public class VolumeBrick implements GLActor
 
 	@Override
 	public void init(GL2 gl) {
+        if (bUseSyntheticData) {
+            createSyntheticData();
+        }
+
 		gl.glPushAttrib(GL2.GL_TEXTURE_BIT | GL2.GL_ENABLE_BIT);
 		int[] textureIds = {0};
 		gl.glGenTextures(1, textureIds, 0);
-		textureId = textureIds[0];
-		if (bUseSyntheticData) {
-			// Clear texture data
-			data.rewind();
-			while (data.hasRemaining()) {
-				data.put(0x00000000);
-			}
-			// Create simple synthetic image for testing.
-			// 0xAARRGGBB
-			/*
-			setVoxelColor(0,0,0, 0x11ff0000); // ghostly red
-			setVoxelColor(0,0,1, 0x4400ff00);
-			setVoxelColor(0,0,2, 0x770000ff);
-			setVoxelColor(0,1,0, 0xaaff0000);
-			setVoxelColor(0,1,1, 0xdd00ff00);
-			setVoxelColor(0,1,2, 0xff0000ff); // opaque blue
-			 */
-			// TESTING PREMULTIPLIED ALPHA
-			setVoxelColor(0,0,0, 0x11110000); // ghostly red
-			setVoxelColor(0,0,1, 0x44004400);
-			setVoxelColor(0,0,2, 0x77000077);
-			setVoxelColor(0,1,0, 0xaaaa0000);
-			setVoxelColor(0,1,1, 0xdd00dd00);
-			setVoxelColor(0,1,2, 0xff0000ff); // opaque blue
-			bTextureNeedsUpload = true;
-		}
-		if (bTextureNeedsUpload)
+		mainObjectTextureId = textureIds[0];
+
+		if (bMainObjectTextureNeedsUpload) {
 			uploadTexture(gl);
+        }
 		if (bUseShader) {
             try {
                 volumeBrickShader.init(gl);
-                //textureMaskingShader.init(gl);
             } catch ( Exception ex ) {
                 ex.printStackTrace();
                 bUseShader = false;
@@ -127,12 +114,14 @@ public class VolumeBrick implements GLActor
 		bIsInitialized = true;
 	}
 
-	@Override
+    @Override
 	public void display(GL2 gl) {
 		if (! bIsInitialized)
 			init(gl);
-		if (bTextureNeedsUpload)
+		if (bMainObjectTextureNeedsUpload)
 			uploadTexture(gl);
+        uploadMaskingTextures(gl);
+
 		// debugging objects showing useful boundaries of what we want to render
 		gl.glColor3d(1,1,1);
 		// displayVoxelCenterBox(gl);
@@ -144,12 +133,8 @@ public class VolumeBrick implements GLActor
         gl.glDisable(GL2.GL_LIGHTING);
         gl.glEnable(GL2.GL_TEXTURE_3D);
 
-        gl.glBindTexture(GL2.GL_TEXTURE_3D, textureId);
-        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MIN_FILTER, interpolationMethod);
-        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MAG_FILTER, interpolationMethod);
-        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_R, GL2.GL_CLAMP_TO_BORDER);
-        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_S, GL2.GL_CLAMP_TO_BORDER);
-        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_T, GL2.GL_CLAMP_TO_BORDER);
+        setupTexture(gl, mainObjectTextureId);
+        setupMaskingTextures(gl);
 
         // set blending to enable transparent voxels
         if (renderMethod == RenderMethod.ALPHA_BLENDING) {
@@ -167,18 +152,16 @@ public class VolumeBrick implements GLActor
         if (bUseShader) {
             volumeBrickShader.setColorMask(colorMask);
             volumeBrickShader.load(gl);
-            //textureMaskingShader.load(gl);
         }
 
         displayVolumeSlices(gl);
 		if (bUseShader) {
-            //textureMaskingShader.unload(gl);
             volumeBrickShader.unload(gl);
         }
 		gl.glPopAttrib();
 	}
-	
-	// Debugging object with corners at the center of
+
+    // Debugging object with corners at the center of
 	// the corner voxels of this volume.
 	public void displayVoxelCenterBox(GL2 gl) {
 		gl.glPushMatrix();
@@ -292,12 +275,13 @@ public class VolumeBrick implements GLActor
 
 	@Override
 	public void dispose(GL2 gl) {
-		int[] textureIds = {textureId};
+		int[] textureIds = {mainObjectTextureId};
 		gl.glDeleteTextures(1, textureIds, 0);
 		// Retarded JOGL GLJPanel frequently reallocates the GL context
 		// during resize. So we need to be ready to reinitialize everything.
-		textureId = 0;
-		bTextureNeedsUpload = true;
+		mainObjectTextureId = 0;
+		bMainObjectTextureNeedsUpload = true;
+        resetMaskingTextures();
 		bIsInitialized = false;
 	}
 
@@ -311,25 +295,11 @@ public class VolumeBrick implements GLActor
 		result.include(half);
 		return result;
 	}
-	
-	private void printPoints(double[] p1, double[] p2, double[] p3, double[] p4) {
-		printPoint(p1);
-		printPoint(p2);
-		printPoint(p3);
-		printPoint(p4);
-	}
 
-    private void printPoint(double[] p) {
-        System.out.println(
-                new Double(p[0]).toString() + ", " +
-                        new Double(p[1]).toString() + ", " +
-                        new Double(p[2]).toString());
-	}
-	
 	public void setTextureColorSpace(TextureColorSpace colorSpace) {
 		if (colorSpace != textureColorSpace) {
 			textureColorSpace = colorSpace;
-			bTextureNeedsUpload = true;
+			bMainObjectTextureNeedsUpload = true;
 		}
 	}
 	
@@ -386,7 +356,7 @@ public class VolumeBrick implements GLActor
 			// data.put(i, 0xffffffff);
 		}
 		*/
-		bTextureNeedsUpload = true;
+		bMainObjectTextureNeedsUpload = true;
 		bUseSyntheticData = false;
 	}
 	
@@ -394,7 +364,7 @@ public class VolumeBrick implements GLActor
 	{
 		textureVoxels = new int[]{sx, sy, sz};
 		data = rgbaBuffer;
-		bTextureNeedsUpload = true;
+		bMainObjectTextureNeedsUpload = true;
 		bUseSyntheticData = false;
 	}
 	
@@ -403,7 +373,18 @@ public class VolumeBrick implements GLActor
 		setVolumeData(sx, sy, sz, Buffers.newDirectIntBuffer(intArray));
 	}
 
-	public void setVolumeMicrometers(double x, double y, double z) {
+    public void addMaskingData(int sx, int sy, int sz, int[] intArray)
+    {
+        IntBuffer maskData = Buffers.newDirectIntBuffer(intArray);
+        // Prepare for upload on next draw.
+        MaskingDataBean bean = new MaskingDataBean( maskData, sx, sy, sz );
+        if ( maskingDataBeans == null ) {
+            maskingDataBeans = new ArrayList<MaskingDataBean>();
+        }
+        maskingDataBeans.add( bean );
+    }
+
+    public void setVolumeMicrometers(double x, double y, double z) {
 		volumeMicrometers[0] = x;
 		volumeMicrometers[1] = y;
 		volumeMicrometers[2] = z;
@@ -423,7 +404,7 @@ public class VolumeBrick implements GLActor
 
     /** Call this when the brick is to be re-shown after an absense. */
     public void refresh() {
-        bTextureNeedsUpload = true;
+        bMainObjectTextureNeedsUpload = true;
     }
 	
 	private double[] textureCoordinateFromXyz(double[] xyz) {
@@ -439,28 +420,159 @@ public class VolumeBrick implements GLActor
 
 		return tc;
 	}
-	
-	private void uploadTexture(GL2 gl) {
+
+    private void createSyntheticData() {
+        // Clear texture data
+        data.rewind();
+        while (data.hasRemaining()) {
+            data.put(0x00000000);
+        }
+        // Create simple synthetic image for testing.
+        // 0xAARRGGBB
+			/*
+			setVoxelColor(0,0,0, 0x11ff0000); // ghostly red
+			setVoxelColor(0,0,1, 0x4400ff00);
+			setVoxelColor(0,0,2, 0x770000ff);
+			setVoxelColor(0,1,0, 0xaaff0000);
+			setVoxelColor(0,1,1, 0xdd00ff00);
+			setVoxelColor(0,1,2, 0xff0000ff); // opaque blue
+			 */
+        // TESTING PREMULTIPLIED ALPHA
+        setVoxelColor(0,0,0, 0x11110000); // ghostly red
+        setVoxelColor(0,0,1, 0x44004400);
+        setVoxelColor(0,0,2, 0x77000077);
+        setVoxelColor(0,1,0, 0xaaaa0000);
+        setVoxelColor(0,1,1, 0xdd00dd00);
+        setVoxelColor(0, 1, 2, 0xff0000ff); // opaque blue
+        bMainObjectTextureNeedsUpload = true;
+    }
+
+    /** Uploading the primary object texture. */
+    private void uploadTexture(GL2 gl) {
+        uploadTexture(gl, mainObjectTextureId, textureVoxels[0], textureVoxels[1], textureVoxels[2], data);
+        bMainObjectTextureNeedsUpload = false;
+    }
+
+    /** Uploading any texture. */
+    private void uploadTexture(GL2 gl, int textureId, int sx, int sy, int sz, IntBuffer data) {
         gl.glEnable(GL2.GL_TEXTURE_3D);
         gl.glBindTexture(GL2.GL_TEXTURE_3D, textureId);
 		gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_REPLACE);
-		int sx = textureVoxels[0];
-		int sy = textureVoxels[1];
-		int sz = textureVoxels[2];
 		int internalFormat = GL2.GL_RGBA8;
 		if (textureColorSpace == TextureColorSpace.COLOR_SPACE_SRGB)
 			internalFormat = GL2.GL_SRGB8_ALPHA8;
-		gl.glTexImage3D(GL2.GL_TEXTURE_3D, 
-				0, // mipmap level
-				internalFormat, // bytes per pixel, plus somehow srgb info
-				sx, // width 
-				sy, // height
-				sz, // depth
-				0, // border 
-				GL2.GL_BGRA, // voxel component order
-				GL2.GL_UNSIGNED_INT_8_8_8_8_REV, // voxel component type
-				data.rewind());
+		gl.glTexImage3D(GL2.GL_TEXTURE_3D,
+                0, // mipmap level
+                internalFormat, // bytes per pixel, plus somehow srgb info
+                sx, // width
+                sy, // height
+                sz, // depth
+                0, // border
+                GL2.GL_BGRA, // voxel component order
+                GL2.GL_UNSIGNED_INT_8_8_8_8_REV, // voxel component type
+                data.rewind()
+        );
 
-        bTextureNeedsUpload = false;
 	}
+
+    private void resetMaskingTextures() {
+        if ( maskingDataBeans != null ) {
+            for ( MaskingDataBean bean: maskingDataBeans ) {
+                bean.setLoaded( false );
+            }
+        }
+    }
+
+    /** Upload all masking textures which require it. */
+    private void uploadMaskingTextures(GL2 gl) {
+        if ( maskingDataBeans != null ) {
+            int nextMaskOffset = VolumeBrick.MASKING_TEXTURE_OFFSET;
+            for (MaskingDataBean bean: maskingDataBeans) {
+                if (! bean.isLoaded()) {
+                    uploadTexture(gl, nextMaskOffset++, bean.getSx(), bean.getSy(), bean.getSz(), bean.getMaskData());
+                    bean.setLoaded(true);
+                }
+            }
+        }
+    }
+
+    private void setupMaskingTextures(GL2 gl) {
+        if ( maskingDataBeans != null ) {
+            int nextTextureId = MASKING_TEXTURE_OFFSET;
+            for (MaskingDataBean bean: maskingDataBeans) {
+                setupTexture(gl, nextTextureId++);
+            }
+        }
+    }
+
+    private void setupTexture(GL2 gl, int textureId) {
+        gl.glActiveTexture(textureId);
+        gl.glBindTexture(GL2.GL_TEXTURE_3D, textureId);
+        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MIN_FILTER, interpolationMethod);
+        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MAG_FILTER, interpolationMethod);
+        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_R, GL2.GL_CLAMP_TO_BORDER);
+        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_S, GL2.GL_CLAMP_TO_BORDER);
+        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_T, GL2.GL_CLAMP_TO_BORDER);
+    }
+
+    private void printPoints(double[] p1, double[] p2, double[] p3, double[] p4) {
+        printPoint(p1);
+        printPoint(p2);
+        printPoint(p3);
+        printPoint(p4);
+    }
+
+    private void printPoint(double[] p) {
+        System.out.println(
+                new Double(p[0]).toString() + ", " +
+                        new Double(p[1]).toString() + ", " +
+                        new Double(p[2]).toString());
+    }
+
+    /**
+     * All info representing a texture for masking.  Note that the texture offset for this is not known,
+     * because masks like this can be switched on and off, changing their offsets at runtime.
+     */
+    private static class MaskingDataBean {
+        private IntBuffer maskData;
+        private int sx;
+        private int sy;
+        private int sz;
+
+        private boolean loaded;
+
+        public MaskingDataBean(IntBuffer maskData, int sx, int sy, int sz) {
+            this.maskData = maskData;
+            this.sx = sx;
+            this.sy = sy;
+            this.sz = sz;
+            this.loaded = false; // Emphasis.
+        }
+
+        public IntBuffer getMaskData() {
+            return maskData;
+        }
+
+        public int getSx() {
+            return sx;
+        }
+
+        public int getSy() {
+            return sy;
+        }
+
+        public int getSz() {
+            return sz;
+        }
+
+        public boolean isLoaded() {
+            return loaded;
+        }
+
+        public void setLoaded(boolean loaded) {
+            this.loaded = loaded;
+        }
+
+    }
+
 }
