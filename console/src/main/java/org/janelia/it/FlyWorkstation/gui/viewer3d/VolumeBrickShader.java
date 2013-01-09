@@ -7,9 +7,9 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d;
 import javax.media.opengl.GL2;
 import java.nio.IntBuffer;
 
-public class ColorFilterShader extends AbstractShader {
-    public static final String VERTEX_SHADER = "shaders/ColorFilterVtx.glsl";
-    public static final String FRAGMENT_SHADER = "shaders/ColorFilterFrg.glsl";
+public class VolumeBrickShader extends AbstractShader {
+    public static final String VERTEX_SHADER = "shaders/VolumeBrickVtx.glsl";
+    public static final String FRAGMENT_SHADER = "shaders/VolumeBrickFrg.glsl";
 
     private static final float[] SHOW_ALL  = new float[] {
         1.0f, 1.0f, 1.0f

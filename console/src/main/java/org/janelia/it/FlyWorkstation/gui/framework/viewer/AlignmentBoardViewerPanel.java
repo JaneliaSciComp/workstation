@@ -16,6 +16,8 @@ import java.awt.*;
  * Time: 4:30 PM
  *
  * This panel holds all alignment board viewers.
+ * @todo remove this class prior to next release.
+ * @deprecated this was only for making multiple tabs of alignment boards.
  */
 public class AlignmentBoardViewerPanel extends JPanel {
     private static final AlignmentBoardViewerPanel s_abvp = new AlignmentBoardViewerPanel();

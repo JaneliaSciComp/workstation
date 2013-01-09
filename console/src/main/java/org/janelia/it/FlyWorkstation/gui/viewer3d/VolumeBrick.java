@@ -51,8 +51,9 @@ public class VolumeBrick implements GLActor
 	IntBuffer data = Buffers.newDirectIntBuffer(textureVoxels[0]*textureVoxels[1]*textureVoxels[2]);
     private int textureId = 0;
     private boolean bTextureNeedsUpload = false;
-    //private VoxelRayShader shader = new VoxelRayShader();
-    private ColorFilterShader shader = new ColorFilterShader();
+
+    private VolumeBrickShader volumeBrickShader = new VolumeBrickShader();
+
     private MipRenderer renderer; // circular reference...
     private boolean bIsInitialized;
     private boolean bUseSyntheticData = false;
@@ -114,7 +115,8 @@ public class VolumeBrick implements GLActor
 			uploadTexture(gl);
 		if (bUseShader) {
             try {
-                shader.init(gl);
+                volumeBrickShader.init(gl);
+                //textureMaskingShader.init(gl);
             } catch ( Exception ex ) {
                 ex.printStackTrace();
                 bUseShader = false;
@@ -163,13 +165,15 @@ public class VolumeBrick implements GLActor
             // gl.glBlendFunc(GL2.GL_ONE_MINUS_DST_COLOR, GL2.GL_ZERO); // inverted?  http://stackoverflow.com/questions/2656905/opengl-invert-framebuffer-pixels
         }
         if (bUseShader) {
-            shader.setColorMask( colorMask );
-            shader.load(gl);
+            volumeBrickShader.setColorMask(colorMask);
+            volumeBrickShader.load(gl);
+            //textureMaskingShader.load(gl);
         }
 
         displayVolumeSlices(gl);
 		if (bUseShader) {
-            shader.unload(gl);
+            //textureMaskingShader.unload(gl);
+            volumeBrickShader.unload(gl);
         }
 		gl.glPopAttrib();
 	}

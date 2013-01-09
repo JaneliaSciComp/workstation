@@ -225,7 +225,6 @@ public class AlignmentBoardViewer extends Viewer {
     //------------------------------Inner Classes
     /** Listens for changes to the child-set of the heard-entity. */
     public static class ModelMgrListener extends ModelMgrAdapter {
-        //todo consider making only one such listener at the panel, with a mapping between entities and boards.
         private Entity heardEntity;
         private AlignmentBoardViewer viewer;
         ModelMgrListener( AlignmentBoardViewer viewer, Entity e ) {

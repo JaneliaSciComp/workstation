@@ -29,46 +29,48 @@ public abstract class AbstractShader
 
     public void init(GL2 gl) throws ShaderCreationException {
         // Create shader program
-        vertexShader = gl.glCreateShader(GL2.GL_VERTEX_SHADER);
-        loadOneShader(vertexShader, getVertexShader(), gl);
+        if ( getVertexShader() != null ) {
+            vertexShader = gl.glCreateShader(GL2.GL_VERTEX_SHADER);
+            loadOneShader(vertexShader, getVertexShader(), gl);
 
-        // System.out.println("loaded vertex shader");
-        fragmentShader = gl.glCreateShader(GL2.GL_FRAGMENT_SHADER);
-        loadOneShader(fragmentShader, getFragmentShader(), gl);
+            // System.out.println("loaded vertex shader");
+            fragmentShader = gl.glCreateShader(GL2.GL_FRAGMENT_SHADER);
+            loadOneShader(fragmentShader, getFragmentShader(), gl);
 
-        // System.out.println("loaded fragment shader");
-        setShaderProgram(gl.glCreateProgram());
-        gl.glAttachShader(getShaderProgram(), vertexShader);
-        gl.glAttachShader(getShaderProgram(), fragmentShader);
-        gl.glLinkProgram(getShaderProgram());
-        gl.glValidateProgram(getShaderProgram());
-        IntBuffer intBuffer = IntBuffer.allocate(1);
-        gl.glGetProgramiv(getShaderProgram(), GL2.GL_LINK_STATUS, intBuffer);
-        if (intBuffer.get(0) != 1) {
-            gl.glGetProgramiv(getShaderProgram(), GL2.GL_INFO_LOG_LENGTH, intBuffer);
-            int size = intBuffer.get(0);
-            StringBuilder errBuilder = new StringBuilder();
-            errBuilder.append("Problem with fragment shader ")
-                    .append(fragmentShader)
-                    .append(", program link error: ")
-                    .append(LINE_ENDING);
-            if (size > 0) {
-                ByteBuffer byteBuffer = ByteBuffer.allocate(size);
-                gl.glGetProgramInfoLog(getShaderProgram(), size, intBuffer, byteBuffer);
-                for (byte b : byteBuffer.array()) {
-                    errBuilder.append((char) b);
-                }
-            } else {
-                errBuilder.append("Unknown")
+            // System.out.println("loaded fragment shader");
+            setShaderProgram(gl.glCreateProgram());
+            gl.glAttachShader(getShaderProgram(), vertexShader);
+            gl.glAttachShader(getShaderProgram(), fragmentShader);
+            gl.glLinkProgram(getShaderProgram());
+            gl.glValidateProgram(getShaderProgram());
+            IntBuffer intBuffer = IntBuffer.allocate(1);
+            gl.glGetProgramiv(getShaderProgram(), GL2.GL_LINK_STATUS, intBuffer);
+            if (intBuffer.get(0) != 1) {
+                gl.glGetProgramiv(getShaderProgram(), GL2.GL_INFO_LOG_LENGTH, intBuffer);
+                int size = intBuffer.get(0);
+                StringBuilder errBuilder = new StringBuilder();
+                errBuilder.append("Problem with fragment shader ")
+                        .append(fragmentShader)
+                        .append(", program link error: ")
                         .append(LINE_ENDING);
-            }
-            throw new ShaderCreationException( errBuilder.toString() );
+                if (size > 0) {
+                    ByteBuffer byteBuffer = ByteBuffer.allocate(size);
+                    gl.glGetProgramInfoLog(getShaderProgram(), size, intBuffer, byteBuffer);
+                    for (byte b : byteBuffer.array()) {
+                        errBuilder.append((char) b);
+                    }
+                } else {
+                    errBuilder.append("Unknown")
+                            .append(LINE_ENDING);
+                }
+                throw new ShaderCreationException( errBuilder.toString() );
 
+            }
         }
     }
 
-	private void loadOneShader(int shaderId, String resourceName, GL2 gl) throws ShaderCreationException {
-		try {
+    private void loadOneShader(int shaderId, String resourceName, GL2 gl) throws ShaderCreationException {
+        try {
             InputStream resourceStream = getClass().getResourceAsStream(
                     resourceName
             );
@@ -76,7 +78,7 @@ public abstract class AbstractShader
                 throw new Exception( "Unable to open resource " + resourceName );
             }
 
-			BufferedReader reader = new BufferedReader(
+            BufferedReader reader = new BufferedReader(
 					new InputStreamReader( resourceStream )
             );
 			StringBuffer stringBuffer = new StringBuffer();
@@ -86,7 +88,7 @@ public abstract class AbstractShader
 				stringBuffer.append("\n");
 			}
 			String progString = stringBuffer.toString();
-			// System.out.println(progString);
+            //System.out.println("Shader contents: " + progString);
 			gl.glShaderSource(shaderId, 1, new String[]{progString}, (int[])null, 0);
 			gl.glCompileShader(shaderId);
 			
