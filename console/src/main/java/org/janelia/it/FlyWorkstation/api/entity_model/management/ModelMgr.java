@@ -858,12 +858,12 @@ public class ModelMgr {
     	return FacadeManager.getFacadeManager().getSolrFacade().getFlyLightVocabulary();
     }
 
-    public boolean loginUser() throws Exception {
-        boolean c = FacadeManager.getFacadeManager().getComputeFacade().loginUser();
-        if (c) {
+    public User loginUser() throws Exception {
+        User loggedInUser = FacadeManager.getFacadeManager().getComputeFacade().loginUser();
+        if (null!=loggedInUser) {
         	FacadeManager.getFacadeManager().getComputeFacade().beginSession();
         }
-        return c;
+        return loggedInUser;
     }
     
     public void logoutUser(String username) throws Exception {

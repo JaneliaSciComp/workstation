@@ -1,15 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.session_mgr;
 
-import java.awt.Component;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
-import java.io.*;
-import java.text.ParseException;
-import java.util.*;
-
-import javax.swing.*;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
@@ -29,6 +19,16 @@ import org.janelia.it.jacs.model.user_data.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.io.*;
+import java.text.ParseException;
+import java.util.*;
+import java.util.List;
+
 
 public class SessionMgr {
 
@@ -43,6 +43,7 @@ public class SessionMgr {
     public static String USER_PASSWORD = LoginProperties.SERVER_LOGIN_PASSWORD;
     public static String USER_EMAIL = "UserEmail";
     public static String CACHE_SIZE_PROPERTY = "SessionMgr.CacheSize";
+    public static String RUN_AS_USER = "RunAs";
 
     public static String DISPLAY_LOOK_AND_FEEL = "SessionMgr.JavaLookAndFeel";
 
@@ -72,6 +73,7 @@ public class SessionMgr {
     private boolean isLoggedIn;
     private String loggedInSubjectName;
     private User loggedInUser;
+    private User authenticatedUser;
     
     private SessionMgr() {
     	
@@ -574,7 +576,8 @@ public class SessionMgr {
         		logoutUser();
         		ModelMgr.getModelMgr().invalidateCache();
         	}
-            isLoggedIn =  ModelMgr.getModelMgr().loginUser();
+            authenticatedUser =  ModelMgr.getModelMgr().loginUser();
+            if (null!=authenticatedUser) { isLoggedIn = true; }
             loggedInSubjectName = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
             loggedInUser = ModelMgr.getModelMgr().getUser();
             return isLoggedIn;
@@ -592,6 +595,7 @@ public class SessionMgr {
     		isLoggedIn = false;
         	loggedInSubjectName = null;
         	loggedInUser = null;
+            authenticatedUser = null;
     	}
     	catch (Exception ex) {
     		ex.printStackTrace();
@@ -606,6 +610,10 @@ public class SessionMgr {
         return prefsDir;
     }
 
+    public User getAuthenticatedUser() {
+        return authenticatedUser;
+    }
+
     class MyBrowserListener extends WindowAdapter {
         public void windowClosed(WindowEvent e) {
         	e.getWindow().removeWindowListener(this);
@@ -617,17 +625,27 @@ public class SessionMgr {
         }
     }
 
-    public static boolean currentUserIsInGroup(String groupName) {
-    	User user = SessionMgr.getSessionMgr().getUser();
-    	for(SubjectRelationship relation : user.getGroupRelationships()) {
-    		if (relation.getGroup().getName().equals(groupName)) {
-    			return true;
-    		}
-    	}
-    	return false;
+    public static boolean authenticatedUserIsInGroup(String groupName) {
+        User user = SessionMgr.getSessionMgr().getAuthenticatedUser();
+        return isUserInGroup(user, groupName);
     }
 
-	public static List<String> getSubjectKeys() {
+    public static boolean currentUserIsInGroup(String groupName) {
+    	User user = SessionMgr.getSessionMgr().getUser();
+        return isUserInGroup(user, groupName);
+    }
+
+	private static boolean isUserInGroup(User targetUser, String targetGroup) {
+        if (null==targetUser) return false;
+        for(SubjectRelationship relation : targetUser.getGroupRelationships()) {
+            if (relation.getGroup().getName().equals(targetGroup)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static List<String> getSubjectKeys() {
 		List<String> subjectKeys = new ArrayList<String>();
     	User user = SessionMgr.getSessionMgr().getUser();
     	subjectKeys.add(user.getKey());
@@ -640,7 +658,10 @@ public class SessionMgr {
     public static String getSubjectKey() {
         try {
             String username = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
-            if (username.startsWith("admin-")) username = username.replaceFirst("admin-", "");
+            if (null!=SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER) &&
+                !"".equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER))) {
+                username = "user:" + SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER);
+            }
             if (!username.contains(":")) {
             	username = "user:"+username;
             }
@@ -654,7 +675,10 @@ public class SessionMgr {
     public static String getUsername() {
         try {
             String username = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
-            if (username.startsWith("admin-")) username = username.replaceFirst("admin-", "");
+            if (null!=SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER) &&
+                    !"".equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER))) {
+                username = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER);
+            }
             return username;
         }
         catch (Exception e) {

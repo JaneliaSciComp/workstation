@@ -26,9 +26,9 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
     private String userLogin = "";
     private String userPassword = "";
     private String userEmail = "";
+    private String runAsUser = "";
     private Integer cacheSize;
     private boolean settingsChanged = false;
-    private JFrame parentFrame;
     JLabel requiredField = new JLabel("* indicates a required field");
 
     JPanel loginPanel = new JPanel();
@@ -37,6 +37,9 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
     JLabel passwordLabel = new JLabel("* Password:");
     JLabel loginLabel = new JLabel("* User Name:");
     JTextField loginTextField = new StandardTextField();
+    JPanel runAsPanel = new JPanel();
+    JLabel runAsLabel = new JLabel("Run As User:");
+    JTextField runAsTextField = new StandardTextField();
 
     JPanel emailPanel = new JPanel();
     TitledBorder emailBorder;
@@ -69,16 +72,17 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
     private static final int MAX_DIR_LENGTH = 60;
 
     public DataSourceSettingsPanel(JFrame parentFrame) {
-        this.parentFrame = parentFrame;
         try {
             userLogin = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
-            if (userLogin == null) userLogin = "";
+            if (userLogin == null) {userLogin = "";}
             userPassword = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_PASSWORD);
-            if (userPassword == null) userPassword = "";
+            if (userPassword == null) {userPassword = "";}
             userEmail = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL);
-            if (userEmail == null) userEmail = "";
+            if (userEmail == null) {userEmail = "";}
             cacheSize = SessionMgr.getCacheSize();
-            if (null==cacheSize) cacheSize = ConsoleProperties.getInt(SessionMgr.CACHE_SIZE_PROPERTY);
+            if (null==cacheSize) {cacheSize = ConsoleProperties.getInt(SessionMgr.CACHE_SIZE_PROPERTY);}
+            runAsUser = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER);
+            if (null == runAsUser) {runAsUser="";}
             jbInit();
         }
         catch (Exception ex) {
@@ -107,6 +111,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
             PropertyConfigurator.getProperties().setProperty(SessionMgr.USER_NAME, "NoUserLogin");
             PropertyConfigurator.getProperties().setProperty(SessionMgr.USER_PASSWORD, "NoUserPassword");
             PropertyConfigurator.getProperties().setProperty(SessionMgr.USER_EMAIL, "NoUserEmail");
+            PropertyConfigurator.getProperties().setProperty(SessionMgr.RUN_AS_USER, "NoRunAsUser");
         }
         settingsChanged = false;
     }
@@ -115,7 +120,8 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         // If not equal to original values, they have changed.
         if (!userLogin.equals(loginTextField.getText().trim()) ||
             !userPassword.equals(new String(passwordTextField.getPassword())) ||
-            !userEmail.equals(new String(emailTextField.getText().trim())) ||
+            !userEmail.equals(emailTextField.getText().trim()) ||
+            !runAsUser.equals(runAsTextField.getText().trim()) ||
             !cacheSize.equals(diskCacheSlider.getValue()))
             settingsChanged = true;
         return settingsChanged;
@@ -126,25 +132,34 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
      * pressed in the Controller frame.
      */
     public String[] applyChanges() {
-        List delayedChanges = new ArrayList();
+        ArrayList delayedChanges = new ArrayList();
         userLogin = loginTextField.getText().trim();
         userPassword = new String(passwordTextField.getPassword());
         userEmail = emailTextField.getText().trim();
+        runAsUser = runAsTextField.getText().trim();
         cacheSize = diskCacheSlider.getValue();
 
         if ((!userLogin.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME))) ||
             (!userPassword.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_PASSWORD))) ||
             (!userEmail.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL))) ||
+            (!runAsUser.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER))) ||
             (!cacheSize.equals(SessionMgr.getCacheSize()))) {
+            // If the login has changed then wipe out the runAs field and value.
+            if ((!userLogin.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME)))) {
+                runAsTextField.setText("");
+                runAsUser="";
+            }
+            SessionMgr.getSessionMgr().logoutUser();
+            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.RUN_AS_USER, runAsUser);
             SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, userLogin);
             SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_PASSWORD, userPassword);
             SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_EMAIL, userEmail);
             SessionMgr.getSessionMgr().setModelProperty(SessionMgr.CACHE_SIZE_PROPERTY, cacheSize);
             boolean loginSuccess = SessionMgr.getSessionMgr().loginUser();
-            if (!loginSuccess) {
-
+            if (loginSuccess) {
+                runAsPanel.setVisible(SessionMgr.authenticatedUserIsInGroup("admin"));
             }
-            
+
             // End login apply code
 
             // Begin Datasource directory selection apply code
@@ -242,6 +257,15 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         loginPanel.add(Box.createVerticalStrut(10));
         loginPanel.add(userPassPanel);
         loginPanel.add(Box.createVerticalStrut(10));
+        if (SessionMgr.authenticatedUserIsInGroup("admin")) {
+            runAsTextField = new StandardTextField(runAsUser, 40);
+            runAsPanel.setLayout(new BoxLayout(runAsPanel, BoxLayout.X_AXIS));
+            runAsPanel.add(runAsLabel);
+            runAsPanel.add(Box.createHorizontalStrut(10));
+            runAsPanel.add(runAsTextField);
+            loginPanel.add(runAsPanel);
+            loginPanel.add(Box.createVerticalStrut(10));
+        }
 
         emailBorder = new TitledBorder("Email Address");
         emailPanel.setBorder(emailBorder);
@@ -261,8 +285,8 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         diskCachePanel.setBorder(diskCacheBorder);
         diskCachePanel.setLayout(new BoxLayout(diskCachePanel, BoxLayout.X_AXIS));
         diskCachePanel.setMaximumSize(new Dimension(600, 50));
-        diskCacheSlider.setMajorTickSpacing(100);
-        diskCacheSlider.setMinorTickSpacing(50);
+        diskCacheSlider.setMajorTickSpacing(200);
+        diskCacheSlider.setMinorTickSpacing(100);
         diskCacheSlider.setPaintTicks(true);
         diskCacheSlider.setPaintLabels(true);
         diskCacheSlider.setSnapToTicks(true);

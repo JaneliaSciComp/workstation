@@ -1,10 +1,10 @@
 package org.janelia.it.FlyWorkstation.api.facade.abstract_facade;
 
-import java.util.List;
-
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.User;
+
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -40,7 +40,7 @@ public interface ComputeFacade {
 
 	public void stopContinuousExecution(Long taskId) throws Exception;
 
-    public boolean loginUser() throws Exception;
+    public User loginUser() throws Exception;
     
     public void beginSession();
     

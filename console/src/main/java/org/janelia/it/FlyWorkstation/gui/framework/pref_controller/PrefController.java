@@ -273,7 +273,7 @@ public class PrefController {
     private void applyButton_actionPerformed() {
         propagateApplyChanges();
         SessionMgr.getSessionMgr().saveUserSettings();
-        if (!SessionMgr.getSessionMgr().isLoggedIn() || null==SessionMgr.getSessionMgr().getUserEmail()) {
+        if (!SessionMgr.getSessionMgr().isLoggedIn() || null== SessionMgr.getUserEmail()) {
             Object[] options = {"Fix Login", "Exit Program"};
             final int answer = JOptionPane.showOptionDialog(null, "Please correct your login or email information.", "Login Information Invalid",
                     JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
@@ -285,6 +285,7 @@ public class PrefController {
             }
 
         }
+        if (null!=parentFrame) {parentFrame.repaint();}
     }
 
     /**
@@ -293,7 +294,7 @@ public class PrefController {
      */
     private void okButton_actionPerformed() {
         propagateApplyChanges();
-        if (!SessionMgr.getSessionMgr().isLoggedIn() || null==SessionMgr.getSessionMgr().getUserEmail()) {
+        if (!SessionMgr.getSessionMgr().isLoggedIn() || null==SessionMgr.getUserEmail()) {
             Object[] options = {"Fix Login", "Exit Program"};
             final int answer = JOptionPane.showOptionDialog(null, "Please correct your login or email information.", "Login Information Invalid",
                     JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
