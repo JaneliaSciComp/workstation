@@ -1,13 +1,16 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
-import java.awt.*;
+import java.awt.Point;
+import java.awt.Dimension;
 import java.awt.event.*;
+import java.util.List;
 
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLJPanel;
 import javax.swing.*;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +47,7 @@ implements MouseListener, MouseMotionListener, ActionListener,
 	private MipRenderer renderer;
 	public JPopupMenu popupMenu;
     private boolean clearOnLoad = true;
+    private VolumeMaskBuilder volumeMaskBuilder;
 
 	public enum InteractionMode {
 		ROTATE,
@@ -88,15 +92,43 @@ implements MouseListener, MouseMotionListener, ActionListener,
     public void setClearOnLoad(boolean clearOnLoad) {
         this.clearOnLoad = clearOnLoad;
     }
-	
-	public boolean loadVolume(String fileName)
-	{
+
+    /**
+     * Accumulates all data for masking, from the set of files provided, preparing them for
+     * injection into th evolume being loaded.
+     *
+     * @param maskFiles list of all mask files to use against the signal volumes.
+     */
+    public void setMaskFiles(List<String> maskFiles) {
+
+        // Build the masking texture info.
+        VolumeLoader volumeLoader = new VolumeLoader();
+        if (maskFiles != null) {
+            VolumeMaskBuilder builder = new VolumeMaskBuilder();
+            for ( String maskFile: maskFiles ) {
+                volumeLoader.loadVolume( maskFile );
+                builder.beginVolume();
+                volumeLoader.populateVolumeAcceptor(builder);
+                builder.endVolume();
+            }
+            volumeMaskBuilder = builder;
+        }
+
+    }
+
+	public boolean loadVolume(String fileName) {
         if (clearOnLoad)
             renderer.clear();
+
 		VolumeLoader volumeLoader = new VolumeLoader();
 		if (volumeLoader.loadVolume(fileName)) {
 			VolumeBrick brick = new VolumeBrick(renderer);
-			volumeLoader.populateBrick(brick);
+			volumeLoader.populateVolumeAcceptor(brick);
+            if ( volumeMaskBuilder != null ) {
+                Integer[] voxels = volumeMaskBuilder.getVolumeMaskVoxels();
+                brick.setMaskingData( voxels[ 0 ], voxels[ 1 ], voxels[ 2 ], volumeMaskBuilder.getVolumeMaskBuffer() );
+                brick.setMaskTextureColorSpace( volumeMaskBuilder.getTextureColorSpace() );
+            }
 			renderer.addActor(brick);
 			renderer.resetView();
 			return true;
@@ -114,40 +146,39 @@ implements MouseListener, MouseMotionListener, ActionListener,
 	}
 	
 	@Override
-    public void mouseDragged(MouseEvent event)
-    {
-    		Point p1 = event.getPoint();
-    		if (! bMouseIsDragging) {
-    			bMouseIsDragging = true;
-    			previousMousePos = p1;
-    			return;
-    		}
-    		
-    		Point p0 = previousMousePos;
-    		Point dPos = new Point(p1.x-p0.x, p1.y-p0.y);
+    public void mouseDragged(MouseEvent event) {
+        Point p1 = event.getPoint();
+        if (! bMouseIsDragging) {
+            bMouseIsDragging = true;
+            previousMousePos = p1;
+            return;
+        }
 
-    		InteractionMode mode = InteractionMode.ROTATE; // default drag mode is ROTATE
-    		if (event.isMetaDown()) // command-drag to zoom
-    			mode = InteractionMode.ZOOM;
-    		if (SwingUtilities.isMiddleMouseButton(event)) // middle drag to translate
-    			mode = InteractionMode.TRANSLATE;
-    		if (event.isShiftDown()) // shift-drag to translate
-    			mode = InteractionMode.TRANSLATE;
-    		
-    		if (mode == InteractionMode.TRANSLATE) {
-    			renderer.translatePixels(dPos.x, dPos.y, 0);
-    			repaint();
-    		}
-    		else if (mode == InteractionMode.ROTATE) {
-    			renderer.rotatePixels(dPos.x, dPos.y, 0);
-    			repaint();
-    		}
-    		else if (mode == InteractionMode.ZOOM) {
-    			renderer.zoomPixels(p1, p0);
-    			repaint();
-    		}
-    		
-    		previousMousePos = p1;
+        Point p0 = previousMousePos;
+        Point dPos = new Point(p1.x-p0.x, p1.y-p0.y);
+
+        InteractionMode mode = InteractionMode.ROTATE; // default drag mode is ROTATE
+        if (event.isMetaDown()) // command-drag to zoom
+            mode = InteractionMode.ZOOM;
+        if (SwingUtilities.isMiddleMouseButton(event)) // middle drag to translate
+            mode = InteractionMode.TRANSLATE;
+        if (event.isShiftDown()) // shift-drag to translate
+            mode = InteractionMode.TRANSLATE;
+
+        if (mode == InteractionMode.TRANSLATE) {
+            renderer.translatePixels(dPos.x, dPos.y, 0);
+            repaint();
+        }
+        else if (mode == InteractionMode.ROTATE) {
+            renderer.rotatePixels(dPos.x, dPos.y, 0);
+            repaint();
+        }
+        else if (mode == InteractionMode.ZOOM) {
+            renderer.zoomPixels(p1, p0);
+            repaint();
+        }
+
+        previousMousePos = p1;
     }
     
     @Override

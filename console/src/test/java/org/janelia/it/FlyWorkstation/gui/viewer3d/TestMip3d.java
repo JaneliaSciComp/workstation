@@ -34,8 +34,8 @@ public class TestMip3d {
                     //String fn = "/Volumes/flylight/RJ/For Les Foster/B01_T01_20121023_PMB1_MB057B_20X_R1_L01.lsm";
                     //                    String fn = "/Volumes/jacsData/MaskResources/GiantFiber/guide/EPA_R.v3dpbd";
                     //String fn = "/groups/scicomp/jacsData/MaskResources/GiantFiber/guide/LAL_L.v3dpbd";
-                    String fn = "/Volumes/jacsData/filestore/system/Separation/296/418/1778029752666296418/separate/fastload/Reference2_50.mp4";
-                    //String fn = "/Volumes/jacsData/filestore/system/Separation/296/418/1778029752666296418/separate/ConsolidatedLabel.v3dpbd";
+                    //String fn = "/Volumes/jacsData/filestore/system/Separation/296/418/1778029752666296418/separate/fastload/Reference2_50.mp4";
+                    String fn = "/Volumes/jacsData/filestore/system/Separation/296/418/1778029752666296418/separate/ConsolidatedLabel.v3dpbd";
                     if ( ! mipWidget.loadVolume(fn) )
                         System.out.println("Volume load failed.");
                 	// mipWidget.loadVolume("/Users/brunsc/projects/fast_load/test_dir2/fastLoad/ConsolidatedSignal2_25.v3dpbd");

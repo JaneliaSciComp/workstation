@@ -15,7 +15,7 @@ import loci.formats.gui.BufferedImageReader;
 import loci.formats.in.TiffReader;
 import loci.formats.in.ZeissLSMReader;
 import org.apache.commons.io.FilenameUtils;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeBrick.TextureColorSpace;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor.TextureColorSpace;
 
 import java.util.zip.DataFormatException;
 import java.awt.image.BufferedImage;
@@ -28,7 +28,7 @@ public class VolumeLoader
 {
 	private int[] argbIntArray;
 	private int sx, sy, sz;
-	private VolumeBrick.TextureColorSpace colorSpace = 
+	private VolumeBrick.TextureColorSpace colorSpace =
 		VolumeBrick.TextureColorSpace.COLOR_SPACE_LINEAR;
 
 	public boolean loadLociReader(BufferedImageReader in)
@@ -139,7 +139,7 @@ System.out.println("FILENAME: " + fileName);
 			else if (extension.startsWith("MP4")) {
 				loadMpegVideo(fileName);
 				// assume all mpegs are in sRGB color space
-				colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;				
+				colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;
 			}
             else {
                 throw new RuntimeException("Extension type " + extension + " not yet implemented.");
@@ -156,11 +156,11 @@ System.out.println("FILENAME: " + fileName);
 		return false;
 	}
 
-	public void populateBrick(VolumeBrick brick) {
-		brick.setVolumeData(sx, sy, sz, argbIntArray);
-		brick.setTextureColorSpace(colorSpace);
-		brick.setVolumeMicrometers(sx, sy, sz);
-		brick.setVoxelMicrometers(1.0, 1.0, 1.0);
+	public void populateVolumeAcceptor(VolumeDataAcceptor dataAcceptor) {
+		dataAcceptor.setVolumeData(sx, sy, sz, argbIntArray);
+		dataAcceptor.setTextureColorSpace(colorSpace);
+		dataAcceptor.setVolumeMicrometers(sx, sy, sz);
+		dataAcceptor.setVoxelMicrometers(1.0, 1.0, 1.0);
 	}
 	
 	private class VolumeFrameListener 

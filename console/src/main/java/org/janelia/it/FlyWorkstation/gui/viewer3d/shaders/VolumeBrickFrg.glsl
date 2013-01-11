@@ -22,14 +22,11 @@ vec4 volumeMask(vec4 origColor)
 {
     if (hasMaskingTexture > 0)
     {
-        origColor[2] = 1.0; // Blue everywhere.
-     /*
         vec4 maskingColor = texture3D(maskingTexture, gl_TexCoord[0].xyz);
         if (maskingColor[0] * maskingColor[1] * maskingColor[2] == 0.0)
         {
             origColor[3] *= 0.5;
         }
-      */
     }
     return origColor;
 }

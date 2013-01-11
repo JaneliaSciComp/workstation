@@ -145,19 +145,38 @@ public class AlignmentBoardViewer extends Viewer {
 
             //  Next, speak the volumes.
             mip3d.setClearOnLoad( true );
-            final List<String> filenames = new ArrayList<String>();
+            final List<String> signalFilenames = new ArrayList<String>();
+            final List<String> maskFilenames = new ArrayList<String>();
+
             EntityFilenameFetcher filenameFetcher = new EntityFilenameFetcher();
             for ( Entity displayable: displayableList ) {
                 // Find this displayable entity's file name of interest.
-                String filename = filenameFetcher.fetchFilename(
-                        displayable,
-                        displayable.getEntityType().getName().equals( EntityConstants.TYPE_NEURON_FRAGMENT ) ?
-                                EntityFilenameFetcher.FilenameType.NEURON_FRAGMENT_3d :
-                                EntityFilenameFetcher.FilenameType.IMAGE_FAST_3d
-                );
-                if ( filename != null ) {
-                    filenames.add( filename );
+                String typeName = displayable.getEntityType().getName();
+                String filename = null;
+                if ( typeName.equals(EntityConstants.TYPE_NEURON_FRAGMENT) ) {
+                    filename = filenameFetcher.fetchFilename(
+                            displayable, EntityFilenameFetcher.FilenameType.NEURON_FRAGMENT_3d
+                    );
+                    if ( filename != null ) {
+                        signalFilenames.add(filename);
+                    }
                 }
+                else if ( typeName.equals(EntityConstants.TYPE_CURATED_NEURON)  ||  typeName.equals(EntityConstants.TYPE_SAMPLE)) {
+                    filename = filenameFetcher.fetchFilename(
+                            displayable, EntityFilenameFetcher.FilenameType.IMAGE_FAST_3d
+                    );
+                    if ( filename != null ) {
+                        signalFilenames.add(filename);
+                    }
+                }
+//                else if ( typeName.equals(EntityConstants.TYPE)) {
+//                    filename = filenameFetcher.fetchFilename(
+//                            displayable, EntityFilenameFetcher.FilenameType.MASK_FILE
+//                    );
+//                    if ( filename != null ) {
+//                        maskFilenames.add(filename);
+//                    }
+//                }
             }
 
             
@@ -168,10 +187,24 @@ public class AlignmentBoardViewer extends Viewer {
             
             
             SimpleWorker loadWorker = new SimpleWorker() {
+                List<String> maskFiles = new ArrayList<String>();
                 @Override
                 protected void doStuff() throws Exception {
-                    for ( String filename: filenames ) {
-                        mip3d.loadVolume( filename );
+                    // Handle all masks first, because that output is applied to all signal volumes.
+                    for ( String maskFileName: maskFilenames ) {
+                        // Get the info from the filename, and prepare it for "folding into" a thing.
+                        //todo add the externally-set coloring.
+                        // Producing the bean.
+                        try {
+                            maskFiles.add(maskFileName);
+                        } catch ( Exception ex ) {
+                            SessionMgr.getSessionMgr().handleException(ex);
+                        }
+                    }
+                    mip3d.setMaskFiles(maskFiles);
+
+                    for ( String signalFilename: signalFilenames ) {
+                        mip3d.loadVolume( signalFilename );
                         // After first volume has been loaded, set the unset clear flag, so subsequent
                         // ones are overloaded.
                         mip3d.setClearOnLoad(false);
@@ -201,6 +234,7 @@ public class AlignmentBoardViewer extends Viewer {
             loadWorker.execute();
 
         }
+
     }
 
     @Override
