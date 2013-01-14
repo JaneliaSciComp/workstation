@@ -143,41 +143,25 @@ public class AlignmentBoardViewer extends Viewer {
                 SessionMgr.getSessionMgr().handleException(ex);
             }
 
-            //  Next, speak the volumes.
             mip3d.setClearOnLoad( true );
+
+            // Get all the signal filenames.  These are to be masked-by the mask filenames' contents.
             final List<String> signalFilenames = new ArrayList<String>();
-            final List<String> maskFilenames = new ArrayList<String>();
 
             EntityFilenameFetcher filenameFetcher = new EntityFilenameFetcher();
             for ( Entity displayable: displayableList ) {
                 // Find this displayable entity's file name of interest.
                 String typeName = displayable.getEntityType().getName();
-                String filename = null;
-                if ( typeName.equals(EntityConstants.TYPE_NEURON_FRAGMENT) ) {
-                    filename = filenameFetcher.fetchFilename(
-                            displayable, EntityFilenameFetcher.FilenameType.NEURON_FRAGMENT_3d
-                    );
-                    if ( filename != null ) {
-                        signalFilenames.add(filename);
-                    }
+                String entityConstantFileType = filenameFetcher.getEntityConstantFileType( typeName );
+
+                String filename = filenameFetcher.fetchFilename( displayable, entityConstantFileType );
+
+                if ( filename != null ) {
+                    signalFilenames.add(filename);
                 }
-                else if ( typeName.equals(EntityConstants.TYPE_CURATED_NEURON)  ||  typeName.equals(EntityConstants.TYPE_SAMPLE)) {
-                    filename = filenameFetcher.fetchFilename(
-                            displayable, EntityFilenameFetcher.FilenameType.IMAGE_FAST_3d
-                    );
-                    if ( filename != null ) {
-                        signalFilenames.add(filename);
-                    }
-                }
-//                else if ( typeName.equals(EntityConstants.TYPE)) {
-//                    filename = filenameFetcher.fetchFilename(
-//                            displayable, EntityFilenameFetcher.FilenameType.MASK_FILE
-//                    );
-//                    if ( filename != null ) {
-//                        maskFilenames.add(filename);
-//                    }
-//                }
             }
+
+            final List<String> maskFilenames = new ArrayList<String>();
 
             
             // Activate the layers panel for controlling visibility. This code might have to be moved elsewhere. 
@@ -187,21 +171,21 @@ public class AlignmentBoardViewer extends Viewer {
             
             
             SimpleWorker loadWorker = new SimpleWorker() {
-                List<String> maskFiles = new ArrayList<String>();
                 @Override
                 protected void doStuff() throws Exception {
+                    List<String> maskFiles = new ArrayList<String>();  // From where???
                     // Handle all masks first, because that output is applied to all signal volumes.
-                    for ( String maskFileName: maskFilenames ) {
+                    for ( String maskFileName: maskFiles ) {
                         // Get the info from the filename, and prepare it for "folding into" a thing.
                         //todo add the externally-set coloring.
                         // Producing the bean.
                         try {
-                            maskFiles.add(maskFileName);
+                            maskFilenames.add(maskFileName);
                         } catch ( Exception ex ) {
                             SessionMgr.getSessionMgr().handleException(ex);
                         }
                     }
-                    mip3d.setMaskFiles(maskFiles);
+                    mip3d.setMaskFiles(maskFilenames);
 
                     for ( String signalFilename: signalFilenames ) {
                         mip3d.loadVolume( signalFilename );
