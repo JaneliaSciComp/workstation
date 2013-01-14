@@ -3,7 +3,6 @@
 	<classpathentry kind="src" path="src/main/java"/>
 	<classpathentry kind="src" path="src/test/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JBoss"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Hibernate"/>
 	<classpathentry kind="lib" path="/compute/build/jars/compute-client.jar" sourcepath="/compute/src"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/model"/>
@@ -12,7 +11,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/LOCI"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Axis"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/SAAJ"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/GWT"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Jogl"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Xuggler"/>
 	<classpathentry kind="lib" path="lib/owlapi-bin.jar"/>
@@ -51,6 +49,8 @@
 	<classpathentry kind="lib" path="lib/Jogl"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Logging"/>
 	<classpathentry kind="lib" path="lib/jackrabbit-webdav-2.5.2.jar"/>
-	<classpathentry kind="lib" path="lib/org-netbeans-swing-outline.jar"/>
+	<classpathentry kind="lib" path="lib/org-netbeans-swing-outline.jar" sourcepath="/Users/rokickik/dev/netbeans/o.n.swing.outline/src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Jetty"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/GWT Serializable"/>
 	<classpathentry kind="output" path="build/eclipse"/>
 </classpath>
