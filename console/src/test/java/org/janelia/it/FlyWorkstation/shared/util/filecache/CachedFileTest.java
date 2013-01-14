@@ -6,11 +6,12 @@ import junit.framework.TestSuite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.net.URL;
-import java.nio.channels.FileChannel;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.concurrent.Callable;
+import java.util.Date;
 
 /**
  * Tests the {@link CachedFile} class.
@@ -20,7 +21,8 @@ import java.util.concurrent.Callable;
 public class CachedFileTest extends TestCase {
 
     private File testCacheRootDirectory;
-    private String rootPath;
+    private File testCacheTempDirectory;
+    private File testCacheActiveDirectory;
     private File testRemoteFile;
 
     public CachedFileTest(String testName) {
@@ -34,15 +36,11 @@ public class CachedFileTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         LOG.info("setUp: entry ----------------------------------------");
-        final String ts = LocalFileCache.buildTimestampName();
-        testCacheRootDirectory = new File("test-cache-" + ts);
-        rootPath = testCacheRootDirectory.getAbsolutePath();
-        if (testCacheRootDirectory.mkdir()) {
-            LOG.info("setUp: created " + rootPath);
-        } else {
-            throw new IllegalStateException("failed to create " + rootPath);
-        }
         final File parentDirectory = (new File(".")).getCanonicalFile();
+        testCacheRootDirectory = createDirectory(parentDirectory,
+                                                 "test-cache-" + buildTimestampName());
+        testCacheTempDirectory = createDirectory(testCacheRootDirectory, "temp");
+        testCacheActiveDirectory = createDirectory(testCacheRootDirectory, "active");
         testRemoteFile = createFile(parentDirectory, 1);
         LOG.info("setUp: exit ----------------------------------------");
     }
@@ -50,20 +48,24 @@ public class CachedFileTest extends TestCase {
     @Override
     protected void tearDown() throws Exception {
         LOG.info("tearDown: entry --------------------------------------");
+        deleteFile(testCacheActiveDirectory);
+        deleteFile(testCacheTempDirectory);
         deleteFile(testCacheRootDirectory);
         deleteFile(testRemoteFile);
         LOG.info("tearDown: exit --------------------------------------");
     }
 
-    public void testRemoteLoadAndDelete() throws Exception {
-        final URL remoteFileUrl = testRemoteFile.toURI().toURL();
+    public void testLoadAndDelete() throws Exception {
 
-        final File rootWithTimestampDirectory =
-                new File(testCacheRootDirectory,
-                         LocalFileCache.buildTimestampName());
+        final WebDavFile webDavFile = new WebDavFile(testRemoteFile);
+        final String urlPath = webDavFile.getUrl().getPath();
+        final File activeFile = new File(testCacheActiveDirectory,
+                                         urlPath);
+        final File tempFile = new File(testCacheTempDirectory,
+                                       "test-temp-file");
 
-        CachedFile cachedFile = new CachedFile(rootWithTimestampDirectory,
-                                               remoteFileUrl);
+        CachedFile cachedFile = new CachedFile(webDavFile, activeFile);
+        cachedFile.loadRemoteFile(tempFile);
 
         File localFile = cachedFile.getLocalFile();
         assertNotNull("local file is missing",
@@ -71,62 +73,43 @@ public class CachedFileTest extends TestCase {
         assertEquals("remote and local file lengths differ",
                      testRemoteFile.length(), localFile.length());
 
-        File[] cacheSubDirectories = testCacheRootDirectory.listFiles();
-        if (cacheSubDirectories == null) {
-            fail(rootPath + " is not a directory");
-        } else {
-            assertEquals("invalid number of sub directories after add in " +
-                         rootPath +  ", found " +
-                         Arrays.asList(cacheSubDirectories),
-                         1, cacheSubDirectories.length);
-        }
+        File metaFile = cachedFile.getMetaFile();
+        assertNotNull("meta file is missing",
+                      metaFile);
 
-        Callable<Void> removalTask = cachedFile.getRemovalTask();
-        removalTask.call();
-        cacheSubDirectories = testCacheRootDirectory.listFiles();
-        if (cacheSubDirectories == null) {
-            fail(rootPath + " is not a directory");
-        } else {
-            assertEquals("invalid number of sub directories after remove in " +
-                    rootPath + ", found " +
-                    Arrays.asList(cacheSubDirectories),
-                    0, cacheSubDirectories.length);
-        }
+        CachedFile reloadedCachedFile = CachedFile.loadPreviouslyCachedFile(metaFile);
+        assertEquals("reloaded URL value differs",
+                     cachedFile.getUrl(), reloadedCachedFile.getUrl());
+
+        validateDirectoryFileCount("after load", testCacheActiveDirectory, 1);
+        validateDirectoryFileCount("after load", testCacheTempDirectory, 0);
+
+        cachedFile.remove(testCacheActiveDirectory);
+
+        validateDirectoryFileCount("after remove", testCacheActiveDirectory, 0);
     }
 
-    public void testLocalLoadAndDelete() throws Exception {
-        File tsDirectory = new File(testCacheRootDirectory,
-                                    LocalFileCache.buildTimestampName());
-        if (! tsDirectory.mkdir()) {
-            fail("failed to create " + tsDirectory.getAbsolutePath());
+    private File createDirectory(File parent,
+                                 String name) throws IllegalStateException {
+        File directory = new File(parent, name);
+        if (! directory.mkdir()) {
+            throw new IllegalStateException("failed to create " + directory.getAbsolutePath());
         }
+        LOG.info("created " + directory.getAbsolutePath());
+        return directory;
+    }
 
-        final String cachedLocalFileName = "foo.txt";
-        File localFile = new File(tsDirectory, cachedLocalFileName);
-        copyFile(testRemoteFile, localFile);
-
-        CachedFile cachedFile = new CachedFile(tsDirectory,
-                                               localFile);
-
-        File cachedLocalFile = cachedFile.getLocalFile();
-        assertNotNull("cached local file is missing",
-                      cachedLocalFile);
-        assertEquals("cached local file does not match source",
-                localFile, cachedLocalFile);
-        assertEquals("invalid relative path derived",
-                     "/" + cachedLocalFileName,
-                     cachedFile.getRelativePath());
-
-        Callable<Void> removalTask = cachedFile.getRemovalTask();
-        removalTask.call();
-        File[] cacheSubDirectories = testCacheRootDirectory.listFiles();
-        if (cacheSubDirectories == null) {
-            fail(rootPath + " is not a directory");
+    private void validateDirectoryFileCount(String context,
+                                            File directory,
+                                            int expectedCount) {
+        File[] subDirectories = directory.listFiles();
+        if (subDirectories == null) {
+            fail(directory.getAbsolutePath() + " does not exist");
         } else {
-            assertEquals("invalid number of sub directories after remove in " +
-                    rootPath +  ", found " +
-                    Arrays.asList(cacheSubDirectories),
-                    0, cacheSubDirectories.length);
+            assertEquals(context + ", invalid number of sub directories in " +
+                         directory.getAbsolutePath() +  ", found: " +
+                         Arrays.asList(subDirectories),
+                         expectedCount, subDirectories.length);
         }
     }
 
@@ -143,7 +126,7 @@ public class CachedFileTest extends TestCase {
     public static File createFile(File parentDirectory,
                                   int numberOfKilobytes) throws IOException {
         final long numberOfBytes = numberOfKilobytes * 1024;
-        final String name = "test-" + LocalFileCache.buildTimestampName() + ".txt";
+        final String name = "test-" + buildTimestampName() + ".txt";
         File file = new File(parentDirectory, name);
 
         final int lineLength = name.length() + 1;
@@ -175,31 +158,6 @@ public class CachedFileTest extends TestCase {
     }
 
     /**
-     * Utility to copy one file to another.
-     *
-     * @param  from  source file.
-     * @param  to    target file.
-     *
-     * @throws IOException
-     *   if the file cannot be copied.
-     */
-    public static void copyFile(File from,
-                                File to) throws IOException {
-        FileChannel fromChannel = new FileInputStream(from).getChannel();
-        FileChannel toChannel = new FileOutputStream(to).getChannel();
-        final long totalBytes = from.length();
-        int bytesWritten = 0;
-        while (bytesWritten < totalBytes) {
-            bytesWritten += fromChannel.transferTo(bytesWritten,
-                                                   totalBytes,
-                                                   toChannel);
-        }
-
-        LOG.info("copyFile: copied " + from.getAbsolutePath() +
-                 " to " + to.getAbsolutePath());
-    }
-
-    /**
      * Utility to delete the specified file.
      *
      * @param  file  file to delete.
@@ -214,5 +172,17 @@ public class CachedFileTest extends TestCase {
         }
     }
 
+    /**
+     * @return a new timestamp directory name based on the current time.
+     */
+    public static String buildTimestampName() {
+        return TIMESTAMP_FORMAT.format(new Date());
+    }
+
     private static final Logger LOG = LoggerFactory.getLogger(CachedFileTest.class);
+
+    private static final String TIMESTAMP_PATTERN =
+            "yyyyMMdd-HHmmssSSS";
+    private static final SimpleDateFormat TIMESTAMP_FORMAT =
+            new SimpleDateFormat(TIMESTAMP_PATTERN);
 }

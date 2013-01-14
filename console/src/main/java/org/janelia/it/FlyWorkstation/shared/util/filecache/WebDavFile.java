@@ -5,6 +5,7 @@ import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.property.*;
 
 import java.io.File;
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -14,38 +15,45 @@ import java.net.URL;
  *
  * @author Eric Trautman
  */
-public class WebDavFile {
+public class WebDavFile implements Serializable {
 
     private URL url;
     private boolean isDirectory;
     private Long contentLength;
+    private String etag;
 
     /**
      * Parses the specified WebDAV PROPFIND response 'fragment' to
      * populate this file's attributes.
      *
-     * @param  directoryUrl         the full URL for the directory that
-     *                              contains the file.
+     * @param  baseUrl              the full URL for the originally requested
+     *                              resource (could be a parent directory).
      * @param  multiStatusResponse  the PROPFIND response for the file.
      *
      * @throws IllegalArgumentException
      *   if a file specific URL cannot be constructed.
      */
-    public WebDavFile(URL directoryUrl,
+    public WebDavFile(URL baseUrl,
                       MultiStatusResponse multiStatusResponse)
             throws IllegalArgumentException {
 
-        int baseLength = directoryUrl.getPath().length();
+        final int baseLength = baseUrl.getPath().length();
         final String href = multiStatusResponse.getHref();
+        final int hrefLength = href.length();
 
-        if (href.length() > baseLength) {
+        if (hrefLength == baseLength) {
+            this.url = baseUrl;
+        } else if (hrefLength > baseLength) {
             try {
-                this.url = new URL(directoryUrl, href.substring(baseLength));
+                this.url = new URL(baseUrl, href.substring(baseLength));
             } catch (MalformedURLException e) {
                 throw new IllegalArgumentException(
-                        "failed to construct file URL from directoryUrl " +
-                        directoryUrl + " and href " + href, e);
+                        "failed to construct file URL from baseUrl " +
+                        baseUrl + " and href " + href, e);
             }
+        } else {
+            throw new IllegalArgumentException("invalid href value '" + href +
+                                               "' returned for resource with base URL " + baseUrl);
         }
 
         final DavPropertySet propertySet =
@@ -67,6 +75,12 @@ public class WebDavFile {
                     String.valueOf(contentLengthProperty.getValue()));
         }
 
+        final DavProperty etagProperty =
+                propertySet.get(DavPropertyName.GETETAG);
+        if (etagProperty != null) {
+            this.etag = String.valueOf(etagProperty.getValue());
+        }
+
     }
 
     /**
@@ -83,12 +97,19 @@ public class WebDavFile {
         }
         this.isDirectory = file.isDirectory();
         this.contentLength = file.length();
+        this.etag = String.valueOf(this.contentLength);
     }
 
+    /**
+     * @return the file's URL.
+     */
     public URL getUrl() {
         return url;
     }
 
+    /**
+     * @return true if the file si a directory; otherwise false.
+     */
     public boolean isDirectory() {
         return isDirectory;
     }
@@ -108,11 +129,19 @@ public class WebDavFile {
         return kilobytes;
     }
 
+    /**
+     * @return the file's etag.
+     */
+    public String getEtag() {
+        return etag;
+    }
+
     @Override
     public String toString() {
         return "\nWebDavFile{url='" + url + '\'' +
                 ", isDirectory=" + isDirectory +
                 ", contentLength=" + contentLength +
+                ", etag=" + etag +
                 '}';
     }
 
@@ -128,6 +157,7 @@ public class WebDavFile {
         DavPropertyNameSet nameSet = new DavPropertyNameSet();
         nameSet.add(DavPropertyName.RESOURCETYPE);
         nameSet.add(DavPropertyName.GETCONTENTLENGTH);
+        nameSet.add(DavPropertyName.GETETAG);
         PROPERTY_NAMES = nameSet;
     }
 }

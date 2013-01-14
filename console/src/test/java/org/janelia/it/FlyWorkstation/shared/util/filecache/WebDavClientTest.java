@@ -31,7 +31,7 @@ public class WebDavClientTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         client = new WebDavClient(100, 100);
-        testUrl = new URL("http://jacs.int.janelia.org/WebDAV/opt/jacs-webdav-test/");
+        testUrl = new URL("http://jacs.int.janelia.org/WebDAV/opt/jacs-webdav-test/unit-test-files/");
     }
 
     public void testWithoutCredentials() throws Exception {
@@ -53,7 +53,7 @@ public class WebDavClientTest extends TestCase {
         // NOTE:
         //
         //   These credentials are maintained on the jacs server in
-        //     /opt/jacs-webdav-test/.htpasswd
+        //     /opt/jacs-webdav-test-auth/.htpasswd
         //
         //   The user file was created using the htpasswd utility.
         //   The Apache server configuration in /etc/httpd/conf.d/
@@ -68,6 +68,16 @@ public class WebDavClientTest extends TestCase {
                 new UsernamePasswordCredentials("testuser",
                                                 "testuser");
         client.setCredentials(credentials);
+
+        WebDavFile webDavFile = client.findFile(testUrl);
+        Assert.assertTrue("base directory should be identified as a directory",
+                          webDavFile.isDirectory());
+
+        Assert.assertEquals("invalid URL saved for base directory",
+                            testUrl, webDavFile.getUrl());
+
+        final String etag = webDavFile.getEtag();
+        Assert.assertNotNull("etag missing for base directory", etag);
 
         List<WebDavFile> fileList =
                 client.findImmediateInternalFiles(testUrl);

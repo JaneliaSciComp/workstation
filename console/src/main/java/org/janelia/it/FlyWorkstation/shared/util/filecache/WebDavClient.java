@@ -102,6 +102,27 @@ public class WebDavClient {
     }
 
     /**
+     * Finds information about the specified file.
+     *
+     * @param  url  file URL.
+     *
+     * @return WebDAV information for the specified file.
+     *
+     * @throws WebDavRetrievalException
+     *   if the file information cannot be retrieved.
+     */
+    public WebDavFile findFile(URL url)
+            throws WebDavRetrievalException {
+
+        final String href = url.toString();
+        MultiStatusResponse[] multiStatusResponses = getResponses(href, DavConstants.DEPTH_0);
+        if ((multiStatusResponses == null) || (multiStatusResponses.length == 0)) {
+            throw new WebDavRetrievalException("empty response returned for " + href);
+        }
+        return new WebDavFile(url, multiStatusResponses[0]);
+    }
+
+    /**
      * Finds all files immediately within the specified directory
      * (but does not recurse into sub-directories).
      *
@@ -153,48 +174,54 @@ public class WebDavClient {
                                                int depth)
             throws WebDavRetrievalException {
 
+        final String href = url.toString();
         List<WebDavFile> webDavFileList = new ArrayList<WebDavFile>(1024);
+        MultiStatusResponse[] multiStatusResponses = getResponses(href, depth);
+        if ((multiStatusResponses == null) || (multiStatusResponses.length == 0)) {
+            throw new WebDavRetrievalException("empty response returned for " + href);
+        }
+        WebDavFile webDavFile;
+        for (MultiStatusResponse msr : multiStatusResponses) {
+            webDavFile = new WebDavFile(url, msr);
+            if (! webDavFile.isDirectory()) {
+                webDavFileList.add(webDavFile);
+            }
+        }
+        return webDavFileList;
+    }
+
+    private MultiStatusResponse[] getResponses(String href,
+                                               int depth)
+            throws WebDavRetrievalException {
+
+        MultiStatusResponse[] multiStatusResponses = null;
         PropFindMethod method = null;
         try {
+            method = new PropFindMethod(href,
+                                        WebDavFile.PROPERTY_NAMES,
+                                        depth);
 
-            final String href = url.toString();
-
-            if (! href.endsWith("/")) {
-                throw new WebDavRetrievalException (
-                        "URL '" + href +
-                        "' must end with a '/' to be used for directory retrieval");
-            }
-
-            method = new PropFindMethod(href, WebDavFile.PROPERTY_NAMES, depth);
             final int responseCode = httpClient.executeMethod(method);
-            if (responseCode == HttpStatus.SC_MULTI_STATUS) {
-                MultiStatus multiStatus = method.getResponseBodyAsMultiStatus();
 
-                WebDavFile webDavFile;
-                for (MultiStatusResponse msr : multiStatus.getResponses()) {
-                    webDavFile = new WebDavFile(url, msr);
-                    if (! webDavFile.isDirectory()) {
-                        webDavFileList.add(webDavFile);
-                    }
-                }
+            if (responseCode == HttpStatus.SC_MULTI_STATUS) {
+                final MultiStatus multiStatus = method.getResponseBodyAsMultiStatus();
+                multiStatusResponses = multiStatus.getResponses();
             } else {
-                throw new WebDavRetrievalException(
-                        responseCode + " response code returned for " + url,
-                        responseCode);
+                throw new WebDavRetrievalException(responseCode + " response code returned for " + href,
+                                                   responseCode);
             }
 
         } catch (WebDavRetrievalException e) {
             throw e;
         } catch (Exception e) {
-            throw new WebDavRetrievalException(
-                    "failed to retrieve WebDAV information for " + url, e);
+            throw new WebDavRetrievalException("failed to retrieve WebDAV information for " + href, e);
         } finally {
             if (method != null) {
                 method.releaseConnection();
             }
         }
 
-        return webDavFileList;
+        return multiStatusResponses;
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(WebDavClient.class);

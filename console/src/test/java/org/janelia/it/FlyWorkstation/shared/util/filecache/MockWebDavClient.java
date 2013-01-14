@@ -23,8 +23,22 @@ public class MockWebDavClient extends WebDavClient {
         urlToFileList = new HashMap<URL, List<WebDavFile>>();
     }
 
-    public void setFilesForUrl(URL url,
-                               List<File> fileList) {
+    public void mapFileUsingDefaultUrl(File file) {
+        WebDavFile webDavFile = new WebDavFile(file);
+        List<WebDavFile> list = new ArrayList<WebDavFile>();
+        list.add(webDavFile);
+        urlToFileList.put(webDavFile.getUrl(), list);
+    }
+
+    public void mapFilesUsingDefaultUrl(List<File> fileList) {
+        for (File file : fileList) {
+            mapFileUsingDefaultUrl(file);
+        }
+    }
+
+    @SuppressWarnings("UnusedDeclaration")
+    public void mapUrlToFileList(URL url,
+                                 List<File> fileList) {
         if (fileList.size() > 0) {
             List<WebDavFile> webDavFileList =
                     new ArrayList<WebDavFile>(fileList.size());
@@ -41,6 +55,16 @@ public class MockWebDavClient extends WebDavClient {
     }
 
     @Override
+    public WebDavFile findFile(URL url)
+            throws WebDavRetrievalException {
+        List<WebDavFile> list = urlToFileList.get(url);
+        if ((list == null) || (list.size() == 0)) {
+            throw new WebDavRetrievalException("no test file registered for " + url);
+        }
+        return list.get(0);
+    }
+
+        @Override
     public List<WebDavFile> findAllInternalFiles(URL url)
             throws WebDavRetrievalException {
         return getFiles(url);

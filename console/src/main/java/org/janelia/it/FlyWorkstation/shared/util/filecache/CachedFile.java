@@ -3,159 +3,72 @@ package org.janelia.it.FlyWorkstation.shared.util.filecache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
-import java.util.concurrent.Callable;
 
 /**
  * <p>
  * This class encapsulates the information about a cached file.
- * It supports removal of the file when evicted from the cache.
+ * It supports retrieval of the file from a remote server and
+ * removal of the file when evicted from the cache.
  * </p>
  * <p>
- * Each cached file is stored within a nested set of directories as follows:
- * <pre>
- *     [local root directory]/[relative path]/[file]
- * </pre>
- * <p>
- * The relative path directory is inserted to allow the cache to be
- * reloaded from local disk at start-up and to support cached directories.
+ * When a remote file is retrieved, it is saved to the local file system
+ * along with a companion file that contains a serialized form of this
+ * object's metadata about the file. For example retrieval of the file
+ * .../separate/ConsolidatedSignalMIP.png results in creation of a companion file
+ * .../separate/ConsolidatedSignalMIP.png.jacs-cached-file.
+ * Creation of these companion files allows the most important parts of the
+ * in-memory cache (namely the remote URL and etag) to be persisted without
+ * requiring centralized/synchronized management.
  * </p>
  *
  * @author Eric Trautman
  */
-public class CachedFile {
+public class CachedFile implements Serializable {
 
-    /**
-     * @return a normalized version of the specified path
-     *         (replaces all backward slashes with forward slashes).
-     */
-    public static String getNormalizedPath(String path) {
-        return(path.replace('\\','/'));
-    }
-
-    /**
-     * Creates any missing parent directories for the specified file.
-     *
-     * @param  child  file whose parents directroies need to exist.
-     *
-     * @throws IllegalStateException
-     *   if the parent directories do not exist and cannot be created.
-     */
-    public static void createParentDirectroiesIfNeccesary(File child)
-            throws IllegalStateException {
-
-        final File parent = child.getParentFile();
-        if (! parent.exists()) {
-            if (! parent.mkdirs()) {
-                // check again for parent existence in case another thread
-                // created the directory while this thread was attempting
-                // to create it
-                if (! parent.exists()) {
-                    throw new IllegalStateException(
-                            "failed to create directory " +
-                                    parent.getAbsolutePath());
-                }
-            }
-        }
-    }
-
-    private File localRootDirectory;
-    private URL remoteFileUrl;
-    private String relativePath;
+    private WebDavFile webDavFile;
     private File localFile;
+    private File metaFile;
 
     /**
-     * Constructs a cached file instance that needs to be retrieved
-     * from a remote location.
+     * Constructs a new instance.
      *
-     * @param  localRootDirectory  the local root directory for
-     *                             this cached file (to which the
-     *                             file's relative path is applied).
-     * @param  remoteFileUrl       identifies location of the remote file.
-     *
-     * @throws IllegalStateException
-     *   if the file cannot be cached locally.
+     * @param  webDavFile  the WebDAV information for the file's remote source.
+     * @param  localFile   the local location for the file after retrieval.
      */
-    public CachedFile(File localRootDirectory,
-                      URL remoteFileUrl)
-            throws IllegalStateException {
-
-        this.localRootDirectory = localRootDirectory;
-        this.remoteFileUrl = remoteFileUrl;
-        this.relativePath = getNormalizedPath(remoteFileUrl.getPath());
-        this.localFile = new File(localRootDirectory,
-                                  this.relativePath);
-
-        if (! this.localFile.exists()) {
-            copyRemoteFile();
-        }
-
-    }
-
-    /**
-     * Constructs a cached file instance from a file that has previously
-     * been cached.
-     *
-     * @param  localRootDirectory  the local root directory containing
-     *                             this cached file (from which the
-     *                             file's relative path is derived).
-     * @param  localFile           the pre-existing locally cached file.
-     *
-     * @throws IOException
-     *   if an error occurs deriving canonical paths for the specified files.
-     *
-     * @throws IllegalArgumentException
-     *   if the cache root directory does not contain the specified file.
-     */
-    public CachedFile(File localRootDirectory,
-                      File localFile)
-            throws IOException, IllegalArgumentException {
-
-        this.localRootDirectory = localRootDirectory;
+    public CachedFile(WebDavFile webDavFile,
+                      File localFile) {
+        this.webDavFile = webDavFile;
         this.localFile = localFile;
-        this.relativePath = null;
-        this.remoteFileUrl = null;
-
-        final String rootPath = localRootDirectory.getCanonicalPath();
-        final String localPath = localFile.getCanonicalPath();
-        if (localPath.startsWith(rootPath)) {
-            final int rootLength = rootPath.length();
-            if (localPath.length() > rootLength) {
-                final String relativePath = localPath.substring(rootLength);
-                this.relativePath = getNormalizedPath(relativePath);
-            }
+        if (! webDavFile.isDirectory()) {
+            this.metaFile = new File(localFile.getAbsolutePath() + META_FILE_SUFFIX);
         }
-
-        if (this.relativePath == null) {
-            throw new IllegalArgumentException(
-                    "cache root directory " + rootPath +
-                    " does not contain local file " + localPath);
-        }
-
-        LOG.info("<init>: loaded " + localFile.getAbsolutePath());
     }
 
     /**
-     * @return the normalized relative path for this file.
+     * @return the source URL for this file.
      */
-    public String getRelativePath() {
-        return relativePath;
+    public URL getUrl() {
+        return webDavFile.getUrl();
     }
 
     /**
-     * @return the location of this locally cached file
-     *         (NOTE: physical file may not exist).
+     * @return the local location of this file after retrieval.
      */
     public File getLocalFile() {
         return localFile;
     }
 
     /**
-     * @return the number of kilobytes in the locally cached file.
+     * @return the local location of this file's serialized meta data.
+     */
+    public File getMetaFile() {
+        return metaFile;
+    }
+
+    /**
+     * @return the number of kilobytes in this file.
      */
     public long getKilobytes() {
         long kilobytes = 0;
@@ -172,59 +85,27 @@ public class CachedFile {
     @Override
     public String toString() {
         return "CachedFile{" +
-                "localFile=" + localFile.getAbsolutePath() +
-                ", remoteFileUrl=" + remoteFileUrl +
+                "webDavFile=" + webDavFile +
+                ", localFile=" + localFile.getAbsolutePath() +
+                ", metaFile=" + metaFile.getAbsolutePath() +
                 '}';
-    }
-
-    /**
-     * @return a task that removes this file from the local file system.
-     */
-    public Callable<Void> getRemovalTask() {
-        return new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                removeLocalFile();
-                return null;
-            }
-        };
-    }
-
-    /**
-     * Moves this cached file to a different physical location.
-     *
-     * @param  toLocalRootDirectory  new directory location.
-     *
-     * @throws IllegalStateException
-     *   if the file cannot be moved.
-     */
-    public synchronized void moveLocalFile(File toLocalRootDirectory)
-            throws IllegalStateException {
-
-        if (! toLocalRootDirectory.equals(localRootDirectory)) {
-            File movedFile = new File(toLocalRootDirectory, relativePath);
-            createParentDirectroiesIfNeccesary(movedFile);
-
-            if (localFile.renameTo(movedFile)) {
-                localRootDirectory = toLocalRootDirectory;
-                localFile = movedFile;
-            } else {
-                throw new IllegalStateException(
-                        "failed to rename " + localFile.getAbsolutePath() +
-                        " to " + movedFile.getAbsolutePath());
-            }
-        }
     }
 
     /**
      * Copies the remote file into the local cache storage.
      *
+     * @param  tempFile  the temporary local location for retrieval.
+     *                   The remote file is copied to this location first
+     *                   before being moved to its final location to
+     *                   ensure that only complete files are available
+     *                   in the cache.
+     *
      * @throws IllegalStateException
      *   if the copy fails for any reason.
      */
-    private void copyRemoteFile() throws IllegalStateException {
+    public void loadRemoteFile(File tempFile) throws IllegalStateException {
 
-        createParentDirectroiesIfNeccesary(localFile);
+        final URL remoteFileUrl = webDavFile.getUrl();
 
         InputStream input = null;
         FileOutputStream output = null;
@@ -232,7 +113,7 @@ public class CachedFile {
         try {
 
             input = remoteFileUrl.openStream();
-            output = new FileOutputStream(localFile);
+            output = new FileOutputStream(tempFile);
 
             byte[] buffer = new byte[BUFFER_SIZE];
             int n;
@@ -240,21 +121,16 @@ public class CachedFile {
                 output.write(buffer, 0, n);
             }
 
-            LOG.info("copyRemoteFile: copied " + remoteFileUrl + " to " +
-                     localFile.getAbsolutePath());
-
         } catch (Throwable t) {
             throw new IllegalStateException(
-                    "failed to copy " + remoteFileUrl +
-                    " to " + localFile.getAbsolutePath(), t);
+                    "failed to copy " + remoteFileUrl + " to " + tempFile.getAbsolutePath(), t);
         } finally {
 
             if (input != null) {
                 try {
                     input.close();
                 } catch (IOException e) {
-                    LOG.warn("copyRemoteFile: failed to close " +
-                             remoteFileUrl, e);
+                    LOG.warn("loadRemoteFile: failed to close " + remoteFileUrl, e);
                 }
             }
 
@@ -262,73 +138,94 @@ public class CachedFile {
                 try {
                     output.close();
                 } catch (IOException e) {
-                    LOG.warn("copyRemoteFile: failed to close " +
-                             localFile.getAbsolutePath(), e);
+                    LOG.warn("loadRemoteFile: failed to close " + tempFile.getAbsolutePath(), e);
                 }
             }
         }
 
+        createParentDirectroiesIfNeccesary(localFile);
+
+        if (tempFile.renameTo(localFile)) {
+            LOG.debug("loadRemoteFile: copied {} to {}", remoteFileUrl, localFile.getAbsolutePath());
+        } else {
+            if (! tempFile.delete()) {
+                LOG.warn("loadRemoteFile: after move failure, failed to remove temp file {}",
+                         tempFile.getAbsolutePath());
+            }
+            throw new IllegalStateException(
+                    "failed to move " + tempFile.getAbsolutePath() +
+                            " to " + localFile.getAbsolutePath());
+        }
+
+        saveMetadata();
     }
 
     /**
      * Removes this file from the local file system and any empty
      * parent directories that are within the cache.  Any exceptions
      * that occur during removal are simply logged (and ignored).
+     *
+     * @param  activeRootDirectory  the root directory for all active files in
+     *                              the cache.
      */
-    private void removeLocalFile() {
+    public void remove(File activeRootDirectory) {
+        removeFile(localFile);
+        removeFile(metaFile);
         try {
-            if (localFile.isFile()) {
-                if (localFile.delete()) {
-                    LOG.info("removeLocalFile: removed " +
-                             localFile.getAbsolutePath());
-                    try {
-                        removeEmptyCacheParent(localFile);
-                    } catch (IOException e) {
-                        LOG.warn("removeLocalFile: failed to remove empty " +
-                                 "parent directories for " +
-                                 localFile.getAbsolutePath(), e);
-                    }
+            removeEmptyCacheParent(activeRootDirectory, localFile);
+        } catch (IOException e) {
+            LOG.warn("remove: failed to remove empty parent directories for " +
+                     localFile.getAbsolutePath(), e);
+        }
+    }
+
+    private void removeFile(File file) {
+        if ((file != null) && file.isFile()) {
+            try {
+                if (file.delete()) {
+                    LOG.debug("removeFile: removed {}", file.getAbsolutePath());
                 } else {
-                    LOG.warn("removeLocalFile: failed to remove " +
-                             localFile.getAbsolutePath());
+                    LOG.warn("removeFile: failed to remove {}", file.getAbsolutePath());
                 }
+            } catch (Throwable t) {
+                LOG.warn("removeFile: failed to remove " + file.getAbsolutePath(), t);
             }
-        } catch (Throwable t) {
-            LOG.warn("removeLocalFile: failed to remove " +
-                     localFile.getAbsolutePath(), t);
         }
     }
 
     /**
-     * Recursively walks up the directory structure until the cache root
+     * Recursively walks up the directory structure until the active root
      * directory is found.  Any empty directories found along the way
      * are removed.  Special care is taken to make sure we only touch
      * directories that are within the cache.
      *
-     * @param  removedFileOrDirectory  previously removed file or
-     *                                 directory whose parent should
-     *                                 be removed if empty.
+     * @param  activeRootDirectory     the root directory for all active files in
+     *                                 the cache.
+
+     * @param  removedFileOrDirectory  previously removed file or directory whose
+     *                                 parent should be removed if empty.
      * @throws IOException
      *   if canonical paths cannot be derived.
      */
-    private void removeEmptyCacheParent(File removedFileOrDirectory)
+    private void removeEmptyCacheParent(File activeRootDirectory,
+                                        File removedFileOrDirectory)
             throws IOException {
 
         File parent = removedFileOrDirectory.getParentFile();
         if ((parent != null) && parent.isDirectory()) {
 
-            final String rootPath = localRootDirectory.getCanonicalPath();
+            final String rootPath = activeRootDirectory.getCanonicalPath();
             final int minLength = rootPath.length();
             final String path = parent.getCanonicalPath();
 
             boolean logRemoval = LOG.isInfoEnabled();
 
-            if ((path.length() >= minLength) && path.startsWith(rootPath)) {
+            if ((path.length() > minLength) && path.startsWith(rootPath)) {
                 final File[] children = parent.listFiles();
                 if ((children != null) && (children.length == 0)) {
                     logRemoval = false;
                     if (parent.delete()) {
-                        removeEmptyCacheParent(parent);
+                        removeEmptyCacheParent(activeRootDirectory, parent);
                     } else {
                         LOG.warn("removeEmptyCacheParent: failed to remove " +
                                  path);
@@ -345,6 +242,107 @@ public class CachedFile {
 
     }
 
+    /**
+     * Creates any missing parent directories for the specified file.
+     *
+     * @param  child  file whose parents directroies need to exist.
+     *
+     * @throws IllegalStateException
+     *   if the parent directories do not exist and cannot be created.
+     */
+    private void createParentDirectroiesIfNeccesary(File child)
+            throws IllegalStateException {
+
+        final File parent = child.getParentFile();
+        if (! parent.exists()) {
+            if (! parent.mkdirs()) {
+                // check again for parent existence in case another thread
+                // created the directory while this thread was attempting
+                // to create it
+                if (! parent.exists()) {
+                    throw new IllegalStateException(
+                            "failed to create directory " + parent.getAbsolutePath());
+                }
+            }
+        }
+    }
+
+    private void saveMetadata()
+            throws IllegalStateException {
+
+        ObjectOutputStream out = null;
+        try {
+            out = new ObjectOutputStream(new FileOutputStream(metaFile));
+            out.writeObject(this);
+        } catch (Exception e) {
+            throw new IllegalStateException(
+                    "failed to save cache file meta data to " + metaFile.getAbsolutePath(), e);
+
+        } finally {
+            if (out != null) {
+                try {
+                    out.close();
+                } catch (IOException e) {
+                    LOG.warn("saveMetadata: failed to close meta data file " + metaFile.getAbsolutePath(),
+                             e);
+                }
+            }
+        }
+    }
+
+    /**
+     * @param  file  the file to check.
+     *
+     * @return true if the specified file is a cached file metadata file; otherwise false.
+     */
+    public static boolean isMetaFile(File file) {
+        final String name = file.getName();
+        return name.endsWith(META_FILE_SUFFIX);
+    }
+
+    /**
+     * Parses the the specified metdata file and returns the corresponding
+     * {@link CachedFile} instance.
+     *
+     * @param  metaFile  metdata file location.
+     *
+     * @return {@link CachedFile} instance parsed from the specified file.
+     *
+     * @throws IllegalStateException
+     *   if any errors occur during parsing.
+     */
+    public static CachedFile loadPreviouslyCachedFile(File metaFile)
+            throws IllegalStateException {
+
+        CachedFile cachedFile;
+        ObjectInputStream in = null;
+        try {
+            in = new ObjectInputStream(new FileInputStream(metaFile));
+            cachedFile = (CachedFile) in.readObject();
+        } catch (Exception e) {
+            throw new IllegalStateException(
+                    "failed to load cache file meta data from " + metaFile.getAbsolutePath(), e);
+
+        } finally {
+            if (in != null) {
+                try {
+                    in.close();
+                } catch (IOException e) {
+                    LOG.warn("loadPreviouslyCachedFile: failed to close meta data file " + metaFile.getAbsolutePath(),
+                             e);
+                }
+            }
+        }
+
+        if (! cachedFile.localFile.exists()) {
+            throw new IllegalStateException(
+                    "meta data loaded from " + metaFile.getAbsolutePath() +
+                    " identifies missing local file " + cachedFile.localFile.getAbsolutePath());
+        }
+
+        return cachedFile;
+    }
+
     private static final Logger LOG = LoggerFactory.getLogger(CachedFile.class);
 
     private static final long ONE_KILOBYTE = 1024;
@@ -356,4 +354,5 @@ public class CachedFile {
     // Most of the dynamic image files are around 1Mb.
     private static final int BUFFER_SIZE = 2 * 1024 * 1024; // 2Mb
 
+    private static final String META_FILE_SUFFIX = ".jacs-cached-file";
 }

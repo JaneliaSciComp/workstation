@@ -1,6 +1,5 @@
 package org.janelia.it.FlyWorkstation.shared.util.filecache;
 
-import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -8,7 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +17,7 @@ import java.util.List;
  */
 public class LocalFileCacheTest extends TestCase {
 
+    private MockWebDavClient mockClient;
     private List<File> testRemoteFiles;
     private int singleFileKilobytes;
     private int maxNumberOfCachedFiles;
@@ -38,7 +37,7 @@ public class LocalFileCacheTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         LOG.info("setUp: entry ----------------------------------------");
-        final String ts = LocalFileCache.buildTimestampName();
+        final String ts = CachedFileTest.buildTimestampName();
         final File cacheRootParentDirectory = new File("test-cache-" + ts);
         final String path = cacheRootParentDirectory.getAbsolutePath();
         if (cacheRootParentDirectory.mkdir()) {
@@ -68,21 +67,26 @@ public class LocalFileCacheTest extends TestCase {
                 CachedFileTest.createFile(nestedRemoteDirectory,
                                           singleFileKilobytes));
 
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 3; i++) {
             testRemoteFiles.add(
                     CachedFileTest.createFile(remoteTestDirectory,
                                               singleFileKilobytes));
         }
 
+        mockClient = new MockWebDavClient();
+        mockClient.mapFilesUsingDefaultUrl(testRemoteFiles);
+
         maxNumberOfCachedFiles = testRemoteFiles.size() - 1;
         // adding last file should force removal of first file
         final int cacheKilobytes =
                 (singleFileKilobytes + 1) * maxNumberOfCachedFiles;
-        cache = new LocalFileCache(cacheRootParentDirectory, cacheKilobytes);
+        cache = new LocalFileCache(cacheRootParentDirectory, cacheKilobytes, mockClient);
 
         filesToDeleteDuringTearDown = new ArrayList<File>();
         filesToDeleteDuringTearDown.add(cacheRootParentDirectory);
         filesToDeleteDuringTearDown.add(cache.getRootDirectory());
+        filesToDeleteDuringTearDown.add(cache.getActiveDirectory());
+        filesToDeleteDuringTearDown.add(cache.getTempDirectory());
         filesToDeleteDuringTearDown.add(remoteTestDirectory);
         filesToDeleteDuringTearDown.add(nestedRemoteDirectory);
         filesToDeleteDuringTearDown.addAll(testRemoteFiles);
@@ -137,20 +141,38 @@ public class LocalFileCacheTest extends TestCase {
         localFile = cache.getFile(testRemoteFile.toURI().toURL());
         localFiles.add(localFile);
         assertEquals("cached file has invalid length",
-                singleFileBytes, localFile.length());
+                     singleFileBytes, localFile.length());
 
         // give removal a chance to complete
         Thread.sleep(500);
 
-        assertEquals("invalid number of files in cache",
-                maxNumberOfCachedFiles, cache.getNumberOfFiles());
+        assertEquals("invalid number of files in cache after max capacity reached",
+                     maxNumberOfCachedFiles, cache.getNumberOfFiles());
 
         File removedLocalFile = localFiles.remove(0);
         assertFalse(removedLocalFile.getAbsolutePath() +
-                " should have been removed after expiration",
-                removedLocalFile.exists());
+                    " should have been removed after max capacity reached",
+                    removedLocalFile.exists());
 
+        // decrease capacity so that another file is dropped
+        cache.setKilobyteCapacity(cache.getKilobyteCapacity() - singleFileKilobytes);
+
+        // give removal a chance to complete
+        Thread.sleep(500);
+
+        assertEquals("invalid number of files in cache after reducing capacity",
+                     (maxNumberOfCachedFiles - 1), cache.getNumberOfFiles());
+
+        removedLocalFile = localFiles.remove(0);
+        assertFalse(removedLocalFile.getAbsolutePath() +
+                    " should have been removed after reducing capacity",
+                    removedLocalFile.exists());
+
+        // clear everything else
         cache.clear();
+
+        // give removal a chance to complete
+        Thread.sleep(500);
 
         assertEquals("invalid number of files in cache after clear",
                      0, cache.getNumberOfFiles());
@@ -164,6 +186,8 @@ public class LocalFileCacheTest extends TestCase {
         testRemoteFile =
                 CachedFileTest.createFile(remoteTestDirectory,
                                           cache.getKilobyteCapacity() + 1);
+        mockClient.mapFileUsingDefaultUrl(testRemoteFile);
+
         filesToDeleteDuringTearDown.add(testRemoteFile);
         try {
             cache.getFile(testRemoteFile.toURI().toURL());
@@ -174,107 +198,6 @@ public class LocalFileCacheTest extends TestCase {
             LOG.info("succesfully received exception, message is: " +
                     cause.getMessage());
         }
-
-        // give removal a chance to complete
-        Thread.sleep(500);
-    }
-
-    public void testGetDirectory() throws Exception {
-
-        // increase capacity so that all original files are kept
-        cache.setKilobyteCapacity(cache.getKilobyteCapacity() + singleFileKilobytes);
-
-        // create one more file that is too big, which should be ignored
-        final File remoteTooBigFile =
-                CachedFileTest.createFile(remoteTestDirectory,
-                                          cache.getKilobyteCapacity() + 1);
-        filesToDeleteDuringTearDown.add(remoteTooBigFile);
-
-        final URL remoteTestDirectoryUrl = remoteTestDirectory.toURI().toURL();
-        MockWebDavClient mockClient = new MockWebDavClient();
-
-        List<File> remoteFileList = new ArrayList<File>(testRemoteFiles);
-        remoteFileList.add(remoteTooBigFile);
-
-        mockClient.setFilesForUrl(remoteTestDirectoryUrl, remoteFileList);
-
-        File remotePreCachedFile = testRemoteFiles.get(0);
-        File localPreCachedFile =
-                cache.getFile(remotePreCachedFile.toURI().toURL());
-        Assert.assertTrue(localPreCachedFile.getAbsolutePath() +
-                          " should exist after being (pre) cached",
-                          localPreCachedFile.exists());
-
-        File localDirectory = cache.getDirectory(remoteTestDirectoryUrl,
-                                                 mockClient);
-
-        Assert.assertTrue(localDirectory.getAbsolutePath() +
-                          " should exist after being cached",
-                          localDirectory.exists());
-
-        // all original file entries + 1 additional directory entry
-        final int expectedNumberOfFiles =
-                testRemoteFiles.size() + 1;
-
-        assertEquals("invalid number of files in cache",
-                     expectedNumberOfFiles, cache.getNumberOfFiles());
-
-        final int relativeStart =
-                remoteTestDirectory.getAbsolutePath().length() + 1;
-        for (File remoteFile : testRemoteFiles) {
-            verifyCachedDirectoryFileExists(localDirectory,
-                                            relativeStart,
-                                            remoteFile);
-        }
-
-        File localTooBigFile = new File(localDirectory,
-                                        remoteTooBigFile.getName());
-        Assert.assertFalse(
-                localTooBigFile.getAbsolutePath() +
-                " should NOT exist in cache since it is too big",
-                localTooBigFile.exists());
-
-        Assert.assertFalse(
-                localPreCachedFile.getAbsolutePath() +
-                " should have been moved into directory",
-                localPreCachedFile.exists());
-
-        // reload the cache from the file system
-        cache.loadCacheFromFilesystem();
-
-        final int numberOfFilesMinusDirectory = expectedNumberOfFiles - 1;
-        assertEquals("invalid number of files in cache after reload",
-                     numberOfFilesMinusDirectory,
-                     cache.getNumberOfFiles());
-
-        localDirectory = cache.getDirectory(remoteTestDirectoryUrl,
-                                            mockClient);
-
-        Assert.assertTrue(localDirectory.getAbsolutePath() +
-                          " should exist after being cached",
-                          localDirectory.exists());
-
-        cache.clear();
-
-        assertEquals("invalid number of files in cache after clear",
-                     0, cache.getNumberOfFiles());
-
-        // reload the cache from the file system to clear empty directories
-        cache.loadCacheFromFilesystem();
-
-        assertEquals("invalid number of files in cache after post clear load",
-                     0, cache.getNumberOfFiles());
-    }
-
-    private void verifyCachedDirectoryFileExists(File localDirectory,
-                                                 int relativeStart,
-                                                 File remoteFile) {
-        final String absolutePath = remoteFile.getAbsolutePath();
-        final String relativePath = absolutePath.substring(relativeStart);
-        final File localFile = new File(localDirectory, relativePath);
-        Assert.assertTrue(localFile.getAbsolutePath() +
-                " should exist after being cached",
-                localFile.exists());
     }
 
     private static final Logger LOG =
