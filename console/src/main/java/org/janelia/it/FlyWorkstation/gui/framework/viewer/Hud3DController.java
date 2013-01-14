@@ -131,7 +131,7 @@ public class Hud3DController implements ActionListener {
     private String locateInputFile() {
         if ( hud.getEntity() != null ) {
             // Doing 3D.  Need to locate the file.
-            filename = entityFilenameFetcher.fetchFilename(
+            filename = entityFilenameFetcher.fetchSignalFilename(
                     hud.getEntity(), EntityFilenameFetcher.FilenameType.IMAGE_FAST_3d
             );
 

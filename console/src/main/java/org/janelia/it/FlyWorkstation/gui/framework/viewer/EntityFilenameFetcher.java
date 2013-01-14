@@ -11,6 +11,9 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Created by IntelliJ IDEA.
  * User: fosterl
@@ -23,39 +26,72 @@ public class EntityFilenameFetcher {
 	
 	private static final Logger log = LoggerFactory.getLogger(EntityFilenameFetcher.class);
 	
-    public enum FilenameType {IMAGE_FAST_3d, NEURON_FRAGMENT_3d}
-    public String fetchFilename( Entity entity, FilenameType type ) {
-        if ( entity == null ) {
-            log.debug("Null entity passed in, for type " + type);
-            return null;
-        }
-        String entityConstantFileType = getEntityConstantFileType(type);
-        if ( entityConstantFileType != null ) {
-            ensureEntityLoaded( entity );
-            for (EntityData ed: entity.getEntityData()) {
-                ensureEntityLoaded(ed.getChildEntity());
-            }
+    public enum FilenameType {IMAGE_FAST_3d, NEURON_FRAGMENT_3d, MASK_FILE}
 
-            String imageFilePath = EntityUtils.getImageFilePath(entity, entityConstantFileType);
+    private static Map<String,String> entityTypeToFileTypeMapping;
+    static {
+        entityTypeToFileTypeMapping = new HashMap<String,String>();
+        entityTypeToFileTypeMapping.put( EntityConstants.TYPE_NEURON_FRAGMENT, EntityConstants.ATTRIBUTE_DEFAULT_3D_IMAGE );
+        entityTypeToFileTypeMapping.put( EntityConstants.TYPE_CURATED_NEURON, EntityConstants.ATTRIBUTE_DEFAULT_FAST_3D_IMAGE );
+        entityTypeToFileTypeMapping.put( EntityConstants.TYPE_SAMPLE, EntityConstants.ATTRIBUTE_DEFAULT_FAST_3D_IMAGE );
+        entityTypeToFileTypeMapping.put( EntityConstants.TYPE_IMAGE_3D, EntityConstants.ATTRIBUTE_REFERENCE_MIP_IMAGE ); //todo change
+    }
+
+    private static Map<FilenameType,String> fetchTypeToFileType;
+    static {
+        fetchTypeToFileType = new HashMap<FilenameType,String>();
+        fetchTypeToFileType.put( FilenameType.IMAGE_FAST_3d, EntityConstants.ATTRIBUTE_DEFAULT_FAST_3D_IMAGE);
+        fetchTypeToFileType.put(FilenameType.NEURON_FRAGMENT_3d, EntityConstants.ATTRIBUTE_DEFAULT_3D_IMAGE);
+    }
+
+    public String fetchFilename(Entity entity, FilenameType entityConstantFileType) {
+        ensureEntityLoaded( entity );
+        for (EntityData ed: entity.getEntityData()) {
+            ensureEntityLoaded(ed.getChildEntity());
+        }
+
+        String imageRole = fetchTypeToFileType.get( entityConstantFileType );
+        String imageFilePath = null;
+        if ( imageRole != null ) {
+            imageFilePath = EntityUtils.getImageFilePath( entity, imageRole );
             log.debug( "For entity {}, got file {}", entity.getId(), imageFilePath );
 
             if ( imageFilePath != null ) {
                 imageFilePath = PathTranslator.convertPath( imageFilePath );
                 log.debug( "The 3D image is at " + imageFilePath);
             }
-            return imageFilePath;
         }
-        else {
-            // In future, other types will be added, and must be handled.
-            throw new IllegalArgumentException( "File type " + type + " not yet implemented." );
-        }
+        return imageFilePath;
+
     }
 
-    private String getEntityConstantFileType( FilenameType type ) {
-        if ( type == FilenameType.IMAGE_FAST_3d ) {
-            return EntityConstants.ATTRIBUTE_DEFAULT_FAST_3D_IMAGE;
+    public String fetchSignalFilename(Entity entity, FilenameType type) {
+        if ( entity == null  ||  type == null ) {
+            log.debug("Null entity or type passed in, for type " + type);
+            return null;
         }
-        else if ( type == FilenameType.NEURON_FRAGMENT_3d) {
+        String entityConstantFileType = getEntityConstantFileType(type);
+        return fetchFilename( entity, type );
+//        if ( entityConstantFileType != null ) {
+//            return fetchFilename(entity, entityConstantFileType);
+//        }
+//        else {
+//            // In future, other types will be added, and must be handled.
+//            throw new IllegalArgumentException( "File type " + type + " not yet implemented." );
+//        }
+    }
+
+    public String getEntityConstantFileType(FilenameType type) {
+        return fetchTypeToFileType.get( type );
+    }
+
+    public String getEntityConstantFileType(String entityType) {
+        return entityTypeToFileTypeMapping.get( entityType );
+    }
+
+    public String getMaskEntityConstantFileType(String entityType) {
+        //        fetchTypeToFileType.put(FilenameType.MASK_FILE, ); //todo change
+        if ( entityType.equals(EntityConstants.TYPE_IMAGE_3D ) ) {   //??????????????????????????
             return EntityConstants.ATTRIBUTE_DEFAULT_3D_IMAGE;
         }
         else {

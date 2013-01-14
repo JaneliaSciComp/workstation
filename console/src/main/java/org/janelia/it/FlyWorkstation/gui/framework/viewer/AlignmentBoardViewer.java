@@ -244,23 +244,24 @@ public class AlignmentBoardViewer extends Viewer {
 
     private void recursivelyFindDisplayableChildren(List<Entity> displayableList, Entity entity) throws Exception {
         entity = ModelMgr.getModelMgr().loadLazyEntity(entity, false);
-        for (Entity childEntity: entity.getChildren()) {
-            if ( entity.hasChildren() ) {
-                recursivelyFindDisplayableChildren(displayableList, childEntity);
-            }
-
-            String entityTypeName = childEntity.getEntityType().getName();
-            if (
+        logger.warn("Recursing into " + entity.getName());
+        String entityTypeName = entity.getEntityType().getName();
+        if (
                 EntityConstants.TYPE_CURATED_NEURON.equals(entityTypeName)
                         ||
-                EntityConstants.TYPE_SAMPLE.equals(entityTypeName)
+                        EntityConstants.TYPE_SAMPLE.equals(entityTypeName)
                         ||
-                EntityConstants.TYPE_NEURON_FRAGMENT.equals(entityTypeName)
+                        EntityConstants.TYPE_NEURON_FRAGMENT.equals(entityTypeName)
 //                        ||
 //                EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION.equals(entityTypeName)
-               ) {
-                logger.info("Adding a child of type " + entityTypeName);
-                displayableList.add(childEntity);
+                ) {
+            logger.info("Adding a child of type " + entityTypeName + ", named " + entity.getName() );
+            displayableList.add(entity);
+        }
+
+        if ( entity.hasChildren() ) {
+            for (Entity childEntity: entity.getChildren()) {
+                recursivelyFindDisplayableChildren(displayableList, childEntity);
             }
         }
     }
