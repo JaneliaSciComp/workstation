@@ -15,10 +15,12 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.LayersPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -143,10 +145,19 @@ public class AlignmentBoardViewer extends Viewer {
                 SessionMgr.getSessionMgr().handleException(ex);
             }
 
+            // Also get the mask items.
+            List<Entity> consolidatedLabelsList = new ArrayList<Entity>();
+            try {
+                recursivelyFindConsolidatedLabels( consolidatedLabelsList, alignmentBoard );
+            } catch ( Exception ex ) {
+                SessionMgr.getSessionMgr().handleException( ex );
+            }
+
             mip3d.setClearOnLoad( true );
 
             // Get all the signal filenames.  These are to be masked-by the mask filenames' contents.
             final List<String> signalFilenames = new ArrayList<String>();
+            final List<String> maskFilenames = new ArrayList<String>();
 
             EntityFilenameFetcher filenameFetcher = new EntityFilenameFetcher();
             for ( Entity displayable: displayableList ) {
@@ -155,16 +166,20 @@ public class AlignmentBoardViewer extends Viewer {
                 String entityConstantFileType = filenameFetcher.getEntityConstantFileType( typeName );
 
                 String filename = filenameFetcher.fetchFilename( displayable, entityConstantFileType );
-
                 if ( filename != null ) {
-                    signalFilenames.add(filename);
+                    signalFilenames.add( filename );
+                }
+
+            }
+
+            for ( Entity consolidatedLabel: consolidatedLabelsList ) {
+                String filename = EntityUtils.getFilePath( consolidatedLabel );
+                if ( filename != null ) {
+                    maskFilenames.add( PathTranslator.convertPath( filename ) );
                 }
             }
 
-            final List<String> maskFilenames = new ArrayList<String>();
-
-            
-            // Activate the layers panel for controlling visibility. This code might have to be moved elsewhere. 
+            // Activate the layers panel for controlling visibility. This code might have to be moved elsewhere.
             LayersPanel layersPanel = SessionMgr.getBrowser().getLayersPanel();
             layersPanel.showEntities(alignmentBoard.getOrderedChildren());
             SessionMgr.getBrowser().selectRightPanel(layersPanel);
@@ -228,7 +243,7 @@ public class AlignmentBoardViewer extends Viewer {
 
     private void recursivelyFindDisplayableChildren(List<Entity> displayableList, Entity entity) throws Exception {
         entity = ModelMgr.getModelMgr().loadLazyEntity(entity, false);
-        logger.warn("Recursing into " + entity.getName());
+        logger.debug("Recursing into " + entity.getName());
         String entityTypeName = entity.getEntityType().getName();
         if (
                 EntityConstants.TYPE_CURATED_NEURON.equals(entityTypeName)
@@ -246,6 +261,28 @@ public class AlignmentBoardViewer extends Viewer {
         if ( entity.hasChildren() ) {
             for (Entity childEntity: entity.getChildren()) {
                 recursivelyFindDisplayableChildren(displayableList, childEntity);
+            }
+        }
+    }
+
+    private void recursivelyFindConsolidatedLabels(List<Entity> consLabelList, Entity entity) throws Exception {
+        entity = ModelMgr.getModelMgr().loadLazyEntity(entity, false);
+        logger.debug("Recursing into " + entity.getName());
+        String entityTypeName = entity.getEntityType().getName();
+        // Finding the right kind of supporting data.
+        if (
+             entity.getName().equals("ConsolidatedLabel.v3dpbd" )
+           ) {
+            logger.info("Adding a child of type " + entityTypeName + ", named " + entity.getName() );
+            // This is that kind of an entity!
+            consLabelList.add(entity);
+        }
+        else {
+            //  We assume supporting data does not HAVE supporting data.
+            if ( entity.hasChildren() ) {
+                for (Entity childEntity: entity.getChildren()) {
+                    recursivelyFindConsolidatedLabels(consLabelList, childEntity);
+                }
             }
         }
     }

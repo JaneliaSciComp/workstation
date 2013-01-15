@@ -40,8 +40,9 @@ public class EntityFilenameFetcher {
     private static Map<FilenameType,String> fetchTypeToFileType;
     static {
         fetchTypeToFileType = new HashMap<FilenameType,String>();
-        fetchTypeToFileType.put( FilenameType.IMAGE_FAST_3d, EntityConstants.ATTRIBUTE_DEFAULT_FAST_3D_IMAGE);
-        fetchTypeToFileType.put(FilenameType.NEURON_FRAGMENT_3d, EntityConstants.ATTRIBUTE_DEFAULT_3D_IMAGE);
+        fetchTypeToFileType.put( FilenameType.IMAGE_FAST_3d, EntityConstants.ATTRIBUTE_DEFAULT_FAST_3D_IMAGE );
+        fetchTypeToFileType.put( FilenameType.NEURON_FRAGMENT_3d, EntityConstants.ATTRIBUTE_DEFAULT_3D_IMAGE );
+        fetchTypeToFileType.put( FilenameType.MASK_FILE, EntityConstants.ATTRIBUTE_FILE_PATH );
     }
 
     /**  Given you already know the image's role, call this with your entity. */
@@ -53,7 +54,7 @@ public class EntityFilenameFetcher {
 
         String imageFilePath = null;
         if ( imageRole != null ) {
-            imageFilePath = getFiletypeForEntityAndRole(entity, imageRole);
+            imageFilePath = getFilepathForEntityAndRole(entity, imageRole);
         }
         return imageFilePath;
 
@@ -68,7 +69,7 @@ public class EntityFilenameFetcher {
         String imageRole = fetchTypeToFileType.get( fetcherFilenameType );
         String imageFilePath = null;
         if ( imageRole != null ) {
-            imageFilePath = getFiletypeForEntityAndRole(entity, imageRole);
+            imageFilePath = getFilepathForEntityAndRole(entity, imageRole);
         }
         return imageFilePath;
 
@@ -100,7 +101,7 @@ public class EntityFilenameFetcher {
 //        }
 //    }
 
-    private String getFiletypeForEntityAndRole(Entity entity, String imageRole) {
+    public String getFilepathForEntityAndRole(Entity entity, String imageRole) {
         String imageFilePath;
         imageFilePath = EntityUtils.getImageFilePath(entity, imageRole);
         log.debug( "For entity {}, got file {}", entity.getId(), imageFilePath );

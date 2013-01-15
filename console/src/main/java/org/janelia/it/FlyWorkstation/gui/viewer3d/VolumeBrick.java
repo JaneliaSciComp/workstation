@@ -80,10 +80,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         colorMask[ 2 ] = blue;
     }
 
-    public void setVolumeMask( IntBuffer volumeMaskData ) {
-
-    }
-
     public float[] getColorMask() {
         return colorMask;
     }
@@ -313,9 +309,9 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     public void setMaskTextureColorSpace(TextureColorSpace colorSpace) {
         if (colorSpace != maskTextureColorSpace) {
-            maskTextureColorSpace = colorSpace;
-            bSignalTextureNeedsUpload = true;
-            bMaskTextureNeedsUpload = true;
+//            maskTextureColorSpace = colorSpace;
+//            bSignalTextureNeedsUpload = true;
+//            bMaskTextureNeedsUpload = true;
         }
     }
 
@@ -397,6 +393,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     public void setMaskingData(int sx, int sy, int sz, IntBuffer rgbaBuffer)
     {
+//setVolumeData(sx, sy, sz, rgbaBuffer); // *** TEMP ***
         maskingVoxels = new int[]{sx, sy, sz};
         maskData = rgbaBuffer;
         bMaskTextureNeedsUpload = true;

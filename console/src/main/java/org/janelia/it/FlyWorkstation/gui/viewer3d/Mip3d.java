@@ -102,10 +102,10 @@ implements MouseListener, MouseMotionListener, ActionListener,
     public void setMaskFiles(List<String> maskFiles) {
 
         // Build the masking texture info.
-        VolumeLoader volumeLoader = new VolumeLoader();
         if (maskFiles != null) {
             VolumeMaskBuilder builder = new VolumeMaskBuilder();
             for ( String maskFile: maskFiles ) {
+                VolumeLoader volumeLoader = new VolumeLoader();
                 volumeLoader.loadVolume( maskFile );
                 builder.beginVolume();
                 volumeLoader.populateVolumeAcceptor(builder);

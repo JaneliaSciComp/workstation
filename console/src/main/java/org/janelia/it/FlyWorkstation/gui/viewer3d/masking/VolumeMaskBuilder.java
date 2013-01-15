@@ -17,6 +17,10 @@ import java.util.List;
  */
 public class VolumeMaskBuilder implements VolumeDataAcceptor {
 
+    private static final int X_INX = 0;
+    private static final int Y_INX = 1;
+    private static final int Z_INX = 2;
+
     private List<MaskingDataBean> maskingDataBeans = new ArrayList<MaskingDataBean>();
     private MaskingDataBean currentBean;
 
@@ -24,10 +28,36 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
     }
 
     public int[] getVolumeMask() {
-        int[] rtnValue = null;
+        Integer[] volumeMaskVoxels = getVolumeMaskVoxels();
+
+        // Build a volume big enough to hold them all.  The volume mask voxels array tells
+        // the maximum number of voxels from any direction from all input masks.
+
+        // This terribly naive first cut will make a huge box big enough to hold any direction
+        // of any input.  Then the individual masks will be thrown into slots with an assumption
+        // (even though wrong) that their voxels are the same size as all other voxels of
+        // any other mask.
+        int[] rtnValue = new int[ volumeMaskVoxels[0] * volumeMaskVoxels[1] * volumeMaskVoxels[2] ];
+        int dimMaskX = volumeMaskVoxels[ X_INX ];
+        int dimMaskY = volumeMaskVoxels[ Y_INX ];
+        //int dimMaskZ = volumeMaskVoxels[ Z_INX ];
 
         for ( MaskingDataBean bean: maskingDataBeans ) {
+            int dimBeanX = bean.getSx();
+            int dimBeanY = bean.getSy();
+            int dimBeanZ = bean.getSz();
 
+            IntBuffer maskData = bean.getMaskData();
+
+            for ( int z = 0; z < dimBeanZ; z++ ) {
+                for ( int y = 0; y < dimBeanY; y++ ) {
+                    for ( int x = 0; x < dimBeanX; x++ ) {
+                        int outputOffset = ( z * dimMaskY * dimMaskX ) + ( y * dimMaskX ) + x;
+                        int inputOffset = ( z * dimBeanX * dimBeanY ) + ( y * dimBeanX ) + x;
+                        rtnValue[ outputOffset ] = maskData.get( inputOffset );
+                    }
+                }
+            }
         }
 
         return rtnValue;
@@ -36,7 +66,6 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
     public IntBuffer getVolumeMaskBuffer() {
         if ( maskingDataBeans.size() == 0 )
             return null;
-
         return IntBuffer.wrap( getVolumeMask() );
     }
 
