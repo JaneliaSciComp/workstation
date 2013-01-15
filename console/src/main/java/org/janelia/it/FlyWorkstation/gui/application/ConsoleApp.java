@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.application;
 
+import java.awt.SplashScreen;
 import java.util.MissingResourceException;
 
 import javax.swing.JOptionPane;
@@ -8,6 +9,7 @@ import javax.swing.SwingUtilities;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.console.ConsoleMenuBar;
 import org.janelia.it.FlyWorkstation.gui.framework.exception_handlers.ExitHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.exception_handlers.UserNotificationExceptionHandler;
@@ -56,11 +58,12 @@ public class ConsoleApp {
     }
 
     private static void newBrowser() {
-        // Show the Splash Screen
-//        final SplashScreen splash = new SplashScreen();
-//        splash.setStatusText("Initializing Application...");
-//        splash.setVisible(true);
-
+        
+        final SplashScreen splash = SplashScreen.getSplashScreen();
+        if (splash == null) {
+            log.warn("No splash screen image configured");
+        }
+        
         // Prime the tool-specific properties before the Session is invoked
         ConsoleProperties.load();
         
@@ -81,7 +84,7 @@ public class ConsoleApp {
             sessionMgr.setNewBrowserMenuBar(ConsoleMenuBar.class);
             sessionMgr.startExternalHttpListener(30000);
             sessionMgr.startAxisServer(ConsoleProperties.getString("console.WebServiceURL"));
-            sessionMgr.startWebServer(ConsoleProperties.getInt("console.WebServerPort"));
+//            sessionMgr.startWebServer(ConsoleProperties.getInt("console.WebServerPort"));
             sessionMgr.setModelProperty("ShowInternalDataSourceInDialogs", internal);
             sessionMgr.setModelProperty(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY, false);
             sessionMgr.setModelProperty(SessionMgr.DISPLAY_SUB_EDITOR_PROPERTY, false);
@@ -99,7 +102,6 @@ public class ConsoleApp {
             //        client.gui.components.assembly.genome_view.GenomeView.class,"Genome View", "ejb");
             //      sessionMgr.registerEditorForType(api.entity_model.model.assembly.GenomicAxis.class,
             //        client.gui.components.annotation.debug_view.DebugView.class,"Annotation Debug View", "ejb");
-//            splash.setStatusText("Initializing Visualization Components...");
 //            final Class vizardEditor = client.gui.components.annotation.axis_annotation.GenomicAxisAnnotationEditor.class;
 //            // OMIT for CONVERSION
 //            sessionMgr.registerEditorForType(
@@ -138,13 +140,9 @@ public class ConsoleApp {
 
             ServerStatusReportManager.getReportManager().startCheckingForReport();
 
-//            sessionMgr.setSplashPanel(new SplashPanel());
-
-//            splash.setStatusText("Connecting to Remote Data Sources...");
             FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
 //            FacadeManager.addProtocolToUseList("sage");
 
-//            splash.setVisible(false);
             // Assuming that the user has entered the login/password information, now validate
             if (null==SessionMgr.getUsername() || null==SessionMgr.getUserEmail()) {
                 Object[] options = {"Enter Login", "Exit Program"};
@@ -181,19 +179,16 @@ public class ConsoleApp {
                         "Missing Data Mount");
         	}
         	
-            //Start First Browser
-            sessionMgr.newBrowser();
+            Browser browser = sessionMgr.newBrowser();
             
-//            splash.setStatusText("Connected.");
+            if (splash!=null) splash.close();
             
+            browser.setVisible(true);
+            browser.toFront();
         }
         catch (Exception ex) {
             SessionMgr.getSessionMgr().handleException(ex);
             SessionMgr.getSessionMgr().systemExit();
-        }
-        finally {
-//            splash.setVisible(false);
-//            splash.dispose();
         }
     }
 }

@@ -6,7 +6,17 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
-import com.google.common.eventbus.Subscribe;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.event.*;
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.swing.*;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChangeEvent;
@@ -15,7 +25,6 @@ import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityRemoveEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.UserColorMapping;
-import org.janelia.it.FlyWorkstation.gui.application.SplashPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.RemoveEntityAction;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyboardShortcut;
@@ -37,13 +46,7 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicBoolean;
+import com.google.common.eventbus.Subscribe;
 
 /**
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of 
@@ -63,7 +66,7 @@ public class IconDemoPanel extends Viewer {
 	protected final static int PAGE_SIZE = 500;
 	
 	// Main components
-	protected SplashPanel splashPanel;
+	protected JLabel splashPanel;
 	protected IconDemoToolbar iconDemoToolbar;
 	protected ImagesPanel imagesPanel;
 	
@@ -341,7 +344,7 @@ public class IconDemoPanel extends Viewer {
 		hud = Hud.getSingletonInstance();
 		hud.addKeyListener(keyListener);
 		
-		splashPanel = new SplashPanel();
+		splashPanel = new JLabel(Icons.getIcon("flylight_transparent_no_shadow.png"));
 		add(splashPanel);
 
 		iconDemoToolbar = createToolbar();

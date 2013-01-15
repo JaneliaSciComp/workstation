@@ -85,6 +85,7 @@
             <manifest>
                 <attribute name="Main-Class" value="org.janelia.it.FlyWorkstation.gui.application.ConsoleApp"/>
                 <attribute name="Class-Path" value="${manifest.classpath}"/>
+            	<attribute name="SplashScreen-Image" value="images/FlyWorkstationSplashScreen.png"/>
             </manifest>
             <fileset dir="${build.classes.dir}"/>
             <fileset dir="${model.module}/build/classes"/>
