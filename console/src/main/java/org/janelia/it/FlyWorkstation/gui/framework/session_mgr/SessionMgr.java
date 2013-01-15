@@ -1,5 +1,15 @@
 package org.janelia.it.FlyWorkstation.gui.framework.session_mgr;
 
+import java.awt.Component;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.io.*;
+import java.text.ParseException;
+import java.util.*;
+
+import javax.swing.*;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
@@ -13,21 +23,12 @@ import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.FlyWorkstation.web.EmbeddedWebServer;
 import org.janelia.it.FlyWorkstation.ws.EmbeddedAxisServer;
 import org.janelia.it.jacs.model.user_data.SubjectRelationship;
 import org.janelia.it.jacs.model.user_data.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
-import java.io.*;
-import java.text.ParseException;
-import java.util.*;
-import java.util.List;
 
 
 public class SessionMgr {
@@ -60,6 +61,7 @@ public class SessionMgr {
     //private String releaseVersion="$date$";
     private ExternalListener externalHttpListener;
     private EmbeddedAxisServer axisServer;
+    private EmbeddedWebServer webServer;
     private File settingsFile;
     private String fileSep = File.separator;
     private String prefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
@@ -495,6 +497,32 @@ public class SessionMgr {
     public EmbeddedAxisServer getAxisServer() {
 		return axisServer;
 	}
+
+    public void startWebServer(int port) {
+        try {
+            if (webServer == null) webServer = new EmbeddedWebServer(port);
+            webServer.start();
+        }
+        catch (Exception e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
+    }
+
+    public void stopWebServer() {
+        if (webServer != null) {
+            try {
+                webServer.stop();
+                webServer = null;
+            }
+            catch (Exception e) {
+                SessionMgr.getSessionMgr().handleException(e);
+            }
+        }
+    }
+    
+    public EmbeddedWebServer getWebServer() {
+        return webServer;
+    }
 
 	public void resetSession() {
         Set keys = browserModelsToBrowser.keySet();
