@@ -224,7 +224,7 @@ class MipRenderer implements GLEventListener
     //todo consider making RGB setting a preference rather than this drill-in setter.
     public void setRgbValues() {
 
-        final VolumeBrickOLD volumeBrick = getVolumeBrick();
+        final VolumeBrick volumeBrick = getVolumeBrick();
 
         if ( volumeBrick != null ) {
             float[] colorMask = volumeBrick.getColorMask();
@@ -268,11 +268,11 @@ class MipRenderer implements GLEventListener
         }
     }
 
-    private VolumeBrickOLD getVolumeBrick() {
-        VolumeBrickOLD volumeBrick = null;
+    private VolumeBrick getVolumeBrick() {
+        VolumeBrick volumeBrick = null;
         for ( GLActor actor: actors ) {
-            if ( actor instanceof VolumeBrickOLD) {
-                volumeBrick = ((VolumeBrickOLD)actor);
+            if ( actor instanceof VolumeBrick) {
+                volumeBrick = ((VolumeBrick)actor);
             }
         }
         return volumeBrick;
