@@ -28,8 +28,8 @@ public class VolumeLoader
 {
 	private int[] argbIntArray;
 	private int sx, sy, sz;
-	private VolumeBrickOLD.TextureColorSpace colorSpace =
-		VolumeBrickOLD.TextureColorSpace.COLOR_SPACE_LINEAR;
+	private VolumeBrick.TextureColorSpace colorSpace =
+		VolumeBrick.TextureColorSpace.COLOR_SPACE_LINEAR;
 
 	public boolean loadLociReader(BufferedImageReader in)
 	throws IOException, FormatException
