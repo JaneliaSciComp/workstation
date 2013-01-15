@@ -315,7 +315,7 @@ public class Browser extends JFrame implements Cloneable {
         
         rightPanel = new VerticalPanelPicker();
         rightPanel.addPanel(Icons.getIcon("page.png"), "Ontology", "Displays an ontology for annotation", ontologyOutline);
-        rightPanel.addPanel(Icons.getIcon("palette.png"), "Layers", "Adjust alignment board layers", layersPanel);
+//        rightPanel.addPanel(Icons.getIcon("palette.png"), "Layers", "Adjust alignment board layers", layersPanel);
         rightPanel.addPanel(Icons.getIcon("page_copy.png"), "Split Picking Tool", "Allows for simulation of flyline crosses", splitPickingPanel);
         
         Component rightComponent = rightPanel;

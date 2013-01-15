@@ -350,7 +350,6 @@ public class SessionMgr {
         if (browserImageIcon != null) {
             browser.setBrowserImageIcon(browserImageIcon);
         }
-        browser.setVisible(true);
         browserModelsToBrowser.put(browser.getBrowserModel(), browser);
         activeBrowser = browser;
         return browser;
