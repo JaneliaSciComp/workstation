@@ -33,7 +33,7 @@ class MipRenderer implements GLEventListener
 
     public MipRenderer() {
     		// actors.add(new TeapotActor()); // solid shading is not supported right now
-    		actors.add(new VolumeBrickOLD(this)); // Test volume with six voxels
+    		actors.add(new VolumeBrick(this)); // Test volume with six voxels
     }
     
     public void addActor(GLActor actor) {
