@@ -54,7 +54,12 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
                     for ( int x = 0; x < dimBeanX; x++ ) {
                         int outputOffset = ( z * dimMaskY * dimMaskX ) + ( y * dimMaskX ) + x;
                         int inputOffset = ( z * dimBeanX * dimBeanY ) + ( y * dimBeanX ) + x;
+
+                        // This set-only technique will merely _set_ the value to the latest
+                        // loaded mask.  There is no overlap taken into account here.
+                        // LAST PRECEDENT STRATEGY
                         rtnValue[ outputOffset ] = maskData.get( inputOffset );
+                        //rtnValue[ outputOffset ] = 255;  // TEMP assumption: allow all underlying data.
                     }
                 }
             }

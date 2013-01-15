@@ -33,7 +33,7 @@ class MipRenderer implements GLEventListener
 
     public MipRenderer() {
     		// actors.add(new TeapotActor()); // solid shading is not supported right now
-    		actors.add(new VolumeBrick(this)); // Test volume with six voxels
+    		actors.add(new VolumeBrickOLD(this)); // Test volume with six voxels
     }
     
     public void addActor(GLActor actor) {
@@ -224,7 +224,7 @@ class MipRenderer implements GLEventListener
     //todo consider making RGB setting a preference rather than this drill-in setter.
     public void setRgbValues() {
 
-        final VolumeBrick volumeBrick = getVolumeBrick();
+        final VolumeBrickOLD volumeBrick = getVolumeBrick();
 
         if ( volumeBrick != null ) {
             float[] colorMask = volumeBrick.getColorMask();
@@ -268,11 +268,11 @@ class MipRenderer implements GLEventListener
         }
     }
 
-    private VolumeBrick getVolumeBrick() {
-        VolumeBrick volumeBrick = null;
+    private VolumeBrickOLD getVolumeBrick() {
+        VolumeBrickOLD volumeBrick = null;
         for ( GLActor actor: actors ) {
-            if ( actor instanceof VolumeBrick ) {
-                volumeBrick = ((VolumeBrick)actor);
+            if ( actor instanceof VolumeBrickOLD) {
+                volumeBrick = ((VolumeBrickOLD)actor);
             }
         }
         return volumeBrick;

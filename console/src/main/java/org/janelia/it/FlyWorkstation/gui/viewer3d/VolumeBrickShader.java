@@ -14,8 +14,6 @@ public class VolumeBrickShader extends AbstractShader {
     private static final float[] SHOW_ALL  = new float[] {
         1.0f, 1.0f, 1.0f
     };
-    private static final int VOL_TEX_OFFSET = 0;
-    private static final int MASK_TEX_OFFSET = 1;
 
     private int previousShader = 0;
     private float[] rgb;
@@ -39,17 +37,9 @@ public class VolumeBrickShader extends AbstractShader {
         int shaderProgram = getShaderProgram();
         gl.glUseProgram( shaderProgram );
 
-        gl.glUniform1i( gl.glGetUniformLocation( shaderProgram, "volumeTexture" ), VOL_TEX_OFFSET );
-        if ( volumeMaskApplied ) {
-            gl.glUniform1i( gl.glGetUniformLocation( shaderProgram, "maskingTexture" ), MASK_TEX_OFFSET );
-        }
         pushFilterUniform( gl, shaderProgram );
         pushMaskUniform( gl, shaderProgram );
 
-    }
-
-    public void setColorMask( float red, float green, float blue ) {
-        setColorMask( new float[] {red, green, blue} );
     }
 
     public void setColorMask( float[] rgb ) {
@@ -63,6 +53,22 @@ public class VolumeBrickShader extends AbstractShader {
 
     public void unload(GL2 gl) {
         gl.glUseProgram(previousShader);
+    }
+
+    public void setTextureUniforms(GL2 gl, int[] textureIds ) {
+        int signalTextureLoc = gl.glGetUniformLocation(getShaderProgram(), "signalTexture");
+        if ( signalTextureLoc == -1 ) {
+            throw new RuntimeException( "Failed to find signal texture location." );
+        }
+        gl.glUniform1i( signalTextureLoc, textureIds[ 0 ] );
+
+        if ( volumeMaskApplied ) {
+            int maskingTextureLoc = gl.glGetUniformLocation(getShaderProgram(), "maskingTexture");
+            if ( maskingTextureLoc == -1 ) {
+                throw new RuntimeException( "Failed to find masking texture location." );
+            }
+            gl.glUniform1i( maskingTextureLoc, textureIds[ 1 ] );
+        }
     }
 
     private void pushMaskUniform(GL2 gl, int shaderProgram) {

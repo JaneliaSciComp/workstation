@@ -122,7 +122,8 @@ implements MouseListener, MouseMotionListener, ActionListener,
 
 		VolumeLoader volumeLoader = new VolumeLoader();
 		if (volumeLoader.loadVolume(fileName)) {
-			VolumeBrick brick = new VolumeBrick(renderer);
+//			VolumeBrickOLD brick = new VolumeBrickOLD(renderer);
+            VolumeBrick brick = new VolumeBrick(renderer);
 			volumeLoader.populateVolumeAcceptor(brick);
             if ( volumeMaskBuilder != null ) {
                 Integer[] voxels = volumeMaskBuilder.getVolumeMaskVoxels();

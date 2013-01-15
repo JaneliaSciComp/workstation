@@ -14,8 +14,6 @@ import javax.media.opengl.GL2;
  */
 public class VolumeBrick implements GLActor, VolumeDataAcceptor
 {
-    private static final int MASKING_TEXTURE_OFFSET = 1;  // After the last primary object offset.
-
     public enum RenderMethod {MAXIMUM_INTENSITY, ALPHA_BLENDING};
 	// Vary these parameters to taste
 	// Rendering variables
@@ -29,6 +27,9 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     // Color space is linear for most microscopy LSM, TIFF and V3DRAW files
     private TextureColorSpace signalTextureColorSpace = TextureColorSpace.COLOR_SPACE_LINEAR;
     private TextureColorSpace maskTextureColorSpace = TextureColorSpace.COLOR_SPACE_LINEAR;
+
+    private int[] textureIds;
+
 
     private GLUT glut = new GLUT();    
     /**
@@ -49,11 +50,12 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     // OpenGL state
     private int[] signalTextureVoxels = {8,8,8};
 	private IntBuffer signalData = Buffers.newDirectIntBuffer(signalTextureVoxels[0]* signalTextureVoxels[1]* signalTextureVoxels[2]);
-    private int mainObjectTextureId = 0;
+    private int signalTextureId = 0;
     private boolean bSignalTextureNeedsUpload = false;
 
     private int[] maskingVoxels = {8,8,8};
     private IntBuffer maskData;
+    private int maskTextureId;
     private boolean bMaskTextureNeedsUpload = false;
 
     private VolumeBrickShader volumeBrickShader = new VolumeBrickShader();
@@ -91,9 +93,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         }
 
 		gl.glPushAttrib(GL2.GL_TEXTURE_BIT | GL2.GL_ENABLE_BIT);
-		int[] textureIds = {0};
-		gl.glGenTextures(1, textureIds, 0);
-		mainObjectTextureId = textureIds[0];
+        genTextureIds(gl);
 
 		if (bSignalTextureNeedsUpload) {
 			uploadSignalTexture(gl);
@@ -115,6 +115,14 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 		bIsInitialized = true;
 	}
 
+    private void genTextureIds(GL2 gl) {
+        textureIds = new int[ maskData == null ? 1 : 2 ];
+        gl.glGenTextures(textureIds.length, textureIds, 0);
+        signalTextureId = textureIds[0];
+        if ( textureIds.length > 1 )
+            maskTextureId = textureIds[1];
+    }
+
     @Override
 	public void display(GL2 gl) {
 		if (! bIsInitialized)
@@ -135,8 +143,9 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         gl.glDisable(GL2.GL_LIGHTING);
         gl.glEnable(GL2.GL_TEXTURE_3D);
 
-        setupTexture(gl, mainObjectTextureId);
-        setupMaskingTexture(gl);
+        setupSignalTexture(gl);
+        if ( maskData != null )
+            setupMaskingTexture(gl);
 
         // set blending to enable transparent voxels
         if (renderMethod == RenderMethod.ALPHA_BLENDING) {
@@ -153,7 +162,11 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         }
         if (bUseShader) {
             volumeBrickShader.setColorMask(colorMask);
+            if ( maskData != null ) {
+                volumeBrickShader.setVolumeMaskApplied();
+            }
             volumeBrickShader.load(gl);
+            //volumeBrickShader.setTextureUniforms( gl, textureIds );
         }
 
         displayVolumeSlices(gl);
@@ -277,11 +290,11 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
 	@Override
 	public void dispose(GL2 gl) {
-		int[] textureIds = {mainObjectTextureId};
 		gl.glDeleteTextures(1, textureIds, 0);
 		// Retarded JOGL GLJPanel frequently reallocates the GL context
 		// during resize. So we need to be ready to reinitialize everything.
-		mainObjectTextureId = 0;
+		signalTextureId = 0;
+        maskTextureId = 0;
 		bSignalTextureNeedsUpload = true;
         bMaskTextureNeedsUpload = true;
         resetMaskingTextures();
@@ -309,9 +322,9 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     public void setMaskTextureColorSpace(TextureColorSpace colorSpace) {
         if (colorSpace != maskTextureColorSpace) {
-//            maskTextureColorSpace = colorSpace;
-//            bSignalTextureNeedsUpload = true;
-//            bMaskTextureNeedsUpload = true;
+            maskTextureColorSpace = colorSpace;
+            bSignalTextureNeedsUpload = true;
+            bMaskTextureNeedsUpload = true;
         }
     }
 
@@ -386,11 +399,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 		setVolumeData(sx, sy, sz, Buffers.newDirectIntBuffer(intArray));
 	}
 
-    public void setMaskingData(int sx, int sy, int sz, int[] intArray)
-    {
-        setMaskingData(sx, sy, sz, Buffers.newDirectIntBuffer(intArray));
-    }
-
     public void setMaskingData(int sx, int sy, int sz, IntBuffer rgbaBuffer)
     {
 //setVolumeData(sx, sy, sz, rgbaBuffer); // *** TEMP ***
@@ -462,11 +470,11 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         bSignalTextureNeedsUpload = true;
     }
 
-    /** Uploading the primary object texture. */
+    /** Uploading the signal texture. */
     private void uploadSignalTexture(GL2 gl) {
         uploadTexture(
                 gl,
-                mainObjectTextureId,
+                signalTextureId,
                 signalTextureVoxels[0],
                 signalTextureVoxels[1],
                 signalTextureVoxels[2],
@@ -474,6 +482,20 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
                 signalData
         );
         bSignalTextureNeedsUpload = false;
+    }
+
+    /** Upload the masking texture to open GL "state". */
+    private void uploadMaskingTexture(GL2 gl) {
+        uploadTexture(
+                gl,
+                maskTextureId,
+                maskingVoxels[0],
+                maskingVoxels[1],
+                maskingVoxels[2],
+                maskTextureColorSpace,
+                maskData
+        );
+        bMaskTextureNeedsUpload = false;
     }
 
     /** Uploading any texture. */
@@ -507,22 +529,12 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         maskingVoxels = null;
     }
 
-    /** Upload all masking textures which require it. */
-    private void uploadMaskingTexture(GL2 gl) {
-        uploadTexture(
-                gl,
-                MASKING_TEXTURE_OFFSET,
-                maskingVoxels[0],
-                maskingVoxels[1],
-                maskingVoxels[2],
-                maskTextureColorSpace,
-                maskData
-        );
-        bMaskTextureNeedsUpload = false;
+    private void setupMaskingTexture(GL2 gl) {
+        setupTexture(gl, maskTextureId);
     }
 
-    private void setupMaskingTexture(GL2 gl) {
-        setupTexture(gl, MASKING_TEXTURE_OFFSET);
+    private void setupSignalTexture(GL2 gl) {
+        setupTexture(gl, signalTextureId);
     }
 
     private void setupTexture(GL2 gl, int textureId) {

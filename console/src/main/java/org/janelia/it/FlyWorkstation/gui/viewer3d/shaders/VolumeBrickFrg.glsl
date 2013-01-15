@@ -6,8 +6,10 @@ uniform int hasMaskingTexture;
 
 // This takes the color as represented in the texture volume for this fragment and
 // eliminates colors opted out by the user.
-vec4 colorFilter(vec4 origColor)
+vec4 colorFilter()
 {
+    vec4 origColor = texture3D(signalTexture, gl_TexCoord[0].xyz);
+
     // Here, apply the color mask.
     origColor[0] = colorMask[0] * origColor[0];
     origColor[1] = colorMask[1] * origColor[1];
@@ -33,10 +35,11 @@ vec4 volumeMask(vec4 origColor)
 
 void main()
 {
-// NO-OP gl_FragColor = gl_TexCoord[0].xyz;
-    vec4 origColor = texture3D(signalTexture, gl_TexCoord[0].xyz);
-    origColor = colorFilter(origColor);
-    gl_FragColor = volumeMask(origColor);
+// NO-OP
+    gl_FragColor = gl_TexCoord[0].xyz;
+
+//    origColor = colorFilter();
+//    gl_FragColor = volumeMask(origColor);
 
 }
 
