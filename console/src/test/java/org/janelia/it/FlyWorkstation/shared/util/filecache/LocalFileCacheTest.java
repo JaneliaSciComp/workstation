@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.shared.util.filecache;
 
+import junit.framework.Assert;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -7,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -103,6 +105,8 @@ public class LocalFileCacheTest extends TestCase {
             if (cache.getNumberOfFiles() > 0) {
                 LOG.info("tearDown: clearing non-empty test cache instance");
                 cache.clear();
+                // give removal a chance to complete
+                Thread.sleep(500);
             }
         } catch (Throwable t) {
             LOG.warn("tearDown: failed to clear test cache instance", t);
@@ -116,7 +120,7 @@ public class LocalFileCacheTest extends TestCase {
         LOG.info("tearDown: exit --------------------------------------");
     }
 
-    public void testGetFile() throws Exception {
+    public void testRetrieveFile() throws Exception {
 
         final long singleFileBytes = singleFileKilobytes * 1024;
 
@@ -200,6 +204,30 @@ public class LocalFileCacheTest extends TestCase {
         }
     }
 
-    private static final Logger LOG =
-            LoggerFactory.getLogger(LocalFileCacheTest.class);
+    public void testGetEffectiveUrl() throws Exception {
+        File remoteFile = testRemoteFiles.get(0);
+        Assert.assertEquals("should not be any cached files before first call",
+                            0, cache.getNumberOfFiles());
+        final URL remoteUrl = remoteFile.toURI().toURL();
+        URL effectiveUrl = cache.getEffectiveUrl(remoteUrl);
+        final long numberOfFiles = cache.getNumberOfFiles();
+
+        Assert.assertEquals("remote and effective URLs should be the same after first call",
+                            remoteUrl, effectiveUrl);
+        Assert.assertEquals("should not be any cached files immediately after first call",
+                0, numberOfFiles);
+
+        // give async load a chance to complete
+        Thread.sleep(500);
+
+        effectiveUrl = cache.getEffectiveUrl(remoteUrl);
+
+        Assert.assertEquals("the requested file should be cached after a short wait",
+                            1, cache.getNumberOfFiles());
+
+        Assert.assertFalse("remote and effective URLs should differ after file is cached",
+                remoteUrl.equals(effectiveUrl));
+    }
+
+    private static final Logger LOG = LoggerFactory.getLogger(LocalFileCacheTest.class);
 }

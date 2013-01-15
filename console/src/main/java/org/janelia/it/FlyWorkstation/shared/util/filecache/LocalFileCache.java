@@ -4,11 +4,12 @@ import com.google.common.cache.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -27,6 +28,7 @@ public class LocalFileCache {
     private int kilobyteCapacity;
 
     private WebDavClient webDavClient;
+    private ExecutorService asyncLoadService;
 
     private Weigher<URL, CachedFile> weigher;
     private RemovalListener<URL, CachedFile> asyncRemovalListener;
@@ -71,6 +73,9 @@ public class LocalFileCache {
 
         this.webDavClient = webDavClient;
 
+        // separate thread pool for async addition of files to the cache
+        this.asyncLoadService = Executors.newFixedThreadPool(4);
+
         this.weigher = new Weigher<URL, CachedFile>() {
 
             @Override
@@ -94,7 +99,7 @@ public class LocalFileCache {
         };
 
         // separate thread pool for removing files that expire from the cache
-        final ExecutorService removalServices = Executors.newFixedThreadPool(4);
+        final ExecutorService removalService = Executors.newFixedThreadPool(4);
 
         final RemovalListener<URL, CachedFile> removalListener =
                 new RemovalListener<URL, CachedFile>() {
@@ -108,7 +113,7 @@ public class LocalFileCache {
                 };
 
         this.asyncRemovalListener =
-                RemovalListeners.asynchronous(removalListener, removalServices);
+                RemovalListeners.asynchronous(removalListener, removalService);
 
         final LocalFileCache thisCache = this;
         this.defaultLoader = new RemoteFileLoader() {
@@ -200,9 +205,10 @@ public class LocalFileCache {
 
     /**
      * Looks for the specified resource in the cache and returns the
-     * corresponding local file copy.  If the resource is not in the cache,
-     * it is retrieved/copied (on the current thread of execution) and
-     * added to the cache before being returned.
+     * corresponding local file copy.
+     * If the resource is not in the cache, it is retrieved/copied
+     * (on the current thread of execution) and is added to the
+     * cache before being returned.
      *
      * @param  remoteFileUrl  remote URL for the file.
      *
@@ -214,33 +220,63 @@ public class LocalFileCache {
     public File getFile(URL remoteFileUrl)
             throws FileNotCacheableException {
 
-        File localFile = null;
+        File localFile;
 
         try {
             // get call should load file if it is not already present
             CachedFile cachedFile = urlToFileCache.get(remoteFileUrl);
-
-            // extra check to ensure cache is consistent with filesystem
-            // maybe overkill?
-            if (cachedFile != null) {
-                localFile = cachedFile.getLocalFile();
-                if (! localFile.exists()) {
-                    urlToFileCache.invalidate(remoteFileUrl);
-                    localFile = null;
-                }
-            }
-
+            localFile = getVerifiedLocalFile(cachedFile);
         } catch (Exception e) {
-            throw new FileNotCacheableException(
-                    "failed to retireve " + remoteFileUrl, e);
+            throw new FileNotCacheableException("failed to retrieve " + remoteFileUrl, e);
         }
 
         if (localFile == null) {
-            throw new FileNotCacheableException(
-                    "local cache file missing for " + remoteFileUrl);
+            throw new FileNotCacheableException("local cache file missing for " + remoteFileUrl);
         }
 
         return localFile;
+    }
+
+    /**
+     * Looks for the specified resource in the cache and returns the
+     * corresponding local file URL if it exists.
+     * If the resource is not in the cache, the specified remote URL
+     * is immediately returned and an asynchronous request is submitted
+     * to cache the resource.
+     *
+     * @param  remoteFileUrl  remote URL for the file.
+     *
+     * @return the local or remote URL for the resource depending upon
+     *         whether it has already been cached.
+     */
+    public URL getEffectiveUrl(URL remoteFileUrl) {
+
+        URL effectiveUrl = remoteFileUrl;
+
+        // get call will NOT load file if it is missing
+        CachedFile cachedFile = urlToFileCache.getIfPresent(remoteFileUrl);
+        File localFile = getVerifiedLocalFile(cachedFile);
+
+        if (localFile == null) {
+
+            final URL asyncRetrievalUrl = remoteFileUrl;
+            asyncLoadService.submit(new Callable<File>() {
+                @Override
+                public File call() throws Exception {
+                    return getFile(asyncRetrievalUrl);
+                }
+            });
+
+        } else  {
+
+            try {
+                effectiveUrl = localFile.toURI().toURL();
+            } catch (MalformedURLException e) {
+                LOG.error("failed to derive URL for " + localFile.getAbsolutePath(), e);
+            }
+        }
+
+        return effectiveUrl;
     }
 
     /**
@@ -356,6 +392,19 @@ public class LocalFileCache {
                 " files into " + this +
                 ", " + usedPercentage + "% full (" + getNumberOfKilobytes() + "/" +
                 getKilobyteCapacity() + " kilobytes)");
+    }
+
+    private File getVerifiedLocalFile(CachedFile cachedFile) {
+        // extra check to ensure cache is consistent with filesystem - maybe overkill?
+        File localFile = null;
+        if (cachedFile != null) {
+            localFile = cachedFile.getLocalFile();
+            if (! localFile.exists()) {
+                urlToFileCache.invalidate(cachedFile.getUrl());
+                localFile = null;
+            }
+        }
+        return localFile;
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(LocalFileCache.class);

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  By virtue of its name (logback-test.xml) this test configuration file is given precedence
+  if it is on the classpath (see http://logback.qos.ch/manual/configuration.html).
+-->
+
+<configuration>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoders are assigned the type ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level [%logger] %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- default levels defined here -->
+    <logger name="org.janelia.it.FlyWorkstation" level="INFO"/>
+    <logger name="org.janelia.it.FlyWorkstation.gui" level="INFO"/>
+    <logger name="org.janelia.it.FlyWorkstation.api" level="INFO"/>
+    <logger name="loci" level="WARN"/>
+
+    <!-- special cases for testing defined here -->
+    <logger name="org.janelia.it.FlyWorkstation.shared.util.filecache" level="DEBUG"/>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT" />
+    </root>
+
+</configuration>
