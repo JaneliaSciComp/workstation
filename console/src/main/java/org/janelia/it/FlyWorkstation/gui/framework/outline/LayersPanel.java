@@ -3,8 +3,11 @@ package org.janelia.it.FlyWorkstation.gui.framework.outline;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.FlowLayout;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,8 +24,14 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.ab.AlignedEntity;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.ab.AlignedItem;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.ab.AlignedItemFolder;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.ImageCache;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.netbeans.swing.outline.DefaultOutlineModel;
 import org.netbeans.swing.outline.Outline;
 import org.netbeans.swing.outline.OutlineModel;
@@ -36,31 +45,6 @@ public class LayersPanel extends JPanel implements Refreshable {
 
     private Outline outline;
     
-    private void updateTableModel(OutlineModel outlineModel) {
-
-        outline.setModel(outlineModel);
-        
-        TableColumnModel columnModel = outline.getColumnModel();
-        TableColumn[] columns = new TableColumn[columnModel.getColumnCount()];
-        
-        for(int i=0; i<columnModel.getColumnCount(); i++) {
-            TableColumn tableColumn = columnModel.getColumn(i);
-            columns[i] = tableColumn;
-        }
-        
-        for(int i=0; i<columns.length; i++) {
-          columnModel.removeColumn(columns[i]);
-        }
-        
-        TableColumn first = columns[0];
-        columns[0] = columns[1];
-        columns[1] = first;
-
-        for(int i=0; i<columns.length; i++) {
-            columnModel.addColumn(columns[i]);
-        }
-
-    }
     
     public LayersPanel() {
 
@@ -102,6 +86,37 @@ public class LayersPanel extends JPanel implements Refreshable {
         add(new JScrollPane(outline),BorderLayout.CENTER);
     }
 
+    private void updateTableModel(OutlineModel outlineModel) {
+
+        outline.setModel(outlineModel);
+        
+        TableColumnModel columnModel = outline.getColumnModel();
+        TableColumn[] columns = new TableColumn[columnModel.getColumnCount()];
+        
+        for(int i=0; i<columnModel.getColumnCount(); i++) {
+            TableColumn tableColumn = columnModel.getColumn(i);
+            columns[i] = tableColumn;
+        }
+        
+        for(int i=0; i<columns.length; i++) {
+          columnModel.removeColumn(columns[i]);
+        }
+        
+        TableColumn first = columns[0];
+        TableColumn second = columns[1];
+        
+        // Swap first and second columns, to bring the checkbox to the front
+        columns[0] = second;
+        columns[1] = first;
+
+        for(int i=0; i<columns.length; i++) {
+            columnModel.addColumn(columns[i]);
+        }
+
+        first.setCellRenderer(new EntityCellRenderer());
+        
+    }
+    
     public void showEntities(final List<Entity> entities) {
         
         SimpleWorker worker = new SimpleWorker() {
@@ -143,15 +158,84 @@ public class LayersPanel extends JPanel implements Refreshable {
     }
     
     private static class EntityCellRenderer extends DefaultTableCellRenderer {
+        
+        protected JPanel cellPanel;
+        protected JLabel titleLabel;
 
+        public EntityCellRenderer() {
+
+            cellPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+            cellPanel.setOpaque(false);
+            
+            titleLabel = new JLabel(" ");
+            titleLabel.setOpaque(true);
+            titleLabel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 0));
+            cellPanel.add(titleLabel);
+        }
+            
         @Override
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean selected,
                 boolean hasFocus, int row, int column) {
+
+            JComponent cell = (JComponent)super.getTableCellRendererComponent(
+                    table, value, selected, hasFocus, row, column);
+            titleLabel.setForeground(cell.getForeground());
+            titleLabel.setBackground(cell.getBackground());
             
+//            cell.setPreferredSize(new Dimension(0, 50));
             
-            
-            
-            return this;
+            if (value instanceof AlignedEntity) {
+
+                AlignedEntity alignedEntity = (AlignedEntity)value;
+                Entity entity = alignedEntity.getEntity();
+                String entityTypeName = entity.getEntityType().getName();
+                
+                // Set the labels
+                titleLabel.setText(entity.getName());
+                titleLabel.setIcon(Icons.getIcon(entity));
+                titleLabel.setToolTipText(entityTypeName);
+                
+                String filepath = EntityUtils.getImageFilePath(entity, EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
+                if (filepath == null) {
+                    throw new IllegalStateException("Entity has no filepath");
+                }
+                
+                File file = new File(PathTranslator.convertPath(filepath));
+                
+                ImageCache imageCache = SessionMgr.getBrowser().getImageCache();
+                
+                table.setRowHeight(row, 40);
+                
+                BufferedImage image = imageCache.get(file.getAbsolutePath());
+                if (image!=null) {
+                    BufferedImage thumbnail = Utils.getScaledImage(image, 50, 50);
+                    titleLabel.setIcon(new ImageIcon(thumbnail));
+                }
+                
+               return cellPanel;
+            }
+            else if (value instanceof AlignedItemFolder) {
+
+                AlignedItemFolder alignedItemFolder = (AlignedItemFolder)value;
+                
+                cellPanel.setEnabled(table.isEnabled());
+                
+                // Set the labels
+                titleLabel.setText(alignedItemFolder.getName());
+                titleLabel.setIcon(Icons.getIcon("folder.png"));
+                titleLabel.setToolTipText("Folder");
+                
+                return cellPanel;
+            }
+            else {
+                if (value==null) {
+                    log.warn("Null value in Layers Panel table");
+                }
+                else {
+                    log.warn("Unrecognized value type in Layers Panel table: "+value.getClass().getName());
+                }
+                return cell;
+            }
         }
     }
     

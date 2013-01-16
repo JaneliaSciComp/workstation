@@ -106,7 +106,7 @@ public class SystemSettingsPanel extends JPanel implements PrefEditor {
             
             PathTranslator.initFromModelProperties(SessionMgr.getSessionMgr().getSessionModel());
             EJBFactory.initFromModelProperties(SessionMgr.getSessionMgr().getSessionModel());
-            SessionMgr.getSessionMgr().loginUser();
+            SessionMgr.getSessionMgr().loginSubject();
         }
         settingsChanged = false;
         return (String[]) delayedChanges.toArray(new String[delayedChanges.size()]);

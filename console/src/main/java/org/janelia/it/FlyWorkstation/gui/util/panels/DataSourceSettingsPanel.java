@@ -150,15 +150,14 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
                 runAsTextField.setText("");
                 runAsUser="";
             }
-            SessionMgr.getSessionMgr().logoutUser();
             SessionMgr.getSessionMgr().setModelProperty(SessionMgr.RUN_AS_USER, runAsUser);
             SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, userLogin);
             SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_PASSWORD, userPassword);
             SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_EMAIL, userEmail);
             SessionMgr.setFileCacheGigabyteCapacity(cacheSize);
-            boolean loginSuccess = SessionMgr.getSessionMgr().loginUser();
+            boolean loginSuccess = SessionMgr.getSessionMgr().loginSubject();
             if (loginSuccess) {
-                runAsPanel.setVisible(SessionMgr.authenticatedUserIsInGroup("admin"));
+                runAsPanel.setVisible(SessionMgr.authenticatedSubjectIsInGroup("admin"));
             }
 
             // End login apply code
@@ -258,7 +257,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         loginPanel.add(Box.createVerticalStrut(10));
         loginPanel.add(userPassPanel);
         loginPanel.add(Box.createVerticalStrut(10));
-        if (SessionMgr.authenticatedUserIsInGroup("admin")) {
+        if (SessionMgr.authenticatedSubjectIsInGroup("admin")) {
             runAsTextField = new StandardTextField(runAsUser, 40);
             runAsPanel.setLayout(new BoxLayout(runAsPanel, BoxLayout.X_AXIS));
             runAsPanel.add(runAsLabel);
@@ -300,7 +299,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         df.setAllowsInvalid(false);
 
         // disable cache management for non-admin users while we test
-        fileCacheSpinner.setEnabled(SessionMgr.authenticatedUserIsInGroup("admin"));
+        fileCacheSpinner.setEnabled(SessionMgr.authenticatedSubjectIsInGroup("admin"));
 
         diskCachePanel.add(fileCacheSpinner);
         diskCachePanel.add(Box.createHorizontalGlue());

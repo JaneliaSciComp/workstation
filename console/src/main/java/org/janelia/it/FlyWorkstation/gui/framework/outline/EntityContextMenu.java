@@ -840,11 +840,6 @@ public class EntityContextMenu extends JPopupMenu {
             if (EntityUtils.isProtected(entity)) {
                 canDelete = false;
             }
-            // Or children of protected entities
-            if (parent!=null && parent.getId()!=null && EntityUtils.isProtected(parent)) {
-                canDelete = false;
-            }
-            
             if (!canDelete) deleteItem.setEnabled(false);
         }
         

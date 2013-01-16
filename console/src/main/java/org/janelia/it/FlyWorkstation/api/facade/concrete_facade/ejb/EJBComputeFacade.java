@@ -1,5 +1,9 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
+import java.util.List;
+
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.ComputeFacade;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
@@ -7,11 +11,6 @@ import org.janelia.it.FlyWorkstation.shared.util.filecache.WebDavClient;
 import org.janelia.it.jacs.compute.api.ComputeBeanRemote;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.user_data.Subject;
-import org.janelia.it.jacs.model.user_data.User;
-
-import java.net.Authenticator;
-import java.net.PasswordAuthentication;
-import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -73,32 +72,37 @@ public class EJBComputeFacade implements ComputeFacade {
     }
 
     @Override
-    public User getUser() throws Exception {
-        return EJBFactory.getRemoteComputeBean().getUserByNameOrKey(SessionMgr.getSubjectKey());
+    public Subject getSubject() throws Exception {
+        return EJBFactory.getRemoteComputeBean().getSubjectByNameOrKey(SessionMgr.getSubjectKey());
     }
 
+    @Override
+    public Subject getSubject(String nameOrKey) throws Exception {
+        return EJBFactory.getRemoteComputeBean().getSubjectByNameOrKey(nameOrKey);
+    }
+    
     @Override
     public List<Subject> getSubjects() throws Exception {
         return EJBFactory.getRemoteComputeBean().getSubjects();
     }
 
     @Override
-    public User saveOrUpdateUser(User user) throws Exception {
-        return EJBFactory.getRemoteComputeBean().saveOrUpdateUser(user);
+    public Subject saveOrUpdateSubject(Subject subject) throws Exception {
+        return EJBFactory.getRemoteComputeBean().saveOrUpdateSubject(subject);
     }
 
     @Override
-    public User loginUser() throws Exception {
+    public Subject loginSubject() throws Exception {
         final SessionMgr mgr = SessionMgr.getSessionMgr();
         final String userName = (String)
                 mgr.getModelProperty(SessionMgr.USER_NAME);
         final String password = (String)
                 mgr.getModelProperty(SessionMgr.USER_PASSWORD);
         final ComputeBeanRemote compute = EJBFactory.getRemoteComputeBean();
-        final User loggedInUser = compute.login(userName, password);
+        final Subject loggedInSubject = compute.login(userName, password);
 
         // set default authenticator for all http requests
-        if (null!=loggedInUser) {
+        if (null!=loggedInSubject) {
             Authenticator.setDefault(new Authenticator() {
                 protected PasswordAuthentication getPasswordAuthentication() {
                     return new PasswordAuthentication(userName,
@@ -109,7 +113,7 @@ public class EJBComputeFacade implements ComputeFacade {
             webDavClient.setCredentialsUsingAuthenticator();
         }
 
-        return loggedInUser;
+        return loggedInSubject;
     }
     
     @Override
@@ -120,8 +124,9 @@ public class EJBComputeFacade implements ComputeFacade {
     }
     
     @Override
-    public void endSession(String username) {
-    	EJBFactory.getRemoteComputeBean().endSession(username);
+    public void endSession() {
+    	EJBFactory.getRemoteComputeBean().endSession(
+    	        (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME));
     }
     
     @Override

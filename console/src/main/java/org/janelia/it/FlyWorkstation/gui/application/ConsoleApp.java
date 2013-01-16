@@ -94,8 +94,7 @@ public class ConsoleApp {
             sessionMgr.registerExceptionHandler(new ExitHandler()); //should be last so that other handlers can complete first.
         	
             final ModelMgr modelMgr = ModelMgr.getModelMgr();
-            modelMgr.initErrorOntology();
-            modelMgr.addModelMgrObserver(sessionMgr.getAxisServer());
+            
             
             // Editor Registration
             //      sessionMgr.registerEditorForType(api.entity_model.model.genetics.Species.class,
@@ -144,7 +143,10 @@ public class ConsoleApp {
 //            FacadeManager.addProtocolToUseList("sage");
 
             // Assuming that the user has entered the login/password information, now validate
-            if (null==SessionMgr.getUsername() || null==SessionMgr.getUserEmail()) {
+            String username = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
+            String email = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL);
+            
+            if (username==null || email==null) {
                 Object[] options = {"Enter Login", "Exit Program"};
                 final int answer = JOptionPane.showOptionDialog(null, "Please enter your login and email information.", "Information Required",
                         JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
@@ -156,7 +158,7 @@ public class ConsoleApp {
                 }
             }
             
-            SessionMgr.getSessionMgr().loginUser();
+            SessionMgr.getSessionMgr().loginSubject();
             
             if (!SessionMgr.getSessionMgr().isLoggedIn()) {
                 Object[] options = {"Enter Login", "Exit Program"};
@@ -172,7 +174,11 @@ public class ConsoleApp {
             else {
             	log.info("Successfully logged in user "+SessionMgr.getUsername());
             }
-
+            
+            // Init data 
+            modelMgr.initErrorOntology();
+            modelMgr.addModelMgrObserver(sessionMgr.getAxisServer());
+            
             // Make sure we can access the data mount
             if ((! sessionMgr.isLocalFileCacheAvailable()) &&
                 (! FacadeManager.isDataSourceConnectivityValid())) {

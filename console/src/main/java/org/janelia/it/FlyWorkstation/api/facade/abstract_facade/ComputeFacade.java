@@ -1,10 +1,9 @@
 package org.janelia.it.FlyWorkstation.api.facade.abstract_facade;
 
+import java.util.List;
+
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.user_data.Subject;
-import org.janelia.it.jacs.model.user_data.User;
-
-import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -30,19 +29,21 @@ public interface ComputeFacade {
     
     public List<Task> getUserTasksByType(String taskName) throws Exception;
 
-    public User getUser() throws Exception;
-
+    public Subject getSubject() throws Exception;
+    
+    public Subject getSubject(String nameOrKey) throws Exception;
+    
     public List<Subject> getSubjects() throws Exception;
 
-    public User saveOrUpdateUser(User user) throws Exception;
+    public Subject saveOrUpdateSubject(Subject subject) throws Exception;
 
     public void removePreferenceCategory(String preferenceCategory) throws Exception;
 
 	public void stopContinuousExecution(Long taskId) throws Exception;
 
-    public User loginUser() throws Exception;
+    public Subject loginSubject() throws Exception;
     
     public void beginSession();
     
-    public void endSession(String username);
+    public void endSession();
 }

@@ -17,8 +17,10 @@ import org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileCache;
 import org.janelia.it.FlyWorkstation.shared.util.filecache.WebDavClient;
 import org.janelia.it.FlyWorkstation.web.EmbeddedWebServer;
 import org.janelia.it.FlyWorkstation.ws.EmbeddedAxisServer;
+import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.SubjectRelationship;
 import org.janelia.it.jacs.model.user_data.User;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,9 +78,8 @@ public class SessionMgr {
     private String appName, appVersion;
     private Date sessionCreationTime;
     private boolean isLoggedIn;
-    private String loggedInSubjectName;
-    private User loggedInUser;
-    private User authenticatedUser;
+    private Subject loggedInSubject;
+    private Subject authenticatedSubject;
     private WebDavClient webDavClient;
     private LocalFileCache localFileCache;
     
@@ -103,7 +104,7 @@ public class SessionMgr {
         readSettingsFile();
         EJBFactory.initFromModelProperties(sessionModel);
         PathTranslator.initFromModelProperties(sessionModel);
-
+                
         // -----------------------------------------------
         // initialize WebDAV and local cache components
 
@@ -449,7 +450,6 @@ public class SessionMgr {
         sessionModel.removeAllBrowserModels();
         
         logoutUser();
-        log.info("Logged out");
         log.info("Memory in use at exit: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1000000f + " MB");
         
         modelManager.prepareForSystemExit();
@@ -646,47 +646,65 @@ public class SessionMgr {
     public void setBackupFileName(String userChosenLocation) {
         backupFileName = userChosenLocation;
     }
-
-    public User getUser() {
+    
+    public boolean loginSubject() {
         try {
-            return loggedInUser;
-        }
-        catch (Exception e) {
-            handleException(e);
-            return null;
-        }
-    }
-
-    public boolean loginUser() {
-        try {
+            boolean relogin = false;
+            
         	if (isLoggedIn()) {
         		logoutUser();
-        		ModelMgr.getModelMgr().invalidateCache();
+        		log.info("RELOGIN");    
+        		relogin = true;
         	}
-            authenticatedUser =  ModelMgr.getModelMgr().loginUser();
-            if (null!=authenticatedUser) { isLoggedIn = true; }
-            loggedInSubjectName = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
-            loggedInUser = ModelMgr.getModelMgr().getUser();
+        	
+            authenticatedSubject =  ModelMgr.getModelMgr().loginSubject();
+            if (null!=authenticatedSubject) { 
+                isLoggedIn = true; 
+                
+                String runAsUser = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER);
+                loggedInSubject = StringUtils.isEmpty(runAsUser) ? authenticatedSubject : ModelMgr.getModelMgr().getSubject(runAsUser);
+                
+                if (loggedInSubject==null) {
+                    JOptionPane.showMessageDialog(SessionMgr.getBrowser(), "Cannot run as non-existent subject "+runAsUser, "Error", JOptionPane.ERROR_MESSAGE);
+                    loggedInSubject = authenticatedSubject;
+                }
+
+                if (!authenticatedSubject.getId().equals(loggedInSubject.getId())) {
+                    log.info("Authenticated as {} (Running as {})",authenticatedSubject.getKey(),loggedInSubject.getId());
+                }
+                else {
+                    log.info("Authenticated as {}",authenticatedSubject.getKey());    
+                }
+                
+                if (relogin) {
+                    log.info("Clearing all caches");    
+                    ModelMgr.getModelMgr().invalidateCache();
+                    log.info("Refreshing all views");
+                    SessionMgr.getBrowser().getEntityOutline().refresh();
+                    SessionMgr.getBrowser().getViewerManager().getActiveViewer().refresh();
+                }
+            }
+
             return isLoggedIn;
         }
         catch (Exception e) {
             log.error("loginUser: exception caught", e);
         	isLoggedIn = false;
-        	loggedInSubjectName = null;
+        	log.error("Error logging in",e);
             throw new SystemError("Cannot authenticate login. The server may be down. Please try again later.");
         }
     }
     
     public void logoutUser() {
     	try {
-    		ModelMgr.getModelMgr().logoutUser(loggedInSubjectName);
+    		ModelMgr.getModelMgr().logoutSubject();
+    		log.info("Logged out with: {}",loggedInSubject.getKey());
     		isLoggedIn = false;
-        	loggedInSubjectName = null;
-        	loggedInUser = null;
-            authenticatedUser = null;
+        	loggedInSubject = null;
+            authenticatedSubject = null;
     	}
-    	catch (Exception ex) {
-    		ex.printStackTrace();
+    	catch (Exception e) {
+    	    log.error("Error logging out",e);
     	}
     }
 
@@ -698,8 +716,13 @@ public class SessionMgr {
         return prefsDir;
     }
 
-    public User getAuthenticatedUser() {
-        return authenticatedUser;
+
+    public Subject getSubject() {
+        return loggedInSubject;
+    }
+
+    public Subject getAuthenticatedSubject() {
+        return authenticatedSubject;
     }
 
     class MyBrowserListener extends WindowAdapter {
@@ -713,14 +736,24 @@ public class SessionMgr {
         }
     }
 
-    public static boolean authenticatedUserIsInGroup(String groupName) {
-        User user = SessionMgr.getSessionMgr().getAuthenticatedUser();
-        return isUserInGroup(user, groupName);
+    public static boolean authenticatedSubjectIsInGroup(String groupName) {
+        Subject subject = SessionMgr.getSessionMgr().getAuthenticatedSubject();
+        if (subject instanceof User) {
+            return isUserInGroup((User)subject, groupName);
+        }
+        else {
+            return false;
+        }
     }
 
     public static boolean currentUserIsInGroup(String groupName) {
-    	User user = SessionMgr.getSessionMgr().getUser();
-        return isUserInGroup(user, groupName);
+    	Subject subject = SessionMgr.getSessionMgr().getSubject();
+    	if (subject instanceof User) {
+    	    return isUserInGroup((User)subject, groupName);
+    	}
+    	else {
+    	    return false;
+    	}
     }
 
 	private static boolean isUserInGroup(User targetUser, String targetGroup) {
@@ -735,53 +768,38 @@ public class SessionMgr {
 
     public static List<String> getSubjectKeys() {
 		List<String> subjectKeys = new ArrayList<String>();
-    	User user = SessionMgr.getSessionMgr().getUser();
-    	subjectKeys.add(user.getKey());
-    	for(SubjectRelationship relation : user.getGroupRelationships()) {
-    		subjectKeys.add(relation.getGroup().getKey());
+    	Subject subject = SessionMgr.getSessionMgr().getSubject();
+    	subjectKeys.add(subject.getKey());
+    	if (subject instanceof User) {
+        	for(SubjectRelationship relation : ((User)subject).getGroupRelationships()) {
+        		subjectKeys.add(relation.getGroup().getKey());
+        	}
     	}
     	return subjectKeys;
 	}
     
     public static String getSubjectKey() {
-        try {
-            String username = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
-            if (null!=SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER) &&
-                !"".equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER))) {
-                username = "user:" + SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER);
-            }
-            if (!username.contains(":")) {
-            	username = "user:"+username;
-            }
-            return username;
+        Subject subject = getSessionMgr().getSubject();
+        if (subject==null) {
+            throw new SystemError("Not logged in");
         }
-        catch (Exception e) {
-            return null;
-        }
+        return subject.getKey();
     }
     
     public static String getUsername() {
-        try {
-            String username = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
-            if (null!=SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER) &&
-                    !"".equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER))) {
-                username = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER);
-            }
-            return username;
+        Subject subject = getSessionMgr().getSubject();
+        if (subject==null) {
+            throw new SystemError("Not logged in");
         }
-        catch (Exception e) {
-            return null;
-        }
+        return subject.getName();
     }
 
     public static String getUserEmail() {
-        if (null!=SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL)) {
-            String userEmail = SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL).toString();
-            if (null != userEmail && userEmail.contains("@")){
-                return userEmail;
-            }
+        Subject subject = getSessionMgr().getSubject();
+        if (subject==null) {
+            throw new SystemError("Not logged in");
         }
-        return null;
+        return subject.getEmail();
     }
 
     /**

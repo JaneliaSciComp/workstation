@@ -26,7 +26,7 @@ import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.User;
-import org.janelia.it.jacs.model.user_data.prefs.UserPreference;
+import org.janelia.it.jacs.model.user_data.prefs.SubjectPreference;
 import org.janelia.it.jacs.shared.annotation.DataDescriptor;
 import org.janelia.it.jacs.shared.annotation.DataFilter;
 import org.janelia.it.jacs.shared.annotation.FilterResult;
@@ -207,11 +207,11 @@ public class ModelMgr {
 
     private OntologyKeyBindings loadOntologyKeyBindings(long ontologyId) {
     	String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyId;
-    	User user = SessionMgr.getSessionMgr().getUser();
-        Map<String, UserPreference> prefs = user.getCategoryPreferences(category);
+    	Subject subject = SessionMgr.getSessionMgr().getSubject();
+        Map<String, SubjectPreference> prefs = subject.getCategoryPreferences(category);
 
-        OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(user.getKey(), ontologyId);
-        for (UserPreference pref : prefs.values()) {
+        OntologyKeyBindings ontologyKeyBindings = new OntologyKeyBindings(subject.getKey(), ontologyId);
+        for (SubjectPreference pref : prefs.values()) {
             ontologyKeyBindings.addBinding(pref.getName(), Long.parseLong(pref.getValue()));
         }
         
@@ -231,19 +231,19 @@ public class ModelMgr {
     public void saveOntologyKeyBindings(OntologyKeyBindings ontologyKeyBindings) throws Exception {
 
         String category = CATEGORY_KEYBINDS_ONTOLOGY + ontologyKeyBindings.getOntologyId();
-        User user = SessionMgr.getSessionMgr().getUser();
+        Subject subject = SessionMgr.getSessionMgr().getSubject();
 
         // Delete all keybinds first, to maintain one key per entity
-        for (String key : user.getCategoryPreferences(category).keySet()) {
-            user.getPreferenceMap().remove(category + ":" + key);
+        for (String key : subject.getCategoryPreferences(category).keySet()) {
+            subject.getPreferenceMap().remove(category + ":" + key);
         }
 
     	Set<OntologyKeyBind> keybinds = ontologyKeyBindings.getKeybinds();
         for (OntologyKeyBind bind : keybinds) {
-            user.setPreference(new UserPreference(bind.getKey(), category, bind.getOntologyTermId().toString()));
+            subject.setPreference(new SubjectPreference(bind.getKey(), category, bind.getOntologyTermId().toString()));
         }
 
-        ModelMgr.getModelMgr().saveOrUpdateUser(user);
+        ModelMgr.getModelMgr().saveOrUpdateSubject(subject);
         
         if (selectedOntology!=null) notifyOntologyChanged(selectedOntology.getId()); // See note in createOntologyTerm
     }
@@ -828,16 +828,20 @@ public class ModelMgr {
         return FacadeManager.getFacadeManager().getComputeFacade().getUserTasksByType(taskName);
     }
 
-    public User getUser() throws Exception {
-        return FacadeManager.getFacadeManager().getComputeFacade().getUser();
+    public Subject getSubject() throws Exception {
+        return FacadeManager.getFacadeManager().getComputeFacade().getSubject();
+    }
+
+    public Subject getSubject(String nameOrKey) throws Exception{
+        return FacadeManager.getFacadeManager().getComputeFacade().getSubject(nameOrKey);
     }
 
     public List<Subject> getSubjects() throws Exception{
         return FacadeManager.getFacadeManager().getComputeFacade().getSubjects();
     }
 
-    public User saveOrUpdateUser(User user) throws Exception {
-        return FacadeManager.getFacadeManager().getComputeFacade().saveOrUpdateUser(user);
+    public Subject saveOrUpdateSubject(Subject subject) throws Exception {
+        return FacadeManager.getFacadeManager().getComputeFacade().saveOrUpdateSubject(subject);
     }
 
     public EntityActorPermission saveOrUpdatePermission(EntityActorPermission eap) throws Exception {
@@ -858,16 +862,16 @@ public class ModelMgr {
     	return FacadeManager.getFacadeManager().getSolrFacade().getFlyLightVocabulary();
     }
 
-    public User loginUser() throws Exception {
-        User loggedInUser = FacadeManager.getFacadeManager().getComputeFacade().loginUser();
-        if (null!=loggedInUser) {
+    public Subject loginSubject() throws Exception {
+        Subject loggedInSubject = FacadeManager.getFacadeManager().getComputeFacade().loginSubject();
+        if (null!=loggedInSubject) {
         	FacadeManager.getFacadeManager().getComputeFacade().beginSession();
         }
-        return loggedInUser;
+        return loggedInSubject;
     }
     
-    public void logoutUser(String username) throws Exception {
-    	FacadeManager.getFacadeManager().getComputeFacade().endSession(username);
+    public void logoutSubject() throws Exception {
+    	FacadeManager.getFacadeManager().getComputeFacade().endSession();
     }
     
     public void addChildren(Long parentId, List<Long> childrenIds, String attributeName) throws Exception {

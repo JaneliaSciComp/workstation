@@ -89,7 +89,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
             @Override
             public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
                 if(key == "console.serverLogin"){
-                   SessionMgr.getBrowser().getEntityOutline().refresh();
+//                   SessionMgr.getBrowser().getEntityOutline().refresh();
                 }
             }
         });
