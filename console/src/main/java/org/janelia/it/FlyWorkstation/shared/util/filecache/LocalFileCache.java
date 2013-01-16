@@ -26,7 +26,7 @@ public class LocalFileCache {
     private File tempDirectory;
     private File activeDirectory;
 
-    private int kilobyteCapacity;
+    private long kilobyteCapacity;
 
     private WebDavClient webDavClient;
     private ExecutorService asyncLoadService;
@@ -55,7 +55,7 @@ public class LocalFileCache {
      *   if any errors occur while constructing a cache tied to the file system.
      */
     public LocalFileCache(File cacheParentDirectory,
-                          int kilobyteCapacity,
+                          long kilobyteCapacity,
                           WebDavClient webDavClient)
             throws IllegalStateException {
 
@@ -179,19 +179,21 @@ public class LocalFileCache {
     /**
      * @return the maximum number of kilobytes to be maintained in this cache.
      */
-    public int getKilobyteCapacity() {
+    public long getKilobyteCapacity() {
         return kilobyteCapacity;
     }
 
     /**
      * Sets the maximum number of kilobytes to be maintained in this cache
      * and then rebuilds the cache.  If the current cache size exceeds the
-     * new maximum, least recently used items will be scheduled for eviction.
+     * new maximum, items will be scheduled for eviction BUT they won't
+     * necessarily be least recently used since this operation requires that
+     * the entire cache be rebuilt.
      * This is potentially an expensive operation, so use it wisely.
      *
      * @param  kilobyteCapacity  maximum cache capacity in kilobytes.
      */
-    public void setKilobyteCapacity(int kilobyteCapacity) {
+    public void setKilobyteCapacity(long kilobyteCapacity) {
         LOG.info("setKilobyteCapacity: entry, kilobyteCapacity={}", kilobyteCapacity);
         this.kilobyteCapacity = kilobyteCapacity;
         buildCacheAndScheduleLoad();

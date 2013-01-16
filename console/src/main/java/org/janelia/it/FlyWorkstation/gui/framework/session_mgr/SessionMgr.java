@@ -46,7 +46,7 @@ public class SessionMgr {
     public static String USER_NAME = LoginProperties.SERVER_LOGIN_NAME;
     public static String USER_PASSWORD = LoginProperties.SERVER_LOGIN_PASSWORD;
     public static String USER_EMAIL = "UserEmail";
-    public static String CACHE_SIZE_PROPERTY = "console.localCache.kilobyteCapacity";
+    public static String FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY = "console.localCache.gigabyteCapacity";
     public static String RUN_AS_USER = "RunAs";
 
     public static String DISPLAY_LOOK_AND_FEEL = "SessionMgr.JavaLookAndFeel";
@@ -113,26 +113,28 @@ public class SessionMgr {
                 ConsoleProperties.getInt("console.webDavClient.maxConnectionsPerHost", 100),
                 ConsoleProperties.getInt("console.webDavClient.maxTotalConnections", 100));
 
-        Integer cacheSize = (Integer) getModelProperty(SessionMgr.CACHE_SIZE_PROPERTY);
-        if (cacheSize == null) {
-            cacheSize = ConsoleProperties.getInt(SessionMgr.CACHE_SIZE_PROPERTY, 0);
-            setModelProperty(SessionMgr.CACHE_SIZE_PROPERTY, cacheSize);
+        Integer configuredGigabyteCapacity = (Integer)
+                getModelProperty(SessionMgr.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
+        if (configuredGigabyteCapacity == null) {
+            configuredGigabyteCapacity = ConsoleProperties.getInt(SessionMgr.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, 0);
+            setModelProperty(SessionMgr.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, configuredGigabyteCapacity);
         }
 
         final String localCacheRoot = ConsoleProperties.getString("console.localCache.rootDirectory", prefsDir);
-        final long minimumCacheSize = 1000000; // 1,000,000 KB == 1GB
-        if (cacheSize > minimumCacheSize) {
+        final int minimumCacheGigabyteCapacity = 1;
+        if (configuredGigabyteCapacity >= minimumCacheGigabyteCapacity) {
             try {
+                final long kilobyteCapacity = configuredGigabyteCapacity * 1024 * 1024;
                 localFileCache = new LocalFileCache(new File(localCacheRoot),
-                                                    cacheSize,
+                                                    kilobyteCapacity,
                                                     webDavClient);
             } catch (Exception e) {
                 localFileCache = null;
                 log.error("disabling local cache after initialization failure", e);
             }
         } else {
-            log.warn("disabling local cache since configured size of {} is less than minimum size of {}",
-                     cacheSize, minimumCacheSize);
+            log.warn("disabling local cache since configured size of {} GB is less than minimum size of {} GB",
+                     configuredGigabyteCapacity, minimumCacheGigabyteCapacity);
         }
 
         // -----------------------------------------------
@@ -190,9 +192,9 @@ public class SessionMgr {
             PropertyConfigurator.getProperties().setProperty(USER_NAME, tempLogin);
             PropertyConfigurator.getProperties().setProperty(USER_PASSWORD, tempPassword);
         }
-        Integer tmpCache = (Integer) getModelProperty(CACHE_SIZE_PROPERTY);
+        Integer tmpCache = (Integer) getModelProperty(FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
         if (null!=tmpCache) {
-            PropertyConfigurator.getProperties().setProperty(CACHE_SIZE_PROPERTY, tmpCache.toString());
+            PropertyConfigurator.getProperties().setProperty(FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, tmpCache.toString());
         }
         sessionCreationTime = new Date();
         // TODO: Bundle FIJI with Fly Workstation
@@ -783,12 +785,38 @@ public class SessionMgr {
     }
 
     /**
-     * @return the local cache size.
+     * @return the maximum number of gigabytes to store in the local file cache.
      */
-    public static int getCacheSize() {
+    public static int getFileCacheGigabyteCapacity() {
         final SessionMgr mgr = SessionMgr.getSessionMgr();
-        return (Integer) mgr.getModelProperty(SessionMgr.CACHE_SIZE_PROPERTY);
+        return (Integer) mgr.getModelProperty(SessionMgr.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
     }
+
+    /**
+     * Sets the local file cache capacity and saves the setting as a session preference.
+     *
+     * @param  gigabyteCapacity  cache capacity in gigabytes.
+     */
+    public static void setFileCacheGigabyteCapacity(int gigabyteCapacity) {
+        final SessionMgr mgr = SessionMgr.getSessionMgr();
+        mgr.setModelProperty(SessionMgr.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, gigabyteCapacity);
+        if (mgr.isLocalFileCacheAvailable()) {
+            LocalFileCache cache = mgr.getLocalFileCache();
+            final long kilobyteCapacity = gigabyteCapacity * 1024 * 1024;
+            if (kilobyteCapacity != cache.getKilobyteCapacity()) {
+                cache.setKilobyteCapacity(kilobyteCapacity);
+            }
+        }
+    }
+
+    /**
+     * Removes all locally cached files.
+     */
+//    public static void clearFileCache() {
+//        final SessionMgr mgr = SessionMgr.getSessionMgr();
+//        LocalFileCache cache = mgr.getLocalFileCache();
+//        cache.clear();
+//    }
 
     /**
      * If local caching is enabled, this method will cache the requested

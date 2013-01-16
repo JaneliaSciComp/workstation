@@ -218,7 +218,7 @@ public class CachedFile implements Serializable {
             final int minLength = rootPath.length();
             final String path = parent.getCanonicalPath();
 
-            boolean logRemoval = LOG.isInfoEnabled();
+            boolean logRemoval = LOG.isDebugEnabled();
 
             if ((path.length() > minLength) && path.startsWith(rootPath)) {
                 final File[] children = parent.listFiles();
@@ -227,15 +227,13 @@ public class CachedFile implements Serializable {
                     if (parent.delete()) {
                         removeEmptyCacheParent(activeRootDirectory, parent);
                     } else {
-                        LOG.warn("removeEmptyCacheParent: failed to remove " +
-                                 path);
+                        LOG.warn("removeEmptyCacheParent: failed to remove {}", path);
                     }
                 }
             }
 
             if (logRemoval) {
-                LOG.info("removeEmptyCacheParent: removed " +
-                         removedFileOrDirectory.getAbsolutePath());
+                LOG.debug("removeEmptyCacheParent: removed {}", removedFileOrDirectory.getAbsolutePath());
             }
 
         }

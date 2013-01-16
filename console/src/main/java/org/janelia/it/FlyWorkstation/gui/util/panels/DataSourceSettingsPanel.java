@@ -12,6 +12,7 @@ import org.janelia.it.FlyWorkstation.shared.util.text_component.StandardTextFiel
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
+import javax.swing.text.DefaultFormatter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -49,8 +50,8 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
     //    JPanel requiredPanel = new JPanel();
     JPanel diskCachePanel = new JPanel();
     TitledBorder diskCacheBorder;
-    JLabel diskCacheLabel = new JLabel("Disk Cache Size (GB)");
-    JSlider diskCacheSlider = new JSlider(0,1000);
+    JLabel diskCacheLabel = new JLabel("Disk Cache Size (GB):");
+    JSpinner fileCacheSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 1000, 1));
 
     private static final String LOCATION_PROP_NAME = "XmlGenomeVersionLocation";
 //    private static final int PREFERRED_JLIST_HEIGHT = 165;
@@ -79,8 +80,8 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
             if (userPassword == null) {userPassword = "";}
             userEmail = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL);
             if (userEmail == null) {userEmail = "";}
-            cacheSize = SessionMgr.getCacheSize();
-            if (null==cacheSize) {cacheSize = ConsoleProperties.getInt(SessionMgr.CACHE_SIZE_PROPERTY);}
+            cacheSize = SessionMgr.getFileCacheGigabyteCapacity();
+            if (null==cacheSize) {cacheSize = ConsoleProperties.getInt(SessionMgr.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);}
             runAsUser = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER);
             if (null == runAsUser) {runAsUser="";}
             jbInit();
@@ -122,7 +123,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
             !userPassword.equals(new String(passwordTextField.getPassword())) ||
             !userEmail.equals(emailTextField.getText().trim()) ||
             !runAsUser.equals(runAsTextField.getText().trim()) ||
-            !cacheSize.equals(diskCacheSlider.getValue()))
+            !cacheSize.equals(fileCacheSpinner.getValue()))
             settingsChanged = true;
         return settingsChanged;
     }
@@ -137,13 +138,13 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         userPassword = new String(passwordTextField.getPassword());
         userEmail = emailTextField.getText().trim();
         runAsUser = runAsTextField.getText().trim();
-        cacheSize = diskCacheSlider.getValue();
+        cacheSize = (Integer) fileCacheSpinner.getValue();
 
         if ((!userLogin.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME))) ||
             (!userPassword.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_PASSWORD))) ||
             (!userEmail.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL))) ||
             (!runAsUser.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER))) ||
-            (!cacheSize.equals(SessionMgr.getCacheSize()))) {
+            (!cacheSize.equals(SessionMgr.getFileCacheGigabyteCapacity()))) {
             // If the login has changed then wipe out the runAs field and value.
             if ((!userLogin.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME)))) {
                 runAsTextField.setText("");
@@ -154,7 +155,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
             SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, userLogin);
             SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_PASSWORD, userPassword);
             SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_EMAIL, userEmail);
-            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.CACHE_SIZE_PROPERTY, cacheSize);
+            SessionMgr.setFileCacheGigabyteCapacity(cacheSize);
             boolean loginSuccess = SessionMgr.getSessionMgr().loginUser();
             if (loginSuccess) {
                 runAsPanel.setVisible(SessionMgr.authenticatedUserIsInGroup("admin"));
@@ -285,16 +286,24 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         diskCachePanel.setBorder(diskCacheBorder);
         diskCachePanel.setLayout(new BoxLayout(diskCachePanel, BoxLayout.X_AXIS));
         diskCachePanel.setMaximumSize(new Dimension(600, 50));
-        diskCacheSlider.setMajorTickSpacing(200);
-        diskCacheSlider.setMinorTickSpacing(100);
-        diskCacheSlider.setPaintTicks(true);
-        diskCacheSlider.setPaintLabels(true);
-        diskCacheSlider.setSnapToTicks(true);
         diskCachePanel.add(diskCacheLabel);
         diskCachePanel.add(Box.createHorizontalStrut(10));
-        diskCachePanel.add(diskCacheSlider);
-        diskCachePanel.add(Box.createHorizontalStrut(10));
-        diskCacheSlider.setValue(cacheSize);
+
+        fileCacheSpinner.setMaximumSize(new Dimension(200, 100));
+        fileCacheSpinner.setValue(cacheSize);
+
+        // configure spinner to dis-allow invalid edits
+        JSpinner.NumberEditor editor = (JSpinner.NumberEditor) fileCacheSpinner.getEditor();
+        JFormattedTextField ftf = editor.getTextField();
+        JFormattedTextField.AbstractFormatter formatter = ftf.getFormatter();
+        DefaultFormatter df = (DefaultFormatter) formatter;
+        df.setAllowsInvalid(false);
+
+        // disable cache management for non-admin users while we test
+        fileCacheSpinner.setEnabled(SessionMgr.authenticatedUserIsInGroup("admin"));
+
+        diskCachePanel.add(fileCacheSpinner);
+        diskCachePanel.add(Box.createHorizontalGlue());
 
         JPanel notePanel = new JPanel();
         notePanel.setMaximumSize(new Dimension(600,100));

@@ -22,8 +22,12 @@
   <logger name="org.janelia.it.FlyWorkstation.gui" level="INFO"/>
   <logger name="org.janelia.it.FlyWorkstation.api" level="INFO"/>
   <logger name="loci" level="WARN"/>
-  
-  <!-- Strictly speaking, the level attribute is not necessary since -->
+
+  <!--
+  <logger name="org.janelia.it.FlyWorkstation.shared.util.filecache" level="DEBUG"/>
+  -->
+
+    <!-- Strictly speaking, the level attribute is not necessary since -->
   <!-- the level of the root level is set to DEBUG by default.       -->
   <root level="INFO">          
     <appender-ref ref="STDOUT" />

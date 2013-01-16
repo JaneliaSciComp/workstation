@@ -124,7 +124,7 @@ public class CachedFileTest extends TestCase {
      *   if the file cannot be created.
      */
     public static File createFile(File parentDirectory,
-                                  int numberOfKilobytes) throws IOException {
+                                  long numberOfKilobytes) throws IOException {
         final long numberOfBytes = numberOfKilobytes * 1024;
         final String name = "test-" + buildTimestampName() + ".txt";
         File file = new File(parentDirectory, name);
