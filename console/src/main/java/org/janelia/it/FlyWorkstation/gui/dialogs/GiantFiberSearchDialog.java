@@ -19,7 +19,6 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
-import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.common.SystemConfigurationProperties;
@@ -329,27 +328,6 @@ public class GiantFiberSearchDialog extends ModalDialog {
         }
     }
 
-    public File getGiantFiberResourceDir() throws Exception {
-        String resourceDirString= SystemConfigurationProperties.getString("MaskSampleAnnotation.ResourceDir");
-        String maskResourceDir = PathTranslator.convertPath(resourceDirString);
-        File gfDir=new File(maskResourceDir, GIANT_FIBER_FOLDER_NAME);
-        if (!gfDir.exists()) {
-            throw new Exception("Could not locate Giant Fiber resource dir="+gfDir.getAbsolutePath());
-        }
-        return gfDir;
-    }
-
-    public File getMaskSummaryFile() throws Exception {
-        String quantifierSummaryFilename= SystemConfigurationProperties.getString("FlyScreen.PatternAnnotationQuantifierSummaryFile");
-        File gfDir=getGiantFiberResourceDir();
-        return new File(gfDir.getAbsolutePath(), quantifierSummaryFilename);
-    }
-
-    public File getMaskNameIndexFile() throws Exception {
-        File gfDir=getGiantFiberResourceDir();
-        return new File(gfDir, "maskNameIndex.txt");
-    }
-
     public GiantFiberSearchDialog() throws Exception {
 
         log.info("Begin loading");
@@ -359,8 +337,17 @@ public class GiantFiberSearchDialog extends ModalDialog {
             @Override
             protected void doStuff() throws Exception {
                 setTitle("Giant Fiber Compartment Search");
-                File maskSummaryFile = getMaskSummaryFile();
-                File maskNameIndexFile = getMaskNameIndexFile();
+                final String giantFiberResourcePath =
+                        getPath(SystemConfigurationProperties.getString("MaskSampleAnnotation.ResourceDir"),
+                                GIANT_FIBER_FOLDER_NAME);
+                final String maskSummaryPath =
+                        getPath(giantFiberResourcePath,
+                                SystemConfigurationProperties.getString("FlyScreen.PatternAnnotationQuantifierSummaryFile"));
+                final String maskNameIndexPath =
+                        getPath(giantFiberResourcePath, "maskNameIndex.txt");
+
+                File maskSummaryFile = SessionMgr.getFile(maskSummaryPath, false);
+                File maskNameIndexFile = SessionMgr.getFile(maskNameIndexPath, false);
                 maskManager.loadMaskCompartmentList(maskNameIndexFile);
                 maskManager.loadMaskSummaryFile(maskSummaryFile);
                 compartmentAbbreviationList = maskManager.getCompartmentListInstance();
@@ -405,6 +392,17 @@ public class GiantFiberSearchDialog extends ModalDialog {
         Utils.setWaitingCursor(GiantFiberSearchDialog.this);
         worker.execute();
 
+    }
+
+    private String getPath(String basePath,
+                           String relativePath) throws Exception {
+        StringBuilder path = new StringBuilder(basePath.length() + relativePath.length() + 1);
+        path.append(basePath);
+        if (! basePath.endsWith("/")) {
+            path.append('/');
+        }
+        path.append(relativePath);
+        return path.toString();
     }
 
     private JPanel createSavePanel() {

@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.ComputeFacade;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
+import org.janelia.it.FlyWorkstation.shared.util.filecache.WebDavClient;
 import org.janelia.it.jacs.compute.api.ComputeBeanRemote;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.user_data.Subject;
@@ -78,7 +79,7 @@ public class EJBComputeFacade implements ComputeFacade {
 
     @Override
     public List<Subject> getSubjects() throws Exception {
-        return (List<Subject>) EJBFactory.getRemoteComputeBean().getSubjects();
+        return EJBFactory.getRemoteComputeBean().getSubjects();
     }
 
     @Override
@@ -104,6 +105,8 @@ public class EJBComputeFacade implements ComputeFacade {
                                                       password.toCharArray());
                 }
             });
+            WebDavClient webDavClient = mgr.getWebDavClient();
+            webDavClient.setCredentialsUsingAuthenticator();
         }
 
         return loggedInUser;

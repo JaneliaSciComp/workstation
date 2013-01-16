@@ -393,6 +393,9 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 	}
 
     private File getJacsDataFile(String relativePath) {
+// TODO: LocalFileCache - convert call to following when we're ready for full local cache cutover
+//        final String fullPath = PathTranslator.JACS_DATA_PATH_NFS + '/' + relativePath;
+//        return SessionMgr.getFile(fullPath, true);
     	File file = new File(PathTranslator.getOsSpecificRootPath(), relativePath);
     	return new File(PathTranslator.convertPath(file.getAbsolutePath()));
     }

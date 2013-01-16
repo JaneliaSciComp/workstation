@@ -1,15 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.session_mgr;
 
-import java.awt.Component;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
-import java.io.*;
-import java.text.ParseException;
-import java.util.*;
-
-import javax.swing.*;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
@@ -23,12 +13,25 @@ import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileCache;
+import org.janelia.it.FlyWorkstation.shared.util.filecache.WebDavClient;
 import org.janelia.it.FlyWorkstation.web.EmbeddedWebServer;
 import org.janelia.it.FlyWorkstation.ws.EmbeddedAxisServer;
 import org.janelia.it.jacs.model.user_data.SubjectRelationship;
 import org.janelia.it.jacs.model.user_data.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
+import java.io.*;
+import java.net.URL;
+import java.text.ParseException;
+import java.util.*;
+import java.util.List;
 
 
 public class SessionMgr {
@@ -43,7 +46,7 @@ public class SessionMgr {
     public static String USER_NAME = LoginProperties.SERVER_LOGIN_NAME;
     public static String USER_PASSWORD = LoginProperties.SERVER_LOGIN_PASSWORD;
     public static String USER_EMAIL = "UserEmail";
-    public static String CACHE_SIZE_PROPERTY = "SessionMgr.CacheSize";
+    public static String CACHE_SIZE_PROPERTY = "console.localCache.kilobyteCapacity";
     public static String RUN_AS_USER = "RunAs";
 
     public static String DISPLAY_LOOK_AND_FEEL = "SessionMgr.JavaLookAndFeel";
@@ -76,6 +79,8 @@ public class SessionMgr {
     private String loggedInSubjectName;
     private User loggedInUser;
     private User authenticatedUser;
+    private WebDavClient webDavClient;
+    private LocalFileCache localFileCache;
     
     private SessionMgr() {
     	
@@ -99,6 +104,38 @@ public class SessionMgr {
         EJBFactory.initFromModelProperties(sessionModel);
         PathTranslator.initFromModelProperties(sessionModel);
 
+        // -----------------------------------------------
+        // initialize WebDAV and local cache components
+
+        webDavClient = new WebDavClient(
+                ConsoleProperties.getString("console.webDavClient.baseUrl",
+                                            "http://jacs.int.janelia.org/WebDAV"),
+                ConsoleProperties.getInt("console.webDavClient.maxConnectionsPerHost", 100),
+                ConsoleProperties.getInt("console.webDavClient.maxTotalConnections", 100));
+
+        Integer cacheSize = (Integer) getModelProperty(SessionMgr.CACHE_SIZE_PROPERTY);
+        if (cacheSize == null) {
+            cacheSize = ConsoleProperties.getInt(SessionMgr.CACHE_SIZE_PROPERTY, 0);
+            setModelProperty(SessionMgr.CACHE_SIZE_PROPERTY, cacheSize);
+        }
+
+        final String localCacheRoot = ConsoleProperties.getString("console.localCache.rootDirectory", prefsDir);
+        final long minimumCacheSize = 1000000; // 1,000,000 KB == 1GB
+        if (cacheSize > minimumCacheSize) {
+            try {
+                localFileCache = new LocalFileCache(new File(localCacheRoot),
+                                                    cacheSize,
+                                                    webDavClient);
+            } catch (Exception e) {
+                localFileCache = null;
+                log.error("disabling local cache after initialization failure", e);
+            }
+        } else {
+            log.warn("disabling local cache since configured size of {} is less than minimum size of {}",
+                     cacheSize, minimumCacheSize);
+        }
+
+        // -----------------------------------------------
         if (getModelProperty(DISPLAY_FREE_MEMORY_METER_PROPERTY) == null) {
             setModelProperty(DISPLAY_FREE_MEMORY_METER_PROPERTY, true);
         }
@@ -312,6 +349,27 @@ public class SessionMgr {
 
     public void setNewBrowserImageIcon(ImageIcon newImageIcon) {
         browserImageIcon = newImageIcon;
+    }
+
+    /**
+     * @return the session client for issuing WebDAV requests.
+     */
+    public WebDavClient getWebDavClient() {
+        return webDavClient;
+    }
+
+    /**
+     * @return true if a local file cache is available for this session; otherwise false.
+     */
+    public boolean isLocalFileCacheAvailable() {
+        return (localFileCache != null);
+    }
+
+    /**
+     * @return the session local file cache instance or null if a cache is not available.
+     */
+    public LocalFileCache getLocalFileCache() {
+        return localFileCache;
     }
 
     /**
@@ -610,6 +668,7 @@ public class SessionMgr {
             return isLoggedIn;
         }
         catch (Exception e) {
+            log.error("loginUser: exception caught", e);
         	isLoggedIn = false;
         	loggedInSubjectName = null;
             throw new SystemError("Cannot authenticate login. The server may be down. Please try again later.");
@@ -723,14 +782,52 @@ public class SessionMgr {
         return null;
     }
 
-    public static Integer getCacheSize() {
-        if (null!=SessionMgr.getSessionMgr().getModelProperty(SessionMgr.CACHE_SIZE_PROPERTY)) {
-            Integer cacheSize = (Integer)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.CACHE_SIZE_PROPERTY);
-            if (null != cacheSize){
-                return cacheSize;
+    /**
+     * @return the local cache size.
+     */
+    public static int getCacheSize() {
+        final SessionMgr mgr = SessionMgr.getSessionMgr();
+        return (Integer) mgr.getModelProperty(SessionMgr.CACHE_SIZE_PROPERTY);
+    }
+
+    /**
+     * If local caching is enabled, this method will cache the requested
+     * system file (as needed) and return the cached file.
+     * If local caching is disabled, this method will simply convert
+     * the specified path for the current platform assuming that
+     * the file is to be loaded via remote mount.
+     *
+     * @param  standardPath  the standard system path for the file.
+     *
+     * @param  forceRefresh  indicates if any existing cached file
+     *                       should be forcibly refreshed before
+     *                       being returned.  In most cases, this
+     *                       should be set to false.
+     *
+     * @return an accessible file for the specified path.
+     */
+    public static File getFile(String standardPath,
+                               boolean forceRefresh) {
+
+        final SessionMgr mgr = SessionMgr.getSessionMgr();
+
+        File file = null;
+        if (mgr.isLocalFileCacheAvailable()) {
+            final LocalFileCache cache = mgr.getLocalFileCache();
+            final WebDavClient client = mgr.getWebDavClient();
+            try {
+                final URL url = client.getWebDavUrl(standardPath);
+                file = cache.getFile(url, forceRefresh);
+            } catch (Exception e) {
+                log.error("failed to retrieve " + standardPath + " from local cache", e);
             }
         }
-        return ConsoleProperties.getInt(SessionMgr.CACHE_SIZE_PROPERTY);
+
+        if (file == null) {
+            file = new File(PathTranslator.convertPath(standardPath));
+        }
+
+        return file;
     }
 
     public static Browser getBrowser() {

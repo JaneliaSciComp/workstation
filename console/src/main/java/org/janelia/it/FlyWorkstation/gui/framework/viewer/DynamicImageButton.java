@@ -1,13 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.Dimension;
-import java.io.File;
 import java.util.concurrent.Callable;
 
 import javax.swing.JComponent;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
@@ -32,9 +30,10 @@ public class DynamicImageButton extends AnnotatedImageButton {
         if (filepath == null) {
         	throw new IllegalStateException("Entity has no filepath");
         }
-        
-        File file = new File(PathTranslator.convertPath(filepath));
-        this.dynamicImagePanel = new DynamicImagePanel(file.getAbsolutePath(), ImagesPanel.MAX_THUMBNAIL_SIZE) {
+
+        // send original file path so that file path translation or local caching occurs
+        // asyncronously within the the load image worker
+        this.dynamicImagePanel = new DynamicImagePanel(filepath, ImagesPanel.MAX_THUMBNAIL_SIZE) {
             protected void syncToViewerState() {
             	this.displaySize = iconDemoPanel.getImagesPanel().getCurrImageSize();
         		Boolean invertImages = (Boolean)SessionMgr.getSessionMgr().getModelProperty(
@@ -84,8 +83,4 @@ public class DynamicImageButton extends AnnotatedImageButton {
 
         });
 	}
-
-	public DynamicImagePanel getDynamicImagePanel() {
-		return dynamicImagePanel;
-	}	
 }

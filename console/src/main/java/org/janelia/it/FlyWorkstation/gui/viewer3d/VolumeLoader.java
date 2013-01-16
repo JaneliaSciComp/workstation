@@ -109,6 +109,11 @@ public class VolumeLoader
 	public boolean loadVolume(String fileName) 
 	{
 		try {
+
+// TODO: LocalFileCache - convert to following when we're ready for full local cache cutover (verify accuracy with Les)
+//            final File localFile = SessionMgr.getFile(fileName, false);
+//            final String localFileName = localFile.getAbsolutePath();
+
 			String extension = FilenameUtils.getExtension(fileName).toUpperCase();
 System.out.println("FILENAME: " + fileName);
 			// Default to linear color space

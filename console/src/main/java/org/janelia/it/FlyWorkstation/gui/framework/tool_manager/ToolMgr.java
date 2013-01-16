@@ -280,6 +280,11 @@ public class ToolMgr extends PreferenceManager {
         ToolInfo tmpTool = getTool(tool);
         File tmpToolFile = new File(tmpTool.getPath());
         String exeCmd = tmpTool.getPath();
+
+// TODO: LocalFileCache - convert to following when we're ready for full local cache cutover (need to discuss delay for loading file to cache)
+//        final File targetFile = SessionMgr.getFile(pathToTarget, false);
+//        final String targetPath = targetFile.getAbsolutePath();
+
         if (TOOL_VAA3D.equals(tool)) {
             exeCmd = tmpTool.getPath()+" -i "+ PathTranslator.convertPath(pathToTarget);
             if (MODE_3D.equals(mode)) {

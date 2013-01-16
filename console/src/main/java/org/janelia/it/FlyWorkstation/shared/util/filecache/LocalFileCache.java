@@ -4,7 +4,8 @@ import com.google.common.cache.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
@@ -219,10 +220,37 @@ public class LocalFileCache {
      */
     public File getFile(URL remoteFileUrl)
             throws FileNotCacheableException {
+        return getFile(remoteFileUrl, false);
+    }
+
+    /**
+     * Looks for the specified resource in the cache and returns the
+     * corresponding local file copy.
+     * If the resource is not in the cache, it is retrieved/copied
+     * (on the current thread of execution) and is added to the
+     * cache before being returned.
+     *
+     * @param  remoteFileUrl  remote URL for the file.
+     *
+     * @param  forceRefresh   if true, will force removal of any existing
+     *                        cached file before retrieving it again from
+     *                        the remote source.
+     *
+     * @return the local cached instance of the specified remote file.
+     *
+     * @throws FileNotCacheableException
+     *   if the file cannot be cached locally.
+     */
+    public File getFile(URL remoteFileUrl,
+                        boolean forceRefresh)
+            throws FileNotCacheableException {
 
         File localFile;
 
         try {
+            if (forceRefresh) {
+                urlToFileCache.invalidate(remoteFileUrl);
+            }
             // get call should load file if it is not already present
             CachedFile cachedFile = urlToFileCache.get(remoteFileUrl);
             localFile = getVerifiedLocalFile(cachedFile);

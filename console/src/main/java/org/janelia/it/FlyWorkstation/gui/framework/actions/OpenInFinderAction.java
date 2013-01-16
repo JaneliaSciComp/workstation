@@ -18,11 +18,11 @@ public class OpenInFinderAction implements Action {
 	private Entity entity;
 	
 	/**
-	 * Returns true if this operation is supported on the current system.
-	 * @return
+	 * @return true if this operation is supported on the current system.
 	 */
 	public static boolean isSupported() {
-		return SystemInfo.isMac || SystemInfo.isLinux || SystemInfo.isWindows;
+        return (SystemInfo.isMac || SystemInfo.isLinux || SystemInfo.isWindows) &&
+                PathTranslator.isMounted();
 	}
 	
 	public OpenInFinderAction(Entity entity) {
@@ -50,7 +50,7 @@ public class OpenInFinderAction implements Action {
 			if (filePath == null) {
 				throw new Exception("Entity has no file path");
 			}
-			
+
 			File file = new File(PathTranslator.convertPath(filePath));
 			File parent = file.getParentFile();
 			

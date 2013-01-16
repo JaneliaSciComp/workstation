@@ -19,7 +19,6 @@ public class MockWebDavClient extends WebDavClient {
     private Map<URL, List<WebDavFile>> urlToFileList;
 
     public MockWebDavClient() {
-        super(null);
         urlToFileList = new HashMap<URL, List<WebDavFile>>();
     }
 

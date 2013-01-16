@@ -191,6 +191,9 @@ public class Hud extends ModalDialog {
             // Ensure we have an image and that it is cached.
             if ( image == null ) {
                 logger.info("In HUD: must load image.");
+// TODO: LocalFileCache - convert call to following when we're ready for full local cache cutover (and confirm with Les)
+//                final File imageFile = SessionMgr.getFile(imagePath, false);
+//                image = Utils.readImage(imageFile.getAbsolutePath());
                 image = Utils.readImage(PathTranslator.convertPath( imagePath ) );
 
                 if ( ic != null ) {

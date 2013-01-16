@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.Authenticator;
+import java.net.MalformedURLException;
 import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.util.ArrayList;
@@ -24,17 +25,22 @@ import java.util.List;
  */
 public class WebDavClient {
 
+    private String baseUrl;
     private HttpClient httpClient;
 
     /**
      * Constructs a client with default authentication credentials.
      *
+     * @param  baseUrl                base URL for converting standard paths
+     *                                (e.g. /groups/...) to WebDAV URLs.
      * @param  maxConnectionsPerHost  the default maximum number of connections
      *                                allowed for a given host config.
      * @param  maxTotalConnections    the maximum number of connections allowed.
      */
-    public WebDavClient(int maxConnectionsPerHost,
+    public WebDavClient(String baseUrl,
+                        int maxConnectionsPerHost,
                         int maxTotalConnections) {
+        this.baseUrl = baseUrl;
         MultiThreadedHttpConnectionManager mgr = new MultiThreadedHttpConnectionManager();
         HttpConnectionManagerParams managerParams = mgr.getParams();
         managerParams.setDefaultMaxConnectionsPerHost(maxConnectionsPerHost); // default is 2
@@ -53,12 +59,25 @@ public class WebDavClient {
     }
 
     /**
-     * Constructs a client using the specified (already configured) {@link HttpClient}.
-     *
-     * @param  httpClient  client for issuing WebDAV requests.
+     * Constructs an empty client for testing.
      */
-    protected WebDavClient(HttpClient httpClient) {
-        this.httpClient = httpClient;
+    protected WebDavClient() {
+        this.baseUrl = "file:/";
+        this.httpClient = null;
+    }
+
+    /**
+     * Returns a WebDAV URL for the specified path.
+     *
+     * @param  standardPath  standard path for the file.
+     *
+     * @return corresponding WebDAV URL.
+     *
+     * @throws MalformedURLException
+     *   if the URL cannot be constructed.
+     */
+    public URL getWebDavUrl(String standardPath) throws MalformedURLException {
+        return new URL(baseUrl + standardPath);
     }
 
     /**
@@ -162,7 +181,7 @@ public class WebDavClient {
     public boolean canReadDirectory(URL directoryUrl) {
         boolean canRead = false;
         try {
-            findInternalFiles(directoryUrl, DavConstants.DEPTH_0);
+            findFile(directoryUrl);
             canRead = true;
         } catch (WebDavRetrievalException e) {
             LOG.error("failed to access " + directoryUrl, e);

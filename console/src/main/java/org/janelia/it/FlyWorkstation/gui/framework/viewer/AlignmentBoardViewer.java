@@ -175,6 +175,7 @@ public class AlignmentBoardViewer extends Viewer {
             for ( Entity consolidatedLabel: consolidatedLabelsList ) {
                 String filename = EntityUtils.getFilePath( consolidatedLabel );
                 if ( filename != null ) {
+                    // TODO: LocalFileCache - confirm with Les that the file name does not need to be converted here
                     maskFilenames.add( PathTranslator.convertPath( filename ) );
                 }
             }

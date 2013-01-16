@@ -173,12 +173,14 @@ public class ConsoleApp {
             	log.info("Successfully logged in user "+SessionMgr.getUsername());
             }
 
-        	// Make sure we can access the data mount
-        	if (!FacadeManager.isDataSourceConnectivityValid()) {
-        		throw new MissingResourceException(FacadeManager.getDataSourceHelpInformation(), ConsoleApp.class.getName(),
-                        "Missing Data Mount");
-        	}
-        	
+            // Make sure we can access the data mount
+            if ((! sessionMgr.isLocalFileCacheAvailable()) &&
+                (! FacadeManager.isDataSourceConnectivityValid())) {
+                throw new MissingResourceException(FacadeManager.getDataSourceHelpInformation(),
+                                                   ConsoleApp.class.getName(),
+                                                   "Missing Data Mount");
+            }
+
             Browser browser = sessionMgr.newBrowser();
             
             if (splash!=null) splash.close();
