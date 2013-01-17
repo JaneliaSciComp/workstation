@@ -172,7 +172,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
             }
 
             volumeBrickShader.load(gl);
-            volumeBrickShader.setTextureUniforms( gl, textureIds );
         }
 
         displayVolumeSlices(gl);

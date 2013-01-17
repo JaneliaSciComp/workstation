@@ -41,7 +41,7 @@ public class VolumeBrickShader extends AbstractShader {
 
         pushMaskUniform( gl, shaderProgram );
         pushFilterUniform( gl, shaderProgram );
-
+        setTextureUniforms( gl );
     }
 
     public void setColorMask( float[] rgb ) {
@@ -57,7 +57,7 @@ public class VolumeBrickShader extends AbstractShader {
         gl.glUseProgram(previousShader);
     }
 
-    public void setTextureUniforms(GL2 gl, int[] textureIds ) {
+    private void setTextureUniforms(GL2 gl) {
         int signalTextureLoc = gl.glGetUniformLocation(getShaderProgram(), "signalTexture");
         if ( signalTextureLoc == -1 ) {
             throw new RuntimeException( "Failed to find signal texture location." );

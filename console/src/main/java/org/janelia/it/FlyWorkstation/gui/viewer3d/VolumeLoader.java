@@ -16,10 +16,12 @@ import loci.formats.in.TiffReader;
 import loci.formats.in.ZeissLSMReader;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor.TextureColorSpace;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 
 import java.util.zip.DataFormatException;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -110,52 +112,53 @@ public class VolumeLoader
 	{
 		try {
 
-// TODO: LocalFileCache - convert to following when we're ready for full local cache cutover (verify accuracy with Les)
-//            final File localFile = SessionMgr.getFile(fileName, false);
-//            final String localFileName = localFile.getAbsolutePath();
+            File localFile = null;
+            try {
+                localFile = SessionMgr.getFile(fileName, false);
+            } catch ( Throwable ex ) {
+                localFile = new File( fileName );
+            }
+            final String localFileName = localFile.getAbsolutePath();
 
-			String extension = FilenameUtils.getExtension(fileName).toUpperCase();
-System.out.println("FILENAME: " + fileName);
-			// Default to linear color space
-			colorSpace = TextureColorSpace.COLOR_SPACE_LINEAR;
-			// But look for some exceptions we know about
-			String baseName = FilenameUtils.getBaseName(fileName);
-			if (baseName.startsWith("ConsolidatedSignal2"))
-				colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;
-			if (baseName.startsWith("Reference2"))
-				colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;
+            String extension = FilenameUtils.getExtension(localFileName).toUpperCase();
+            System.out.println("FILENAME: " + fileName);
+            // Default to linear color space
+            colorSpace = TextureColorSpace.COLOR_SPACE_LINEAR;
+            // But look for some exceptions we know about
+            String baseName = FilenameUtils.getBaseName(fileName);
+            if (baseName.startsWith("ConsolidatedSignal2"))
+                colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;
+            if (baseName.startsWith("Reference2"))
+                colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;
 
-			IFormatReader reader = null;
-			if (extension.startsWith("TIF")) {
-				reader = new TiffReader();
-			} else if (extension.startsWith("LSM")) {
-				reader = new ZeissLSMReader();
- 			}
-			if (reader != null) {
-				BufferedImageReader in = new BufferedImageReader(reader);
-				in.setId(fileName);
-				loadLociReader(in);
-			}
-			else if (extension.startsWith("V3D")) {
-				InputStream v3dRawStream = new BufferedInputStream(
-								new FileInputStream(fileName));
-				loadV3dRaw(v3dRawStream);
-			}
-			else if (extension.startsWith("MP4")) {
-				loadMpegVideo(fileName);
-				// assume all mpegs are in sRGB color space
-				colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;
-			}
-            else {
+            IFormatReader reader = null;
+            if (extension.startsWith("TIF")) {
+                reader = new TiffReader();
+            } else if (extension.startsWith("LSM")) {
+                reader = new ZeissLSMReader();
+            }
+            if (reader != null) {
+                BufferedImageReader in = new BufferedImageReader(reader);
+                in.setId(fileName);
+                loadLociReader(in);
+            } else if (extension.startsWith("V3D")) {
+                InputStream v3dRawStream = new BufferedInputStream(
+                        new FileInputStream(fileName));
+                loadV3dRaw(v3dRawStream);
+            } else if (extension.startsWith("MP4")) {
+                loadMpegVideo(fileName);
+                // assume all mpegs are in sRGB color space
+                colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;
+            } else {
                 throw new RuntimeException("Extension type " + extension + " not yet implemented.");
             }
 
-			// Because we use premultiplied transparency...
-			setAlphaToSaturateColors(colorSpace);
-			
-			return true;
-		}
-		catch (Exception exc) {
+            // Because we use premultiplied transparency...
+            setAlphaToSaturateColors(colorSpace);
+
+            return true;
+        }
+        catch (Exception exc) {
 			exc.printStackTrace();
 		}
 		return false;
