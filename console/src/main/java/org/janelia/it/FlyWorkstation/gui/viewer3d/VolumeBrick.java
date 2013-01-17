@@ -1,6 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import java.nio.IntBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.util.gl2.GLUT;
@@ -29,7 +31,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     private TextureColorSpace maskTextureColorSpace = TextureColorSpace.COLOR_SPACE_LINEAR;
 
     private int[] textureIds;
-
+    private Map<Integer,Integer> texIdToSymbolic;
 
     private GLUT glut = new GLUT();    
     /**
@@ -50,12 +52,10 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     // OpenGL state
     private int[] signalTextureVoxels = {8,8,8};
 	private IntBuffer signalData = Buffers.newDirectIntBuffer(signalTextureVoxels[0]* signalTextureVoxels[1]* signalTextureVoxels[2]);
-    private int signalTextureId = 0;
     private boolean bSignalTextureNeedsUpload = false;
 
     private int[] maskingVoxels = {8,8,8};
     private IntBuffer maskData;
-    private int maskTextureId;
     private boolean bMaskTextureNeedsUpload = false;
 
     private VolumeBrickShader volumeBrickShader = new VolumeBrickShader();
@@ -99,7 +99,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 			uploadSignalTexture(gl);
         }
 		if (bUseShader) {
-            if ( bMaskTextureNeedsUpload ) {
+            if ( maskData != null  &&  bMaskTextureNeedsUpload ) {
                 uploadMaskingTexture(gl);
             }
 
@@ -118,9 +118,14 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     private void genTextureIds(GL2 gl) {
         textureIds = new int[ maskData == null ? 1 : 2 ];
         gl.glGenTextures(textureIds.length, textureIds, 0);
-        signalTextureId = textureIds[0];
-        if ( textureIds.length > 1 )
-            maskTextureId = textureIds[1];
+        texIdToSymbolic = new HashMap<Integer,Integer>();
+        // NOTE:
+        //   http://www.opengl.org/sdk/docs/man2/xhtml/glMultiTexCoord.xml
+        // "it is always the case that GL_TEXTUREi = GL_TEXTURE0 + i"
+        for ( int i = 0; i < textureIds.length; i++ ) {
+            texIdToSymbolic.put( textureIds[i], GL2.GL_TEXTURE0 + i );
+        }
+        //signalTextureId = GL2.GL_TEXTURE0; // *** TEMP ***
     }
 
     @Override
@@ -129,7 +134,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 			init(gl);
 		if (bSignalTextureNeedsUpload)
 			uploadSignalTexture(gl);
-        if (bMaskTextureNeedsUpload)
+        if (maskData != null  &&  bMaskTextureNeedsUpload)
             uploadMaskingTexture(gl);
 
 		// debugging objects showing useful boundaries of what we want to render
@@ -165,8 +170,9 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
             if ( maskData != null ) {
                 volumeBrickShader.setVolumeMaskApplied();
             }
+
             volumeBrickShader.load(gl);
-            //volumeBrickShader.setTextureUniforms( gl, textureIds );
+            volumeBrickShader.setTextureUniforms( gl, textureIds );
         }
 
         displayVolumeSlices(gl);
@@ -269,16 +275,21 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 			// draw the quadrilateral as a triangle strip with 4 points
             // (somehow GL_QUADS never works correctly for me)
             gl.glBegin(GL2.GL_TRIANGLE_STRIP);
-            gl.glTexCoord3d(t00[0], t00[1], t00[2]);
+
+            setTextureCoordinates( gl, t00[0], t00[1], t00[2] );
+//            gl.glTexCoord3d(t00[0], t00[1], t00[2]);
             gl.glVertex3d(p00[0], p00[1], p00[2]);
 
-            gl.glTexCoord3d(t10[0], t10[1], t10[2]);
+            setTextureCoordinates( gl, t10[0], t10[1], t10[2] );
+//            gl.glTexCoord3d(t10[0], t10[1], t10[2]);
             gl.glVertex3d(p10[0], p10[1], p10[2]);
 
-            gl.glTexCoord3d(t01[0], t01[1], t01[2]);
+            setTextureCoordinates( gl, t01[0], t01[1], t01[2] );
+//            gl.glTexCoord3d(t01[0], t01[1], t01[2]);
             gl.glVertex3d(p01[0], p01[1], p01[2]);
 
-            gl.glTexCoord3d(t11[0], t11[1], t11[2]);
+            setTextureCoordinates( gl, t11[0], t11[1], t11[2] );
+//            gl.glTexCoord3d(t11[0], t11[1], t11[2]);
             gl.glVertex3d(p11[0], p11[1], p11[2]);
             gl.glEnd();
 			boolean bDebug = false;
@@ -293,8 +304,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 		gl.glDeleteTextures(1, textureIds, 0);
 		// Retarded JOGL GLJPanel frequently reallocates the GL context
 		// during resize. So we need to be ready to reinitialize everything.
-		signalTextureId = 0;
-        maskTextureId = 0;
+        textureIds = null;
 		bSignalTextureNeedsUpload = true;
         bMaskTextureNeedsUpload = true;
         resetMaskingTextures();
@@ -401,7 +411,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     public void setMaskingData(int sx, int sy, int sz, IntBuffer rgbaBuffer)
     {
-//setVolumeData(sx, sy, sz, rgbaBuffer); // *** TEMP ***
         maskingVoxels = new int[]{sx, sy, sz};
         maskData = rgbaBuffer;
         bMaskTextureNeedsUpload = true;
@@ -444,6 +453,13 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 		return tc;
 	}
 
+    private void setTextureCoordinates( GL2 gl, double tX, double tY, double tZ ) {
+        for ( int i = 0; i < textureIds.length; i++ ) {
+            Integer symbolicTextureId = texIdToSymbolic.get( textureIds[i] );
+            gl.glMultiTexCoord3d(symbolicTextureId, tX, tY, tZ);
+        }
+    }
+
     private void createSyntheticData() {
         // Clear texture data
         signalData.rewind();
@@ -474,7 +490,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     private void uploadSignalTexture(GL2 gl) {
         uploadTexture(
                 gl,
-                signalTextureId,
+                textureIds[ 0 ],
                 signalTextureVoxels[0],
                 signalTextureVoxels[1],
                 signalTextureVoxels[2],
@@ -486,9 +502,19 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     /** Upload the masking texture to open GL "state". */
     private void uploadMaskingTexture(GL2 gl) {
+// As a test, overlay the signal texture onto itself.
+//        uploadTexture(
+//                gl,
+//                maskTextureId,
+//                signalTextureVoxels[0],
+//                signalTextureVoxels[1],
+//                signalTextureVoxels[2],
+//                signalTextureColorSpace,
+//                signalData
+//        );
         uploadTexture(
                 gl,
-                maskTextureId,
+                textureIds[ 1 ],
                 maskingVoxels[0],
                 maskingVoxels[1],
                 maskingVoxels[2],
@@ -503,6 +529,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
             GL2 gl, int textureId, int sx, int sy, int sz, TextureColorSpace textureColorSpace, IntBuffer data
     ) {
         if (data != null) {
+            gl.glActiveTexture( texIdToSymbolic.get( textureId ) );
             gl.glEnable(GL2.GL_TEXTURE_3D);
             gl.glBindTexture(GL2.GL_TEXTURE_3D, textureId);
             gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_REPLACE);
@@ -530,15 +557,15 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     }
 
     private void setupMaskingTexture(GL2 gl) {
-        setupTexture(gl, maskTextureId);
+        setupTexture(gl, textureIds[ 1 ]);
     }
 
     private void setupSignalTexture(GL2 gl) {
-        setupTexture(gl, signalTextureId);
+        setupTexture(gl, textureIds[ 0 ]);
     }
 
     private void setupTexture(GL2 gl, int textureId) {
-        gl.glActiveTexture(textureId);
+        gl.glActiveTexture( texIdToSymbolic.get( textureId ) );
         gl.glBindTexture(GL2.GL_TEXTURE_3D, textureId);
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MIN_FILTER, interpolationMethod);
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MAG_FILTER, interpolationMethod);

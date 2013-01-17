@@ -21,6 +21,8 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
     private static final int Y_INX = 1;
     private static final int Z_INX = 2;
 
+    private boolean debug = true;
+
     private List<MaskingDataBean> maskingDataBeans = new ArrayList<MaskingDataBean>();
     private MaskingDataBean currentBean;
 
@@ -28,6 +30,14 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
     }
 
     public int[] getVolumeMask() {
+
+        // *** TEMP ***  Bypasses the combining of all these things.
+        if (debug) {
+            if ( maskingDataBeans.size() > 0 ) {
+                return maskingDataBeans.get( 0 ).getMaskData().array();
+            }
+        }
+
         Integer[] volumeMaskVoxels = getVolumeMaskVoxels();
 
         // Build a volume big enough to hold them all.  The volume mask voxels array tells
@@ -76,6 +86,14 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
 
     /** Size of volume mask.  Numbers of voxels in all three directions. */
     public Integer[] getVolumeMaskVoxels() {
+        // *** TEMP ***  Bypasses the combining of all these things.
+        if (debug) {
+            if ( maskingDataBeans.size() > 0 ) {
+                return new Integer[] { maskingDataBeans.get( 0 ).getSx(),
+                                       maskingDataBeans.get( 0 ).getSy(),
+                                       maskingDataBeans.get( 0 ).getSz() };
+            }
+        }
         Integer[] voxels = { Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE };
 
         for ( MaskingDataBean bean: maskingDataBeans ) {
@@ -112,6 +130,13 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
     }
 
     public TextureColorSpace getTextureColorSpace() {
+        // *** TEMP ***  Bypasses the combining of all these things.
+        if (debug) {
+            if ( maskingDataBeans.size() > 0 ) {
+                return maskingDataBeans.get(0).getColorSpace();
+            }
+        }
+
         TextureColorSpace space = null;
         for ( MaskingDataBean bean: maskingDataBeans ) {
             if ( space == null ) {

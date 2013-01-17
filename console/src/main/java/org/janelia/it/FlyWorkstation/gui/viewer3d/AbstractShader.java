@@ -88,7 +88,7 @@ public abstract class AbstractShader
 				stringBuffer.append("\n");
 			}
 			String progString = stringBuffer.toString();
-            //System.out.println("Shader contents: " + progString);
+            System.out.println("Shader contents: " + progString);
 			gl.glShaderSource(shaderId, 1, new String[]{progString}, (int[])null, 0);
 			gl.glCompileShader(shaderId);
 			

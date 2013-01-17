@@ -189,23 +189,11 @@ public class AlignmentBoardViewer extends Viewer {
             SimpleWorker loadWorker = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    List<String> maskFiles = new ArrayList<String>();  // From where???
-                    // Handle all masks first, because that output is applied to all signal volumes.
-                    for ( String maskFileName: maskFiles ) {
-                        // Get the info from the filename, and prepare it for "folding into" a thing.
-                        //todo add the externally-set coloring.
-                        // Producing the bean.
-                        try {
-                            maskFilenames.add(maskFileName);
-                        } catch ( Exception ex ) {
-                            SessionMgr.getSessionMgr().handleException(ex);
-                        }
-                    }
                     mip3d.setMaskFiles(maskFilenames);
 
                     for ( String signalFilename: signalFilenames ) {
                         mip3d.loadVolume( signalFilename );
-                        // After first volume has been loaded, set the unset clear flag, so subsequent
+                        // After first volume has been loaded, unset clear flag, so subsequent
                         // ones are overloaded.
                         mip3d.setClearOnLoad(false);
                     }

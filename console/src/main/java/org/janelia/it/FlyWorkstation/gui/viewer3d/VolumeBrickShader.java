@@ -4,6 +4,7 @@
  */
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
+import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 import java.nio.IntBuffer;
 
@@ -35,10 +36,11 @@ public class VolumeBrickShader extends AbstractShader {
         gl.glGetIntegerv( GL2.GL_CURRENT_PROGRAM, buffer );
         previousShader = buffer.get();
         int shaderProgram = getShaderProgram();
+
         gl.glUseProgram( shaderProgram );
 
-        pushFilterUniform( gl, shaderProgram );
         pushMaskUniform( gl, shaderProgram );
+        pushFilterUniform( gl, shaderProgram );
 
     }
 
@@ -60,31 +62,33 @@ public class VolumeBrickShader extends AbstractShader {
         if ( signalTextureLoc == -1 ) {
             throw new RuntimeException( "Failed to find signal texture location." );
         }
-        gl.glUniform1i( signalTextureLoc, textureIds[ 0 ] );
+        gl.glUniform1i( signalTextureLoc, 0 );
+        //  This did not work.  GL.GL_TEXTURE0 ); //textureIds[ 0 ] );
 
         if ( volumeMaskApplied ) {
             int maskingTextureLoc = gl.glGetUniformLocation(getShaderProgram(), "maskingTexture");
             if ( maskingTextureLoc == -1 ) {
                 throw new RuntimeException( "Failed to find masking texture location." );
             }
-            gl.glUniform1i( maskingTextureLoc, textureIds[ 1 ] );
+            gl.glUniform1i( maskingTextureLoc, 1 );
+            // This did not work.  GL.GL_TEXTURE1 ); //textureIds[ 1 ] );
         }
     }
 
-    private void pushMaskUniform(GL2 gl, int shaderProgram) {
+    private void pushMaskUniform( GL2 gl, int shaderProgram ) {
         // Need to push uniform for masking parameter.
         int hasMaskLoc = gl.glGetUniformLocation(shaderProgram, "hasMaskingTexture");
         if ( hasMaskLoc == -1 ) {
             throw new RuntimeException( "Failed to find masking texture flag location." );
         }
-        gl.glUniform1i( hasMaskLoc, 0 );  // Always false at this point.
+        gl.glUniform1i( hasMaskLoc, volumeMaskApplied ? 1 : 0 );
 
     }
 
     private void pushFilterUniform(GL2 gl, int shaderProgram) {
         // Need to push uniform for the filtering parameter.
-        int colorMaskLocation = gl.glGetUniformLocation(shaderProgram, "colorMask");
-        if ( colorMaskLocation == -1 ) {
+        int colorMaskLoc = gl.glGetUniformLocation(shaderProgram, "colorMask");
+        if ( colorMaskLoc == -1 ) {
             throw new RuntimeException( "Failed to find color mask uniform location." );
         }
 
@@ -97,7 +101,7 @@ public class VolumeBrickShader extends AbstractShader {
         }
 
         gl.glUniform4f(
-                colorMaskLocation,
+                colorMaskLoc,
                 localrgb[0],
                 localrgb[1],
                 localrgb[2],
