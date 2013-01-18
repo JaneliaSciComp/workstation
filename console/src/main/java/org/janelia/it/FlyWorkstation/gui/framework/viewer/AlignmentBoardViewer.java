@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.BorderLayout;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -176,7 +177,9 @@ public class AlignmentBoardViewer extends Viewer {
             for ( Entity consolidatedLabel: consolidatedLabelsList ) {
                 String filename = EntityUtils.getFilePath( consolidatedLabel );
                 if ( filename != null ) {
-                    maskFilenames.add( filename );
+                    if ( matchesSomeSignal( signalFilenames, filename ) ) {
+                        maskFilenames.add( filename );
+                    }
                 }
             }
 
@@ -230,6 +233,29 @@ public class AlignmentBoardViewer extends Viewer {
     @Override
     public void totalRefresh() {
         refresh();
+    }
+
+    /**
+     * This may/may not be temporary.  It makes sure that the base path of th mask filename matches one from
+     * a signal filename, to avoid attempting to load things that are not compatible.
+     */
+    private boolean matchesSomeSignal( List<String> signalFileNames, String maskFilename ) {
+        boolean rtnVal = false;
+        File maskFile = new File( maskFilename );
+        File baseLoc = maskFile.getParentFile();
+        String maskParentPath = baseLoc.getPath();
+
+        for ( String signalFileName: signalFileNames ) {
+            File signalFileLoc = new File( signalFileName ).getParentFile();
+            String signalParentPath = signalFileLoc.getPath();
+
+            if ( signalParentPath.startsWith( maskParentPath ) ) {
+                rtnVal = true;
+                break;
+            }
+        }
+
+        return rtnVal;
     }
 
     private void recursivelyFindDisplayableChildren(List<Entity> displayableList, Entity entity) throws Exception {

@@ -28,21 +28,27 @@ vec4 volumeMask(vec4 origColor)
     {
         // texture3D returns vec4.
         vec4 maskingColor = texture3D(maskingTexture, gl_TexCoord[1].xyz);
+
+        // Display strategy: only show the signal, only if the mask is non-zero.
+        if ( ( maskingColor[0] + maskingColor[1] + maskingColor[2] ) == 0.0 ) {
+            rtnVal[0] = 0.0;
+            rtnVal[1] = 0.0;
+            rtnVal[2] = 0.0;
+        }
+
         // Testing: all white if red mask is on, and matches source.
-        if ( ( origColor[0] * maskingColor[0] ) > 0.0 )
-        {
-            rtnVal[0] = 1.0;
-            rtnVal[1] = 1.0;
-            rtnVal[2] = 1.0;
-        }
-        else
-        {
-            rtnVal[0] = origColor[0];
-            rtnVal[1] = origColor[1];
-            rtnVal[2] = origColor[2];
-        }
-        //rtnVal = origColor;     // shows the red branching mess.
-        //rtnVal = maskingColor;  // shows the red branching mess.
+//        if ( ( origColor[0] * maskingColor[0] ) > 0.0 )
+//        {
+//            rtnVal[0] = 1.0;
+//            rtnVal[1] = 1.0;
+//            rtnVal[2] = 1.0;
+//        }
+//        else
+//        {
+//            rtnVal[0] = origColor[0];
+//            rtnVal[1] = origColor[1];
+//            rtnVal[2] = origColor[2];
+//        }
     }
 
     return rtnVal;

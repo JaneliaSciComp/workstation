@@ -36,11 +36,11 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
     public int[] getVolumeMask() {
 
         // *** TEMP ***  Bypasses the combining of all these things.
-        if (debug) {
-            if ( maskingDataBeans.size() > 0 ) {
-                return maskingDataBeans.get( 0 ).getMaskData().array();
-            }
-        }
+//        if (debug) {
+//            if ( maskingDataBeans.size() > 0 ) {
+//                return maskingDataBeans.get( 0 ).getMaskData().array();
+//            }
+//        }
 
         Integer[] volumeMaskVoxels = getVolumeMaskVoxels();
 
@@ -69,14 +69,16 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
                         int outputOffset = ( z * dimMaskY * dimMaskX ) + ( y * dimMaskX ) + x;
                         int inputOffset = ( z * dimBeanX * dimBeanY ) + ( y * dimBeanX ) + x;
 
-                        // This set-only technique will merely _set_ the value to the latest
-                        // loaded mask.  There is no overlap taken into account here.
+                        // This set-only technique will merely _set_ the value to the latest loaded mask's
+                        // value at this location.  There is no overlap taken into account here.
                         // LAST PRECEDENT STRATEGY
                         rtnValue[ outputOffset ] = maskData.get( inputOffset );
                         //rtnValue[ outputOffset ] = 255;  // TEMP assumption: allow all underlying data.
                     }
                 }
             }
+
+//            if ( debug ) break;  // Use only the first, but copy its bytes around.
         }
 
         return rtnValue;
@@ -140,11 +142,11 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
 
     public TextureColorSpace getTextureColorSpace() {
         // *** TEMP ***  Bypasses the combining of all these things.
-        if (debug) {
-            if ( maskingDataBeans.size() > 0 ) {
-                return maskingDataBeans.get(0).getColorSpace();
-            }
-        }
+//        if (debug) {
+//            if ( maskingDataBeans.size() > 0 ) {
+//                return maskingDataBeans.get(0).getColorSpace();
+//            }
+//        }
 
         TextureColorSpace space = null;
         for ( MaskingDataBean bean: maskingDataBeans ) {
