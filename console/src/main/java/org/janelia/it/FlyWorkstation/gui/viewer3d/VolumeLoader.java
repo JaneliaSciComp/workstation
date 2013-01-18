@@ -16,12 +16,11 @@ import loci.formats.in.TiffReader;
 import loci.formats.in.ZeissLSMReader;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor.TextureColorSpace;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 
 import java.util.zip.DataFormatException;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,6 +31,12 @@ public class VolumeLoader
 	private int sx, sy, sz;
 	private VolumeBrick.TextureColorSpace colorSpace =
 		VolumeBrick.TextureColorSpace.COLOR_SPACE_LINEAR;
+
+    private FileResolver resolver;
+
+    public VolumeLoader( FileResolver resolver ) {
+        this.resolver = resolver;
+    }
 
 	public boolean loadLociReader(BufferedImageReader in)
 	throws IOException, FormatException
@@ -112,13 +117,7 @@ public class VolumeLoader
 	{
 		try {
 
-            File localFile = null;
-            try {
-                localFile = SessionMgr.getFile(unCachedFileName, false);
-            } catch ( Throwable ex ) {
-                localFile = new File( unCachedFileName );
-            }
-            final String localFileName = localFile.getAbsolutePath();
+            String localFileName = resolver.getResolvedFilename( unCachedFileName );
 
             String extension = FilenameUtils.getExtension(localFileName).toUpperCase();
             System.out.println("FILENAME: " + localFileName);

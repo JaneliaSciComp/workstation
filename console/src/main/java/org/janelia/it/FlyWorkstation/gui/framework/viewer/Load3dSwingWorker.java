@@ -9,6 +9,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
  * A swing worker to load the volume from the filename, in background.
  */
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 
 import javax.swing.*;
 
@@ -36,7 +37,7 @@ public class Load3dSwingWorker extends SwingWorker<Boolean,Boolean> {
     @Override
     protected void done() {
         if ( filename != null ) {
-            mip3d.loadVolume(filename);
+            mip3d.loadVolume(filename, new CacheFileResolver());
             filenameSufficient();
         }
         else {

@@ -17,6 +17,8 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
@@ -187,10 +189,12 @@ public class AlignmentBoardViewer extends Viewer {
             SimpleWorker loadWorker = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    mip3d.setMaskFiles(maskFilenames);
+                    FileResolver resolver = new CacheFileResolver();
+
+                    mip3d.setMaskFiles(maskFilenames, resolver);
 
                     for ( String signalFilename: signalFilenames ) {
-                        mip3d.loadVolume( signalFilename );
+                        mip3d.loadVolume( signalFilename, resolver);
                         // After first volume has been loaded, unset clear flag, so subsequent
                         // ones are overloaded.
                         mip3d.setClearOnLoad(false);

@@ -4,6 +4,9 @@
 
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
+
 import javax.swing.*;
 import java.util.Arrays;
 
@@ -30,6 +33,7 @@ public class TestMaskedMip3d {
                 Mip3d mipWidget = new Mip3d();
                 mipWidget.setClearOnLoad( true );
                 mipWidget.refresh();
+                FileResolver resolver = new TrivialFileResolver();
                 try {
                     /*
                     ./1696292257579143266/ConsolidatedLabel.v3dpbd
@@ -46,8 +50,8 @@ public class TestMaskedMip3d {
                             fileBase + "1778036012035866722/ConsolidatedLabel.v3dpbd",
                     };
                     //  Bypass mask files.  May be misloading over other texture.
-                    mipWidget.setMaskFiles( Arrays.asList( maskFiles ) );
-                    if ( ! mipWidget.loadVolume(volumeFile1) )  {
+                    mipWidget.setMaskFiles( Arrays.asList( maskFiles ), resolver );
+                    if ( ! mipWidget.loadVolume(volumeFile1, resolver) )  {
                         System.out.println("Volume load failed.");
                     }
                     mipWidget.setClearOnLoad( false );

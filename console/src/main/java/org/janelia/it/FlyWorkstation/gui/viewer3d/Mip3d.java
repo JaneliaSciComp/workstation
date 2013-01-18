@@ -11,6 +11,7 @@ import javax.media.opengl.awt.GLJPanel;
 import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -99,13 +100,13 @@ implements MouseListener, MouseMotionListener, ActionListener,
      *
      * @param maskFiles list of all mask files to use against the signal volumes.
      */
-    public void setMaskFiles(List<String> maskFiles) {
+    public void setMaskFiles(List<String> maskFiles, FileResolver resolver) {
 
         // Build the masking texture info.
         if (maskFiles != null) {
             VolumeMaskBuilder builder = new VolumeMaskBuilder();
             for ( String maskFile: maskFiles ) {
-                VolumeLoader volumeLoader = new VolumeLoader();
+                VolumeLoader volumeLoader = new VolumeLoader( resolver );
                 volumeLoader.loadVolume( maskFile );
                 builder.beginVolume();
                 volumeLoader.populateVolumeAcceptor(builder);
@@ -116,11 +117,11 @@ implements MouseListener, MouseMotionListener, ActionListener,
 
     }
 
-	public boolean loadVolume(String fileName) {
+	public boolean loadVolume(String fileName, FileResolver resolver) {
         if (clearOnLoad)
             renderer.clear();
 
-		VolumeLoader volumeLoader = new VolumeLoader();
+		VolumeLoader volumeLoader = new VolumeLoader(resolver);
 		if (volumeLoader.loadVolume(fileName)) {
             VolumeBrick brick = new VolumeBrick(renderer);
 			volumeLoader.populateVolumeAcceptor(brick);

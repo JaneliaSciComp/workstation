@@ -4,6 +4,8 @@
 
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
+
 import javax.swing.*;
 
 /**
@@ -39,7 +41,7 @@ public class TestMip3d {
                     String fileBase = "/Users/fosterl/Documents/alignment_board/samples/";
                     String fn = fileBase + "1735579170638921826/ConsolidatedSignal2_25.mp4";
 
-                    if ( ! mipWidget.loadVolume(fn) )
+                    if ( ! mipWidget.loadVolume(fn, new TrivialFileResolver()) )
                         System.out.println("Volume load failed.");
                 	// mipWidget.loadVolume("/Users/brunsc/projects/fast_load/test_dir2/fastLoad/ConsolidatedSignal2_25.v3dpbd");
                 	// mipWidget.loadVolume("/Users/brunsc/projects/fast_load/test_dir2/fastLoad/ConsolidatedSignal2_25.v3draw");
