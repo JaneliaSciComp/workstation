@@ -1,11 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import java.nio.IntBuffer;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.util.gl2.GLUT;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator;
 
 import javax.media.opengl.GL2;
 
@@ -17,6 +18,11 @@ import javax.media.opengl.GL2;
 public class VolumeBrick implements GLActor, VolumeDataAcceptor
 {
     public enum RenderMethod {MAXIMUM_INTENSITY, ALPHA_BLENDING};
+
+    private TextureMediator signalTextureMediator;
+    private TextureMediator maskTextureMediator;
+    private List<TextureMediator> textureMediators = new ArrayList<TextureMediator>();
+
 	// Vary these parameters to taste
 	// Rendering variables
 	private RenderMethod renderMethod = 
@@ -26,23 +32,10 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     		GL2.GL_LINEAR; // blending across voxel edges
     		// GL2.GL_NEAREST; // discrete cube shaped voxels
     private boolean bUseShader = true; // Controls whether to load and use shader program(s).
-    // Color space is linear for most microscopy LSM, TIFF and V3DRAW files
-    private TextureColorSpace signalTextureColorSpace = TextureColorSpace.COLOR_SPACE_LINEAR;
-    private TextureColorSpace maskTextureColorSpace = TextureColorSpace.COLOR_SPACE_LINEAR;
 
     private int[] textureIds;
-    private Map<Integer,Integer> texIdToSymbolic;
 
     private GLUT glut = new GLUT();    
-    /**
-     * Dimensions of rectangular volume, from centers of corner voxels, in world units.
-     */
-    // Geometry parameters
-    private double[] volumeMicrometers = {1.0, 2.0, 3.0};
-    /**
-     * Size of a single voxel, in world units.
-     */
-    private double[] voxelMicrometers = {1.0, 1.0, 1.0};
 
     private float[] colorMask = { 1.0f, 1.0f, 1.0f };
     /**
@@ -65,7 +58,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     private boolean bUseSyntheticData = false;
 
     VolumeBrick(MipRenderer mipRenderer) {
-    		renderer = mipRenderer;
+		renderer = mipRenderer;
     }
 
     /**
@@ -88,12 +81,12 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
 	@Override
 	public void init(GL2 gl) {
+        initMediators( gl );
         if (bUseSyntheticData) {
             createSyntheticData();
         }
 
 		gl.glPushAttrib(GL2.GL_TEXTURE_BIT | GL2.GL_ENABLE_BIT);
-        genTextureIds(gl);
 
 		if (bSignalTextureNeedsUpload) {
 			uploadSignalTexture(gl);
@@ -115,17 +108,16 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 		bIsInitialized = true;
 	}
 
-    private void genTextureIds(GL2 gl) {
-        textureIds = new int[ maskData == null ? 1 : 2 ];
-        gl.glGenTextures(textureIds.length, textureIds, 0);
-        texIdToSymbolic = new HashMap<Integer,Integer>();
-        // NOTE:
-        //   http://www.opengl.org/sdk/docs/man2/xhtml/glMultiTexCoord.xml
-        // "it is always the case that GL_TEXTUREi = GL_TEXTURE0 + i"
-        for ( int i = 0; i < textureIds.length; i++ ) {
-            texIdToSymbolic.put( textureIds[i], GL2.GL_TEXTURE0 + i );
+    private void initMediators( GL2 gl ) {
+        if ( maskData != null ) {
+            textureIds = TextureMediator.genTextureIds( gl, 2 );
+            signalTextureMediator.init( textureIds[ 0 ], 0 );
+            maskTextureMediator.init( textureIds[ 1 ], 1 );
         }
-        //signalTextureId = GL2.GL_TEXTURE0; // *** TEMP ***
+        else {
+            textureIds = TextureMediator.genTextureIds( gl, 1 );
+            signalTextureMediator.init( textureIds[ 0 ], 0 );
+        }
     }
 
     @Override
@@ -183,24 +175,24 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     // Debugging object with corners at the center of
 	// the corner voxels of this volume.
-	public void displayVoxelCenterBox(GL2 gl) {
-		gl.glPushMatrix();
-		double[] v = volumeMicrometers;
-		double[] pad = voxelMicrometers;
-		gl.glScaled(v[0]-pad[0], v[1]-pad[1], v[2]-pad[2]);
-		glut.glutWireCube(1);
-		gl.glPopMatrix();		
-	}
+//	public void displayVoxelCenterBox(GL2 gl) {
+//		gl.glPushMatrix();
+//		double[] v = volumeMicrometers;
+//		double[] pad = voxelMicrometers;
+//		gl.glScaled(v[0]-pad[0], v[1]-pad[1], v[2]-pad[2]);
+//		glut.glutWireCube(1);
+//		gl.glPopMatrix();
+//	}
 
 	// Debugging object with corners at the outer corners of
 	// the corner voxels of this volume.
-	public void displayVoxelCornerBox(GL2 gl) {
-		gl.glPushMatrix();
-		double[] v = volumeMicrometers;
-		gl.glScaled(v[0], v[1], v[2]);
-		glut.glutWireCube(1);
-		gl.glPopMatrix();		
-	}
+//	public void displayVoxelCornerBox(GL2 gl) {
+//		gl.glPushMatrix();
+//		double[] v = volumeMicrometers;
+//		gl.glScaled(v[0], v[1], v[2]);
+//		glut.glutWireCube(1);
+//		gl.glPopMatrix();
+//	}
 
 	/**
 	 * Volume rendering by painting a series of transparent,
@@ -237,9 +229,9 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 		// but slice edges extend all the way to voxel edges.
 		// Compute dimensions of one x slice: y0-y1 and z0-z1
 		// Pad edges of rectangles by one voxel to support oblique ray tracing past edges
-		double y0 = direction * (volumeMicrometers[a2.index()] / 2.0 + voxelMicrometers[a2.index()]);
+		double y0 = direction * (signalTextureMediator.getVolumeMicrometers()[a2.index()] / 2.0 + signalTextureMediator.getVoxelMicrometers()[a2.index()]);
 		double y1 = -y0;
-		double z0 = direction * (volumeMicrometers[a3.index()] / 2.0 + voxelMicrometers[a3.index()]);
+		double z0 = direction * (signalTextureMediator.getVolumeMicrometers()[a3.index()] / 2.0 + signalTextureMediator.getVoxelMicrometers()[a3.index()]);
 		double z1 = -z0;
 		// Four points for four slice corners
 		double[] p00 = {0,0,0};
@@ -252,11 +244,11 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 		p00[a3.index()] = p10[a3.index()] = z0;
 		p01[a3.index()] = p11[a3.index()] = z1;
 		// compute number of slices
-		int sx = (int)(0.5 + volumeMicrometers[a1.index()] / voxelMicrometers[a1.index()]);
+		int sx = (int)(0.5 + signalTextureMediator.getVolumeMicrometers()[a1.index()] / signalTextureMediator.getVoxelMicrometers()[a1.index()]);
 		// compute position of first slice
-		double x0 = -direction * (voxelMicrometers[a1.index()] - volumeMicrometers[a1.index()]) / 2.0;
+		double x0 = -direction * (signalTextureMediator.getVoxelMicrometers()[a1.index()] - signalTextureMediator.getVolumeMicrometers()[a1.index()]) / 2.0;
 		// compute distance between slices
-		double dx = -direction * voxelMicrometers[a1.index()];
+		double dx = -direction * signalTextureMediator.getVoxelMicrometers()[a1.index()];
 		// deal out the slices, like cards from a deck
 		for (int xi = 0; xi < sx; ++xi) {
 			// insert final coordinate into corner vectors
@@ -264,10 +256,10 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 			int a = a1.index();
 			p00[a] = p01[a] = p10[a] = p11[a] = x;
 			// Compute texture coordinates
-			double[] t00 = textureCoordinateFromXyz(p00);
-			double[] t01 = textureCoordinateFromXyz(p01);
-			double[] t10 = textureCoordinateFromXyz(p10);
-			double[] t11 = textureCoordinateFromXyz(p11);
+			double[] t00 = signalTextureMediator.textureCoordinateFromXyz(p00);
+			double[] t01 = signalTextureMediator.textureCoordinateFromXyz(p01);
+			double[] t10 = signalTextureMediator.textureCoordinateFromXyz(p10);
+			double[] t11 = signalTextureMediator.textureCoordinateFromXyz(p11);
 			// color from black(back) to white(front) for debugging.
 			// double c = xi / (double)sx;
 			// gl.glColor3d(c, c, c);
@@ -276,19 +268,15 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
             gl.glBegin(GL2.GL_TRIANGLE_STRIP);
 
             setTextureCoordinates( gl, t00[0], t00[1], t00[2] );
-//            gl.glTexCoord3d(t00[0], t00[1], t00[2]);
             gl.glVertex3d(p00[0], p00[1], p00[2]);
 
             setTextureCoordinates( gl, t10[0], t10[1], t10[2] );
-//            gl.glTexCoord3d(t10[0], t10[1], t10[2]);
             gl.glVertex3d(p10[0], p10[1], p10[2]);
 
             setTextureCoordinates( gl, t01[0], t01[1], t01[2] );
-//            gl.glTexCoord3d(t01[0], t01[1], t01[2]);
             gl.glVertex3d(p01[0], p01[1], p01[2]);
 
             setTextureCoordinates( gl, t11[0], t11[1], t11[2] );
-//            gl.glTexCoord3d(t11[0], t11[1], t11[2]);
             gl.glVertex3d(p11[0], p11[1], p11[2]);
             gl.glEnd();
 			boolean bDebug = false;
@@ -315,24 +303,22 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 		BoundingBox result = new BoundingBox();
 		Vec3 half = new Vec3(0,0,0);
 		for (int i = 0; i < 3; ++i)
-			half.set(i, 0.5 * volumeMicrometers[i]);
+			half.set(i, 0.5 * signalTextureMediator.getVolumeMicrometers()[i]);
 		result.include(half.minus());
 		result.include(half);
 		return result;
 	}
 
 	public void setTextureColorSpace(TextureColorSpace colorSpace) {
-		if (colorSpace != signalTextureColorSpace) {
-			signalTextureColorSpace = colorSpace;
+        if (colorSpace != signalTextureMediator.getColorSpace()) {
+            signalTextureMediator.setColorSpace( colorSpace );
 			bSignalTextureNeedsUpload = true;
-            bMaskTextureNeedsUpload = true;
 		}
 	}
 
     public void setMaskTextureColorSpace(TextureColorSpace colorSpace) {
-        if (colorSpace != maskTextureColorSpace) {
-            maskTextureColorSpace = colorSpace;
-            bSignalTextureNeedsUpload = true;
+        if (colorSpace != maskTextureMediator.getColorSpace()) {
+            maskTextureMediator.setColorSpace( colorSpace );
             bMaskTextureNeedsUpload = true;
         }
     }
@@ -397,7 +383,15 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 	
 	public void setVolumeData(int sx, int sy, int sz, IntBuffer rgbaBuffer) 
 	{
-		signalTextureVoxels = new int[]{sx, sy, sz};
+        if ( signalTextureMediator == null ) {
+            signalTextureMediator = new TextureMediator();
+            textureMediators.add( signalTextureMediator );
+        }
+		signalTextureVoxels = new int[] {sx, sy, sz};
+        if ( signalTextureMediator != null ) {
+            signalTextureMediator.setData( rgbaBuffer );
+            signalTextureMediator.setVoxels( signalTextureVoxels );
+        }
         signalData = rgbaBuffer;
 		bSignalTextureNeedsUpload = true;
 		bUseSyntheticData = false;
@@ -410,15 +404,27 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     public void setMaskingData(int sx, int sy, int sz, IntBuffer rgbaBuffer)
     {
+        if ( maskTextureMediator == null ) {
+            maskTextureMediator = new TextureMediator();
+            textureMediators.add( maskTextureMediator );
+        }
         maskingVoxels = new int[]{sx, sy, sz};
         maskData = rgbaBuffer;
+        if ( maskTextureMediator != null ) {
+            maskTextureMediator.setVoxels( maskingVoxels );
+            maskTextureMediator.setData( maskData );
+        }
         bMaskTextureNeedsUpload = true;
     }
 
     public void setVolumeMicrometers(double x, double y, double z) {
-		volumeMicrometers[0] = x;
-		volumeMicrometers[1] = y;
-		volumeMicrometers[2] = z;
+        double[] volumeMicrometers1 = {x, y, z};
+        if ( signalTextureMediator != null ) {
+            signalTextureMediator.setVolumeMicrometers( volumeMicrometers1 );
+        }
+        if ( maskTextureMediator != null ) {
+            maskTextureMediator.setVolumeMicrometers( volumeMicrometers1 );
+        }
 	}
 	
 	public void setVoxelColor(int x, int y, int z, int color) {
@@ -428,9 +434,13 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 	}
 	
 	public void setVoxelMicrometers(double x, double y, double z) {
-		voxelMicrometers[0] = x;
-		voxelMicrometers[1] = y;
-		voxelMicrometers[2] = z;
+        double[] voxelMicrometers = {x, y, z};
+        if ( signalTextureMediator != null ) {
+            signalTextureMediator.setVoxelMicrometers(voxelMicrometers);
+        }
+        if ( maskTextureMediator != null ) {
+            maskTextureMediator.setVoxelMicrometers(voxelMicrometers);
+        }
 	}
 
     /** Call this when the brick is to be re-shown after an absense. */
@@ -438,26 +448,19 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         bSignalTextureNeedsUpload = true;
     }
 	
-	private double[] textureCoordinateFromXyz(double[] xyz) {
-		double[] tc = {xyz[0], xyz[1], xyz[2]}; // micrometers, origin at center
-		for (int i =0; i < 3; ++i) {
-			// Move origin to upper left corner
-			tc[i] += volumeMicrometers[i] / 2.0; // micrometers, origin at corner
-			// Rescale from micrometers to voxels
-			tc[i] /= voxelMicrometers[i]; // voxels, origin at corner
-			// Rescale from voxels to texture units (range 0-1)
-			tc[i] /= signalTextureVoxels[i]; // texture units
-		}
-
-		return tc;
-	}
-
-    private void setTextureCoordinates( GL2 gl, double tX, double tY, double tZ ) {
-        for ( int i = 0; i < textureIds.length; i++ ) {
-            Integer symbolicTextureId = texIdToSymbolic.get( textureIds[i] );
-            gl.glMultiTexCoord3d(symbolicTextureId, tX, tY, tZ);
-        }
-    }
+//	private double[] textureCoordinateFromXyz(double[] xyz) {
+//		double[] tc = {xyz[0], xyz[1], xyz[2]}; // micrometers, origin at center
+//		for (int i =0; i < 3; ++i) {
+//			// Move origin to upper left corner
+//			tc[i] += volumeMicrometers[i] / 2.0; // micrometers, origin at corner
+//			// Rescale from micrometers to voxels
+//			tc[i] /= voxelMicrometers[i]; // voxels, origin at corner
+//			// Rescale from voxels to texture units (range 0-1)
+//			tc[i] /= signalTextureVoxels[i]; // texture units
+//		}
+//
+//		return tc;
+//	}
 
     private void createSyntheticData() {
         // Clear texture data
@@ -487,68 +490,42 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     /** Uploading the signal texture. */
     private void uploadSignalTexture(GL2 gl) {
-        uploadTexture(
-                gl,
-                textureIds[ 0 ],
-                signalTextureVoxels[0],
-                signalTextureVoxels[1],
-                signalTextureVoxels[2],
-                signalTextureColorSpace,
-                signalData
-        );
-        bSignalTextureNeedsUpload = false;
-    }
-
-    /** Upload the masking texture to open GL "state". */
-    private void uploadMaskingTexture(GL2 gl) {
-// As a test, overlay the signal texture onto itself.
+        if ( signalTextureMediator != null )
+            signalTextureMediator.uploadTexture( gl );
 //        uploadTexture(
 //                gl,
-//                maskTextureId,
+//                textureIds[ 0 ],
 //                signalTextureVoxels[0],
 //                signalTextureVoxels[1],
 //                signalTextureVoxels[2],
 //                signalTextureColorSpace,
 //                signalData
 //        );
-        uploadTexture(
-                gl,
-                textureIds[ 1 ],
-                maskingVoxels[0],
-                maskingVoxels[1],
-                maskingVoxels[2],
-                maskTextureColorSpace,
-                maskData
-        );
+        bSignalTextureNeedsUpload = false;
+    }
+
+    /** Upload the masking texture to open GL "state". */
+    private void uploadMaskingTexture(GL2 gl) {
+        if ( maskTextureMediator != null )
+            maskTextureMediator.uploadTexture( gl );
+
+//        uploadTexture(
+//                gl,
+//                textureIds[ 1 ],
+//                maskingVoxels[0],
+//                maskingVoxels[1],
+//                maskingVoxels[2],
+//                maskTextureColorSpace,
+//                maskData
+//        );
         bMaskTextureNeedsUpload = false;
     }
 
-    /** Uploading any texture. */
-    private void uploadTexture(
-            GL2 gl, int textureId, int sx, int sy, int sz, TextureColorSpace textureColorSpace, IntBuffer data
-    ) {
-        if (data != null) {
-            gl.glActiveTexture( texIdToSymbolic.get( textureId ) );
-            gl.glEnable(GL2.GL_TEXTURE_3D);
-            gl.glBindTexture(GL2.GL_TEXTURE_3D, textureId);
-            gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_REPLACE);
-            int internalFormat = GL2.GL_RGBA8;
-            if (textureColorSpace == TextureColorSpace.COLOR_SPACE_SRGB)
-                internalFormat = GL2.GL_SRGB8_ALPHA8;
-            gl.glTexImage3D(GL2.GL_TEXTURE_3D,
-                    0, // mipmap level
-                    internalFormat, // bytes per pixel, plus somehow srgb info
-                    sx, // width
-                    sy, // height
-                    sz, // depth
-                    0, // border
-                    GL2.GL_BGRA, // voxel component order
-                    GL2.GL_UNSIGNED_INT_8_8_8_8_REV, // voxel component type
-                    data.rewind()
-            );
+    private void setTextureCoordinates( GL2 gl, double tX, double tY, double tZ ) {
+        for ( TextureMediator mediator: textureMediators ) {
+            mediator.setTextureCoordinates( gl, tX, tY, tZ );
         }
-
-	}
+    }
 
     private void resetMaskingTextures() {
         maskData = null;
@@ -556,23 +533,27 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     }
 
     private void setupMaskingTexture(GL2 gl) {
-        setupTexture(gl, textureIds[ 1 ]);
+        if ( maskTextureMediator != null ) {
+            maskTextureMediator.setupTexture( gl );
+        }
     }
 
     private void setupSignalTexture(GL2 gl) {
-        setupTexture(gl, textureIds[ 0 ]);
+        if ( signalTextureMediator != null ) {
+            signalTextureMediator.setupTexture( gl );
+        }
     }
 
-    private void setupTexture(GL2 gl, int textureId) {
-        gl.glActiveTexture( texIdToSymbolic.get( textureId ) );
-        gl.glBindTexture(GL2.GL_TEXTURE_3D, textureId);
-        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MIN_FILTER, interpolationMethod);
-        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MAG_FILTER, interpolationMethod);
-        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_R, GL2.GL_CLAMP_TO_BORDER);
-        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_S, GL2.GL_CLAMP_TO_BORDER);
-        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_T, GL2.GL_CLAMP_TO_BORDER);
-    }
-
+//    private void setupTexture(GL2 gl, int textureId) {
+//        gl.glActiveTexture( texIdToSymbolic.get( textureId ) );
+//        gl.glBindTexture(GL2.GL_TEXTURE_3D, textureId);
+//        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MIN_FILTER, interpolationMethod);
+//        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MAG_FILTER, interpolationMethod);
+//        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_R, GL2.GL_CLAMP_TO_BORDER);
+//        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_S, GL2.GL_CLAMP_TO_BORDER);
+//        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_T, GL2.GL_CLAMP_TO_BORDER);
+//    }
+//
     private void printPoints(double[] p1, double[] p2, double[] p3, double[] p4) {
         printPoint(p1);
         printPoint(p2);

@@ -108,24 +108,24 @@ public class VolumeLoader
 		}
 	}
 	
-	public boolean loadVolume(String fileName) 
+	public boolean loadVolume(String unCachedFileName)
 	{
 		try {
 
             File localFile = null;
             try {
-                localFile = SessionMgr.getFile(fileName, false);
+                localFile = SessionMgr.getFile(unCachedFileName, false);
             } catch ( Throwable ex ) {
-                localFile = new File( fileName );
+                localFile = new File( unCachedFileName );
             }
             final String localFileName = localFile.getAbsolutePath();
 
             String extension = FilenameUtils.getExtension(localFileName).toUpperCase();
-            System.out.println("FILENAME: " + fileName);
+            System.out.println("FILENAME: " + localFileName);
             // Default to linear color space
             colorSpace = TextureColorSpace.COLOR_SPACE_LINEAR;
             // But look for some exceptions we know about
-            String baseName = FilenameUtils.getBaseName(fileName);
+            String baseName = FilenameUtils.getBaseName(localFileName);
             if (baseName.startsWith("ConsolidatedSignal2"))
                 colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;
             if (baseName.startsWith("Reference2"))
@@ -139,14 +139,14 @@ public class VolumeLoader
             }
             if (reader != null) {
                 BufferedImageReader in = new BufferedImageReader(reader);
-                in.setId(fileName);
+                in.setId(localFileName);
                 loadLociReader(in);
             } else if (extension.startsWith("V3D")) {
                 InputStream v3dRawStream = new BufferedInputStream(
-                        new FileInputStream(fileName));
+                        new FileInputStream(localFileName));
                 loadV3dRaw(v3dRawStream);
             } else if (extension.startsWith("MP4")) {
-                loadMpegVideo(fileName);
+                loadMpegVideo(localFileName);
                 // assume all mpegs are in sRGB color space
                 colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;
             } else {

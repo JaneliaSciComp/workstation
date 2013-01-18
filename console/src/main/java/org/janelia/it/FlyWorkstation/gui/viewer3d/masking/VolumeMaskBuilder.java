@@ -1,6 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.IntBuffer;
 import java.util.ArrayList;
@@ -25,6 +27,8 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
 
     private List<MaskingDataBean> maskingDataBeans = new ArrayList<MaskingDataBean>();
     private MaskingDataBean currentBean;
+
+    private Logger logger = LoggerFactory.getLogger( VolumeDataAcceptor.class );
 
     public VolumeMaskBuilder() {
     }
@@ -117,8 +121,13 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
      */
     @Override
     public void setVolumeData( int sx, int sy, int sz, int[] rgbaValues ) {
-        IntBuffer maskData = IntBuffer.wrap( rgbaValues );
-        currentBean.setMaskData(maskData, sx, sy, sz);
+        if ( rgbaValues != null ) {
+            IntBuffer maskData = IntBuffer.wrap( rgbaValues );
+            currentBean.setMaskData(maskData, sx, sy, sz);
+        }
+        else {
+            logger.warn( "Null values provided to set volume data." );
+        }
     }
 
     /**

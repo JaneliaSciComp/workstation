@@ -15,7 +15,6 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.LayersPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -140,7 +139,7 @@ public class AlignmentBoardViewer extends Viewer {
             // First how to find the items?
             List<Entity> displayableList = new ArrayList<Entity>();
             try {
-                recursivelyFindDisplayableChildren(displayableList, alignmentBoard);
+                recursivelyFindDisplayableChildren( displayableList, alignmentBoard);
             } catch ( Exception ex ) {
                 SessionMgr.getSessionMgr().handleException(ex);
             }
