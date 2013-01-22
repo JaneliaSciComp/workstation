@@ -35,20 +35,11 @@ vec4 volumeMask(vec4 origColor)
             rtnVal[1] = 0.0;
             rtnVal[2] = 0.0;
         }
-
-        // Testing: all white if red mask is on, and matches source.
-//        if ( ( origColor[0] * maskingColor[0] ) > 0.0 )
-//        {
-//            rtnVal[0] = 1.0;
-//            rtnVal[1] = 1.0;
-//            rtnVal[2] = 1.0;
-//        }
-//        else
-//        {
-//            rtnVal[0] = origColor[0];
-//            rtnVal[1] = origColor[1];
-//            rtnVal[2] = origColor[2];
-//        }
+        else {
+            rtnVal[0] = maskingColor[0];
+            rtnVal[1] = maskingColor[1];
+            rtnVal[2] = maskingColor[2];
+        }
     }
 
     return rtnVal;

@@ -34,13 +34,17 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
     }
 
     public int[] getVolumeMask() {
-
-        // *** TEMP ***  Bypasses the combining of all these things.
-//        if (debug) {
-//            if ( maskingDataBeans.size() > 0 ) {
-//                return maskingDataBeans.get( 0 ).getMaskData().array();
-//            }
-//        }
+        // This constructs a "color rolodex".
+        Integer[][] colors = {
+                { 255, 255, 0 },
+                { 255, 128, 128 },
+                { 0, 255, 255 },
+                { 255, 255, 0 },
+                { 0, 255, 0 },
+                { 0, 0, 255 },
+                { 255, 0, 0 },
+        };
+        //Color[] colors = { Color.yellow, Color.pink, Color.cyan, Color.orange, Color.green, Color.blue, Color.red };
 
         Integer[] volumeMaskVoxels = getVolumeMaskVoxels();
 
@@ -56,6 +60,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
         int dimMaskY = volumeMaskVoxels[ Y_INX ];
         //int dimMaskZ = volumeMaskVoxels[ Z_INX ];
 
+        int colorOffset = 0;
         for ( MaskingDataBean bean: maskingDataBeans ) {
             int dimBeanX = bean.getSx();
             int dimBeanY = bean.getSy();
@@ -69,14 +74,35 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
                         int outputOffset = ( z * dimMaskY * dimMaskX ) + ( y * dimMaskX ) + x;
                         int inputOffset = ( z * dimBeanX * dimBeanY ) + ( y * dimBeanX ) + x;
 
+                        // Get the RGB breakdown of the input.
+
                         // This set-only technique will merely _set_ the value to the latest loaded mask's
                         // value at this location.  There is no overlap taken into account here.
                         // LAST PRECEDENT STRATEGY
-                        rtnValue[ outputOffset ] = maskData.get( inputOffset );
-                        //rtnValue[ outputOffset ] = 255;  // TEMP assumption: allow all underlying data.
+                        int voxelVal = maskData.get(inputOffset);
+                        int red   = (voxelVal & 0x00ff0000) >>> 16;
+                        int green = (voxelVal & 0x0000ff00) >>> 8;
+                        int blue  = (voxelVal & 0x000000ff);
+
+                        if (! (red == blue  &&  blue == green ) ) {
+                            int colorInx = colorOffset % colors.length;
+                            red = colors[ colorInx ][0];
+                            green = colors[ colorInx ][1];
+                            blue = colors[ colorInx ][2];
+
+                            rtnValue[ outputOffset ] =
+                                    blue +
+                                    (green << 8) +
+                                    (red << 16)
+                            ;
+                            //System.out.println( "Input = " + voxelVal + " output =" + rtnValue[ outputOffset ]);
+                        }
+
                     }
                 }
             }
+
+            colorOffset ++;
 
 //            if ( debug ) break;  // Use only the first, but copy its bytes around.
         }
