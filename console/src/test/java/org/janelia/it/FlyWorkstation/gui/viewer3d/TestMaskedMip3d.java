@@ -8,6 +8,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.Arrays;
 
 /**
@@ -30,6 +31,7 @@ public class TestMaskedMip3d {
                 frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
                 JLabel label = new JLabel("Test MipWidget for Masking");
                 frame.getContentPane().add(label);
+                frame.setSize( new Dimension( 600, 622 ) );
                 Mip3d mipWidget = new Mip3d();
                 mipWidget.setClearOnLoad( true );
                 mipWidget.refresh();
@@ -44,10 +46,12 @@ public class TestMaskedMip3d {
                     String fileBase = "/Users/fosterl/Documents/alignment_board/samples/";
                     String volumeFile1 = fileBase + "1735579170638921826/ConsolidatedSignal2_25.mp4";
                     //String volumeFile2 = fileBase + ""; //Unknown as yet.  Doing without...
+                    String guideBase = "/Volumes/jacsData/MaskResources/Compartment/guide/";
                     String[] maskFiles = {
-                            fileBase + "1735579170638921826/ConsolidatedLabel.v3dpbd", // This matches the signal file.
-                            fileBase + "1696292257579143266/ConsolidatedLabel.v3dpbd",
-                            fileBase + "1778036012035866722/ConsolidatedLabel.v3dpbd",
+                            guideBase + "LOP_R.v3dpbd",
+                            guideBase + "WED_L.v3dpbd",
+                            guideBase + "WED_R.v3dpbd",
+//                            fileBase + "1735579170638921826/ConsolidatedLabel.v3dpbd", // This matches the signal file.
                     };
                     //  Bypass mask files.  May be misloading over other texture.
                     mipWidget.setMaskFiles( Arrays.asList( maskFiles ), resolver );
