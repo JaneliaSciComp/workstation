@@ -66,30 +66,16 @@ public class TextureMediator {
 
             gl.glBindTexture( GL2.GL_TEXTURE_3D, textureName );
             gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_REPLACE);
-            int internalFormat = GL2.GL_RGBA;
-            if (textureData.getColorSpace() == VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_SRGB)
-                internalFormat = GL2.GL_SRGB8_ALPHA8;
 
-            //internalFormat = GL2.GL_LUMINANCE;
             gl.glTexImage3D(GL2.GL_TEXTURE_3D,
                     0, // mipmap level
-                    internalFormat, // as stored INTO graphics hardware, w/ srgb info (GLint internal format)
+                    getInternalFormat(), // as stored INTO graphics hardware, w/ srgb info (GLint internal format)
                     textureData.getSx(), // width
                     textureData.getSy(), // height
                     textureData.getSz(), // depth
                     0, // border
-                    GL2.GL_BGRA, // voxel component order (GLenum format)
-                    // BLACK SCREEN. GL2.GL_UNSIGNED_BYTE_3_3_2,  // BLACK SCREEN for 143/266
-                    // GL2.GL_UNSIGNED_SHORT_4_4_4_4_REV, // TWO-COLOR SCREEN for 143/266
-                    // GL2.GL_UNSIGNED_SHORT_5_5_5_1, // 3-Color Screen for 143/266
-                    // GL2.GL_UNSIGNED_SHORT_1_5_5_5_REV, // Different 3-Color Screen for 143/266
-                    // GL2.GL_UNSIGNED_SHORT_5_6_5, // BLACK SCREEN for 143/266
-                    // GL2.GL_UNSIGNED_SHORT_5_6_5_REV, // BLACK SCREEN for 143/266
-                    // GL2.GL_BYTE, // YBD for 143/266
-                    // GL2.GL_BYTE, // YBD for 143/266
-                    // GL2.GL_UNSIGNED_BYTE, // Grey Neurons for 143/266
-                    // GL2.GL_UNSIGNED_SHORT, // Stack Trace for 143/266
-                    GL2.GL_UNSIGNED_INT_8_8_8_8_REV, // voxel component type=packed RGBA values(GLenum type)
+                    getVoxelComponentOrder(), // voxel component order (GLenum format)
+                    getVoxelComponentType(), // voxel component type=packed RGBA values(GLenum type)
                     data.rewind()
             );
         }
@@ -97,10 +83,6 @@ public class TextureMediator {
 
     public int getTextureOffset() {
         return textureOffset;
-    }
-
-    public VolumeDataAcceptor.TextureColorSpace getColorSpace() {
-        return textureData.getColorSpace();
     }
 
     public double[] textureCoordinateFromXyz( double[] xyz ) {
@@ -145,4 +127,40 @@ public class TextureMediator {
     public void setTextureData(TextureDataI textureData) {
         this.textureData = textureData;
     }
+
+    //--------------------------- Helpers for glTexImage3D
+    private int getVoxelComponentType() {
+        int rtnVal = GL2.GL_UNSIGNED_INT_8_8_8_8_REV;
+        if ( textureData.getPixelByteCount()  == 1 ) {
+            rtnVal = GL2.GL_UNSIGNED_BYTE;
+        }
+
+        return rtnVal;
+        // BLACK SCREEN. GL2.GL_UNSIGNED_BYTE_3_3_2,  // BLACK SCREEN for 143/266
+        // GL2.GL_UNSIGNED_SHORT_4_4_4_4_REV, // TWO-COLOR SCREEN for 143/266
+        // GL2.GL_UNSIGNED_SHORT_5_5_5_1, // 3-Color Screen for 143/266
+        // GL2.GL_UNSIGNED_SHORT_1_5_5_5_REV, // Different 3-Color Screen for 143/266
+        // GL2.GL_UNSIGNED_SHORT_5_6_5, // BLACK SCREEN for 143/266
+        // GL2.GL_UNSIGNED_SHORT_5_6_5_REV, // BLACK SCREEN for 143/266
+        // GL2.GL_BYTE, // YBD for 143/266
+        // GL2.GL_BYTE, // YBD for 143/266
+        // GL2.GL_UNSIGNED_BYTE, // Grey Neurons for 143/266
+        // GL2.GL_UNSIGNED_SHORT, // Stack Trace for 143/266
+    }
+
+    private int getInternalFormat() {
+        int internalFormat = GL2.GL_RGBA;
+        if (textureData.getColorSpace() == VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_SRGB)
+            internalFormat = GL2.GL_SRGB8_ALPHA8;
+        if (textureData.getPixelByteCount() == 1)
+            internalFormat = GL2.GL_LUMINANCE;
+        return internalFormat;
+    }
+
+    private int getVoxelComponentOrder() {
+        int rtnVal = GL2.GL_BGRA;
+        return rtnVal;
+    }
+    //--------------------------- End: Helpers for glTexImage3D
+
 }

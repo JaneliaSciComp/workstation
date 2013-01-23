@@ -87,6 +87,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
                         int blue  = (voxelVal & 0x000000ff);
 
                         if (! (red == blue  &&  blue == green ) ) {
+//                        if (! (red == 0  &&  blue == 0  &&  green == 0 ) ) {
                             int colorInx = colorOffset % colors.length;
                             red = colors[ colorInx ][0];
                             green = colors[ colorInx ][1];

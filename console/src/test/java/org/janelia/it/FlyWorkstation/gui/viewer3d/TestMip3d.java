@@ -42,8 +42,9 @@ public class TestMip3d {
                     String guideBase = "/Volumes/jacsData/MaskResources/Compartment/guide/";
                     //String fn = guideBase + "LOP_R.v3dpbd";
 
-                    String fn = "/Volumes/jacsData/filestore/system/Separation/296/418/1778029752666296418/separate/ConsolidatedLabel.v3dpbd";
+                    //String fn = "/Volumes/jacsData/filestore/system/Separation/296/418/1778029752666296418/separate/ConsolidatedLabel.v3dpbd";
                     //String fn = "/Volumes/jacsData/filestore/system/Separation/143/266/1696292257579143266/separate/ConsolidatedLabel.v3dpbd";
+                    String fn = "/Volumes/jacsData/filestore/system/Separation/921/826/1735579170638921826/separate/ConsolidatedLabel.v3dpbd";
 
                     if ( ! mipWidget.loadVolume(fn, new TrivialFileResolver()) )
                         System.out.println("Volume load failed.");
