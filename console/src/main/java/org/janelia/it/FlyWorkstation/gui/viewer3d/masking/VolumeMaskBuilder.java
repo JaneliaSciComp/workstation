@@ -1,9 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.TextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,10 +26,9 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
     private static final int Y_INX = 1;
     private static final int Z_INX = 2;
 
-    private boolean debug = true;
-
-    private List<MaskingDataBean> maskingDataBeans = new ArrayList<MaskingDataBean>();
-    private MaskingDataBean currentBean;
+    private List<TextureDataI> maskingDataBeans = new ArrayList<TextureDataI>();
+    private ByteOrder consensusByteOrder;
+    private int consensusByteCount;
 
     private Logger logger = LoggerFactory.getLogger( VolumeDataAcceptor.class );
 
@@ -61,7 +63,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
         //int dimMaskZ = volumeMaskVoxels[ Z_INX ];
 
         int colorOffset = 0;
-        for ( MaskingDataBean bean: maskingDataBeans ) {
+        for ( TextureDataI bean: maskingDataBeans ) {
             int dimBeanX = bean.getSx();
             int dimBeanY = bean.getSy();
             int dimBeanZ = bean.getSz();
@@ -103,8 +105,6 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
             }
 
             colorOffset ++;
-
-//            if ( debug ) break;  // Use only the first, but copy its bytes around.
         }
 
         return rtnValue;
@@ -118,109 +118,83 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
 
     /** Size of volume mask.  Numbers of voxels in all three directions. */
     public Integer[] getVolumeMaskVoxels() {
-        // *** TEMP ***  Bypasses the combining of all these things.
-        if (debug) {
-            if ( maskingDataBeans.size() > 0 ) {
-                return new Integer[] { maskingDataBeans.get( 0 ).getSx(),
-                                       maskingDataBeans.get( 0 ).getSy(),
-                                       maskingDataBeans.get( 0 ).getSz() };
-            }
-        }
         Integer[] voxels = { Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE };
 
-        for ( MaskingDataBean bean: maskingDataBeans ) {
+        for ( TextureDataI bean: maskingDataBeans ) {
             adjustMaxValues( voxels, new Integer[] { bean.getSx(), bean.getSy(), bean.getSz() } );
         }
 
         return voxels;
     }
 
-    public void beginVolume() {
-        currentBean = new MaskingDataBean();
+    public ByteOrder getPixelByteOrder() {
+        return consensusByteOrder;
     }
 
-    public void endVolume() {
-        maskingDataBeans.add( currentBean );
-        currentBean = null;
+    public int getPixelByteCount() {
+        return consensusByteCount;
+    }
+
+    @Override
+    public void setTextureData(TextureDataI textureData) {
+        if ( consensusByteCount == 0 ) {
+            consensusByteCount = textureData.getPixelByteCount();
+        }
+        else if ( consensusByteCount != textureData.getPixelByteCount() ) {
+            //todo watch this output; consider how serious this mismatch becomes, and how frequent.
+            logger.warn(
+                    "Mismatch in pixel byte count.  Previously saw {}, now seeing {}.  Sticking with former value.",
+                    consensusByteCount, textureData.getPixelByteCount()
+            );
+        }
+
+        if ( consensusByteOrder == null ) {
+            consensusByteOrder = textureData.getByteOrder();
+        }
+        else
+        if (! textureData.getByteOrder().equals( consensusByteOrder ) ) {
+            //todo watch this output; consider how serious this mismatch becomes, and how frequent.
+            logger.warn(
+                    "Mismatch in byte order.  Previously saw {}, now seeing {}.  Sticking with former value.",
+                    consensusByteOrder, textureData.getByteOrder()
+            );
+        }
+        maskingDataBeans.add( textureData );
     }
 
     /**
-     * Adds another volume of data to the collection being accumulated here.
+     * This builds up a finalized texture data object for external use, combined from all texture data
+     * objects set on this builder.
+     *
+     * @return "consensus" texture data object.
      */
-    @Override
-    public void setVolumeData( int sx, int sy, int sz, int[] rgbaValues ) {
-        if ( rgbaValues != null ) {
-            IntBuffer maskData = IntBuffer.wrap( rgbaValues );
-            currentBean.setMaskData(maskData, sx, sy, sz);
-        }
-        else {
-            logger.warn( "Null values provided to set volume data." );
-        }
-    }
+    public TextureDataI getCombinedTextureData() {
+        TextureDataI rtnVal = new TextureDataBean( getVolumeMask(), getVolumeMaskVoxels() );
+        rtnVal.setByteOrder( getPixelByteOrder() );
+        rtnVal.setPixelByteCount(getPixelByteCount());
+        rtnVal.setHeader("Accumulated");
+        rtnVal.setColorSpace(getTextureColorSpace());
+        rtnVal.setVoxelMicrometers( new Double[] { 1.0, 1.0, 1.0 } );
+        rtnVal.setLoaded(false);
 
-    /**
-     * Adds another color space value to those collected here.
-     */
-    @Override
-    public void setTextureColorSpace(TextureColorSpace colorSpace) {
-        currentBean.setColorSpace( colorSpace );
+        return rtnVal;
     }
 
     public TextureColorSpace getTextureColorSpace() {
-        // *** TEMP ***  Bypasses the combining of all these things.
-//        if (debug) {
-//            if ( maskingDataBeans.size() > 0 ) {
-//                return maskingDataBeans.get(0).getColorSpace();
-//            }
-//        }
-
         TextureColorSpace space = null;
-        for ( MaskingDataBean bean: maskingDataBeans ) {
+        for ( TextureDataI bean: maskingDataBeans ) {
             if ( space == null ) {
                 space = bean.getColorSpace();
             }
             else {
                 if (! space.equals( bean.getColorSpace() ) ) {
-                    throw new IllegalArgumentException(
-                            "Masking volume color space " + bean.getColorSpace() +
-                            " differs from established space of " + space
-                    );
+                    logger.warn( "Masking volume color space " + bean.getColorSpace() +
+                            " differs from established space of " + space + ".  Sticking with latter value.",
+                            bean.getColorSpace(), space );
                 }
             }
         }
         return space;
-    }
-
-    /**
-     * Adds another volume micrometers (whole volume) 3-D dimension.
-     */
-    @Override
-    public void setVolumeMicrometers( double sx, double sy, double sz ) {
-        currentBean.setVolumeMicrometers( new Double[] {sx, sy, sz});
-    }
-
-    public Double[] getVolumeMicrometers() {
-        Double[] maxValues = { Double.MIN_VALUE, Double.MIN_VALUE, Double.MIN_VALUE };
-        for ( MaskingDataBean bean: maskingDataBeans ) {
-            adjustMaxValues(maxValues, bean.getVolumeMicrometers());
-        }
-        return maxValues;
-    }
-
-    /**
-     * Adds another voxel (size of one element) 3-D dimension.
-     */
-    @Override
-    public void setVoxelMicrometers( double sx, double sy, double sz ) {
-        currentBean.setVoxelMicrometers( new Double[] {sx, sy, sz} );
-    }
-
-    public Double[] getVoxelMicrometers() {
-        Double[] maxValues = { Double.MIN_VALUE, Double.MIN_VALUE, Double.MIN_VALUE };
-        for ( MaskingDataBean bean: maskingDataBeans ) {
-            adjustMaxValues(maxValues, bean.getVoxelMicrometers());
-        }
-        return maxValues;
     }
 
     private<T extends Comparable> void adjustMaxValues(T[] maxValues, T[] values) {

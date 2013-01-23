@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
  * Date: 1/3/13
  * Time: 4:42 PM
  *
- * This is a special viewer to be added to the alignment board viewer panel.
+ * Shows alignment board relevant entities in 3D.
  */
 public class AlignmentBoardViewer extends Viewer {
 
@@ -177,6 +177,7 @@ public class AlignmentBoardViewer extends Viewer {
             for ( Entity consolidatedLabel: consolidatedLabelsList ) {
                 String filename = EntityUtils.getFilePath( consolidatedLabel );
                 if ( filename != null ) {
+//                    if ( ! matchesSomeSignal( signalFilenames, filename ) ) { // *** TEMP ***
                     if ( matchesSomeSignal( signalFilenames, filename ) ) {
                         maskFilenames.add( filename );
                     }

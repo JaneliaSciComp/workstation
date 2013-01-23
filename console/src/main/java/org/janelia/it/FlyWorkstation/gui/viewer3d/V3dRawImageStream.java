@@ -8,7 +8,19 @@ import java.util.zip.DataFormatException;
 
 public class V3dRawImageStream 
 {
-	public enum Format {
+    public String getHeaderKey() {
+        return headerKey;
+    }
+
+    public Format getFormat() {
+        return format;
+    }
+
+    public ByteOrder getEndian() {
+        return endian;
+    }
+
+    public enum Format {
 		FORMAT_PENG_RAW, // Original uncompressed format
 		FORMAT_MURPHY_PBD, // Compressed data region, same header
 		FORMAT_MYERS_PBD; // Modification by Gene Myers

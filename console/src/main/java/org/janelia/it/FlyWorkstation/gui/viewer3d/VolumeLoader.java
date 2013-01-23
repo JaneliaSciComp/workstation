@@ -17,7 +17,9 @@ import loci.formats.in.ZeissLSMReader;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor.TextureColorSpace;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 
+import java.nio.ByteOrder;
 import java.util.zip.DataFormatException;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
@@ -33,6 +35,9 @@ public class VolumeLoader
 		VolumeBrick.TextureColorSpace.COLOR_SPACE_LINEAR;
 
     private FileResolver resolver;
+    private String header = null;
+    private int pixelBytes = 1;
+    private ByteOrder pixelByteOrder = ByteOrder.LITTLE_ENDIAN;
 
     public VolumeLoader( FileResolver resolver ) {
         this.resolver = resolver;
@@ -111,6 +116,10 @@ public class VolumeLoader
 				}
 			}
 		}
+
+        header = sliceStream.getHeaderKey();
+        pixelBytes = sliceStream.getPixelBytes();
+        pixelByteOrder = sliceStream.getEndian();
 	}
 	
 	public boolean loadVolume(String unCachedFileName)
@@ -164,10 +173,17 @@ public class VolumeLoader
 	}
 
 	public void populateVolumeAcceptor(VolumeDataAcceptor dataAcceptor) {
-		dataAcceptor.setVolumeData(sx, sy, sz, argbIntArray);
-		dataAcceptor.setTextureColorSpace(colorSpace);
-		dataAcceptor.setVolumeMicrometers(sx, sy, sz);
-		dataAcceptor.setVoxelMicrometers(1.0, 1.0, 1.0);
+        TextureDataI textureData = new TextureDataBean( argbIntArray, sx, sy, sz );
+        textureData.setColorSpace( colorSpace );
+        textureData.setVolumeMicrometers( new Double[] { (double)sx, (double)sy, (double)sz } );
+        textureData.setVoxelMicrometers( new Double[] { 1.0, 1.0, 1.0 } );
+        if ( header != null ) {
+            textureData.setHeader( header );
+            textureData.setByteOrder( pixelByteOrder );
+            textureData.setPixelByteCount( pixelBytes );
+        }
+        dataAcceptor.setTextureData( textureData );
+
 	}
 	
 	private class VolumeFrameListener 

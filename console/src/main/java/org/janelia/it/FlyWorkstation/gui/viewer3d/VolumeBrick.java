@@ -1,11 +1,13 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
+import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.util.gl2.GLUT;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator;
 
 import javax.media.opengl.GL2;
@@ -23,7 +25,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     private TextureMediator maskTextureMediator;
     private List<TextureMediator> textureMediators = new ArrayList<TextureMediator>();
 
-	// Vary these parameters to taste
+    // Vary these parameters to taste
 	// Rendering variables
 	private RenderMethod renderMethod = 
 		// RenderMethod.ALPHA_BLENDING;
@@ -46,9 +48,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     private int[] signalTextureVoxels = {8,8,8};
 	private IntBuffer signalData = Buffers.newDirectIntBuffer(signalTextureVoxels[0]* signalTextureVoxels[1]* signalTextureVoxels[2]);
     private boolean bSignalTextureNeedsUpload = false;
-
-    private int[] maskingVoxels = {8,8,8};
-    private IntBuffer maskData;
     private boolean bMaskTextureNeedsUpload = false;
 
     private VolumeBrickShader volumeBrickShader = new VolumeBrickShader();
@@ -92,11 +91,12 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 			uploadSignalTexture(gl);
         }
 		if (bUseShader) {
-            if ( maskData != null  &&  bMaskTextureNeedsUpload ) {
+            if ( maskTextureMediator != null  &&  bMaskTextureNeedsUpload ) {
                 uploadMaskingTexture(gl);
             }
 
             try {
+                volumeBrickShader.setTextureMediators( signalTextureMediator, maskTextureMediator );
                 volumeBrickShader.init(gl);
             } catch ( Exception ex ) {
                 ex.printStackTrace();
@@ -109,10 +109,12 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 	}
 
     private void initMediators( GL2 gl ) {
-        if ( maskData != null ) {
+        if ( maskTextureMediator != null ) {
             textureIds = TextureMediator.genTextureIds( gl, 2 );
+
             signalTextureMediator.init( textureIds[ 0 ], 0 );
             maskTextureMediator.init( textureIds[ 1 ], 1 );
+
         }
         else {
             textureIds = TextureMediator.genTextureIds( gl, 1 );
@@ -126,7 +128,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 			init(gl);
 		if (bSignalTextureNeedsUpload)
 			uploadSignalTexture(gl);
-        if (maskData != null  &&  bMaskTextureNeedsUpload)
+        if (maskTextureMediator != null  &&  bMaskTextureNeedsUpload)
             uploadMaskingTexture(gl);
 
 		// debugging objects showing useful boundaries of what we want to render
@@ -141,7 +143,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         gl.glEnable(GL2.GL_TEXTURE_3D);
 
         setupSignalTexture(gl);
-        if ( maskData != null )
+        if ( maskTextureMediator != null )
             setupMaskingTexture(gl);
 
         // set blending to enable transparent voxels
@@ -159,7 +161,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         }
         if (bUseShader) {
             volumeBrickShader.setColorMask(colorMask);
-            if ( maskData != null ) {
+            if ( maskTextureMediator != null ) {
                 volumeBrickShader.setVolumeMaskApplied();
             }
 
@@ -294,7 +296,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         textureIds = null;
 		bSignalTextureNeedsUpload = true;
         bMaskTextureNeedsUpload = true;
-        resetMaskingTextures();
 		bIsInitialized = false;
 	}
 
@@ -308,20 +309,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 		result.include(half);
 		return result;
 	}
-
-	public void setTextureColorSpace(TextureColorSpace colorSpace) {
-        if (colorSpace != signalTextureMediator.getColorSpace()) {
-            signalTextureMediator.setColorSpace( colorSpace );
-			bSignalTextureNeedsUpload = true;
-		}
-	}
-
-    public void setMaskTextureColorSpace(TextureColorSpace colorSpace) {
-        if (colorSpace != maskTextureMediator.getColorSpace()) {
-            maskTextureMediator.setColorSpace( colorSpace );
-            bMaskTextureNeedsUpload = true;
-        }
-    }
 
     /**
 	 * Colors are already premultiplied by alpha.
@@ -380,88 +367,40 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         bMaskTextureNeedsUpload = false; //Dummy data has no masking at this time.
 		bUseSyntheticData = false;
 	}
-	
-	public void setVolumeData(int sx, int sy, int sz, IntBuffer rgbaBuffer) 
-	{
-        if ( signalTextureMediator == null ) {
-            signalTextureMediator = new TextureMediator();
-            textureMediators.add( signalTextureMediator );
-        }
-		signalTextureVoxels = new int[] {sx, sy, sz};
-        if ( signalTextureMediator != null ) {
-            signalTextureMediator.setData( rgbaBuffer );
-            signalTextureMediator.setVoxels( signalTextureVoxels );
-        }
-        signalData = rgbaBuffer;
-		bSignalTextureNeedsUpload = true;
-		bUseSyntheticData = false;
-	}
-	
-	public void setVolumeData(int sx, int sy, int sz, int[] intArray) 
-	{
-		setVolumeData(sx, sy, sz, Buffers.newDirectIntBuffer(intArray));
-	}
 
-    public void setMaskingData(int sx, int sy, int sz, IntBuffer rgbaBuffer)
-    {
+    public void setVoxelColor(int x, int y, int z, int color) {
+        int sx = signalTextureVoxels[0];
+        int sy = signalTextureVoxels[1];
+        signalData.put(z * sx * sy + y * sx + x, color);
+    }
+
+    public void setMaskTextureData( TextureDataI textureData ) {
         if ( maskTextureMediator == null ) {
-            maskTextureMediator = new TextureMediator();
+            maskTextureMediator = new TextureMediator( TextureMediator.MASK_TEXTURE_OFFSET );
             textureMediators.add( maskTextureMediator );
         }
-        maskingVoxels = new int[]{sx, sy, sz};
-        maskData = rgbaBuffer;
-        if ( maskTextureMediator != null ) {
-            maskTextureMediator.setVoxels( maskingVoxels );
-            maskTextureMediator.setData( maskData );
-        }
+        maskTextureMediator.setTextureData(textureData);
         bMaskTextureNeedsUpload = true;
     }
 
-    public void setVolumeMicrometers(double x, double y, double z) {
-        double[] volumeMicrometers1 = {x, y, z};
-        if ( signalTextureMediator != null ) {
-            signalTextureMediator.setVolumeMicrometers( volumeMicrometers1 );
+    //---------------------------------IMPLEMENT VolumeDataAcceptor
+    @Override
+    public void setTextureData(TextureDataI textureData) {
+        if ( signalTextureMediator == null ) {
+            signalTextureMediator = new TextureMediator( TextureMediator.SIGNAL_TEXTURE_OFFSET );
+            textureMediators.add( signalTextureMediator );
         }
-        if ( maskTextureMediator != null ) {
-            maskTextureMediator.setVolumeMicrometers( volumeMicrometers1 );
-        }
-	}
-	
-	public void setVoxelColor(int x, int y, int z, int color) {
-		int sx = signalTextureVoxels[0];
-		int sy = signalTextureVoxels[1];
-        signalData.put(z * sx * sy + y * sx + x, color);
-	}
-	
-	public void setVoxelMicrometers(double x, double y, double z) {
-        double[] voxelMicrometers = {x, y, z};
-        if ( signalTextureMediator != null ) {
-            signalTextureMediator.setVoxelMicrometers(voxelMicrometers);
-        }
-        if ( maskTextureMediator != null ) {
-            maskTextureMediator.setVoxelMicrometers(voxelMicrometers);
-        }
-	}
+        signalTextureMediator.setTextureData( textureData );
+        bSignalTextureNeedsUpload = true;
+    }
+
+    //---------------------------------END: IMPLEMENT VolumeDataAcceptor
 
     /** Call this when the brick is to be re-shown after an absense. */
     public void refresh() {
         bSignalTextureNeedsUpload = true;
     }
 	
-//	private double[] textureCoordinateFromXyz(double[] xyz) {
-//		double[] tc = {xyz[0], xyz[1], xyz[2]}; // micrometers, origin at center
-//		for (int i =0; i < 3; ++i) {
-//			// Move origin to upper left corner
-//			tc[i] += volumeMicrometers[i] / 2.0; // micrometers, origin at corner
-//			// Rescale from micrometers to voxels
-//			tc[i] /= voxelMicrometers[i]; // voxels, origin at corner
-//			// Rescale from voxels to texture units (range 0-1)
-//			tc[i] /= signalTextureVoxels[i]; // texture units
-//		}
-//
-//		return tc;
-//	}
-
     private void createSyntheticData() {
         // Clear texture data
         signalData.rewind();
@@ -492,15 +431,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     private void uploadSignalTexture(GL2 gl) {
         if ( signalTextureMediator != null )
             signalTextureMediator.uploadTexture( gl );
-//        uploadTexture(
-//                gl,
-//                textureIds[ 0 ],
-//                signalTextureVoxels[0],
-//                signalTextureVoxels[1],
-//                signalTextureVoxels[2],
-//                signalTextureColorSpace,
-//                signalData
-//        );
         bSignalTextureNeedsUpload = false;
     }
 
@@ -508,16 +438,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     private void uploadMaskingTexture(GL2 gl) {
         if ( maskTextureMediator != null )
             maskTextureMediator.uploadTexture( gl );
-
-//        uploadTexture(
-//                gl,
-//                textureIds[ 1 ],
-//                maskingVoxels[0],
-//                maskingVoxels[1],
-//                maskingVoxels[2],
-//                maskTextureColorSpace,
-//                maskData
-//        );
         bMaskTextureNeedsUpload = false;
     }
 
@@ -525,11 +445,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         for ( TextureMediator mediator: textureMediators ) {
             mediator.setTextureCoordinates( gl, tX, tY, tZ );
         }
-    }
-
-    private void resetMaskingTextures() {
-        maskData = null;
-        maskingVoxels = null;
     }
 
     private void setupMaskingTexture(GL2 gl) {

@@ -107,10 +107,8 @@ implements MouseListener, MouseMotionListener, ActionListener,
             VolumeMaskBuilder builder = new VolumeMaskBuilder();
             for ( String maskFile: maskFiles ) {
                 VolumeLoader volumeLoader = new VolumeLoader( resolver );
-                volumeLoader.loadVolume( maskFile );
-                builder.beginVolume();
+                volumeLoader.loadVolume(maskFile);
                 volumeLoader.populateVolumeAcceptor(builder);
-                builder.endVolume();
             }
             volumeMaskBuilder = builder;
         }
@@ -126,9 +124,7 @@ implements MouseListener, MouseMotionListener, ActionListener,
             VolumeBrick brick = new VolumeBrick(renderer);
 			volumeLoader.populateVolumeAcceptor(brick);
             if ( volumeMaskBuilder != null ) {
-                Integer[] voxels = volumeMaskBuilder.getVolumeMaskVoxels();
-                brick.setMaskingData( voxels[ 0 ], voxels[ 1 ], voxels[ 2 ], volumeMaskBuilder.getVolumeMaskBuffer() );
-                brick.setMaskTextureColorSpace( volumeMaskBuilder.getTextureColorSpace() );
+                brick.setMaskTextureData( volumeMaskBuilder.getCombinedTextureData() );
             }
 			renderer.addActor(brick);
 			renderer.resetView();

@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
+package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 /**
  * Created with IntelliJ IDEA.
@@ -6,16 +6,16 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
  * Date: 1/10/13
  * Time: 10:42 AM
  *
- * All info representing a texture for masking.  Note that the texture offset for this is not known,
- * because masks like this can be switched on and off, changing their offsets at runtime. *
+ * All info representing a texture volume.  Note that the texture offset for this is not known,
+ * because masks like this can be switched on and off, changing their offsets at runtime.
  */
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 
-public class MaskingDataBean {
+public class TextureDataBean implements TextureDataI {
     private IntBuffer maskData;
     private Integer sx;
     private Integer sy;
@@ -32,14 +32,22 @@ public class MaskingDataBean {
 
     private boolean loaded;
 
-    public MaskingDataBean() {
+    public TextureDataBean() {
         super();
         this.loaded = false; // Emphasis.
     }
 
-    public MaskingDataBean(IntBuffer maskData, int sx, int sy, int sz) {
+    public TextureDataBean(IntBuffer maskData, int sx, int sy, int sz) {
         this();
         setMaskData(maskData, sx, sy, sz);
+    }
+
+    public TextureDataBean(int[] maskData, int sx, int sy, int sz) {
+        this( IntBuffer.wrap(maskData), sx, sy, sz );
+    }
+
+    public TextureDataBean( int[] maskData, Integer[] voxels ) {
+        this( IntBuffer.wrap(maskData), voxels[ 0 ], voxels[ 1 ], voxels[ 2 ] );
     }
 
     public void setMaskData( IntBuffer maskData, int sx, int sy, int sz ) {

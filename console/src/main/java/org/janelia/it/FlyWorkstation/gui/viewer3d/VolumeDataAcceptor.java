@@ -1,5 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+
+import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 
 /**
@@ -16,9 +19,6 @@ public interface VolumeDataAcceptor {
         COLOR_SPACE_SRGB // R,G,B values are already gamma corrected for display on computer monitors
     };
 
-    void setVolumeData(int sx, int sy, int sz, int[] rgbaValues);
-    void setTextureColorSpace(TextureColorSpace colorSpace);
-    void setVolumeMicrometers(double sx, double sy, double sz);
-    void setVoxelMicrometers(double sx, double sy, double sz);
+    void setTextureData( TextureDataI textureData );
 
 }

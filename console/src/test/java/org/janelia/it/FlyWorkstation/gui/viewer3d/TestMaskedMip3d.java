@@ -38,7 +38,8 @@ public class TestMaskedMip3d {
                 FileResolver resolver = new TrivialFileResolver();
                 try {
                     /*
-                    ./1696292257579143266/ConsolidatedLabel.v3dpbd
+                       This combination causes the yellow-box problem.
+
                     ./1735579170638921826/ConsolidatedSignal2_25.mp4
                     ./1778036012035866722/ConsolidatedLabel.v3dpbd
                      */
@@ -47,13 +48,15 @@ public class TestMaskedMip3d {
                     String volumeFile1 = fileBase + "1735579170638921826/ConsolidatedSignal2_25.mp4";
                     //String volumeFile2 = fileBase + ""; //Unknown as yet.  Doing without...
                     String guideBase = "/Volumes/jacsData/MaskResources/Compartment/guide/";
+                    String separationBase = "/Volumes/jacsData/filestore/system/Separation/";
                     String[] maskFiles = {
+//                            separationBase + "143/266/1696292257579143266/separate/ConsolidatedLabel.v3dpbd",
+
                             guideBase + "LOP_R.v3dpbd",
                             guideBase + "WED_L.v3dpbd",
                             guideBase + "WED_R.v3dpbd",
-//                            fileBase + "1735579170638921826/ConsolidatedLabel.v3dpbd", // This matches the signal file.
                     };
-                    //  Bypass mask files.  May be misloading over other texture.
+//                            fileBase + "1735579170638921826/ConsolidatedLabel.v3dpbd", // This matches the signal file.
                     mipWidget.setMaskFiles( Arrays.asList( maskFiles ), resolver );
                     if ( ! mipWidget.loadVolume(volumeFile1, resolver) )  {
                         System.out.println("Volume load failed.");

@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 
 import javax.media.opengl.GL2;
+import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 
 /**
@@ -15,31 +16,20 @@ import java.nio.IntBuffer;
  * regarding a single texture.
  */
 public class TextureMediator {
+    public static int SIGNAL_TEXTURE_OFFSET = 0;
+    public static int MASK_TEXTURE_OFFSET = 1;
+
     private static int s_textureCount = 0;  // Optional: an assumed sequence of textures is made.
 
     private int textureName;
     private int textureSymbolicId; // This is an ID like GL.GL_TEXTURE0.
     private int textureOffset; // This will be 0, 1, ...
 
-    private IntBuffer data;
-    private int[] voxels;
-
-    /**
-     * Dimensions of rectangular volume, from centers of corner voxels, in world units.
-     */
-    private double[] volumeMicrometers = {1.0, 2.0, 3.0};
-
-    /**
-     * Size of a single voxel, in world units.
-     */
-    private double[] voxelMicrometers = {1.0, 1.0, 1.0};
+    private TextureDataI textureData;
 
     private static final int INTERPOLATION_METHOD =
             GL2.GL_LINEAR; // blending across voxel edges
     // GL2.GL_NEAREST; // discrete cube shaped voxels
-
-    // Color space is linear for most microscopy LSM, TIFF and V3DRAW files
-    private VolumeDataAcceptor.TextureColorSpace colorSpace = VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_LINEAR;
 
     public static int[] genTextureIds( GL2 gl, int count ) {
         int[] rtnVal = new int[ count ];
@@ -69,56 +59,55 @@ public class TextureMediator {
 
     public void uploadTexture( GL2 gl ) {
 
+        IntBuffer data = textureData.getMaskData();
         if ( data != null ) {
             gl.glActiveTexture( textureSymbolicId );
             gl.glEnable( GL2.GL_TEXTURE_3D );
 
-            gl.glBindTexture(GL2.GL_TEXTURE_3D, textureName );
+            gl.glBindTexture( GL2.GL_TEXTURE_3D, textureName );
             gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_REPLACE);
-            int internalFormat = GL2.GL_RGBA8;
-            if (colorSpace == VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_SRGB)
+            int internalFormat = GL2.GL_RGBA;
+            if (textureData.getColorSpace() == VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_SRGB)
                 internalFormat = GL2.GL_SRGB8_ALPHA8;
 
+            //internalFormat = GL2.GL_LUMINANCE;
             gl.glTexImage3D(GL2.GL_TEXTURE_3D,
                     0, // mipmap level
-                    internalFormat, // bytes per pixel, plus somehow srgb info
-                    voxels[ 0 ], // width
-                    voxels[ 1 ], // height
-                    voxels[ 2 ], // depth
+                    internalFormat, // as stored INTO graphics hardware, w/ srgb info (GLint internal format)
+                    textureData.getSx(), // width
+                    textureData.getSy(), // height
+                    textureData.getSz(), // depth
                     0, // border
-                    GL2.GL_BGRA, // voxel component order
-                    GL2.GL_UNSIGNED_INT_8_8_8_8_REV, // voxel component type
+                    GL2.GL_BGRA, // voxel component order (GLenum format)
+                    // BLACK SCREEN. GL2.GL_UNSIGNED_BYTE_3_3_2,  // BLACK SCREEN for 143/266
+                    // GL2.GL_UNSIGNED_SHORT_4_4_4_4_REV, // TWO-COLOR SCREEN for 143/266
+                    // GL2.GL_UNSIGNED_SHORT_5_5_5_1, // 3-Color Screen for 143/266
+                    // GL2.GL_UNSIGNED_SHORT_1_5_5_5_REV, // Different 3-Color Screen for 143/266
+                    // GL2.GL_UNSIGNED_SHORT_5_6_5, // BLACK SCREEN for 143/266
+                    // GL2.GL_UNSIGNED_SHORT_5_6_5_REV, // BLACK SCREEN for 143/266
+                    // GL2.GL_BYTE, // YBD for 143/266
+                    // GL2.GL_BYTE, // YBD for 143/266
+                    // GL2.GL_UNSIGNED_BYTE, // Grey Neurons for 143/266
+                    // GL2.GL_UNSIGNED_SHORT, // Stack Trace for 143/266
+                    GL2.GL_UNSIGNED_INT_8_8_8_8_REV, // voxel component type=packed RGBA values(GLenum type)
                     data.rewind()
             );
         }
     }
 
-    public IntBuffer getData() {
-        return data;
-    }
-
-    public void setData(IntBuffer data) {
-        this.data = data;
-    }
-
-    public int[] getVoxels() {
-        return voxels;
-    }
-
-    public void setVoxels(int[] voxels) {
-        this.voxels = voxels;
+    public int getTextureOffset() {
+        return textureOffset;
     }
 
     public VolumeDataAcceptor.TextureColorSpace getColorSpace() {
-        return colorSpace;
-    }
-
-    public void setColorSpace( VolumeDataAcceptor.TextureColorSpace colorSpace ) {
-        this.colorSpace = colorSpace;
+        return textureData.getColorSpace();
     }
 
     public double[] textureCoordinateFromXyz( double[] xyz ) {
         double[] tc = {xyz[0], xyz[1], xyz[2]}; // micrometers, origin at center
+        int[] voxels = { textureData.getSx(), textureData.getSy(), textureData.getSz() };
+        Double[] volumeMicrometers = textureData.getVolumeMicrometers();
+        Double[] voxelMicrometers = textureData.getVoxelMicrometers();
         for (int i =0; i < 3; ++i) {
             // Move origin to upper left corner
             tc[i] += volumeMicrometers[i] / 2.0; // micrometers, origin at corner
@@ -135,20 +124,12 @@ public class TextureMediator {
         gl.glMultiTexCoord3d(textureSymbolicId, tX, tY, tZ);
     }
 
-    public double[] getVolumeMicrometers() {
-        return volumeMicrometers;
+    public Double[] getVolumeMicrometers() {
+        return textureData.getVolumeMicrometers();
     }
 
-    public void setVolumeMicrometers(double[] volumeMicrometers) {
-        this.volumeMicrometers = volumeMicrometers;
-    }
-
-    public double[] getVoxelMicrometers() {
-        return voxelMicrometers;
-    }
-
-    public void setVoxelMicrometers(double[] voxelMicrometers) {
-        this.voxelMicrometers = voxelMicrometers;
+    public Double[] getVoxelMicrometers() {
+        return textureData.getVoxelMicrometers();
     }
 
     public void setupTexture( GL2 gl ) {
@@ -161,4 +142,7 @@ public class TextureMediator {
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_T, GL2.GL_CLAMP_TO_BORDER);
     }
 
+    public void setTextureData(TextureDataI textureData) {
+        this.textureData = textureData;
+    }
 }

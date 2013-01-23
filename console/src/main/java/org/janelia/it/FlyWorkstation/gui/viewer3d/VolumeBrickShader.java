@@ -4,7 +4,8 @@
  */
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
-import javax.media.opengl.GL;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator;
+
 import javax.media.opengl.GL2;
 import java.nio.IntBuffer;
 
@@ -19,6 +20,9 @@ public class VolumeBrickShader extends AbstractShader {
     private int previousShader = 0;
     private float[] rgb;
 
+    private TextureMediator signalTextureMediator;
+    private TextureMediator maskTextureMediator;
+
     private boolean volumeMaskApplied = false;
 
     @Override
@@ -31,6 +35,7 @@ public class VolumeBrickShader extends AbstractShader {
         return FRAGMENT_SHADER;
     }
 
+    @Override
     public void load(GL2 gl) {
         IntBuffer buffer = IntBuffer.allocate( 1 );
         gl.glGetIntegerv( GL2.GL_CURRENT_PROGRAM, buffer );
@@ -42,6 +47,17 @@ public class VolumeBrickShader extends AbstractShader {
         pushMaskUniform( gl, shaderProgram );
         pushFilterUniform( gl, shaderProgram );
         setTextureUniforms( gl );
+    }
+
+    /**
+     * Note, this must be called with at least the signal mediator, before attempting to set texture uniforms.
+     *
+     * @param signalTextureMediator intermediator for signal.
+     * @param maskTextureMediator intermediator for mask.
+     */
+    public void setTextureMediators( TextureMediator signalTextureMediator, TextureMediator maskTextureMediator ) {
+        this.signalTextureMediator = signalTextureMediator;
+        this.maskTextureMediator = maskTextureMediator;
     }
 
     public void setColorMask( float[] rgb ) {
@@ -62,7 +78,7 @@ public class VolumeBrickShader extends AbstractShader {
         if ( signalTextureLoc == -1 ) {
             throw new RuntimeException( "Failed to find signal texture location." );
         }
-        gl.glUniform1i( signalTextureLoc, 0 );
+        gl.glUniform1i( signalTextureLoc, signalTextureMediator.getTextureOffset() );
         //  This did not work.  GL.GL_TEXTURE0 ); //textureIds[ 0 ] );
 
         if ( volumeMaskApplied ) {
@@ -70,7 +86,7 @@ public class VolumeBrickShader extends AbstractShader {
             if ( maskingTextureLoc == -1 ) {
                 throw new RuntimeException( "Failed to find masking texture location." );
             }
-            gl.glUniform1i( maskingTextureLoc, 1 );
+            gl.glUniform1i( maskingTextureLoc, maskTextureMediator.getTextureOffset() );
             // This did not work.  GL.GL_TEXTURE1 ); //textureIds[ 1 ] );
         }
     }
