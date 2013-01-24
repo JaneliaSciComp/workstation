@@ -13,10 +13,9 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 
 import java.nio.ByteOrder;
-import java.nio.IntBuffer;
 
 public class TextureDataBean implements TextureDataI {
-    private IntBuffer maskData;
+    private int[] textureData;
     private Integer sx;
     private Integer sy;
     private Integer sz;
@@ -37,28 +36,27 @@ public class TextureDataBean implements TextureDataI {
         this.loaded = false; // Emphasis.
     }
 
-    public TextureDataBean(IntBuffer maskData, int sx, int sy, int sz) {
-        this();
-        setMaskData(maskData, sx, sy, sz);
-    }
-
-    public TextureDataBean(int[] maskData, int sx, int sy, int sz) {
-        this( IntBuffer.wrap(maskData), sx, sy, sz );
-    }
-
-    public TextureDataBean( int[] maskData, Integer[] voxels ) {
-        this( IntBuffer.wrap(maskData), voxels[ 0 ], voxels[ 1 ], voxels[ 2 ] );
-    }
-
-    public void setMaskData( IntBuffer maskData, int sx, int sy, int sz ) {
-        this.maskData = maskData;
+    public TextureDataBean(int[] textureData, int sx, int sy, int sz) {
+        super();
+        this.textureData = textureData;
         this.sx = sx;
         this.sy = sy;
         this.sz = sz;
     }
 
-    public IntBuffer getMaskData() {
-        return maskData;
+    public TextureDataBean( int[] textureData, Integer[] voxels ) {
+        this( textureData, voxels[ 0 ], voxels[ 1 ], voxels[ 2 ] );
+    }
+
+    public void setTextureData(int[] textureData, int sx, int sy, int sz) {
+        this.textureData = textureData;
+        this.sx = sx;
+        this.sy = sy;
+        this.sz = sz;
+    }
+
+    public int[] getTextureData() {
+        return textureData;
     }
 
     public int getSx() {
@@ -81,8 +79,8 @@ public class TextureDataBean implements TextureDataI {
         this.loaded = loaded;
     }
 
-    public void setMaskData(IntBuffer maskData) {
-        this.maskData = maskData;
+    public void setTextureData(int[] textureData) {
+        this.textureData = textureData;
     }
 
     public void setSx(int sx) {

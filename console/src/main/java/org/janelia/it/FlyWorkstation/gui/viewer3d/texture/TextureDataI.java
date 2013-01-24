@@ -14,9 +14,9 @@ import java.nio.IntBuffer;
  * Implement this to make an object holding/conveying all texture data about one input file.
  */
 public interface TextureDataI {
-    void setMaskData( IntBuffer maskData, int sx, int sy, int sz );
+    void setTextureData(int[] textureData, int sx, int sy, int sz);
 
-    IntBuffer getMaskData();
+    int[] getTextureData();
 
     int getSx();
 
@@ -28,7 +28,7 @@ public interface TextureDataI {
 
     void setLoaded(boolean loaded);
 
-    void setMaskData(IntBuffer maskData);
+    void setTextureData(int[] textureData);
 
     void setSx(int sx);
 

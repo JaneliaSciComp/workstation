@@ -68,7 +68,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
             int dimBeanY = bean.getSy();
             int dimBeanZ = bean.getSz();
 
-            IntBuffer maskData = bean.getMaskData();
+            int[] maskData = bean.getTextureData();
 
             for ( int z = 0; z < dimBeanZ; z++ ) {
                 for ( int y = 0; y < dimBeanY; y++ ) {
@@ -81,7 +81,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
                         // This set-only technique will merely _set_ the value to the latest loaded mask's
                         // value at this location.  There is no overlap taken into account here.
                         // LAST PRECEDENT STRATEGY
-                        int voxelVal = maskData.get(inputOffset);
+                        int voxelVal = maskData[ inputOffset ];
                         int red   = (voxelVal & 0x00ff0000) >>> 16;
                         int green = (voxelVal & 0x0000ff00) >>> 8;
                         int blue  = (voxelVal & 0x000000ff);

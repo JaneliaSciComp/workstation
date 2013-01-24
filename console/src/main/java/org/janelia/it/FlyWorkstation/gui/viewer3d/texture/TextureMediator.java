@@ -3,7 +3,6 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 
 import javax.media.opengl.GL2;
-import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 
 /**
@@ -59,7 +58,7 @@ public class TextureMediator {
 
     public void uploadTexture( GL2 gl ) {
 
-        IntBuffer data = textureData.getMaskData();
+        IntBuffer data = IntBuffer.wrap( textureData.getTextureData() );
         if ( data != null ) {
             gl.glActiveTexture( textureSymbolicId );
             gl.glEnable( GL2.GL_TEXTURE_3D );
