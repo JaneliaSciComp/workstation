@@ -2,9 +2,8 @@
  * This class will allow dynamic selection of colors to present in the renderer, by forwarding parameters changed
  * programmatically, onward into the shader-language implementations.
  */
-package org.janelia.it.FlyWorkstation.gui.viewer3d.shaders;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.shader;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.shaders.AbstractShader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator;
 
 import javax.media.opengl.GL2;

@@ -1,6 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.shaders;
-
-import org.janelia.it.FlyWorkstation.gui.viewer3d.shaders.AbstractShader;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.shader;
 
 import java.nio.IntBuffer;
 import javax.media.opengl.GL2;
