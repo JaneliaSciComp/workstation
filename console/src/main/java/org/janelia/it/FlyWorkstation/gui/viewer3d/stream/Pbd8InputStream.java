@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.stream;
 
 import java.io.IOException;
 import java.io.InputStream;

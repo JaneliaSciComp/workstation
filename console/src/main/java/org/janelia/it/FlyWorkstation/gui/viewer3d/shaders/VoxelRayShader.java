@@ -1,11 +1,13 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.shaders;
+
+import org.janelia.it.FlyWorkstation.gui.viewer3d.shaders.AbstractShader;
 
 import java.nio.IntBuffer;
 import javax.media.opengl.GL2;
 
 public class VoxelRayShader extends AbstractShader {
-    public static final String VERTEX_SHADER = "shaders/VoxelRayVtx.glsl";
-    public static final String FRAGMENT_SHADER = "shaders/VoxelRayFrg.glsl";
+    public static final String VERTEX_SHADER = "VoxelRayVtx.glsl";
+    public static final String FRAGMENT_SHADER = "VoxelRayFrg.glsl";
     int shaderProgram = 0;
     int previousShader = 0;
     private int[] textureVoxels;

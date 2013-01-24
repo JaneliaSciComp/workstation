@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.stream;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -140,7 +140,7 @@ public class V3dRawImageStream
 		currentSlice.read(inStream);
 	}
 	
-	class Slice 
+	public static class Slice
 	{
 		private int sliceByteCount;
 		private ByteBuffer sliceBuffer;

@@ -1,12 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
-import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.util.gl2.GLUT;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.shaders.VolumeBrickShader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator;
 

@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 
 /**
  * Created with IntelliJ IDEA.
@@ -10,6 +10,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d;
  * because masks like this can be switched on and off, changing their offsets at runtime.
  */
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 
 import java.nio.ByteOrder;

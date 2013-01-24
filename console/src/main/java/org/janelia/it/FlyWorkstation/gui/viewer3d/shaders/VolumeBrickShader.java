@@ -2,16 +2,19 @@
  * This class will allow dynamic selection of colors to present in the renderer, by forwarding parameters changed
  * programmatically, onward into the shader-language implementations.
  */
-package org.janelia.it.FlyWorkstation.gui.viewer3d;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.shaders;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.shaders.AbstractShader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator;
 
 import javax.media.opengl.GL2;
 import java.nio.IntBuffer;
 
 public class VolumeBrickShader extends AbstractShader {
-    public static final String VERTEX_SHADER = "shaders/VolumeBrickVtx.glsl";
-    public static final String FRAGMENT_SHADER = "shaders/VolumeBrickFrg.glsl";
+    // Shader GLSL source is expected to be in the same package as this class.  Otherwise,
+    // a prefix of the relative path could be given, as in "shader_sub_pkg/AShader.glsl"
+    public static final String VERTEX_SHADER = "VolumeBrickVtx.glsl";
+    public static final String FRAGMENT_SHADER = "VolumeBrickFrg.glsl";
 
     private static final float[] SHOW_ALL  = new float[] {
         1.0f, 1.0f, 1.0f

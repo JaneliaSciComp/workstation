@@ -4,7 +4,7 @@
  *
  * Supports only vertex and fragment shaders. Both must be non-null.
  */
-package org.janelia.it.FlyWorkstation.gui.viewer3d;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.shaders;
 
 import javax.media.opengl.GL2;
 import java.io.BufferedReader;
