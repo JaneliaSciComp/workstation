@@ -59,4 +59,12 @@ public interface TextureDataI {
     int getPixelByteCount();
 
     void setPixelByteCount(int pixelByteCount);
+
+    String getFilename();
+
+    void setFilename( String filename );
+
+    int getChannelCount();
+
+    void setChannelCount( int channelCount );
 }

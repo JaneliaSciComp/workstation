@@ -31,14 +31,22 @@ import java.io.InputStream;
 
 public class VolumeLoader 
 {
-	private int[] argbIntArray;
+    private static final String CONSOLIDATED_SIGNAL_FILE = "ConsolidatedSignal2";
+    private static final String REFERENCE_FILE = "Reference2";
+    private static final String TIF_EXT = "TIF";
+    private static final String LSM_EXT = "LSM";
+    private static final String V3D_EXT = "V3D";
+    private static final String MP4_EXT = "MP4";
+    private int[] argbIntArray;
 	private int sx, sy, sz;
+    private int channelCount = 1; // Default for non-data-bearing file formats.
 	private VolumeBrick.TextureColorSpace colorSpace =
 		VolumeBrick.TextureColorSpace.COLOR_SPACE_LINEAR;
 
     private FileResolver resolver;
     private String header = null;
     private int pixelBytes = 1;
+    private String localFileName;
     private ByteOrder pixelByteOrder = ByteOrder.LITTLE_ENDIAN;
 
     public VolumeLoader( FileResolver resolver ) {
@@ -85,6 +93,7 @@ public class VolumeLoader
 		sx = sliceStream.getDimension(0);
 		sy = sliceStream.getDimension(1);
 		sz = sliceStream.getDimension(2);
+        channelCount = sliceStream.getDimension(3);
 		int sc = sliceStream.getDimension(3);
 		double scale = 1.0;
 		if (sliceStream.getPixelBytes() > 1)
@@ -128,7 +137,7 @@ public class VolumeLoader
 	{
 		try {
 
-            String localFileName = resolver.getResolvedFilename( unCachedFileName );
+            localFileName = resolver.getResolvedFilename( unCachedFileName );
 
             String extension = FilenameUtils.getExtension(localFileName).toUpperCase();
             System.out.println("FILENAME: " + localFileName);
@@ -136,26 +145,26 @@ public class VolumeLoader
             colorSpace = TextureColorSpace.COLOR_SPACE_LINEAR;
             // But look for some exceptions we know about
             String baseName = FilenameUtils.getBaseName(localFileName);
-            if (baseName.startsWith("ConsolidatedSignal2"))
+            if (baseName.startsWith(CONSOLIDATED_SIGNAL_FILE))
                 colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;
-            if (baseName.startsWith("Reference2"))
+            if (baseName.startsWith(REFERENCE_FILE))
                 colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;
 
             IFormatReader reader = null;
-            if (extension.startsWith("TIF")) {
+            if (extension.startsWith(TIF_EXT)) {
                 reader = new TiffReader();
-            } else if (extension.startsWith("LSM")) {
+            } else if (extension.startsWith(LSM_EXT)) {
                 reader = new ZeissLSMReader();
             }
             if (reader != null) {
                 BufferedImageReader in = new BufferedImageReader(reader);
                 in.setId(localFileName);
                 loadLociReader(in);
-            } else if (extension.startsWith("V3D")) {
+            } else if (extension.startsWith(V3D_EXT)) {
                 InputStream v3dRawStream = new BufferedInputStream(
                         new FileInputStream(localFileName));
                 loadV3dRaw(v3dRawStream);
-            } else if (extension.startsWith("MP4")) {
+            } else if (extension.startsWith(MP4_EXT)) {
                 loadMpegVideo(localFileName);
                 // assume all mpegs are in sRGB color space
                 colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;
@@ -181,9 +190,11 @@ public class VolumeLoader
         textureData.setVoxelMicrometers( new Double[] { 1.0, 1.0, 1.0 } );
         if ( header != null ) {
             textureData.setHeader( header );
-            textureData.setByteOrder( pixelByteOrder );
-            textureData.setPixelByteCount( pixelBytes );
         }
+        textureData.setByteOrder( pixelByteOrder );
+        textureData.setPixelByteCount( pixelBytes );
+        textureData.setFilename( localFileName );
+        textureData.setChannelCount( channelCount );
         dataAcceptor.setTextureData( textureData );
 
 	}
@@ -215,6 +226,8 @@ public class VolumeLoader
 	    			sy = coder.getHeight();
 	    			sz = (int)(frameRate * duration / 1e6 + 0.5);
 	    			argbIntArray = new int[sx*sy*sz];
+                    channelCount = 3;
+                    pixelBytes = 1;
 	    			return;
 	    		}
 	    }

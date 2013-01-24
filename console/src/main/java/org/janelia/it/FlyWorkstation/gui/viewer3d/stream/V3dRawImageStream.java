@@ -169,9 +169,9 @@ public class V3dRawImageStream
 				return sliceBuffer.get(index);
 			}
 			else if (pixelBytes == 2)
-				return sliceBuffer.getShort(index);
+				return sliceBuffer.getShort(index * pixelBytes);
 			else
-				return sliceBuffer.getInt(index);
+				return sliceBuffer.getInt(index * pixelBytes);
 		}
 		
 		public void read(InputStream inStream) 

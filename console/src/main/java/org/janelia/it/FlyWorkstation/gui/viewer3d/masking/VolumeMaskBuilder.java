@@ -30,6 +30,8 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
     private ByteOrder consensusByteOrder;
     private int consensusByteCount;
 
+    private String firstFileName = null;
+
     private Logger logger = LoggerFactory.getLogger( VolumeDataAcceptor.class );
 
     public VolumeMaskBuilder() {
@@ -149,6 +151,10 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
             );
         }
 
+        if ( firstFileName == null ) {
+            firstFileName = textureData.getFilename();
+        }
+
         if ( consensusByteOrder == null ) {
             consensusByteOrder = textureData.getByteOrder();
         }
@@ -176,6 +182,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
         rtnVal.setHeader("Accumulated");
         rtnVal.setColorSpace(getTextureColorSpace());
         rtnVal.setVoxelMicrometers( new Double[] { 1.0, 1.0, 1.0 } );
+        rtnVal.setFilename( firstFileName );
         rtnVal.setLoaded(false);
 
         return rtnVal;

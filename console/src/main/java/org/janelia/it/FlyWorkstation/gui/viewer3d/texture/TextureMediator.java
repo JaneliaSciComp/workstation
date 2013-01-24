@@ -1,9 +1,14 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.GL2;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.IntBuffer;
+import java.nio.ShortBuffer;
 
 /**
  * Created with IntelliJ IDEA.
@@ -25,6 +30,7 @@ public class TextureMediator {
     private int textureOffset; // This will be 0, 1, ...
 
     private TextureDataI textureData;
+    private Logger logger = LoggerFactory.getLogger( TextureMediator.class );
 
     private static final int INTERPOLATION_METHOD =
             GL2.GL_LINEAR; // blending across voxel edges
@@ -57,9 +63,47 @@ public class TextureMediator {
     }
 
     public void uploadTexture( GL2 gl ) {
+        int[] textureDataArr = textureData.getTextureData();
+        if ( textureDataArr != null ) {
+            IntBuffer data = null;
 
-        IntBuffer data = IntBuffer.wrap( textureData.getTextureData() );
-        if ( data != null ) {
+            if ( textureData.getPixelByteCount() > 777 ) {
+                ByteBuffer rawData = ByteBuffer.allocateDirect( textureDataArr.length * 4 * textureData.getPixelByteCount() );
+                rawData.order( ByteOrder.LITTLE_ENDIAN );
+                data = rawData.asIntBuffer();
+                int hasNonZero = 0;
+                for ( int i = 0; i < textureDataArr.length; i ++ ) {
+                    int nextInt = textureDataArr[ i ];
+                    if ( nextInt > 0 ) {
+                        hasNonZero ++;
+                    }
+                    int[] ints = getInts(nextInt, textureData.getPixelByteCount());
+//                    short[] shorts = getShorts(nextInt, textureData.getPixelByteCount());
+//                    for ( int j = 0; j < shorts.length; j++ ) {
+//                        rawData.putShort(shorts[j]);
+//                    }
+                    data.put( ints );
+                }
+
+                data.rewind();
+
+
+                // *** TEMP *** wrap up a big colored rect-solid.
+                int[] dummyArr = new int[ textureDataArr.length * textureData.getPixelByteCount() ];
+                for ( int i = 0; i < dummyArr.length; i++ ) {
+                    dummyArr[ i ] = 16;
+                }
+
+                data = IntBuffer.wrap( dummyArr );
+                data.rewind();
+
+                System.out.println("This many ints were nonzero " + hasNonZero);
+            }
+            else {
+                data = IntBuffer.wrap( textureDataArr );
+                data.rewind();
+            }
+
             gl.glActiveTexture( textureSymbolicId );
             gl.glEnable( GL2.GL_TEXTURE_3D );
 
@@ -75,10 +119,52 @@ public class TextureMediator {
                     0, // border
                     getVoxelComponentOrder(), // voxel component order (GLenum format)
                     getVoxelComponentType(), // voxel component type=packed RGBA values(GLenum type)
-                    data.rewind()
+                    data
             );
         }
     }
+
+//    public void uploadTexture( GL2 gl ) {
+//        int[] textureDataArr = textureData.getTextureData();
+//        if ( textureDataArr != null ) {
+//            ShortBuffer data = null;
+//            if ( textureData.getPixelByteCount() > 1 ) {
+//                ByteBuffer rawData = ByteBuffer.allocate( textureDataArr.length * 4 * textureData.getPixelByteCount() );
+//                rawData.order( ByteOrder.LITTLE_ENDIAN );
+//                data = rawData.asShortBuffer();
+//                int hasNonZero = 0;
+//                for ( int i = 0; i < textureDataArr.length; i ++ ) {
+//                    int nextInt = textureDataArr[ i ];
+//                    if ( nextInt > 0 ) {
+//                        hasNonZero ++;
+//                    }
+//                    short[] ints = getShorts(nextInt, textureData.getPixelByteCount());
+//                    data.put(ints);
+//                }
+//
+//                data.rewind();
+//                System.out.println("This many ints were nonzero " + hasNonZero);
+//            }
+//
+//            gl.glActiveTexture( textureSymbolicId );
+//            gl.glEnable( GL2.GL_TEXTURE_3D );
+//
+//            gl.glBindTexture( GL2.GL_TEXTURE_3D, textureName );
+//            gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_REPLACE);
+//
+//            gl.glTexImage3D(GL2.GL_TEXTURE_3D,
+//                    0, // mipmap level
+//                    getInternalFormat(), // as stored INTO graphics hardware, w/ srgb info (GLint internal format)
+//                    textureData.getSx(), // width
+//                    textureData.getSy(), // height
+//                    textureData.getSz(), // depth
+//                    0, // border
+//                    getVoxelComponentOrder(), // voxel component order (GLenum format)
+//                    getVoxelComponentType(), // voxel component type=packed RGBA values(GLenum type)
+//                    data.rewind()
+//            );
+//        }
+//    }
 
     public int getTextureOffset() {
         return textureOffset;
@@ -130,9 +216,21 @@ public class TextureMediator {
     //--------------------------- Helpers for glTexImage3D
     private int getVoxelComponentType() {
         int rtnVal = GL2.GL_UNSIGNED_INT_8_8_8_8_REV;
+        // This: tested vs 1-byte mask.
         if ( textureData.getPixelByteCount()  == 1 ) {
             rtnVal = GL2.GL_UNSIGNED_BYTE;
         }
+
+        // This throws excepx for current read method.
+        if ( textureData.getPixelByteCount() == 2 ) {
+            rtnVal = GL2.GL_UNSIGNED_BYTE;
+//            rtnVal = GL2.GL_UNSIGNED_SHORT;
+        }
+
+        logger.info( "Voxel comp type num is {} for GL2.GL_UNSIGNED_INT_8_8_8_8_REV.", GL2.GL_UNSIGNED_INT_8_8_8_8_REV );
+        logger.info( "Voxel comp type num is {} for GL2.GL_UNSIGNED_BYTE.", GL2.GL_UNSIGNED_BYTE );
+        logger.info( "Voxel comp type num is {} for GL2.GL_UNSIGNED_SHORT.", GL2.GL_UNSIGNED_SHORT );
+        logger.info( "Got voxel component type of {} for {}.", rtnVal, textureData.getFilename() );
 
         return rtnVal;
         // BLACK SCREEN. GL2.GL_UNSIGNED_BYTE_3_3_2,  // BLACK SCREEN for 143/266
@@ -151,8 +249,15 @@ public class TextureMediator {
         int internalFormat = GL2.GL_RGBA;
         if (textureData.getColorSpace() == VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_SRGB)
             internalFormat = GL2.GL_SRGB8_ALPHA8;
-        if (textureData.getPixelByteCount() == 1)
+
+        // This: tested against a mask file.
+        if (textureData.getChannelCount() == 1)
             internalFormat = GL2.GL_LUMINANCE;
+
+        logger.info("Luminance format num = {}", GL2.GL_LUMINANCE);
+        logger.info("Alpha8 format num = {}", GL2.GL_SRGB8_ALPHA8);
+        logger.info("RGBA format num = {}", GL2.GL_RGBA);
+        logger.info( "internalFormat = {} for {}", internalFormat, textureData.getFilename() );
         return internalFormat;
     }
 
@@ -162,4 +267,32 @@ public class TextureMediator {
     }
     //--------------------------- End: Helpers for glTexImage3D
 
+    /** Roll the relevant bytes of the integer down into a byte array. */
+    private int[] getInts(int i, int size) {
+        int[] rtnVal = new int[ size ];
+        int nextPos = 0;
+        rtnVal[ nextPos++ ] = (i & 0xff000000) >>> 24;
+        if ( size > 1 )
+            rtnVal[ nextPos++ ] = (i & 0x00ff0000) >>> 16;
+        if ( size > 2 )
+            rtnVal[ nextPos++ ] = (i & 0x0000ff00) >>> 8;
+        if ( size > 3 )
+            rtnVal[ nextPos ] = i & 0x000000ff;
+
+        return rtnVal;
+    }
+
+//    private short[] getShorts(int i, int size) {
+//        short[] rtnVal = new short[ size ];
+//        int nextPos = 0;
+//        rtnVal[ nextPos++ ] = (short)((i & 0xff000000) >>> 24);
+//        if ( size > 1 )
+//            rtnVal[ nextPos++ ] = (short)((i & 0x00ff0000) >>> 16);
+//        if ( size > 2 )
+//            rtnVal[ nextPos++ ] = (short)((i & 0x0000ff00) >>> 8);
+//        if ( size > 3 )
+//            rtnVal[ nextPos ] = (short)(i & 0x000000ff);
+//
+//        return rtnVal;
+//    }
 }

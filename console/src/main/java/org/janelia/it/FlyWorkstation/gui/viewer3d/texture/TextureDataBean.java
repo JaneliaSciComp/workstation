@@ -11,11 +11,10 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
  */
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
-
 import java.nio.ByteOrder;
 
 public class TextureDataBean implements TextureDataI {
+    private String filename;
     private int[] textureData;
     private Integer sx;
     private Integer sy;
@@ -29,6 +28,7 @@ public class TextureDataBean implements TextureDataI {
     private String header = "Not Available";
     private ByteOrder byteOrder = ByteOrder.LITTLE_ENDIAN;
     private int pixelByteCount = 1;
+    private int channelCount = 0;
 
     private boolean loaded;
 
@@ -142,6 +142,22 @@ public class TextureDataBean implements TextureDataI {
 
     public void setPixelByteCount(int pixelByteCount) {
         this.pixelByteCount = pixelByteCount;
+    }
+
+    public String getFilename() {
+        return filename;
+    }
+
+    public void setFilename(String filename) {
+        this.filename = filename;
+    }
+
+    public int getChannelCount() {
+        return channelCount;
+    }
+
+    public void setChannelCount(int channelCount) {
+        this.channelCount = channelCount;
     }
 }
 
