@@ -566,6 +566,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
         	getDynamicTree().expandNodeWithLazyChildren(node, new Callable<Void>() {
 				@Override
 				public Void call() throws Exception {
+				    log.debug("Got lazy nodes, loading entity in viewer");
 					loadEntityInViewer(finalCurrUniqueId);
 					return null;
 				}
@@ -579,6 +580,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	
 	private void loadEntityInViewer(String uniqueId) {
 		
+	    log.debug("loadEntityInViewer: "+uniqueId);
 		if (uniqueId==null) return;
 
 		DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
@@ -590,6 +592,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		}
 		
 		RootedEntity rootedEntity = new RootedEntity(uniqueId, getEntityData(node));
+		log.debug("showEntityInActiveViewer: "+rootedEntity);
 		SessionMgr.getBrowser().getViewerManager().showEntityInActiveViewer(rootedEntity);
 	}
 }
