@@ -5,6 +5,7 @@ import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.FlyWorkstation.api.stub.data.SystemError;
+import org.janelia.it.FlyWorkstation.gui.dataview.DataviewApp;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.external_listener.ExternalListener;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyBindings;
@@ -681,7 +682,7 @@ public class SessionMgr {
                     ModelMgr.getModelMgr().invalidateCache();
                     log.info("Refreshing all views");
                     SessionMgr.getBrowser().getEntityOutline().refresh();
-                    SessionMgr.getBrowser().getViewerManager().getActiveViewer().refresh();
+                    SessionMgr.getBrowser().getViewerManager().clearAllViewers();
                 }
             }
 
@@ -781,6 +782,7 @@ public class SessionMgr {
     public static String getSubjectKey() {
         Subject subject = getSessionMgr().getSubject();
         if (subject==null) {
+            if (DataviewApp.getMainFrame()!=null) return null;
             throw new SystemError("Not logged in");
         }
         return subject.getKey();
@@ -789,6 +791,7 @@ public class SessionMgr {
     public static String getUsername() {
         Subject subject = getSessionMgr().getSubject();
         if (subject==null) {
+            if (DataviewApp.getMainFrame()!=null) return null;
             throw new SystemError("Not logged in");
         }
         return subject.getName();
@@ -797,6 +800,7 @@ public class SessionMgr {
     public static String getUserEmail() {
         Subject subject = getSessionMgr().getSubject();
         if (subject==null) {
+            if (DataviewApp.getMainFrame()!=null) return null;
             throw new SystemError("Not logged in");
         }
         return subject.getEmail();
