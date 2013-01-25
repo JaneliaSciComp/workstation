@@ -63,46 +63,16 @@ public class TextureMediator {
     }
 
     public void uploadTexture( GL2 gl ) {
-        int[] textureDataArr = textureData.getTextureData();
-        if ( textureDataArr != null ) {
-            IntBuffer data = null;
+        ByteBuffer data = textureData.getTextureData();
+        if ( data != null ) {
 
-            if ( textureData.getPixelByteCount() > 777 ) {
-                ByteBuffer rawData = ByteBuffer.allocateDirect( textureDataArr.length * 4 * textureData.getPixelByteCount() );
-                rawData.order( ByteOrder.LITTLE_ENDIAN );
-                data = rawData.asIntBuffer();
-                int hasNonZero = 0;
-                for ( int i = 0; i < textureDataArr.length; i ++ ) {
-                    int nextInt = textureDataArr[ i ];
-                    if ( nextInt > 0 ) {
-                        hasNonZero ++;
-                    }
-                    int[] ints = getInts(nextInt, textureData.getPixelByteCount());
-//                    short[] shorts = getShorts(nextInt, textureData.getPixelByteCount());
-//                    for ( int j = 0; j < shorts.length; j++ ) {
-//                        rawData.putShort(shorts[j]);
-//                    }
-                    data.put( ints );
-                }
-
-                data.rewind();
-
-
-                // *** TEMP *** wrap up a big colored rect-solid.
-                int[] dummyArr = new int[ textureDataArr.length * textureData.getPixelByteCount() ];
-                for ( int i = 0; i < dummyArr.length; i++ ) {
-                    dummyArr[ i ] = 16;
-                }
-
-                data = IntBuffer.wrap( dummyArr );
-                data.rewind();
-
-                System.out.println("This many ints were nonzero " + hasNonZero);
-            }
-            else {
-                data = IntBuffer.wrap( textureDataArr );
-                data.rewind();
-            }
+//            ByteBuffer data = ByteBuffer.allocateDirect( textureDataArr.length * Integer.SIZE );
+//            data.order( ByteOrder.LITTLE_ENDIAN );
+//            for ( int i = 0; i < textureDataArr.length; i++ ) {
+//                data.putInt( textureDataArr[ i ] );
+//            }
+//            IntBuffer data = IntBuffer.wrap( textureDataArr );
+            data.rewind();
 
             gl.glActiveTexture( textureSymbolicId );
             gl.glEnable( GL2.GL_TEXTURE_3D );
@@ -123,6 +93,39 @@ public class TextureMediator {
             );
         }
     }
+
+//            if ( textureData.getPixelByteCount() > 777 ) {
+//                ByteBuffer rawData = ByteBuffer.allocateDirect( textureDataArr.length * 4 * textureData.getPixelByteCount() );
+//                rawData.order( ByteOrder.LITTLE_ENDIAN );
+//                data = rawData.asIntBuffer();
+//                int hasNonZero = 0;
+//                for ( int i = 0; i < textureDataArr.length; i ++ ) {
+//                    int nextInt = textureDataArr[ i ];
+//                    if ( nextInt > 0 ) {
+//                        hasNonZero ++;
+//                    }
+//                    int[] ints = getInts(nextInt, textureData.getPixelByteCount());
+//                    data.put( ints );
+//                }
+//
+//                data.rewind();
+//
+//
+//                // *** TEMP *** wrap up a big colored rect-solid.
+//                int[] dummyArr = new int[ textureDataArr.length * textureData.getPixelByteCount() ];
+//                for ( int i = 0; i < dummyArr.length; i++ ) {
+//                    dummyArr[ i ] = 16;
+//                }
+//
+//                data = IntBuffer.wrap( dummyArr );
+//                data.rewind();
+//
+//                System.out.println("This many ints were nonzero " + hasNonZero);
+//            }
+//            else {
+//                data = IntBuffer.wrap( textureDataArr );
+//                data.rewind();
+//            }
 
 //    public void uploadTexture( GL2 gl ) {
 //        int[] textureDataArr = textureData.getTextureData();
@@ -223,8 +226,8 @@ public class TextureMediator {
 
         // This throws excepx for current read method.
         if ( textureData.getPixelByteCount() == 2 ) {
-            rtnVal = GL2.GL_UNSIGNED_BYTE;
-//            rtnVal = GL2.GL_UNSIGNED_SHORT;
+//            rtnVal = GL2.GL_UNSIGNED_BYTE;
+            rtnVal = GL2.GL_UNSIGNED_SHORT;
         }
 
         logger.info( "Voxel comp type num is {} for GL2.GL_UNSIGNED_INT_8_8_8_8_REV.", GL2.GL_UNSIGNED_INT_8_8_8_8_REV );
@@ -263,6 +266,9 @@ public class TextureMediator {
 
     private int getVoxelComponentOrder() {
         int rtnVal = GL2.GL_BGRA;
+        if ( textureData.getChannelCount() == 1 ) {
+            rtnVal = GL2.GL_LUMINANCE;
+        }
         return rtnVal;
     }
     //--------------------------- End: Helpers for glTexImage3D

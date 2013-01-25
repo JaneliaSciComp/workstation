@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.MaskTextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
@@ -29,6 +30,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
     private List<TextureDataI> maskingDataBeans = new ArrayList<TextureDataI>();
     private ByteOrder consensusByteOrder;
     private int consensusByteCount;
+    private int consensusChannelCount;
 
     private String firstFileName = null;
 
@@ -37,7 +39,8 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
     public VolumeMaskBuilder() {
     }
 
-    public int[] getVolumeMask() {
+    public byte[] getVolumeMask() {
+
         // This constructs a "color rolodex".
         Integer[][] colors = {
                 { 255, 255, 0 },
@@ -59,7 +62,8 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
         // of any input.  Then the individual masks will be thrown into slots with an assumption
         // (even though wrong) that their voxels are the same size as all other voxels of
         // any other mask.
-        int[] rtnValue = new int[ volumeMaskVoxels[0] * volumeMaskVoxels[1] * volumeMaskVoxels[2] ];
+        int bufferSizeBytes = volumeMaskVoxels[0] * volumeMaskVoxels[1] * volumeMaskVoxels[2] * consensusByteCount;
+        byte[] rtnValue = new byte[ bufferSizeBytes ];
         int dimMaskX = volumeMaskVoxels[ X_INX ];
         int dimMaskY = volumeMaskVoxels[ Y_INX ];
         //int dimMaskZ = volumeMaskVoxels[ Z_INX ];
@@ -70,7 +74,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
             int dimBeanY = bean.getSy();
             int dimBeanZ = bean.getSz();
 
-            int[] maskData = bean.getTextureData();
+            byte[] maskData = ((MaskTextureDataBean)bean).getTextureBytes();
 
             for ( int z = 0; z < dimBeanZ; z++ ) {
                 for ( int y = 0; y < dimBeanY; y++ ) {
@@ -83,25 +87,27 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
                         // This set-only technique will merely _set_ the value to the latest loaded mask's
                         // value at this location.  There is no overlap taken into account here.
                         // LAST PRECEDENT STRATEGY
-                        int voxelVal = maskData[ inputOffset ];
-                        int red   = (voxelVal & 0x00ff0000) >>> 16;
-                        int green = (voxelVal & 0x0000ff00) >>> 8;
-                        int blue  = (voxelVal & 0x000000ff);
+                        byte voxelVal = maskData[ inputOffset ];
+//                        int red   = (voxelVal & 0x00ff0000) >>> 16;
+//                        int green = (voxelVal & 0x0000ff00) >>> 8;
+//                        int blue  = (voxelVal & 0x000000ff);
+//
+//                        if (! (red == blue  &&  blue == green ) ) {
+////                        if (! (red == 0  &&  blue == 0  &&  green == 0 ) ) {
+//                            int colorInx = colorOffset % colors.length;
+//                            red = colors[ colorInx ][0];
+//                            green = colors[ colorInx ][1];
+//                            blue = colors[ colorInx ][2];
+//
+//                            rtnValue[ outputOffset ] =
+//                                    blue +
+//                                    (green << 8) +
+//                                    (red << 16)
+//                            ;
+                        rtnValue[ outputOffset ] = voxelVal;
 
-                        if (! (red == blue  &&  blue == green ) ) {
-//                        if (! (red == 0  &&  blue == 0  &&  green == 0 ) ) {
-                            int colorInx = colorOffset % colors.length;
-                            red = colors[ colorInx ][0];
-                            green = colors[ colorInx ][1];
-                            blue = colors[ colorInx ][2];
-
-                            rtnValue[ outputOffset ] =
-                                    blue +
-                                    (green << 8) +
-                                    (red << 16)
-                            ;
                             //System.out.println( "Input = " + voxelVal + " output =" + rtnValue[ outputOffset ]);
-                        }
+//                        }
 
                     }
                 }
@@ -111,12 +117,6 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
         }
 
         return rtnValue;
-    }
-
-    public IntBuffer getVolumeMaskBuffer() {
-        if ( maskingDataBeans.size() == 0 )
-            return null;
-        return IntBuffer.wrap( getVolumeMask() );
     }
 
     /** Size of volume mask.  Numbers of voxels in all three directions. */
@@ -166,6 +166,21 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
                     consensusByteOrder, textureData.getByteOrder()
             );
         }
+
+        if ( consensusChannelCount == 0 ) {
+            consensusChannelCount = textureData.getChannelCount();
+            if ( consensusChannelCount != 1 ) {
+                logger.warn(
+                        "Mask files expect one-channel data."
+                );
+            }
+        }
+        else if ( consensusChannelCount != textureData.getChannelCount() ) {
+            logger.warn(
+                    "Mismatch in channel count.  Expecting value of {}.  Instead seeing {}.  Using former value.",
+                    consensusChannelCount, textureData.getChannelCount()
+            );
+        }
         maskingDataBeans.add( textureData );
     }
 
@@ -176,13 +191,14 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
      * @return "consensus" texture data object.
      */
     public TextureDataI getCombinedTextureData() {
-        TextureDataI rtnVal = new TextureDataBean( getVolumeMask(), getVolumeMaskVoxels() );
+        TextureDataI rtnVal = new MaskTextureDataBean( getVolumeMask(), getVolumeMaskVoxels() );
         rtnVal.setByteOrder( getPixelByteOrder() );
         rtnVal.setPixelByteCount(getPixelByteCount());
         rtnVal.setHeader("Accumulated");
         rtnVal.setColorSpace(getTextureColorSpace());
-        rtnVal.setVoxelMicrometers( new Double[] { 1.0, 1.0, 1.0 } );
-        rtnVal.setFilename( firstFileName );
+        rtnVal.setVoxelMicrometers(new Double[]{1.0, 1.0, 1.0});
+        rtnVal.setFilename(firstFileName);
+        rtnVal.setChannelCount( consensusChannelCount );
         rtnVal.setLoaded(false);
 
         return rtnVal;

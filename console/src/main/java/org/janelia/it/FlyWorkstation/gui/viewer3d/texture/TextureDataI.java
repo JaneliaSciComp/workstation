@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 
+import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 
@@ -14,9 +15,7 @@ import java.nio.IntBuffer;
  * Implement this to make an object holding/conveying all texture data about one input file.
  */
 public interface TextureDataI {
-    void setTextureData(int[] textureData, int sx, int sy, int sz);
-
-    int[] getTextureData();
+    ByteBuffer getTextureData();
 
     int getSx();
 
@@ -27,8 +26,6 @@ public interface TextureDataI {
     boolean isLoaded();
 
     void setLoaded(boolean loaded);
-
-    void setTextureData(int[] textureData);
 
     void setSx(int sx);
 

@@ -18,10 +18,13 @@ import org.apache.commons.io.FilenameUtils;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor.TextureColorSpace;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.stream.V3dRawImageStream;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.MaskTextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 
 import java.nio.ByteOrder;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.zip.DataFormatException;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
@@ -38,6 +41,7 @@ public class VolumeLoader
     private static final String V3D_EXT = "V3D";
     private static final String MP4_EXT = "MP4";
     private int[] argbIntArray;
+    private byte[] maskByteArray;
 	private int sx, sy, sz;
     private int channelCount = 1; // Default for non-data-bearing file formats.
 	private VolumeBrick.TextureColorSpace colorSpace =
@@ -47,6 +51,7 @@ public class VolumeLoader
     private String header = null;
     private int pixelBytes = 1;
     private String localFileName;
+    private boolean isMask = false;
     private ByteOrder pixelByteOrder = ByteOrder.LITTLE_ENDIAN;
 
     public VolumeLoader( FileResolver resolver ) {
@@ -93,8 +98,11 @@ public class VolumeLoader
 		sx = sliceStream.getDimension(0);
 		sy = sliceStream.getDimension(1);
 		sz = sliceStream.getDimension(2);
-        channelCount = sliceStream.getDimension(3);
+        pixelBytes = sliceStream.getPixelBytes();
 		int sc = sliceStream.getDimension(3);
+        channelCount = sc;
+        pixelByteOrder = sliceStream.getEndian();
+
 		double scale = 1.0;
 		if (sliceStream.getPixelBytes() > 1)
 			scale = 255.0 / 4095.0; // assume it's 12 bits
@@ -129,11 +137,67 @@ public class VolumeLoader
 		}
 
         header = sliceStream.getHeaderKey();
-        pixelBytes = sliceStream.getPixelBytes();
-        pixelByteOrder = sliceStream.getEndian();
 	}
-	
-	public boolean loadVolume(String unCachedFileName)
+
+    public void loadV3dMask(InputStream inputStream)
+            throws IOException, DataFormatException
+    {
+        isMask = true;
+
+        V3dRawImageStream sliceStream = new V3dRawImageStream(inputStream);
+        sx = sliceStream.getDimension(0);
+        sy = sliceStream.getDimension(1);
+        sz = sliceStream.getDimension(2);
+        pixelBytes = sliceStream.getPixelBytes();
+        int sc = sliceStream.getDimension(3);
+        channelCount = sc;
+        pixelByteOrder = sliceStream.getEndian();
+
+        maskByteArray = new byte[(sx*sy*sz) * pixelBytes];
+        for ( int i = 0; i < maskByteArray.length; i++ ) {
+            maskByteArray[ i ] = 0;
+        }
+
+        if ( sc > 1 ) {
+            throw new RuntimeException( "Unexpected multi-channel mask file." );
+        }
+
+        if ( sc == 0 ) {
+            throw new RuntimeException( "Unexpected zero channel count mask file." );
+        }
+
+        // *** DEBUG
+        Set<Integer> values = new HashSet<Integer>();
+
+        for (int z = 0; z < sz; ++z) {
+            int zOffset = z * sx * sy;
+            sliceStream.loadNextSlice();
+            V3dRawImageStream.Slice slice = sliceStream.getCurrentSlice();
+            for (int y = 0; y < sy; y += pixelBytes) {
+                int yOffset = zOffset + y * sx;
+                for (int x = 0; x < sx; x += pixelBytes) {
+                    Integer value = slice.getValue(x, y);
+                    if ( value > 0 ) {
+                        for ( int pi = 0; pi < pixelBytes; pi ++ ) {
+                            byte piByte = (byte)(value >>> (pi * 8) & 0x000000ff);
+//                            maskByteArray[yOffset + x + pi] = 1;
+                            values.add( (int)piByte );
+                            maskByteArray[yOffset + x + pi] = piByte;
+                        }
+                    }
+                }
+            }
+        }
+
+        // *** DEBUG
+        for ( Integer value: values ) {
+            System.out.println("Value: " + value );
+        }
+
+        header = sliceStream.getHeaderKey();
+    }
+
+    public boolean loadVolume(String unCachedFileName)
 	{
 		try {
 
@@ -163,7 +227,13 @@ public class VolumeLoader
             } else if (extension.startsWith(V3D_EXT)) {
                 InputStream v3dRawStream = new BufferedInputStream(
                         new FileInputStream(localFileName));
-                loadV3dRaw(v3dRawStream);
+                // todo find the right way to switch this on.
+                if ( baseName.startsWith("ConsolidatedLabel") ) {
+                    loadV3dMask(v3dRawStream);
+                }
+                else {
+                    loadV3dRaw(v3dRawStream);
+                }
             } else if (extension.startsWith(MP4_EXT)) {
                 loadMpegVideo(localFileName);
                 // assume all mpegs are in sRGB color space
@@ -173,7 +243,8 @@ public class VolumeLoader
             }
 
             // Because we use premultiplied transparency...
-            setAlphaToSaturateColors(colorSpace);
+            if ( ! isMask )
+                setAlphaToSaturateColors(colorSpace);
 
             return true;
         }
@@ -184,19 +255,27 @@ public class VolumeLoader
 	}
 
 	public void populateVolumeAcceptor(VolumeDataAcceptor dataAcceptor) {
-        TextureDataI textureData = new TextureDataBean( argbIntArray, sx, sy, sz );
-        textureData.setColorSpace( colorSpace );
-        textureData.setVolumeMicrometers( new Double[] { (double)sx, (double)sy, (double)sz } );
-        textureData.setVoxelMicrometers( new Double[] { 1.0, 1.0, 1.0 } );
-        if ( header != null ) {
-            textureData.setHeader( header );
-        }
-        textureData.setByteOrder( pixelByteOrder );
-        textureData.setPixelByteCount( pixelBytes );
-        textureData.setFilename( localFileName );
-        textureData.setChannelCount( channelCount );
-        dataAcceptor.setTextureData( textureData );
 
+        TextureDataI textureData = null;
+
+        if ( isMask ) {
+            textureData = new MaskTextureDataBean( maskByteArray, sx, sy, sz );
+        }
+        else {
+            textureData = new TextureDataBean( argbIntArray, sx, sy, sz );
+        }
+
+        textureData.setColorSpace(colorSpace);
+        textureData.setVolumeMicrometers(new Double[]{(double) sx, (double) sy, (double) sz});
+        textureData.setVoxelMicrometers(new Double[]{1.0, 1.0, 1.0});
+        if ( header != null ) {
+            textureData.setHeader(header);
+        }
+        textureData.setByteOrder(pixelByteOrder);
+        textureData.setPixelByteCount(pixelBytes);
+        textureData.setFilename(localFileName);
+        textureData.setChannelCount(channelCount);
+        dataAcceptor.setTextureData( textureData );
 	}
 	
 	private class VolumeFrameListener 

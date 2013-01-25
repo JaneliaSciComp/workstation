@@ -6,19 +6,18 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
  * Date: 1/10/13
  * Time: 10:42 AM
  *
- * All info representing a texture volume.  Note that the texture offset for this is not known,
- * because masks like this can be switched on and off, changing their offsets at runtime.
+ * All info representing a texture volume. This one is to meet the special needs of masking textures, such
+ * as quick fetching of bytes.
  */
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.IntBuffer;
 
-public class TextureDataBean implements TextureDataI {
+public class MaskTextureDataBean implements TextureDataI {
     private String filename;
-    private ByteBuffer textureData;
+    private byte[] textureData;
     private Integer sx;
     private Integer sy;
     private Integer sz;
@@ -35,37 +34,24 @@ public class TextureDataBean implements TextureDataI {
 
     private boolean loaded;
 
-    private static ByteBuffer getByteBuffer(int[] textureData) {
-        ByteBuffer textureBuffer = ByteBuffer.allocate( textureData.length * (Integer.SIZE / 8));
-        textureBuffer.order( ByteOrder.LITTLE_ENDIAN );
-        for ( int i = 0; i < textureData.length; i++ ) {
-            textureBuffer.putInt( textureData[ i ] );
-        }
-        return textureBuffer;
-    }
-
-    public TextureDataBean( ByteBuffer textureData, int sx, int sy, int sz ) {
+    public MaskTextureDataBean(byte[] textureData, int sx, int sy, int sz) {
         super();
+        this.textureData = textureData;
         this.sx = sx;
         this.sy = sy;
         this.sz = sz;
-        this.textureData = textureData;
     }
 
-    public TextureDataBean( ByteBuffer textureData, Integer[] voxels ) {
+    public MaskTextureDataBean(byte[] textureData, Integer[] voxels) {
         this( textureData, voxels[ 0 ], voxels[ 1 ], voxels[ 2 ] );
     }
 
-    public TextureDataBean(int[] textureData, int sx, int sy, int sz) {
-        this( getByteBuffer( textureData ), sx, sy, sz );
-    }
-
-    public TextureDataBean( int[] textureData, Integer[] voxels ) {
-        this( textureData, voxels[ 0 ], voxels[ 1 ], voxels[ 2 ] );
+    public byte[] getTextureBytes() {
+        return textureData;
     }
 
     public ByteBuffer getTextureData() {
-        return textureData;
+        return ByteBuffer.wrap( textureData );
     }
 
     public int getSx() {
