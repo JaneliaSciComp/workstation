@@ -19,6 +19,11 @@ public class ViewerManager {
 	public ViewerManager() {
 		ensureViewerClass(viewerContainer.getMainViewerPane(), IconDemoPanel.class);
 	}
+	
+	public void clearAllViewers() {
+	    if (getMainViewerPane()!=null) getMainViewerPane().clearViewer();
+	    if (getSecViewerPane()!=null) getSecViewerPane().clearViewer();
+	}
 
 	public Viewer getActiveViewer() {
 		Viewer viewer = viewerContainer.getActiveViewerPane().getViewer();

@@ -19,6 +19,8 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A wrapper around a Viewer that provides a title bar, a close button, and entity navigation history.
@@ -26,7 +28,9 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ViewerPane extends JPanel {
-	
+
+    private static final Logger log = LoggerFactory.getLogger(ViewerPane.class);
+    
 	private static final Font titleLabelFont = new Font("Sans Serif", Font.PLAIN, 12);
 	
 	private ViewerContainer viewerContainer;
@@ -97,7 +101,8 @@ public class ViewerPane extends JPanel {
 		if (this.viewer!=null) {
 			remove(this.viewer);
 		}
-		viewer = null;
+		this.viewer = null;
+		this.contextRootedEntity = null;
 	}
 
 	public void setViewer(Viewer viewer) {
@@ -154,8 +159,10 @@ public class ViewerPane extends JPanel {
 	public synchronized void loadEntity(RootedEntity rootedEntity, final Callable<Void> success) {
 
 		if (rootedEntity==null) return;
+		log.debug("loadEntity: "+rootedEntity.getId());
 		
 		if (contextRootedEntity!=null && rootedEntity.getId().equals(contextRootedEntity.getId())) {
+		    log.debug("Entity is already loaded: "+contextRootedEntity.getId());
 			if (success!=null) {
 				try {
 					success.call();	
