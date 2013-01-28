@@ -66,12 +66,6 @@ public class TextureMediator {
         ByteBuffer data = textureData.getTextureData();
         if ( data != null ) {
 
-//            ByteBuffer data = ByteBuffer.allocateDirect( textureDataArr.length * Integer.SIZE );
-//            data.order( ByteOrder.LITTLE_ENDIAN );
-//            for ( int i = 0; i < textureDataArr.length; i++ ) {
-//                data.putInt( textureDataArr[ i ] );
-//            }
-//            IntBuffer data = IntBuffer.wrap( textureDataArr );
             data.rewind();
 
             gl.glActiveTexture( textureSymbolicId );
@@ -79,7 +73,6 @@ public class TextureMediator {
 
             gl.glBindTexture( GL2.GL_TEXTURE_3D, textureName );
             gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_REPLACE);
-
             gl.glTexImage3D(GL2.GL_TEXTURE_3D,
                     0, // mipmap level
                     getInternalFormat(), // as stored INTO graphics hardware, w/ srgb info (GLint internal format)
@@ -93,81 +86,6 @@ public class TextureMediator {
             );
         }
     }
-
-//            if ( textureData.getPixelByteCount() > 777 ) {
-//                ByteBuffer rawData = ByteBuffer.allocateDirect( textureDataArr.length * 4 * textureData.getPixelByteCount() );
-//                rawData.order( ByteOrder.LITTLE_ENDIAN );
-//                data = rawData.asIntBuffer();
-//                int hasNonZero = 0;
-//                for ( int i = 0; i < textureDataArr.length; i ++ ) {
-//                    int nextInt = textureDataArr[ i ];
-//                    if ( nextInt > 0 ) {
-//                        hasNonZero ++;
-//                    }
-//                    int[] ints = getInts(nextInt, textureData.getPixelByteCount());
-//                    data.put( ints );
-//                }
-//
-//                data.rewind();
-//
-//
-//                // *** TEMP *** wrap up a big colored rect-solid.
-//                int[] dummyArr = new int[ textureDataArr.length * textureData.getPixelByteCount() ];
-//                for ( int i = 0; i < dummyArr.length; i++ ) {
-//                    dummyArr[ i ] = 16;
-//                }
-//
-//                data = IntBuffer.wrap( dummyArr );
-//                data.rewind();
-//
-//                System.out.println("This many ints were nonzero " + hasNonZero);
-//            }
-//            else {
-//                data = IntBuffer.wrap( textureDataArr );
-//                data.rewind();
-//            }
-
-//    public void uploadTexture( GL2 gl ) {
-//        int[] textureDataArr = textureData.getTextureData();
-//        if ( textureDataArr != null ) {
-//            ShortBuffer data = null;
-//            if ( textureData.getPixelByteCount() > 1 ) {
-//                ByteBuffer rawData = ByteBuffer.allocate( textureDataArr.length * 4 * textureData.getPixelByteCount() );
-//                rawData.order( ByteOrder.LITTLE_ENDIAN );
-//                data = rawData.asShortBuffer();
-//                int hasNonZero = 0;
-//                for ( int i = 0; i < textureDataArr.length; i ++ ) {
-//                    int nextInt = textureDataArr[ i ];
-//                    if ( nextInt > 0 ) {
-//                        hasNonZero ++;
-//                    }
-//                    short[] ints = getShorts(nextInt, textureData.getPixelByteCount());
-//                    data.put(ints);
-//                }
-//
-//                data.rewind();
-//                System.out.println("This many ints were nonzero " + hasNonZero);
-//            }
-//
-//            gl.glActiveTexture( textureSymbolicId );
-//            gl.glEnable( GL2.GL_TEXTURE_3D );
-//
-//            gl.glBindTexture( GL2.GL_TEXTURE_3D, textureName );
-//            gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_REPLACE);
-//
-//            gl.glTexImage3D(GL2.GL_TEXTURE_3D,
-//                    0, // mipmap level
-//                    getInternalFormat(), // as stored INTO graphics hardware, w/ srgb info (GLint internal format)
-//                    textureData.getSx(), // width
-//                    textureData.getSy(), // height
-//                    textureData.getSz(), // depth
-//                    0, // border
-//                    getVoxelComponentOrder(), // voxel component order (GLenum format)
-//                    getVoxelComponentType(), // voxel component type=packed RGBA values(GLenum type)
-//                    data.rewind()
-//            );
-//        }
-//    }
 
     public int getTextureOffset() {
         return textureOffset;
@@ -254,8 +172,12 @@ public class TextureMediator {
             internalFormat = GL2.GL_SRGB8_ALPHA8;
 
         // This: tested against a mask file.
-        if (textureData.getChannelCount() == 1)
+        if (textureData.getChannelCount() == 1) {
             internalFormat = GL2.GL_LUMINANCE;
+            if (textureData.getPixelByteCount() == 2) {
+                internalFormat = GL2.GL_LUMINANCE16;
+            }
+        }
 
         logger.info("Luminance format num = {}", GL2.GL_LUMINANCE);
         logger.info("Alpha8 format num = {}", GL2.GL_SRGB8_ALPHA8);
@@ -268,6 +190,7 @@ public class TextureMediator {
         int rtnVal = GL2.GL_BGRA;
         if ( textureData.getChannelCount() == 1 ) {
             rtnVal = GL2.GL_LUMINANCE;
+            //rtnVal = GL2.GL_RED;
         }
         return rtnVal;
     }

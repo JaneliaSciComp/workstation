@@ -169,20 +169,19 @@ public class VolumeLoader
         // *** DEBUG
         Set<Integer> values = new HashSet<Integer>();
 
-        for (int z = 0; z < sz; ++z) {
+        for (int z = 0; z < sz; z ++ ) {
             int zOffset = z * sx * sy;
             sliceStream.loadNextSlice();
             V3dRawImageStream.Slice slice = sliceStream.getCurrentSlice();
-            for (int y = 0; y < sy; y += pixelBytes) {
+            for (int y = 0; y < sy; y ++ ) {
                 int yOffset = zOffset + y * sx;
-                for (int x = 0; x < sx; x += pixelBytes) {
+                for (int x = 0; x < sx; x ++ ) {
                     Integer value = slice.getValue(x, y);
                     if ( value > 0 ) {
                         for ( int pi = 0; pi < pixelBytes; pi ++ ) {
                             byte piByte = (byte)(value >>> (pi * 8) & 0x000000ff);
-//                            maskByteArray[yOffset + x + pi] = 1;
                             values.add( (int)piByte );
-                            maskByteArray[yOffset + x + pi] = piByte;
+                            maskByteArray[(yOffset * 2) + (x * 2) + (pixelBytes - pi - 1)] = piByte;
                         }
                     }
                 }

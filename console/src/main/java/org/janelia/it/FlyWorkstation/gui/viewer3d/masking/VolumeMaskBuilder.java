@@ -40,6 +40,8 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
     }
 
     public byte[] getVolumeMask() {
+        if ( 0 == 0 )
+            return ((MaskTextureDataBean)maskingDataBeans.get(0)).getTextureBytes();
 
         // This constructs a "color rolodex".
         Integer[][] colors = {
