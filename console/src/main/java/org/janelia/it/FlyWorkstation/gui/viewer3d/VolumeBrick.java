@@ -80,6 +80,12 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
 	@Override
 	public void init(GL2 gl) {
+        // Avoid carrying out any operations if there is no real data.
+        if ( signalTextureMediator == null  &&  maskTextureMediator == null ) {
+            renderer.clear();
+            return;
+        }
+
         initMediators( gl );
         if (bUseSyntheticData) {
             createSyntheticData();
@@ -108,22 +114,14 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 		bIsInitialized = true;
 	}
 
-    private void initMediators( GL2 gl ) {
-        if ( maskTextureMediator != null ) {
-            textureIds = TextureMediator.genTextureIds( gl, 2 );
-
-            signalTextureMediator.init( textureIds[ 0 ], 0 );
-            maskTextureMediator.init( textureIds[ 1 ], 1 );
-
-        }
-        else {
-            textureIds = TextureMediator.genTextureIds( gl, 1 );
-            signalTextureMediator.init( textureIds[ 0 ], 0 );
-        }
-    }
-
     @Override
 	public void display(GL2 gl) {
+        // Avoid carrying out operations if there is no data.
+        if ( maskTextureMediator == null  &&  signalTextureMediator == null ) {
+            renderer.clear();
+            return;
+        }
+
 		if (! bIsInitialized)
 			init(gl);
 		if (bSignalTextureNeedsUpload)
@@ -400,7 +398,21 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     public void refresh() {
         bSignalTextureNeedsUpload = true;
     }
-	
+
+    private void initMediators( GL2 gl ) {
+        if ( maskTextureMediator != null ) {
+            textureIds = TextureMediator.genTextureIds( gl, 2 );
+
+            signalTextureMediator.init( textureIds[ 0 ], 0 );
+            maskTextureMediator.init( textureIds[ 1 ], 1 );
+
+        }
+        else if ( signalTextureMediator != null ) {
+            textureIds = TextureMediator.genTextureIds( gl, 1 );
+            signalTextureMediator.init( textureIds[ 0 ], 0 );
+        }
+    }
+
     private void createSyntheticData() {
         // Clear texture data
         signalData.rewind();

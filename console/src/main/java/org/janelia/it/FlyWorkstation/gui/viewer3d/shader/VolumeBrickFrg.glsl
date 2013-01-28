@@ -33,13 +33,16 @@ vec4 volumeMask(vec4 origColor)
         // Display strategy: only show the signal, only if the mask is non-zero.
         if ( ( maskingColor[0] + maskingColor[1] + maskingColor[2] ) == 0.0 ) {
             rtnVal = origColor;
+            rtnVal[0] = origColor[0] * 0.3;
+            rtnVal[1] = origColor[1] * 0.3;
+            rtnVal[2] = origColor[2] * 0.3;
+            rtnVal[3] = 0.1;
 //            rtnVal[0] = 0.0;
 //            rtnVal[1] = 0.0;
 //            rtnVal[2] = 0.0;
         }
         else {
-//            rtnVal[3] = maskingColor[ 0 ];
-            rtnVal = maskingColor;
+//            rtnVal = maskingColor;
 //            rtnVal[3] = maskingColor[3];
 //            rtnVal[0] = maskingColor[3];
 //            rtnVal[1] = 0.0;

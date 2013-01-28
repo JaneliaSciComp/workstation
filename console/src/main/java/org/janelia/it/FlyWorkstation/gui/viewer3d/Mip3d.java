@@ -82,6 +82,10 @@ implements MouseListener, MouseMotionListener, ActionListener,
     public void refresh() {
         renderer.refresh();
     }
+
+    public void clear() {
+        renderer.clear();
+    }
 	
 	@Override
 	public void actionPerformed(ActionEvent arg0) {

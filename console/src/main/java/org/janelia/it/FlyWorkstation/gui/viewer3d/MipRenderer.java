@@ -218,7 +218,9 @@ class MipRenderer implements GLEventListener
 	}
 
     public void refresh() {
-        getVolumeBrick().refresh();
+        VolumeBrick volumeBrick = getVolumeBrick();
+        if ( volumeBrick != null )
+            volumeBrick.refresh();
     }
 
     //todo consider making RGB setting a preference rather than this drill-in setter.

@@ -153,10 +153,8 @@ public class VolumeLoader
         channelCount = sc;
         pixelByteOrder = sliceStream.getEndian();
 
+        // Java implicitly sets newly-allocated byte arrays to all zeros.
         maskByteArray = new byte[(sx*sy*sz) * pixelBytes];
-        for ( int i = 0; i < maskByteArray.length; i++ ) {
-            maskByteArray[ i ] = 0;
-        }
 
         if ( sc > 1 ) {
             throw new RuntimeException( "Unexpected multi-channel mask file." );
@@ -166,31 +164,22 @@ public class VolumeLoader
             throw new RuntimeException( "Unexpected zero channel count mask file." );
         }
 
-        // *** DEBUG
-        Set<Integer> values = new HashSet<Integer>();
-
         for (int z = 0; z < sz; z ++ ) {
             int zOffset = z * sx * sy;
             sliceStream.loadNextSlice();
             V3dRawImageStream.Slice slice = sliceStream.getCurrentSlice();
             for (int y = 0; y < sy; y ++ ) {
-                int yOffset = zOffset + y * sx;
+                int yOffset = zOffset + (sy-y) * sx;
                 for (int x = 0; x < sx; x ++ ) {
                     Integer value = slice.getValue(x, y);
                     if ( value > 0 ) {
                         for ( int pi = 0; pi < pixelBytes; pi ++ ) {
                             byte piByte = (byte)(value >>> (pi * 8) & 0x000000ff);
-                            values.add( (int)piByte );
                             maskByteArray[(yOffset * 2) + (x * 2) + (pixelBytes - pi - 1)] = piByte;
                         }
                     }
                 }
             }
-        }
-
-        // *** DEBUG
-        for ( Integer value: values ) {
-            System.out.println("Value: " + value );
         }
 
         header = sliceStream.getHeaderKey();
