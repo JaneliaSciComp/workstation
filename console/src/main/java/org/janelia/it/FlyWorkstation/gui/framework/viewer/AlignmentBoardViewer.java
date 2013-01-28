@@ -40,27 +40,13 @@ public class AlignmentBoardViewer extends Viewer {
     private RootedEntity albRootedEntity;
 
     private Mip3d mip3d;
+    private ABLoadWorker loadWorker;
     private ModelMgrObserver modelMgrObserver;
     private Logger logger = LoggerFactory.getLogger(AlignmentBoardViewer.class);
 
     public AlignmentBoardViewer(ViewerPane viewerPane) {
         super(viewerPane);
         setLayout(new BorderLayout());
-    }
-
-    public void setAlignmentBoard( RootedEntity albRootedEntity, Entity alignmentBoard ) {
-        if (EntityConstants.TYPE_ALIGNMENT_BOARD.equals(alignmentBoard.getEntityType().getName())) {
-            this.alignmentBoard = alignmentBoard;
-            this.albRootedEntity = albRootedEntity;
-            if ( modelMgrObserver != null ) {
-                ModelMgr.getModelMgr().removeModelMgrObserver(modelMgrObserver);
-            }
-            modelMgrObserver = new ModelMgrListener(this, alignmentBoard);
-            ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
-            refresh();
-        }
-        else
-            throw new RuntimeException("Invalid entity type for alignment board.");
     }
 
     @Override
@@ -81,6 +67,11 @@ public class AlignmentBoardViewer extends Viewer {
     @Override
     public void loadEntity(RootedEntity rootedEntity) {
         alignmentBoard = rootedEntity.getEntity();
+        if (loadWorker != null) {
+            loadWorker.disregard();
+            loadWorker.cancel( true );
+        }
+        loadWorker = new ABLoadWorker();
         refresh();
     }
 
@@ -117,11 +108,14 @@ public class AlignmentBoardViewer extends Viewer {
 
     @Override
     public void close() {
+        ModelMgr.getModelMgr().removeModelMgrObserver(modelMgrObserver);
+        if (loadWorker != null) {
+            loadWorker.disregard();
+        }
         alignmentBoard = null;
         albRootedEntity = null;
         removeAll();
         mip3d = null;
-        ModelMgr.getModelMgr().removeModelMgrObserver(modelMgrObserver);
     }
 
     @Override
@@ -177,7 +171,6 @@ public class AlignmentBoardViewer extends Viewer {
             for ( Entity consolidatedLabel: consolidatedLabelsList ) {
                 String filename = EntityUtils.getFilePath( consolidatedLabel );
                 if ( filename != null ) {
-//                    if ( ! matchesSomeSignal( signalFilenames, filename ) ) { // *** TEMP ***
                     if ( matchesSomeSignal( signalFilenames, filename ) ) {
                         maskFilenames.add( filename );
                     }
@@ -188,43 +181,8 @@ public class AlignmentBoardViewer extends Viewer {
             LayersPanel layersPanel = SessionMgr.getBrowser().getLayersPanel();
             layersPanel.showEntities(alignmentBoard.getOrderedChildren());
             SessionMgr.getBrowser().selectRightPanel(layersPanel);
-            
-            
-            SimpleWorker loadWorker = new SimpleWorker() {
-                @Override
-                protected void doStuff() throws Exception {
-                    FileResolver resolver = new CacheFileResolver();
 
-                    mip3d.setMaskFiles(maskFilenames, resolver);
-
-                    for ( String signalFilename: signalFilenames ) {
-                        mip3d.loadVolume( signalFilename, resolver);
-                        // After first volume has been loaded, unset clear flag, so subsequent
-                        // ones are overloaded.
-                        mip3d.setClearOnLoad(false);
-                    }
-                }
-
-                @Override
-                protected void hadSuccess() {
-                    // Add this last.  "show-loading" removes it.  This way, it is shown only
-                    // when it becomes un-busy.
-                    AlignmentBoardViewer.this.removeAll();
-                    add(mip3d, BorderLayout.CENTER);
-
-                    revalidate();
-                    repaint();
-                }
-
-                @Override
-                protected void hadError(Throwable error) {
-                    AlignmentBoardViewer.this.removeAll();
-                    revalidate();
-                    repaint();
-                    SessionMgr.getSessionMgr().handleException( error );
-                }
-            };
-
+            loadWorker.setFilenames( signalFilenames, maskFilenames );
             loadWorker.execute();
 
         }
@@ -267,8 +225,8 @@ public class AlignmentBoardViewer extends Viewer {
                 EntityConstants.TYPE_CURATED_NEURON.equals(entityTypeName)
                         ||
                         EntityConstants.TYPE_SAMPLE.equals(entityTypeName)
-                        ||
-                        EntityConstants.TYPE_NEURON_FRAGMENT.equals(entityTypeName)
+//                        ||
+//                        EntityConstants.TYPE_NEURON_FRAGMENT.equals(entityTypeName)
 //                        ||
 //                EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION.equals(entityTypeName)
                 ) {
@@ -322,4 +280,55 @@ public class AlignmentBoardViewer extends Viewer {
             }
         }
     }
+
+    public class ABLoadWorker extends SimpleWorker {
+        private List<String> maskFilenames;
+        private List<String> signalFilenames;
+
+        public void setFilenames( List<String> signalFilenames, List<String> maskFilenames ) {
+            this.signalFilenames = signalFilenames;
+            this.maskFilenames = maskFilenames;
+        }
+
+        @Override
+        protected void doStuff() throws Exception {
+            if ( signalFilenames == null  ||  maskFilenames == null ) {
+                return;
+            }
+            else if ( signalFilenames.size() == 0 ) {
+                mip3d.clear();
+                return;
+            }
+
+            FileResolver resolver = new CacheFileResolver();
+            mip3d.setMaskFiles(maskFilenames, resolver);
+
+            for ( String signalFilename: signalFilenames ) {
+                mip3d.loadVolume( signalFilename, resolver);
+                // After first volume has been loaded, unset clear flag, so subsequent
+                // ones are overloaded.
+                mip3d.setClearOnLoad(false);
+            }
+        }
+
+        @Override
+        protected void hadSuccess() {
+            // Add this last.  "show-loading" removes it.  This way, it is shown only
+            // when it becomes un-busy.
+            AlignmentBoardViewer.this.removeAll();
+            add(mip3d, BorderLayout.CENTER);
+
+            revalidate();
+            repaint();
+        }
+
+        @Override
+        protected void hadError(Throwable error) {
+            AlignmentBoardViewer.this.removeAll();
+            revalidate();
+            repaint();
+            SessionMgr.getSessionMgr().handleException( error );
+        }
+    };
+
 }
