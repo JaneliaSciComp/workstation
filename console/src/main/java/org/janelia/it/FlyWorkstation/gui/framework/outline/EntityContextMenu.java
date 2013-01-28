@@ -24,7 +24,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.*;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tool_manager.ToolMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.AlignmentBoardViewerPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Hud;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
