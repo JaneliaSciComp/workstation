@@ -14,8 +14,6 @@ import java.util.Vector;
  
 class MipRenderer implements GLEventListener
 {
-    public static final int RGBDIALOG_WIDTH = 300;
-    public static final int RGBDIALOG_HEIGHT = 150;
     private GLU glu = new GLU();
     
     // camera parameters
@@ -223,51 +221,17 @@ class MipRenderer implements GLEventListener
             volumeBrick.refresh();
     }
 
-    //todo consider making RGB setting a preference rather than this drill-in setter.
-    public void setRgbValues() {
-
-        final VolumeBrick volumeBrick = getVolumeBrick();
-
-        if ( volumeBrick != null ) {
-            float[] colorMask = volumeBrick.getColorMask();
-            final JDialog rgbPopup = new JDialog();
-            rgbPopup.setSize( new Dimension(RGBDIALOG_WIDTH, RGBDIALOG_HEIGHT) );
-            rgbPopup.setTitle("Red, Green or Blue Channels");
-            rgbPopup.setLayout( new BorderLayout() );
-            final ChannelSelectionPanel channelSelectionPanel = new ChannelSelectionPanel( colorMask );
-
-            JButton cancelButton = new JButton( "Cancel" );
-            cancelButton.setActionCommand( "Cancel" );
-            JButton okButton = new JButton( "OK" );
-            okButton.setActionCommand("OK");
-
-            JPanel buttonPanel = new JPanel();
-            buttonPanel.setLayout( new FlowLayout() );
-            buttonPanel.add( okButton );
-            buttonPanel.add( cancelButton );
-
-            ActionListener buttonListener = new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    rgbPopup.setVisible( false );
-                    if ( ((AbstractButton)e.getSource()).getActionCommand().equals( "OK" ) ) {
-                        float[] rgbChoices = channelSelectionPanel.getRgbChoices();
-                        volumeBrick.setColorMask( rgbChoices[ 0 ], rgbChoices[ 1 ], rgbChoices[ 2 ] );
-                    }
-                }
-            };
-
-            cancelButton.addActionListener( buttonListener );
-            okButton.addActionListener( buttonListener );
-
-            rgbPopup.add( channelSelectionPanel, BorderLayout.CENTER );
-            rgbPopup.add( buttonPanel, BorderLayout.SOUTH );
-            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-            int locX = (int)screenSize.getWidth() / 4 - (RGBDIALOG_WIDTH / 2);
-            int locY = (int)screenSize.getHeight() / 2 - (RGBDIALOG_HEIGHT / 2);
-            rgbPopup.setLocation( locX, locY );
-            rgbPopup.setVisible(true);
+    public float[] getColorMask() {
+        if ( getVolumeBrick() != null ) {
+            return getVolumeBrick().getColorMask();
         }
+        else {
+            return null;
+        }
+    }
+
+    public void setRgbValues( float[] rgbChoices ) {
+        getVolumeBrick().setColorMask( rgbChoices[ 0 ], rgbChoices[ 1 ], rgbChoices[ 2 ] );
     }
 
     private VolumeBrick getVolumeBrick() {
