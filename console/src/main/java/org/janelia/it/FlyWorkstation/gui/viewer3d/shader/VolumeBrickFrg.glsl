@@ -30,16 +30,21 @@ vec4 volumeMask(vec4 origColor)
         vec4 maskingColor = texture3D(maskingTexture, gl_TexCoord[1].xyz);
         //maskingColor = texture3D(signalTexture, gl_TexCoord[1].xyz);
 
+        // This reverts the value of this voxel to its original integer range.
+        int maskValue = int(floor(maskingColor.g*65535.0));
+
         // Display strategy: only show the signal, only if the mask is non-zero.
-        if ( ( maskingColor[0] + maskingColor[1] + maskingColor[2] ) == 0.0 ) {
-            rtnVal = origColor;
-            rtnVal[0] = origColor[0] * 0.3;
-            rtnVal[1] = origColor[1] * 0.3;
-            rtnVal[2] = origColor[2] * 0.3;
-            rtnVal[3] = 0.1;
-//            rtnVal[0] = 0.0;
-//            rtnVal[1] = 0.0;
-//            rtnVal[2] = 0.0;
+        if ( ( ( maskingColor[0] + maskingColor[1] + maskingColor[2] ) == 0.0 ) ) {
+// This picks a specific mask value as the only feature shown.
+//        if (  maskValue != 23 ) {
+//            rtnVal = origColor;
+//            rtnVal[0] = origColor[0] * 0.1;
+//            rtnVal[1] = origColor[1] * 0.1;
+//            rtnVal[2] = origColor[2] * 0.1;
+//            rtnVal[3] = 0.1;
+            rtnVal[0] = 0.0;
+            rtnVal[1] = 0.0;
+            rtnVal[2] = 0.0;
         }
         else {
 //            rtnVal = maskingColor;

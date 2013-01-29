@@ -33,8 +33,8 @@ public class TextureMediator {
     private Logger logger = LoggerFactory.getLogger( TextureMediator.class );
 
     private static final int INTERPOLATION_METHOD =
-            GL2.GL_LINEAR; // blending across voxel edges
-    // GL2.GL_NEAREST; // discrete cube shaped voxels
+    //        GL2.GL_LINEAR; // blending across voxel edges
+     GL2.GL_NEAREST; // discrete cube shaped voxels
 
     public static int[] genTextureIds( GL2 gl, int count ) {
         int[] rtnVal = new int[ count ];

@@ -25,6 +25,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import java.nio.ByteOrder;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.zip.DataFormatException;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
@@ -164,6 +165,7 @@ public class VolumeLoader
             throw new RuntimeException( "Unexpected zero channel count mask file." );
         }
 
+        Set<Integer> values = new TreeSet<Integer>();
         for (int z = 0; z < sz; z ++ ) {
             int zOffset = z * sx * sy;
             sliceStream.loadNextSlice();
@@ -173,15 +175,21 @@ public class VolumeLoader
                 for (int x = 0; x < sx; x ++ ) {
                     Integer value = slice.getValue(x, y);
                     if ( value > 0 ) {
+                        values.add( value );
                         for ( int pi = 0; pi < pixelBytes; pi ++ ) {
                             byte piByte = (byte)(value >>> (pi * 8) & 0x000000ff);
-                            maskByteArray[(yOffset * 2) + (x * 2) + (pixelBytes - pi - 1)] = piByte;
+//                            maskByteArray[(yOffset * 2) + (x * 2) + (pixelBytes - pi - 1)] = piByte;
+                            maskByteArray[(yOffset * 2) + (x * 2) + (pi)] = piByte;
                         }
                     }
                 }
             }
         }
 
+        for ( Integer value: values ) {
+            System.out.print( value + "," );
+        }
+        System.out.println();
         header = sliceStream.getHeaderKey();
     }
 
