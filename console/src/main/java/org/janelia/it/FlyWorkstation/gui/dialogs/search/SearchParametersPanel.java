@@ -33,9 +33,11 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
     protected final JLabel titleLabel2;
     protected final JButton deleteContextButton;
     protected final JCheckBox advancedSearchCheckbox;
+    protected final JPanel advancedSearchPanel;
     protected final JPanel adhocPanel;
     protected final JPanel criteriaPanel;
     protected final JButton searchButton;
+    protected final JButton clearButton;
     
     // Search state
     protected SearchConfiguration searchConfig;
@@ -61,6 +63,14 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
 			}
 		});
 
+        clearButton = new JButton("Clear");
+        clearButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                clear();
+            }
+        });
+        
         deleteContextButton = new JButton(Icons.getIcon("close.png"));
         deleteContextButton.setBorderPainted(false);
         deleteContextButton.addActionListener(new ActionListener() {
@@ -80,6 +90,7 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
         searchBox.add(deleteContextButton);
         searchBox.add(Box.createHorizontalStrut(5));
         searchBox.add(searchButton);
+        searchBox.add(clearButton);
         
         criteriaPanel = new JPanel();
         criteriaPanel.setLayout(new BoxLayout(criteriaPanel, BoxLayout.PAGE_AXIS));
@@ -102,23 +113,23 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
         addCriteriaButton.setAlignmentX(Component.LEFT_ALIGNMENT);
         adhocPanel.add(addCriteriaButton);
 
-        final JPanel advancedSearch = new JPanel();
-        advancedSearch.setMinimumSize(new Dimension(500, 200));
-        advancedSearch.setLayout(new BoxLayout(advancedSearch, BoxLayout.PAGE_AXIS));
-        advancedSearch.setVisible(false);
-        advancedSearch.setBorder(BorderFactory.createCompoundBorder(
+        advancedSearchPanel = new JPanel();
+        advancedSearchPanel.setMinimumSize(new Dimension(500, 200));
+        advancedSearchPanel.setLayout(new BoxLayout(advancedSearchPanel, BoxLayout.PAGE_AXIS));
+        advancedSearchPanel.setVisible(false);
+        advancedSearchPanel.setBorder(BorderFactory.createCompoundBorder(
         				BorderFactory.createEmptyBorder(10,10,10,10), 
         				BorderFactory.createEtchedBorder(EtchedBorder.LOWERED)));
         
         adhocPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        advancedSearch.add(adhocPanel);
+        advancedSearchPanel.add(adhocPanel);
         
         advancedSearchCheckbox = new JCheckBox("Advanced search options");
         advancedSearchCheckbox.setEnabled(false);
         advancedSearchCheckbox.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				advancedSearch.setVisible(!advancedSearch.isVisible());
+				advancedSearchPanel.setVisible(!advancedSearchPanel.isVisible());
 				if (searchCriteriaList.isEmpty()) {
 			        addSearchCriteria(true);
 				}
@@ -169,7 +180,7 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
         c.anchor = GridBagConstraints.FIRST_LINE_END;
         c.weightx = c.weighty = 1.0;
         JPanel advancedSearchHolder = new JPanel(new BorderLayout());
-        advancedSearchHolder.add(advancedSearch, BorderLayout.WEST);
+        advancedSearchHolder.add(advancedSearchPanel, BorderLayout.WEST);
         contentPanel.add(advancedSearchHolder, c);
 
         c.gridx = 2;
@@ -340,6 +351,11 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
 		return searchString;
 	}
 
+	public void setSearchString(String searchString) {
+	    this.searchString = searchString;
+	    inputField.setSelectedItem(searchString);
+	}
+	
 	public JLabel getTitleLabel() {
 		return titleLabel;
 	}
@@ -368,6 +384,17 @@ public class SearchParametersPanel extends JPanel implements SearchConfiguration
 		return criteriaPanel;
 	}
     
+	private void clear() {
+	    searchString = "";
+	    inputField.setSelectedItem(searchString);
+	    setSearchRoot(null);
+	    searchCriteriaList.clear();
+        criteriaPanel.removeAll();
+        adhocPanel.revalidate();
+        advancedSearchPanel.setVisible(false);
+        advancedSearchCheckbox.setSelected(false);
+	}
+	
 	public void performSearch(boolean clear) {
 		populateHistory();
 	}

@@ -278,10 +278,20 @@ public abstract class EntityListPane extends JPanel implements SearchConfigurati
 			value = entity.getOwnerKey();
 		}
 		else if ("creation_date".equals(field)) {
-			value = df.format(entity.getCreationDate());
+		    if (entity.getCreationDate()==null) {
+		        value = "";
+		    }
+		    else {
+		        value = df.format(entity.getCreationDate());    
+		    }
 		}
 		else if ("updated_date".equals(field)) {
-			value = df.format(entity.getUpdatedDate());
+            if (entity.getUpdatedDate()==null) {
+                value = "";
+            }
+            else {
+                value = df.format(entity.getUpdatedDate());    
+            }
 		}
 		
 		return value;

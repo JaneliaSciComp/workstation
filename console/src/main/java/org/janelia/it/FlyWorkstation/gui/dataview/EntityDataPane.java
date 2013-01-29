@@ -1,18 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.dataview;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.shared.util.Utils;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
-
-import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
@@ -22,6 +11,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
+
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
+import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * A panel for displaying entity data objects. 
  * 
@@ -29,6 +33,8 @@ import java.util.Vector;
  */
 public class EntityDataPane extends JPanel {
 
+    private static final Logger log = LoggerFactory.getLogger(EntityDataPane.class);
+    
     private final List<String> staticColumns = new ArrayList<String>();
     private final String title;
     private boolean showParent;
@@ -81,7 +87,12 @@ public class EntityDataPane extends JPanel {
 			protected void doubleLeftClicked(MouseEvent e) {
 				if (datas==null) return;
                 table.setColumnSelectionAllowed(false);
-                doubleClick(datas.get(table.getSelectedRow()));
+                int row = table.getSelectedRow();
+                if (row >= datas.size()) {
+                    log.error("No such row: {}",row);
+                    return;
+                }
+                doubleClick(datas.get(row));
 			}
 
 			@Override

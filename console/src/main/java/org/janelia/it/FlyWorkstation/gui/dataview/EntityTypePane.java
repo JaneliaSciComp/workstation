@@ -1,22 +1,25 @@
 package org.janelia.it.FlyWorkstation.gui.dataview;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.jacs.model.entity.EntityAttribute;
-import org.janelia.it.jacs.model.entity.EntityType;
-import org.janelia.it.jacs.shared.utils.StringUtils;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.util.List;
+import java.util.TreeMap;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.util.List;
-import java.util.TreeMap;
+
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchResultsPanel;
+import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
+import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.jacs.compute.api.support.SolrUtils;
+import org.janelia.it.jacs.model.entity.EntityAttribute;
+import org.janelia.it.jacs.model.entity.EntityType;
+import org.janelia.it.jacs.shared.utils.StringUtils;
 
 /**
  * The left-hand panel which lists the Entity types and their attributes.
@@ -26,9 +29,15 @@ import java.util.TreeMap;
 public class EntityTypePane extends JScrollPane {
 
     private SimpleWorker loadTask;
-    private JTree tree;
-
-    public EntityTypePane() {
+    private final JTree tree;
+    private final SearchPane searchPane;
+    private final SearchResultsPanel searchResultsPanel;
+    
+    public EntityTypePane(EntityPane entityPane) {
+        
+        this.searchPane = entityPane.getSearchPane();
+        this.searchResultsPanel = entityPane.getSearchResultsPanel();
+        
         tree = new JTree(new DefaultMutableTreeNode("Loading..."));
         setViewportView(tree);
 
@@ -43,13 +52,13 @@ public class EntityTypePane extends JScrollPane {
                 TreePath path = tree.getClosestPathForLocation(e.getX(), e.getY());
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
                 if (node.getUserObject() instanceof EntityType) {
-                    DataviewApp.getMainFrame().getEntityPane().showEntities((EntityType) node.getUserObject());
-                    tree.setSelectionPath(path);
+//                    DataviewApp.getMainFrame().getEntityPane().showEntities((EntityType) node.getUserObject());
+//                    tree.setSelectionPath(path);
                 }
                 else if (node.getUserObject() instanceof EntityAttribute) {
-                    DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
-                    DataviewApp.getMainFrame().getEntityPane().showEntities((EntityType) parent.getUserObject());
-                    tree.setSelectionPath(path.getParentPath());
+//                    DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
+//                    DataviewApp.getMainFrame().getEntityPane().showEntities((EntityType) parent.getUserObject());
+//                    tree.setSelectionPath(path.getParentPath());
                 }
 			}
         });
@@ -106,9 +115,34 @@ public class EntityTypePane extends JScrollPane {
     			}
     		});
             popupMenu.add(addAttrMenuItem);
+
+            JMenuItem searchItem = new JMenuItem("Search for this type");
+            searchItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    searchPane.setTabIndex(1);
+                    searchPane.getSolrPanel().setSearchString("+entity_type:\""+entityType.getName()+"\"");
+                    searchPane.performSolrSearch(true);
+                }
+            });
+            popupMenu.add(searchItem);
         }
         else if (node.getUserObject() instanceof EntityAttribute) {
-
+            
+            final EntityAttribute entityAttr = (EntityAttribute)node.getUserObject();
+            
+            JMenuItem searchItem = new JMenuItem("Search for this attribute");
+            searchItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    searchPane.setTabIndex(1);
+                    String attrName = SolrUtils.getDynamicFieldName(entityAttr.getName());
+                    searchPane.getSolrPanel().setSearchString("+"+attrName+":*");
+                    searchResultsPanel.setColumnVisibility(attrName, true);
+                    searchPane.performSolrSearch(true);
+                }
+            });
+            popupMenu.add(searchItem);
         }
         
         popupMenu.show((JComponent) e.getSource(), e.getX(), e.getY());

@@ -770,10 +770,12 @@ public class SessionMgr {
     public static List<String> getSubjectKeys() {
 		List<String> subjectKeys = new ArrayList<String>();
     	Subject subject = SessionMgr.getSessionMgr().getSubject();
-    	subjectKeys.add(subject.getKey());
-    	if (subject instanceof User) {
-        	for(SubjectRelationship relation : ((User)subject).getGroupRelationships()) {
-        		subjectKeys.add(relation.getGroup().getKey());
+    	if (subject != null) {
+        	subjectKeys.add(subject.getKey());
+        	if (subject instanceof User) {
+            	for(SubjectRelationship relation : ((User)subject).getGroupRelationships()) {
+            		subjectKeys.add(relation.getGroup().getKey());
+            	}
         	}
     	}
     	return subjectKeys;

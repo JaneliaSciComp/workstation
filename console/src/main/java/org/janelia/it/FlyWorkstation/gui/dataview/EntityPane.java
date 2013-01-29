@@ -11,7 +11,6 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchConfiguration;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchResultsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
@@ -26,6 +25,7 @@ public class EntityPane extends JPanel {
     private final EntityListPane entityListPane;
     private final SearchResultsPanel searchResultsPanel;
     
+    private final SearchPane searchPanel;
     private final EntityDataPane entityParentsPane;
     private final EntityDataPane entityChildrenPane;
     
@@ -34,13 +34,13 @@ public class EntityPane extends JPanel {
     	SOLR
     }
     private ResultViewType currentView;
-    private SimpleWorker loadTask;
     
     public EntityPane(final SearchConfiguration searchConfig, final SearchPane searchPanel, 
     		final EntityDataPane entityParentsPane, final EntityDataPane entityChildrenPane) {
 
     	setLayout(new BorderLayout());
     	
+    	this.searchPanel = searchPanel;
         this.entityParentsPane = entityParentsPane;
         this.entityChildrenPane = entityChildrenPane;
 
@@ -239,7 +239,15 @@ public class EntityPane extends JPanel {
 //    	entityListPane.showEntities(entities);
 	}
 
-	protected DataviewContextMenu getPopupMenu(List<Entity> selectedEntities, String label) {
+    public SearchPane getSearchPane() {
+        return searchPanel;
+    }
+    
+	public SearchResultsPanel getSearchResultsPanel() {
+        return searchResultsPanel;
+    }
+
+    protected DataviewContextMenu getPopupMenu(List<Entity> selectedEntities, String label) {
 		// Create context menu
 		return new DataviewContextMenu(selectedEntities, label);
 	}

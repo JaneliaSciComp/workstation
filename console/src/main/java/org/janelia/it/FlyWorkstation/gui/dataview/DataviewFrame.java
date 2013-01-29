@@ -57,8 +57,6 @@ public class DataviewFrame extends JFrame {
 
         searchConfig = new SearchConfiguration();
         searchConfig.load();
-        
-        entityTypePane = new EntityTypePane();
 
         entityParentsPane = new EntityDataPane("Entity Data: Parents", true, false) {
             @Override
@@ -99,6 +97,7 @@ public class DataviewFrame extends JFrame {
     	};
 
         entityPane = new EntityPane(searchConfig, searchPane, entityParentsPane, entityChildrenPane);
+        entityTypePane = new EntityTypePane(entityPane);
 
         double frameHeight = (double) DataviewFrame.this.getPreferredSize().height - 30;
         double frameWidth = (double) DataviewFrame.this.getPreferredSize().width - 30;

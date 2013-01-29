@@ -41,7 +41,7 @@ public class SearchResults {
     }
     
     public boolean hasMoreResults() {
-    	return numFound>numLoaded;
+    	return numFound>numLoaded && !pages.get(pages.size()-1).getResults().isEmpty();
     }
     
     public List<ResultPage> getPages() {
@@ -70,7 +70,8 @@ public class SearchResults {
     }
     
     public void addPage(ResultPage resultPage) {
-    	pages.add(resultPage);
+        int numOnPage = resultPage.getSolrResults().getResultList().size();
+        pages.add(resultPage);
     	for(Entity entity : resultPage.getSolrResults().getResultList()) {
     		Long entityId = entity.getId();
     		if (allResultIds.contains(entityId)) {
@@ -79,8 +80,10 @@ public class SearchResults {
     		allResultIds.add(entityId);
     		resultIdToRowIndex.put(entityId, allResultIds.size()-1);
     	}
-    	numLoaded += resultPage.getSolrResults().getResultList().size();
+    	numLoaded += numOnPage;
     	numFound = (int)resultPage.getSolrResults().getResponse().getResults().getNumFound();
+    	log.debug("Updated numLoaded to {}",numLoaded);
+        log.debug("Updated numFound to {}",numFound);
     }
 
     public void projectResultPages() throws Exception {

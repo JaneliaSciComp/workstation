@@ -403,6 +403,8 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     
     public synchronized void performSearch(final int pageNum, final boolean showLoading, final Callable<Void> success) {
 
+        log.debug("performSearch(pageNum={},showLoading={})",pageNum,showLoading);
+        
 		final SolrQueryBuilder builder = getQueryBuilder(true);		
 		if (!builder.hasQuery()) return;
 		
@@ -425,6 +427,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 			@Override
 			protected void doStuff() throws Exception {
 				resultPage = new ResultPage(performSearch(builder, pageNum, PAGE_SIZE));
+				log.debug("Adding result page ({} results)",resultPage.getResults().size());
 	    		searchResults.addPage(resultPage);
 	    		resultsTable.setMoreResults(searchResults.hasMoreResults());
 			}
@@ -519,7 +522,7 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     	if (resultPage==null) return;
     	SolrResults pageResults = resultPage.getSolrResults();
     	long numResults = pageResults.getResponse().getResults().getNumFound();
-    	if (pageResults.getResultList().isEmpty()) numResults = 0;
+    	//if (pageResults.getResultList().isEmpty()) numResults = 0;
     	    	
     	// Show any columns for attributes that were used in the search criteria
     	for(SearchCriteria searchCriteria : paramsPanel.getSearchCriteriaList()) {
@@ -705,7 +708,8 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
     		for(final Count count : ff.getValues()) {
     			
     			final SearchAttribute attr = searchConfig.getAttributeByName(ff.getName());
-    			final String label = searchConfig.getFormattedFieldValue(count.getName(), attr.getName())+" ("+count.getCount()+")";
+    			final String name = attr==null?null:attr.getName();
+    			final String label = searchConfig.getFormattedFieldValue(count.getName(), name)+" ("+count.getCount()+")";
     			
     			final JCheckBox checkBox = new JCheckBox(new AbstractAction(label) {
 					public void actionPerformed(ActionEvent e) {
@@ -810,6 +814,11 @@ public abstract class SearchResultsPanel extends JPanel implements SearchConfigu
 
 	public DynamicTable getResultsTable() {
 		return resultsTable;
+	}
+	
+	public void setColumnVisibility(String attrName, boolean visible) {
+	    final DynamicColumn column = resultsTable.getColumn(attrName);
+	    column.setVisible(visible);
 	}
 
 	public DynamicTable getMappedResultsTable() {

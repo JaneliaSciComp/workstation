@@ -23,6 +23,7 @@ public abstract class SearchPane extends JPanel {
 	private JPanel groovyPanel;
 	private JTextArea groovyArea;
 	private JTextArea groovyExamples;
+	private JTabbedPane tabbedPane;
 	
 	public SearchPane(final SearchConfiguration searchConfig) {
 		
@@ -69,7 +70,6 @@ public abstract class SearchPane extends JPanel {
         c.anchor = GridBagConstraints.FIRST_LINE_START;
         c.weightx = c.weighty = 1.0;
         hibernatePanel.add(hibernateSearchPanel, c);
-        
         
 		solrPanel = new SearchParametersPanel() {
         	@Override
@@ -122,7 +122,7 @@ public abstract class SearchPane extends JPanel {
 		JPanel groovyTab = new JPanel(new BorderLayout());
 		groovyTab.add(groovyPanel, BorderLayout.CENTER);
 		
-		final JTabbedPane tabbedPane = new JTabbedPane();
+		tabbedPane = new JTabbedPane();
 		tabbedPane.addTab("Hibernate Search", hibernateTab);
 		tabbedPane.addTab("Solr Search", solrTab);
 		tabbedPane.addTab("Groovy Search", groovyTab);
@@ -174,6 +174,10 @@ public abstract class SearchPane extends JPanel {
 			public void componentShown(ComponentEvent e) {
 			}
 		});
+	}
+	
+	public void setTabIndex(int index) {
+	    tabbedPane.setSelectedIndex(index);
 	}
 	
 	public abstract void performHibernateSearch(String searchString);
