@@ -77,8 +77,8 @@ implements MouseListener, MouseMotionListener, ActionListener,
 
     //todo consider making these RGB value setting a preference, rather than this drill-in-setter.
     public void setRgbValues() {
-        if ( renderer.getColorMask() != null ) {
-            float[] colorMask = renderer.getColorMask();
+        if ( renderer.getRgbValues() != null ) {
+            float[] colorMask = renderer.getRgbValues();
             final JDialog rgbPopup = new JDialog();
             rgbPopup.setSize( new Dimension(RGBDIALOG_WIDTH, RGBDIALOG_HEIGHT) );
             rgbPopup.setTitle("Red, Green or Blue Channels");

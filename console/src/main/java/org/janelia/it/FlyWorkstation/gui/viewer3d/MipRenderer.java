@@ -221,7 +221,7 @@ class MipRenderer implements GLEventListener
             volumeBrick.refresh();
     }
 
-    public float[] getColorMask() {
+    public float[] getRgbValues() {
         if ( getVolumeBrick() != null ) {
             return getVolumeBrick().getColorMask();
         }
@@ -231,7 +231,7 @@ class MipRenderer implements GLEventListener
     }
 
     public void setRgbValues( float[] rgbChoices ) {
-        getVolumeBrick().setColorMask( rgbChoices[ 0 ], rgbChoices[ 1 ], rgbChoices[ 2 ] );
+        getVolumeBrick().setColorMask(rgbChoices[0], rgbChoices[1], rgbChoices[2]);
     }
 
     private VolumeBrick getVolumeBrick() {
