@@ -6,9 +6,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.GL2;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.IntBuffer;
-import java.nio.ShortBuffer;
 
 /**
  * Created with IntelliJ IDEA.
@@ -20,6 +17,9 @@ import java.nio.ShortBuffer;
  * regarding a single texture.
  */
 public class TextureMediator {
+    public static final int SIGNAL_INTERPOLATION_METHOD = GL2.GL_LINEAR; // blending across voxel edges
+    public static final int MASK_INTERPOLATION_METHOD = GL2.GL_NEAREST; // discrete cube shaped voxels
+
     public static int SIGNAL_TEXTURE_OFFSET = 0;
     public static int MASK_TEXTURE_OFFSET = 1;
 
@@ -31,10 +31,6 @@ public class TextureMediator {
 
     private TextureDataI textureData;
     private Logger logger = LoggerFactory.getLogger( TextureMediator.class );
-
-    private static final int INTERPOLATION_METHOD =
-    //        GL2.GL_LINEAR; // blending across voxel edges
-     GL2.GL_NEAREST; // discrete cube shaped voxels
 
     public static int[] genTextureIds( GL2 gl, int count ) {
         int[] rtnVal = new int[ count ];
@@ -120,11 +116,11 @@ public class TextureMediator {
         return textureData.getVoxelMicrometers();
     }
 
-    public void setupTexture( GL2 gl ) {
+    public void setupTexture( GL2 gl, int interpolationMethod ) {
         gl.glActiveTexture( textureSymbolicId );
         gl.glBindTexture( GL2.GL_TEXTURE_3D, textureName );
-        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MIN_FILTER, INTERPOLATION_METHOD);
-        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MAG_FILTER, INTERPOLATION_METHOD);
+        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MIN_FILTER, interpolationMethod);
+        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MAG_FILTER, interpolationMethod);
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_R, GL2.GL_CLAMP_TO_BORDER);
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_S, GL2.GL_CLAMP_TO_BORDER);
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_T, GL2.GL_CLAMP_TO_BORDER);
