@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
+import loci.plugins.config.SpringUtilities;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -24,7 +25,7 @@ import java.util.HashSet;
  * Date: 5/23/12
  * Time: 2:05 PM
  */
-public class RunImportDialog extends ModalDialog {
+public class RunImportDialog extends ModalDialog{
 
     private static final String INPUT_DIR = "";
     private static final String TOP_LEVEL_FOLDER_NAME = "%USER%'s Imported Data";
@@ -36,8 +37,6 @@ public class RunImportDialog extends ModalDialog {
 
     private final JTextField inputDirectoryField;
     private final JTextField topLevelFolderField;
-    private JComboBox referenceChannelComboBox;
-    private JComboBox backgroundChannelComboBox;
 
     private long taskID;
 
@@ -48,14 +47,9 @@ public class RunImportDialog extends ModalDialog {
 
         setTitle("Import");
 
-        attrPanel = new JPanel();
-        attrPanel.setLayout(new BoxLayout(attrPanel, BoxLayout.PAGE_AXIS));
-        attrPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JPanel locationPanel = new JPanel();
-        locationPanel.setLayout(new GridLayout(4,2));
-        locationPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10),
-                BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Location Settings")));
+        attrPanel = new JPanel(new SpringLayout());
+        attrPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10),
+                BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Import Information")));
 
         JLabel topLevelFolderLabel = new JLabel("Top Level Folder Name");
         topLevelFolderLabel.setToolTipText(TOOLTIP_TOP_LEVEL_FOLDER);
@@ -63,8 +57,8 @@ public class RunImportDialog extends ModalDialog {
         topLevelFolderField.setText(filter(TOP_LEVEL_FOLDER_NAME));
         topLevelFolderField.setToolTipText(TOOLTIP_TOP_LEVEL_FOLDER);
         topLevelFolderLabel.setLabelFor(topLevelFolderField);
-        locationPanel.add(topLevelFolderLabel);
-        locationPanel.add(topLevelFolderField);
+        attrPanel.add(topLevelFolderLabel);
+        attrPanel.add(topLevelFolderField);
 
         JLabel inputDirectoryLabel = new JLabel("Input Directory (Linux mounted)");
         inputDirectoryLabel.setToolTipText(TOOLTIP_INPUT_DIR);
@@ -72,28 +66,11 @@ public class RunImportDialog extends ModalDialog {
         inputDirectoryField.setText(filter(INPUT_DIR));
         inputDirectoryField.setToolTipText(TOOLTIP_INPUT_DIR);
         inputDirectoryLabel.setLabelFor(inputDirectoryField);
-        locationPanel.add(inputDirectoryLabel);
-        locationPanel.add(inputDirectoryField);
-        locationPanel.setPreferredSize(new Dimension(500,150));
+        attrPanel.add(inputDirectoryLabel);
+        attrPanel.add(inputDirectoryField);
 
-        JPanel imageAttPanel = new JPanel();
-        imageAttPanel.setLayout(new GridLayout(2, 2));
-        imageAttPanel.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10),
-                BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), "Optional Image Attributes")));
-        String[] channelRange = new String[]{"Not Applicable", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"};
-        JLabel refLabel = new JLabel("Reference Channel");
-        JLabel backgroundLabel = new JLabel("Background Channel");
-        referenceChannelComboBox = new JComboBox(channelRange);
-        backgroundChannelComboBox= new JComboBox(channelRange);
-
-        imageAttPanel.add(refLabel);
-        imageAttPanel.add(referenceChannelComboBox);
-        imageAttPanel.add(backgroundLabel);
-        imageAttPanel.add(backgroundChannelComboBox);
-        imageAttPanel.setPreferredSize(new Dimension(500,100));
-
-        attrPanel.add(locationPanel);
-        attrPanel.add(imageAttPanel);
+        add(attrPanel, BorderLayout.CENTER);
+        SpringUtilities.makeCompactGrid(attrPanel, attrPanel.getComponentCount()/2, 2, 6, 6, 6, 6);
 
         JButton okButton = new JButton("Import");
         okButton.setToolTipText("Import a directory or file");
@@ -120,7 +97,6 @@ public class RunImportDialog extends ModalDialog {
         buttonPane.add(okButton);
         buttonPane.add(cancelButton);
 
-        add(attrPanel, BorderLayout.CENTER);
         add(buttonPane, BorderLayout.SOUTH);
 
     }
@@ -168,11 +144,13 @@ public class RunImportDialog extends ModalDialog {
     private void startImport(String path, String topLevelFolderName) {
 
         try {
+            String process;
+            Task task;
             String owner = SessionMgr.getSubjectKey();
-            String process = "FileTreeLoader";
-            Task task = new FileTreeLoaderPipelineTask(new HashSet<Node>(),
-                    owner, new ArrayList<Event>(), new HashSet<TaskParameter>(), path, topLevelFolderName,
-                    referenceChannelComboBox.getSelectedItem().toString(), backgroundChannelComboBox.getSelectedItem().toString());
+
+            process = "FileTreeLoader";
+            task = new FileTreeLoaderPipelineTask(new HashSet<Node>(),
+                    owner, new ArrayList<Event>(), new HashSet<TaskParameter>(), path, topLevelFolderName);
             task.setJobName("Import Files Task");
             task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
             taskID = task.getObjectId();
