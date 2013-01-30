@@ -31,6 +31,7 @@ public class ToolConfigurationDialog extends JDialog {
         getContentPane().setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
         setSize(400, 400);
         setModal(true);
+        setTitle("Tools");
         model = new DefaultTableModel(){
                 @Override
                 public boolean isCellEditable(int row, int column) {
