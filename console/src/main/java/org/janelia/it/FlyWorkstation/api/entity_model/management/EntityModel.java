@@ -412,6 +412,9 @@ public class EntityModel {
             if (!EntityUtils.areLoaded(retEntity.getEntityData())) {
             	refreshChildren(retEntity);
             }
+            else {
+                notifyEntityChildrenLoaded(entity);
+            }
         }
         return retEntity;
     }
