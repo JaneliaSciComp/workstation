@@ -1,10 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs.search;
 
-import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
-
 import org.apache.solr.common.SolrDocument;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchAttribute.DataStore;
@@ -18,6 +13,11 @@ import org.janelia.it.jacs.compute.api.support.SolrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityAttribute;
 import org.janelia.it.jacs.shared.utils.StringUtils;
+
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * The configuration of search attributes available for query and display.
@@ -191,7 +191,7 @@ public class SearchConfiguration {
     /**
      * Return the value of the specified column for the given object.
      * @param userObject
-     * @param column
+     * @param fieldName
      * @return
      */
 	public String getValue(Object userObject, String fieldName) {
