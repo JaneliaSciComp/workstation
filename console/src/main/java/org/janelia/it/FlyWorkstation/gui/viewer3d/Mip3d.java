@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.List;
+import java.util.Map;
 
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
@@ -12,6 +13,8 @@ import javax.swing.*;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ChannelSelectionPanel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ColorMapTextureBean;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +54,7 @@ implements MouseListener, MouseMotionListener, ActionListener,
 	public JPopupMenu popupMenu;
     private boolean clearOnLoad = true;
     private VolumeMaskBuilder volumeMaskBuilder;
+    private Map<Integer,byte[]> neuronNumToRGB;
 
 	public enum InteractionMode {
 		ROTATE,
@@ -76,7 +80,7 @@ implements MouseListener, MouseMotionListener, ActionListener,
     }
 
     //todo consider making these RGB value setting a preference, rather than this drill-in-setter.
-    public void setRgbValues() {
+    public void setRgbChannelValues() {
         if ( renderer.getRgbValues() != null ) {
             float[] colorMask = renderer.getRgbValues();
             final JDialog rgbPopup = new JDialog();
@@ -149,7 +153,7 @@ implements MouseListener, MouseMotionListener, ActionListener,
     public void setMaskFiles(List<String> maskFiles, FileResolver resolver) {
 
         // Build the masking texture info.
-        if (maskFiles != null) {
+        if (maskFiles != null  &&  maskFiles.size() > 0) {
             VolumeMaskBuilder builder = new VolumeMaskBuilder();
             for ( String maskFile: maskFiles ) {
                 VolumeLoader volumeLoader = new VolumeLoader( resolver );
@@ -159,6 +163,15 @@ implements MouseListener, MouseMotionListener, ActionListener,
             volumeMaskBuilder = builder;
         }
 
+    }
+
+    /**
+     * Sets the info needed for the shader to colorize the otherwise luminance-only masks.
+     *
+     * @param neuronNumToRGB mapping: id of neuron mask to RGB output.
+     */
+    public void setMaskColorMappings(Map<Integer,byte[]> neuronNumToRGB) {
+        this.neuronNumToRGB = neuronNumToRGB;
     }
 
 	public boolean loadVolume(String fileName, FileResolver resolver) {
@@ -171,6 +184,11 @@ implements MouseListener, MouseMotionListener, ActionListener,
 			volumeLoader.populateVolumeAcceptor(brick);
             if ( volumeMaskBuilder != null ) {
                 brick.setMaskTextureData( volumeMaskBuilder.getCombinedTextureData() );
+            }
+            if ( neuronNumToRGB != null ) {
+                ColorMapTextureBean colorMapTextureData = new ColorMapTextureBean();
+                colorMapTextureData.setMapping( neuronNumToRGB );
+                brick.setColorMapTextureData( colorMapTextureData );
             }
 			renderer.addActor(brick);
 			renderer.resetView();

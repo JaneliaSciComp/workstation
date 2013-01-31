@@ -16,6 +16,7 @@ import java.nio.IntBuffer;
 public interface VolumeDataAcceptor {
     public enum TextureColorSpace {
         COLOR_SPACE_LINEAR, // R,G,B values are proportional to photons collected
+        COLOR_SPACE_RGB, // R,G,B valuesonly.  No alpha.  Needed for id-to-color mapping.
         COLOR_SPACE_SRGB // R,G,B values are already gamma corrected for display on computer monitors
     };
 

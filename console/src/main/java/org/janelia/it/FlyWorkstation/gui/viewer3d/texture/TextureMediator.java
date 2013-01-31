@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.GL2;
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 
 /**
  * Created with IntelliJ IDEA.
@@ -19,9 +20,11 @@ import java.nio.ByteBuffer;
 public class TextureMediator {
     public static final int SIGNAL_INTERPOLATION_METHOD = GL2.GL_LINEAR; // blending across voxel edges
     public static final int MASK_INTERPOLATION_METHOD = GL2.GL_NEAREST; // discrete cube shaped voxels
+    public static final int COLOR_MAP_INTERPOLATION_METHOD = GL2.GL_NEAREST; // discrete cube shaped voxels
 
     public static int SIGNAL_TEXTURE_OFFSET = 0;
     public static int MASK_TEXTURE_OFFSET = 1;
+    public static int COLOR_MAP_TEXTURE_OFFSET = 2;
 
     private static int s_textureCount = 0;  // Optional: an assumed sequence of textures is made.
 
@@ -60,9 +63,15 @@ public class TextureMediator {
 
     public void uploadTexture( GL2 gl ) {
         ByteBuffer data = textureData.getTextureData();
+        //System.out.println( "Loading texture data of capacity: " + data.capacity() );
         if ( data != null ) {
 
             data.rewind();
+
+            int maxCoord = getMaxTexCoord(gl);
+            if ( textureData.getSx() > maxCoord  || textureData.getSy() > maxCoord || textureData.getSz() > maxCoord ) {
+                logger.warn("Exeeding max coord in one or more size of texture data.  Results unpredictable.");
+            }
 
             gl.glActiveTexture( textureSymbolicId );
             gl.glEnable( GL2.GL_TEXTURE_3D );
@@ -80,6 +89,13 @@ public class TextureMediator {
                     getVoxelComponentType(), // voxel component type=packed RGBA values(GLenum type)
                     data
             );
+
+            int errorNum = gl.glGetError();
+            if ( errorNum != 0 ) {
+                logger.error(
+                        "Failure " + errorNum + " during texture upload: " + textureSymbolicId + " / " + textureName
+                );
+            }
         }
     }
 
@@ -87,8 +103,8 @@ public class TextureMediator {
         return textureOffset;
     }
 
-    public double[] textureCoordinateFromXyz( double[] xyz ) {
-        double[] tc = {xyz[0], xyz[1], xyz[2]}; // micrometers, origin at center
+    public double[] textureCoordFromVoxelCoord(double[] voxelCoord) {
+        double[] tc = {voxelCoord[0], voxelCoord[1], voxelCoord[2]}; // micrometers, origin at center
         int[] voxels = { textureData.getSx(), textureData.getSy(), textureData.getSz() };
         Double[] volumeMicrometers = textureData.getVolumeMicrometers();
         Double[] voxelMicrometers = textureData.getVoxelMicrometers();
@@ -162,6 +178,14 @@ public class TextureMediator {
         // GL2.GL_UNSIGNED_SHORT, // Stack Trace for 143/266
     }
 
+    private int getMaxTexCoord(GL2 gl) {
+        IntBuffer rtnBuf = IntBuffer.allocate( 1 );
+        rtnBuf.rewind();
+        gl.glGetIntegerv(GL2.GL_MAX_TEXTURE_SIZE, rtnBuf);
+        int[] rtnVals = rtnBuf.array();
+        return rtnVals[ 0 ];
+    }
+
     private int getInternalFormat() {
         int internalFormat = GL2.GL_RGBA;
         if (textureData.getColorSpace() == VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_SRGB)
@@ -174,6 +198,9 @@ public class TextureMediator {
                 internalFormat = GL2.GL_LUMINANCE16;
             }
         }
+
+        if (textureData.getColorSpace() == VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_RGB)
+            internalFormat = GL2.GL_RGB;
 
         logger.info("Luminance format num = {}", GL2.GL_LUMINANCE);
         logger.info("Alpha8 format num = {}", GL2.GL_SRGB8_ALPHA8);

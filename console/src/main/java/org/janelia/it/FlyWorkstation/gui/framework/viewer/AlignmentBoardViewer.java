@@ -1,11 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.BorderLayout;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 import javax.swing.JLabel;
@@ -20,9 +16,8 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.AlignmentBoardDataBuilder;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +31,7 @@ import org.slf4j.LoggerFactory;
  */
 public class AlignmentBoardViewer extends Viewer {
 
+    private final AlignmentBoardDataBuilder alignmentBoardDataBuilder = new AlignmentBoardDataBuilder();
     private Entity alignmentBoard;
     private RootedEntity albRootedEntity;
 
@@ -73,6 +69,10 @@ public class AlignmentBoardViewer extends Viewer {
         }
         loadWorker = new ABLoadWorker();
         refresh();
+
+        // Listen for further changes, so can refresh again later.
+        modelMgrObserver = new ModelMgrListener( this, alignmentBoard );
+        ModelMgr.getModelMgr().addModelMgrObserver( modelMgrObserver );
     }
 
     @Override
@@ -131,56 +131,18 @@ public class AlignmentBoardViewer extends Viewer {
 
             mip3d.refresh();
 
-            // Here, should load volumes, for all the different items given.
-
-            // First how to find the items?
-            List<Entity> displayableList = new ArrayList<Entity>();
-            try {
-                recursivelyFindDisplayableChildren( displayableList, alignmentBoard);
-            } catch ( Exception ex ) {
-                SessionMgr.getSessionMgr().handleException(ex);
-            }
-
-            // Also get the mask items.
-            List<Entity> consolidatedLabelsList = new ArrayList<Entity>();
-            try {
-                recursivelyFindConsolidatedLabels( consolidatedLabelsList, alignmentBoard );
-            } catch ( Exception ex ) {
-                SessionMgr.getSessionMgr().handleException( ex );
-            }
-
             mip3d.setClearOnLoad( true );
 
-            // Get all the signal filenames.  These are to be masked-by the mask filenames' contents.
-            final List<String> signalFilenames = new ArrayList<String>();
-            final List<String> maskFilenames = new ArrayList<String>();
-
-            EntityFilenameFetcher filenameFetcher = new EntityFilenameFetcher();
-            for ( Entity displayable: displayableList ) {
-                // Find this displayable entity's file name of interest.
-                String typeName = displayable.getEntityType().getName();
-                String entityConstantFileType = filenameFetcher.getEntityConstantFileType( typeName );
-
-                String filename = filenameFetcher.fetchFilename( displayable, entityConstantFileType );
-                if ( filename != null ) {
-                    signalFilenames.add( filename );
-                }
-
-            }
-
-            for ( Entity consolidatedLabel: consolidatedLabelsList ) {
-                String filename = EntityUtils.getFilePath( consolidatedLabel );
-                if ( filename != null ) {
-                    if ( matchesSomeSignal( signalFilenames, filename ) ) {
-                        maskFilenames.add( filename );
-                    }
-                }
-            }
+            // Here, should load volumes, for all the different items given.
 
             // Activate the layers panel for controlling visibility. This code might have to be moved elsewhere.
             LayersPanel layersPanel = SessionMgr.getBrowser().getLayersPanel();
             layersPanel.showEntities(alignmentBoard.getOrderedChildren());
             SessionMgr.getBrowser().selectRightPanel(layersPanel);
+
+            alignmentBoardDataBuilder.setAlignmentBoard( alignmentBoard );
+            List<String> signalFilenames = alignmentBoardDataBuilder.getSignalFilenames();
+            List<String> maskFilenames = alignmentBoardDataBuilder.getMaskFilenames();
 
             loadWorker.setFilenames( signalFilenames, maskFilenames );
             loadWorker.execute();
@@ -192,75 +154,6 @@ public class AlignmentBoardViewer extends Viewer {
     @Override
     public void totalRefresh() {
         refresh();
-    }
-
-    /**
-     * This may/may not be temporary.  It makes sure that the base path of th mask filename matches one from
-     * a signal filename, to avoid attempting to load things that are not compatible.
-     */
-    private boolean matchesSomeSignal( List<String> signalFileNames, String maskFilename ) {
-        boolean rtnVal = false;
-        File maskFile = new File( maskFilename );
-        File baseLoc = maskFile.getParentFile();
-        String maskParentPath = baseLoc.getPath();
-
-        for ( String signalFileName: signalFileNames ) {
-            File signalFileLoc = new File( signalFileName ).getParentFile();
-            String signalParentPath = signalFileLoc.getPath();
-
-            if ( signalParentPath.startsWith( maskParentPath ) ) {
-                rtnVal = true;
-                break;
-            }
-        }
-
-        return rtnVal;
-    }
-
-    private void recursivelyFindDisplayableChildren(List<Entity> displayableList, Entity entity) throws Exception {
-        entity = ModelMgr.getModelMgr().loadLazyEntity(entity, false);
-        logger.debug("Recursing into " + entity.getName());
-        String entityTypeName = entity.getEntityType().getName();
-        if (
-                EntityConstants.TYPE_CURATED_NEURON.equals(entityTypeName)
-                        ||
-                        EntityConstants.TYPE_SAMPLE.equals(entityTypeName)
-//                        ||
-//                        EntityConstants.TYPE_NEURON_FRAGMENT.equals(entityTypeName)
-//                        ||
-//                EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION.equals(entityTypeName)
-                ) {
-            logger.info("Adding a child of type " + entityTypeName + ", named " + entity.getName() );
-            displayableList.add(entity);
-        }
-
-        if ( entity.hasChildren() ) {
-            for (Entity childEntity: entity.getChildren()) {
-                recursivelyFindDisplayableChildren(displayableList, childEntity);
-            }
-        }
-    }
-
-    private void recursivelyFindConsolidatedLabels(List<Entity> consLabelList, Entity entity) throws Exception {
-        entity = ModelMgr.getModelMgr().loadLazyEntity(entity, false);
-        logger.debug("Recursing into " + entity.getName());
-        String entityTypeName = entity.getEntityType().getName();
-        // Finding the right kind of supporting data.
-        if (
-             entity.getName().equals("ConsolidatedLabel.v3dpbd" )
-           ) {
-            logger.info("Adding a child of type " + entityTypeName + ", named " + entity.getName() );
-            // This is that kind of an entity!
-            consLabelList.add(entity);
-        }
-        else {
-            //  We assume supporting data does not HAVE supporting data.
-            if ( entity.hasChildren() ) {
-                for (Entity childEntity: entity.getChildren()) {
-                    recursivelyFindConsolidatedLabels(consLabelList, childEntity);
-                }
-            }
-        }
     }
 
     //------------------------------Inner Classes
@@ -302,6 +195,17 @@ public class AlignmentBoardViewer extends Viewer {
 
             FileResolver resolver = new CacheFileResolver();
             mip3d.setMaskFiles(maskFilenames, resolver);
+
+            // *** TEMP *** this sets up a test of mapping neuron fragment number vs color.
+            Map<Integer,byte[]> maskMappings = new HashMap<Integer,byte[]>();
+//for (int i=0; i < 65535; i++) {
+//    maskMappings.put(i, new byte[]{ (byte)0xff, (byte)0, (byte)0xff });
+//}
+
+            maskMappings.put( 15, new byte[] { (byte)0x00, (byte)0x00, (byte)0xff } );
+            maskMappings.put( 22, new byte[] { (byte)0x00, (byte)0xff, (byte)0x00 } );
+            maskMappings.put( 41, new byte[] { (byte)0xff, (byte)0x00, (byte)0x00 } );
+            mip3d.setMaskColorMappings( maskMappings );
 
             for ( String signalFilename: signalFilenames ) {
                 mip3d.loadVolume( signalFilename, resolver);

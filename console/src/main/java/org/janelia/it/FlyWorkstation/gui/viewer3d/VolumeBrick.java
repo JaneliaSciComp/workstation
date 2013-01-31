@@ -23,6 +23,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     private TextureMediator signalTextureMediator;
     private TextureMediator maskTextureMediator;
+    private TextureMediator colorMapTextureMediator;
     private List<TextureMediator> textureMediators = new ArrayList<TextureMediator>();
 
     // Vary these parameters to taste
@@ -99,6 +100,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 		if (bUseShader) {
             if ( maskTextureMediator != null  &&  bMaskTextureNeedsUpload ) {
                 uploadMaskingTexture(gl);
+                uploadColorMapTexture(gl);
             }
 
             try {
@@ -141,8 +143,8 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         gl.glEnable(GL2.GL_TEXTURE_3D);
 
         setupSignalTexture(gl);
-        if ( maskTextureMediator != null )
-            setupMaskingTexture(gl);
+        setupMaskingTexture(gl);
+        setupColorMapTexture(gl);
 
         // set blending to enable transparent voxels
         if (renderMethod == RenderMethod.ALPHA_BLENDING) {
@@ -256,10 +258,10 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 			int a = a1.index();
 			p00[a] = p01[a] = p10[a] = p11[a] = x;
 			// Compute texture coordinates
-			double[] t00 = signalTextureMediator.textureCoordinateFromXyz(p00);
-			double[] t01 = signalTextureMediator.textureCoordinateFromXyz(p01);
-			double[] t10 = signalTextureMediator.textureCoordinateFromXyz(p10);
-			double[] t11 = signalTextureMediator.textureCoordinateFromXyz(p11);
+			double[] t00 = signalTextureMediator.textureCoordFromVoxelCoord( p00 );
+			double[] t01 = signalTextureMediator.textureCoordFromVoxelCoord( p01 );
+			double[] t10 = signalTextureMediator.textureCoordFromVoxelCoord( p10 );
+			double[] t11 = signalTextureMediator.textureCoordFromVoxelCoord( p11 );
 			// color from black(back) to white(front) for debugging.
 			// double c = xi / (double)sx;
 			// gl.glColor3d(c, c, c);
@@ -381,6 +383,16 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         bMaskTextureNeedsUpload = true;
     }
 
+    /** Use this to feed color mapping between neuron number in mask, and color desired. */
+    public void setColorMapTextureData( TextureDataI textureData ) {
+        if ( colorMapTextureMediator == null ) {
+            colorMapTextureMediator = new TextureMediator( TextureMediator.COLOR_MAP_TEXTURE_OFFSET );
+            textureMediators.add( colorMapTextureMediator );
+        }
+        colorMapTextureMediator.setTextureData( textureData );
+        bMaskTextureNeedsUpload = true;  // Tying this to the mask texture data.  It makes not sense sans mask.
+    }
+
     //---------------------------------IMPLEMENT VolumeDataAcceptor
     @Override
     public void setTextureData(TextureDataI textureData) {
@@ -453,6 +465,11 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         bMaskTextureNeedsUpload = false;
     }
 
+    private void uploadColorMapTexture(GL2 gl) {
+        if ( colorMapTextureMediator != null )
+            colorMapTextureMediator.uploadTexture( gl );
+    }
+
     private void setTextureCoordinates( GL2 gl, double tX, double tY, double tZ ) {
         for ( TextureMediator mediator: textureMediators ) {
             mediator.setTextureCoordinates( gl, tX, tY, tZ );
@@ -471,6 +488,11 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         }
     }
 
+    private void setupColorMapTexture(GL2 gl) {
+        if ( colorMapTextureMediator != null ) {
+            colorMapTextureMediator.setupTexture( gl, TextureMediator.COLOR_MAP_INTERPOLATION_METHOD );
+        }
+    }
 //    private void setupTexture(GL2 gl, int textureId) {
 //        gl.glActiveTexture( texIdToSymbolic.get( textureId ) );
 //        gl.glBindTexture(GL2.GL_TEXTURE_3D, textureId);

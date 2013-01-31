@@ -88,7 +88,7 @@ public class Hud extends ModalDialog {
 
     /** Filters RGB characteristics of rendering in 3D. */
     public void setRgbValues() {
-        mip3d.setRgbValues();
+        mip3d.setRgbChannelValues();
     }
 
     /**
