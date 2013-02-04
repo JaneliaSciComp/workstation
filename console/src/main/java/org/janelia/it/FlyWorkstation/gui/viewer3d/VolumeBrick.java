@@ -269,14 +269,18 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
             // (somehow GL_QUADS never works correctly for me)
             gl.glBegin(GL2.GL_TRIANGLE_STRIP);
 
+            int errNum = 0;
             setTextureCoordinates( gl, t00[0], t00[1], t00[2] );
             gl.glVertex3d(p00[0], p00[1], p00[2]);
+            errNum += gl.glGetError();
 
             setTextureCoordinates( gl, t10[0], t10[1], t10[2] );
             gl.glVertex3d(p10[0], p10[1], p10[2]);
+            errNum += gl.glGetError();
 
             setTextureCoordinates( gl, t01[0], t01[1], t01[2] );
             gl.glVertex3d(p01[0], p01[1], p01[2]);
+            errNum += gl.glGetError();
 
             setTextureCoordinates( gl, t11[0], t11[1], t11[2] );
             gl.glVertex3d(p11[0], p11[1], p11[2]);
@@ -490,6 +494,8 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     private void setupColorMapTexture(GL2 gl) {
         if ( colorMapTextureMediator != null ) {
+            //System.out.println("-------------Who is calling this so often?");
+            //new Exception().printStackTrace();
             colorMapTextureMediator.setupTexture( gl, TextureMediator.COLOR_MAP_INTERPOLATION_METHOD );
         }
     }

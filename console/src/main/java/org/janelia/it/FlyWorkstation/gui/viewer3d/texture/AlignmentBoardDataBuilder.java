@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.EntityFilenameFetcher;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.FragmentBean;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.tasks.Event;
@@ -16,9 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 /**
  * This is where the data are pulled together for the alignment board viewer.
@@ -28,52 +27,25 @@ public class AlignmentBoardDataBuilder implements Serializable {
 
     private List<String> signalFilenames;
     private List<String> maskFilenames;
+    private List<FragmentBean> fragments;
+
+    private boolean sampleAncestorEncountered;
 
     public AlignmentBoardDataBuilder() {
     }
 
     public void setAlignmentBoard( Entity alignmentBoard ) {
-        // First how to find the items?
-        List<Entity> displayableList = new ArrayList<Entity>();
-        try {
-            recursivelyFindDisplayableChildren( displayableList, alignmentBoard );
-        } catch ( Exception ex ) {
-            SessionMgr.getSessionMgr().handleException(ex);
-        }
+        fragments = new ArrayList<FragmentBean>();
+        Map<Entity,List<Entity>> ancestorToFragments = new HashMap<Entity,List<Entity>>();
+        Map<Entity,Entity> labelToPipelineResult = new HashMap<Entity,Entity>();
 
-        // Also get the mask items.
-        List<Entity> consolidatedLabelsList = new ArrayList<Entity>();
-        try {
-            recursivelyFindConsolidatedLabels( consolidatedLabelsList, alignmentBoard );
-        } catch ( Exception ex ) {
-            SessionMgr.getSessionMgr().handleException( ex );
-        }
+        List<Entity> displayableList = getDisplayableList( alignmentBoard );
+        Set<Entity> baseEntities = getMaskContainerAncestors(ancestorToFragments, displayableList);
+        List<Entity> consolidatedLabelsList = getMaskLabelEntities(labelToPipelineResult, baseEntities);
+        Set<Entity> sampleEntities = getSampleEntities( displayableList );
 
-        // Get all the signal filenames.  These are to be masked-by the mask filenames' contents.
-        signalFilenames = new ArrayList<String>();
-        maskFilenames = new ArrayList<String>();
-
-        EntityFilenameFetcher filenameFetcher = new EntityFilenameFetcher();
-        for ( Entity displayable: displayableList ) {
-            // Find this displayable entity's file name of interest.
-            String typeName = displayable.getEntityType().getName();
-            String entityConstantFileType = filenameFetcher.getEntityConstantFileType( typeName );
-
-            String filename = filenameFetcher.fetchFilename( displayable, entityConstantFileType );
-            if ( filename != null ) {
-                signalFilenames.add( filename );
-            }
-
-        }
-
-        for ( Entity consolidatedLabel: consolidatedLabelsList ) {
-            String filename = EntityUtils.getFilePath(consolidatedLabel);
-            if ( filename != null ) {
-                if ( matchesSomeSignal( signalFilenames, filename ) ) {
-                    maskFilenames.add(ensureMaskFile(filename));
-                }
-            }
-        }
+        findSignalFilenames(sampleEntities);
+        findMaskFilenames(ancestorToFragments, labelToPipelineResult, consolidatedLabelsList);
 
     }
 
@@ -83,6 +55,153 @@ public class AlignmentBoardDataBuilder implements Serializable {
 
     public List<String> getMaskFilenames() {
         return maskFilenames;
+    }
+
+    public List<FragmentBean> getFragments() {
+        return fragments;
+    }
+
+    private Set<Entity> getSampleEntities(List<Entity> displayableList) {
+        // Get all the signal filenames.  These are to be masked-by the mask filenames' contents.
+        Set<Entity> sampleEntities = new HashSet<Entity>();
+        for ( Entity displayable: displayableList ) {
+            try {
+                sampleEntities.add(findSampleAncestor(displayable));
+            } catch ( Exception ex ) {
+                SessionMgr.getSessionMgr().handleException( ex );
+            }
+        }
+        return sampleEntities;
+    }
+
+    private List<Entity> getMaskLabelEntities(Map<Entity, Entity> labelToPipelineResult, Set<Entity> baseEntities) {
+        // Get the mask items.
+        List<Entity> consolidatedLabelsList = new ArrayList<Entity>();
+        try {
+            List<Entity> nextLabelList = new ArrayList<Entity>();
+            for ( Entity baseEntity: baseEntities ) {
+                if ( baseEntity != null ) {
+                    recursivelyFindConsolidatedLabels( nextLabelList, baseEntity );
+                    consolidatedLabelsList.addAll( nextLabelList );
+                    for ( Entity label: nextLabelList ) {
+                        labelToPipelineResult.put(label, baseEntity);
+                    }
+                }
+                else {
+                    logger.warn( "Found no sample for neuron fragment {}.  Not displaying.", baseEntity.getId() );
+                }
+            }
+        } catch ( Exception ex ) {
+            SessionMgr.getSessionMgr().handleException( ex );
+        }
+        return consolidatedLabelsList;
+    }
+
+    private List<Entity> getDisplayableList(Entity alignmentBoard) {
+        // Find all interesting entities on the alignment board.
+        List<Entity> displayableList = new ArrayList<Entity>();
+        try {
+            sampleAncestorEncountered = false;
+            recursivelyFindDisplayableChildren( displayableList, alignmentBoard );
+        } catch ( Exception ex ) {
+            SessionMgr.getSessionMgr().handleException(ex);
+        }
+        return displayableList;
+    }
+
+    private Set<Entity> getMaskContainerAncestors(Map<Entity, List<Entity>> ancestorToFragments, List<Entity> displayableList) {
+        // Resolve interesting entities to usable ancestors.
+        Set<Entity> baseEntities = new HashSet<Entity>();
+        try {
+            for ( Entity displayable: displayableList ) {
+                Entity baseEntity = findPipelineResultAncestor(displayable);
+                if ( displayable.getEntityType().getName().equals( EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
+                    List<Entity> pipelineResultFragments = ancestorToFragments.get( baseEntity );
+                    if ( pipelineResultFragments == null ) {
+                        pipelineResultFragments = new ArrayList<Entity>();
+                        ancestorToFragments.put(baseEntity, pipelineResultFragments);
+                    }
+                    pipelineResultFragments.add(displayable);
+                }
+                baseEntities.add(baseEntity);
+            }
+        } catch ( Exception ex ) {
+            SessionMgr.getSessionMgr().handleException( ex );
+        }
+        return baseEntities;
+    }
+
+    private Entity findSampleAncestor(Entity displayableChild) throws Exception {
+        return findTypedAncestor( displayableChild, EntityConstants.TYPE_SAMPLE );
+    }
+
+    private Entity findPipelineResultAncestor(Entity displayableChild) throws Exception {
+        return findTypedAncestor( displayableChild, EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT );
+    }
+
+    private Entity findTypedAncestor(Entity displayableChild, String ancestorEntityTypeConstant) throws Exception {
+        Entity baseEntity;
+        if ( displayableChild.getEntityType().getName().equals( EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
+            baseEntity =
+                    ModelMgr.getModelMgr().getAncestorWithType( displayableChild, ancestorEntityTypeConstant);
+        }
+        else {
+            baseEntity = displayableChild;
+        }
+        if ( baseEntity != null )
+            logger.info( "Displayable from base entity of {}: {}.", baseEntity.getName(), baseEntity.getId() );
+        return baseEntity;
+    }
+
+    private void findMaskFilenames(Map<Entity, List<Entity>> sampleToFragments, Map<Entity, Entity> labelToPipelineResult, List<Entity> consolidatedLabelsList) {
+        maskFilenames = new ArrayList<String>();
+        int fragmentOffset = 1;
+        for ( Entity consolidatedLabel: consolidatedLabelsList ) {
+            String filename = EntityUtils.getFilePath(consolidatedLabel);
+            if ( filename != null ) {
+//                if ( matchesSomeSignal( signalFilenames, filename ) ) {
+                    String finalMaskFile = ensureMaskFile(filename);
+                    maskFilenames.add( finalMaskFile );
+
+                    // Get any fragments associated. Create fragment bean.
+                    Entity sample = labelToPipelineResult.get( consolidatedLabel );
+                    List<Entity> sampleFragments = sampleToFragments.get( sample );
+                    if ( sampleFragments != null ) {
+                        for ( Entity fragment: sampleFragments ) {
+                            FragmentBean bean = new FragmentBean();
+                            bean.setLabelFile( finalMaskFile );
+                            bean.setFragment( fragment );
+                            bean.setTranslatedNum( fragmentOffset++ );
+
+                            fragments.add( bean );
+                        }
+                    }
+                    sampleToFragments.remove( sample );
+                }
+//            }
+        }
+    }
+
+    private void findSignalFilenames(Set<Entity> baseEntities) {
+        signalFilenames = new ArrayList<String>();
+        try {
+            EntityFilenameFetcher filenameFetcher = new EntityFilenameFetcher();
+
+            for ( Entity baseEntity: baseEntities ) {
+
+                // Find this entity's file name of interest.
+                String typeName = baseEntity.getEntityType().getName();
+                String entityConstantFileType = filenameFetcher.getEntityConstantFileType( typeName );
+
+                String filename = filenameFetcher.fetchFilename( baseEntity, entityConstantFileType );
+                if ( filename != null ) {
+                    signalFilenames.add( filename );
+                }
+
+            }
+        } catch ( Exception ex ) {
+            SessionMgr.getSessionMgr().handleException( ex );
+        }
     }
 
     /**
@@ -144,15 +263,22 @@ public class AlignmentBoardDataBuilder implements Serializable {
         entity = ModelMgr.getModelMgr().loadLazyEntity(entity, false);
         logger.debug("Recursing into " + entity.getName());
         String entityTypeName = entity.getEntityType().getName();
-        if (
-                EntityConstants.TYPE_CURATED_NEURON.equals(entityTypeName)
-                        ||
-                        EntityConstants.TYPE_SAMPLE.equals(entityTypeName)
-//                        ||
-//                        EntityConstants.TYPE_NEURON_FRAGMENT.equals(entityTypeName)
-//                        ||
-//                EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION.equals(entityTypeName)
-                ) {
+
+        //                EntityConstants.TYPE_CURATED_NEURON.equals(entityTypeName)
+        //                EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION.equals(entityTypeName)
+
+        boolean useThisEntity = false;
+        if ( EntityConstants.TYPE_SAMPLE.equals(entityTypeName) ) {
+            sampleAncestorEncountered = true;
+            useThisEntity = true;
+        }
+
+        if ( EntityConstants.TYPE_NEURON_FRAGMENT.equals(entityTypeName)  &&  sampleAncestorEncountered == false ) {
+            useThisEntity = true;
+//            fragments.add( entity );
+        }
+
+        if ( useThisEntity ) {
             logger.info("Adding a child of type " + entityTypeName + ", named " + entity.getName() );
             displayableList.add(entity);
         }

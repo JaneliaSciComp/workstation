@@ -73,6 +73,15 @@ public class TextureMediator {
                 logger.warn("Exeeding max coord in one or more size of texture data.  Results unpredictable.");
             }
 
+            if ( textureData.getSx() * textureData.getSy() * textureData.getSz() * textureData.getPixelByteCount()
+                != data.remaining() ) {
+                logger.warn( "Invalid remainder vs texture data dimsensions.  Sx=" + textureData.getSx() +
+                             " Sy=" + textureData.getSy() + " Sz=" + textureData.getSz() + ";  total remaining is " +
+                             data.remaining() + " " + textureData.getFilename()
+                );
+                data.rewind();
+            }
+
             gl.glActiveTexture( textureSymbolicId );
             gl.glEnable( GL2.GL_TEXTURE_3D );
 
@@ -135,11 +144,21 @@ public class TextureMediator {
     public void setupTexture( GL2 gl, int interpolationMethod ) {
         gl.glActiveTexture( textureSymbolicId );
         gl.glBindTexture( GL2.GL_TEXTURE_3D, textureName );
+        int errorNum = gl.glGetError();
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MIN_FILTER, interpolationMethod);
+        errorNum += gl.glGetError();
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MAG_FILTER, interpolationMethod);
+        errorNum += gl.glGetError();
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_R, GL2.GL_CLAMP_TO_BORDER);
+        errorNum += gl.glGetError();
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_S, GL2.GL_CLAMP_TO_BORDER);
+        errorNum += gl.glGetError();
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_T, GL2.GL_CLAMP_TO_BORDER);
+        errorNum += gl.glGetError();
+
+        if ( errorNum > 0 ) {
+            logger.error( "Error {} has occurred during setup of texture {}.", errorNum, textureName );
+        }
     }
 
     public void setTextureData(TextureDataI textureData) {

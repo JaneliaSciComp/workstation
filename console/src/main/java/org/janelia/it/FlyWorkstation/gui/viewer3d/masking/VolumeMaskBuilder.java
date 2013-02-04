@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.FragmentBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.MaskTextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
@@ -9,8 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -25,12 +25,12 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
 
     private static final int X_INX = 0;
     private static final int Y_INX = 1;
-    private static final int Z_INX = 2;
 
     private List<TextureDataI> maskingDataBeans = new ArrayList<TextureDataI>();
     private ByteOrder consensusByteOrder;
     private int consensusByteCount;
     private int consensusChannelCount;
+    private List<FragmentBean> fragments;
 
     private String firstFileName = null;
 
@@ -40,20 +40,18 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
     }
 
     public byte[] getVolumeMask() {
-        if ( 0 == 0 )
-            return ((MaskTextureDataBean)maskingDataBeans.get(0)).getTextureBytes();
+//        if ( 0 == 0 )
+//            return ((MaskTextureDataBean)maskingDataBeans.get(0)).getTextureBytes();
 
-        // This constructs a "color rolodex".
-        Integer[][] colors = {
-                { 255, 255, 0 },
-                { 255, 128, 128 },
-                { 0, 255, 255 },
-                { 255, 255, 0 },
-                { 0, 255, 0 },
-                { 0, 0, 255 },
-                { 255, 0, 0 },
-        };
-        //Color[] colors = { Color.yellow, Color.pink, Color.cyan, Color.orange, Color.green, Color.blue, Color.red };
+        Map<String,Set<FragmentBean>> fileNameToFragment = new HashMap<String,Set<FragmentBean>>();
+        for ( FragmentBean bean: fragments ) {
+            Set<FragmentBean> beans = fileNameToFragment.get( bean.getLabelFile() );
+            if ( beans == null ) {
+                beans = new HashSet<FragmentBean>();
+                fileNameToFragment.put( bean.getLabelFile(), beans );
+            }
+            beans.add(bean);
+        }
 
         Integer[] volumeMaskVoxels = getVolumeMaskVoxels();
 
@@ -64,58 +62,88 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
         // of any input.  Then the individual masks will be thrown into slots with an assumption
         // (even though wrong) that their voxels are the same size as all other voxels of
         // any other mask.
-        int bufferSizeBytes = volumeMaskVoxels[0] * volumeMaskVoxels[1] * volumeMaskVoxels[2] * consensusByteCount;
+        int maskBytCt = consensusByteCount;
+        int bufferSizeBytes = (volumeMaskVoxels[0] * maskBytCt) * volumeMaskVoxels[1] * volumeMaskVoxels[2];
         byte[] rtnValue = new byte[ bufferSizeBytes ];
         int dimMaskX = volumeMaskVoxels[ X_INX ];
         int dimMaskY = volumeMaskVoxels[ Y_INX ];
-        //int dimMaskZ = volumeMaskVoxels[ Z_INX ];
 
-        int colorOffset = 0;
-        for ( TextureDataI bean: maskingDataBeans ) {
-            int dimBeanX = bean.getSx();
-            int dimBeanY = bean.getSy();
-            int dimBeanZ = bean.getSz();
+        // Shortcut bypass
+        if ( fileNameToFragment.size() == 0  &&  maskingDataBeans.size() == 1 ) {
+            rtnValue = ((MaskTextureDataBean)maskingDataBeans.get(0)).getTextureBytes();
+        }
+        else {
+            for ( TextureDataI texBean: maskingDataBeans ) {
+                Set<Integer> values = new TreeSet<Integer>();
 
-            byte[] maskData = ((MaskTextureDataBean)bean).getTextureBytes();
+                int dimBeanX = texBean.getSx();
+                int dimBeanY = texBean.getSy();
+                int dimBeanZ = texBean.getSz();
 
-            for ( int z = 0; z < dimBeanZ; z++ ) {
-                for ( int y = 0; y < dimBeanY; y++ ) {
-                    for ( int x = 0; x < dimBeanX; x++ ) {
-                        int outputOffset = ( z * dimMaskY * dimMaskX ) + ( y * dimMaskX ) + x;
-                        int inputOffset = ( z * dimBeanX * dimBeanY ) + ( y * dimBeanX ) + x;
+                Set<FragmentBean> fragmentBeans = fileNameToFragment.get( texBean.getFilename() );
 
-                        // Get the RGB breakdown of the input.
+                byte[] maskData = ((MaskTextureDataBean)texBean).getTextureBytes();
 
-                        // This set-only technique will merely _set_ the value to the latest loaded mask's
-                        // value at this location.  There is no overlap taken into account here.
-                        // LAST PRECEDENT STRATEGY
-                        byte voxelVal = maskData[ inputOffset ];
-//                        int red   = (voxelVal & 0x00ff0000) >>> 16;
-//                        int green = (voxelVal & 0x0000ff00) >>> 8;
-//                        int blue  = (voxelVal & 0x000000ff);
-//
-//                        if (! (red == blue  &&  blue == green ) ) {
-////                        if (! (red == 0  &&  blue == 0  &&  green == 0 ) ) {
-//                            int colorInx = colorOffset % colors.length;
-//                            red = colors[ colorInx ][0];
-//                            green = colors[ colorInx ][1];
-//                            blue = colors[ colorInx ][2];
-//
-//                            rtnValue[ outputOffset ] =
-//                                    blue +
-//                                    (green << 8) +
-//                                    (red << 16)
-//                            ;
-                        rtnValue[ outputOffset ] = voxelVal;
+                for ( int z = 0; z < dimBeanZ; z++ ) {
+                    int zOffsetOutput = z * dimMaskX * dimMaskY * maskBytCt; // Slice number x next z
+                    int zOffsetInput = z * dimBeanX * dimBeanY * maskBytCt;
+                    for ( int y = 0; y < dimBeanY; y++ ) {
+                        int yOffsetOutput = zOffsetOutput + ( ( (dimMaskY - y - 1) * dimMaskX ) * maskBytCt );
+                        int yOffsetInput = zOffsetInput + ( ( (dimBeanY - y - 1) * dimBeanX ) * maskBytCt );
+                        for ( int x = 0; x < dimBeanX; x++ ) {
+                            int outputOffset = yOffsetOutput + x*maskBytCt;
+                            int inputOffset = yOffsetInput + x*maskBytCt;
 
-                            //System.out.println( "Input = " + voxelVal + " output =" + rtnValue[ outputOffset ]);
-//                        }
+                            // The voxel value may be a multi-byte value.
+                            int voxelVal = 0;
+                            for ( int mi = 0; mi < maskBytCt; mi++ ) {
+                                try {
+                                    byte nextVoxelByte = maskData[ inputOffset + mi ];
+                                    voxelVal += nextVoxelByte << (mi * 8);
+                                } catch ( RuntimeException ex ) {
+                                    System.out.println( ex.getMessage() + " offset=" + inputOffset +
+                                    " mi=" + mi + " zOffset=" + zOffsetInput + " yOffset=" + yOffsetInput +
+                                            " yOffs x maskByteCt=" + yOffsetInput*maskBytCt + " x*maskByteCt=" + x * maskBytCt + " x,y,z="+x+","+y+","+z);
+                                    throw ex;
+                                }
+                            }
 
+                            int newVal = voxelVal;
+                            if ( voxelVal > 0 ) {
+                                values.add( voxelVal );
+                                if ( fragmentBeans != null ) {
+                                    // This set-only technique will merely _set_ the value to the latest loaded mask's
+                                    // value at this location.  There is no overlap taken into account here.
+                                    // LAST PRECEDENT STRATEGY
+                                    newVal = 0;
+                                    for ( FragmentBean fragmentBean: fragmentBeans ) {
+                                        if ( (fragmentBean.getLabelFileNum()) == voxelVal ) {
+                                            newVal = fragmentBean.getTranslatedNum();
+                                        }
+                                    }
+                                }
+
+                            }
+
+                            // Either a new value will be set in the mask, or the original value
+                            // will wind up there.
+                            if ( newVal > 0 ) {
+                                for ( int mi = 0; mi < maskBytCt; mi ++ ) {
+                                    byte mByte = (byte)(newVal >>> (mi * 8) & 0x000000ff);
+                                    rtnValue[ outputOffset + mi ] = mByte;
+                                }
+                            }
+                        }
                     }
                 }
+
+                System.out.println("Values seen in file " + texBean.getFilename() + " in volume mask builder.");
+                for ( Integer nextVal: values ) {
+                    System.out.print( nextVal + "," );
+                }
+                System.out.println();
             }
 
-            colorOffset ++;
         }
 
         return rtnValue;
@@ -231,4 +259,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
         }
     }
 
+    public void setFragments(List<FragmentBean> fragments) {
+        this.fragments = fragments;
+    }
 }

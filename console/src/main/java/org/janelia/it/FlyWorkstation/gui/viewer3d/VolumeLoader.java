@@ -48,10 +48,10 @@ public class VolumeLoader
 	private VolumeBrick.TextureColorSpace colorSpace =
 		VolumeBrick.TextureColorSpace.COLOR_SPACE_LINEAR;
 
+    private String unCachedFileName;
     private FileResolver resolver;
     private String header = null;
     private int pixelBytes = 1;
-    private String localFileName;
     private boolean isMask = false;
     private ByteOrder pixelByteOrder = ByteOrder.LITTLE_ENDIAN;
 
@@ -179,7 +179,7 @@ public class VolumeLoader
                         for ( int pi = 0; pi < pixelBytes; pi ++ ) {
                             byte piByte = (byte)(value >>> (pi * 8) & 0x000000ff);
 //                            maskByteArray[(yOffset * 2) + (x * 2) + (pixelBytes - pi - 1)] = piByte;
-                            maskByteArray[(yOffset * 2) + (x * 2) + (pi)] = piByte;
+                            maskByteArray[(yOffset * pixelBytes) + (x * pixelBytes) + (pi)] = piByte;
                         }
                     }
                 }
@@ -196,8 +196,8 @@ public class VolumeLoader
     public boolean loadVolume(String unCachedFileName)
 	{
 		try {
-
-            localFileName = resolver.getResolvedFilename( unCachedFileName );
+            this.unCachedFileName = unCachedFileName;
+            String localFileName = resolver.getResolvedFilename( unCachedFileName );
 
             String extension = FilenameUtils.getExtension(localFileName).toUpperCase();
             System.out.println("FILENAME: " + localFileName);
@@ -269,7 +269,7 @@ public class VolumeLoader
         }
         textureData.setByteOrder(pixelByteOrder);
         textureData.setPixelByteCount(pixelBytes);
-        textureData.setFilename(localFileName);
+        textureData.setFilename( unCachedFileName );
         textureData.setChannelCount(channelCount);
         dataAcceptor.setTextureData( textureData );
 	}

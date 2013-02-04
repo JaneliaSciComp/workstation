@@ -14,7 +14,6 @@ import org.janelia.it.FlyWorkstation.gui.util.panels.ChannelSelectionPanel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ColorMapTextureBean;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -144,25 +143,8 @@ implements MouseListener, MouseMotionListener, ActionListener,
         this.clearOnLoad = clearOnLoad;
     }
 
-    /**
-     * Accumulates all data for masking, from the set of files provided, preparing them for
-     * injection into th evolume being loaded.
-     *
-     * @param maskFiles list of all mask files to use against the signal volumes.
-     */
-    public void setMaskFiles(List<String> maskFiles, FileResolver resolver) {
-
-        // Build the masking texture info.
-        if (maskFiles != null  &&  maskFiles.size() > 0) {
-            VolumeMaskBuilder builder = new VolumeMaskBuilder();
-            for ( String maskFile: maskFiles ) {
-                VolumeLoader volumeLoader = new VolumeLoader( resolver );
-                volumeLoader.loadVolume(maskFile);
-                volumeLoader.populateVolumeAcceptor(builder);
-            }
-            volumeMaskBuilder = builder;
-        }
-
+    public void setVolumeMaskBuilder( VolumeMaskBuilder volumeMaskBuilder ) {
+        this.volumeMaskBuilder = volumeMaskBuilder;
     }
 
     /**

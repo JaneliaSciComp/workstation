@@ -47,7 +47,7 @@ vec4 volumeMask(vec4 origColor)
             vec3 cmCoord = vec3( visX, visY, 0.0 );
             vec4 mappedColor = texture3D(colorMapTexture, cmCoord);
             rtnVal = mappedColor;
-//            rtnVal = maskingColor;
+
 //            rtnVal[3] = maskingColor[3];
 //            rtnVal[0] = maskingColor[3];
 //            rtnVal[1] = 0.0;
