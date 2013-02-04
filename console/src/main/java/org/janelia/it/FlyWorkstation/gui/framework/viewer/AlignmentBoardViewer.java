@@ -14,6 +14,8 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeLoader;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.AlignmentBoardDataBuilder;
@@ -156,6 +158,34 @@ public class AlignmentBoardViewer extends Viewer {
         refresh();
     }
 
+    /**
+     * Accumulates all data for masking, from the set of files provided, preparing them for
+     * injection into th evolume being loaded.
+     *
+     * @param maskFiles list of all mask files to use against the signal volumes.
+     */
+    private VolumeMaskBuilder createMaskBuilder(
+            List<String> maskFiles, List<FragmentBean> fragments, FileResolver resolver
+    ) {
+
+        VolumeMaskBuilder volumeMaskBuilder = null;
+        // Build the masking texture info.
+        if (maskFiles != null  &&  maskFiles.size() > 0) {
+            VolumeMaskBuilder builder = new VolumeMaskBuilder();
+            builder.setFragments( fragments );
+            for ( String maskFile: maskFiles ) {
+                VolumeLoader volumeLoader = new VolumeLoader( resolver );
+                volumeLoader.loadVolume(maskFile);
+                volumeLoader.populateVolumeAcceptor(builder);
+            }
+            volumeMaskBuilder = builder;
+        }
+
+        return volumeMaskBuilder;
+    }
+
+
+
     //------------------------------Inner Classes
     /** Listens for changes to the child-set of the heard-entity. */
     public static class ModelMgrListener extends ModelMgrAdapter {
@@ -193,8 +223,6 @@ public class AlignmentBoardViewer extends Viewer {
                 return;
             }
 
-            FileResolver resolver = new CacheFileResolver();
-            mip3d.setMaskFiles(maskFilenames, resolver);
 
             // *** TEMP *** this sets up a test of mapping neuron fragment number vs color.
             Map<Integer,byte[]> maskMappings = new HashMap<Integer,byte[]>();
@@ -202,10 +230,28 @@ public class AlignmentBoardViewer extends Viewer {
 //    maskMappings.put(i, new byte[]{ (byte)0xff, (byte)0, (byte)0xff });
 //}
 
-            maskMappings.put( 15, new byte[] { (byte)0x00, (byte)0x00, (byte)0xff } );
-            maskMappings.put( 22, new byte[] { (byte)0x00, (byte)0xff, (byte)0x00 } );
-            maskMappings.put( 41, new byte[] { (byte)0xff, (byte)0x00, (byte)0x00 } );
+            byte[][] colorWheel = {
+                    { (byte)0x00, (byte)0x00, (byte)0xff },
+                    { (byte)0x00, (byte)0xff, (byte)0x00 },
+                    { (byte)0xff, (byte)0x00, (byte)0x00 },
+                    { (byte)0x00, (byte)0xff, (byte)0xff },
+                    { (byte)0xff, (byte)0x00, (byte)0xff },
+                    { (byte)0xff, (byte)0xff, (byte)0x00 },
+                    { (byte)0x8f, (byte)0x00, (byte)0x00 },
+                    { (byte)0x00, (byte)0x8f, (byte)0x00 },
+            };
+            for ( FragmentBean fragmentBean: alignmentBoardDataBuilder.getFragments() ) {
+                // Make the "back map" to the original fragment number.
+                int translatedNum = fragmentBean.getTranslatedNum();
+                maskMappings.put(translatedNum, colorWheel[ translatedNum % colorWheel.length ] );
+            }
             mip3d.setMaskColorMappings( maskMappings );
+
+            FileResolver resolver = new CacheFileResolver();
+            VolumeMaskBuilder volumeMaskBuilder = createMaskBuilder(
+                    maskFilenames, alignmentBoardDataBuilder.getFragments(), resolver
+            );
+            mip3d.setVolumeMaskBuilder(volumeMaskBuilder);
 
             for ( String signalFilename: signalFilenames ) {
                 mip3d.loadVolume( signalFilename, resolver);
