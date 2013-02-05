@@ -6,9 +6,12 @@ import java.util.List;
 
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.util.gl2.GLUT;
+import org.apache.juli.JdkLoggerFormatter;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.VolumeBrickShader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.GL2;
 
@@ -56,6 +59,8 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     private MipRenderer renderer; // circular reference...
     private boolean bIsInitialized;
     private boolean bUseSyntheticData = false;
+
+    private Logger logger = LoggerFactory.getLogger( VolumeBrick.class );
 
     VolumeBrick(MipRenderer mipRenderer) {
 		renderer = mipRenderer;
@@ -272,7 +277,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
             int errNum = 0;
             setTextureCoordinates( gl, t00[0], t00[1], t00[2] );
             gl.glVertex3d(p00[0], p00[1], p00[2]);
-            errNum += gl.glGetError();
+            errNum += gl.glGetError();  // Calling resets the error state to zero.
 
             setTextureCoordinates( gl, t10[0], t10[1], t10[2] );
             gl.glVertex3d(p10[0], p10[1], p10[2]);
@@ -285,9 +290,15 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
             setTextureCoordinates( gl, t11[0], t11[1], t11[2] );
             gl.glVertex3d(p11[0], p11[1], p11[2]);
             gl.glEnd();
+
+            if ( errNum > 0 ) {
+                logger.warn( "Found problem while setting vertex coordinates {}.", errNum );
+            }
+
 			boolean bDebug = false;
 			if (bDebug)
 				printPoints(t00, t10, t01, t11);
+
 		}
 
     }
@@ -494,21 +505,10 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     private void setupColorMapTexture(GL2 gl) {
         if ( colorMapTextureMediator != null ) {
-            //System.out.println("-------------Who is calling this so often?");
-            //new Exception().printStackTrace();
             colorMapTextureMediator.setupTexture( gl, TextureMediator.COLOR_MAP_INTERPOLATION_METHOD );
         }
     }
-//    private void setupTexture(GL2 gl, int textureId) {
-//        gl.glActiveTexture( texIdToSymbolic.get( textureId ) );
-//        gl.glBindTexture(GL2.GL_TEXTURE_3D, textureId);
-//        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MIN_FILTER, interpolationMethod);
-//        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MAG_FILTER, interpolationMethod);
-//        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_R, GL2.GL_CLAMP_TO_BORDER);
-//        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_S, GL2.GL_CLAMP_TO_BORDER);
-//        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_T, GL2.GL_CLAMP_TO_BORDER);
-//    }
-//
+
     private void printPoints(double[] p1, double[] p2, double[] p3, double[] p4) {
         printPoint(p1);
         printPoint(p2);

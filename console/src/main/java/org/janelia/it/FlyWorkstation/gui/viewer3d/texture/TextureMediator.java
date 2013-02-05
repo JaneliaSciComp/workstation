@@ -70,7 +70,7 @@ public class TextureMediator {
 
             int maxCoord = getMaxTexCoord(gl);
             if ( textureData.getSx() > maxCoord  || textureData.getSy() > maxCoord || textureData.getSz() > maxCoord ) {
-                logger.warn("Exeeding max coord in one or more size of texture data.  Results unpredictable.");
+                logger.warn("Exceeding max coord in one or more size of texture data.  Results unpredictable.");
             }
 
             if ( textureData.getSx() * textureData.getSy() * textureData.getSz() * textureData.getPixelByteCount()
@@ -83,10 +83,17 @@ public class TextureMediator {
             }
 
             gl.glActiveTexture( textureSymbolicId );
+            reportError( "glActiveTexture", gl );
+
             gl.glEnable( GL2.GL_TEXTURE_3D );
+            reportError( "glEnable", gl );
 
             gl.glBindTexture( GL2.GL_TEXTURE_3D, textureName );
+            reportError( "glBindTexture", gl );
+
             gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_REPLACE);
+            reportError( "glTexEnv MODE-REPLACE", gl );
+
             gl.glTexImage3D(GL2.GL_TEXTURE_3D,
                     0, // mipmap level
                     getInternalFormat(), // as stored INTO graphics hardware, w/ srgb info (GLint internal format)
@@ -98,13 +105,7 @@ public class TextureMediator {
                     getVoxelComponentType(), // voxel component type=packed RGBA values(GLenum type)
                     data
             );
-
-            int errorNum = gl.glGetError();
-            if ( errorNum != 0 ) {
-                logger.error(
-                        "Failure " + errorNum + " during texture upload: " + textureSymbolicId + " / " + textureName
-                );
-            }
+            reportError( "glTexImage", gl );
         }
     }
 
@@ -131,6 +132,10 @@ public class TextureMediator {
 
     public void setTextureCoordinates( GL2 gl, double tX, double tY, double tZ ) {
         gl.glMultiTexCoord3d(textureSymbolicId, tX, tY, tZ);
+        int errNum = gl.glGetError();
+        if ( errNum > 0 ) {
+            logger.warn( "Error setting texture coords for name={}:  {}.", textureName, errNum );
+        }
     }
 
     public Double[] getVolumeMicrometers() {
@@ -143,28 +148,36 @@ public class TextureMediator {
 
     public void setupTexture( GL2 gl, int interpolationMethod ) {
         gl.glActiveTexture( textureSymbolicId );
+        reportError( "setupTexture glActiveTexture", gl );
         gl.glBindTexture( GL2.GL_TEXTURE_3D, textureName );
-        int errorNum = gl.glGetError();
+        reportError( "setupTexture glBindTexture", gl );
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MIN_FILTER, interpolationMethod);
-        errorNum += gl.glGetError();
+        reportError( "setupTexture glTexParam MIN FILTER", gl );
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MAG_FILTER, interpolationMethod);
-        errorNum += gl.glGetError();
+        reportError( "setupTexture glTexParam MAG_FILTER", gl );
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_R, GL2.GL_CLAMP_TO_BORDER);
-        errorNum += gl.glGetError();
+        reportError( "setupTexture glTexParam TEX-WRAP-R", gl );
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_S, GL2.GL_CLAMP_TO_BORDER);
-        errorNum += gl.glGetError();
+        reportError( "setupTexture glTexParam TEX-WRAP-S", gl );
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_T, GL2.GL_CLAMP_TO_BORDER);
-        errorNum += gl.glGetError();
+        reportError( "setupTexture glTexParam TEX-WRAP-T", gl );
 
-        if ( errorNum > 0 ) {
-            logger.error( "Error {} has occurred during setup of texture {}.", errorNum, textureName );
-        }
     }
 
-    public void setTextureData(TextureDataI textureData) {
+    /** This should be called immediately after some openGL call, to check error status. */
+    public void setTextureData( TextureDataI textureData ) {
         this.textureData = textureData;
     }
 
+    private void reportError( String operation, GL2 gl ) {
+        int errorNum = gl.glGetError();
+        String hexErrorNum = Integer.toHexString( errorNum );
+        if ( errorNum > 0 ) {
+            logger.error( "Error " + errorNum + "/x0" + hexErrorNum + " during " + operation +
+                          " on texture (by 'name' id) " + textureName );
+        }
+
+    }
     //--------------------------- Helpers for glTexImage3D
     private int getVoxelComponentType() {
         int rtnVal = GL2.GL_UNSIGNED_INT_8_8_8_8_REV;

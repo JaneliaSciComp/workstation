@@ -157,6 +157,10 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
             adjustMaxValues( voxels, new Integer[] { bean.getSx(), bean.getSy(), bean.getSz() } );
         }
 
+        for ( int i = 0; i < voxels.length; i++ ) {
+            voxels[ i ] += /*consensusByteCount * */( 8 - (voxels[ i ] % 8) );
+        }
+
         return voxels;
     }
 
