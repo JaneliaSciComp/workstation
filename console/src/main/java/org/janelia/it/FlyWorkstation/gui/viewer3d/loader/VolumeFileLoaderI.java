@@ -9,5 +9,5 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
  * Implement this to load a volume file.
  */
 public interface VolumeFileLoaderI {
-    void loadVolumeFile();
+    void loadVolumeFile( String fileName ) throws Exception;
 }

@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+import loci.formats.in.TiffReader;
 
 /**
  * Created with IntelliJ IDEA.
@@ -8,16 +8,14 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
  * Date: 2/6/13
  * Time: 3:33 PM
  *
- *
+ * Handles TIFF via Loci reading capability.
  */
-public class TifFileLoader extends TextureDataBuilder implements VolumeFileLoaderI {
-    @Override
-    protected TextureDataI createTextureDataBean() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
+public class TifFileLoader extends LociFileLoader {
 
     @Override
-    public void loadVolumeFile() {
-        //To change body of implemented methods use File | Settings | File Templates.
+    public void loadVolumeFile( String fileName ) throws Exception {
+        this.unCachedFileName = fileName;
+        super.loadLociReader( new TiffReader() );
     }
+
 }

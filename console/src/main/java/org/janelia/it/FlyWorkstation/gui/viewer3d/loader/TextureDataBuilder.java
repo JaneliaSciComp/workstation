@@ -2,10 +2,9 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeBrick;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.MaskTextureDataBean;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 
+import java.awt.color.ColorSpace;
 import java.nio.ByteOrder;
 
 /**
@@ -29,17 +28,13 @@ public abstract class TextureDataBuilder {
     protected ByteOrder pixelByteOrder = ByteOrder.LITTLE_ENDIAN;
     protected String unCachedFileName;
 
+    public void setColorSpace( VolumeDataAcceptor.TextureColorSpace colorSpace ) {
+        this.colorSpace = colorSpace;
+    }
+
     public TextureDataI buildTextureData( boolean isMask ) {
         TextureDataI textureData = createTextureDataBean();
 
-        /*
-        if ( isMask ) {
-            textureData = new MaskTextureDataBean( maskByteArray, sx, sy, sz );
-        }
-        else {
-            textureData = new TextureDataBean( argbIntArray, sx, sy, sz );
-        }
-        */
         textureData.setSx(sx);
         textureData.setSy(sy);
         textureData.setSz(sz);
@@ -55,8 +50,44 @@ public abstract class TextureDataBuilder {
         textureData.setFilename( unCachedFileName );
         textureData.setChannelCount(channelCount);
 
+        if (! isMask )
+            setAlphaToSaturateColors( colorSpace );
+
         return textureData;
     }
 
+    /**
+     * Set alpha component of each voxel assuming that R,G,B
+     * values represent a saturated color with premultiplied alpha.
+     * Similar to Vaa3D.  In other words, alpha = max(R,G,B)
+     */
+    private void setAlphaToSaturateColors(VolumeDataAcceptor.TextureColorSpace space) {
+        if ( space == null )
+            return;
+
+        // Use modified alpha value for sRGB textures
+        int[] alphaMap = new int[256];
+        double exponent = 1.0;
+        if (space == VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_SRGB)
+            exponent  = 2.2;
+        for (int i = 0; i < 256; ++i) {
+            double i0 = i / 255.0;
+            double i1 = Math.pow(i0, exponent);
+            alphaMap[i] = (int)(i1 * 255.0 + 0.5);
+        }
+        int numVoxels = argbIntArray.length;
+        for (int v = 0; v < numVoxels; ++v) {
+            int argb = argbIntArray[v];
+            int red   = (argb & 0x00ff0000) >>> 16;
+            int green = (argb & 0x0000ff00) >>> 8;
+            int blue  = (argb & 0x000000ff);
+            int alpha = Math.max(red, Math.max(green, blue));
+            alpha = alphaMap[alpha];
+            argb = (argb & 0x00ffffff) | (alpha << 24);
+            argbIntArray[v] = argb;
+        }
+    }
+
     abstract protected TextureDataI createTextureDataBean();
+
 }

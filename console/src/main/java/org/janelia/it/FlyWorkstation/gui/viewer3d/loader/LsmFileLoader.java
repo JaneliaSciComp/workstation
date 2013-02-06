@@ -1,6 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 
+import loci.formats.in.ZeissLSMReader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+
+import java.io.IOException;
 
 /**
  * Created with IntelliJ IDEA.
@@ -8,16 +11,12 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
  * Date: 2/6/13
  * Time: 3:33 PM
  *
- *
+ * Uses ZEISS funcitionality for Loci file loading.
  */
-public class LsmFileLoader extends TextureDataBuilder implements VolumeFileLoaderI {
+public class LsmFileLoader extends LociFileLoader {
     @Override
-    protected TextureDataI createTextureDataBean() {
-        return null;  //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    @Override
-    public void loadVolumeFile() {
-        //To change body of implemented methods use File | Settings | File Templates.
+    public void loadVolumeFile( String volumeFileName ) throws Exception {
+        this.unCachedFileName = volumeFileName;
+        super.loadLociReader( new ZeissLSMReader() );
     }
 }
