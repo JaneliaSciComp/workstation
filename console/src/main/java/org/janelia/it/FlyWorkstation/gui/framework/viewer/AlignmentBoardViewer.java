@@ -15,6 +15,8 @@ import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeLoader;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ColorMappingI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ColorWheelColorMapping;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
@@ -225,27 +227,8 @@ public class AlignmentBoardViewer extends Viewer {
 
 
             // *** TEMP *** this sets up a test of mapping neuron fragment number vs color.
-            Map<Integer,byte[]> maskMappings = new HashMap<Integer,byte[]>();
-//for (int i=0; i < 65535; i++) {
-//    maskMappings.put(i, new byte[]{ (byte)0xff, (byte)0, (byte)0xff });
-//}
-
-            byte[][] colorWheel = {
-                    { (byte)0x00, (byte)0x00, (byte)0xff },
-                    { (byte)0x00, (byte)0xff, (byte)0x00 },
-                    { (byte)0xff, (byte)0x00, (byte)0x00 },
-                    { (byte)0x00, (byte)0xff, (byte)0xff },
-                    { (byte)0xff, (byte)0x00, (byte)0xff },
-                    { (byte)0xff, (byte)0xff, (byte)0x00 },
-                    { (byte)0x8f, (byte)0x00, (byte)0x00 },
-                    { (byte)0x00, (byte)0x8f, (byte)0x00 },
-            };
-            for ( FragmentBean fragmentBean: alignmentBoardDataBuilder.getFragments() ) {
-                // Make the "back map" to the original fragment number.
-                int translatedNum = fragmentBean.getTranslatedNum();
-                maskMappings.put(translatedNum, colorWheel[ translatedNum % colorWheel.length ] );
-            }
-            mip3d.setMaskColorMappings( maskMappings );
+            ColorMappingI colorMapper = new ColorWheelColorMapping();
+            mip3d.setMaskColorMappings( colorMapper.getMapping( alignmentBoardDataBuilder.getFragments() ) );
 
             FileResolver resolver = new CacheFileResolver();
             VolumeMaskBuilder volumeMaskBuilder = createMaskBuilder(

@@ -38,6 +38,10 @@ public class FragmentBean {
         this.translatedNum = translatedNum;
     }
 
+    public void setLabelFileNum( int labelFileNum ) {
+        this.labelFileNum = labelFileNum;
+    }
+
     public byte[] getRgb() {
         return rgb;
     }
