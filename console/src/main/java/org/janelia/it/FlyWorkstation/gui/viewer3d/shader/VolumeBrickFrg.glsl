@@ -32,21 +32,35 @@ vec4 volumeMask(vec4 origColor)
 
         // Display strategy: only show the signal, only if the mask is non-zero.
         if ( ( ( maskingColor[0] + maskingColor[1] + maskingColor[2] ) == 0.0 ) ) {
+// TEMP: allow the unmasked signal to bleed through.
             rtnVal[0] = 0.0;
             rtnVal[1] = 0.0;
             rtnVal[2] = 0.0;
         }
         else {
-            // This reverts the value of this voxel to its original integer range.
-//            int maskValue = int(floor(maskingColor.g*65535.0));
-
             // This maps the masking data value to a color set.
             float iIx = floor(maskingColor.g * 65535.1);
             float visY = floor(iIx / 256.0);
             float visX = (iIx - 256.0 * visY) / 256.0;
             vec3 cmCoord = vec3( visX, visY, 0.0 );
             vec4 mappedColor = texture3D(colorMapTexture, cmCoord);
-            rtnVal = mappedColor;
+
+            // This takes the mapped color, and multiplies it by the
+            // maximum intensity of any signal color.
+            vec4 signalColor = origColor;
+            float maxIntensity = 0.0;
+            for (int i = 0; i < 3; i++) {
+                if ( signalColor[i] > maxIntensity )
+                    maxIntensity = signalColor[i];
+            }
+            // Guard against empty signal texture.
+            if ( maxIntensity == 0.0 ) {
+                maxIntensity = 1.0;
+            }
+
+            for (int i = 0; i < 3; i++) {
+                rtnVal[i] = mappedColor[ i ] * maxIntensity;
+            }
 
 //            rtnVal[3] = maskingColor[3];
 //            rtnVal[0] = maskingColor[3];

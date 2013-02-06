@@ -26,11 +26,11 @@ public class TextureMediator {
     public static int MASK_TEXTURE_OFFSET = 1;
     public static int COLOR_MAP_TEXTURE_OFFSET = 2;
 
-    private static int s_textureCount = 0;  // Optional: an assumed sequence of textures is made.
-
     private int textureName;
     private int textureSymbolicId; // This is an ID like GL.GL_TEXTURE0.
     private int textureOffset; // This will be 0, 1, ...
+
+    private boolean isInitialized = false;
 
     private TextureDataI textureData;
     private Logger logger = LoggerFactory.getLogger( TextureMediator.class );
@@ -45,10 +45,6 @@ public class TextureMediator {
         // No initialization.
     }
 
-    public TextureMediator( int textureId ) {
-        init( textureId, s_textureCount ++ );
-    }
-
     /**
      * Initialize a mediator.  Assumptions that can be made about various identifiers will be made here.
      *
@@ -56,9 +52,12 @@ public class TextureMediator {
      * @param offset 0, 1, ...
      */
     public void init( int textureId, int offset ) {
-        this.textureName = textureId;
-        this.textureOffset = offset;
-        textureSymbolicId = GL2.GL_TEXTURE0 + offset;
+        if ( ! isInitialized ) {
+            this.textureName = textureId;
+            this.textureOffset = offset;
+            textureSymbolicId = GL2.GL_TEXTURE0 + offset;
+        }
+        isInitialized = true;
     }
 
     public void uploadTexture( GL2 gl ) {
@@ -147,6 +146,9 @@ public class TextureMediator {
     }
 
     public void setupTexture( GL2 gl, int interpolationMethod ) {
+//System.out.println(this.textureSymbolicId + ":" + this.textureName + ":" + this.getTextureOffset() );
+//new Exception().printStackTrace(); // Who's calling.
+
         gl.glActiveTexture( textureSymbolicId );
         reportError( "setupTexture glActiveTexture", gl );
         gl.glBindTexture( GL2.GL_TEXTURE_3D, textureName );
@@ -175,6 +177,7 @@ public class TextureMediator {
         if ( errorNum > 0 ) {
             logger.error( "Error " + errorNum + "/x0" + hexErrorNum + " during " + operation +
                           " on texture (by 'name' id) " + textureName );
+            //new Exception().printStackTrace(); // *** DEBUG ***
         }
 
     }

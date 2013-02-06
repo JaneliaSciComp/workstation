@@ -24,6 +24,7 @@ public class VolumeBrickShader extends AbstractShader {
 
     private TextureMediator signalTextureMediator;
     private TextureMediator maskTextureMediator;
+    private TextureMediator colorMapTextureMediator;
 
     private boolean volumeMaskApplied = false;
 
@@ -57,9 +58,13 @@ public class VolumeBrickShader extends AbstractShader {
      * @param signalTextureMediator intermediator for signal.
      * @param maskTextureMediator intermediator for mask.
      */
-    public void setTextureMediators( TextureMediator signalTextureMediator, TextureMediator maskTextureMediator ) {
+    public void setTextureMediators(
+            TextureMediator signalTextureMediator,
+            TextureMediator maskTextureMediator,
+            TextureMediator colorMapTextureMediator ) {
         this.signalTextureMediator = signalTextureMediator;
         this.maskTextureMediator = maskTextureMediator;
+        this.colorMapTextureMediator = colorMapTextureMediator;
     }
 
     public void setColorMask( float[] rgb ) {
@@ -76,21 +81,22 @@ public class VolumeBrickShader extends AbstractShader {
     }
 
     private void setTextureUniforms(GL2 gl) {
-        int signalTextureLoc = gl.glGetUniformLocation(getShaderProgram(), "signalTexture");
-        if ( signalTextureLoc == -1 ) {
-            throw new RuntimeException( "Failed to find signal texture location." );
-        }
-        gl.glUniform1i( signalTextureLoc, signalTextureMediator.getTextureOffset() );
+        setTextureUniform(gl, "signalTexture", signalTextureMediator);
         //  This did not work.  GL.GL_TEXTURE0 ); //textureIds[ 0 ] );
 
         if ( volumeMaskApplied ) {
-            int maskingTextureLoc = gl.glGetUniformLocation(getShaderProgram(), "maskingTexture");
-            if ( maskingTextureLoc == -1 ) {
-                throw new RuntimeException( "Failed to find masking texture location." );
-            }
-            gl.glUniform1i( maskingTextureLoc, maskTextureMediator.getTextureOffset() );
-            // This did not work.  GL.GL_TEXTURE1 ); //textureIds[ 1 ] );
+            setTextureUniform(gl, "maskingTexture", maskTextureMediator);
+            setTextureUniform(gl, "colorMapTexture", colorMapTextureMediator);
         }
+    }
+
+    private void setTextureUniform( GL2 gl, String shaderUniformName, TextureMediator textureMediator ) {
+        int signalTextureLoc = gl.glGetUniformLocation( getShaderProgram(), shaderUniformName );
+        if ( signalTextureLoc == -1 ) {
+            throw new RuntimeException( "Failed to find " + shaderUniformName + " texture location." );
+        }
+        gl.glUniform1i( signalTextureLoc, textureMediator.getTextureOffset() );
+        // This did not work.  GL.GL_TEXTURE1 ); //textureIds[ 1 ] );
     }
 
     private void pushMaskUniform( GL2 gl, int shaderProgram ) {

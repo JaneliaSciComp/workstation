@@ -255,6 +255,10 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
         return space;
     }
 
+    public void setFragments(List<FragmentBean> fragments) {
+        this.fragments = fragments;
+    }
+
     private<T extends Comparable> void adjustMaxValues(T[] maxValues, T[] values) {
         for ( int dim = 0; dim < 3; dim ++ ) {
             if ( values[ dim ].compareTo( maxValues[ dim ] ) > 0 ) {
@@ -263,7 +267,4 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
         }
     }
 
-    public void setFragments(List<FragmentBean> fragments) {
-        this.fragments = fragments;
-    }
 }

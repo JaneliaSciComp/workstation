@@ -99,8 +99,8 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
 		gl.glPushAttrib(GL2.GL_TEXTURE_BIT | GL2.GL_ENABLE_BIT);
 
-		if (bSignalTextureNeedsUpload) {
-			uploadSignalTexture(gl);
+        if (bSignalTextureNeedsUpload) {
+            uploadSignalTexture(gl);
         }
 		if (bUseShader) {
             if ( maskTextureMediator != null  &&  bMaskTextureNeedsUpload ) {
@@ -109,7 +109,9 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
             }
 
             try {
-                volumeBrickShader.setTextureMediators( signalTextureMediator, maskTextureMediator );
+                volumeBrickShader.setTextureMediators(
+                        signalTextureMediator, maskTextureMediator, colorMapTextureMediator
+                );
                 volumeBrickShader.init(gl);
             } catch ( Exception ex ) {
                 ex.printStackTrace();
@@ -391,7 +393,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     public void setMaskTextureData( TextureDataI textureData ) {
         if ( maskTextureMediator == null ) {
-            maskTextureMediator = new TextureMediator( TextureMediator.MASK_TEXTURE_OFFSET );
+            maskTextureMediator = new TextureMediator();
             textureMediators.add( maskTextureMediator );
         }
         maskTextureMediator.setTextureData(textureData);
@@ -401,18 +403,18 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     /** Use this to feed color mapping between neuron number in mask, and color desired. */
     public void setColorMapTextureData( TextureDataI textureData ) {
         if ( colorMapTextureMediator == null ) {
-            colorMapTextureMediator = new TextureMediator( TextureMediator.COLOR_MAP_TEXTURE_OFFSET );
+            colorMapTextureMediator = new TextureMediator();
             textureMediators.add( colorMapTextureMediator );
         }
         colorMapTextureMediator.setTextureData( textureData );
-        bMaskTextureNeedsUpload = true;  // Tying this to the mask texture data.  It makes not sense sans mask.
+        bMaskTextureNeedsUpload = true;  // Tying this to the mask texture data.  It makes no sense sans mask.
     }
 
     //---------------------------------IMPLEMENT VolumeDataAcceptor
     @Override
     public void setTextureData(TextureDataI textureData) {
         if ( signalTextureMediator == null ) {
-            signalTextureMediator = new TextureMediator( TextureMediator.SIGNAL_TEXTURE_OFFSET );
+            signalTextureMediator = new TextureMediator();
             textureMediators.add( signalTextureMediator );
         }
         signalTextureMediator.setTextureData( textureData );
@@ -427,16 +429,15 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     }
 
     private void initMediators( GL2 gl ) {
-        if ( maskTextureMediator != null ) {
-            textureIds = TextureMediator.genTextureIds( gl, 2 );
-
-            signalTextureMediator.init( textureIds[ 0 ], 0 );
-            maskTextureMediator.init( textureIds[ 1 ], 1 );
-
+        textureIds = TextureMediator.genTextureIds( gl, textureMediators.size() );
+        if ( signalTextureMediator != null ) {
+            signalTextureMediator.init( textureIds[ 0 ], TextureMediator.SIGNAL_TEXTURE_OFFSET );
         }
-        else if ( signalTextureMediator != null ) {
-            textureIds = TextureMediator.genTextureIds( gl, 1 );
-            signalTextureMediator.init( textureIds[ 0 ], 0 );
+        if ( maskTextureMediator != null ) {
+            maskTextureMediator.init( textureIds[ 1 ], TextureMediator.MASK_TEXTURE_OFFSET );
+        }
+        if ( colorMapTextureMediator != null ) {
+            colorMapTextureMediator.init( textureIds[ 2 ], TextureMediator.COLOR_MAP_TEXTURE_OFFSET );
         }
     }
 

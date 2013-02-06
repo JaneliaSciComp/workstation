@@ -302,7 +302,7 @@ public class VolumeLoader
 	    			sz = (int)(frameRate * duration / 1e6 + 0.5);
 	    			argbIntArray = new int[sx*sy*sz];
                     channelCount = 3;
-                    pixelBytes = 1;
+                    pixelBytes = 4;
 	    			return;
 	    		}
 	    }
