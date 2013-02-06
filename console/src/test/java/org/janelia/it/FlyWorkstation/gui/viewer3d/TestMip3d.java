@@ -35,16 +35,18 @@ public class TestMip3d {
                     //      String fn = "/Users/fosterl/Documents/LSM_3D/FLFL_20121001154228067_25581.lsm";
                     //String fn = "/Volumes/flylight/RJ/For Les Foster/B01_T01_20121023_PMB1_MB057B_20X_R1_L01.lsm";
                     //                    String fn = "/Volumes/jacsData/MaskResources/GiantFiber/guide/EPA_R.v3dpbd";
-                    //String fn = "/groups/scicomp/jacsData/MaskResources/GiantFiber/guide/LAL_L.v3dpbd";
+                    //String fn = "/Volumes/jacsData/MaskResources/GiantFiber/guide/LAL_L.v3dpbd";
                     //String fn = "/Volumes/jacsData/filestore/system/Separation/296/418/1778029752666296418/separate/fastload/Reference2_50.mp4";
-                    //String fileBase = "/Users/fosterl/Documents/alignment_board/samples/";
+                    String fileBase = "/Users/fosterl/Documents/alignment_board/samples/";
                     //String fn = fileBase + "1735579170638921826/ConsolidatedSignal2_25.mp4";
+                    //String fn = "/Volumes/jacsData/filestore/system/Separation/951/842/1742124964321951842/separate/ConsolidatedLabel.v3dpbd";
+                    String fn = "/Volumes/jacsData/filestore/system/Separation/294/370/1742138165818294370/separate/fastLoad/ConsolidatedSignal2_25.mp4";
                     String guideBase = "/Volumes/jacsData/MaskResources/Compartment/guide/";
                     //String fn = guideBase + "LOP_R.v3dpbd";
 
                     //String fn = "/Volumes/jacsData/filestore/system/Separation/296/418/1778029752666296418/separate/ConsolidatedLabel.v3dpbd";
                     //String fn = "/Volumes/jacsData/filestore/system/Separation/143/266/1696292257579143266/separate/ConsolidatedLabel.v3dpbd";
-                    String fn = "/Volumes/jacsData/filestore/system/Separation/921/826/1735579170638921826/separate/ConsolidatedLabel.v3dpbd";
+                    //String fn = "/Volumes/jacsData/filestore/system/Separation/921/826/1735579170638921826/separate/ConsolidatedLabel.v3dpbd";
 
                     if ( ! mipWidget.loadVolume(fn, new TrivialFileResolver()) )
                         System.out.println("Volume load failed.");
