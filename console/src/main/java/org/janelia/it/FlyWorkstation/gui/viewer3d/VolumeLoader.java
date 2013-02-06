@@ -97,52 +97,6 @@ public class VolumeLoader
                     throw new IllegalArgumentException("Unknown filename/extension combination " + baseName + "/" + extension);
             }
 
-
-//            if (extension.startsWith(TIF_EXT)) {
-//                loadLociReader(localFileName, new TiffReader());
-//            } else if (extension.startsWith(LSM_EXT)) {
-//                loadLociReader(localFileName, new ZeissLSMReader());
-//            } else if (extension.startsWith(V3D_EXT)) {
-//                if ( baseName.startsWith("ConsolidatedLabel") ) {
-//                    loadV3dMask(new BufferedInputStream(
-//                            new FileInputStream(localFileName))
-//                    );
-//                }
-//                else {
-//                    loadV3dRaw(new BufferedInputStream(
-//                            new FileInputStream(localFileName))
-//                    );
-//                }
-//            } else if (extension.startsWith(MP4_EXT)) {
-//                loadMpegVideo(localFileName);
-//            } else {
-//                throw new RuntimeException("Extension type " + extension + " not yet implemented.");
-//            }
-
-//            IFormatReader reader = null;
-//            if (extension.startsWith(TIF_EXT)) {
-//                reader = new TiffReader();
-//            } else if (extension.startsWith(LSM_EXT)) {
-//                reader = new ZeissLSMReader();
-//            }
-//            if (reader != null) {
-//                loadLociReader(localFileName, reader);
-//            } else if (extension.startsWith(V3D_EXT)) {
-//                InputStream v3dRawStream = new BufferedInputStream(
-//                        new FileInputStream(localFileName));
-//                // todo find the right way to switch this on.
-//                if ( baseName.startsWith("ConsolidatedLabel") ) {
-//                    loadV3dMask(v3dRawStream);
-//                }
-//                else {
-//                    loadV3dRaw(v3dRawStream);
-//                }
-//            } else if (extension.startsWith(MP4_EXT)) {
-//                loadMpegVideo(localFileName);
-//            } else {
-//                throw new RuntimeException("Extension type " + extension + " not yet implemented.");
-//            }
-
             // Because we use premultiplied transparency...
             if ( ! isMask )
                 setAlphaToSaturateColors(colorSpace);

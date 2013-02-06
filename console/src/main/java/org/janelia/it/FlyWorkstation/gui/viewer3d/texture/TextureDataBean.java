@@ -46,22 +46,19 @@ public class TextureDataBean implements TextureDataI {
 
     public TextureDataBean( ByteBuffer textureData, int sx, int sy, int sz ) {
         super();
-        this.sx = sx;
-        this.sy = sy;
-        this.sz = sz;
-        this.textureData = textureData;
-    }
-
-    public TextureDataBean( ByteBuffer textureData, Integer[] voxels ) {
-        this( textureData, voxels[ 0 ], voxels[ 1 ], voxels[ 2 ] );
+        setTextureData(textureData);
+        setSx( sx );
+        setSy( sy );
+        setSz( sz );
     }
 
     public TextureDataBean(int[] textureData, int sx, int sy, int sz) {
-        this( getByteBuffer( textureData ), sx, sy, sz );
+        this(getByteBuffer(textureData), sx, sy, sz);
     }
 
-    public TextureDataBean( int[] textureData, Integer[] voxels ) {
-        this( textureData, voxels[ 0 ], voxels[ 1 ], voxels[ 2 ] );
+    @Override
+    public void setTextureData( ByteBuffer textureData ) {
+        this.textureData = textureData;
     }
 
     public ByteBuffer getTextureData() {

@@ -50,6 +50,11 @@ public class ColorMapTextureBean implements TextureDataI {
     }
 
     @Override
+    public void setTextureData(ByteBuffer textureData) {
+        this.mapData = textureData;
+    }
+
+    @Override
     public ByteBuffer getTextureData() {
         return mapData;
     }
