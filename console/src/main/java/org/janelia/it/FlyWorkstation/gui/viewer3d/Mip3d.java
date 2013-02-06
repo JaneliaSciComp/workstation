@@ -2,55 +2,23 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.List;
 import java.util.Map;
 
-import javax.media.opengl.GLCapabilities;
-import javax.media.opengl.GLProfile;
-import javax.media.opengl.awt.GLJPanel;
 import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.gui.util.panels.ChannelSelectionPanel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ColorMapTextureBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class Mip3d 
-//extends GLCanvas // in case heavyweight widget is preferred
-extends GLJPanel // in case lightweight widget is required
-implements MouseListener, MouseMotionListener, ActionListener,
-	MouseWheelListener
+extends BaseGLViewer
 {
     public static final int RGBDIALOG_WIDTH = 300;
     public static final int RGBDIALOG_HEIGHT = 150;
-    private static final Logger log = LoggerFactory.getLogger(Mip3d.class);
 	
 	private static final long serialVersionUID = 1L;
-	// setup OpenGL Version 2
-	static GLProfile profile = null;
-	static GLCapabilities capabilities = null;
-
-    static {
-        try {
-            profile = GLProfile.get(GLProfile.GL2);
-            capabilities = new GLCapabilities(profile);
-        } catch ( Throwable th ) {
-            profile = null;
-            capabilities = null;
-            log.warn("JOGL is unavailable. No 3D images will be shown.");
-        }
-    }
-
-    public static boolean isAvailable() {
-		return capabilities!=null;
-	}
-	
-	private Point previousMousePos;
-	private boolean bMouseIsDragging = false;
 	private MipRenderer renderer;
-	public JPopupMenu popupMenu;
     private boolean clearOnLoad = true;
     private VolumeMaskBuilder volumeMaskBuilder;
     private Map<Integer,byte[]> neuronNumToRGB;
@@ -63,16 +31,11 @@ implements MouseListener, MouseMotionListener, ActionListener,
 	
 	public Mip3d()
     {
-        super(capabilities);
         renderer = new MipRenderer();
         addGLEventListener(renderer);
         setPreferredSize( new Dimension( 400, 400 ) );
 
-        addMouseListener(this);
-        addMouseMotionListener(this);
-        addMouseWheelListener(this);
         // Context menu for resetting view
-        popupMenu = new JPopupMenu();
         JMenuItem resetViewItem = new JMenuItem("Reset view");
         resetViewItem.addActionListener(this);
         popupMenu.add(resetViewItem);
@@ -180,14 +143,6 @@ implements MouseListener, MouseMotionListener, ActionListener,
 			return false;
 	}
 	
-	private void maybeShowPopup(MouseEvent event)
-	{
-		if (event.isPopupTrigger()) {
-			popupMenu.show(event.getComponent(),
-					event.getX(), event.getY());
-		}
-	}
-	
 	@Override
     public void mouseDragged(MouseEvent event) {
         Point p1 = event.getPoint();
@@ -235,24 +190,6 @@ implements MouseListener, MouseMotionListener, ActionListener,
 			renderer.centerOnPixel(event.getPoint());
 			repaint();
 		}
-	}
-
-	@Override
-	public void mouseEntered(MouseEvent e) {}
-
-	@Override
-	public void mouseExited(MouseEvent e) {}
-
-	@Override
-	public void mousePressed(MouseEvent e) {
-		bMouseIsDragging = false;
-		maybeShowPopup(e);
-	}
-
-	@Override
-	public void mouseReleased(MouseEvent event) {
-		bMouseIsDragging = false;
-		maybeShowPopup(event);
 	}
 
 	@Override
