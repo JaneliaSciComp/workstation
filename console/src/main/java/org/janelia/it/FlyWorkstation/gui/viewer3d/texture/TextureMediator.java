@@ -72,10 +72,13 @@ public class TextureMediator {
                 logger.warn("Exceeding max coord in one or more size of texture data.  Results unpredictable.");
             }
 
-            if ( textureData.getSx() * textureData.getSy() * textureData.getSz() * textureData.getPixelByteCount()
-                != data.remaining() ) {
+            int expectedRemaining = textureData.getSx() * textureData.getSy() * textureData.getSz()
+                    * textureData.getPixelByteCount() * getStorageFormatMultiplier();
+            if ( expectedRemaining != data.remaining() ) {
                 logger.warn( "Invalid remainder vs texture data dimsensions.  Sx=" + textureData.getSx() +
-                             " Sy=" + textureData.getSy() + " Sz=" + textureData.getSz() + ";  total remaining is " +
+                             " Sy=" + textureData.getSy() + " Sz=" + textureData.getSz() +
+                             " storageFmtReq=" + getStorageFormatMultiplier() +
+                             ";  total remaining is " +
                              data.remaining() + " " + textureData.getFilename()
                 );
                 data.rewind();
@@ -106,6 +109,7 @@ public class TextureMediator {
             );
             reportError( "glTexImage", gl );
         }
+
     }
 
     public int getTextureOffset() {
@@ -163,9 +167,89 @@ public class TextureMediator {
 
     }
 
+    /**
+     * This debugging method will take the assumptions inherent in this mediator, and use them to
+     * grab the stuff in the graphics memory.  If it has been loaded, and contains non-zero data
+     * (any), this method will tell that, and any other kinds of checks that may be coded below.
+     *
+     * Please do not remove this "apparently dead" code, as it may be called to debug difficult-to
+     * -track problems with texture loading.
+     *
+     * @param gl for invoking the required OpenGL method.
+     */
+    public void testTextureContents( GL2 gl ) {
+        gl.glActiveTexture( textureSymbolicId );
+        reportError( "testTextureContents glActiveTexture", gl );
+        gl.glBindTexture( GL2.GL_TEXTURE_3D, textureName );
+        reportError( "testTextureContents glBindTexture", gl );
+
+        int pixelByteCount = textureData.getPixelByteCount();
+        int bufferSize = textureData.getSx() * textureData.getSy() * textureData.getSz() *
+                pixelByteCount * getStorageFormatMultiplier();
+
+        byte[] rawBuffer = new byte[ bufferSize ];
+        ByteBuffer buffer = ByteBuffer.wrap(rawBuffer);
+        gl.glGetTexImage( GL2.GL_TEXTURE_3D, 0, getVoxelComponentOrder(), getVoxelComponentType(), buffer );
+        reportError( "TEST: Getting texture for testing", gl );
+
+        buffer.rewind();
+
+        int nonZeroCount = 0;
+        for ( int i = 0; i < rawBuffer.length; i++ ) {
+            if ( rawBuffer[ i ] != 0 ) {
+                nonZeroCount ++;
+            }
+        }
+        if ( nonZeroCount == 0 ) {
+            logger.warn( "TEST: All-zero texture loaded for {} by name.", textureName );
+        }
+        else {
+            logger.info( "TEST: Found {} non-zero bytes in texture {} by name.", nonZeroCount, textureName );
+
+            if ( pixelByteCount > 1 ) {
+                byte[] voxel = new byte[pixelByteCount];
+                int leftByteNonZeroCount = 0;
+                int rightByteNonZeroCount = 0;
+                for ( int i = 0; i < rawBuffer.length; i += pixelByteCount ) {
+                    boolean voxelNonZero = false;
+                    for ( int voxOffs = 0; voxOffs < pixelByteCount; voxOffs ++ ) {
+                        voxel[ voxOffs ] = rawBuffer[ i+voxOffs ];
+                        if ( voxel[ voxOffs ] > 0 ) {
+                            voxelNonZero = true;
+                        }
+
+                    }
+                    if ( voxelNonZero ) {
+                        if ( voxel[ 0 ] != 0 ) {
+                            leftByteNonZeroCount ++;
+                        }
+                        else if ( voxel[ pixelByteCount - 1 ] > 0 ) {
+                            rightByteNonZeroCount ++;
+                        }
+                    }
+                }
+
+                logger.info( "TEST: There are {} nonzero left-most bytes.", leftByteNonZeroCount );
+                logger.info( "TEST: There are {} nonzero right-most bytes.", rightByteNonZeroCount );
+            }
+
+        }
+
+    }
+
     /** This should be called immediately after some openGL call, to check error status. */
     public void setTextureData( TextureDataI textureData ) {
         this.textureData = textureData;
+    }
+
+    private int getStorageFormatMultiplier() {
+        int orderId =  getVoxelComponentOrder();
+        if ( orderId == GL2.GL_BGRA ) {
+            return 4;
+        }
+        else {
+            return 1;
+        }
     }
 
     private void reportError( String operation, GL2 gl ) {
