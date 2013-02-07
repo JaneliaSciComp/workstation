@@ -21,6 +21,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.keybind.OntologyKeyBindings;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.ExternalClient;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -157,15 +158,15 @@ public class ConsoleDataServiceImpl {
 	}
 	
     public Entity getEntityById(long entityId) throws Exception {
-        return PathTranslator.translatePathsToCurrentPlatform(FacadeManager.getFacadeManager().getEntityFacade().getEntityById(entityId));
+        return translatePaths(FacadeManager.getFacadeManager().getEntityFacade().getEntityById(entityId));
     }
 
     public Entity getEntityAndChildren(long entityId) throws Exception {
-        return PathTranslator.translatePathsToCurrentPlatform(FacadeManager.getFacadeManager().getEntityFacade().getEntityAndChildren(entityId));
+        return translatePaths(FacadeManager.getFacadeManager().getEntityFacade().getEntityAndChildren(entityId));
     }
 
 	public Entity getEntityTree(long entityId) throws Exception {
-        return PathTranslator.translatePathsToCurrentPlatform(FacadeManager.getFacadeManager().getEntityFacade().getEntityTree(entityId));
+        return translatePaths(FacadeManager.getFacadeManager().getEntityFacade().getEntityTree(entityId));
     }
 
 //    public List<EntityType> getEntityTypes() {
@@ -194,5 +195,14 @@ public class ConsoleDataServiceImpl {
         Color color = ModelMgr.getModelMgr().getUserAnnotationColor(username);
         String rgb = Integer.toHexString((color.getRGB() & 0xffffff) | 0x1000000).substring(1);
         return rgb;
+    }
+    
+    private Entity translatePaths(Entity entity) {
+        if (ConsoleProperties.getBoolean("console.WebServer.proxyFiles")) {
+            return PathTranslator.translatePathsToProxy(entity);
+        }
+        else {
+            return PathTranslator.translatePathsToCurrentPlatform(entity);
+        }
     }
 }

@@ -1,10 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.util;
 
 import java.io.File;
+import java.net.MalformedURLException;
 
 import org.hibernate.Hibernate;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModel;
+import org.janelia.it.FlyWorkstation.web.FileProxyService;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -84,6 +86,33 @@ public class PathTranslator {
         return entity;
     }
 
+
+    /**
+     * Modify the given entity tree so that any file path attributes are proxied by our local file service.
+     */
+    public static Entity translatePathsToProxy(Entity entity) {
+
+        for (EntityData entityData : entity.getEntityData()) {
+            if (entityData.getEntityAttribute().getName().equals(EntityConstants.ATTRIBUTE_FILE_PATH)) {
+                String path = entityData.getValue();
+                try {
+                    String url = FileProxyService.getProxiedFileUrl(path).toString();
+                    entityData.setValue(url);
+                }
+                catch (MalformedURLException e) {
+                    log.error("Error translating path to proxy: "+path,e);
+                }
+            }
+            else {
+                Entity child = entityData.getChildEntity();
+                if (child!=null && Hibernate.isInitialized(child)) {
+                    translatePathsToCurrentPlatform(child);
+                }
+            }
+        }
+
+        return entity;
+    }
     
     public static boolean isMounted() {
         File jacsData = new File(jacsDataPath);
