@@ -5,15 +5,11 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.error_trap.JaneliaDebugGL2;
 import javax.media.opengl.DebugGL2;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GLEventListener;
-import javax.media.opengl.glu.GLU;
 import java.awt.*;
-import java.util.Vector;
  
-class MipRenderer implements GLEventListener
+class MipRenderer 
+extends BaseRenderer
 {
-    private GLU glu = new GLU();
-    
     // camera parameters
     Vec3 focusInGround = new Vec3(0,0,0);
     private Vec3 upInCamera = new Vec3(0,-1,0);
@@ -25,15 +21,9 @@ class MipRenderer implements GLEventListener
     private double widthInPixels = defaultHeightInPixels;
     private double heightInPixels = defaultHeightInPixels;
     // scene objects
-    private Vector<GLActor> actors = new Vector<GLActor>();
-
     public MipRenderer() {
     		// actors.add(new TeapotActor()); // solid shading is not supported right now
     		actors.add(new VolumeBrick(this)); // Test volume with six voxels
-    }
-    
-    public void addActor(GLActor actor) {
-    		actors.add(actor);
     }
     
     public void centerOnPixel(Point p) {
@@ -50,9 +40,8 @@ class MipRenderer implements GLEventListener
     @Override
     public void display(GLAutoDrawable gLDrawable) 
     {
+	    super.display(gLDrawable); // fills background
         final GL2 gl = gLDrawable.getGL().getGL2();
-        gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        gl.glClear(GL2.GL_COLOR_BUFFER_BIT);
         gl.glPushAttrib(GL2.GL_TRANSFORM_BIT);
         gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glPushMatrix();
@@ -84,19 +73,6 @@ class MipRenderer implements GLEventListener
         gl.glFlush();
     }
  
-    public void displayChanged(GLAutoDrawable gLDrawable, boolean modeChanged, boolean deviceChanged) 
-    {
-    		// System.out.println("displayChanged called");
-    }
-    
-    @Override
-	public void dispose(GLAutoDrawable glDrawable) 
-	{
-        final GL2 gl = glDrawable.getGL().getGL2();
-		for (GLActor actor : actors)
-			actor.dispose(gl);
-	}
-
     public Rotation getRotation() {
     		return R_ground_camera;
     }
@@ -105,16 +81,6 @@ class MipRenderer implements GLEventListener
     		return cameraFocusDistance / distanceToScreenInPixels;
     }
 
-    @Override
-    public void init(GLAutoDrawable gLDrawable) 
-    {
-    		// System.out.println("init() called");
-        GL2 gl = gLDrawable.getGL().getGL2();
-        gl.glEnable(GL2.GL_FRAMEBUFFER_SRGB);
-		for (GLActor actor : actors)
-			actor.init(gl);
-    }
-    
     public void resetView() 
     {
     		// Adjust view to fit the actual objects present

@@ -31,8 +31,13 @@ extends BaseGLViewer
 	
 	public Mip3d()
     {
-        renderer = new MipRenderer();
-        addGLEventListener(renderer);
+		this(new MipRenderer());
+    }
+	
+	public Mip3d(MipRenderer renderer)
+    {
+		super(renderer);
+        this.renderer = renderer;
         setPreferredSize( new Dimension( 400, 400 ) );
 
         // Context menu for resetting view

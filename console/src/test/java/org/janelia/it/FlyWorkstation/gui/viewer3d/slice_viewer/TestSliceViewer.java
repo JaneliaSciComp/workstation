@@ -1,9 +1,9 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.sliceViewer;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.sliceViewer.SliceViewer;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.SliceViewer;
 
 public class TestSliceViewer {
 

@@ -7,6 +7,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelListener;
 import javax.media.opengl.GLCapabilities;
+import javax.media.opengl.GLEventListener;
 import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLJPanel;
 import javax.swing.JPopupMenu;
@@ -38,6 +39,15 @@ MouseWheelListener
         }
     }
 
+    public BaseGLViewer(GLEventListener renderer) {
+		super(capabilities);
+    		addGLEventListener(renderer);
+        popupMenu = new JPopupMenu();
+        addMouseListener(this);
+        addMouseMotionListener(this);
+        addMouseWheelListener(this);
+    }
+    
     public static boolean isAvailable() {
 		return capabilities!=null;
 	}
@@ -45,15 +55,6 @@ MouseWheelListener
 	protected Point previousMousePos;
 	protected boolean bMouseIsDragging = false;
 	
-	public BaseGLViewer()
-	{
-		super(capabilities);
-        popupMenu = new JPopupMenu();
-        addMouseListener(this);
-        addMouseMotionListener(this);
-        addMouseWheelListener(this);
-	}
-
 	protected void maybeShowPopup(MouseEvent event)
 	{
 		if (event.isPopupTrigger()) {
