@@ -1,39 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
-import com.xuggle.mediatool.IMediaReader;
-import com.xuggle.mediatool.MediaListenerAdapter;
-import com.xuggle.mediatool.ToolFactory;
-import com.xuggle.mediatool.event.IOpenCoderEvent;
-import com.xuggle.mediatool.event.IVideoPictureEvent;
-import com.xuggle.xuggler.ICodec;
-import com.xuggle.xuggler.IContainer;
-import com.xuggle.xuggler.IStream;
-import com.xuggle.xuggler.IStreamCoder;
-import loci.formats.FormatException;
-import loci.formats.IFormatReader;
-import loci.formats.gui.BufferedImageReader;
-import loci.formats.in.TiffReader;
-import loci.formats.in.ZeissLSMReader;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor.TextureColorSpace;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.*;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.stream.V3dRawImageStream;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.MaskTextureDataBean;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 
-import java.nio.ByteOrder;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.zip.DataFormatException;
-import java.awt.image.BufferedImage;
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
-public class VolumeLoader 
+public class VolumeLoader
 {
     public enum FileType{
         TIF, LSM, V3DMASK, V3DSIGNAL, MP4, UNKNOWN
