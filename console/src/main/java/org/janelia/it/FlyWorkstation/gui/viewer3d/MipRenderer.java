@@ -1,15 +1,13 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
-import org.janelia.it.FlyWorkstation.gui.util.panels.ChannelSelectionPanel;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.error_trap.JaneliaDebugGL2;
 
+import javax.media.opengl.DebugGL2;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.glu.GLU;
-import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.Vector;
  
 class MipRenderer implements GLEventListener
@@ -53,7 +51,7 @@ class MipRenderer implements GLEventListener
     public void display(GLAutoDrawable gLDrawable) 
     {
         final GL2 gl = gLDrawable.getGL().getGL2();
-	    gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        gl.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         gl.glClear(GL2.GL_COLOR_BUFFER_BIT);
         gl.glPushAttrib(GL2.GL_TRANSFORM_BIT);
         gl.glMatrixMode(GL2.GL_PROJECTION);
@@ -61,15 +59,23 @@ class MipRenderer implements GLEventListener
         updateProjection(gl);
         gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glPushMatrix();
-        		gl.glLoadIdentity();
-        		Vec3 f = focusInGround;
-        		Vec3 u = R_ground_camera.times(upInCamera);
-        		Vec3 c = f.plus(R_ground_camera.times(new Vec3(0,0,-cameraFocusDistance)));
-        		glu.gluLookAt(c.x(), c.y(), c.z(), // camera in ground
-        					  f.x(), f.y(), f.z(), // focus in ground
-        					  u.x(), u.y(), u.z()); // up vector in ground
-        		for (GLActor actor : actors)
-        			actor.display(gl);
+        gl.glLoadIdentity();
+
+        Vec3 f = focusInGround;
+        Vec3 u = R_ground_camera.times(upInCamera);
+        Vec3 c = f.plus(R_ground_camera.times(new Vec3(0,0,-cameraFocusDistance)));
+        glu.gluLookAt(c.x(), c.y(), c.z(), // camera in ground
+                f.x(), f.y(), f.z(), // focus in ground
+                u.x(), u.y(), u.z()); // up vector in ground
+
+        if ( System.getProperty( "glComposablePipelineDebug", "f" ).toLowerCase().startsWith("t") ) {
+            DebugGL2 debugGl2 = new JaneliaDebugGL2(gl);
+            gLDrawable.setGL(debugGl2);
+        }
+
+        for (GLActor actor : actors)
+            actor.display(gl);
+
         gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glPopMatrix();
         gl.glMatrixMode(GL2.GL_MODELVIEW);

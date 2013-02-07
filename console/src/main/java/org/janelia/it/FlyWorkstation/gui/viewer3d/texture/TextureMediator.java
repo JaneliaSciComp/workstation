@@ -129,12 +129,12 @@ public class TextureMediator {
         return tc;
     }
 
+    /**
+     * Set the coords for the texture.  Note that we may not call glGetError here, as this is done
+     * between glBegin and glGetEnd calls.
+     */
     public void setTextureCoordinates( GL2 gl, double tX, double tY, double tZ ) {
         gl.glMultiTexCoord3d(textureSymbolicId, tX, tY, tZ);
-        int errNum = gl.glGetError();
-        if ( errNum > 0 ) {
-            logger.warn( "Error setting texture coords for name={}:  {}.", textureName, errNum );
-        }
     }
 
     public Double[] getVolumeMicrometers() {
@@ -146,9 +146,6 @@ public class TextureMediator {
     }
 
     public void setupTexture( GL2 gl, int interpolationMethod ) {
-//System.out.println(this.textureSymbolicId + ":" + this.textureName + ":" + this.getTextureOffset() );
-//new Exception().printStackTrace(); // Who's calling.
-
         gl.glActiveTexture( textureSymbolicId );
         reportError( "setupTexture glActiveTexture", gl );
         gl.glBindTexture( GL2.GL_TEXTURE_3D, textureName );

@@ -233,7 +233,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		}
 
         public JMenuItem getNewAlignmentBoardItem() {
-            if ( 0 == 0 ) return null;      // Removed for release.
             if (multiple) return null;
 
             JMenuItem newFolderItem = new JMenuItem("  Create New Alignment Board");

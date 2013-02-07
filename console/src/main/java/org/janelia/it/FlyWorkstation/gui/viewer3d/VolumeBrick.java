@@ -6,7 +6,6 @@ import java.util.List;
 
 import com.jogamp.common.nio.Buffers;
 import com.jogamp.opengl.util.gl2.GLUT;
-import org.apache.juli.JdkLoggerFormatter;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.VolumeBrickShader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator;
@@ -274,28 +273,20 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 			// gl.glColor3d(c, c, c);
 			// draw the quadrilateral as a triangle strip with 4 points
             // (somehow GL_QUADS never works correctly for me)
+            reportError(gl, "Volume Brick, before setting coords.");
+
             gl.glBegin(GL2.GL_TRIANGLE_STRIP);
-
-            int errNum = 0;
-            setTextureCoordinates( gl, t00[0], t00[1], t00[2] );
+            setTextureCoordinates(gl, t00[0], t00[1], t00[2]);
             gl.glVertex3d(p00[0], p00[1], p00[2]);
-            errNum += gl.glGetError();  // Calling resets the error state to zero.
-
-            setTextureCoordinates( gl, t10[0], t10[1], t10[2] );
+            setTextureCoordinates(gl, t10[0], t10[1], t10[2]);
             gl.glVertex3d(p10[0], p10[1], p10[2]);
-            errNum += gl.glGetError();
-
-            setTextureCoordinates( gl, t01[0], t01[1], t01[2] );
+            setTextureCoordinates(gl, t01[0], t01[1], t01[2]);
             gl.glVertex3d(p01[0], p01[1], p01[2]);
-            errNum += gl.glGetError();
-
-            setTextureCoordinates( gl, t11[0], t11[1], t11[2] );
+            setTextureCoordinates(gl, t11[0], t11[1], t11[2]);
             gl.glVertex3d(p11[0], p11[1], p11[2]);
             gl.glEnd();
 
-            if ( errNum > 0 ) {
-                logger.warn( "Found problem while setting vertex coordinates {}.", errNum );
-            }
+            reportError(gl, "Volume Brick, after setting coords.");
 
 			boolean bDebug = false;
 			if (bDebug)
@@ -305,7 +296,17 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     }
 
-	@Override
+    private void reportError(GL2 gl, String source) {
+        int errNum = gl.glGetError();
+        if ( errNum > 0 ) {
+            logger.warn(
+                    "Error {}/0x0{} encountered in " + source,
+                    errNum, Integer.toHexString(errNum)
+            );
+        }
+    }
+
+    @Override
 	public void dispose(GL2 gl) {
 		gl.glDeleteTextures(1, textureIds, 0);
 		// Retarded JOGL GLJPanel frequently reallocates the GL context
