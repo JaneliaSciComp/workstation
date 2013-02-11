@@ -6,10 +6,7 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
 import javax.media.opengl.glu.GLU;
-
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.Camera3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.SimpleCamera3d;
 
 // Shared base class of MipRenderer and SliceRenderer
 public abstract class BaseRenderer implements GLEventListener
@@ -17,16 +14,8 @@ public abstract class BaseRenderer implements GLEventListener
     protected GLU glu = new GLU();
     protected Vector<GLActor> actors = new Vector<GLActor>();
     protected Color backgroundColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
-    protected ObservableCamera3d camera;
+    protected Camera3d camera;
 
-    public BaseRenderer() {
-    		this(new ObservableCamera3d());
-    }
-    
-	public BaseRenderer(ObservableCamera3d camera) {
-    		this.camera = camera;
-    }
-    
 	public void addActor(GLActor actor) {
 		actors.add(actor);
     }
@@ -61,7 +50,7 @@ public abstract class BaseRenderer implements GLEventListener
 		return backgroundColor;
 	}
 
-    public ObservableCamera3d getCamera() {
+    public Camera3d getCamera() {
 		return camera;
 	}
 
@@ -77,5 +66,9 @@ public abstract class BaseRenderer implements GLEventListener
 
     public void setBackgroundColor(Color backgroundColor) {
 		this.backgroundColor = backgroundColor;
+	}
+
+    public void setCamera(Camera3d camera) {
+		this.camera = camera;
 	}
 }

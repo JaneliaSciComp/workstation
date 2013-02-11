@@ -3,7 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.camera;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 
-public class SimpleCamera3d
+public class BasicCamera3d
 implements Camera3d
 {
 	// View center
@@ -22,7 +22,14 @@ implements Camera3d
 	public Rotation getRotation() {
 		return rotation;
 	}
-    
+	
+    @Override
+	public boolean incrementFocusPixels(int x, int y, int z) {
+		Vec3 v = new Vec3(x, y, z);
+		v = v.times(1.0 / pixelsPerSceneUnit);
+		return setFocus(focus.plus(v));
+	}
+	
     public boolean incrementZoom(float zoomRatio) {
     		if (zoomRatio == 1.0)
     			return false; // no change

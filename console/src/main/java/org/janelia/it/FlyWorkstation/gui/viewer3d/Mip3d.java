@@ -3,7 +3,6 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Map;
-
 import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.gui.util.panels.ChannelSelectionPanel;
@@ -18,7 +17,7 @@ extends BaseGLViewer
     public static final int RGBDIALOG_HEIGHT = 150;
 	
 	private static final long serialVersionUID = 1L;
-	private MipRenderer renderer;
+	private MipRenderer renderer = new MipRenderer();
     private boolean clearOnLoad = true;
     private Map<Integer,byte[]> neuronNumToRGB;
 
@@ -30,13 +29,7 @@ extends BaseGLViewer
 	
 	public Mip3d()
     {
-		this(new MipRenderer());
-    }
-	
-	public Mip3d(MipRenderer renderer)
-    {
-		super(renderer);
-        this.renderer = renderer;
+		addGLEventListener(renderer);
         setPreferredSize( new Dimension( 400, 400 ) );
 
         // Context menu for resetting view
@@ -202,5 +195,4 @@ extends BaseGLViewer
 		// not display().
 		repaint();
 	}
-
 }

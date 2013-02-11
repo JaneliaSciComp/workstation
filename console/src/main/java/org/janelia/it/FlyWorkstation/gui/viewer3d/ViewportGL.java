@@ -3,7 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.SimpleCamera3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicCamera3d;
 
 // ViewportGL combines:
 //  1) camera information
@@ -14,9 +14,9 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.SimpleCamera3d;
 public class ViewportGL {
     private int width; // in pixels
     private int height; // in pixels
-    private SimpleCamera3d camera;
+    private BasicCamera3d camera;
     
-	public SimpleCamera3d getCamera() {
+	public BasicCamera3d getCamera() {
 		return camera;
 	}
 
@@ -35,7 +35,7 @@ public class ViewportGL {
 		gl.glViewport(0, 0, width, height);
     }
 
-	public void setCamera(SimpleCamera3d camera) {
+	public void setCamera(BasicCamera3d camera) {
 		this.camera = camera;
 	}
 

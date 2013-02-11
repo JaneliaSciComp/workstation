@@ -39,9 +39,8 @@ MouseWheelListener
         }
     }
 
-    public BaseGLViewer(GLEventListener renderer) {
+    public BaseGLViewer() {
 		super(capabilities);
-    		addGLEventListener(renderer);
         popupMenu = new JPopupMenu();
         addMouseListener(this);
         addMouseMotionListener(this);
@@ -80,5 +79,4 @@ MouseWheelListener
 		bMouseIsDragging = false;
 		maybeShowPopup(event);
 	}
-
 }

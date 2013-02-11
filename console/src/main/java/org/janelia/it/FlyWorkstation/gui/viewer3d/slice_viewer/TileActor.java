@@ -17,7 +17,13 @@ implements GLActor
 
 	@Override
 	public void display(GL2 gl) {
+		// for initial testing, paint a blue square
+		gl.glColor3d(0.2, 0.2, 1.0);
 		gl.glBegin(GL2.GL_QUADS);
+			gl.glVertex3d( 0,  0, 0);
+			gl.glVertex3d( 0, 10, 0);
+			gl.glVertex3d(10, 10, 0);
+			gl.glVertex3d(10,  0, 0);
 		gl.glEnd();
 	}
 
