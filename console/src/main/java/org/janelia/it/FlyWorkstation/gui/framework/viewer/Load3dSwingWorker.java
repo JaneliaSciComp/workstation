@@ -37,7 +37,7 @@ public class Load3dSwingWorker extends SwingWorker<Boolean,Boolean> {
     @Override
     protected void done() {
         if ( filename != null ) {
-            mip3d.loadVolume(filename, new CacheFileResolver());
+            mip3d.loadVolume(filename, null, new CacheFileResolver());
             filenameSufficient();
         }
         else {

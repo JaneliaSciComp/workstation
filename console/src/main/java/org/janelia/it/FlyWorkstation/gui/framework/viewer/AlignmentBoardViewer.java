@@ -210,7 +210,10 @@ public class AlignmentBoardViewer extends Viewer {
         private List<String> maskFilenames;
         private List<String> signalFilenames;
 
-        public void setFilenames( List<String> signalFilenames, List<String> maskFilenames ) {
+        public void setFilenames(
+                List<String> signalFilenames,
+                List<String> maskFilenames
+        ) {
             this.signalFilenames = signalFilenames;
             this.maskFilenames = maskFilenames;
         }
@@ -231,13 +234,13 @@ public class AlignmentBoardViewer extends Viewer {
             mip3d.setMaskColorMappings( colorMapper.getMapping( alignmentBoardDataBuilder.getFragments() ) );
 
             FileResolver resolver = new CacheFileResolver();
-            VolumeMaskBuilder volumeMaskBuilder = createMaskBuilder(
-                    maskFilenames, alignmentBoardDataBuilder.getFragments(), resolver
-            );
-            mip3d.setVolumeMaskBuilder(volumeMaskBuilder);
-
             for ( String signalFilename: signalFilenames ) {
-                mip3d.loadVolume( signalFilename, resolver);
+                List<String> maskFilenamesForSignal = alignmentBoardDataBuilder.getMaskFilenames( signalFilename );
+                VolumeMaskBuilder volumeMaskBuilder = createMaskBuilder(
+                        maskFilenamesForSignal, alignmentBoardDataBuilder.getFragments( signalFilename ), resolver
+                );
+
+                mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver);
                 // After first volume has been loaded, unset clear flag, so subsequent
                 // ones are overloaded.
                 mip3d.setClearOnLoad(false);
