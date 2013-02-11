@@ -40,15 +40,22 @@ public class TestMip3d {
                     String fileBase = "/Users/fosterl/Documents/alignment_board/samples/";
                     //String fn = fileBase + "1735579170638921826/ConsolidatedSignal2_25.mp4";
                     //String fn = "/Volumes/jacsData/filestore/system/Separation/951/842/1742124964321951842/separate/ConsolidatedLabel.v3dpbd";
-                    String fn = "/Volumes/jacsData/filestore/system/Separation/294/370/1742138165818294370/separate/fastLoad/ConsolidatedSignal2_25.mp4";
+                    //String fn = "/Volumes/jacsData/filestore/system/Separation/294/370/1742138165818294370/separate/fastLoad/ConsolidatedSignal2_25.mp4";
+
+                    // Compartment masks.
                     String guideBase = "/Volumes/jacsData/MaskResources/Compartment/guide/";
                     //String fn = guideBase + "LOP_R.v3dpbd";
+                    //String fn = guideBase + "Mask.v3dpbd";
+                    String fn = guideBase + "../maskIndex.v3dpbd";
+
+                    //String fn = "/Users/fosterl/mean_brain_295_ref_local_with_compartment_edges.tif";
+                    //String fn = "/Users/fosterl/test1_256.tif";
 
                     //String fn = "/Volumes/jacsData/filestore/system/Separation/296/418/1778029752666296418/separate/ConsolidatedLabel.v3dpbd";
                     //String fn = "/Volumes/jacsData/filestore/system/Separation/143/266/1696292257579143266/separate/ConsolidatedLabel.v3dpbd";
                     //String fn = "/Volumes/jacsData/filestore/system/Separation/921/826/1735579170638921826/separate/ConsolidatedLabel.v3dpbd";
 
-                    if ( ! mipWidget.loadVolume(fn, new TrivialFileResolver()) )
+                    if ( ! mipWidget.loadVolume(fn, null, new TrivialFileResolver()) )
                         System.out.println("Volume load failed.");
                 	// mipWidget.loadVolume("/Users/brunsc/projects/fast_load/test_dir2/fastLoad/ConsolidatedSignal2_25.v3dpbd");
                 	// mipWidget.loadVolume("/Users/brunsc/projects/fast_load/test_dir2/fastLoad/ConsolidatedSignal2_25.v3draw");

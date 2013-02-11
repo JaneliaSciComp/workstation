@@ -101,6 +101,7 @@ public class TestMaskedMip3d {
                         throw new IllegalArgumentException( "Cannot open signal file " + fn );
                     }
 
+                    VolumeMaskBuilder vmb = null;
                     // Load the file into the mask-builder.
                     if ( mf != null ) {
                         File mfFile = new File( mf );
@@ -109,7 +110,7 @@ public class TestMaskedMip3d {
                         }
 
                         java.util.List<FragmentBean> beans = new ArrayList<FragmentBean>();
-                        VolumeMaskBuilder vmb = new VolumeMaskBuilder();
+                        vmb = new VolumeMaskBuilder();
                         VolumeLoader vLoader = new VolumeLoader( resolver );
 
                         FragmentBean fragmentBean = new FragmentBean();
@@ -138,10 +139,9 @@ public class TestMaskedMip3d {
                         // Setup a testing color-wheel mapping.
                         ColorMappingI colorMapper = new ColorWheelColorMapping();
                         mipWidget.setMaskColorMappings( colorMapper.getMapping( beans ) );
-                        mipWidget.setVolumeMaskBuilder( vmb );
                     }
 
-                    if ( ! mipWidget.loadVolume( fn, resolver ) ) {
+                    if ( ! mipWidget.loadVolume( fn, vmb, resolver ) ) {
                         throw new RuntimeException( "Failed to load " + fn );
                     }
                     mipWidget.setClearOnLoad( false );
