@@ -20,7 +20,6 @@ extends BaseGLViewer
 	private static final long serialVersionUID = 1L;
 	private MipRenderer renderer;
     private boolean clearOnLoad = true;
-    private VolumeMaskBuilder volumeMaskBuilder;
     private Map<Integer,byte[]> neuronNumToRGB;
 
 	public enum InteractionMode {
@@ -111,10 +110,6 @@ extends BaseGLViewer
         this.clearOnLoad = clearOnLoad;
     }
 
-    public void setVolumeMaskBuilder( VolumeMaskBuilder volumeMaskBuilder ) {
-        this.volumeMaskBuilder = volumeMaskBuilder;
-    }
-
     /**
      * Sets the info needed for the shader to colorize the otherwise luminance-only masks.
      *
@@ -124,7 +119,7 @@ extends BaseGLViewer
         this.neuronNumToRGB = neuronNumToRGB;
     }
 
-	public boolean loadVolume(String fileName, FileResolver resolver) {
+	public boolean loadVolume(String fileName, VolumeMaskBuilder volumeMaskBuilder, FileResolver resolver) {
         if (clearOnLoad)
             renderer.clear();
 

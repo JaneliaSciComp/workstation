@@ -26,8 +26,10 @@ public class AlignmentBoardDataBuilder implements Serializable {
     private Logger logger = LoggerFactory.getLogger( AlignmentBoardDataBuilder.class );
 
     private List<String> signalFilenames;
-    private List<String> maskFilenames;
+    //private List<String> maskFilenames;
     private List<FragmentBean> fragments;
+    private Map<String,List<String>> signalToMaskFilenames;
+    private Map<String,List<FragmentBean>> signalFilenameToFragments;
 
     private boolean sampleAncestorEncountered;
 
@@ -40,33 +42,75 @@ public class AlignmentBoardDataBuilder implements Serializable {
         Map<Entity,Entity> labelToPipelineResult = new HashMap<Entity,Entity>();
 
         List<Entity> displayableList = getDisplayableList( alignmentBoard );
-        Set<Entity> baseEntities = getMaskContainerAncestors(ancestorToFragments, displayableList);
-        List<Entity> consolidatedLabelsList = getMaskLabelEntities(labelToPipelineResult, baseEntities);
-        Set<Entity> sampleEntities = getSampleEntities( displayableList );
+        Map<Entity,Entity> displayableToBaseEntity = getMaskContainerAncestors(ancestorToFragments, displayableList);
+        Set<Entity> baseEntities = new HashSet<Entity>();
+        baseEntities.addAll( displayableToBaseEntity.values() );
 
-        findSignalFilenames(sampleEntities);
-        findMaskFilenames(ancestorToFragments, labelToPipelineResult, consolidatedLabelsList);
+        List<Entity> consolidatedLabelsList = getMaskLabelEntities(labelToPipelineResult, baseEntities);
+        Map<Entity,Entity> sampleToBaseEntity = new HashMap<Entity,Entity>();
+        Set<Entity> sampleEntities = getSampleEntities( displayableList, displayableToBaseEntity, sampleToBaseEntity );
+
+        Map<Entity,Set<Entity>> signalToLabelEntities = getSignalToLabelEntities(labelToPipelineResult);
+
+        Map<Entity,String> labelEntityToSignalFilename = findSignalFilenames(sampleEntities, sampleToBaseEntity, signalToLabelEntities);
+        findLabelFilenames(ancestorToFragments, labelToPipelineResult, consolidatedLabelsList, labelEntityToSignalFilename);
 
     }
 
+    //todo change this to get all the masks, given the filename out of this iterator.
     public List<String> getSignalFilenames() {
         return signalFilenames;
     }
 
+    public List<String> getMaskFilenames( String signalFilename ) {
+        return signalToMaskFilenames.get( signalFilename );
+    }
+
     public List<String> getMaskFilenames() {
-        return maskFilenames;
+        List<String> rtnVal = new ArrayList<String>();
+        for ( String signalFilename: signalToMaskFilenames.keySet() ) {
+            List<String> maskFilenames = signalToMaskFilenames.get( signalFilename );
+            rtnVal.addAll( maskFilenames );
+        }
+        return rtnVal;
     }
 
     public List<FragmentBean> getFragments() {
         return fragments;
     }
 
-    private Set<Entity> getSampleEntities(List<Entity> displayableList) {
+    public List<FragmentBean> getFragments( String signalFilename ) {
+        return signalFilenameToFragments.get( signalFilename );
+    }
+
+    private Map<Entity,Set<Entity>> getSignalToLabelEntities(Map<Entity, Entity> labelToPipelineResult) {
+        Map<Entity,Set<Entity>> rtnVal = new HashMap<Entity,Set<Entity>> ();
+
+        for ( Entity labelEntity: labelToPipelineResult.keySet() ) {
+            Entity value = labelToPipelineResult.get( labelEntity );
+            Set<Entity> labelSet = rtnVal.get( value );
+            if ( labelSet == null ) {
+                labelSet = new HashSet<Entity>();
+                rtnVal.put( value, labelSet );
+            }
+            labelSet.add( labelEntity );
+        }
+
+        return rtnVal;
+    }
+
+    private Set<Entity> getSampleEntities(List<Entity> displayableList,
+                                          Map<Entity,Entity> displayableToBaseEntity,
+                                          Map<Entity,Entity> sampleToBaseEntity
+    ) {
         // Get all the signal filenames.  These are to be masked-by the mask filenames' contents.
         Set<Entity> sampleEntities = new HashSet<Entity>();
         for ( Entity displayable: displayableList ) {
             try {
-                sampleEntities.add(findSampleAncestor(displayable));
+                Entity sampleAncestor = findSampleAncestor(displayable);
+                sampleEntities.add(sampleAncestor);
+
+                sampleToBaseEntity.put( sampleAncestor, displayableToBaseEntity.get( displayable ) );
             } catch ( Exception ex ) {
                 SessionMgr.getSessionMgr().handleException( ex );
             }
@@ -74,7 +118,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
         return sampleEntities;
     }
 
-    private List<Entity> getMaskLabelEntities(Map<Entity, Entity> labelToPipelineResult, Set<Entity> baseEntities) {
+    private List<Entity> getMaskLabelEntities(Map<Entity, Entity> labelToPipelineResult, Collection<Entity> baseEntities) {
         // Get the mask items.
         List<Entity> consolidatedLabelsList = new ArrayList<Entity>();
         try {
@@ -109,9 +153,9 @@ public class AlignmentBoardDataBuilder implements Serializable {
         return displayableList;
     }
 
-    private Set<Entity> getMaskContainerAncestors(Map<Entity, List<Entity>> ancestorToFragments, List<Entity> displayableList) {
+    private Map<Entity,Entity> getMaskContainerAncestors(Map<Entity, List<Entity>> ancestorToFragments, List<Entity> displayableList) {
         // Resolve interesting entities to usable ancestors.
-        Set<Entity> baseEntities = new HashSet<Entity>();
+        Map<Entity,Entity> displayableToBaseEntity = new HashMap<Entity,Entity>();
         try {
             for ( Entity displayable: displayableList ) {
                 Entity baseEntity = findPipelineResultAncestor(displayable);
@@ -123,12 +167,12 @@ public class AlignmentBoardDataBuilder implements Serializable {
                     }
                     pipelineResultFragments.add(displayable);
                 }
-                baseEntities.add(baseEntity);
+                displayableToBaseEntity.put(displayable, baseEntity);
             }
         } catch ( Exception ex ) {
             SessionMgr.getSessionMgr().handleException( ex );
         }
-        return baseEntities;
+        return displayableToBaseEntity;
     }
 
     private Entity findSampleAncestor(Entity displayableChild) throws Exception {
@@ -153,55 +197,98 @@ public class AlignmentBoardDataBuilder implements Serializable {
         return baseEntity;
     }
 
-    private void findMaskFilenames(Map<Entity, List<Entity>> sampleToFragments, Map<Entity, Entity> labelToPipelineResult, List<Entity> consolidatedLabelsList) {
-        maskFilenames = new ArrayList<String>();
+    private void findLabelFilenames(
+            Map<Entity, List<Entity>> sampleToFragments,
+            Map<Entity, Entity> labelToPipelineResult,
+            List<Entity> consolidatedLabelsList,
+            Map<Entity,String> labelEntityToSignalFilename) {
+
+        signalToMaskFilenames = new HashMap<String,List<String>>();
+        signalFilenameToFragments = new HashMap<String,List<FragmentBean>>();
+
         int fragmentOffset = 1;
-        for ( Entity consolidatedLabel: consolidatedLabelsList ) {
-            String filename = EntityUtils.getFilePath(consolidatedLabel);
-            if ( filename != null ) {
-//                if ( matchesSomeSignal( signalFilenames, filename ) ) {
-                    String finalMaskFile = ensureMaskFile(filename);
-                    maskFilenames.add( finalMaskFile );
+        for ( Entity labelEntity: consolidatedLabelsList ) {
+            String labelFilename = EntityUtils.getFilePath(labelEntity);
+            if ( labelFilename != null ) {
+//                if ( matchesSomeSignal( signalFilenames, labelFilename ) ) {
+                String signalFilename = labelEntityToSignalFilename.get( labelEntity );
+                String finalLabelFile = ensureLabelFile(labelFilename);
 
-                    // Get any fragments associated. Create fragment bean.
-                    Entity sample = labelToPipelineResult.get( consolidatedLabel );
-                    List<Entity> sampleFragments = sampleToFragments.get( sample );
-                    if ( sampleFragments != null ) {
-                        for ( Entity fragment: sampleFragments ) {
-                            FragmentBean bean = new FragmentBean();
-                            bean.setLabelFile( finalMaskFile );
-                            bean.setFragment( fragment );
-                            bean.setTranslatedNum( fragmentOffset++ );
-
-                            fragments.add( bean );
-                        }
-                    }
-                    sampleToFragments.remove( sample );
+                List<String> maskFilenamesForSignal = signalToMaskFilenames.get( signalFilename );
+                if ( maskFilenamesForSignal == null ) {
+                    maskFilenamesForSignal = new ArrayList<String>();
+                    signalToMaskFilenames.put( signalFilename, maskFilenamesForSignal );
                 }
+                maskFilenamesForSignal.add( labelFilename );
+
+                // Get any fragments associated. Create fragment bean.
+                Entity sample = labelToPipelineResult.get( labelEntity );
+                List<Entity> sampleFragments = sampleToFragments.get( sample );
+                if ( sampleFragments != null ) {
+                    for ( Entity fragment: sampleFragments ) {
+                        FragmentBean bean = new FragmentBean();
+                        bean.setLabelFile( finalLabelFile );
+                        bean.setFragment( fragment );
+                        bean.setTranslatedNum( fragmentOffset++ );
+
+                        fragments.add( bean );
+
+                        List<FragmentBean> fragmentsForSignalFn = signalFilenameToFragments.get( signalFilename );
+                        if ( fragmentsForSignalFn == null ) {
+                            fragmentsForSignalFn = new ArrayList<FragmentBean>();
+                            signalFilenameToFragments.put( signalFilename, fragmentsForSignalFn );
+                        }
+                        fragmentsForSignalFn.add( bean );
+                    }
+                }
+                sampleToFragments.remove( sample );
+            }
 //            }
         }
     }
 
-    private void findSignalFilenames(Set<Entity> baseEntities) {
+    private Map<Entity,String> findSignalFilenames(
+            Collection<Entity> sampleEntities,
+            Map<Entity,Entity> sampleToBaseEntity,
+            Map<Entity,Set<Entity>> signalToLabelEntities
+    ) {
         signalFilenames = new ArrayList<String>();
+
+        Map<Entity,String> labelEntityToSignalFilename = new HashMap<Entity,String>();
         try {
             EntityFilenameFetcher filenameFetcher = new EntityFilenameFetcher();
 
-            for ( Entity baseEntity: baseEntities ) {
+            for ( Entity sampleEntity: sampleEntities ) {
 
                 // Find this entity's file name of interest.
-                String typeName = baseEntity.getEntityType().getName();
+                String typeName = sampleEntity.getEntityType().getName();
                 String entityConstantFileType = filenameFetcher.getEntityConstantFileType( typeName );
-
-                String filename = filenameFetcher.fetchFilename( baseEntity, entityConstantFileType );
+                String filename = filenameFetcher.fetchFilename( sampleEntity, entityConstantFileType );
                 if ( filename != null ) {
                     signalFilenames.add( filename );
                 }
 
+                // Side effect: build a mapping of label entity to signal filename.
+                // NOTE: _emphasis_ this for-loop looks at the returned collection to get its
+                //    iterator.  Had I phrased it as "iterate over keyset" I would then have
+                //    to traverse all keys, getting each set in turn.
+                Entity baseEntity = sampleToBaseEntity.get( sampleEntity );
+                if ( baseEntity == null ) {
+                    logger.warn("No mapping to base entity from sample entity {}/{}." +
+                            sampleEntity.getName(), sampleEntity.getId() );
+                }
+                else {
+                    for ( Entity labelEntity: signalToLabelEntities.get( baseEntity ) ) {
+                        labelEntityToSignalFilename.put( labelEntity, filename );
+                    }
+
+                }
             }
         } catch ( Exception ex ) {
             SessionMgr.getSessionMgr().handleException( ex );
         }
+
+        return labelEntityToSignalFilename;
     }
 
     /**
@@ -228,7 +315,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
     }
 
     //@todo complete this as needed.
-    private String ensureMaskFile(String filePath) {
+    private String ensureLabelFile(String filePath) {
         // This method is stubbed. The final implementation will be similar to below:
         //  the existing file will need to have a path like "/archive/fastLoad/" inserted
         //  into it.  Details not precise at the moment.
