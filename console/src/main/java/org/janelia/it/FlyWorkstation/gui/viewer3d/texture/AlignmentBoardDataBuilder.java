@@ -27,6 +27,10 @@ import java.util.*;
  * This is where the data are pulled together for the alignment board viewer.
  */
 public class AlignmentBoardDataBuilder implements Serializable {
+    private static final String COMPARTMENT_MASK_FILE = "/groups/scicomp/jacsData/MaskResources/Compartment/maskIndex.v3dpbd";
+    private static final String COMPARTMENT_MASK_MAPPING_FILE = "/groups/scicomp/jacsData/MaskResources/Compartment/maskNameIndex.txt";
+    private static final String COMPARTMENT_FOLDER_NAME = "Compartment";
+
     private Logger logger = LoggerFactory.getLogger( AlignmentBoardDataBuilder.class );
 
     private List<String> signalFilenames;
@@ -108,7 +112,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
         for ( Entity entity: displayableList ) {
             try {
                 Entity definingAncestor = ModelMgr.getModelMgr().getAncestorWithType( entity, EntityConstants.TYPE_FOLDER );
-                if ( definingAncestor.getName().equals( "Compartment" ) ) {
+                if ( definingAncestor.getName().equals( COMPARTMENT_FOLDER_NAME ) ) {
                     // Know: we have a compartment.
                     String compartmentName = entity.getName();
                     compartmentNames.add( compartmentName );
@@ -123,7 +127,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
             CacheFileResolver cacheFileResolver = new CacheFileResolver();
             String maskIndex =
                     cacheFileResolver.getResolvedFilename(
-                            "/groups/scicomp/jacsData/MaskResources/Compartment/maskIndex.v3dpbd"
+                            COMPARTMENT_MASK_FILE
                     );
 
             // Tack along to the last signal file name.
@@ -140,7 +144,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
 
             // Pull in info from the compartments definition text file.
             File maskNameIndex = new File( cacheFileResolver.getResolvedFilename(
-                    "/groups/scicomp/jacsData/MaskResources/Compartment/maskNameIndex.txt"
+                    COMPARTMENT_MASK_MAPPING_FILE
             )
             );
 
@@ -148,6 +152,8 @@ public class AlignmentBoardDataBuilder implements Serializable {
             try {
                 BufferedReader rdr = new BufferedReader( new FileReader( maskNameIndex ) );
                 String nextLine = null;
+
+                // Prototype input line:
                 // 56 WED_L "Description" ( 53 45 215 )
                 while ( null != ( nextLine = rdr.readLine() ) ) {
                     String[] fields = nextLine.trim().split( " " );
@@ -227,14 +233,11 @@ public class AlignmentBoardDataBuilder implements Serializable {
             List<Entity> nextLabelList = new ArrayList<Entity>();
             for ( Entity baseEntity: baseEntities ) {
                 if ( baseEntity != null ) {
-                    recursivelyFindConsolidatedLabels( nextLabelList, baseEntity );
+                    recursivelyFindConsolidatedLabels(nextLabelList, baseEntity);
                     consolidatedLabelsList.addAll( nextLabelList );
                     for ( Entity label: nextLabelList ) {
                         labelToPipelineResult.put(label, baseEntity);
                     }
-                }
-                else {
-                    logger.warn( "Found no sample for neuron fragment {}.  Not displaying.", baseEntity.getId() );
                 }
             }
         } catch ( Exception ex ) {
@@ -494,12 +497,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
         logger.debug("Recursing into " + entity.getName());
         String entityTypeName = entity.getEntityType().getName();
         // Finding the right kind of supporting data.
-        if (
-/*
-             entity.getName().equals("ConsolidatedLabel2_25.v3dpbd" )
-*/
-                entity.getName().equals("ConsolidatedLabel.v3dpbd" )
-                ) {
+        if ( entity.getName().equals("ConsolidatedLabel.v3dpbd" ) ) {
             logger.info("Adding a child of type " + entityTypeName + ", named " + entity.getName() );
             // This is that kind of an entity!
             consLabelList.add(entity);
