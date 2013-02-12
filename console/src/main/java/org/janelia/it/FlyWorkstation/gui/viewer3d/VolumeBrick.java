@@ -434,10 +434,10 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         if ( signalTextureMediator != null ) {
             signalTextureMediator.init( textureIds[ 0 ], TextureMediator.SIGNAL_TEXTURE_OFFSET );
         }
-        if ( maskTextureMediator != null ) {
+        if ( maskTextureMediator != null  &&  textureIds.length >= 2 ) {
             maskTextureMediator.init( textureIds[ 1 ], TextureMediator.MASK_TEXTURE_OFFSET );
         }
-        if ( colorMapTextureMediator != null ) {
+        if ( colorMapTextureMediator != null  &&  textureIds.length >= 3 ) {
             colorMapTextureMediator.init( textureIds[ 2 ], TextureMediator.COLOR_MAP_TEXTURE_OFFSET );
         }
     }
