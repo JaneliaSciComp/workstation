@@ -63,6 +63,9 @@ public class AlignmentBoardDataBuilder implements Serializable {
 
     // *** TEMP ***
     private void applyFalseCompartmentMask() {
+        if ( signalFilenameToFragments.size() == 0 ) {
+            return;
+        }
         // Special section, for testing: add some arbitrary compartment masks to the mix.
         // NOTE: use of assumed non-null keyset/iterator could lead to NPE.  Brittle. For test only.
         Set<String> signalFilenames = signalFilenameToFragments.keySet();
