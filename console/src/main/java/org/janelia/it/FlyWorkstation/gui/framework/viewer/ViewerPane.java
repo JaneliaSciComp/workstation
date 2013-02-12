@@ -193,7 +193,8 @@ public class ViewerPane extends JPanel {
 				List<String> uniqueIds = EntityUtils.getPathFromUniqueId(contextRootedEntity.getUniqueId());
 				List<Long> entityIds = new ArrayList<Long>();
 				for(String uniqueId : uniqueIds) {
-					entityIds.add(EntityUtils.getEntityIdFromUniqueId(uniqueId));
+				    Long entityId = EntityUtils.getEntityIdFromUniqueId(uniqueId);
+					entityIds.add(entityId);
 				}
 				Map<Long,Entity>entityMap = EntityUtils.getEntityMap(ModelMgr.getModelMgr().getEntityByIds(entityIds));
 

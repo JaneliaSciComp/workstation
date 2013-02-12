@@ -97,7 +97,7 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
     
     private void updateDataSetIdentifier() {
     	if (dataSetEntity==null) {
-    		identifierInput.setText(EntityUtils.createDataSetIdentifierFromName(SessionMgr.getSubjectKey(), nameInput.getText()));
+    		identifierInput.setText(EntityUtils.createDenormIdentifierFromName(SessionMgr.getSubjectKey(), nameInput.getText()));
     	} 
     }
     

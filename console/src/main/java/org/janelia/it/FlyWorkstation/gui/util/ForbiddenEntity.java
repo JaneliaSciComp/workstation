@@ -36,47 +36,47 @@ public class ForbiddenEntity extends Entity {
 
 	@Override
 	public EntityStatus getEntityStatus() {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public void setEntityStatus(EntityStatus entityStatus) {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public EntityType getEntityType() {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public void setEntityType(EntityType entityType) {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public Date getCreationDate() {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public void setCreationDate(Date creationDate) {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public Date getUpdatedDate() {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public void setUpdatedDate(Date updatedDate) {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public Set<EntityData> getEntityData() {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
@@ -86,97 +86,97 @@ public class ForbiddenEntity extends Entity {
 
 	@Override
 	public String getName() {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public void setName(String name) {
-		throw new AccessControlException("Access denied");
+        throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public String getOwnerKey() {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public void setOwnerKey(String ownerKey) {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public Set<EntityActorPermission> getEntityActorPermissions() {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public void setEntityActorPermissions(Set<EntityActorPermission> entityActorPermissions) {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public EntityAttribute getAttributeByName(String name) {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public EntityData getEntityDataByAttributeName(String attributeName) {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public String getValueByAttributeName(String attributeName) {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public Entity getChildByAttributeName(String attributeName) {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public boolean setValueByAttributeName(String attributeName, String value) {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public EntityData addChildEntity(Entity entity) {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public EntityData addChildEntity(Entity entity, String attributeName) {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public List<EntityData> getList(String attributeName) {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public Integer getMaxOrderIndex() {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public List<EntityData> getOrderedEntityData() {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public List<Entity> getOrderedChildren() {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public boolean hasChildren() {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 
 	@Override
 	public Set<Entity> getChildren() {
-		throw new AccessControlException("Access denied");
+		throw new AccessControlException("Access denied to entity "+entity.getId());
 	}
 	
 	@Override

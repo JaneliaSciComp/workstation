@@ -1,12 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.util;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.List;
+
+import javax.swing.*;
 
 
 /**
@@ -113,6 +113,10 @@ public class JOutlookBar extends JPanel implements ActionListener {
             }
         }
         return null;
+    }
+    
+    public List<String> getBarNames() {
+        return new ArrayList<String>(bars.keySet());
     }
     
     /**

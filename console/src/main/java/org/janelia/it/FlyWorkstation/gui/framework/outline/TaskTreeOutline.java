@@ -6,6 +6,20 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import java.awt.BorderLayout;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.util.*;
+import java.util.Timer;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.TaskDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
@@ -17,25 +31,12 @@ import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
 
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreePath;
-import java.awt.*;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.util.*;
-import java.util.List;
-import java.util.Timer;
-
 /**
  * Provides a tree of the user's Tasks and provides ways to manipulate and view them.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class TaskTreeOutline extends JPanel {
+public class TaskTreeOutline extends JPanel implements ActivatableView {
 
     private static final int REFRESH_SECS = 10;
     
@@ -77,18 +78,26 @@ public class TaskTreeOutline extends JPanel {
         showLoadingIndicator();
         this.updateUI();
         loadTasks();
-        
+    }
+
+    @Override
+    public void activate() {
         TimerTask refreshTask = new TimerTask() {
-			@Override
-			public void run() {
-		        loadTasks();
-			}
-		};
-		
-		refreshTimer = new Timer();
+            @Override
+            public void run() {
+                loadTasks();
+            }
+        };
+        refreshTimer = new Timer();
         refreshTimer.schedule(refreshTask, REFRESH_SECS*1000, REFRESH_SECS*1000);
     }
 
+    @Override
+    public void deactivate() {
+        refreshTimer.cancel();
+        refreshTimer = null;
+    }
+    
     public synchronized void showLoadingIndicator() {
         treesPanel.removeAll();
         treesPanel.add(new JLabel(Icons.getLoadingIcon()));

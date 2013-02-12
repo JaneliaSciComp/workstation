@@ -29,12 +29,16 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModelListe
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ImageCache;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.*;
+import org.janelia.it.FlyWorkstation.model.domain.AlignedEntityWrapperFactory;
+import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableImage;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,6 +70,7 @@ public class Browser extends JFrame implements Cloneable {
     public static final String VIEW_OUTLINES = "Outlines Section";
     public static final String VIEW_ONTOLOGY = "Ontology Section";
     public static final String BAR_DATA = "Data";
+    public static final String BAR_SAMPLES = "Samples";
     public static final String BAR_SESSIONS = "Sessions";
     public static final String BAR_TASKS = "Services";
 
@@ -100,6 +105,7 @@ public class Browser extends JFrame implements Cloneable {
     //    private FileOutline fileOutline;
     private SessionOutline sessionOutline;
     private EntityOutline entityOutline;
+    private EntityWrapperOutline entityWrapperOutline;
     private TaskOutline taskOutline;
 
     private VerticalPanelPicker rightPanel;
@@ -153,15 +159,6 @@ public class Browser extends JFrame implements Cloneable {
         	JOptionPane.showMessageDialog(this, "NFS mount is available, but not configured. To improve performance, edit your data source preferences.", "WARNING", JOptionPane.ERROR_MESSAGE);
         }
     }
-    
-//    public Viewer showSecViewer() {
-//    	Viewer secViewer = viewerPanel.getSecViewer();
-//		if (secViewer==null) {
-//			secViewer = new IconDemoPanel(viewerPanel, EntitySelectionModel.CATEGORY_SEC_VIEW);
-//			viewerPanel.setSecViewer(secViewer);
-//		}
-//		return secViewer;
-//    }
 
     /**
      * Use given coordinates of the top left point and passed realEstatePercent (0-1.0).
@@ -251,9 +248,33 @@ public class Browser extends JFrame implements Cloneable {
 							.compare(o1.getId(), o2.getId()).result();
 					}
 				});
+
 				return roots;
 			}
 		};
+		
+        entityWrapperOutline = new EntityWrapperOutline() {
+            @Override
+            public List<EntityWrapper> loadRootList() throws Exception {
+                List<Entity> roots = ModelMgr.getModelMgr().getCommonRootEntities();
+                Collections.sort(roots, new Comparator<Entity>(){
+                    public int compare(Entity o1, Entity o2) {
+                        return ComparisonChain.start()
+                            .compareTrueFirst(ModelMgrUtils.isOwner(o1), ModelMgrUtils.isOwner(o2))
+                            .compare(o1.getOwnerKey(), o2.getOwnerKey())
+                            .compare(o1.getId(), o2.getId()).result();
+                    }
+                });
+                List<EntityWrapper> wrappers = new ArrayList<EntityWrapper>();
+                for(Entity rootEntity : roots) {
+                    EntityData ed = new EntityData();
+                    ed.setChildEntity(rootEntity);
+                    RootedEntity rootedEntity = new RootedEntity("/e_"+rootEntity.getId(), ed);
+                    wrappers.add(AlignedEntityWrapperFactory.wrap(rootedEntity));
+                }
+                return wrappers;
+            }
+        };
 		
         taskOutline = new TaskOutline(this);
         
@@ -281,25 +302,34 @@ public class Browser extends JFrame implements Cloneable {
 
         outlookBar = new JOutlookBar2();
         outlookBar.addBar(BAR_DATA, Icons.getIcon("folders_explorer_medium.png"), entityOutline);
+        outlookBar.addBar(BAR_SAMPLES, Icons.getIcon("folders_explorer_medium.png"), entityWrapperOutline);
         outlookBar.addBar(BAR_SESSIONS, Icons.getIcon("cart_medium.png"), sessionOutline);
         outlookBar.addBar(BAR_TASKS, Icons.getIcon("cog_medium.png"), taskOutline);
 //        outlookBar.addBar("Files", fileOutline);
-//        outlookBar.setVisibleBarByName(Browser.BAR_PUBLIC_DATA);
+        outlookBar.setVisibleBarByName(Browser.BAR_DATA);
         
         outlookBar.addPropertyChangeListener("visibleBar", new PropertyChangeListener() {
         	public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
-        		JComponent comp = outlookBar.getBar(outlookBar.getVisibleBarName());
-				
+
+        	    log.info("Changing viewable outline to: "+outlookBar.getVisibleBarName());
+                
 				// clear the main viewer 
 				Browser.this.getViewerManager().getMainViewer(null).clear();
 				
-				// refresh the outline being selected
-        		if (comp instanceof Refreshable) {
-        			((Refreshable)comp).refresh();
-        		}
-        		
+				for(String bar : outlookBar.getBarNames()) {
+				    JComponent comp = outlookBar.getBar(bar);
+                    if (!(comp instanceof ActivatableView)) continue;
+				    if (bar.equals(outlookBar.getVisibleBarName())) {
+				        ((ActivatableView)comp).activate();
+				    }
+				    else {
+	                    ((ActivatableView)comp).deactivate();    
+				    }
+				}
+				
         		// clear annotation session whenever the user moves away from the session outline
-        		if (!(comp instanceof SessionOutline)) {
+				JComponent activeComp = outlookBar.getBar(outlookBar.getVisibleBarName());
+        		if (!(activeComp instanceof SessionOutline)) {
         			ModelMgr.getModelMgr().setCurrentAnnotationSession(null);
         		}
             }
@@ -315,7 +345,7 @@ public class Browser extends JFrame implements Cloneable {
         
         rightPanel = new VerticalPanelPicker();
         rightPanel.addPanel(Icons.getIcon("page.png"), "Ontology", "Displays an ontology for annotation", ontologyOutline);
-//        rightPanel.addPanel(Icons.getIcon("palette.png"), "Layers", "Adjust alignment board layers", layersPanel);
+        rightPanel.addPanel(Icons.getIcon("palette.png"), "Layers", "Adjust alignment board layers", layersPanel);
         rightPanel.addPanel(Icons.getIcon("page_copy.png"), "Split Picking Tool", "Allows for simulation of flyline crosses", splitPickingPanel);
         
         Component rightComponent = rightPanel;
@@ -358,43 +388,11 @@ public class Browser extends JFrame implements Cloneable {
         mainPanel.add(collapsedOutlineView, "Collapsed FileOutline");
         getContentPane().add(mainPanel, BorderLayout.CENTER);
 
-//        ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
-//			@Override
-//			public void entitySelected(String category, String entityId, boolean clearAll) {
-//				updateStatusBar();
-//			}
-//			@Override
-//			public void entityDeselected(String category, String entityId) {
-//				updateStatusBar();
-//			}
-//        });
-        
         // Run this later so that the Browser has finished initializing by the time it runs
         SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-		        entityOutline.showLoadingIndicator();
-
-		        final SimpleWorker entityOutlineLoadingWorker = new SimpleWorker() {
-
-		            private List<Entity> rootList;
-		        	
-		            protected void doStuff() throws Exception {
-		            	rootList = entityOutline.loadRootList();
-		            }
-
-		            protected void hadSuccess() {
-		                entityOutline.init(rootList);
-		            }
-
-		            protected void hadError(Throwable error) {
-		                error.printStackTrace();
-		                JOptionPane.showMessageDialog(mainPanel, "Error loading data outlines", "Data Load Error", JOptionPane.ERROR_MESSAGE);
-		                entityOutline.showNothing();
-		            }
-
-		        };
-		        entityOutlineLoadingWorker.execute();
+			    entityOutline.activate();
 			}
         });
     }

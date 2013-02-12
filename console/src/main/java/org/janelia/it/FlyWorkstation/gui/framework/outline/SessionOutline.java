@@ -38,7 +38,7 @@ import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class SessionOutline extends JPanel implements Refreshable {
+public class SessionOutline extends JPanel implements Refreshable, ActivatableView {
 
     private static final String COLUMN_NAME = "Name";
     private static final String COLUMN_PCT_COMPLETE = "% Complete";
@@ -49,6 +49,7 @@ public class SessionOutline extends JPanel implements Refreshable {
     protected final JPanel tablePanel;
     private DynamicTable dynamicTable;
     private SimpleWorker loadingWorker;
+    private ModelMgrAdapter mml;
     	
     public SessionOutline(Browser consoleFrame) {
         super(new BorderLayout());
@@ -58,7 +59,7 @@ public class SessionOutline extends JPanel implements Refreshable {
         tablePanel = new JPanel(new BorderLayout());
         add(tablePanel, BorderLayout.CENTER);
         
-        ModelMgr.getModelMgr().addModelMgrObserver(new ModelMgrAdapter() {
+        mml = new ModelMgrAdapter() {
 
 			@Override
 			public void sessionSelected(long sessionId) {
@@ -86,9 +87,20 @@ public class SessionOutline extends JPanel implements Refreshable {
 				dynamicTable.navigateToRowWithObject(currSession);
 			}
 			
-        });
+        };
         
         loadAnnotationSessions(null);
+    }
+
+    @Override
+    public void activate() {
+        ModelMgr.getModelMgr().addModelMgrObserver(mml);
+        refresh();
+    }
+
+    @Override
+    public void deactivate() {
+        ModelMgr.getModelMgr().removeModelMgrObserver(mml);
     }
     
     @Override

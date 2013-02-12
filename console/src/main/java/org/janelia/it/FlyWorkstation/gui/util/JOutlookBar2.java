@@ -44,6 +44,7 @@ public class JOutlookBar2 extends JOutlookBar implements ActionListener {
         for (String barName : bars.keySet()) {
             barInfo = (BarInfo) bars.get(barName);
             JToggleButton button = new JToggleButton(barName);
+            button.setFocusable(false);
             if (barInfo.getIcon()!=null) {
             	button.setIcon(barInfo.getIcon());
             	button.setVerticalTextPosition(SwingConstants.TOP);

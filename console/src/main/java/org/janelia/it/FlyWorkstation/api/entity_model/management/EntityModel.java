@@ -422,6 +422,7 @@ public class EntityModel {
     private void loadLazyEntity(Entity entity, Set<Long> visited) throws Exception {
 		if (visited.contains(entity.getId())) return;
 		if (!EntityUtils.isInitialized(entity)) return;
+		if (entity instanceof ForbiddenEntity) return;
 		visited.add(entity.getId());
         if (!EntityUtils.areLoaded(entity.getEntityData())) {
         	refreshChildren(entity);

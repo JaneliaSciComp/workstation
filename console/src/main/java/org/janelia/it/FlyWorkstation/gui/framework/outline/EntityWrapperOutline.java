@@ -11,7 +11,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -28,12 +27,13 @@ import org.janelia.it.FlyWorkstation.gui.dialogs.ScreenEvaluationDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.AlignmentBoardViewer.ModelMgrListener;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
+import org.janelia.it.FlyWorkstation.model.domain.AlignmentSpace;
+import org.janelia.it.FlyWorkstation.model.domain.EntityContext;
+import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
+import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityAttribute;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.entity.EntityType;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,23 +41,23 @@ import org.slf4j.LoggerFactory;
 import com.google.common.eventbus.Subscribe;
 
 /**
- * The entity tree which lives in the right-hand "Data" panel and drives the viewers. 
+ * The entity wrapper tree which lives in the right-hand "Data" panel and drives the viewers. 
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class EntityOutline extends EntityTree implements Cloneable, Refreshable, ActivatableView {
+public abstract class EntityWrapperOutline extends EntityWrapperTree implements Cloneable, Refreshable, ActivatableView {
 	
-	private static final Logger log = LoggerFactory.getLogger(EntityOutline.class);
-	
-	private ModelMgrAdapter mml;
-	private String currUniqueId;
-    
+	private static final Logger log = LoggerFactory.getLogger(EntityWrapperOutline.class);
 
-    public EntityOutline() {
+    private ModelMgrAdapter mml;
+	private String currUniqueId;
+
+    public EntityWrapperOutline() {
 		super(true);
 		this.setMinimumSize(new Dimension(400, 400));
 		showLoadingIndicator();
-		this.mml = new ModelMgrAdapter() {
+
+        this.mml = new ModelMgrAdapter() {
             @Override
             public void entitySelected(String category, String entityId, boolean clearAll) {
                 if (EntitySelectionModel.CATEGORY_OUTLINE.equals(category)) {
@@ -72,9 +72,20 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
                 }
             }
         };
+		
+		// TODO: this should be defined by the user in a drop-down
+
+        Entity alignmentSpaceEntity = new Entity();
+        alignmentSpaceEntity.setName("Unified 20x Alignment Space");
+        AlignmentSpace alignmentSpace = new AlignmentSpace(alignmentSpaceEntity);
+        AlignmentContext alignmentContext = new AlignmentContext(alignmentSpace, "0.62x0.62x0.62", "1024x512x218");
+        
+        EntityContext entityContext = new EntityContext();
+        entityContext.setAlignmentContext(alignmentContext);
+        setEntityContext(entityContext);
 	}
-    
-	@Override
+
+    @Override
     public void activate() {
         ModelMgr.getModelMgr().registerOnEventBus(this);
         ModelMgr.getModelMgr().addModelMgrObserver(mml);
@@ -87,52 +98,12 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
         ModelMgr.getModelMgr().removeModelMgrObserver(mml);
     }
 
-    public void init(List<Entity> entityRootList) {
-		
-		EntityType rootType = new EntityType();
-		rootType.setName("");
-		rootType.setAttributes(new HashSet<EntityAttribute>());
-		
-		Entity root = new Entity();
-		root.setEntityType(rootType);
-		root.setName("Data");
-		
-		if (null != entityRootList && entityRootList.size() >= 1) {
-			root.setEntityType(entityRootList.get(0).getEntityType());
-			
-			for (Entity commonRoot : entityRootList) {
-				addTopLevelEntity(root, commonRoot);
-			}
-
-			initializeTree(root);
-		} 
-		else {
-			EntityType type = new EntityType();
-			type.setName("");
-			type.setAttributes(new HashSet<EntityAttribute>());
-			
-			Entity noDataEntity = new Entity();
-			noDataEntity.setEntityType(type);
-			noDataEntity.setName("No data");
-
-			addTopLevelEntity(root, noDataEntity);
-			
-			initializeTree(root);
-		}
-	}
-
-	private EntityData addTopLevelEntity(Entity rootEntity, Entity entity) {
-		EntityData ed = rootEntity.addChildEntity(entity);
-		ed.setOrderIndex(rootEntity.getMaxOrderIndex() + 1);
-		ed.setOwnerKey(entity.getOwnerKey());
-		return ed;
-	}
-
 	@Override
-	public void initializeTree(Entity rootEntity) {
-		super.initializeTree(rootEntity);
-		
-		selectedTree.expand(selectedTree.getRootNode(), true);
+	public void initializeTree(List<EntityWrapper> roots) {
+	    
+		super.initializeTree(roots);
+				
+		getDynamicTree().expand(getDynamicTree().getRootNode(), true);
 		
 		JTree tree = getTree();
 		tree.setRootVisible(false);
@@ -141,7 +112,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		tree.setTransferHandler(new EntityTransferHandler() {
 			@Override
 			public JComponent getDropTargetComponent() {
-				return EntityOutline.this;
+				return EntityWrapperOutline.this;
 			}
 		});
 
@@ -160,7 +131,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	 * 
 	 * @return
 	 */
-	public abstract List<Entity> loadRootList() throws Exception;
+	public abstract List<EntityWrapper> loadRootList() throws Exception;
 
     private class EntityOutlineContextMenu extends EntityContextMenu {
 
@@ -171,7 +142,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
         public void addRootMenuItems() {
             add(getRootItem());
             add(getNewRootFolderItem());
-            add(getNewAlignmentBoardItem());
         }
 
 		protected JMenuItem getRootItem() {
@@ -224,50 +194,6 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			return newFolderItem;
 		}
 
-        public JMenuItem getNewAlignmentBoardItem() {
-            if (multiple) return null;
-
-            JMenuItem newFolderItem = new JMenuItem("  Create New Alignment Board");
-            newFolderItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent actionEvent) {
-
-                    // Add button clicked
-                    final String boardName = (String) JOptionPane.showInputDialog(browser, "Board Name:\n",
-                            "Create Alignment Board", JOptionPane.PLAIN_MESSAGE, null, null, null);
-                    if ((boardName == null) || (boardName.length() <= 0)) {
-                        return;
-                    }
-
-                    SimpleWorker worker = new SimpleWorker() {
-                        private Entity newBoard;
-                        @Override
-                        protected void doStuff() throws Exception {
-                            // Update database
-                            newBoard = ModelMgr.getModelMgr().createAlignmentBoard(boardName);
-                        }
-                        @Override
-                        protected void hadSuccess() {
-                            // Update Tree UI
-                            totalRefresh(true, new Callable<Void>() {
-                                @Override
-                                public Void call() throws Exception {
-                                    selectEntityByUniqueId("/e_" + newBoard.getId());
-                                    return null;
-                                }
-                            });
-                        }
-                        @Override
-                        protected void hadError(Throwable error) {
-                            SessionMgr.getSessionMgr().handleException(error);
-                        }
-                    };
-                    worker.execute();
-                }
-            });
-
-            return newFolderItem;
-        }
-
     }
 
 	/**
@@ -279,12 +205,12 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	protected void showPopupMenu(final MouseEvent e) {
 
 		// Clicked on what node?
-		final DefaultMutableTreeNode node = selectedTree.getCurrentNode();
+		final DefaultMutableTreeNode node = getDynamicTree().getCurrentNode();
 
 		// Create context menu
-		final EntityOutlineContextMenu popupMenu = new EntityOutlineContextMenu(node, selectedTree.getUniqueId(node));
+		final EntityOutlineContextMenu popupMenu = new EntityOutlineContextMenu(node, getDynamicTree().getUniqueId(node));
 			
-		if ("".equals(getRootEntity().getEntityType().getName())) return;
+		if ("".equals(getRoot().getType())) return;
 		
 		if (node != null) {
 			final Entity entity = getEntity(node);
@@ -295,7 +221,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			popupMenu.addRootMenuItems();
 		}
 
-		popupMenu.show(selectedTree.getTree(), e.getX(), e.getY());
+		popupMenu.show(getDynamicTree().getTree(), e.getX(), e.getY());
 	}
 
 	/**
@@ -305,7 +231,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	 */
 	protected void nodeClicked(MouseEvent e) {
 		this.currUniqueId = null;
-		selectNode(selectedTree.getCurrentNode());
+		selectNode(getDynamicTree().getCurrentNode());
 	}
 
 	/**
@@ -324,12 +250,12 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	 */
 	protected void nodeDoubleClicked(MouseEvent e) {
 	}
-
-	@Subscribe 
-	public void entityInvalidated(EntityInvalidationEvent event) {
-		log.debug("Some entities were invalidated so we're refreshing the tree");
-		refresh(false, true, null);
-	}
+	
+    @Subscribe 
+    public void entityInvalidated(EntityInvalidationEvent event) {
+        log.debug("Some entities were invalidated so we're refreshing the tree");
+        refresh(false, true, null);
+    }
 
 	@Override
 	public void refresh() {
@@ -340,57 +266,57 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	public void totalRefresh() {
 		totalRefresh(true, null);
 	}
+
+	public void refresh(final boolean restoreState, final Callable<Void> success) {
+	    refresh(false, restoreState, success);
+	}
 	
-    public void refresh(final boolean restoreState, final Callable<Void> success) {
-        refresh(false, restoreState, success);
-    }
-    
-    public void totalRefresh(final boolean restoreState, final Callable<Void> success) {
-        refresh(true, restoreState, success);
-    }
-    
+	public void totalRefresh(final boolean restoreState, final Callable<Void> success) {
+	    refresh(true, restoreState, success);
+	}
+	
     public void refresh(final boolean invalidateCache, final boolean restoreState, final Callable<Void> success) {
         if (restoreState) {
             final ExpansionState expansionState = new ExpansionState();
             expansionState.storeExpansionState(getDynamicTree());
-            refresh(invalidateCache, expansionState, success);
+            refresh(invalidateCache, restoreState, expansionState, success);
         }
         else {
-            refresh(invalidateCache, null, success);
+            refresh(invalidateCache, false, null, success);
         }
     }
-	
+    
 	private AtomicBoolean refreshInProgress = new AtomicBoolean(false);
 	
-	public void refresh(final boolean invalidateCache, final ExpansionState expansionState, final Callable<Void> success) {
+	public void refresh(final boolean invalidateCache, final boolean restoreState, final ExpansionState expansionState, final Callable<Void> success) {
 		
 		if (refreshInProgress.getAndSet(true)) {
 			log.debug("Skipping refresh, since there is one already in progress");
 			return;
 		}
 		
-		log.debug("Starting whole tree refresh (invalidateCache={}, restoreState={})",invalidateCache,expansionState!=null);
+		log.debug("Starting whole tree refresh (invalidateCache={}, restoreState={})",invalidateCache,restoreState);
 		
 		showLoadingIndicator();
 		
 		SimpleWorker entityOutlineLoadingWorker = new SimpleWorker() {
 
-			private List<Entity> rootList;
+			private List<EntityWrapper> rootList;
 
 			protected void doStuff() throws Exception {
 				if (invalidateCache) {
-					ModelMgr.getModelMgr().invalidateCache(getRootEntity().getChildren(), true);
+					ModelMgr.getModelMgr().invalidateCache(ModelMgrUtils.getEntities(getRoot().getChildren()), true);
 				}
 				rootList = loadRootList();
 			}
 
 			protected void hadSuccess() {
 				try {
-					init(rootList);
+				    initializeTree(rootList);
 					currUniqueId = null;
 					refreshInProgress.set(false);
 					
-					if (expansionState!=null) {
+					if (restoreState) {
 						expansionState.restoreExpansionState(getDynamicTree(), true, new Callable<Void>() {
 							@Override
 							public Void call() throws Exception {
@@ -410,9 +336,9 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 			protected void hadError(Throwable error) {
 				refreshInProgress.set(false);
 				log.error("Tree refresh encountered error",error);
-				JOptionPane.showMessageDialog(EntityOutline.this, "Error loading data outline", "Data Load Error",
+				JOptionPane.showMessageDialog(EntityWrapperOutline.this, "Error loading data outline", "Data Load Error",
 						JOptionPane.ERROR_MESSAGE);
-				init(null);
+				initializeTree(null);
 			}
 		};
 
@@ -584,10 +510,14 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 		
 		// This method would never be called on a node whose children are lazy
 		if (!getDynamicTree().childrenAreLoaded(node)) {
-			throw new IllegalStateException("Cannot display entity whose children are not loaded");
+		    // TODO: what is this for?
+//			throw new IllegalStateException("Cannot display entity whose children are not loaded");
 		}
 		
+		EntityWrapper wrapper = getEntityWrapper(node);
+		// TODO: should use the wrapper.getChildren() at some point here, instead of relying on the entity model
 		RootedEntity rootedEntity = new RootedEntity(uniqueId, getEntityData(node));
+		
 		log.debug("showEntityInActiveViewer: "+rootedEntity);
 		SessionMgr.getBrowser().getViewerManager().showEntityInActiveViewer(rootedEntity);
 	}
