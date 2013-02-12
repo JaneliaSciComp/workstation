@@ -21,6 +21,8 @@ import java.util.zip.DataFormatException;
  *
  */
 public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileLoaderI {
+    public static final String COMPARTMENT_MASK_INDEX = "maskIndex";
+    public static final String CONSOLIDATED_LABEL_MASK = "ConsolidatedLabel";
     @Override
     protected TextureDataI createTextureDataBean() {
         return new MaskTextureDataBean( maskByteArray, sx, sy, sz );

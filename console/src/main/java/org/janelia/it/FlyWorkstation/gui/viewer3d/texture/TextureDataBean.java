@@ -35,6 +35,7 @@ public class TextureDataBean implements TextureDataI {
     private int channelCount = 0;
 
     private boolean loaded;
+    private boolean inverted = true; // Tested stored images were inverted.
 
     private static ByteBuffer getByteBuffer(int[] textureData) {
         ByteBuffer textureBuffer = ByteBuffer.allocate( textureData.length * (Integer.SIZE / 8));
@@ -161,6 +162,14 @@ public class TextureDataBean implements TextureDataI {
 
     public void setChannelCount(int channelCount) {
         this.channelCount = channelCount;
+    }
+
+    public boolean isInverted() {
+        return inverted;
+    }
+
+    public void setInverted(boolean inverted) {
+        this.inverted = inverted;
     }
 }
 

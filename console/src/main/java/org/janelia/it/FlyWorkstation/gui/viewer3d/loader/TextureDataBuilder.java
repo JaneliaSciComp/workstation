@@ -50,8 +50,14 @@ public abstract class TextureDataBuilder {
         textureData.setFilename( unCachedFileName );
         textureData.setChannelCount(channelCount);
 
-        if (! isMask )
+        if (! isMask ) {
             setAlphaToSaturateColors( colorSpace );
+        }
+        else {
+            if ( unCachedFileName.contains( V3dMaskFileLoader.COMPARTMENT_MASK_INDEX ) ) {
+                textureData.setInverted( false );  // Do not invert the compartment mask.
+            }
+        }
 
         return textureData;
     }

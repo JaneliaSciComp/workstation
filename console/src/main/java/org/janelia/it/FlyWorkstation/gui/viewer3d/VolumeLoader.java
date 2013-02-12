@@ -99,7 +99,8 @@ public class VolumeLoader
             return FileType.MP4;
         }
         else if (extension.startsWith(V3D_EXT) &&
-                 ( baseName.startsWith("ConsolidatedLabel") || baseName.startsWith("maskIndex") ) ) {
+                 ( baseName.startsWith( V3dMaskFileLoader.CONSOLIDATED_LABEL_MASK ) ||
+                   baseName.startsWith( V3dMaskFileLoader.COMPARTMENT_MASK_INDEX ) ) ) {
             return FileType.V3DMASK;
         }
         else if (extension.startsWith(V3D_EXT)) {

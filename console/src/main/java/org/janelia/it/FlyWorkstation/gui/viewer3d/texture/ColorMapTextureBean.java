@@ -19,6 +19,7 @@ public class ColorMapTextureBean implements TextureDataI {
 
     private static final int BYTES_PER_ENTRY = 4;
     private ByteBuffer mapData;
+    private boolean inverted = false; // Default probably carries the day.
 
     /**
      * This implementation makes a big array of 64K * 3, to accommodate any possible neuron fragment number's
@@ -168,5 +169,12 @@ public class ColorMapTextureBean implements TextureDataI {
     public void setChannelCount(int channelCount) {
     }
 
+    public boolean isInverted() {
+        return inverted;
+    }
+
+    public void setInverted(boolean inverted) {
+        this.inverted = inverted;
+    }
 }
 

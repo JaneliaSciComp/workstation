@@ -83,11 +83,11 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
                 byte[] maskData = ((MaskTextureDataBean)texBean).getTextureBytes();
 
                 for ( int z = 0; z < dimBeanZ; z++ ) {
-                    int zOffsetOutput = z * dimMaskX * dimMaskY * consensusByteCount; // Slice number x next z
+                    int zOffsetOutput = z * dimMaskX * dimMaskY * consensusByteCount; // Slice number * next z
                     int zOffsetInput = z * dimBeanX * dimBeanY * maskBytCt;
                     for ( int y = 0; y < dimBeanY; y++ ) {
-                        int yOffsetOutput = zOffsetOutput + ( ( (dimMaskY - y - 1) * dimMaskX ) * consensusByteCount );
-                        int yOffsetInput = zOffsetInput + ( ( (dimBeanY - y - 1) * dimBeanX ) * maskBytCt );
+                        int yOffsetOutput = calcYOffset( consensusByteCount, dimMaskX, dimMaskY, zOffsetOutput, y, true );
+                        int yOffsetInput = calcYOffset( maskBytCt, dimBeanX, dimBeanY, zOffsetInput, y, texBean.isInverted() );
                         for ( int x = 0; x < dimBeanX; x++ ) {
                             int outputOffset = yOffsetOutput + x*consensusByteCount;
                             int inputOffset = yOffsetInput + x*maskBytCt;
@@ -269,6 +269,15 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
             if ( values[ dim ].compareTo( maxValues[ dim ] ) > 0 ) {
                 maxValues[ dim ] = values[ dim ];
             }
+        }
+    }
+
+    private int calcYOffset(int maskBytCt, int dimBeanX, int dimBeanY, int zOffsetInput, int y, boolean invert) {
+        if ( invert ) {
+            return zOffsetInput + ( ( (dimBeanY - y - 1) * dimBeanX ) * maskBytCt );
+        }
+        else {
+            return zOffsetInput + ( ( (y               ) * dimBeanX ) * maskBytCt );
         }
     }
 

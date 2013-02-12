@@ -34,6 +34,7 @@ public class MaskTextureDataBean implements TextureDataI {
     private int channelCount = 0;
 
     private boolean loaded;
+    private boolean inverted = true; // Most tested masks were inverted.
 
     public MaskTextureDataBean() {
         super();
@@ -159,5 +160,12 @@ public class MaskTextureDataBean implements TextureDataI {
         this.channelCount = channelCount;
     }
 
+    public boolean isInverted() {
+        return inverted;
+    }
+
+    public void setInverted(boolean inverted) {
+        this.inverted = inverted;
+    }
 }
 

@@ -29,6 +29,10 @@ public interface TextureDataI {
 
     void setLoaded(boolean loaded);
 
+    boolean isInverted();
+
+    void setInverted( boolean inverted );
+
     void setSx(int sx);
 
     void setSy(int sy);
