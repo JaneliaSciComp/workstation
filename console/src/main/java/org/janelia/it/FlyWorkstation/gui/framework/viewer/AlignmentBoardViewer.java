@@ -1,10 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.BorderLayout;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
 import java.util.*;
 import java.util.concurrent.Callable;
 
-import javax.swing.JLabel;
+import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
@@ -47,6 +49,62 @@ public class AlignmentBoardViewer extends Viewer {
     public AlignmentBoardViewer(ViewerPane viewerPane) {
         super(viewerPane);
         setLayout(new BorderLayout());
+        TransferHandler transferHandler = new TransferHandler() {
+            @Override
+            public boolean canImport(TransferSupport supp) {
+                // Check for String flavor
+                for ( DataFlavor flavor: supp.getDataFlavors() ) {
+                    if (!supp.isDataFlavorSupported( flavor )) {
+                        return false;
+                    }
+                }
+
+                // Fetch the drop location
+                DropLocation loc = supp.getDropLocation();
+
+                // Return whether we accept the location
+                return true;
+            }
+
+            @Override
+            public boolean importData(TransferSupport supp) {
+                if (!canImport(supp)) {
+                    return false;
+                }
+
+                // Fetch the Transferable and its data
+                Transferable t = supp.getTransferable();
+                for ( DataFlavor flavor: supp.getDataFlavors() ) {
+                    try {
+                        Object data = t.getTransferData( flavor );
+
+                        // Fetch the drop location
+                        DropLocation loc = supp.getDropLocation();
+
+                        // Do something.
+                        if ( data instanceof ArrayList ) {
+                            ArrayList list = (ArrayList)data;
+                            if ( list.size() > 0 ) {
+                                Object firstItem = list.get( 0 );
+                                if ( firstItem instanceof Entity ) {
+                                    Entity draggedEntity = (Entity)firstItem;
+                                    if ( alignmentBoard != null )
+                                        alignmentBoard.addChildEntity( draggedEntity );
+                                }
+                            }
+                        }
+                        System.out.println("Accepting import data " + loc);
+                    } catch ( Exception ex ) {
+                        ex.printStackTrace();
+                    }
+                }
+
+                return true;
+            }
+        };
+
+        setTransferHandler( transferHandler );
+
     }
 
     @Override
