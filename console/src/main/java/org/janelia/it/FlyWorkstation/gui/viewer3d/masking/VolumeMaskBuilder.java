@@ -43,6 +43,10 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
 //        if ( 0 == 0 )
 //            return ((MaskTextureDataBean)maskingDataBeans.get(0)).getTextureBytes();
 
+        if ( fragments == null ) {
+            return null;
+        }
+
         Map<String,Set<FragmentBean>> fileNameToFragment = new HashMap<String,Set<FragmentBean>>();
         for ( FragmentBean bean: fragments ) {
             Set<FragmentBean> beans = fileNameToFragment.get( bean.getLabelFile() );

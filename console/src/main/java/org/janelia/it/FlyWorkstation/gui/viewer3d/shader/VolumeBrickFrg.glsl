@@ -48,7 +48,7 @@ vec4 volumeMask(vec4 origColor)
             vec4 signalColor = origColor;
             float maxIntensity = 0.0;
             for (int i = 0; i < 3; i++) {
-                    if ( signalColor[i] > maxIntensity )
+                if ( signalColor[i] > maxIntensity )
                     maxIntensity = signalColor[i];
             }
 

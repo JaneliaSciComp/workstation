@@ -17,7 +17,9 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.Serializable;
 import java.util.*;
 
@@ -28,7 +30,6 @@ public class AlignmentBoardDataBuilder implements Serializable {
     private Logger logger = LoggerFactory.getLogger( AlignmentBoardDataBuilder.class );
 
     private List<String> signalFilenames;
-    //private List<String> maskFilenames;
     private List<FragmentBean> fragments;
     private Map<String,List<String>> signalToMaskFilenames;
     private Map<String,List<FragmentBean>> signalFilenameToFragments;
@@ -56,42 +57,8 @@ public class AlignmentBoardDataBuilder implements Serializable {
 
         Map<Entity,String> labelEntityToSignalFilename = findSignalFilenames(sampleEntities, sampleToBaseEntity, signalToLabelEntities);
         findLabelFilenames(ancestorToFragments, labelToPipelineResult, consolidatedLabelsList, labelEntityToSignalFilename);
-        applyFalseCompartmentMask();
+        applyCompartmentMask( displayableList );
 
-
-    }
-
-    // *** TEMP ***
-    private void applyFalseCompartmentMask() {
-        if ( signalFilenameToFragments.size() == 0 ) {
-            return;
-        }
-        // Special section, for testing: add some arbitrary compartment masks to the mix.
-        // NOTE: use of assumed non-null keyset/iterator could lead to NPE.  Brittle. For test only.
-        Set<String> signalFilenames = signalFilenameToFragments.keySet();
-        String lastFilename = null;
-        for ( String nextFilename: signalFilenames ) {
-            lastFilename = nextFilename;
-        }
-        List<String> lastMaskList = signalToMaskFilenames.get( lastFilename );
-
-        List<FragmentBean> lastBeanList = signalFilenameToFragments.get( lastFilename );
-
-        String maskIndex =
-                new CacheFileResolver().getResolvedFilename(
-                        "/groups/scicomp/jacsData/MaskResources/Compartment/maskIndex.v3dpbd"
-                );
-        lastMaskList.add(maskIndex);
-        FragmentBean maskIndexBean = new FragmentBean();
-        maskIndexBean.setLabelFile(maskIndex);
-        maskIndexBean.setLabelFileNum(4); // SOG
-        //maskIndexBean.setLabelFileNum(17); // 17 OTU_L "Description" ( 112 1 51 )
-        maskIndexBean.setTranslatedNum(lastBeanList.size() + 1);
-        maskIndexBean.setRgb( new byte[] { 20, 20, 20 } );
-
-        lastBeanList.add(maskIndexBean);
-
-        fragments.add( maskIndexBean );
     }
 
     //todo change this to get all the masks, given the filename out of this iterator.
@@ -121,6 +88,103 @@ public class AlignmentBoardDataBuilder implements Serializable {
     }
 
     //--------------------------------------HELPERS
+    private void applyCompartmentMask( List<Entity> displayableList ) {
+        if ( signalFilenameToFragments.size() == 0  ||  displayableList.size() == 0 ) {
+            return;
+        }
+
+        /*
+            if ( definingAncestor.getName().equals( "Compartment" ) ) {
+                // The name of the current entity should be used to
+                //
+                // 1: trigger inclusion of the compartment mask, and
+                // 2: lookup a number for which index to use.
+                useThisEntity = true;
+            }
+
+         */
+        // First, figure out if we have anything relevant to do here.
+        List<String> compartmentNames = new ArrayList<String>();
+        for ( Entity entity: displayableList ) {
+            try {
+                Entity definingAncestor = ModelMgr.getModelMgr().getAncestorWithType( entity, EntityConstants.TYPE_FOLDER );
+                if ( definingAncestor.getName().equals( "Compartment" ) ) {
+                    // Know: we have a compartment.
+                    String compartmentName = entity.getName();
+                    compartmentNames.add( compartmentName );
+                }
+            } catch ( Exception ex ) {
+                SessionMgr.getSessionMgr().handleException( ex );
+            }
+
+        }
+
+        if ( compartmentNames.size() > 0 ) {
+            CacheFileResolver cacheFileResolver = new CacheFileResolver();
+            String maskIndex =
+                    cacheFileResolver.getResolvedFilename(
+                            "/groups/scicomp/jacsData/MaskResources/Compartment/maskIndex.v3dpbd"
+                    );
+
+            // Tack along to the last signal file name.
+            Set<String> signalFilenames = signalFilenameToFragments.keySet();
+            String lastFilename = null;
+            for ( String nextFilename: signalFilenames ) {
+                lastFilename = nextFilename;
+            }
+            List<String> lastMaskList = signalToMaskFilenames.get( lastFilename );
+
+            List<FragmentBean> lastBeanList = signalFilenameToFragments.get( lastFilename );
+
+            lastMaskList.add(maskIndex);
+
+            // Pull in info from the compartments definition text file.
+            File maskNameIndex = new File( cacheFileResolver.getResolvedFilename(
+                    "/groups/scicomp/jacsData/MaskResources/Compartment/maskNameIndex.txt"
+            )
+            );
+
+            Map<String, Integer> nameVsNum = new HashMap<String,Integer>();
+            try {
+                BufferedReader rdr = new BufferedReader( new FileReader( maskNameIndex ) );
+                String nextLine = null;
+                // 56 WED_L "Description" ( 53 45 215 )
+                while ( null != ( nextLine = rdr.readLine() ) ) {
+                    String[] fields = nextLine.trim().split( " " );
+                    if ( fields.length >= 8 ) {
+                        Integer labelNum = Integer.parseInt( fields[ 0 ] );
+                        String compartmentName = fields[ 1 ];
+                        nameVsNum.put( compartmentName, labelNum );
+                    }
+                }
+                rdr.close();
+            } catch ( Exception ex ) {
+                SessionMgr.getSessionMgr().handleException( ex );
+            }
+
+            // Now, add all the fragments.
+            for ( String compartmentName: compartmentNames ) {
+                Integer labelNum = nameVsNum.get( compartmentName );
+                if ( labelNum != null ) {
+                    FragmentBean maskIndexBean = new FragmentBean();
+                    maskIndexBean.setLabelFile(maskIndex);
+
+                    maskIndexBean.setLabelFileNum( labelNum );
+                    maskIndexBean.setTranslatedNum(lastBeanList.size() + 1);
+                    maskIndexBean.setRgb( new byte[] { 20, 20, 20 } );
+
+                    lastBeanList.add(maskIndexBean);
+
+                    fragments.add( maskIndexBean );
+                }
+                else {
+                    logger.warn( "Encountered compartment {} with no known label number.", compartmentName );
+                }
+            }
+        }
+
+    }
+
     private Map<Entity,Set<Entity>> getSignalToLabelEntities(Map<Entity, Entity> labelToPipelineResult) {
         Map<Entity,Set<Entity>> rtnVal = new HashMap<Entity,Set<Entity>> ();
 
@@ -249,7 +313,6 @@ public class AlignmentBoardDataBuilder implements Serializable {
         for ( Entity labelEntity: consolidatedLabelsList ) {
             String labelFilename = EntityUtils.getFilePath(labelEntity);
             if ( labelFilename != null ) {
-//                if ( matchesSomeSignal( signalFilenames, labelFilename ) ) {
                 String signalFilename = labelEntityToSignalFilename.get( labelEntity );
                 labelFilename = resolver.getResolvedFilename( labelFilename );
                 String finalLabelFile = ensureLabelFile(labelFilename);
@@ -284,7 +347,6 @@ public class AlignmentBoardDataBuilder implements Serializable {
                 }
                 sampleToFragments.remove( sample );
             }
-//            }
         }
     }
 
@@ -319,8 +381,11 @@ public class AlignmentBoardDataBuilder implements Serializable {
                             sampleEntity.getName(), sampleEntity.getId() );
                 }
                 else {
-                    for ( Entity labelEntity: signalToLabelEntities.get( baseEntity ) ) {
-                        labelEntityToSignalFilename.put( labelEntity, filename );
+                    Set<Entity> labelEntities = signalToLabelEntities.get( baseEntity );
+                    if ( labelEntities != null ) {
+                        for ( Entity labelEntity: labelEntities ) {
+                            labelEntityToSignalFilename.put( labelEntity, filename );
+                        }
                     }
 
                 }
@@ -404,6 +469,12 @@ public class AlignmentBoardDataBuilder implements Serializable {
         if ( EntityConstants.TYPE_NEURON_FRAGMENT.equals(entityTypeName)  &&  sampleAncestorEncountered == false ) {
             useThisEntity = true;
 //            fragments.add( entity );
+        }
+        else if ( entityTypeName.equals("Image 3D") ) {
+            Entity definingAncestor = ModelMgr.getModelMgr().getAncestorWithType( entity, EntityConstants.TYPE_FOLDER );
+            if ( definingAncestor.getName().equals( "Compartment" ) ) {
+                useThisEntity = true;
+            }
         }
 
         if ( useThisEntity ) {

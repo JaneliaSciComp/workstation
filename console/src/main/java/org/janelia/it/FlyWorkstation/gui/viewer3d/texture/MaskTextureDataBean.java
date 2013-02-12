@@ -61,6 +61,8 @@ public class MaskTextureDataBean implements TextureDataI {
     }
 
     public ByteBuffer getTextureData() {
+        if ( textureData == null )
+            return null;
         return ByteBuffer.wrap( textureData );
     }
 
