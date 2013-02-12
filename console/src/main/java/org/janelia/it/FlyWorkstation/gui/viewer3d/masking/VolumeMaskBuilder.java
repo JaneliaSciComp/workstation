@@ -2,14 +2,12 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.FragmentBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.MaskTextureDataBean;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteOrder;
-import java.nio.IntBuffer;
 import java.util.*;
 
 /**
@@ -62,8 +60,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
         // of any input.  Then the individual masks will be thrown into slots with an assumption
         // (even though wrong) that their voxels are the same size as all other voxels of
         // any other mask.
-        int maskBytCt = consensusByteCount;
-        int bufferSizeBytes = (volumeMaskVoxels[0] * maskBytCt) * volumeMaskVoxels[1] * volumeMaskVoxels[2];
+        int bufferSizeBytes = (volumeMaskVoxels[0] * consensusByteCount) * volumeMaskVoxels[1] * volumeMaskVoxels[2];
         byte[] rtnValue = new byte[ bufferSizeBytes ];
         int dimMaskX = volumeMaskVoxels[ X_INX ];
         int dimMaskY = volumeMaskVoxels[ Y_INX ];
@@ -74,6 +71,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
         }
         else {
             for ( TextureDataI texBean: maskingDataBeans ) {
+                int maskBytCt = texBean.getPixelByteCount();  // This is allowed to be non-consensus.
                 Set<Integer> values = new TreeSet<Integer>();
 
                 int dimBeanX = texBean.getSx();
@@ -85,13 +83,13 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
                 byte[] maskData = ((MaskTextureDataBean)texBean).getTextureBytes();
 
                 for ( int z = 0; z < dimBeanZ; z++ ) {
-                    int zOffsetOutput = z * dimMaskX * dimMaskY * maskBytCt; // Slice number x next z
+                    int zOffsetOutput = z * dimMaskX * dimMaskY * consensusByteCount; // Slice number x next z
                     int zOffsetInput = z * dimBeanX * dimBeanY * maskBytCt;
                     for ( int y = 0; y < dimBeanY; y++ ) {
-                        int yOffsetOutput = zOffsetOutput + ( ( (dimMaskY - y - 1) * dimMaskX ) * maskBytCt );
+                        int yOffsetOutput = zOffsetOutput + ( ( (dimMaskY - y - 1) * dimMaskX ) * consensusByteCount );
                         int yOffsetInput = zOffsetInput + ( ( (dimBeanY - y - 1) * dimBeanX ) * maskBytCt );
                         for ( int x = 0; x < dimBeanX; x++ ) {
-                            int outputOffset = yOffsetOutput + x*maskBytCt;
+                            int outputOffset = yOffsetOutput + x*consensusByteCount;
                             int inputOffset = yOffsetInput + x*maskBytCt;
 
                             // The voxel value may be a multi-byte value.
@@ -103,21 +101,21 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
                                 } catch ( RuntimeException ex ) {
                                     System.out.println( ex.getMessage() + " offset=" + inputOffset +
                                     " mi=" + mi + " zOffset=" + zOffsetInput + " yOffset=" + yOffsetInput +
-                                            " yOffs x maskByteCt=" + yOffsetInput*maskBytCt + " x*maskByteCt=" + x * maskBytCt + " x,y,z="+x+","+y+","+z);
+                                            " yOffs x consensusByteCt=" + yOffsetInput*maskBytCt + " x*consensusByteCount=" + x * consensusByteCount + " x,y,z="+x+","+y+","+z);
                                     throw ex;
                                 }
                             }
 
-                            int newVal = voxelVal;
+                            int newVal = 0;
                             if ( voxelVal > 0 ) {
                                 values.add( voxelVal );
                                 if ( fragmentBeans != null ) {
                                     // This set-only technique will merely _set_ the value to the latest loaded mask's
                                     // value at this location.  There is no overlap taken into account here.
                                     // LAST PRECEDENT STRATEGY
-                                    newVal = 0;
                                     for ( FragmentBean fragmentBean: fragmentBeans ) {
-                                        if ( (fragmentBean.getLabelFileNum()) == voxelVal ) {
+                                        // Use only masks settings FROM the current texture file.
+                                        if ( fragmentBean.getLabelFileNum() == voxelVal ) {
                                             newVal = fragmentBean.getTranslatedNum();
                                         }
                                     }
@@ -128,7 +126,10 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
                             // Either a new value will be set in the mask, or the original value
                             // will wind up there.
                             if ( newVal > 0 ) {
-                                for ( int mi = 0; mi < maskBytCt; mi ++ ) {
+                                // NOTE: consensus byte count may be larger than regular byte count.
+                                // If so, using the full consensus count for output size, will zero
+                                // the higher-order bytes, as required.
+                                for ( int mi = 0; mi < consensusByteCount; mi ++ ) {
                                     byte mByte = (byte)(newVal >>> (mi * 8) & 0x000000ff);
                                     rtnValue[ outputOffset + mi ] = mByte;
                                 }
@@ -174,15 +175,19 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
 
     @Override
     public void setTextureData(TextureDataI textureData) {
+        int maskPixelByteCount = textureData.getPixelByteCount();
         if ( consensusByteCount == 0 ) {
-            consensusByteCount = textureData.getPixelByteCount();
+            consensusByteCount = maskPixelByteCount;
         }
-        else if ( consensusByteCount != textureData.getPixelByteCount() ) {
+        else if ( consensusByteCount != maskPixelByteCount ) {
             //todo watch this output; consider how serious this mismatch becomes, and how frequent.
             logger.warn(
-                    "Mismatch in pixel byte count.  Previously saw {}, now seeing {}.  Sticking with former value.",
-                    consensusByteCount, textureData.getPixelByteCount()
+                    "Mismatch in pixel byte count.  Previously saw {}, now seeing {}.  Sticking with higher value.",
+                    consensusByteCount, maskPixelByteCount
             );
+            if ( maskPixelByteCount > consensusByteCount ) {
+                consensusByteCount = maskPixelByteCount;
+            }
         }
 
         if ( firstFileName == null ) {
@@ -226,7 +231,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
      */
     public TextureDataI getCombinedTextureData() {
         TextureDataI rtnVal = new MaskTextureDataBean( getVolumeMask(), getVolumeMaskVoxels() );
-        rtnVal.setByteOrder( getPixelByteOrder() );
+        rtnVal.setByteOrder(getPixelByteOrder());
         rtnVal.setPixelByteCount(getPixelByteCount());
         rtnVal.setHeader("Accumulated");
         rtnVal.setColorSpace(getTextureColorSpace());

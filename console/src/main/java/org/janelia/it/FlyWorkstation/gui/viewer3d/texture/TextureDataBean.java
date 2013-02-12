@@ -18,6 +18,7 @@ import java.nio.IntBuffer;
 
 public class TextureDataBean implements TextureDataI {
     private String filename;
+    private String remoteFilename;
     private ByteBuffer textureData;
     private Integer sx;
     private Integer sy;
@@ -145,8 +146,9 @@ public class TextureDataBean implements TextureDataI {
         this.pixelByteCount = pixelByteCount;
     }
 
+    @Override
     public String getFilename() {
-        return filename;
+        return remoteFilename;
     }
 
     public void setFilename(String filename) {

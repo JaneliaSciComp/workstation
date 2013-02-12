@@ -158,5 +158,6 @@ public class MaskTextureDataBean implements TextureDataI {
     public void setChannelCount(int channelCount) {
         this.channelCount = channelCount;
     }
+
 }
 

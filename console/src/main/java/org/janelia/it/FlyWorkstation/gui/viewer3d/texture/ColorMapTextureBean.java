@@ -167,4 +167,6 @@ public class ColorMapTextureBean implements TextureDataI {
     @Override
     public void setChannelCount(int channelCount) {
     }
+
 }
+

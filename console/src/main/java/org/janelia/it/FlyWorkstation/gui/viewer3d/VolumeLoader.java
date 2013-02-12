@@ -98,7 +98,8 @@ public class VolumeLoader
         else if (extension.startsWith(MP4_EXT)) {
             return FileType.MP4;
         }
-        else if (extension.startsWith(V3D_EXT) && baseName.startsWith("ConsolidatedLabel")) {
+        else if (extension.startsWith(V3D_EXT) &&
+                 ( baseName.startsWith("ConsolidatedLabel") || baseName.startsWith("maskIndex") ) ) {
             return FileType.V3DMASK;
         }
         else if (extension.startsWith(V3D_EXT)) {

@@ -4,6 +4,8 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.EntityFilenameFetcher;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.FragmentBean;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.tasks.Event;
@@ -44,7 +46,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
         List<Entity> displayableList = getDisplayableList( alignmentBoard );
         Map<Entity,Entity> displayableToBaseEntity = getMaskContainerAncestors(ancestorToFragments, displayableList);
         Set<Entity> baseEntities = new HashSet<Entity>();
-        baseEntities.addAll( displayableToBaseEntity.values() );
+        baseEntities.addAll(displayableToBaseEntity.values());
 
         List<Entity> consolidatedLabelsList = getMaskLabelEntities(labelToPipelineResult, baseEntities);
         Map<Entity,Entity> sampleToBaseEntity = new HashMap<Entity,Entity>();
@@ -54,7 +56,34 @@ public class AlignmentBoardDataBuilder implements Serializable {
 
         Map<Entity,String> labelEntityToSignalFilename = findSignalFilenames(sampleEntities, sampleToBaseEntity, signalToLabelEntities);
         findLabelFilenames(ancestorToFragments, labelToPipelineResult, consolidatedLabelsList, labelEntityToSignalFilename);
+        applyFalseCompartmentMask();
 
+
+    }
+
+    // *** TEMP ***
+    private void applyFalseCompartmentMask() {
+        // Special section, for testing: add some arbitrary compartment masks to the mix.
+        // NOTE: use of assumed non-null keyset/iterator could lead to NPE.  Brittle. For test only.
+        String firstFilename = signalToMaskFilenames.keySet().iterator().next();
+        List<String> firstMaskList = signalToMaskFilenames.get( firstFilename );
+
+        List<FragmentBean> firstBeanList = signalFilenameToFragments.get( firstFilename );
+
+        String maskIndex =
+                new CacheFileResolver().getResolvedFilename(
+                        "/groups/scicomp/jacsData/MaskResources/Compartment/maskIndex.v3dpbd"
+                );
+        firstMaskList.add( maskIndex );
+        FragmentBean maskIndexBean = new FragmentBean();
+        maskIndexBean.setLabelFile(maskIndex);
+        maskIndexBean.setLabelFileNum(17); // 17 OTU_L "Description" ( 112 1 51 )
+        maskIndexBean.setTranslatedNum( firstBeanList.size() + 1 );
+        maskIndexBean.setRgb( new byte[] { 20, 20, 20 } );
+
+        firstBeanList.add( maskIndexBean );
+
+        fragments.add( maskIndexBean );
     }
 
     //todo change this to get all the masks, given the filename out of this iterator.
@@ -83,6 +112,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
         return signalFilenameToFragments.get( signalFilename );
     }
 
+    //--------------------------------------HELPERS
     private Map<Entity,Set<Entity>> getSignalToLabelEntities(Map<Entity, Entity> labelToPipelineResult) {
         Map<Entity,Set<Entity>> rtnVal = new HashMap<Entity,Set<Entity>> ();
 
@@ -205,6 +235,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
 
         signalToMaskFilenames = new HashMap<String,List<String>>();
         signalFilenameToFragments = new HashMap<String,List<FragmentBean>>();
+        FileResolver resolver = new CacheFileResolver();
 
         int fragmentOffset = 1;
         for ( Entity labelEntity: consolidatedLabelsList ) {
@@ -212,6 +243,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
             if ( labelFilename != null ) {
 //                if ( matchesSomeSignal( signalFilenames, labelFilename ) ) {
                 String signalFilename = labelEntityToSignalFilename.get( labelEntity );
+                labelFilename = resolver.getResolvedFilename( labelFilename );
                 String finalLabelFile = ensureLabelFile(labelFilename);
 
                 List<String> maskFilenamesForSignal = signalToMaskFilenames.get( signalFilename );
@@ -224,6 +256,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
                 // Get any fragments associated. Create fragment bean.
                 Entity sample = labelToPipelineResult.get( labelEntity );
                 List<Entity> sampleFragments = sampleToFragments.get( sample );
+
                 if ( sampleFragments != null ) {
                     for ( Entity fragment: sampleFragments ) {
                         FragmentBean bean = new FragmentBean();

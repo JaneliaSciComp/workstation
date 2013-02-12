@@ -240,7 +240,7 @@ public class AlignmentBoardViewer extends Viewer {
                         maskFilenamesForSignal, alignmentBoardDataBuilder.getFragments( signalFilename ), resolver
                 );
 
-                mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver);
+                mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver );
                 // After first volume has been loaded, unset clear flag, so subsequent
                 // ones are overloaded.
                 mip3d.setClearOnLoad(false);

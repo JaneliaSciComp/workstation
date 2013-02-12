@@ -32,7 +32,6 @@ vec4 volumeMask(vec4 origColor)
 
         // Display strategy: only show the signal, only if the mask is non-zero.
         if ( ( ( maskingColor[0] + maskingColor[1] + maskingColor[2] ) == 0.0 ) ) {
-// TEMP: allow the unmasked signal to bleed through.
             rtnVal[0] = 0.0;
             rtnVal[1] = 0.0;
             rtnVal[2] = 0.0;
