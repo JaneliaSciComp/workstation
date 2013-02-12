@@ -65,23 +65,28 @@ public class AlignmentBoardDataBuilder implements Serializable {
     private void applyFalseCompartmentMask() {
         // Special section, for testing: add some arbitrary compartment masks to the mix.
         // NOTE: use of assumed non-null keyset/iterator could lead to NPE.  Brittle. For test only.
-        String firstFilename = signalToMaskFilenames.keySet().iterator().next();
-        List<String> firstMaskList = signalToMaskFilenames.get( firstFilename );
+        Set<String> signalFilenames = signalFilenameToFragments.keySet();
+        String lastFilename = null;
+        for ( String nextFilename: signalFilenames ) {
+            lastFilename = nextFilename;
+        }
+        List<String> lastMaskList = signalToMaskFilenames.get( lastFilename );
 
-        List<FragmentBean> firstBeanList = signalFilenameToFragments.get( firstFilename );
+        List<FragmentBean> lastBeanList = signalFilenameToFragments.get( lastFilename );
 
         String maskIndex =
                 new CacheFileResolver().getResolvedFilename(
                         "/groups/scicomp/jacsData/MaskResources/Compartment/maskIndex.v3dpbd"
                 );
-        firstMaskList.add( maskIndex );
+        lastMaskList.add(maskIndex);
         FragmentBean maskIndexBean = new FragmentBean();
         maskIndexBean.setLabelFile(maskIndex);
-        maskIndexBean.setLabelFileNum(17); // 17 OTU_L "Description" ( 112 1 51 )
-        maskIndexBean.setTranslatedNum( firstBeanList.size() + 1 );
+        maskIndexBean.setLabelFileNum(4); // SOG
+        //maskIndexBean.setLabelFileNum(17); // 17 OTU_L "Description" ( 112 1 51 )
+        maskIndexBean.setTranslatedNum(lastBeanList.size() + 1);
         maskIndexBean.setRgb( new byte[] { 20, 20, 20 } );
 
-        firstBeanList.add( maskIndexBean );
+        lastBeanList.add(maskIndexBean);
 
         fragments.add( maskIndexBean );
     }

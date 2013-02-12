@@ -1,6 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.FragmentBean;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.TextureDataBuilder;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.V3dMaskFileLoader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.MaskTextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
@@ -114,9 +116,12 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
                                     // value at this location.  There is no overlap taken into account here.
                                     // LAST PRECEDENT STRATEGY
                                     for ( FragmentBean fragmentBean: fragmentBeans ) {
-                                        // Use only masks settings FROM the current texture file.
+                                        // Use only masks settings FROM the earliest texture file.
                                         if ( fragmentBean.getLabelFileNum() == voxelVal ) {
                                             newVal = fragmentBean.getTranslatedNum();
+//                                            if ( fragmentBean.getLabelFile().contains(V3dMaskFileLoader.COMPARTMENT_MASK_INDEX)) {
+//                                                break;
+//                                            }
                                         }
                                     }
                                 }

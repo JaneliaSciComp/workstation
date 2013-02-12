@@ -44,21 +44,38 @@ vec4 volumeMask(vec4 origColor)
             vec3 cmCoord = vec3( visX, visY, 0.0 );
             vec4 mappedColor = texture3D(colorMapTexture, cmCoord);
 
-            // This takes the mapped color, and multiplies it by the
-            // maximum intensity of any signal color.
+            // Find the max intensity.
             vec4 signalColor = origColor;
             float maxIntensity = 0.0;
             for (int i = 0; i < 3; i++) {
-                if ( signalColor[i] > maxIntensity )
+                    if ( signalColor[i] > maxIntensity )
                     maxIntensity = signalColor[i];
             }
-            // Guard against empty signal texture.
-            if ( maxIntensity == 0.0 ) {
-                maxIntensity = 1.0;
-            }
 
-            for (int i = 0; i < 3; i++) {
-                rtnVal[i] = mappedColor[ i ] * maxIntensity;
+            // For gray mappings, fill in solid gray for anything empty, but otherwise just apply intensities
+            // to the gray.
+            if ( mappedColor[ 0 ] == mappedColor[ 1 ] && mappedColor[ 1 ] == mappedColor[ 2 ] ) {
+                // Special case: probably a compartment.  Here, make a translucent gray appearance.
+                if ( maxIntensity < 0.05 ) {
+                    mappedColor = vec4( 1.0, 1.0, 1.0, 1.0 );
+                }
+                else {
+                    mappedColor = origColor; // TEMP?
+                }
+                for (int i = 0; i < 3; i++) {
+                    rtnVal[i] = mappedColor[ i ] * maxIntensity;
+                }
+            }
+            else {
+                // Guard against empty signal texture.
+                if ( maxIntensity == 0.0 ) {
+                    maxIntensity = 1.0;
+                }
+                // This takes the mapped color, and multiplies it by the
+                // maximum intensity of any signal color.
+                for (int i = 0; i < 3; i++) {
+                    rtnVal[i] = mappedColor[ i ] * maxIntensity;
+                }
             }
 
 //            rtnVal[3] = maskingColor[3];

@@ -34,7 +34,13 @@ public class ColorWheelColorMapping implements ColorMappingI {
         for ( FragmentBean fragmentBean: fragments ) {
             // Make the "back map" to the original fragment number.
             int translatedNum = fragmentBean.getTranslatedNum();
-            maskMappings.put(translatedNum, colorWheel[ translatedNum % colorWheel.length ] );
+            byte[] rgb = fragmentBean.getRgb();
+            if ( rgb == null ) {
+                maskMappings.put( translatedNum, colorWheel[ translatedNum % colorWheel.length ] );
+            }
+            else {
+                maskMappings.put( translatedNum, rgb );
+            }
         }
 
         return maskMappings;
