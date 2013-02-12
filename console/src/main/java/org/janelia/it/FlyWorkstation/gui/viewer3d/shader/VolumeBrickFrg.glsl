@@ -52,8 +52,7 @@ vec4 volumeMask(vec4 origColor)
                     maxIntensity = signalColor[i];
             }
 
-            // For gray mappings, fill in solid gray for anything empty, but otherwise just apply intensities
-            // to the gray.
+            // For gray mappings, fill in solid gray for anything empty, but otherwise just use original.
             if ( mappedColor[ 0 ] == mappedColor[ 1 ] && mappedColor[ 1 ] == mappedColor[ 2 ] ) {
                 // Special case: probably a compartment.  Here, make a translucent gray appearance.
                 if ( maxIntensity < 0.05 ) {
@@ -78,12 +77,6 @@ vec4 volumeMask(vec4 origColor)
                 }
             }
 
-//            rtnVal[3] = maskingColor[3];
-//            rtnVal[0] = maskingColor[3];
-//            rtnVal[1] = 0.0;
-//            rtnVal[2] = 0.0;
-//            rtnVal[1] = maskingColor[1];
-//            rtnVal[2] = maskingColor[2];
         }
     }
 
