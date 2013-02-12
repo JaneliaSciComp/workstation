@@ -51,6 +51,7 @@ implements Camera3d
 		if (f == focus)
 			return false; // no change
 		focus = f;
+		// System.out.println(f);
 		return true;
     }
 

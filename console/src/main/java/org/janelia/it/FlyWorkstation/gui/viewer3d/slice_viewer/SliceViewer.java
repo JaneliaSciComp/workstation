@@ -14,13 +14,15 @@ public class SliceViewer
 extends BaseGLViewer
 {
 	private static final long serialVersionUID = 1L;
-	protected MouseMode mouseMode = new PanMode();
+	protected MouseMode panMode = new PanMode();
+	protected MouseMode mouseMode = panMode;
 	protected ObservableCamera3d camera;
 	protected SliceRenderer renderer = new SliceRenderer();
+
 	protected QtSlot<Object> repaintSlot = new QtSlot<Object>(this) {
 		@Override
 		public void execute(Object arg) {
-			System.out.println("repaint slot");
+			// System.out.println("repaint slot");
 			((SliceViewer)receiver).repaint();
 		}
 	};
@@ -30,8 +32,8 @@ extends BaseGLViewer
 		setCamera(new BasicObservableCamera3d());
 		mouseMode.setComponent(this);
 		// pink color for testing only
-		this.renderer.setBackgroundColor(new Color(1.0f, 0.8f, 0.8f, 0.0f));
-        setPreferredSize( new Dimension( 400, 400 ) );
+		this.renderer.setBackgroundColor(new Color(0.5f, 0.5f, 0.5f, 0.0f));
+        setPreferredSize( new Dimension( 600, 600 ) );
 	}
 
 	@Override
@@ -98,5 +100,10 @@ extends BaseGLViewer
 		getCamera().getViewChangedSignal().connect(repaintSlot);
 		renderer.setCamera(camera);
 		mouseMode.setCamera(camera);
+	}
+	
+	public void setPanMode() {
+		System.out.println("Pan mode set");
+		setMouseMode(panMode);
 	}
 }

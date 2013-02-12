@@ -24,15 +24,20 @@ public abstract class BaseRenderer implements GLEventListener
     public void display(GLAutoDrawable gLDrawable) 
     {
         final GL2 gl = gLDrawable.getGL().getGL2();
+	    displayBackground(gl);
+    }
+ 
+    protected void displayBackground(GL2 gl) 
+    {
         // paint solid background color
 	    gl.glClearColor(
 	    		backgroundColor.getRed()/255.0f,
 	    		backgroundColor.getGreen()/255.0f,
 	    		backgroundColor.getBlue()/255.0f,
 	    		backgroundColor.getAlpha()/255.0f);
-        gl.glClear(GL2.GL_COLOR_BUFFER_BIT);
+        gl.glClear(GL2.GL_COLOR_BUFFER_BIT);    		
     }
- 
+
     public void displayChanged(GLAutoDrawable gLDrawable, boolean modeChanged, boolean deviceChanged) 
     {
     		// System.out.println("displayChanged called");

@@ -1,26 +1,16 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import javax.media.opengl.GL2;
-import javax.media.opengl.GLAutoDrawable;
-
-import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicCamera3d;
 
 // ViewportGL combines:
-//  1) camera information
-//  2) size of OpenGL viewport
-//  3) OpenGL viewport response to size changes
+//  1) size of OpenGL viewport
+//  2) OpenGL viewport response to size changes
 //     a) viewport size
-//     b) camera projection? TODO
 public class ViewportGL {
     private int width; // in pixels
     private int height; // in pixels
-    private BasicCamera3d camera;
-    
-	public BasicCamera3d getCamera() {
-		return camera;
-	}
 
-	public int getHeight() {
+    public int getHeight() {
 		return height;
 	}
 
@@ -28,16 +18,13 @@ public class ViewportGL {
 		return width;
 	}
 
-	public void reshape(GLAutoDrawable gLDrawable, int x, int y, int width, int height) {
-        final GL2 gl = gLDrawable.getGL().getGL2();
-		// Assuming OpenGL viewport occupies entire GLEventListener widget...
-        // (won't be so for side-by-side stereo, for example)
+	public void reshape(GL2 gl, int width, int height) {
+		if ( (width == getWidth()) && (height == getHeight()) )
+			return; // no change
+		setWidth(width);
+		setHeight(height);
 		gl.glViewport(0, 0, width, height);
     }
-
-	public void setCamera(BasicCamera3d camera) {
-		this.camera = camera;
-	}
 
 	public void setHeight(int height) {
 		this.height = height;

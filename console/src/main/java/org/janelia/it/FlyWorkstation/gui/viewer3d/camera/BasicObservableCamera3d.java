@@ -34,7 +34,7 @@ implements Camera3d, ObservableCamera3d
 	private boolean markAndNotify(boolean changed) {
 		if (! changed)
 			return false;
-		System.out.println("emit viewChanged");
+		// System.out.println("emit viewChanged");
 		viewChanged.emit(null);	
 		return true;
 	}

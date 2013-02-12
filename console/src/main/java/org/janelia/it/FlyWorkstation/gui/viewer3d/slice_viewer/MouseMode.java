@@ -7,7 +7,7 @@ import java.awt.event.MouseMotionListener;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.Camera3d;
 
-// MouseOperation manages the current mouse Mode for a Widget
+// MouseMode manages the current mouse Mode for a Widget, e.g. Pan, Zoom, Rotate...
 public interface MouseMode
 extends MouseMotionListener, MouseListener
 {
