@@ -24,13 +24,17 @@ implements Camera3d
 	}
 	
     @Override
-	public boolean incrementFocusPixels(int x, int y, int z) {
-		Vec3 v = new Vec3(x, y, z);
-		v = v.times(1.0 / pixelsPerSceneUnit);
-		return setFocus(focus.plus(v));
+	public boolean incrementFocusPixels(double dx, double dy, double dz) {
+		return incrementFocusPixels(new Vec3(dx, dy, dz));
 	}
 	
-    public boolean incrementZoom(float zoomRatio) {
+	@Override
+	public boolean incrementFocusPixels(Vec3 offset) {
+		Vec3 v = offset.times(1.0 / pixelsPerSceneUnit);
+		return setFocus(focus.plus(v));
+	}
+
+    public boolean incrementZoom(double zoomRatio) {
     		if (zoomRatio == 1.0)
     			return false; // no change
     		if (zoomRatio <= 0.0)
@@ -55,6 +59,11 @@ implements Camera3d
 		return true;
     }
 
+	@Override
+	public boolean setFocus(double x, double y, double z) {
+		return setFocus(new Vec3(x, y, z));
+	}
+
     public boolean setRotation(Rotation r) {
 		if (r == rotation)
 			return false; // no change
@@ -68,4 +77,5 @@ implements Camera3d
 		this.pixelsPerSceneUnit = pixelsPerSceneUnit;
 		return true;
 	}
+
 }

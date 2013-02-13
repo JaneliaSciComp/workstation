@@ -17,6 +17,8 @@ import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
+
 public class QuadView extends JFrame {
 
 	/**
@@ -25,6 +27,8 @@ public class QuadView extends JFrame {
 	private static final long serialVersionUID = 1L;
 	protected SliceViewer sliceViewer = new SliceViewer();
 	protected Action panModeAction = new PanModeAction(sliceViewer);
+	protected Action zoomScrollModeAction = new ZoomScrollModeAction(sliceViewer);
+	protected Action zoomMouseModeAction = new ZoomMouseModeAction(sliceViewer);
 	
 	static {
 		// Use top menu bar on Mac
@@ -88,6 +92,9 @@ public class QuadView extends JFrame {
 		group.add(item);
 		submenu.add(item);
 		item.setSelected(true);
+		item = new JRadioButtonMenuItem(zoomMouseModeAction);
+		group.add(item);
+		submenu.add(item);
 		menu.add(submenu);
 		menuBar.add(menu);
 
@@ -111,7 +118,23 @@ public class QuadView extends JFrame {
 	protected void createToolBar() {
 		JToolBar toolBar = new JToolBar();
 
+		JLabel mouseModeLabel = new JLabel(Icons.getIcon("mouse_left.png"));
+		mouseModeLabel.setToolTipText("Mouse mode:");
+		mouseModeLabel.setEnabled(false);
+		toolBar.add(mouseModeLabel);
+		toolBar.addSeparator();
 		toolBar.add(panModeAction);
+		toolBar.add(zoomMouseModeAction);
+		
+		toolBar.addSeparator();
+		toolBar.addSeparator();
+
+		mouseModeLabel = new JLabel(Icons.getIcon("mouse_scroll.png"));
+		mouseModeLabel.setToolTipText("Scroll wheel mode:");
+		mouseModeLabel.setEnabled(false);
+		toolBar.add(mouseModeLabel);
+		toolBar.addSeparator();
+		toolBar.add(zoomScrollModeAction);
 
 		getContentPane().add(toolBar, BorderLayout.PAGE_START);
 	}

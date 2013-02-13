@@ -22,12 +22,17 @@ implements Camera3d, ObservableCamera3d
 	}
 
 	@Override
-	public boolean incrementFocusPixels(int dx, int dy, int dz) {
+	public boolean incrementFocusPixels(double dx, double dy, double dz) {
 		return markAndNotify(camera.incrementFocusPixels(dx, dy, dz));
 	}
 
 	@Override
-    public boolean incrementZoom(float zoomRatio) {
+	public boolean incrementFocusPixels(Vec3 offset) {
+		return markAndNotify(camera.incrementFocusPixels(offset));
+	}
+
+	@Override
+    public boolean incrementZoom(double zoomRatio) {
 		return markAndNotify(camera.incrementZoom(zoomRatio));
 	}
 	
@@ -70,6 +75,11 @@ implements Camera3d, ObservableCamera3d
 	}
 
 	@Override
+	public boolean setFocus(double x, double y, double z) {
+		return markAndNotify(camera.setFocus(x, y, z));
+	}
+
+	@Override
 	public boolean setRotation(Rotation r) {
 		return markAndNotify(camera.setRotation(r));
 	}
@@ -78,5 +88,4 @@ implements Camera3d, ObservableCamera3d
 	public boolean setPixelsPerSceneUnit(double pixelsPerSceneUnit) {
 		return markAndNotify(camera.setPixelsPerSceneUnit(pixelsPerSceneUnit));
 	}
-
 }
