@@ -1,6 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
@@ -12,7 +14,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.Camera3d;
 public abstract class BaseRenderer implements GLEventListener
 {
     protected GLU glu = new GLU();
-    protected Vector<GLActor> actors = new Vector<GLActor>();
+    protected List<GLActor> actors = new ArrayList<GLActor>();
     protected Color backgroundColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
     protected Camera3d camera;
 
@@ -60,7 +62,7 @@ public abstract class BaseRenderer implements GLEventListener
 	}
 
     @Override
-    public void init(GLAutoDrawable gLDrawable) 
+    public void init(GLAutoDrawable gLDrawable)
     {
     		// System.out.println("init() called");
         GL2 gl = gLDrawable.getGL().getGL2();
