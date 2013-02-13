@@ -1,8 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.BorderLayout;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
 import java.util.*;
 import java.util.concurrent.Callable;
 
@@ -46,11 +44,6 @@ public class AlignmentBoardViewer extends Viewer {
         setLayout(new BorderLayout());
         setTransferHandler( new ABTransferHandler( alignmentBoard ) );
 
-    }
-
-    /** This is used by load code to establish how to colorize the things that are rendered. */
-    public ColorMappingI getColorMapper() {
-        return new ColorWheelColorMapping();
     }
 
     @Override
@@ -134,7 +127,8 @@ public class AlignmentBoardViewer extends Viewer {
             if ( mip3d == null ) {
                 mip3d = new Mip3d();
                 if ( loadWorker == null ) {
-                    loadWorker = new ABLoadWorker( this, alignmentBoard, mip3d );
+                    // *** Use of color wheel color mapping is temporary, awaiting changes.
+                    loadWorker = new ABLoadWorker( this, alignmentBoard, mip3d, new ColorWheelColorMapping() );
                 }
             }
 

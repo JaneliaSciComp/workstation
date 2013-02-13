@@ -30,11 +30,15 @@ public class ABLoadWorker extends SimpleWorker {
     private Entity alignmentBoard;
     private Mip3d mip3d;
     private AlignmentBoardViewer viewer;
+    private ColorMappingI colorMapping;
 
-    public ABLoadWorker( AlignmentBoardViewer viewer, Entity alignmentBoard, Mip3d mip3d ) {
+    public ABLoadWorker(
+            AlignmentBoardViewer viewer, Entity alignmentBoard, Mip3d mip3d, ColorMappingI colorMapping
+    ) {
         this.alignmentBoard = alignmentBoard;
         this.mip3d = mip3d;
         this.viewer = viewer;
+        this.colorMapping = colorMapping;
     }
 
     @Override
@@ -49,9 +53,7 @@ public class ABLoadWorker extends SimpleWorker {
             return;
         }
 
-        // *** TEMP *** this sets up a test of mapping neuron fragment number vs color.
-        ColorMappingI colorMapper = viewer.getColorMapper();
-        mip3d.setMaskColorMappings( colorMapper.getMapping( renderableBeans ) );
+        mip3d.setMaskColorMappings( colorMapping.getMapping( renderableBeans ) );
 
         Collection<String> signalFilenames = getSignalFilenames( renderableBeans );
 

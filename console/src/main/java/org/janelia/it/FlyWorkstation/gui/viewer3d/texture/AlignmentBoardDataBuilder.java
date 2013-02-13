@@ -40,7 +40,13 @@ public class AlignmentBoardDataBuilder implements Serializable {
     public AlignmentBoardDataBuilder() {
     }
 
-    public void setAlignmentBoard( Entity alignmentBoard ) {
+    /**
+     * Plug in the alignment board entity, from which all returned information is derived.
+     *
+     * @param alignmentBoard support for pipelining the output.
+     * @return reference to this object.
+     */
+    public AlignmentBoardDataBuilder setAlignmentBoard( Entity alignmentBoard ) {
         clear();
         renderableBeanList = new ArrayList<RenderableBean>();
         Map<Entity,List<Entity>> ancestorToRenderables = new HashMap<Entity,List<Entity>>();
@@ -61,6 +67,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
         createRenderableBeanList( ancestorToRenderables, labelToPipelineResult, consolidatedLabelsList, labelEntityToSignalFilename );
         applyCompartmentMask( displayableList );
 
+        return this;
     }
 
     /**
@@ -70,50 +77,6 @@ public class AlignmentBoardDataBuilder implements Serializable {
      */
     public Collection<RenderableBean> getRenderableBeanList() {
         return renderableBeanList;
-    }
-
-    /**
-     * This is a convenience method.  All information needed for this comes from the renderable bean list.
-     *
-     * @param signalFilename find things pertaining to this signal file.
-     * @return all the renderables which refer to this signal file.
-     */
-    public Collection<RenderableBean> getRenderables(String signalFilename) {
-        Collection<RenderableBean> rtnVal = new HashSet<RenderableBean>();
-        for ( RenderableBean bean: getRenderableBeanList() ) {
-            if ( bean.getSignalFile().equals( signalFilename ) ) {
-                rtnVal.add( bean );
-            }
-        }
-        return rtnVal;
-    }
-
-    /**
-     * This is a convenience method.  All information needed for this comes from the renderable bean list.
-     * @return all signal file names found in any bean.
-     */
-    public Collection<String> getSignalFilenames() {
-        Collection<String> signalFileNames = new HashSet<String>();
-        for ( RenderableBean bean: getRenderableBeanList() ) {
-            signalFileNames.add( bean.getSignalFile() );
-        }
-        return signalFileNames;
-    }
-
-    /**
-     * This is a convenience method.  All information needed for this comes from the renderable bean list.
-     *
-     * @param signalFilename which signal to find masks against.
-     * @return all mask file names from beans which refer to the signal file name given.
-     */
-    public Collection<String> getMaskFilenames( String signalFilename ) {
-        Collection<String> maskFileNames = new HashSet<String>();
-        for ( RenderableBean bean: getRenderableBeanList() ) {
-            if ( bean.getSignalFile().equals( signalFilename ) ) {
-                maskFileNames.add( bean.getLabelFile() );
-            }
-        }
-        return maskFileNames;
     }
 
     //--------------------------------------HELPERS
@@ -399,29 +362,6 @@ public class AlignmentBoardDataBuilder implements Serializable {
         }
 
         return labelEntityToSignalFilename;
-    }
-
-    /**
-     * This may/may not be temporary.  It makes sure that the base path of th mask filename matches one from
-     * a signal filename, to avoid attempting to load things that are not compatible.
-     */
-    private boolean matchesSomeSignal( List<String> signalFileNames, String maskFilename ) {
-        boolean rtnVal = false;
-        File maskFile = new File( maskFilename );
-        File baseLoc = maskFile.getParentFile();
-        String maskParentPath = baseLoc.getPath();
-
-        for ( String signalFileName: signalFileNames ) {
-            File signalFileLoc = new File( signalFileName ).getParentFile();
-            String signalParentPath = signalFileLoc.getPath();
-
-            if ( signalParentPath.startsWith( maskParentPath ) ) {
-                rtnVal = true;
-                break;
-            }
-        }
-
-        return rtnVal;
     }
 
     //@todo complete this as needed.
