@@ -122,12 +122,14 @@ extends BaseGLViewer
 			volumeLoader.populateVolumeAcceptor(brick);
             if ( volumeMaskBuilder != null ) {
                 brick.setMaskTextureData( volumeMaskBuilder.getCombinedTextureData() );
+
+                if ( neuronNumToRGB != null ) {
+                    ColorMapTextureBean colorMapTextureData = new ColorMapTextureBean();
+                    colorMapTextureData.setMapping( neuronNumToRGB );
+                    brick.setColorMapTextureData( colorMapTextureData );
+                }
             }
-            if ( neuronNumToRGB != null ) {
-                ColorMapTextureBean colorMapTextureData = new ColorMapTextureBean();
-                colorMapTextureData.setMapping( neuronNumToRGB );
-                brick.setColorMapTextureData( colorMapTextureData );
-            }
+
 			renderer.addActor(brick);
 			renderer.resetView();
 			return true;

@@ -61,6 +61,10 @@ public class TextureMediator {
     }
 
     public void uploadTexture( GL2 gl ) {
+        if ( ! isInitialized ) {
+            logger.error("Attempted to upload texture before mediator was initialized.");
+            throw new RuntimeException("Failed to upload texture");
+        }
         ByteBuffer data = textureData.getTextureData();
         //System.out.println( "Loading texture data of capacity: " + data.capacity() );
         if ( data != null ) {
@@ -150,6 +154,10 @@ public class TextureMediator {
     }
 
     public void setupTexture( GL2 gl, int interpolationMethod ) {
+        if ( ! isInitialized ) {
+            logger.error("Attempting to setup texture before mediator has been initialized.");
+            throw new RuntimeException( "Texture setup failed." );
+        }
         gl.glActiveTexture( textureSymbolicId );
         reportError( "setupTexture glActiveTexture", gl );
         gl.glBindTexture( GL2.GL_TEXTURE_3D, textureName );

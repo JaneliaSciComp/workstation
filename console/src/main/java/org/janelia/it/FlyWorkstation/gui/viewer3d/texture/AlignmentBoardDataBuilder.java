@@ -97,16 +97,6 @@ public class AlignmentBoardDataBuilder implements Serializable {
             return;
         }
 
-        /*
-            if ( definingAncestor.getName().equals( "Compartment" ) ) {
-                // The name of the current entity should be used to
-                //
-                // 1: trigger inclusion of the compartment mask, and
-                // 2: lookup a number for which index to use.
-                useThisEntity = true;
-            }
-
-         */
         // First, figure out if we have anything relevant to do here.
         List<String> compartmentNames = new ArrayList<String>();
         for ( Entity entity: displayableList ) {
@@ -372,26 +362,27 @@ public class AlignmentBoardDataBuilder implements Serializable {
                 String filename = filenameFetcher.fetchFilename( sampleEntity, entityConstantFileType );
                 if ( filename != null ) {
                     signalFilenames.add( filename );
-                }
 
-                // Side effect: build a mapping of label entity to signal filename.
-                // NOTE: _emphasis_ this for-loop looks at the returned collection to get its
-                //    iterator.  Had I phrased it as "iterate over keyset" I would then have
-                //    to traverse all keys, getting each set in turn.
-                Entity baseEntity = sampleToBaseEntity.get( sampleEntity );
-                if ( baseEntity == null ) {
-                    logger.warn("No mapping to base entity from sample entity {}/{}." +
-                            sampleEntity.getName(), sampleEntity.getId() );
-                }
-                else {
-                    Set<Entity> labelEntities = signalToLabelEntities.get( baseEntity );
-                    if ( labelEntities != null ) {
-                        for ( Entity labelEntity: labelEntities ) {
-                            labelEntityToSignalFilename.put( labelEntity, filename );
-                        }
+                    // Side effect: build a mapping of label entity to signal filename.
+                    // NOTE: _emphasis_ this for-loop looks at the returned collection to get its
+                    //    iterator.  Had I phrased it as "iterate over keyset" I would then have
+                    //    to traverse all keys, getting each set in turn.
+                    Entity baseEntity = sampleToBaseEntity.get( sampleEntity );
+                    if ( baseEntity == null ) {
+                        logger.warn("No mapping to base entity from sample entity {}/{}." +
+                                sampleEntity.getName(), sampleEntity.getId() );
                     }
+                    else {
+                        Set<Entity> labelEntities = signalToLabelEntities.get( baseEntity );
+                        if ( labelEntities != null ) {
+                            for ( Entity labelEntity: labelEntities ) {
+                                labelEntityToSignalFilename.put( labelEntity, filename );
+                            }
+                        }
 
+                    }
                 }
+
             }
         } catch ( Exception ex ) {
             SessionMgr.getSessionMgr().handleException( ex );
