@@ -13,16 +13,12 @@ import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.LayersPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.ABLoadWorker;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.ABTransferHandler;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeLoader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ColorMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ColorWheelColorMapping;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.AlignmentBoardDataBuilder;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +33,6 @@ import org.slf4j.LoggerFactory;
  */
 public class AlignmentBoardViewer extends Viewer {
 
-    private final AlignmentBoardDataBuilder alignmentBoardDataBuilder = new AlignmentBoardDataBuilder();
     private Entity alignmentBoard;
     private RootedEntity albRootedEntity;
 
@@ -49,63 +44,13 @@ public class AlignmentBoardViewer extends Viewer {
     public AlignmentBoardViewer(ViewerPane viewerPane) {
         super(viewerPane);
         setLayout(new BorderLayout());
-        TransferHandler transferHandler = new TransferHandler() {
-            @Override
-            public boolean canImport(TransferSupport supp) {
-                // Check for String flavor
-                for ( DataFlavor flavor: supp.getDataFlavors() ) {
-                    if (!supp.isDataFlavorSupported( flavor )) {
-                        return false;
-                    }
-                }
+        setTransferHandler( new ABTransferHandler( alignmentBoard ) );
 
-                // Fetch the drop location
-                DropLocation loc = supp.getDropLocation();
+    }
 
-                // Return whether we accept the location
-                return true;
-            }
-
-            @Override
-            public boolean importData(TransferSupport supp) {
-                if (!canImport(supp)) {
-                    return false;
-                }
-
-                // Fetch the Transferable and its data
-                Transferable t = supp.getTransferable();
-                for ( DataFlavor flavor: supp.getDataFlavors() ) {
-                    try {
-                        Object data = t.getTransferData( flavor );
-
-                        // Fetch the drop location
-                        DropLocation loc = supp.getDropLocation();
-
-                        // Do something.
-                        if ( data instanceof ArrayList ) {
-                            ArrayList list = (ArrayList)data;
-                            if ( list.size() > 0 ) {
-                                Object firstItem = list.get( 0 );
-                                if ( firstItem instanceof Entity ) {
-                                    Entity draggedEntity = (Entity)firstItem;
-                                    if ( alignmentBoard != null ) {
-                                        alignmentBoard.addChildEntity( draggedEntity );
-                                    }
-                                }
-                            }
-                        }
-                        System.out.println("Accepting import data " + loc);
-                    } catch ( Exception ex ) {
-                        ex.printStackTrace();
-                    }
-                }
-
-                return true;
-            }
-        };
-
-        setTransferHandler( transferHandler );
-
+    /** This is used by load code to establish how to colorize the things that are rendered. */
+    public ColorMappingI getColorMapper() {
+        return new ColorWheelColorMapping();
     }
 
     @Override
@@ -130,7 +75,6 @@ public class AlignmentBoardViewer extends Viewer {
             loadWorker.disregard();
             loadWorker.cancel( true );
         }
-        loadWorker = new ABLoadWorker();
         refresh();
 
         // Listen for further changes, so can refresh again later.
@@ -189,6 +133,9 @@ public class AlignmentBoardViewer extends Viewer {
 
             if ( mip3d == null ) {
                 mip3d = new Mip3d();
+                if ( loadWorker == null ) {
+                    loadWorker = new ABLoadWorker( this, alignmentBoard, mip3d );
+                }
             }
 
             mip3d.refresh();
@@ -202,7 +149,6 @@ public class AlignmentBoardViewer extends Viewer {
             layersPanel.showEntities(alignmentBoard.getOrderedChildren());
             SessionMgr.getBrowser().selectRightPanel(layersPanel);
 
-            alignmentBoardDataBuilder.setAlignmentBoard( alignmentBoard );
             loadWorker.execute();
 
         }
@@ -212,32 +158,6 @@ public class AlignmentBoardViewer extends Viewer {
     @Override
     public void totalRefresh() {
         refresh();
-    }
-
-    /**
-     * Accumulates all data for masking, from the set of files provided, preparing them for
-     * injection into th evolume being loaded.
-     *
-     * @param maskFiles list of all mask files to use against the signal volumes.
-     */
-    private VolumeMaskBuilder createMaskBuilder(
-            Collection<String> maskFiles, Collection<RenderableBean> renderables, FileResolver resolver
-    ) {
-
-        VolumeMaskBuilder volumeMaskBuilder = null;
-        // Build the masking texture info.
-        if (maskFiles != null  &&  maskFiles.size() > 0) {
-            VolumeMaskBuilder builder = new VolumeMaskBuilder();
-            builder.setRenderables(renderables);
-            for ( String maskFile: maskFiles ) {
-                VolumeLoader volumeLoader = new VolumeLoader( resolver );
-                volumeLoader.loadVolume(maskFile);
-                volumeLoader.populateVolumeAcceptor(builder);
-            }
-            volumeMaskBuilder = builder;
-        }
-
-        return volumeMaskBuilder;
     }
 
     private void establishObserver() {
@@ -268,52 +188,5 @@ public class AlignmentBoardViewer extends Viewer {
             }
         }
     }
-
-    public class ABLoadWorker extends SimpleWorker {
-
-        @Override
-        protected void doStuff() throws Exception {
-            Collection<String> signalFilenames = alignmentBoardDataBuilder.getSignalFilenames();
-            if ( signalFilenames == null ) {
-                return;
-            }
-
-            // *** TEMP *** this sets up a test of mapping neuron fragment number vs color.
-            ColorMappingI colorMapper = new ColorWheelColorMapping();
-            mip3d.setMaskColorMappings( colorMapper.getMapping( alignmentBoardDataBuilder.getRenderableBeanList() ) );
-
-            FileResolver resolver = new CacheFileResolver();
-            for ( String signalFilename: signalFilenames ) {
-                Collection<String> maskFilenamesForSignal = alignmentBoardDataBuilder.getMaskFilenames( signalFilename );
-                VolumeMaskBuilder volumeMaskBuilder = createMaskBuilder(
-                        maskFilenamesForSignal, alignmentBoardDataBuilder.getRenderables(signalFilename), resolver
-                );
-
-                mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver );
-                // After first volume has been loaded, unset clear flag, so subsequent
-                // ones are overloaded.
-                mip3d.setClearOnLoad(false);
-            }
-        }
-
-        @Override
-        protected void hadSuccess() {
-            // Add this last.  "show-loading" removes it.  This way, it is shown only
-            // when it becomes un-busy.
-            AlignmentBoardViewer.this.removeAll();
-            add(mip3d, BorderLayout.CENTER);
-
-            revalidate();
-            repaint();
-        }
-
-        @Override
-        protected void hadError(Throwable error) {
-            AlignmentBoardViewer.this.removeAll();
-            revalidate();
-            repaint();
-            SessionMgr.getSessionMgr().handleException( error );
-        }
-    };
 
 }
