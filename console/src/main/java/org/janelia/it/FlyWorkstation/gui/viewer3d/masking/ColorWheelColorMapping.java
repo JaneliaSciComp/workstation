@@ -1,10 +1,10 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.FragmentBean;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.RenderableBean;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Collection;
 
 /**
  * Created with IntelliJ IDEA.
@@ -15,7 +15,7 @@ import java.util.Map;
  * Simplistic implementation of a color mapping.
  */
 public class ColorWheelColorMapping implements ColorMappingI {
-    public Map<Integer,byte[]> getMapping( List<FragmentBean> fragments ) {
+    public Map<Integer,byte[]> getMapping( Collection<RenderableBean> fragments ) {
         Map<Integer,byte[]> maskMappings = new HashMap<Integer,byte[]>();
 //for (int i=0; i < 65535; i++) {
 //    maskMappings.put(i, new byte[]{ (byte)0xff, (byte)0, (byte)0xff });
@@ -31,10 +31,10 @@ public class ColorWheelColorMapping implements ColorMappingI {
                 { (byte)0x8f, (byte)0x00, (byte)0x00 },
                 { (byte)0x00, (byte)0x8f, (byte)0x00 },
         };
-        for ( FragmentBean fragmentBean: fragments ) {
+        for ( RenderableBean renderableBean : fragments ) {
             // Make the "back map" to the original fragment number.
-            int translatedNum = fragmentBean.getTranslatedNum();
-            byte[] rgb = fragmentBean.getRgb();
+            int translatedNum = renderableBean.getTranslatedNum();
+            byte[] rgb = renderableBean.getRgb();
             if ( rgb == null ) {
                 maskMappings.put( translatedNum, colorWheel[ translatedNum % colorWheel.length ] );
             }

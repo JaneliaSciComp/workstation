@@ -3,7 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.EntityFilenameFetcher;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.FragmentBean;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -29,14 +29,11 @@ import java.util.*;
 public class AlignmentBoardDataBuilder implements Serializable {
     private static final String COMPARTMENT_MASK_FILE = "/groups/scicomp/jacsData/MaskResources/Compartment/maskIndex.v3dpbd";
     private static final String COMPARTMENT_MASK_MAPPING_FILE = "/groups/scicomp/jacsData/MaskResources/Compartment/maskNameIndex.txt";
-    private static final String COMPARTMENT_FOLDER_NAME = "Compartment";
+    private static final String COMPARTMENT_ENTITY_NAME = "Compartment";
 
     private Logger logger = LoggerFactory.getLogger( AlignmentBoardDataBuilder.class );
 
-    private List<String> signalFilenames;
-    private List<FragmentBean> fragments;
-    private Map<String,List<String>> signalToMaskFilenames;
-    private Map<String,List<FragmentBean>> signalFilenameToFragments;
+    private List<RenderableBean> renderableBeanList;
 
     private boolean sampleAncestorEncountered;
 
@@ -45,12 +42,12 @@ public class AlignmentBoardDataBuilder implements Serializable {
 
     public void setAlignmentBoard( Entity alignmentBoard ) {
         clear();
-        fragments = new ArrayList<FragmentBean>();
-        Map<Entity,List<Entity>> ancestorToFragments = new HashMap<Entity,List<Entity>>();
+        renderableBeanList = new ArrayList<RenderableBean>();
+        Map<Entity,List<Entity>> ancestorToRenderables = new HashMap<Entity,List<Entity>>();
         Map<Entity,Entity> labelToPipelineResult = new HashMap<Entity,Entity>();
 
         List<Entity> displayableList = getDisplayableList( alignmentBoard );
-        Map<Entity,Entity> displayableToBaseEntity = getMaskContainerAncestors(ancestorToFragments, displayableList);
+        Map<Entity,Entity> displayableToBaseEntity = getMaskContainerAncestors(ancestorToRenderables, displayableList);
         Set<Entity> baseEntities = new HashSet<Entity>();
         baseEntities.addAll(displayableToBaseEntity.values());
 
@@ -60,49 +57,73 @@ public class AlignmentBoardDataBuilder implements Serializable {
 
         Map<Entity,Set<Entity>> signalToLabelEntities = getSignalToLabelEntities(labelToPipelineResult);
 
-        Map<Entity,String> labelEntityToSignalFilename = findSignalFilenames(sampleEntities, sampleToBaseEntity, signalToLabelEntities);
-        findLabelFilenames(ancestorToFragments, labelToPipelineResult, consolidatedLabelsList, labelEntityToSignalFilename);
+        Map<Entity,String> labelEntityToSignalFilename = findLabelEntityToSignalFilename( sampleEntities, sampleToBaseEntity, signalToLabelEntities );
+        createRenderableBeanList( ancestorToRenderables, labelToPipelineResult, consolidatedLabelsList, labelEntityToSignalFilename );
         applyCompartmentMask( displayableList );
 
     }
 
-    //todo change this to get all the masks, given the filename out of this iterator.
-    public List<String> getSignalFilenames() {
-        return signalFilenames;
+    /**
+     * Returns the full collection of things found by this builder, which may be rendered.
+     *
+     * @return list configured into existence at construction time.
+     */
+    public Collection<RenderableBean> getRenderableBeanList() {
+        return renderableBeanList;
     }
 
-    public List<String> getMaskFilenames( String signalFilename ) {
-        return signalToMaskFilenames.get( signalFilename );
-    }
-
-    public List<String> getMaskFilenames() {
-        List<String> rtnVal = new ArrayList<String>();
-        for ( String signalFilename: signalToMaskFilenames.keySet() ) {
-            List<String> maskFilenames = signalToMaskFilenames.get( signalFilename );
-            rtnVal.addAll( maskFilenames );
+    /**
+     * This is a convenience method.  All information needed for this comes from the renderable bean list.
+     *
+     * @param signalFilename find things pertaining to this signal file.
+     * @return all the renderables which refer to this signal file.
+     */
+    public Collection<RenderableBean> getRenderables(String signalFilename) {
+        Collection<RenderableBean> rtnVal = new HashSet<RenderableBean>();
+        for ( RenderableBean bean: getRenderableBeanList() ) {
+            if ( bean.getSignalFile().equals( signalFilename ) ) {
+                rtnVal.add( bean );
+            }
         }
         return rtnVal;
     }
 
-    public List<FragmentBean> getFragments() {
-        return fragments;
+    /**
+     * This is a convenience method.  All information needed for this comes from the renderable bean list.
+     * @return all signal file names found in any bean.
+     */
+    public Collection<String> getSignalFilenames() {
+        Collection<String> signalFileNames = new HashSet<String>();
+        for ( RenderableBean bean: getRenderableBeanList() ) {
+            signalFileNames.add( bean.getSignalFile() );
+        }
+        return signalFileNames;
     }
 
-    public List<FragmentBean> getFragments( String signalFilename ) {
-        return signalFilenameToFragments.get( signalFilename );
+    /**
+     * This is a convenience method.  All information needed for this comes from the renderable bean list.
+     *
+     * @param signalFilename which signal to find masks against.
+     * @return all mask file names from beans which refer to the signal file name given.
+     */
+    public Collection<String> getMaskFilenames( String signalFilename ) {
+        Collection<String> maskFileNames = new HashSet<String>();
+        for ( RenderableBean bean: getRenderableBeanList() ) {
+            if ( bean.getSignalFile().equals( signalFilename ) ) {
+                maskFileNames.add( bean.getLabelFile() );
+            }
+        }
+        return maskFileNames;
     }
 
     //--------------------------------------HELPERS
     private void clear() {
-        fragments = null;
-        signalFilenames = null;
-        signalToMaskFilenames = null;
-        signalFilenameToFragments = null;
+        renderableBeanList = null;
         sampleAncestorEncountered = false;
     }
 
     private void applyCompartmentMask( List<Entity> displayableList ) {
-        if ( signalFilenameToFragments.size() == 0  ||  displayableList.size() == 0 ) {
+        if ( renderableBeanList.size() == 0  ||  displayableList.size() == 0 ) {
             return;
         }
 
@@ -111,7 +132,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
         for ( Entity entity: displayableList ) {
             try {
                 Entity definingAncestor = ModelMgr.getModelMgr().getAncestorWithType( entity, EntityConstants.TYPE_FOLDER );
-                if ( definingAncestor.getName().equals( COMPARTMENT_FOLDER_NAME ) ) {
+                if ( definingAncestor.getName().equals( COMPARTMENT_ENTITY_NAME ) ) {
                     // Know: we have a compartment.
                     String compartmentName = entity.getName();
                     compartmentNames.add( compartmentName );
@@ -129,22 +150,25 @@ public class AlignmentBoardDataBuilder implements Serializable {
                             COMPARTMENT_MASK_FILE
                     );
 
-            // Tack along to the last signal file name.
-            Set<String> signalFilenames = signalFilenameToFragments.keySet();
-            String lastFilename = null;
-            for ( String nextFilename: signalFilenames ) {
-                lastFilename = nextFilename;
+            // Tack along to the last existing bean, and get its signal file name.
+            String lastSignalFile = null;
+            for ( RenderableBean bean: renderableBeanList ) {
+                lastSignalFile = bean.getSignalFile();
             }
-            List<String> lastMaskList = signalToMaskFilenames.get( lastFilename );
 
-            List<FragmentBean> lastBeanList = signalFilenameToFragments.get( lastFilename );
-
-            lastMaskList.add(maskIndex);
+            // Look for highest-numbered translation.
+            int highestTranslatedLabel = -1;
+            for ( RenderableBean bean: renderableBeanList ) {
+                if ( bean.getTranslatedNum() >= highestTranslatedLabel ) {
+                    highestTranslatedLabel = bean.getTranslatedNum() + 1;
+                }
+            }
 
             // Pull in info from the compartments definition text file.
-            File maskNameIndex = new File( cacheFileResolver.getResolvedFilename(
+            File maskNameIndex = new File(
+                cacheFileResolver.getResolvedFilename(
                     COMPARTMENT_MASK_MAPPING_FILE
-            )
+                )
             );
 
             Map<String, Integer> nameVsNum = new HashMap<String,Integer>();
@@ -167,20 +191,19 @@ public class AlignmentBoardDataBuilder implements Serializable {
                 SessionMgr.getSessionMgr().handleException( ex );
             }
 
-            // Now, add all the fragments.
+            // Now, add all the renderableBeanList.
             for ( String compartmentName: compartmentNames ) {
                 Integer labelNum = nameVsNum.get( compartmentName );
                 if ( labelNum != null ) {
-                    FragmentBean maskIndexBean = new FragmentBean();
-                    maskIndexBean.setLabelFile(maskIndex);
-
+                    RenderableBean maskIndexBean = new RenderableBean();
+                    maskIndexBean.setLabelFile( maskIndex );
+                    maskIndexBean.setSignalFile( lastSignalFile );
                     maskIndexBean.setLabelFileNum( labelNum );
-                    maskIndexBean.setTranslatedNum(lastBeanList.size() + 1);
+
+                    maskIndexBean.setTranslatedNum( highestTranslatedLabel ++ );
                     maskIndexBean.setRgb( new byte[] { 20, 20, 20 } );
 
-                    lastBeanList.add(maskIndexBean);
-
-                    fragments.add( maskIndexBean );
+                    renderableBeanList.add(maskIndexBean);
                 }
                 else {
                     logger.warn( "Encountered compartment {} with no known label number.", compartmentName );
@@ -301,14 +324,12 @@ public class AlignmentBoardDataBuilder implements Serializable {
         return baseEntity;
     }
 
-    private void findLabelFilenames(
-            Map<Entity, List<Entity>> sampleToFragments,
+    private void createRenderableBeanList(
+            Map<Entity, List<Entity>> sampleToRenderable,
             Map<Entity, Entity> labelToPipelineResult,
             List<Entity> consolidatedLabelsList,
-            Map<Entity,String> labelEntityToSignalFilename) {
+            Map<Entity, String> labelEntityToSignalFilename) {
 
-        signalToMaskFilenames = new HashMap<String,List<String>>();
-        signalFilenameToFragments = new HashMap<String,List<FragmentBean>>();
         FileResolver resolver = new CacheFileResolver();
 
         int fragmentOffset = 1;
@@ -319,46 +340,31 @@ public class AlignmentBoardDataBuilder implements Serializable {
                 labelFilename = resolver.getResolvedFilename( labelFilename );
                 String finalLabelFile = ensureLabelFile(labelFilename);
 
-                List<String> maskFilenamesForSignal = signalToMaskFilenames.get( signalFilename );
-                if ( maskFilenamesForSignal == null ) {
-                    maskFilenamesForSignal = new ArrayList<String>();
-                    signalToMaskFilenames.put( signalFilename, maskFilenamesForSignal );
-                }
-                maskFilenamesForSignal.add( labelFilename );
-
-                // Get any fragments associated. Create fragment bean.
+                // Get any renderableBeanList associated. Create fragment bean.
                 Entity sample = labelToPipelineResult.get( labelEntity );
-                List<Entity> sampleFragments = sampleToFragments.get( sample );
+                List<Entity> sampleFragments = sampleToRenderable.get( sample );
 
                 if ( sampleFragments != null ) {
                     for ( Entity fragment: sampleFragments ) {
-                        FragmentBean bean = new FragmentBean();
+                        RenderableBean bean = new RenderableBean();
                         bean.setLabelFile( finalLabelFile );
-                        bean.setFragment( fragment );
+                        bean.setSignalFile( signalFilename );
+                        bean.setEntity( fragment );
                         bean.setTranslatedNum( fragmentOffset++ );
 
-                        fragments.add( bean );
-
-                        List<FragmentBean> fragmentsForSignalFn = signalFilenameToFragments.get( signalFilename );
-                        if ( fragmentsForSignalFn == null ) {
-                            fragmentsForSignalFn = new ArrayList<FragmentBean>();
-                            signalFilenameToFragments.put( signalFilename, fragmentsForSignalFn );
-                        }
-                        fragmentsForSignalFn.add( bean );
+                        renderableBeanList.add(bean);
                     }
                 }
-                sampleToFragments.remove( sample );
+                sampleToRenderable.remove(sample);
             }
         }
     }
 
-    private Map<Entity,String> findSignalFilenames(
+    private Map<Entity,String> findLabelEntityToSignalFilename(
             Collection<Entity> sampleEntities,
-            Map<Entity,Entity> sampleToBaseEntity,
-            Map<Entity,Set<Entity>> signalToLabelEntities
+            Map<Entity, Entity> sampleToBaseEntity,
+            Map<Entity, Set<Entity>> signalToLabelEntities
     ) {
-        signalFilenames = new ArrayList<String>();
-
         Map<Entity,String> labelEntityToSignalFilename = new HashMap<Entity,String>();
         try {
             EntityFilenameFetcher filenameFetcher = new EntityFilenameFetcher();
@@ -370,12 +376,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
                 String entityConstantFileType = filenameFetcher.getEntityConstantFileType( typeName );
                 String filename = filenameFetcher.fetchFilename( sampleEntity, entityConstantFileType );
                 if ( filename != null ) {
-                    signalFilenames.add( filename );
-
-                    // Side effect: build a mapping of label entity to signal filename.
-                    // NOTE: _emphasis_ this for-loop looks at the returned collection to get its
-                    //    iterator.  Had I phrased it as "iterate over keyset" I would then have
-                    //    to traverse all keys, getting each set in turn.
+                    // Build a mapping of label entity to signal filename.
                     Entity baseEntity = sampleToBaseEntity.get( sampleEntity );
                     if ( baseEntity == null ) {
                         logger.warn("No mapping to base entity from sample entity {}/{}." +
@@ -460,9 +461,6 @@ public class AlignmentBoardDataBuilder implements Serializable {
         logger.debug("Recursing into " + entity.getName());
         String entityTypeName = entity.getEntityType().getName();
 
-        //                EntityConstants.TYPE_CURATED_NEURON.equals(entityTypeName)
-        //                EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION.equals(entityTypeName)
-
         boolean useThisEntity = false;
         if ( EntityConstants.TYPE_SAMPLE.equals(entityTypeName) ) {
             sampleAncestorEncountered = true;
@@ -471,11 +469,10 @@ public class AlignmentBoardDataBuilder implements Serializable {
 
         if ( EntityConstants.TYPE_NEURON_FRAGMENT.equals(entityTypeName)  &&  sampleAncestorEncountered == false ) {
             useThisEntity = true;
-//            fragments.add( entity );
         }
-        else if ( entityTypeName.equals("Image 3D") ) {
+        else if ( entityTypeName.equals( EntityConstants.TYPE_IMAGE_3D ) ) {
             Entity definingAncestor = ModelMgr.getModelMgr().getAncestorWithType( entity, EntityConstants.TYPE_FOLDER );
-            if ( definingAncestor.getName().equals( "Compartment" ) ) {
+            if ( definingAncestor.getName().equals( COMPARTMENT_ENTITY_NAME ) ) {
                 useThisEntity = true;
             }
         }

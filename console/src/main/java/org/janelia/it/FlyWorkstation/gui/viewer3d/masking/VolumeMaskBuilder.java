@@ -1,8 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.FragmentBean;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.TextureDataBuilder;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.V3dMaskFileLoader;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.MaskTextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
@@ -30,7 +28,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
     private ByteOrder consensusByteOrder;
     private int consensusByteCount;
     private int consensusChannelCount;
-    private List<FragmentBean> fragments;
+    private Collection<RenderableBean> renderables;
 
     private String firstFileName = null;
 
@@ -43,15 +41,15 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
 //        if ( 0 == 0 )
 //            return ((MaskTextureDataBean)maskingDataBeans.get(0)).getTextureBytes();
 
-        if ( fragments == null ) {
+        if ( renderables == null ) {
             return null;
         }
 
-        Map<String,Set<FragmentBean>> fileNameToFragment = new HashMap<String,Set<FragmentBean>>();
-        for ( FragmentBean bean: fragments ) {
-            Set<FragmentBean> beans = fileNameToFragment.get( bean.getLabelFile() );
+        Map<String,Set<RenderableBean>> fileNameToFragment = new HashMap<String,Set<RenderableBean>>();
+        for ( RenderableBean bean: renderables) {
+            Set<RenderableBean> beans = fileNameToFragment.get( bean.getLabelFile() );
             if ( beans == null ) {
-                beans = new HashSet<FragmentBean>();
+                beans = new HashSet<RenderableBean>();
                 fileNameToFragment.put( bean.getLabelFile(), beans );
             }
             beans.add(bean);
@@ -84,7 +82,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
                 int dimBeanY = texBean.getSy();
                 int dimBeanZ = texBean.getSz();
 
-                Set<FragmentBean> fragmentBeans = fileNameToFragment.get( texBean.getFilename() );
+                Set<RenderableBean> renderableBeans = fileNameToFragment.get( texBean.getFilename() );
 
                 byte[] maskData = ((MaskTextureDataBean)texBean).getTextureBytes();
 
@@ -115,15 +113,15 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
                             int newVal = 0;
                             if ( voxelVal > 0 ) {
                                 values.add( voxelVal );
-                                if ( fragmentBeans != null ) {
+                                if ( renderableBeans != null ) {
                                     // This set-only technique will merely _set_ the value to the latest loaded mask's
                                     // value at this location.  There is no overlap taken into account here.
                                     // LAST PRECEDENT STRATEGY
-                                    for ( FragmentBean fragmentBean: fragmentBeans ) {
+                                    for ( RenderableBean renderableBean : renderableBeans) {
                                         // Use only masks settings FROM the earliest texture file.
-                                        if ( fragmentBean.getLabelFileNum() == voxelVal ) {
-                                            newVal = fragmentBean.getTranslatedNum();
-//                                            if ( fragmentBean.getLabelFile().contains(V3dMaskFileLoader.COMPARTMENT_MASK_INDEX)) {
+                                        if ( renderableBean.getLabelFileNum() == voxelVal ) {
+                                            newVal = renderableBean.getTranslatedNum();
+//                                            if ( renderableBean.getLabelFile().contains(V3dMaskFileLoader.COMPARTMENT_MASK_INDEX)) {
 //                                                break;
 //                                            }
                                         }
@@ -269,8 +267,8 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
         return space;
     }
 
-    public void setFragments(List<FragmentBean> fragments) {
-        this.fragments = fragments;
+    public void setRenderables(Collection<RenderableBean> renderables) {
+        this.renderables = renderables;
     }
 
     private<T extends Comparable> void adjustMaxValues(T[] maxValues, T[] values) {

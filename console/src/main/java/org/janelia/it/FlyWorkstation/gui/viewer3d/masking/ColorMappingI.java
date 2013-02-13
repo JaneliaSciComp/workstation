@@ -1,8 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.FragmentBean;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.RenderableBean;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -14,5 +14,5 @@ import java.util.Map;
  * Supplies a color mapping, given a list of
  */
 public interface ColorMappingI {
-    Map<Integer,byte[]> getMapping( List<FragmentBean> fragments );
+    Map<Integer,byte[]> getMapping( Collection<RenderableBean> fragments );
 }

@@ -203,10 +203,6 @@ public class AlignmentBoardViewer extends Viewer {
             SessionMgr.getBrowser().selectRightPanel(layersPanel);
 
             alignmentBoardDataBuilder.setAlignmentBoard( alignmentBoard );
-            List<String> signalFilenames = alignmentBoardDataBuilder.getSignalFilenames();
-            List<String> maskFilenames = alignmentBoardDataBuilder.getMaskFilenames();
-
-            loadWorker.setFilenames( signalFilenames, maskFilenames );
             loadWorker.execute();
 
         }
@@ -225,14 +221,14 @@ public class AlignmentBoardViewer extends Viewer {
      * @param maskFiles list of all mask files to use against the signal volumes.
      */
     private VolumeMaskBuilder createMaskBuilder(
-            List<String> maskFiles, List<FragmentBean> fragments, FileResolver resolver
+            Collection<String> maskFiles, Collection<RenderableBean> renderables, FileResolver resolver
     ) {
 
         VolumeMaskBuilder volumeMaskBuilder = null;
         // Build the masking texture info.
         if (maskFiles != null  &&  maskFiles.size() > 0) {
             VolumeMaskBuilder builder = new VolumeMaskBuilder();
-            builder.setFragments( fragments );
+            builder.setRenderables(renderables);
             for ( String maskFile: maskFiles ) {
                 VolumeLoader volumeLoader = new VolumeLoader( resolver );
                 volumeLoader.loadVolume(maskFile);
@@ -274,37 +270,23 @@ public class AlignmentBoardViewer extends Viewer {
     }
 
     public class ABLoadWorker extends SimpleWorker {
-        private List<String> maskFilenames;
-        private List<String> signalFilenames;
-
-        public void setFilenames(
-                List<String> signalFilenames,
-                List<String> maskFilenames
-        ) {
-            this.signalFilenames = signalFilenames;
-            this.maskFilenames = maskFilenames;
-        }
 
         @Override
         protected void doStuff() throws Exception {
-            if ( signalFilenames == null  ||  maskFilenames == null ) {
+            Collection<String> signalFilenames = alignmentBoardDataBuilder.getSignalFilenames();
+            if ( signalFilenames == null ) {
                 return;
             }
-            else if ( signalFilenames.size() == 0 ) {
-                mip3d.clear();
-                return;
-            }
-
 
             // *** TEMP *** this sets up a test of mapping neuron fragment number vs color.
             ColorMappingI colorMapper = new ColorWheelColorMapping();
-            mip3d.setMaskColorMappings( colorMapper.getMapping( alignmentBoardDataBuilder.getFragments() ) );
+            mip3d.setMaskColorMappings( colorMapper.getMapping( alignmentBoardDataBuilder.getRenderableBeanList() ) );
 
             FileResolver resolver = new CacheFileResolver();
             for ( String signalFilename: signalFilenames ) {
-                List<String> maskFilenamesForSignal = alignmentBoardDataBuilder.getMaskFilenames( signalFilename );
+                Collection<String> maskFilenamesForSignal = alignmentBoardDataBuilder.getMaskFilenames( signalFilename );
                 VolumeMaskBuilder volumeMaskBuilder = createMaskBuilder(
-                        maskFilenamesForSignal, alignmentBoardDataBuilder.getFragments( signalFilename ), resolver
+                        maskFilenamesForSignal, alignmentBoardDataBuilder.getRenderables(signalFilename), resolver
                 );
 
                 mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver );

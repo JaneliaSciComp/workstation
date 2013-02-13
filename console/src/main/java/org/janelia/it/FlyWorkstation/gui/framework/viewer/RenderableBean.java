@@ -8,15 +8,15 @@ import org.janelia.it.jacs.model.entity.Entity;
  * Date: 2/1/13
  * Time: 1:34 PM
  *
- * Holds information about a neuron fragment, or any other thing represented within a consolidated
- * label file by number.
+ * Holds information about a anything that can be rendered inside the alignment board.
  */
-public class FragmentBean {
+public class RenderableBean {
     private String labelFile;
+    private String signalFile;
     private int labelFileNum = -1;
     private int translatedNum;
     private byte[] rgb;
-    private Entity fragment;
+    private Entity entity;
 
     public String getLabelFile() {
         return labelFile;
@@ -50,16 +50,24 @@ public class FragmentBean {
         this.rgb = rgb;
     }
 
-    public Entity getFragment() {
-        return fragment;
+    public Entity getEntity() {
+        return entity;
     }
 
-    public void setFragment(Entity fragment) {
-        this.fragment = fragment;
-        String[] nameParts = fragment.getName().trim().split(" ");
+    public void setEntity(Entity entity) {
+        this.entity = entity;
+        String[] nameParts = entity.getName().trim().split(" ");
         // In establishing the label file number, must add one to account for 0-based neuron numbering
         // by name.  The number 0 cannot be used to represent a neuron, since it is needed for "nothing".
         // Therefore, there is a discrepancy between the naming and the numbering as done in the luminance file.
         labelFileNum = (Integer.parseInt( nameParts[ nameParts.length - 1 ] )) + 1;
+    }
+
+    public String getSignalFile() {
+        return signalFile;
+    }
+
+    public void setSignalFile(String signalFile) {
+        this.signalFile = signalFile;
     }
 }
