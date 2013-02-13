@@ -37,6 +37,8 @@ public class AlignmentBoardViewer extends Viewer {
     private Mip3d mip3d;
     private ABLoadWorker loadWorker;
     private ModelMgrObserver modelMgrObserver;
+    // *** Use of color wheel color mapping is temporary, awaiting changes.
+    private ColorMappingI colorMapping = new ColorWheelColorMapping();
     private Logger logger = LoggerFactory.getLogger(AlignmentBoardViewer.class);
 
     public AlignmentBoardViewer(ViewerPane viewerPane) {
@@ -127,8 +129,8 @@ public class AlignmentBoardViewer extends Viewer {
             if ( mip3d == null ) {
                 mip3d = new Mip3d();
                 if ( loadWorker == null ) {
-                    // *** Use of color wheel color mapping is temporary, awaiting changes.
-                    loadWorker = new ABLoadWorker( this, alignmentBoard, mip3d, new ColorWheelColorMapping() );
+
+                    loadWorker = new ABLoadWorker( this, alignmentBoard, mip3d, getColorMapping() );
                 }
             }
 
@@ -152,6 +154,20 @@ public class AlignmentBoardViewer extends Viewer {
     @Override
     public void totalRefresh() {
         refresh();
+    }
+
+    /**
+     * The "controller" should set this color mapping value onto this viewer.  Creating this requires
+     * being able to create something that can map colors against renderable objects.
+     *
+     * @return the color mapping set for this viewer.
+     */
+    public ColorMappingI getColorMapping() {
+        return colorMapping;
+    }
+
+    public void setColorMapping(ColorMappingI colorMapping) {
+        this.colorMapping = colorMapping;
     }
 
     private void establishObserver() {
