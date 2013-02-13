@@ -44,6 +44,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
     }
 
     public void setAlignmentBoard( Entity alignmentBoard ) {
+        clear();
         fragments = new ArrayList<FragmentBean>();
         Map<Entity,List<Entity>> ancestorToFragments = new HashMap<Entity,List<Entity>>();
         Map<Entity,Entity> labelToPipelineResult = new HashMap<Entity,Entity>();
@@ -92,6 +93,14 @@ public class AlignmentBoardDataBuilder implements Serializable {
     }
 
     //--------------------------------------HELPERS
+    private void clear() {
+        fragments = null;
+        signalFilenames = null;
+        signalToMaskFilenames = null;
+        signalFilenameToFragments = null;
+        sampleAncestorEncountered = false;
+    }
+
     private void applyCompartmentMask( List<Entity> displayableList ) {
         if ( signalFilenameToFragments.size() == 0  ||  displayableList.size() == 0 ) {
             return;

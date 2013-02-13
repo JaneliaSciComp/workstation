@@ -110,8 +110,8 @@ public class AlignmentBoardViewer extends Viewer {
 
     @Override
     public void clear() {
-        // TODO watch for problems, here.
-        refresh();
+        clearObserver();
+        //refresh();
     }
 
     @Override
@@ -134,8 +134,7 @@ public class AlignmentBoardViewer extends Viewer {
         refresh();
 
         // Listen for further changes, so can refresh again later.
-        modelMgrObserver = new ModelMgrListener( this, alignmentBoard );
-        ModelMgr.getModelMgr().addModelMgrObserver( modelMgrObserver );
+        establishObserver();
     }
 
     @Override
@@ -171,7 +170,7 @@ public class AlignmentBoardViewer extends Viewer {
 
     @Override
     public void close() {
-        ModelMgr.getModelMgr().removeModelMgrObserver(modelMgrObserver);
+        clearObserver();
         if (loadWorker != null) {
             loadWorker.disregard();
         }
@@ -245,7 +244,16 @@ public class AlignmentBoardViewer extends Viewer {
         return volumeMaskBuilder;
     }
 
+    private void establishObserver() {
+        modelMgrObserver = new ModelMgrListener( this, alignmentBoard );
+        ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
+    }
 
+    private void clearObserver() {
+        if ( modelMgrObserver != null ) {
+            ModelMgr.getModelMgr().removeModelMgrObserver(modelMgrObserver);
+        }
+    }
 
     //------------------------------Inner Classes
     /** Listens for changes to the child-set of the heard-entity. */
