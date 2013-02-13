@@ -88,8 +88,9 @@ public class AlignmentBoardViewer extends Viewer {
                                 Object firstItem = list.get( 0 );
                                 if ( firstItem instanceof Entity ) {
                                     Entity draggedEntity = (Entity)firstItem;
-                                    if ( alignmentBoard != null )
+                                    if ( alignmentBoard != null ) {
                                         alignmentBoard.addChildEntity( draggedEntity );
+                                    }
                                 }
                             }
                         }
