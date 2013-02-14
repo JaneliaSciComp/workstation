@@ -2,7 +2,10 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 
+import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
@@ -14,6 +17,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JToolBar;
+import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 
@@ -61,6 +65,7 @@ public class QuadView extends JFrame {
         // menus
         createMenus();
         // Slice widget
+        sliceViewer.setPreferredSize( new Dimension( 800, 700 ) );
         getContentPane().add(sliceViewer, BorderLayout.CENTER);
         //
         createStatusBar();
@@ -79,13 +84,19 @@ public class QuadView extends JFrame {
 		menu = new JMenu("File");
 		item = new JMenuItem("Open Folder...");
 		menu.add(item);
+		submenu = new JMenu("Open Recent");
+		submenu.setEnabled(false); // until we find some recent items...
+		menu.add(submenu);
 		menuBar.add(menu);
 
 		menu = new JMenu("Edit");
+		menu.add(new UndoAction());
+		menu.add(new RedoAction());
 		menuBar.add(menu);
 
 		menu = new JMenu("View");
 		submenu = new JMenu("Mouse Mode");
+		submenu.setIcon(Icons.getIcon("mouse_left.png"));
 		// only one mouse mode is active at a time
 		ButtonGroup group = new ButtonGroup();
 		item = new JRadioButtonMenuItem(panModeAction);
@@ -95,6 +106,14 @@ public class QuadView extends JFrame {
 		item = new JRadioButtonMenuItem(zoomMouseModeAction);
 		group.add(item);
 		submenu.add(item);
+		menu.add(submenu);
+		submenu = new JMenu("Scroll Mode");
+		submenu.setIcon(Icons.getIcon("mouse_scroll.png"));		
+		group = new ButtonGroup();
+		item = new JRadioButtonMenuItem(zoomScrollModeAction);
+		group.add(item);
+		submenu.add(item);
+		item.setSelected(true);
 		menu.add(submenu);
 		menuBar.add(menu);
 

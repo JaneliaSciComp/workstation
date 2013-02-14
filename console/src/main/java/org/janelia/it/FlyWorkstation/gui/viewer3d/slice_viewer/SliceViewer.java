@@ -42,6 +42,7 @@ implements MouseModalWidget
 		this.renderer.setBackgroundColor(new Color(0.5f, 0.5f, 0.5f, 0.0f));
         setPreferredSize( new Dimension( 600, 600 ) );
         rubberBand.changed.connect(repaintSlot);
+        setToolTipText("Double click to center on point.");
 	}
 
 	@Override
