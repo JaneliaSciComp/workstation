@@ -4,20 +4,17 @@
 
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.FragmentBean;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ColorMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ColorWheelColorMapping;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.MaskTextureDataBean;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 /**
  * This test-run class / standalone program will pull in a signal and an optional mask file and display the
@@ -109,29 +106,29 @@ public class TestMaskedMip3d {
                             throw new IllegalArgumentException( "Cannot open mask file " + mf );
                         }
 
-                        java.util.List<FragmentBean> beans = new ArrayList<FragmentBean>();
+                        java.util.List<RenderableBean> beans = new ArrayList<RenderableBean>();
                         vmb = new VolumeMaskBuilder();
                         VolumeLoader vLoader = new VolumeLoader( resolver );
 
-                        FragmentBean fragmentBean = new FragmentBean();
-                        fragmentBean.setLabelFile( mf );
-                        fragmentBean.setTranslatedNum(1);
-                        fragmentBean.setLabelFileNum( 13 ); // Can modify this.
-                        beans.add( fragmentBean );
+                        RenderableBean renderableBean = new RenderableBean();
+                        renderableBean.setLabelFile( mf );
+                        renderableBean.setTranslatedNum(1);
+                        renderableBean.setLabelFileNum( 13 ); // Can modify this.
+                        beans.add(renderableBean);
 
-                        fragmentBean = new FragmentBean();
-                        fragmentBean.setLabelFile( mf );
-                        fragmentBean.setTranslatedNum(2);
-                        fragmentBean.setLabelFileNum( 14 );
-                        beans.add( fragmentBean );
+                        renderableBean = new RenderableBean();
+                        renderableBean.setLabelFile( mf );
+                        renderableBean.setTranslatedNum(2);
+                        renderableBean.setLabelFileNum( 14 );
+                        beans.add(renderableBean);
 
-                        fragmentBean = new FragmentBean();
-                        fragmentBean.setLabelFile( mf );
-                        fragmentBean.setTranslatedNum(3);
-                        fragmentBean.setLabelFileNum( 15 );
-                        beans.add( fragmentBean );
+                        renderableBean = new RenderableBean();
+                        renderableBean.setLabelFile( mf );
+                        renderableBean.setTranslatedNum(3);
+                        renderableBean.setLabelFileNum( 15 );
+                        beans.add(renderableBean);
 
-                        vmb.setFragments( beans );
+                        vmb.setRenderables(beans);
 
                         vLoader.loadVolume( mf );
                         vLoader.populateVolumeAcceptor( vmb );
