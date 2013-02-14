@@ -109,6 +109,7 @@ public class AlignmentBoardViewer extends Viewer {
 
     @Override
     public void close() {
+        logger.info("Closing");
         clearObserver();
         if (loadWorker != null) {
             loadWorker.disregard();
@@ -128,15 +129,9 @@ public class AlignmentBoardViewer extends Viewer {
 
             if ( mip3d == null ) {
                 mip3d = new Mip3d();
-                if ( loadWorker == null ) {
-
-                    loadWorker = new ABLoadWorker( this, alignmentBoard, mip3d, getColorMapping() );
-                }
             }
 
             mip3d.refresh();
-
-            mip3d.setClearOnLoad( true );
 
             // Here, should load volumes, for all the different items given.
 
@@ -145,6 +140,7 @@ public class AlignmentBoardViewer extends Viewer {
             layersPanel.showEntities(alignmentBoard.getOrderedChildren());
             SessionMgr.getBrowser().selectRightPanel(layersPanel);
 
+            loadWorker = new ABLoadWorker( this, alignmentBoard, mip3d, getColorMapping() );
             loadWorker.execute();
 
         }

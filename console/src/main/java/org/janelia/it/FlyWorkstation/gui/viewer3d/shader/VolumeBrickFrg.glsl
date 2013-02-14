@@ -52,9 +52,16 @@ vec4 volumeMask(vec4 origColor)
                     maxIntensity = signalColor[i];
             }
 
-            // For gray mappings, fill in solid gray for anything empty, but otherwise just use original.
-            if ( mappedColor[ 0 ] == mappedColor[ 1 ] && mappedColor[ 1 ] == mappedColor[ 2 ] ) {
+            if ( mappedColor[ 0 ] == 0.0 && mappedColor[ 1 ] == 0.0 && mappedColor[ 2 ] == 0.0 ) {
+                // The coloring for this particular label has been set to all-zero.  This constitutes
+                // an "off" switch.
+                rtnVal[ 0 ] = 0.0;
+                rtnVal[ 1 ] = 0.0;
+                rtnVal[ 2 ] = 0.0;
+            }
+            else if ( mappedColor[ 0 ] == mappedColor[ 1 ] && mappedColor[ 1 ] == mappedColor[ 2 ] ) {
                 // Special case: probably a compartment.  Here, make a translucent gray appearance.
+                // For gray mappings, fill in solid gray for anything empty, but otherwise just use original.
                 if ( maxIntensity < 0.05 ) {
                     mappedColor = vec4( 1.0, 1.0, 1.0, 1.0 );
                 }

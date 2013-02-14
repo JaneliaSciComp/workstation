@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
+import org.apache.juli.JdkLoggerFormatter;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.AlignmentBoardViewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RenderableBean;
@@ -44,6 +45,9 @@ public class ABLoadWorker extends SimpleWorker {
     @Override
     protected void doStuff() throws Exception {
 
+        mip3d.setClearOnLoad( true );
+
+        System.out.println("In load thread, before getting bean list " + new java.util.Date());
         Collection<RenderableBean> renderableBeans =
                 new AlignmentBoardDataBuilder()
                     .setAlignmentBoard( alignmentBoard )
@@ -53,12 +57,15 @@ public class ABLoadWorker extends SimpleWorker {
             return;
         }
 
+        System.out.println("In load thread, after getting bean list " + new java.util.Date());
         mip3d.setMaskColorMappings( colorMapping.getMapping( renderableBeans ) );
 
         Collection<String> signalFilenames = getSignalFilenames( renderableBeans );
 
         FileResolver resolver = new CacheFileResolver();
         for ( String signalFilename: signalFilenames ) {
+            System.out.println("In load thread, STARTING load of volume " + new java.util.Date());
+
             Collection<String> maskFilenamesForSignal = getMaskFilenames( renderableBeans, signalFilename );
             VolumeMaskBuilder volumeMaskBuilder = createMaskBuilder(
                     maskFilenamesForSignal, getRenderables(renderableBeans, signalFilename), resolver
@@ -66,20 +73,28 @@ public class ABLoadWorker extends SimpleWorker {
 
             mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver );
             // After first volume has been loaded, unset clear flag, so subsequent
-            // ones are overloaded.
+            // ones are added.
             mip3d.setClearOnLoad(false);
+
+            System.out.println("In load thread, ENDED load of volume " + new java.util.Date());
         }
+
+        // Strip any "show-loading" off the viewer.
+        viewer.removeAll();
+
+        // Add this last.  "show-loading" removes it.  This way, it is shown only
+        // when it becomes un-busy.
+        viewer.add( mip3d, BorderLayout.CENTER );
+
     }
 
     @Override
     protected void hadSuccess() {
-        // Add this last.  "show-loading" removes it.  This way, it is shown only
-        // when it becomes un-busy.
-        viewer.removeAll();
-        viewer.add(mip3d, BorderLayout.CENTER);
-
         viewer.revalidate();
         viewer.repaint();
+
+        mip3d.refresh();
+
     }
 
     @Override
