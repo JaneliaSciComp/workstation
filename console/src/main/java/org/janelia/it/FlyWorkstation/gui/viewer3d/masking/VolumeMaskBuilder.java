@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.RenderableBean;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.MaskTextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;

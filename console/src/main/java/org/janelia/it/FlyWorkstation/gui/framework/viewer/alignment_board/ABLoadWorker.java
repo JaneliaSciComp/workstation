@@ -1,11 +1,10 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
-import org.apache.juli.JdkLoggerFormatter;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.AlignmentBoardViewer;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeLoader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ColorMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
@@ -13,6 +12,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.AlignmentBoardDataBuilder;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.util.Collection;
@@ -32,10 +33,12 @@ public class ABLoadWorker extends SimpleWorker {
     private Mip3d mip3d;
     private AlignmentBoardViewer viewer;
     private ColorMappingI colorMapping;
+    private Logger logger;
 
     public ABLoadWorker(
             AlignmentBoardViewer viewer, Entity alignmentBoard, Mip3d mip3d, ColorMappingI colorMapping
     ) {
+        logger = LoggerFactory.getLogger( ABLoadWorker.class );
         this.alignmentBoard = alignmentBoard;
         this.mip3d = mip3d;
         this.viewer = viewer;
@@ -47,17 +50,18 @@ public class ABLoadWorker extends SimpleWorker {
 
         mip3d.setClearOnLoad( true );
 
-        System.out.println("In load thread, before getting bean list " + new java.util.Date());
+        logger.info( "In load thread, before getting bean list." );
         Collection<RenderableBean> renderableBeans =
                 new AlignmentBoardDataBuilder()
                     .setAlignmentBoard( alignmentBoard )
                         .getRenderableBeanList();
 
         if ( renderableBeans == null  ||  renderableBeans.size() == 0 ) {
+            logger.info( "No renderables found for alignment board " + alignmentBoard.getName() );
             return;
         }
 
-        System.out.println("In load thread, after getting bean list " + new java.util.Date());
+        logger.info( "In load thread, after getting bean list." );
         mip3d.setMaskColorMappings( colorMapping.getMapping( renderableBeans ) );
 
         Collection<String> signalFilenames = getSignalFilenames( renderableBeans );
@@ -76,7 +80,7 @@ public class ABLoadWorker extends SimpleWorker {
             // ones are added.
             mip3d.setClearOnLoad(false);
 
-            System.out.println("In load thread, ENDED load of volume " + new java.util.Date());
+            logger.info( "In load thread, ENDED load of volume." );
         }
 
         // Strip any "show-loading" off the viewer.

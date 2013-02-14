@@ -3,7 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.EntityFilenameFetcher;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.RenderableBean;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.jacs.model.entity.Entity;

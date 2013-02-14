@@ -44,7 +44,6 @@ public class AlignmentBoardViewer extends Viewer {
     public AlignmentBoardViewer(ViewerPane viewerPane) {
         super(viewerPane);
         setLayout(new BorderLayout());
-        setTransferHandler( new ABTransferHandler( alignmentBoard ) );
 
     }
 
@@ -66,6 +65,7 @@ public class AlignmentBoardViewer extends Viewer {
     @Override
     public void loadEntity(RootedEntity rootedEntity) {
         alignmentBoard = rootedEntity.getEntity();
+        setTransferHandler( new ABTransferHandler( alignmentBoard ) );
         if (loadWorker != null) {
             loadWorker.disregard();
             loadWorker.cancel( true );

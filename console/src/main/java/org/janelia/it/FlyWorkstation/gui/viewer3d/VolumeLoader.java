@@ -1,13 +1,19 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.juli.JdkLoggerFormatter;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor.TextureColorSpace;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.*;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 public class VolumeLoader
 {
+
     public enum FileType{
         TIF, LSM, V3DMASK, V3DSIGNAL, MP4, UNKNOWN
     };
@@ -19,11 +25,17 @@ public class VolumeLoader
     private static final String V3D_EXT = "V3D";
     private static final String MP4_EXT = "MP4";
 
+    private static final int MAX_FILE_LOAD_RETRY = 3;
+    private static final int WAIT_BETWEEN_FILE_LOAD_RETRIES = 1000;
+
     private FileResolver resolver;
     private boolean isMask = false;
     private TextureDataI textureData;
 
+    private Logger logger;
+
     public VolumeLoader( FileResolver resolver ) {
+        logger = LoggerFactory.getLogger( VolumeLoader.class );
         this.resolver = resolver;
     }
 
@@ -70,7 +82,31 @@ public class VolumeLoader
             }
 
             textureDataBuilder.setColorSpace( resolveColorSpace(baseName, extension) );
-            fileLoader.loadVolumeFile( localFileName );
+
+            // Attempt to load the file.  After the max attempt, pass through the exception.
+            int tryCount = 0;
+            try {
+                while ( true ) {
+
+                    fileLoader.loadVolumeFile( localFileName );
+                    break;
+
+                }
+            } catch ( IOException ioe ) {
+                try {
+                    logger.warn( "Exception " + ioe.getMessage() + " during file-load attempt of {}. ", localFileName );
+                    Thread.sleep( WAIT_BETWEEN_FILE_LOAD_RETRIES );
+                } catch ( Exception sleepEx ) {
+                    // Will basically ignore this, since it is in a retry loop.
+                    logger.error( "Interrupted during volume-load retry.  Continuing..." );
+                    sleepEx.printStackTrace();
+                }
+                tryCount ++;
+                if ( tryCount > MAX_FILE_LOAD_RETRY ) {
+                    throw ioe;
+                }
+            }
+
             textureData = textureDataBuilder.buildTextureData( isMask );
 
             return true;

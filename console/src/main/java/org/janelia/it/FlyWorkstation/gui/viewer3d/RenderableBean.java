@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.viewer;
+package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import org.janelia.it.jacs.model.entity.Entity;
 
