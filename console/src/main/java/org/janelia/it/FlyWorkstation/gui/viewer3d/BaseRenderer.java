@@ -3,7 +3,6 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
@@ -64,7 +63,7 @@ public abstract class BaseRenderer implements GLEventListener
     @Override
     public void init(GLAutoDrawable gLDrawable)
     {
-    		// System.out.println("init() called");
+    	// System.out.println("init() called");
         GL2 gl = gLDrawable.getGL().getGL2();
         gl.glEnable(GL2.GL_FRAMEBUFFER_SRGB);
 		for (GLActor actor : actors)
