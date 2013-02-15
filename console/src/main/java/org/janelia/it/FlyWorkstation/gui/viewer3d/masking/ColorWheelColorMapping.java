@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.RenderableBean;
+import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 
 import java.util.HashMap;
@@ -39,12 +40,18 @@ public class ColorWheelColorMapping implements RenderMappingI {
 
             if ( rgb == null ) {
                 rgb = colorWheel[ translatedNum % colorWheel.length ];
-                String entityTypeName = renderableBean.getEntity().getEntityType().getName();
-                if ( entityTypeName.equals(EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
-                    rgb[ 3 ] = RenderMappingI.FRAGMENT_RENDERING;
+                Entity entity = renderableBean.getEntity();
+                if ( entity != null ) {
+                    String entityTypeName = entity.getEntityType().getName();
+                    if ( entityTypeName.equals(EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
+                        rgb[ 3 ] = RenderMappingI.FRAGMENT_RENDERING;
+                    }
+                    else {
+                        rgb[ 3 ] = RenderMappingI.NON_RENDERING;
+                    }
                 }
                 else {
-                    rgb[ 3 ] = RenderMappingI.NON_RENDERING;
+                    rgb[ 3 ] = RenderMappingI.FRAGMENT_RENDERING;
                 }
             }
 
