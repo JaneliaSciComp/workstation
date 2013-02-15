@@ -15,7 +15,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.ABLoad
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.ABTransferHandler;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ColorMappingI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ColorWheelColorMapping;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.slf4j.Logger;
@@ -38,7 +38,7 @@ public class AlignmentBoardViewer extends Viewer {
     private ABLoadWorker loadWorker;
     private ModelMgrObserver modelMgrObserver;
     // *** Use of color wheel color mapping is temporary, awaiting changes.
-    private ColorMappingI colorMapping = new ColorWheelColorMapping();
+    private RenderMappingI renderMapping = new ColorWheelColorMapping();
     private Logger logger = LoggerFactory.getLogger(AlignmentBoardViewer.class);
 
     public AlignmentBoardViewer(ViewerPane viewerPane) {
@@ -140,7 +140,7 @@ public class AlignmentBoardViewer extends Viewer {
             layersPanel.showEntities(alignmentBoard.getOrderedChildren());
             SessionMgr.getBrowser().selectRightPanel(layersPanel);
 
-            loadWorker = new ABLoadWorker( this, alignmentBoard, mip3d, getColorMapping() );
+            loadWorker = new ABLoadWorker( this, alignmentBoard, mip3d, getRenderMapping() );
             loadWorker.execute();
 
         }
@@ -158,12 +158,12 @@ public class AlignmentBoardViewer extends Viewer {
      *
      * @return the color mapping set for this viewer.
      */
-    public ColorMappingI getColorMapping() {
-        return colorMapping;
+    public RenderMappingI getRenderMapping() {
+        return renderMapping;
     }
 
-    public void setColorMapping(ColorMappingI colorMapping) {
-        this.colorMapping = colorMapping;
+    public void setRenderMapping(RenderMappingI renderMapping) {
+        this.renderMapping = renderMapping;
     }
 
     private void establishObserver() {

@@ -55,14 +55,14 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     private VolumeBrickShader volumeBrickShader = new VolumeBrickShader();
 
-    private MipRenderer renderer; // circular reference...
+    private RotationState rotationState;
     private boolean bIsInitialized;
     private boolean bUseSyntheticData = false;
 
     private Logger logger = LoggerFactory.getLogger( VolumeBrick.class );
 
     VolumeBrick(MipRenderer mipRenderer) {
-		renderer = mipRenderer;
+		rotationState = mipRenderer;
     }
 
     /**
@@ -87,7 +87,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 	public void init(GL2 gl) {
         // Avoid carrying out any operations if there is no real data.
         if ( signalTextureMediator == null  &&  maskTextureMediator == null ) {
-            renderer.clear();
+            logger.warn("No textures for volume brick.");
             return;
         }
 
@@ -126,7 +126,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 	public void display(GL2 gl) {
         // Avoid carrying out operations if there is no data.
         if ( maskTextureMediator == null  &&  signalTextureMediator == null ) {
-            renderer.clear();
+            logger.warn( "No textures for volume brick." );
             return;
         }
 
@@ -215,7 +215,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 		// or backward.
 		// "InGround" means in the WORLD object reference frame.
 		// (the view vector in the EYE reference frame is always [0,0,-1])
-		Vec3 viewVectorInGround = renderer.getRotation().times(new Vec3(0,0,1));
+		Vec3 viewVectorInGround = rotationState.getRotation().times(new Vec3(0,0,1));
 		// Compute the principal axis of the view direction; that's the direction we will slice along.
 		CoordinateAxis a1 = CoordinateAxis.X; // First guess principal axis is X.  Who knows?
 		Vec3 vv = viewVectorInGround;

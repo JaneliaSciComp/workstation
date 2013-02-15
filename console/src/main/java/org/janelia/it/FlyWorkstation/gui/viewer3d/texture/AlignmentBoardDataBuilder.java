@@ -4,6 +4,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.EntityFilenameFetcher;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.RenderableBean;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -164,7 +165,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
                     maskIndexBean.setLabelFileNum( labelNum );
 
                     maskIndexBean.setTranslatedNum( highestTranslatedLabel ++ );
-                    maskIndexBean.setRgb( new byte[] { 20, 20, 20 } );
+                    maskIndexBean.setRgb( new byte[] { 20, 20, 20, RenderMappingI.COMPARTMENT_RENDERING } );
 
                     renderableBeanList.add(maskIndexBean);
                 }

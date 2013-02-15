@@ -15,7 +15,7 @@ import java.util.Map;
  * Uploadable texture representation, with just enough information to map ids represented as luminances in another
  * texture, to 3-int color values.
  */
-public class ColorMapTextureBean implements TextureDataI {
+public class RenderMapTextureBean implements TextureDataI {
 
     private static final int BYTES_PER_ENTRY = 4;
     private ByteBuffer mapData;
@@ -26,24 +26,23 @@ public class ColorMapTextureBean implements TextureDataI {
      * three colors.  It is wasteful in space, but far smaller than most uploaded textures.  It may be possible
      * to pack this into far smaller area, but with the sacrifice of processing time.
      *
-     * @param colorMap neuron number from label file, vs 3-byte color array (RGB).
+     * @param renderingMap neuron number from label file, vs 3-byte color array (RGB)+1-byte rendering method.
      */
-    public void setMapping( Map<Integer,byte[]> colorMap ) {
-        if ( colorMap == null || colorMap.size() > 65535 ) {
-            throw new IllegalArgumentException("Invalid inputs for color mapping");
+    public void setMapping( Map<Integer,byte[]> renderingMap ) {
+        if ( renderingMap == null || renderingMap.size() > 65535 ) {
+            throw new IllegalArgumentException("Invalid inputs for render mapping");
         }
 
         byte[] rawMap = new byte[ 65536 * BYTES_PER_ENTRY ];
-        for ( Integer neuronNumber: colorMap.keySet() ) {
-            byte[] rgb = colorMap.get( neuronNumber );
-            if ( rgb.length != 3 ) {
-                throw new IllegalArgumentException( "Invalid size of RGB color map target.  Must be 3." );
+        for ( Integer neuronNumber: renderingMap.keySet() ) {
+            byte[] rendition = renderingMap.get( neuronNumber );
+            if ( rendition.length != 4 ) {
+                throw new IllegalArgumentException( "Invalid size of RGB color map target.  Must be 4." );
             }
             int entryOffset = neuronNumber * BYTES_PER_ENTRY;
-            rawMap[ entryOffset ] = rgb[ 0 ];
-            rawMap[ entryOffset + 1 ] = rgb[ 1 ];
-            rawMap[ entryOffset + 2 ] = rgb[ 2 ];
-            rawMap[ entryOffset + 3 ] = (byte)0xff;
+            for ( int i = 0; i < BYTES_PER_ENTRY; i++ ) {
+                rawMap[ entryOffset + i ] = rendition[ i ];
+            }
         }
 
         mapData = ByteBuffer.wrap( rawMap );

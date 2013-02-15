@@ -13,6 +13,9 @@ import java.util.Map;
  *
  * Supplies a color mapping, given a list of
  */
-public interface ColorMappingI {
+public interface RenderMappingI {
+    public static final int FRAGMENT_RENDERING = 1;
+    public static final int NON_RENDERING = 0;
+    public static final int COMPARTMENT_RENDERING = 2;
     Map<Integer,byte[]> getMapping( Collection<RenderableBean> fragments );
 }

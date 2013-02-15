@@ -8,7 +8,7 @@ import javax.swing.*;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ChannelSelectionPanel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ColorMapTextureBean;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.RenderMapTextureBean;
 
 public class Mip3d 
 extends BaseGLViewer
@@ -124,9 +124,9 @@ extends BaseGLViewer
                 brick.setMaskTextureData( volumeMaskBuilder.getCombinedTextureData() );
 
                 if ( neuronNumToRGB != null ) {
-                    ColorMapTextureBean colorMapTextureData = new ColorMapTextureBean();
-                    colorMapTextureData.setMapping( neuronNumToRGB );
-                    brick.setColorMapTextureData( colorMapTextureData );
+                    RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
+                    renderMapTextureData.setMapping(neuronNumToRGB);
+                    brick.setColorMapTextureData( renderMapTextureData );
                 }
             }
 

@@ -8,7 +8,8 @@ import javax.media.opengl.GLAutoDrawable;
 import java.awt.*;
  
 class MipRenderer 
-extends BaseRenderer
+    extends BaseRenderer
+    implements RotationState
 {
     // camera parameters
     Vec3 focusInGround = new Vec3(0,0,0);
@@ -22,8 +23,8 @@ extends BaseRenderer
     private double heightInPixels = defaultHeightInPixels;
     // scene objects
     public MipRenderer() {
-    		// actors.add(new TeapotActor()); // solid shading is not supported right now
-    		actors.add(new VolumeBrick(this)); // Test volume with six voxels
+		// actors.add(new TeapotActor()); // solid shading is not supported right now
+        addActor( new VolumeBrick(this));
     }
     
     public void centerOnPixel(Point p) {
@@ -34,7 +35,7 @@ extends BaseRenderer
     }
     
     public void clear() {
-    		actors.clear();
+		actors.clear();
     }
 
     @Override

@@ -6,7 +6,7 @@ import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeLoader;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ColorMappingI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
@@ -32,17 +32,17 @@ public class ABLoadWorker extends SimpleWorker {
     private Entity alignmentBoard;
     private Mip3d mip3d;
     private AlignmentBoardViewer viewer;
-    private ColorMappingI colorMapping;
+    private RenderMappingI renderMapping;
     private Logger logger;
 
     public ABLoadWorker(
-            AlignmentBoardViewer viewer, Entity alignmentBoard, Mip3d mip3d, ColorMappingI colorMapping
+            AlignmentBoardViewer viewer, Entity alignmentBoard, Mip3d mip3d, RenderMappingI renderMapping
     ) {
         logger = LoggerFactory.getLogger( ABLoadWorker.class );
         this.alignmentBoard = alignmentBoard;
         this.mip3d = mip3d;
         this.viewer = viewer;
-        this.colorMapping = colorMapping;
+        this.renderMapping = renderMapping;
     }
 
     @Override
@@ -58,29 +58,29 @@ public class ABLoadWorker extends SimpleWorker {
 
         if ( renderableBeans == null  ||  renderableBeans.size() == 0 ) {
             logger.info( "No renderables found for alignment board " + alignmentBoard.getName() );
-            return;
         }
+        else {
+            logger.info( "In load thread, after getting bean list." );
+            mip3d.setMaskColorMappings(renderMapping.getMapping(renderableBeans));
 
-        logger.info( "In load thread, after getting bean list." );
-        mip3d.setMaskColorMappings( colorMapping.getMapping( renderableBeans ) );
+            Collection<String> signalFilenames = getSignalFilenames( renderableBeans );
 
-        Collection<String> signalFilenames = getSignalFilenames( renderableBeans );
+            FileResolver resolver = new CacheFileResolver();
+            for ( String signalFilename: signalFilenames ) {
+                System.out.println("In load thread, STARTING load of volume " + new java.util.Date());
 
-        FileResolver resolver = new CacheFileResolver();
-        for ( String signalFilename: signalFilenames ) {
-            System.out.println("In load thread, STARTING load of volume " + new java.util.Date());
+                Collection<String> maskFilenamesForSignal = getMaskFilenames( renderableBeans, signalFilename );
+                VolumeMaskBuilder volumeMaskBuilder = createMaskBuilder(
+                        maskFilenamesForSignal, getRenderables(renderableBeans, signalFilename), resolver
+                );
 
-            Collection<String> maskFilenamesForSignal = getMaskFilenames( renderableBeans, signalFilename );
-            VolumeMaskBuilder volumeMaskBuilder = createMaskBuilder(
-                    maskFilenamesForSignal, getRenderables(renderableBeans, signalFilename), resolver
-            );
+                mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver );
+                // After first volume has been loaded, unset clear flag, so subsequent
+                // ones are added.
+                mip3d.setClearOnLoad(false);
 
-            mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver );
-            // After first volume has been loaded, unset clear flag, so subsequent
-            // ones are added.
-            mip3d.setClearOnLoad(false);
-
-            logger.info( "In load thread, ENDED load of volume." );
+                logger.info( "In load thread, ENDED load of volume." );
+            }
         }
 
         // Strip any "show-loading" off the viewer.

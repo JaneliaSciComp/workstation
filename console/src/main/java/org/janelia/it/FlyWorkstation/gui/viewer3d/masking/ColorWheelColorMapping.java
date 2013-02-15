@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.RenderableBean;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,35 +13,42 @@ import java.util.Collection;
  * Date: 2/5/13
  * Time: 3:04 PM
  *
- * Simplistic implementation of a color mapping.
+ * Simplistic implementation of a render mapping.
  */
-public class ColorWheelColorMapping implements ColorMappingI {
-    public Map<Integer,byte[]> getMapping( Collection<RenderableBean> fragments ) {
+public class ColorWheelColorMapping implements RenderMappingI {
+    public Map<Integer,byte[]> getMapping( Collection<RenderableBean> renderableBeans ) {
         Map<Integer,byte[]> maskMappings = new HashMap<Integer,byte[]>();
 //for (int i=0; i < 65535; i++) {
 //    maskMappings.put(i, new byte[]{ (byte)0xff, (byte)0, (byte)0xff });
 //}
 
         byte[][] colorWheel = {
-                { (byte)0x00, (byte)0x00, (byte)0xff },
-                { (byte)0x00, (byte)0xff, (byte)0x00 },
-                { (byte)0xff, (byte)0x00, (byte)0x00 },
-                { (byte)0x00, (byte)0xff, (byte)0xff },
-                { (byte)0xff, (byte)0x00, (byte)0xff },
-                { (byte)0xff, (byte)0xff, (byte)0x00 },
-                { (byte)0x8f, (byte)0x00, (byte)0x00 },
-                { (byte)0x00, (byte)0x8f, (byte)0x00 },
+                { (byte)0x00, (byte)0x00, (byte)0xff, (byte)0xff },
+                { (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff },
+                { (byte)0xff, (byte)0x00, (byte)0x00, (byte)0xff },
+                { (byte)0x00, (byte)0xff, (byte)0xff, (byte)0xff },
+                { (byte)0xff, (byte)0x00, (byte)0xff, (byte)0xff },
+                { (byte)0xff, (byte)0xff, (byte)0x00, (byte)0xff },
+                { (byte)0x8f, (byte)0x00, (byte)0x00, (byte)0xff },
+                { (byte)0x00, (byte)0x8f, (byte)0x00, (byte)0xff },
         };
-        for ( RenderableBean renderableBean : fragments ) {
+        for ( RenderableBean renderableBean : renderableBeans ) {
             // Make the "back map" to the original fragment number.
             int translatedNum = renderableBean.getTranslatedNum();
             byte[] rgb = renderableBean.getRgb();
+
             if ( rgb == null ) {
-                maskMappings.put( translatedNum, colorWheel[ translatedNum % colorWheel.length ] );
+                rgb = colorWheel[ translatedNum % colorWheel.length ];
+                String entityTypeName = renderableBean.getEntity().getEntityType().getName();
+                if ( entityTypeName.equals(EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
+                    rgb[ 3 ] = RenderMappingI.FRAGMENT_RENDERING;
+                }
+                else {
+                    rgb[ 3 ] = RenderMappingI.NON_RENDERING;
+                }
             }
-            else {
-                maskMappings.put( translatedNum, rgb );
-            }
+
+            maskMappings.put( translatedNum, rgb );
         }
 
         return maskMappings;
