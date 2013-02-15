@@ -1,14 +1,19 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.awt.BorderLayout;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -16,10 +21,13 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JSlider;
+import javax.swing.JSplitPane;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
+import javax.swing.border.TitledBorder;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 
@@ -31,8 +39,10 @@ public class QuadView extends JFrame {
 	private static final long serialVersionUID = 1L;
 	protected SliceViewer sliceViewer = new SliceViewer();
 	protected Action panModeAction = new PanModeAction(sliceViewer);
-	protected Action zoomScrollModeAction = new ZoomScrollModeAction(sliceViewer);
+	protected Action zoomInAction = new ZoomInAction(sliceViewer.getCamera());
 	protected Action zoomMouseModeAction = new ZoomMouseModeAction(sliceViewer);
+	protected Action zoomOutAction = new ZoomOutAction(sliceViewer.getCamera());
+	protected Action zoomScrollModeAction = new ZoomScrollModeAction(sliceViewer);	
 	
 	static {
 		// Use top menu bar on Mac
@@ -57,18 +67,67 @@ public class QuadView extends JFrame {
 
 	public QuadView() {
 		setTitle("QuadView");
+        setupUi();
+	}
+	
+	protected void setupUi() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        // toolBar requires BorderLayout
-		getContentPane().setLayout(new BorderLayout(5,5));
-        // Toolbar
-        createToolBar();
-        // menus
-        createMenus();
+		createMenus();
+		// Top level container - status bar vs rest
+		Container container = getContentPane();
+		container.setLayout(new BorderLayout(0, 0));
+		container.add(createStatusBar(container), BorderLayout.SOUTH);
+		// Next level - tool bar vs rest - tool bar requires BorderLayout
+		Container parent = container;
+		container = new JPanel();
+		container.setLayout(new BorderLayout(0,0));
+		container.add(createToolBar(), BorderLayout.NORTH);
+		parent.add(container, BorderLayout.CENTER);
+		// Next level - splitter dividing viewer from controls
+		parent = container;
+		JPanel viewerPanel = new JPanel();
+		JPanel controlPanel = new JPanel();
+		controlPanel.setMinimumSize(new Dimension(0, 0)); // So split pane can hide controls
+		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
+				viewerPanel, controlPanel);
+		splitPane.setContinuousLayout(true); // Optimistic!
+		splitPane.setResizeWeight(1.0); // Controls' size stays fixed
+		parent.add(splitPane);
         // Slice widget
+		viewerPanel.setLayout(new BoxLayout(viewerPanel, BoxLayout.Y_AXIS));
         sliceViewer.setPreferredSize( new Dimension( 800, 700 ) );
-        getContentPane().add(sliceViewer, BorderLayout.CENTER);
-        //
-        createStatusBar();
+        viewerPanel.add(sliceViewer);
+        // Controls
+		controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
+		Container upperControls = new JPanel();
+		upperControls.setLayout(new BoxLayout(upperControls, BoxLayout.X_AXIS));
+		controlPanel.add(upperControls);
+		// sliders
+		Container slidersPanel = new JPanel();
+		slidersPanel.setLayout(new BoxLayout(slidersPanel, BoxLayout.X_AXIS));
+		upperControls.add(slidersPanel);
+		JPanel zoomPanel = new JPanel();
+		zoomPanel.setLayout(new BorderLayout(0, 0));
+		slidersPanel.add(zoomPanel);
+		// put a border to suggest that the zoom buttons belong with the slider
+		zoomPanel.setBorder(BorderFactory.createEtchedBorder());
+		zoomPanel.add(new ToolButton(zoomInAction), BorderLayout.NORTH);
+		JSlider zoomSlider = new JSlider(JSlider.VERTICAL);
+		zoomPanel.add(zoomSlider, BorderLayout.CENTER);
+		zoomPanel.add(new ToolButton(zoomOutAction), BorderLayout.SOUTH);
+		slidersPanel.add(Box.createHorizontalGlue());
+		// buttons
+		Container buttonsPanel = new JPanel();
+		buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
+		upperControls.add(buttonsPanel);
+		buttonsPanel.add(new JButton("Fit to Window"));
+		buttonsPanel.add(new JButton("Zoom Max"));
+		buttonsPanel.add(new JButton("Reset View"));
+		buttonsPanel.add(Box.createVerticalGlue());
+		// colors
+		JPanel colorsPanel = new JPanel();
+		colorsPanel.setBorder(new TitledBorder("Color Channels"));
+		controlPanel.add(colorsPanel);
         //Display the window.
         pack();
         setSize( getContentPane().getPreferredSize() );
@@ -115,6 +174,9 @@ public class QuadView extends JFrame {
 		submenu.add(item);
 		item.setSelected(true);
 		menu.add(submenu);
+		menu.addSeparator();
+		menu.add(zoomOutAction);
+		menu.add(zoomInAction);
 		menuBar.add(menu);
 
 		menu = new JMenu("Help");
@@ -123,39 +185,46 @@ public class QuadView extends JFrame {
 		setJMenuBar(menuBar);
 	}
 	
-	protected void createStatusBar() {
+	protected JComponent createStatusBar(Container parent) {
 		// http://stackoverflow.com/questions/3035880/how-can-i-create-a-bar-in-the-bottom-of-a-java-app-like-a-status-bar
 		JPanel statusPanel = new JPanel();
-		getContentPane().add(statusPanel, BorderLayout.SOUTH);
-		statusPanel.setPreferredSize(new Dimension(getContentPane().getWidth(), 16));
+		statusPanel.setPreferredSize(new Dimension(parent.getWidth(), 20));
 		statusPanel.setLayout(new BoxLayout(statusPanel, BoxLayout.X_AXIS));
 		JLabel statusLabel = new JLabel("");
 		statusLabel.setHorizontalAlignment(SwingConstants.LEFT);
-		statusPanel.add(statusLabel);		
+		statusPanel.add(statusLabel);
+		return statusPanel;
 	}
 
-	protected void createToolBar() {
+	protected JComponent createToolBar() {
 		JToolBar toolBar = new JToolBar();
 
-		JLabel mouseModeLabel = new JLabel(Icons.getIcon("mouse_left.png"));
+		JLabel mouseModeLabel = new ToolBarIcon("mouse_left.png");
 		mouseModeLabel.setToolTipText("Mouse mode:");
-		mouseModeLabel.setEnabled(false);
 		toolBar.add(mouseModeLabel);
-		toolBar.addSeparator();
-		toolBar.add(panModeAction);
-		toolBar.add(zoomMouseModeAction);
+		ButtonGroup group = new ButtonGroup();
+		ToolModeButton button = new ToolModeButton(panModeAction);
+		group.add(button);
+		toolBar.add(button);
+		button.setSelected(true);
+		button = new ToolModeButton(zoomMouseModeAction);
+		group.add(button);
+		toolBar.add(button);
 		
 		toolBar.addSeparator();
-		toolBar.addSeparator();
 
-		mouseModeLabel = new JLabel(Icons.getIcon("mouse_scroll.png"));
+		mouseModeLabel = new ToolBarIcon("mouse_scroll.png");
 		mouseModeLabel.setToolTipText("Scroll wheel mode:");
-		mouseModeLabel.setEnabled(false);
 		toolBar.add(mouseModeLabel);
-		toolBar.addSeparator();
-		toolBar.add(zoomScrollModeAction);
+		group = new ButtonGroup();
+		button = new ToolModeButton(zoomScrollModeAction);
+		group.add(button);
+		toolBar.add(button);
+		button.setSelected(true);
 
-		getContentPane().add(toolBar, BorderLayout.PAGE_START);
+		toolBar.addSeparator();
+		
+		return toolBar;
 	}
 	
 }

@@ -13,7 +13,7 @@ public class ZoomScrollModeAction extends AbstractAction
 
 	public ZoomScrollModeAction(MouseModalWidget widget) {
 		putValue(NAME, "Zoom");
-		putValue(SMALL_ICON, Icons.getIcon("magnifier.png"));
+		putValue(SMALL_ICON, Icons.getIcon("magnify_glass.png"));
 		putValue(SHORT_DESCRIPTION, 
 				"Set scroll wheel mode to Zoom in and out.");
 		this.widget = widget;
@@ -24,5 +24,6 @@ public class ZoomScrollModeAction extends AbstractAction
 		WheelMode mode = new ZoomMode();
 		mode.setComponent(widget);
 		widget.setWheelMode(mode);
+		putValue(SELECTED_KEY, true);
 	}
 }

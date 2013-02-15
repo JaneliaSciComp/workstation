@@ -127,7 +127,10 @@ public class BasicMouseMode implements MouseMode
 
 	@Override
 	public void setComponent(MouseModalWidget widget) {
+		if (this.widget == widget)
+			return;
 		this.widget = widget;
+		checkCursor(currentCursor);
 	}
 
 	@Override

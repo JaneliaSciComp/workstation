@@ -14,7 +14,7 @@ public class ZoomMouseModeAction extends AbstractAction
 
 	public ZoomMouseModeAction(MouseModalWidget widget) {
 		putValue(NAME, "Zoom");
-		putValue(SMALL_ICON, Icons.getIcon("magnifier.png"));
+		putValue(SMALL_ICON, Icons.getIcon("magnify_glass.png"));
 		String acc = "Z";
 		KeyStroke accelerator = KeyStroke.getKeyStroke(acc);
 		putValue(ACCELERATOR_KEY, accelerator);
@@ -29,5 +29,6 @@ public class ZoomMouseModeAction extends AbstractAction
 		MouseMode mode = new ZoomMode();
 		mode.setComponent(widget);
 		widget.setMouseMode(mode);
+		putValue(SELECTED_KEY, true);
 	}
 }

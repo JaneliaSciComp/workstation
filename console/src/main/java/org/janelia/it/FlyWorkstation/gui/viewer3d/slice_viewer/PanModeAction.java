@@ -25,9 +25,11 @@ public class PanModeAction extends AbstractAction
 	}
 	
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void actionPerformed(ActionEvent e) 
+	{
 		MouseMode mode = new PanMode();
 		mode.setComponent(widget);
 		widget.setMouseMode(mode);
+		putValue(SELECTED_KEY, true);
 	}
 }

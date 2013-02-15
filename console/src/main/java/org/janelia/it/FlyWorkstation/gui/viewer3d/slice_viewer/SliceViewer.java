@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -42,7 +43,7 @@ implements MouseModalWidget
 		this.renderer.setBackgroundColor(new Color(0.5f, 0.5f, 0.5f, 0.0f));
         setPreferredSize( new Dimension( 600, 600 ) );
         rubberBand.changed.connect(repaintSlot);
-        setToolTipText("Double click to center on point.");
+        setToolTipText("Double click to center on a point.");
 	}
 
 	@Override
@@ -129,6 +130,8 @@ implements MouseModalWidget
 	}
 	
 	public void setMouseMode(MouseMode mouseMode) {
+		if (mouseMode == this.mouseMode)
+			return;
 		this.mouseMode = mouseMode;
 		this.mouseMode.setComponent(this);
 		this.mouseMode.setCamera(camera);
