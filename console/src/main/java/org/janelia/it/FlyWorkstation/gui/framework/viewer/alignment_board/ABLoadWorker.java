@@ -58,6 +58,7 @@ public class ABLoadWorker extends SimpleWorker {
 
         if ( renderableBeans == null  ||  renderableBeans.size() == 0 ) {
             logger.info( "No renderables found for alignment board " + alignmentBoard.getName() );
+            mip3d.clear();
         }
         else {
             logger.info( "In load thread, after getting bean list." );

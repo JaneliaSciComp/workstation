@@ -65,12 +65,19 @@ public class AlignmentBoardViewer extends Viewer {
 
     @Override
     public void loadEntity(RootedEntity rootedEntity) {
-        alignmentBoard = rootedEntity.getEntity();
-        setTransferHandler( new ABTransferHandler( alignmentBoard ) );
-        if (loadWorker != null) {
-            loadWorker.disregard();
-            loadWorker.cancel( true );
+        Entity newEntity = rootedEntity.getEntity();
+        if ( ! newEntity.equals( alignmentBoard ) ) {
+            // Stop any existing load, to free up the A-board.
+            if (loadWorker != null) {
+                loadWorker.disregard();
+                loadWorker.cancel( true );
+            }
+
+            deleteAll();
         }
+        alignmentBoard = newEntity;
+
+        setTransferHandler( new ABTransferHandler( alignmentBoard ) );
         refresh();
 
         // Listen for further changes, so can refresh again later.
@@ -111,14 +118,7 @@ public class AlignmentBoardViewer extends Viewer {
     @Override
     public void close() {
         logger.info("Closing");
-        clearObserver();
-        if (loadWorker != null) {
-            loadWorker.disregard();
-        }
-        alignmentBoard = null;
-        albRootedEntity = null;
-        removeAll();
-        mip3d = null;
+        deleteAll();
     }
 
     @Override
@@ -169,6 +169,17 @@ public class AlignmentBoardViewer extends Viewer {
     private void establishObserver() {
         modelMgrObserver = new ModelMgrListener( this, alignmentBoard );
         ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
+    }
+
+    private void deleteAll() {
+        clearObserver();
+        if (loadWorker != null) {
+            loadWorker.disregard();
+        }
+        alignmentBoard = null;
+        albRootedEntity = null;
+        removeAll();
+        mip3d = null;
     }
 
     private void clearObserver() {
