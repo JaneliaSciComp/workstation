@@ -22,6 +22,7 @@ import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.model.domain.EntityContext;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
+import org.janelia.it.FlyWorkstation.model.domain.Neuron;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityAttribute;
@@ -41,7 +42,7 @@ import com.google.common.collect.Multimap;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class EntityWrapperTree extends JPanel {
+public class EntityWrapperTree extends JPanel implements ActivatableView {
 	
 	private static final Logger log = LoggerFactory.getLogger(EntityWrapperTree.class);
 	
@@ -65,10 +66,18 @@ public class EntityWrapperTree extends JPanel {
         this.lazy = lazy;
         treesPanel = new JPanel(new BorderLayout());
         add(treesPanel, BorderLayout.CENTER);
-        
+    }
+
+    @Override
+    public void activate() {
         ModelMgr.getModelMgr().registerOnEventBus(this);
     }
 
+    @Override
+    public void deactivate() {
+        ModelMgr.getModelMgr().unregisterOnEventBus(this);
+    }
+    
     public void initializeTree(final List<EntityWrapper> roots) {
 
         entityIdToNodeMap.clear();
@@ -83,10 +92,6 @@ public class EntityWrapperTree extends JPanel {
         root.setName("Data");
         
         EntityWrapper rootWrapper = new EntityWrapper(new RootedEntity(root)) {
-//            @Override
-//            public String getUniqueId() {
-//                return "/";
-//            }
             @Override
             public List<EntityWrapper> getChildren() {
                 return roots;
@@ -129,26 +134,6 @@ public class EntityWrapperTree extends JPanel {
                 
                 EntityWrapper wrapper = getEntityWrapper(node);
                 log.debug("expandNodeWithLazyChildren: {}",wrapper.getName());  
-                
-//                if (EntityUtils.areLoaded(getEntity(node).getEntityData())) {
-//                    SwingUtilities.invokeLater(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            log.debug("expandNodeWithLazyChildren completed, from cache: {}",getEntity(node).getName());    
-//                            getDynamicTree().recreateChildNodes(node);
-//                            SwingUtilities.updateComponentTreeUI(EntityWrapperTree.this);
-//                            if (success!=null) {
-//                                try {
-//                                    success.call();
-//                                }
-//                                catch (Exception e) {
-//                                    SessionMgr.getSessionMgr().handleException(e);
-//                                }
-//                            }
-//                        }
-//                    });
-//                    return;
-//                }
                 
                 SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node) {
                     protected void doneLoading() {
@@ -204,22 +189,6 @@ public class EntityWrapperTree extends JPanel {
                 if (node.isRoot()) return "/";
                 EntityWrapper wrapper = getEntityWrapper(node);
                 return wrapper.getUniqueId();
-//                if (node.isRoot()) return "/";
-//                StringBuffer sb = new StringBuffer();
-//                DefaultMutableTreeNode curr = node;
-//                while(curr != null) {
-//                    if (node != curr) sb.insert(0, "/");
-//                    EntityData ed = getEntityData(curr);
-//                    if (ed==null) {
-//                        log.warn("Encountered null EntityData while building unique id: "+sb);
-//                        return null;
-//                    }
-//                    String nodeId = ed.getId()==null ? "" : "ed_"+ed.getId();
-//                    nodeId += "/" + "e_"+ed.getChildEntity().getId();
-//                    sb.insert(0, nodeId);
-//                    curr = ed.getId()==null ? null : (DefaultMutableTreeNode)curr.getParent();
-//                }
-//                return sb.toString();
             }
             
             @Override
@@ -382,6 +351,11 @@ public class EntityWrapperTree extends JPanel {
         uniqueIdToNodeMap.put(entityWrapper.getUniqueId(), newNode);
         entityIdToNodeMap.put(entityWrapper.getId(), newNode);
         
+        if (entityWrapper instanceof Neuron) {
+            // Neurons cannot have children
+            return;
+        }
+        
         // Add lazy child node
         selectedTree.addObject(newNode, new LazyTreeNode()); 
     }
@@ -486,8 +460,7 @@ public class EntityWrapperTree extends JPanel {
 //      }
 //      return null;
 //    }
-    
-
+//    
 //    public Entity getCurrentRootEntity() {
 //        return getEntity(selectedTree.getRootNode());
 //    }

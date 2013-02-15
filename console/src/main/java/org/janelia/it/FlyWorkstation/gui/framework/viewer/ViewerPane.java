@@ -96,29 +96,40 @@ public class ViewerPane extends JPanel {
 	protected void closeButtonPressed() {
 		throw new UnsupportedOperationException("This method has not been implemented for this ViewerPane instance");
 	}
-	
-	public void clearViewer() {
-		if (this.viewer!=null) {
-			remove(this.viewer);
-		}
-		this.viewer = null;
-		this.contextRootedEntity = null;
-	}
 
-	public void setViewer(Viewer viewer) {
-		
-		if (this.viewer!=null) {
-			this.viewer.close();
-		}
-		
-		clearViewer();
-		this.viewer = viewer;
-		if (viewer!=null) {
-			add(viewer, BorderLayout.CENTER);
-		}
-		revalidate();
-		repaint();
-	}
+    public void clearViewer() {
+        if (this.viewer!=null) {
+            log.debug("Clearing viewer {}",selectionCategory);
+            this.viewer.clear();
+            revalidate();
+            repaint();
+        }
+        this.contextRootedEntity = null;
+    }
+    
+    public void closeViewer() {
+        if (this.viewer!=null) {
+            log.debug("Closing viewer {}",this.viewer);
+            this.viewer.close();
+            remove(this.viewer);
+            revalidate();
+            repaint();
+        }
+        this.viewer = null;
+        this.contextRootedEntity = null;
+    }
+    
+    public void setViewer(Viewer viewer) {
+        log.debug("Setting viewer for viewer pane {}",selectionCategory);
+        closeViewer();
+        this.viewer = viewer;
+        if (viewer!=null) {
+            log.debug("Adding viewer {}",this.viewer);
+            add(viewer, BorderLayout.CENTER);
+        }
+        revalidate();
+        repaint();
+    }
 	
 	public Viewer getViewer() {
 		return viewer;

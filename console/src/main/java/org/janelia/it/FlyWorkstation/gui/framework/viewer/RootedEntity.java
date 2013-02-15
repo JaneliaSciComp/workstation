@@ -27,7 +27,7 @@ public class RootedEntity {
 	}
 	
 	public RootedEntity(Entity entity) {
-		this.uniqueId = "/e_"+entity.getId();
+		this.uniqueId = entity==null?"/":"/e_"+entity.getId();
 		this.entityData = new EntityData();
 		entityData.setChildEntity(entity);
 	}

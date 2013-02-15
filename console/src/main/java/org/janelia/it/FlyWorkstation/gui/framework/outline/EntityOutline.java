@@ -28,7 +28,6 @@ import org.janelia.it.FlyWorkstation.gui.dialogs.ScreenEvaluationDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.AlignmentBoardViewer.ModelMgrListener;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityAttribute;
@@ -45,7 +44,7 @@ import com.google.common.eventbus.Subscribe;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class EntityOutline extends EntityTree implements Cloneable, Refreshable, ActivatableView {
+public abstract class EntityOutline extends EntityTree implements Cloneable, Refreshable {
 	
 	private static final Logger log = LoggerFactory.getLogger(EntityOutline.class);
 	
@@ -76,14 +75,18 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
     
 	@Override
     public void activate() {
-        ModelMgr.getModelMgr().registerOnEventBus(this);
+	    log.info("Activating");
+        super.activate();
         ModelMgr.getModelMgr().addModelMgrObserver(mml);
-        refresh();
+        if (getRootEntity()==null) {
+            refresh();
+        }
     }
 
     @Override
     public void deactivate() {
-        ModelMgr.getModelMgr().unregisterOnEventBus(this);
+        log.info("Deactivating");
+        super.deactivate();
         ModelMgr.getModelMgr().removeModelMgrObserver(mml);
     }
 
@@ -239,11 +242,21 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
                     }
 
                     SimpleWorker worker = new SimpleWorker() {
-                        private Entity newBoard;
+                        private RootedEntity newBoard;
                         @Override
                         protected void doStuff() throws Exception {
                             // Update database
                             newBoard = ModelMgr.getModelMgr().createAlignmentBoard(boardName);
+                            
+//                            Entity board = newBoard.getEntity();
+//
+//                            board.setChildByAttributeName(EntityConstants.ATTRIBUTE_ALIGNMENT_SPACE, alignmentSpace);
+//                            board.setValueByAttributeName(EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION, "0.62x0.62x0.62");
+//                            board.setValueByAttributeName(EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION, "1024x512x218");
+//                            
+//                            alignmentSpaceEntity.setName("Unified 20x Alignment Space");
+//                            AlignmentSpace alignmentSpace = new AlignmentSpace(alignmentSpaceEntity);
+//                            AlignmentContext alignmentContext = new AlignmentContext(alignmentSpace, , );
                         }
                         @Override
                         protected void hadSuccess() {
@@ -251,7 +264,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
                             totalRefresh(true, new Callable<Void>() {
                                 @Override
                                 public Void call() throws Exception {
-                                    selectEntityByUniqueId("/e_" + newBoard.getId());
+                                    selectEntityByUniqueId(newBoard.getUniqueId());
                                     return null;
                                 }
                             });

@@ -98,7 +98,7 @@ public abstract class EntityWrapper {
     }
 
     public List<EntityWrapper> getChildren() {
-        checkContext();
+//        checkContext();
         return children;
     }
     

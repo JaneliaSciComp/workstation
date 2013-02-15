@@ -6,6 +6,8 @@ import java.util.concurrent.Callable;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.*;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Manages the viewers in the central panel, deciding, for instance, when to use a particular viewer class. 
@@ -13,7 +15,9 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class ViewerManager {
-	
+
+    private static final Logger log = LoggerFactory.getLogger(ViewerManager.class);
+    
 	private ViewerSplitPanel viewerContainer = new ViewerSplitPanel();
 	
 	public ViewerManager() {
@@ -21,8 +25,14 @@ public class ViewerManager {
 	}
 	
 	public void clearAllViewers() {
-	    if (getMainViewerPane()!=null) getMainViewerPane().clearViewer();
-	    if (getSecViewerPane()!=null) getSecViewerPane().clearViewer();
+	    log.debug("Clearing all viewers");
+	    if (getMainViewerPane()!=null) {
+	        getMainViewerPane().clearViewer();
+	    }
+	    if (getSecViewerPane()!=null) {
+	        getSecViewerPane().closeViewer();
+	        viewerContainer.setSecViewerVisible(false);
+	    }
 	}
 
 	public Viewer getActiveViewer() {

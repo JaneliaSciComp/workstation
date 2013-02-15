@@ -1,7 +1,12 @@
 package org.janelia.it.FlyWorkstation.api.entity_model.management;
 
-import com.google.common.eventbus.AsyncEventBus;
-import com.google.common.eventbus.EventBus;
+import java.awt.Color;
+import java.awt.EventQueue;
+import java.util.*;
+import java.util.concurrent.Executor;
+
+import javax.swing.SwingUtilities;
+
 import org.apache.solr.client.solrj.SolrQuery;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
@@ -11,6 +16,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.keybind.OntologyKeyBind;
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.OntologyKeyBindings;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.shared.exception_handlers.PrintStackTraceHandler;
 import org.janelia.it.jacs.compute.api.support.MappedId;
@@ -25,7 +31,6 @@ import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
 import org.janelia.it.jacs.model.user_data.Subject;
-import org.janelia.it.jacs.model.user_data.User;
 import org.janelia.it.jacs.model.user_data.prefs.SubjectPreference;
 import org.janelia.it.jacs.shared.annotation.DataDescriptor;
 import org.janelia.it.jacs.shared.annotation.DataFilter;
@@ -33,11 +38,8 @@ import org.janelia.it.jacs.shared.annotation.FilterResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import java.awt.*;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Executor;
+import com.google.common.eventbus.AsyncEventBus;
+import com.google.common.eventbus.EventBus;
 
 public class ModelMgr {
 	
@@ -521,7 +523,7 @@ public class ModelMgr {
         return entityModel.createCommonRootFolder(name);
     }
 
-    public Entity createAlignmentBoard(String name) throws Exception {
+    public RootedEntity createAlignmentBoard(String name) throws Exception {
         return entityModel.createAlignmentBoard(name);
     }
 
@@ -927,15 +929,30 @@ public class ModelMgr {
     }
 
     public void registerOnEventBus(Object object) {
-    	modelEventBus.register(object);
+        try {
+            modelEventBus.register(object);
+        }
+        catch (IllegalArgumentException e) {
+            log.error("Cannot register object on event bus",e);
+        }
     }
     
     public void unregisterOnEventBus(Object object) {
-    	modelEventBus.unregister(object);
+        try {
+            modelEventBus.unregister(object);
+        }
+        catch (IllegalArgumentException e) {
+            log.error("Cannot unregister object on event bus",e);
+        }
     }
 
     public void postOnEventBus(Object object) {
-    	modelEventBus.post(object);
+        try {
+            modelEventBus.post(object);
+        }
+        catch (IllegalArgumentException e) {
+            log.error("Cannot post event on event bus",e);
+        }
     }
     
 	public Color getUserAnnotationColor(String username) {

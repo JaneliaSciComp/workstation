@@ -40,7 +40,7 @@ import com.google.common.eventbus.Subscribe;
  *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class EntityTree extends JPanel {
+public class EntityTree extends JPanel implements ActivatableView {
 	
 	private static final Logger log = LoggerFactory.getLogger(EntityTree.class);
 	
@@ -65,10 +65,18 @@ public class EntityTree extends JPanel {
         this.lazy = lazy;
         treesPanel = new JPanel(new BorderLayout());
         add(treesPanel, BorderLayout.CENTER);
-        
+    }
+
+    @Override
+    public void activate() {
         ModelMgr.getModelMgr().registerOnEventBus(this);
     }
 
+    @Override
+    public void deactivate() {
+        ModelMgr.getModelMgr().unregisterOnEventBus(this);
+    }
+    
     public Entity getRootEntity() {
     	if (rootEntityData==null) return null;
 		return rootEntityData.getChildEntity();

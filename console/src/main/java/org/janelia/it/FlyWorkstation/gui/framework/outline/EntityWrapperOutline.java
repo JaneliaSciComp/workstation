@@ -73,28 +73,30 @@ public abstract class EntityWrapperOutline extends EntityWrapperTree implements 
             }
         };
 		
-		// TODO: this should be defined by the user in a drop-down
-
+		// TODO: this should be defined by the user when creating the alignment board
         Entity alignmentSpaceEntity = new Entity();
         alignmentSpaceEntity.setName("Unified 20x Alignment Space");
         AlignmentSpace alignmentSpace = new AlignmentSpace(alignmentSpaceEntity);
         AlignmentContext alignmentContext = new AlignmentContext(alignmentSpace, "0.62x0.62x0.62", "1024x512x218");
-        
         EntityContext entityContext = new EntityContext();
         entityContext.setAlignmentContext(alignmentContext);
         setEntityContext(entityContext);
 	}
-
+    
     @Override
     public void activate() {
-        ModelMgr.getModelMgr().registerOnEventBus(this);
+        log.info("Activating");
+        super.activate();
         ModelMgr.getModelMgr().addModelMgrObserver(mml);
-        refresh();
+        if (getRoot()==null) {
+            refresh();
+        }
     }
 
     @Override
     public void deactivate() {
-        ModelMgr.getModelMgr().unregisterOnEventBus(this);
+        log.info("Deactivating");
+        super.deactivate();
         ModelMgr.getModelMgr().removeModelMgrObserver(mml);
     }
 
@@ -107,14 +109,14 @@ public abstract class EntityWrapperOutline extends EntityWrapperTree implements 
 		
 		JTree tree = getTree();
 		tree.setRootVisible(false);
-		tree.setDragEnabled(true);
-		tree.setDropMode(DropMode.ON_OR_INSERT);
-		tree.setTransferHandler(new EntityTransferHandler() {
-			@Override
-			public JComponent getDropTargetComponent() {
-				return EntityWrapperOutline.this;
-			}
-		});
+//		tree.setDragEnabled(true);
+//		tree.setDropMode(DropMode.ON_OR_INSERT);
+//		tree.setTransferHandler(new EntityTransferHandler() {
+//			@Override
+//			public JComponent getDropTargetComponent() {
+//				return EntityWrapperOutline.this;
+//			}
+//		});
 
 		getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true),"enterAction");
 		getActionMap().put("enterAction",new AbstractAction() {
@@ -482,43 +484,37 @@ public abstract class EntityWrapperOutline extends EntityWrapperTree implements 
 		
 		// TODO: should decouple this somehow
 		
-		if (!getDynamicTree().childrenAreLoaded(node)) {
-			SessionMgr.getBrowser().getViewerManager().getActiveViewer().showLoadingIndicator();
-			// Load the children before displaying them
-        	getDynamicTree().expandNodeWithLazyChildren(node, new Callable<Void>() {
-				@Override
-				public Void call() throws Exception {
-				    log.debug("Got lazy nodes, loading entity in viewer");
-					loadEntityInViewer(finalCurrUniqueId);
-					return null;
-				}
-				
-			});
-		} 
-		else {
-			loadEntityInViewer(finalCurrUniqueId);
-		}
+//		if (!getDynamicTree().childrenAreLoaded(node)) {
+//			SessionMgr.getBrowser().getViewerManager().getActiveViewer().showLoadingIndicator();
+//			// Load the children before displaying them
+//        	getDynamicTree().expandNodeWithLazyChildren(node, new Callable<Void>() {
+//				@Override
+//				public Void call() throws Exception {
+//				    log.debug("Got lazy nodes, loading entity in viewer");
+//					loadEntityInViewer(finalCurrUniqueId);
+//					return null;
+//				}
+//				
+//			});
+//		} 
+//		else {
+//			loadEntityInViewer(finalCurrUniqueId);
+//		}
 	}
 	
 	private void loadEntityInViewer(String uniqueId) {
 		
-	    log.debug("loadEntityInViewer: "+uniqueId);
-		if (uniqueId==null) return;
-
-		DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
-		if (node==null) return;
-		
-		// This method would never be called on a node whose children are lazy
-		if (!getDynamicTree().childrenAreLoaded(node)) {
-		    // TODO: what is this for?
-//			throw new IllegalStateException("Cannot display entity whose children are not loaded");
-		}
-		
-		EntityWrapper wrapper = getEntityWrapper(node);
-		// TODO: should use the wrapper.getChildren() at some point here, instead of relying on the entity model
-		RootedEntity rootedEntity = new RootedEntity(uniqueId, getEntityData(node));
-		
-		log.debug("showEntityInActiveViewer: "+rootedEntity);
-		SessionMgr.getBrowser().getViewerManager().showEntityInActiveViewer(rootedEntity);
+//	    log.debug("loadEntityInViewer: "+uniqueId);
+//		if (uniqueId==null) return;
+//
+//		DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
+//		if (node==null) return;
+//		
+//		EntityWrapper wrapper = getEntityWrapper(node);
+//		// TODO: should use the wrapper.getChildren() at some point here, instead of relying on the entity model
+//		RootedEntity rootedEntity = new RootedEntity(uniqueId, getEntityData(node));
+//		
+//		log.debug("showEntityInActiveViewer: "+uniqueId);
+//		SessionMgr.getBrowser().getViewerManager().showEntityInActiveViewer(rootedEntity);
 	}
 }

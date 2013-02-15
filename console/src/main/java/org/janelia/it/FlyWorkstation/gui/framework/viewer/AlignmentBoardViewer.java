@@ -1,15 +1,16 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.BorderLayout;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Callable;
 
-import javax.swing.*;
+import javax.swing.JLabel;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.LayersPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.ABLoadWorker;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.ABTransferHandler;
@@ -136,9 +137,8 @@ public class AlignmentBoardViewer extends Viewer {
             // Here, should load volumes, for all the different items given.
 
             // Activate the layers panel for controlling visibility. This code might have to be moved elsewhere.
-            LayersPanel layersPanel = SessionMgr.getBrowser().getLayersPanel();
-            layersPanel.showEntities(alignmentBoard.getOrderedChildren());
-            SessionMgr.getBrowser().selectRightPanel(layersPanel);
+//            SessionMgr.getBrowser().getLayersPanel().showEntities(alignmentBoard.getOrderedChildren());
+//            SessionMgr.getBrowser().selectRightPanel(Browser.OUTLINE_LAYERS);
 
             loadWorker = new ABLoadWorker( this, alignmentBoard, mip3d, getRenderMapping() );
             loadWorker.execute();

@@ -1262,6 +1262,8 @@ public class IconDemoPanel extends Viewer {
 
 	public synchronized void clear() {
 
+	    log.debug("Clearing {}",getSelectionCategory());
+	    
 		// TODO: move this to the ViewerPane
 		
 		this.contextRootedEntity = null;
@@ -1278,6 +1280,7 @@ public class IconDemoPanel extends Viewer {
 	}
 	
 	public void close() {
+	    log.debug("Closing {}",getSelectionCategory());
 		SessionMgr.getSessionMgr().removeSessionModelListener(sessionModelListener);
 		ModelMgr.getModelMgr().removeModelMgrObserver(modelMgrObserver);
 		ModelMgr.getModelMgr().unregisterOnEventBus(this);

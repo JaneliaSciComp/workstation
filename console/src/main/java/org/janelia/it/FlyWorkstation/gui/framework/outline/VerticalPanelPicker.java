@@ -1,9 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.*;
 
@@ -22,6 +25,7 @@ public class VerticalPanelPicker extends JPanel {
 	private final JPanel mainPanel;
 	private final JPanel buttonPanel;
 	private final ButtonGroup buttonGroup;
+	private final Map<String,JPanel> panelMap = new HashMap<String,JPanel>();
 	
 	public VerticalPanelPicker() {
 		setLayout(new BorderLayout());
@@ -37,39 +41,53 @@ public class VerticalPanelPicker extends JPanel {
 		add(buttonPanel, BorderLayout.EAST);
 	}
 	
-	public void addPanel(Icon icon, String title, String tooltip, final JPanel panel) {
+	public void addPanel(final String title, final Icon icon, final String tooltip, final JPanel panel) {
 		
 		JToggleButton button = new JToggleButton();
 		TextIcon ti = new TextIcon(button, title);
 		RotatedIcon ri = new RotatedIcon(ti, RotatedIcon.Rotate.DOWN);
 		CompoundIcon ci = new CompoundIcon(Axis.Y_AXIS, 5, icon, ri);
+		button.setFocusable(false);
 		button.setIcon(ci);
 		button.setToolTipText(tooltip);
 		button.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				showPanel(panel);
+				showPanel(title);
 			}
 		});
 		
 		buttonPanel.add(button);
 		buttonGroup.add(button);
 		
-		// Show the first panel that was added
-		if (mainPanel.getComponentCount()==0) {
-			button.setSelected(true);
-			showPanel(panel);
-		}
+		panelMap.put(title, panel);
 	}
 	
-	public void showPanel(JPanel panel) {
+	public void showPanel(String name) {
+
+        JPanel panel = panelMap.get(name);
+        if (panel==null) throw new IllegalArgumentException("No such panel: "+name);
+        
+	    // Deactivate current panel
+	    if (mainPanel.getComponentCount()>0) {
+	        Component currComponent = mainPanel.getComponent(0);
+	        if (currComponent instanceof ActivatableView) {
+	            ((ActivatableView)currComponent).deactivate();
+	        }
+	    }
+	    
 		mainPanel.removeAll();
+		
+		// Activate new panel
 		mainPanel.add(panel);
 		revalidate();
 		repaint();
 		if (panel instanceof Refreshable) {
 			((Refreshable)panel).refresh();
 		}
+        if (panel instanceof ActivatableView) {
+            ((ActivatableView)panel).activate();
+        }
 	}
 	
 }

@@ -7,7 +7,7 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Folder extends AlignedEntityWrapper {
+public class Folder extends EntityWrapper {
 
     private static final Logger log = LoggerFactory.getLogger(Folder.class);
     
@@ -27,7 +27,7 @@ public class Folder extends AlignedEntityWrapper {
         for(EntityData childEd : entity.getOrderedEntityData()) {
             if (childEd.getChildEntity()==null) continue;
             try {
-                AlignedEntityWrapper child = AlignedEntityWrapperFactory.wrap(rootedEntity.getChild(childEd));
+                EntityWrapper child = EntityWrapperFactory.wrap(rootedEntity.getChild(childEd));
                 child.setParent(this);
                 children.add(child);
             }

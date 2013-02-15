@@ -4,7 +4,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 
-public class Neuron extends AlignedEntityWrapper implements Viewable2d {
+public class Neuron extends EntityWrapper implements Viewable2d {
 
     public Neuron(RootedEntity neuronFragment) {
         super(neuronFragment);

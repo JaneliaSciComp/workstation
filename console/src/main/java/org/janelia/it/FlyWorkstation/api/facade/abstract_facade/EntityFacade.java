@@ -30,6 +30,8 @@ public interface EntityFacade {
 
     public List<Entity> getCommonRootEntities() throws Exception;
     
+    public List<Entity> getAlignmentSpaces() throws Exception;
+     
     public Set<Entity> getChildEntities(Long parentEntityId) throws Exception;
 
     public List<EntityData> getParentEntityDatas(Long childEntityId) throws Exception;

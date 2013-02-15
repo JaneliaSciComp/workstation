@@ -8,6 +8,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.events.*;
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.AnnotationFacade;
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.EntityFacade;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.ForbiddenEntity;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -49,6 +50,8 @@ import com.google.common.collect.ImmutableMap;
 public class EntityModel {
 
 	private static final Logger log = LoggerFactory.getLogger(EntityModel.class);
+	
+	private static final String ALIGNMENT_BOARD_FOLDER_NAME = "Alignment Boards";
 	
 	private final AnnotationFacade annotationFacade;
 	private final EntityFacade entityFacade;
@@ -728,20 +731,18 @@ public class EntityModel {
     }
 
     /**
-     * Create a new Alignment board and cache it.
-     *
-     * @param boardName Name of the Alignment Board
+     * Retrieve an existing common root folder by name.
+     * 
+     * @param folderName
      * @return canonical entity instance
-     * @throws Exception
      */
-    public Entity createAlignmentBoard(String boardName) throws Exception {
-        Entity boardEntity = null;
-        synchronized(this) {
-            boardEntity = entityFacade.createEntity(EntityConstants.TYPE_ALIGNMENT_BOARD, boardName);
-            EntityUtils.addAttributeAsTag(boardEntity, EntityConstants.ATTRIBUTE_COMMON_ROOT);
-            boardEntity = entityFacade.saveEntity(boardEntity);
+    public Entity getCommonRootFolder(String folderName) throws Exception {
+        for(Entity commonRoot : getCommonRoots()) {
+            if (commonRoot.getName().equals(folderName)) {
+                return commonRoot;
+            }
         }
-        return putOrUpdate(boardEntity);
+        return null;
     }
 
     /**
@@ -770,6 +771,44 @@ public class EntityModel {
     		List<Entity> userRoots = entityFacade.getCommonRootEntities();
     		return putOrUpdateAll(userRoots);
     	}
+    }
+    
+    /**
+     * Returns all of the alignment spaces that the user has access to. 
+     * 
+     * @return canonical entity instances
+     * @throws Exception
+     */
+    public List<Entity> getAlignmentSpaces() throws Exception {
+        synchronized (this) {
+            List<Entity> alignmentSpaces = entityFacade.getAlignmentSpaces();
+            return putOrUpdateAll(alignmentSpaces);
+        }
+    }
+    
+    /**
+     * Create a new Alignment board and cache it.
+     *
+     * @param boardName Name of the Alignment Board
+     * @return canonical entity instance
+     * @throws Exception
+     */
+    public RootedEntity createAlignmentBoard(String boardName) throws Exception {
+        synchronized(this) {
+            Entity alignmentBoardFolder = getCommonRootFolder(ALIGNMENT_BOARD_FOLDER_NAME);
+            if (alignmentBoardFolder==null) {
+                alignmentBoardFolder = createCommonRootFolder(ALIGNMENT_BOARD_FOLDER_NAME);
+            }
+            
+            Entity boardEntity = entityFacade.createEntity(EntityConstants.TYPE_ALIGNMENT_BOARD, boardName);
+            putOrUpdate(boardEntity);
+            EntityData childEd = alignmentBoardFolder.addChildEntity(boardEntity);
+            boardEntity = entityFacade.saveEntity(alignmentBoardFolder);
+            
+            RootedEntity abRootedEntity = new RootedEntity(alignmentBoardFolder);
+            abRootedEntity.getChild(childEd);
+            return abRootedEntity;
+        }
     }
     
     /**

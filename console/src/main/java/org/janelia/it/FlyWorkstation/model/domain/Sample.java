@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable3d, Viewable4d {
+public class Sample extends EntityWrapper implements Viewable2d, Viewable3d, Viewable4d {
 
     private static final Logger log = LoggerFactory.getLogger(Sample.class);
     
@@ -44,7 +44,6 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
         RootedEntity separation = null;
         RootedEntity fragmentCollection = null;
         
-        Entity sample = entity;
         for(RootedEntity pipelineRun : rootedEntity.getChildrenOfType(EntityConstants.TYPE_PIPELINE_RUN)) {
             log.info("Checking "+pipelineRun.getName()+" (id="+pipelineRun.getId()+")");
             

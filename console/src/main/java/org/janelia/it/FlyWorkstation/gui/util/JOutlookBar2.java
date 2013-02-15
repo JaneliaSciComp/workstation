@@ -28,12 +28,12 @@ public class JOutlookBar2 extends JOutlookBar implements ActionListener {
         
         String visibleBar = getVisibleBarName();
         BarInfo barInfo = (BarInfo) bars.get(visibleBar);
+        if (barInfo==null) return;
         visibleComponent = barInfo.getComponent();
         add(visibleComponent, BorderLayout.CENTER);
         
         bottomPanel.removeAll();
         bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.PAGE_AXIS));
-//        bottomPanel.add(new JSeparator(JSeparator.HORIZONTAL), BorderLayout.CENTER);
         
         JPanel iconPanel = new JPanel();
         iconPanel.setLayout(new BoxLayout(iconPanel, BoxLayout.LINE_AXIS));

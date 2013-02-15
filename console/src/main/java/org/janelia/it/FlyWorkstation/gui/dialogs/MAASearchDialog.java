@@ -534,7 +534,6 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 
 	public boolean isAccessible() {
 		if (!"user:jenetta".equals(SessionMgr.getSubjectKey())) {
-			log.info("User "+SessionMgr.getSubjectKey()+" is not user:jenetta");
 			return false;
 		}
 		return true;

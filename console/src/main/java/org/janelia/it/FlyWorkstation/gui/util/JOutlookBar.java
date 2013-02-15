@@ -32,7 +32,7 @@ public class JOutlookBar extends JPanel implements ActionListener {
     /**
      * The currently visible bar (zero-based index)
      */
-    protected int visibleBar = 0;
+    protected int visibleBar = -1;
 
     /**
      * A place-holder for the currently visible component
@@ -141,6 +141,7 @@ public class JOutlookBar extends JPanel implements ActionListener {
      * @param desiredBarName The name of the bar to set visible
      */
     public void setVisibleBarByName(String desiredBarName) {
+        if (getVisibleBarName()!=null && getVisibleBarName().equals(desiredBarName)) return;
         int count = -1;
         for (String bar : bars.keySet()) {
             count++;
@@ -150,7 +151,7 @@ public class JOutlookBar extends JPanel implements ActionListener {
             }
         }
     }
-
+    
     /**
      * Causes the outlook bar component to rebuild itself; this means that
      * it rebuilds the top and bottom panels of bars as well as making the
