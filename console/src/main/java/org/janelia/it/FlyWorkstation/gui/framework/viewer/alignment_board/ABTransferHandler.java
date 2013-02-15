@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.jacs.model.entity.Entity;
 
 import javax.swing.*;
@@ -61,6 +62,7 @@ public class ABTransferHandler extends TransferHandler {
                             Entity draggedEntity = (Entity)firstItem;
                             if ( alignmentBoard != null ) {
                                 alignmentBoard.addChildEntity( draggedEntity );
+                                ModelMgr.getModelMgr().saveOrUpdateEntity( alignmentBoard );
                             }
                         }
                     }
