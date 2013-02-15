@@ -1,11 +1,8 @@
-/**
- * 
- */
 
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ColorMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ColorWheelColorMapping;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
@@ -133,7 +130,7 @@ public class TestMaskedMip3d {
                         vLoader.populateVolumeAcceptor( vmb );
 
                         // Setup a testing color-wheel mapping.
-                        ColorMappingI colorMapper = new ColorWheelColorMapping();
+                        RenderMappingI colorMapper = new ColorWheelColorMapping();
                         mipWidget.setMaskColorMappings( colorMapper.getMapping( beans ) );
                     }
 
