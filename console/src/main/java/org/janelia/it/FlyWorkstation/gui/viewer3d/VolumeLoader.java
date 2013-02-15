@@ -45,7 +45,7 @@ public class VolumeLoader
             String localFileName = resolver.getResolvedFilename( unCachedFileName );
 
             String extension = FilenameUtils.getExtension(localFileName).toUpperCase();
-            System.out.println("FILENAME: " + localFileName);
+            logger.debug("FILENAME: {}", localFileName);
             String baseName = FilenameUtils.getBaseName(localFileName);
 
             VolumeFileLoaderI fileLoader = null;
@@ -123,7 +123,7 @@ public class VolumeLoader
     }
 
     private FileType getFileType( String filename, String baseName, String extension ) {
-        System.out.println("FILENAME: " + filename);
+        logger.debug("FILENAME: {}", filename);
 
         if (extension.startsWith(TIF_EXT)) {
             return FileType.TIF;

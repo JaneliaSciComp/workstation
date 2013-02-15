@@ -65,8 +65,9 @@ public class AlignmentBoardDataBuilder implements Serializable {
         Map<Entity,Set<Entity>> signalToLabelEntities = getSignalToLabelEntities(labelToPipelineResult);
 
         Map<Entity,String> labelEntityToSignalFilename = findLabelEntityToSignalFilename( sampleEntities, sampleToBaseEntity, signalToLabelEntities );
-        createRenderableBeanList( ancestorToRenderables, labelToPipelineResult, consolidatedLabelsList, labelEntityToSignalFilename );
-        applyCompartmentMask( displayableList );
+        createRenderableBeanList(ancestorToRenderables, labelToPipelineResult, consolidatedLabelsList, labelEntityToSignalFilename);
+
+        applyCompartmentMask(displayableList);
 
         return this;
     }
@@ -244,17 +245,17 @@ public class AlignmentBoardDataBuilder implements Serializable {
         return displayableList;
     }
 
-    private Map<Entity,Entity> getMaskContainerAncestors(Map<Entity, List<Entity>> ancestorToFragments, List<Entity> displayableList) {
+    private Map<Entity,Entity> getMaskContainerAncestors(Map<Entity, List<Entity>> ancestorToRenderables, List<Entity> displayableList) {
         // Resolve interesting entities to usable ancestors.
         Map<Entity,Entity> displayableToBaseEntity = new HashMap<Entity,Entity>();
         try {
             for ( Entity displayable: displayableList ) {
                 Entity baseEntity = findPipelineResultAncestor(displayable);
                 if ( displayable.getEntityType().getName().equals( EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
-                    List<Entity> pipelineResultFragments = ancestorToFragments.get( baseEntity );
+                    List<Entity> pipelineResultFragments = ancestorToRenderables.get( baseEntity );
                     if ( pipelineResultFragments == null ) {
                         pipelineResultFragments = new ArrayList<Entity>();
-                        ancestorToFragments.put(baseEntity, pipelineResultFragments);
+                        ancestorToRenderables.put(baseEntity, pipelineResultFragments);
                     }
                     pipelineResultFragments.add(displayable);
                 }
@@ -284,12 +285,12 @@ public class AlignmentBoardDataBuilder implements Serializable {
             baseEntity = displayableChild;
         }
         if ( baseEntity != null )
-            logger.info( "Displayable from base entity of {}: {}.", baseEntity.getName(), baseEntity.getId() );
+            logger.debug("Displayable from base entity of {}: {}.", baseEntity.getName(), baseEntity.getId());
         return baseEntity;
     }
 
     private void createRenderableBeanList(
-            Map<Entity, List<Entity>> sampleToRenderable,
+            Map<Entity, List<Entity>> ancestorToRenderables,
             Map<Entity, Entity> labelToPipelineResult,
             List<Entity> consolidatedLabelsList,
             Map<Entity, String> labelEntityToSignalFilename) {
@@ -306,7 +307,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
 
                 // Get any renderableBeanList associated. Create fragment bean.
                 Entity sample = labelToPipelineResult.get( labelEntity );
-                List<Entity> sampleFragments = sampleToRenderable.get( sample );
+                List<Entity> sampleFragments = ancestorToRenderables.get( sample );
 
                 if ( sampleFragments != null ) {
                     for ( Entity fragment: sampleFragments ) {
@@ -319,9 +320,18 @@ public class AlignmentBoardDataBuilder implements Serializable {
                         renderableBeanList.add(bean);
                     }
                 }
-                sampleToRenderable.remove(sample);
+                ancestorToRenderables.remove(sample);
             }
         }
+
+        if ( renderableBeanList.size() == 0 ) {
+            logger.warn("No renderables produced.  See info below.");
+            logger.info("Got {} ancestorToRenderables.", ancestorToRenderables.size());
+            logger.info( "Got {} labelToPipelineResults.", labelToPipelineResult.size() );
+            logger.info( "Got {} consolidatedLabelsList.", consolidatedLabelsList.size() );
+            logger.info( "Got {} labelEntityToSignalFilename.", labelEntityToSignalFilename.size() );
+        }
+
     }
 
     private Map<Entity,String> findLabelEntityToSignalFilename(
@@ -419,7 +429,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
         }
 
         if ( useThisEntity ) {
-            logger.info("Adding a child of type " + entityTypeName + ", named " + entity.getName() );
+            logger.debug("Adding a child of type " + entityTypeName + ", named " + entity.getName());
             displayableList.add(entity);
         }
 
@@ -436,7 +446,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
         String entityTypeName = entity.getEntityType().getName();
         // Finding the right kind of supporting data.
         if ( entity.getName().equals("ConsolidatedLabel.v3dpbd" ) ) {
-            logger.info("Adding a child of type " + entityTypeName + ", named " + entity.getName() );
+            logger.debug("Adding a child of type " + entityTypeName + ", named " + entity.getName());
             // This is that kind of an entity!
             consLabelList.add(entity);
         }
