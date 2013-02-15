@@ -44,6 +44,9 @@ vec4 volumeMask(vec4 origColor)
             vec3 cmCoord = vec3( visX, visY, 0.0 );
             vec4 mappedColor = texture3D(colorMapTexture, cmCoord);
 
+            // This finds the render-method byte, which is stored in the alpha byte of the uploaded mapping texture.
+            float renderMethod = floor(mappedColor[ 3 ] * 255.1);
+
             // Find the max intensity.
             vec4 signalColor = origColor;
             float maxIntensity = 0.0;
@@ -52,15 +55,15 @@ vec4 volumeMask(vec4 origColor)
                     maxIntensity = signalColor[i];
             }
 
-            if ( mappedColor[ 0 ] == 0.0 && mappedColor[ 1 ] == 0.0 && mappedColor[ 2 ] == 0.0 ) {
-                // The coloring for this particular label has been set to all-zero.  This constitutes
+            if ( mappedColor[ 3 ] == 0.0 ) {
+                // Zero in the render method position.  This constitutes
                 // an "off" switch.
                 rtnVal[ 0 ] = 0.0;
                 rtnVal[ 1 ] = 0.0;
                 rtnVal[ 2 ] = 0.0;
             }
-            else if ( mappedColor[ 0 ] == mappedColor[ 1 ] && mappedColor[ 1 ] == mappedColor[ 2 ] ) {
-                // Special case: probably a compartment.  Here, make a translucent gray appearance.
+            else if ( renderMethod == 2.0 ) {
+                // Special case: a compartment.  Here, make a translucent gray appearance.
                 // For gray mappings, fill in solid gray for anything empty, but otherwise just use original.
                 if ( maxIntensity < 0.05 ) {
                     mappedColor = vec4( 1.0, 1.0, 1.0, 1.0 );
@@ -72,7 +75,7 @@ vec4 volumeMask(vec4 origColor)
                     rtnVal[i] = mappedColor[ i ] * maxIntensity;
                 }
             }
-            else {
+            else if ( renderMethod == 1.0 ) {
                 // Guard against empty signal texture.
                 if ( maxIntensity == 0.0 ) {
                     maxIntensity = 1.0;
@@ -81,6 +84,23 @@ vec4 volumeMask(vec4 origColor)
                 // maximum intensity of any signal color.
                 for (int i = 0; i < 3; i++) {
                     rtnVal[i] = mappedColor[ i ] * maxIntensity;
+                }
+            }
+            else {
+                // Debug coloring.
+                if ( renderMethod > 10.0 ) {
+                    rtnVal[ 0 ] = 1.0;
+                }
+                else if ( renderMethod > 7.5 ) {
+                    rtnVal[ 1 ] = 1.0;
+                }
+                else if ( renderMethod > 5.0 ) {
+                    rtnVal[ 2 ] = 1.0;
+                }
+                else {
+                    rtnVal[ 0 ] = 1.0;
+                    rtnVal[ 1 ] = 1.0;
+                    rtnVal[ 2 ] = 1.0;
                 }
             }
 

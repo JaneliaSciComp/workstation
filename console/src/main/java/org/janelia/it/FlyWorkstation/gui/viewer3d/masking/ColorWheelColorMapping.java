@@ -55,6 +55,10 @@ public class ColorWheelColorMapping implements RenderMappingI {
                 }
             }
 
+            if ( rgb[ 3 ] == RenderMappingI.COMPARTMENT_RENDERING ) {
+                System.out.println("Found a compartment for " + renderableBean.getTranslatedNum() + ", " + RenderMappingI.COMPARTMENT_RENDERING );
+            }
+
             maskMappings.put( translatedNum, rgb );
         }
 

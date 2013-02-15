@@ -329,6 +329,7 @@ public class TextureMediator {
         logger.info("Luminance format num = {}", GL2.GL_LUMINANCE);
         logger.info("Alpha8 format num = {}", GL2.GL_SRGB8_ALPHA8);
         logger.info("RGBA format num = {}", GL2.GL_RGBA);
+        logger.info("RGB format num = {}", GL2.GL_RGB);
         logger.info( "internalFormat = {} for {}", internalFormat, textureData.getFilename() );
         return internalFormat;
     }

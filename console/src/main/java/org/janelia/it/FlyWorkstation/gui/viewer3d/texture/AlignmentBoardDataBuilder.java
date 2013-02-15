@@ -64,7 +64,8 @@ public class AlignmentBoardDataBuilder implements Serializable {
 
         Map<Entity,Set<Entity>> signalToLabelEntities = getSignalToLabelEntities(labelToPipelineResult);
 
-        Map<Entity,String> labelEntityToSignalFilename = findLabelEntityToSignalFilename( sampleEntities, sampleToBaseEntity, signalToLabelEntities );
+        Map<Entity,String> labelEntityToSignalFilename =
+                findLabelEntityToSignalFilename( sampleEntities, sampleToBaseEntity, signalToLabelEntities );
         createRenderableBeanList(ancestorToRenderables, labelToPipelineResult, consolidatedLabelsList, labelEntityToSignalFilename);
 
         applyCompartmentMask(displayableList);
@@ -217,10 +218,15 @@ public class AlignmentBoardDataBuilder implements Serializable {
         // Get the mask items.
         List<Entity> consolidatedLabelsList = new ArrayList<Entity>();
         try {
-            List<Entity> nextLabelList = new ArrayList<Entity>();
             for ( Entity baseEntity: baseEntities ) {
+                List<Entity> nextLabelList = new ArrayList<Entity>();
                 if ( baseEntity != null ) {
                     recursivelyFindConsolidatedLabels(nextLabelList, baseEntity);
+                    if ( nextLabelList.size() == 0 ) {
+                        logger.info(
+                                "No labels found for base entity {}:{}", baseEntity.getName(), baseEntity.getId()
+                        );
+                    }
                     consolidatedLabelsList.addAll( nextLabelList );
                     for ( Entity label: nextLabelList ) {
                         labelToPipelineResult.put(label, baseEntity);
@@ -361,6 +367,17 @@ public class AlignmentBoardDataBuilder implements Serializable {
                         if ( labelEntities != null ) {
                             for ( Entity labelEntity: labelEntities ) {
                                 labelEntityToSignalFilename.put( labelEntity, filename );
+                            }
+                        }
+                        else {
+                            logger.warn( "No label entities found for {}.", baseEntity.getName() );
+                            logger.info( "signalToLabelEntities size is {}.", signalToLabelEntities.size() ) ;
+                            for ( Entity signalEntity: signalToLabelEntities.keySet() ) {
+                                Set<Entity> labelEntitySet = signalToLabelEntities.get( signalEntity );
+                                logger.info( "Signal Entity Key: {}:{}", signalEntity.getName(), signalEntity.getId() );
+                                for ( Entity labelEntity: labelEntitySet ) {
+                                    logger.info( "    Label entity {}:{}", labelEntity.getName(), labelEntity.getId() );
+                                }
                             }
                         }
 

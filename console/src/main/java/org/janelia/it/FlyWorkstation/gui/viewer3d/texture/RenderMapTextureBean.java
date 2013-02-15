@@ -98,7 +98,7 @@ public class RenderMapTextureBean implements TextureDataI {
 
     @Override
     public VolumeDataAcceptor.TextureColorSpace getColorSpace() {
-        return VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_RGB;
+        return VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_SRGB;
     }
 
     @Override
