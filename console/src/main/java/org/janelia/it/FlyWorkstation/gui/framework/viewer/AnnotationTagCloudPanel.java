@@ -1,15 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
-import java.awt.Color;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.*;
-import javax.swing.border.Border;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationBuilderDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.RemoveAnnotationKeyValueAction;
@@ -24,6 +14,15 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import javax.swing.border.Border;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A tag cloud of Entity-based annotations which support context menu operations such as deletion.
@@ -141,7 +140,6 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
                     public void actionPerformed(ActionEvent e) {
                         AnnotationBuilderDialog dialog = new AnnotationBuilderDialog();
                         dialog.setAnnotationValue(tag.getValueString());
-                        dialog.setAnnotationTextField(tag.getValueString());
                         dialog.setVisible(true);
                         String value = dialog.getAnnotationValue();
                         if (null==value) { value=""; }

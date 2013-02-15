@@ -266,7 +266,6 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
                     public void actionPerformed(ActionEvent e) {
                         AnnotationBuilderDialog dialog = new AnnotationBuilderDialog();
                         dialog.setAnnotationValue(annotation.getValueString());
-                        dialog.setAnnotationTextField(annotation.getValueString());
                         dialog.setVisible(true);
                         String value = dialog.getAnnotationValue();
                         if (null==value) { value=""; }

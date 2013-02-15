@@ -4,7 +4,6 @@
 
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ColorMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ColorWheelColorMapping;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
