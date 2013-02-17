@@ -25,6 +25,18 @@ public class Vec3 extends SizedVector<Double>
 		return result;
 	}
 	
+	public double getX() {
+		return get(0);
+	}
+
+	public double getY() {
+		return get(1);
+	}
+
+	public double getZ() {
+		return get(2);
+	}
+
 	public Vec3 minus() {
 		return new Vec3(-x(), -y(), -z());
 	}

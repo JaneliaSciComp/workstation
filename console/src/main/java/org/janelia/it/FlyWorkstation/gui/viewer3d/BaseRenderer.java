@@ -14,7 +14,7 @@ public abstract class BaseRenderer implements GLEventListener
 {
     protected GLU glu = new GLU();
     protected List<GLActor> actors = new ArrayList<GLActor>();
-    protected Color backgroundColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
+	protected Color backgroundColor = new Color(0.0f, 0.0f, 0.0f, 0.0f);
     protected Camera3d camera;
 
 	public void addActor(GLActor actor) {
@@ -50,6 +50,10 @@ public abstract class BaseRenderer implements GLEventListener
         final GL2 gl = glDrawable.getGL().getGL2();
 		for (GLActor actor : actors)
 			actor.dispose(gl);
+	}
+
+    public List<GLActor> getActors() {
+		return actors;
 	}
 
     public Color getBackgroundColor() {

@@ -10,7 +10,11 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Point2D;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BaseGLViewer;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.GLActor;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicObservableCamera3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d;
 
 // Viewer widget for viewing 2D quadtree tiles from pyramid data structure
@@ -49,6 +53,17 @@ implements MouseModalWidget
 	public void actionPerformed(ActionEvent arg0) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	public BoundingBox3d getBoundingBox3d() 
+	{
+		// TODO - use bounding box of displayed Volume
+		// (not just the present actors...)
+		BoundingBox3d bb = new BoundingBox3d();
+		for (GLActor a : renderer.getActors()) {
+			bb.include(a.getBoundingBox());
+		}
+		return bb;
 	}
 
 	public ObservableCamera3d getCamera() {
@@ -126,6 +141,53 @@ implements MouseModalWidget
 		super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D)g;
 		rubberBand.paint(g2);
+	}
+	
+	public boolean resetFocus() {
+		return resetFocus(getBoundingBox3d());
+	}
+	
+	public boolean resetFocus(BoundingBox3d box) {
+		if (box.isEmpty())
+			return false;
+		return camera.setFocus(box.getCenter());
+	}
+	
+	public boolean resetView() {
+		// Compute the smallest bounding box that holds all actors
+		BoundingBox3d bb = getBoundingBox3d();
+		if (! resetFocus(bb))
+			return false;
+		if (! resetZoom(bb))
+			return false;
+		return true;
+	}
+	
+	public boolean resetZoom() 
+	{
+		return resetZoom(getBoundingBox3d());
+	}
+
+	public boolean resetZoom(BoundingBox3d box) 
+	{
+		if (box.isEmpty())
+			return false;
+		// Need to fit entire bounding box
+		double sx = box.getWidth();
+		double sy = box.getHeight();
+		// ... plus offset from center
+		Vec3 bc = box.getCenter();
+		Camera3d camera = getCamera();		
+		Vec3 focus = camera.getFocus();
+		sx += 2.0 * Math.abs(bc.getX() - focus.getX());
+		sy += 2.0 * Math.abs(bc.getY() - focus.getY());
+		// Use minimum of X and Y zoom
+		double zx = getWidth() / sx;
+		double zy = getHeight() / sy;
+		double zoom = Math.min(zx, zy);
+		if (! camera.setPixelsPerSceneUnit(zoom))
+			return false;
+		return true;
 	}
 	
 	public void setMouseMode(MouseMode mouseMode) {

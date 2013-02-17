@@ -33,12 +33,15 @@ public class QuadView extends JFrame {
 	 */
 	private static final long serialVersionUID = 1L;
 	protected SliceViewer sliceViewer = new SliceViewer();
+	
+	protected Action resetViewAction = new ResetViewAction(sliceViewer);
+	protected Action resetZoomAction = new ResetZoomAction(sliceViewer);
 	protected Action panModeAction = new PanModeAction(sliceViewer);
 	protected Action zoomInAction = new ZoomInAction(sliceViewer.getCamera());
 	protected Action zoomMouseModeAction = new ZoomMouseModeAction(sliceViewer);
 	protected Action zoomOutAction = new ZoomOutAction(sliceViewer.getCamera());
 	protected Action zoomScrollModeAction = new ZoomScrollModeAction(sliceViewer);	
-	
+
 	static {
 		// Use top menu bar on Mac
 		if (System.getProperty("os.name").contains("Mac")) {
@@ -117,9 +120,9 @@ public class QuadView extends JFrame {
 		Container buttonsPanel = new JPanel();
 		upperControls.add(buttonsPanel);
 		buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
-		buttonsPanel.add(new JButton("Fit to Window"));
+		buttonsPanel.add(new JButton(resetZoomAction));
 		buttonsPanel.add(new JButton("Zoom Max"));
-		buttonsPanel.add(new JButton("Reset View"));
+		buttonsPanel.add(new JButton(resetViewAction));
 		buttonsPanel.add(Box.createVerticalGlue());
 		// colors
 		JPanel colorsPanel = new JPanel();
@@ -173,6 +176,8 @@ public class QuadView extends JFrame {
 		item.setSelected(true);
 		menu.add(submenu);
 		menu.addSeparator();
+		menu.add(resetViewAction);
+		menu.add(resetZoomAction);
 		menu.add(zoomOutAction);
 		menu.add(zoomInAction);
 		menuBar.add(menu);

@@ -21,8 +21,7 @@ public class ZoomInAction extends AbstractAction
 	}
 	
 	@Override
-	public void actionPerformed(ActionEvent event) 
-	{
+	public void actionPerformed(ActionEvent event) {
 		camera.incrementZoom(1.414);
 	}
 

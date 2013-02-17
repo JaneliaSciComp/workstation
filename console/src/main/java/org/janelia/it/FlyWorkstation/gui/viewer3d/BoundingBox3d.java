@@ -1,23 +1,31 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 public class BoundingBox3d {
-	public Vec3 min = new Vec3(Double.NaN, Double.NaN, Double.NaN);
-	public Vec3 max = new Vec3(Double.NaN, Double.NaN, Double.NaN);
+	protected Vec3 min = new Vec3(Double.NaN, Double.NaN, Double.NaN);
+	protected Vec3 max = new Vec3(Double.NaN, Double.NaN, Double.NaN);
 
 	public Vec3 getCenter() {
 		return max.plus(min).times(0.5);
+	}
+	
+	public double getDepth() {
+		return max.z() - min.z();
 	}
 	
 	public double getHeight() {
 		return max.y() - min.y();
 	}
 	
+	public Vec3 getMax() {
+		return max;
+	}
+
+	public Vec3 getMin() {
+		return min;
+	}
+
 	public double getWidth() {
 		return max.x() - min.x();
-	}
-	
-	public double getDepth() {
-		return max.z() - min.z();
 	}
 	
 	/**
@@ -38,19 +46,20 @@ public class BoundingBox3d {
 		double x = v.x();
 		double y = v.y();
 		double z = v.z();
-		// weird comparisons because there might be NaNs
+		// NOTE weird comparisons because there might be NaNs
+		// Compare to old min values
 		if ( (!Double.isNaN(x)) && (! (x >= min.x())) )
 			min.setX(x);
 		if ( (!Double.isNaN(y)) && (! (y >= min.y())) )
 			min.setY(y);
 		if ( (!Double.isNaN(z)) && (! (z >= min.z())) )
 			min.setZ(z);
-
-		if ( (!Double.isNaN(x)) && (! (x <= min.x())) )
+		// Compare to old max values
+		if ( (!Double.isNaN(x)) && (! (x <= max.x())) )
 			max.setX(x);
-		if ( (!Double.isNaN(y)) && (! (y <= min.y())) )
+		if ( (!Double.isNaN(y)) && (! (y <= max.y())) )
 			max.setY(y);
-		if ( (!Double.isNaN(z)) && (! (z <= min.z())) )
+		if ( (!Double.isNaN(z)) && (! (z <= max.z())) )
 			max.setZ(z);
 	}
 	
@@ -63,4 +72,21 @@ public class BoundingBox3d {
 		if (Double.isNaN(max.z())) return true;		
 		return false;
 	}
+
+	public void setMax(double x, double y, double z) {
+		this.max = new Vec3(x, y, z);
+	}
+	
+	public void setMax(Vec3 max) {
+		this.max = max;
+	}
+
+	public void setMin(double x, double y, double z) {
+		this.min = new Vec3(x, y, z);
+	}
+
+	public void setMin(Vec3 min) {
+		this.min = min;
+	}
+
 }

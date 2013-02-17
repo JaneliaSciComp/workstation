@@ -29,7 +29,11 @@ implements GLActor
 
 	@Override
 	public BoundingBox3d getBoundingBox() {
-		return null;
+		// NOTE - Y coordinate is inverted w.r.t. glVertex3d(...)
+		BoundingBox3d result = new BoundingBox3d();
+		result.setMin(0, -10, 0);
+		result.setMax(10,  0, 0);
+		return result;
 	}
 
 	@Override
