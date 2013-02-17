@@ -109,18 +109,19 @@ implements WheelMode, MouseMode
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent event) 
 	{
-		if (getCamera() == null)
+		Camera3d camera = getCamera();
+		if (camera == null)
 			return;
 		int notches = event.getWheelRotation();
 		if (notches == 0)
 			return;
-		double zoomRatio = Math.pow(2.0, -notches/30.0);
-		getCamera().incrementZoom(zoomRatio);
+		double zoomRatio = Math.pow(2.0, -notches/50.0);
+		camera.incrementZoom(zoomRatio);
 		if (isCenterOnCursor()) {
 			Point2D dx = getComponent().getPixelOffsetFromCenter(event.getPoint());
-			Vec3 p0 = new Vec3(dx.getX(), dx.getY(), 0.0);
-			p0 = p0.times(zoomRatio - 1.0);
-			getCamera().incrementFocusPixels(p0);
+			Vec3 dv = new Vec3(dx.getX(), dx.getY(), 0.0);
+			dv = dv.times(zoomRatio - 1.0);
+			camera.incrementFocusPixels(dv);
 		}
 	}
 

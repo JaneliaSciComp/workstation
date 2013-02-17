@@ -17,7 +17,7 @@ extends BaseRenderer
 	public SliceRenderer() {
 		glCamera.setCamera(camera);
 		glCamera.setViewport(viewport);
-		actors.add(new TileActor());
+		actors.add(new PracticeBlueTileActor());
 	}
 
     @Override

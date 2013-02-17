@@ -24,6 +24,7 @@ public class ToolButton extends JButton
 		setAlignmentX(CENTER_ALIGNMENT); // so it lines up with (centered) zoom slider
 		setAlignmentY(CENTER_ALIGNMENT);
 		setMargin(new Insets(0,0,0,0)); // keep the button small
+		setMaximumSize(getPreferredSize()); // does this help?
 	}
 	
 	@Override

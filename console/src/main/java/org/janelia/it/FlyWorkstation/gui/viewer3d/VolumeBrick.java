@@ -318,8 +318,8 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 	}
 
     @Override
-	public BoundingBox getBoundingBox() {
-		BoundingBox result = new BoundingBox();
+	public BoundingBox3d getBoundingBox() {
+		BoundingBox3d result = new BoundingBox3d();
 		Vec3 half = new Vec3(0,0,0);
 		for (int i = 0; i < 3; ++i)
 			half.set(i, 0.5 * signalTextureMediator.getVolumeMicrometers()[i]);

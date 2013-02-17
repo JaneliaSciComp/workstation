@@ -1,13 +1,10 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
-import java.awt.Color;
 import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.image.FilteredImageSource;
 import java.awt.image.ImageFilter;
 import java.awt.image.RGBImageFilter;
-
-import javax.swing.GrayFilter;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 

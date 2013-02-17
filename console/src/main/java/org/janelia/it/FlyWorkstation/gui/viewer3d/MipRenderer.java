@@ -85,7 +85,7 @@ class MipRenderer
     public void resetView() 
     {
     		// Adjust view to fit the actual objects present
-    		BoundingBox boundingBox = new BoundingBox();
+    		BoundingBox3d boundingBox = new BoundingBox3d();
     		for (GLActor actor : actors) {
     			boundingBox.include(actor.getBoundingBox());
     		}

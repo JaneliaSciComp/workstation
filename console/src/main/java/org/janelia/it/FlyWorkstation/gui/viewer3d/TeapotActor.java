@@ -17,8 +17,8 @@ public class TeapotActor implements GLActor
         gl.glPopAttrib(); // restore GL_FRONT_FACE
 	}
 
-	public BoundingBox getBoundingBox() {
-		BoundingBox result = new BoundingBox();
+	public BoundingBox3d getBoundingBox() {
+		BoundingBox3d result = new BoundingBox3d();
 		result.include(new Vec3(1,1,1));
 		result.include(new Vec3(-1,-1,-1));
 		return result;

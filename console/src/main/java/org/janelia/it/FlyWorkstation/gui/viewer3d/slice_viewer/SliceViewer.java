@@ -1,7 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.awt.Color;
-import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -26,9 +25,9 @@ implements MouseModalWidget
 	protected SliceRenderer renderer = new SliceRenderer();
 	protected RubberBand rubberBand = new RubberBand();
 
-	protected QtSlot<Object> repaintSlot = new QtSlot<Object>(this) {
+	protected QtSlot repaintSlot = new QtSlot(this) {
 		@Override
-		public void execute(Object arg) {
+		public void execute() {
 			// System.out.println("repaint slot");
 			((SliceViewer)receiver).repaint();
 		}
@@ -67,7 +66,7 @@ implements MouseModalWidget
 		return new Point2D.Double(dx, dy);
 	}
 
-	public QtSlot<Object> getRepaintSlot() {
+	public QtSlot getRepaintSlot() {
 		return repaintSlot;
 	}
 

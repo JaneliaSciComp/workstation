@@ -3,10 +3,6 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
-
-import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -24,7 +20,6 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSlider;
 import javax.swing.JSplitPane;
 import javax.swing.JToolBar;
-import javax.swing.KeyStroke;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
@@ -75,14 +70,14 @@ public class QuadView extends JFrame {
 		createMenus();
 		// Top level container - status bar vs rest
 		Container container = getContentPane();
-		container.setLayout(new BorderLayout(0, 0));
-		container.add(createStatusBar(container), BorderLayout.SOUTH);
-		// Next level - tool bar vs rest - tool bar requires BorderLayout
+		container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
+		container.add(createStatusBar(container));
+		// Next level - tool bar vs rest - tool bar requires BorderLayout parent
 		Container parent = container;
 		container = new JPanel();
 		container.setLayout(new BorderLayout(0,0));
 		container.add(createToolBar(), BorderLayout.NORTH);
-		parent.add(container, BorderLayout.CENTER);
+		parent.add(container, 0); // put main area north of status bar
 		// Next level - splitter dividing viewer from controls
 		parent = container;
 		JPanel viewerPanel = new JPanel();
@@ -90,44 +85,47 @@ public class QuadView extends JFrame {
 		controlPanel.setMinimumSize(new Dimension(0, 0)); // So split pane can hide controls
 		JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
 				viewerPanel, controlPanel);
-		splitPane.setContinuousLayout(true); // Optimistic!
+		parent.add(splitPane, BorderLayout.CENTER);
+		splitPane.setContinuousLayout(true); // too optimistic?
 		splitPane.setResizeWeight(1.0); // Controls' size stays fixed
-		parent.add(splitPane);
         // Slice widget
 		viewerPanel.setLayout(new BoxLayout(viewerPanel, BoxLayout.Y_AXIS));
-        sliceViewer.setPreferredSize( new Dimension( 800, 700 ) );
         viewerPanel.add(sliceViewer);
+        sliceViewer.setPreferredSize( new Dimension( 800, 700 ) );
         // Controls
 		controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
 		Container upperControls = new JPanel();
-		upperControls.setLayout(new BoxLayout(upperControls, BoxLayout.X_AXIS));
 		controlPanel.add(upperControls);
+		upperControls.setLayout(new BoxLayout(upperControls, BoxLayout.X_AXIS));
 		// sliders
 		Container slidersPanel = new JPanel();
-		slidersPanel.setLayout(new BoxLayout(slidersPanel, BoxLayout.X_AXIS));
 		upperControls.add(slidersPanel);
+		// upperControls.add(Box.createHorizontalGlue()); // allow space between sliders and buttons
+		slidersPanel.setLayout(new BoxLayout(slidersPanel, BoxLayout.X_AXIS));
+		// zoom slider
 		JPanel zoomPanel = new JPanel();
-		zoomPanel.setLayout(new BorderLayout(0, 0));
 		slidersPanel.add(zoomPanel);
+		slidersPanel.add(Box.createHorizontalGlue());
+		zoomPanel.setLayout(new BoxLayout(zoomPanel, BoxLayout.Y_AXIS));
 		// put a border to suggest that the zoom buttons belong with the slider
 		zoomPanel.setBorder(BorderFactory.createEtchedBorder());
-		zoomPanel.add(new ToolButton(zoomInAction), BorderLayout.NORTH);
+		zoomPanel.add(new ToolButton(zoomInAction));
 		JSlider zoomSlider = new JSlider(JSlider.VERTICAL);
-		zoomPanel.add(zoomSlider, BorderLayout.CENTER);
-		zoomPanel.add(new ToolButton(zoomOutAction), BorderLayout.SOUTH);
-		slidersPanel.add(Box.createHorizontalGlue());
+		zoomPanel.add(zoomSlider);
+		zoomPanel.add(new ToolButton(zoomOutAction));
 		// buttons
 		Container buttonsPanel = new JPanel();
-		buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
 		upperControls.add(buttonsPanel);
+		buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
 		buttonsPanel.add(new JButton("Fit to Window"));
 		buttonsPanel.add(new JButton("Zoom Max"));
 		buttonsPanel.add(new JButton("Reset View"));
 		buttonsPanel.add(Box.createVerticalGlue());
 		// colors
 		JPanel colorsPanel = new JPanel();
-		colorsPanel.setBorder(new TitledBorder("Color Channels"));
 		controlPanel.add(colorsPanel);
+		colorsPanel.setBorder(new TitledBorder("Color Channels"));
+		colorsPanel.setLayout(new BoxLayout(colorsPanel, BoxLayout.Y_AXIS));
         //Display the window.
         pack();
         setSize( getContentPane().getPreferredSize() );

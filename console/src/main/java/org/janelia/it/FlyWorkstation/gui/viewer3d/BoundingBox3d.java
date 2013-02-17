@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
-public class BoundingBox {
+public class BoundingBox3d {
 	public Vec3 min = new Vec3(Double.NaN, Double.NaN, Double.NaN);
 	public Vec3 max = new Vec3(Double.NaN, Double.NaN, Double.NaN);
 
@@ -24,7 +24,7 @@ public class BoundingBox {
 	 * Expand this bounding box to contain another bounding box.
 	 * @param rhs
 	 */
-	public void include(BoundingBox rhs) {
+	public void include(BoundingBox3d rhs) {
 		include(rhs.min);
 		include(rhs.max);
 	}

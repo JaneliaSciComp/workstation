@@ -20,7 +20,7 @@ public class RubberBand
 	protected Point endPoint = new Point(30, 30);
 	boolean visible = false;
 
-	public QtSignal<Object> changed = new QtSignal<Object>();
+	public QtSignal changed = new QtSignal();
 	
 	public Point getStartPoint() {
 		return startPoint;
@@ -31,7 +31,7 @@ public class RubberBand
 			return;
 		this.startPoint = startPoint;
 		if (this.visible)
-			changed.emit(null);
+			changed.emit();
 	}
 
 	public Point getEndPoint() {
@@ -43,7 +43,7 @@ public class RubberBand
 			return;
 		this.endPoint = endPoint;
 		if (this.visible)
-			changed.emit(null);
+			changed.emit();
 	}
 
 	public boolean isVisible() {
@@ -54,7 +54,7 @@ public class RubberBand
 		if (this.visible == visible)
 			return;
 		this.visible = visible;
-		changed.emit(null);
+		changed.emit();
 	}
 
 	public void paint(Graphics2D g) 

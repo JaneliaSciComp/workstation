@@ -11,13 +11,13 @@ extends Observable
 implements Camera3d, ObservableCamera3d
 {
 	private Camera3d camera = new BasicCamera3d();
-	protected QtSignal<Object> viewChanged = new QtSignal<Object>();
+	protected QtSignal viewChanged = new QtSignal();
 	
 	/* (non-Javadoc)
 	 * @see org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d#getViewChangedSignal()
 	 */
 	@Override
-	public QtSignal<Object> getViewChangedSignal() {
+	public QtSignal getViewChangedSignal() {
 		return viewChanged;
 	}
 
@@ -40,7 +40,7 @@ implements Camera3d, ObservableCamera3d
 		if (! changed)
 			return false;
 		// System.out.println("emit viewChanged");
-		viewChanged.emit(null);	
+		viewChanged.emit();	
 		return true;
 	}
 
