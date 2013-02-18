@@ -12,6 +12,7 @@ import java.awt.geom.Point2D;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BaseGLViewer;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.GLActor;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.Camera3d;
@@ -20,14 +21,16 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d;
 // Viewer widget for viewing 2D quadtree tiles from pyramid data structure
 public class SliceViewer 
 extends BaseGLViewer
-implements MouseModalWidget
+implements MouseModalWidget, VolumeViewer
 {
 	private static final long serialVersionUID = 1L;
 	protected MouseMode mouseMode = new PanMode();
 	protected WheelMode wheelMode = new ZoomMode();
 	protected ObservableCamera3d camera;
 	protected SliceRenderer renderer = new SliceRenderer();
+	protected Viewport viewport = renderer.getViewport();
 	protected RubberBand rubberBand = new RubberBand();
+	protected VolumeImage3d volume = new PracticeBlueVolume();
 
 	protected QtSlot repaintSlot = new QtSlot(this) {
 		@Override
@@ -215,5 +218,75 @@ implements MouseModalWidget
 		this.wheelMode = wheelMode;
 		this.wheelMode.setComponent(this);
 		this.wheelMode.setCamera(camera);
+	}
+
+	@Override
+	public Vec3 getFocus() {
+		return camera.getFocus();
+	}
+
+	@Override
+	public double getPixelsPerSceneUnit() {
+		return camera.getPixelsPerSceneUnit();
+	}
+
+	@Override
+	public Rotation getRotation() {
+		return camera.getRotation();
+	}
+
+	@Override
+	public boolean incrementFocusPixels(double dx, double dy, double dz) {
+		return camera.incrementFocusPixels(dx, dy, dz);
+	}
+
+	@Override
+	public boolean incrementFocusPixels(Vec3 offset) {
+		return camera.incrementFocusPixels(offset);
+	}
+
+	@Override
+	public boolean incrementZoom(double zoomRatio) {
+		return camera.incrementZoom(zoomRatio);
+	}
+
+	@Override
+	public boolean resetRotation() {
+		return camera.resetRotation();
+	}
+
+	@Override
+	public boolean setFocus(double x, double y, double z) {
+		return camera.setFocus(x, y, z);
+	}
+
+	@Override
+	public boolean setFocus(Vec3 focus) {
+		return camera.setFocus(focus);
+	}
+
+	@Override
+	public boolean setRotation(Rotation r) {
+		return camera.setRotation(r);
+	}
+
+	@Override
+	public boolean setPixelsPerSceneUnit(double pixelsPerSceneUnit) {
+		return camera.setPixelsPerSceneUnit(pixelsPerSceneUnit);
+	}
+
+	@Override
+	public double getMaxResolution() {
+		return volume.getMaxResolution();
+	}
+
+	@Override
+	public int getOriginX() {
+		return viewport.getOriginX();
+	}
+
+	@Override
+	public int getOriginY() {
+		return viewport.getOriginY();
 	}
 }
