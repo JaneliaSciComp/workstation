@@ -195,6 +195,8 @@ public class TextureMediator {
         int bufferSize = textureData.getSx() * textureData.getSy() * textureData.getSz() *
                 pixelByteCount * getStorageFormatMultiplier();
 
+        java.util.Map<Integer,Integer> allFoundFrequencies = new java.util.HashMap<Integer,Integer>();
+
         byte[] rawBuffer = new byte[ bufferSize ];
         ByteBuffer buffer = ByteBuffer.wrap(rawBuffer);
         gl.glGetTexImage( GL2.GL_TEXTURE_3D, 0, getVoxelComponentOrder(), getVoxelComponentType(), buffer );
@@ -235,6 +237,12 @@ public class TextureMediator {
                             rightByteNonZeroCount ++;
                         }
                     }
+
+                    Integer count = allFoundFrequencies.get( (int)voxel[ 0 ] );
+                    if ( count == null ) {
+                        count = 0;
+                    }
+                    allFoundFrequencies.put( (int)voxel[ 0 ], ++count );
                 }
 
                 logger.info( "TEST: There are {} nonzero left-most bytes.", leftByteNonZeroCount );
@@ -242,6 +250,12 @@ public class TextureMediator {
             }
 
         }
+
+        logger.info("Texture Values Dump---------------------");
+        for ( Integer key: allFoundFrequencies.keySet() ) {
+            logger.info("Found {}  occurrences of {}.", allFoundFrequencies.get( key ), key);
+        }
+        logger.info("End: Texture Values Dump---------------------");
 
     }
 

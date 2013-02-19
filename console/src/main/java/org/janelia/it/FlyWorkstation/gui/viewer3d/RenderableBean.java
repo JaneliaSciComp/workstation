@@ -60,7 +60,9 @@ public class RenderableBean {
         // In establishing the label file number, must add one to account for 0-based neuron numbering
         // by name.  The number 0 cannot be used to represent a neuron, since it is needed for "nothing".
         // Therefore, there is a discrepancy between the naming and the numbering as done in the luminance file.
-        labelFileNum = (Integer.parseInt( nameParts[ nameParts.length - 1 ] )) + 1;
+        if ( labelFileNum == -1 ) {
+            labelFileNum = (Integer.parseInt( nameParts[ nameParts.length - 1 ] )) + 1;
+        }
     }
 
     public String getSignalFile() {

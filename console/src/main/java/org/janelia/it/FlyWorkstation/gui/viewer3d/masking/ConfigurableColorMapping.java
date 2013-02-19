@@ -4,9 +4,9 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.RenderableBean;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Collection;
 
 /**
  * Created with IntelliJ IDEA.
@@ -14,9 +14,15 @@ import java.util.Collection;
  * Date: 2/5/13
  * Time: 3:04 PM
  *
- * Simplistic implementation of a render mapping.
+ * Overridable implementation of a render mapping.
  */
-public class ColorWheelColorMapping implements RenderMappingI {
+public class ConfigurableColorMapping implements RenderMappingI {
+
+    private Map<Long,Integer> guidToRenderMethod;
+
+    public void setGuidToRenderMethod( Map<Long,Integer> guidToRenderMethod ) {
+        this.guidToRenderMethod = guidToRenderMethod;
+    }
 
     public Map<Integer,byte[]> getMapping( Collection<RenderableBean> renderableBeans ) {
         return makeMaskMappings( renderableBeans );
@@ -54,6 +60,15 @@ public class ColorWheelColorMapping implements RenderMappingI {
                 }
                 else {
                     rgb[ 3 ] = RenderMappingI.FRAGMENT_RENDERING;
+                }
+            }
+
+            // Placing this here, to benefit from null-catch of RGB array above.
+            if ( renderableBean.getEntity() != null && guidToRenderMethod != null ) {
+                Long entityId = renderableBean.getEntity().getId();
+                Integer renderMethodNum = guidToRenderMethod.get( entityId );
+                if ( renderMethodNum != null ) {
+                    rgb[ 3 ] = renderMethodNum.byteValue();
                 }
             }
 

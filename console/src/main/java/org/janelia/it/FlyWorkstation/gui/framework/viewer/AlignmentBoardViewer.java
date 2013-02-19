@@ -16,8 +16,8 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.ABLoad
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.ABTransferHandler;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ColorWheelColorMapping;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,13 +39,13 @@ public class AlignmentBoardViewer extends Viewer {
     private ABLoadWorker loadWorker;
     private ModelMgrObserver modelMgrObserver;
     // *** Use of color wheel color mapping is temporary, awaiting changes.
-    private RenderMappingI renderMapping = new ColorWheelColorMapping();
+    private RenderMappingI renderMapping;
     private Logger logger = LoggerFactory.getLogger(AlignmentBoardViewer.class);
 
     public AlignmentBoardViewer(ViewerPane viewerPane) {
         super(viewerPane);
+        renderMapping = new ConfigurableColorMapping();
         setLayout(new BorderLayout());
-
     }
 
     @Override
