@@ -9,7 +9,7 @@ public interface GLActor {
 	 */
 	public void display(GL2 gl);
 	
-	public BoundingBox3d getBoundingBox();
+	public BoundingBox3d getBoundingBox3d();
 
 	/**
 	 * Initializes this actor for the given OpenGL context

@@ -318,7 +318,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 	}
 
     @Override
-	public BoundingBox3d getBoundingBox() {
+	public BoundingBox3d getBoundingBox3d() {
 		BoundingBox3d result = new BoundingBox3d();
 		Vec3 half = new Vec3(0,0,0);
 		for (int i = 0; i < 3; ++i)

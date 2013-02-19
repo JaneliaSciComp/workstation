@@ -115,7 +115,8 @@ implements WheelMode, MouseMode
 		int notches = event.getWheelRotation();
 		if (notches == 0)
 			return;
-		double zoomRatio = Math.pow(2.0, -notches/50.0);
+		// compromise between sensitive wheel on my laptop and less sensitive wheel on my workstation
+		double zoomRatio = Math.pow(2.0, -notches/40.0);
 		camera.incrementZoom(zoomRatio);
 		if (isCenterOnCursor()) {
 			Point2D dx = getComponent().getPixelOffsetFromCenter(event.getPoint());

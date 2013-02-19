@@ -1,8 +1,10 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
-public class BoundingBox3d {
+public class BoundingBox3d 
+{
 	protected Vec3 min = new Vec3(Double.NaN, Double.NaN, Double.NaN);
 	protected Vec3 max = new Vec3(Double.NaN, Double.NaN, Double.NaN);
+	protected PhysicalUnit physicalUnit = SIUnit.micrometer;
 
 	public Vec3 getCenter() {
 		return max.plus(min).times(0.5);
@@ -16,13 +18,29 @@ public class BoundingBox3d {
 		return max.y() - min.y();
 	}
 	
-	public Vec3 getMax() {
+    public Vec3 getMax() {
 		return max;
 	}
+
+    public PhysicalUnit getPhysicalUnit() {
+		return physicalUnit;
+	}
+
+	public void setPhysicalUnit(PhysicalUnit physicalUnit) {
+		this.physicalUnit = physicalUnit;
+	}
+
+	double getMaxX() {return max.getX();}
+    double getMaxY() {return max.getY();}
+    double getMaxZ() {return max.getZ();}
 
 	public Vec3 getMin() {
 		return min;
 	}
+
+	double getMinX() {return min.getX();}
+    double getMinY() {return min.getY();}
+    double getMinZ() {return min.getZ();}
 
 	public double getWidth() {
 		return max.x() - min.x();

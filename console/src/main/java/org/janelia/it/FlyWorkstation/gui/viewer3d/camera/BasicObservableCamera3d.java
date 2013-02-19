@@ -5,6 +5,7 @@ import java.util.Observable;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.QtSignal;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.QtSignal1;
 
 public class BasicObservableCamera3d 
 extends Observable 
@@ -12,6 +13,7 @@ implements Camera3d, ObservableCamera3d
 {
 	private Camera3d camera = new BasicCamera3d();
 	protected QtSignal viewChanged = new QtSignal();
+	protected QtSignal1<Double> zoomChanged = new QtSignal1<Double>();
 	
 	/* (non-Javadoc)
 	 * @see org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d#getViewChangedSignal()
@@ -19,6 +21,11 @@ implements Camera3d, ObservableCamera3d
 	@Override
 	public QtSignal getViewChangedSignal() {
 		return viewChanged;
+	}
+	
+	@Override
+	public QtSignal1<Double> getZoomChanged() {
+		return zoomChanged;
 	}
 
 	@Override
@@ -33,7 +40,11 @@ implements Camera3d, ObservableCamera3d
 
 	@Override
     public boolean incrementZoom(double zoomRatio) {
-		return markAndNotify(camera.incrementZoom(zoomRatio));
+		boolean result = markAndNotify(camera.incrementZoom(zoomRatio));
+		if (result) {
+			zoomChanged.emit(camera.getPixelsPerSceneUnit());
+		}
+		return result;
 	}
 	
 	private boolean markAndNotify(boolean changed) {
@@ -86,6 +97,10 @@ implements Camera3d, ObservableCamera3d
 
 	@Override
 	public boolean setPixelsPerSceneUnit(double pixelsPerSceneUnit) {
-		return markAndNotify(camera.setPixelsPerSceneUnit(pixelsPerSceneUnit));
+		boolean result = markAndNotify(camera.setPixelsPerSceneUnit(pixelsPerSceneUnit));
+		if (result) {
+			zoomChanged.emit(camera.getPixelsPerSceneUnit());
+		}
+		return result;
 	}
 }

@@ -30,7 +30,9 @@ implements MouseModalWidget, VolumeViewer
 	protected SliceRenderer renderer = new SliceRenderer();
 	protected Viewport viewport = renderer.getViewport();
 	protected RubberBand rubberBand = new RubberBand();
-	protected VolumeImage3d volume = new PracticeBlueVolume();
+	protected PracticeBlueVolume volume = new PracticeBlueVolume();
+	
+	protected QtSignal1<Double> zoomChanged = new QtSignal1<Double>();
 
 	protected QtSlot repaintSlot = new QtSlot(this) {
 		@Override
@@ -43,6 +45,7 @@ implements MouseModalWidget, VolumeViewer
 	public SliceViewer() {
 		addGLEventListener(renderer);
 		setCamera(new BasicObservableCamera3d());
+		camera.getZoomChanged().connect(zoomChanged); // Forward signal
 		mouseMode.setComponent(this);
 		wheelMode.setComponent(this);
 		// pink color for testing only
@@ -50,6 +53,7 @@ implements MouseModalWidget, VolumeViewer
         setPreferredSize( new Dimension( 600, 600 ) );
         rubberBand.changed.connect(repaintSlot);
         setToolTipText("Double click to center on a point.");
+        renderer.addActor(volume);
 	}
 
 	@Override
@@ -60,11 +64,9 @@ implements MouseModalWidget, VolumeViewer
 
 	public BoundingBox3d getBoundingBox3d() 
 	{
-		// TODO - use bounding box of displayed Volume
-		// (not just the present actors...)
 		BoundingBox3d bb = new BoundingBox3d();
 		for (GLActor a : renderer.getActors()) {
-			bb.include(a.getBoundingBox());
+			bb.include(a.getBoundingBox3d());
 		}
 		return bb;
 	}
@@ -288,5 +290,36 @@ implements MouseModalWidget, VolumeViewer
 	@Override
 	public int getOriginY() {
 		return viewport.getOriginY();
+	}
+
+	@Override
+	public int getNumberOfChannels() {
+		return volume.getNumberOfChannels();
+	}
+
+	@Override
+	public int getMaximumIntensity() {
+		return volume.getMaximumIntensity();
+	}
+
+	@Override
+	public double getMaxZoom() 
+	{
+		// 300 screen pixels per image pixel
+		return 300.0 / getMaxResolution();
+	}
+
+	@Override
+	public double getMinZoom() {
+		// Fit two of the whole volume on the screen
+		BoundingBox3d box = getBoundingBox3d();
+		double minZoomX = 0.5 * viewport.getWidth() / box.getWidth();
+		double minZoomY = 0.5 * viewport.getHeight() / box.getHeight();
+		return Math.min(minZoomX, minZoomY);
+	}
+
+	@Override
+	public QtSignal1<Double> getZoomChanged() {
+		return zoomChanged;
 	}
 }

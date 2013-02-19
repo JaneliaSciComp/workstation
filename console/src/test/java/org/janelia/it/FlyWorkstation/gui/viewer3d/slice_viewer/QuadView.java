@@ -23,25 +23,13 @@ import javax.swing.JToolBar;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 
-public class QuadView extends JFrame {
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-	protected SliceViewer sliceViewer = new SliceViewer();
-	
-	protected Action resetViewAction = new ResetViewAction(sliceViewer);
-	protected Action resetZoomAction = new ResetZoomAction(sliceViewer);
-	protected Action panModeAction = new PanModeAction(sliceViewer);
-	protected Action zoomInAction = new ZoomInAction(sliceViewer.getCamera());
-	protected Action zoomMouseModeAction = new ZoomMouseModeAction(sliceViewer);
-	protected Action zoomOutAction = new ZoomOutAction(sliceViewer.getCamera());
-	protected Action zoomScrollModeAction = new ZoomScrollModeAction(sliceViewer);	
-
+public class QuadView extends JFrame 
+{
 	static {
 		// Use top menu bar on Mac
 		if (System.getProperty("os.name").contains("Mac")) {
@@ -55,6 +43,29 @@ public class QuadView extends JFrame {
 		}
 	}
 	
+	private static final long serialVersionUID = 1L;
+	protected SliceViewer sliceViewer = new SliceViewer();
+	protected Action resetViewAction = new ResetViewAction(sliceViewer);
+	protected Action resetZoomAction = new ResetZoomAction(sliceViewer);
+	protected Action panModeAction = new PanModeAction(sliceViewer);
+	protected Action zoomInAction = new ZoomInAction(sliceViewer.getCamera());
+	protected Action zoomMouseModeAction = new ZoomMouseModeAction(sliceViewer);
+	protected Action zoomOutAction = new ZoomOutAction(sliceViewer.getCamera());
+	protected Action zoomScrollModeAction = new ZoomScrollModeAction(sliceViewer);
+	protected JSlider zoomSlider = new JSlider(JSlider.VERTICAL);
+
+	protected QtSlot1<Double> changeZoom = new QtSlot1<Double>(this) {
+		@Override
+		public void execute(Double zoom) {
+			double zoomMin = Math.log(sliceViewer.getMinZoom()) / Math.log(2.0);
+			double zoomMax = Math.log(sliceViewer.getMaxZoom()) / Math.log(2.0);
+			double zoomLog = Math.log(zoom) / Math.log(2.0);
+			double relativeZoom = (zoomLog - zoomMin) / (zoomMax - zoomMin);
+			int sliderValue = (int)Math.round(relativeZoom * 1000.0);
+			zoomSlider.setValue(sliderValue);
+		}
+	};
+
 	public static void main(String[] args) {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
@@ -113,7 +124,11 @@ public class QuadView extends JFrame {
 		// put a border to suggest that the zoom buttons belong with the slider
 		zoomPanel.setBorder(BorderFactory.createEtchedBorder());
 		zoomPanel.add(new ToolButton(zoomInAction));
-		JSlider zoomSlider = new JSlider(JSlider.VERTICAL);
+		zoomSlider.setMinimum(0);
+		zoomSlider.setMaximum(1000);
+		zoomSlider.addChangeListener(new ZoomSliderListener(zoomSlider, sliceViewer));
+		// connect signal from camera back to slider
+		sliceViewer.getZoomChanged().connect(changeZoom);
 		zoomPanel.add(zoomSlider);
 		zoomPanel.add(new ToolButton(zoomOutAction));
 		// buttons
@@ -228,6 +243,35 @@ public class QuadView extends JFrame {
 		toolBar.addSeparator();
 		
 		return toolBar;
+	}
+
+	// Allow camera to respond to dragging Zoom Slider
+	class ZoomSliderListener implements ChangeListener
+	{
+		JSlider slider;
+		VolumeViewer viewer;
+		int previousValue = -1;
+		
+		ZoomSliderListener(JSlider slider, VolumeViewer viewer) {
+			this.slider = slider;
+			this.viewer = viewer;
+		}
+
+		@Override
+		public void stateChanged(ChangeEvent e) 
+		{
+			int value = this.slider.getValue();
+			if (value == previousValue)
+				return;
+			previousValue = value;
+			double relativeZoom = value / 1000.0;
+			// log scale
+			double zoomMin = Math.log(viewer.getMinZoom()) / Math.log(2.0);
+			double zoomMax = Math.log(viewer.getMaxZoom()) / Math.log(2.0);
+			double zoom = zoomMin + relativeZoom * (zoomMax - zoomMin);
+			zoom = Math.pow(2.0, zoom);
+			viewer.setPixelsPerSceneUnit(zoom);
+		}
 	}
 	
 }

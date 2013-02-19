@@ -1,20 +1,13 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
-import java.awt.geom.Point2D;
-
 import javax.media.opengl.GL2;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.GLActor;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 
 public class PracticeBlueTileActor 
 implements GLActor
 {
-	Vec3 origin = new Vec3();
-	Point2D pixelSize = new Point2D.Float(1.0f, 1.0f);
-	
-
 	@Override
 	public void display(GL2 gl) {
 		// for initial testing, paint a blue square
@@ -28,7 +21,7 @@ implements GLActor
 	}
 
 	@Override
-	public BoundingBox3d getBoundingBox() {
+	public BoundingBox3d getBoundingBox3d() {
 		// NOTE - Y coordinate is inverted w.r.t. glVertex3d(...)
 		BoundingBox3d result = new BoundingBox3d();
 		result.setMin(0, -10, 0);
