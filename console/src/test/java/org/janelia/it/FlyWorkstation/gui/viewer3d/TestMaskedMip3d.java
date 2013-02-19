@@ -2,15 +2,21 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ColorWheelColorMapping;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityType;
 
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This test-run class / standalone program will pull in a signal and an optional mask file and display the
@@ -44,7 +50,9 @@ import java.util.ArrayList;
  */
 public class TestMaskedMip3d {
 
-	/**
+    private static final long MOCK_UID = 777L;
+
+    /**
      * This is a test program for trying the full volume + mask functionality of the Mip3d widget.  This test
      * has the convenience of being able to use hardcoded (local) paths, and quicker cycle time than the
      * full-blown console application
@@ -109,7 +117,7 @@ public class TestMaskedMip3d {
                         RenderableBean renderableBean = new RenderableBean();
                         renderableBean.setLabelFile( mf );
                         renderableBean.setTranslatedNum(1);
-                        renderableBean.setLabelFileNum( 13 ); // Can modify this.
+                        renderableBean.setLabelFileNum( 16 ); // Can modify this.
                         beans.add(renderableBean);
 
                         renderableBean = new RenderableBean();
@@ -124,14 +132,38 @@ public class TestMaskedMip3d {
                         renderableBean.setLabelFileNum( 15 );
                         beans.add(renderableBean);
 
+                        renderableBean = new RenderableBean();
+                        renderableBean.setLabelFile( mf );
+                        renderableBean.setTranslatedNum(4);
+                        renderableBean.setLabelFileNum( 13 );
+                        beans.add(renderableBean);
+
                         vmb.setRenderables(beans);
 
                         vLoader.loadVolume( mf );
                         vLoader.populateVolumeAcceptor( vmb );
 
                         // Setup a testing color-wheel mapping.
-                        RenderMappingI colorMapper = new ColorWheelColorMapping();
-                        mipWidget.setMaskColorMappings( colorMapper.getMapping( beans ) );
+                        ConfigurableColorMapping colorMapping = new ConfigurableColorMapping();
+                        if ( args.length > 2 ) {
+                            // This mock-entity needs ONLY its ID, a type, and a name.
+                            Entity mockE = new Entity();
+                            mockE.setId( MOCK_UID );
+                            EntityType mockEType = new EntityType();
+                            mockEType.setName( EntityConstants.TYPE_NEURON_FRAGMENT );
+                            mockE.setEntityType( mockEType );
+                            mockE.setName("Entity: " + MOCK_UID);
+                            renderableBean.setEntity( mockE );
+                            renderableBean.setSignalFile( fn );
+
+                            // Here, establish a map suitable for testing.  It will get a UID-vs-render-method.
+                            // This affects only the last-entered file.
+                            Map<Long,Integer> guidToRenderMethod = new HashMap<Long,Integer>();
+                            guidToRenderMethod.put( MOCK_UID, Integer.parseInt( args[ 2 ] ) );
+
+                            colorMapping.setGuidToRenderMethod( guidToRenderMethod );
+                        }
+                        mipWidget.setMaskColorMappings( colorMapping.getMapping( beans ) );
                     }
 
                     if ( ! mipWidget.loadVolume( fn, vmb, resolver ) ) {
