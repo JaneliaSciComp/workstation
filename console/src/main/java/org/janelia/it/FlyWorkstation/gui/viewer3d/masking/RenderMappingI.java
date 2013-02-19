@@ -17,5 +17,8 @@ public interface RenderMappingI {
     public static final int FRAGMENT_RENDERING = 1;
     public static final int NON_RENDERING = 0;
     public static final int COMPARTMENT_RENDERING = 2;
+    public static final int SOLID_COMPARTMENT_RENDERING = 3;
+    public static final int PASS_THROUGH_RENDERING = 4;
+
     Map<Integer,byte[]> getMapping( Collection<RenderableBean> fragments );
 }

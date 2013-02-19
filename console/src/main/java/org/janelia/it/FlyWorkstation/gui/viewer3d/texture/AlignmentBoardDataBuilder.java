@@ -30,6 +30,8 @@ import java.util.*;
 public class AlignmentBoardDataBuilder implements Serializable {
     private static final String COMPARTMENT_MASK_FILE = "/groups/scicomp/jacsData/MaskResources/Compartment/maskIndex.v3dpbd";
     private static final String COMPARTMENT_MASK_MAPPING_FILE = "/groups/scicomp/jacsData/MaskResources/Compartment/maskNameIndex.txt";
+    //"/Users/fosterl/Documents/alignment_board/samples/174213816581829437/ConsolidatedSignal2_25.mp4"; //
+    private static final String COMPARTMENT_MASK_ONLY_SIGNAL = "/groups/scicomp/jacsData/MaskResources/Compartment/maskRGB.v3dpbd";
     private static final String COMPARTMENT_ENTITY_NAME = "Compartment";
 
     private Logger logger = LoggerFactory.getLogger( AlignmentBoardDataBuilder.class );
@@ -89,7 +91,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
     }
 
     private void applyCompartmentMask( List<Entity> displayableList ) {
-        if ( renderableBeanList.size() == 0  ||  displayableList.size() == 0 ) {
+        if ( displayableList.size() == 0 ) {
             return;
         }
 
@@ -117,9 +119,15 @@ public class AlignmentBoardDataBuilder implements Serializable {
                     );
 
             // Tack along to the last existing bean, and get its signal file name.
-            String lastSignalFile = null;
+            String compartmentSignalFile = null;
             for ( RenderableBean bean: renderableBeanList ) {
-                lastSignalFile = bean.getSignalFile();
+                compartmentSignalFile = bean.getSignalFile();
+            }
+            boolean compartmentsOnly = false;
+            if ( compartmentSignalFile == null ) {
+                // Need to force a signal, compatible with compartments.
+                compartmentSignalFile = COMPARTMENT_MASK_ONLY_SIGNAL;
+                compartmentsOnly = true;
             }
 
             // Look for highest-numbered translation.
@@ -128,6 +136,9 @@ public class AlignmentBoardDataBuilder implements Serializable {
                 if ( bean.getTranslatedNum() >= highestTranslatedLabel ) {
                     highestTranslatedLabel = bean.getTranslatedNum() + 1;
                 }
+            }
+            if ( highestTranslatedLabel == -1 ) {
+                highestTranslatedLabel = 1;
             }
 
             // Pull in info from the compartments definition text file.
@@ -163,11 +174,15 @@ public class AlignmentBoardDataBuilder implements Serializable {
                 if ( labelNum != null ) {
                     RenderableBean maskIndexBean = new RenderableBean();
                     maskIndexBean.setLabelFile( maskIndex );
-                    maskIndexBean.setSignalFile( lastSignalFile );
+                    maskIndexBean.setSignalFile( compartmentSignalFile );
                     maskIndexBean.setLabelFileNum( labelNum );
 
                     maskIndexBean.setTranslatedNum( highestTranslatedLabel ++ );
-                    maskIndexBean.setRgb( new byte[] { 20, 20, 20, RenderMappingI.COMPARTMENT_RENDERING } );
+                    byte renderMethod = RenderMappingI.COMPARTMENT_RENDERING;
+                    if ( compartmentsOnly ) {
+                        renderMethod = RenderMappingI.SOLID_COMPARTMENT_RENDERING;
+                    }
+                    maskIndexBean.setRgb( new byte[] { 20, 20, 20, renderMethod } );
 
                     renderableBeanList.add(maskIndexBean);
                 }

@@ -78,10 +78,16 @@ public class VolumeLoader
                     textureDataBuilder = mpegFileLoader;
                     break;
                 default:
-                    throw new IllegalArgumentException("Unknown filename/extension combination " + baseName + "/" + extension);
+                    break;
+                    //throw new IllegalArgumentException("Unknown filename/extension combination " + baseName + "/" + extension);
             }
 
-            textureDataBuilder.setColorSpace( resolveColorSpace(baseName, extension) );
+            if ( textureDataBuilder != null ) {
+                textureDataBuilder.setColorSpace( resolveColorSpace(baseName, extension) );
+            }
+            else {
+                return true;
+            }
 
             // Attempt to load the file.  After the max attempt, pass through the exception.
             int tryCount = 0;

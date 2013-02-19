@@ -5,6 +5,7 @@ import java.awt.event.*;
 import java.util.Map;
 import javax.swing.*;
 
+import org.apache.juli.JdkLoggerFormatter;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ChannelSelectionPanel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
@@ -126,6 +127,12 @@ extends BaseGLViewer
                 if ( neuronNumToRGB != null ) {
                     RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
                     renderMapTextureData.setMapping(neuronNumToRGB);
+
+                    // DEBUG ***
+                    for ( Integer nNum: neuronNumToRGB.keySet() ) {
+                        byte[] vals = neuronNumToRGB.get( nNum );
+                        System.out.println(nNum + " vs " + vals[0] + "," + vals[1] + "," + vals[2] + ": " + vals[3]);
+                    }
                     brick.setColorMapTextureData( renderMapTextureData );
                 }
             }

@@ -112,6 +112,9 @@ public class TextureMediator {
                     data
             );
             reportError( "glTexImage", gl );
+
+            // TEMP
+            //testTextureContents(gl);
         }
 
     }
@@ -216,38 +219,36 @@ public class TextureMediator {
         else {
             logger.info( "TEST: Found {} non-zero bytes in texture {} by name.", nonZeroCount, textureName );
 
-            if ( pixelByteCount > 1 ) {
-                byte[] voxel = new byte[pixelByteCount];
-                int leftByteNonZeroCount = 0;
-                int rightByteNonZeroCount = 0;
-                for ( int i = 0; i < rawBuffer.length; i += pixelByteCount ) {
-                    boolean voxelNonZero = false;
-                    for ( int voxOffs = 0; voxOffs < pixelByteCount; voxOffs ++ ) {
-                        voxel[ voxOffs ] = rawBuffer[ i+voxOffs ];
-                        if ( voxel[ voxOffs ] > 0 ) {
-                            voxelNonZero = true;
-                        }
-
-                    }
-                    if ( voxelNonZero ) {
-                        if ( voxel[ 0 ] != 0 ) {
-                            leftByteNonZeroCount ++;
-                        }
-                        else if ( voxel[ pixelByteCount - 1 ] > 0 ) {
-                            rightByteNonZeroCount ++;
-                        }
+            byte[] voxel = new byte[pixelByteCount];
+            int leftByteNonZeroCount = 0;
+            int rightByteNonZeroCount = 0;
+            for ( int i = 0; i < rawBuffer.length; i += pixelByteCount ) {
+                boolean voxelNonZero = false;
+                for ( int voxOffs = 0; voxOffs < pixelByteCount; voxOffs ++ ) {
+                    voxel[ voxOffs ] = rawBuffer[ i+voxOffs ];
+                    if ( voxel[ voxOffs ] > 0 ) {
+                        voxelNonZero = true;
                     }
 
-                    Integer count = allFoundFrequencies.get( (int)voxel[ 0 ] );
-                    if ( count == null ) {
-                        count = 0;
+                }
+                if ( voxelNonZero ) {
+                    if ( voxel[ 0 ] != 0 ) {
+                        leftByteNonZeroCount ++;
                     }
-                    allFoundFrequencies.put( (int)voxel[ 0 ], ++count );
+                    else if ( voxel[ pixelByteCount - 1 ] > 0 ) {
+                        rightByteNonZeroCount ++;
+                    }
                 }
 
-                logger.info( "TEST: There are {} nonzero left-most bytes.", leftByteNonZeroCount );
-                logger.info( "TEST: There are {} nonzero right-most bytes.", rightByteNonZeroCount );
+                Integer count = allFoundFrequencies.get( (int)voxel[ 0 ] );
+                if ( count == null ) {
+                    count = 0;
+                }
+                allFoundFrequencies.put( (int)voxel[ 0 ], ++count );
             }
+
+            logger.info( "TEST: There are {} nonzero left-most bytes.", leftByteNonZeroCount );
+            logger.info( "TEST: There are {} nonzero right-most bytes.", rightByteNonZeroCount );
 
         }
 

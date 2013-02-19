@@ -62,8 +62,17 @@ vec4 volumeMask(vec4 origColor)
                 rtnVal[ 1 ] = 0.0;
                 rtnVal[ 2 ] = 0.0;
             }
+            else if ( renderMethod == 4.0 ) {
+                rtnVal = origColor;
+            }
+            else if ( renderMethod == 3.0 ) {
+                // Special case: solid compartment.
+                rtnVal[ 0 ] = 0.3;
+                rtnVal[ 1 ] = 0.3;
+                rtnVal[ 2 ] = 0.3;
+            }
             else if ( renderMethod == 2.0 ) {
-                // Special case: a compartment.  Here, make a translucent gray appearance.
+                // Special case: a translucent compartment.  Here, make a translucent gray appearance.
                 // For gray mappings, fill in solid gray for anything empty, but otherwise just use original.
                 if ( maxIntensity < 0.05 ) {
                     mappedColor = vec4( 1.0, 1.0, 1.0, 1.0 );
@@ -71,6 +80,7 @@ vec4 volumeMask(vec4 origColor)
                 else {
                     mappedColor = origColor; // TEMP?
                 }
+
                 for (int i = 0; i < 3; i++) {
                     rtnVal[i] = mappedColor[ i ] * maxIntensity;
                 }

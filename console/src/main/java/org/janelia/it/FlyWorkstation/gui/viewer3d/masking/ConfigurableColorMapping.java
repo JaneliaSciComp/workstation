@@ -59,7 +59,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
                     }
                 }
                 else {
-                    rgb[ 3 ] = RenderMappingI.FRAGMENT_RENDERING;
+                    rgb[ 3 ] = RenderMappingI.PASS_THROUGH_RENDERING;
                 }
             }
 

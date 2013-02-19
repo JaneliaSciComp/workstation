@@ -134,7 +134,9 @@ public class ABLoadWorker extends SimpleWorker {
     private Collection<String> getSignalFilenames(Collection<RenderableBean> renderableBeans) {
         Collection<String> signalFileNames = new HashSet<String>();
         for ( RenderableBean bean: renderableBeans ) {
-            signalFileNames.add( bean.getSignalFile() );
+            if ( bean.getSignalFile().trim().length() > 0 ) {
+                signalFileNames.add( bean.getSignalFile() );
+            }
         }
         return signalFileNames;
     }

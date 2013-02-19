@@ -24,9 +24,14 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
     private static final int X_INX = 0;
     private static final int Y_INX = 1;
 
+    private static final int SHADER_FRIENDLY_BYTE_COUNT = 2;
+
     private List<TextureDataI> maskingDataBeans = new ArrayList<TextureDataI>();
     private ByteOrder consensusByteOrder;
-    private int consensusByteCount;
+    //TODO revisit below at optimization time.
+    // NOTE: force the consensus (output) byte count to 2, because the fragment shader can easily handle that,
+    // even though, for all-8-bit masks, some time and space are wasted.
+    private int consensusByteCount = SHADER_FRIENDLY_BYTE_COUNT;
     private int consensusChannelCount;
     private Collection<RenderableBean> renderables;
 
