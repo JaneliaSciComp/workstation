@@ -406,8 +406,7 @@ public class EntityModel {
      */
     public Entity loadLazyEntity(Entity entity, boolean recurse) throws Exception {
         Entity retEntity = putOrUpdate(entity);
-//    	Entity retEntity = getEntityById(entity.getId());
-    	log.debug("Loading lazy entity '{}' (recurse={})",retEntity.getName(),recurse);
+    	log.debug("Loading lazy entity '{}' (recurse={})",retEntity,recurse);
         if (recurse) {
             loadLazyEntity(retEntity, new HashSet<Long>());
         }
@@ -423,8 +422,12 @@ public class EntityModel {
     }
 
     private void loadLazyEntity(Entity entity, Set<Long> visited) throws Exception {
+        if (entity==null) {
+            log.warn("Cannot load lazy entity when entity is null");
+            return;
+        }
+        if (!EntityUtils.isInitialized(entity)) return;
 		if (visited.contains(entity.getId())) return;
-		if (!EntityUtils.isInitialized(entity)) return;
 		if (entity instanceof ForbiddenEntity) return;
 		visited.add(entity.getId());
         if (!EntityUtils.areLoaded(entity.getEntityData())) {
@@ -542,7 +545,9 @@ public class EntityModel {
     	checkIfCanonicalEntity(entity);
     	Entity canonicalEntity = null;
     	synchronized(this) {
+    	    replaceForbiddenEntitiesWithUnloadedChildren(entity, true);
 	    	canonicalEntity = putOrUpdate(entityFacade.saveEntity(entity));
+	    	replaceUnloadedChildrenWithForbiddenEntities(entity, true);
     	}
     	// Need to notify here, because the changes were made to the canonical entity (TODO: disallow this?)
     	notifyEntityChanged(canonicalEntity);
@@ -911,6 +916,26 @@ public class EntityModel {
 	        		replaceUnloadedChildrenWithForbiddenEntities(ed.getChildEntity(), true);
 	        	}
         	}
+        }
+    }
+
+    /**
+     * Replace any forbidden place-holders with their original uninitialized children. This is useful if you want to 
+     * send the entity tree back to the server.
+     * @param parent
+     */
+    private void replaceForbiddenEntitiesWithUnloadedChildren(Entity parent, boolean recurse) {
+        if (parent==null) return;
+        if (!EntityUtils.isInitialized(parent)) return;
+        if (parent.getEntityData()==null) return;
+        for(EntityData ed : parent.getEntityData()) {
+            if (ed.getChildEntity() instanceof ForbiddenEntity) {
+                ForbiddenEntity fe = (ForbiddenEntity)ed.getChildEntity();
+                ed.setChildEntity(fe.getEntity());
+            }
+            else if (recurse) {
+                replaceForbiddenEntitiesWithUnloadedChildren(ed.getChildEntity(), true);
+            }
         }
     }
     

@@ -9,19 +9,15 @@ public class Neuron extends EntityWrapper implements Viewable2d {
     public Neuron(RootedEntity neuronFragment) {
         super(neuronFragment);
     }
-
-    @Override
-    protected void loadContextualizedChildren() throws Exception {
-    }
     
     public Integer getMaskIndex() {
-        String value = entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_NUMBER);
+        String value = getInternalEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_NUMBER);
         if (StringUtils.isEmpty(value)) return null;
         return Integer.parseInt(value);
     }
 
     @Override
     public String get2dImageFilepath() {
-        return entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
+        return getInternalEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
     }
 }

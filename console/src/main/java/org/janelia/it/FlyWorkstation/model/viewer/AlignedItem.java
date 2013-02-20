@@ -2,8 +2,10 @@ package org.janelia.it.FlyWorkstation.model.viewer;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
+import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapperFactory;
+import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 
@@ -22,14 +24,22 @@ public class AlignedItem extends EntityWrapper {
     }
 
     @Override
-    protected void loadContextualizedChildren() throws Exception {
-        EntityData itemEd = rootedEntity.getEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_ITEM);
+    public void loadContextualizedChildren(AlignmentContext alignmentContext) throws Exception {
+        
+        // TODO: sanity check everything against the alignment context
+        
+        initChildren();
+        
+        RootedEntity rootedEntity = getInternalRootedEntity();
+        EntityData itemEd = rootedEntity.getEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_ENTITY);
         if (itemEd!=null) {
             this.cachedItem = EntityWrapperFactory.wrap(rootedEntity.getChild(itemEd));
         }
-        for(RootedEntity child : rootedEntity.getChildrenForAttribute(EntityConstants.ATTRIBUTE_ENTITY)) {
-            children.add(new AlignedItem(child));
+        
+        for(RootedEntity child : rootedEntity.getChildrenForAttribute(EntityConstants.ATTRIBUTE_ITEM)) {
+            addChild(new AlignedItem(child));
         }
+        
     }
     
     public EntityWrapper getEntity() {
@@ -37,19 +47,23 @@ public class AlignedItem extends EntityWrapper {
     }
     
     public boolean isVisible() {
+        Entity entity = getInternalEntity();
         return "true".equals(entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_VISIBILITY));
     }
 
     public void setIsVisible(boolean visible) throws Exception {
+        Entity entity = getInternalEntity();
         entity.setValueByAttributeName(EntityConstants.ATTRIBUTE_VISIBILITY, new Boolean(visible).toString());
         ModelMgr.getModelMgr().saveOrUpdateEntity(entity);
     }
     
     public String getColorHex() {
+        Entity entity = getInternalEntity();
         return entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_COLOR);
     }
 
     public void setColorHex(String colorHex) throws Exception {
+        Entity entity = getInternalEntity();
         entity.setValueByAttributeName(EntityConstants.ATTRIBUTE_COLOR, colorHex);
         ModelMgr.getModelMgr().saveOrUpdateEntity(entity);
     }

@@ -16,6 +16,11 @@ public class AlignmentSpace extends EntityWrapper {
     }
 
     public String getAlignmentTargetFilepath() {
-        return entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_3D_IMAGE);
+        return getInternalEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_DEFAULT_3D_IMAGE);
+    }
+
+    @Override
+    public String toString() {
+        return "AlignmentSpace [id=" + getId() + ", name=" + getName() + "]";
     }   
 }

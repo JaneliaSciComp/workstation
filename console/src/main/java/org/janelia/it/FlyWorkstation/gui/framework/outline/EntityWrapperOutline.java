@@ -1,9 +1,3 @@
-/*
- * Created by IntelliJ IDEA. 
- * User: saffordt 
- * Date: 2/8/11 
- * Time: 2:09 PM
- */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
 import java.awt.Dimension;
@@ -29,8 +23,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
-import org.janelia.it.FlyWorkstation.model.domain.AlignmentSpace;
-import org.janelia.it.FlyWorkstation.model.domain.EntityContext;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -51,6 +43,7 @@ public abstract class EntityWrapperOutline extends EntityWrapperTree implements 
 
     private ModelMgrAdapter mml;
 	private String currUniqueId;
+    private AlignmentContext alignmentContext;
 
     public EntityWrapperOutline() {
 		super(true);
@@ -73,15 +66,19 @@ public abstract class EntityWrapperOutline extends EntityWrapperTree implements 
             }
         };
 		
-		// TODO: this should be defined by the user when creating the alignment board
-        Entity alignmentSpaceEntity = new Entity();
-        alignmentSpaceEntity.setName("Unified 20x Alignment Space");
-        AlignmentSpace alignmentSpace = new AlignmentSpace(alignmentSpaceEntity);
-        AlignmentContext alignmentContext = new AlignmentContext(alignmentSpace, "0.62x0.62x0.62", "1024x512x218");
-        EntityContext entityContext = new EntityContext();
-        entityContext.setAlignmentContext(alignmentContext);
-        setEntityContext(entityContext);
+		// TODO: these parameters should be picked from a list, by the user, when creating the alignment board
+        AlignmentContext alignmentContext = new AlignmentContext(
+                "Unified 20x Alignment Space", "0.62x0.62x0.62", "1024x512x218");
+        setAlignmentContext(alignmentContext);
 	}
+
+    public AlignmentContext getAlignmentContext() {
+        return alignmentContext;
+    }
+
+    public void setAlignmentContext(AlignmentContext alignmentContext) {
+        this.alignmentContext = alignmentContext;
+    }
     
     @Override
     public void activate() {
@@ -100,7 +97,7 @@ public abstract class EntityWrapperOutline extends EntityWrapperTree implements 
         ModelMgr.getModelMgr().removeModelMgrObserver(mml);
     }
 
-	@Override
+    @Override
 	public void initializeTree(List<EntityWrapper> roots) {
 	    
 		super.initializeTree(roots);
@@ -109,14 +106,14 @@ public abstract class EntityWrapperOutline extends EntityWrapperTree implements 
 		
 		JTree tree = getTree();
 		tree.setRootVisible(false);
-//		tree.setDragEnabled(true);
+		tree.setDragEnabled(true);
 //		tree.setDropMode(DropMode.ON_OR_INSERT);
-//		tree.setTransferHandler(new EntityTransferHandler() {
-//			@Override
-//			public JComponent getDropTargetComponent() {
-//				return EntityWrapperOutline.this;
-//			}
-//		});
+		tree.setTransferHandler(new EntityWrapperTransferHandler() {
+			@Override
+			public JComponent getDropTargetComponent() {
+				return EntityWrapperOutline.this;
+			}
+		});
 
 		getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER,0,true),"enterAction");
 		getActionMap().put("enterAction",new AbstractAction() {
@@ -231,6 +228,7 @@ public abstract class EntityWrapperOutline extends EntityWrapperTree implements 
 	 * 
 	 * @param e
 	 */
+    @Override
 	protected void nodeClicked(MouseEvent e) {
 		this.currUniqueId = null;
 		selectNode(getDynamicTree().getCurrentNode());
@@ -242,6 +240,7 @@ public abstract class EntityWrapperOutline extends EntityWrapperTree implements 
 	 * 
 	 * @param e
 	 */
+    @Override
 	protected void nodePressed(MouseEvent e) {
 	}
 
@@ -250,9 +249,17 @@ public abstract class EntityWrapperOutline extends EntityWrapperTree implements 
 	 * 
 	 * @param e
 	 */
+    @Override
 	protected void nodeDoubleClicked(MouseEvent e) {
 	}
-	
+
+	@Override
+    protected void loadLazyNode(DefaultMutableTreeNode node) throws Exception {
+        EntityWrapper wrapper = getEntityWrapper(node);
+        wrapper.loadContextualizedChildren(getAlignmentContext());
+    }
+
+    
     @Subscribe 
     public void entityInvalidated(EntityInvalidationEvent event) {
         log.debug("Some entities were invalidated so we're refreshing the tree");

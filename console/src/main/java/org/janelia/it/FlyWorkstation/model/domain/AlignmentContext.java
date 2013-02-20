@@ -7,18 +7,18 @@ package org.janelia.it.FlyWorkstation.model.domain;
  */
 public class AlignmentContext {
 
-    private AlignmentSpace alignmentSpace;
+    private String alignmentSpaceName;
     private String opticalResolution;
     private String pixelResolution;
     
-    public AlignmentContext(AlignmentSpace alignmentSpace, String opticalResolution, String pixelResolution) {
-        this.alignmentSpace = alignmentSpace;
+    public AlignmentContext(String alignmentSpaceName, String opticalResolution, String pixelResolution) {
+        this.alignmentSpaceName = alignmentSpaceName;
         this.opticalResolution = opticalResolution;
         this.pixelResolution = pixelResolution;
     }
     
-    public AlignmentSpace getAlignmentSpace() {
-        return alignmentSpace;
+    public String getAlignmentSpaceName() {
+        return alignmentSpaceName;
     }
 
     public String getOpticalResolution() {
@@ -27,5 +27,17 @@ public class AlignmentContext {
     
     public String getPixelResolution() {
         return pixelResolution;
+    }
+    
+    public boolean canDisplay(AlignmentContext alignmentContext) {
+        return (alignmentSpaceName.equals(alignmentContext.getAlignmentSpaceName()) 
+                && opticalResolution.equals(alignmentContext.getOpticalResolution())
+                && pixelResolution.equals(alignmentContext.getPixelResolution()));
+    }
+
+    @Override
+    public String toString() {
+        return "AlignmentContext [alignmentSpaceName=" + alignmentSpaceName + ", opticalResolution=" + opticalResolution
+                + ", pixelResolution=" + pixelResolution + "]";
     }
 }

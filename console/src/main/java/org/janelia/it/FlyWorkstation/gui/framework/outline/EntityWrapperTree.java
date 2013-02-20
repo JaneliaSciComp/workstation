@@ -20,7 +20,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.ForbiddenEntity;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.model.domain.EntityContext;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.domain.Neuron;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
@@ -50,7 +49,6 @@ public class EntityWrapperTree extends JPanel implements ActivatableView {
     private DynamicTree selectedTree;
     private boolean lazy;
     
-    private EntityContext entityContext;
 	private EntityWrapper root;
     
 	private Multimap<Long,DefaultMutableTreeNode> entityIdToNodeMap = HashMultimap.<Long,DefaultMutableTreeNode>create();
@@ -156,8 +154,7 @@ public class EntityWrapperTree extends JPanel implements ActivatableView {
 
             @Override
             public void loadLazyNodeData(DefaultMutableTreeNode node) throws Exception {
-                EntityWrapper wrapper = getEntityWrapper(node);
-                wrapper.loadContextualizedChildren(entityContext);
+                EntityWrapperTree.this.loadLazyNode(node);
             }
 
             @Override
@@ -211,8 +208,8 @@ public class EntityWrapperTree extends JPanel implements ActivatableView {
 
         selectedTree.setCellRenderer(new EntityWrapperTreeCellRenderer());
     }
-    
-	public void showNothing() {
+	
+    public void showNothing() {
         treesPanel.removeAll();
         revalidate();
         repaint();
@@ -268,20 +265,7 @@ public class EntityWrapperTree extends JPanel implements ActivatableView {
 //			removeNode(node);	
 //		}
 //	}
-//
-//	@Subscribe 
-//	public void entityChildrenLoaded(EntityChildrenLoadedEvent event) {
-//		Entity entity = event.getEntity();
-//		Collection<DefaultMutableTreeNode> nodes = getNodesByEntityId(entity.getId());
-//		if (nodes == null) return;
-//		log.debug("Entity affecting {} nodes had children loaded: '{}'",nodes.size(),entity.getName());	
-//		for(DefaultMutableTreeNode node : nodes) {
-//			log.debug("Recreating children of {}",getDynamicTree().getUniqueId(node));
-//			getDynamicTree().recreateChildNodes(node);	
-//		}
-//	}
 	
-    
     /**
      * Override this method to show a popup menu when the user right clicks a node in the tree.
      *
@@ -320,7 +304,14 @@ public class EntityWrapperTree extends JPanel implements ActivatableView {
      */
 	public void selectEntityByUniqueId(String uniqueId) {
 	}
-	
+
+    /**
+     * Override to provide custom loading behavior. 
+     * @param uniqueId
+     */
+    protected void loadLazyNode(DefaultMutableTreeNode node) throws Exception {
+    }
+    
 	/**
 	 * Override to provide refresh behavior. Default implementation does nothing.
 	 */
@@ -494,14 +485,4 @@ public class EntityWrapperTree extends JPanel implements ActivatableView {
         if (selectedTree==null) return null;
         return selectedTree.getTree();
     }
-
-    public EntityContext getEntityContext() {
-        return entityContext;
-    }
-
-    public void setEntityContext(EntityContext entityContext) {
-        this.entityContext = entityContext;
-    }
-    
-    
 }

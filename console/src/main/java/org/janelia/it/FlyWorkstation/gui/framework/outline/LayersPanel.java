@@ -3,12 +3,12 @@ package org.janelia.it.FlyWorkstation.gui.framework.outline;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.FlowLayout;
 import java.awt.event.ComponentEvent;
 import java.awt.event.ComponentListener;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import javax.swing.tree.TreeModel;
@@ -16,22 +16,31 @@ import javax.swing.tree.TreeModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.AlignmentBoardItemChangeEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.AlignmentBoardItemChangeEvent.ChangeType;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.AlignmentBoardOpenEvent;
+import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
+import org.janelia.it.FlyWorkstation.model.domain.Neuron;
+import org.janelia.it.FlyWorkstation.model.domain.Sample;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.netbeans.swing.outline.DefaultOutlineModel;
-import org.netbeans.swing.outline.Outline;
-import org.netbeans.swing.outline.OutlineModel;
-import org.netbeans.swing.outline.RowModel;
+import org.netbeans.swing.outline.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.eventbus.Subscribe;
+
+/**
+ * The Layers Panel acts as a controller for the Alignment Board. It opens an Alignment Board Context and generates
+ * events that the Alignment Board can listen to in order to know when the user adds items to the alignment board,
+ * toggles their visibility, or sets other attributes such as color.
+ * 
+ * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ */
 public class LayersPanel extends JPanel implements Refreshable {
 
     private static final Logger log = LoggerFactory.getLogger(LayersPanel.class);
@@ -40,18 +49,25 @@ public class LayersPanel extends JPanel implements Refreshable {
     private Outline outline;
     
     public LayersPanel() {
-
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createLineBorder((Color)UIManager.get("windowBorder")));
+    }
+    
+    private void init() {
 
         outline = new Outline();
         outline.setRootVisible(false);
         outline.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         outline.setColumnHidingAllowed(false);
-
-        OutlineModel outlineModel = DefaultOutlineModel.createOutlineModel(new SampleTreeModel(), new AlignedEntityRowModel(), true, "Name");
-        updateTableModel(outlineModel);
+        outline.setRootVisible(true);
         
+        setTransferHandler(new EntityWrapperTransferHandler() {
+            @Override
+            public JComponent getDropTargetComponent() {
+                return LayersPanel.this;
+            }
+        });
+       
         addComponentListener(new ComponentListener() {
             
             @Override
@@ -77,43 +93,126 @@ public class LayersPanel extends JPanel implements Refreshable {
         });
         
         add(new JScrollPane(outline),BorderLayout.CENTER);
+        
+        refresh();
+        revalidate();
+        repaint();
+    }
+    
+    public Outline getOutline() {
+        return outline;
     }
 
     public AlignmentBoardContext getAlignmentBoardContext() {
         return alignmentBoardContext;
     }
-    
+
     public void openAlignmentBoard(RootedEntity rootedEntity) {
-        this.alignmentBoardContext = new AlignmentBoardContext(rootedEntity);
+        loadAlignmentBoard(rootedEntity, new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                AlignmentBoardOpenEvent event = new AlignmentBoardOpenEvent(alignmentBoardContext);
+                ModelMgr.getModelMgr().postOnEventBus(event);
+                return null;
+            }
+        });
+    }
+
+    private AtomicBoolean loadInProgress = new AtomicBoolean(false);
+    
+    public void loadAlignmentBoard(final RootedEntity rootedEntity, final Callable<Void> success) {
+        
+        if (loadInProgress.getAndSet(true)) {
+            log.debug("Skipping refresh, since there is one already in progress");
+            return;
+        }
+        
+        if (outline==null) init();
         
         SimpleWorker worker = new SimpleWorker() {
             
+            AlignmentBoardContext abContext;
+            
             @Override
             protected void doStuff() throws Exception {
-                alignmentBoardContext.loadContextualizedChildren(null);
+                // Ensure we have the latest entity
+                rootedEntity.setEntity(ModelMgr.getModelMgr().getEntityTree(rootedEntity.getEntityId()));
+                // Load all the ancestors
+                this.abContext = new AlignmentBoardContext(rootedEntity);
+                loadAncestors(abContext);
+            }
+            
+            private void loadAncestors(EntityWrapper wrapper) throws Exception {
+                wrapper.loadContextualizedChildren(abContext.getAlignmentContext());
+                for(EntityWrapper childWrapper : wrapper.getChildren()) {
+                    loadAncestors(childWrapper);
+                }
             }
 
             @Override
             protected void hadSuccess() {
-
+                alignmentBoardContext = abContext;
+                
                 OutlineModel outlineModel = DefaultOutlineModel.createOutlineModel(new SampleTreeModel(), new AlignedEntityRowModel(), true, "Name");
                 updateTableModel(outlineModel);
 
-                AlignmentBoardOpenEvent event = new AlignmentBoardOpenEvent(alignmentBoardContext);
-                ModelMgr.getModelMgr().postOnEventBus(event);
+                revalidate();
+                repaint();
+                
+                loadInProgress.set(false);
             }
 
             @Override
             protected void hadError(Throwable error) {
                 SessionMgr.getSessionMgr().handleException(error);
+                loadInProgress.set(false);
             }
         };
         
         worker.execute();   
     }
+
+    /**
+     * Add a new aligned entity to the board. This method must be called from a worker thread.
+     * 
+     * @param wrapper
+     * @throws Exception
+     */
+    public void addNewAlignedEntity(EntityWrapper wrapper) throws Exception {
+        
+        if (wrapper instanceof Sample) {
+            Sample sample = (Sample)wrapper;
+            
+            if (sample.getChildren()==null) {
+                sample.loadContextualizedChildren(alignmentBoardContext.getAlignmentContext());
+            }
+            
+            AlignedItem sampleItem = ModelMgr.getModelMgr().addAlignedItem(alignmentBoardContext, sample);
+            sampleItem.setIsVisible(true);
+            
+            for(Neuron neuron : sample.getNeuronSet()) {
+                AlignedItem neuronItem = ModelMgr.getModelMgr().addAlignedItem(sampleItem, neuron);
+                neuronItem.setIsVisible(true);
+            }
+        }
+        else if (wrapper instanceof Neuron) {
+            // TODO: same as above but highlight the neuron
+        }
+        else {
+            throw new IllegalStateException("Cannot add entity of type "+wrapper.getType()+" to the alignment board.");
+        }
+        
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                refresh();
+            }
+        });
+    }
     
     private void updateTableModel(OutlineModel outlineModel) {
 
+        if (outline==null) return;
         outline.setModel(outlineModel);
         
         TableColumnModel columnModel = outline.getColumnModel();
@@ -139,33 +238,42 @@ public class LayersPanel extends JPanel implements Refreshable {
             columnModel.addColumn(columns[i]);
         }
 
-        first.setCellRenderer(new EntityCellRenderer());
-        
+        first.setCellRenderer(new OutlineEntityCellRenderer());        
+    }
+
+    @Subscribe 
+    public void entityInvalidated(EntityInvalidationEvent event) {
+        log.debug("Some entities were invalidated so we're refreshing the tree");
+        refresh();
     }
     
     @Override
     public void refresh() {
-        
+        refresh(false, null);
     }
 
     @Override
     public void totalRefresh() {
+        refresh(true, null);
+    }
+
+    public void refresh(final Callable<Void> success) {
+        refresh(false, success);
     }
     
-    private static class EntityCellRenderer extends DefaultTableCellRenderer {
+    public void totalRefresh(final Callable<Void> success) {
+        refresh(true, success);
+    }
+    
+    public void refresh(final boolean invalidateCache, final Callable<Void> success) {
+        if (alignmentBoardContext!=null) {
+            loadAlignmentBoard(alignmentBoardContext.getInternalRootedEntity(), success);
+        }
+    }
+    
+    private class OutlineEntityCellRenderer extends DefaultOutlineCellRenderer {
         
-        protected JPanel cellPanel;
-        protected JLabel titleLabel;
-
-        public EntityCellRenderer() {
-
-            cellPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            cellPanel.setOpaque(false);
-            
-            titleLabel = new JLabel(" ");
-            titleLabel.setOpaque(true);
-            titleLabel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 0));
-            cellPanel.add(titleLabel);
+        public OutlineEntityCellRenderer() {
         }
             
         @Override
@@ -174,47 +282,33 @@ public class LayersPanel extends JPanel implements Refreshable {
 
             JComponent cell = (JComponent)super.getTableCellRendererComponent(
                     table, value, selected, hasFocus, row, column);
-            titleLabel.setForeground(cell.getForeground());
-            titleLabel.setBackground(cell.getBackground());
             
-//            cell.setPreferredSize(new Dimension(0, 50));
+            JLabel label = (JLabel)cell;
             
             if (value instanceof AlignedItem) {
                 
-                cellPanel.setEnabled(table.isEnabled());
-                
                 AlignedItem alignedItem = (AlignedItem)value;
                 EntityWrapper wrapper = alignedItem.getEntity();
+                if (wrapper==null) {
+                    label.setText(alignmentBoardContext.getName());
+                    label.setIcon(Icons.getIcon(alignmentBoardContext.getInternalEntity()));
+                    label.setToolTipText(alignmentBoardContext.getType());
+                    return cell;
+                }
+                
                 Entity entity = wrapper.getInternalEntity();
                 String entityTypeName = wrapper.getType();
                 
                 // Set the labels
-                titleLabel.setText(wrapper.getName());
-                titleLabel.setIcon(Icons.getIcon(entity));
-                titleLabel.setToolTipText(entityTypeName);
+                label.setText(wrapper.getName());
+                label.setIcon(Icons.getIcon(entity));
+                label.setToolTipText(entityTypeName);
                 
-//                String filepath = EntityUtils.getImageFilePath(entity, EntityConstants.ATTRIBUTE_DEFAULT_2D_IMAGE);
-//                if (filepath == null) {
-//                    throw new IllegalStateException("Entity has no filepath");
-//                }
-//                
-//                File file = new File(PathTranslator.convertPath(filepath));
-//                
-//                ImageCache imageCache = SessionMgr.getBrowser().getImageCache();
-//                
-//                table.setRowHeight(row, 40);
-//                
-//                BufferedImage image = imageCache.get(file.getAbsolutePath());
-//                if (image!=null) {
-//                    BufferedImage thumbnail = Utils.getScaledImage(image, 50, 50);
-//                    titleLabel.setIcon(new ImageIcon(thumbnail));
-//                }
-                
-               return cellPanel;
+                return cell;
             }
             else {
                 if (value==null) {
-                    log.warn("Null value in Layers Panel table");
+                    log.warn("Null value in Layers Panel table at row={}, col={}",row,column);
                 }
                 else {
                     log.warn("Unrecognized value type in Layers Panel table: "+value.getClass().getName());
@@ -226,8 +320,6 @@ public class LayersPanel extends JPanel implements Refreshable {
     
     private class SampleTreeModel implements TreeModel {
         
-        private final AlignedItem root = new AlignedItem(new RootedEntity(null));
-        
         public SampleTreeModel() {
         }
 
@@ -238,24 +330,30 @@ public class LayersPanel extends JPanel implements Refreshable {
         @Override
         public Object getChild(Object parent, int index) {
             AlignedItem item = (AlignedItem)parent;
-            return item.getChildren().get(index);
+            if (item==null) return null;
+            Object child = item.getChildren()==null?0:item.getChildren().get(index);
+            return child;
         }
 
         @Override
         public int getChildCount(Object parent) {
             AlignedItem item = (AlignedItem)parent;
-            return item.getChildren().size();
+            if (item==null) return 0;
+            int count = item.getChildren()==null?0:item.getChildren().size();
+            return count;
         }
 
         @Override
         public int getIndexOfChild(Object parent, Object child) {
             AlignedItem item = (AlignedItem)parent;
-            return item.getChildren().indexOf(child);
+            if (item==null) return 0;
+            int index = item.getChildren()==null?0:item.getChildren().indexOf(child);
+            return index;
         }
 
         @Override
         public Object getRoot() {
-            return root;
+            return alignmentBoardContext;
         }
 
         @Override
@@ -298,17 +396,20 @@ public class LayersPanel extends JPanel implements Refreshable {
         @Override
         public Object getValueFor(Object node, int column) {
             AlignedItem alignedItem = (AlignedItem)node;
+            if (alignedItem==alignmentBoardContext) return Boolean.TRUE;
             return alignedItem.isVisible();
         }
 
         @Override
         public boolean isCellEditable(Object node, int column) {
-            return column==0;
+            final AlignedItem alignedItem = (AlignedItem)node;
+            return column==0 && (alignedItem!=alignmentBoardContext);
         }
 
         @Override
         public void setValueFor(Object node, int column, Object value) {
             final AlignedItem alignedItem = (AlignedItem)node;
+            if (alignedItem==alignmentBoardContext) return;
             final Boolean isVisible = (Boolean)value;
             SimpleWorker worker = new SimpleWorker() {
                 

@@ -10,6 +10,7 @@ import java.util.Map;
 
 import javax.swing.*;
 
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.CompoundIcon;
 import org.janelia.it.FlyWorkstation.gui.util.CompoundIcon.Axis;
 import org.janelia.it.FlyWorkstation.gui.util.RotatedIcon;
@@ -82,12 +83,18 @@ public class VerticalPanelPicker extends JPanel {
 		mainPanel.add(panel);
 		revalidate();
 		repaint();
-		if (panel instanceof Refreshable) {
-			((Refreshable)panel).refresh();
+		
+		try {
+    		if (panel instanceof Refreshable) {
+    			((Refreshable)panel).refresh();
+    		}
+            if (panel instanceof ActivatableView) {
+                ((ActivatableView)panel).activate();
+            }
 		}
-        if (panel instanceof ActivatableView) {
-            ((ActivatableView)panel).activate();
-        }
+		catch (Exception e) {
+		    SessionMgr.getSessionMgr().handleException(e);
+		}
 	}
 	
 }

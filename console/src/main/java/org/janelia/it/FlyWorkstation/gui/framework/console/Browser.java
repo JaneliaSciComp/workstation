@@ -23,7 +23,6 @@ import org.janelia.it.FlyWorkstation.gui.dialogs.*;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.GeneralSearchDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchConfiguration;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.*;
-import org.janelia.it.FlyWorkstation.gui.framework.search.SearchToolbar;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModelListenerAdapter;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -31,8 +30,8 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListe
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ImageCache;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.*;
-import org.janelia.it.FlyWorkstation.model.domain.EntityWrapperFactory;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
+import org.janelia.it.FlyWorkstation.model.domain.EntityWrapperFactory;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
@@ -415,6 +414,40 @@ public class Browser extends JFrame implements Cloneable {
 			@Override
 			public void run() {
 			    setPerspective(Perspective.ImageBrowser);
+			    
+			    // Temporary code for testing with a single alignment board
+			    // TODO: REMOVE ALL THIS
+//			    setPerspective(Perspective.AlignmentBoard);
+//			    
+//			    SimpleWorker worker = new SimpleWorker() {
+//                    
+//			        RootedEntity ab;
+//			        
+//                    @Override
+//                    protected void doStuff() throws Exception {
+//                        Entity cr = ModelMgr.getModelMgr().getEntityById(1842353839806611627L);
+//                        if (cr==null) {
+//                            throw new IllegalStateException("Cannot find test AB folder");
+//                        }
+//                        RootedEntity rootedEntity = new RootedEntity(cr);
+//                        ModelMgr.getModelMgr().loadLazyEntity(cr, true);
+//                        ab = rootedEntity.getChildOfType(EntityConstants.TYPE_ALIGNMENT_BOARD);
+//                    }
+//                    
+//                    @Override
+//                    protected void hadSuccess() {
+//                        SessionMgr.getBrowser().getLayersPanel().openAlignmentBoard(ab);
+//                    }
+//                    
+//                    @Override
+//                    protected void hadError(Throwable error) {
+//                        SessionMgr.getSessionMgr().handleException(error);                        
+//                    }
+//                };
+//                
+//                worker.execute();
+			    
+			    
 //			    rightPanel.showPanel(OUTLINE_ONTOLOGY);
 //			    entityOutline.activate();
 			}
@@ -1288,6 +1321,10 @@ public class Browser extends JFrame implements Cloneable {
         return entityOutline;
     }
     
+    public EntityWrapperOutline getEntityWrapperOutline() {
+        return entityWrapperOutline;
+    }
+    
     public OntologyOutline getOntologyOutline() {
         return ontologyOutline;
     }
@@ -1472,6 +1509,20 @@ public class Browser extends JFrame implements Cloneable {
             selectRightPanel(OUTLINE_ONTOLOGY);
             viewerManager.clearAllViewers();
         }
+    }
+
+    public void resetWindow() {
+        int offsetY = 0;
+        String lafName = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.DISPLAY_LOOK_AND_FEEL);
+        if (SystemInfo.isMac && lafName!=null && lafName.contains("synthetica")) {
+            offsetY=20;
+        }
+        
+        BrowserPosition consolePosition = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
+        consolePosition.setBrowserLocation(new Point(0, offsetY));
+        SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, consolePosition);        
+        setSize(consolePosition.getBrowserSize());
+        setLocation(consolePosition.getBrowserLocation());
     }
 
 }

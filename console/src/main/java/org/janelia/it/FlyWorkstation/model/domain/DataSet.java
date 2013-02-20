@@ -15,12 +15,12 @@ public class DataSet extends EntityWrapper {
     }
 
     public String getDataSetIdentifier() {
-        return entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_DATA_SET_IDENTIFIER);
+        return getInternalEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_DATA_SET_IDENTIFIER);
     }
 
     public List<String> getPipelineProcesses() {
         List<String> processNames = new ArrayList<String>();
-        String value = entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_PIPELINE_PROCESS);
+        String value = getInternalEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_PIPELINE_PROCESS);
         if (value!=null) {
             processNames.addAll(Arrays.asList(value.split(",")));
         }
@@ -28,6 +28,6 @@ public class DataSet extends EntityWrapper {
     }
     
     public boolean isSAGESynchronized() {
-        return entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SAGE_SYNC)!=null;
+        return getInternalEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_SAGE_SYNC)!=null;
     }
 }

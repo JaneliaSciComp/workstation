@@ -18,6 +18,8 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
+import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.shared.exception_handlers.PrintStackTraceHandler;
 import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.compute.api.support.SageTerm;
@@ -926,6 +928,23 @@ public class ModelMgr {
 
     public FilterResult patternSearchGetFilteredResults(String type, Map<String, Set<DataFilter>> filterMap) throws Exception {
         return FacadeManager.getFacadeManager().getAnnotationFacade().patternSearchGetFilteredResults(type, filterMap);
+    }
+
+    public AlignedItem addAlignedItem(EntityWrapper parent, EntityWrapper wrapper) throws Exception {
+
+        // TODO: consider putting this login in the aligned item
+        Entity abEntity = parent.getInternalEntity();
+        
+        // Add the aligned item
+        Entity alignedItem = createEntity(EntityConstants.TYPE_ALIGNED_ITEM, wrapper.getName());
+        EntityData aignedItemEd = addEntityToParent(abEntity, alignedItem, abEntity.getMaxOrderIndex()+1, EntityConstants.ATTRIBUTE_ITEM);
+        RootedEntity alignedItemRe = parent.getInternalRootedEntity().getChild(aignedItemEd);
+        
+        // Add the actual entity 
+        addEntityToParent(alignedItem, wrapper.getInternalEntity(), alignedItem.getMaxOrderIndex()+1, EntityConstants.ATTRIBUTE_ENTITY);
+        
+        // But return the aligned item
+        return new AlignedItem(alignedItemRe);
     }
 
     public void registerOnEventBus(Object object) {

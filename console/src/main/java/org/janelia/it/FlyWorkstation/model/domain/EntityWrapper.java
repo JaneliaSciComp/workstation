@@ -16,15 +16,12 @@ import org.janelia.it.jacs.model.entity.Entity;
  */
 public abstract class EntityWrapper {
     
-    protected RootedEntity rootedEntity;
-    protected Entity entity;
+    private RootedEntity rootedEntity;
+    private Entity entity;
     
-    protected EntityContext context;
-    protected EntityWrapper parent;
-    protected List<EntityWrapper> children = new ArrayList<EntityWrapper>();
-    protected List<Annotation> annotations;
-    
-    private boolean inited = false;
+    private List<EntityWrapper> children;
+    private EntityWrapper parent;
+    private List<Annotation> annotations;
     
     public EntityWrapper(RootedEntity rootedEntity) {
         this.rootedEntity = rootedEntity;
@@ -83,22 +80,7 @@ public abstract class EntityWrapper {
         this.parent = parent;
     }
 
-    public final void loadContextualizedChildren(EntityContext context) throws Exception {
-        this.context = context;
-        loadContextualizedChildren();
-        this.inited = true;
-    }
-    
-    public EntityContext getContext() {
-        return context;
-    }
-    
-    public boolean isInited() {
-        return inited;
-    }
-
     public List<EntityWrapper> getChildren() {
-//        checkContext();
         return children;
     }
     
@@ -110,12 +92,17 @@ public abstract class EntityWrapper {
         return annotations;
     }
     
-    protected void loadContextualizedChildren() throws Exception {
+    protected void initChildren() {
+        this.children = new ArrayList<EntityWrapper>();
+    }
+    
+    public void loadContextualizedChildren(AlignmentContext alignmentContext) throws Exception {
     }
 
-    protected final void checkContext() {
-        if (context==null) {
-            throw new IllegalStateException("Context not initialized");
+    protected void addChild(EntityWrapper child) {
+        if (children==null) {
+            this.children = new ArrayList<EntityWrapper>();
         }
+        children.add(child);
     }
 }
