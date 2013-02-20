@@ -18,8 +18,11 @@ import com.jogamp.opengl.util.texture.TextureData;
 import com.jogamp.opengl.util.texture.TextureIO;
 import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
 
-public class Simple2dImageVolume implements VolumeImage3d, GLActor {
-
+/**
+ * Test implementation for showing 2D images in slice viewer.
+ */
+public class Simple2dImageVolume implements VolumeImage3d, GLActor 
+{
 	TextureData textureData;
 	Texture texture;
 	boolean glIsInitialized = false;
