@@ -144,6 +144,10 @@ public class QuadView extends JFrame
 		controlPanel.add(colorsPanel);
 		colorsPanel.setBorder(new TitledBorder("Color Channels"));
 		colorsPanel.setLayout(new BoxLayout(colorsPanel, BoxLayout.Y_AXIS));
+		colorsPanel.add(new ColorChannelWidget(0));
+		colorsPanel.add(new ColorChannelWidget(1));
+		colorsPanel.add(new ColorChannelWidget(2));
+		colorsPanel.add(new JButton("Reset Colors"));
         //Display the window.
         pack();
         setSize( getContentPane().getPreferredSize() );

@@ -9,6 +9,8 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Point2D;
 
+import javax.media.opengl.GLProfile;
+
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BaseGLViewer;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.GLActor;
@@ -24,13 +26,21 @@ extends BaseGLViewer
 implements MouseModalWidget, VolumeViewer
 {
 	private static final long serialVersionUID = 1L;
+	static public GLProfile glProfile;
+	static {
+		glProfile = BaseGLViewer.profile;
+	}
+	
 	protected MouseMode mouseMode = new PanMode();
 	protected WheelMode wheelMode = new ZoomMode();
 	protected ObservableCamera3d camera;
 	protected SliceRenderer renderer = new SliceRenderer();
 	protected Viewport viewport = renderer.getViewport();
 	protected RubberBand rubberBand = new RubberBand();
-	protected PracticeBlueVolume volume = new PracticeBlueVolume();
+	
+	// protected PracticeBlueVolume volume = new PracticeBlueVolume();
+	protected Simple2dImageVolume volume = new Simple2dImageVolume(
+			"/Users/brunsc/svn/jacs/console/src/main/java/images/kittens.jpg");	
 	
 	protected QtSignal1<Double> zoomChanged = new QtSignal1<Double>();
 

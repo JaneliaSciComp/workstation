@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
+
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BaseRenderer;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.ViewportGL;

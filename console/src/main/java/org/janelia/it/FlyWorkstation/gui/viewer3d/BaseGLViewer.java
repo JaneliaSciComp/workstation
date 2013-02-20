@@ -7,7 +7,6 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelListener;
 import javax.media.opengl.GLCapabilities;
-import javax.media.opengl.GLEventListener;
 import javax.media.opengl.GLProfile;
 import javax.media.opengl.awt.GLJPanel;
 import javax.swing.JPopupMenu;
@@ -22,11 +21,11 @@ extends GLJPanel // in case lightweight widget is required
 implements MouseListener, MouseMotionListener, ActionListener,
 MouseWheelListener
 {
-    private static final Logger log = LoggerFactory.getLogger(Mip3d.class);
+	private static final long serialVersionUID = 1L;
+	private static final Logger log = LoggerFactory.getLogger(Mip3d.class);
 	// setup OpenGL Version 2
-	static GLProfile profile = null;
+	protected static GLProfile profile = null;
 	static GLCapabilities capabilities = null;
-	public JPopupMenu popupMenu;
 
     static {
         try {
@@ -39,7 +38,9 @@ MouseWheelListener
         }
     }
 
-    public BaseGLViewer() {
+	public JPopupMenu popupMenu;
+
+	public BaseGLViewer() {
 		super(capabilities);
         popupMenu = new JPopupMenu();
         addMouseListener(this);
