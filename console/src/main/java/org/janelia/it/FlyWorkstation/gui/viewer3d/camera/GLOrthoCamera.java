@@ -4,6 +4,7 @@ import javax.media.opengl.GL2;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.ViewportGL;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 
 // GLOrthoCamera sets up orthographic view for OpenGL from a Camera3d
 public class GLOrthoCamera 

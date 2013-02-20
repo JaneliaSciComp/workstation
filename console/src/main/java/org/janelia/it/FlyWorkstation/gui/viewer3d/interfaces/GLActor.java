@@ -1,6 +1,8 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces;
 
 import javax.media.opengl.GL2;
+
+import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 
 public interface GLActor {
 	/**

@@ -2,7 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import javax.media.opengl.GL2;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Viewport;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 
 // ViewportGL combines:
 //  1) size of OpenGL viewport

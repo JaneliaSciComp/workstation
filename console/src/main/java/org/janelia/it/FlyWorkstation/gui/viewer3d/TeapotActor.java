@@ -1,6 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import javax.media.opengl.GL2;
+
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
+
 import com.jogamp.opengl.util.gl2.GLUT;
 
 public class TeapotActor implements GLActor 

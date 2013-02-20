@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.camera;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;

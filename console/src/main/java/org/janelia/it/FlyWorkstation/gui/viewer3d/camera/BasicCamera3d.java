@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.camera;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 
 public class BasicCamera3d
 implements Camera3d

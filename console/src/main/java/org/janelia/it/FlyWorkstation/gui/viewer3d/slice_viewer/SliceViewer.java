@@ -13,12 +13,13 @@ import javax.media.opengl.GLProfile;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BaseGLViewer;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicObservableCamera3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 
 // Viewer widget for viewing 2D quadtree tiles from pyramid data structure
 public class SliceViewer 

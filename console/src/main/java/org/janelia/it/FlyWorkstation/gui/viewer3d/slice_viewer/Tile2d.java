@@ -3,7 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 import javax.media.opengl.GL2;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.GLActor;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 
 public class Tile2d 
 implements GLActor

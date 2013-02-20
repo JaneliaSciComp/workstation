@@ -16,8 +16,10 @@ import java.util.regex.Pattern;
 import javax.media.opengl.GL2;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.GLActor;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.Camera3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 
 import com.jogamp.opengl.util.texture.Texture;
 

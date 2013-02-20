@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.error_trap.JaneliaDebugGL2;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 
 import javax.media.opengl.DebugGL2;
 import javax.media.opengl.GL2;

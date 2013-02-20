@@ -8,7 +8,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Point2D;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.Camera3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 
 public class ZoomMode 
 implements WheelMode, MouseMode

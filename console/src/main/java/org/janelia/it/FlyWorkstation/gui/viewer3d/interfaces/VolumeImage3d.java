@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 

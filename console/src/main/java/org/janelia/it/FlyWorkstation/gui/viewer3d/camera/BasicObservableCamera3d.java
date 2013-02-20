@@ -4,6 +4,7 @@ import java.util.Observable;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.QtSignal;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.QtSignal1;
 

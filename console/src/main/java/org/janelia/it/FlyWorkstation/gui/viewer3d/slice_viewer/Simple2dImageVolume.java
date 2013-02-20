@@ -9,8 +9,9 @@ import javax.imageio.ImageIO;
 import javax.media.opengl.GL2;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.TextureCoords;
