@@ -8,6 +8,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Point2D;
+import java.io.File;
+import java.net.MalformedURLException;
 
 import javax.media.opengl.GLProfile;
 
@@ -40,8 +42,9 @@ implements MouseModalWidget, VolumeViewer
 	protected RubberBand rubberBand = new RubberBand();
 	
 	// protected PracticeBlueVolume volume = new PracticeBlueVolume();
-	protected Simple2dImageVolume volume = new Simple2dImageVolume(
-			"/Users/brunsc/svn/jacs/console/src/main/java/images/kittens.jpg");	
+	// protected Simple2dImageVolume volume = new Simple2dImageVolume(
+	// 		"/Users/brunsc/svn/jacs/console/src/main/java/images/kittens.jpg");	
+	protected RavelerTileServer volume = new RavelerTileServer();
 	
 	protected QtSignal1<Double> zoomChanged = new QtSignal1<Double>();
 
@@ -65,6 +68,12 @@ implements MouseModalWidget, VolumeViewer
         rubberBand.changed.connect(repaintSlot);
         setToolTipText("Double click to center on a point.");
         renderer.addActor(volume);
+        try {
+			volume.openFolder(new File("/Volumes/jacsData/brunsTest/clack_test16/Z").toURI().toURL());
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Override
