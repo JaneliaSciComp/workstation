@@ -18,10 +18,11 @@ import java.util.TreeSet;
  * Date: 6/28/12
  * Time: 3:45 PM
  */
-public class AnnotationBuilderDialog extends JDialog{
+public class AnnotationBuilderDialog extends JDialog {
 
     private JPanel annotationPanel = new JPanel();
     private JTextField annotationTextField;
+    private String originalAnnotationText;
     private StringBuilder annotationValue = new StringBuilder();
 
     public AnnotationBuilderDialog(){
@@ -35,7 +36,7 @@ public class AnnotationBuilderDialog extends JDialog{
 
         annotationPanel.setLayout(new BoxLayout(annotationPanel, BoxLayout.PAGE_AXIS));
 
-        final JButton doneButton = new JButton("Save");
+        final JButton doneButton = new JButton("Save and Close");
         doneButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -48,7 +49,7 @@ public class AnnotationBuilderDialog extends JDialog{
             }
         });
 
-        final JButton addButton = new JButton("Add");
+        final JButton addButton = new JButton("Add Term");
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -81,22 +82,11 @@ public class AnnotationBuilderDialog extends JDialog{
             }
         });
 
-        JButton resetButton = new JButton("Reset");
-        resetButton.addActionListener(new ActionListener() {
+        JButton cancelButton = new JButton("Cancel");
+        cancelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                annotationValue = new StringBuilder();
-                comboBox.setSelectedItem(null);
-                annotationTextField.setText(annotationValue.toString());
-            }
-        });
-
-        JButton closeButton = new JButton("Cancel");
-        closeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                annotationValue = new StringBuilder();
-                annotationTextField.setText("");
+                setAnnotationValue(originalAnnotationText);
                 AnnotationBuilderDialog.this.setVisible(false);
             }
         });
@@ -115,8 +105,7 @@ public class AnnotationBuilderDialog extends JDialog{
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
         buttonPanel.add(addButton);
         buttonPanel.add(doneButton);
-        buttonPanel.add(resetButton);
-        buttonPanel.add(closeButton);
+        buttonPanel.add(cancelButton);
         annotationPanel.add(textBox);
         annotationPanel.add(comboBoxPanel);
         annotationPanel.add(buttonPanel);
@@ -127,7 +116,6 @@ public class AnnotationBuilderDialog extends JDialog{
 
     private void createAndShowGUI() {
         //Create and set up the window.
-
         this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         this.setResizable(false);
         this.setIconImage(SessionMgr.getBrowser().getIconImage());
@@ -143,11 +131,11 @@ public class AnnotationBuilderDialog extends JDialog{
         return annotationValue.toString();
     }
 
-    public void setAnnotationValue(String pathString1){
-        annotationValue = new StringBuilder(pathString1);
+    public void setAnnotationValue(String newAnnotationValue){
+        if (null==newAnnotationValue) {newAnnotationValue=""; }
+        originalAnnotationText = newAnnotationValue;
+        annotationValue = new StringBuilder(newAnnotationValue);
+        annotationTextField.setText(newAnnotationValue);
     }
 
-    public void setAnnotationTextField(String pathText1){
-        annotationTextField.setText(pathText1);
-    }
 }
