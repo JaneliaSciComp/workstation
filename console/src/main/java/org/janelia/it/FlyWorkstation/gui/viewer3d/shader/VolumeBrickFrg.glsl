@@ -58,9 +58,10 @@ vec4 volumeMask(vec4 origColor)
             if ( mappedColor[ 3 ] == 0.0 ) {
                 // Zero in the render method position.  This constitutes
                 // an "off" switch.
-                rtnVal[ 0 ] = 0.0;
-                rtnVal[ 1 ] = 0.0;
-                rtnVal[ 2 ] = 0.0;
+//                rtnVal[ 0 ] = 0.0;
+//                rtnVal[ 1 ] = 0.0;
+//                rtnVal[ 2 ] = 0.0;
+                discard;
             }
             else if ( renderMethod == 4.0 ) {
                 rtnVal = origColor;
@@ -98,20 +99,9 @@ vec4 volumeMask(vec4 origColor)
             }
             else {
                 // Debug coloring.
-                if ( renderMethod > 10.0 ) {
-                    rtnVal[ 0 ] = 1.0;
-                }
-                else if ( renderMethod > 7.5 ) {
-                    rtnVal[ 1 ] = 1.0;
-                }
-                else if ( renderMethod > 5.0 ) {
-                    rtnVal[ 2 ] = 1.0;
-                }
-                else {
-                    rtnVal[ 0 ] = 1.0;
-                    rtnVal[ 1 ] = 1.0;
-                    rtnVal[ 2 ] = 1.0;
-                }
+                rtnVal[ 0 ] = 1.0;
+                rtnVal[ 1 ] = 1.0;
+                rtnVal[ 2 ] = 1.0;
             }
 
         }

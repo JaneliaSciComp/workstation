@@ -129,10 +129,10 @@ extends BaseGLViewer
                     renderMapTextureData.setMapping(neuronNumToRGB);
 
                     // DEBUG ***
-                    for ( Integer nNum: neuronNumToRGB.keySet() ) {
-                        byte[] vals = neuronNumToRGB.get( nNum );
-                        System.out.println(nNum + " vs " + vals[0] + "," + vals[1] + "," + vals[2] + ": " + vals[3]);
-                    }
+//                    for ( Integer nNum: neuronNumToRGB.keySet() ) {
+//                        byte[] vals = neuronNumToRGB.get( nNum );
+//                        System.out.println(nNum + " vs " + vals[0] + "," + vals[1] + "," + vals[2] + ": " + vals[3]);
+//                    }
                     brick.setColorMapTextureData( renderMapTextureData );
                 }
             }

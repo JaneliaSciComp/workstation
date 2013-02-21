@@ -18,7 +18,8 @@ import java.util.zip.DataFormatException;
  * Date: 2/6/13
  * Time: 3:33 PM
  *
- *
+ * Invoke this to build a mask-specific file from v3d file types.  Such files will contain "labels", rather than
+ * color data, which are treated in transit-to-GPU as luminance values.
  */
 public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileLoaderI {
     public static final String COMPARTMENT_MASK_INDEX = "maskIndex";
