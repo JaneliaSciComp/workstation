@@ -17,9 +17,11 @@ import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 
 public class TextureDataBean implements TextureDataI {
+    private static final int INTEGER_NUM_BYTES = (Integer.SIZE / 8);
+
     private String filename;
     private String remoteFilename;
-    private ByteBuffer textureData;
+    private byte[] textureData;
     private Integer sx;
     private Integer sy;
     private Integer sz;
@@ -37,33 +39,30 @@ public class TextureDataBean implements TextureDataI {
     private boolean loaded;
     private boolean inverted = true; // Tested stored images were inverted.
 
-    private static ByteBuffer getByteBuffer(int[] textureData) {
-        ByteBuffer textureBuffer = ByteBuffer.allocate( textureData.length * (Integer.SIZE / 8));
-        textureBuffer.order( ByteOrder.LITTLE_ENDIAN );
-        for ( int i = 0; i < textureData.length; i++ ) {
-            textureBuffer.putInt( textureData[ i ] );
-        }
-        return textureBuffer;
-    }
-
-    public TextureDataBean( ByteBuffer textureData, int sx, int sy, int sz ) {
-        super();
-        setTextureData(textureData);
+    public TextureDataBean(byte[] textureData, int sx, int sy, int sz) {
+        this.textureData = textureData;
         setSx( sx );
         setSy( sy );
         setSz( sz );
     }
 
-    public TextureDataBean(int[] textureData, int sx, int sy, int sz) {
-        this(getByteBuffer(textureData), sx, sy, sz);
+    public TextureDataBean(int[] argbData, int sx, int sy, int sz) {
+        ByteBuffer intermediate = ByteBuffer.allocate( argbData.length * INTEGER_NUM_BYTES );
+        intermediate.order( ByteOrder.LITTLE_ENDIAN );
+        IntBuffer intBuffer = intermediate.asIntBuffer();
+        intBuffer.put( argbData );
+        textureData = intermediate.array();
+        setSx( sx );
+        setSy( sy );
+        setSz( sz );
     }
 
     @Override
-    public void setTextureData( ByteBuffer textureData ) {
+    public void setTextureData( byte[] textureData ) {
         this.textureData = textureData;
     }
 
-    public ByteBuffer getTextureData() {
+    public byte[] getTextureData() {
         return textureData;
     }
 

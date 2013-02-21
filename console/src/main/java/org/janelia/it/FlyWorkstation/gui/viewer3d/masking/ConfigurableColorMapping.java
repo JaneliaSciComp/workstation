@@ -31,8 +31,8 @@ public class ConfigurableColorMapping implements RenderMappingI {
     private Map<Integer,byte[]> makeMaskMappings( Collection<RenderableBean> renderableBeans ) {
         Map<Integer,byte[]> maskMappings = new HashMap<Integer,byte[]>();
         byte[][] colorWheel = {
-                { (byte)0x00, (byte)0x00, (byte)0xff, (byte)0xff },
                 { (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff },
+                { (byte)0x00, (byte)0x00, (byte)0xff, (byte)0xff },
                 { (byte)0xff, (byte)0x00, (byte)0x00, (byte)0xff },
                 { (byte)0x00, (byte)0xff, (byte)0xff, (byte)0xff },
                 { (byte)0xff, (byte)0x00, (byte)0xff, (byte)0xff },

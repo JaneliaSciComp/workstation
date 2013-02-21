@@ -16,8 +16,8 @@ import java.nio.IntBuffer;
  */
 public interface TextureDataI {
 
-    void setTextureData( ByteBuffer textureData );
-    ByteBuffer getTextureData();
+    void setTextureData( byte[] textureData );
+    byte[] getTextureData();
 
     int getSx();
 

@@ -11,7 +11,6 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
  */
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
-import org.jdesktop.swingx.plaf.BuddyTextFieldUI;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -52,18 +51,16 @@ public class MaskTextureDataBean implements TextureDataI {
         this(textureData, voxels[0], voxels[1], voxels[2]);
     }
 
-    public void setTextureData( ByteBuffer textureData ) {
-        this.textureData = textureData.array();
+    public void setTextureData( byte[] textureData ) {
+        this.textureData = textureData;
     }
 
     public byte[] getTextureBytes() {
         return textureData;
     }
 
-    public ByteBuffer getTextureData() {
-        if ( textureData == null )
-            return null;
-        return ByteBuffer.wrap( textureData );
+    public byte[] getTextureData() {
+        return textureData;
     }
 
     public int getSx() {

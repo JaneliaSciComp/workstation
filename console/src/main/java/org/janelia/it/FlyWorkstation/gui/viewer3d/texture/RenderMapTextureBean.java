@@ -18,7 +18,7 @@ import java.util.Map;
 public class RenderMapTextureBean implements TextureDataI {
 
     private static final int BYTES_PER_ENTRY = 4;
-    private ByteBuffer mapData;
+    private byte[] mapData;
     private boolean inverted = false; // Default probably carries the day.
 
     /**
@@ -45,17 +45,17 @@ public class RenderMapTextureBean implements TextureDataI {
             }
         }
 
-        mapData = ByteBuffer.wrap( rawMap );
+        mapData = rawMap;
 
     }
 
     @Override
-    public void setTextureData(ByteBuffer textureData) {
+    public void setTextureData(byte[] textureData) {
         this.mapData = textureData;
     }
 
     @Override
-    public ByteBuffer getTextureData() {
+    public byte[] getTextureData() {
         return mapData;
     }
 

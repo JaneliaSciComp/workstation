@@ -65,7 +65,7 @@ public class TextureMediator {
             logger.error("Attempted to upload texture before mediator was initialized.");
             throw new RuntimeException("Failed to upload texture");
         }
-        ByteBuffer data = textureData.getTextureData();
+        ByteBuffer data = ByteBuffer.wrap( textureData.getTextureData() );
         //System.out.println( "Loading texture data of capacity: " + data.capacity() );
         if ( data != null ) {
 
