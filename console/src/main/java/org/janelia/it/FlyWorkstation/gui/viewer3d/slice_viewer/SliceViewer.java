@@ -68,6 +68,7 @@ implements MouseModalWidget, VolumeViewer
         rubberBand.changed.connect(repaintSlot);
         setToolTipText("Double click to center on a point.");
         renderer.addActor(volume);
+        volume.getTileLoadedSignal().connect(getRepaintSlot());
         try {
 			volume.openFolder(new File("/Volumes/jacsData/brunsTest/clack_test16/Z").toURI().toURL());
 		} catch (MalformedURLException e) {

@@ -1,7 +1,26 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
+import java.util.List;
+import java.util.Vector;
+
 public class TileIndex 
 {
+	public int getX() {
+		return x;
+	}
+
+	public int getY() {
+		return y;
+	}
+
+	public int getZ() {
+		return z;
+	}
+
+	public int getZoom() {
+		return zoom;
+	}
+
 	private final int x;
 	private final int y;
 	private final int z;
@@ -45,5 +64,54 @@ public class TileIndex
 		if (zoom != other.zoom)
 			return false;
 		return true;
+	}
+
+	public List<TextureScore> getTextureScores() 
+	{
+		List<TextureScore> result = new Vector<TextureScore>();
+		double score = 1.0;
+		TileIndex key = this;
+		result.add(new TextureScore(key, score));
+		return result;
+	}
+	
+	// Retarded Java philosophy eschews built-in Pair type nor multiple return values
+	// thus the usual "add another class..." ad infinitum.
+	public class TextureScore {
+		private TileIndex textureKey;
+		private double score;
+
+		public TextureScore(TileIndex key, double score) {
+			this.textureKey = key;
+			this.score = score;
+		}
+		public TileIndex getTextureKey() {
+			return textureKey;
+		}
+		public void setTextureKey(TileIndex textureKey) {
+			this.textureKey = textureKey;
+		}
+		public double getScore() {
+			return score;
+		}
+		public void setScore(double score) {
+			this.score = score;
+		}
+	}
+
+	/**
+	 * Returns the index of the next lower resolution tile that 
+	 * contains the tile represented by this index.
+	 * 
+	 * @return null if current zoom index is already zero
+	 */
+	public TileIndex zoomOut() {
+		if (getZoom() <= 0)
+			return null; // Cannot zoom farther out than zero
+		int x = getX()/2;
+		int y = getY()/2;
+		int z = getZ();
+		int zoom = getZoom() - 1;
+		return new TileIndex(x, y, z, zoom);
 	}
 }

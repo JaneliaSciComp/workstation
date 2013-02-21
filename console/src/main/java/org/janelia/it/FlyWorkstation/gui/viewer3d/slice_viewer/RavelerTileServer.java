@@ -6,9 +6,10 @@ import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.Map;
-import java.util.Vector;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,7 +21,6 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 
-import com.jogamp.opengl.util.texture.Texture;
 
 public class RavelerTileServer 
 implements GLActor, VolumeImage3d
@@ -40,21 +40,27 @@ implements GLActor, VolumeImage3d
 	// Latest tiles list stores the current desired tile set, even if
 	// not all of the tiles are ready.
 	private TileSet latestTiles;
-	private Map<TileIndex, Texture> textureCache = new Hashtable<TileIndex, Texture>();
-	private Map<TileIndex, Tile2d> tileCache = new Hashtable<TileIndex, Tile2d>();
+	private Map<TileIndex, TileTexture> textureCache = new Hashtable<TileIndex, TileTexture>();
+	private ExecutorService textureLoadExecutor = Executors.newFixedThreadPool(4);
+	private Set<TileIndex> neededTextures;
 	private Map<String, String> metadata = new Hashtable<String, String>();
 	//
 	private Camera3d camera;
 	private Viewport viewport;
 	private Tile2d testTile;
-
+	// TODO add signal for tile loaded
+	private QtSignal tileLoadedSignal = new QtSignal();
 
 	public Camera3d getCamera() {
 		return camera;
 	}
 
-	public void setCamera(Camera3d camera) {
-		this.camera = camera;
+	public synchronized Set<TileIndex> getNeededTextures() {
+		return neededTextures;
+	}
+
+	public QtSignal getTileLoadedSignal() {
+		return tileLoadedSignal;
 	}
 
 	public Viewport getViewport() {
@@ -81,6 +87,23 @@ implements GLActor, VolumeImage3d
 			}
 		}
 		return true;
+	}
+	
+	protected TileSet createLatestTiles(Camera3d camera, Viewport viewport)
+	{
+		TileSet result = new TileSet();
+		
+		// TODO
+		// for initial testing, just return one low resolution tile
+		if (testTile == null) {
+			int zMin = (int)Math.round(getBoundingBox3d().getMin().getZ() / voxelZ);
+			TileIndex key = new TileIndex(0, 0, zMin, 0);
+			testTile = new Tile2d(key);
+			// TODO - load textures
+		}
+		result.add(testTile);
+		
+		return result;
 	}
 	
 	@Override
@@ -127,34 +150,22 @@ implements GLActor, VolumeImage3d
 	public TileSet getTiles(Camera3d camera, Viewport viewport) 
 	{
 		latestTiles = createLatestTiles(camera, viewport);
+		latestTiles.assignTextures(textureCache);
 		Tile2d.Stage stage = latestTiles.getMinStage();
 		if (stage.ordinal() < Tile2d.Stage.COARSE_TEXTURE_LOADED.ordinal())
 		{
-			latestTiles.seedFastTextures(textureCache);
+			setNeededTextures(latestTiles.getFastNeededTextures());
+			queueTextureLoad(getNeededTextures());
 			return emergencyTiles;
 		}
 		else if (stage.ordinal() < Tile2d.Stage.BEST_TEXTURE_LOADED.ordinal())
 		{
-			latestTiles.seedBestTextures(textureCache);
+			setNeededTextures(latestTiles.getBestNeededTextures());
+			queueTextureLoad(getNeededTextures());
 		}
+		// if we get this far, the new latestTiles are next-time's emergency tiles
+		emergencyTiles = latestTiles;
 		return latestTiles;
-	}
-	
-	protected TileSet createLatestTiles(Camera3d camera, Viewport viewport)
-	{
-		TileSet result = new TileSet();
-		
-		// TODO
-		// for initial testing, just return one low resolution tile
-		if (testTile == null) {
-			int zMin = (int)Math.round(getBoundingBox3d().getMin().getZ() / voxelZ);
-			TileIndex key = new TileIndex(0, 0, zMin, 0);
-			testTile = new Tile2d(key);
-			// TODO - load textures
-		}
-		result.add(testTile);
-		
-		return result;
 	}
 	
 	@Override
@@ -246,6 +257,22 @@ implements GLActor, VolumeImage3d
 		return true;
 	}
 	
+	private void queueTextureLoad(Set<TileIndex> textures) 
+	{
+		for (TileIndex ix : textures) {
+			if (! textureCache.containsKey(ix)) {
+				TileTexture t = new TileTexture(ix, urlStalk);
+				t.getRamLoadedSignal().connect(getTileLoadedSignal());
+				textureCache.put(ix, t);
+			}
+			TileTexture texture = textureCache.get(ix);
+			if (texture.getStage().ordinal() < TileTexture.Stage.RAM_LOADING.ordinal()) 
+			{
+				textureLoadExecutor.submit(new TileTextureLoader(texture, this));
+			}
+		}
+	}
+
 	protected void setDefaultParameters() {
 		maximumIntensity= 255;
 		bitDepth = 8;
@@ -253,5 +280,12 @@ implements GLActor, VolumeImage3d
 		voxelX = voxelY = voxelZ = 1.0; // micrometers
 		zoomMax = 0;
 	}
-	
+
+	public synchronized void setNeededTextures(Set<TileIndex> neededTextures) {
+		this.neededTextures = neededTextures;
+	}
+
+	public void setCamera(Camera3d camera) {
+		this.camera = camera;
+	}
 }
