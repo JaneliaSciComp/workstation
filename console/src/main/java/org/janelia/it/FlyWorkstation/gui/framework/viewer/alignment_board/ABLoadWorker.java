@@ -119,7 +119,7 @@ public class ABLoadWorker extends SimpleWorker {
     private Collection<RenderableBean> getRenderables(Collection<RenderableBean> renderableBeans, String signalFilename) {
         Collection<RenderableBean> rtnVal = new HashSet<RenderableBean>();
         for ( RenderableBean bean: renderableBeans ) {
-            if ( bean.getSignalFile().equals( signalFilename ) ) {
+            if ( bean.getSignalFile() != null && bean.getSignalFile().equals( signalFilename ) ) {
                 rtnVal.add( bean );
             }
         }
@@ -134,7 +134,7 @@ public class ABLoadWorker extends SimpleWorker {
     private Collection<String> getSignalFilenames(Collection<RenderableBean> renderableBeans) {
         Collection<String> signalFileNames = new HashSet<String>();
         for ( RenderableBean bean: renderableBeans ) {
-            if ( bean.getSignalFile().trim().length() > 0 ) {
+            if ( bean.getSignalFile() != null && bean.getSignalFile().trim().length() > 0 ) {
                 signalFileNames.add( bean.getSignalFile() );
             }
         }
@@ -150,7 +150,7 @@ public class ABLoadWorker extends SimpleWorker {
     private Collection<String> getMaskFilenames( Collection<RenderableBean> renderableBeans, String signalFilename ) {
         Collection<String> maskFileNames = new HashSet<String>();
         for ( RenderableBean bean: renderableBeans ) {
-            if ( bean.getSignalFile().equals( signalFilename ) ) {
+            if ( bean.getSignalFile() != null && bean.getSignalFile().equals( signalFilename ) ) {
                 maskFileNames.add( bean.getLabelFile() );
             }
         }
