@@ -30,11 +30,9 @@ vec4 volumeMask(vec4 origColor)
         // texture3D returns vec4.
         vec4 maskingColor = texture3D(maskingTexture, gl_TexCoord[1].xyz);
 
-        // Display strategy: only show the signal, only if the mask is non-zero.
-        if ( ( ( maskingColor[0] + maskingColor[1] + maskingColor[2] ) == 0.0 ) ) {
-            rtnVal[0] = 0.0;
-            rtnVal[1] = 0.0;
-            rtnVal[2] = 0.0;
+        // Display strategy: bypass unseen values.
+        if ( ( ( origColor[0] + origColor[1] + origColor[2] ) == 0.0 ) ) {
+            discard;
         }
         else {
             // This maps the masking data value to a color set.
@@ -88,9 +86,9 @@ vec4 volumeMask(vec4 origColor)
             }
             else if ( renderMethod == 1.0 ) {
                 // Guard against empty signal texture.
-                if ( maxIntensity == 0.0 ) {
-                    maxIntensity = 1.0;
-                }
+                //if ( maxIntensity == 0.0 ) {
+                //    maxIntensity = 1.0;
+                //}
                 // This takes the mapped color, and multiplies it by the
                 // maximum intensity of any signal color.
                 for (int i = 0; i < 3; i++) {

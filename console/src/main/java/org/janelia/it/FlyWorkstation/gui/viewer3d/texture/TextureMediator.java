@@ -71,19 +71,21 @@ public class TextureMediator {
 
             data.rewind();
 
+            logger.info( "Coords are " + textureData.getSx() + " * " + textureData.getSy() + " * " + textureData.getSz() );
             int maxCoord = getMaxTexCoord(gl);
             if ( textureData.getSx() > maxCoord  || textureData.getSy() > maxCoord || textureData.getSz() > maxCoord ) {
                 logger.warn("Exceeding max coord in one or more size of texture data.  Results unpredictable.");
             }
 
             int expectedRemaining = textureData.getSx() * textureData.getSy() * textureData.getSz()
-                    * textureData.getPixelByteCount() * getStorageFormatMultiplier();
+                    * textureData.getPixelByteCount();
             if ( expectedRemaining != data.remaining() ) {
                 logger.warn( "Invalid remainder vs texture data dimsensions.  Sx=" + textureData.getSx() +
                              " Sy=" + textureData.getSy() + " Sz=" + textureData.getSz() +
                              " storageFmtReq=" + getStorageFormatMultiplier() +
                              ";  total remaining is " +
-                             data.remaining() + " " + textureData.getFilename()
+                             data.remaining() + " " + textureData.getFilename() +
+                             ";  expected remaining is " + expectedRemaining
                 );
                 data.rewind();
             }
@@ -120,7 +122,6 @@ public class TextureMediator {
                         this.getInternalFormat() + ":" + this.getVoxelComponentOrder() + ":" +
                         this.getStorageFormatMultiplier()
                 );
-                reportError( exGlTexImage.getMessage(), gl );
             }
             reportError( "glTexImage", gl );
 

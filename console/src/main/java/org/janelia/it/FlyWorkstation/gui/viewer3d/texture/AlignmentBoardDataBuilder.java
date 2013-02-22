@@ -68,9 +68,16 @@ public class AlignmentBoardDataBuilder implements Serializable {
 
         Map<Entity,String> labelEntityToSignalFilename =
                 findLabelEntityToSignalFilename( sampleEntities, sampleToBaseEntity, signalToLabelEntities );
-        createRenderableBeanList(ancestorToRenderables, labelToPipelineResult, consolidatedLabelsList, labelEntityToSignalFilename);
+        createRenderablesFromLabels(
+                ancestorToRenderables, labelToPipelineResult, consolidatedLabelsList, labelEntityToSignalFilename
+        );
 
-        applyCompartmentMask(displayableList);
+        Collection<RenderableBean> signalRenderables = createRenderablesFromSignalEntities(
+                sampleEntities
+        );
+        renderableBeanList.addAll( signalRenderables );
+
+        applyCompartmentMask( displayableList );
 
         return this;
     }
@@ -310,7 +317,35 @@ public class AlignmentBoardDataBuilder implements Serializable {
         return baseEntity;
     }
 
-    private void createRenderableBeanList(
+    private List<RenderableBean> createRenderablesFromSignalEntities(
+            Collection<Entity> signalEntities
+    ) {
+        List<RenderableBean> rtnVal = new ArrayList<RenderableBean>();
+        EntityFilenameFetcher filenameFetcher = new EntityFilenameFetcher();
+
+        byte[] rgba = new byte[] {
+                (byte)0x8f, (byte)0x00, (byte)0x8f, RenderMappingI.FRAGMENT_RENDERING
+        };
+        for ( Entity signal: signalEntities ) {
+            // TODO: why do non-samples, like SOG end up in this list?
+            if ( signal.getEntityType().getName().equals( EntityConstants.TYPE_SAMPLE ) ) {
+                String signalFilename = getSignalFilename( filenameFetcher, signal );
+
+                RenderableBean bean = new RenderableBean();
+                bean.setLabelFile( null );
+                bean.setSignalFile( signalFilename );
+                bean.setEntity( signal );
+                bean.setTranslatedNum( 0 );  // Reserved for the pass-through
+                bean.setRgb( rgba );
+                bean.setLabelFileNum( 0 );
+
+                rtnVal.add( bean );
+            }
+        }
+        return rtnVal;
+    }
+
+    private void createRenderablesFromLabels(
             Map<Entity, List<Entity>> ancestorToRenderables,
             Map<Entity, Entity> labelToPipelineResult,
             List<Entity> consolidatedLabelsList,
@@ -367,9 +402,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
             for ( Entity sampleEntity: sampleEntities ) {
 
                 // Find this entity's file name of interest.
-                String typeName = sampleEntity.getEntityType().getName();
-                String entityConstantFileType = filenameFetcher.getEntityConstantFileType( typeName );
-                String filename = filenameFetcher.fetchFilename( sampleEntity, entityConstantFileType );
+                String filename = getSignalFilename(filenameFetcher, sampleEntity);
                 if ( filename != null ) {
                     // Build a mapping of label entity to signal filename.
                     Entity baseEntity = sampleToBaseEntity.get( sampleEntity );
@@ -405,6 +438,12 @@ public class AlignmentBoardDataBuilder implements Serializable {
         }
 
         return labelEntityToSignalFilename;
+    }
+
+    private String getSignalFilename(EntityFilenameFetcher filenameFetcher, Entity sampleEntity) {
+        String typeName = sampleEntity.getEntityType().getName();
+        String entityConstantFileType = filenameFetcher.getEntityConstantFileType( typeName );
+        return filenameFetcher.fetchFilename( sampleEntity, entityConstantFileType );
     }
 
     //@todo complete this as needed.

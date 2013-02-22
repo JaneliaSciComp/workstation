@@ -150,7 +150,9 @@ public class ABLoadWorker extends SimpleWorker {
     private Collection<String> getMaskFilenames( Collection<RenderableBean> renderableBeans, String signalFilename ) {
         Collection<String> maskFileNames = new HashSet<String>();
         for ( RenderableBean bean: renderableBeans ) {
-            if ( bean.getSignalFile() != null && bean.getSignalFile().equals( signalFilename ) ) {
+            if ( bean.getSignalFile() != null  &&
+                 bean.getSignalFile().equals( signalFilename )  &&
+                 bean.getLabelFile() != null ) {
                 maskFileNames.add( bean.getLabelFile() );
             }
         }

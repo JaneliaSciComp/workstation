@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 
 /**
  * Created with IntelliJ IDEA.
@@ -56,12 +57,14 @@ public class RenderableBean {
 
     public void setEntity(Entity entity) {
         this.entity = entity;
-        String[] nameParts = entity.getName().trim().split(" ");
-        // In establishing the label file number, must add one to account for 0-based neuron numbering
-        // by name.  The number 0 cannot be used to represent a neuron, since it is needed for "nothing".
-        // Therefore, there is a discrepancy between the naming and the numbering as done in the luminance file.
-        if ( labelFileNum == -1 ) {
-            labelFileNum = (Integer.parseInt( nameParts[ nameParts.length - 1 ] )) + 1;
+        if ( entity.getEntityType().getName().equals( EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
+            String[] nameParts = entity.getName().trim().split(" ");
+            // In establishing the label file number, must add one to account for 0-based neuron numbering
+            // by name.  The number 0 cannot be used to represent a neuron, since it is needed for "nothing".
+            // Therefore, there is a discrepancy between the naming and the numbering as done in the luminance file.
+            if ( labelFileNum == -1 ) {
+                labelFileNum = (Integer.parseInt( nameParts[ nameParts.length - 1 ] )) + 1;
+            }
         }
     }
 

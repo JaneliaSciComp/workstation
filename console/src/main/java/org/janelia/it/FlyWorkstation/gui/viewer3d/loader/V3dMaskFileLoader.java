@@ -24,6 +24,9 @@ import java.util.zip.DataFormatException;
 public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileLoaderI {
     public static final String COMPARTMENT_MASK_INDEX = "maskIndex";
     public static final String CONSOLIDATED_LABEL_MASK = "ConsolidatedLabel";
+
+    private int[][][] maskVolume;
+
     @Override
     protected TextureDataI createTextureDataBean() {
         return new MaskTextureDataBean( maskByteArray, sx, sy, sz );
@@ -52,8 +55,15 @@ public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileL
         channelCount = sc;
         pixelByteOrder = sliceStream.getEndian();
 
-        // Java implicitly sets newly-allocated byte arrays to all zeros.
-        maskByteArray = new byte[(sx*sy*sz) * pixelBytes];
+        maskVolume = new int[ sx ][ sy ][ sz ];
+
+        // Temporary values, subject to change, by use of metadata file accompanying linked downsample.
+        double xScale = 2.0;
+        double yScale = 2.0;
+        double zScale = 2.0;
+        int outSx = (int)Math.ceil( (double)sx / xScale );
+        int outSy = (int)Math.ceil( (double)sy / yScale );
+        int outSz = (int)Math.ceil( (double)sz / zScale );
 
         if ( sc > 1 ) {
             throw new RuntimeException( "Unexpected multi-channel mask file." );
@@ -63,26 +73,103 @@ public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileL
             throw new RuntimeException( "Unexpected zero channel count mask file." );
         }
 
+        // Here, store all the values into a massive 3D array.  Dimensions very very unlikely
+        // to exceed 16K.
         Set<Integer> values = new TreeSet<Integer>();
         for (int z = 0; z < sz; z ++ ) {
-            int zOffset = z * sx * sy;
             sliceStream.loadNextSlice();
             V3dRawImageStream.Slice slice = sliceStream.getCurrentSlice();
             for (int y = 0; y < sy; y ++ ) {
-                int yOffset = zOffset + (sy-y) * sx;
                 for (int x = 0; x < sx; x ++ ) {
                     Integer value = slice.getValue(x, y);
+                    // NOTE: java zeros its arrays at allocation.  Therefore, can skip matrix-pos calculation.
                     if ( value > 0 ) {
+                        maskVolume[x][y][z] = value;
                         values.add( value );
-                        for ( int pi = 0; pi < pixelBytes; pi ++ ) {
-                            byte piByte = (byte)(value >>> (pi * 8) & 0x000000ff);
-//                            maskByteArray[(yOffset * 2) + (x * 2) + (pixelBytes - pi - 1)] = piByte;
-                            maskByteArray[(yOffset * pixelBytes) + (x * pixelBytes) + (pi)] = piByte;
-                        }
                     }
                 }
             }
         }
+
+        // Here, sample the neighborhoods (or _output_ voxels).
+        // Java implicitly sets newly-allocated byte arrays to all zeros.
+        maskByteArray = new byte[(outSx * outSy * outSz) * pixelBytes];
+
+        int outZ = 0;
+        for ( int z = 0; z < sz-zScale; z += zScale ) {
+            int outY = 0;
+            int zOffset = outZ * outSx * outSy;
+            for ( int y = 0; y < sy-yScale; y += yScale ) {
+                int yOffset = zOffset + (outSy-outY) * outSx; // zOffset + outY * outSx;
+                int outX = 0;
+                for ( int x = 0; x < sx-xScale; x += xScale ) {
+                    java.util.Map<Integer,Integer> frequencies = new java.util.HashMap<Integer,Integer>();
+
+                    int value = 0; // Arrive at our final value using the neighborhood comparisons.
+
+                    // Neighborhood starts at the x,y,z values of the loops.  There will be one
+                    // such neighborhood for each of these down-sampled coord sets: x,y,z
+                    int maxFreq = 0;
+                    for ( int zNbh = z; zNbh < z + zScale && zNbh < sz; zNbh ++ ) {
+
+                        for ( int yNbh = y; yNbh < y + yScale && yNbh < sy; yNbh ++ ) {
+
+                            for ( int xNbh = x; xNbh < x + xScale && xNbh < sx; xNbh++ ) {
+                                int voxelVal = maskVolume[xNbh][yNbh][zNbh];
+                                Integer freq = frequencies.get( voxelVal );
+                                if ( freq == null ) {
+                                    freq = 0;
+                                }
+                                frequencies.put(voxelVal, ++ freq );
+
+                                if ( freq > maxFreq ) {
+                                    maxFreq = freq;
+                                    value = voxelVal;
+                                }
+                            }
+                        }
+                    }
+
+                    // Store the value into the output array.
+                    for ( int pi = 0; pi < pixelBytes; pi ++ ) {
+                        byte piByte = (byte)(value >>> (pi * 8) & 0x000000ff);
+                        maskByteArray[(yOffset * pixelBytes) + (outX * pixelBytes) + (pi)] = piByte;
+                    }
+
+                    outX ++;
+                }
+
+                outY ++;
+            }
+
+            outZ ++;
+        }
+
+        maskVolume = null; // Discard this and allow GC to take its course.
+
+        // Post-adjust the x,y,z sizes to fit the target down-sampled array.
+        sx = outSx;
+        sy = outSy;
+        sz = outSz;
+
+//        for (int z = 0; z < sz; z ++ ) {
+//            int zOffset = z * sx * sy;
+//            sliceStream.loadNextSlice();
+//            V3dRawImageStream.Slice slice = sliceStream.getCurrentSlice();
+//            for (int y = 0; y < sy; y ++ ) {
+//                int yOffset = zOffset + (sy-y) * sx;
+//                for (int x = 0; x < sx; x ++ ) {
+//                    Integer value = slice.getValue(x, y);
+//                    if ( value > 0 ) {
+//                        values.add( value );
+//                        for ( int pi = 0; pi < pixelBytes; pi ++ ) {
+//                            byte piByte = (byte)(value >>> (pi * 8) & 0x000000ff);
+//                            maskByteArray[(yOffset * pixelBytes) + (x * pixelBytes) + (pi)] = piByte;
+//                        }
+//                    }
+//                }
+//            }
+//        }
 
         for ( Integer value: values ) {
             System.out.print( value + "," );
