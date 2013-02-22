@@ -23,6 +23,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 
+import antlr.collections.impl.IntRange;
+
 // Viewer widget for viewing 2D quadtree tiles from pyramid data structure
 public class SliceViewer 
 extends BaseGLViewer
@@ -57,7 +59,7 @@ implements MouseModalWidget, VolumeViewer
 			((SliceViewer)receiver).repaint();
 		}
 	};
-
+	
 	public SliceViewer() {
 		addGLEventListener(renderer);
 		setCamera(new BasicObservableCamera3d());

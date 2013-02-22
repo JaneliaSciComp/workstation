@@ -21,7 +21,6 @@ import javax.swing.JSlider;
 import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JToolBar;
-import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
@@ -30,6 +29,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 
 public class QuadView extends JFrame 
 {
@@ -62,6 +62,7 @@ public class QuadView extends JFrame
 	protected Action zoomScrollModeAction = new ZoomScrollModeAction(sliceViewer);
 
 	// Z scan
+    protected JPanel zPanel = new JPanel();
 	protected JSlider zScanSlider = new JSlider(JSlider.HORIZONTAL);
     protected JSpinner zScanSpinner = new JSpinner();
 	protected Action nextZSliceAction = new NextZSliceAction(sliceViewer, sliceViewer);
@@ -78,6 +79,38 @@ public class QuadView extends JFrame
 			double relativeZoom = (zoomLog - zoomMin) / (zoomMax - zoomMin);
 			int sliderValue = (int)Math.round(relativeZoom * 1000.0);
 			zoomSlider.setValue(sliderValue);
+		}
+	};
+	
+	protected QtSlot1<Vec3> changeZ = new QtSlot1<Vec3>(this) {
+		@Override
+		public void execute(Vec3 focus) {
+			int z = (int)Math.round(focus.getZ() / sliceViewer.getZResolution());
+			zScanSlider.setValue(z);
+			zScanSpinner.setValue(z);
+		}
+	};
+	
+	protected QtSlot updateRangesSlot = new QtSlot(this) {
+		@Override
+		public void execute() 
+		{
+			// Z range
+			double zMin = sliceViewer.getBoundingBox3d().getMin().getZ();
+			double zMax = sliceViewer.getBoundingBox3d().getMax().getZ();
+			int z0 = (int)Math.round(zMin / sliceViewer.getZResolution());
+			int z1 = (int)Math.round(zMax / sliceViewer.getZResolution());
+			assert z1 >= z0;
+			zPanel.setVisible((z1 - z0) > 1);
+			int z = (int)Math.round(sliceViewer.getFocus().getZ() / sliceViewer.getZResolution());
+			if (z < z0)
+				z = z0;
+			if (z > z1)
+				z = z1;
+			zScanSlider.setMinimum(z0);
+			zScanSlider.setMaximum(z1);
+			zScanSlider.setValue(z);
+			zScanSpinner.setModel(new SpinnerNumberModel(z, z0, z1, 1));
 		}
 	};
 
@@ -122,7 +155,6 @@ public class QuadView extends JFrame
         viewerPanel.add(sliceViewer);
         sliceViewer.setPreferredSize( new Dimension( 800, 700 ) );
         // Z slider below slice viewer
-        JPanel zPanel = new JPanel();
         viewerPanel.add(zPanel);
         zPanel.setLayout(new BoxLayout(zPanel, BoxLayout.X_AXIS));
         zPanel.add(new ToolButton(goBackZSlicesAction));
@@ -133,11 +165,14 @@ public class QuadView extends JFrame
         zScanSlider.setPaintTicks(true);
         // zScanSlider.setPaintTrack(false); // just seeing...
         zPanel.add(zScanSlider);
+        zScanSlider.addChangeListener(new ZScanSliderListener(zScanSlider, sliceViewer));
+        sliceViewer.getCamera().getFocusChangedSignal().connect(changeZ);
         zPanel.add(new ToolButton(nextZSliceAction));
         zPanel.add(new ToolButton(advanceZSlicesAction));
         zScanSpinner.setPreferredSize(new Dimension(65, zScanSpinner.getPreferredSize().height));
         zScanSpinner.setMaximumSize(zScanSpinner.getPreferredSize());
         zPanel.add(zScanSpinner);
+        sliceViewer.getDataChangedSignal().connect(updateRangesSlot);
         // Controls
 		controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
 		Container upperControls = new JPanel();
@@ -281,12 +316,32 @@ public class QuadView extends JFrame
 		return toolBar;
 	}
 
-	void setZRange(double zMin, double zMax) {
-		int z0 = (int)Math.round(zMin / sliceViewer.getZResolution());
-		int z1 = (int)Math.round(zMax / sliceViewer.getZResolution());
-		zScanSlider.setMinimum(z0);
-		zScanSlider.setMaximum(z1);
-		zScanSpinner.setModel(new SpinnerNumberModel(z0, z0, z1, 1));
+
+	static class ZScanSliderListener implements ChangeListener
+	{
+		JSlider slider;
+		VolumeViewer viewer;
+		int previousValue = -1;
+		
+		ZScanSliderListener(JSlider slider, VolumeViewer viewer) 
+		{
+			this.viewer = viewer;
+			this.slider = slider;
+		}
+
+		@Override
+		public void stateChanged(ChangeEvent arg0) {
+			int value = this.slider.getValue();
+			if (value == previousValue)
+				return;
+			previousValue = value;
+			Vec3 oldFocus = viewer.getFocus();
+			int oldValue = (int)Math.round(oldFocus.getZ() / viewer.getZResolution());
+			if (oldValue == value)
+				return; // camera is already pretty close
+			double newZ = value * viewer.getZResolution();
+			viewer.setFocus(new Vec3(oldFocus.getX(), oldFocus.getY(), newZ));
+		}
 	}
 	
 	

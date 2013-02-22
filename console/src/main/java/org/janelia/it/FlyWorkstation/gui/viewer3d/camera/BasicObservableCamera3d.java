@@ -15,7 +15,13 @@ implements Camera3d, ObservableCamera3d
 	private Camera3d camera = new BasicCamera3d();
 	protected QtSignal viewChangedSignal = new QtSignal();
 	protected QtSignal1<Double> zoomChangedSignal = new QtSignal1<Double>();
+	protected QtSignal1<Vec3> focusChangedSignal = new QtSignal1<Vec3>();
+
 	
+	public QtSignal1<Vec3> getFocusChangedSignal() {
+		return focusChangedSignal;
+	}
+
 	/* (non-Javadoc)
 	 * @see org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d#getViewChangedSignal()
 	 */
@@ -31,12 +37,18 @@ implements Camera3d, ObservableCamera3d
 
 	@Override
 	public boolean incrementFocusPixels(double dx, double dy, double dz) {
-		return markAndNotify(camera.incrementFocusPixels(dx, dy, dz));
+		boolean result = markAndNotify(camera.incrementFocusPixels(dx, dy, dz));
+		if (result)
+			getFocusChangedSignal().emit(camera.getFocus());
+		return result;
 	}
 
 	@Override
 	public boolean incrementFocusPixels(Vec3 offset) {
-		return markAndNotify(camera.incrementFocusPixels(offset));
+		boolean result = markAndNotify(camera.incrementFocusPixels(offset));
+		if (result)
+			getFocusChangedSignal().emit(camera.getFocus());
+		return result;
 	}
 
 	@Override
@@ -73,7 +85,10 @@ implements Camera3d, ObservableCamera3d
 
 	@Override
 	public boolean resetFocus() {
-		return markAndNotify(camera.resetFocus());
+		boolean result = markAndNotify(camera.resetFocus());
+		if (result)
+			getFocusChangedSignal().emit(camera.getFocus());
+		return result;
 	}
 
 	@Override
@@ -83,12 +98,18 @@ implements Camera3d, ObservableCamera3d
 
 	@Override
 	public boolean setFocus(Vec3 f) {
-		return markAndNotify(camera.setFocus(f));
+		boolean result = markAndNotify(camera.setFocus(f));
+		if (result)
+			getFocusChangedSignal().emit(camera.getFocus());
+		return result;
 	}
 
 	@Override
 	public boolean setFocus(double x, double y, double z) {
-		return markAndNotify(camera.setFocus(x, y, z));
+		boolean result = markAndNotify(camera.setFocus(x, y, z));
+		if (result)
+			getFocusChangedSignal().emit(camera.getFocus());
+		return result;		
 	}
 
 	@Override
