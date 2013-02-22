@@ -70,7 +70,7 @@ public class GLOrthoCamera
 			hw = 1;
 		if (hh == 0)
 			hh = 1;
-		gl.glOrtho(-hw, hw, -hh, hh, -100.0, 100.0);
+		gl.glOrtho(-hw, hw, hh, -hh, -100.0, 100.0);
 		// model/view matrix
 		gl.glMatrixMode(GL2.GL_MODELVIEW);
 		gl.glPushMatrix();
@@ -80,7 +80,7 @@ public class GLOrthoCamera
 		gl.glScaled(s, s, s);
 		// translate
 		Vec3 f = camera.getFocus();
-		gl.glTranslated(-f.x(), f.y(), 0.0); // z is set by choice of tiles
+		gl.glTranslated(-f.x(),-f.y(), 0.0); // z is set by choice of tiles
 		isPushed = true;
 	}
 	

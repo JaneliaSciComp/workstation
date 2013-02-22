@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
+import java.net.URL;
+
 import javax.media.opengl.GL2;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
@@ -11,6 +13,7 @@ public class PracticeBlueVolume
 implements VolumeImage3d, GLActor
 {
 	private GLActor actor = new PracticeBlueTileActor();
+	private QtSignal dataChangedSignal = new QtSignal();
 	
 	@Override
 	public BoundingBox3d getBoundingBox3d() {
@@ -18,7 +21,17 @@ implements VolumeImage3d, GLActor
 	}
 
 	@Override
-	public double getMaxResolution() {
+	public double getXResolution() {
+		return 0.10;
+	}
+
+	@Override
+	public double getYResolution() {
+		return 0.10;
+	}
+
+	@Override
+	public double getZResolution() {
 		return 0.10;
 	}
 
@@ -45,5 +58,16 @@ implements VolumeImage3d, GLActor
 	@Override
 	public int getMaximumIntensity() {
 		return 255;
+	}
+
+	@Override
+	public QtSignal getDataChangedSignal() {
+		return dataChangedSignal;
+	}
+
+	@Override
+	public boolean loadURL(URL url) {
+		// The blue square you want is already "loaded"
+		return false;
 	}
 }

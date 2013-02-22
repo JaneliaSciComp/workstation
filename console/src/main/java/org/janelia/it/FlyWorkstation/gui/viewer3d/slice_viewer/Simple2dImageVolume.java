@@ -4,6 +4,8 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 import javax.imageio.ImageIO;
 import javax.media.opengl.GL2;
@@ -30,60 +32,15 @@ public class Simple2dImageVolume implements VolumeImage3d, GLActor
 	boolean isSrgbApplied = false; // Whether sRGB color correction is already applied to texture
 	int channelCount = 0;
 	int maxIntensity = 255;
+	private QtSignal dataChangedSignal = new QtSignal();
 	
 	Simple2dImageVolume(String fileName) {
 		try {
-			BufferedImage image = ImageIO.read(new File(fileName));
-			ColorModel colorModel = image.getColorModel();
-			// NOT getNumColorComponents(), because we count alpha channel as data.
-			channelCount = colorModel.getNumComponents();
-			int bitDepth = colorModel.getPixelSize() / channelCount;
-			if (bitDepth > 8)
-				maxIntensity = 65535;
-			boolean isSRGB = colorModel.getColorSpace().isCS_sRGB();
-			// Determine correct OpenGL texture type, based on bit-depth, number of colors, and srgb
-			int internalFormat, pixelFormat;
-			if (channelCount == 1) {
-				internalFormat = pixelFormat = GL2.GL_LUMINANCE; // default for single gray channel
-				if (bitDepth > 8)
-					internalFormat = GL2.GL_LUMINANCE16;
-			}
-			else if (channelCount == 2) {
-				internalFormat = pixelFormat = GL2.GL_LUMINANCE_ALPHA;
-				if (bitDepth > 8)
-					internalFormat = GL2.GL_LUMINANCE16_ALPHA16;
-			}
-			else if (channelCount == 3) {
-				internalFormat = pixelFormat = GL2.GL_RGB;
-				if (bitDepth > 8)
-					internalFormat = GL2.GL_RGB16;
-				else if (isSRGB) {
-					internalFormat = GL2.GL_SRGB;
-					isSrgbApplied = true;
-				}
-			}
-			else if (channelCount == 4) {
-				internalFormat = pixelFormat = GL2.GL_RGB8;
-				if (bitDepth > 8)
-					internalFormat = GL2.GL_RGB16;				
-				else if (isSRGB) {
-					internalFormat = GL2.GL_SRGB_ALPHA;
-					isSrgbApplied = true;
-				}
-			}
-			else {
-				System.out.println("Error: unsupported number of channels: " + channelCount);
-				return;
-			}
-			textureData = AWTTextureIO.newTextureData(
-					SliceViewer.glProfile,
-					image,
-					internalFormat,
-					pixelFormat,
-					false); // mipmap?
-		} catch (IOException e) {
+			URL url = new File(fileName).toURI().toURL();
+			loadURL(url);
+		} catch (MalformedURLException e1) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			e1.printStackTrace();
 		}
 	}
 	
@@ -148,7 +105,19 @@ public class Simple2dImageVolume implements VolumeImage3d, GLActor
 	}
 
 	@Override
-	public double getMaxResolution() {
+	public double getXResolution() {
+		// Treat each pixel as 1.0 micrometers
+		return 1.0;
+	}
+
+	@Override
+	public double getYResolution() {
+		// Treat each pixel as 1.0 micrometers
+		return 1.0;
+	}
+
+	@Override
+	public double getZResolution() {
 		// Treat each pixel as 1.0 micrometers
 		return 1.0;
 	}
@@ -163,6 +132,71 @@ public class Simple2dImageVolume implements VolumeImage3d, GLActor
 	@Override
 	public int getMaximumIntensity() {
 		return maxIntensity;
+	}
+
+	@Override
+	public QtSignal getDataChangedSignal() {
+		return dataChangedSignal;
+	}
+
+	@Override
+	public boolean loadURL(URL url) {
+		if (url == null)
+			return false;
+		try {
+			BufferedImage image = ImageIO.read(url);
+			ColorModel colorModel = image.getColorModel();
+			// NOT getNumColorComponents(), because we count alpha channel as data.
+			channelCount = colorModel.getNumComponents();
+			int bitDepth = colorModel.getPixelSize() / channelCount;
+			if (bitDepth > 8)
+				maxIntensity = 65535;
+			boolean isSRGB = colorModel.getColorSpace().isCS_sRGB();
+			// Determine correct OpenGL texture type, based on bit-depth, number of colors, and srgb
+			int internalFormat, pixelFormat;
+			if (channelCount == 1) {
+				internalFormat = pixelFormat = GL2.GL_LUMINANCE; // default for single gray channel
+				if (bitDepth > 8)
+					internalFormat = GL2.GL_LUMINANCE16;
+			}
+			else if (channelCount == 2) {
+				internalFormat = pixelFormat = GL2.GL_LUMINANCE_ALPHA;
+				if (bitDepth > 8)
+					internalFormat = GL2.GL_LUMINANCE16_ALPHA16;
+			}
+			else if (channelCount == 3) {
+				internalFormat = pixelFormat = GL2.GL_RGB;
+				if (bitDepth > 8)
+					internalFormat = GL2.GL_RGB16;
+				else if (isSRGB) {
+					internalFormat = GL2.GL_SRGB;
+					isSrgbApplied = true;
+				}
+			}
+			else if (channelCount == 4) {
+				internalFormat = pixelFormat = GL2.GL_RGB8;
+				if (bitDepth > 8)
+					internalFormat = GL2.GL_RGB16;				
+				else if (isSRGB) {
+					internalFormat = GL2.GL_SRGB_ALPHA;
+					isSrgbApplied = true;
+				}
+			}
+			else {
+				System.out.println("Error: unsupported number of channels: " + channelCount);
+				return false;
+			}
+			textureData = AWTTextureIO.newTextureData(
+					SliceViewer.glProfile,
+					image,
+					internalFormat,
+					pixelFormat,
+					false); // mipmap?
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;
 	}
 
 }

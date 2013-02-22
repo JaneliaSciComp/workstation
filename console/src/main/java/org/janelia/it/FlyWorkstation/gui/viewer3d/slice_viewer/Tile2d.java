@@ -4,8 +4,11 @@ import java.util.Map;
 
 import javax.media.opengl.GL2;
 
+import org.eclipse.jetty.util.log.Log;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.TextureCoords;
@@ -13,16 +16,18 @@ import com.jogamp.opengl.util.texture.TextureCoords;
 public class Tile2d 
 implements GLActor
 {
-	public enum Stage {
+	public static enum Stage {
 	    NO_TEXTURE_LOADED,
 	    COARSE_TEXTURE_LOADED,
 	    BEST_TEXTURE_LOADED
 	}
 
-
+	private static final Logger log = LoggerFactory.getLogger(TileTexture.class);
+	
 	private Stage stage = Stage.NO_TEXTURE_LOADED;
 	private TileTexture bestTexture;
 	private TileIndex index;
+	private double yMax; // To help flip Raveler tiles in Y
 
 	
 	public Tile2d(TileIndex key) {
@@ -78,6 +83,7 @@ implements GLActor
 			return;
 		if (getStage().ordinal() < Stage.COARSE_TEXTURE_LOADED.ordinal())
 			return;
+		// log.info("Rendering tile "+getIndex());
 		bestTexture.init(gl);
 		Texture texture = bestTexture.getTexture();
 		assert(texture != null);
@@ -91,34 +97,37 @@ implements GLActor
 		TextureCoords tc0 = texture.getImageTexCoords();
 		// Adjust texture coordinates for relative zoom level
 		int dZoom = getIndex().getZoom() - bestTexture.getIndex().getZoom();
-		int zoomScale = (int)(Math.pow(2, dZoom) + 0.1);
+		int textureScale = (int)(Math.pow(2, dZoom) + 0.1);
 		// Remember texture coordinates might already not go from 0->1
 		double tcXTotal = tc0.right() - tc0.left();
 		assert(tcXTotal > 0.0);
 		double tcYTotal = tc0.top() - tc0.bottom();
 		// assert(tcYTotal > 0.0); // no, it's -1.0
 		// Compute texture coordinate offset due to tile not being at upper left of texture
-		double dXTex = tcXTotal * (getIndex().getX() % zoomScale) / (double)zoomScale;
-		double dYTex = tcYTotal * (getIndex().getY() % zoomScale) / (double)zoomScale;
+		double dXTex = tcXTotal * (getIndex().getX() % textureScale) / (double)textureScale;
+		double dYTex = tcYTotal * (getIndex().getY() % textureScale) / (double)textureScale;
 		double tcLeft = tc0.left() + dXTex;
-		double tcRight = tcLeft + tcXTotal/zoomScale;
+		double tcRight = tcLeft + tcXTotal/textureScale;
 		double tcBottom = tc0.bottom() + dYTex;
-		double tcTop = tcBottom + tcYTotal/zoomScale;
+		double tcTop = tcBottom + tcYTotal/textureScale;
 		// compute corner vertices for tile, not for texture
 		double voxelSize = 1.0; // TODO
-		double tileWidth = texture.getWidth() * voxelSize;
-		double tileHeight = texture.getHeight() * voxelSize;
+		int zoomScale = (int)(Math.pow(2.0, getIndex().getZoom()) + 0.1);
+		double tileWidth = texture.getWidth() * zoomScale * voxelSize;
+		double tileHeight = texture.getHeight() * zoomScale * voxelSize;
 		gl.glBegin(GL2.GL_QUADS);
 			// draw quad
 	        double z = 0.0; // As far as OpenGL is concerned, all Z's are zero
-	        double x0 = getIndex().getX() * 1024.0 * voxelSize;
+	        double x0 = getIndex().getX() * 1024.0 * zoomScale * voxelSize;
 	        double x1 = x0 + tileWidth;
-	        double y0 = getIndex().getY() * 1024.0 * voxelSize;
+	        // Raveler tile index has origin at BOTTOM left, unlike TOP left for images and
+	        // our coordinate system
+	        double y0 = yMax - getIndex().getY() * 1024.0 * zoomScale * voxelSize;
 	        double y1 = y0 - tileHeight; // y inverted in OpenGL relative to image convention
-	        gl.glTexCoord2d(tcLeft, tcBottom); gl.glVertex3d(x0, y1, z);
-	        gl.glTexCoord2d(tcRight, tcBottom); gl.glVertex3d(x1, y1, z);
-	        gl.glTexCoord2d(tcRight, tcTop); gl.glVertex3d(x1, y0, z);
-	        gl.glTexCoord2d(tcLeft, tcTop); gl.glVertex3d(x0, y0, z);
+	        gl.glTexCoord2d(tcLeft, tcBottom); gl.glVertex3d(x0, y0, z);
+	        gl.glTexCoord2d(tcRight, tcBottom); gl.glVertex3d(x1, y0, z);
+	        gl.glTexCoord2d(tcRight, tcTop); gl.glVertex3d(x1, y1, z);
+	        gl.glTexCoord2d(tcLeft, tcTop); gl.glVertex3d(x0, y1, z);
 		gl.glEnd();
 		texture.disable(gl);
 	}
@@ -144,5 +153,9 @@ implements GLActor
 
 	public TileTexture getBestTexture() {
 		return bestTexture;
+	}
+
+	public void setYMax(double yMax) {
+		this.yMax  = yMax;
 	}
 }

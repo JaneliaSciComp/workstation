@@ -8,8 +8,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Point2D;
-import java.io.File;
-import java.net.MalformedURLException;
+import java.net.URL;
 
 import javax.media.opengl.GLProfile;
 
@@ -22,6 +21,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 
 // Viewer widget for viewing 2D quadtree tiles from pyramid data structure
 public class SliceViewer 
@@ -41,13 +41,15 @@ implements MouseModalWidget, VolumeViewer
 	protected Viewport viewport = renderer.getViewport();
 	protected RubberBand rubberBand = new RubberBand();
 	
-	// protected PracticeBlueVolume volume = new PracticeBlueVolume();
-	// protected Simple2dImageVolume volume = new Simple2dImageVolume(
+	// TODO - use a factory to choose the particular volumeimage
+	// protected PracticeBlueVolume volume0 = new PracticeBlueVolume();
+	// protected Simple2dImageVolume volume0 = new Simple2dImageVolume(
 	// 		"/Users/brunsc/svn/jacs/console/src/main/java/images/kittens.jpg");	
-	protected RavelerTileServer volume = new RavelerTileServer();
+	protected RavelerTileServer volume0 = new RavelerTileServer(
+			"/Volumes/jacsData/brunsTest/clack_test16/Z");
+	protected VolumeImage3d volumeImage = volume0;
+	protected GLActor volumeActor = volume0;
 	
-	protected QtSignal1<Double> zoomChanged = new QtSignal1<Double>();
-
 	protected QtSlot repaintSlot = new QtSlot(this) {
 		@Override
 		public void execute() {
@@ -59,7 +61,7 @@ implements MouseModalWidget, VolumeViewer
 	public SliceViewer() {
 		addGLEventListener(renderer);
 		setCamera(new BasicObservableCamera3d());
-		camera.getZoomChanged().connect(zoomChanged); // Forward signal
+		volume0.setViewport(viewport);
 		mouseMode.setComponent(this);
 		wheelMode.setComponent(this);
 		// pink color for testing only
@@ -67,14 +69,9 @@ implements MouseModalWidget, VolumeViewer
         setPreferredSize( new Dimension( 600, 600 ) );
         rubberBand.changed.connect(repaintSlot);
         setToolTipText("Double click to center on a point.");
-        renderer.addActor(volume);
-        volume.getTileLoadedSignal().connect(getRepaintSlot());
-        try {
-			volume.openFolder(new File("/Volumes/jacsData/brunsTest/clack_test16/Z").toURI().toURL());
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+        renderer.addActor(volumeActor);
+        volumeImage.getDataChangedSignal().connect(getRepaintSlot());
+        resetView();
 	}
 
 	@Override
@@ -235,6 +232,7 @@ implements MouseModalWidget, VolumeViewer
 		renderer.setCamera(camera);
 		mouseMode.setCamera(camera);
 		wheelMode.setCamera(camera);
+		volume0.setCamera(camera);
 	}
 	
 	public void setWheelMode(WheelMode wheelMode) {
@@ -299,8 +297,18 @@ implements MouseModalWidget, VolumeViewer
 	}
 
 	@Override
-	public double getMaxResolution() {
-		return volume.getMaxResolution();
+	public double getXResolution() {
+		return volumeImage.getXResolution();
+	}
+
+	@Override
+	public double getYResolution() {
+		return volumeImage.getYResolution();
+	}
+
+	@Override
+	public double getZResolution() {
+		return volumeImage.getZResolution();
 	}
 
 	@Override
@@ -315,19 +323,21 @@ implements MouseModalWidget, VolumeViewer
 
 	@Override
 	public int getNumberOfChannels() {
-		return volume.getNumberOfChannels();
+		return volumeImage.getNumberOfChannels();
 	}
 
 	@Override
 	public int getMaximumIntensity() {
-		return volume.getMaximumIntensity();
+		return volumeImage.getMaximumIntensity();
 	}
 
 	@Override
-	public double getMaxZoom() 
+	public double getMaxZoom()
 	{
 		// 300 screen pixels per image pixel
-		return 300.0 / getMaxResolution();
+		// Yes, I mean min, because high resolution is a small distance value
+		double maxRes = Math.min(getXResolution(), getYResolution());
+		return 300.0 / maxRes;
 	}
 
 	@Override
@@ -340,7 +350,20 @@ implements MouseModalWidget, VolumeViewer
 	}
 
 	@Override
-	public QtSignal1<Double> getZoomChanged() {
-		return zoomChanged;
+	public QtSignal1<Double> getZoomChangedSignal() {
+		return camera.getZoomChangedSignal();
+	}
+
+	@Override
+	public QtSignal getDataChangedSignal() {
+		return volumeImage.getDataChangedSignal();
+	}
+
+	@Override
+	public boolean loadURL(URL url) {
+		boolean result = volumeImage.loadURL(url);
+		if (result)
+			resetView();
+		return result;
 	}
 }

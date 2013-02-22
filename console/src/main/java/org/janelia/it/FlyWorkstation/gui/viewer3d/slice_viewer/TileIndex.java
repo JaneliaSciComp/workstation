@@ -33,19 +33,6 @@ public class TileIndex
 		this.zoom = zoom;
 	}
 
-	// For hashability, we need hashCode() and equals() methods.
-	// Pro tip: Use eclipse to autogenerate hashCode and equals methods!
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + x;
-		result = prime * result + y;
-		result = prime * result + z;
-		result = prime * result + zoom;
-		return result;
-	}
-
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -75,9 +62,43 @@ public class TileIndex
 		return result;
 	}
 	
+	// For hashability, we need hashCode() and equals() methods.
+	// Pro tip: Use eclipse to autogenerate hashCode and equals methods!
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + x;
+		result = prime * result + y;
+		result = prime * result + z;
+		result = prime * result + zoom;
+		return result;
+	}
+
+	@Override
+	public String toString() {
+		return "TileIndex [x="+x+"; y="+y+"; z="+z+"; zoom="+zoom+"]";
+	}
+
+	/**
+	 * Returns the index of the next lower resolution tile that 
+	 * contains the tile represented by this index.
+	 * 
+	 * @return null if current zoom index is already zero
+	 */
+	public TileIndex zoomOut() {
+		if (getZoom() <= 0)
+			return null; // Cannot zoom farther out than zero
+		int x = getX()/2;
+		int y = getY()/2;
+		int z = getZ();
+		int zoom = getZoom() - 1;
+		return new TileIndex(x, y, z, zoom);
+	}
+
 	// Retarded Java philosophy eschews built-in Pair type nor multiple return values
 	// thus the usual "add another class..." ad infinitum.
-	public class TextureScore {
+	public static class TextureScore {
 		private TileIndex textureKey;
 		private double score;
 
@@ -99,19 +120,4 @@ public class TileIndex
 		}
 	}
 
-	/**
-	 * Returns the index of the next lower resolution tile that 
-	 * contains the tile represented by this index.
-	 * 
-	 * @return null if current zoom index is already zero
-	 */
-	public TileIndex zoomOut() {
-		if (getZoom() <= 0)
-			return null; // Cannot zoom farther out than zero
-		int x = getX()/2;
-		int y = getY()/2;
-		int z = getZ();
-		int zoom = getZoom() - 1;
-		return new TileIndex(x, y, z, zoom);
-	}
 }

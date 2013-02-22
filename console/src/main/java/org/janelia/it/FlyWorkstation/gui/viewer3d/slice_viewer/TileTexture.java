@@ -9,19 +9,26 @@ import java.net.URL;
 import javax.imageio.ImageIO;
 import javax.media.opengl.GL2;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.TextureData;
 import com.jogamp.opengl.util.texture.TextureIO;
 import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
 
-public class TileTexture {
-	public enum Stage {
+public class TileTexture 
+{
+	public static enum Stage 
+	{
 		LOAD_FAILED, // worst
 	    UNINITIALIZED, // initial state
 	    RAM_LOADING,
 	    RAM_LOADED,
 	    GL_LOADED // best
 	}
+	
+	private static final Logger log = LoggerFactory.getLogger(TileTexture.class);
 	
 	private Stage stage = Stage.UNINITIALIZED;
 	private TileIndex index;
@@ -50,7 +57,7 @@ public class TileTexture {
 				thousands_dir, z);
 		try {
 			url = new URL(urlStalk, path);
-			System.out.println(url);
+			// log.info("Texture URL = " + url);
 		} catch (MalformedURLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -84,6 +91,7 @@ public class TileTexture {
 	public synchronized boolean loadImageToRam() {
 		setStage(Stage.RAM_LOADING);
 		try {
+			// log.info("Loading texture from " + url);
 			BufferedImage image = ImageIO.read(url);
 			ColorModel colorModel = image.getColorModel();
 			// NOT getNumColorComponents(), because we count alpha channel as data.
@@ -123,7 +131,7 @@ public class TileTexture {
 				}
 			}
 			else {
-				System.out.println("Error: unsupported number of channels: " + channelCount);
+				log.error("Unsupported number of channels: " + channelCount);
 				return false;
 			}
 			textureData = AWTTextureIO.newTextureData(

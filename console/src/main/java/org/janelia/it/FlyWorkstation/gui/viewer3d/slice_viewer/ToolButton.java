@@ -15,8 +15,8 @@ public class ToolButton extends JButton
 implements MouseListener, ActionListener
 {
 	private static final long serialVersionUID = 1L;
-	private int autoRepeatInitialDelay = 600; // milliseconds
-	private int autoRepeatDelay = 300; // milliseconds
+	private int autoRepeatInitialDelay = 300; // milliseconds
+	private int autoRepeatDelay = 100; // milliseconds
 	private Timer autoRepeatTimer = new Timer(autoRepeatDelay, this);
 
 	public ToolButton(Action action)

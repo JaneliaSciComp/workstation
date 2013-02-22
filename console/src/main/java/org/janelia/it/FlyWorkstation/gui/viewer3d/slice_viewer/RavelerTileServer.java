@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
@@ -16,10 +17,13 @@ import java.util.regex.Pattern;
 import javax.media.opengl.GL2;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
+
+import com.jogamp.opengl.util.texture.Texture;
 
 
 public class RavelerTileServer 
@@ -30,10 +34,11 @@ implements GLActor, VolumeImage3d
 	private int numberOfChannels = 3;
 	private int maximumIntensity = 255;
 	private int bitDepth = 8;
-	private double voxelX = 1.0; // micrometers
-	private double voxelY = 1.0;
-	private double voxelZ = 1.0;
+	private double xResolution = 1.0; // micrometers
+	private double yResolution = 1.0;
+	private double zResolution = 1.0;
 	private int zoomMax = 0;
+	private int zoomMin = 0;
 	// Emergency tiles list stores a recently displayed view, so that
 	// SOMETHING gets displayed while the current view is being loaded.
 	private TileSet emergencyTiles;
@@ -47,9 +52,19 @@ implements GLActor, VolumeImage3d
 	//
 	private Camera3d camera;
 	private Viewport viewport;
-	private Tile2d testTile;
-	// TODO add signal for tile loaded
-	private QtSignal tileLoadedSignal = new QtSignal();
+	// signal for tile loaded
+	private QtSignal dataChangedSignal = new QtSignal();
+	private boolean needsGlDisposal = false; // flag for deferred OpenGL data reset
+	private double zoomOffset = 0.5; // tradeoff between optimal resolution (0.0) and speed.
+
+	public RavelerTileServer(String folderName) {
+        try {
+			loadURL(new File(folderName).toURI().toURL());
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 
 	public Camera3d getCamera() {
 		return camera;
@@ -59,8 +74,9 @@ implements GLActor, VolumeImage3d
 		return neededTextures;
 	}
 
-	public QtSignal getTileLoadedSignal() {
-		return tileLoadedSignal;
+	@Override
+	public QtSignal getDataChangedSignal() {
+		return dataChangedSignal;
 	}
 
 	public Viewport getViewport() {
@@ -82,7 +98,10 @@ implements GLActor, VolumeImage3d
 			tile.init(gl);
 		// Check whether tiles are actually displayable
 		for (Tile2d tile: tiles) {
-			if (tile.getBestTexture().getStage().ordinal() < TileTexture.Stage.GL_LOADED.ordinal()) {
+			TileTexture tileTexture = tile.getBestTexture();
+			if (tileTexture == null)
+				return false;
+			if (tileTexture.getStage().ordinal() < TileTexture.Stage.GL_LOADED.ordinal()) {
 				return false; // wait for more data to load
 			}
 		}
@@ -92,16 +111,57 @@ implements GLActor, VolumeImage3d
 	protected TileSet createLatestTiles(Camera3d camera, Viewport viewport)
 	{
 		TileSet result = new TileSet();
-		
-		// TODO
-		// for initial testing, just return one low resolution tile
-		if (testTile == null) {
-			int zMin = (int)Math.round(getBoundingBox3d().getMin().getZ() / voxelZ);
-			TileIndex key = new TileIndex(0, 0, zMin, 0);
-			testTile = new Tile2d(key);
-			// TODO - load textures
+
+		// Need to loop over x and y
+		// Need to compute z, and zoom
+		// 1) zoom
+		double maxRes = Math.min(getXResolution(), getYResolution());
+		double voxelsPerPixel = 1.0 / (camera.getPixelsPerSceneUnit() * maxRes);
+		int zoom = 20; // default to very coarse zoom
+		if (voxelsPerPixel > 0.0) {
+			double topZoom = Math.log(voxelsPerPixel) / Math.log(2.0);
+			zoom = (int)(topZoom + zoomOffset);
 		}
-		result.add(testTile);
+		zoom = Math.max(zoom, zoomMin);
+		zoom = Math.min(zoom, zoomMax);
+		// 2) z
+		Vec3 focus = camera.getFocus();
+		int z = (int)Math.floor(focus.getZ() / getZResolution() + 0.5);
+		// 3) x and y range
+		// In scene units
+		// Clip to screen space
+		double xFMin = focus.getX() - 0.5*viewport.getWidth()/camera.getPixelsPerSceneUnit();
+		double xFMax = focus.getX() + 0.5*viewport.getWidth()/camera.getPixelsPerSceneUnit();
+		double yFMin = focus.getY() - 0.5*viewport.getHeight()/camera.getPixelsPerSceneUnit();
+		double yFMax = focus.getY() + 0.5*viewport.getHeight()/camera.getPixelsPerSceneUnit();
+		// Clip to volume space
+		xFMin = Math.max(xFMin, getBoundingBox3d().getMin().getX());
+		yFMin = Math.max(yFMin, getBoundingBox3d().getMin().getY());
+		xFMax = Math.min(xFMax, getBoundingBox3d().getMax().getX());
+		yFMax = Math.min(yFMax, getBoundingBox3d().getMax().getY());
+		double zoomFactor = Math.pow(2.0, zoom);
+		// TODO - store tile pixel size 1024 someplace
+		double tileWidth = 1024 * zoomFactor * getXResolution();
+		double tileHeight = 1024 * zoomFactor * getYResolution();
+		// In tile units
+		int xMin = (int)Math.floor(xFMin / tileWidth);
+		int xMax = (int)Math.floor(xFMax / tileWidth);
+		int yMin = (int)Math.floor(yFMin / tileHeight);
+		int yMax = (int)Math.floor(yFMax / tileHeight);
+		// Correct for bottom Y origin of Raveler tile coordinate system
+		// (everything else is top Y origin: image, our OpenGL, user facing coordinate system)
+		int maxYTile = (int)Math.floor(getBoundingBox3d().getMax().getY() / tileHeight);
+		int tmp = maxYTile - yMin;
+		yMin = maxYTile - yMax;
+		yMax = tmp;
+		for (int x = xMin; x <= xMax; ++x) {
+			for (int y = yMin; y <= yMax; ++y) {
+				TileIndex key = new TileIndex(x, y, z, zoom);
+				Tile2d tile = new Tile2d(key);
+				tile.setYMax(getBoundingBox3d().getMax().getY()); // To help flip y
+				result.add(tile);
+			}
+		}
 		
 		return result;
 	}
@@ -114,16 +174,52 @@ implements GLActor, VolumeImage3d
 
 	public void display(GL2 gl, TileSet tiles) 
 	{
+		if (tiles == null)
+			return;
+		// Possibly eliminate texture cache
+		if (needsGlDisposal) {
+			dispose(gl);
+			textureCache.clear();
+			for (Tile2d tile : tiles) {
+				tile.setBestTexture(null);
+				tile.setStage(Tile2d.Stage.NO_TEXTURE_LOADED);
+			}
+		}
 		if (! canDisplay(gl, tiles))
 			return;
 		// TODO - load shader?
 		for (Tile2d tile: tiles) {
 			tile.display(gl);
 		}
+		// For debugging, draw bounding box
+		gl.glDisable(GL2.GL_TEXTURE_2D);
+		gl.glColor3d(1.0, 1.0, 0.2);
+		Vec3 a = getBoundingBox3d().getMin();
+		Vec3 b = getBoundingBox3d().getMax();
+		gl.glBegin(GL2.GL_LINE_STRIP);
+		gl.glColor3d(0.2, 1.0, 1.0); // zero line cyan
+		gl.glVertex3d(a.getX(), a.getY(), 0.0);
+		gl.glVertex3d(b.getX(), a.getY(), 0.0);
+		gl.glColor3d(1.0, 1.0, 0.2); // rest yellow
+		gl.glVertex3d(b.getX(), b.getY(), 0.0);
+		gl.glVertex3d(a.getX(), b.getY(), 0.0);
+		gl.glVertex3d(a.getX(), a.getY(), 0.0);
+		gl.glEnd();
+		gl.glColor3d(1.0, 1.0, 1.0);
 	}
 
 	@Override
-	public void dispose(GL2 gl) {}
+	public void dispose(GL2 gl) {
+		// System.out.println("dispose RavelerTileServer");
+		for (TileTexture tileTexture : textureCache.values()) {
+			if (tileTexture.getStage().ordinal() < TileTexture.Stage.GL_LOADED.ordinal())
+				continue;
+			Texture joglTexture = tileTexture.getTexture();
+			joglTexture.destroy(gl);
+			tileTexture.setStage(TileTexture.Stage.RAM_LOADED);
+		}
+		needsGlDisposal = false;
+	}
 
 	@Override
 	public BoundingBox3d getBoundingBox3d() {
@@ -133,12 +229,6 @@ implements GLActor, VolumeImage3d
 	@Override
 	public int getMaximumIntensity() {
 		return maximumIntensity;
-	}
-
-	@Override
-	public double getMaxResolution() {
-		// TODO Auto-generated method stub
-		return 0;
 	}
 
 	@Override
@@ -171,7 +261,8 @@ implements GLActor, VolumeImage3d
 	@Override
 	public void init(GL2 gl) {}
 
-	public boolean openFolder(URL folderUrl) {
+	@Override
+	public boolean loadURL(URL folderUrl) {
 		// Sanity check before overwriting current view
 		if (folderUrl == null)
 			return false;
@@ -179,7 +270,14 @@ implements GLActor, VolumeImage3d
 			return false;
 		// Now we can start replacing the previous state
 		this.urlStalk = folderUrl;
-		// TODO - set up threads?
+		
+		// remove old data
+		emergencyTiles = null;
+		if (latestTiles != null)
+			latestTiles.clear();
+		// queue disposal of textures on next display event
+		needsGlDisposal = true;
+		getDataChangedSignal().emit();
 		
 		return true;
 	}
@@ -191,7 +289,8 @@ implements GLActor, VolumeImage3d
 			BufferedReader in = new BufferedReader(new InputStreamReader(metadataUrl.openStream()));
 			String line;
 			// finds lines like "key=value"
-			Pattern pattern = Pattern.compile("^(.*)=(.*)\\n?$"); 
+			Pattern pattern = Pattern.compile("^(.*)=(.*)\\n?$");
+			metadata.clear();
 			while ((line = in.readLine()) != null) {
 				Matcher m = pattern.matcher(line);
 				if (! m.matches())
@@ -204,16 +303,16 @@ implements GLActor, VolumeImage3d
 			setDefaultParameters();
 			// TODO - parse voxel size first
 			if (metadata.containsKey("zmax"))
-				boundingBox3d.getMax().setZ(voxelZ * Integer.parseInt(metadata.get("zmax")));
+				boundingBox3d.getMax().setZ(zResolution * Integer.parseInt(metadata.get("zmax")));
 			if (metadata.containsKey("zmin"))
-				boundingBox3d.getMin().setZ(voxelZ * Integer.parseInt(metadata.get("zmin")));
+				boundingBox3d.getMin().setZ(zResolution * Integer.parseInt(metadata.get("zmin")));
 			if (metadata.containsKey("width")) {
 				boundingBox3d.getMin().setX(0.0);
-				boundingBox3d.getMax().setX(voxelX * (Integer.parseInt(metadata.get("width")) - 1) );
+				boundingBox3d.getMax().setX(xResolution * (Integer.parseInt(metadata.get("width")) - 1) );
 			}
 			if (metadata.containsKey("height")) {
 				boundingBox3d.getMin().setY(0.0);
-				boundingBox3d.getMax().setY(voxelY * (Integer.parseInt(metadata.get("height")) - 1) );
+				boundingBox3d.getMax().setY(yResolution * (Integer.parseInt(metadata.get("height")) - 1) );
 			}
 			assert(! boundingBox3d.isEmpty());
 	        // Data range
@@ -239,8 +338,8 @@ implements GLActor, VolumeImage3d
 	        		numberOfChannels = Integer.parseInt(metadata.get("channel-count"));
 	        }
 	        // Compute zoom min/max from dimensions...
-	        double tileMax = Math.max(boundingBox3d.getMax().getX() / voxelX / 1024.0, 
-	        		boundingBox3d.getMax().getY() / voxelY / 1024.0);
+	        double tileMax = Math.max(boundingBox3d.getMax().getX() / xResolution / 1024.0, 
+	        		boundingBox3d.getMax().getY() / yResolution / 1024.0);
 	        if (tileMax != 0) {
 	        		zoomMax = (int)Math.ceil(Math.log(tileMax)/Math.log(2.0));
 	        }
@@ -262,7 +361,7 @@ implements GLActor, VolumeImage3d
 		for (TileIndex ix : textures) {
 			if (! textureCache.containsKey(ix)) {
 				TileTexture t = new TileTexture(ix, urlStalk);
-				t.getRamLoadedSignal().connect(getTileLoadedSignal());
+				t.getRamLoadedSignal().connect(getDataChangedSignal());
 				textureCache.put(ix, t);
 			}
 			TileTexture texture = textureCache.get(ix);
@@ -277,7 +376,7 @@ implements GLActor, VolumeImage3d
 		maximumIntensity= 255;
 		bitDepth = 8;
 		numberOfChannels = 3;
-		voxelX = voxelY = voxelZ = 1.0; // micrometers
+		xResolution = yResolution = zResolution = 1.0; // micrometers
 		zoomMax = 0;
 	}
 
@@ -287,5 +386,20 @@ implements GLActor, VolumeImage3d
 
 	public void setCamera(Camera3d camera) {
 		this.camera = camera;
+	}
+
+	@Override
+	public double getXResolution() {
+		return xResolution;
+	}
+
+	@Override
+	public double getYResolution() {
+		return yResolution;
+	}
+
+	@Override
+	public double getZResolution() {
+		return zResolution;
 	}
 }

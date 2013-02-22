@@ -18,8 +18,11 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSlider;
+import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JToolBar;
+import javax.swing.SpinnerModel;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
@@ -48,12 +51,24 @@ public class QuadView extends JFrame
 	protected Action resetViewAction = new ResetViewAction(sliceViewer);
 	protected Action resetZoomAction = new ResetZoomAction(sliceViewer);
 	protected Action panModeAction = new PanModeAction(sliceViewer);
+	protected Action openFolderAction = new OpenFolderAction(sliceViewer, sliceViewer);
+
+
+	// Zoom 
+	protected JSlider zoomSlider = new JSlider(JSlider.VERTICAL);
 	protected Action zoomInAction = new ZoomInAction(sliceViewer.getCamera());
 	protected Action zoomMouseModeAction = new ZoomMouseModeAction(sliceViewer);
 	protected Action zoomOutAction = new ZoomOutAction(sliceViewer.getCamera());
 	protected Action zoomScrollModeAction = new ZoomScrollModeAction(sliceViewer);
-	protected JSlider zoomSlider = new JSlider(JSlider.VERTICAL);
 
+	// Z scan
+	protected JSlider zScanSlider = new JSlider(JSlider.HORIZONTAL);
+    protected JSpinner zScanSpinner = new JSpinner();
+	protected Action nextZSliceAction = new NextZSliceAction(sliceViewer, sliceViewer);
+	protected Action previousZSliceAction = new PreviousZSliceAction(sliceViewer, sliceViewer);
+	protected Action advanceZSlicesAction = new AdvanceZSlicesAction(sliceViewer, sliceViewer, 10);
+	protected Action goBackZSlicesAction = new GoBackZSlicesAction(sliceViewer, sliceViewer, -10);
+	
 	protected QtSlot1<Double> changeZoom = new QtSlot1<Double>(this) {
 		@Override
 		public void execute(Double zoom) {
@@ -106,6 +121,23 @@ public class QuadView extends JFrame
 		viewerPanel.setLayout(new BoxLayout(viewerPanel, BoxLayout.Y_AXIS));
         viewerPanel.add(sliceViewer);
         sliceViewer.setPreferredSize( new Dimension( 800, 700 ) );
+        // Z slider below slice viewer
+        JPanel zPanel = new JPanel();
+        viewerPanel.add(zPanel);
+        zPanel.setLayout(new BoxLayout(zPanel, BoxLayout.X_AXIS));
+        zPanel.add(new ToolButton(goBackZSlicesAction));
+        zPanel.add(new ToolButton(previousZSliceAction));
+        zScanSlider.setMajorTickSpacing(10);
+        zScanSlider.setMinimum(0);
+        zScanSlider.setMaximum(100);
+        zScanSlider.setPaintTicks(true);
+        // zScanSlider.setPaintTrack(false); // just seeing...
+        zPanel.add(zScanSlider);
+        zPanel.add(new ToolButton(nextZSliceAction));
+        zPanel.add(new ToolButton(advanceZSlicesAction));
+        zScanSpinner.setPreferredSize(new Dimension(65, zScanSpinner.getPreferredSize().height));
+        zScanSpinner.setMaximumSize(zScanSpinner.getPreferredSize());
+        zPanel.add(zScanSpinner);
         // Controls
 		controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
 		Container upperControls = new JPanel();
@@ -128,7 +160,7 @@ public class QuadView extends JFrame
 		zoomSlider.setMaximum(1000);
 		zoomSlider.addChangeListener(new ZoomSliderListener(zoomSlider, sliceViewer));
 		// connect signal from camera back to slider
-		sliceViewer.getZoomChanged().connect(changeZoom);
+		sliceViewer.getZoomChangedSignal().connect(changeZoom);
 		zoomPanel.add(zoomSlider);
 		zoomPanel.add(new ToolButton(zoomOutAction));
 		// buttons
@@ -161,8 +193,8 @@ public class QuadView extends JFrame
 		JMenuItem item;
 
 		menu = new JMenu("File");
-		item = new JMenuItem("Open Folder...");
-		menu.add(item);
+		// item = new JMenuItem("Open Folder...");
+		menu.add(openFolderAction);
 		submenu = new JMenu("Open Recent");
 		submenu.setEnabled(false); // until we find some recent items...
 		menu.add(submenu);
@@ -249,8 +281,17 @@ public class QuadView extends JFrame
 		return toolBar;
 	}
 
+	void setZRange(double zMin, double zMax) {
+		int z0 = (int)Math.round(zMin / sliceViewer.getZResolution());
+		int z1 = (int)Math.round(zMax / sliceViewer.getZResolution());
+		zScanSlider.setMinimum(z0);
+		zScanSlider.setMaximum(z1);
+		zScanSpinner.setModel(new SpinnerNumberModel(z0, z0, z1, 1));
+	}
+	
+	
 	// Allow camera to respond to dragging Zoom Slider
-	class ZoomSliderListener implements ChangeListener
+	static class ZoomSliderListener implements ChangeListener
 	{
 		JSlider slider;
 		VolumeViewer viewer;

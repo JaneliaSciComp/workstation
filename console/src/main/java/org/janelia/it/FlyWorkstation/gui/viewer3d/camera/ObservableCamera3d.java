@@ -8,5 +8,5 @@ public interface ObservableCamera3d
 extends Camera3d
 {
 	public abstract QtSignal getViewChangedSignal();
-	QtSignal1<Double> getZoomChanged();
+	QtSignal1<Double> getZoomChangedSignal();
 }
