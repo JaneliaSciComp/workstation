@@ -55,6 +55,40 @@ public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileL
         channelCount = sc;
         pixelByteOrder = sliceStream.getEndian();
 
+        if ( sc > 1 ) {
+            throw new RuntimeException( "Unexpected multi-channel mask file." );
+        }
+
+        if ( sc == 0 ) {
+            throw new RuntimeException( "Unexpected zero channel count mask file." );
+        }
+
+        Set<Integer> values = null;
+        long rawRequired = (long)(sx * sy * sz) * (long)pixelBytes;
+
+        if ( rawRequired > Integer.MAX_VALUE ) {
+            values = readDownSampled(sliceStream);
+        }
+        else {
+            values = readBytes(sliceStream);
+        }
+
+        for ( Integer value: values ) {
+            System.out.print( value + "," );
+        }
+        System.out.println();
+        header = sliceStream.getHeaderKey();
+    }
+
+    /**
+     * This method will read in all bytes from the slice stream into a 3-D array. It will then "down-sample" those
+     * using a frequency-of-occurence algorithm, into some fraction of the original size, of cells.
+     *
+     * @param sliceStream source of input data.
+     * @return set of all distinct label values found in all cells.
+     * @throws IOException thrown by called methods.
+     */
+    private Set<Integer> readDownSampled(V3dRawImageStream sliceStream) throws IOException {
         maskVolume = new int[ sx ][ sy ][ sz ];
 
         // Temporary values, subject to change, by use of metadata file accompanying linked downsample.
@@ -64,14 +98,6 @@ public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileL
         int outSx = (int)Math.ceil( (double)sx / xScale );
         int outSy = (int)Math.ceil( (double)sy / yScale );
         int outSz = (int)Math.ceil( (double)sz / zScale );
-
-        if ( sc > 1 ) {
-            throw new RuntimeException( "Unexpected multi-channel mask file." );
-        }
-
-        if ( sc == 0 ) {
-            throw new RuntimeException( "Unexpected zero channel count mask file." );
-        }
 
         // Here, store all the values into a massive 3D array.  Dimensions very very unlikely
         // to exceed 16K.
@@ -151,31 +177,41 @@ public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileL
         sx = outSx;
         sy = outSy;
         sz = outSz;
+        return values;
+    }
 
-//        for (int z = 0; z < sz; z ++ ) {
-//            int zOffset = z * sx * sy;
-//            sliceStream.loadNextSlice();
-//            V3dRawImageStream.Slice slice = sliceStream.getCurrentSlice();
-//            for (int y = 0; y < sy; y ++ ) {
-//                int yOffset = zOffset + (sy-y) * sx;
-//                for (int x = 0; x < sx; x ++ ) {
-//                    Integer value = slice.getValue(x, y);
-//                    if ( value > 0 ) {
-//                        values.add( value );
-//                        for ( int pi = 0; pi < pixelBytes; pi ++ ) {
-//                            byte piByte = (byte)(value >>> (pi * 8) & 0x000000ff);
-//                            maskByteArray[(yOffset * pixelBytes) + (x * pixelBytes) + (pi)] = piByte;
-//                        }
-//                    }
-//                }
-//            }
-//        }
+    /**
+     * This method reads all information from the slice stream into the internal mask-byte-array (1-D) without
+     * attempting to subset or interpret the values.
+     *
+     * @param sliceStream source for data.
+     * @return distinct set of all values found in the stream.
+     * @throws IOException thrown by called methods.
+     */
+    private Set<Integer>  readBytes(V3dRawImageStream sliceStream) throws IOException {
+        maskByteArray = new byte[(sx * sy * sz) * pixelBytes];
 
-        for ( Integer value: values ) {
-            System.out.print( value + "," );
+        Set<Integer> values = new TreeSet<Integer>();
+        for (int z = 0; z < sz; z ++ ) {
+            int zOffset = z * sx * sy;
+            sliceStream.loadNextSlice();
+            V3dRawImageStream.Slice slice = sliceStream.getCurrentSlice();
+            for (int y = 0; y < sy; y ++ ) {
+                int yOffset = zOffset + (sy-y) * sx;
+                for (int x = 0; x < sx; x ++ ) {
+                    Integer value = slice.getValue(x, y);
+                    if ( value > 0 ) {
+                        values.add( value );
+                        for ( int pi = 0; pi < pixelBytes; pi ++ ) {
+                            byte piByte = (byte)(value >>> (pi * 8) & 0x000000ff);
+                            maskByteArray[(yOffset * pixelBytes) + (x * pixelBytes) + (pi)] = piByte;
+                        }
+                    }
+                }
+            }
         }
-        System.out.println();
-        header = sliceStream.getHeaderKey();
+
+        return values;
     }
 
 }
