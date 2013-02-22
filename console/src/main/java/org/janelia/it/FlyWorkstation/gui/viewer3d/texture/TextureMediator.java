@@ -100,17 +100,28 @@ public class TextureMediator {
             gl.glTexEnvi(GL2.GL_TEXTURE_ENV, GL2.GL_TEXTURE_ENV_MODE, GL2.GL_REPLACE);
             reportError( "glTexEnv MODE-REPLACE", gl );
 
-            gl.glTexImage3D(GL2.GL_TEXTURE_3D,
-                    0, // mipmap level
-                    getInternalFormat(), // as stored INTO graphics hardware, w/ srgb info (GLint internal format)
-                    textureData.getSx(), // width
-                    textureData.getSy(), // height
-                    textureData.getSz(), // depth
-                    0, // border
-                    getVoxelComponentOrder(), // voxel component order (GLenum format)
-                    getVoxelComponentType(), // voxel component type=packed RGBA values(GLenum type)
-                    data
-            );
+            try {
+                gl.glTexImage3D(GL2.GL_TEXTURE_3D,
+                        0, // mipmap level
+                        getInternalFormat(), // as stored INTO graphics hardware, w/ srgb info (GLint internal format)
+                        textureData.getSx(), // width
+                        textureData.getSy(), // height
+                        textureData.getSz(), // depth
+                        0, // border
+                        getVoxelComponentOrder(), // voxel component order (GLenum format)
+                        getVoxelComponentType(), // voxel component type=packed RGBA values(GLenum type)
+                        data
+                );
+
+            } catch ( Exception exGlTexImage ) {
+                logger.error(
+                        "Exception reported during texture upload of NAME:OFFS={}, FORMAT:COMP-ORDER:MULTIPLIER={}",
+                        this.textureName + ":" + this.getTextureOffset(),
+                        this.getInternalFormat() + ":" + this.getVoxelComponentOrder() + ":" +
+                        this.getStorageFormatMultiplier()
+                );
+                reportError( exGlTexImage.getMessage(), gl );
+            }
             reportError( "glTexImage", gl );
 
             // TEMP
