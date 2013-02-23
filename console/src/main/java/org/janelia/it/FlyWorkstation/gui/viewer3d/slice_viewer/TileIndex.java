@@ -3,6 +3,13 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 import java.util.List;
 import java.util.Vector;
 
+/**
+ * An efficiently hashable key that uniquely identifies a particular
+ * Tile2d or TileTexture in a RavelerTileServer.
+ * 
+ * @author brunsc
+ *
+ */
 public class TileIndex 
 {
 	public int getX() {

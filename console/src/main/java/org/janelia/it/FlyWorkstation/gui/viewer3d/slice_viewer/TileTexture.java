@@ -19,13 +19,20 @@ import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
 
 public class TileTexture 
 {
+	/**
+	 * Sequence of texture stages toward readiness for use.
+	 * 
+	 * @author brunsc
+	 *
+	 */
 	public static enum Stage 
 	{
 		LOAD_FAILED, // worst
 	    UNINITIALIZED, // initial state
-	    RAM_LOADING,
-	    RAM_LOADED,
-	    GL_LOADED // best
+	    LOAD_QUEUED, // waiting in load queue
+	    RAM_LOADING, // actively loading
+	    RAM_LOADED, // in memory
+	    GL_LOADED // best; in texture memory
 	}
 	
 	private static final Logger log = LoggerFactory.getLogger(TileTexture.class);

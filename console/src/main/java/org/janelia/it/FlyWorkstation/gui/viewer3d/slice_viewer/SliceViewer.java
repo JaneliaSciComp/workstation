@@ -37,7 +37,7 @@ implements MouseModalWidget, VolumeViewer
 	}
 	
 	protected MouseMode mouseMode = new PanMode();
-	protected WheelMode wheelMode = new ZoomMode();
+	protected WheelMode wheelMode;
 	protected ObservableCamera3d camera;
 	protected SliceRenderer renderer = new SliceRenderer();
 	protected Viewport viewport = renderer.getViewport();
@@ -61,6 +61,7 @@ implements MouseModalWidget, VolumeViewer
 	};
 	
 	public SliceViewer() {
+		wheelMode = new ZScanMode(this);
 		addGLEventListener(renderer);
 		setCamera(new BasicObservableCamera3d());
 		volume0.setViewport(viewport);

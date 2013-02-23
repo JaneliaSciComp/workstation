@@ -7,6 +7,7 @@ import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Point2D;
+
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 
@@ -39,6 +40,8 @@ implements WheelMode, MouseMode
 	@Override
 	public void mouseDragged(MouseEvent event) {
 		mode.mouseDragged(event);
+		if (event.isPopupTrigger())
+			return;
 		getComponent().getRubberBand().setEndPoint(event.getPoint());
 	}
 
@@ -65,6 +68,9 @@ implements WheelMode, MouseMode
 	@Override
 	public void mousePressed(MouseEvent event) {
 		mode.mousePressed(event);
+		// Don't zoom and context menu at the same time
+		if (event.isPopupTrigger())
+			return;
 		RubberBand rb = getComponent().getRubberBand();
 		rb.setStartPoint(event.getPoint());
 		rb.setEndPoint(event.getPoint());
@@ -75,7 +81,11 @@ implements WheelMode, MouseMode
 	public void mouseReleased(MouseEvent event) {
 		mode.mouseReleased(event);
 		RubberBand rb = getComponent().getRubberBand();
+		if (! rb.isVisible())
+			return;
 		rb.setVisible(false);
+		if (event.isPopupTrigger())
+			return;
 		Point p0 = rb.getStartPoint();
 		Point p1 = rb.getEndPoint();
 		// Don't zoom if box is too small

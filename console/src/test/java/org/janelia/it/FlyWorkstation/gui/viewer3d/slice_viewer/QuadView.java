@@ -8,6 +8,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -65,6 +66,7 @@ public class QuadView extends JFrame
     protected JPanel zPanel = new JPanel();
 	protected JSlider zScanSlider = new JSlider(JSlider.HORIZONTAL);
     protected JSpinner zScanSpinner = new JSpinner();
+	protected Action zScanScrollModeAction = new ZScanScrollModeAction(sliceViewer, sliceViewer);
 	protected Action nextZSliceAction = new NextZSliceAction(sliceViewer, sliceViewer);
 	protected Action previousZSliceAction = new PreviousZSliceAction(sliceViewer, sliceViewer);
 	protected Action advanceZSlicesAction = new AdvanceZSlicesAction(sliceViewer, sliceViewer, 10);
@@ -254,13 +256,16 @@ public class QuadView extends JFrame
 		submenu.add(item);
 		menu.add(submenu);
 		submenu = new JMenu("Scroll Mode");
+		menu.add(submenu);
 		submenu.setIcon(Icons.getIcon("mouse_scroll.png"));		
 		group = new ButtonGroup();
-		item = new JRadioButtonMenuItem(zoomScrollModeAction);
+		item = new JRadioButtonMenuItem(zScanScrollModeAction);
 		group.add(item);
 		submenu.add(item);
 		item.setSelected(true);
-		menu.add(submenu);
+		item = new JRadioButtonMenuItem(zoomScrollModeAction);
+		group.add(item);
+		submenu.add(item);
 		menu.addSeparator();
 		menu.add(resetViewAction);
 		menu.add(resetZoomAction);
@@ -306,10 +311,13 @@ public class QuadView extends JFrame
 		mouseModeLabel.setToolTipText("Scroll wheel mode:");
 		toolBar.add(mouseModeLabel);
 		group = new ButtonGroup();
-		button = new ToolModeButton(zoomScrollModeAction);
+		button = new ToolModeButton(zScanScrollModeAction);
 		group.add(button);
 		toolBar.add(button);
 		button.setSelected(true);
+		button = new ToolModeButton(zoomScrollModeAction);
+		group.add(button);
+		toolBar.add(button);
 
 		toolBar.addSeparator();
 		

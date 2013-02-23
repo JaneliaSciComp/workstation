@@ -8,6 +8,8 @@ import java.awt.Point;
 
 public class RubberBand
 {
+	// private static final Logger log = LoggerFactory.getLogger(RubberBand.class);
+
 	protected Color startColor = new Color(0.85f, 0.85f, 0.85f, 0.15f);
 	protected Color endColor = new Color(1.0f, 1.0f, 1.0f, 0.15f);
 	protected Color outlineColor = new Color(0.9f, 0.9f, 0.7f, 0.9f);
@@ -39,10 +41,11 @@ public class RubberBand
 	}
 
 	public void setEndPoint(Point endPoint) {
+		//log.info("setEndPoint");
 		if (this.endPoint == endPoint)
 			return;
 		this.endPoint = endPoint;
-		if (this.visible)
+		if (this.isVisible())
 			changed.emit();
 	}
 
@@ -51,6 +54,7 @@ public class RubberBand
 	}
 
 	public void setVisible(boolean visible) {
+		//log.info("setVisible "+visible);
 		if (this.visible == visible)
 			return;
 		this.visible = visible;
@@ -59,6 +63,7 @@ public class RubberBand
 
 	public void paint(Graphics2D g) 
 	{
+		//log.info("paint");
 		if (! visible)
 			return;
 		int x = startPoint.x;

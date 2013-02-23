@@ -7,7 +7,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-
+/**
+ * A group of Tile2d that together form a complete image on the SliceViewer,
+ * when the RavelerTileServer is used.
+ * 
+ * @author brunsc
+ *
+ */
 public class TileSet 
 extends Vector<Tile2d>
 {
@@ -19,6 +25,18 @@ extends Vector<Tile2d>
 		}
 	}
 	
+	public boolean canDisplay() 
+	{
+		for (Tile2d tile : this) {
+			TileTexture texture = tile.getBestTexture();
+			if (texture == null)
+				return false;
+			if (texture.getStage().ordinal() < TileTexture.Stage.RAM_LOADED.ordinal())
+				return false;
+		}
+		return true;
+	}
+
 	public Tile2d.Stage getMinStage() {
 		if (size() < 1)
 			return Tile2d.Stage.NO_TEXTURE_LOADED;

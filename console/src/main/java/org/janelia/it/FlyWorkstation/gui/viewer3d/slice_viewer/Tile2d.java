@@ -4,15 +4,22 @@ import java.util.Map;
 
 import javax.media.opengl.GL2;
 
-import org.eclipse.jetty.util.log.Log;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.TextureCoords;
 
+/**
+ * One rectangular region that forms part of the SliceViewer display,
+ * when the RavelerTileServer is used.
+ * 
+ * A particular Tile2d may use a lower resolution TileTexture, in case
+ * its corresponding full-resolution TileTexture is not yet available.
+ * 
+ * @author brunsc
+ *
+ */
 public class Tile2d 
 implements GLActor
 {
@@ -22,7 +29,7 @@ implements GLActor
 	    BEST_TEXTURE_LOADED
 	}
 
-	private static final Logger log = LoggerFactory.getLogger(TileTexture.class);
+	// private static final Logger log = LoggerFactory.getLogger(TileTexture.class);
 	
 	private Stage stage = Stage.NO_TEXTURE_LOADED;
 	private TileTexture bestTexture;
@@ -86,7 +93,7 @@ implements GLActor
 		// log.info("Rendering tile "+getIndex());
 		bestTexture.init(gl);
 		Texture texture = bestTexture.getTexture();
-		assert(texture != null);
+		assert texture != null;
 		texture.enable(gl);
 		texture.bind(gl);
 		texture.setTexParameteri(gl, GL2.GL_TEXTURE_WRAP_S, GL2.GL_CLAMP_TO_EDGE);
