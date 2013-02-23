@@ -129,27 +129,6 @@ implements GLActor, VolumeImage3d
 	public void setViewport(Viewport viewport) {
 		this.viewport = viewport;
 	}
-
-	// canDisplay() allows controller to make subtler decisions about rendering
-	public boolean canDisplay(GL2 gl, TileSet tiles) {
-		if (tiles == null)
-			return false;
-		if (tiles.size() < 1)
-			return false;
-		// Initialize and possibly trigger loading of the tile set
-		for (Tile2d tile : tiles)
-			tile.init(gl);
-		// Check whether tiles are actually displayable
-		for (Tile2d tile: tiles) {
-			TileTexture tileTexture = tile.getBestTexture();
-			if (tileTexture == null)
-				return false;
-			if (tileTexture.getStage().ordinal() < TileTexture.Stage.GL_LOADED.ordinal()) {
-				return false; // wait for more data to load
-			}
-		}
-		return true;
-	}
 	
 	protected TileSet createLatestTiles(Camera3d camera, Viewport viewport)
 	{
@@ -189,14 +168,13 @@ implements GLActor, VolumeImage3d
 		// In tile units
 		int xMin = (int)Math.floor(xFMin / tileWidth);
 		int xMax = (int)Math.floor(xFMax / tileWidth);
-		int yMin = (int)Math.floor(yFMin / tileHeight);
-		int yMax = (int)Math.floor(yFMax / tileHeight);
+		
 		// Correct for bottom Y origin of Raveler tile coordinate system
 		// (everything else is top Y origin: image, our OpenGL, user facing coordinate system)
-		int maxYTile = (int)Math.floor(getBoundingBox3d().getMax().getY() / tileHeight);
-		int tmp = maxYTile - yMin;
-		yMin = maxYTile - yMax;
-		yMax = tmp;
+		double bottomY = getBoundingBox3d().getMax().getY();
+		int yMin = (int)Math.floor((bottomY - yFMax) / tileHeight);
+		int yMax = (int)Math.floor((bottomY - yFMin) / tileHeight);
+		
 		for (int x = xMin; x <= xMax; ++x) {
 			for (int y = yMin; y <= yMax; ++y) {
 				TileIndex key = new TileIndex(x, y, z, zoom);
@@ -228,12 +206,20 @@ implements GLActor, VolumeImage3d
 				tile.setStage(Tile2d.Stage.NO_TEXTURE_LOADED);
 			}
 		}
-		if (! canDisplay(gl, tiles))
+		if (! tiles.canDisplay())
 			return;
+		// upload textures to video card, if needed
+		for (Tile2d tile: tiles) {
+			tile.init(gl);
+		}
 		// TODO - load shader?
 		for (Tile2d tile: tiles) {
 			tile.display(gl);
 		}
+		displayBoundingBox(gl);
+	}
+	
+	private void displayBoundingBox(GL2 gl) {
 		// For debugging, draw bounding box
 		gl.glDisable(GL2.GL_TEXTURE_2D);
 		gl.glColor3d(1.0, 1.0, 0.2);
@@ -248,7 +234,7 @@ implements GLActor, VolumeImage3d
 		gl.glVertex3d(a.getX(), b.getY(), 0.0);
 		gl.glVertex3d(a.getX(), a.getY(), 0.0);
 		gl.glEnd();
-		gl.glColor3d(1.0, 1.0, 1.0);
+		gl.glColor3d(1.0, 1.0, 1.0);		
 	}
 
 	@Override

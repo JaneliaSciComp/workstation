@@ -10,7 +10,7 @@ public class ResetZoomAction extends AbstractAction {
 
 	public ResetZoomAction(SliceViewer widget) {
 		this.widget = widget;
-		putValue(NAME, "Fit to Window");
+		putValue(NAME, "Zoom Min");
 		putValue(SHORT_DESCRIPTION,
 				"Zoom out to show entire volume.");
 	}

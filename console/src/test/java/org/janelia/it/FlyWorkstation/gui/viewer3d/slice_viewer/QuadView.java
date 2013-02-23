@@ -11,9 +11,9 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
-import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -31,6 +31,7 @@ import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.text.DefaultFormatter;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
@@ -64,6 +65,7 @@ public class QuadView extends JFrame
 	protected Action zoomMouseModeAction = new ZoomMouseModeAction(sliceViewer);
 	protected Action zoomOutAction = new ZoomOutAction(sliceViewer.getCamera());
 	protected Action zoomScrollModeAction = new ZoomScrollModeAction(sliceViewer);
+	protected Action zoomMaxAction = new ZoomMaxAction(sliceViewer, sliceViewer);
 
 	// Z scan
     protected JPanel zPanel = new JPanel();
@@ -192,13 +194,25 @@ public class QuadView extends JFrame
         zScanSlider.setPaintTicks(true);
         // zScanSlider.setPaintTrack(false); // just seeing...
         zPanel.add(zScanSlider);
-        zScanSlider.addChangeListener(new ZScanSliderListener(zScanSlider, sliceViewer));
+        zScanSlider.addChangeListener(new ZScanSliderListener());
         sliceViewer.getCamera().getFocusChangedSignal().connect(changeZ);
         zPanel.add(new ToolButton(nextZSliceAction));
         zPanel.add(new ToolButton(advanceZSlicesAction));
+        zPanel.add(zScanSpinner);
         zScanSpinner.setPreferredSize(new Dimension(65, zScanSpinner.getPreferredSize().height));
         zScanSpinner.setMaximumSize(zScanSpinner.getPreferredSize());
-        zPanel.add(zScanSpinner);
+        // Crazy Java! Good thing we have StackOverflow.com!
+        // http://stackoverflow.com/questions/3949382/jspinner-value-change-events
+	    JComponent comp = zScanSpinner.getEditor();
+	    JFormattedTextField field = (JFormattedTextField) comp.getComponent(0);
+	    DefaultFormatter formatter = (DefaultFormatter) field.getFormatter();
+	    formatter.setCommitsOnValidEdit(true);
+	    zScanSpinner.addChangeListener(new ChangeListener() {
+	        @Override
+	        public void stateChanged(ChangeEvent e) {
+	            setZSlice((Integer)zScanSpinner.getValue());
+	        }
+	    });
         sliceViewer.getDataChangedSignal().connect(updateRangesSlot);
         // Controls
 		controlPanel.setLayout(new BoxLayout(controlPanel, BoxLayout.Y_AXIS));
@@ -230,7 +244,7 @@ public class QuadView extends JFrame
 		upperControls.add(buttonsPanel);
 		buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
 		buttonsPanel.add(new JButton(resetZoomAction));
-		buttonsPanel.add(new JButton("Zoom Max"));
+		buttonsPanel.add(new JButton(zoomMaxAction));
 		buttonsPanel.add(new JButton(resetViewAction));
 		buttonsPanel.add(Box.createVerticalGlue());
 		// colors
@@ -298,6 +312,7 @@ public class QuadView extends JFrame
 		menu.add(resetZoomAction);
 		menu.add(zoomOutAction);
 		menu.add(zoomInAction);
+		menu.add(zoomMaxAction);
 		menuBar.add(menu);
 
 		menu = new JMenu("Help");
@@ -350,32 +365,27 @@ public class QuadView extends JFrame
 		
 		return toolBar;
 	}
+	
+	private boolean setZSlice(int z) {
+		Vec3 oldFocus = sliceViewer.getFocus();
+		int oldValue = (int)Math.round(oldFocus.getZ() / sliceViewer.getZResolution());
+		if (oldValue == z)
+			return false; // camera is already pretty close
+		double newZ = z * sliceViewer.getZResolution();
+		double minZ = sliceViewer.getBoundingBox3d().getMin().getZ();
+		double maxZ = sliceViewer.getBoundingBox3d().getMax().getZ();
+		newZ = Math.max(newZ, minZ);
+		newZ = Math.min(newZ, maxZ);
+		sliceViewer.setFocus(new Vec3(oldFocus.getX(), oldFocus.getY(), newZ));
+		return true;
+	}
 
 
-	static class ZScanSliderListener implements ChangeListener
+	class ZScanSliderListener implements ChangeListener
 	{
-		JSlider slider;
-		VolumeViewer viewer;
-		int previousValue = -1;
-		
-		ZScanSliderListener(JSlider slider, VolumeViewer viewer) 
-		{
-			this.viewer = viewer;
-			this.slider = slider;
-		}
-
 		@Override
 		public void stateChanged(ChangeEvent arg0) {
-			int value = this.slider.getValue();
-			if (value == previousValue)
-				return;
-			previousValue = value;
-			Vec3 oldFocus = viewer.getFocus();
-			int oldValue = (int)Math.round(oldFocus.getZ() / viewer.getZResolution());
-			if (oldValue == value)
-				return; // camera is already pretty close
-			double newZ = value * viewer.getZResolution();
-			viewer.setFocus(new Vec3(oldFocus.getX(), oldFocus.getY(), newZ));
+			setZSlice(zScanSlider.getValue());
 		}
 	}
 	
