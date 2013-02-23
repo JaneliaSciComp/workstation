@@ -6,9 +6,20 @@ package org.janelia.it.FlyWorkstation.gui.framework.console;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public enum Perspective {
-    ImageBrowser,
-    AlignmentBoard,
-    SplitPicker,
-    AnnotationSession,
-    TaskMonitoring,
+    
+    ImageBrowser("Image Browsing"),
+    AlignmentBoard("Alignment Board"),
+    SplitPicker("Split Picking"),
+    AnnotationSession("Annotation Session"),
+    TaskMonitoring("Task Monitoring");
+    
+    private String name;
+    
+    private Perspective(String name) {
+        this.name = name;
+    }
+    
+    public String getName() {
+        return name;
+    }
 }
