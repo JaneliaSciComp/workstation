@@ -1,10 +1,10 @@
 package org.janelia.it.FlyWorkstation.model.viewer;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapperFactory;
+import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;

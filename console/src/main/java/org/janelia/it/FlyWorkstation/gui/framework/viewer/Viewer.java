@@ -8,6 +8,7 @@ import java.util.concurrent.Callable;
 import javax.swing.JPanel;
 
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
+import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
 
 /**

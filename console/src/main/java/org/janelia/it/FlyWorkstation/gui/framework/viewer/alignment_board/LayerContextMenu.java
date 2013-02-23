@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.outline;
+package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
@@ -14,13 +14,13 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
-import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;

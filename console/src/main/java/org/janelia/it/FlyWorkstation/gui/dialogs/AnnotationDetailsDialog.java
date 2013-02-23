@@ -11,8 +11,8 @@ import javax.swing.*;
 import loci.plugins.config.SpringUtilities;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.model.utils.AnnotationSession;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 
 /**

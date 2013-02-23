@@ -1,7 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
 import org.janelia.it.FlyWorkstation.gui.dialogs.MAASearchDialog;
-import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
+import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;

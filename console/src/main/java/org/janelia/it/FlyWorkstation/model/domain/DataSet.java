@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
+import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 

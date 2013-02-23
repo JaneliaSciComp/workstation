@@ -4,8 +4,8 @@ import java.awt.Desktop;
 import java.io.File;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
-import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
+import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
+import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 

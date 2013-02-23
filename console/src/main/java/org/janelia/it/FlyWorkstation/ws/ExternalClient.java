@@ -4,7 +4,7 @@
  * Date: 8/9/11
  * Time: 9:00 AM
  */
-package org.janelia.it.FlyWorkstation.gui.framework.session_mgr;
+package org.janelia.it.FlyWorkstation.ws;
 
 import java.net.URL;
 import java.util.Map;
@@ -20,7 +20,8 @@ import org.apache.axis2.transport.http.HTTPConstants;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

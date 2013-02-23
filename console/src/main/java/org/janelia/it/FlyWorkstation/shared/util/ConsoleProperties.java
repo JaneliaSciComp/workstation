@@ -4,7 +4,7 @@
  * Date: 6/17/11
  * Time: 12:47 PM
  */
-package org.janelia.it.FlyWorkstation.gui.util;
+package org.janelia.it.FlyWorkstation.shared.util;
 
 import java.io.File;
 import java.io.FileInputStream;

@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.util;
+package org.janelia.it.FlyWorkstation.shared.workers;
 
 import java.awt.*;
 import java.awt.event.WindowAdapter;

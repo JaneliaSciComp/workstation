@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.janelia.it.FlyWorkstation.gui.util;
+package org.janelia.it.FlyWorkstation.shared.util;
 
 /**
  * Adapted from IDEA code base.

@@ -8,10 +8,10 @@ import javax.swing.ProgressMonitor;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationBuilderDialog;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
+import org.janelia.it.FlyWorkstation.model.utils.AnnotationSession;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.model.ontology.OntologyElement;

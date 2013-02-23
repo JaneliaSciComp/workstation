@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.util;
+package org.janelia.it.FlyWorkstation.shared.filestore;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -6,6 +6,8 @@ import java.net.MalformedURLException;
 import org.hibernate.Hibernate;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModel;
+import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
+import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 import org.janelia.it.FlyWorkstation.web.FileProxyService;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;

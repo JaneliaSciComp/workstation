@@ -7,8 +7,8 @@ import javax.jws.WebParam;
 import javax.jws.WebService;
 import javax.jws.soap.SOAPBinding;
 
-import org.janelia.it.FlyWorkstation.gui.framework.keybind.OntologyKeyBindings;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
+import org.janelia.it.FlyWorkstation.model.utils.AnnotationSession;
+import org.janelia.it.FlyWorkstation.model.utils.OntologyKeyBindings;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;

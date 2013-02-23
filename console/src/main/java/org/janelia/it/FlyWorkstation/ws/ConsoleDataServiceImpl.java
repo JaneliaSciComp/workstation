@@ -17,12 +17,11 @@ import javax.jws.soap.SOAPBinding;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
-import org.janelia.it.FlyWorkstation.gui.framework.keybind.OntologyKeyBindings;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.AnnotationSession;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.ExternalClient;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
-import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
+import org.janelia.it.FlyWorkstation.model.utils.AnnotationSession;
+import org.janelia.it.FlyWorkstation.model.utils.OntologyKeyBindings;
+import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
+import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;

@@ -2,11 +2,11 @@ package org.janelia.it.FlyWorkstation.gui.dialogs.search;
 
 import org.apache.solr.common.SolrDocument;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchAttribute.DataStore;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchAttribute.DataType;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.compute.api.support.EntityDocument;
 import org.janelia.it.jacs.compute.api.support.SageTerm;
 import org.janelia.it.jacs.compute.api.support.SolrUtils;

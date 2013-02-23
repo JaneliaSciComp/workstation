@@ -3,7 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.tree;
 import javax.swing.SwingUtilities;
 import javax.swing.tree.DefaultMutableTreeNode;
 
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 
 /**
  * A worker thread which loads the children or ancestors for a node in a DynamicTree. 

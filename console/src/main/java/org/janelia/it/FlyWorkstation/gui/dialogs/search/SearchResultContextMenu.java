@@ -15,7 +15,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTree;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTreeCellRenderer;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityData;
 

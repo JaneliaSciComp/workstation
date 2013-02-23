@@ -26,7 +26,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.DynamicTree;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.tasks.Task;
 import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;

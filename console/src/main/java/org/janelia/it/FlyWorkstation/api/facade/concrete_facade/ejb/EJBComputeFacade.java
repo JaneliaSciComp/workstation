@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.ComputeFacade;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
+import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.filecache.WebDavClient;
 import org.janelia.it.jacs.compute.api.ComputeBeanRemote;
 import org.janelia.it.jacs.model.tasks.Task;

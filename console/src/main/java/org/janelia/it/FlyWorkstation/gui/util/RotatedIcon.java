@@ -7,6 +7,8 @@ import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import javax.swing.Icon;
 
+import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
+
 /**
  * From http://tips4java.wordpress.com/2009/04/06/rotated-icon/
  * 

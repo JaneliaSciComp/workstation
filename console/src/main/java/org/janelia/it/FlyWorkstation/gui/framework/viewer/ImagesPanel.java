@@ -12,6 +12,7 @@ import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Annotations;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
+import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.ontology.OntologyAnnotation;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;

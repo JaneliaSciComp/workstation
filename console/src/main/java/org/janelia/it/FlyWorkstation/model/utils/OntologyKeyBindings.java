@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.keybind;
+package org.janelia.it.FlyWorkstation.model.utils;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
+
 
 /**
  * The set of key bindings for an ontology. 

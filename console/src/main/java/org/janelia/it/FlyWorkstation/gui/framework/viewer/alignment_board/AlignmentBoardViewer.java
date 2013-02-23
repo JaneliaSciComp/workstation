@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.viewer;
+package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import java.awt.BorderLayout;
 import java.util.Arrays;
@@ -10,12 +10,10 @@ import javax.swing.JLabel;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
-import org.janelia.it.FlyWorkstation.api.entity_model.events.AlignmentBoardItemChangeEvent;
-import org.janelia.it.FlyWorkstation.api.entity_model.events.AlignmentBoardOpenEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.ABLoadWorker;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.ABTransferHandler;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerPane;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
@@ -23,6 +21,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.domain.Neuron;
 import org.janelia.it.FlyWorkstation.model.domain.Sample;
+import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.*;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.ArtifactType;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.Channels;

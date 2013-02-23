@@ -4,7 +4,7 @@ import java.util.*;
 
 import org.janelia.it.FlyWorkstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.FlyWorkstation.api.stub.data.NoDataException;
-import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
+import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
 
 public class FacadeManager {
 

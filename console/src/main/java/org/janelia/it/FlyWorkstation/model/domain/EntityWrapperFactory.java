@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.model.domain;
 
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
+import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 

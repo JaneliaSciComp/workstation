@@ -5,6 +5,7 @@ import java.util.concurrent.Callable;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.*;
+import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

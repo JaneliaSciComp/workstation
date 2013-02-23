@@ -13,10 +13,11 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.IndeterminateProgressMonitor;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.LayersPanel;
 import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
+import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

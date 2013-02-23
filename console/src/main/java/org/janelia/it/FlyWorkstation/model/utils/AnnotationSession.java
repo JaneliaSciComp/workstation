@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.outline;
+package org.janelia.it.FlyWorkstation.model.utils;
 
 import java.util.ArrayList;
 import java.util.HashSet;

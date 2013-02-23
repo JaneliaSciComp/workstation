@@ -1,11 +1,11 @@
-package org.janelia.it.FlyWorkstation.gui.util;
+package org.janelia.it.FlyWorkstation.model.utils;
 
 import java.util.List;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
+import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -17,7 +17,6 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class FolderUtils {
-
 	
 	public static RootedEntity saveEntitiesToFolder(RootedEntity parentFolder, String folderName, List<Long> entityIds) throws Exception {
 	
@@ -44,10 +43,9 @@ public class FolderUtils {
 	public static RootedEntity saveEntitiesToCommonRoot(String commonRootName, List<Long> entityIds) throws Exception {
 
 		Entity saveFolder = null;
-		List<EntityData> rootEds = SessionMgr.getBrowser().getEntityOutline().getRootEntity().getOrderedEntityData();
-		for(EntityData rootEd : rootEds) {
-			final Entity commonRoot = rootEd.getChildEntity();
-			if (!commonRoot.getOwnerKey().equals(SessionMgr.getSubjectKey())) continue;
+		List<Entity> commonRoots = ModelMgr.getModelMgr().getCommonRootEntities();
+		for(Entity commonRoot : commonRoots) {
+		    if (!ModelMgrUtils.hasWriteAccess(commonRoot)) continue;
 			if (commonRoot.getName().equals(commonRootName)) {
 				saveFolder = commonRoot;
 			}

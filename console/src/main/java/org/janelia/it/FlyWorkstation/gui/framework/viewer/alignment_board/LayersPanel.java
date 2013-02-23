@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.outline;
+package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -13,20 +13,20 @@ import javax.swing.table.TableColumnModel;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.events.AlignmentBoardItemChangeEvent;
-import org.janelia.it.FlyWorkstation.api.entity_model.events.AlignmentBoardItemChangeEvent.ChangeType;
-import org.janelia.it.FlyWorkstation.api.entity_model.events.AlignmentBoardOpenEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityWrapperTransferHandler;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardItemChangeEvent.ChangeType;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.domain.Neuron;
 import org.janelia.it.FlyWorkstation.model.domain.Sample;
+import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.netbeans.swing.outline.*;
 import org.slf4j.Logger;
@@ -56,7 +56,7 @@ public class LayersPanel extends JPanel implements Refreshable {
         setBorder(BorderFactory.createLineBorder((Color)UIManager.get("windowBorder")));
         treesPanel = new JPanel(new BorderLayout());
         add(treesPanel, BorderLayout.CENTER);
-        showLoadingIndicator();
+        showNothing();
     }
 
     public void showNothing() {
@@ -226,6 +226,7 @@ public class LayersPanel extends JPanel implements Refreshable {
     public void loadAlignmentBoard(final RootedEntity rootedEntity, final Callable<Void> success) {
         
         log.debug("loadAlignmentBoard: {}",rootedEntity.getName());
+        showLoadingIndicator();
         
         if (loadInProgress.getAndSet(true)) {
             log.debug("Refresh in progress, killing it");
@@ -235,8 +236,6 @@ public class LayersPanel extends JPanel implements Refreshable {
         }
         
         if (outline==null) init();
-        
-        showLoadingIndicator();
         
         this.worker = new SimpleWorker() {
             

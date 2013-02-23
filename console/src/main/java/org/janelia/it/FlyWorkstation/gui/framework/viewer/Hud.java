@@ -7,9 +7,9 @@ import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.gui.dialogs.ModalDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
+import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;

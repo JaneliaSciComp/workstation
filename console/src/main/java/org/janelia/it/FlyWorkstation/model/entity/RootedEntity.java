@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.viewer;
+package org.janelia.it.FlyWorkstation.model.entity;
 
 import java.util.*;
 

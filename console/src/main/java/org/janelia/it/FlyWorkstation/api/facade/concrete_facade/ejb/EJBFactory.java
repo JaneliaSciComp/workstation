@@ -7,7 +7,7 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModel;
-import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
+import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.jacs.compute.api.*;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;

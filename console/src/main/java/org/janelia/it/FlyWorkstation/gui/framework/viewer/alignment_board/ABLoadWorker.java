@@ -1,8 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.AlignmentBoardViewer;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeLoader;
@@ -11,6 +9,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.AlignmentBoardDataBuilder;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

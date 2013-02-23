@@ -3,7 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.outline;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
+import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.TifImageInfoDialog;
 import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 

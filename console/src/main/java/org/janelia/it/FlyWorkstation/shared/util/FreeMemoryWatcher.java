@@ -1,6 +1,5 @@
 package org.janelia.it.FlyWorkstation.shared.util;
 
-import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 
 /**
  * Created by IntelliJ IDEA.

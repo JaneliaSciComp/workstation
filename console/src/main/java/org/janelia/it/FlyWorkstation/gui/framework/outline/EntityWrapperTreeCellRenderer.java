@@ -14,9 +14,9 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.TreeCellRenderer;
 
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
-import org.janelia.it.FlyWorkstation.shared.util.ModelMgrUtils;
 import org.janelia.it.jacs.model.entity.Entity;
 
 /**

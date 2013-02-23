@@ -15,6 +15,8 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OntologyElementAction;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.model.utils.OntologyKeyBind;
+import org.janelia.it.FlyWorkstation.model.utils.OntologyKeyBindings;
 import org.janelia.it.jacs.model.ontology.OntologyRoot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

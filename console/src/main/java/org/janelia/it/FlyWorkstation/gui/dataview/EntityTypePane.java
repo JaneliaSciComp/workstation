@@ -15,7 +15,7 @@ import javax.swing.tree.TreePath;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchResultsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.compute.api.support.SolrUtils;
 import org.janelia.it.jacs.model.entity.EntityAttribute;
 import org.janelia.it.jacs.model.entity.EntityType;

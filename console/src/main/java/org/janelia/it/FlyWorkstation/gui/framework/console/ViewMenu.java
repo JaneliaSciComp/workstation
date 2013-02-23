@@ -11,7 +11,7 @@ import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
+import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 
 /**
  * Created by IntelliJ IDEA.

@@ -1,9 +1,11 @@
-package org.janelia.it.FlyWorkstation.gui.util;
+package org.janelia.it.FlyWorkstation.shared.workers;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.Timer;
+
+
 
 /**
  * A SimpleWorker that fakes its progress by incrementing one percent per second. 

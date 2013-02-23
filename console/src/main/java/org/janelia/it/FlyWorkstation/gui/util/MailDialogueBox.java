@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.util;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.text_component.StandardTextArea;
 import org.janelia.it.jacs.shared.utils.MailHelper;
 

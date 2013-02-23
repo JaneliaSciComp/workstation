@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.keybind;
+package org.janelia.it.FlyWorkstation.model.utils;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;

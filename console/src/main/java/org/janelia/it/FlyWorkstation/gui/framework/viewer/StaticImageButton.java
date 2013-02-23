@@ -8,6 +8,7 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 
 /**

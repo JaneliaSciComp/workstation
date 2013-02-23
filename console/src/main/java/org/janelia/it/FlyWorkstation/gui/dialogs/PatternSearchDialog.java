@@ -17,10 +17,10 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelection
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityOutline;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
-import org.janelia.it.FlyWorkstation.gui.util.FolderUtils;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
+import org.janelia.it.FlyWorkstation.model.utils.FolderUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.shared.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

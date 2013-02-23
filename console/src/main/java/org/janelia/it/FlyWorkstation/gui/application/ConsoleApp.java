@@ -15,11 +15,11 @@ import org.janelia.it.FlyWorkstation.gui.framework.exception_handlers.ExitHandle
 import org.janelia.it.FlyWorkstation.gui.framework.exception_handlers.UserNotificationExceptionHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ApplicationSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.panels.DataSourceSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.server_status.ServerStatusReportManager;
+import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

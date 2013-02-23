@@ -15,7 +15,7 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.keybind;
 
-import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
+import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 
 import javax.swing.*;
 import java.awt.*;

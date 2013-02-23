@@ -7,6 +7,7 @@ import javax.swing.JComponent;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
+import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
 /**

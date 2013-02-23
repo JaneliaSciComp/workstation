@@ -1,11 +1,10 @@
-package org.janelia.it.FlyWorkstation.shared.util;
+package org.janelia.it.FlyWorkstation.api.entity_model.management;
 
 import java.util.*;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
+import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -154,13 +153,5 @@ public class ModelMgrUtils {
 			orderIndex++;
 		}
 		ModelMgr.getModelMgr().saveOrUpdateEntity(entity);
-    }
-
-    public static Collection<Entity> getEntities(Collection<EntityWrapper> wrappers) {
-        List<Entity> entities = new ArrayList<Entity>();
-        for(EntityWrapper wrapper : wrappers) {
-            entities.add(wrapper.getInternalEntity());
-        }
-        return entities;
     }
 }

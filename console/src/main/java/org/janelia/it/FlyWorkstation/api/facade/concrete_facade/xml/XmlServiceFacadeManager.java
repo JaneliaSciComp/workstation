@@ -9,7 +9,7 @@ import java.util.*;
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.*;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.ConnectionStatus;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
-import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
+import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 
 /**
  * This facade manager provides all facades to field requests for data

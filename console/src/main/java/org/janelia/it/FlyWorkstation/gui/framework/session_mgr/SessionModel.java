@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.session_mgr;
 
 import org.janelia.it.FlyWorkstation.gui.framework.keybind.KeyBindings;
+import org.janelia.it.FlyWorkstation.ws.ExternalClient;
 
 import java.util.*;
 

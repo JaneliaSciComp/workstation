@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.model.domain;
 
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
+import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 
 public class AlignedEntityWrapper extends EntityWrapper {
 

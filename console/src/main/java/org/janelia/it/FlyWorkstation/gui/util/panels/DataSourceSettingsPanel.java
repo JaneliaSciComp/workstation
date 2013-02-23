@@ -5,8 +5,8 @@ import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.framework.roles.PrefEditor;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.gui.util.swing_models.CollectionJListModel;
+import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
 import org.janelia.it.FlyWorkstation.shared.util.text_component.StandardTextField;
 

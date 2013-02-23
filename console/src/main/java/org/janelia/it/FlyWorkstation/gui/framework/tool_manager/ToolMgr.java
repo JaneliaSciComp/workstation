@@ -4,11 +4,11 @@ import org.janelia.it.FlyWorkstation.gui.framework.console.ToolsMenu;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
-import org.janelia.it.FlyWorkstation.gui.util.PathTranslator;
-import org.janelia.it.FlyWorkstation.gui.util.SystemInfo;
+import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.preferences.InfoObject;
 import org.janelia.it.FlyWorkstation.shared.preferences.PrefMgrListener;
 import org.janelia.it.FlyWorkstation.shared.preferences.PreferenceManager;
+import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

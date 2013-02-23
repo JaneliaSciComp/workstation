@@ -17,7 +17,7 @@ import org.janelia.it.FlyWorkstation.gui.dialogs.search.SearchConfiguration.Attr
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicColumn;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicTable;
-import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityType;
 
