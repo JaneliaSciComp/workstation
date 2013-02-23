@@ -100,26 +100,28 @@ public class EntityModel {
 	private Entity putOrUpdate(Entity entity) {
 		if (entity==null || !EntityUtils.isInitialized(entity) || entity.getEntityType()==null) {
 			// This is an uninitialized entity, which cannot go into the cache
+		    log.trace("putOrUpdate: entity is null or uninitialized");
 			return null;
 		}
 		if (!EntityUtils.isInitialized(entity.getEntityActorPermissions())) {
+		    log.trace("putOrUpdate: entity permissions are uninitialized");
 			return null;
 		}
 		synchronized (this) {
 			Entity canonicalEntity = entityCache.getIfPresent(entity.getId());
 			if (canonicalEntity!=null) {
 				if (!EntityUtils.areEqual(canonicalEntity, entity)) {
-					log.debug("Updating cached instance {} (@{})",canonicalEntity.getName(),System.identityHashCode(canonicalEntity));
+					log.debug("putOrUpdate: Updating cached instance {} (@{})",canonicalEntity.getName(),System.identityHashCode(canonicalEntity));
 					EntityUtils.updateEntity(canonicalEntity, entity);	
 					notifyEntityChanged(canonicalEntity);
 				}
 				else {
-					log.debug("Returning cached instance {} (@{})",canonicalEntity.getName(),System.identityHashCode(canonicalEntity));
+					log.debug("putOrUpdate: Returning cached instance {} (@{})",canonicalEntity.getName(),System.identityHashCode(canonicalEntity));
 				}
 			}
 			else {
 				canonicalEntity = entity;
-				log.debug("Caching {} (@{})",entity.getName(),System.identityHashCode(entity));
+				log.debug("putOrUpdate: Caching {} (@{})",entity.getName(),System.identityHashCode(entity));
 				entityCache.put(entity.getId(), entity);
 			}
 			
@@ -145,7 +147,6 @@ public class EntityModel {
 	 * @return canonical entity instance
 	 */
 	private Entity putOrUpdate(Entity entity, boolean recurse) {
-		Entity putEntity = putOrUpdate(entity);
 		if (recurse) {
 			for(EntityData ed : entity.getEntityData()) {
 				if (ed.getChildEntity()!=null && EntityUtils.isInitialized(ed.getChildEntity())) {
@@ -154,7 +155,7 @@ public class EntityModel {
 				}
 			}
 		}
-		return putEntity;
+        return putOrUpdate(entity);
 	}
 	
 	/**
@@ -811,8 +812,8 @@ public class EntityModel {
             boardEntity = entityFacade.saveEntity(alignmentBoardFolder);
             
             RootedEntity abRootedEntity = new RootedEntity(alignmentBoardFolder);
-            abRootedEntity.getChild(childEd);
-            return abRootedEntity;
+
+            return abRootedEntity.getChild(childEd);
         }
     }
     
@@ -907,9 +908,13 @@ public class EntityModel {
      * @param parent
      */
     private void replaceUnloadedChildrenWithForbiddenEntities(Entity parent, boolean recurse) {
+        if (parent==null) return;
+        if (parent instanceof ForbiddenEntity) return;
+        if (parent.getEntityData()==null) return;
         for(EntityData ed : parent.getEntityData()) {
         	if (ed.getChildEntity()!=null) {
 	        	if (!EntityUtils.isInitialized(ed.getChildEntity())) {
+	        	    log.trace("replacing unloaded entity with forbidden entity: {}",ed.getChildEntity().getId());
 	        		ed.setChildEntity(new ForbiddenEntity(ed.getChildEntity()));
 	        	}
 	        	else if (recurse) {
@@ -930,6 +935,7 @@ public class EntityModel {
         if (parent.getEntityData()==null) return;
         for(EntityData ed : parent.getEntityData()) {
             if (ed.getChildEntity() instanceof ForbiddenEntity) {
+                log.trace("replacing forbidden entity with unloaded entity: {}",ed.getChildEntity().getId());
                 ForbiddenEntity fe = (ForbiddenEntity)ed.getChildEntity();
                 ed.setChildEntity(fe.getEntity());
             }

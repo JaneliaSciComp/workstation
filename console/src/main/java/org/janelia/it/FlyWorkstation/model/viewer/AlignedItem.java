@@ -17,7 +17,7 @@ import org.janelia.it.jacs.model.entity.EntityData;
  */
 public class AlignedItem extends EntityWrapper {
     
-    private EntityWrapper cachedItem;
+    private EntityWrapper itemWrapper;
     
     public AlignedItem(RootedEntity rootedEntity) {
         super(rootedEntity);
@@ -29,21 +29,21 @@ public class AlignedItem extends EntityWrapper {
         // TODO: sanity check everything against the alignment context
         
         initChildren();
+        ModelMgr.getModelMgr().loadLazyEntity(getInternalEntity(), false);
         
         RootedEntity rootedEntity = getInternalRootedEntity();
         EntityData itemEd = rootedEntity.getEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_ENTITY);
         if (itemEd!=null) {
-            this.cachedItem = EntityWrapperFactory.wrap(rootedEntity.getChild(itemEd));
+            this.itemWrapper = EntityWrapperFactory.wrap(rootedEntity.getChild(itemEd));
         }
         
         for(RootedEntity child : rootedEntity.getChildrenForAttribute(EntityConstants.ATTRIBUTE_ITEM)) {
             addChild(new AlignedItem(child));
         }
-        
     }
     
-    public EntityWrapper getEntity() {
-        return cachedItem;
+    public EntityWrapper getItemWrapper() {
+        return itemWrapper;
     }
     
     public boolean isVisible() {

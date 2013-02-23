@@ -11,8 +11,8 @@ import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 public class AlignmentBoardItemChangeEvent extends AlignmentBoardEvent {
    
     public enum ChangeType {
-        Creation,
-        Deletion,
+        Added,
+        Removed,
         VisibilityChange,
         ColorChange
     }

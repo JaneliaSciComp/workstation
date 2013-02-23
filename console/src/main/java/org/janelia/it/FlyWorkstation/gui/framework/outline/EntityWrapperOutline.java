@@ -262,13 +262,13 @@ public abstract class EntityWrapperOutline extends EntityWrapperTree implements 
     
     @Subscribe 
     public void entityInvalidated(EntityInvalidationEvent event) {
-        log.debug("Some entities were invalidated so we're refreshing the tree");
+        log.info("Some entities were invalidated so we're refreshing the outline");
         refresh(false, true, null);
     }
 
 	@Override
 	public void refresh() {
-		refresh(false, null);
+		refresh(true, null);
 	}
 
 	@Override

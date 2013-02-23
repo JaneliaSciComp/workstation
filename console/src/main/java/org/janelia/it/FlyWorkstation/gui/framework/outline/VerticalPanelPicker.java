@@ -15,6 +15,8 @@ import org.janelia.it.FlyWorkstation.gui.util.CompoundIcon;
 import org.janelia.it.FlyWorkstation.gui.util.CompoundIcon.Axis;
 import org.janelia.it.FlyWorkstation.gui.util.RotatedIcon;
 import org.janelia.it.FlyWorkstation.gui.util.TextIcon;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An IntelliJ-like side panel with vertical icons to switch between panels.
@@ -23,10 +25,14 @@ import org.janelia.it.FlyWorkstation.gui.util.TextIcon;
  */
 public class VerticalPanelPicker extends JPanel {
 
+    private static final Logger log = LoggerFactory.getLogger(VerticalPanelPicker.class);
+    
 	private final JPanel mainPanel;
 	private final JPanel buttonPanel;
 	private final ButtonGroup buttonGroup;
 	private final Map<String,JPanel> panelMap = new HashMap<String,JPanel>();
+	private final Map<String,JToggleButton> buttonMap = new HashMap<String,JToggleButton>();
+	private String selectedPanel;
 	
 	public VerticalPanelPicker() {
 		setLayout(new BorderLayout());
@@ -60,12 +66,17 @@ public class VerticalPanelPicker extends JPanel {
 		
 		buttonPanel.add(button);
 		buttonGroup.add(button);
-		
+		buttonMap.put(title, button);
 		panelMap.put(title, panel);
 	}
 	
 	public void showPanel(String name) {
-
+	    
+	    if (name.equals(selectedPanel)) return;
+	    this.selectedPanel = name;
+	    
+	    log.info("showPanel: {}",name);
+	    
         JPanel panel = panelMap.get(name);
         if (panel==null) throw new IllegalArgumentException("No such panel: "+name);
         
@@ -78,18 +89,22 @@ public class VerticalPanelPicker extends JPanel {
 	    }
 	    
 		mainPanel.removeAll();
-		
+
+		// Toggle button
+        JToggleButton button = buttonMap.get(name);
+        button.setSelected(true);
+        
 		// Activate new panel
 		mainPanel.add(panel);
 		revalidate();
 		repaint();
 		
 		try {
-    		if (panel instanceof Refreshable) {
-    			((Refreshable)panel).refresh();
-    		}
             if (panel instanceof ActivatableView) {
                 ((ActivatableView)panel).activate();
+            }
+            else if (panel instanceof Refreshable) {
+                ((Refreshable)panel).refresh();
             }
 		}
 		catch (Exception e) {

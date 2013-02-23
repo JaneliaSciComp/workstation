@@ -27,6 +27,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModelListenerAdapter;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.AlignmentBoardViewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ImageCache;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.*;
@@ -425,7 +426,7 @@ public class Browser extends JFrame implements Cloneable {
 //			        
 //                    @Override
 //                    protected void doStuff() throws Exception {
-//                        Entity cr = ModelMgr.getModelMgr().getEntityById(1842353839806611627L);
+//                        Entity cr = ModelMgr.getModelMgr().getEntityById(1844506916470915243L);
 //                        if (cr==null) {
 //                            throw new IllegalStateException("Cannot find test AB folder");
 //                        }
@@ -1487,6 +1488,7 @@ public class Browser extends JFrame implements Cloneable {
             outlookBar.setVisibleBarByName(Browser.BAR_SAMPLES);
             selectRightPanel(OUTLINE_LAYERS);
             viewerManager.clearAllViewers();
+            viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), AlignmentBoardViewer.class);
             break;
         case SplitPicker:
             outlookBar.setVisibleBarByName(Browser.BAR_DATA);
@@ -1517,7 +1519,6 @@ public class Browser extends JFrame implements Cloneable {
         if (SystemInfo.isMac && lafName!=null && lafName.contains("synthetica")) {
             offsetY=20;
         }
-        
         BrowserPosition consolePosition = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
         consolePosition.setBrowserLocation(new Point(0, offsetY));
         SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, consolePosition);        

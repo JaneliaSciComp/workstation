@@ -96,7 +96,14 @@ public abstract class EntityWrapper {
         this.children = new ArrayList<EntityWrapper>();
     }
     
+    /**
+     * Override to load child in a given context. If you override this method, you MUST call initChildren, so that 
+     * getChildren() starts returning a list instead of null.
+     * @param alignmentContext
+     * @throws Exception
+     */
     public void loadContextualizedChildren(AlignmentContext alignmentContext) throws Exception {
+        initChildren();
     }
 
     protected void addChild(EntityWrapper child) {
@@ -105,4 +112,12 @@ public abstract class EntityWrapper {
         }
         children.add(child);
     }
+
+    @Override
+    public String toString() {
+        return "EntityWrapper [id=" + getId() + ", name=" + getName() + ", type=" + getType()
+                + ", role=" + getRole() + ", owner=" + getOwnerKey() + "]";
+    }
+    
+    
 }

@@ -29,10 +29,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.gui.util.SimpleWorker;
-import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityAttribute;
-import org.janelia.it.jacs.model.entity.EntityData;
-import org.janelia.it.jacs.model.entity.EntityType;
+import org.janelia.it.jacs.model.entity.*;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,10 +47,9 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	
 	private ModelMgrAdapter mml;
 	private String currUniqueId;
-    
 
     public EntityOutline() {
-		super(true);
+		super();
 		this.setMinimumSize(new Dimension(400, 400));
 		showLoadingIndicator();
 		this.mml = new ModelMgrAdapter() {
@@ -248,15 +244,14 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
                             // Update database
                             newBoard = ModelMgr.getModelMgr().createAlignmentBoard(boardName);
                             
-//                            Entity board = newBoard.getEntity();
-//
-//                            board.setChildByAttributeName(EntityConstants.ATTRIBUTE_ALIGNMENT_SPACE, alignmentSpace);
-//                            board.setValueByAttributeName(EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION, "0.62x0.62x0.62");
-//                            board.setValueByAttributeName(EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION, "1024x512x218");
-//                            
-//                            alignmentSpaceEntity.setName("Unified 20x Alignment Space");
-//                            AlignmentSpace alignmentSpace = new AlignmentSpace(alignmentSpaceEntity);
-//                            AlignmentContext alignmentContext = new AlignmentContext(alignmentSpace, , );
+                            // TODO: this should ask the user what kind of alignment board they want to create
+                            // for now it's hardcoded
+                            Entity board = newBoard.getEntity();
+                            board.setValueByAttributeName(EntityConstants.ATTRIBUTE_ALIGNMENT_SPACE, "Unified 20x Alignment Space");
+                            board.setValueByAttributeName(EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION, "0.62x0.62x0.62");
+                            board.setValueByAttributeName(EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION, "1024x512x218");
+                            ModelMgr.getModelMgr().saveOrUpdateEntity(board);
+                            
                         }
                         @Override
                         protected void hadSuccess() {
@@ -340,13 +335,13 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 
 	@Subscribe 
 	public void entityInvalidated(EntityInvalidationEvent event) {
-		log.debug("Some entities were invalidated so we're refreshing the tree");
+		log.info("Some entities were invalidated so we're refreshing the tree");
 		refresh(false, true, null);
 	}
 
 	@Override
 	public void refresh() {
-		refresh(false, null);
+		refresh(true, null);
 	}
 
 	@Override

@@ -69,6 +69,7 @@ public class EntityWrapperTree extends JPanel implements ActivatableView {
     @Override
     public void activate() {
         ModelMgr.getModelMgr().registerOnEventBus(this);
+        refresh();
     }
 
     @Override

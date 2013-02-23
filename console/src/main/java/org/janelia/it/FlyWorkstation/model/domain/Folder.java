@@ -24,7 +24,6 @@ public class Folder extends EntityWrapper {
     public void loadContextualizedChildren(AlignmentContext alignmentContext) throws Exception {
 
         initChildren();
-        
         ModelMgr.getModelMgr().loadLazyEntity(getInternalEntity(), false);
         
         // TODO: in the future, this should only show samples which have results in this context, but that's currently

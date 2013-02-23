@@ -1,5 +1,9 @@
 package org.janelia.it.FlyWorkstation.model.viewer;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -10,7 +14,8 @@ public class AlignmentBoardContext extends AlignedItem {
 
     private static final Logger log = LoggerFactory.getLogger(AlignmentBoardContext.class);
     
-    protected AlignmentContext context;
+    private AlignmentContext context;
+    private List<AlignedItem> alignedItems;
     
     public AlignmentBoardContext(RootedEntity rootedEntity) {
         super(rootedEntity);
@@ -23,15 +28,27 @@ public class AlignmentBoardContext extends AlignedItem {
     @Override
     public void loadContextualizedChildren(AlignmentContext alignmentContext) throws Exception {
 
+        log.trace("loading alignment board");
         initChildren();
+        this.alignedItems = new ArrayList<AlignedItem>();
+        
+        ModelMgr.getModelMgr().loadLazyEntity(getInternalEntity(), false);
         
         RootedEntity rootedEntity = getInternalRootedEntity();
+        
         for(RootedEntity child : rootedEntity.getChildrenForAttribute(EntityConstants.ATTRIBUTE_ITEM)) {
-            addChild(new AlignedItem(child));
+            log.trace("adding child: {}",child.getName());
+            AlignedItem item = new AlignedItem(child);
+            addChild(item);
+            alignedItems.add(item);
         }
     }
 
     public AlignmentContext getAlignmentContext() {
         return context;
+    }
+    
+    public List<AlignedItem> getAlignedItems() {
+        return alignedItems;
     }
 }
