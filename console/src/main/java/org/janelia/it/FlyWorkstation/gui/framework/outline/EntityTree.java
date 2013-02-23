@@ -46,8 +46,6 @@ public class EntityTree extends JPanel implements ActivatableView {
 	
     protected final JPanel treesPanel;
     protected DynamicTree selectedTree;
-    protected boolean lazy;
-    
     private SimpleWorker loadingWorker;
 	private EntityData rootEntityData;
     
@@ -56,13 +54,7 @@ public class EntityTree extends JPanel implements ActivatableView {
 	private Map<String,DefaultMutableTreeNode> uniqueIdToNodeMap = new HashMap<String,DefaultMutableTreeNode>();
 	
     public EntityTree() {
-        this(false);
-    }
-
-    public EntityTree(boolean lazy) {
         super(new BorderLayout());
-        
-        this.lazy = lazy;
         treesPanel = new JPanel(new BorderLayout());
         add(treesPanel, BorderLayout.CENTER);
     }
@@ -70,6 +62,7 @@ public class EntityTree extends JPanel implements ActivatableView {
     @Override
     public void activate() {
         ModelMgr.getModelMgr().registerOnEventBus(this);
+        refresh();
     }
 
     @Override
@@ -114,12 +107,7 @@ public class EntityTree extends JPanel implements ActivatableView {
             private Entity rootEntity;
 
             protected void doStuff() throws Exception {
-                if (lazy) {
-                    rootEntity = ModelMgr.getModelMgr().getEntityById(rootId);
-                }
-                else {
-                    rootEntity = ModelMgr.getModelMgr().getEntityTree(rootId);
-                }
+                rootEntity = ModelMgr.getModelMgr().getEntityById(rootId);
             }
 
             protected void hadSuccess() {
@@ -271,7 +259,7 @@ public class EntityTree extends JPanel implements ActivatableView {
     protected void createNewTree(EntityData root) {
 
     	this.rootEntityData = root;
-        selectedTree = new DynamicTree(root, true, lazy) {
+        selectedTree = new DynamicTree(root, true, true) {
 
             protected void showPopupMenu(MouseEvent e) {
                 EntityTree.this.showPopupMenu(e);
@@ -430,6 +418,10 @@ public class EntityTree extends JPanel implements ActivatableView {
 		    			log.warn("Encountered null EntityData while building unique id: "+sb);
 		    			return null;
 		    		}
+		    		if (ed.getChildEntity()==null) {
+                        log.warn("Encountered null Entity while building unique id: "+sb);
+                        return null;
+                    }
 		    		String nodeId = ed.getId()==null ? "" : "ed_"+ed.getId();
 		    		nodeId += "/" + "e_"+ed.getChildEntity().getId();
 					sb.insert(0, nodeId);
