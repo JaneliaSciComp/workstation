@@ -10,8 +10,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 public class ZScanScrollModeAction extends AbstractAction 
 {
 	private static final long serialVersionUID = 1L;
+	WheelMode zScanMode;
 	protected MouseModalWidget widget;
-	protected VolumeImage3d image;
 
 	public ZScanScrollModeAction(MouseModalWidget widget, VolumeImage3d image) {
 		putValue(NAME, "Z-Scan");
@@ -19,13 +19,13 @@ public class ZScanScrollModeAction extends AbstractAction
 		putValue(SHORT_DESCRIPTION, 
 				"Set scroll wheel mode to reveal different image slices.");
 		this.widget = widget;
-		this.image = image;
+		zScanMode = new ZScanMode(image);
+		zScanMode.setComponent(widget);
 	}
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		WheelMode mode = new ZScanMode(image);
-		mode.setComponent(widget);
-		widget.setWheelMode(mode);
+		widget.setWheelMode(zScanMode);
+		putValue(SELECTED_KEY, true);
 	}
 }

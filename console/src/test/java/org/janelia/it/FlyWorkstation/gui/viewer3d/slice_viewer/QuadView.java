@@ -4,13 +4,18 @@ import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.net.URL;
 
+import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.ActionMap;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ButtonGroup;
+import javax.swing.InputMap;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
@@ -25,6 +30,7 @@ import javax.swing.JSlider;
 import javax.swing.JSpinner;
 import javax.swing.JSplitPane;
 import javax.swing.JToolBar;
+import javax.swing.KeyStroke;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
@@ -35,8 +41,11 @@ import javax.swing.text.DefaultFormatter;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class QuadView extends JFrame 
+public class QuadView 
+extends JFrame
 {
 	static {
 		// Use top menu bar on Mac
@@ -52,12 +61,16 @@ public class QuadView extends JFrame
 	}
 	
 	private static final long serialVersionUID = 1L;
+	private static final Logger log = LoggerFactory.getLogger(QuadView.class);
+	
 	protected SliceViewer sliceViewer = new SliceViewer();
 	protected Action resetViewAction = new ResetViewAction(sliceViewer);
 	protected Action resetZoomAction = new ResetZoomAction(sliceViewer);
 	protected Action panModeAction = new PanModeAction(sliceViewer);
 	protected Action openFolderAction = new OpenFolderAction(sliceViewer, sliceViewer);
 	protected RecentFileList recentFileList;
+	protected boolean modifierKeyPressed = false;
+	protected JPanel motherPanel = new JPanel(); // Container for all but status bar
 
 	// Zoom 
 	protected JSlider zoomSlider = new JSlider(JSlider.VERTICAL);
@@ -154,8 +167,42 @@ public class QuadView extends JFrame
 	public QuadView() {
 		setTitle("QuadView");
         setupUi();
-	}
+        interceptModifierKeyPresses();
+ 	}
 	
+	private void interceptModifierKeyPresses() 
+	{ 
+        // Intercept Shift key strokes at the highest level JComponent we can find.
+        InputMap inputMap = motherPanel.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, KeyEvent.SHIFT_DOWN_MASK, false),
+        		"ModifierPressed");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, KeyEvent.CTRL_DOWN_MASK, false),
+        		"ModifierPressed");
+        
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, 0, true),
+				"ModifierReleased");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0, true),
+				"ModifierReleased");
+        
+        ActionMap actionMap = motherPanel.getActionMap();
+        actionMap.put("ModifierPressed", new AbstractAction() 
+        {
+			private static final long serialVersionUID = 1L;
+			@Override
+            public void actionPerformed(ActionEvent e) {
+                setModifierKeyPressed(true);
+            }
+        });
+        actionMap.put("ModifierReleased", new AbstractAction() 
+        {
+			private static final long serialVersionUID = 1L;
+			@Override
+            public void actionPerformed(ActionEvent e) {
+                setModifierKeyPressed(false);
+            }
+        });
+	}
+
 	protected void setupUi() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		createMenus();
@@ -165,7 +212,7 @@ public class QuadView extends JFrame
 		container.add(createStatusBar(container));
 		// Next level - tool bar vs rest - tool bar requires BorderLayout parent
 		Container parent = container;
-		container = new JPanel();
+		container = motherPanel;
 		container.setLayout(new BorderLayout(0,0));
 		container.add(createToolBar(), BorderLayout.NORTH);
 		parent.add(container, 0); // put main area north of status bar
@@ -284,6 +331,7 @@ public class QuadView extends JFrame
 		menuBar.add(menu);
 
 		menu = new JMenu("View");
+		menuBar.add(menu);
 		submenu = new JMenu("Mouse Mode");
 		submenu.setIcon(Icons.getIcon("mouse_left.png"));
 		// only one mouse mode is active at a time
@@ -313,7 +361,11 @@ public class QuadView extends JFrame
 		menu.add(zoomOutAction);
 		menu.add(zoomInAction);
 		menu.add(zoomMaxAction);
-		menuBar.add(menu);
+		menu.addSeparator();
+		menu.add(goBackZSlicesAction);
+		menu.add(previousZSliceAction);
+		menu.add(nextZSliceAction);
+		menu.add(advanceZSlicesAction);
 
 		menu = new JMenu("Help");
 		menuBar.add(menu);
@@ -364,6 +416,19 @@ public class QuadView extends JFrame
 		toolBar.addSeparator();
 		
 		return toolBar;
+	}
+
+	private void setModifierKeyPressed(boolean pressed) 
+	{
+		// Has the status changed since last time?
+		if (pressed == modifierKeyPressed)
+			return; // no change
+		modifierKeyPressed = pressed; // changed!
+		// Shift to select zoom scroll mode
+		if (pressed)
+			zoomScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
+		else if (zScanScrollModeAction.isEnabled())
+			zScanScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
 	}
 	
 	private boolean setZSlice(int z) {
@@ -418,5 +483,5 @@ public class QuadView extends JFrame
 			viewer.setPixelsPerSceneUnit(zoom);
 		}
 	}
-	
+
 }

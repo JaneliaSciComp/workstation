@@ -10,6 +10,7 @@ public class ZoomScrollModeAction extends AbstractAction
 {
 	private static final long serialVersionUID = 1L;
 	protected MouseModalWidget widget;
+	protected ZoomMode zoomMode = new ZoomMode();
 
 	public ZoomScrollModeAction(MouseModalWidget widget) {
 		putValue(NAME, "Zoom");
@@ -17,12 +18,12 @@ public class ZoomScrollModeAction extends AbstractAction
 		putValue(SHORT_DESCRIPTION, 
 				"Set scroll wheel mode to Zoom in and out.");
 		this.widget = widget;
+		zoomMode.setComponent(widget);
 	}
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		WheelMode mode = new ZoomMode();
-		mode.setComponent(widget);
-		widget.setWheelMode(mode);
+		widget.setWheelMode(zoomMode);
+		putValue(SELECTED_KEY, true); // this mode is now selected
 	}
 }

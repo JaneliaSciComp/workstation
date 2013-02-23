@@ -29,5 +29,6 @@ public class ZoomMouseModeAction extends AbstractAction
 		MouseMode mode = new ZoomMode();
 		mode.setComponent(widget);
 		widget.setMouseMode(mode);
+		putValue(SELECTED_KEY, true);
 	}
 }

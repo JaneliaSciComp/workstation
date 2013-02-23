@@ -25,8 +25,6 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import antlr.collections.impl.IntRange;
-
 // Viewer widget for viewing 2D quadtree tiles from pyramid data structure
 public class SliceViewer 
 extends BaseGLViewer
