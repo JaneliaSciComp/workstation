@@ -40,12 +40,14 @@ public class ExpansionState {
 	};
 	
     public void storeExpansionState(DynamicTree dynamicTree) {
+        if (dynamicTree==null) return;
     	expanded.clear();
     	this.selected = dynamicTree.getUniqueId(dynamicTree.getCurrentNode());
     	storeExpansionState(dynamicTree, dynamicTree.getRootNode());
     }
     
 	public void storeExpansionState(DynamicTree dynamicTree, DefaultMutableTreeNode node) {
+	    if (dynamicTree==null) return;
     	if (dynamicTree.getTree().isExpanded(new TreePath(node.getPath()))) {
     		expanded.add(dynamicTree.getUniqueId(node));
     	}
@@ -57,10 +59,12 @@ public class ExpansionState {
     }
 
     public void restoreExpansionState(DynamicTree dynamicTree, boolean restoreSelection) {
+        if (dynamicTree==null) return;
     	restoreExpansionState(dynamicTree, dynamicTree.getRootNode(), restoreSelection, null);
     }
     
     public void restoreExpansionState(DynamicTree dynamicTree, boolean restoreSelection, Callable<Void> success) {
+        if (dynamicTree==null) return;
     	restoreExpansionState(dynamicTree, dynamicTree.getRootNode(), restoreSelection, success);
     	setStartedAllWorkers(true);
     	callSuccessFunction(success);
