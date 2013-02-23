@@ -3,6 +3,9 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.net.URL;
+
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -53,7 +56,7 @@ public class QuadView extends JFrame
 	protected Action resetZoomAction = new ResetZoomAction(sliceViewer);
 	protected Action panModeAction = new PanModeAction(sliceViewer);
 	protected Action openFolderAction = new OpenFolderAction(sliceViewer, sliceViewer);
-
+	protected RecentFileList recentFileList;
 
 	// Zoom 
 	protected JSlider zoomSlider = new JSlider(JSlider.VERTICAL);
@@ -72,6 +75,15 @@ public class QuadView extends JFrame
 	protected Action advanceZSlicesAction = new AdvanceZSlicesAction(sliceViewer, sliceViewer, 10);
 	protected Action goBackZSlicesAction = new GoBackZSlicesAction(sliceViewer, sliceViewer, -10);
 	
+	protected QtSlot1<Vec3> changeZ = new QtSlot1<Vec3>(this) {
+		@Override
+		public void execute(Vec3 focus) {
+			int z = (int)Math.round(focus.getZ() / sliceViewer.getZResolution());
+			zScanSlider.setValue(z);
+			zScanSpinner.setValue(z);
+		}
+	};
+
 	protected QtSlot1<Double> changeZoom = new QtSlot1<Double>(this) {
 		@Override
 		public void execute(Double zoom) {
@@ -84,12 +96,12 @@ public class QuadView extends JFrame
 		}
 	};
 	
-	protected QtSlot1<Vec3> changeZ = new QtSlot1<Vec3>(this) {
+	protected QtSlot1<URL> rememberLoadedFileSlot = new QtSlot1<URL>(this) {
 		@Override
-		public void execute(Vec3 focus) {
-			int z = (int)Math.round(focus.getZ() / sliceViewer.getZResolution());
-			zScanSlider.setValue(z);
-			zScanSpinner.setValue(z);
+		public void execute(URL url) {
+			if (recentFileList == null)
+				return;
+			recentFileList.add(url);
 		}
 	};
 	
@@ -103,17 +115,30 @@ public class QuadView extends JFrame
 			int z0 = (int)Math.round(zMin / sliceViewer.getZResolution());
 			int z1 = (int)Math.round(zMax / sliceViewer.getZResolution());
 			assert z1 >= z0;
-			zPanel.setVisible((z1 - z0) > 1);
-			int z = (int)Math.round(sliceViewer.getFocus().getZ() / sliceViewer.getZResolution());
-			if (z < z0)
-				z = z0;
-			if (z > z1)
-				z = z1;
-			zScanSlider.setMinimum(z0);
-			zScanSlider.setMaximum(z1);
-			zScanSlider.setValue(z);
-			zScanSpinner.setModel(new SpinnerNumberModel(z, z0, z1, 1));
+			// Z-scan is only relevant if there is more than one slice.
+			boolean useZScan = ((z1 - z0) > 1);
+			if (useZScan) {
+				zPanel.setVisible(true);
+				sliceViewer.setWheelMode(new ZScanMode(sliceViewer));
+				zScanScrollModeAction.setEnabled(true);
+				zScanScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
+				int z = (int)Math.round(sliceViewer.getFocus().getZ() / sliceViewer.getZResolution());
+				if (z < z0)
+					z = z0;
+				if (z > z1)
+					z = z1;
+				zScanSlider.setMinimum(z0);
+				zScanSlider.setMaximum(z1);
+				zScanSlider.setValue(z);
+				zScanSpinner.setModel(new SpinnerNumberModel(z, z0, z1, 1));
+			}
+			else { // no Z scan
+				zPanel.setVisible(false);
+				zoomScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
+				zScanScrollModeAction.setEnabled(false);
+			}
 		}
+		// TODO update zoom range too?
 	};
 
 	public static void main(String[] args) {
@@ -233,7 +258,9 @@ public class QuadView extends JFrame
 		// item = new JMenuItem("Open Folder...");
 		menu.add(openFolderAction);
 		submenu = new JMenu("Open Recent");
-		submenu.setEnabled(false); // until we find some recent items...
+		recentFileList = new RecentFileList(submenu);
+		sliceViewer.getFileLoadedSignal().connect(rememberLoadedFileSlot);
+		recentFileList.getOpenUrlRequestedSignal().connect(sliceViewer.getLoadUrlSlot());
 		menu.add(submenu);
 		menuBar.add(menu);
 

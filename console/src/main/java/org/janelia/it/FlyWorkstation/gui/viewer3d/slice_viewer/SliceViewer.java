@@ -22,6 +22,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import antlr.collections.impl.IntRange;
 
@@ -31,6 +33,7 @@ extends BaseGLViewer
 implements MouseModalWidget, VolumeViewer
 {
 	private static final long serialVersionUID = 1L;
+	private static final Logger log = LoggerFactory.getLogger(SliceViewer.class);
 	static public GLProfile glProfile;
 	static {
 		glProfile = BaseGLViewer.profile;
@@ -51,6 +54,20 @@ implements MouseModalWidget, VolumeViewer
 			"/Volumes/jacsData/brunsTest/clack_test16/Z");
 	protected VolumeImage3d volumeImage = volume0;
 	protected GLActor volumeActor = volume0;
+	
+	public QtSignal1<URL> getFileLoadedSignal() {
+		return fileLoadedSignal;
+	}
+
+	protected QtSignal1<URL> fileLoadedSignal = new QtSignal1<URL>();
+	
+	protected QtSlot1<URL> loadUrlSlot = new QtSlot1<URL>(this) {
+		@Override
+		public void execute(URL url) {
+			log.info("loadUrlSlot");
+			loadURL(url);
+		}
+	};
 	
 	protected QtSlot repaintSlot = new QtSlot(this) {
 		@Override
@@ -75,6 +92,10 @@ implements MouseModalWidget, VolumeViewer
         renderer.addActor(volumeActor);
         volumeImage.getDataChangedSignal().connect(getRepaintSlot());
         resetView();
+	}
+
+	public QtSlot1<URL> getLoadUrlSlot() {
+		return loadUrlSlot;
 	}
 
 	@Override
@@ -365,8 +386,11 @@ implements MouseModalWidget, VolumeViewer
 	@Override
 	public boolean loadURL(URL url) {
 		boolean result = volumeImage.loadURL(url);
-		if (result)
+		if (result) {
 			resetView();
+			log.info("emitting file loaded signal");
+			getFileLoadedSignal().emit(url);
+		}
 		return result;
 	}
 }
