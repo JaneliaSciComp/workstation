@@ -121,7 +121,7 @@ public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
 							String selected = sb.toString();
 							expansion.setSelectedUniqueId(selected);
 
-							EntityTree tree = new EntityTree(true);
+							EntityTree tree = new EntityTree();
 							tree.initializeTree((Entity)path.get(0));
 							tree.getDynamicTree().setCellRenderer(new EntityTreeCellRenderer() {
 								@Override

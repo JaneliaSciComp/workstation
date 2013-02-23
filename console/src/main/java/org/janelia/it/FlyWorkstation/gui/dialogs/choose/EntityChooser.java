@@ -33,7 +33,7 @@ public class EntityChooser extends AbstractChooser<EntityData> {
     
     public EntityChooser(String title, EntityOutline entityOutline) {
     	setTitle(title);
-        entityTree = new EntityTree(entityOutline.getDynamicTree().isLazyLoading()) {
+        entityTree = new EntityTree() {
             protected void nodeDoubleClicked(MouseEvent e) {
                 chooseSelection();
             }
