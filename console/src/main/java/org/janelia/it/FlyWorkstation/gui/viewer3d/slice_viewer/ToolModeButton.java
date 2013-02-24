@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
+import java.awt.Insets;
+
 import javax.swing.Action;
 import javax.swing.JToggleButton;
 
@@ -19,6 +21,12 @@ public class ToolModeButton extends JToggleButton
 		setHideActionText(true); // Want icon only; no text
 		setFocusable(false); // Remove that useless blue glow on Mac
 		setRolloverEnabled(true); // No effect on Mac?
+		setHideActionText(true); // Want icon only; no text
+		setFocusable(false);
+		setAlignmentX(CENTER_ALIGNMENT); // so it lines up with (centered) zoom slider
+		setAlignmentY(CENTER_ALIGNMENT);
+		setMargin(new Insets(0,0,0,0)); // keep the button small
+		setMaximumSize(getPreferredSize()); // does this help?
 	}
 	
 	@Override

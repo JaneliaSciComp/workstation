@@ -1,8 +1,10 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -290,6 +292,8 @@ extends JFrame
 		Container buttonsPanel = new JPanel();
 		upperControls.add(buttonsPanel);
 		buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
+		JButton button = new JButton(resetZoomAction);
+		button.setAlignmentX(Component.RIGHT_ALIGNMENT); // first child sets alignment
 		buttonsPanel.add(new JButton(resetZoomAction));
 		buttonsPanel.add(new JButton(zoomMaxAction));
 		buttonsPanel.add(new JButton(resetViewAction));
@@ -302,7 +306,11 @@ extends JFrame
 		colorsPanel.add(new ColorChannelWidget(0));
 		colorsPanel.add(new ColorChannelWidget(1));
 		colorsPanel.add(new ColorChannelWidget(2));
-		colorsPanel.add(new JButton("Reset Colors"));
+		button = new JButton("Reset Colors");
+		// All components in a BoxLayout should have the same alignment
+		// So the color widgets really set the pattern here
+		button.setAlignmentX(Component.RIGHT_ALIGNMENT); // moves it a LITTLE to the right...
+		colorsPanel.add(button);
         //Display the window.
         pack();
         setSize( getContentPane().getPreferredSize() );

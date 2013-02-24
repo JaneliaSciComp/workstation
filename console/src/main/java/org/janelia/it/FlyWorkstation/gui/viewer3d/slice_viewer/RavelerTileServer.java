@@ -23,6 +23,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.jogamp.opengl.util.texture.Texture;
 
@@ -30,6 +32,8 @@ import com.jogamp.opengl.util.texture.Texture;
 public class RavelerTileServer 
 implements GLActor, VolumeImage3d
 {
+	// private static final Logger log = LoggerFactory.getLogger(RavelerTileServer.class);
+
 	/*
 	 * A TileSet is a group of rectangles that complete the SliceViewer image
 	 * display.
@@ -89,7 +93,7 @@ implements GLActor, VolumeImage3d
 	private int zoomMax = 0;
 	private int zoomMin = 0;
 	private Map<TileIndex, TileTexture> textureCache = new Hashtable<TileIndex, TileTexture>();
-	private ExecutorService textureLoadExecutor = Executors.newFixedThreadPool(4);
+	private ExecutorService textureLoadExecutor = Executors.newFixedThreadPool(1);
 	private Set<TileIndex> neededTextures;
 	private Map<String, String> metadata = new Hashtable<String, String>();
 	//
@@ -199,6 +203,7 @@ implements GLActor, VolumeImage3d
 			return;
 		// Possibly eliminate texture cache
 		if (needsGlDisposal) {
+			// log.info("Clearing tile cache");
 			dispose(gl);
 			textureCache.clear();
 			for (Tile2d tile : tiles) {
@@ -272,6 +277,10 @@ implements GLActor, VolumeImage3d
 		latestTiles = createLatestTiles(camera, viewport);
 		latestTiles.assignTextures(textureCache);
 		
+		// Need to assign textures to emergency tiles too...
+		if (emergencyTiles != null)
+			emergencyTiles.assignTextures(textureCache);
+		
 		// Maybe initialize emergency tiles
 		if (emergencyTiles == null)
 			emergencyTiles = latestTiles;
@@ -281,11 +290,13 @@ implements GLActor, VolumeImage3d
 		// Which tile set will we display this time?
 		TileSet result = latestTiles;
 		if (latestTiles.canDisplay()) {
+			// log.info("Using Latest tiles");
 			emergencyTiles = latestTiles;
 			lastGoodTiles = latestTiles;
 			result = latestTiles;
 		}
 		else if (emergencyTiles.canDisplay()) {
+			// log.info("Using Emergency tiles");
 			lastGoodTiles = emergencyTiles;
 			result = emergencyTiles;
 			// These emergency tiles will now be displayed.
@@ -293,6 +304,7 @@ implements GLActor, VolumeImage3d
 			emergencyTiles = latestTiles; 
 		}
 		else {
+			// log.info("Using LastGood tiles");
 			// Fall back to a known displayable
 			result = lastGoodTiles;
 		}
@@ -309,6 +321,10 @@ implements GLActor, VolumeImage3d
 			// Then load the best ones
 			newNeededTextures.addAll(latestTiles.getBestNeededTextures());
 		// Use set/getNeededTextures() methods for thread safety
+		// log.info("Needed textures:");
+		for (TileIndex ix : newNeededTextures) {
+			// log.info("  "+ix);
+		}
 		setNeededTextures(newNeededTextures);
 		queueTextureLoad(getNeededTextures());
 		
