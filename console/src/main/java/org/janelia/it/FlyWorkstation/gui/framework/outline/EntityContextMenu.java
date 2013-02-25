@@ -29,6 +29,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.tool_manager.ToolMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Hud;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.utils.AnnotationSession;
+import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
@@ -1077,8 +1078,9 @@ public class EntityContextMenu extends JPopupMenu {
         if (!OpenInFinderAction.isSupported())
             return null;
         String filepath = EntityUtils.getAnyFilePath(rootedEntity.getEntity());
+        JMenuItem menuItem = null;
         if (!StringUtils.isEmpty(filepath)) {
-            OpenInFinderAction action = new OpenInFinderAction(rootedEntity.getEntity()) {
+            menuItem = getActionItem(new OpenInFinderAction(rootedEntity.getEntity()) {
                 @Override
                 public String getName() {
                     String name = super.getName();
@@ -1086,10 +1088,12 @@ public class EntityContextMenu extends JPopupMenu {
                         return null;
                     return "  " + name;
                 }
-            };
-            return getActionItem(action);
+            });
+            if (!PathTranslator.isMounted()) {
+                menuItem.setEnabled(false);
+            }
         }
-        return null;
+        return menuItem;
     }
 
     protected JMenuItem getOpenWithAppItem() {

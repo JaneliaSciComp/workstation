@@ -7,6 +7,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenWithDefaultAppAct
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.context_menu.AbstractContextMenu;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -278,10 +279,14 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 		if (!OpenInFinderAction.isSupported()) return null;
 		final Entity entity = getSelectedElement();
     	String filepath = EntityUtils.getAnyFilePath(entity);
+    	JMenuItem menuItem = null;
         if (!StringUtils.isEmpty(filepath)) {
-        	return getActionItem(new OpenInFinderAction(entity));
+        	menuItem = getActionItem(new OpenInFinderAction(entity));
+            if (!PathTranslator.isMounted()) {
+                menuItem.setEnabled(false);
+            }
         }
-        return null;
+        return menuItem;
 	}
 	
 	protected JMenuItem getOpenWithAppItem() {

@@ -21,8 +21,7 @@ public class OpenInFinderAction implements Action {
 	 * @return true if this operation is supported on the current system.
 	 */
 	public static boolean isSupported() {
-        return (SystemInfo.isMac || SystemInfo.isLinux || SystemInfo.isWindows) &&
-                PathTranslator.isMounted();
+        return (SystemInfo.isMac || SystemInfo.isLinux || SystemInfo.isWindows);
 	}
 	
 	public OpenInFinderAction(Entity entity) {

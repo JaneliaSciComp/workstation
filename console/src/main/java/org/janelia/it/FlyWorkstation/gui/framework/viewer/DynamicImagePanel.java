@@ -4,8 +4,8 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagLayout;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.FileNotFoundException;
+import java.net.URL;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
@@ -231,8 +231,8 @@ public abstract class DynamicImagePanel extends JPanel {
 		protected void doStuff() throws Exception {
             BufferedImage maxSizeImage = imageCache==null ? null : imageCache.get(imageFilename);
             if (maxSizeImage == null) {
-                final File imageFile = SessionMgr.getFile(imageFilename, false);
-            	maxSizeImage = Utils.readImage(imageFile.getAbsolutePath());
+                final URL imageFileURL = SessionMgr.getURL(imageFilename);
+            	maxSizeImage = Utils.readImage(imageFileURL);
             	if (isCancelled()) return;
             	if (maxSize != null) {
             		int newWidth = maxSize;

@@ -180,12 +180,12 @@ public class ConsoleApp {
             modelMgr.addModelMgrObserver(sessionMgr.getAxisServer());
             
             // Make sure we can access the data mount
-            if ((! sessionMgr.isLocalFileCacheAvailable()) &&
-                (! FacadeManager.isDataSourceConnectivityValid())) {
-                throw new MissingResourceException(FacadeManager.getDataSourceHelpInformation(),
-                                                   ConsoleApp.class.getName(),
-                                                   "Missing Data Mount");
-            }
+//            if ((! sessionMgr.isLocalFileCacheAvailable()) &&
+//                (! FacadeManager.isDataSourceConnectivityValid())) {
+//                throw new MissingResourceException(FacadeManager.getDataSourceHelpInformation(),
+//                                                   ConsoleApp.class.getName(),
+//                                                   "Missing Data Mount");
+//            }
 
             Browser browser = sessionMgr.newBrowser();
             

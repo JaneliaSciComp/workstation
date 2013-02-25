@@ -193,6 +193,48 @@ public class Utils {
     }
 
     /**
+     * Read an image from a URL using the ImageIO API. Currently supports TIFFs, PNGs and JPEGs.
+     * 
+     * @param path
+     * @return
+     * @throws MalformedURLException
+     */
+    public static BufferedImage readImage(URL url) throws Exception {
+        try {
+            String path = url.getPath();
+            String format = path.substring(path.lastIndexOf(".")+1);
+            IFormatReader reader = null;
+            if (format.equals("tif") || format.equals("tiff")) {
+                reader = new TiffReader();
+            }
+            else if (format.equals("png")) {
+                reader = new APNGReader();
+            }
+            else if (format.equals("jpg")||format.equals("jpeg")){
+                reader = new JPEGReader();
+            }
+            else if (format.equals("bmp")){
+                reader = new BMPReader();
+            }
+            else if (format.equals("gif")){
+                reader = new GIFReader();
+            }
+            else {
+                throw new FormatException("File format is not supported: "+format);
+            }
+            BufferedImageReader in = new BufferedImageReader(reader);
+            in.setId(url.toString());            
+            BufferedImage image = in.openImage(0);
+            in.close();
+            return image;
+        }
+        catch (Exception e) {
+            if (e instanceof IOException) throw (IOException) e;
+            throw new IOException("Error reading image: "+url, e);
+        }
+    }
+    
+    /**
      * Returns a color inverted version of the given image.
      *
      * @param image

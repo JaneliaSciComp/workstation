@@ -32,6 +32,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.util.*;
@@ -523,10 +524,17 @@ public class SessionMgr {
     	return isDarkLook;
     }
     
+    /**
+     * Use getBrowser, it's shorter and static.
+     */
     public Browser getActiveBrowser() {
         return activeBrowser;
     }
 
+    public static Browser getBrowser() {
+        return getSessionMgr().getActiveBrowser();
+    }
+    
     public void startExternalHttpListener(int port) {
         if (externalHttpListener == null) externalHttpListener = new ExternalListener(port);
     }
@@ -858,7 +866,9 @@ public class SessionMgr {
      *                       should be set to false.
      *
      * @return an accessible file for the specified path.
+     * @deprecated superseded by getURL
      */
+    @Deprecated 
     public static File getFile(String standardPath,
                                boolean forceRefresh) {
 
@@ -882,8 +892,25 @@ public class SessionMgr {
 
         return file;
     }
-
-    public static Browser getBrowser() {
-    	return getSessionMgr().getActiveBrowser();
+    
+    /**
+     * Get the URL for a standard path. It may be a local URL, if the file has been cached, or a remote
+     * URL on the WebDAV server. It might even be a mounted location, if WebDAV is disabled. 
+     * @param standardPath a standard system path
+     * @return an accessible URL for the specified path
+     * @throws Exception
+     */
+    public static URL getURL(String standardPath) {
+        try {
+            SessionMgr sessionMgr = getSessionMgr();
+            WebDavClient client = sessionMgr.getWebDavClient();
+            URL remoteFileUrl = client.getWebDavUrl(standardPath);
+            LocalFileCache cache = sessionMgr.getLocalFileCache();
+            return sessionMgr.isLocalFileCacheAvailable() ? cache.getEffectiveUrl(remoteFileUrl) : remoteFileUrl;
+        }
+        catch (MalformedURLException e) {
+            SessionMgr.getSessionMgr().handleException(e);
+            return null;
+        }
     }
 }

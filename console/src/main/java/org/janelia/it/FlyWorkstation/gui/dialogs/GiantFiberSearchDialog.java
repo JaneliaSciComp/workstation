@@ -5,7 +5,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
+import java.net.URL;
 import java.util.*;
 import java.util.concurrent.Callable;
 
@@ -346,8 +346,8 @@ public class GiantFiberSearchDialog extends ModalDialog {
                 final String maskNameIndexPath =
                         getPath(giantFiberResourcePath, "maskNameIndex.txt");
 
-                File maskSummaryFile = SessionMgr.getFile(maskSummaryPath, false);
-                File maskNameIndexFile = SessionMgr.getFile(maskNameIndexPath, false);
+                URL maskSummaryFile = SessionMgr.getURL(maskSummaryPath);
+                URL maskNameIndexFile = SessionMgr.getURL(maskNameIndexPath);
                 maskManager.loadMaskCompartmentList(maskNameIndexFile);
                 maskManager.loadMaskSummaryFile(maskSummaryFile);
                 compartmentAbbreviationList = maskManager.getCompartmentListInstance();
