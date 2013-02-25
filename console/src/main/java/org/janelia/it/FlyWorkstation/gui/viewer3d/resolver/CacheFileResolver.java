@@ -15,7 +15,7 @@ import java.io.File;
 public class CacheFileResolver implements FileResolver {
     @Override
     public String getResolvedFilename(String fileName) {
-        File cachedFile = SessionMgr.getFile( fileName, false );
+        File cachedFile = SessionMgr.getCachedFile( fileName, false );
         if ( cachedFile != null )
             return cachedFile.getAbsolutePath();
         else

@@ -866,10 +866,8 @@ public class SessionMgr {
      *                       should be set to false.
      *
      * @return an accessible file for the specified path.
-     * @deprecated superseded by getURL
      */
-    @Deprecated 
-    public static File getFile(String standardPath,
+    public static File getCachedFile(String standardPath,
                                boolean forceRefresh) {
 
         final SessionMgr mgr = SessionMgr.getSessionMgr();
@@ -882,12 +880,11 @@ public class SessionMgr {
                 final URL url = client.getWebDavUrl(standardPath);
                 file = cache.getFile(url, forceRefresh);
             } catch (Exception e) {
-                log.error("failed to retrieve " + standardPath + " from local cache", e);
+                log.error("Failed to retrieve " + standardPath + " from local cache", e);
             }
         }
-
-        if (file == null) {
-            file = new File(PathTranslator.convertPath(standardPath));
+        else {
+            log.error("Local file cache is not available");
         }
 
         return file;

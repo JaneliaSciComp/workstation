@@ -54,11 +54,7 @@ public class FileProxyService extends AbstractHandler {
             OutputStream output = null;
             
             try {
-                SessionMgr mgr = SessionMgr.getSessionMgr();
-                WebDavClient client = mgr.getWebDavClient();
-                URL remoteFileUrl = client.getWebDavUrl(standardPath);
-                LocalFileCache cache = mgr.getLocalFileCache();
-                URL effectiveUrl = mgr.isLocalFileCacheAvailable() ? cache.getEffectiveUrl(remoteFileUrl) : remoteFileUrl;
+                URL effectiveUrl = SessionMgr.getURL(standardPath);
                 response.setContentType("application/octet-stream");
                 response.setStatus(HttpServletResponse.SC_OK);
                 input = effectiveUrl.openStream();
