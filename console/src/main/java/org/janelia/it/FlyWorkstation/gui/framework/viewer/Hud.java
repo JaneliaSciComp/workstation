@@ -1,10 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
-import java.awt.*;
-import java.awt.image.BufferedImage;
-
-import javax.swing.*;
-
 import org.janelia.it.FlyWorkstation.gui.dialogs.ModalDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
@@ -17,6 +12,12 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+
 /**
  * A persistent heads-up display for a synchronized image. 
  * 
@@ -25,7 +26,6 @@ import org.slf4j.LoggerFactory;
 public class Hud extends ModalDialog {
 
 	private static final Logger log = LoggerFactory.getLogger(Hud.class);
-    public static final String RED_GREEN_BLUE_CONTROL = "rgb";
     public static final String THREE_D_CONTROL = "3D";
 
     private Entity entity;
@@ -33,11 +33,17 @@ public class Hud extends ModalDialog {
 	private JLabel previewLabel;
     private Mip3d mip3d;
     private JCheckBox render3DCheckbox;
-    private JButton rgbButton;
+    private JMenu rgbMenu = new JMenu("RGB Controls");
     private Hud3DController hud3DController;
     private Logger logger = LoggerFactory.getLogger( Hud.class );
 
     private static Hud instance;
+
+    public enum COLOR_CHANNEL {
+        RED,
+        GREEN,
+        BLUE
+    }
 
     public static Hud getSingletonInstance() {
         if ( instance == null ) {
@@ -51,9 +57,11 @@ public class Hud extends ModalDialog {
 		setModalityType(ModalityType.MODELESS);
         setLayout(new BorderLayout());
 		previewLabel = new JLabel(new ImageIcon());
+        previewLabel.setFocusable(false);
+        previewLabel.setRequestFocusEnabled(false);
         init3dGui();
-
         add(previewLabel, BorderLayout.CENTER);
+        mip3d.setDoubleBuffered(true);
 	}
 
     public void toggleDialog() {
@@ -71,24 +79,12 @@ public class Hud extends ModalDialog {
 		setVisible(false);
 	}
 	
-	public Long getEntityId() {
-        if ( entity == null ) {
-            return 0L;
-        }
-		return entity.getId();
-	}
-
     public void setEntityAndToggleDialog(Entity entity) {
         setEntityAndToggleDialog( entity, true );
     }
 
     public void setEntity(Entity entity) {
         setEntityAndToggleDialog( entity, false );
-    }
-
-    /** Filters RGB characteristics of rendering in 3D. */
-    public void setRgbValues() {
-        mip3d.setRgbChannelValues();
     }
 
     /**
@@ -118,21 +114,16 @@ public class Hud extends ModalDialog {
     }
 
     public void handleRenderSelection() {
-        if ( shouldRender3D() ) {
+        boolean is3D = shouldRender3D();
+        if (is3D) {
             renderIn3D();
-            if ( this.rgbButton != null ) {
-                rgbButton.setEnabled( true );
-            }
         }
         else {
             this.remove(mip3d);
             this.add(previewLabel, BorderLayout.CENTER);
-            if ( this.rgbButton != null ) {
-                rgbButton.setEnabled( false );
-            }
         }
+        rgbMenu.setEnabled(is3D);
         this.validate();
-        this.repaint();
     }
 
     public void setEntityAndToggleDialog(Entity entity, boolean toggle) {
@@ -156,7 +147,6 @@ public class Hud extends ModalDialog {
                     hud3DController.entityUpdate();
                 }
                 setTitle(entity.getName());
-                pack();
 
                 if ( toggle ) {
                     toggleDialog();
@@ -167,7 +157,7 @@ public class Hud extends ModalDialog {
                 logger.info( "No image established for {}:{}", entity.getName(), entity.getEntityType() );
             }
         }
-
+        mip3d.repaint();
     }
 
     private boolean establishImage() throws Exception {
@@ -231,6 +221,9 @@ public class Hud extends ModalDialog {
 
     private void renderIn3D() {
         this.remove( previewLabel );
+        for (Component component : rgbMenu.getMenuComponents()) {
+            ((JCheckBoxMenuItem)component).setSelected(true);
+        }
         if ( dirtyEntityFor3D ) {
             try {
                 if ( hud3DController != null ) {
@@ -261,6 +254,32 @@ public class Hud extends ModalDialog {
     	}
         try {
             mip3d = new Mip3d();
+            rgbMenu.setFocusable(false);
+            rgbMenu.setRequestFocusEnabled(false);
+            JMenuBar menuBar = new JMenuBar();
+            menuBar.setFocusable(false);
+            menuBar.setRequestFocusEnabled(false);
+            JCheckBoxMenuItem redButton = new JCheckBoxMenuItem("Red");
+            redButton.setSelected(true);
+            redButton.setFocusable(false);
+            redButton.setRequestFocusEnabled(false);
+            redButton.addActionListener(new MyButtonActionListener(COLOR_CHANNEL.RED));
+            rgbMenu.add(redButton);
+            JCheckBoxMenuItem blueButton = new JCheckBoxMenuItem("Blue");
+            blueButton.setSelected(true);
+            blueButton.addActionListener(new MyButtonActionListener(COLOR_CHANNEL.BLUE));
+            blueButton.setFocusable(false);
+            blueButton.setRequestFocusEnabled(false);
+            rgbMenu.add(blueButton);
+            JCheckBoxMenuItem greenButton = new JCheckBoxMenuItem("Green");
+            greenButton.setSelected(true);
+            greenButton.addActionListener(new MyButtonActionListener(COLOR_CHANNEL.GREEN));
+            greenButton.setFocusable(false);
+            greenButton.setRequestFocusEnabled(false);
+            rgbMenu.add(greenButton);
+            rgbMenu.setEnabled(false);
+            menuBar.add(rgbMenu);
+
             hud3DController = new Hud3DController(this, mip3d);
             render3DCheckbox = new JCheckBox( THREE_D_CONTROL );
             render3DCheckbox.setSelected( false ); // Always startup as false.
@@ -268,24 +287,24 @@ public class Hud extends ModalDialog {
             render3DCheckbox.setFont( render3DCheckbox.getFont().deriveFont( 9.0f ));
             render3DCheckbox.setBorderPainted(false);
             render3DCheckbox.setActionCommand( THREE_D_CONTROL );
-
-            rgbButton = new JButton( RED_GREEN_BLUE_CONTROL );
-            rgbButton.setFont( rgbButton.getFont().deriveFont( 9.0f ) );
-            rgbButton.addActionListener( hud3DController );
-            rgbButton.setBorderPainted( true );
-            rgbButton.setActionCommand( RED_GREEN_BLUE_CONTROL );
-            rgbButton.setEnabled( false );
+            render3DCheckbox.setFocusable(false);
+            render3DCheckbox.setRequestFocusEnabled(false);
 
             JPanel rightSidePanel = new JPanel();
-            rightSidePanel.setLayout( new FlowLayout() );
-            rightSidePanel.add( rgbButton );
-            rightSidePanel.add( render3DCheckbox );
+            rightSidePanel.setLayout(new FlowLayout());
+            rightSidePanel.add(menuBar);
+            rightSidePanel.setFocusable(false);
+            rightSidePanel.setRequestFocusEnabled(false);
+            rightSidePanel.add(render3DCheckbox);
 
             JPanel menuLikePanel = new JPanel();
+            menuLikePanel.setFocusable(false);
+            menuLikePanel.setRequestFocusEnabled(false);
             menuLikePanel.setLayout( new BorderLayout() );
             menuLikePanel.add( rightSidePanel, BorderLayout.EAST );
             add(menuLikePanel, BorderLayout.NORTH);
-        } catch ( Exception ex ) {
+        }
+        catch ( Exception ex ) {
             // Turn off the 3d capability if exception.
             render3DCheckbox = null;
             log.error("Error initializing 3D HUD",ex);
@@ -302,4 +321,16 @@ public class Hud extends ModalDialog {
         return rtnVal;
     }
 
+    private class MyButtonActionListener implements ActionListener {
+        private COLOR_CHANNEL myChannel;
+        public MyButtonActionListener(COLOR_CHANNEL channel) {
+            myChannel = channel;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent actionEvent) {
+            mip3d.toggleRGBValue( myChannel.ordinal() , ((JCheckBoxMenuItem)actionEvent.getSource()).isSelected());
+            mip3d.repaint();
+        }
+    }
 }

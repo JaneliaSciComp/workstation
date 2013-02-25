@@ -6,17 +6,7 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.event.*;
-import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.swing.*;
-
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChangeEvent;
@@ -51,7 +41,13 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.Subscribe;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of 
@@ -765,13 +761,11 @@ public class IconDemoPanel extends Viewer {
 	protected void entitySelected(String entityId, boolean clearAll) {
 		log.debug("selecting {} in {} viewer",entityId,getSelectionCategory());
 		imagesPanel.setSelection(entityId, true, clearAll);
-//		updateHud();
 		updateStatusBar();
 	}
 
 	public void entityDeselected(String entityId) {
 		imagesPanel.setSelection(entityId, false, false);
-//		updateHud();
 		updateStatusBar();
 	}
 	
