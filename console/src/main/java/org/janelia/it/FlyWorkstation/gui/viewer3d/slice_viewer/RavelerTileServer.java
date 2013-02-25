@@ -93,7 +93,7 @@ implements GLActor, VolumeImage3d
 	private int zoomMax = 0;
 	private int zoomMin = 0;
 	private Map<TileIndex, TileTexture> textureCache = new Hashtable<TileIndex, TileTexture>();
-	private ExecutorService textureLoadExecutor = Executors.newFixedThreadPool(1);
+	private ExecutorService textureLoadExecutor = Executors.newFixedThreadPool(10);
 	private Set<TileIndex> neededTextures;
 	private Map<String, String> metadata = new Hashtable<String, String>();
 	//

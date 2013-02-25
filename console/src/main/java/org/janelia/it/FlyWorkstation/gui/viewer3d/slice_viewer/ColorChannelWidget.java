@@ -31,7 +31,7 @@ public class ColorChannelWidget extends JPanel
 		// A: We want the reset color button right aligned
 		// B: All components in a BoxLayout should have the same alignment
 		// C: Therefore, the slider widget should be right aligned
-		setAlignmentX(Component.RIGHT_ALIGNMENT);
+		// setAlignmentX(Component.RIGHT_ALIGNMENT);
 		add(new VisibilityButton());
 		add(new JSlider(JSlider.HORIZONTAL));
 		add(new ColorButton());
@@ -64,7 +64,7 @@ public class ColorChannelWidget extends JPanel
 					image.setRGB(x, y, Color.orange.getRGB());
 			ImageIcon icon = new ImageIcon(image);
 			setIcon(icon);
-			setToolTipText("Click to change channel color");
+			setToolTipText("Click to change channel "+channelIndex+"color");
 		}
 	}
 	

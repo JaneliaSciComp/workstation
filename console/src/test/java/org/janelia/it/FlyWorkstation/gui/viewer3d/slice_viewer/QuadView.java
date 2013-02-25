@@ -293,7 +293,7 @@ extends JFrame
 		upperControls.add(buttonsPanel);
 		buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
 		JButton button = new JButton(resetZoomAction);
-		button.setAlignmentX(Component.RIGHT_ALIGNMENT); // first child sets alignment
+		// button.setAlignmentX(Component.RIGHT_ALIGNMENT); // first child sets alignment
 		buttonsPanel.add(new JButton(resetZoomAction));
 		buttonsPanel.add(new JButton(zoomMaxAction));
 		buttonsPanel.add(new JButton(resetViewAction));
@@ -309,7 +309,7 @@ extends JFrame
 		button = new JButton("Reset Colors");
 		// All components in a BoxLayout should have the same alignment
 		// So the color widgets really set the pattern here
-		button.setAlignmentX(Component.RIGHT_ALIGNMENT); // moves it a LITTLE to the right...
+		// button.setAlignmentX(Component.RIGHT_ALIGNMENT); // moves it a LITTLE to the right...
 		colorsPanel.add(button);
         //Display the window.
         pack();
