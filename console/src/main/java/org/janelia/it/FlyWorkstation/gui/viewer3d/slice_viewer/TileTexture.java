@@ -148,7 +148,8 @@ public class TileTexture
 					pixelFormat,
 					false); // mipmap
 		} catch (IOException e) {
-			e.printStackTrace();
+			// e.printStackTrace();
+			log.error("Tile load to RAM failed " + getIndex());
 			setStage(Stage.LOAD_FAILED);
 			return false;
 		}

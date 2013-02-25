@@ -221,7 +221,15 @@ implements GLActor, VolumeImage3d
 		for (Tile2d tile: tiles) {
 			tile.display(gl);
 		}
-		displayBoundingBox(gl);
+		boolean bOutlineTiles = false;
+		if (bOutlineTiles) {
+			for (Tile2d tile: tiles) {
+				tile.displayBoundingBox(gl);
+			}
+		}
+		boolean bOutlineVolume = false;
+		if (bOutlineVolume)
+			displayBoundingBox(gl);
 	}
 	
 	private void displayBoundingBox(GL2 gl) {

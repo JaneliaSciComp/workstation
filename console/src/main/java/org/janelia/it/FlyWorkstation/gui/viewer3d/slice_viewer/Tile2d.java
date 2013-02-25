@@ -139,6 +139,32 @@ implements GLActor
 		texture.disable(gl);
 	}
 
+	public void displayBoundingBox(GL2 gl) 
+	{
+		Texture texture = bestTexture.getTexture();
+		double voxelSize = 1.0; // TODO
+		int zoomScale = (int)(Math.pow(2.0, getIndex().getZoom()) + 0.1);
+		double tileWidth = texture.getWidth() * zoomScale * voxelSize;
+		double tileHeight = texture.getHeight() * zoomScale * voxelSize;
+		gl.glColor3d(1.0, 1.0, 0.3);
+		gl.glBegin(GL2.GL_LINE_STRIP);
+			// draw quad
+	        double z = 0.0; // As far as OpenGL is concerned, all Z's are zero
+	        double x0 = getIndex().getX() * 1024.0 * zoomScale * voxelSize;
+	        double x1 = x0 + tileWidth;
+	        // Raveler tile index has origin at BOTTOM left, unlike TOP left for images and
+	        // our coordinate system
+	        double y0 = yMax - getIndex().getY() * 1024.0 * zoomScale * voxelSize;
+	        double y1 = y0 - tileHeight; // y inverted in OpenGL relative to image convention
+	        gl.glVertex3d(x0, y0, z);
+	        gl.glVertex3d(x1, y0, z);
+	        gl.glVertex3d(x1, y1, z);
+	        gl.glVertex3d(x0, y1, z);
+	        gl.glVertex3d(x0, y0, z);
+        gl.glEnd();
+		gl.glColor3d(1.0, 1.0, 1.0);
+	}
+
 	@Override
 	public BoundingBox3d getBoundingBox3d() {
 		// TODO Auto-generated method stub
@@ -165,4 +191,5 @@ implements GLActor
 	public void setYMax(double yMax) {
 		this.yMax  = yMax;
 	}
+
 }
