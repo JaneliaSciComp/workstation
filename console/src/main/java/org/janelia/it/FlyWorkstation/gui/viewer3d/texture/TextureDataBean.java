@@ -19,7 +19,6 @@ import java.nio.IntBuffer;
 public class TextureDataBean implements TextureDataI {
     private static final int INTEGER_NUM_BYTES = (Integer.SIZE / 8);
 
-    private String filename;
     private String remoteFilename;
     private byte[] textureData;
     private Integer sx;
@@ -55,6 +54,21 @@ public class TextureDataBean implements TextureDataI {
         setSx( sx );
         setSy( sy );
         setSz( sz );
+    }
+
+    @Override
+    public boolean equals( Object other ) {
+        if ( other == null  ||  (! (other instanceof TextureDataBean ) ) ) {
+            return false;
+        }
+        else {
+            return ((TextureDataBean) other).getFilename().equals( getFilename() );
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return getFilename().hashCode();
     }
 
     @Override
@@ -152,7 +166,7 @@ public class TextureDataBean implements TextureDataI {
     }
 
     public void setFilename(String filename) {
-        this.filename = filename;
+        this.remoteFilename = filename;
     }
 
     public int getChannelCount() {

@@ -9,14 +9,16 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.AlignmentBoardDataBuilder;
+import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -28,17 +30,17 @@ import java.util.HashSet;
  */
 public class ABLoadWorker extends SimpleWorker {
 
-    private Entity alignmentBoard;
+    private AlignmentBoardContext context;
     private Mip3d mip3d;
     private AlignmentBoardViewer viewer;
     private RenderMappingI renderMapping;
     private Logger logger;
 
     public ABLoadWorker(
-            AlignmentBoardViewer viewer, Entity alignmentBoard, Mip3d mip3d, RenderMappingI renderMapping
+            AlignmentBoardViewer viewer, AlignmentBoardContext context, Mip3d mip3d, RenderMappingI renderMapping
     ) {
         logger = LoggerFactory.getLogger( ABLoadWorker.class );
-        this.alignmentBoard = alignmentBoard;
+        this.context = context;
         this.mip3d = mip3d;
         this.viewer = viewer;
         this.renderMapping = renderMapping;
@@ -52,11 +54,11 @@ public class ABLoadWorker extends SimpleWorker {
         logger.info( "In load thread, before getting bean list." );
         Collection<RenderableBean> renderableBeans =
                 new AlignmentBoardDataBuilder()
-                    .setAlignmentBoard( alignmentBoard )
+                    .setAlignmentBoardContext( context )
                         .getRenderableBeanList();
 
         if ( renderableBeans == null  ||  renderableBeans.size() == 0 ) {
-            logger.info( "No renderables found for alignment board " + alignmentBoard.getName() );
+            logger.info( "No renderables found for alignment board " + context.getName() );
             mip3d.clear();
         }
         else {
@@ -69,9 +71,9 @@ public class ABLoadWorker extends SimpleWorker {
             for ( String signalFilename: signalFilenames ) {
                 System.out.println("In load thread, STARTING load of volume " + new java.util.Date());
 
-                Collection<String> maskFilenamesForSignal = getMaskFilenames( renderableBeans, signalFilename );
+                Map<String,Long> maskVsUidForSignal = getMaskInfo(renderableBeans, signalFilename);
                 VolumeMaskBuilder volumeMaskBuilder = createMaskBuilder(
-                        maskFilenamesForSignal, getRenderables(renderableBeans, signalFilename), resolver
+                        maskVsUidForSignal, getRenderables(renderableBeans, signalFilename), resolver
                 );
 
                 mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver );
@@ -143,40 +145,44 @@ public class ABLoadWorker extends SimpleWorker {
     /**
      * Extract the mask file names from the renderable beans.
      *
+     *
      * @param signalFilename which signal to find masks against.
      * @return all mask file names from beans which refer to the signal file name given.
      */
-    private Collection<String> getMaskFilenames( Collection<RenderableBean> renderableBeans, String signalFilename ) {
-        Collection<String> maskFileNames = new HashSet<String>();
+    private Map<String, Long> getMaskInfo(Collection<RenderableBean> renderableBeans, String signalFilename) {
+        Map<String,Long> rtnVal = new HashMap<String,Long>();
         for ( RenderableBean bean: renderableBeans ) {
             if ( bean.getSignalFile() != null  &&
                  bean.getSignalFile().equals( signalFilename )  &&
                  bean.getLabelFile() != null ) {
-                maskFileNames.add( bean.getLabelFile() );
+                rtnVal.put(bean.getLabelFile(), bean.getLabelUid());
             }
         }
-        return maskFileNames;
+        return rtnVal;
     }
 
     /**
      * Accumulates all data for masking, from the set of files provided, preparing them for
-     * injection into th evolume being loaded.
+     * injection into the volume being loaded.
      *
-     * @param maskFiles list of all mask files to use against the signal volumes.
+     * @param maskVsUid mapping of all mask file names as key, vs mask UID, to use against the signal volumes.
      */
     private VolumeMaskBuilder createMaskBuilder(
-            Collection<String> maskFiles, Collection<RenderableBean> renderables, FileResolver resolver
+            Map<String,Long> maskVsUid, Collection<RenderableBean> renderables, FileResolver resolver
     ) {
 
         VolumeMaskBuilder volumeMaskBuilder = null;
         // Build the masking texture info.
-        if (maskFiles != null  &&  maskFiles.size() > 0) {
+        if (maskVsUid != null  &&  maskVsUid.size() > 0) {
             VolumeMaskBuilder builder = new VolumeMaskBuilder();
             builder.setRenderables(renderables);
-            for ( String maskFile: maskFiles ) {
+            for ( String maskFile: maskVsUid.keySet() ) {
+                Long maskUid = maskVsUid.get( maskFile );
                 VolumeLoader volumeLoader = new VolumeLoader( resolver );
-                volumeLoader.loadVolume(maskFile);
-                volumeLoader.populateVolumeAcceptor(builder);
+                if ( volumeLoader.loadVolume(maskFile) ) {
+                    builder.setCurrentMaskUid( maskUid );
+                    volumeLoader.populateVolumeAcceptor(builder);
+                }
             }
             volumeMaskBuilder = builder;
         }

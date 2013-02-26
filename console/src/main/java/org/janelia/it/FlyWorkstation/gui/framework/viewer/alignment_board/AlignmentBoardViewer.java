@@ -50,12 +50,12 @@ public class AlignmentBoardViewer extends Viewer {
     private Mip3d mip3d;
     private ABLoadWorker loadWorker;
     private ModelMgrObserver modelMgrObserver;
-    // *** Use of color wheel color mapping is temporary, awaiting changes.
     private RenderMappingI renderMapping;
     private Logger logger = LoggerFactory.getLogger(AlignmentBoardViewer.class);
 
     public AlignmentBoardViewer(ViewerPane viewerPane) {
         super(viewerPane);
+        // *** Use of color wheel color mapping is temporary, awaiting changes.
         renderMapping = new ConfigurableColorMapping();
         setLayout(new BorderLayout());
         ModelMgr.getModelMgr().registerOnEventBus(this);
@@ -64,7 +64,6 @@ public class AlignmentBoardViewer extends Viewer {
     @Override
     public void clear() {
         clearObserver();
-        //refresh();
     }
 
     @Override
@@ -149,9 +148,9 @@ public class AlignmentBoardViewer extends Viewer {
             mip3d.refresh();
 
             // Here, should load volumes, for all the different items given.
-
-            loadWorker = new ABLoadWorker( this, alignmentBoard, mip3d, getRenderMapping() );
-            loadWorker.execute();
+//
+//            loadWorker = new ABLoadWorker( this, context, mip3d, getRenderMapping() );
+//            loadWorker.execute();
 
         }
     }
@@ -175,51 +174,11 @@ public class AlignmentBoardViewer extends Viewer {
         this.renderMapping = renderMapping;
     }
 
-    private void establishObserver() {
-        modelMgrObserver = new ModelMgrListener( this, alignmentBoard );
-        ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
-    }
-
-    private void deleteAll() {
-        clearObserver();
-        if (loadWorker != null) {
-            loadWorker.disregard();
-        }
-        alignmentBoard = null;
-        albRootedEntity = null;
-        removeAll();
-        mip3d = null;
-    }
-
-    private void clearObserver() {
-        if ( modelMgrObserver != null ) {
-            ModelMgr.getModelMgr().removeModelMgrObserver(modelMgrObserver);
-        }
-    }
-
-    //------------------------------Inner Classes
-    /** Listens for changes to the child-set of the heard-entity. */
-    public static class ModelMgrListener extends ModelMgrAdapter {
-        private Entity heardEntity;
-        private AlignmentBoardViewer viewer;
-        ModelMgrListener( AlignmentBoardViewer viewer, Entity e ) {
-            heardEntity = e;
-            this.viewer = viewer;
-        }
-
-        @Override
-        public void entityChildrenChanged(long entityId) {
-            if (heardEntity.getId() == entityId) {
-                viewer.refresh();
-            }
-        }
-    }
-    
-    @Subscribe 
+    @Subscribe
     public void printBoardOpened(AlignmentBoardOpenEvent event) {
         
         AlignmentBoardContext abContext = event.getAlignmentBoardContext();
-        
+
         log.info("Alignment board opened: "+abContext.getName());
         log.info("* Alignment space: "+abContext.getAlignmentContext().getAlignmentSpaceName());
         log.info("* Optical resolution: "+abContext.getAlignmentContext().getOpticalResolution());
@@ -283,6 +242,10 @@ public class AlignmentBoardViewer extends Viewer {
                         log.info("  Neuron: "+neuron.getName()+" (mask index = "+neuron.getMaskIndex()+")");
                     }
                 }
+
+                // The true update!
+
+                this.updateBoard( abContext );
             }
             else {
                 log.error("Cannot handle entites of type: "+itemEntity.getType());    
@@ -308,4 +271,69 @@ public class AlignmentBoardViewer extends Viewer {
     public void handleItemChanged(AlignmentBoardItemChangeEvent event) {
         // TBD
     }
+
+    private void establishObserver() {
+        modelMgrObserver = new ModelMgrListener( this, alignmentBoard );
+        ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
+    }
+
+    private void deleteAll() {
+        clearObserver();
+        if (loadWorker != null) {
+            loadWorker.disregard();
+        }
+        alignmentBoard = null;
+        albRootedEntity = null;
+        removeAll();
+        mip3d = null;
+    }
+
+    private void clearObserver() {
+        if ( modelMgrObserver != null ) {
+            ModelMgr.getModelMgr().removeModelMgrObserver(modelMgrObserver);
+        }
+    }
+
+    /**
+     * This is called when the board data has been updated.
+     */
+    private void updateBoard( AlignmentBoardContext context ) {
+        logger.info("Update-board called.");
+
+        if (context != null) {
+            showLoadingIndicator();
+
+            if ( mip3d == null ) {
+                mip3d = new Mip3d();
+            }
+
+            mip3d.refresh();
+
+            // Here, should load volumes, for all the different items given.
+
+            loadWorker = new ABLoadWorker( this, context, mip3d, getRenderMapping() );
+            loadWorker.execute();
+
+        }
+
+    }
+
+    //------------------------------Inner Classes
+    /** Listens for changes to the child-set of the heard-entity. */
+    public static class ModelMgrListener extends ModelMgrAdapter {
+        private Entity heardEntity;
+        private AlignmentBoardViewer viewer;
+        ModelMgrListener( AlignmentBoardViewer viewer, Entity e ) {
+            heardEntity = e;
+            this.viewer = viewer;
+        }
+
+        @Override
+        public void entityChildrenChanged(long entityId) {
+            if (heardEntity.getId() == entityId) {
+                viewer.refresh();
+            }
+        }
+    }
+
 }

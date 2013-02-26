@@ -4,6 +4,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -47,6 +48,22 @@ public class RenderMapTextureBean implements TextureDataI {
 
         mapData = rawMap;
 
+    }
+
+    /** This collection-friendly pair of methods can employ direct mapping data only because these data are reasonably small. */
+    @Override
+    public boolean equals( Object other ) {
+        if ( other == null  ||  (! (other instanceof RenderMapTextureBean ) ) ) {
+            return false;
+        }
+        else {
+            return other.hashCode() == hashCode();
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode( mapData );
     }
 
     @Override

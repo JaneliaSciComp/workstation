@@ -1,8 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 
+import org.apache.juli.JdkLoggerFormatter;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.stream.V3dRawImageStream;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.MaskTextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
@@ -26,6 +29,7 @@ public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileL
     public static final String CONSOLIDATED_LABEL_MASK = "ConsolidatedLabel";
 
     private int[][][] maskVolume;
+    private Logger logger = LoggerFactory.getLogger( V3dMaskFileLoader.class );
 
     @Override
     protected TextureDataI createTextureDataBean() {
@@ -67,6 +71,7 @@ public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileL
         long rawRequired = (long)(sx * sy * sz) * (long)pixelBytes;
 
         if ( rawRequired > Integer.MAX_VALUE ) {
+            logger.info( "Downsampling {}.", unCachedFileName );
             values = readDownSampled(sliceStream);
         }
         else {

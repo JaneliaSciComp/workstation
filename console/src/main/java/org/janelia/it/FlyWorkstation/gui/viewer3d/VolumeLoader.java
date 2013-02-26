@@ -43,6 +43,10 @@ public class VolumeLoader
     {
         try {
             String localFileName = resolver.getResolvedFilename( unCachedFileName );
+            if ( localFileName == null ) {
+                logger.error( "Cannot resolve {} to a local file name.", unCachedFileName );
+                return false;
+            }
 
             String extension = FilenameUtils.getExtension(localFileName).toUpperCase();
             logger.debug("FILENAME: {}", localFileName);

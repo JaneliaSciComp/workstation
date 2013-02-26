@@ -7,6 +7,12 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
+import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
+import org.janelia.it.FlyWorkstation.model.domain.Neuron;
+import org.janelia.it.FlyWorkstation.model.domain.Sample;
+import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
+import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
+import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.tasks.Event;
@@ -33,6 +39,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
     //"/Users/fosterl/Documents/alignment_board/samples/174213816581829437/ConsolidatedSignal2_25.mp4"; //
     private static final String COMPARTMENT_MASK_ONLY_SIGNAL = "/groups/scicomp/jacsData/MaskResources/Compartment/maskRGB.v3dpbd";
     private static final String COMPARTMENT_ENTITY_NAME = "Compartment";
+    private static final int TARGET_MVOXELS = 25;
 
     private Logger logger = LoggerFactory.getLogger( AlignmentBoardDataBuilder.class );
 
@@ -78,6 +85,82 @@ public class AlignmentBoardDataBuilder implements Serializable {
         renderableBeanList.addAll( signalRenderables );
 
         applyCompartmentMask( displayableList );
+
+        return this;
+    }
+
+    /**
+     * Plug in the alignment board entity, from which all returned information is derived.
+     *
+     * @param abContext to retrieve all relevant data.
+     * @return reference to this object to support pipelining.
+     */
+    public AlignmentBoardDataBuilder setAlignmentBoardContext( AlignmentBoardContext abContext ) {
+        clear();
+
+        renderableBeanList = new ArrayList<RenderableBean>();
+
+        // Build out the bean list, from info sen
+        for ( AlignedItem alignedItem : abContext.getAlignedItems() ) {
+
+            EntityWrapper itemEntity = alignedItem.getItemWrapper();
+            if ( itemEntity instanceof Sample ) {
+                Sample sample = (Sample)itemEntity;
+                RenderableBean sampleBean = new RenderableBean();
+                sampleBean.setLabelFileNum( 0 );
+                sampleBean.setTranslatedNum( 0 );
+                sampleBean.setRenderableEntity(sample.getInternalEntity());
+                sampleBean.setRgb(
+                        new byte[] {
+                                (byte)255, (byte) 255, (byte) 0, RenderMappingI.NON_RENDERING
+                        }
+                );
+
+                String labelFile = null;
+                MaskedVolume vol = sample.getMaskedVolume();
+                if ( vol != null ) {
+                    logger.info("    subsampled volumes:");
+                    for ( MaskedVolume.Size size : MaskedVolume.Size.values() ) {
+                        if ( size.getMegaVoxels() == TARGET_MVOXELS ) {
+                            labelFile = vol.getFastVolumePath(
+                                    MaskedVolume.ArtifactType.ConsolidatedLabel, size, MaskedVolume.Channels.All, true
+                            );
+                        }
+                    }
+// TEMP  - this would get the original non-down-sampled signal file.
+//                    labelFile = vol.getSignalLabelPath();
+                }
+                sampleBean.setLabelFile( labelFile );
+                String signalFile = sample.getFast3dImageFilepath();
+                //signalFile = sample.get3dImageFilepath(); // TEMP
+
+                sampleBean.setSignalFile( signalFile );
+                sampleBean.setLabelUid( sample.getId() );
+
+                renderableBeanList.add( sampleBean );
+
+                int translatedNum = 1;
+                if ( sample.getNeuronSet() != null ) {
+                    for ( Neuron neuron : sample.getNeuronSet() ) {
+                        logger.info("  Neuron: " + neuron.getName() + " (mask index = " + neuron.getMaskIndex() + ")");
+
+                        RenderableBean neuronBean = new RenderableBean();
+                        neuronBean.setLabelFileNum( neuron.getMaskIndex() + 1 ); // From 0-based to 1-based.
+                        neuronBean.setTranslatedNum( translatedNum ++ );
+                        neuronBean.setSignalFile( sampleBean.getSignalFile() );
+                        neuronBean.setLabelFile( sampleBean.getLabelFile() );
+                        neuronBean.setRenderableEntity(neuron.getInternalEntity());
+                        neuronBean.setLabelUid( sampleBean.getLabelUid() );
+
+                        renderableBeanList.add( neuronBean );
+                    }
+                }
+
+            }
+            else {
+                logger.error("Cannot handle entites of type: " + itemEntity.getType());
+            }
+        }
 
         return this;
     }
@@ -181,6 +264,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
                 if ( labelNum != null ) {
                     RenderableBean maskIndexBean = new RenderableBean();
                     maskIndexBean.setLabelFile( maskIndex );
+                    maskIndexBean.setLabelUid( 1L );                  // All these apply to the same unknown label UID.
                     maskIndexBean.setSignalFile( compartmentSignalFile );
                     maskIndexBean.setLabelFileNum( labelNum );
 
@@ -194,7 +278,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
                     renderableBeanList.add(maskIndexBean);
                 }
                 else {
-                    logger.warn( "Encountered compartment {} with no known label number.", compartmentName );
+                    logger.warn("Encountered compartment {} with no known label number.", compartmentName);
                 }
             }
         }
@@ -332,12 +416,16 @@ public class AlignmentBoardDataBuilder implements Serializable {
                 String signalFilename = getSignalFilename( filenameFetcher, signal );
 
                 RenderableBean bean = new RenderableBean();
+
+                // No label / label file is applicable.
                 bean.setLabelFile( null );
-                bean.setSignalFile( signalFilename );
-                bean.setEntity( signal );
-                bean.setTranslatedNum( 0 );  // Reserved for the pass-through
-                bean.setRgb( rgba );
-                bean.setLabelFileNum( 0 );
+                bean.setLabelUid(0L);
+                bean.setLabelFileNum(0);
+
+                bean.setSignalFile(signalFilename);
+                bean.setRenderableEntity(signal);
+                bean.setTranslatedNum(0);  // Reserved for the pass-through
+                bean.setRgb(rgba);
 
                 rtnVal.add( bean );
             }
@@ -369,8 +457,9 @@ public class AlignmentBoardDataBuilder implements Serializable {
                     for ( Entity fragment: sampleFragments ) {
                         RenderableBean bean = new RenderableBean();
                         bean.setLabelFile( finalLabelFile );
+                        bean.setLabelUid( labelEntity.getId() );
                         bean.setSignalFile( signalFilename );
-                        bean.setEntity( fragment );
+                        bean.setRenderableEntity(fragment);
                         bean.setTranslatedNum( fragmentOffset++ );
 
                         renderableBeanList.add(bean);
@@ -383,9 +472,9 @@ public class AlignmentBoardDataBuilder implements Serializable {
         if ( renderableBeanList.size() == 0 ) {
             logger.warn("No renderables produced.  See info below.");
             logger.info("Got {} ancestorToRenderables.", ancestorToRenderables.size());
-            logger.info( "Got {} labelToPipelineResults.", labelToPipelineResult.size() );
-            logger.info( "Got {} consolidatedLabelsList.", consolidatedLabelsList.size() );
-            logger.info( "Got {} labelEntityToSignalFilename.", labelEntityToSignalFilename.size() );
+            logger.info("Got {} labelToPipelineResults.", labelToPipelineResult.size());
+            logger.info("Got {} consolidatedLabelsList.", consolidatedLabelsList.size());
+            logger.info("Got {} labelEntityToSignalFilename.", labelEntityToSignalFilename.size());
         }
 
     }
@@ -408,7 +497,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
                     Entity baseEntity = sampleToBaseEntity.get( sampleEntity );
                     if ( baseEntity == null ) {
                         logger.warn("No mapping to base entity from sample entity {}/{}." +
-                                sampleEntity.getName(), sampleEntity.getId() );
+                                sampleEntity.getName(), sampleEntity.getId());
                     }
                     else {
                         Set<Entity> labelEntities = signalToLabelEntities.get( baseEntity );
@@ -418,13 +507,13 @@ public class AlignmentBoardDataBuilder implements Serializable {
                             }
                         }
                         else {
-                            logger.warn( "No label entities found for {}.", baseEntity.getName() );
-                            logger.info( "signalToLabelEntities size is {}.", signalToLabelEntities.size() ) ;
+                            logger.warn("No label entities found for {}.", baseEntity.getName());
+                            logger.info("signalToLabelEntities size is {}.", signalToLabelEntities.size()) ;
                             for ( Entity signalEntity: signalToLabelEntities.keySet() ) {
                                 Set<Entity> labelEntitySet = signalToLabelEntities.get( signalEntity );
-                                logger.info( "Signal Entity Key: {}:{}", signalEntity.getName(), signalEntity.getId() );
+                                logger.info("Signal Entity Key: {}:{}", signalEntity.getName(), signalEntity.getId());
                                 for ( Entity labelEntity: labelEntitySet ) {
-                                    logger.info( "    Label entity {}:{}", labelEntity.getName(), labelEntity.getId() );
+                                    logger.info("    Label entity {}:{}", labelEntity.getName(), labelEntity.getId());
                                 }
                             }
                         }

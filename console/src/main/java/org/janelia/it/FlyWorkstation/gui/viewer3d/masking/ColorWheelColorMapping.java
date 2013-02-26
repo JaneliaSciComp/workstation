@@ -42,7 +42,7 @@ public class ColorWheelColorMapping implements RenderMappingI {
 
             if ( rgb == null ) {
                 rgb = colorWheel[ translatedNum % colorWheel.length ];
-                Entity entity = renderableBean.getEntity();
+                Entity entity = renderableBean.getRenderableEntity();
                 if ( entity != null ) {
                     String entityTypeName = entity.getEntityType().getName();
                     if ( entityTypeName.equals(EntityConstants.TYPE_NEURON_FRAGMENT ) ) {

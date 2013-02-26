@@ -125,7 +125,7 @@ public class TextureMediator {
             }
             reportError( "glTexImage", gl );
 
-            // TEMP
+            // DEBUG
             //testTextureContents(gl);
         }
 

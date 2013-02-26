@@ -51,6 +51,21 @@ public class MaskTextureDataBean implements TextureDataI {
         this(textureData, voxels[0], voxels[1], voxels[2]);
     }
 
+    @Override
+    public boolean equals( Object other ) {
+        if ( other == null  ||  (! (other instanceof MaskTextureDataBean ) ) ) {
+            return false;
+        }
+        else {
+            return ((MaskTextureDataBean) other).getFilename().equals( getFilename() );
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return filename.hashCode();
+    }
+
     public void setTextureData( byte[] textureData ) {
         this.textureData = textureData;
     }

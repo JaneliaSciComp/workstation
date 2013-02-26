@@ -17,7 +17,8 @@ public class RenderableBean {
     private int labelFileNum = -1;
     private int translatedNum;
     private byte[] rgb;
-    private Entity entity;
+    private Entity renderableEntity;
+    private long labelUid;
 
     public String getLabelFile() {
         return labelFile;
@@ -51,12 +52,12 @@ public class RenderableBean {
         this.rgb = rgb;
     }
 
-    public Entity getEntity() {
-        return entity;
+    public Entity getRenderableEntity() {
+        return renderableEntity;
     }
 
-    public void setEntity(Entity entity) {
-        this.entity = entity;
+    public void setRenderableEntity(Entity entity) {
+        this.renderableEntity = entity;
         if ( entity.getEntityType().getName().equals( EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
             String[] nameParts = entity.getName().trim().split(" ");
             // In establishing the label file number, must add one to account for 0-based neuron numbering
@@ -74,5 +75,13 @@ public class RenderableBean {
 
     public void setSignalFile(String signalFile) {
         this.signalFile = signalFile;
+    }
+
+    public long getLabelUid() {
+        return labelUid;
+    }
+
+    public void setLabelUid(long labelUid) {
+        this.labelUid = labelUid;
     }
 }

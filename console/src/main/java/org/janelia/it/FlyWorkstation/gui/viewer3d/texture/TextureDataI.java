@@ -70,4 +70,5 @@ public interface TextureDataI {
     int getChannelCount();
 
     void setChannelCount( int channelCount );
+
 }

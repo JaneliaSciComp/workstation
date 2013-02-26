@@ -48,7 +48,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
 
             if ( rgb == null ) {
                 rgb = colorWheel[ translatedNum % colorWheel.length ];
-                Entity entity = renderableBean.getEntity();
+                Entity entity = renderableBean.getRenderableEntity();
                 if ( entity != null ) {
                     String entityTypeName = entity.getEntityType().getName();
                     if ( entityTypeName.equals(EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
@@ -64,8 +64,8 @@ public class ConfigurableColorMapping implements RenderMappingI {
             }
 
             // Placing this here, to benefit from null-catch of RGB array above.
-            if ( renderableBean.getEntity() != null && guidToRenderMethod != null ) {
-                Long entityId = renderableBean.getEntity().getId();
+            if ( renderableBean.getRenderableEntity() != null && guidToRenderMethod != null ) {
+                Long entityId = renderableBean.getRenderableEntity().getId();
                 Integer renderMethodNum = guidToRenderMethod.get( entityId );
                 if ( renderMethodNum != null ) {
                     rgb[ 3 ] = renderMethodNum.byteValue();
