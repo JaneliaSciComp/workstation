@@ -50,11 +50,12 @@ implements GLActor
 		TileTexture texture = textureCache.get(ix);
 		if ((texture != null) && (texture.getStage().ordinal() >= TileTexture.Stage.RAM_LOADED.ordinal()))
 		{
+			// Hey! I just noticed I have the best possible texture
 			bestTexture = texture;
 			setStage(Stage.BEST_TEXTURE_LOADED);
 			return;
 		}
-		ix = ix.zoomOut();
+		ix = ix.zoomOut(); // Try some lower resolution textures
 		while (ix != null) {
 			texture = textureCache.get(ix);
 			if ((texture != null) && (texture.getStage().ordinal() >= TileTexture.Stage.RAM_LOADED.ordinal()))

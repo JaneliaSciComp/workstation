@@ -82,8 +82,10 @@ implements MouseModalWidget, VolumeViewer
 		volume0.setViewport(viewport);
 		mouseMode.setComponent(this);
 		wheelMode.setComponent(this);
-		// pink color for testing only
-		this.renderer.setBackgroundColor(new Color(0.5f, 0.5f, 0.5f, 0.0f));
+		// gray background for testing
+		// this.renderer.setBackgroundColor(new Color(0.5f, 0.5f, 0.5f, 0.0f));
+		// black background for production
+		this.renderer.setBackgroundColor(Color.black);
         setPreferredSize( new Dimension( 600, 600 ) );
         rubberBand.changed.connect(repaintSlot);
         setToolTipText("Double click to center on a point.");

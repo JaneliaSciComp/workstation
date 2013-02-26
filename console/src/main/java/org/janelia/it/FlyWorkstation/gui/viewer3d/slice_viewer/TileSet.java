@@ -66,21 +66,23 @@ extends Vector<Tile2d>
 			// Store a score for each candidate texture
 			Map<TileIndex, Double> textureScores = new HashMap<TileIndex, Double>();
 			// Remember which tiles could use a particular texture
-			Map<TileIndex, Set<Tile2d>> textureTiles = new HashMap<TileIndex, Set<Tile2d>>();
+			Map<TileIndex, Set<Tile2d>> tilesByTexture = new HashMap<TileIndex, Set<Tile2d>>();
 			// Accumulate a score for each candidate texture from each tile
 			// TODO - cache something so we don't need to do O(n) in this loop every time
+			// TODO - downweight textures that have already failed to load
 			for (Tile2d tile : untexturedTiles) {
 				for (TileIndex.TextureScore textureScore : tile.getIndex().getTextureScores()) 
 				{
+					// TODO - maybe skip textures that have failed to load
 					double initialScore = 0.0;
 					TileIndex textureKey = textureScore.getTextureKey();
 					if (textureScores.containsKey(textureKey))
 						initialScore = textureScores.get(textureKey);
 					textureScores.put(textureKey, initialScore + textureScore.getScore());
 					// remember that this tile could use this texture
-					if (! textureTiles.containsKey(textureKey))
-						textureTiles.put(textureKey, new HashSet<Tile2d>());
-					textureTiles.get(textureKey).add(tile);
+					if (! tilesByTexture.containsKey(textureKey))
+						tilesByTexture.put(textureKey, new HashSet<Tile2d>());
+					tilesByTexture.get(textureKey).add(tile);
 				}
 			}
 			// Choose the highest scoring texture for inclusion
@@ -95,7 +97,7 @@ extends Vector<Tile2d>
 			assert(bestTexture != null);
 			neededTextures.add(bestTexture);
 			// remove satisfied tiles from untextured tiles list
-			for (Tile2d tile : textureTiles.get(bestTexture)) {
+			for (Tile2d tile : tilesByTexture.get(bestTexture)) {
 				untexturedTiles.remove(tile);
 			}
 		}
@@ -108,6 +110,8 @@ extends Vector<Tile2d>
 		Set<TileIndex> neededTextures = new HashSet<TileIndex>();
 		for (Tile2d tile : this) {
 			// The best texture for each tile is always the one with the same index
+			// TODO - maybe skip textures that have failed to load
+			// or use the highest resolution tile that has not failed yet
 			if (tile.getStage().ordinal() < Tile2d.Stage.BEST_TEXTURE_LOADED.ordinal())
 				neededTextures.add(tile.getIndex());
 		}
