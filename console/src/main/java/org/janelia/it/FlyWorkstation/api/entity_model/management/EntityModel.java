@@ -4,6 +4,8 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 import java.util.*;
 
+import javax.swing.SwingUtilities;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.events.*;
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.AnnotationFacade;
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.EntityFacade;
@@ -19,7 +21,11 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Multimap;
 
 /**
  * Implements a unified Entity model for client-side operations. All changes to the model should go through
@@ -56,11 +62,28 @@ public class EntityModel {
 	private final AnnotationFacade annotationFacade;
 	private final EntityFacade entityFacade;
 	private final Cache<Long,Entity> entityCache;
+	private final Map<Long,Entity> commonRootCache;
+	private final Multimap<Long,Long> parentMap;
 	
 	public EntityModel() {
 		this.annotationFacade = FacadeManager.getFacadeManager().getAnnotationFacade();
 		this.entityFacade = FacadeManager.getFacadeManager().getEntityFacade();
-		this.entityCache = CacheBuilder.newBuilder().softValues().build();
+		this.entityCache = CacheBuilder.newBuilder().softValues().removalListener(new RemovalListener<Long,Entity>() {
+            @Override
+            public void onRemoval(RemovalNotification<Long, Entity> notification) {
+                synchronized (EntityModel.this) {
+                    Long id = notification.getKey();
+                    log.debug("Removing evicted entity from parentMap: {}",id);
+                    parentMap.removeAll(id);
+                    if (commonRootCache.containsKey(id)) {
+                        log.debug("Removed entity was a common root, clearing the common root cache...");
+                        commonRootCache.clear();
+                    }
+                }
+            }
+        }).build();
+		this.commonRootCache = new LinkedHashMap<Long,Entity>();
+	    this.parentMap = HashMultimap.<Long,Long>create();
 	}
 
 	/**
@@ -104,7 +127,7 @@ public class EntityModel {
 			return null;
 		}
 		if (!EntityUtils.isInitialized(entity.getEntityActorPermissions())) {
-		    log.trace("putOrUpdate: entity permissions are uninitialized");
+		    log.warn("putOrUpdate: entity permissions are uninitialized");
 			return null;
 		}
 		synchronized (this) {
@@ -125,12 +148,16 @@ public class EntityModel {
 				entityCache.put(entity.getId(), entity);
 			}
 			
+			log.debug("putOrUpdate: Repopulating parentMap for {} (@{})",canonicalEntity.getName(),System.identityHashCode(canonicalEntity));
+			
 			// Replace the child entities with ones that we already know about
 			for(EntityData ed : canonicalEntity.getEntityData()) {
 				if (ed.getChildEntity()!=null) {
 					Entity child = entityCache.getIfPresent(ed.getChildEntity().getId());
 					if (child!=null) {
 						ed.setChildEntity(child);
+						log.debug("putOrUpdate: Adding relationship: parent={}, child={}",canonicalEntity.getId(), child.getId());
+						parentMap.put(child.getId(), canonicalEntity.getId());
 					}
 				}
 			}
@@ -177,42 +204,18 @@ public class EntityModel {
 	 */
 	public void invalidateAllSilently() {
 	    entityCache.invalidateAll();
+	    commonRootCache.clear();
 	}
 
-	/**
-     * Invalidate any number of entities in the cache, so that they will be reloaded on the next request. 
-	 * 
-	 * @param entityIds
-	 */
-	public void invalidate(Collection<Long> entityIds) {
-	    ImmutableMap<Long,Entity> presentMap = entityCache.getAllPresent(entityIds);
-	    for(Entity entity : presentMap.values()) {
-	        entityCache.invalidate(entity.getId());
-	    }
-	    notifyEntitiesInvalidated(presentMap.values());
-	}
-	
     /**
      * Invalidate any number of entities in the cache, so that they will be reloaded on the next request. 
      * 
-     * @param entities
-     * @param recurse
+     * @param entityIds
      */
-	public void invalidate(Collection<Entity> entities, boolean recurse) {
-		Map<Long,Entity> visited = new HashMap<Long,Entity>();
-		for(Entity entity : entities) {
-			if (!EntityUtils.isInitialized(entity)) continue;
-			log.debug("Invalidating entity '{}' (@{})",entity.getName(),System.identityHashCode(entity));
-			if (recurse) {
-				invalidate(entity, visited);
-			}
-			else {
-				entityCache.invalidate(entity.getId());
-				visited.put(entity.getId(), entity);
-			}
-		}
-		notifyEntitiesInvalidated(visited.values());
-	}
+    public void invalidate(Collection<Long> entityIds) {
+        ImmutableMap<Long,Entity> presentMap = entityCache.getAllPresent(entityIds);
+        invalidate(presentMap.values(), false);
+    }
 	
     /**
      * Invalidate the entity in the cache, so that it will be reloaded on the next request. 
@@ -221,27 +224,56 @@ public class EntityModel {
      * @param recurse
      */
 	public void invalidate(Entity entity, boolean recurse) {
-		if (!EntityUtils.isInitialized(entity)) return;
-		log.debug("Invalidating entity '{}' (@{})",entity.getName(),System.identityHashCode(entity));
-		Map<Long,Entity> visited = new HashMap<Long,Entity>();
-		if (recurse) {
-			invalidate(entity, visited);
-		}
-		else {
-			entityCache.invalidate(entity.getId());
-			visited.put(entity.getId(), entity);
-		}
-		notifyEntitiesInvalidated(visited.values());
+	    List<Entity> entities = new ArrayList<Entity>();
+	    entities.add(entity);
+		invalidate(entities, recurse);
 	}
-	
-	private void invalidate(Entity entity, Map<Long,Entity> visited) {
+    
+    /**
+     * Invalidate any number of entities in the cache, so that they will be reloaded on the next request. 
+     * 
+     * @param entities
+     * @param recurse
+     */
+    public void invalidate(Collection<Entity> entities, boolean recurse) {
+        Map<Long,Entity> visited = new HashMap<Long,Entity>();
+        for(Entity entity : entities) {
+            // Invalidate parents too, because they hold references to invalid children now
+            Collection<Long> parentIds = parentMap.get(entity.getId());
+            if (parentIds!=null && !parentIds.isEmpty()) {
+                for(Long parentId : parentIds) {
+                    log.debug("Invalidating parent if present: {}",parentId);    
+                    Entity parent = entityCache.getIfPresent(parentId);
+                    if (parent!=null) {
+                        invalidate(parent, false);
+                    }
+                }
+            }
+            else {
+                log.debug("Entity has no parents: {}",entity.getId());    
+            }
+            // Invalidate the entity AFTER invalidating its parents 
+            // (otherwise the parentMap may not contain the information we need)
+            invalidate(entity, visited, recurse);
+        }
+        notifyEntitiesInvalidated(visited.values());
+    }
+    
+	private void invalidate(Entity entity, Map<Long,Entity> visited, boolean recurse) {
+	    if (SwingUtilities.isEventDispatchThread()) {
+	        throw new IllegalStateException("EntityModel illegally called from EDT!");
+	    }
 		if (visited.containsKey(entity.getId())) return;
 		if (!EntityUtils.isInitialized(entity)) return;
 		if (entity instanceof ForbiddenEntity) return;
+		log.debug("Invalidating cached instance {} (@{})",entity.getName(),System.identityHashCode(entity));
 		visited.put(entity.getId(), entity);
 		entityCache.invalidate(entity.getId());
-		for(Entity child : entity.getChildren()) {
-			invalidate(child, visited);
+		commonRootCache.remove(entity.getId());
+		if (recurse) {
+    		for(Entity child : entity.getChildren()) {
+    			invalidate(child, visited, true);
+    		}
 		}
 	}
 	
@@ -305,7 +337,7 @@ public class EntityModel {
 	public Entity getEntityById(final long entityId) throws Exception {
 		Entity entity = entityCache.getIfPresent(entityId);
 		if (entity!=null) {
-			log.debug("Returning cached entity {}",entity.getId());
+			log.debug("getEntityById: returning cached entity {}",entity.getId());
 			return entity;
 		}
 		synchronized (this) {
@@ -387,6 +419,7 @@ public class EntityModel {
 	 */
     public void refreshChildren(Entity entity) throws Exception {
     	checkIfCanonicalEntity(entity);
+    	log.debug("Refreshing children for '{}'",entity);
         synchronized (this) {
         	Set<Entity> childEntitySet = entityFacade.getChildEntities(entity.getId());
         	putOrUpdateAll(childEntitySet);
@@ -547,11 +580,11 @@ public class EntityModel {
     	Entity canonicalEntity = null;
     	synchronized(this) {
     	    replaceForbiddenEntitiesWithUnloadedChildren(entity, true);
-	    	canonicalEntity = putOrUpdate(entityFacade.saveEntity(entity));
-	    	replaceUnloadedChildrenWithForbiddenEntities(entity, true);
+    	    Entity newEntity = entityFacade.saveEntity(entity);
+	    	replaceUnloadedChildrenWithForbiddenEntities(newEntity, true);
+    	    canonicalEntity = putOrUpdate(newEntity);
+	    	
     	}
-    	// Need to notify here, because the changes were made to the canonical entity (TODO: disallow this?)
-    	notifyEntityChanged(canonicalEntity);
     	return canonicalEntity;
 	}
 	
@@ -627,23 +660,6 @@ public class EntityModel {
     		notifyEntityChanged(parent);
     	}
     }
-    
-    /**
-     * Delete the given Entity object. 
-     * 
-     * This method may generate an EntityDeleted event. 
-     * 
-     * @param entity
-     * @throws Exception
-     */
-    public void deleteEntity(Entity entity) throws Exception {
-    	checkIfCanonicalEntity(entity);
-    	synchronized(this) {
-	    	entityFacade.deleteEntityById(entity.getId());
-    		entityCache.invalidate(entity);
-    	}
-    	notifyEntityRemoved(entity);
-    }
 
     /**
      * Delete the given Entity object tree. 
@@ -656,8 +672,20 @@ public class EntityModel {
     public void deleteEntityTree(Entity entity) throws Exception {
     	checkIfCanonicalEntity(entity);
     	synchronized(this) {
+    	    log.debug("Deleting entity tree "+entity.getId());
 	    	entityFacade.deleteEntityTree(entity.getId());
-			entityCache.invalidate(entity);
+	    	commonRootCache.remove(entity.getId());
+            invalidate(entity, true);
+	    	
+			// Go through the cache and invalidate any entities which have this entity as a child
+//			for(Entity parent : entityCache.asMap().values()) {
+//			    for(EntityData childEd : parent.getEntityData()) {
+//			        if (childEd.getChildEntity()!=null && childEd.getChildEntity().getId().equals(entity.getId())) {
+//			            log.debug("Invalidating tree rooted at parent "+parent.getId());
+//			            invalidate(parent, true);
+//			        }
+//			    }   
+//			}
     	}
     	notifyEntityRemoved(entity);
     }
@@ -732,6 +760,7 @@ public class EntityModel {
 	    	newFolder = entityFacade.createEntity(EntityConstants.TYPE_FOLDER, folderName);
 	    	EntityUtils.addAttributeAsTag(newFolder, EntityConstants.ATTRIBUTE_COMMON_ROOT);
 			newFolder = entityFacade.saveEntity(newFolder);
+			commonRootCache.put(newFolder.getId(), newFolder);
     	}
 		return putOrUpdate(newFolder);
     }
@@ -763,6 +792,7 @@ public class EntityModel {
 			EntityData rootTagEd = commonRoot.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT);
 			checkArgument(rootTagEd!=null, "Entity is not a common root: "+commonRoot.getId());
 			entityFacade.removeEntityData(rootTagEd);
+			commonRootCache.remove(commonRoot.getId());
     	}
     }
     
@@ -774,8 +804,18 @@ public class EntityModel {
      */
     public List<Entity> getCommonRoots() throws Exception {
     	synchronized (this) {
-    		List<Entity> userRoots = entityFacade.getCommonRootEntities();
-    		return putOrUpdateAll(userRoots);
+    	    List<Entity> userRoots = null;
+    		if (commonRootCache.isEmpty()) {
+        	    userRoots = entityFacade.getCommonRootEntities();
+        		putOrUpdateAll(userRoots);
+        		for(Entity entity : userRoots) {
+        		    commonRootCache.put(entity.getId(), entity);
+        		}
+    		}
+    		else {
+    		    userRoots = new ArrayList<Entity>(commonRootCache.values());
+    		}
+    		return userRoots;
     	}
     }
     
@@ -946,27 +986,27 @@ public class EntityModel {
     }
     
 	private void notifyEntityChildrenLoaded(Entity entity) {
-		log.debug("Generating EntityChildrenLoadedEvent for {}",entity.getId());
+		log.trace("Generating EntityChildrenLoadedEvent for {}",entity.getId());
 		ModelMgr.getModelMgr().postOnEventBus(new EntityChildrenLoadedEvent(entity));
 	}
 	
 	private void notifyEntityCreated(Entity entity) {
-		log.debug("Generating EntityCreateEvent for {}",entity.getId());
+		log.trace("Generating EntityCreateEvent for {}",entity.getId());
 		ModelMgr.getModelMgr().postOnEventBus(new EntityCreateEvent(entity));
 	}
 
 	private void notifyEntityChanged(Entity entity) {
-		log.debug("Generating EntityChangeEvent for {}",entity.getId());
+		log.trace("Generating EntityChangeEvent for {}",entity.getId());
 		ModelMgr.getModelMgr().postOnEventBus(new EntityChangeEvent(entity));
 	}
 
 	private void notifyEntityRemoved(Entity entity) {
-		log.debug("Generating EntityRemoveEvent for {}",entity.getId());
+		log.trace("Generating EntityRemoveEvent for {}",entity.getId());
 		ModelMgr.getModelMgr().postOnEventBus(new EntityRemoveEvent(entity));
 	}
 
 	private void notifyEntitiesInvalidated(Collection<Entity> entities) {
-		log.debug("Generating EntityInvalidationEvent with {} entities",entities.size());
+		log.trace("Generating EntityInvalidationEvent with {} entities",entities.size());
 		ModelMgr.getModelMgr().postOnEventBus(new EntityInvalidationEvent(entities));
 	}
 }

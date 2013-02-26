@@ -127,12 +127,12 @@ public class Hud extends ModalDialog {
     }
 
     public void setEntityAndToggleDialog(Entity entity, boolean toggle) {
-        logger.info( "HUD: entity type is {}", entity.getEntityType().getName() );
         this.entity = entity;
         if ( entity == null ) {
             dirtyEntityFor3D = false;
         }
         else {
+            logger.info( "HUD: entity type is {}", entity.getEntityType().getName() );
             boolean imageEstablished = false;
             try {
                 imageEstablished = establishImage();

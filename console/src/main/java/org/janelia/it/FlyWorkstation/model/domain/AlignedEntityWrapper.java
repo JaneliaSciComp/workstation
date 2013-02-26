@@ -17,5 +17,4 @@ public class AlignedEntityWrapper extends EntityWrapper {
     protected void setAlignmentContext(AlignmentContext alignmentContext) {
         this.alignmentContext = alignmentContext;
     }
-    
 }

@@ -384,7 +384,7 @@ public class EntityContextMenu extends JPopupMenu {
                     public void actionPerformed(ActionEvent e) {
                         if (rootedEntity != null) {
                             SessionMgr.getBrowser().setPerspective(Perspective.AlignmentBoard);
-                            SessionMgr.getBrowser().getLayersPanel().openAlignmentBoard(rootedEntity);
+                            SessionMgr.getBrowser().getLayersPanel().openAlignmentBoard(rootedEntity.getEntityId());
                         }
                     }
                 });
@@ -815,7 +815,7 @@ public class EntityContextMenu extends JPopupMenu {
             }
         }
 
-        final Action action = new RemoveEntityAction(rootedEntityList);
+        final Action action = new RemoveEntityAction(rootedEntityList, true);
 
         JMenuItem deleteItem = new JMenuItem("  " + action.getName());
         deleteItem.addActionListener(new ActionListener() {

@@ -90,7 +90,11 @@ public class RootedEntity {
 	public RootedEntity getChildByName(String childName) {
 		return getChild(EntityUtils.findChildEntityDataWithName(getEntity(), childName));
 	}
-	
+
+    public RootedEntity getChildById(long childId) {
+        return getChild(EntityUtils.findChildEntityDataWithChildId(getEntity(), childId));
+    }
+    
     public List<RootedEntity> getChildrenOfType(String typeName) {
         List<RootedEntity> items = new ArrayList<RootedEntity>();
         for (EntityData entityData : getEntity().getOrderedEntityData()) {

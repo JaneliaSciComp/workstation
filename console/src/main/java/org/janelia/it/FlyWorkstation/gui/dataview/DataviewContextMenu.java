@@ -39,7 +39,7 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 		add(getTitleItem("Entity '"+entity.getName()+"'"));
         add(getDetailsItem());
         add(getRenameItem());
-        add(getDeleteItem());
+//        add(getDeleteItem());
         add(getDeleteTreeItem());
         add(getUnlinkAndDeleteTreeItem());
         setNextAddRequiresSeparator(true);
@@ -49,7 +49,7 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 	
 	@Override
 	protected void addMultipleSelectionItems() {
-        add(getDeleteItem());
+//        add(getDeleteItem());
         add(getDeleteTreeItem());
 	}
 	
@@ -88,51 +88,51 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
         return renameItem;
 	}
 
-	private JMenuItem getDeleteItem() {
-
-		String name = isMultipleSelection() ? "Delete entities" : "Delete entity";
-		
-		JMenuItem deleteEntityMenuItem = new JMenuItem("  "+name);
-        deleteEntityMenuItem.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-	            int deleteConfirmation = confirm("Are you sure you want to delete " + getSelectedElements().size() + 
-	            		" entities? This can potentially orphan their children, if they have any.");
-	            if (deleteConfirmation != 0) return;
-
-	            final List<Entity> toDelete = new ArrayList<Entity>(getSelectedElements());
-
-	            Utils.setWaitingCursor(DataviewApp.getMainFrame());
-	            
-	            SimpleWorker loadTask = new SimpleWorker() {
-
-	                @Override
-	                protected void doStuff() throws Exception {
-    		            // Update database
-    		            for (Entity entity : toDelete) {
-    		                ModelMgr.getModelMgr().deleteEntityById(entity.getId());
-    		            }
-	                }
-
-	                @Override
-	                protected void hadSuccess() {
-	                	Utils.setDefaultCursor(DataviewApp.getMainFrame());
-//	    	            reshow();
-	                }
-
-	                @Override
-	                protected void hadError(Throwable error) {
-	                	SessionMgr.getSessionMgr().handleException(error);
-	                }
-
-	            };
-
-	            loadTask.execute();
-			}
-		});
-        return deleteEntityMenuItem;
-	}
+//	private JMenuItem getDeleteItem() {
+//
+//		String name = isMultipleSelection() ? "Delete entities" : "Delete entity";
+//		
+//		JMenuItem deleteEntityMenuItem = new JMenuItem("  "+name);
+//        deleteEntityMenuItem.addActionListener(new ActionListener() {
+//			
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+//	            int deleteConfirmation = confirm("Are you sure you want to delete " + getSelectedElements().size() + 
+//	            		" entities? This can potentially orphan their children, if they have any.");
+//	            if (deleteConfirmation != 0) return;
+//
+//	            final List<Entity> toDelete = new ArrayList<Entity>(getSelectedElements());
+//
+//	            Utils.setWaitingCursor(DataviewApp.getMainFrame());
+//	            
+//	            SimpleWorker loadTask = new SimpleWorker() {
+//
+//	                @Override
+//	                protected void doStuff() throws Exception {
+//    		            // Update database
+//    		            for (Entity entity : toDelete) {
+//    		                ModelMgr.getModelMgr().deleteEntityById(entity.getId());
+//    		            }
+//	                }
+//
+//	                @Override
+//	                protected void hadSuccess() {
+//	                	Utils.setDefaultCursor(DataviewApp.getMainFrame());
+//	    	            //reshow();
+//	                }
+//
+//	                @Override
+//	                protected void hadError(Throwable error) {
+//	                	SessionMgr.getSessionMgr().handleException(error);
+//	                }
+//
+//	            };
+//
+//	            loadTask.execute();
+//			}
+//		});
+//        return deleteEntityMenuItem;
+//	}
 
 	private JMenuItem getDeleteTreeItem() {
 

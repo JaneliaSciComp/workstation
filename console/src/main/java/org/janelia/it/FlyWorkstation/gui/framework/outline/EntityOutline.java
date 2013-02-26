@@ -74,9 +74,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 	    log.info("Activating");
         super.activate();
         ModelMgr.getModelMgr().addModelMgrObserver(mml);
-        if (getRootEntity()==null) {
-            refresh();
-        }
+        refresh();
     }
 
     @Override
@@ -335,7 +333,7 @@ public abstract class EntityOutline extends EntityTree implements Cloneable, Ref
 
 	@Subscribe 
 	public void entityInvalidated(EntityInvalidationEvent event) {
-		log.info("Some entities were invalidated so we're refreshing the tree");
+		log.debug("Some entities were invalidated so we're refreshing the tree");
 		refresh(false, true, null);
 	}
 

@@ -31,13 +31,20 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListe
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ImageCache;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.LayersPanel;
-import org.janelia.it.FlyWorkstation.gui.util.*;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.gui.util.JOutlookBar;
+import org.janelia.it.FlyWorkstation.gui.util.JOutlookBar2;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapperFactory;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
-import org.janelia.it.FlyWorkstation.shared.util.*;
+import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
+import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
+import org.janelia.it.FlyWorkstation.shared.util.PrintableImage;
+import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -414,39 +421,39 @@ public class Browser extends JFrame implements Cloneable {
         SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
-			    setPerspective(Perspective.ImageBrowser);
+//			    setPerspective(Perspective.ImageBrowser);
 			    
 			    // Temporary code for testing with a single alignment board
 			    // TODO: REMOVE ALL THIS
-//			    setPerspective(Perspective.AlignmentBoard);
-//			    
-//			    SimpleWorker worker = new SimpleWorker() {
-//                    
-//			        RootedEntity ab;
-//			        
-//                    @Override
-//                    protected void doStuff() throws Exception {
-//                        Entity cr = ModelMgr.getModelMgr().getEntityById(1844506916470915243L);
-//                        if (cr==null) {
-//                            throw new IllegalStateException("Cannot find test AB folder");
-//                        }
-//                        RootedEntity rootedEntity = new RootedEntity(cr);
-//                        ModelMgr.getModelMgr().loadLazyEntity(cr, true);
-//                        ab = rootedEntity.getChildOfType(EntityConstants.TYPE_ALIGNMENT_BOARD);
-//                    }
-//                    
-//                    @Override
-//                    protected void hadSuccess() {
-//                        SessionMgr.getBrowser().getLayersPanel().openAlignmentBoard(ab);
-//                    }
-//                    
-//                    @Override
-//                    protected void hadError(Throwable error) {
-//                        SessionMgr.getSessionMgr().handleException(error);                        
-//                    }
-//                };
-//                
-//                worker.execute();
+			    setPerspective(Perspective.AlignmentBoard);
+			    
+			    SimpleWorker worker = new SimpleWorker() {
+                    
+			        RootedEntity ab;
+			        
+                    @Override
+                    protected void doStuff() throws Exception {
+                        Entity cr = ModelMgr.getModelMgr().getCommonRootEntityByName(LayersPanel.ALIGNMENT_BOARDS_FOLDER);
+                        if (cr==null) {
+                            throw new IllegalStateException("Cannot find test AB folder");
+                        }
+                        RootedEntity rootedEntity = new RootedEntity(cr);
+                        ModelMgr.getModelMgr().loadLazyEntity(cr, false);
+                        ab = rootedEntity.getChildOfType(EntityConstants.TYPE_ALIGNMENT_BOARD);
+                    }
+                    
+                    @Override
+                    protected void hadSuccess() {
+                        SessionMgr.getBrowser().getLayersPanel().openAlignmentBoard(ab.getEntityId());
+                    }
+                    
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);                        
+                    }
+                };
+                
+                worker.execute();
 			    
 			    
 //			    rightPanel.showPanel(OUTLINE_ONTOLOGY);

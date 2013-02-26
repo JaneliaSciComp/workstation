@@ -154,7 +154,7 @@ public class IconDemoPanel extends Viewer {
 				if (e.getKeyCode() == KeyEvent.VK_DELETE) {
 					List<RootedEntity> selected = getSelectedEntities();
 					if (selected.isEmpty()) return;
-					final Action action = new RemoveEntityAction(selected);
+					final Action action = new RemoveEntityAction(selected, true);
 					action.doAction();
 					e.consume();
 					return;

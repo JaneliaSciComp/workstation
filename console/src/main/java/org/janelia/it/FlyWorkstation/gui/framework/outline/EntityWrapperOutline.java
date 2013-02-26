@@ -85,9 +85,7 @@ public abstract class EntityWrapperOutline extends EntityWrapperTree implements 
         log.info("Activating");
         super.activate();
         ModelMgr.getModelMgr().addModelMgrObserver(mml);
-        if (getRoot()==null) {
-            refresh();
-        }
+        refresh();
     }
 
     @Override
@@ -262,7 +260,7 @@ public abstract class EntityWrapperOutline extends EntityWrapperTree implements 
     
     @Subscribe 
     public void entityInvalidated(EntityInvalidationEvent event) {
-        log.info("Some entities were invalidated so we're refreshing the outline");
+        log.debug("Some entities were invalidated so we're refreshing the outline");
         refresh(false, true, null);
     }
 

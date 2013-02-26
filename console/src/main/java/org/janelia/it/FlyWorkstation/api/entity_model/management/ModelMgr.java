@@ -533,10 +533,10 @@ public class ModelMgr {
     	 entityModel.demoteCommonRootToFolder(commonRoot);
     }
     
-    public void deleteEntityById(Long entityId) throws Exception {
-        entityModel.deleteEntity(entityModel.getEntityById(entityId));
-        notifyEntityRemoved(entityId);
-    }
+//    public void deleteEntityById(Long entityId) throws Exception {
+//        entityModel.deleteEntity(entityModel.getEntityById(entityId));
+//        notifyEntityRemoved(entityId);
+//    }
 
     public void removeEntityData(EntityData ed) throws Exception {
     	entityModel.deleteEntityData(ed);
@@ -641,6 +641,15 @@ public class ModelMgr {
         return entityModel.getCommonRoots();
     }
 
+    public Entity getCommonRootEntityByName(String name) throws Exception {
+        for(Entity entity : ModelMgr.getModelMgr().getCommonRootEntities()) {
+            if (name.equals(entity.getName())) {
+                return entity;
+            }
+        }
+        return null;
+    }
+    
     public Entity getEntityAndChildren(long entityId) throws Exception {    	
         return entityModel.getEntityAndChildren(entityId);
     }

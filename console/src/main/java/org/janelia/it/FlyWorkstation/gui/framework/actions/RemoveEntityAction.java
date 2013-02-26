@@ -25,10 +25,12 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
  */
 public class RemoveEntityAction implements Action {
 
-	private List<RootedEntity> rootedEntityList;
+	private final List<RootedEntity> rootedEntityList;
+	private final boolean showConfirmationDialogs;
 	
-	public RemoveEntityAction(List<RootedEntity> rootedEntityList) {
+	public RemoveEntityAction(List<RootedEntity> rootedEntityList, boolean showConfirmationDialogs) {
 		this.rootedEntityList = rootedEntityList;
+		this.showConfirmationDialogs = showConfirmationDialogs;
 	}
 	
     @Override
@@ -126,7 +128,7 @@ public class RemoveEntityAction implements Action {
 			@Override
 			protected void hadSuccess() {
 		        
-				boolean confirmedAll = false;
+				boolean confirmedAll = !showConfirmationDialogs;
 				
 				final Set<EntityData> toReallyDelete = new HashSet<EntityData>(toDelete);
 				for(EntityData ed : toDelete) {
@@ -219,11 +221,11 @@ public class RemoveEntityAction implements Action {
 								throw new IllegalStateException("Unknown deletion type for EntityData.id="+ed.getId());
 							}
 						}
+//						ModelMgr.getModelMgr().invalidate(invalidIdSet);
 					}
 
 					@Override
 					protected void hadSuccess() {
-					    ModelMgr.getModelMgr().invalidate(invalidIdSet);
 					}
 
 					@Override

@@ -106,7 +106,7 @@ public class DataSetListDialog extends ModalDialog implements Accessibility, Ref
 
     							@Override
     							protected void doStuff() throws Exception {
-    								ModelMgr.getModelMgr().deleteEntityById(dataSetEntity.getId());
+    								ModelMgr.getModelMgr().deleteEntityTree(dataSetEntity.getId());
     							}
     							
     							@Override

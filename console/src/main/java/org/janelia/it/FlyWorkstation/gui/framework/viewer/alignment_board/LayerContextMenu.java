@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
+import java.awt.Color;
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
@@ -8,18 +9,19 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
+import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.RemoveEntityAction;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardItemChangeEvent.ChangeType;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
+import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
@@ -37,12 +39,14 @@ public class LayerContextMenu extends JPopupMenu {
 
     protected static final Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
 
+    protected final AlignmentBoardContext alignmentBoardContext;
     protected final AlignedItem alignedItem;
 
     // Internal state
     protected boolean nextAddRequiresSeparator = false;
 
-    public LayerContextMenu(AlignedItem alignedItem) {
+    public LayerContextMenu(AlignmentBoardContext alignmentBoardContext, AlignedItem alignedItem) {
+        this.alignmentBoardContext = alignmentBoardContext;
         this.alignedItem = alignedItem;
     }
 
@@ -53,6 +57,7 @@ public class LayerContextMenu extends JPopupMenu {
         add(getDetailsItem());
 
         setNextAddRequiresSeparator(true);
+        add(getChooseColorItem());
         add(getRenameItem());
         add(getDeleteItem());
     }
@@ -99,27 +104,69 @@ public class LayerContextMenu extends JPopupMenu {
         return detailsMenuItem;
     }
 
+    protected JMenuItem getChooseColorItem() {
+        JMenuItem copyMenuItem = new JMenuItem("  Choose Color");
+        copyMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                
+                Color currColor = alignedItem.getColor();
+                final Color newColor = JColorChooser.showDialog(SessionMgr.getBrowser(), "Choose color", currColor);
+                if (newColor==null) return;
+                
+                SimpleWorker worker = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        alignedItem.setColor(newColor);
+                    }
+                    
+                    @Override
+                    protected void hadSuccess() {
+                        AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
+                                alignmentBoardContext, alignedItem, ChangeType.ColorChange);
+                        ModelMgr.getModelMgr().postOnEventBus(event);
+                    }
+                    
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                worker.execute();
+            }
+        });
+        return copyMenuItem;
+    }
+
     protected JMenuItem getRenameItem() {
         JMenuItem renameItem = new JMenuItem("  Set Alias");
         renameItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
 
-                String newName = (String) JOptionPane.showInputDialog(browser, "Alias:\n", "Set Alias For "
+                final String newName = (String) JOptionPane.showInputDialog(browser, "Alias:\n", "Set Alias For "
                         + alignedItem.getItemWrapper().getName()+" in this Alignment Board", JOptionPane.PLAIN_MESSAGE, 
-                        null, null, alignedItem.getItemWrapper().getName());
+                        null, null, alignedItem.getName());
                 if ((newName == null) || (newName.length() <= 0)) {
                     return;
                 }
 
-                try {
-                    ModelMgr.getModelMgr().renameEntity(alignedItem.getInternalEntity(), newName);
-                } 
-                catch (Exception ex) {
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(SessionMgr.getSessionMgr().getActiveBrowser(),
-                            "Error renaming entity", "Error", JOptionPane.ERROR_MESSAGE);
-                }
-
+                SimpleWorker worker = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        ModelMgr.getModelMgr().renameEntity(alignedItem.getInternalEntity(), newName);
+                    }
+                    
+                    @Override
+                    protected void hadSuccess() {
+                        // Updates are driven by the entity model
+                    }
+                    
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                worker.execute();
             }
         });
 
@@ -135,27 +182,12 @@ public class LayerContextMenu extends JPopupMenu {
         List<RootedEntity> rootedEntityList = new ArrayList<RootedEntity>();
         rootedEntityList.add(alignedItem.getInternalRootedEntity());
 
+        final Action action = new RemoveEntityAction(rootedEntityList, false);
+
         JMenuItem deleteItem = new JMenuItem("  Remove From Alignment Board");
         deleteItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-                SimpleWorker worker = new SimpleWorker() {
-                    
-                    @Override
-                    protected void doStuff() throws Exception {
-                        SessionMgr.getBrowser().getLayersPanel().removeAlignedEntity(alignedItem);
-                    }
-                    
-                    @Override
-                    protected void hadSuccess() {
-                        // everything is done by the layers panel
-                    }
-                    
-                    @Override
-                    protected void hadError(Throwable error) {
-                        SessionMgr.getSessionMgr().handleException(error);
-                    }
-                };
-                worker.execute();
+                action.doAction();
             }
         });
         

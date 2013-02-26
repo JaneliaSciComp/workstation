@@ -31,6 +31,8 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
     @Override
     public void loadContextualizedChildren(AlignmentContext alignmentContext) throws Exception {
         
+        log.debug("Loading contextualized children for sample '{}' (id={})",getName(),getId());
+        
         initChildren();
         ModelMgr.getModelMgr().loadLazyEntity(getInternalEntity(), false);
         
@@ -44,12 +46,12 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
         RootedEntity fragmentCollection = null;
         
         for(RootedEntity pipelineRun : getInternalRootedEntity().getChildrenOfType(EntityConstants.TYPE_PIPELINE_RUN)) {
-            log.info("Checking pipeline run '{}' (id={})",pipelineRun.getName(),pipelineRun.getEntityId());
+            log.debug("Checking pipeline run '{}' (id={})",pipelineRun.getName(),pipelineRun.getEntityId());
             ModelMgr.getModelMgr().loadLazyEntity(pipelineRun.getEntity(), false);
             
             for(RootedEntity pipelineResult : pipelineRun.getChildrenForAttribute(EntityConstants.ATTRIBUTE_RESULT)) {
                 String alignmentSpaceName = pipelineResult.getEntity().getValueByAttributeName(EntityConstants.TYPE_ALIGNMENT_SPACE);
-                log.info("  Checking '{}'",pipelineResult.getName());    
+                log.debug("  Checking '{}'",pipelineResult.getName());    
                 ModelMgr.getModelMgr().loadLazyEntity(pipelineResult.getEntity(), false);
                 
                 if (alignmentSpaceName!=null && alignmentSpaceName.equals(alignmentContext.getAlignmentSpaceName())) {
@@ -61,7 +63,7 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
                         ModelMgr.getModelMgr().loadLazyEntity(supportingFiles.getEntity(), false);
                         
                         for(RootedEntity alignedVolume : supportingFiles.getChildrenOfType(EntityConstants.TYPE_IMAGE_3D)) {
-                            log.info("    Checking aligned volume '{}' (id={})",alignedVolume.getName(),alignedVolume.getEntityId());
+                            log.debug("    Checking aligned volume '{}' (id={})",alignedVolume.getName(),alignedVolume.getEntityId());
                             ModelMgr.getModelMgr().loadLazyEntity(alignedVolume.getEntity(), false);
                             
                             String opticalRes = alignedVolume.getValueByAttributeName(EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION);
@@ -69,7 +71,7 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
                                 matchedOpticalRes = opticalRes;
                                 String pixelRes = alignedVolume.getValueByAttributeName(EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION);
                                 if (pixelRes!=null && pixelRes.equals(alignmentContext.getPixelResolution())) {
-                                    log.info("      Accepted aligned result (id={})",alignedVolume.getEntityId());    
+                                    log.debug("      Accepted aligned result (id={})",alignedVolume.getEntityId());    
                                     matchedPixelRes = pixelRes;
                                     volume = alignedVolume;
                                 }
@@ -79,13 +81,13 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
                         for(RootedEntity sep : pipelineResult.getChildrenOfType(EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT)) {
                             String opticalRes = sep.getValueByAttributeName(EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION);
                             String pixelRes = sep.getValueByAttributeName(EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION);
-                            log.info("    Checking neuron separation '{}' (id={})",sep.getName(),sep.getEntityId());
+                            log.debug("    Checking neuron separation '{}' (id={})",sep.getName(),sep.getEntityId());
                             ModelMgr.getModelMgr().loadLazyEntity(sep.getEntity(), false);
                             
                             if (opticalRes!=null && opticalRes.equals(alignmentContext.getOpticalResolution())) {
                                 matchedOpticalRes = opticalRes;
                                 if (pixelRes!=null && pixelRes.equals(alignmentContext.getPixelResolution())) {
-                                    log.info("      Accepted neuron separation (id={})",sep.getEntityId());  
+                                    log.debug("      Accepted neuron separation (id={})",sep.getEntityId());  
                                     matchedPixelRes = pixelRes;
                                     separation = sep;
                                     fragmentCollection = sep.getChildOfType(EntityConstants.TYPE_NEURON_FRAGMENT_COLLECTION);
@@ -101,14 +103,14 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
             RootedEntity fast3dImage = volume.getChildForAttribute(EntityConstants.ATTRIBUTE_DEFAULT_FAST_3D_IMAGE);
             if (fast3dImage != null) {
                 imagePathFast3d = fast3dImage.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH);
-                log.info("Got fast 3d image: {}",imagePathFast3d);
+                log.debug("Got fast 3d image: {}",imagePathFast3d);
             }
         }
         
         if (separation!=null) {
             maskedVolume = new MaskedVolume(separation.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH));
             if (maskedVolume!=null) {
-                log.info("Got masked volume: {}",maskedVolume.getSignalLabelPath());
+                log.debug("Got masked volume: {}",maskedVolume.getSignalLabelPath());
             }
             
             if (fragmentCollection!=null) {
@@ -119,7 +121,7 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
                     neuronSet.add(neuron);
                     addChild(neuron);
                 }
-                log.info("Got {} neurons",neuronSet.size());
+                log.debug("Got {} neurons",neuronSet.size());
             }
         }
         

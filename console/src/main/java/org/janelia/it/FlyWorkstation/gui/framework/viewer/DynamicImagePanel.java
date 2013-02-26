@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.framework.viewer;
+    package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -231,8 +231,17 @@ public abstract class DynamicImagePanel extends JPanel {
 		protected void doStuff() throws Exception {
             BufferedImage maxSizeImage = imageCache==null ? null : imageCache.get(imageFilename);
             if (maxSizeImage == null) {
-                final URL imageFileURL = SessionMgr.getURL(imageFilename);
-            	maxSizeImage = Utils.readImage(imageFileURL);
+                
+                URL imageFileURL = SessionMgr.getURL(imageFilename);
+                // Some extra finagling is required because LOCI libraries do not like the file protocol for some reason
+                if (imageFileURL.getProtocol().equals("file")) {
+                    String localFilepath = imageFileURL.toString().replace("file:","");
+                    maxSizeImage = Utils.readImage(localFilepath);
+                }
+                else {
+                    maxSizeImage = Utils.readImage(imageFileURL);
+                }
+                
             	if (isCancelled()) return;
             	if (maxSize != null) {
             		int newWidth = maxSize;

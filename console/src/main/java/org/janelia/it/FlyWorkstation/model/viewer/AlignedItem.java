@@ -1,5 +1,9 @@
 package org.janelia.it.FlyWorkstation.model.viewer;
 
+import java.awt.Color;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
@@ -8,6 +12,8 @@ import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An aligned item an alignment board context. Always has an entity, and may have other AlignedItems as children. 
@@ -16,6 +22,8 @@ import org.janelia.it.jacs.model.entity.EntityData;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class AlignedItem extends EntityWrapper {
+
+    private static final Logger log = LoggerFactory.getLogger(AlignedItem.class);
     
     private EntityWrapper itemWrapper;
     
@@ -42,29 +50,118 @@ public class AlignedItem extends EntityWrapper {
         }
     }
     
+    /**
+     * Returns the underlying domain object (e.g. Sample, Neuron, Mask, etc) that is contextualized by this AlignedItem.
+     * @return
+     */
     public EntityWrapper getItemWrapper() {
         return itemWrapper;
     }
+
+    /**
+     * Returns the children of this aligned item. This basically just takes everything from getChildren() and casts it
+     * to AlignedItem. 
+     * @return
+     */
+    public List<AlignedItem> getAlignedItems() {
+        if (getChildren()==null) {
+            log.warn("This entity wrapper (name={},type={}) has not been initialized with children. " +
+                    "Calling getAlignedItems will return null.",getName(),getType());
+            return null;
+        }
+        List<AlignedItem> alignedItems = new ArrayList<AlignedItem>();
+        for(EntityWrapper wrapper : getChildren()) {
+            if (wrapper instanceof AlignedItem) {
+                alignedItems.add((AlignedItem)wrapper);
+            }
+            else {
+                log.warn("AlignedItems can only have other AlignedItems as children. " +
+                		"In this case, we have a {} as a child of AlignedItem with id={}.",wrapper.getType(),getId());
+            }
+        }
+        return alignedItems;
+    }
+
+    /**
+     * Returns the child aligned item with the given entity id. This is the entity id of the wrapped domain entity,
+     * NOT the AlignedItem entity.
+     * @param entityId
+     * @return
+     */
+    public AlignedItem getAlignedItemWithEntityId(Long entityId) {
+        if (getChildren()==null) {
+            log.warn("This entity wrapper (name={},type={}) has not been initialized with children. " +
+            		"Calling getAlignedItemWithEntityId will return null.",getName(),getType());
+            return null;
+        }
+        for(AlignedItem item : getAlignedItems()) {
+            if (item.getItemWrapper().getId().equals(entityId)) {
+                return item;
+            }
+        }
+        return null;
+    }
     
+    /**
+     * Returns true if this item is visible in the alignment board. 
+     * @return
+     */
     public boolean isVisible() {
         Entity entity = getInternalEntity();
         return "true".equals(entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_VISIBILITY));
     }
 
+    /**
+     * Sets the visibility of this item and immediately writes the database (therefore, this method should not be 
+     * called in the EDT). 
+     * @param visible
+     * @throws Exception
+     */
     public void setIsVisible(boolean visible) throws Exception {
         Entity entity = getInternalEntity();
         entity.setValueByAttributeName(EntityConstants.ATTRIBUTE_VISIBILITY, new Boolean(visible).toString());
         ModelMgr.getModelMgr().saveOrUpdateEntity(entity);
     }
     
+    /**
+     * Returns the hex color of this item (e.g. "FF0000"). Returns null if no color has been set (a.k.a. use the native color). 
+     * @return
+     */
     public String getColorHex() {
         Entity entity = getInternalEntity();
         return entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_COLOR);
     }
-
+    
+    /**
+     * Sets the color of this item and immediately writes the database (therefore, this method should not be 
+     * called in the EDT). 
+     * @param colorHex
+     * @throws Exception
+     */
     public void setColorHex(String colorHex) throws Exception {
         Entity entity = getInternalEntity();
         entity.setValueByAttributeName(EntityConstants.ATTRIBUTE_COLOR, colorHex);
         ModelMgr.getModelMgr().saveOrUpdateEntity(entity);
+    }
+
+    /**
+     * Returns the color of this item. Returns null if no color has been set (a.k.a. use the native color). 
+     * @return
+     */
+    public Color getColor() {
+        String colorHex = getColorHex();
+        Color color = colorHex==null?null:Color.decode("#"+colorHex);
+        return color;
+    }
+
+    /**
+     * Sets the color of this item and immediately writes the database (therefore, this method should not be 
+     * called in the EDT). 
+     * @param color
+     * @throws Exception
+     */
+    public void setColor(Color color) throws Exception {
+        final String rgbHex = Integer.toHexString(color.getRGB()).substring(2);    
+        setColorHex(rgbHex);
     }
 }
