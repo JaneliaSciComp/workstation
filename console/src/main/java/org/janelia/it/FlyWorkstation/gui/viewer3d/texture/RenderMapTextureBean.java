@@ -192,5 +192,16 @@ public class RenderMapTextureBean implements TextureDataI {
     public void setInverted(boolean inverted) {
         this.inverted = inverted;
     }
+
+    @Override
+    public float[] getCoordCoverage() {
+        return new float[] { 1.0f, 1.0f, 1.0f };
+    }
+
+    @Override
+    public void setCoordCoverage(float[] coverage) {
+        // Do nothing.  Special texture never has less than 100% coord-to-edge ratio.
+    }
+
 }
 

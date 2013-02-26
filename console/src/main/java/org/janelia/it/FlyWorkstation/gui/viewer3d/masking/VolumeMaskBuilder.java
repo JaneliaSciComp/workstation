@@ -35,6 +35,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
     private int consensusByteCount = SHADER_FRIENDLY_BYTE_COUNT;
     private int consensusChannelCount;
     private long currentMaskUid = UNSET_MASK_UID;
+    private float[] coordCoverage;
     private Collection<RenderableBean> renderables;
     private Map<TextureDataI,Long> textureDataToLabelUid = new HashMap<TextureDataI,Long>();
 
@@ -175,8 +176,25 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
             adjustMaxValues( voxels, new Integer[] { bean.getSx(), bean.getSy(), bean.getSz() } );
         }
 
+        // May need to add more bytes to ensure that the coords are each multiples of 8 bytes.
+        // If we do, we must take that into account for applying texture coordinates.
+        coordCoverage = new float[] { 1.0f, 1.0f, 1.0f };
         for ( int i = 0; i < voxels.length; i++ ) {
-            voxels[ i ] += /*consensusByteCount * */( 8 - (voxels[ i ] % 8) );
+            int leftover = voxels[i] % 8;
+            if ( leftover > 0 ) {
+                int voxelModCount = 8 - leftover;
+                int newVoxelCount = voxels[ i ] + voxelModCount;
+                coordCoverage[ i ] = (float)voxels[ i ] / (float)newVoxelCount;
+                voxels[ i ] = newVoxelCount;
+            }
+            //else {
+            //    // TEMP/TEST
+            //    int voxelModCount = 8;
+            //    int newVoxelCount = voxels[ i ] + voxelModCount;
+            //    coordCoverage[ i ] = (float)voxels[ i ] / (float)newVoxelCount;
+            //    voxels[ i ] = newVoxelCount;
+            //    logger.warn("Seeing coord coverage of {} on coord {}.", coordCoverage[i], i);
+            //}
         }
 
         return voxels;
@@ -270,6 +288,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
         rtnVal.setFilename(firstFileName);
         rtnVal.setChannelCount( consensusChannelCount );
         rtnVal.setLoaded(false);
+        rtnVal.setCoordCoverage( coordCoverage );
 
         return rtnVal;
     }

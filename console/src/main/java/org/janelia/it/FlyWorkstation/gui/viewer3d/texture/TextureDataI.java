@@ -71,4 +71,11 @@ public interface TextureDataI {
 
     void setChannelCount( int channelCount );
 
+    // "Coordinate Coverage" are the percentage of the texture that should be mapped to the 0..1.0 coordinates
+    // used against textures in OpenGL.  It may be that 100% of the texture is used. It could also be, however,
+    // that some padding onto-the-ends has happened during processing or fetch, such that <100% is the correct value.
+    float[] getCoordCoverage();
+
+    void setCoordCoverage( float[] coverage );
+
 }

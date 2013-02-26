@@ -22,6 +22,8 @@ public class MaskTextureDataBean implements TextureDataI {
     private Integer sy;
     private Integer sz;
 
+    private float[] coordCoverage = { 1.0f, 1.0f, 1.0f};
+
     private VolumeDataAcceptor.TextureColorSpace colorSpace;
     private Double[] volumeMicrometers;
     private Double[] voxelMicrometers;
@@ -172,6 +174,16 @@ public class MaskTextureDataBean implements TextureDataI {
 
     public void setChannelCount(int channelCount) {
         this.channelCount = channelCount;
+    }
+
+    @Override
+    public float[] getCoordCoverage() {
+        return coordCoverage;
+    }
+
+    @Override
+    public void setCoordCoverage(float[] coverage) {
+        this.coordCoverage = coverage;
     }
 
     public boolean isInverted() {

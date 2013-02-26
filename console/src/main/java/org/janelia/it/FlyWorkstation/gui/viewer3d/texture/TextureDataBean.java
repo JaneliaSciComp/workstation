@@ -25,6 +25,8 @@ public class TextureDataBean implements TextureDataI {
     private Integer sy;
     private Integer sz;
 
+    private float[] coordCoverage = new float[] { 1.0f, 1.0f, 1.0f };
+
     private VolumeDataAcceptor.TextureColorSpace colorSpace;
     private Double[] volumeMicrometers;
     private Double[] voxelMicrometers;
@@ -184,5 +186,16 @@ public class TextureDataBean implements TextureDataI {
     public void setInverted(boolean inverted) {
         this.inverted = inverted;
     }
+
+    @Override
+    public float[] getCoordCoverage() {
+        return coordCoverage;
+    }
+
+    @Override
+    public void setCoordCoverage(float[] coverage) {
+        this.coordCoverage = coverage;
+    }
+
 }
 

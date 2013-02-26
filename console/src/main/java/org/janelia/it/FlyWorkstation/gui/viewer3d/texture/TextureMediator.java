@@ -157,7 +157,10 @@ public class TextureMediator {
      * between glBegin and glGetEnd calls.
      */
     public void setTextureCoordinates( GL2 gl, double tX, double tY, double tZ ) {
-        gl.glMultiTexCoord3d(textureSymbolicId, tX, tY, tZ);
+        float[] coordCoverage = textureData.getCoordCoverage();
+        gl.glMultiTexCoord3d(
+                textureSymbolicId, tX * coordCoverage[ 0 ], tY * coordCoverage[ 1 ], tZ * coordCoverage[ 2 ]
+        );
     }
 
     public Double[] getVolumeMicrometers() {
