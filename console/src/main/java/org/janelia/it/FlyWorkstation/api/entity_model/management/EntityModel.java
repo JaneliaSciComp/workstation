@@ -205,6 +205,7 @@ public class EntityModel {
 	public void invalidateAllSilently() {
 	    entityCache.invalidateAll();
 	    commonRootCache.clear();
+	    parentMap.clear();
 	}
 
     /**

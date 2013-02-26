@@ -345,9 +345,11 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                 }
                 
                 sampleAlignedItem = ModelMgr.getModelMgr().addAlignedItem(alignmentBoardContext, sample);
+                sampleAlignedItem.loadContextualizedChildren(alignmentBoardContext.getAlignmentContext());
                 
                 for(Neuron neuron : sample.getNeuronSet()) {
                     AlignedItem neuronItem = ModelMgr.getModelMgr().addAlignedItem(sampleAlignedItem, neuron);
+                    neuronItem.loadContextualizedChildren(alignmentBoardContext.getAlignmentContext());
                     neuronItem.setIsVisible(true);
                 }
 
@@ -379,6 +381,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                 }
                 
                 sampleAlignedItem = ModelMgr.getModelMgr().addAlignedItem(alignmentBoardContext, sample);
+                sampleAlignedItem.loadContextualizedChildren(alignmentBoardContext.getAlignmentContext());
             }
             else {
                 sample = (Sample)sampleAlignedItem.getItemWrapper();
@@ -390,6 +393,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
             
             if (neuronItem == null) {
                 neuronItem = ModelMgr.getModelMgr().addAlignedItem(sampleAlignedItem, neuron);
+                neuronItem.loadContextualizedChildren(alignmentBoardContext.getAlignmentContext());
                 events.add(new AlignmentBoardItemChangeEvent(alignmentBoardContext, neuronItem, ChangeType.Added));
             }
             else {
@@ -426,10 +430,11 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                log.info("SENDING REMOVED EVENT");
                 AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
                         alignmentBoardContext, alignedItem, ChangeType.Removed);
                 ModelMgr.getModelMgr().postOnEventBus(event);
-                refresh();
+//                refresh();
             }
         });
     }

@@ -41,7 +41,7 @@ import com.google.common.eventbus.Subscribe;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public abstract class EntityOutline extends EntityTree implements Cloneable, Refreshable {
+public abstract class EntityOutline extends EntityTree implements Refreshable, ActivatableView {
 	
 	private static final Logger log = LoggerFactory.getLogger(EntityOutline.class);
 	

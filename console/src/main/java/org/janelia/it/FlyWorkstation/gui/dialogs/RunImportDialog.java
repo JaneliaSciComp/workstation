@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.dialogs;
 import loci.plugins.config.SpringUtilities;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
+import org.janelia.it.FlyWorkstation.gui.framework.console.Perspective;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
@@ -119,8 +120,7 @@ public class RunImportDialog extends ModalDialog{
             protected void hadSuccess() {
                 Utils.setDefaultCursor(RunImportDialog.this);
                 Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
-                browser.getTaskOutline().loadTasks();
-                browser.getOutlookBar().setVisibleBarByName(Browser.BAR_DATA);
+                browser.setPerspective(Perspective.ImageBrowser);
                 setVisible(false);
             }
 
