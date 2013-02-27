@@ -17,8 +17,14 @@ implements QtBasicSignalSlot1<T>
 		addObserver(dest);
 	}
 
+	// Argument can be ignored by the listener with this version of connect()
+	public void connect(QtBasicSignalSlot noArgListener) {
+		addObserver(noArgListener);
+	}
+
 	@Override
 	public void update(Observable o, Object arg) {
 		emit((T) arg);	
 	}
+
 }
