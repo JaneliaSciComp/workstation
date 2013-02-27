@@ -215,6 +215,7 @@ public class ImagesPanel extends JScrollPane {
         if (imageSize < MIN_THUMBNAIL_SIZE || imageSize > MAX_THUMBNAIL_SIZE) {
             return;
         }
+        log.trace("rescaleImages: {}", imageSize);
         this.currImageSize = imageSize;
 
         double aspectRatio = lowestAspectRatio==null?1.0:lowestAspectRatio;
@@ -237,6 +238,7 @@ public class ImagesPanel extends JScrollPane {
     	if (tableHeight < MIN_TABLE_HEIGHT || tableHeight > MAX_TABLE_HEIGHT) {
     		return;
     	}
+    	log.trace("resizeTables: {}", tableHeight);
         this.currTableHeight = tableHeight;
     	for (AnnotatedImageButton button : buttons.values()) {
         	try {

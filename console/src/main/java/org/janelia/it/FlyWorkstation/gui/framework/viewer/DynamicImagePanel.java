@@ -231,14 +231,15 @@ public abstract class DynamicImagePanel extends JPanel {
 		protected void doStuff() throws Exception {
             BufferedImage maxSizeImage = imageCache==null ? null : imageCache.get(imageFilename);
             if (maxSizeImage == null) {
-                
                 URL imageFileURL = SessionMgr.getURL(imageFilename);
                 // Some extra finagling is required because LOCI libraries do not like the file protocol for some reason
                 if (imageFileURL.getProtocol().equals("file")) {
                     String localFilepath = imageFileURL.toString().replace("file:","");
+                    log.trace("loading cached file: {}", localFilepath);
                     maxSizeImage = Utils.readImage(localFilepath);
                 }
                 else {
+                    log.trace("loading url: {}", imageFileURL);
                     maxSizeImage = Utils.readImage(imageFileURL);
                 }
                 
