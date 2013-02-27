@@ -39,7 +39,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
     //"/Users/fosterl/Documents/alignment_board/samples/174213816581829437/ConsolidatedSignal2_25.mp4"; //
     private static final String COMPARTMENT_MASK_ONLY_SIGNAL = "/groups/scicomp/jacsData/MaskResources/Compartment/maskRGB.v3dpbd";
     private static final String COMPARTMENT_ENTITY_NAME = "Compartment";
-    private static final int TARGET_MVOXELS = 25;
+    private static final int TARGET_MVOXELS = 100;
 
     private Logger logger = LoggerFactory.getLogger( AlignmentBoardDataBuilder.class );
 

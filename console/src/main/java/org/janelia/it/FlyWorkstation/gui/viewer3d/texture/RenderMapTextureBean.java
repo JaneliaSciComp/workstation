@@ -160,7 +160,7 @@ public class RenderMapTextureBean implements TextureDataI {
 
     @Override
     public int getPixelByteCount() {
-        return 1;  // Bytes
+        return BYTES_PER_ENTRY;  // Bytes
     }
 
     @Override
@@ -169,7 +169,7 @@ public class RenderMapTextureBean implements TextureDataI {
 
     @Override
     public String getFilename() {
-        return null;
+        return "Renderable to Appearance Map";
     }
 
     @Override

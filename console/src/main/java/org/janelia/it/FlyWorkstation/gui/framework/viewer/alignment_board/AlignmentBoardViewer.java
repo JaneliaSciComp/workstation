@@ -186,16 +186,22 @@ public class AlignmentBoardViewer extends Viewer {
         
         for(AlignedItem alignedItem : abContext.getAlignedItems()) {
         
-            log.info("  Aligned item with alias: "+alignedItem.getName()+" (isVisible?="+alignedItem.isVisible()+", colorHex="+alignedItem.getColorHex()+", color="+alignedItem.getColor()+")");
-            
             EntityWrapper itemEntity = alignedItem.getItemWrapper();
+            
             if (itemEntity instanceof Sample) {
             
                 Sample sample = (Sample)itemEntity;
                 
-                log.info("    This aligned item is a sample with name: "+sample.getName());
-                log.info("    * 3d image: "+sample.get3dImageFilepath());
-                log.info("    * fast 3d image: "+sample.getFast3dImageFilepath());
+                log.info("  Sample: "+sample.getName());
+                log.info("  * 3d image: "+sample.get3dImageFilepath());
+                log.info("  * fast 3d image: "+sample.getFast3dImageFilepath());
+                
+                if (sample.getChildren()==null) {
+                    log.warn("  Sample children not loaded");
+                }
+                if (sample.getNeuronSet()==null) {
+                    log.warn("  Sample neurons not loaded");
+                }
                 
                 MaskedVolume vol = sample.getMaskedVolume();
                 if (vol!=null) {
@@ -224,47 +230,41 @@ public class AlignmentBoardViewer extends Viewer {
                         log.info("    * "+size+"/reference: "+vol.getFastVolumePath(ArtifactType.Reference, size, Channels.All, false));
                     }
                     
-                    log.info("    metadata files:");
+                    log.info("  metadata files:");
                     for(Size size : Size.values()) {
-                        log.info("    * signal metadata: "+vol.getFastMetadataPath(ArtifactType.ConsolidatedSignal, size));
-                        log.info("    * reference metadata: "+vol.getFastMetadataPath(ArtifactType.Reference, size));
+                        log.info("  * signal metadata: "+vol.getFastMetadataPath(ArtifactType.ConsolidatedSignal, size));
+                        log.info("  * reference metadata: "+vol.getFastMetadataPath(ArtifactType.Reference, size));
+                    }
+                }
+                
+                if (sample.getNeuronSet()!=null) {
+                    for(Neuron neuron : sample.getNeuronSet()) {
+                        log.info("  Neuron: "+neuron.getName()+" (mask index = "+neuron.getMaskIndex()+")");
                     }
                 }
 
-                for (AlignedItem alignedChild : alignedItem.getAlignedItems()) {
+                // The true update!
 
-                    log.info("    Aligned child with alias: " + alignedChild.getName() + " (isVisible?="
-                            + alignedChild.isVisible() + ", colorHex=" + alignedChild.getColorHex() + ", color="
-                            + alignedChild.getColor() + ")");
-
-                    EntityWrapper childEntity = alignedChild.getItemWrapper();
-                    if (childEntity instanceof Neuron) {
-                        Neuron neuron = (Neuron) childEntity;
-                        log.info("      This aligned item is a neuron with name: " + sample.getName());
-                        log.info("      * mask index: " + neuron.getMaskIndex());
-                    }
-                }
+                this.updateBoard( abContext );
             }
             else {
                 log.error("Cannot handle entites of type: "+itemEntity.getType());    
             }
         }
-        
-        // The true update!
-        this.updateBoard( abContext );
     }
     
     @Subscribe 
-    public void handleItemChanged(AlignmentBoardItemChangeEvent event) {
+    public void printItemChanged(AlignmentBoardItemChangeEvent event) {
 
         AlignmentBoardContext abContext = event.getAlignmentBoardContext();
-        AlignedItem alignedItem = event.getAlignedItem();
         log.info("Item changed on alignment context: "+abContext.getName());
-        log.info("* Change Type: "+event.getChangeType());
-        log.info("* Item Alias: "+alignedItem.getName());
-        log.info("* Item Name: "+alignedItem.getItemWrapper().getName());
-        log.info("* Item Visibility: "+alignedItem.isVisible());
-        log.info("* Item Color: "+alignedItem.getColor()+" (hex="+alignedItem.getColorHex()+")");
+        log.info("* Item: "+event.getAlignedItem().getName());
+        log.info("* Change Type: "+event.getChangeType());    
+    }
+
+    @Subscribe 
+    public void handleItemChanged(AlignmentBoardItemChangeEvent event) {
+        // TBD
     }
 
     private void establishObserver() {

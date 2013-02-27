@@ -68,13 +68,15 @@ public class TextureMediator {
         ByteBuffer data = ByteBuffer.wrap( textureData.getTextureData() );
         //System.out.println( "Loading texture data of capacity: " + data.capacity() );
         if ( data != null ) {
-
             data.rewind();
 
             logger.info( "Coords are " + textureData.getSx() + " * " + textureData.getSy() + " * " + textureData.getSz() );
             int maxCoord = getMaxTexCoord(gl);
             if ( textureData.getSx() > maxCoord  || textureData.getSy() > maxCoord || textureData.getSz() > maxCoord ) {
-                logger.warn("Exceeding max coord in one or more size of texture data.  Results unpredictable.");
+                logger.warn(
+                        "Exceeding max coord in one or more size of texture data {}.  Results unpredictable.",
+                        textureData.getFilename()
+                );
             }
 
             int expectedRemaining = textureData.getSx() * textureData.getSy() * textureData.getSz()
@@ -87,8 +89,8 @@ public class TextureMediator {
                              data.remaining() + " " + textureData.getFilename() +
                              ";  expected remaining is " + expectedRemaining
                 );
-                data.rewind();
             }
+            data.rewind();
 
             gl.glActiveTexture( textureSymbolicId );
             reportError( "glActiveTexture", gl );
