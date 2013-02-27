@@ -28,6 +28,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModelListenerAdapter;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ImageCache;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.LayersPanel;
@@ -1501,11 +1502,13 @@ public class Browser extends JFrame implements Cloneable {
             outlookBar.setVisibleBarByName(Browser.BAR_DATA);
             selectRightPanel(OUTLINE_SPLIT_PICKER);
             viewerManager.clearAllViewers();
+            viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), IconDemoPanel.class);
             break;
         case AnnotationSession:
             outlookBar.setVisibleBarByName(Browser.BAR_SESSIONS);
             selectRightPanel(OUTLINE_ONTOLOGY);
             viewerManager.clearAllViewers();
+            viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), IconDemoPanel.class);
             break;
         case TaskMonitoring:
             outlookBar.setVisibleBarByName(Browser.BAR_TASKS);
@@ -1517,6 +1520,7 @@ public class Browser extends JFrame implements Cloneable {
             outlookBar.setVisibleBarByName(Browser.BAR_DATA);
             selectRightPanel(OUTLINE_ONTOLOGY);
             viewerManager.clearAllViewers();
+            viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), IconDemoPanel.class);
         }
     }
 
