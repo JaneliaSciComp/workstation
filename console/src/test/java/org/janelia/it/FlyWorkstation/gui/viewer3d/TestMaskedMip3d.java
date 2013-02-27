@@ -117,6 +117,7 @@ public class TestMaskedMip3d {
                         RenderableBean renderableBean = new RenderableBean();
                         renderableBean.setLabelFile( mf );
                         renderableBean.setTranslatedNum(1);
+                        renderableBean.setLabelUid( 1L );
                         renderableBean.setLabelFileNum( 16 ); // Can modify this.
                         beans.add(renderableBean);
 
@@ -124,18 +125,21 @@ public class TestMaskedMip3d {
                         renderableBean.setLabelFile( mf );
                         renderableBean.setTranslatedNum(2);
                         renderableBean.setLabelFileNum( 14 );
+                        renderableBean.setLabelUid( 1L );
                         beans.add(renderableBean);
 
                         renderableBean = new RenderableBean();
                         renderableBean.setLabelFile( mf );
                         renderableBean.setTranslatedNum(3);
                         renderableBean.setLabelFileNum( 15 );
+                        renderableBean.setLabelUid( 1L );
                         beans.add(renderableBean);
 
                         renderableBean = new RenderableBean();
                         renderableBean.setLabelFile( mf );
                         renderableBean.setTranslatedNum(4);
                         renderableBean.setLabelFileNum( 13 );
+                        renderableBean.setLabelUid( 1L );
                         beans.add(renderableBean);
 
                         vmb.setRenderables(beans);
@@ -153,7 +157,7 @@ public class TestMaskedMip3d {
                             mockEType.setName( EntityConstants.TYPE_NEURON_FRAGMENT );
                             mockE.setEntityType( mockEType );
                             mockE.setName("Entity: " + MOCK_UID);
-                            renderableBean.setEntity( mockE );
+                            renderableBean.setRenderableEntity( mockE );
                             renderableBean.setSignalFile( fn );
 
                             // Here, establish a map suitable for testing.  It will get a UID-vs-render-method.
