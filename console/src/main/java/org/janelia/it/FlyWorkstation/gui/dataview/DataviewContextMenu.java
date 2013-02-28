@@ -1,5 +1,13 @@
 package org.janelia.it.FlyWorkstation.gui.dataview;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.OpenInFinderAction;
@@ -11,14 +19,9 @@ import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-
-import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Context pop up menu for entities in the data viewer.
@@ -152,19 +155,17 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 
             	boolean su = false;
 	            for (Entity entity : toDelete) {
-                	if (!SessionMgr.getSubjectKey().equals(entity.getOwnerKey())) {
+                	if (SessionMgr.getSubjectKey()==null || !SessionMgr.getSubjectKey().equals(entity.getOwnerKey())) {
         	            int overrideConfirmation = confirm("Override owner "+entity.getOwnerKey()+" to delete "+entity.getName()+"?");
         	            if (overrideConfirmation != 0) {
         	                continue;
         	            }
-        	            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, entity.getOwnerKey());
         	            su = true;
         	            break;
                 	}
 	            }
-	            
-	            final boolean didSu = su;
-	            final String realUsername = SessionMgr.getUsername();
+
+                final boolean needSu = su;
 	            
 	            Utils.setWaitingCursor(DataviewApp.getMainFrame());
 	            
@@ -173,17 +174,21 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 	                @Override
 	                protected void doStuff() throws Exception {
 	    	            // Update database
+                        Subject realSubject = SessionMgr.getSessionMgr().getSubject();
 	    	            for (Entity entity : toDelete) {
+	                        if (needSu) {
+	                            SessionMgr.getSessionMgr().setSubject(ModelMgr.getModelMgr().getSubject(entity.getOwnerKey()));
+	                        }
 	    	            	System.out.println("Deleting "+entity.getId());
     	                    ModelMgr.getModelMgr().deleteEntityTree(entity.getId());
 	    	            }
+                        if (needSu) {
+                            SessionMgr.getSessionMgr().setSubject(realSubject);
+                        }
 	                }
 
 	                @Override
 	                protected void hadSuccess() {
-	                    if (didSu) {
-	        	            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, realUsername);
-	                    }
 	                	Utils.setDefaultCursor(DataviewApp.getMainFrame());
 //	    	            reshow();
 	                }
@@ -220,19 +225,17 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 
             	boolean su = false;
 	            for (Entity entity : toDelete) {
-                	if (!SessionMgr.getSubjectKey().equals(entity.getOwnerKey())) {
+                	if (SessionMgr.getSubjectKey()==null || !SessionMgr.getSubjectKey().equals(entity.getOwnerKey())) {
         	            int overrideConfirmation = confirm("Override owner "+entity.getOwnerKey()+" to delete "+entity.getName()+"?");
         	            if (overrideConfirmation != 0) {
         	                continue;
         	            }
-        	            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, entity.getOwnerKey());
         	            su = true;
         	            break;
                 	}
 	            }
 	            
-	            final boolean didSu = su;
-	            final String realUsername = SessionMgr.getUsername();
+	            final boolean needSu = su;
 	            
 	            Utils.setWaitingCursor(DataviewApp.getMainFrame());
 	            
@@ -241,7 +244,11 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 	                @Override
 	                protected void doStuff() throws Exception {
 	    	            // Update database
+	                    Subject realSubject = SessionMgr.getSessionMgr().getSubject();
 	    	            for (Entity entity : toDelete) {
+	                        if (needSu) {
+	                            SessionMgr.getSessionMgr().setSubject(ModelMgr.getModelMgr().getSubject(entity.getOwnerKey()));
+	                        }
 	    	            	long numAnnotated = ModelMgr.getModelMgr().getNumDescendantsAnnotated(entity.getId());
 	    	            	if (numAnnotated>0) {
 	    	            		throw new Exception("Cannnot delete entity tree because "+numAnnotated+" descendants are annotated");
@@ -249,23 +256,21 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
 		                	
 	    	            	System.out.println("Deleting "+entity.getId());
     	                    ModelMgr.getModelMgr().deleteEntityTree(entity.getId(), true);
+    	                    if (needSu) {
+                                SessionMgr.getSessionMgr().setSubject(realSubject);
+                            }
 	    	            }
 	                }
 
 	                @Override
 	                protected void hadSuccess() {
-	                    if (didSu) {
-	        	            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, realUsername);
-	                    }
-	                	Utils.setDefaultCursor(DataviewApp.getMainFrame());
-//	    	            reshow();
+	                	Utils.setDefaultCursor(DataviewApp.getMainFrame());  
 	                }
 
 	                @Override
 	                protected void hadError(Throwable error) {
 	                    SessionMgr.getSessionMgr().handleException(error);
 	                }
-
 	            };
 
 	            loadTask.execute();

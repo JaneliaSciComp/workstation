@@ -726,6 +726,9 @@ public class SessionMgr {
         return prefsDir;
     }
 
+    public void setSubject(Subject subject) {
+        this.loggedInSubject = subject;
+    }
 
     public Subject getSubject() {
         return loggedInSubject;

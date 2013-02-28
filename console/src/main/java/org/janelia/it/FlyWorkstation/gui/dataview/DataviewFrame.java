@@ -126,4 +126,30 @@ public class DataviewFrame extends JFrame {
     public EntityPane getEntityPane() {
         return entityPane;
     }
+
+    public SearchConfiguration getSearchConfig() {
+        return searchConfig;
+    }
+
+    public SearchPane getSearchPane() {
+        return searchPane;
+    }
+
+    public EntityTypePane getEntityTypePane() {
+        return entityTypePane;
+    }
+
+    public EntityDataPane getEntityParentsPane() {
+        return entityParentsPane;
+    }
+
+    public EntityDataPane getEntityChildrenPane() {
+        return entityChildrenPane;
+    }
+
+    public JPanel getProgressPanel() {
+        return progressPanel;
+    }
+    
+    
 }
