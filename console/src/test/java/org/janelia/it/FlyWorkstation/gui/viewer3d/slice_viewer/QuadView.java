@@ -122,7 +122,7 @@ extends JFrame
 		}
 	};
 	
-	protected QtSlot updateRangesSlot = new QtSlot(this) {
+	protected QtSlot updateRangesSlot = new QtSlot() {
 		@Override
 		public void execute() 
 		{

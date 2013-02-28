@@ -51,7 +51,8 @@ implements MouseModalWidget, VolumeViewer
 	protected RavelerTileServer volume0 = new RavelerTileServer(
 			"/Volumes/jacsData/brunsTest/clack_test16/Z");
 	protected VolumeImage3d volumeImage = volume0;
-	protected GLActor volumeActor = volume0;
+	// TODO - add dataChangedSignal to GLActor
+	protected RavelerActor volumeActor = new RavelerActor(volume0);
 	
 	public QtSignal1<URL> getFileLoadedSignal() {
 		return fileLoadedSignal;
@@ -67,11 +68,11 @@ implements MouseModalWidget, VolumeViewer
 		}
 	};
 	
-	protected QtSlot repaintSlot = new QtSlot(this) {
+	protected QtSlot repaintSlot = new QtSlot() {
 		@Override
 		public void execute() {
 			// System.out.println("repaint slot");
-			((SliceViewer)receiver).repaint();
+			repaint();
 		}
 	};
 	
@@ -90,7 +91,7 @@ implements MouseModalWidget, VolumeViewer
         rubberBand.changed.connect(repaintSlot);
         setToolTipText("Double click to center on a point.");
         renderer.addActor(volumeActor);
-        volumeImage.getDataChangedSignal().connect(getRepaintSlot());
+        volumeActor.getDataChangedSignal().connect(getRepaintSlot());
         resetView();
 	}
 
@@ -380,7 +381,7 @@ implements MouseModalWidget, VolumeViewer
 
 	@Override
 	public QtSignal getDataChangedSignal() {
-		return volumeImage.getDataChangedSignal();
+		return volumeActor.getDataChangedSignal();
 	}
 
 	@Override

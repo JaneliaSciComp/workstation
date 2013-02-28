@@ -14,14 +14,14 @@ public class TileTextureLoader implements Runnable
 	private static final Logger log = LoggerFactory.getLogger(TileTextureLoader.class);
 	
 	private TileTexture texture;
-	private RavelerTileServer tileServer;
+	private RavelerActor ravelerActor;
 
-	public TileTextureLoader(TileTexture texture, RavelerTileServer tileServer) 
+	public TileTextureLoader(TileTexture texture, RavelerActor ravelerActor) 
 	{
 		if (texture.getStage().ordinal() < TileTexture.Stage.LOAD_QUEUED.ordinal())
 			texture.setStage(TileTexture.Stage.LOAD_QUEUED);
 		this.texture = texture;
-		this.tileServer = tileServer;
+		this.ravelerActor = ravelerActor;
 	}
 
 	@Override
@@ -34,7 +34,7 @@ public class TileTextureLoader implements Runnable
 			return; // already loaded or loading
 		}
 		// Don't load this texture if it is no longer needed
-		if (! tileServer.getNeededTextures().contains(texture.getIndex())) {
+		if (! ravelerActor.getNeededTextures().contains(texture.getIndex())) {
 			if (texture.getStage() == TileTexture.Stage.LOAD_QUEUED)
 				// revert to not-queued
 				texture.setStage(TileTexture.Stage.UNINITIALIZED);
