@@ -39,6 +39,7 @@ public class TextureDataBean implements TextureDataI {
 
     private boolean loaded;
     private boolean inverted = true; // Tested stored images were inverted.
+    private Integer voxelComponentFormat;
 
     public TextureDataBean(byte[] textureData, int sx, int sy, int sz) {
         this.textureData = textureData;
@@ -197,5 +198,14 @@ public class TextureDataBean implements TextureDataI {
         this.coordCoverage = coverage;
     }
 
+    @Override
+    public Integer getExplicitVoxelComponentFormat() {
+        return voxelComponentFormat;
+    }
+
+    @Override
+    public void setExplicitVoxelComponentFormat( int format ) {
+        this.voxelComponentFormat = format;
+    }
 }
 

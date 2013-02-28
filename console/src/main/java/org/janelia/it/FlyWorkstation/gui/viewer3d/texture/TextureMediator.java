@@ -312,15 +312,20 @@ public class TextureMediator {
     //--------------------------- Helpers for glTexImage3D
     private int getVoxelComponentType() {
         int rtnVal = GL2.GL_UNSIGNED_INT_8_8_8_8_REV;
-        // This: tested vs 1-byte mask.
-        if ( textureData.getPixelByteCount()  == 1 ) {
-            rtnVal = GL2.GL_UNSIGNED_BYTE;
+        if ( textureData.getExplicitVoxelComponentFormat() != null ) {
+            rtnVal = textureData.getExplicitVoxelComponentFormat();
         }
+        else {
+            // This: tested vs 1-byte mask.
+            if ( textureData.getPixelByteCount()  == 1 ) {
+                rtnVal = GL2.GL_UNSIGNED_BYTE;
+            }
 
-        // This throws excepx for current read method.
-        if ( textureData.getPixelByteCount() == 2 ) {
+            // This throws excepx for current read method.
+            if ( textureData.getPixelByteCount() == 2 ) {
 //            rtnVal = GL2.GL_UNSIGNED_BYTE;
-            rtnVal = GL2.GL_UNSIGNED_SHORT;
+                rtnVal = GL2.GL_UNSIGNED_SHORT;
+            }
         }
 
         logger.info( "Voxel comp type num is {} for GL2.GL_UNSIGNED_INT_8_8_8_8_REV.", GL2.GL_UNSIGNED_INT_8_8_8_8_REV );

@@ -78,4 +78,15 @@ public interface TextureDataI {
 
     void setCoordCoverage( float[] coverage );
 
+    /**
+     * For voxel component format, this value is used for the glTexImage*D (3D in our case) calls.  Specifically,
+     * the GLEnum type parameter.  This may be omitted if the rules for deducing it are in place and working for
+     * this texture.  However, this explicit override may be used otherwise.
+     *
+     * @return a constant like INT_8_8_8_8 or null if not overridden.
+     */
+    Integer getExplicitVoxelComponentFormat();
+
+    void setExplicitVoxelComponentFormat( int format );
+
 }

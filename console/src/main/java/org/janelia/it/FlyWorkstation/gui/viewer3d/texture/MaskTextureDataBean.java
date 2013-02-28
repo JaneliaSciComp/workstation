@@ -33,6 +33,7 @@ public class MaskTextureDataBean implements TextureDataI {
     private ByteOrder byteOrder = ByteOrder.LITTLE_ENDIAN;
     private int pixelByteCount = 1;
     private int channelCount = 0;
+    private Integer voxelComponentFormat;
 
     private boolean loaded;
     private boolean inverted = true; // Most tested masks were inverted.
@@ -192,6 +193,16 @@ public class MaskTextureDataBean implements TextureDataI {
 
     public void setInverted(boolean inverted) {
         this.inverted = inverted;
+    }
+
+    @Override
+    public Integer getExplicitVoxelComponentFormat() {
+        return voxelComponentFormat;
+    }
+
+    @Override
+    public void setExplicitVoxelComponentFormat( int format ) {
+        this.voxelComponentFormat = format;
     }
 }
 
