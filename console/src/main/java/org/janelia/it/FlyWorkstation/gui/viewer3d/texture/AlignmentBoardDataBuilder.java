@@ -24,11 +24,13 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.Serializable;
 import java.util.*;
+import java.util.List;
 
 /**
  * This is where the data are pulled together for the alignment board viewer.
@@ -100,7 +102,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
 
         renderableBeanList = new ArrayList<RenderableBean>();
 
-        // Build out the bean list, from info sen
+        // Build out the bean list, from info seen.
         for ( AlignedItem alignedItem : abContext.getAlignedItems() ) {
 
             EntityWrapper itemEntity = alignedItem.getItemWrapper();
@@ -127,8 +129,8 @@ public class AlignmentBoardDataBuilder implements Serializable {
                             );
                         }
                     }
-// TEMP  - this would get the original non-down-sampled signal file.
-//                    labelFile = vol.getSignalLabelPath();
+                    // TEMP  - this would get the original non-down-sampled signal file.
+                    //                    labelFile = vol.getSignalLabelPath();
                 }
                 sampleBean.setLabelFile( labelFile );
                 String signalFile = sample.getFast3dImageFilepath();
@@ -139,20 +141,16 @@ public class AlignmentBoardDataBuilder implements Serializable {
 
                 renderableBeanList.add( sampleBean );
 
+                Collection<AlignedItem> childItems = alignedItem.getAlignedItems();
                 int translatedNum = 1;
-                if ( sample.getNeuronSet() != null ) {
-                    for ( Neuron neuron : sample.getNeuronSet() ) {
-                        logger.info("  Neuron: " + neuron.getName() + " (mask index = " + neuron.getMaskIndex() + ")");
-
-                        RenderableBean neuronBean = new RenderableBean();
-                        neuronBean.setLabelFileNum( neuron.getMaskIndex() + 1 ); // From 0-based to 1-based.
-                        neuronBean.setTranslatedNum( translatedNum ++ );
-                        neuronBean.setSignalFile( sampleBean.getSignalFile() );
-                        neuronBean.setLabelFile( sampleBean.getLabelFile() );
-                        neuronBean.setRenderableEntity(neuron.getInternalEntity());
-                        neuronBean.setLabelUid( sampleBean.getLabelUid() );
-
-                        renderableBeanList.add( neuronBean );
+                if ( childItems != null ) {
+                    for ( AlignedItem item: childItems ) {
+                    // for ( Neuron neuron : neurons ) {
+                        if ( item.getItemWrapper() instanceof Neuron ) {
+                            RenderableBean neuronBean = createRenderableBean(sampleBean, translatedNum, item);
+                            renderableBeanList.add( neuronBean );
+                            translatedNum ++;
+                        }
                     }
                 }
 
@@ -178,6 +176,46 @@ public class AlignmentBoardDataBuilder implements Serializable {
     private void clear() {
         renderableBeanList = null;
         sampleAncestorEncountered = false;
+    }
+
+    private RenderableBean createRenderableBean(RenderableBean sampleBean, int translatedNum, AlignedItem item ) {
+        Neuron neuron = (Neuron)item.getItemWrapper();
+        logger.info("Creating Renderable Bean for: " + neuron.getName() + " original index=" + neuron.getMaskIndex() + " new index=" + translatedNum);
+
+        RenderableBean neuronBean = new RenderableBean();
+        neuronBean.setLabelFileNum( neuron.getMaskIndex() + 1 ); // From 0-based to 1-based.
+        neuronBean.setTranslatedNum(translatedNum);
+        neuronBean.setSignalFile(sampleBean.getSignalFile());
+        neuronBean.setLabelFile(sampleBean.getLabelFile());
+        neuronBean.setRenderableEntity(neuron.getInternalEntity());
+
+        // See to the appearance.
+        Color neuronColor = item.getColor();
+        logger.info( "Neuron color is {} for {}.", neuronColor, item.getItemWrapper().getName() );
+        if ( neuronColor == null ) {
+            // If visible, leave RGB as null, and allow downstream automated-color to take place.
+            // Otherwise, if not visible, ensure that the bean has a non-render setting.
+            if ( ! item.isVisible() ) {
+                byte[] rgb = new byte[ 4 ];
+                rgb[ 0 ] = 0;
+                rgb[ 1 ] = 0;
+                rgb[ 2 ] = 0;
+                rgb[ 3 ] = RenderMappingI.NON_RENDERING;
+                neuronBean.setRgb( rgb );
+            }
+        }
+        else {
+            // A Neuron Color was set, but the neuron could still be "turned off" for render.
+            byte[] rgb = new byte[ 4 ];
+            rgb[ 0 ] = (byte)neuronColor.getBlue();  // 8_8_8_8_REV Ordering
+            rgb[ 1 ] = (byte)neuronColor.getGreen();
+            rgb[ 2 ] = (byte)neuronColor.getRed();   // 8_8_8_8_REV Ordering
+            rgb[ 3 ] = item.isVisible()    ?    RenderMappingI.FRAGMENT_RENDERING : RenderMappingI.NON_RENDERING;
+            neuronBean.setRgb( rgb );
+        }
+
+        neuronBean.setLabelUid( sampleBean.getLabelUid() );
+        return neuronBean;
     }
 
     private void applyCompartmentMask( List<Entity> displayableList ) {

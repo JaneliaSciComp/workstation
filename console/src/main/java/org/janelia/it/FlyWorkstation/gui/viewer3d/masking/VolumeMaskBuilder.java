@@ -132,9 +132,6 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
                                         // Use only masks settings FROM the earliest texture file.
                                         if ( renderableBean.getLabelFileNum() == voxelVal ) {
                                             newVal = renderableBean.getTranslatedNum();
-//                                            if ( renderableBean.getLabelFile().contains(V3dMaskFileLoader.COMPARTMENT_MASK_INDEX)) {
-//                                                break;
-//                                            }
                                         }
                                     }
                                 }

@@ -257,6 +257,15 @@ public class AlignmentBoardViewer extends Viewer {
     public void printItemChanged(AlignmentBoardItemChangeEvent event) {
 
         AlignmentBoardContext abContext = event.getAlignmentBoardContext();
+
+        AlignedItem alignedItem = event.getAlignedItem();
+
+        log.info("* Change Type: "+event.getChangeType());
+        log.info("* Item Alias: "+alignedItem.getName());
+        log.info("* Item Name: "+alignedItem.getItemWrapper().getName());
+        log.info("* Item Visibility: "+alignedItem.isVisible());
+        log.info("* Item Color: "+alignedItem.getColor()+" (hex="+alignedItem.getColorHex()+")");
+
         log.info("Item changed on alignment context: "+abContext.getName());
         log.info("* Item: "+event.getAlignedItem().getName());
         log.info("* Change Type: "+event.getChangeType());    
@@ -264,7 +273,8 @@ public class AlignmentBoardViewer extends Viewer {
 
     @Subscribe 
     public void handleItemChanged(AlignmentBoardItemChangeEvent event) {
-        // TBD
+        AlignmentBoardContext abContext = event.getAlignmentBoardContext();
+        this.updateBoard( abContext );
     }
 
     private void establishObserver() {

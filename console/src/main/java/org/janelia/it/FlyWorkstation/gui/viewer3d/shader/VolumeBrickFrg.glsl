@@ -32,6 +32,11 @@ vec4 volumeMask(vec4 origColor)
 
         // Display strategy: bypass unseen values.
         if ( ( ( origColor[0] + origColor[1] + origColor[2] ) == 0.0 ) ) {
+//float iIx = 5.0;
+//float visY = floor(iIx / 256.0);
+//float visX = (iIx - 256.0 * visY) / 256.0;
+//vec3 cmCoord = vec3( visX, visY, 0.0 );
+//rtnVal = texture3D(colorMapTexture, cmCoord);
             discard;
         }
         else {

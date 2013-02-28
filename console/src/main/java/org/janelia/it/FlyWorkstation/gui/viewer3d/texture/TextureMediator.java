@@ -128,7 +128,8 @@ public class TextureMediator {
             reportError( "glTexImage", gl );
 
             // DEBUG
-            //testTextureContents(gl);
+            //if ( expectedRemaining < 1000000 )
+            //    testTextureContents(gl);
         }
 
     }
@@ -213,7 +214,7 @@ public class TextureMediator {
 
         int pixelByteCount = textureData.getPixelByteCount();
         int bufferSize = textureData.getSx() * textureData.getSy() * textureData.getSz() *
-                pixelByteCount * getStorageFormatMultiplier();
+                pixelByteCount;
 
         java.util.Map<Integer,Integer> allFoundFrequencies = new java.util.HashMap<Integer,Integer>();
 
@@ -257,11 +258,13 @@ public class TextureMediator {
                     }
                 }
 
-                Integer count = allFoundFrequencies.get( (int)voxel[ 0 ] );
-                if ( count == null ) {
-                    count = 0;
+                for ( int j = 0; j < pixelByteCount; j++ ) {
+                    Integer count = allFoundFrequencies.get( (int)voxel[ j ] );
+                    if ( count == null ) {
+                        count = 0;
+                    }
+                    allFoundFrequencies.put( (int)voxel[ j ], ++count );
                 }
-                allFoundFrequencies.put( (int)voxel[ 0 ], ++count );
             }
 
             logger.info( "TEST: There are {} nonzero left-most bytes.", leftByteNonZeroCount );
@@ -271,7 +274,11 @@ public class TextureMediator {
 
         logger.info("Texture Values Dump---------------------");
         for ( Integer key: allFoundFrequencies.keySet() ) {
-            logger.info("Found {}  occurrences of {}.", allFoundFrequencies.get( key ), key);
+            int foundValue = key;
+            if ( foundValue < 0 ) {
+                foundValue = 256 + key;
+            }
+            logger.info("Found {}  occurrences of {}.", allFoundFrequencies.get( key ), foundValue );
         }
         logger.info("End: Texture Values Dump---------------------");
 
@@ -317,6 +324,7 @@ public class TextureMediator {
         }
 
         logger.info( "Voxel comp type num is {} for GL2.GL_UNSIGNED_INT_8_8_8_8_REV.", GL2.GL_UNSIGNED_INT_8_8_8_8_REV );
+        logger.info( "Voxel comp type num is {} for GL2.GL_UNSIGNED_INT_8_8_8_8.", GL2.GL_UNSIGNED_INT_8_8_8_8 );
         logger.info( "Voxel comp type num is {} for GL2.GL_UNSIGNED_BYTE.", GL2.GL_UNSIGNED_BYTE );
         logger.info( "Voxel comp type num is {} for GL2.GL_UNSIGNED_SHORT.", GL2.GL_UNSIGNED_SHORT );
         logger.info( "Got voxel component type of {} for {}.", rtnVal, textureData.getFilename() );
