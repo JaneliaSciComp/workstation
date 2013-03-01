@@ -1,3 +1,27 @@
+/*
+Copyright (c) 2012, Christopher M. Bruns and Howard Hughes Medical Institute
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 package org.janelia.it.FlyWorkstation.gui.viewer3d.stream;
 
 import java.io.IOException;
@@ -6,6 +30,17 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
 
+/**
+ * Decompresses a binary InputStream using Sean Murphy's fast PBD 
+ * pack-bits plus difference encoding.
+ * 
+ * Overrides the FilterInputStream.read method.
+ * Adapted from ImageLoader.cpp in Vaa3d project.
+ * Used by V3dRawImageStream class.
+ * 
+ * @author Christopher M. Bruns
+ *
+ */
 public class Pbd16InputStream extends PbdInputStream 
 {
 	private ByteOrder byteOrder= ByteOrder.BIG_ENDIAN;
@@ -15,7 +50,7 @@ public class Pbd16InputStream extends PbdInputStream
 	private short repeatValue;
 	private short decompressionPrior;
 	private byte d0,d1,d2,d3;
-	private byte sourceChar;
+	// private byte sourceChar;
 	private byte carryOver;
 	private byte oooooool = 1;
 	// private byte oooooolo = 2;
@@ -33,6 +68,19 @@ public class Pbd16InputStream extends PbdInputStream
 		shortBuffer = byteBuffer.asShortBuffer();
 	}
 
+	// for debugging
+	/*
+	private short checkValue(short v) {
+		if (v < 0) {
+			// System.out.println("fizz");
+		}
+		if (v > 5000) {
+			// System.out.println("buzz");			
+		}
+		return v;
+	}
+	*/
+	
     @Override
     public void close() throws IOException {
         super.close();
@@ -92,96 +140,91 @@ public class Pbd16InputStream extends PbdInputStream
 				{
 	                // 332
 	                d0=d1=d2=d3=0;
-	                sourceChar=(byte)in.read();
-	                d0=sourceChar;
-	                d0 >>>= 5;
+	                int sourceChar2 = in.read();
+	                // sourceChar=(byte)sourceChar2;
+	                d0 = (byte)(sourceChar2 >>> 5);
 					short value = (short)(decompressionPrior+(d0<5?d0:4-d0));
 	                out.put(value);
+	                // out.put(checkValue(value));
 	                //if (debug) qDebug() << "debug: position " << (dp-1) << " diff value=" << target16Data[dp-1] << " d0=" << d0;
 	                leftToFill--;
 	                if (leftToFill==0) {
 	                    break;
 	                }
-	                d1=sourceChar;
-	                d1 >>>= 2;
-	                d1 &= ooooolll;
+	                d1 = (byte)((sourceChar2 >>> 2) & ooooolll);
 	                value = (short)(value + (d1<5?d1:4-d1));
 	                out.put(value);
+	                // out.put(checkValue(value));
 	                //if (debug) qDebug() << "debug: position " << (dp-1) << " diff value=" << target16Data[dp-1];
 	                leftToFill--;
 	                if (leftToFill==0) {
 	                    break;
 	                }
-	                d2=sourceChar;
-	                d2 &= ooooooll;
+	                d2 = (byte)((sourceChar2) & ooooooll);
 	                carryOver=d2;
 
 	                // 1331
 	                d0=d1=d2=d3=0;
-	                sourceChar=(byte)in.read();
-	                d0=sourceChar;
+	                sourceChar2 = in.read();
+	                // sourceChar=(byte)sourceChar2;
 	                carryOver <<= 1;
-	                d0 >>>= 7;
-	                d0 |= carryOver;
+	                d0 = (byte)((sourceChar2 >>> 7) | carryOver);
 	                value = (short)(value + (d0<5?d0:4-d0));
 	                out.put(value);
+	                // out.put(checkValue(value));
 	                //if (debug) qDebug() << "debug: position " << (dp-1) << " diff value=" << target16Data[dp-1];
 	                leftToFill--;
 	                if (leftToFill==0) {
 	                    break;
 	                }
-	                d1=sourceChar;
-	                d1 >>>= 4;
-	                d1 &= ooooolll;
+	                d1 = (byte)((sourceChar2 >>> 4) & ooooolll);
 	                value = (short)(value + (d1<5?d1:4-d1));
 	                out.put(value);
+	                // out.put(checkValue(value));
 	                //if (debug) qDebug() << "debug: position " << (dp-1) << " diff value=" << target16Data[dp-1];
 	                leftToFill--;
 	                if (leftToFill==0) {
 	                    break;
 	                }
-	                d2=sourceChar;
-	                d2 >>>= 1;
-	                d2 &= ooooolll;
+	                d2 = (byte)((sourceChar2 >>> 1) & ooooolll);
 	                value = (short)(value + (d2<5?d2:4-d2));
 	                out.put(value);
+	                // out.put(checkValue(value));
 	                //if (debug) qDebug() << "debug: position " << (dp-1) << " diff value=" << target16Data[dp-1];
 	                leftToFill--;
 	                if (leftToFill==0) {
 	                    break;
 	                }
-	                d3=sourceChar;
-	                d3 &= oooooool;
+	                d3 = (byte)((sourceChar2) & oooooool);
 	                carryOver=d3;
 
 	                // 233
 	                d0=d1=d2=d3=0;
-	                sourceChar=(byte)in.read();
-	                d0=sourceChar;
-	                d0 >>>= 6;
+	                sourceChar2 = in.read();
+	                // sourceChar=(byte)sourceChar2;
 	                carryOver <<= 2;
-	                d0 |= carryOver;
+	                d0 = (byte)((sourceChar2 >>> 6) | carryOver);
 	                value = (short)(value + (d0<5?d0:4-d0));
 	                out.put(value);
+	                // out.put(checkValue(value));
 	                //if (debug) qDebug() << "debug: position " << (dp-1) << " diff value=" << target16Data[dp-1];
 	                leftToFill--;
 	                if (leftToFill==0) {
 	                    break;
 	                }
-	                d1=sourceChar;
-	                d1 >>>= 3;
-	                d1 &= ooooolll;
+	                d1 = (byte)((sourceChar2 >>> 3) & ooooolll);
 	                value = (short)(value + (d1<5?d1:4-d1));
 	                out.put(value);
+	                // out.put(checkValue(value));
 	                //if (debug) qDebug() << "debug: position " << (dp-1) << " diff value=" << target16Data[dp-1];
 	                leftToFill--;
 	                if (leftToFill==0) {
 	                    break;
 	                }
-	                d2=sourceChar;
-	                d2 &= ooooolll;
+	                d2 = (byte)((sourceChar2) & ooooolll);
 	                value = (short)(value + (d2<5?d2:4-d2));
 	                out.put(value);
+	                // out.put(checkValue(value));
 	                //if (debug) qDebug() << "debug: position " << (dp-1) << " diff value=" << target16Data[dp-1];
 	                leftToFill--;
 	                if (leftToFill==0) {
@@ -196,6 +239,7 @@ public class Pbd16InputStream extends PbdInputStream
 			else if (state == State.STATE_REPEAT)
 			{
 				int repeatCount = Math.min(leftToFill, out.remaining());
+				// checkValue(repeatValue);
 				for (int j = 0; j < repeatCount; ++j)
 					out.put(repeatValue);
 				leftToFill -= repeatCount;
