@@ -130,7 +130,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
                         }
                     }
                     // TEMP  - this would get the original non-down-sampled signal file.
-                    labelFile = vol.getSignalLabelPath();
+                    //labelFile = vol.getSignalLabelPath();
                 }
                 sampleBean.setLabelFile( labelFile );
                 String signalFile = sample.getFast3dImageFilepath();
