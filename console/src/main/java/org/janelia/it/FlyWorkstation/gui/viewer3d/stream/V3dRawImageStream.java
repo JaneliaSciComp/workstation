@@ -139,6 +139,11 @@ public class V3dRawImageStream
 	{
 		currentSlice.read(inStream);
 	}
+
+    public void close() throws IOException {
+        inStream.close();
+    }
+
 	
 	public static class Slice
 	{

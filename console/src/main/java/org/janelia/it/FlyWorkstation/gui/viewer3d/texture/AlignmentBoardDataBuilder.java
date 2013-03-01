@@ -41,7 +41,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
     //"/Users/fosterl/Documents/alignment_board/samples/174213816581829437/ConsolidatedSignal2_25.mp4"; //
     private static final String COMPARTMENT_MASK_ONLY_SIGNAL = "/groups/scicomp/jacsData/MaskResources/Compartment/maskRGB.v3dpbd";
     private static final String COMPARTMENT_ENTITY_NAME = "Compartment";
-    private static final int TARGET_MVOXELS = 100;
+    private static final int TARGET_MVOXELS = 25;
 
     private Logger logger = LoggerFactory.getLogger( AlignmentBoardDataBuilder.class );
 
@@ -130,11 +130,11 @@ public class AlignmentBoardDataBuilder implements Serializable {
                         }
                     }
                     // TEMP  - this would get the original non-down-sampled signal file.
-                    //                    labelFile = vol.getSignalLabelPath();
+                    labelFile = vol.getSignalLabelPath();
                 }
                 sampleBean.setLabelFile( labelFile );
                 String signalFile = sample.getFast3dImageFilepath();
-                //signalFile = sample.get3dImageFilepath(); // TEMP
+                //String signalFile = sample.get3dImageFilepath(); // TEMP
 
                 sampleBean.setSignalFile( signalFile );
                 sampleBean.setLabelUid( sample.getId() );

@@ -26,6 +26,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
 
     private static final int SHADER_FRIENDLY_BYTE_COUNT = 2;
     private static final long UNSET_MASK_UID = -1L;
+    private static final int GPU_MULTIBYTE_DIVISIBILITY_VALUE = 4;
 
     private List<TextureDataI> maskingDataBeans = new ArrayList<TextureDataI>();
     private ByteOrder consensusByteOrder;
@@ -177,12 +178,13 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
         // If we do, we must take that into account for applying texture coordinates.
         coordCoverage = new float[] { 1.0f, 1.0f, 1.0f };
         for ( int i = 0; i < voxels.length; i++ ) {
-            int leftover = voxels[i] % 8;
+            int leftover = voxels[i] % GPU_MULTIBYTE_DIVISIBILITY_VALUE;
             if ( leftover > 0 ) {
-                int voxelModCount = 8 - leftover;
+                int voxelModCount = GPU_MULTIBYTE_DIVISIBILITY_VALUE - leftover;
                 int newVoxelCount = voxels[ i ] + voxelModCount;
-                coordCoverage[ i ] = (float)voxels[ i ] / (float)newVoxelCount;
+                coordCoverage[ i ] = ((float)voxels[ i ]) / ((float)newVoxelCount);
                 voxels[ i ] = newVoxelCount;
+                logger.info("Expanding edge by " + voxelModCount);
             }
             //else {
             //    // TEMP/TEST

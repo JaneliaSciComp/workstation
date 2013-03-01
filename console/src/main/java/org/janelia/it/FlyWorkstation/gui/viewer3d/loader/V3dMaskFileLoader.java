@@ -196,6 +196,10 @@ public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileL
     private Set<Integer>  readBytes(V3dRawImageStream sliceStream) throws IOException {
         maskByteArray = new byte[(sx * sy * sz) * pixelBytes];
 
+        // DEBUG INFO.
+        //int tgtVal = 3;
+        //Set<Integer[]> coordsForTgtValue = new java.util.HashSet<Integer[]>();
+
         Set<Integer> values = new TreeSet<Integer>();
         for (int z = 0; z < sz; z ++ ) {
             int zOffset = z * sx * sy;
@@ -211,10 +215,50 @@ public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileL
                             byte piByte = (byte)(value >>> (pi * 8) & 0x000000ff);
                             maskByteArray[(yOffset * pixelBytes) + (x * pixelBytes) + (pi)] = piByte;
                         }
+                        // DEBUG BLOCK
+                        //if ( value == tgtVal ) {
+                        //    coordsForTgtValue.add( new Integer[] { x, y, z } );
+                        //}
+                        // END: DEBUG BLOCK
                     }
                 }
             }
         }
+        sliceStream.close();
+
+        // DEBUG BLOCK
+//        int maxX = 0;
+//        int minX = Integer.MAX_VALUE;
+//        int maxY = 0;
+//        int minY = Integer.MAX_VALUE;
+//        Integer[] maxXCoord = null;
+//        Integer[] minXCoord = null;
+//        for ( Integer[] coord: coordsForTgtValue ) {
+//            if ( coord[0] > maxX ) {
+//                maxX = coord[0];
+//                maxXCoord = coord;
+//            }
+//            if ( coord[0] < minX ) {
+//                minX = coord[0];
+//                minXCoord = coord;
+//            }
+//
+//            if ( coord[1] > maxY )
+//                maxY = coord[1];
+//            if ( coord[1] < minY )
+//                minY = coord[1];
+//        }
+//        System.out.println("MinX for " + tgtVal + " is " + minX );
+//        System.out.println("MaxX for " + tgtVal + " is " + maxX );
+//        System.out.println("Size of X " + sx );
+//        System.out.println("Maximum X's full coordinates: " + maxXCoord[0] + "," + maxXCoord[1] + "," + maxXCoord[2]);
+//        System.out.println("Minimum X's full coordinates: " + minXCoord[0] + "," + minXCoord[1] + "," + minXCoord[2]);
+//
+//        System.out.println("MinY for " + tgtVal + " is " + minY );
+//        System.out.println("MaxY for " + tgtVal + " is " + maxY );
+//        System.out.println("Size of Y " + sy );
+
+        // END: DEBUG BLOCK.
 
         return values;
     }

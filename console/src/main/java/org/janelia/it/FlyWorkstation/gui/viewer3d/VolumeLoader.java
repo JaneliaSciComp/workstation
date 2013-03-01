@@ -95,25 +95,24 @@ public class VolumeLoader
 
             // Attempt to load the file.  After the max attempt, pass through the exception.
             int tryCount = 0;
-            try {
-                while ( true ) {
-
+            while ( true ) {
+                try {
                     fileLoader.loadVolumeFile( localFileName );
                     break;
 
-                }
-            } catch ( IOException ioe ) {
-                try {
-                    logger.warn( "Exception " + ioe.getMessage() + " during file-load attempt of {}. ", localFileName );
-                    Thread.sleep( WAIT_BETWEEN_FILE_LOAD_RETRIES );
-                } catch ( Exception sleepEx ) {
-                    // Will basically ignore this, since it is in a retry loop.
-                    logger.error( "Interrupted during volume-load retry.  Continuing..." );
-                    sleepEx.printStackTrace();
-                }
-                tryCount ++;
-                if ( tryCount > MAX_FILE_LOAD_RETRY ) {
-                    throw ioe;
+                } catch ( IOException ioe ) {
+                    try {
+                        logger.warn( "Exception " + ioe.getMessage() + " during file-load attempt of {}. ", localFileName );
+                        Thread.sleep( WAIT_BETWEEN_FILE_LOAD_RETRIES );
+                    } catch ( Exception sleepEx ) {
+                        // Will basically ignore this, since it is in a retry loop.
+                        logger.error( "Interrupted during volume-load retry.  Continuing..." );
+                        sleepEx.printStackTrace();
+                    }
+                    tryCount ++;
+                    if ( tryCount > MAX_FILE_LOAD_RETRY ) {
+                        throw ioe;
+                    }
                 }
             }
 

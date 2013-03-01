@@ -35,9 +35,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 	private RenderMethod renderMethod = 
 		// RenderMethod.ALPHA_BLENDING;
 		RenderMethod.MAXIMUM_INTENSITY; // MIP
-    private int interpolationMethod =
-    		GL2.GL_LINEAR; // blending across voxel edges
-    		// GL2.GL_NEAREST; // discrete cube shaped voxels
     private boolean bUseShader = true; // Controls whether to load and use shader program(s).
 
     private int[] textureIds;
