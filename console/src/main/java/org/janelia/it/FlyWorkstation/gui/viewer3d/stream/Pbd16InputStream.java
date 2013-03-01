@@ -33,12 +33,17 @@ public class Pbd16InputStream extends PbdInputStream
 		shortBuffer = byteBuffer.asShortBuffer();
 	}
 
+    @Override
+    public void close() throws IOException {
+        super.close();
+    }
+
 	@Override
 	public int read(byte[] b, int off, int len) 
 	throws IOException
 	{
 		if (len < 1) return 0;
-		
+
 		ByteBuffer byteOut = ByteBuffer.wrap(b, off, len);
 		byteOut.order(this.byteOrder);
 		ShortBuffer out = byteOut.asShortBuffer();
