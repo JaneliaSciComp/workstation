@@ -50,7 +50,6 @@ import java.util.Map;
 public class TestMaskedMip3d {
 
     private static final long MOCK_UID = 777L;
-    private static final long MOCK_LABEL_UID = 777L;
 
     /**
      * This is a test program for trying the full volume + mask functionality of the Mip3d widget.  This test
