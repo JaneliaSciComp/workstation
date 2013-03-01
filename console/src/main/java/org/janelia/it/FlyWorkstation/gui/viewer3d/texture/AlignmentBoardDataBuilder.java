@@ -121,7 +121,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
                 String labelFile = null;
                 MaskedVolume vol = sample.getMaskedVolume();
                 if ( vol != null ) {
-                    logger.info("    subsampled volumes:");
+                    logger.debug("    subsampled volumes:");
                     for ( MaskedVolume.Size size : MaskedVolume.Size.values() ) {
                         if ( size.getMegaVoxels() == TARGET_MVOXELS ) {
                             labelFile = vol.getFastVolumePath(
@@ -179,7 +179,10 @@ public class AlignmentBoardDataBuilder implements Serializable {
 
     private RenderableBean createRenderableBean(RenderableBean sampleBean, int translatedNum, AlignedItem item ) {
         Neuron neuron = (Neuron)item.getItemWrapper();
-        logger.info("Creating Renderable Bean for: " + neuron.getName() + " original index=" + neuron.getMaskIndex() + " new index=" + translatedNum);
+        logger.debug(
+                "Creating Renderable Bean for: " + neuron.getName() + " original index=" + neuron.getMaskIndex() +
+                " new index=" + translatedNum
+        );
 
         RenderableBean neuronBean = new RenderableBean();
         neuronBean.setLabelFileNum( neuron.getMaskIndex() + 1 ); // From 0-based to 1-based.
@@ -190,7 +193,6 @@ public class AlignmentBoardDataBuilder implements Serializable {
 
         // See to the appearance.
         Color neuronColor = item.getColor();
-        logger.info( "Neuron color is {} for {}.", neuronColor, item.getItemWrapper().getName() );
         if ( neuronColor == null ) {
             // If visible, leave RGB as null, and allow downstream automated-color to take place.
             // Otherwise, if not visible, ensure that the bean has a non-render setting.
@@ -204,6 +206,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
             }
         }
         else {
+            logger.info( "Neuron color is {} for {}.", neuronColor, item.getItemWrapper().getName() );
             // A Neuron Color was set, but the neuron could still be "turned off" for render.
             byte[] rgb = new byte[ 4 ];
             rgb[ 0 ] = (byte)neuronColor.getBlue();  // 8_8_8_8_REV Ordering

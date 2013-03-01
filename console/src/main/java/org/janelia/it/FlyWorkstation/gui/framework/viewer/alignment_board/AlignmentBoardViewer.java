@@ -179,10 +179,10 @@ public class AlignmentBoardViewer extends Viewer {
         
         AlignmentBoardContext abContext = event.getAlignmentBoardContext();
 
-        log.info("Alignment board opened: "+abContext.getName());
-        log.info("* Alignment space: "+abContext.getAlignmentContext().getAlignmentSpaceName());
-        log.info("* Optical resolution: "+abContext.getAlignmentContext().getOpticalResolution());
-        log.info("* Pixel resolution: "+abContext.getAlignmentContext().getPixelResolution());
+        log.debug("Alignment board opened: "+abContext.getName());
+        log.debug("* Alignment space: "+abContext.getAlignmentContext().getAlignmentSpaceName());
+        log.debug("* Optical resolution: "+abContext.getAlignmentContext().getOpticalResolution());
+        log.debug("* Pixel resolution: "+abContext.getAlignmentContext().getPixelResolution());
         
         for(AlignedItem alignedItem : abContext.getAlignedItems()) {
         
@@ -192,9 +192,9 @@ public class AlignmentBoardViewer extends Viewer {
             
                 Sample sample = (Sample)itemEntity;
                 
-                log.info("  Sample: "+sample.getName());
-                log.info("  * 3d image: "+sample.get3dImageFilepath());
-                log.info("  * fast 3d image: "+sample.getFast3dImageFilepath());
+                log.debug("  Sample: "+sample.getName());
+                log.debug("  * 3d image: "+sample.get3dImageFilepath());
+                log.debug("  * fast 3d image: "+sample.getFast3dImageFilepath());
                 
                 if (sample.getChildren()==null) {
                     log.warn("  Sample children not loaded");
@@ -205,41 +205,41 @@ public class AlignmentBoardViewer extends Viewer {
                 
                 MaskedVolume vol = sample.getMaskedVolume();
                 if (vol!=null) {
-                    log.info("    original separation volumes:");
-                    log.info("    * reference vol: "+vol.getReferenceVolumePath());
-                    log.info("    * signal vol: "+vol.getSignalVolumePath());
-                    log.info("    * signal label: "+vol.getSignalLabelPath());
+                    log.debug("    original separation volumes:");
+                    log.debug("    * reference vol: "+vol.getReferenceVolumePath());
+                    log.debug("    * signal vol: "+vol.getSignalVolumePath());
+                    log.debug("    * signal label: "+vol.getSignalLabelPath());
                     
-                    log.info("    fast load 8-bit volumes:");
-                    log.info("    * fast signal: "+vol.getFastVolumePath(ArtifactType.ConsolidatedSignal, Size.Full, Channels.All, true));
-                    log.info("    * fast label: "+vol.getFastVolumePath(ArtifactType.ConsolidatedLabel, Size.Full, Channels.All, true));
-                    log.info("    * fast referece: "+vol.getFastVolumePath(ArtifactType.Reference, Size.Full, Channels.All, true));
+                    log.debug("    fast load 8-bit volumes:");
+                    log.debug("    * fast signal: "+vol.getFastVolumePath(ArtifactType.ConsolidatedSignal, Size.Full, Channels.All, true));
+                    log.debug("    * fast label: "+vol.getFastVolumePath(ArtifactType.ConsolidatedLabel, Size.Full, Channels.All, true));
+                    log.debug("    * fast referece: "+vol.getFastVolumePath(ArtifactType.Reference, Size.Full, Channels.All, true));
     
-                    log.info("    subsampled volumes:");
+                    log.debug("    subsampled volumes:");
                     for(Size size : Size.values()) {
-                        log.info("    * "+size+"/signal: "+vol.getFastVolumePath(ArtifactType.ConsolidatedSignal, size, Channels.All, true));
-                        log.info("    * "+size+"/label: "+vol.getFastVolumePath(ArtifactType.ConsolidatedLabel, size, Channels.All, true));
-                        log.info("    * "+size+"/reference: "+vol.getFastVolumePath(ArtifactType.Reference, size, Channels.All, true));
+                        log.debug("    * "+size+"/signal: "+vol.getFastVolumePath(ArtifactType.ConsolidatedSignal, size, Channels.All, true));
+                        log.debug("    * "+size+"/label: "+vol.getFastVolumePath(ArtifactType.ConsolidatedLabel, size, Channels.All, true));
+                        log.debug("    * "+size+"/reference: "+vol.getFastVolumePath(ArtifactType.Reference, size, Channels.All, true));
                     }
     
-                    log.info("    mpeg4 volumes:");
+                    log.debug("    mpeg4 volumes:");
                     for(Size size : Size.values()) {
                         for(Channels channels : Channels.values()) {
-                            log.info("    * "+size+"/"+channels+" signal: "+vol.getFastVolumePath(ArtifactType.ConsolidatedSignal, size, channels, false));
+                            log.debug("    * "+size+"/"+channels+" signal: "+vol.getFastVolumePath(ArtifactType.ConsolidatedSignal, size, channels, false));
                         }
-                        log.info("    * "+size+"/reference: "+vol.getFastVolumePath(ArtifactType.Reference, size, Channels.All, false));
+                        log.debug("    * "+size+"/reference: "+vol.getFastVolumePath(ArtifactType.Reference, size, Channels.All, false));
                     }
                     
-                    log.info("  metadata files:");
+                    log.debug("  metadata files:");
                     for(Size size : Size.values()) {
-                        log.info("  * signal metadata: "+vol.getFastMetadataPath(ArtifactType.ConsolidatedSignal, size));
-                        log.info("  * reference metadata: "+vol.getFastMetadataPath(ArtifactType.Reference, size));
+                        log.debug("  * signal metadata: "+vol.getFastMetadataPath(ArtifactType.ConsolidatedSignal, size));
+                        log.debug("  * reference metadata: "+vol.getFastMetadataPath(ArtifactType.Reference, size));
                     }
                 }
                 
                 if (sample.getNeuronSet()!=null) {
                     for(Neuron neuron : sample.getNeuronSet()) {
-                        log.info("  Neuron: "+neuron.getName()+" (mask index = "+neuron.getMaskIndex()+")");
+                        log.debug("  Neuron: "+neuron.getName()+" (mask index = "+neuron.getMaskIndex()+")");
                     }
                 }
 
