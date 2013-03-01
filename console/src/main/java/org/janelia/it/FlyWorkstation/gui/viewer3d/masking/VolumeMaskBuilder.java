@@ -186,14 +186,6 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
                 voxels[ i ] = newVoxelCount;
                 logger.info("Expanding edge by " + voxelModCount);
             }
-            //else {
-            //    // TEMP/TEST
-            //    int voxelModCount = 8;
-            //    int newVoxelCount = voxels[ i ] + voxelModCount;
-            //    coordCoverage[ i ] = (float)voxels[ i ] / (float)newVoxelCount;
-            //    voxels[ i ] = newVoxelCount;
-            //    logger.warn("Seeing coord coverage of {} on coord {}.", coordCoverage[i], i);
-            //}
         }
 
         return voxels;
