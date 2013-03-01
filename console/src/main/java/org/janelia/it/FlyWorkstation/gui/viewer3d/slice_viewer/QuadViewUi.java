@@ -66,8 +66,8 @@ public class QuadViewUi extends JFrame {
 	private final ZoomMouseModeAction zoomMouseModeAction = new ZoomMouseModeAction(sliceViewer);
 	private final PanModeAction panModeAction = new PanModeAction(sliceViewer);
 	private final ButtonGroup mouseModeGroup = new ButtonGroup();
-	private final ZScanScrollModeAction scanScrollModeAction = new ZScanScrollModeAction((MouseModalWidget) null, (VolumeImage3d) null);
-	private final ZoomScrollModeAction zoomScrollModeAction = new ZoomScrollModeAction((MouseModalWidget) null);
+	private final ZScanScrollModeAction scanScrollModeAction = new ZScanScrollModeAction(sliceViewer, sliceViewer);
+	private final ZoomScrollModeAction zoomScrollModeAction = new ZoomScrollModeAction(sliceViewer);
 	private final ButtonGroup scrollModeGroup = new ButtonGroup();
 	private final Action nextZSliceAction = new NextZSliceAction(sliceViewer, sliceViewer);
 	private final Action previousZSliceAction = new PreviousZSliceAction(sliceViewer, sliceViewer);
@@ -242,6 +242,9 @@ public class QuadViewUi extends JFrame {
 		splitPane.setRightComponent(colorPanel);
 		colorPanel.setLayout(new BoxLayout(colorPanel, BoxLayout.Y_AXIS));
 		
+		TripleSlider slider_1 = new TripleSlider();
+		colorPanel.add(slider_1);
+		
 		JSplitPane splitPane_1 = new JSplitPane();
 		splitPane_1.setResizeWeight(1.00);
 		splitPane.setLeftComponent(splitPane_1);
@@ -259,14 +262,14 @@ public class QuadViewUi extends JFrame {
 		viewerPanel.add(zScanPanel);
 		zScanPanel.setLayout(new BoxLayout(zScanPanel, BoxLayout.X_AXIS));
 		
-		JButton button_2 = new JButton("New button");
+		ToolButton button_2 = new ToolButton(goBackZSlicesAction);
 		button_2.setAction(goBackZSlicesAction);
 		button_2.setMargin(new Insets(0, 0, 0, 0));
 		button_2.setHideActionText(true);
 		button_2.setAlignmentX(0.5f);
 		zScanPanel.add(button_2);
 		
-		JButton button_1 = new JButton("New button");
+		ToolButton button_1 = new ToolButton(previousZSliceAction);
 		button_1.setAction(previousZSliceAction);
 		button_1.setMargin(new Insets(0, 0, 0, 0));
 		button_1.setHideActionText(true);
@@ -279,14 +282,14 @@ public class QuadViewUi extends JFrame {
 		zScanSlider.setPaintTicks(true);
 		zScanPanel.add(zScanSlider);
 		
-		JButton button_3 = new JButton("New button");
+		ToolButton button_3 = new ToolButton(nextZSliceAction);
 		button_3.setAction(nextZSliceAction);
 		button_3.setMargin(new Insets(0, 0, 0, 0));
 		button_3.setHideActionText(true);
 		button_3.setAlignmentX(0.5f);
 		zScanPanel.add(button_3);
 		
-		JButton button_4 = new JButton("New button");
+		ToolButton button_4 = new ToolButton(advanceZSlicesAction);
 		button_4.setAction(advanceZSlicesAction);
 		button_4.setMargin(new Insets(0, 0, 0, 0));
 		button_4.setHideActionText(true);
@@ -308,7 +311,7 @@ public class QuadViewUi extends JFrame {
 		controlsPanel.add(panel_1);
 		panel_1.setLayout(new BoxLayout(panel_1, BoxLayout.Y_AXIS));
 		
-		JButton btnNewButton_2 = new JButton("New button");
+		ToolButton btnNewButton_2 = new ToolButton(zoomInAction);
 		btnNewButton_2.setAlignmentX(0.5f);
 		btnNewButton_2.setMargin(new Insets(0, 0, 0, 0));
 		btnNewButton_2.setHideActionText(true);
@@ -319,7 +322,7 @@ public class QuadViewUi extends JFrame {
 		slider.setOrientation(SwingConstants.VERTICAL);
 		panel_1.add(slider);
 		
-		JButton button = new JButton("New button");
+		ToolButton button = new ToolButton(zoomOutAction);
 		button.setAction(zoomOutAction);
 		button.setMargin(new Insets(0, 0, 0, 0));
 		button.setHideActionText(true);
