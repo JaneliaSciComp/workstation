@@ -115,7 +115,6 @@ public class TestMaskedMip3d {
                         VolumeLoader vLoader = new VolumeLoader( resolver );
 
                         RenderableBean signalBean = new RenderableBean();
-                        signalBean.setLabelUid( MOCK_LABEL_UID );
                         signalBean.setSignalFile( fn );
                         signalBean.setLabelFile( mf );
                         signalBean.setLabelFileNum( 0 );
@@ -140,7 +139,6 @@ public class TestMaskedMip3d {
                         RenderableBean renderableBean = new RenderableBean();
                         renderableBean.setLabelFile(mf);
                         renderableBean.setTranslatedNum(1);
-                        renderableBean.setLabelUid( MOCK_LABEL_UID );
                         renderableBean.setSignalFile( fn );
                         renderableBean.setLabelFileNum( 6 ); // Can modify this.
                         renderableBean.setRgb(
@@ -155,7 +153,6 @@ public class TestMaskedMip3d {
                         renderableBean.setTranslatedNum(2);
                         renderableBean.setLabelFileNum( 17 );
                         renderableBean.setSignalFile( fn );
-                        renderableBean.setLabelUid( MOCK_LABEL_UID );
                         beans.add(renderableBean);
 
                         renderableBean = new RenderableBean();
@@ -163,7 +160,6 @@ public class TestMaskedMip3d {
                         renderableBean.setTranslatedNum(3);
                         renderableBean.setLabelFileNum( 3 );
                         renderableBean.setSignalFile( fn );
-                        renderableBean.setLabelUid( MOCK_LABEL_UID );
                         beans.add(renderableBean);
 
                         renderableBean = new RenderableBean();
@@ -171,13 +167,11 @@ public class TestMaskedMip3d {
                         renderableBean.setTranslatedNum(4);
                         renderableBean.setLabelFileNum( 12 );
                         renderableBean.setSignalFile( fn );
-                        renderableBean.setLabelUid( MOCK_LABEL_UID );
                         beans.add(renderableBean);
 
                         vmb.setRenderables(beans);
 
                         vLoader.loadVolume( mf );
-                        vmb.setCurrentMaskUid( MOCK_LABEL_UID );
                         vLoader.populateVolumeAcceptor( vmb );
 
                         // Setup a testing color-wheel mapping.
