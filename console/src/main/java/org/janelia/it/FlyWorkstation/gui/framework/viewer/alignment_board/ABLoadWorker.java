@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
@@ -71,9 +70,9 @@ public class ABLoadWorker extends SimpleWorker {
             for ( String signalFilename: signalFilenames ) {
                 System.out.println("In load thread, STARTING load of volume " + new java.util.Date());
 
-                Map<String,Long> maskVsUidForSignal = getMaskInfo(renderableBeans, signalFilename);
+                Collection<String> labelFiles = getLabelsForSignalFile(renderableBeans, signalFilename);
                 VolumeMaskBuilder volumeMaskBuilder = createMaskBuilder(
-                        maskVsUidForSignal, getRenderables(renderableBeans, signalFilename), resolver
+                        labelFiles, getRenderables(renderableBeans, signalFilename), resolver
                 );
 
                 mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver );
@@ -146,16 +145,16 @@ public class ABLoadWorker extends SimpleWorker {
      * Extract the mask file names from the renderable beans.
      *
      *
-     * @param signalFilename which signal to find masks against.
-     * @return all mask file names from beans which refer to the signal file name given.
+     * @param signalFilename which signal to find label file names against.
+     * @return all label file names from beans which refer to the signal file name given.
      */
-    private Map<String, Long> getMaskInfo(Collection<RenderableBean> renderableBeans, String signalFilename) {
-        Map<String,Long> rtnVal = new HashMap<String,Long>();
+    private Collection<String> getLabelsForSignalFile(Collection<RenderableBean> renderableBeans, String signalFilename) {
+        Collection<String> rtnVal = new HashSet<String>();
         for ( RenderableBean bean: renderableBeans ) {
             if ( bean.getSignalFile() != null  &&
                  bean.getSignalFile().equals( signalFilename )  &&
                  bean.getLabelFile() != null ) {
-                rtnVal.put(bean.getLabelFile(), bean.getLabelUid());
+                rtnVal.add( bean.getLabelFile() );
             }
         }
         return rtnVal;
@@ -165,22 +164,22 @@ public class ABLoadWorker extends SimpleWorker {
      * Accumulates all data for masking, from the set of files provided, preparing them for
      * injection into the volume being loaded.
      *
-     * @param maskVsUid mapping of all mask file names as key, vs mask UID, to use against the signal volumes.
+     * @param labelFiles all label files found in the renderables.
+     * @param renderables all items which may be rendered in this volume.
+     * @param resolver for finding true paths of files.
      */
     private VolumeMaskBuilder createMaskBuilder(
-            Map<String,Long> maskVsUid, Collection<RenderableBean> renderables, FileResolver resolver
+            Collection<String> labelFiles, Collection<RenderableBean> renderables, FileResolver resolver
     ) {
 
         VolumeMaskBuilder volumeMaskBuilder = null;
         // Build the masking texture info.
-        if (maskVsUid != null  &&  maskVsUid.size() > 0) {
+        if (labelFiles != null  &&  labelFiles.size() > 0) {
             VolumeMaskBuilder builder = new VolumeMaskBuilder();
             builder.setRenderables(renderables);
-            for ( String maskFile: maskVsUid.keySet() ) {
-                Long maskUid = maskVsUid.get( maskFile );
+            for ( String labelFile: labelFiles ) {
                 VolumeLoader volumeLoader = new VolumeLoader( resolver );
-                if ( volumeLoader.loadVolume(maskFile) ) {
-                    builder.setCurrentMaskUid( maskUid );
+                if ( volumeLoader.loadVolume(labelFile) ) {
                     volumeLoader.populateVolumeAcceptor(builder);
                 }
             }

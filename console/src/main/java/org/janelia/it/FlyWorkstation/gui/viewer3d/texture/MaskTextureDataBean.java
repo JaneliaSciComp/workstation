@@ -10,14 +10,17 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
  * as quick fetching of bytes.
  */
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Collection;
 
 public class MaskTextureDataBean implements TextureDataI {
     private String filename;
     private byte[] textureData;
+    private Collection<RenderableBean> renderables;
     private Integer sx;
     private Integer sy;
     private Integer sz;
@@ -203,6 +206,16 @@ public class MaskTextureDataBean implements TextureDataI {
     @Override
     public void setExplicitVoxelComponentFormat( int format ) {
         this.voxelComponentFormat = format;
+    }
+
+    @Override
+    public void setRenderables(Collection<RenderableBean> renderables) {
+        this.renderables = renderables;
+    }
+
+    @Override
+    public Collection<RenderableBean> getRenderables() {
+        return renderables;
     }
 }
 

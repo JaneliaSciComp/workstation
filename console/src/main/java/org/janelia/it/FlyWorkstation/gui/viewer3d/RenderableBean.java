@@ -18,7 +18,6 @@ public class RenderableBean {
     private int translatedNum;
     private byte[] rgb;
     private Entity renderableEntity;
-    private long labelUid;
 
     public String getLabelFile() {
         return labelFile;
@@ -77,11 +76,4 @@ public class RenderableBean {
         this.signalFile = signalFile;
     }
 
-    public long getLabelUid() {
-        return labelUid;
-    }
-
-    public void setLabelUid(long labelUid) {
-        this.labelUid = labelUid;
-    }
 }

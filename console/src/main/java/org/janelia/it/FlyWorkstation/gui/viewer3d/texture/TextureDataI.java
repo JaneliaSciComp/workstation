@@ -1,10 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
+import java.util.Collection;
 
 /**
  * Created with IntelliJ IDEA.
@@ -88,5 +90,8 @@ public interface TextureDataI {
     Integer getExplicitVoxelComponentFormat();
 
     void setExplicitVoxelComponentFormat( int format );
+
+    void setRenderables( Collection<RenderableBean> renderables );
+    Collection<RenderableBean> getRenderables();
 
 }

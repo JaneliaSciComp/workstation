@@ -137,7 +137,6 @@ public class AlignmentBoardDataBuilder implements Serializable {
                 //String signalFile = sample.get3dImageFilepath(); // TEMP
 
                 sampleBean.setSignalFile( signalFile );
-                sampleBean.setLabelUid( sample.getId() );
 
                 renderableBeanList.add( sampleBean );
 
@@ -214,7 +213,6 @@ public class AlignmentBoardDataBuilder implements Serializable {
             neuronBean.setRgb( rgb );
         }
 
-        neuronBean.setLabelUid( sampleBean.getLabelUid() );
         return neuronBean;
     }
 
@@ -302,7 +300,6 @@ public class AlignmentBoardDataBuilder implements Serializable {
                 if ( labelNum != null ) {
                     RenderableBean maskIndexBean = new RenderableBean();
                     maskIndexBean.setLabelFile( maskIndex );
-                    maskIndexBean.setLabelUid( 1L );                  // All these apply to the same unknown label UID.
                     maskIndexBean.setSignalFile( compartmentSignalFile );
                     maskIndexBean.setLabelFileNum( labelNum );
 
@@ -457,7 +454,6 @@ public class AlignmentBoardDataBuilder implements Serializable {
 
                 // No label / label file is applicable.
                 bean.setLabelFile( null );
-                bean.setLabelUid(0L);
                 bean.setLabelFileNum(0);
 
                 bean.setSignalFile(signalFilename);
@@ -495,7 +491,6 @@ public class AlignmentBoardDataBuilder implements Serializable {
                     for ( Entity fragment: sampleFragments ) {
                         RenderableBean bean = new RenderableBean();
                         bean.setLabelFile( finalLabelFile );
-                        bean.setLabelUid( labelEntity.getId() );
                         bean.setSignalFile( signalFilename );
                         bean.setRenderableEntity(fragment);
                         bean.setTranslatedNum( fragmentOffset++ );

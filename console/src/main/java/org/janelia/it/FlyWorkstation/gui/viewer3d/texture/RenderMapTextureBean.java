@@ -1,10 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 
 import javax.media.opengl.GL2;
 import java.nio.ByteOrder;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -22,6 +24,7 @@ public class RenderMapTextureBean implements TextureDataI {
     private byte[] mapData;
     private boolean inverted = false; // Default probably carries the day.
     private Integer voxelComponentFormat = GL2.GL_UNSIGNED_INT_8_8_8_8_REV;
+    private Collection<RenderableBean> renderables;
 
     /**
      * This implementation makes a big array of 64K * 3, to accommodate any possible neuron fragment number's
@@ -214,5 +217,14 @@ public class RenderMapTextureBean implements TextureDataI {
         this.voxelComponentFormat = format;
     }
 
+    @Override
+    public void setRenderables(Collection<RenderableBean> renderables) {
+        this.renderables = renderables;
+    }
+
+    @Override
+    public Collection<RenderableBean> getRenderables() {
+        return renderables;
+    }
 }
 

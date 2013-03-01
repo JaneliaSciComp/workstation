@@ -10,11 +10,13 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
  * because masks like this can be switched on and off, changing their offsets at runtime.
  */
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
+import java.util.Collection;
 
 public class TextureDataBean implements TextureDataI {
     private static final int INTEGER_NUM_BYTES = (Integer.SIZE / 8);
@@ -40,6 +42,8 @@ public class TextureDataBean implements TextureDataI {
     private boolean loaded;
     private boolean inverted = true; // Tested stored images were inverted.
     private Integer voxelComponentFormat;
+
+    private Collection<RenderableBean> renderables;
 
     public TextureDataBean(byte[] textureData, int sx, int sy, int sz) {
         this.textureData = textureData;
@@ -206,6 +210,16 @@ public class TextureDataBean implements TextureDataI {
     @Override
     public void setExplicitVoxelComponentFormat( int format ) {
         this.voxelComponentFormat = format;
+    }
+
+    @Override
+    public void setRenderables(Collection<RenderableBean> renderables) {
+        this.renderables = renderables;
+    }
+
+    @Override
+    public Collection<RenderableBean> getRenderables() {
+        return renderables;
     }
 }
 

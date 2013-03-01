@@ -35,10 +35,8 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
     // even though, for all-8-bit masks, some time and space are wasted.
     private int consensusByteCount = SHADER_FRIENDLY_BYTE_COUNT;
     private int consensusChannelCount;
-    private long currentMaskUid = UNSET_MASK_UID;
     private float[] coordCoverage;
     private Collection<RenderableBean> renderables;
-    private Map<TextureDataI,Long> textureDataToLabelUid = new HashMap<TextureDataI,Long>();
 
     private String firstFileName = null;
 
@@ -55,15 +53,15 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
             return null;
         }
 
-        Map<Long,Set<RenderableBean>> labelUidToFragment = new HashMap<Long,Set<RenderableBean>>();
-        for ( RenderableBean bean: renderables) {
-            Set<RenderableBean> beans = labelUidToFragment.get( bean.getLabelUid() );
-            if ( beans == null ) {
-                beans = new HashSet<RenderableBean>();
-                labelUidToFragment.put(bean.getLabelUid(), beans);
-            }
-            beans.add(bean);
-        }
+//        Map<Long,Set<RenderableBean>> labelUidToRenderable = new HashMap<Long,Set<RenderableBean>>();
+//        for ( RenderableBean bean: renderables) {
+//            Set<RenderableBean> beans = labelUidToRenderable.get( bean.getLabelUid() );
+//            if ( beans == null ) {
+//                beans = new HashSet<RenderableBean>();
+//                labelUidToRenderable.put(bean.getLabelUid(), beans);
+//            }
+//            beans.add(bean);
+//        }
 
         Integer[] volumeMaskVoxels = getVolumeMaskVoxels();
 
@@ -80,7 +78,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
         int dimMaskY = volumeMaskVoxels[ Y_INX ];
 
         // Shortcut bypass
-        if ( labelUidToFragment.size() == 0  &&  maskingDataBeans.size() == 1 ) {
+        if ( maskingDataBeans.size() == 1  &&  maskingDataBeans.get(0).getRenderables() == null ) {
             rtnValue = ((MaskTextureDataBean)maskingDataBeans.get(0)).getTextureBytes();
         }
         else {
@@ -92,9 +90,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
                 int dimBeanY = texBean.getSy();
                 int dimBeanZ = texBean.getSz();
 
-                Long texBeanLabelUid = textureDataToLabelUid.get( texBean ) ;
-
-                Set<RenderableBean> renderableBeans = labelUidToFragment.get( texBeanLabelUid );
+                Collection<RenderableBean> renderableBeans = texBean.getRenderables();
 
                 byte[] maskData = ((MaskTextureDataBean)texBean).getTextureBytes();
 
@@ -199,10 +195,6 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
         return consensusByteCount;
     }
 
-    public void setCurrentMaskUid( Long currentMaskUid ) {
-        this.currentMaskUid = currentMaskUid;
-    }
-
     @Override
     public void setTextureData(TextureDataI textureData) {
         //zeroCheckDebug(textureData);
@@ -252,15 +244,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
             );
         }
         maskingDataBeans.add( textureData );
-
-        if ( currentMaskUid == UNSET_MASK_UID ) {
-            logger.error( "No UID given for mask file {}.", textureData.getFilename() );
-        }
-        else {
-            textureDataToLabelUid.put(textureData, currentMaskUid);
-        }
-
-        currentMaskUid = UNSET_MASK_UID;
+        textureData.setRenderables( renderables );
     }
 
     /**
