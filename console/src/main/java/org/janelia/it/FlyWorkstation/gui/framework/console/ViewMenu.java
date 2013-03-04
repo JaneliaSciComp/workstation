@@ -47,6 +47,7 @@ public class ViewMenu extends JMenu {
         JMenuItem perspectivesMenu = new JMenu("Open Perspective");
         
         for(final Perspective perspective : Perspective.values()) {
+        	if (perspective==Perspective.AlignmentBoard) continue;
 
             JMenuItem perspectiveMenuItem = new JMenuItem(perspective.getName());
             perspectiveMenuItem.addActionListener(new ActionListener() {

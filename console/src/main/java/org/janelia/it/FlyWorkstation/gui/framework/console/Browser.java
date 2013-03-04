@@ -310,7 +310,7 @@ public class Browser extends JFrame implements Cloneable {
 
         outlookBar = new JOutlookBar2();
         outlookBar.addBar(BAR_DATA, Icons.getIcon("folders_explorer_medium.png"), entityOutline);
-        outlookBar.addBar(BAR_SAMPLES, Icons.getIcon("folders_explorer_medium.png"), entityWrapperOutline);
+//        outlookBar.addBar(BAR_SAMPLES, Icons.getIcon("folders_explorer_medium.png"), entityWrapperOutline);
         outlookBar.addBar(BAR_SESSIONS, Icons.getIcon("cart_medium.png"), sessionOutline);
         outlookBar.addBar(BAR_TASKS, Icons.getIcon("cog_medium.png"), taskOutline);
         
@@ -370,7 +370,7 @@ public class Browser extends JFrame implements Cloneable {
         
         rightPanel = new VerticalPanelPicker();
         rightPanel.addPanel(OUTLINE_ONTOLOGY, Icons.getIcon("page.png"), "Displays an ontology for annotation", ontologyOutline);
-        rightPanel.addPanel(OUTLINE_LAYERS, Icons.getIcon("palette.png"), "Adjust alignment board layers", layersPanel);
+//        rightPanel.addPanel(OUTLINE_LAYERS, Icons.getIcon("palette.png"), "Adjust alignment board layers", layersPanel);
         rightPanel.addPanel(OUTLINE_SPLIT_PICKER, Icons.getIcon("page_copy.png"), "Allows for simulation of flyline crosses", splitPickingPanel);
         
         
@@ -453,8 +453,8 @@ public class Browser extends JFrame implements Cloneable {
 //                worker.execute();
 //
 //
-			    rightPanel.showPanel(OUTLINE_ONTOLOGY);
-			    entityOutline.activate();
+//			    rightPanel.showPanel(OUTLINE_ONTOLOGY);
+//			    entityOutline.activate();
 			}
         });
     }
