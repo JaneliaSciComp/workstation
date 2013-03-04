@@ -135,6 +135,13 @@ public class TestMaskedMip3d {
 
                          */
 
+                        Entity mockE = new Entity();
+                        mockE.setId( MOCK_UID );
+                        EntityType mockEType = new EntityType();
+                        mockEType.setName( EntityConstants.TYPE_NEURON_FRAGMENT );
+                        mockE.setEntityType( mockEType );
+                        mockE.setName("Entity: " + MOCK_UID);
+
                         RenderableBean renderableBean = new RenderableBean();
                         renderableBean.setLabelFile(mf);
                         renderableBean.setTranslatedNum(1);
@@ -152,6 +159,7 @@ public class TestMaskedMip3d {
                         renderableBean.setTranslatedNum(2);
                         renderableBean.setLabelFileNum( 17 );
                         renderableBean.setSignalFile( fn );
+                        renderableBean.setRenderableEntity( mockE );
                         beans.add(renderableBean);
 
                         renderableBean = new RenderableBean();
@@ -159,6 +167,7 @@ public class TestMaskedMip3d {
                         renderableBean.setTranslatedNum(3);
                         renderableBean.setLabelFileNum( 3 );
                         renderableBean.setSignalFile( fn );
+                        renderableBean.setRenderableEntity( mockE );
                         beans.add(renderableBean);
 
                         renderableBean = new RenderableBean();
@@ -166,7 +175,21 @@ public class TestMaskedMip3d {
                         renderableBean.setTranslatedNum(4);
                         renderableBean.setLabelFileNum( 12 );
                         renderableBean.setSignalFile( fn );
+                        renderableBean.setRenderableEntity( mockE );
                         beans.add(renderableBean);
+
+                        /**
+                         * special renderables for the ref channel.
+                         */
+                        //for ( int i = 1; i < 128; i++ ) {
+                        //    renderableBean = new RenderableBean();
+                        //    renderableBean.setLabelFile( mf );
+                        //    renderableBean.setTranslatedNum( 1+i );
+                        //    renderableBean.setLabelFileNum( i );
+                        //    renderableBean.setSignalFile( fn );
+                        //    renderableBean.setRenderableEntity( mockE );
+                        //    beans.add(renderableBean);
+                        //}
 
                         vmb.setRenderables(beans);
 
@@ -177,12 +200,6 @@ public class TestMaskedMip3d {
                         ConfigurableColorMapping colorMapping = new ConfigurableColorMapping();
                         if ( args.length > 2 ) {
                             // This mock-entity needs ONLY its ID, a type, and a name.
-                            Entity mockE = new Entity();
-                            mockE.setId( MOCK_UID );
-                            EntityType mockEType = new EntityType();
-                            mockEType.setName( EntityConstants.TYPE_NEURON_FRAGMENT );
-                            mockE.setEntityType( mockEType );
-                            mockE.setName("Entity: " + MOCK_UID);
                             renderableBean.setRenderableEntity( mockE );
                             renderableBean.setSignalFile( fn );
 
