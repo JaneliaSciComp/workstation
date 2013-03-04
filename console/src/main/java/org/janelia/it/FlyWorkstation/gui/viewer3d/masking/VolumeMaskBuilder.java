@@ -125,8 +125,8 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
                                     // This set-only technique will merely _set_ the value to the latest loaded mask's
                                     // value at this location.  There is no overlap taken into account here.
                                     // LAST PRECEDENT STRATEGY
-                                    for ( RenderableBean renderableBean : renderableBeans) {
-                                        // Use only masks settings FROM the earliest texture file.
+                                    for ( RenderableBean renderableBean : renderableBeans ) {
+                                        // Use only masks settings FROM the latest texture file.
                                         if ( renderableBean.getLabelFileNum() == voxelVal ) {
                                             newVal = renderableBean.getTranslatedNum();
                                         }
