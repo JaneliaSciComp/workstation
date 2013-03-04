@@ -1,7 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.juli.JdkLoggerFormatter;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor.TextureColorSpace;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.*;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
@@ -29,7 +28,7 @@ public class VolumeLoader
     private static final int WAIT_BETWEEN_FILE_LOAD_RETRIES = 1000;
 
     private FileResolver resolver;
-    private boolean isMask = false;
+    private boolean isLuminance = false;
     private TextureDataI textureData;
 
     private Logger logger;
@@ -74,7 +73,7 @@ public class VolumeLoader
                     V3dMaskFileLoader maskFileLoader = new V3dMaskFileLoader();
                     fileLoader = maskFileLoader;
                     textureDataBuilder = maskFileLoader;
-                    isMask = true;
+                    isLuminance = true;
                     break;
                 case MP4:
                     MpegFileLoader mpegFileLoader = new MpegFileLoader();
@@ -116,7 +115,7 @@ public class VolumeLoader
                 }
             }
 
-            textureData = textureDataBuilder.buildTextureData( isMask );
+            textureData = textureDataBuilder.buildTextureData( isLuminance );
 
             return true;
         }

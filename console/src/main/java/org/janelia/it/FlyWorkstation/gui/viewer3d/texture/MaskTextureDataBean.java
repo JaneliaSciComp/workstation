@@ -157,10 +157,12 @@ public class MaskTextureDataBean implements TextureDataI {
     }
 
     public int getPixelByteCount() {
+//new Exception("Pixel Byte Count is " + pixelByteCount).printStackTrace();
         return pixelByteCount;
     }
 
     public void setPixelByteCount(int pixelByteCount) {
+//new Exception("Pixel Byte Count is " + pixelByteCount).printStackTrace();
         this.pixelByteCount = pixelByteCount;
     }
 

@@ -21,7 +21,7 @@ public abstract class LociFileLoader extends TextureDataBuilder implements Volum
 
     @Override
     public TextureDataI createTextureDataBean() {
-        return new TextureDataBean( argbIntArray, sx, sy, sz );
+        return new TextureDataBean(argbTextureIntArray, sx, sy, sz );
     }
 
     /** A facility for loci reader users. */
@@ -37,7 +37,7 @@ public abstract class LociFileLoader extends TextureDataBuilder implements Volum
         sx = in.getSizeX();
         sy = in.getSizeY();
         sz = in.getSizeZ();
-        argbIntArray = new int[sx*sy*sz];
+        argbTextureIntArray = new int[sx*sy*sz];
         int scanLineStride = sx;
         for (int z = 0; z < sz; z++) {
             BufferedImage zSlice = in.openImage(z);
@@ -45,7 +45,7 @@ public abstract class LociFileLoader extends TextureDataBuilder implements Volum
             // int[] pixels = ((DataBufferInt)zSlice.getData().getDataBuffer()).getData();
             zSlice.getRGB(0, 0,
                     sx, sy,
-                    argbIntArray,
+                    argbTextureIntArray,
                     zOffset,
                     scanLineStride);
         }

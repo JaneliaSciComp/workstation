@@ -1,6 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 
-import org.apache.juli.JdkLoggerFormatter;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.stream.V3dRawImageStream;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.MaskTextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
@@ -33,7 +32,7 @@ public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileL
 
     @Override
     protected TextureDataI createTextureDataBean() {
-        return new MaskTextureDataBean( maskByteArray, sx, sy, sz );
+        return new MaskTextureDataBean(textureByteArray, sx, sy, sz );
     }
 
     @Override
@@ -75,7 +74,9 @@ public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileL
             values = readDownSampled(sliceStream);
         }
         else {
-            values = readBytes(sliceStream);
+            V3dByteReader byteReader = new V3dByteReader();
+            values = byteReader.readBytes( sliceStream, sx, sy, sz, pixelBytes );
+            textureByteArray = byteReader.getTextureBytes();
         }
 
         for ( Integer value: values ) {
@@ -124,7 +125,7 @@ public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileL
 
         // Here, sample the neighborhoods (or _output_ voxels).
         // Java implicitly sets newly-allocated byte arrays to all zeros.
-        maskByteArray = new byte[(outSx * outSy * outSz) * pixelBytes];
+        textureByteArray = new byte[(outSx * outSy * outSz) * pixelBytes];
 
         int outZ = 0;
         for ( int z = 0; z < sz-zScale; z += zScale ) {
@@ -164,7 +165,7 @@ public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileL
                     // Store the value into the output array.
                     for ( int pi = 0; pi < pixelBytes; pi ++ ) {
                         byte piByte = (byte)(value >>> (pi * 8) & 0x000000ff);
-                        maskByteArray[(yOffset * pixelBytes) + (outX * pixelBytes) + (pi)] = piByte;
+                        textureByteArray[(yOffset * pixelBytes) + (outX * pixelBytes) + (pi)] = piByte;
                     }
 
                     outX ++;
@@ -182,41 +183,6 @@ public class V3dMaskFileLoader extends TextureDataBuilder implements VolumeFileL
         sx = outSx;
         sy = outSy;
         sz = outSz;
-        return values;
-    }
-
-    /**
-     * This method reads all information from the slice stream into the internal mask-byte-array (1-D) without
-     * attempting to subset or interpret the values.
-     *
-     * @param sliceStream source for data.
-     * @return distinct set of all values found in the stream.
-     * @throws IOException thrown by called methods.
-     */
-    private Set<Integer>  readBytes(V3dRawImageStream sliceStream) throws IOException {
-        maskByteArray = new byte[(sx * sy * sz) * pixelBytes];
-
-        Set<Integer> values = new TreeSet<Integer>();
-        for (int z = 0; z < sz; z ++ ) {
-            int zOffset = z * sx * sy;
-            sliceStream.loadNextSlice();
-            V3dRawImageStream.Slice slice = sliceStream.getCurrentSlice();
-            for (int y = 0; y < sy; y ++ ) {
-                int yOffset = zOffset + (sy-y) * sx;
-                for (int x = 0; x < sx; x ++ ) {
-                    Integer value = slice.getValue(x, y);
-                    if ( value > 0 ) {
-                        values.add( value );
-                        for ( int pi = 0; pi < pixelBytes; pi ++ ) {
-                            byte piByte = (byte)(value >>> (pi * 8) & 0x000000ff);
-                            maskByteArray[(yOffset * pixelBytes) + (x * pixelBytes) + (pi)] = piByte;
-                        }
-                    }
-                }
-            }
-        }
-        sliceStream.close();
-
         return values;
     }
 

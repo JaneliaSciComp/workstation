@@ -8,6 +8,7 @@ import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Set;
 import java.util.zip.DataFormatException;
 
 /**
@@ -16,25 +17,28 @@ import java.util.zip.DataFormatException;
  * Date: 2/6/13
  * Time: 3:33 PM
  *
- *
+ * Loader of signal data, from v3dpbd format input file.
  */
 public class V3dSignalFileLoader extends TextureDataBuilder implements VolumeFileLoaderI {
+
     @Override
     protected TextureDataI createTextureDataBean() {
-        return new TextureDataBean( argbIntArray, sx, sy, sz );
+        if ( pixelBytes == 4 )
+            return new TextureDataBean( argbTextureIntArray, sx, sy, sz );
+        else
+            return new TextureDataBean( textureByteArray, sx, sy, sz );
     }
 
     @Override
     public void loadVolumeFile( String fileName ) throws Exception {
         unCachedFileName = fileName;
 
-        loadV3dRaw( new BufferedInputStream(
-                new FileInputStream(unCachedFileName) ) );
+        loadV3dRaw(new BufferedInputStream(
+                new FileInputStream(unCachedFileName)));
 
     }
 
-    private void loadV3dRaw(InputStream inputStream)
-            throws IOException, DataFormatException {
+    private void loadV3dRaw(InputStream inputStream) throws IOException, DataFormatException {
         V3dRawImageStream sliceStream = new V3dRawImageStream(inputStream);
         sx = sliceStream.getDimension(0);
         sy = sliceStream.getDimension(1);
@@ -44,12 +48,27 @@ public class V3dSignalFileLoader extends TextureDataBuilder implements VolumeFil
         channelCount = sc;
         pixelByteOrder = sliceStream.getEndian();
 
+        if ( pixelBytes == 4 ) {
+            loadV3dIntRaw( sliceStream, sc );
+        }
+        else if ( pixelBytes == 1 ) {
+            loadV3dByteRaw( sliceStream, sc );
+        }
+        else {
+            throw new IOException("Unexpected pixelbytes count of " + pixelBytes);
+        }
+    }
+
+    private void loadV3dIntRaw(V3dRawImageStream sliceStream, int sc )
+            throws IOException, DataFormatException {
+
+
         double scale = 1.0;
         if (sliceStream.getPixelBytes() > 1)
             scale = 255.0 / 4095.0; // assume it's 12 bits
 
-        argbIntArray = new int[sx*sy*sz];
-        zeroColors();
+        argbTextureIntArray = new int[sx*sy*sz];
+        //zeroColors();
         for (int c = 0; c < sc; ++c) {
             // create a mask to manipulate one color byte of a 32-bit ARGB int
             int bitShift = 8 * (c + 2);
@@ -64,14 +83,14 @@ public class V3dSignalFileLoader extends TextureDataBuilder implements VolumeFil
                 for (int y = 0; y < sy; ++y) {
                     int yOffset = zOffset + y * sx;
                     for (int x = 0; x < sx; ++x) {
-                        int argb = argbIntArray[yOffset + x] & notMask; // zero color component
+                        int argb = argbTextureIntArray[yOffset + x] & notMask; // zero color component
                         double value = scale * slice.getValue(x, y);
                         int ival = (int)(value + 0.5);
                         if (ival < 0) ival = 0;
                         if (ival > 255) ival = 255;
                         ival = ival << bitShift;
                         argb = argb | ival; // insert updated color component
-                        argbIntArray[yOffset + x] = argb;
+                        argbTextureIntArray[yOffset + x] = argb;
                     }
                 }
             }
@@ -80,10 +99,19 @@ public class V3dSignalFileLoader extends TextureDataBuilder implements VolumeFil
         header = sliceStream.getHeaderKey();
     }
 
+    private void loadV3dByteRaw(V3dRawImageStream sliceStream, int sc)
+            throws IOException, DataFormatException {
+
+        V3dByteReader byteReader = new V3dByteReader();
+        Set<Integer> values= byteReader.readBytes( sliceStream, sx, sy, sz, pixelBytes );
+        textureByteArray = byteReader.getTextureBytes();
+        header = sliceStream.getHeaderKey();
+    }
+
     private void zeroColors() {
-        int numVoxels = argbIntArray.length;
+        int numVoxels = argbTextureIntArray.length;
         for (int v = 0; v < numVoxels; ++v)
-            argbIntArray[v] = 0;
+            argbTextureIntArray[v] = 0;
     }
 
 }

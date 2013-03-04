@@ -4,7 +4,6 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeBrick;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 
-import java.awt.color.ColorSpace;
 import java.nio.ByteOrder;
 
 /**
@@ -17,8 +16,8 @@ import java.nio.ByteOrder;
  */
 public abstract class TextureDataBuilder {
 
-    protected int[] argbIntArray;
-    protected byte[] maskByteArray;
+    protected int[] argbTextureIntArray;
+    protected byte[] textureByteArray;
     protected int sx, sy, sz;
     protected int channelCount = 1; // Default for non-data-bearing file formats.
     protected VolumeDataAcceptor.TextureColorSpace colorSpace =
@@ -32,7 +31,7 @@ public abstract class TextureDataBuilder {
         this.colorSpace = colorSpace;
     }
 
-    public TextureDataI buildTextureData( boolean isMask ) {
+    public TextureDataI buildTextureData( boolean isLuminance ) {
         TextureDataI textureData = createTextureDataBean();
 
         textureData.setSx(sx);
@@ -50,7 +49,7 @@ public abstract class TextureDataBuilder {
         textureData.setFilename( unCachedFileName );
         textureData.setChannelCount(channelCount);
 
-        if (! isMask ) {
+        if (! isLuminance  &&  (pixelBytes == 4) ) {
             setAlphaToSaturateColors( colorSpace );
         }
         else {
@@ -81,16 +80,16 @@ public abstract class TextureDataBuilder {
             double i1 = Math.pow(i0, exponent);
             alphaMap[i] = (int)(i1 * 255.0 + 0.5);
         }
-        int numVoxels = argbIntArray.length;
+        int numVoxels = argbTextureIntArray.length;
         for (int v = 0; v < numVoxels; ++v) {
-            int argb = argbIntArray[v];
+            int argb = argbTextureIntArray[v];
             int red   = (argb & 0x00ff0000) >>> 16;
             int green = (argb & 0x0000ff00) >>> 8;
             int blue  = (argb & 0x000000ff);
             int alpha = Math.max(red, Math.max(green, blue));
             alpha = alphaMap[alpha];
             argb = (argb & 0x00ffffff) | (alpha << 24);
-            argbIntArray[v] = argb;
+            argbTextureIntArray[v] = argb;
         }
     }
 

@@ -82,14 +82,25 @@ public class TextureMediator {
             int expectedRemaining = textureData.getSx() * textureData.getSy() * textureData.getSz()
                     * textureData.getPixelByteCount();
             if ( expectedRemaining != data.remaining() ) {
-                logger.warn( "Invalid remainder vs texture data dimsensions.  Sx=" + textureData.getSx() +
+                logger.warn( "Invalid remainder vs texture data dimensions.  Sx=" + textureData.getSx() +
                              " Sy=" + textureData.getSy() + " Sz=" + textureData.getSz() +
                              " storageFmtReq=" + getStorageFormatMultiplier() +
+                             " pixelByteCount=" + textureData.getPixelByteCount() +
                              ";  total remaining is " +
                              data.remaining() + " " + textureData.getFilename() +
                              ";  expected remaining is " + expectedRemaining
                 );
             }
+            //else {
+            //    logger.info( "Remainder vs texture data dimensions matches.  Sx=" + textureData.getSx() +
+            //            " Sy=" + textureData.getSy() + " Sz=" + textureData.getSz() +
+            //            " storageFmtReq=" + getStorageFormatMultiplier() +
+            //            " pixelByteCount=" + textureData.getPixelByteCount() +
+            //            ";  total remaining is " +
+            //            data.remaining() + " " + textureData.getFilename() +
+            //            ";  expected remaining is " + expectedRemaining
+            //    );
+            //}
             data.rewind();
 
             gl.glActiveTexture( textureSymbolicId );
@@ -385,7 +396,12 @@ public class TextureMediator {
         int rtnVal = GL2.GL_BGRA;
         if ( textureData.getChannelCount() == 1 ) {
             rtnVal = GL2.GL_LUMINANCE;
-            //rtnVal = GL2.GL_RED;
+        }
+        if ( rtnVal == GL2.GL_LUMINANCE ) {
+            logger.info("GL_LUMINANCE voxel component order.");
+        }
+        else {
+            logger.info("GL_BGRA voxel component order.");
         }
         return rtnVal;
     }

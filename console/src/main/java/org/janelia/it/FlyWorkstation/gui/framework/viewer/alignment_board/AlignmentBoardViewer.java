@@ -213,13 +213,13 @@ public class AlignmentBoardViewer extends Viewer {
                     log.debug("    fast load 8-bit volumes:");
                     log.debug("    * fast signal: "+vol.getFastVolumePath(ArtifactType.ConsolidatedSignal, Size.Full, Channels.All, true));
                     log.debug("    * fast label: "+vol.getFastVolumePath(ArtifactType.ConsolidatedLabel, Size.Full, Channels.All, true));
-                    log.debug("    * fast referece: "+vol.getFastVolumePath(ArtifactType.Reference, Size.Full, Channels.All, true));
+                    log.info("    * fast reference: "+vol.getFastVolumePath(ArtifactType.Reference, Size.Full, Channels.All, true));
     
                     log.debug("    subsampled volumes:");
                     for(Size size : Size.values()) {
                         log.debug("    * "+size+"/signal: "+vol.getFastVolumePath(ArtifactType.ConsolidatedSignal, size, Channels.All, true));
                         log.debug("    * "+size+"/label: "+vol.getFastVolumePath(ArtifactType.ConsolidatedLabel, size, Channels.All, true));
-                        log.debug("    * "+size+"/reference: "+vol.getFastVolumePath(ArtifactType.Reference, size, Channels.All, true));
+                        log.info("    * "+size+"/reference: "+vol.getFastVolumePath(ArtifactType.Reference, size, Channels.All, true));
                     }
     
                     log.debug("    mpeg4 volumes:");

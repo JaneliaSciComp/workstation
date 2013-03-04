@@ -25,7 +25,7 @@ import java.awt.image.BufferedImage;
 public class MpegFileLoader extends TextureDataBuilder implements VolumeFileLoaderI {
     @Override
     protected TextureDataI createTextureDataBean() {
-        return new TextureDataBean( argbIntArray, sx, sy, sz );
+        return new TextureDataBean(argbTextureIntArray, sx, sy, sz );
     }
 
     @Override
@@ -66,7 +66,7 @@ public class MpegFileLoader extends TextureDataBuilder implements VolumeFileLoad
                 sx = coder.getWidth();
                 sy = coder.getHeight();
                 sz = (int)(frameRate * duration / 1e6 + 0.5);
-                argbIntArray = new int[sx*sy*sz];
+                argbTextureIntArray = new int[sx*sy*sz];
                 channelCount = 3;
                 pixelBytes = 4;
                 return;
@@ -93,14 +93,14 @@ public class MpegFileLoader extends TextureDataBuilder implements VolumeFileLoad
         // System.out.println("Reading frame " + frameIndex);
         int offset = frameIndex * sx * sy;
         image.getRGB(0, 0, sx, sy,
-                argbIntArray,
+                argbTextureIntArray,
                 offset, sx);
     }
 
     private void zeroColors() {
-        int numVoxels = argbIntArray.length;
+        int numVoxels = argbTextureIntArray.length;
         for (int v = 0; v < numVoxels; ++v)
-            argbIntArray[v] = 0;
+            argbTextureIntArray[v] = 0;
     }
 
 }
