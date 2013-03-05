@@ -79,7 +79,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
 
         // Shortcut bypass
         if ( maskingDataBeans.size() == 1  &&  maskingDataBeans.get(0).getRenderables() == null ) {
-            rtnValue = ((MaskTextureDataBean)maskingDataBeans.get(0)).getTextureBytes();
+            rtnValue = maskingDataBeans.get(0).getTextureData();
         }
         else {
             for ( TextureDataI texBean: maskingDataBeans ) {
@@ -92,7 +92,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
 
                 Collection<RenderableBean> renderableBeans = texBean.getRenderables();
 
-                byte[] maskData = ((MaskTextureDataBean)texBean).getTextureBytes();
+                byte[] maskData = texBean.getTextureData();
 
                 for ( int z = 0; z < dimBeanZ; z++ ) {
                     int zOffsetOutput = z * dimMaskX * dimMaskY * consensusByteCount; // Slice number * next z
