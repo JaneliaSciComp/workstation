@@ -59,7 +59,7 @@ public class TestMip3d {
 
                     // All black.  String fn = "/Volumes/jacsData/MaskResources/Compartment/maskRGB.v3dpbd";
 
-                    if ( ! mipWidget.loadVolume(fn, null, new TrivialFileResolver()) )
+                    if ( ! mipWidget.loadVolume(fn, new TrivialFileResolver()) )
                         System.out.println("Volume load failed.");
                 	// mipWidget.loadVolume("/Users/brunsc/projects/fast_load/test_dir2/fastLoad/ConsolidatedSignal2_25.v3dpbd");
                 	// mipWidget.loadVolume("/Users/brunsc/projects/fast_load/test_dir2/fastLoad/ConsolidatedSignal2_25.v3draw");

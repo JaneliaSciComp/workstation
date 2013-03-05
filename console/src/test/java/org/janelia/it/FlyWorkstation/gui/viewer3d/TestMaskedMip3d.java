@@ -123,6 +123,7 @@ public class TestMaskedMip3d {
                                         (byte)0f, (byte)0f, (byte)0f, RenderMappingI.NON_RENDERING
                                 }
                         );
+                        signalBean.setSignal( true );
                         beans.add( signalBean );
 
                         /*
