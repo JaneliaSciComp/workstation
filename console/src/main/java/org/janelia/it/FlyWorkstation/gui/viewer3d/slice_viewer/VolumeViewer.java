@@ -10,5 +10,5 @@ extends Camera3d, VolumeImage3d, Viewport
 	double getMaxZoom();
 	double getMinZoom();
 
-	QtSignal1<Double> getZoomChangedSignal();
+	Signal1<Double> getZoomChangedSignal();
 }

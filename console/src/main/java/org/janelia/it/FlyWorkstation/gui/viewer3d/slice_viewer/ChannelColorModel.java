@@ -13,12 +13,12 @@ public class ChannelColorModel
 	private boolean visible = true;
 	private int index; // e.g. first channel red is zero, second green is one, etc.
 
-	private QtSignal1<Integer> blackLevelChangedSignal = new QtSignal1<Integer>();
-	private QtSignal1<Color> colorChangedSignal = new QtSignal1<Color>();
-	private QtSignal1<Integer> dataMaxChangedSignal = new QtSignal1<Integer>();
-	private QtSignal1<Double> gammaChangedSignal = new QtSignal1<Double>();
-	private QtSignal1<Integer> whiteLevelChangedSignal = new QtSignal1<Integer>();
-	private QtSignal1<Boolean> visibilityChangedSignal = new QtSignal1<Boolean>();
+	private Signal1<Integer> blackLevelChangedSignal = new Signal1<Integer>();
+	private Signal1<Color> colorChangedSignal = new Signal1<Color>();
+	private Signal1<Integer> dataMaxChangedSignal = new Signal1<Integer>();
+	private Signal1<Double> gammaChangedSignal = new Signal1<Double>();
+	private Signal1<Integer> whiteLevelChangedSignal = new Signal1<Integer>();
+	private Signal1<Boolean> visibilityChangedSignal = new Signal1<Boolean>();
 	
 	public ChannelColorModel(int index, Color color, int bitDepth) {
 		this.index = index;
@@ -37,7 +37,7 @@ public class ChannelColorModel
 		return blackLevel;
 	}
 
-	public QtSignal1<Integer> getBlackLevelChangedSignal() {
+	public Signal1<Integer> getBlackLevelChangedSignal() {
 		return blackLevelChangedSignal;
 	}
 
@@ -45,15 +45,15 @@ public class ChannelColorModel
 		return color;
 	}
 
-	public QtSignal1<Color> getColorChangedSignal() {
+	public Signal1<Color> getColorChangedSignal() {
 		return colorChangedSignal;
 	}
 
-	public QtSignal1<Integer> getDataMaxChangedSignal() {
+	public Signal1<Integer> getDataMaxChangedSignal() {
 		return dataMaxChangedSignal;
 	}
 
-	public QtSignal1<Boolean> getVisibilityChangedSignal() {
+	public Signal1<Boolean> getVisibilityChangedSignal() {
 		return visibilityChangedSignal;
 	}
 
@@ -65,7 +65,7 @@ public class ChannelColorModel
 		return gamma;
 	}
 
-	public QtSignal1<Double> getGammaChangedSignal() {
+	public Signal1<Double> getGammaChangedSignal() {
 		return gammaChangedSignal;
 	}
 
@@ -77,7 +77,7 @@ public class ChannelColorModel
 		return whiteLevel;
 	}
 
-	public QtSignal1<Integer> getWhiteLevelChangedSignal() {
+	public Signal1<Integer> getWhiteLevelChangedSignal() {
 		return whiteLevelChangedSignal;
 	}
 	

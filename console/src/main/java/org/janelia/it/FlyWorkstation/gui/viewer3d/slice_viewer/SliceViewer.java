@@ -54,13 +54,13 @@ implements MouseModalWidget, VolumeViewer
 	// TODO - add dataChangedSignal to GLActor
 	protected RavelerActor volumeActor = new RavelerActor(volume0);
 	
-	public QtSignal1<URL> getFileLoadedSignal() {
+	public Signal1<URL> getFileLoadedSignal() {
 		return fileLoadedSignal;
 	}
 
-	protected QtSignal1<URL> fileLoadedSignal = new QtSignal1<URL>();
+	protected Signal1<URL> fileLoadedSignal = new Signal1<URL>();
 	
-	protected QtSlot1<URL> loadUrlSlot = new QtSlot1<URL>(this) {
+	protected Slot1<URL> loadUrlSlot = new Slot1<URL>(this) {
 		@Override
 		public void execute(URL url) {
 			log.info("loadUrlSlot");
@@ -68,7 +68,7 @@ implements MouseModalWidget, VolumeViewer
 		}
 	};
 	
-	protected QtSlot repaintSlot = new QtSlot() {
+	protected Slot repaintSlot = new Slot() {
 		@Override
 		public void execute() {
 			// System.out.println("repaint slot");
@@ -95,7 +95,7 @@ implements MouseModalWidget, VolumeViewer
         resetView();
 	}
 
-	public QtSlot1<URL> getLoadUrlSlot() {
+	public Slot1<URL> getLoadUrlSlot() {
 		return loadUrlSlot;
 	}
 
@@ -129,7 +129,7 @@ implements MouseModalWidget, VolumeViewer
 		return new Point2D.Double(dx, dy);
 	}
 
-	public QtSlot getRepaintSlot() {
+	public Slot getRepaintSlot() {
 		return repaintSlot;
 	}
 
@@ -375,12 +375,12 @@ implements MouseModalWidget, VolumeViewer
 	}
 
 	@Override
-	public QtSignal1<Double> getZoomChangedSignal() {
+	public Signal1<Double> getZoomChangedSignal() {
 		return camera.getZoomChangedSignal();
 	}
 
 	@Override
-	public QtSignal getDataChangedSignal() {
+	public Signal getDataChangedSignal() {
 		return volumeActor.getDataChangedSignal();
 	}
 

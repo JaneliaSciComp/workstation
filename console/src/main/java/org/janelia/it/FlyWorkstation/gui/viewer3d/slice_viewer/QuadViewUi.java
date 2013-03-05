@@ -8,10 +8,17 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.BoxLayout;
 import java.awt.Dimension;
+
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
+import javax.swing.InputMap;
+import javax.swing.JComponent;
 import javax.swing.JToolBar;
 import javax.swing.JLabel;
 import javax.swing.JSplitPane;
 import javax.swing.JSlider;
+import javax.swing.KeyStroke;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingConstants;
 import javax.swing.JButton;
 import javax.swing.JMenuBar;
@@ -23,20 +30,33 @@ import javax.swing.JSpinner;
 import javax.swing.Action;
 import javax.swing.JMenuItem;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicObservableCamera3d;
 import javax.swing.JSeparator;
 import java.awt.Component;
 import javax.swing.Box;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 import javax.swing.JToggleButton;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.net.URL;
+
 import javax.swing.ImageIcon;
 import javax.swing.ButtonGroup;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.border.EtchedBorder;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ChangeEvent;
 
-public class QuadViewUi extends JFrame {
-
+/** 
+ * Main window for QuadView application.
+ * Maintained using Google WindowBuilder design tool.
+ * 
+ * @author Christopher M. Bruns
+ *
+ */
+public class QuadViewUi extends JFrame 
+{
 	private static final long serialVersionUID = 1L;
 
 	static {
@@ -58,22 +78,101 @@ public class QuadViewUi extends JFrame {
 	// (there's only one viewer now actually, but you know...)
 	private BasicObservableCamera3d camera = new BasicObservableCamera3d();
 	private SliceViewer sliceViewer = new SliceViewer();
-	private final Action zoomInAction = new ZoomInAction(camera);
-	private final ZoomOutAction zoomOutAction = new ZoomOutAction(camera);
-	private final ResetViewAction resetViewAction = new ResetViewAction(sliceViewer);
-	private final ZoomMaxAction zoomMaxAction = new ZoomMaxAction(camera, sliceViewer);
-	private final ResetZoomAction resetZoomAction = new ResetZoomAction(sliceViewer);
-	private final ZoomMouseModeAction zoomMouseModeAction = new ZoomMouseModeAction(sliceViewer);
-	private final PanModeAction panModeAction = new PanModeAction(sliceViewer);
+	private boolean modifierKeyPressed = false;
+	private JPanel zScanPanel = new JPanel();
+	private JSlider zScanSlider = new JSlider();
+	private JSpinner zScanSpinner = new JSpinner();
+	private JSlider zoomSlider = new JSlider();
+	
+	// Actions
+	private final Action openFolderAction = new OpenFolderAction(sliceViewer, sliceViewer);
+	private RecentFileList recentFileList;
+	private final Action resetViewAction = new ResetViewAction(sliceViewer);
+	// mode actions (and groups)
+	private final Action zoomMouseModeAction = new ZoomMouseModeAction(sliceViewer);
+	private final Action panModeAction = new PanModeAction(sliceViewer);
 	private final ButtonGroup mouseModeGroup = new ButtonGroup();
-	private final ZScanScrollModeAction scanScrollModeAction = new ZScanScrollModeAction(sliceViewer, sliceViewer);
-	private final ZoomScrollModeAction zoomScrollModeAction = new ZoomScrollModeAction(sliceViewer);
+	private final Action zScanScrollModeAction = new ZScanScrollModeAction(sliceViewer, sliceViewer);
+	private final Action zoomScrollModeAction = new ZoomScrollModeAction(sliceViewer);
 	private final ButtonGroup scrollModeGroup = new ButtonGroup();
+	// zoom actions
+	private final Action zoomInAction = new ZoomInAction(camera);
+	private final Action zoomOutAction = new ZoomOutAction(camera);
+	private final Action zoomMaxAction = new ZoomMaxAction(camera, sliceViewer);
+	private final Action resetZoomAction = new ResetZoomAction(sliceViewer);
+	// Z scan actions
 	private final Action nextZSliceAction = new NextZSliceAction(sliceViewer, sliceViewer);
 	private final Action previousZSliceAction = new PreviousZSliceAction(sliceViewer, sliceViewer);
 	private final Action advanceZSlicesAction = new AdvanceZSlicesAction(sliceViewer, sliceViewer, 10);
 	private final Action goBackZSlicesAction = new GoBackZSlicesAction(sliceViewer, sliceViewer, -10);
 
+	// Slots
+	protected Slot1<Vec3> changeZ = new Slot1<Vec3>(this) {
+		@Override
+		public void execute(Vec3 focus) {
+			int z = (int)Math.round(focus.getZ() / sliceViewer.getZResolution());
+			zScanSlider.setValue(z);
+			zScanSpinner.setValue(z);
+		}
+	};
+
+	protected Slot1<Double> changeZoom = new Slot1<Double>(this) {
+		@Override
+		public void execute(Double zoom) {
+			double zoomMin = Math.log(sliceViewer.getMinZoom()) / Math.log(2.0);
+			double zoomMax = Math.log(sliceViewer.getMaxZoom()) / Math.log(2.0);
+			double zoomLog = Math.log(zoom) / Math.log(2.0);
+			double relativeZoom = (zoomLog - zoomMin) / (zoomMax - zoomMin);
+			int sliderValue = (int)Math.round(relativeZoom * 1000.0);
+			zoomSlider.setValue(sliderValue);
+		}
+	};
+	
+	protected Slot1<URL> rememberLoadedFileSlot = new Slot1<URL>(this) {
+		@Override
+		public void execute(URL url) {
+			if (recentFileList == null)
+				return;
+			recentFileList.add(url);
+		}
+	};
+	
+	protected Slot updateRangesSlot = new Slot() {
+		@Override
+		public void execute() 
+		{
+			// Z range
+			double zMin = sliceViewer.getBoundingBox3d().getMin().getZ();
+			double zMax = sliceViewer.getBoundingBox3d().getMax().getZ();
+			int z0 = (int)Math.round(zMin / sliceViewer.getZResolution());
+			int z1 = (int)Math.round(zMax / sliceViewer.getZResolution());
+			assert z1 >= z0;
+			// Z-scan is only relevant if there is more than one slice.
+			boolean useZScan = ((z1 - z0) > 1);
+			if (useZScan) {
+				zScanPanel.setVisible(true);
+				sliceViewer.setWheelMode(new ZScanMode(sliceViewer));
+				zScanScrollModeAction.setEnabled(true);
+				zScanScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
+				int z = (int)Math.round(sliceViewer.getFocus().getZ() / sliceViewer.getZResolution());
+				if (z < z0)
+					z = z0;
+				if (z > z1)
+					z = z1;
+				zScanSlider.setMinimum(z0);
+				zScanSlider.setMaximum(z1);
+				zScanSlider.setValue(z);
+				zScanSpinner.setModel(new SpinnerNumberModel(z, z0, z1, 1));
+			}
+			else { // no Z scan
+				zScanPanel.setVisible(false);
+				zoomScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
+				zScanScrollModeAction.setEnabled(false);
+			}
+		}
+		// TODO update zoom range too?
+	};
+	
 	/**
 	 * Launch the application.
 	 */
@@ -93,90 +192,217 @@ public class QuadViewUi extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public QuadViewUi() {
-		setResizable(false);
+	public QuadViewUi() 
+	{
+		setupUi();
+		interceptModifierKeyPresses();
+	}
+
+	private void setupUi() {
 		setTitle("QuadView");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setResizable(true);
+		
 		setBounds(100, 100, 967, 726);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);
 		contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
 		
-		JMenuBar menuBar = new JMenuBar();
-		setJMenuBar(menuBar);
+		JPanel glassPane = new HudPanel();
+		setGlassPane(glassPane);
+		// glassPane.setVisible(true);
 		
-		JMenu mnFile = new JMenu("File");
-		menuBar.add(mnFile);
+		setupMenu();
 		
-		JMenu mnEdit = new JMenu("Edit");
-		menuBar.add(mnEdit);
+		JPanel toolBarPanel = setupToolBar();
 		
-		JMenu mnView = new JMenu("View");
-		menuBar.add(mnView);
+		JSplitPane splitPane = new JSplitPane();
+		splitPane.setResizeWeight(0.95);
+		splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
+		toolBarPanel.add(splitPane, BorderLayout.CENTER);
 		
-		JMenu mnMouseMode = new JMenu("Mouse Mode");
-		mnMouseMode.setIcon(new ImageIcon(QuadViewUi.class.getResource("/images/mouse_left.png")));
-		mnView.add(mnMouseMode);
+		JPanel colorPanel = new JPanel();
+		splitPane.setRightComponent(colorPanel);
+		colorPanel.setLayout(new BoxLayout(colorPanel, BoxLayout.Y_AXIS));
 		
-		JRadioButtonMenuItem panModeItem = new JRadioButtonMenuItem("New radio item");
-		panModeItem.setSelected(true);
-		panModeItem.setAction(panModeAction);
-		mnMouseMode.add(panModeItem);
+		TripleSlider slider_1 = new TripleSlider();
+		colorPanel.add(slider_1);
 		
-		JRadioButtonMenuItem zoomMouseModeItem = new JRadioButtonMenuItem("New radio item");
-		zoomMouseModeItem.setAction(zoomMouseModeAction);
-		mnMouseMode.add(zoomMouseModeItem);
+		JSplitPane splitPane_1 = new JSplitPane();
+		splitPane_1.setResizeWeight(1.00);
+		splitPane.setLeftComponent(splitPane_1);
 		
-		JMenu mnScrollMode = new JMenu("Scroll Mode");
-		mnScrollMode.setIcon(new ImageIcon(QuadViewUi.class.getResource("/images/mouse_scroll.png")));
-		mnView.add(mnScrollMode);
+		JPanel viewerPanel = new JPanel();
+		splitPane_1.setLeftComponent(viewerPanel);
+		viewerPanel.setLayout(new BoxLayout(viewerPanel, BoxLayout.Y_AXIS));
 		
-		JRadioButtonMenuItem rdbtnmntmNewRadioItem = new JRadioButtonMenuItem("New radio item");
-		rdbtnmntmNewRadioItem.setSelected(true);
-		rdbtnmntmNewRadioItem.setAction(scanScrollModeAction);
-		mnScrollMode.add(rdbtnmntmNewRadioItem);
+		// SliceViewer sliceViewer = new SliceViewer();
+		sliceViewer.setCamera(camera);
+		sliceViewer.setBackground(Color.DARK_GRAY);
+		viewerPanel.add(sliceViewer);
+        sliceViewer.getDataChangedSignal().connect(updateRangesSlot);
+		sliceViewer.getZoomChangedSignal().connect(changeZoom);
+        sliceViewer.getCamera().getFocusChangedSignal().connect(changeZ);
+		sliceViewer.getFileLoadedSignal().connect(rememberLoadedFileSlot);
 		
-		JRadioButtonMenuItem mntmNewMenuItem_2 = new JRadioButtonMenuItem("New menu item");
-		mntmNewMenuItem_2.setAction(zoomScrollModeAction);
-		mnScrollMode.add(mntmNewMenuItem_2);
+		// JPanel zScanPanel = new JPanel();
+		viewerPanel.add(zScanPanel);
+		zScanPanel.setLayout(new BoxLayout(zScanPanel, BoxLayout.X_AXIS));
+	
+        ToolButton button_2 = new ToolButton(goBackZSlicesAction);
+		button_2.setAction(goBackZSlicesAction);
+		button_2.setMargin(new Insets(0, 0, 0, 0));
+		button_2.setHideActionText(true);
+		button_2.setAlignmentX(0.5f);
+		zScanPanel.add(button_2);
 		
-		JSeparator separator = new JSeparator();
-		mnView.add(separator);
+		ToolButton button_1 = new ToolButton(previousZSliceAction);
+		button_1.setAction(previousZSliceAction);
+		button_1.setMargin(new Insets(0, 0, 0, 0));
+		button_1.setHideActionText(true);
+		button_1.setAlignmentX(0.5f);
+		zScanPanel.add(button_1);
+		zScanSlider.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent arg0) {
+				setZSlice((Integer)zScanSlider.getValue());
+			}
+		});
 		
-		JMenu mnZoom = new JMenu("Zoom");
-		mnView.add(mnZoom);
+		// JSlider zScanSlider = new JSlider();
+		zScanSlider.setPreferredSize(new Dimension(32767, 29));
+		zScanSlider.setMajorTickSpacing(10);
+		zScanSlider.setPaintTicks(true);
+		zScanPanel.add(zScanSlider);
 		
-		JMenuItem zoomMinItem = mnZoom.add(resetZoomAction);
+		ToolButton button_3 = new ToolButton(nextZSliceAction);
+		button_3.setAction(nextZSliceAction);
+		button_3.setMargin(new Insets(0, 0, 0, 0));
+		button_3.setHideActionText(true);
+		button_3.setAlignmentX(0.5f);
+		zScanPanel.add(button_3);
 		
-		JMenuItem zoomOutItem = mnZoom.add(zoomOutAction);
+		ToolButton button_4 = new ToolButton(advanceZSlicesAction);
+		button_4.setAction(advanceZSlicesAction);
+		button_4.setMargin(new Insets(0, 0, 0, 0));
+		button_4.setHideActionText(true);
+		button_4.setAlignmentX(0.5f);
+		zScanPanel.add(button_4);
+		zScanSpinner.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent arg0) {
+				setZSlice((Integer)zScanSpinner.getValue());
+			}
+		});
 		
-		JMenuItem zoomInItem = mnZoom.add(zoomInAction);
+		// JSpinner zScanSpinner = new JSpinner();
+		zScanSpinner.setPreferredSize(new Dimension(75, 28));
+		zScanSpinner.setMaximumSize(new Dimension(120, 28));
+		zScanSpinner.setMinimumSize(new Dimension(65, 28));
+		zScanPanel.add(zScanSpinner);
 		
-		JMenuItem zoomMaxItem = mnZoom.add(zoomMaxAction);
+		JPanel controlsPanel = new JPanel();
+		splitPane_1.setRightComponent(controlsPanel);
+		controlsPanel.setLayout(new BoxLayout(controlsPanel, BoxLayout.X_AXIS));
 		
-		JSeparator separator_1 = new JSeparator();
-		mnView.add(separator_1);
+		JPanel panel_1 = new JPanel();
+		panel_1.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
+		controlsPanel.add(panel_1);
+		panel_1.setLayout(new BoxLayout(panel_1, BoxLayout.Y_AXIS));
 		
-		JMenu mnZScan = new JMenu("Z Scan");
-		mnView.add(mnZScan);
+		ToolButton btnNewButton_2 = new ToolButton(zoomInAction);
+		btnNewButton_2.setAlignmentX(0.5f);
+		btnNewButton_2.setMargin(new Insets(0, 0, 0, 0));
+		btnNewButton_2.setHideActionText(true);
+		btnNewButton_2.setAction(zoomInAction);
+		panel_1.add(btnNewButton_2);
+		zoomSlider.setMaximum(1000);
 		
-		JMenuItem mntmNewMenuItem = new JMenuItem("New menu item");
-		mntmNewMenuItem.setAction(goBackZSlicesAction);
-		mnZScan.add(mntmNewMenuItem);
+		// JSlider zoomSlider = new JSlider();
+		zoomSlider.setOrientation(SwingConstants.VERTICAL);
+		panel_1.add(zoomSlider);
+		zoomSlider.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent arg0) {
+				int value = zoomSlider.getValue();
+				double relativeZoom = value / 1000.0;
+				// log scale
+				double zoomMin = Math.log(sliceViewer.getMinZoom()) / Math.log(2.0);
+				double zoomMax = Math.log(sliceViewer.getMaxZoom()) / Math.log(2.0);
+				double zoom = zoomMin + relativeZoom * (zoomMax - zoomMin);
+				zoom = Math.pow(2.0, zoom);
+				sliceViewer.setPixelsPerSceneUnit(zoom);
+			}
+		});
 		
-		JMenuItem menuItem_2 = new JMenuItem("New menu item");
-		menuItem_2.setAction(previousZSliceAction);
-		mnZScan.add(menuItem_2);
+		ToolButton button = new ToolButton(zoomOutAction);
+		button.setAction(zoomOutAction);
+		button.setMargin(new Insets(0, 0, 0, 0));
+		button.setHideActionText(true);
+		button.setAlignmentX(0.5f);
+		panel_1.add(button);
 		
-		JMenuItem menuItem_1 = new JMenuItem("New menu item");
-		menuItem_1.setAction(nextZSliceAction);
-		mnZScan.add(menuItem_1);
+		JPanel buttonsPanel = new JPanel();
+		controlsPanel.add(buttonsPanel);
+		buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
 		
-		JMenuItem menuItem = new JMenuItem("New menu item");
-		menuItem.setAction(advanceZSlicesAction);
-		mnZScan.add(menuItem);
+		JButton btnNewButton_1 = new JButton("New button");
+		btnNewButton_1.setAction(resetZoomAction);
+		buttonsPanel.add(btnNewButton_1);
 		
+		JButton btnNewButton = new JButton("New button");
+		btnNewButton.setAction(zoomMaxAction);
+		buttonsPanel.add(btnNewButton);
+		
+		JButton resetViewButton = new JButton("New button");
+		resetViewButton.setAction(resetViewAction);
+		buttonsPanel.add(resetViewButton);
+		
+		Component verticalGlue = Box.createVerticalGlue();
+		buttonsPanel.add(verticalGlue);
+		
+		JPanel statusBar = new JPanel();
+		statusBar.setMaximumSize(new Dimension(32767, 30));
+		statusBar.setMinimumSize(new Dimension(10, 30));
+		contentPane.add(statusBar);
+		statusBar.setLayout(new BoxLayout(statusBar, BoxLayout.X_AXIS));
+		
+		JLabel lblNewLabel = new JLabel("status area");
+		statusBar.add(lblNewLabel);
+	}
+
+	private void interceptModifierKeyPresses() 
+	{ 
+        // Intercept Shift key strokes at the highest level JComponent we can find.
+        InputMap inputMap = contentPane.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, KeyEvent.SHIFT_DOWN_MASK, false),
+        		"ModifierPressed");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, KeyEvent.CTRL_DOWN_MASK, false),
+        		"ModifierPressed");
+        
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, 0, true),
+				"ModifierReleased");
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0, true),
+				"ModifierReleased");
+
+        ActionMap actionMap = contentPane.getActionMap();
+        actionMap.put("ModifierPressed", new AbstractAction() 
+        {
+			private static final long serialVersionUID = 1L;
+			@Override
+            public void actionPerformed(ActionEvent e) {
+                setModifierKeyPressed(true);
+            }
+        });
+        actionMap.put("ModifierReleased", new AbstractAction() 
+        {
+			private static final long serialVersionUID = 1L;
+			@Override
+            public void actionPerformed(ActionEvent e) {
+                setModifierKeyPressed(false);
+            }
+        });
+	}
+
+	private JPanel setupToolBar() {
 		JPanel toolBarPanel = new JPanel();
 		contentPane.add(toolBarPanel);
 		toolBarPanel.setLayout(new BorderLayout(0, 0));
@@ -217,7 +443,7 @@ public class QuadViewUi extends JFrame {
 		JToggleButton toggleButton = new JToggleButton("");
 		scrollModeGroup.add(toggleButton);
 		toggleButton.setSelected(true);
-		toggleButton.setAction(scanScrollModeAction);
+		toggleButton.setAction(zScanScrollModeAction);
 		toggleButton.setMargin(new Insets(0, 0, 0, 0));
 		toggleButton.setHideActionText(true);
 		toggleButton.setFocusable(false);
@@ -232,130 +458,121 @@ public class QuadViewUi extends JFrame {
 		toolBar.add(toggleButton_1);
 		
 		toolBar.addSeparator();
+		return toolBarPanel;
+	}
+
+	private void setModifierKeyPressed(boolean pressed) 
+	{
+		// Has the status changed since last time?
+		if (pressed == modifierKeyPressed)
+			return; // no change
+		modifierKeyPressed = pressed; // changed!
+		// Shift to select zoom scroll mode
+		if (pressed)
+			zoomScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
+		else if (zScanScrollModeAction.isEnabled())
+			zScanScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
+	}
+	
+	private boolean setZSlice(int z) {
+		Vec3 oldFocus = sliceViewer.getFocus();
+		int oldValue = (int)Math.round(oldFocus.getZ() / sliceViewer.getZResolution());
+		if (oldValue == z)
+			return false; // camera is already pretty close
+		double newZ = z * sliceViewer.getZResolution();
+		double minZ = sliceViewer.getBoundingBox3d().getMin().getZ();
+		double maxZ = sliceViewer.getBoundingBox3d().getMax().getZ();
+		newZ = Math.max(newZ, minZ);
+		newZ = Math.min(newZ, maxZ);
+		sliceViewer.setFocus(new Vec3(oldFocus.getX(), oldFocus.getY(), newZ));
+		return true;
+	}
+
+	private void setupMenu() {
+		JMenuBar menuBar = new JMenuBar();
+		setJMenuBar(menuBar);
 		
-		JSplitPane splitPane = new JSplitPane();
-		splitPane.setResizeWeight(0.95);
-		splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
-		toolBarPanel.add(splitPane, BorderLayout.CENTER);
+		JMenu mnFile = new JMenu("File");
+		menuBar.add(mnFile);
 		
-		JPanel colorPanel = new JPanel();
-		splitPane.setRightComponent(colorPanel);
-		colorPanel.setLayout(new BoxLayout(colorPanel, BoxLayout.Y_AXIS));
+		JMenuItem mntmNewMenuItem_1 = new JMenuItem("New menu item");
+		mntmNewMenuItem_1.setAction(openFolderAction);
+		mnFile.add(mntmNewMenuItem_1);
 		
-		TripleSlider slider_1 = new TripleSlider();
-		colorPanel.add(slider_1);
+		JMenu mnNewMenu = new JMenu("Open Recent");
+		mnNewMenu.setVisible(false);
+		mnFile.add(mnNewMenu);
+		recentFileList = new RecentFileList(mnNewMenu);
+		sliceViewer.getFileLoadedSignal().connect(rememberLoadedFileSlot);
+		recentFileList.getOpenUrlRequestedSignal().connect(sliceViewer.getLoadUrlSlot());
 		
-		JSplitPane splitPane_1 = new JSplitPane();
-		splitPane_1.setResizeWeight(1.00);
-		splitPane.setLeftComponent(splitPane_1);
+		JMenu mnEdit = new JMenu("Edit");
+		menuBar.add(mnEdit);
 		
-		JPanel viewerPanel = new JPanel();
-		splitPane_1.setLeftComponent(viewerPanel);
-		viewerPanel.setLayout(new BoxLayout(viewerPanel, BoxLayout.Y_AXIS));
+		JMenu mnView = new JMenu("View");
+		menuBar.add(mnView);
 		
-		// SliceViewer sliceViewer = new SliceViewer();
-		sliceViewer.setCamera(camera);
-		sliceViewer.setBackground(Color.DARK_GRAY);
-		viewerPanel.add(sliceViewer);
+		JMenu mnMouseMode = new JMenu("Mouse Mode");
+		mnMouseMode.setIcon(new ImageIcon(QuadViewUi.class.getResource("/images/mouse_left.png")));
+		mnView.add(mnMouseMode);
 		
-		JPanel zScanPanel = new JPanel();
-		viewerPanel.add(zScanPanel);
-		zScanPanel.setLayout(new BoxLayout(zScanPanel, BoxLayout.X_AXIS));
+		JRadioButtonMenuItem panModeItem = new JRadioButtonMenuItem("New radio item");
+		panModeItem.setSelected(true);
+		panModeItem.setAction(panModeAction);
+		mnMouseMode.add(panModeItem);
 		
-		ToolButton button_2 = new ToolButton(goBackZSlicesAction);
-		button_2.setAction(goBackZSlicesAction);
-		button_2.setMargin(new Insets(0, 0, 0, 0));
-		button_2.setHideActionText(true);
-		button_2.setAlignmentX(0.5f);
-		zScanPanel.add(button_2);
+		JRadioButtonMenuItem zoomMouseModeItem = new JRadioButtonMenuItem("New radio item");
+		zoomMouseModeItem.setAction(zoomMouseModeAction);
+		mnMouseMode.add(zoomMouseModeItem);
 		
-		ToolButton button_1 = new ToolButton(previousZSliceAction);
-		button_1.setAction(previousZSliceAction);
-		button_1.setMargin(new Insets(0, 0, 0, 0));
-		button_1.setHideActionText(true);
-		button_1.setAlignmentX(0.5f);
-		zScanPanel.add(button_1);
+		JMenu mnScrollMode = new JMenu("Scroll Mode");
+		mnScrollMode.setIcon(new ImageIcon(QuadViewUi.class.getResource("/images/mouse_scroll.png")));
+		mnView.add(mnScrollMode);
 		
-		JSlider zScanSlider = new JSlider();
-		zScanSlider.setPreferredSize(new Dimension(32767, 29));
-		zScanSlider.setMajorTickSpacing(10);
-		zScanSlider.setPaintTicks(true);
-		zScanPanel.add(zScanSlider);
+		JRadioButtonMenuItem rdbtnmntmNewRadioItem = new JRadioButtonMenuItem("New radio item");
+		rdbtnmntmNewRadioItem.setSelected(true);
+		rdbtnmntmNewRadioItem.setAction(zScanScrollModeAction);
+		mnScrollMode.add(rdbtnmntmNewRadioItem);
 		
-		ToolButton button_3 = new ToolButton(nextZSliceAction);
-		button_3.setAction(nextZSliceAction);
-		button_3.setMargin(new Insets(0, 0, 0, 0));
-		button_3.setHideActionText(true);
-		button_3.setAlignmentX(0.5f);
-		zScanPanel.add(button_3);
+		JRadioButtonMenuItem mntmNewMenuItem_2 = new JRadioButtonMenuItem("New menu item");
+		mntmNewMenuItem_2.setAction(zoomScrollModeAction);
+		mnScrollMode.add(mntmNewMenuItem_2);
 		
-		ToolButton button_4 = new ToolButton(advanceZSlicesAction);
-		button_4.setAction(advanceZSlicesAction);
-		button_4.setMargin(new Insets(0, 0, 0, 0));
-		button_4.setHideActionText(true);
-		button_4.setAlignmentX(0.5f);
-		zScanPanel.add(button_4);
+		JSeparator separator = new JSeparator();
+		mnView.add(separator);
 		
-		JSpinner zSliceSpinner = new JSpinner();
-		zSliceSpinner.setPreferredSize(new Dimension(75, 28));
-		zSliceSpinner.setMaximumSize(new Dimension(120, 28));
-		zSliceSpinner.setMinimumSize(new Dimension(65, 28));
-		zScanPanel.add(zSliceSpinner);
+		JMenu mnZoom = new JMenu("Zoom");
+		mnView.add(mnZoom);
 		
-		JPanel controlsPanel = new JPanel();
-		splitPane_1.setRightComponent(controlsPanel);
-		controlsPanel.setLayout(new BoxLayout(controlsPanel, BoxLayout.X_AXIS));
+		mnZoom.add(resetZoomAction);
+		mnZoom.add(zoomOutAction);
+		mnZoom.add(zoomInAction);
+		mnZoom.add(zoomMaxAction);
 		
-		JPanel panel_1 = new JPanel();
-		panel_1.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-		controlsPanel.add(panel_1);
-		panel_1.setLayout(new BoxLayout(panel_1, BoxLayout.Y_AXIS));
+		JSeparator separator_1 = new JSeparator();
+		mnView.add(separator_1);
 		
-		ToolButton btnNewButton_2 = new ToolButton(zoomInAction);
-		btnNewButton_2.setAlignmentX(0.5f);
-		btnNewButton_2.setMargin(new Insets(0, 0, 0, 0));
-		btnNewButton_2.setHideActionText(true);
-		btnNewButton_2.setAction(zoomInAction);
-		panel_1.add(btnNewButton_2);
+		JMenu mnZScan = new JMenu("Z Scan");
+		mnView.add(mnZScan);
 		
-		JSlider slider = new JSlider();
-		slider.setOrientation(SwingConstants.VERTICAL);
-		panel_1.add(slider);
+		JMenuItem mntmNewMenuItem = new JMenuItem("New menu item");
+		mntmNewMenuItem.setAction(goBackZSlicesAction);
+		mnZScan.add(mntmNewMenuItem);
 		
-		ToolButton button = new ToolButton(zoomOutAction);
-		button.setAction(zoomOutAction);
-		button.setMargin(new Insets(0, 0, 0, 0));
-		button.setHideActionText(true);
-		button.setAlignmentX(0.5f);
-		panel_1.add(button);
+		JMenuItem menuItem_2 = new JMenuItem("New menu item");
+		menuItem_2.setAction(previousZSliceAction);
+		mnZScan.add(menuItem_2);
 		
-		JPanel buttonsPanel = new JPanel();
-		controlsPanel.add(buttonsPanel);
-		buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
+		JMenuItem menuItem_1 = new JMenuItem("New menu item");
+		menuItem_1.setAction(nextZSliceAction);
+		mnZScan.add(menuItem_1);
 		
-		JButton btnNewButton_1 = new JButton("New button");
-		btnNewButton_1.setAction(resetZoomAction);
-		buttonsPanel.add(btnNewButton_1);
+		JMenuItem menuItem = new JMenuItem("New menu item");
+		menuItem.setAction(advanceZSlicesAction);
+		mnZScan.add(menuItem);
 		
-		JButton btnNewButton = new JButton("New button");
-		btnNewButton.setAction(zoomMaxAction);
-		buttonsPanel.add(btnNewButton);
-		
-		JButton resetViewButton = new JButton("New button");
-		resetViewButton.setAction(resetViewAction);
-		buttonsPanel.add(resetViewButton);
-		
-		Component verticalGlue = Box.createVerticalGlue();
-		buttonsPanel.add(verticalGlue);
-		
-		JPanel statusBar = new JPanel();
-		statusBar.setMaximumSize(new Dimension(32767, 30));
-		statusBar.setMinimumSize(new Dimension(10, 30));
-		contentPane.add(statusBar);
-		statusBar.setLayout(new BoxLayout(statusBar, BoxLayout.X_AXIS));
-		
-		JLabel lblNewLabel = new JLabel("status area");
-		statusBar.add(lblNewLabel);
+		JMenu mnHelp = new JMenu("Help");
+		menuBar.add(mnHelp);
 	}
 
 }

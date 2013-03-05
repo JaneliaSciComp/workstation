@@ -66,10 +66,10 @@ extends JFrame
 	private static final Logger log = LoggerFactory.getLogger(QuadView.class);
 	
 	protected SliceViewer sliceViewer = new SliceViewer();
+	private final Action openFolderAction = new OpenFolderAction(sliceViewer, sliceViewer);
 	protected Action resetViewAction = new ResetViewAction(sliceViewer);
 	protected Action resetZoomAction = new ResetZoomAction(sliceViewer);
 	protected Action panModeAction = new PanModeAction(sliceViewer);
-	protected Action openFolderAction = new OpenFolderAction(sliceViewer, sliceViewer);
 	protected RecentFileList recentFileList;
 	protected boolean modifierKeyPressed = false;
 	protected JPanel motherPanel = new JPanel(); // Container for all but status bar
@@ -92,7 +92,7 @@ extends JFrame
 	protected Action advanceZSlicesAction = new AdvanceZSlicesAction(sliceViewer, sliceViewer, 10);
 	protected Action goBackZSlicesAction = new GoBackZSlicesAction(sliceViewer, sliceViewer, -10);
 	
-	protected QtSlot1<Vec3> changeZ = new QtSlot1<Vec3>(this) {
+	protected Slot1<Vec3> changeZ = new Slot1<Vec3>(this) {
 		@Override
 		public void execute(Vec3 focus) {
 			int z = (int)Math.round(focus.getZ() / sliceViewer.getZResolution());
@@ -101,7 +101,7 @@ extends JFrame
 		}
 	};
 
-	protected QtSlot1<Double> changeZoom = new QtSlot1<Double>(this) {
+	protected Slot1<Double> changeZoom = new Slot1<Double>(this) {
 		@Override
 		public void execute(Double zoom) {
 			double zoomMin = Math.log(sliceViewer.getMinZoom()) / Math.log(2.0);
@@ -113,7 +113,7 @@ extends JFrame
 		}
 	};
 	
-	protected QtSlot1<URL> rememberLoadedFileSlot = new QtSlot1<URL>(this) {
+	protected Slot1<URL> rememberLoadedFileSlot = new Slot1<URL>(this) {
 		@Override
 		public void execute(URL url) {
 			if (recentFileList == null)
@@ -122,7 +122,7 @@ extends JFrame
 		}
 	};
 	
-	protected QtSlot updateRangesSlot = new QtSlot() {
+	protected Slot updateRangesSlot = new Slot() {
 		@Override
 		public void execute() 
 		{

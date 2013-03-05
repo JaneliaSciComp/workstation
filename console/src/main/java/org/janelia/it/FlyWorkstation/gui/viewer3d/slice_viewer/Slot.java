@@ -2,20 +2,14 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.util.Observable;
 
-public abstract class QtSlot1<T> 
-implements QtBasicSignalSlot1<T>
+public abstract class Slot
+implements BasicSignalSlot
 {
-	protected Object receiver;
-
-	public QtSlot1(Object receiver) {
-		this.receiver = receiver;
-	}
-
 	// Override this execute() method for your particular slot
-	public abstract void execute(T arg);
+	public abstract void execute();
 
 	@Override
 	public void update(Observable o, Object arg) {
-		execute( (T) arg);	
+		execute();	
 	}
 }

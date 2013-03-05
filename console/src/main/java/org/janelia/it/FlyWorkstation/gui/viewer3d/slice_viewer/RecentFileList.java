@@ -27,7 +27,7 @@ public class RecentFileList
 	private LinkedList<RecentFileAction> actions = 
 		new LinkedList<RecentFileAction>();
 
-	private QtSignal1<URL> openUrlRequestedSignal = new QtSignal1<URL>();
+	private Signal1<URL> openUrlRequestedSignal = new Signal1<URL>();
 	
 	RecentFileList(JMenu menu)
 	{
@@ -56,7 +56,7 @@ public class RecentFileList
 		updateMenu();
 	}
 	
-	public QtSignal1<URL> getOpenUrlRequestedSignal() {
+	public Signal1<URL> getOpenUrlRequestedSignal() {
 		return openUrlRequestedSignal;
 	}
 

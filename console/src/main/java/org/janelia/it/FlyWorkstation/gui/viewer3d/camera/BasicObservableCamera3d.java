@@ -5,20 +5,20 @@ import java.util.Observable;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.QtSignal;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.QtSignal1;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal1;
 
 public class BasicObservableCamera3d 
 extends Observable 
 implements Camera3d, ObservableCamera3d
 {
 	private Camera3d camera = new BasicCamera3d();
-	protected QtSignal viewChangedSignal = new QtSignal();
-	protected QtSignal1<Double> zoomChangedSignal = new QtSignal1<Double>();
-	protected QtSignal1<Vec3> focusChangedSignal = new QtSignal1<Vec3>();
+	protected Signal viewChangedSignal = new Signal();
+	protected Signal1<Double> zoomChangedSignal = new Signal1<Double>();
+	protected Signal1<Vec3> focusChangedSignal = new Signal1<Vec3>();
 
 	
-	public QtSignal1<Vec3> getFocusChangedSignal() {
+	public Signal1<Vec3> getFocusChangedSignal() {
 		return focusChangedSignal;
 	}
 
@@ -26,12 +26,12 @@ implements Camera3d, ObservableCamera3d
 	 * @see org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d#getViewChangedSignal()
 	 */
 	@Override
-	public QtSignal getViewChangedSignal() {
+	public Signal getViewChangedSignal() {
 		return viewChangedSignal;
 	}
 	
 	@Override
-	public QtSignal1<Double> getZoomChangedSignal() {
+	public Signal1<Double> getZoomChangedSignal() {
 		return zoomChangedSignal;
 	}
 

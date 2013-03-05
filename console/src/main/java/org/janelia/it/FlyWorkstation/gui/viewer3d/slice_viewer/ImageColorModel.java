@@ -21,7 +21,7 @@ public class ImageColorModel
 	private boolean gammaSynchronized = true;
 	private boolean whiteSynchronized = true;
 
-	private QtSignal colorModelChangedSignal = new QtSignal();
+	private Signal colorModelChangedSignal = new Signal();
 
 	
 	public ImageColorModel() {
@@ -66,7 +66,7 @@ public class ImageColorModel
 		this.whiteSynchronized = whiteSynchronized;
 	}
 
-	public QtSignal getColorModelChangedSignal() {
+	public Signal getColorModelChangedSignal() {
 		return colorModelChangedSignal;
 	}
 

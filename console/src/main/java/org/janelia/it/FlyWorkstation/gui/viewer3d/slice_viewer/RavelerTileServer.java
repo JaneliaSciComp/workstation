@@ -40,9 +40,9 @@ implements VolumeImage3d
 	private Camera3d camera;
 	private Viewport viewport;
 	// signal for tile loaded
-	private QtSignal dataChangedSignal = new QtSignal();
+	private Signal dataChangedSignal = new Signal();
 	private double zoomOffset = 0.5; // tradeoff between optimal resolution (0.0) and speed.
-	private QtSignal volumeInitializedSignal = new QtSignal();
+	private Signal volumeInitializedSignal = new Signal();
 	
 	
 	public RavelerTileServer(String folderName) {
@@ -136,7 +136,7 @@ implements VolumeImage3d
 	}
 
 	@Override
-	public QtSignal getDataChangedSignal() {
+	public Signal getDataChangedSignal() {
 		return dataChangedSignal;
 	}
 
@@ -148,7 +148,7 @@ implements VolumeImage3d
 		return viewport;
 	}
 
-	public QtSignal getVolumeInitializedSignal() {
+	public Signal getVolumeInitializedSignal() {
 		return volumeInitializedSignal;
 	}
 

@@ -4,16 +4,16 @@ import java.util.Observable;
 
 
 // Java Observable that acts a bit like a Qt Signal
-public class QtSignal
+public class Signal
 extends Observable
-implements QtBasicSignalSlot
+implements BasicSignalSlot
 {
 	public void emit() {
 		setChanged();
 		notifyObservers();
 	}
 	
-	public void connect(QtBasicSignalSlot dest) {
+	public void connect(BasicSignalSlot dest) {
 		addObserver(dest);
 	}
 

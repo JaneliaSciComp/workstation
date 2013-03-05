@@ -32,7 +32,7 @@ public class Simple2dImageVolume implements VolumeImage3d, GLActor
 	boolean isSrgbApplied = false; // Whether sRGB color correction is already applied to texture
 	int channelCount = 0;
 	int maxIntensity = 255;
-	private QtSignal dataChangedSignal = new QtSignal();
+	private Signal dataChangedSignal = new Signal();
 	
 	Simple2dImageVolume(String fileName) {
 		try {
@@ -135,7 +135,7 @@ public class Simple2dImageVolume implements VolumeImage3d, GLActor
 	}
 
 	@Override
-	public QtSignal getDataChangedSignal() {
+	public Signal getDataChangedSignal() {
 		return dataChangedSignal;
 	}
 

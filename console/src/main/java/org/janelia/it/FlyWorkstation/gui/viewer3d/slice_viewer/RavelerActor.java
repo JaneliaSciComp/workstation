@@ -80,9 +80,9 @@ implements GLActor
 	private ExecutorService textureLoadExecutor = Executors.newFixedThreadPool(4);
 	private Set<TileIndex> neededTextures;
 	
-	private QtSignal dataChangedSignal = new QtSignal();
+	private Signal dataChangedSignal = new Signal();
 	
-	private QtSlot clearDataSlot = new QtSlot() {
+	private Slot clearDataSlot = new Slot() {
 		@Override
 		public void execute() {
 			needsGlDisposal = true;
@@ -182,7 +182,7 @@ implements GLActor
 		return server.getBoundingBox3d();
 	}
 	
-	public QtSignal getDataChangedSignal() {
+	public Signal getDataChangedSignal() {
 		return dataChangedSignal;
 	}
 

@@ -21,7 +21,7 @@ public class RecentFileAction extends AbstractAction
 	private static final Logger log = LoggerFactory.getLogger(RecentFileAction.class);
 	
 	private URL url;
-	private QtSignal1<URL> openFileRequestedSignal = new QtSignal1<URL>();
+	private Signal1<URL> openFileRequestedSignal = new Signal1<URL>();
 
 	RecentFileAction(URL url) {
 		setUrl(url);
@@ -62,7 +62,7 @@ public class RecentFileAction extends AbstractAction
 		putValue(SHORT_DESCRIPTION, "Load image from " + url.toString());
 	}
 
-	public QtSignal1<URL> getOpenFileRequestedSignal() {
+	public Signal1<URL> getOpenFileRequestedSignal() {
 		return openFileRequestedSignal;
 	}
 

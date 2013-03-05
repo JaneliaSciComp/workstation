@@ -20,7 +20,7 @@ import javax.swing.event.ChangeListener;
  * @author Christopher M. Bruns
  *
  */
-public class TripleSlider extends JSlider
+public class TripleSlider extends CombinedJSliderHandle
 implements MouseListener, MouseMotionListener
 {
 	private static final long serialVersionUID = 1L;
@@ -89,6 +89,7 @@ implements MouseListener, MouseMotionListener
 
 	protected void delegateMouseEvent(MouseEvent event) 
 	{
+		/*
 		// Use recently activated slider
 		CombinedJSliderHandle slider = activeSlider;
 		// ...or whatever slider is near the mouse
@@ -110,6 +111,7 @@ implements MouseListener, MouseMotionListener
 				event.isPopupTrigger(),
 				event.getButton());
 		slider.processEvent(e);
+		*/
 	}
 	
 	public BoundedRangeModel getBlackModel() {
@@ -181,6 +183,8 @@ implements MouseListener, MouseMotionListener
 	
 	@Override
 	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		/*
 		// black slider
 		Rectangle r = blackSlider.getBounds();
 		g.translate(r.x, r.y);
@@ -190,6 +194,8 @@ implements MouseListener, MouseMotionListener
 		g.translate(r.x, r.y); // only on Mac?
 		whiteSlider.paint(g);
 		// TODO - gamma slider
+		 * 
+		 */
 	}
 
 	@Override

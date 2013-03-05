@@ -22,7 +22,7 @@ public class RubberBand
 	protected Point endPoint = new Point(30, 30);
 	boolean visible = false;
 
-	public QtSignal changed = new QtSignal();
+	public Signal changed = new Signal();
 	
 	public Point getStartPoint() {
 		return startPoint;

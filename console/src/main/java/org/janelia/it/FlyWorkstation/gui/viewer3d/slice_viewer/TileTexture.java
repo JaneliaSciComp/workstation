@@ -45,7 +45,7 @@ public class TileTexture
 	private boolean isSrgb = false;
 	private boolean isSrgbApplied = false;
 	private TextureData textureData;
-	private QtSignal ramLoaded = new QtSignal();
+	private Signal ramLoaded = new Signal();
 	private Texture texture;
 
 	public TileTexture(TileIndex index, URL urlStalk) {
@@ -75,7 +75,7 @@ public class TileTexture
 		return index;
 	}
 
-	public QtSignal getRamLoadedSignal() {
+	public Signal getRamLoadedSignal() {
 		return ramLoaded;
 	}
 
