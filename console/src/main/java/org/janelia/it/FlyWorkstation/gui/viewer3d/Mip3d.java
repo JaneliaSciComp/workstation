@@ -62,6 +62,38 @@ public class Mip3d extends BaseGLViewer {
         this.neuronNumToRGB = neuronNumToRGB;
     }
 
+    /**
+     * Load a volume which may have a mask against it.
+     *
+     * @param fileName for signal file data.
+     * @param resolver flexibility: allows different ways of resolving the file, which may be server-based.
+     * @return true if it worked; false otherwise.
+     */
+    public boolean loadVolume(String fileName, FileResolver resolver) {
+        if (clearOnLoad)
+            renderer.clear();
+
+        VolumeLoader volumeLoader = new VolumeLoader(resolver);
+        if (volumeLoader.loadVolume(fileName)) {
+            VolumeBrick brick = new VolumeBrick(renderer);
+            volumeLoader.populateVolumeAcceptor(brick);
+
+            renderer.addActor(brick);
+            renderer.resetView();
+            return true;
+        }
+        else
+            return false;
+    }
+
+    /**
+     * Load a volume which may have a mask against it.
+     *
+     * @param fileName for signal file data.
+     * @param volumeMaskBuilder for mask file data.
+     * @param resolver flexibility: allows different ways of resolving the file, which may be server-based.
+     * @return true if it worked; false otherwise.
+     */
 	public boolean loadVolume(String fileName, VolumeMaskBuilder volumeMaskBuilder, FileResolver resolver) {
         if (clearOnLoad)
             renderer.clear();
@@ -77,11 +109,6 @@ public class Mip3d extends BaseGLViewer {
                     RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
                     renderMapTextureData.setMapping(neuronNumToRGB);
 
-                    // DEBUG ***
-//                    for ( Integer nNum: neuronNumToRGB.keySet() ) {
-//                        byte[] vals = neuronNumToRGB.get( nNum );
-//                        System.out.println(nNum + " vs " + vals[0] + "," + vals[1] + "," + vals[2] + ": " + vals[3]);
-//                    }
                     brick.setColorMapTextureData( renderMapTextureData );
                 }
             }
@@ -93,8 +120,36 @@ public class Mip3d extends BaseGLViewer {
 		else
 			return false;
 	}
-	
-	@Override
+
+    /**
+     * Load a volume which may have a color mask, rather than a voxel mask.
+     *
+     * @param fileName for signal file data.
+     * @param colorMask for mask coloring--not mask texture. Color across all voxels, not fine-grained.
+     * @param resolver flexibility: allows different ways of resolving the file, which may be server-based.
+     * @return true if it worked; false otherwise.
+     */
+    public boolean loadVolume(
+            String fileName, float[] colorMask,  FileResolver resolver
+    ) {
+        if (clearOnLoad)
+            renderer.clear();
+
+        VolumeLoader volumeLoader = new VolumeLoader(resolver);
+        if (volumeLoader.loadVolume(fileName)) {
+            VolumeBrick brick = new VolumeBrick(renderer);
+            brick.setColorMask( colorMask[ 0 ], colorMask[ 1 ], colorMask[ 2 ] );
+            volumeLoader.populateVolumeAcceptor(brick);
+
+            renderer.addActor(brick);
+            renderer.resetView();
+            return true;
+        }
+        else
+            return false;
+    }
+
+    @Override
     public void mouseDragged(MouseEvent event) {
         Point p1 = event.getPoint();
         if (! bMouseIsDragging) {

@@ -62,6 +62,12 @@ public class ConfigurableColorMapping implements RenderMappingI {
                     rgb[ 3 ] = RenderMappingI.PASS_THROUGH_RENDERING;
                 }
             }
+            else {
+                // No-op if non-shader rendering.  Do not add this to the mapping at all.
+                if ( rgb[ 3 ] == RenderMappingI.NO_SHADER_USE ) {
+                    continue;
+                }
+            }
 
             // Placing this here, to benefit from null-catch of RGB array above.
             if ( renderableBean.getRenderableEntity() != null && guidToRenderMethod != null ) {

@@ -68,7 +68,6 @@ public class V3dSignalFileLoader extends TextureDataBuilder implements VolumeFil
             scale = 255.0 / 4095.0; // assume it's 12 bits
 
         argbTextureIntArray = new int[sx*sy*sz];
-        //zeroColors();
         for (int c = 0; c < sc; ++c) {
             // create a mask to manipulate one color byte of a 32-bit ARGB int
             int bitShift = 8 * (c + 2);
@@ -103,15 +102,10 @@ public class V3dSignalFileLoader extends TextureDataBuilder implements VolumeFil
             throws IOException, DataFormatException {
 
         V3dByteReader byteReader = new V3dByteReader();
+        byteReader.setInvertedY( false );
         Set<Integer> values= byteReader.readBytes( sliceStream, sx, sy, sz, pixelBytes );
         textureByteArray = byteReader.getTextureBytes();
         header = sliceStream.getHeaderKey();
-    }
-
-    private void zeroColors() {
-        int numVoxels = argbTextureIntArray.length;
-        for (int v = 0; v < numVoxels; ++v)
-            argbTextureIntArray[v] = 0;
     }
 
 }

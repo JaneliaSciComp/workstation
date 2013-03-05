@@ -104,16 +104,17 @@ class MipRenderer
     }
 
     @Override
-    public void reshape(GLAutoDrawable gLDrawable, int x, int y, int width, int height) 
+    public void reshape(GLAutoDrawable gLDrawable, int x, int y, int width, int height)
     {
-    		// Keep roughly the same view as before by zooming
-    		double zoomRatio = 1.0;
-    		if (heightInPixels > 0) {
-    			zoomRatio = (double)height/heightInPixels;
-    		}
-    		this.widthInPixels = width;
-    		this.heightInPixels = height;
-    		// System.out.println("reshape() called: x = "+x+", y = "+y+", width = "+width+", height = "+height);
+        // Keep roughly the same view as before by zooming
+        double zoomRatio = 1.0;
+        if (heightInPixels > 0) {
+            zoomRatio = (double)height/heightInPixels;
+        }
+        this.widthInPixels = width;
+        this.heightInPixels = height;
+
+        // System.out.println("reshape() called: x = "+x+", y = "+y+", width = "+width+", height = "+height);
         final GL2 gl = gLDrawable.getGL().getGL2();
  
         if (height <= 0) // avoid a divide by zero error!

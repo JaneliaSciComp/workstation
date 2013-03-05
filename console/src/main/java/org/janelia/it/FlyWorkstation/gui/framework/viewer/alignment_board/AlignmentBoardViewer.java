@@ -227,7 +227,7 @@ public class AlignmentBoardViewer extends Viewer {
                         for(Channels channels : Channels.values()) {
                             log.debug("    * "+size+"/"+channels+" signal: "+vol.getFastVolumePath(ArtifactType.ConsolidatedSignal, size, channels, false));
                         }
-                        log.debug("    * "+size+"/reference: "+vol.getFastVolumePath(ArtifactType.Reference, size, Channels.All, false));
+                        log.info("    * "+size+"/reference: "+vol.getFastVolumePath(ArtifactType.Reference, size, Channels.All, false));
                     }
                     
                     log.debug("  metadata files:");

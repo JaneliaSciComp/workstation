@@ -29,6 +29,7 @@ public class TextureMediator {
     private int textureName;
     private int textureSymbolicId; // This is an ID like GL.GL_TEXTURE0.
     private int textureOffset; // This will be 0, 1, ...
+    private int voxelComponentOrderOverride = -1;
 
     private boolean isInitialized = false;
 
@@ -300,6 +301,11 @@ public class TextureMediator {
         this.textureData = textureData;
     }
 
+    /** Allow client/creator to force a certain component order. */
+    public void setVoxelComponentOrderOverride(int voxelComponentOrderOverride) {
+        this.voxelComponentOrderOverride = voxelComponentOrderOverride;
+    }
+
     private int getStorageFormatMultiplier() {
         int orderId =  getVoxelComponentOrder();
         if ( orderId == GL2.GL_BGRA ) {
@@ -394,17 +400,24 @@ public class TextureMediator {
 
     private int getVoxelComponentOrder() {
         int rtnVal = GL2.GL_BGRA;
-        if ( textureData.getChannelCount() == 1 ) {
-            rtnVal = GL2.GL_LUMINANCE;
-        }
-        if ( rtnVal == GL2.GL_LUMINANCE ) {
-            logger.info("GL_LUMINANCE voxel component order.");
+        if ( voxelComponentOrderOverride > -1 ) {
+            logger.info("OVERRIDDEN voxel component order to {}.", voxelComponentOrderOverride);
+            rtnVal = voxelComponentOrderOverride;
         }
         else {
-            logger.info("GL_BGRA voxel component order.");
+            if ( textureData.getChannelCount() == 1 ) {
+                rtnVal = GL2.GL_LUMINANCE;
+            }
+            if ( rtnVal == GL2.GL_LUMINANCE ) {
+                logger.info("GL_LUMINANCE voxel component order.");
+            }
+            else {
+                logger.info("GL_BGRA voxel component order.");
+            }
         }
         return rtnVal;
     }
+
     //--------------------------- End: Helpers for glTexImage3D
 
     /** Roll the relevant bytes of the integer down into a byte array. */

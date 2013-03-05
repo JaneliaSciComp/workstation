@@ -117,9 +117,11 @@ public class AlignmentBoardDataBuilder implements Serializable {
                                 (byte)255, (byte) 255, (byte) 0, RenderMappingI.NON_RENDERING
                         }
                 );
+                sampleBean.setSignal( true );
 
                 String labelFile = null;
                 MaskedVolume vol = sample.getMaskedVolume();
+                String referenceFile = null;
                 if ( vol != null ) {
                     logger.debug("    subsampled volumes:");
                     for ( MaskedVolume.Size size : MaskedVolume.Size.values() ) {
@@ -127,24 +129,45 @@ public class AlignmentBoardDataBuilder implements Serializable {
                             labelFile = vol.getFastVolumePath(
                                     MaskedVolume.ArtifactType.ConsolidatedLabel, size, MaskedVolume.Channels.All, true
                             );
+
+                            referenceFile = vol.getFastVolumePath(
+                                    MaskedVolume.ArtifactType.Reference, size, MaskedVolume.Channels.All, true
+                            );
+                            break;
                         }
                     }
                     // TEMP  - this would get the original non-down-sampled signal file.
                     //labelFile = vol.getSignalLabelPath();
                 }
+
                 sampleBean.setLabelFile( labelFile );
                 String signalFile = sample.getFast3dImageFilepath();
                 //String signalFile = sample.get3dImageFilepath(); // TEMP
 
                 sampleBean.setSignalFile( signalFile );
-
                 renderableBeanList.add( sampleBean );
+
+                // Reference should be treated as a separate overlaid volume.  Another "signal".
+                if ( referenceFile != null ) {
+                    logger.info( "Reference file is {}.", referenceFile );
+                    RenderableBean referenceBean = new RenderableBean();
+                    referenceBean.setTranslatedNum( 0 );
+                    referenceBean.setRenderableEntity( sample.getInternalEntity() );
+                    referenceBean.setSignalFile( referenceFile );
+                    referenceBean.setSignal( true );
+                    referenceBean.setRgb(
+                            new byte[] {
+                                    (byte)25, (byte) 25, (byte) 25, RenderMappingI.NO_SHADER_USE
+                            }
+                    );
+
+                    renderableBeanList.add( referenceBean );
+                }
 
                 Collection<AlignedItem> childItems = alignedItem.getAlignedItems();
                 int translatedNum = 1;
                 if ( childItems != null ) {
                     for ( AlignedItem item: childItems ) {
-                    // for ( Neuron neuron : neurons ) {
                         if ( item.getItemWrapper() instanceof Neuron ) {
                             RenderableBean neuronBean = createRenderableBean(sampleBean, translatedNum, item);
                             renderableBeanList.add( neuronBean );
@@ -209,9 +232,9 @@ public class AlignmentBoardDataBuilder implements Serializable {
             logger.info( "Neuron color is {} for {}.", neuronColor, item.getItemWrapper().getName() );
             // A Neuron Color was set, but the neuron could still be "turned off" for render.
             byte[] rgb = new byte[ 4 ];
-            rgb[ 0 ] = (byte)neuronColor.getBlue();  // 8_8_8_8_REV Ordering
+            rgb[ 0 ] = (byte)neuronColor.getRed();
             rgb[ 1 ] = (byte)neuronColor.getGreen();
-            rgb[ 2 ] = (byte)neuronColor.getRed();   // 8_8_8_8_REV Ordering
+            rgb[ 2 ] = (byte)neuronColor.getBlue();
             rgb[ 3 ] = item.isVisible()    ?    RenderMappingI.FRAGMENT_RENDERING : RenderMappingI.NON_RENDERING;
             neuronBean.setRgb( rgb );
         }

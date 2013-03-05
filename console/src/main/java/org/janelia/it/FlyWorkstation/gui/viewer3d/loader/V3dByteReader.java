@@ -17,6 +17,7 @@ import java.util.TreeSet;
 public class V3dByteReader {
 
     private byte[] textureByteArray;
+    private boolean invertedY = true;
 
     public byte[] getTextureBytes() {
         return textureByteArray;
@@ -40,7 +41,7 @@ public class V3dByteReader {
             sliceStream.loadNextSlice();
             V3dRawImageStream.Slice slice = sliceStream.getCurrentSlice();
             for (int y = 0; y < sy; y ++ ) {
-                int yOffset = zOffset + (sy-y) * sx;
+                int yOffset = zOffset + calcYOffset(y, sy) * sx;
                 for (int x = 0; x < sx; x ++ ) {
                     Integer value = slice.getValue(x, y);
                     if ( value > 0 ) {
@@ -58,5 +59,11 @@ public class V3dByteReader {
         return values;
     }
 
+    public void setInvertedY(boolean invertedY) {
+        this.invertedY = invertedY;
+    }
 
+    private int calcYOffset( int y, int sy ) {
+        return invertedY ? (sy-y) : y;
+    }
 }

@@ -18,6 +18,7 @@ public class RenderableBean {
     private int translatedNum;
     private byte[] rgb;
     private Entity renderableEntity;
+    private boolean signalRenderable = false;
 
     public String getLabelFile() {
         return labelFile;
@@ -74,6 +75,15 @@ public class RenderableBean {
 
     public void setSignalFile(String signalFile) {
         this.signalFile = signalFile;
+    }
+
+    /** Flag to indicate that this renderable _represents_ a signal, rather than a neuron fragment, etc. */
+    public void setSignal( boolean signalRenderable ) {
+        this.signalRenderable = signalRenderable;
+    }
+
+    public boolean isSignal() {
+        return signalRenderable;
     }
 
 }

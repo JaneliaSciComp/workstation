@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import java.awt.*;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -62,20 +61,47 @@ public class ABLoadWorker extends SimpleWorker {
         }
         else {
             logger.info( "In load thread, after getting bean list." );
-            mip3d.setMaskColorMappings(renderMapping.getMapping(renderableBeans));
 
-            Collection<String> signalFilenames = getSignalFilenames( renderableBeans );
+            Collection<RenderableBean> signalRenderables = getSignalRenderables(renderableBeans);
 
             FileResolver resolver = new CacheFileResolver();
-            for ( String signalFilename: signalFilenames ) {
-                System.out.println("In load thread, STARTING load of volume " + new java.util.Date());
+            for ( RenderableBean signalRenderable: signalRenderables ) {
+                logger.info("In load thread, STARTING load of volume " + new java.util.Date());
 
+                String signalFilename = signalRenderable.getSignalFile();
                 Collection<String> labelFiles = getLabelsForSignalFile(renderableBeans, signalFilename);
+                Collection<RenderableBean> nextSignalsRenderables = getRenderables(renderableBeans, signalFilename);
+                mip3d.setMaskColorMappings(renderMapping.getMapping(nextSignalsRenderables));
+
                 VolumeMaskBuilder volumeMaskBuilder = createMaskBuilder(
-                        labelFiles, getRenderables(renderableBeans, signalFilename), resolver
+                        labelFiles, nextSignalsRenderables, resolver
                 );
 
-                mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver );
+                if ( volumeMaskBuilder == null ) {
+                    float[] rgb = new float[] { 1.0f, 0.3f, 0.3f };  // Default value.
+                    if ( signalRenderable.getRgb() != null ) {
+                        byte[] signalByteColors = signalRenderable.getRgb();
+                        if ( signalByteColors[ 3 ] == RenderMappingI.NON_RENDERING ) {
+                            for ( int i = 0; i < rgb.length; i++ ) {
+                                rgb[ i ] = 0.0f;
+                            }
+                        }
+                        else {
+                            for ( int i = 0; i < rgb.length; i++ ) {
+                                int signalIntColor = signalByteColors[ i ];
+                                if ( signalByteColors[ i ] < 0 ) {
+                                    signalIntColor = 256 + signalIntColor;
+                                }
+                                rgb[ i ] = signalIntColor / 255.0f;
+                            }
+                        }
+                    }
+                    mip3d.loadVolume( signalFilename, rgb, resolver );
+                }
+                else {
+                    mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver );
+                }
+
                 // After first volume has been loaded, unset clear flag, so subsequent
                 // ones are added.
                 mip3d.setClearOnLoad(false);
@@ -131,11 +157,11 @@ public class ABLoadWorker extends SimpleWorker {
      *
      * @return all signal file names found in any bean.
      */
-    private Collection<String> getSignalFilenames(Collection<RenderableBean> renderableBeans) {
-        Collection<String> signalFileNames = new HashSet<String>();
+    private Collection<RenderableBean> getSignalRenderables(Collection<RenderableBean> renderableBeans) {
+        Collection<RenderableBean> signalFileNames = new HashSet<RenderableBean>();
         for ( RenderableBean bean: renderableBeans ) {
-            if ( bean.getSignalFile() != null && bean.getSignalFile().trim().length() > 0 ) {
-                signalFileNames.add( bean.getSignalFile() );
+            if ( bean.isSignal() ) {
+                signalFileNames.add( bean );
             }
         }
         return signalFileNames;
