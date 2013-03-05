@@ -248,9 +248,10 @@ public class AlignmentBoardViewer extends Viewer {
                 log.error("Cannot handle entites of type: "+itemEntity.getType());    
             }
 
-            // The true update!
-            this.updateBoard( abContext );
         }
+
+        // The true update!
+        this.updateBoard( abContext );
     }
     
     @Subscribe 
