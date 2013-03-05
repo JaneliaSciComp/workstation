@@ -30,16 +30,13 @@ vec4 volumeMask(vec4 origColor)
         // texture3D returns vec4.
         vec4 maskingColor = texture3D(maskingTexture, gl_TexCoord[1].xyz);
 
-        // Display strategy: bypass unseen values.
         if ( ( ( origColor[0] + origColor[1] + origColor[2] ) == 0.0 ) ) {
-//float iIx = 5.0;
-//float visY = floor(iIx / 256.0);
-//float visX = (iIx - 256.0 * visY) / 256.0;
-//vec3 cmCoord = vec3( visX, visY, 0.0 );
-//rtnVal = texture3D(colorMapTexture, cmCoord);
+            // Display strategy: bypass unseen values.
             discard;
         }
         else {
+            // Enter here -> original color is not black.
+
             // This maps the masking data value to a color set.
             float iIx = floor(maskingColor.g * 65535.1);
             float visY = floor(iIx / 256.0);
@@ -59,11 +56,7 @@ vec4 volumeMask(vec4 origColor)
             }
 
             if ( mappedColor[ 3 ] == 0.0 ) {
-                // Zero in the render method position.  This constitutes
-                // an "off" switch.
-//                rtnVal[ 0 ] = 0.0;
-//                rtnVal[ 1 ] = 0.0;
-//                rtnVal[ 2 ] = 0.0;
+                // This constitutes an "off" switch.
                 discard;
             }
             else if ( renderMethod == 4.0 ) {
@@ -90,10 +83,6 @@ vec4 volumeMask(vec4 origColor)
                 }
             }
             else if ( renderMethod == 1.0 ) {
-                // Guard against empty signal texture.
-                //if ( maxIntensity == 0.0 ) {
-                //    maxIntensity = 1.0;
-                //}
                 // This takes the mapped color, and multiplies it by the
                 // maximum intensity of any signal color.
                 for (int i = 0; i < 3; i++) {
@@ -119,11 +108,8 @@ void main()
     //  will fail to find the location of that uniform.  Hence, uncomment below if
     //  that inexplicably happens.
     vec4 throwAwayUse = colorMask;
-// NO-OP
-//    gl_FragColor = texture3D(signalTexture, gl_TexCoord[0].xyz);
 
     vec4 origColor = colorFilter();
-//    gl_FragColor = origColor;
     gl_FragColor = volumeMask(origColor);
 
 }
