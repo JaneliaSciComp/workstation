@@ -72,7 +72,8 @@ public abstract class BaseRenderer implements GLEventListener
     	// System.out.println("init() called");
         GL2 gl = gLDrawable.getGL().getGL2();
         gl.glEnable(GL2.GL_FRAMEBUFFER_SRGB);
-		for (GLActor actor : actors) {
+        List<GLActor> localActors = new ArrayList<GLActor>( getActors() );
+		for (GLActor actor : localActors) {
             actor.init(gl);
         }
     }

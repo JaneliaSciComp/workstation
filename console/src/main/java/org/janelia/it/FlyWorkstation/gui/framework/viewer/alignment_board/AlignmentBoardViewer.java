@@ -243,13 +243,13 @@ public class AlignmentBoardViewer extends Viewer {
                     }
                 }
 
-                // The true update!
-
-                this.updateBoard( abContext );
             }
             else {
                 log.error("Cannot handle entites of type: "+itemEntity.getType());    
             }
+
+            // The true update!
+            this.updateBoard( abContext );
         }
     }
     

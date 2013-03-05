@@ -64,7 +64,8 @@ class MipRenderer
             gLDrawable.setGL(debugGl2);
         }
 
-        for (GLActor actor : actors)
+        java.util.List<GLActor> localActors = new java.util.ArrayList<GLActor>( actors );
+        for (GLActor actor : localActors)
             actor.display(gl);
 
         gl.glMatrixMode(GL2.GL_PROJECTION);
@@ -214,6 +215,7 @@ class MipRenderer
         for ( GLActor actor: actors ) {
             if ( actor instanceof VolumeBrick) {
                 volumeBrick = ((VolumeBrick)actor);
+                break;
             }
         }
         return volumeBrick;
