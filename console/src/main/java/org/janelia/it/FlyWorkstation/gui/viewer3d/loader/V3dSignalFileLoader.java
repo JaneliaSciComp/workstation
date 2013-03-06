@@ -25,9 +25,6 @@ public class V3dSignalFileLoader extends TextureDataBuilder implements VolumeFil
     @Override
     protected TextureDataI createTextureDataBean() {
         int interpolationMethod = GL.GL_LINEAR;
-        if ( unCachedFileName.contains( REFERENCE_FILE ) ) {
-            interpolationMethod = GL.GL_NEAREST;
-        }
         if ( pixelBytes == 4 ) {
             TextureDataBean textureDataBean = new TextureDataBean(argbTextureIntArray, sx, sy, sz);
             textureDataBean.setInterpolationMethod( interpolationMethod );
@@ -72,7 +69,6 @@ public class V3dSignalFileLoader extends TextureDataBuilder implements VolumeFil
 
     private void loadV3dIntRaw(V3dRawImageStream sliceStream, int sc )
             throws IOException, DataFormatException {
-
 
         double scale = 1.0;
         if (sliceStream.getPixelBytes() > 1)
