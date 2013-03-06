@@ -3,6 +3,8 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 import java.awt.Color;
 import java.util.Vector;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
+
 public class ImageColorModel 
 {
 	private static Color defaultChannelColors[] = {
@@ -16,7 +18,7 @@ public class ImageColorModel
 		Color.magenta,
 	};
 	
-	private Vector<ChannelColorModel> channels;
+	private Vector<ChannelColorModel> channels = new Vector<ChannelColorModel>();
 	private boolean blackSynchronized = true;
 	private boolean gammaSynchronized = true;
 	private boolean whiteSynchronized = true;
@@ -28,6 +30,21 @@ public class ImageColorModel
 		init(3, 8); // Default to 3 8-bit channels
 	}
 	
+	public ImageColorModel(VolumeImage3d volumeImage) 
+	{
+		int maxI = volumeImage.getMaximumIntensity();
+		assert maxI < 65536;
+		int bitDepth = 8;
+		if (maxI > 256)
+			bitDepth = 16;
+		int hardMax = (int)Math.pow(2.0, bitDepth);
+		init(volumeImage.getNumberOfChannels(), bitDepth);
+		if (hardMax != maxI) {
+			for (ChannelColorModel ccm : channels)
+				ccm.setWhiteLevel(maxI);
+		}
+	}
+
 	private void addChannel(Color color, int bitDepth) {
 		int c = channels.size();
 		ChannelColorModel channel = new ChannelColorModel(

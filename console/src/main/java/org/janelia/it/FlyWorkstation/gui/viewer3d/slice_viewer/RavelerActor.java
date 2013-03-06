@@ -12,6 +12,8 @@ import javax.media.opengl.GL2;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.PassThroughTextureShader;
 
 import com.jogamp.opengl.util.texture.Texture;
 
@@ -80,6 +82,9 @@ implements GLActor
 	private ExecutorService textureLoadExecutor = Executors.newFixedThreadPool(4);
 	private Set<TileIndex> neededTextures;
 	
+	private ImageColorModel imageColorModel;
+	private PassThroughTextureShader shader = new PassThroughTextureShader();
+	
 	private Signal dataChangedSignal = new Signal();
 	
 	private Slot clearDataSlot = new Slot() {
@@ -131,10 +136,12 @@ implements GLActor
 		for (Tile2d tile: tiles) {
 			tile.init(gl);
 		}
-		// TODO - load shader?
+		// Use shader for tile rendering
+		shader.load(gl);
 		for (Tile2d tile: tiles) {
 			tile.display(gl);
 		}
+		shader.unload(gl);
 		boolean bOutlineTiles = false;
 		if (bOutlineTiles) {
 			for (Tile2d tile: tiles) {
@@ -247,12 +254,23 @@ implements GLActor
 		return result;
 	}	
 
+	public ImageColorModel getImageColorModel() {
+		return imageColorModel;
+	}
+
 	public synchronized Set<TileIndex> getNeededTextures() {
 		return neededTextures;
 	}
 
 	@Override
-	public void init(GL2 gl) {}
+	public void init(GL2 gl) {
+		try {
+			shader.init(gl);
+		} catch (ShaderCreationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	
 	public void queueGlDisposal() {
 		needsGlDisposal = true;
@@ -273,6 +291,10 @@ implements GLActor
 		}
 	}
 	
+	public void setImageColorModel(ImageColorModel imageColorModel) {
+		this.imageColorModel = imageColorModel;
+	}
+
 	public synchronized void setNeededTextures(Set<TileIndex> neededTextures) {
 		this.neededTextures = neededTextures;
 	}

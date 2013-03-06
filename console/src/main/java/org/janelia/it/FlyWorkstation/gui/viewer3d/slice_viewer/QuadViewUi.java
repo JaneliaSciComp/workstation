@@ -203,7 +203,7 @@ public class QuadViewUi extends JFrame
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setResizable(true);
 		
-		setBounds(100, 100, 967, 726);
+		setBounds(100, 100, 994, 653);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		setContentPane(contentPane);

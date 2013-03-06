@@ -53,6 +53,7 @@ implements MouseModalWidget, VolumeViewer
 	protected VolumeImage3d volumeImage = volume0;
 	// TODO - add dataChangedSignal to GLActor
 	protected RavelerActor volumeActor = new RavelerActor(volume0);
+	private ImageColorModel imageColorModel;
 	
 	public Signal1<URL> getFileLoadedSignal() {
 		return fileLoadedSignal;
@@ -90,6 +91,7 @@ implements MouseModalWidget, VolumeViewer
         setPreferredSize( new Dimension( 600, 600 ) );
         rubberBand.changed.connect(repaintSlot);
         setToolTipText("Double click to center on a point.");
+        setImageColorModel(new ImageColorModel(volumeImage));
         renderer.addActor(volumeActor);
         volumeActor.getDataChangedSignal().connect(getRepaintSlot());
         resetView();
@@ -116,6 +118,10 @@ implements MouseModalWidget, VolumeViewer
 
 	public ObservableCamera3d getCamera() {
 		return camera;
+	}
+
+	public ImageColorModel getImageColorModel() {
+		return imageColorModel;
 	}
 
 	public MouseMode getMouseMode() {
@@ -394,4 +400,10 @@ implements MouseModalWidget, VolumeViewer
 		}
 		return result;
 	}
+	
+	public void setImageColorModel(ImageColorModel imageColorModel) {
+		this.imageColorModel = imageColorModel;
+		volumeActor.setImageColorModel(imageColorModel);
+	}
+
 }
