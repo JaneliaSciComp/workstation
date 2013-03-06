@@ -17,13 +17,6 @@ public class VolumeLoader
         TIF, LSM, V3DMASK, V3DSIGNAL, MP4, UNKNOWN
     };
 
-    private static final String CONSOLIDATED_SIGNAL_FILE = "ConsolidatedSignal2";
-    private static final String REFERENCE_FILE = "Reference2";
-    private static final String TIF_EXT = "TIF";
-    private static final String LSM_EXT = "LSM";
-    private static final String V3D_EXT = "V3D";
-    private static final String MP4_EXT = "MP4";
-
     private static final int MAX_FILE_LOAD_RETRY = 3;
     private static final int WAIT_BETWEEN_FILE_LOAD_RETRIES = 1000;
 
@@ -133,21 +126,21 @@ public class VolumeLoader
     private FileType getFileType( String filename, String baseName, String extension ) {
         logger.debug("FILENAME: {}", filename);
 
-        if (extension.startsWith(TIF_EXT)) {
+        if (extension.startsWith(VolumeFileLoaderI.TIF_EXT)) {
             return FileType.TIF;
         }
-        else if (extension.startsWith(LSM_EXT)) {
+        else if (extension.startsWith(VolumeFileLoaderI.LSM_EXT)) {
             return FileType.LSM;
         }
-        else if (extension.startsWith(MP4_EXT)) {
+        else if (extension.startsWith(VolumeFileLoaderI.MP4_EXT)) {
             return FileType.MP4;
         }
-        else if (extension.startsWith(V3D_EXT) &&
+        else if (extension.startsWith(VolumeFileLoaderI.V3D_EXT) &&
                  ( baseName.startsWith( V3dMaskFileLoader.CONSOLIDATED_LABEL_MASK ) ||
                    baseName.startsWith( V3dMaskFileLoader.COMPARTMENT_MASK_INDEX ) ) ) {
             return FileType.V3DMASK;
         }
-        else if (extension.startsWith(V3D_EXT)) {
+        else if (extension.startsWith(VolumeFileLoaderI.V3D_EXT)) {
             return FileType.V3DSIGNAL;
         }
         else {
@@ -159,12 +152,12 @@ public class VolumeLoader
         // Default to linear color space
         // But look for some exceptions we know about
         TextureColorSpace colorSpace = TextureColorSpace.COLOR_SPACE_LINEAR;
-        if (baseName.startsWith(CONSOLIDATED_SIGNAL_FILE))
+        if (baseName.startsWith(VolumeFileLoaderI.CONSOLIDATED_SIGNAL_FILE))
             colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;
-        if (baseName.startsWith(REFERENCE_FILE))
+        if (baseName.startsWith(VolumeFileLoaderI.REFERENCE_FILE))
             colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;
         // assume all mpegs are in sRGB color space
-        if (extension.startsWith(MP4_EXT))
+        if (extension.startsWith(VolumeFileLoaderI.MP4_EXT))
             colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;
 
         return colorSpace;

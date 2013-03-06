@@ -13,6 +13,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 
+import javax.media.opengl.GL2;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
@@ -42,6 +43,8 @@ public class TextureDataBean implements TextureDataI {
     private boolean loaded;
     private boolean inverted = true; // Tested stored images were inverted.
     private Integer voxelComponentFormat;
+
+    private int interpolationMethod = GL2.GL_LINEAR;
 
     private Collection<RenderableBean> renderables;
 
@@ -222,6 +225,16 @@ public class TextureDataBean implements TextureDataI {
     @Override
     public Collection<RenderableBean> getRenderables() {
         return renderables;
+    }
+
+    @Override
+    public int getInterpolationMethod() {
+        return interpolationMethod;
+    }
+
+    @Override
+    public void setInterpolationMethod(int interpolationMethod) {
+        this.interpolationMethod = interpolationMethod;
     }
 }
 

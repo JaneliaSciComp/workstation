@@ -157,7 +157,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
                     referenceBean.setSignal( true );
                     referenceBean.setRgb(
                             new byte[] {
-                                    (byte)50, (byte) 50, (byte) 50, RenderMappingI.NO_SHADER_USE
+                                    (byte)500, (byte) 500, (byte) 500, RenderMappingI.NO_SHADER_USE
                             }
                     );
 

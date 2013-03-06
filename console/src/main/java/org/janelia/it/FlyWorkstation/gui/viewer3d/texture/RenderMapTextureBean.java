@@ -26,6 +26,8 @@ public class RenderMapTextureBean implements TextureDataI {
     private Integer voxelComponentFormat = GL2.GL_UNSIGNED_INT_8_8_8_8_REV;
     private Collection<RenderableBean> renderables;
 
+    private int interpolationMethod = GL2.GL_NEAREST;
+
     /**
      * This implementation makes a big array of 64K * 3, to accommodate any possible neuron fragment number's
      * three colors.  It is wasteful in space, but far smaller than most uploaded textures.  It may be possible
@@ -225,6 +227,16 @@ public class RenderMapTextureBean implements TextureDataI {
     @Override
     public Collection<RenderableBean> getRenderables() {
         return renderables;
+    }
+
+    @Override
+    public int getInterpolationMethod() {
+        return interpolationMethod;
+    }
+
+    @Override
+    public void setInterpolationMethod(int interpolationMethod) {
+        this.interpolationMethod = interpolationMethod;
     }
 }
 

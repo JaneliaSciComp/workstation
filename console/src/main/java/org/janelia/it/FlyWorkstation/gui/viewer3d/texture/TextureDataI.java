@@ -45,6 +45,10 @@ public interface TextureDataI {
 
     void setColorSpace(VolumeDataAcceptor.TextureColorSpace colorSpace);
 
+    /** Fill in this value with a valid inter method from OpenGL, such as Linear or Nearest. */
+    int getInterpolationMethod();
+    void setInterpolationMethod( int interpolationMethod );
+
     Double[] getVolumeMicrometers();
 
     void setVolumeMicrometers(Double[] volumeMicrometers);

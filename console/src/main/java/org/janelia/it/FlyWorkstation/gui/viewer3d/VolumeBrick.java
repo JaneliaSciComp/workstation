@@ -495,19 +495,19 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     private void setupMaskingTexture(GL2 gl) {
         if ( maskTextureMediator != null ) {
-            maskTextureMediator.setupTexture( gl, TextureMediator.MASK_INTERPOLATION_METHOD );
+            maskTextureMediator.setupTexture( gl );
         }
     }
 
     private void setupSignalTexture(GL2 gl) {
         if ( signalTextureMediator != null ) {
-            signalTextureMediator.setupTexture( gl, TextureMediator.SIGNAL_INTERPOLATION_METHOD );
+            signalTextureMediator.setupTexture( gl );
         }
     }
 
     private void setupColorMapTexture(GL2 gl) {
         if ( colorMapTextureMediator != null ) {
-            colorMapTextureMediator.setupTexture( gl, TextureMediator.COLOR_MAP_INTERPOLATION_METHOD );
+            colorMapTextureMediator.setupTexture( gl );
         }
     }
 

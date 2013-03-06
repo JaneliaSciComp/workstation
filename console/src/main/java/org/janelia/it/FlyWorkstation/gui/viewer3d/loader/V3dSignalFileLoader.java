@@ -4,6 +4,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.stream.V3dRawImageStream;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 
+import javax.media.opengl.GL;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -23,10 +24,20 @@ public class V3dSignalFileLoader extends TextureDataBuilder implements VolumeFil
 
     @Override
     protected TextureDataI createTextureDataBean() {
-        if ( pixelBytes == 4 )
-            return new TextureDataBean( argbTextureIntArray, sx, sy, sz );
-        else
-            return new TextureDataBean( textureByteArray, sx, sy, sz );
+        int interpolationMethod = GL.GL_LINEAR;
+        if ( unCachedFileName.contains( REFERENCE_FILE ) ) {
+            interpolationMethod = GL.GL_NEAREST;
+        }
+        if ( pixelBytes == 4 ) {
+            TextureDataBean textureDataBean = new TextureDataBean(argbTextureIntArray, sx, sy, sz);
+            textureDataBean.setInterpolationMethod( interpolationMethod );
+            return textureDataBean;
+        }
+        else {
+            TextureDataBean textureDataBean = new TextureDataBean(textureByteArray, sx, sy, sz);
+            textureDataBean.setInterpolationMethod( interpolationMethod );
+            return textureDataBean;
+        }
     }
 
     @Override

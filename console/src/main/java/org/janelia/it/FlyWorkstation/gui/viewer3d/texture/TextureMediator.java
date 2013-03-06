@@ -18,10 +18,6 @@ import java.nio.IntBuffer;
  * regarding a single texture.
  */
 public class TextureMediator {
-    public static final int SIGNAL_INTERPOLATION_METHOD = GL2.GL_LINEAR; // blending across voxel edges
-    public static final int MASK_INTERPOLATION_METHOD = GL2.GL_NEAREST; // discrete cube shaped voxels
-    public static final int COLOR_MAP_INTERPOLATION_METHOD = GL2.GL_NEAREST; // discrete cube shaped voxels
-
     public static int SIGNAL_TEXTURE_OFFSET = 0;
     public static int MASK_TEXTURE_OFFSET = 1;
     public static int COLOR_MAP_TEXTURE_OFFSET = 2;
@@ -186,7 +182,11 @@ public class TextureMediator {
         return textureData.getVoxelMicrometers();
     }
 
-    public void setupTexture( GL2 gl, int interpolationMethod ) {
+    public void setupTexture( GL2 gl ) {
+        logger.info( "Interp Method of LINEAR == {}.", GL2.GL_LINEAR );
+        logger.info( "Interp Method of NEAREST == {}.", GL2.GL_NEAREST );
+        logger.info( "Texture Data for {} has interp of {}.", textureData.getFilename(), textureData.getInterpolationMethod() );
+
         if ( ! isInitialized ) {
             logger.error("Attempting to setup texture before mediator has been initialized.");
             throw new RuntimeException( "Texture setup failed." );
@@ -195,9 +195,9 @@ public class TextureMediator {
         reportError( "setupTexture glActiveTexture", gl );
         gl.glBindTexture( GL2.GL_TEXTURE_3D, textureName );
         reportError( "setupTexture glBindTexture", gl );
-        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MIN_FILTER, interpolationMethod);
+        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MIN_FILTER, textureData.getInterpolationMethod() );
         reportError( "setupTexture glTexParam MIN FILTER", gl );
-        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MAG_FILTER, interpolationMethod);
+        gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_MAG_FILTER, textureData.getInterpolationMethod() );
         reportError( "setupTexture glTexParam MAG_FILTER", gl );
         gl.glTexParameteri(GL2.GL_TEXTURE_3D, GL2.GL_TEXTURE_WRAP_R, GL2.GL_CLAMP_TO_BORDER);
         reportError( "setupTexture glTexParam TEX-WRAP-R", gl );
@@ -340,7 +340,6 @@ public class TextureMediator {
 
             // This throws excepx for current read method.
             if ( textureData.getPixelByteCount() == 2 ) {
-//            rtnVal = GL2.GL_UNSIGNED_BYTE;
                 rtnVal = GL2.GL_UNSIGNED_SHORT;
             }
         }
@@ -380,6 +379,7 @@ public class TextureMediator {
         // This: tested against a mask file.
         if (textureData.getChannelCount() == 1) {
             internalFormat = GL2.GL_LUMINANCE;
+
             if (textureData.getPixelByteCount() == 2) {
                 internalFormat = GL2.GL_LUMINANCE16;
             }

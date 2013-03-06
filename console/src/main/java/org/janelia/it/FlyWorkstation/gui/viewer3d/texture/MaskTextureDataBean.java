@@ -13,6 +13,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 
+import javax.media.opengl.GL2;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Collection;
@@ -24,6 +25,8 @@ public class MaskTextureDataBean implements TextureDataI {
     private Integer sx;
     private Integer sy;
     private Integer sz;
+
+    private int interpolationMethod = GL2.GL_NEAREST;
 
     private float[] coordCoverage = { 1.0f, 1.0f, 1.0f};
 
@@ -218,6 +221,14 @@ public class MaskTextureDataBean implements TextureDataI {
     @Override
     public Collection<RenderableBean> getRenderables() {
         return renderables;
+    }
+
+    public int getInterpolationMethod() {
+        return interpolationMethod;
+    }
+
+    public void setInterpolationMethod(int interpolationMethod) {
+        this.interpolationMethod = interpolationMethod;
     }
 }
 
