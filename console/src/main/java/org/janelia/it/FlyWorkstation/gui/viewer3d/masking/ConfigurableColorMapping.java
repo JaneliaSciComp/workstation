@@ -31,14 +31,14 @@ public class ConfigurableColorMapping implements RenderMappingI {
     private Map<Integer,byte[]> makeMaskMappings( Collection<RenderableBean> renderableBeans ) {
         Map<Integer,byte[]> maskMappings = new HashMap<Integer,byte[]>();
         byte[][] colorWheel = {
-                { (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff },
-                { (byte)0x00, (byte)0x00, (byte)0xff, (byte)0xff },
-                { (byte)0xff, (byte)0x00, (byte)0x00, (byte)0xff },
-                { (byte)0x00, (byte)0xff, (byte)0xff, (byte)0xff },
-                { (byte)0xff, (byte)0x00, (byte)0xff, (byte)0xff },
-                { (byte)0xff, (byte)0xff, (byte)0x00, (byte)0xff },
-                { (byte)0x8f, (byte)0x00, (byte)0x00, (byte)0xff },
-                { (byte)0x00, (byte)0x8f, (byte)0x00, (byte)0xff },
+                { (byte)0x00, (byte)0xff, (byte)0x00, (byte)0xff },          //G
+                { (byte)0x00, (byte)0x00, (byte)0xff, (byte)0xff },          //B
+                { (byte)0xff, (byte)0x00, (byte)0x00, (byte)0xff },          //R
+                { (byte)0x00, (byte)0xff, (byte)0xff, (byte)0xff },          //G+B
+                { (byte)0xff, (byte)0x00, (byte)0xff, (byte)0xff },          //R+B
+                { (byte)0xff, (byte)0xff, (byte)0x00, (byte)0xff },          //R+G
+                { (byte)0x8f, (byte)0x00, (byte)0x00, (byte)0xff },          //Dk R
+                { (byte)0x00, (byte)0x8f, (byte)0x00, (byte)0xff },          //Dk G
         };
 
         for ( RenderableBean renderableBean : renderableBeans ) {
