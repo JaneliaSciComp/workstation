@@ -17,6 +17,8 @@ import org.slf4j.LoggerFactory;
 import java.awt.*;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
 
 /**
  * Created with IntelliJ IDEA.
@@ -47,7 +49,7 @@ public class ABLoadWorker extends SimpleWorker {
     @Override
     protected void doStuff() throws Exception {
 
-        mip3d.setClearOnLoad( true );
+        mip3d.clear();
 
         logger.info( "In load thread, before getting bean list." );
         Collection<RenderableBean> renderableBeans =
@@ -65,48 +67,19 @@ public class ABLoadWorker extends SimpleWorker {
             Collection<RenderableBean> signalRenderables = getSignalRenderables(renderableBeans);
 
             FileResolver resolver = new CacheFileResolver();
+            final CyclicBarrier barrier = new CyclicBarrier( signalRenderables.size() + 1 );
             for ( RenderableBean signalRenderable: signalRenderables ) {
-                logger.info("In load thread, STARTING load of volume " + new java.util.Date());
+//                loadVolume(renderableBeans, resolver, signalRenderable);
 
-                String signalFilename = signalRenderable.getSignalFile();
-                Collection<String> labelFiles = getLabelsForSignalFile(renderableBeans, signalFilename);
-                Collection<RenderableBean> nextSignalsRenderables = getRenderables(renderableBeans, signalFilename);
-                mip3d.setMaskColorMappings(renderMapping.getMapping(nextSignalsRenderables));
+                // Multithreaded load.
+                LoadRunnable runnable = new LoadRunnable( renderableBeans, resolver, signalRenderable, barrier );
+                new Thread( runnable ).start();
+            }
 
-                VolumeMaskBuilder volumeMaskBuilder = createMaskBuilder(
-                        labelFiles, nextSignalsRenderables, resolver
-                );
-
-                if ( volumeMaskBuilder == null ) {
-                    float[] rgb = new float[] { 1.0f, 0.3f, 0.3f };  // Default value.
-                    if ( signalRenderable.getRgb() != null ) {
-                        byte[] signalByteColors = signalRenderable.getRgb();
-                        if ( signalByteColors[ 3 ] == RenderMappingI.NON_RENDERING ) {
-                            for ( int i = 0; i < rgb.length; i++ ) {
-                                rgb[ i ] = 0.0f;
-                            }
-                        }
-                        else {
-                            for ( int i = 0; i < rgb.length; i++ ) {
-                                int signalIntColor = signalByteColors[ i ];
-                                if ( signalByteColors[ i ] < 0 ) {
-                                    signalIntColor = 256 + signalIntColor;
-                                }
-                                rgb[ i ] = signalIntColor / 255.0f;
-                            }
-                        }
-                    }
-                    mip3d.loadVolume( signalFilename, rgb, resolver );
-                }
-                else {
-                    mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver );
-                }
-
-                // After first volume has been loaded, unset clear flag, so subsequent
-                // ones are added.
-                mip3d.setClearOnLoad(false);
-
-                logger.info( "In load thread, ENDED load of volume." );
+            try {
+                barrier.await();
+            } catch ( Exception ex ) {
+                ex.printStackTrace();
             }
         }
 
@@ -117,6 +90,7 @@ public class ABLoadWorker extends SimpleWorker {
         // when it becomes un-busy.
         viewer.add( mip3d, BorderLayout.CENTER );
 
+        logger.info( "Ending load thread." );
     }
 
     @Override
@@ -134,6 +108,46 @@ public class ABLoadWorker extends SimpleWorker {
         viewer.revalidate();
         viewer.repaint();
         SessionMgr.getSessionMgr().handleException( error );
+    }
+
+    private void loadVolume(Collection<RenderableBean> renderableBeans, FileResolver resolver, RenderableBean signalRenderable) {
+        logger.info("In load thread, STARTING load of volume " + new java.util.Date());
+
+        String signalFilename = signalRenderable.getSignalFile();
+        Collection<String> labelFiles = getLabelsForSignalFile(renderableBeans, signalFilename);
+        Collection<RenderableBean> nextSignalsRenderables = getRenderables(renderableBeans, signalFilename);
+        mip3d.setMaskColorMappings(renderMapping.getMapping(nextSignalsRenderables));
+
+        VolumeMaskBuilder volumeMaskBuilder = createMaskBuilder(
+                labelFiles, nextSignalsRenderables, resolver
+        );
+
+        if ( volumeMaskBuilder == null ) {
+            float[] rgb = new float[] { 1.0f, 0.3f, 0.3f };  // Default value.
+            if ( signalRenderable.getRgb() != null ) {
+                byte[] signalByteColors = signalRenderable.getRgb();
+                if ( signalByteColors[ 3 ] == RenderMappingI.NON_RENDERING ) {
+                    for ( int i = 0; i < rgb.length; i++ ) {
+                        rgb[ i ] = 0.0f;
+                    }
+                }
+                else {
+                    for ( int i = 0; i < rgb.length; i++ ) {
+                        int signalIntColor = signalByteColors[ i ];
+                        if ( signalByteColors[ i ] < 0 ) {
+                            signalIntColor = 256 + signalIntColor;
+                        }
+                        rgb[ i ] = signalIntColor / 255.0f;
+                    }
+                }
+            }
+            mip3d.loadVolume( signalFilename, rgb, resolver );
+        }
+        else {
+            mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver );
+        }
+
+        logger.info("In load thread, ENDED load of volume.");
     }
 
     /**
@@ -215,5 +229,32 @@ public class ABLoadWorker extends SimpleWorker {
         return volumeMaskBuilder;
     }
 
+    public class LoadRunnable implements Runnable {
+        private Collection<RenderableBean> renderableBeans;
+        private RenderableBean signalRenderable;
+        private FileResolver resolver;
+        private CyclicBarrier barrier;
+
+        public LoadRunnable(
+                Collection<RenderableBean> renderableBeans, FileResolver resolver, RenderableBean signalRenderable,
+                CyclicBarrier barrier
+        ) {
+            this.renderableBeans = renderableBeans;
+            this.resolver = resolver;
+            this.signalRenderable = signalRenderable;
+            this.barrier = barrier;
+        }
+
+        public void run() {
+            ABLoadWorker.this.loadVolume(renderableBeans, resolver, signalRenderable);
+            try {
+                barrier.await();
+            } catch ( BrokenBarrierException bbe ) {
+                bbe.printStackTrace();
+            } catch ( InterruptedException ie ) {
+                ie.printStackTrace();
+            }
+        }
+    }
 }
 
