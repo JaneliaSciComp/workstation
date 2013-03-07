@@ -112,9 +112,7 @@ public class Mip3d extends BaseGLViewer {
                 }
             }
 
-            System.out.println("Adding the actor to the brick for " + fileName);
             addActorToRenderer(brick);
-            System.out.println("Added the actor to the brick for " + fileName);
 			return true;
 		}
 		else
