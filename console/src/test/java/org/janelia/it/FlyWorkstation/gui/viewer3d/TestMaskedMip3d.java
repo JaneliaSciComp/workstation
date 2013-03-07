@@ -86,7 +86,7 @@ public class TestMaskedMip3d {
                     }
                     if ( args.length > 1 ) {
                         mf = args[ 1 ];
-                        mipWidget.setClearOnLoad( true );
+                        mipWidget.clear();
                         mipWidget.refresh();
                     }
 
@@ -147,10 +147,10 @@ public class TestMaskedMip3d {
                         renderableBean.setLabelFile(mf);
                         renderableBean.setTranslatedNum(1);
                         renderableBean.setSignalFile( fn );
-                        renderableBean.setLabelFileNum( 6 ); // Can modify this.
+                        renderableBean.setLabelFileNum( 1 ); // In signal=label=reference scenario, this shows edgy outline
                         renderableBean.setRgb(
                                 new byte[] {
-                                        (byte)0f, (byte)255f, (byte)0f, RenderMappingI.FRAGMENT_RENDERING
+                                        (byte)255f, (byte)0f, (byte)255f, RenderMappingI.FRAGMENT_RENDERING
                                 }
                         );
                         beans.add(renderableBean);
@@ -158,7 +158,7 @@ public class TestMaskedMip3d {
                         renderableBean = new RenderableBean();
                         renderableBean.setLabelFile( mf );
                         renderableBean.setTranslatedNum(2);
-                        renderableBean.setLabelFileNum( 17 );
+                        renderableBean.setLabelFileNum( 57 );
                         renderableBean.setSignalFile( fn );
                         renderableBean.setRenderableEntity( mockE );
                         beans.add(renderableBean);
@@ -166,7 +166,7 @@ public class TestMaskedMip3d {
                         renderableBean = new RenderableBean();
                         renderableBean.setLabelFile( mf );
                         renderableBean.setTranslatedNum(3);
-                        renderableBean.setLabelFileNum( 3 );
+                        renderableBean.setLabelFileNum( 58 );
                         renderableBean.setSignalFile( fn );
                         renderableBean.setRenderableEntity( mockE );
                         beans.add(renderableBean);
@@ -174,7 +174,7 @@ public class TestMaskedMip3d {
                         renderableBean = new RenderableBean();
                         renderableBean.setLabelFile( mf );
                         renderableBean.setTranslatedNum(4);
-                        renderableBean.setLabelFileNum( 12 );
+                        renderableBean.setLabelFileNum( 59 );
                         renderableBean.setSignalFile( fn );
                         renderableBean.setRenderableEntity( mockE );
                         beans.add(renderableBean);
@@ -217,7 +217,6 @@ public class TestMaskedMip3d {
                     if ( ! mipWidget.loadVolume( fn, vmb, resolver ) ) {
                         throw new RuntimeException( "Failed to load " + fn );
                     }
-                    mipWidget.setClearOnLoad( false );
 
                     frame.getContentPane().add(mipWidget);
 
