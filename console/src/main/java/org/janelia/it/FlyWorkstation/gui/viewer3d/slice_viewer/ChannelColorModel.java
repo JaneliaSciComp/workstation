@@ -26,7 +26,7 @@ public class ChannelColorModel
 		this.bitDepth = bitDepth;
 		blackLevel = 0;
 		gamma = 1.0;
-		whiteLevel = dataMax = (int)(Math.pow(2.0, bitDepth) + 0.1);
+		whiteLevel = dataMax = (int)(Math.pow(2.0, bitDepth) - 0.9);
 	}
 	
 	public int getBitDepth() {

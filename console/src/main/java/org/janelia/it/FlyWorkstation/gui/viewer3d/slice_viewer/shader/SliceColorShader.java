@@ -11,13 +11,13 @@ public class SliceColorShader extends PassThroughTextureShader
 {
 	private ImageColorModel imageColorModel;
 
-	public ImageColorModel getChannelColorModel() {
+	public ImageColorModel getImageColorModel() {
 		return imageColorModel;
 	}
 
 	@Override
 	public String getFragmentShader() {
-		return "PassThroughTextureFrag.glsl";
+		return "ColorFrag.glsl";
 	}
 
 	@Override
@@ -26,6 +26,7 @@ public class SliceColorShader extends PassThroughTextureShader
 		int sc = imageColorModel.getChannelCount();
 		assert sc <= 4;
 		setUniform(gl, "channel_count", sc);
+		// System.out.println("shader Channel count = "+sc);
 		
 		float channel_color[] = 
 			{0, 0, 0,
@@ -53,6 +54,11 @@ public class SliceColorShader extends PassThroughTextureShader
 				channel_scale[c] = 0f;
 			}
 			channel_gamma[c] = (float)ccm.getGamma();
+			/*
+			System.out.println(
+					"Channel "+c+", "+channel_min[c]+", "+channel_gamma[c]+", "+channel_scale[c]
+			        +", "+channel_color[offset+0]+", "+channel_color[offset+1]+", "+channel_color[offset+2]);
+			        */
 		}
 		setUniform3v(gl, "channel_color", 4, channel_color);
 		setUniform4v(gl, "channel_gamma", 1, channel_gamma);
@@ -60,7 +66,7 @@ public class SliceColorShader extends PassThroughTextureShader
 		setUniform4v(gl, "channel_scale", 1, channel_scale);
 	}
 	
-	public void setChannelColorModel(ImageColorModel imageColorModel) {
+	public void setImageColorModel(ImageColorModel imageColorModel) {
 		this.imageColorModel = imageColorModel;
 	}
 

@@ -94,6 +94,7 @@ implements MouseModalWidget, VolumeViewer
         setImageColorModel(new ImageColorModel(volumeImage));
         renderer.addActor(volumeActor);
         volumeActor.getDataChangedSignal().connect(getRepaintSlot());
+        imageColorModel.getColorModelChangedSignal().connect(getRepaintSlot());
         resetView();
 	}
 
@@ -394,6 +395,7 @@ implements MouseModalWidget, VolumeViewer
 	public boolean loadURL(URL url) {
 		boolean result = volumeImage.loadURL(url);
 		if (result) {
+			getImageColorModel().reset(volumeImage);
 			resetView();
 			log.info("emitting file loaded signal");
 			getFileLoadedSignal().emit(url);

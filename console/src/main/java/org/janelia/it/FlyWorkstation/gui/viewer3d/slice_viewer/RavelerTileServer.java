@@ -230,7 +230,7 @@ implements VolumeImage3d
 	            		maximumIntensity = 65535; // 16-bit
 	            }
 	            if (i > 255) {
-	            		maximumIntensity = 16;
+	            		bitDepth = 16;
 	            }
 	        }
 	        if (metadata.containsKey("bitdepth")) {
@@ -238,6 +238,7 @@ implements VolumeImage3d
 	        }
 	        if (metadata.containsKey("channel-count")) {
 	        		numberOfChannels = Integer.parseInt(metadata.get("channel-count"));
+	        		System.out.println("channel count = "+numberOfChannels);
 	        }
 	        // Compute zoom min/max from dimensions...
 	        double tileMax = Math.max(boundingBox3d.getMax().getX() / xResolution / 1024.0, 

@@ -19,8 +19,7 @@ void main()
         i = clamp(i, 0, 1); // avoid extreme numbers in sum
         i = pow(i, channel_gamma[c]); // apply gamma correction
         // out_color += i * channel_color[c]; // apply channel color
-        out_color = max(out_color, i * channel_color[c] / 255.0); // apply channel color
+        out_color = max(out_color, i * channel_color[c]); // apply channel color
     }
     gl_FragColor = vec4(out_color, 1.0);
-    // gl_FragColor = 255.0 * in_color;
 }

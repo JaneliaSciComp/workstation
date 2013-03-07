@@ -26,23 +26,15 @@ public class ImageColorModel
 	private Signal colorModelChangedSignal = new Signal();
 
 	
+	/*
 	public ImageColorModel() {
 		init(3, 8); // Default to 3 8-bit channels
 	}
+	**/
 	
 	public ImageColorModel(VolumeImage3d volumeImage) 
 	{
-		int maxI = volumeImage.getMaximumIntensity();
-		assert maxI < 65536;
-		int bitDepth = 8;
-		if (maxI > 256)
-			bitDepth = 16;
-		int hardMax = (int)Math.pow(2.0, bitDepth);
-		init(volumeImage.getNumberOfChannels(), bitDepth);
-		if (hardMax != maxI) {
-			for (ChannelColorModel ccm : channels)
-				ccm.setWhiteLevel(maxI);
-		}
+		reset(volumeImage);
 	}
 
 	private void addChannel(Color color, int bitDepth) {
@@ -101,9 +93,25 @@ public class ImageColorModel
 			int ix = c % defaultChannelColors.length;
 			addChannel(defaultChannelColors[ix], bitDepth);
 		}
+		System.out.println("model channel count = "+channelCount);
 		resetColors(); // in case 1 or 2 channels
 	}
 	
+	public void reset(VolumeImage3d volumeImage) 
+	{
+		int maxI = volumeImage.getMaximumIntensity();
+		assert maxI <= 65535;
+		int bitDepth = 8;
+		if (maxI > 255)
+			bitDepth = 16;
+		int hardMax = (int)Math.pow(2.0, bitDepth) - 1;
+		init(volumeImage.getNumberOfChannels(), bitDepth);
+		if (hardMax != maxI) {
+			for (ChannelColorModel ccm : channels)
+				ccm.setWhiteLevel(maxI);
+		}
+	}
+
 	public void resetColors() 
 	{
 		for (ChannelColorModel channel : channels) {

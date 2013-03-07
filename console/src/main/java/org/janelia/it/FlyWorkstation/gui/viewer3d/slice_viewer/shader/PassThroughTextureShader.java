@@ -29,6 +29,14 @@ public class PassThroughTextureShader extends AbstractShader
         gl.glUseProgram(shaderProgram);
 	}
 
+	protected boolean setUniform(GL2 gl, String varName, float value) {
+        int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
+        if ( uniformLoc < 0 ) 
+        	return false;
+        gl.glUniform1f( uniformLoc, value );
+        return true;
+	}
+
 	protected boolean setUniform(GL2 gl, String varName, int value) 
 	{
         int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );

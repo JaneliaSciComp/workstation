@@ -13,7 +13,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.PassThroughTextureShader;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.NumeralShader;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.SliceColorShader;
 
 import com.jogamp.opengl.util.texture.Texture;
 
@@ -83,7 +84,8 @@ implements GLActor
 	private Set<TileIndex> neededTextures;
 	
 	private ImageColorModel imageColorModel;
-	private PassThroughTextureShader shader = new PassThroughTextureShader();
+	private SliceColorShader shader = new SliceColorShader();
+	private NumeralShader numeralShader = new NumeralShader();
 	
 	private Signal dataChangedSignal = new Signal();
 	
@@ -136,18 +138,26 @@ implements GLActor
 		for (Tile2d tile: tiles) {
 			tile.init(gl);
 		}
-		// Use shader for tile rendering
+		
+		// Render tile textures
+		// TODO - pixellate at high zoom
 		shader.load(gl);
 		for (Tile2d tile: tiles) {
 			tile.display(gl);
 		}
 		shader.unload(gl);
+		
+		// TODO optional numeral display at high zoom
+
+		// Outline tiles for viewer debugging
 		boolean bOutlineTiles = false;
 		if (bOutlineTiles) {
 			for (Tile2d tile: tiles) {
 				tile.displayBoundingBox(gl);
 			}
 		}
+		
+		// Outline volume for debugging
 		boolean bOutlineVolume = false;
 		if (bOutlineVolume)
 			displayBoundingBox(gl);
@@ -245,9 +255,11 @@ implements GLActor
 			newNeededTextures.addAll(latestTiles.getBestNeededTextures());
 		// Use set/getNeededTextures() methods for thread safety
 		// log.info("Needed textures:");
+		/*
 		for (TileIndex ix : newNeededTextures) {
-			// log.info("  "+ix);
+			log.info("  "+ix);
 		}
+		*/
 		setNeededTextures(newNeededTextures);
 		queueTextureLoad(getNeededTextures());
 		
@@ -290,9 +302,11 @@ implements GLActor
 				textureLoadExecutor.submit(new TileTextureLoader(texture, this));
 		}
 	}
-	
+
 	public void setImageColorModel(ImageColorModel imageColorModel) {
 		this.imageColorModel = imageColorModel;
+		shader.setImageColorModel(imageColorModel);
+		numeralShader.setImageColorModel(imageColorModel);
 	}
 
 	public synchronized void setNeededTextures(Set<TileIndex> neededTextures) {
