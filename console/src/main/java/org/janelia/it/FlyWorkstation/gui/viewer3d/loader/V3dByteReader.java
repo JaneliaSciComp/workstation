@@ -59,6 +59,77 @@ public class V3dByteReader {
         return values;
     }
 
+    /**
+     * This method reads all information from the slice stream into the internal mask-byte-array (1-D).
+     *
+     * @param sliceStream source for data.
+     * @return distinct set of all values found in the stream.
+     * @throws java.io.IOException thrown by called methods.
+     */
+    public Set<Integer> readBytes(V3dRawImageStream sliceStream, int sx, int sy, int sz)
+            throws IOException {
+        textureByteArray = new byte[(sx * sy * sz)];
+
+        Set<Integer> values = new TreeSet<Integer>();
+        for (int z = 0; z < sz; z ++ ) {
+            int zOffset = z * sx * sy;
+            sliceStream.loadNextSlice();
+            V3dRawImageStream.Slice slice = sliceStream.getCurrentSlice();
+            for (int y = 0; y < sy; y ++ ) {
+                int yOffset = zOffset + calcYOffset(y, sy) * sx;
+                for (int x = 0; x < sx; x ++ ) {
+                    Integer value = slice.getValue(x, y);
+                    if ( value > 0 ) {
+                        values.add( value );
+                        textureByteArray[(yOffset) + x] = value.byteValue();
+                    }
+                }
+            }
+        }
+        sliceStream.close();
+
+        return values;
+    }
+
+    /**
+     * This method reads all information from the slice stream into the internal mask-byte-array (1-D). Makes
+     * triples of all bytes, to simulate RGB + Alpha.
+     *
+     * @param sliceStream source for data.
+     * @return distinct set of all values found in the stream.
+     * @throws java.io.IOException thrown by called methods.
+     */
+    public Set<Integer> readBytesToInts(V3dRawImageStream sliceStream, int sx, int sy, int sz)
+            throws IOException {
+
+        int pixelBytes = 4;
+        textureByteArray = new byte[(sx * sy * sz) * pixelBytes];
+        Set<Integer> values = new TreeSet<Integer>();
+        for (int z = 0; z < sz; z ++ ) {
+            int zOffset = z * sx * sy;
+            sliceStream.loadNextSlice();
+            V3dRawImageStream.Slice slice = sliceStream.getCurrentSlice();
+            for (int y = 0; y < sy; y ++ ) {
+                int yOffset = zOffset + calcYOffset(y, sy) * sx;
+                for (int x = 0; x < sx; x ++ ) {
+                    Integer value = slice.getValue(x, y);
+                    if ( value > 0 ) {
+                        values.add( value );
+                        int intOffset = (yOffset * pixelBytes) + (x * pixelBytes);
+                        for ( int pi = 0; pi < pixelBytes - 1; pi++ ) {
+                            byte b = value.byteValue();
+                            textureByteArray[intOffset + pi] = b;
+                        }
+                        textureByteArray[(intOffset + 3)] = (byte)255;
+                    }
+                }
+            }
+        }
+        sliceStream.close();
+
+        return values;
+    }
+
     public void setInvertedY(boolean invertedY) {
         this.invertedY = invertedY;
     }

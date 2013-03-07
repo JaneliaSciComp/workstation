@@ -49,7 +49,7 @@ public abstract class TextureDataBuilder {
         textureData.setFilename( unCachedFileName );
         textureData.setChannelCount(channelCount);
 
-        if (! isLuminance  &&  (pixelBytes == 4) ) {
+        if (! isLuminance  &&  (pixelBytes == 4)  &&  argbTextureIntArray != null ) {
             setAlphaToSaturateColors( colorSpace );
         }
         else {

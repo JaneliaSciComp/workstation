@@ -98,6 +98,9 @@ vec4 volumeMask(vec4 origColor)
 
         }
     }
+    else if ( ( origColor[0] + origColor[1] + origColor[2] ) == 0.0 ) {
+        discard;
+    }
 
     return rtnVal;
 }

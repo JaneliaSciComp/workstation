@@ -183,9 +183,9 @@ public class TextureMediator {
     }
 
     public void setupTexture( GL2 gl ) {
-        logger.info( "Interp Method of LINEAR == {}.", GL2.GL_LINEAR );
-        logger.info( "Interp Method of NEAREST == {}.", GL2.GL_NEAREST );
-        logger.info( "Texture Data for {} has interp of {}.", textureData.getFilename(), textureData.getInterpolationMethod() );
+        logger.debug( "Interp Method of LINEAR == {}.", GL2.GL_LINEAR );
+        logger.debug( "Interp Method of NEAREST == {}.", GL2.GL_NEAREST );
+        logger.debug( "Texture Data for {} has interp of {}.", textureData.getFilename(), textureData.getInterpolationMethod() );
 
         if ( ! isInitialized ) {
             logger.error("Attempting to setup texture before mediator has been initialized.");
