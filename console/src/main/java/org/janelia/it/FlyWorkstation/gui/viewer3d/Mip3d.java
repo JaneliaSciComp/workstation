@@ -78,8 +78,7 @@ public class Mip3d extends BaseGLViewer {
             VolumeBrick brick = new VolumeBrick(renderer);
             volumeLoader.populateVolumeAcceptor(brick);
 
-            renderer.addActor(brick);
-            renderer.resetView();
+            addActorToRenderer(brick);
             return true;
         }
         else
@@ -113,8 +112,9 @@ public class Mip3d extends BaseGLViewer {
                 }
             }
 
-			renderer.addActor(brick);
-			renderer.resetView();
+            System.out.println("Adding the actor to the brick for " + fileName);
+            addActorToRenderer(brick);
+            System.out.println("Added the actor to the brick for " + fileName);
 			return true;
 		}
 		else
@@ -141,8 +141,7 @@ public class Mip3d extends BaseGLViewer {
             brick.setColorMask( colorMask[ 0 ], colorMask[ 1 ], colorMask[ 2 ] );
             volumeLoader.populateVolumeAcceptor(brick);
 
-            renderer.addActor(brick);
-            renderer.resetView();
+            addActorToRenderer(brick);
             return true;
         }
         else
@@ -214,4 +213,13 @@ public class Mip3d extends BaseGLViewer {
         newValues[colorChannel]=isEnabled?1:0;
         renderer.setRgbValues(newValues);
     }
+
+    /** Special synchronized method, for adding actors. Supports multi-threaded brick-add. */
+    private void addActorToRenderer(VolumeBrick brick) {
+        synchronized ( this ) {
+            renderer.addActor(brick);
+            renderer.resetView();
+        }
+    }
+
 }

@@ -100,6 +100,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
     public AlignmentBoardDataBuilder setAlignmentBoardContext( AlignmentBoardContext abContext ) {
         clear();
 
+        logger.info("Starting 'setAlignmentBoardContext'");
         renderableBeanList = new ArrayList<RenderableBean>();
 
         // Build out the bean list, from info seen.
@@ -183,6 +184,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
             }
         }
 
+        logger.info("Ending 'setAlignmentBoardContext'");
         return this;
     }
 
