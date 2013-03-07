@@ -130,14 +130,15 @@ public class AlignmentBoardDataBuilder implements Serializable {
                                     MaskedVolume.ArtifactType.ConsolidatedLabel, size, MaskedVolume.Channels.All, true
                             );
 
+                            // Fetching the lossy version, an MP4 file.  The lossless version is a v3dpbd, but its
+                            // rendering in grayscale is very poor.
                             referenceFile = vol.getFastVolumePath(
-                                    MaskedVolume.ArtifactType.Reference, size, MaskedVolume.Channels.All, true
+                                    MaskedVolume.ArtifactType.Reference, size, MaskedVolume.Channels.All, false
                             );
                             break;
                         }
                     }
-                    // TEMP  - this would get the original non-down-sampled signal file.
-                    //labelFile = vol.getSignalLabelPath();
+
                 }
 
                 sampleBean.setLabelFile( labelFile );
