@@ -162,11 +162,6 @@ public class Browser extends JFrame implements Cloneable {
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
         }
-
-        // Check to see if NFS is accessible but not in use
-        if (!SessionMgr.getSessionMgr().getModelProperty(SessionMgr.JACS_DATA_PATH_PROPERTY).equals(PathTranslator.JACS_DATA_PATH_NFS) && new File(PathTranslator.JACS_DATA_PATH_NFS).canRead()) {
-        	JOptionPane.showMessageDialog(this, "NFS mount is available, but not configured. To improve performance, edit your data source preferences.", "WARNING", JOptionPane.ERROR_MESSAGE);
-        }
     }
 
     /**
@@ -451,10 +446,6 @@ public class Browser extends JFrame implements Cloneable {
 //                };
 //
 //                worker.execute();
-//
-//
-			    rightPanel.showPanel(OUTLINE_ONTOLOGY);
-			    entityOutline.activate();
 			}
         });
     }
