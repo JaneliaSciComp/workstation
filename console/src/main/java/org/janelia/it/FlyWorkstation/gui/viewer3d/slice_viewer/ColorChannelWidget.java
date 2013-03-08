@@ -89,7 +89,7 @@ public class ColorChannelWidget extends JPanel
 			setSelectedIcon(Icons.getIcon("eye.png"));
 			setRolloverSelectedIcon(Icons.getIcon("eye.png"));
 			setSelected(true);
-			setToolTipText("Click to show/hide color channel");
+			setToolTipText("Click to show/hide color channel " + channelIndex);
 		}
 	}
 	
@@ -106,7 +106,7 @@ public class ColorChannelWidget extends JPanel
 			super(new ChannelColorAction(channelIndex));
 			setColor(whiteColor);
 			setIcon(icon);
-			setToolTipText("Click to change channel "+channelIndex+"color");
+			setToolTipText("Click to change channel "+channelIndex+" color");
 		}
 		
 		public void setColor(Color color) {

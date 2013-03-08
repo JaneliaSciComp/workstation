@@ -61,7 +61,7 @@ implements MouseModalWidget, VolumeViewer
 
 	protected Signal1<URL> fileLoadedSignal = new Signal1<URL>();
 	
-	protected Slot1<URL> loadUrlSlot = new Slot1<URL>(this) {
+	protected Slot1<URL> loadUrlSlot = new Slot1<URL>() {
 		@Override
 		public void execute(URL url) {
 			// log.info("loadUrlSlot");

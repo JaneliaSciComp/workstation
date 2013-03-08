@@ -92,7 +92,7 @@ extends JFrame
 	protected Action advanceZSlicesAction = new AdvanceZSlicesAction(sliceViewer, sliceViewer, 10);
 	protected Action goBackZSlicesAction = new GoBackZSlicesAction(sliceViewer, sliceViewer, -10);
 	
-	protected Slot1<Vec3> changeZ = new Slot1<Vec3>(this) {
+	protected Slot1<Vec3> changeZ = new Slot1<Vec3>() {
 		@Override
 		public void execute(Vec3 focus) {
 			int z = (int)Math.round(focus.getZ() / sliceViewer.getZResolution());
@@ -101,7 +101,7 @@ extends JFrame
 		}
 	};
 
-	protected Slot1<Double> changeZoom = new Slot1<Double>(this) {
+	protected Slot1<Double> changeZoom = new Slot1<Double>() {
 		@Override
 		public void execute(Double zoom) {
 			double zoomMin = Math.log(sliceViewer.getMinZoom()) / Math.log(2.0);
@@ -113,7 +113,7 @@ extends JFrame
 		}
 	};
 	
-	protected Slot1<URL> rememberLoadedFileSlot = new Slot1<URL>(this) {
+	protected Slot1<URL> rememberLoadedFileSlot = new Slot1<URL>() {
 		@Override
 		public void execute(URL url) {
 			if (recentFileList == null)

@@ -42,12 +42,42 @@ public class ImageColorModel
 				c, color, bitDepth);
 		channels.add(channel);
 		// connect signals
-		channel.getBlackLevelChangedSignal().connect(colorModelChangedSignal);
 		channel.getColorChangedSignal().connect(colorModelChangedSignal);
 		channel.getDataMaxChangedSignal().connect(colorModelChangedSignal);
-		channel.getGammaChangedSignal().connect(colorModelChangedSignal);
-		channel.getWhiteLevelChangedSignal().connect(colorModelChangedSignal);
 		channel.getVisibilityChangedSignal().connect(colorModelChangedSignal);
+
+		channel.getBlackLevelChangedSignal().connect(new Slot1<Integer>() {
+			@Override
+			public void execute(Integer blackLevel) {
+				if (blackSynchronized) {
+					for (ChannelColorModel channel : channels)
+						channel.setBlackLevel(blackLevel);
+				}
+				colorModelChangedSignal.emit();
+			}
+		});
+
+		channel.getGammaChangedSignal().connect(new Slot1<Double>() {
+			@Override
+			public void execute(Double gamma) {
+				if (gammaSynchronized) {
+					for (ChannelColorModel channel : channels)
+						channel.setGamma(gamma);
+				}
+				colorModelChangedSignal.emit();
+			}
+		});
+
+		channel.getWhiteLevelChangedSignal().connect(new Slot1<Integer>() {
+			@Override
+			public void execute(Integer whiteLevel) {
+				if (whiteSynchronized) {
+					for (ChannelColorModel channel : channels)
+						channel.setWhiteLevel(whiteLevel);
+				}
+				colorModelChangedSignal.emit();
+			}
+		});
 	}
 
 	public Signal getColorModelInitializedSignal() {

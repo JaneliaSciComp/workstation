@@ -10,6 +10,7 @@ import javax.swing.BoxLayout;
 import java.awt.Dimension;
 
 import javax.swing.AbstractAction;
+import javax.swing.AbstractButton;
 import javax.swing.ActionMap;
 import javax.swing.InputMap;
 import javax.swing.JComponent;
@@ -87,6 +88,7 @@ public class QuadViewUi extends JFrame
 	private JSlider zoomSlider = new JSlider();
 	
 	private JPanel colorPanel = new JPanel();
+	private JPanel colorLockPanel = new JPanel();
 	private JSplitPane splitPane = new JSplitPane();
 	private ColorChannelWidget colorChannelWidget_0 = new ColorChannelWidget(0, sliceViewer.getImageColorModel());
 	private ColorChannelWidget colorChannelWidget_1 = new ColorChannelWidget(1, sliceViewer.getImageColorModel());
@@ -123,7 +125,7 @@ public class QuadViewUi extends JFrame
 	private final Action goBackZSlicesAction = new GoBackZSlicesAction(sliceViewer, sliceViewer, -10);
 
 	// Slots
-	protected Slot1<Vec3> changeZ = new Slot1<Vec3>(this) {
+	protected Slot1<Vec3> changeZ = new Slot1<Vec3>() {
 		@Override
 		public void execute(Vec3 focus) {
 			int z = (int)Math.round(focus.getZ() / sliceViewer.getZResolution());
@@ -132,7 +134,7 @@ public class QuadViewUi extends JFrame
 		}
 	};
 
-	protected Slot1<Double> changeZoom = new Slot1<Double>(this) {
+	protected Slot1<Double> changeZoom = new Slot1<Double>() {
 		@Override
 		public void execute(Double zoom) {
 			double zoomMin = Math.log(sliceViewer.getMinZoom()) / Math.log(2.0);
@@ -144,7 +146,7 @@ public class QuadViewUi extends JFrame
 		}
 	};
 	
-	protected Slot1<URL> rememberLoadedFileSlot = new Slot1<URL>(this) {
+	protected Slot1<URL> rememberLoadedFileSlot = new Slot1<URL>() {
 		@Override
 		public void execute(URL url) {
 			if (recentFileList == null)
@@ -251,6 +253,80 @@ public class QuadViewUi extends JFrame
 		colorPanel.add(colorWidgets[1]);
 		colorPanel.add(colorWidgets[2]);
 		colorPanel.add(colorWidgets[3]);
+		
+		// JPanel colorLockPanel = new JPanel();
+		colorLockPanel.setVisible(false);
+		colorPanel.add(colorLockPanel);
+		colorLockPanel.setLayout(new BoxLayout(colorLockPanel, BoxLayout.X_AXIS));
+		
+		colorLockPanel.add(Box.createHorizontalStrut(30));
+		
+		JToggleButton lockBlackButton = new JToggleButton("");
+		lockBlackButton.setToolTipText("Synchronize channel black levels");
+		lockBlackButton.setMargin(new Insets(0, 0, 0, 0));
+		lockBlackButton.setRolloverIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock_unlock.png")));
+		lockBlackButton.setRolloverSelectedIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock.png")));
+		lockBlackButton.setIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock_unlock.png")));
+		lockBlackButton.setSelectedIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock.png")));
+		lockBlackButton.setSelected(true);
+		colorLockPanel.add(lockBlackButton);
+		lockBlackButton.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent event) {
+				ImageColorModel colorModel = sliceViewer.getImageColorModel();
+				if (colorModel == null)
+					return;
+				AbstractButton button = (AbstractButton)event.getSource();
+				colorModel.setBlackSynchronized(button.isSelected());
+			}
+		});
+		
+		colorLockPanel.add(Box.createHorizontalGlue());
+
+		JToggleButton lockGrayButton = new JToggleButton("");
+		lockGrayButton.setToolTipText("Synchronize channel gray levels");
+		lockGrayButton.setMargin(new Insets(0, 0, 0, 0));
+		lockGrayButton.setRolloverIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock_unlock.png")));
+		lockGrayButton.setRolloverSelectedIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock.png")));
+		lockGrayButton.setIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock_unlock.png")));
+		lockGrayButton.setSelectedIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock.png")));
+		lockGrayButton.setSelected(true);
+		colorLockPanel.add(lockGrayButton);
+		lockGrayButton.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent event) {
+				ImageColorModel colorModel = sliceViewer.getImageColorModel();
+				if (colorModel == null)
+					return;
+				AbstractButton button = (AbstractButton)event.getSource();
+				colorModel.setGammaSynchronized(button.isSelected());
+			}
+		});
+		
+		colorLockPanel.add(Box.createHorizontalGlue());
+
+		JToggleButton lockWhiteButton = new JToggleButton("");
+		lockWhiteButton.setToolTipText("Synchronize channel white levels");
+		lockWhiteButton.setMargin(new Insets(0, 0, 0, 0));
+		lockWhiteButton.setRolloverIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock_unlock.png")));
+		lockWhiteButton.setRolloverSelectedIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock.png")));
+		lockWhiteButton.setIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock_unlock.png")));
+		lockWhiteButton.setSelectedIcon(new ImageIcon(QuadViewUi.class.getResource("/images/lock.png")));
+		lockWhiteButton.setSelected(true);
+		colorLockPanel.add(lockWhiteButton);
+		lockWhiteButton.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent event) {
+				ImageColorModel colorModel = sliceViewer.getImageColorModel();
+				if (colorModel == null)
+					return;
+				AbstractButton button = (AbstractButton)event.getSource();
+				colorModel.setWhiteSynchronized(button.isSelected());
+			}
+		});
+		
+		colorLockPanel.add(Box.createHorizontalStrut(30));
+
 		sliceViewer.getImageColorModel().getColorModelInitializedSignal().connect(new Slot() {
 			@Override
 			public void execute() {
@@ -261,6 +337,7 @@ public class QuadViewUi extends JFrame
 					w.setVisible(c < sc);
 					c += 1;
 				}
+				colorLockPanel.setVisible(sc > 1);
 				splitPane.resetToPreferredSizes();
 			}
 		});

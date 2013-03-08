@@ -5,10 +5,7 @@ import java.util.Observable;
 public abstract class Slot1<T> 
 implements BasicSignalSlot1<T>
 {
-	protected Object receiver;
-
-	public Slot1(Object receiver) {
-		this.receiver = receiver;
+	public Slot1() {
 	}
 
 	// Override this execute() method for your particular slot
