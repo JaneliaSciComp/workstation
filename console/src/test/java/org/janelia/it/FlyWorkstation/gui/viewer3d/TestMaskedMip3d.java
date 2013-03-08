@@ -101,6 +101,7 @@ public class TestMaskedMip3d {
                         throw new IllegalArgumentException( "Cannot open signal file " + fn );
                     }
 
+                    Map<Integer,byte[]> finalMapping = null;
                     VolumeMaskBuilder vmb = null;
                     // Load the file into the mask-builder.
                     if ( mf != null ) {
@@ -182,15 +183,15 @@ public class TestMaskedMip3d {
                         /**
                          * special renderables for the ref channel.
                          */
-                        //for ( int i = 1; i < 128; i++ ) {
-                        //    renderableBean = new RenderableBean();
-                        //    renderableBean.setLabelFile( mf );
-                        //    renderableBean.setTranslatedNum( 1+i );
-                        //    renderableBean.setLabelFileNum( i );
-                        //    renderableBean.setSignalFile( fn );
-                        //    renderableBean.setRenderableEntity( mockE );
-                        //    beans.add(renderableBean);
-                        //}
+                        for ( int i = 1; i < 128; i++ ) {
+                            renderableBean = new RenderableBean();
+                            renderableBean.setLabelFile( mf );
+                            renderableBean.setTranslatedNum( 1+i );
+                            renderableBean.setLabelFileNum( i );
+                            renderableBean.setSignalFile( fn );
+                            renderableBean.setRenderableEntity( mockE );
+                            beans.add(renderableBean);
+                        }
 
                         vmb.setRenderables(beans);
 
@@ -211,10 +212,10 @@ public class TestMaskedMip3d {
 
                             colorMapping.setGuidToRenderMethod( guidToRenderMethod );
                         }
-                        mipWidget.setMaskColorMappings( colorMapping.getMapping( beans ) );
+                        finalMapping = colorMapping.getMapping( beans );
                     }
 
-                    if ( ! mipWidget.loadVolume( fn, vmb, resolver ) ) {
+                    if ( ! mipWidget.loadVolume( fn, vmb, resolver, finalMapping ) ) {
                         throw new RuntimeException( "Failed to load " + fn );
                     }
 
