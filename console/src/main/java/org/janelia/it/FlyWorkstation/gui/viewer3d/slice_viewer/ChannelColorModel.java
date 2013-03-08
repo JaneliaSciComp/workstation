@@ -95,6 +95,7 @@ public class ChannelColorModel
 		if (this.blackLevel == blackLevel)
 			return;
 		this.blackLevel = blackLevel;
+		// System.out.println("black level = "+blackLevel);
 		blackLevelChangedSignal.emit(this.blackLevel);
 	}
 
@@ -116,6 +117,7 @@ public class ChannelColorModel
 		if (this.gamma == gamma)
 			return;
 		this.gamma = gamma;
+		// System.out.println("gamma = "+gamma);
 		gammaChangedSignal.emit(this.gamma);
 	}
 
@@ -130,6 +132,7 @@ public class ChannelColorModel
 		if (whiteLevel == this.whiteLevel)
 			return;
 		this.whiteLevel = whiteLevel;
+		// System.out.println("white level = "+whiteLevel);
 		whiteLevelChangedSignal.emit(this.whiteLevel);
 	}
 

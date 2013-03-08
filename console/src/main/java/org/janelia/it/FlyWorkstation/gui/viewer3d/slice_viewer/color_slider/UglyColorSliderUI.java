@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.color_slider;
 
 import java.awt.Color;
+import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -8,6 +9,7 @@ import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Ellipse2D;
+import java.awt.geom.Rectangle2D;
 
 import javax.swing.JComponent;
 import javax.swing.JSlider;
@@ -266,58 +268,52 @@ class UglyColorSliderUI extends BasicSliderUI
 	}
 
 	@Override
-	public void paintTrack(Graphics g) {
+	public void paintTrack(Graphics g) 
+	{
+		assert slider.getOrientation() == JSlider.HORIZONTAL;
+		
+		// paint color ramp behind track
+		UglyColorSlider colorSlider = (UglyColorSlider)slider;
+		Graphics2D g2 = (Graphics2D) g;
+
+		// black to gray
+		int x1 = xPositionForValue(colorSlider.getBlackLevel());
+		int x2 = xPositionForValue(colorSlider.getGrayLevel());
+		int y1 = slider.getHeight()/4;
+		int y2 = 3 * y1;
+		GradientPaint gp = new GradientPaint(x1, y1, blackColor, x2, y1, grayColor);
+		Rectangle2D rect = new Rectangle2D.Double(x1, y1, x2-x1, y2-y1);
+		g2.setPaint(gp);
+		g2.fill(rect);
+		
+		// gray to white
+		x1 = xPositionForValue(colorSlider.getGrayLevel());
+		x2 = xPositionForValue(colorSlider.getWhiteLevel());
+		gp = new GradientPaint(x1, y1, grayColor, x2, y1, whiteColor);
+		rect = new Rectangle2D.Double(x1, y1, x2-x1, y2-y1);
+		g2.setPaint(gp);
+		g2.fill(rect);
+
 		// Draw track.
 		super.paintTrack(g);
 
 		Rectangle trackBounds = trackRect;
 
-		if (slider.getOrientation() == JSlider.HORIZONTAL) {
-			// Determine position of selected range by moving from the middle
-			// of one thumb to the other.
-			int blackX = thumbRect.x + (thumbRect.width / 2);
-			int upperX = whiteThumbRect.x + (whiteThumbRect.width / 2);
+		// Determine position of selected range by moving from the middle
+		// of one thumb to the other.
+		int blackX = thumbRect.x + (thumbRect.width / 2);
+		int upperX = whiteThumbRect.x + (whiteThumbRect.width / 2);
 
-			// Determine track position.
-			int cy = (trackBounds.height / 2) - 2;
+		// Determine track position.
+		int cy = (trackBounds.height / 2) - 2;
 
-			// Save color and shift position.
-			Color oldColor = g.getColor();
-			g.translate(trackBounds.x, trackBounds.y + cy);
+		// Save color and shift position.
+		Color oldColor = g.getColor();
+		g.translate(trackBounds.x, trackBounds.y + cy);
 
-			// Draw selected range.
-			g.setColor(rangeColor);
-			for (int y = 0; y <= 3; y++) {
-				g.drawLine(blackX - trackBounds.x, y, upperX - trackBounds.x, y);
-			}
-
-			// Restore position and color.
-			g.translate(-trackBounds.x, -(trackBounds.y + cy));
-			g.setColor(oldColor);
-
-		} else {
-			// Determine position of selected range by moving from the middle
-			// of one thumb to the other.
-			int blackY = thumbRect.x + (thumbRect.width / 2);
-			int upperY = whiteThumbRect.x + (whiteThumbRect.width / 2);
-
-			// Determine track position.
-			int cx = (trackBounds.width / 2) - 2;
-
-			// Save color and shift position.
-			Color oldColor = g.getColor();
-			g.translate(trackBounds.x + cx, trackBounds.y);
-
-			// Draw selected range.
-			g.setColor(rangeColor);
-			for (int x = 0; x <= 3; x++) {
-				g.drawLine(x, blackY - trackBounds.y, x, upperY - trackBounds.y);
-			}
-
-			// Restore position and color.
-			g.translate(-(trackBounds.x + cx), -trackBounds.y);
-			g.setColor(oldColor);
-		}
+		// Restore position and color.
+		g.translate(-trackBounds.x, -(trackBounds.y + cy));
+		g.setColor(oldColor);
 	}
 
 	/**
@@ -743,6 +739,17 @@ class UglyColorSliderUI extends BasicSliderUI
 			slider.repaint(grayUnionRect.x, grayUnionRect.y, grayUnionRect.width, grayUnionRect.height);
 		}
 
+	}
+
+	public void setWhiteColor(Color whiteColor) 
+	{
+		if (this.whiteColor == whiteColor)
+			return;
+		this.whiteColor = whiteColor;
+		this.grayColor = new Color(
+				whiteColor.getRed()/2, 
+				whiteColor.getGreen()/2, 
+				whiteColor.getBlue()/2);
 	}
 
 }

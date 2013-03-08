@@ -303,9 +303,9 @@ extends JFrame
 		controlPanel.add(colorsPanel);
 		colorsPanel.setBorder(new TitledBorder("Color Channels"));
 		colorsPanel.setLayout(new BoxLayout(colorsPanel, BoxLayout.Y_AXIS));
-		colorsPanel.add(new ColorChannelWidget(0));
-		colorsPanel.add(new ColorChannelWidget(1));
-		colorsPanel.add(new ColorChannelWidget(2));
+		colorsPanel.add(new ColorChannelWidget(0, sliceViewer.getImageColorModel()));
+		colorsPanel.add(new ColorChannelWidget(1, sliceViewer.getImageColorModel()));
+		colorsPanel.add(new ColorChannelWidget(2, sliceViewer.getImageColorModel()));
 		button = new JButton("Reset Colors");
 		// All components in a BoxLayout should have the same alignment
 		// So the color widgets really set the pattern here

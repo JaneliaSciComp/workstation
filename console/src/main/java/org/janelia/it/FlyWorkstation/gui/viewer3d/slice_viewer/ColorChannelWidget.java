@@ -1,7 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -14,29 +13,72 @@ import javax.swing.ImageIcon;
 import javax.swing.JColorChooser;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
-import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.color_slider.UglyColorSlider;
 
 public class ColorChannelWidget extends JPanel 
 {
 	private static final long serialVersionUID = 1L;
-	private int channelIndex;
+	private final int channelIndex;
+	private ImageColorModel imageColorModel;
+	private ColorButton colorButton;
+	private UglyColorSlider slider;
 	
-	ColorChannelWidget(int channelIndex) {
+	ColorChannelWidget(int channelIndex, ImageColorModel imageColorModel) {
 		this.channelIndex = channelIndex;
+		this.imageColorModel = imageColorModel;
+		this.colorButton = new ColorButton(); // construct after imageColorModel is set...
 		setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
 		// A: We want the reset color button right aligned
 		// B: All components in a BoxLayout should have the same alignment
 		// C: Therefore, the slider widget should be right aligned
 		// setAlignmentX(Component.RIGHT_ALIGNMENT);
 		add(new VisibilityButton());
-		add(new JSlider(JSlider.HORIZONTAL));
-		add(new ColorButton());
+		if (slider == null)
+			slider = new UglyColorSlider(channelIndex, imageColorModel);
+		add(slider);
+		add(colorButton);
+		updateColor();
+		imageColorModel.getColorModelInitializedSignal().connect(new Slot() {
+			@Override
+			public void execute() {
+				updateColor();
+			}
+		});
+		imageColorModel.getColorModelChangedSignal().connect(new Slot() {
+			@Override
+			public void execute() {
+				updateColor();
+			}
+		});
 	}
-	
+
+	public void setWhiteColor(Color whiteColor) {
+		if (whiteColor == null)
+			return;
+		if (colorButton != null)
+			colorButton.setColor(whiteColor);
+		if (slider != null)
+			slider.setWhiteColor(whiteColor);
+		if (imageColorModel == null)
+			return;
+		if (imageColorModel.getChannelCount() <= channelIndex)
+			return;
+		ChannelColorModel ccm = imageColorModel.getChannel(channelIndex);
+		ccm.setColor(whiteColor);
+	}
+
+	public void updateColor() {
+		if (imageColorModel == null)
+			return;
+		if (imageColorModel.getChannelCount() <= channelIndex)
+			return;
+		ChannelColorModel ccm = imageColorModel.getChannel(channelIndex);
+		setWhiteColor(ccm.getColor());
+	}
 	
 	class VisibilityButton extends ToolModeButton 
 	{
@@ -55,16 +97,29 @@ public class ColorChannelWidget extends JPanel
 	class ColorButton extends ToolButton
 	{
 		private static final long serialVersionUID = 1L;
+		
+		BufferedImage image = new BufferedImage(16, 16, BufferedImage.TYPE_INT_RGB);
+		private ImageIcon icon = new ImageIcon(image);
+		private Color whiteColor = Color.white;
+		
 		public ColorButton() {
 			super(new ChannelColorAction(channelIndex));
-			
-			BufferedImage image = new BufferedImage(16, 16, BufferedImage.TYPE_INT_RGB);
-			for (int x = 0; x < 16; ++x)
-				for (int y = 0; y < 16; ++y)
-					image.setRGB(x, y, Color.orange.getRGB());
-			ImageIcon icon = new ImageIcon(image);
+			setColor(whiteColor);
 			setIcon(icon);
 			setToolTipText("Click to change channel "+channelIndex+"color");
+		}
+		
+		public void setColor(Color color) {
+			if (color == null)
+				return;
+			if (whiteColor.equals(color))
+				return;
+			whiteColor = color;
+			int c = color.getRGB();
+			for (int x = 0; x < 16; ++x)
+				for (int y = 0; y < 16; ++y)
+					image.setRGB(x, y, c);
+			repaint();
 		}
 	}
 	
@@ -76,8 +131,13 @@ public class ColorChannelWidget extends JPanel
 		}
 		
 		@Override
-		public void actionPerformed(ActionEvent e) {
-			System.out.println("visibility"); // TODO
+		public void actionPerformed(ActionEvent event) {
+			if (imageColorModel.getChannelCount() <= channelIndex)
+				return;
+			ChannelColorModel ccm = imageColorModel.getChannel(channelIndex);
+			VisibilityButton button = (VisibilityButton)event.getSource();
+			ccm.setVisible(button.isSelected());
+			// System.out.println("visibility");
 		}
 	}
 	
@@ -87,13 +147,25 @@ public class ColorChannelWidget extends JPanel
 		private static final long serialVersionUID = 1L;
 		JDialog colorDialog;
 		JColorChooser colorChooser;
+		private Color originalColor;
+		private int channelIndex = 0;
 		
-		public ChannelColorAction(int channelIndex) 
+		public ChannelColorAction(int channelIndexParam) 
 		{
-			ActionListener actionListener = new ActionListener() {
+			this.channelIndex = channelIndexParam;
+			
+			ActionListener cancelListener = new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
-					System.out.println("action!");
+					System.out.println("cancel");
+					setWhiteColor(originalColor);
+				}
+			};
+			ActionListener okListener = new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					System.out.println("ok");
+					setWhiteColor(colorChooser.getColor());
 				}
 			};
 			PropertyChangeListener colorListener = new PropertyChangeListener() {
@@ -107,20 +179,27 @@ public class ColorChannelWidget extends JPanel
 			{
 				@Override
 				public void stateChanged(ChangeEvent arg0) {
-					System.out.println("Color changed");
+					setWhiteColor(colorChooser.getColor());
 				}
 			});
 			colorDialog = JColorChooser.createDialog(ColorChannelWidget.this,
 					"Select color for channel "+channelIndex,
 					false, // not modal
 					colorChooser,
-					actionListener, actionListener);
+					okListener, cancelListener);
 			colorDialog.setVisible(false);
 			colorDialog.addPropertyChangeListener(colorListener);
 		}
 		
 		@Override
 		public void actionPerformed(ActionEvent e) {
+			if (imageColorModel == null)
+				return;
+			if (imageColorModel.getChannelCount() <= channelIndex)
+				return;
+			ChannelColorModel ccm = imageColorModel.getChannel(channelIndex);
+			originalColor = ccm.getColor();
+			colorChooser.setColor(originalColor);
 			colorDialog.setVisible(true);
 		}
 	}

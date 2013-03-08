@@ -292,6 +292,8 @@ implements GLActor
 	{
 		for (TileIndex ix : textures) {
 			if (! textureCache.containsKey(ix)) {
+				if (server.getUrlStalk() == null)
+					continue;
 				TileTexture t = new TileTexture(ix, server.getUrlStalk());
 				t.getRamLoadedSignal().connect(getDataChangedSignal());
 				textureCache.put(ix, t);

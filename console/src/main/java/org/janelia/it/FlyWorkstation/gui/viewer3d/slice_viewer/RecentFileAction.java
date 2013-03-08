@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 public class RecentFileAction extends AbstractAction 
 {
 	private static final long serialVersionUID = 1L;
-	private static final Logger log = LoggerFactory.getLogger(RecentFileAction.class);
+	// private static final Logger log = LoggerFactory.getLogger(RecentFileAction.class);
 	
 	private URL url;
 	private Signal1<URL> openFileRequestedSignal = new Signal1<URL>();
@@ -68,7 +68,7 @@ public class RecentFileAction extends AbstractAction
 
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
-		log.info("requesting load of "+url);
+		// log.info("requesting load of "+url);
 		getOpenFileRequestedSignal().emit(url);
 	}
 

@@ -64,7 +64,7 @@ implements MouseModalWidget, VolumeViewer
 	protected Slot1<URL> loadUrlSlot = new Slot1<URL>(this) {
 		@Override
 		public void execute(URL url) {
-			log.info("loadUrlSlot");
+			// log.info("loadUrlSlot");
 			loadURL(url);
 		}
 	};
@@ -397,7 +397,7 @@ implements MouseModalWidget, VolumeViewer
 		if (result) {
 			getImageColorModel().reset(volumeImage);
 			resetView();
-			log.info("emitting file loaded signal");
+			// log.info("emitting file loaded signal");
 			getFileLoadedSignal().emit(url);
 		}
 		return result;

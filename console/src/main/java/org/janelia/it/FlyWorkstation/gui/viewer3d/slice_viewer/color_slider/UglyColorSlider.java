@@ -1,6 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.color_slider;
 
 
+import java.awt.Color;
+
 import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -16,6 +18,8 @@ public class UglyColorSlider extends JSlider
 	protected int channelIndex;
 	protected ImageColorModel imageColorModel;
 	private ColorChannelRangeModel rangeModel = new ColorChannelRangeModel();
+	private Color whiteColor = Color.white;
+	private UglyColorSliderUI ui;
 
 	private boolean updatingFromModel = false; // flag to prevent recursion
 
@@ -89,7 +93,17 @@ public class UglyColorSlider extends JSlider
 		float grayLevel = (float)Math.pow(0.5, 1.0/ccm.getGamma());
 		grayLevel = getBlackLevel() + grayLevel*(getWhiteLevel() - getBlackLevel());
 		setGrayLevel((int)Math.round(grayLevel));
+		// Color
+		// setWhiteColor(ccm.getColor());
 		updatingFromModel = false;
+	}
+
+	public void setWhiteColor(Color color) {
+		if (whiteColor == color)
+			return;
+		whiteColor = color;
+		ui.setWhiteColor(whiteColor);
+		repaint();
 	}
 
 	private void updateColorModelFromSliderValues() {
@@ -111,7 +125,9 @@ public class UglyColorSlider extends JSlider
 	 */
 	@Override
 	public void updateUI() {
-		setUI(new UglyColorSliderUI(this));
+		if (ui == null)
+			ui = new UglyColorSliderUI(this);
+		setUI(ui);
 		// Update UI for slider labels. This must be called after updating the
 		// UI of the slider. Refer to JSlider.updateUI().
 		updateLabelUIs();

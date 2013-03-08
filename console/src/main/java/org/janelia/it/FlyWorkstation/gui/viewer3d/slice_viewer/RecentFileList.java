@@ -38,7 +38,7 @@ public class RecentFileList
 	}
 
 	public void add(URL url) {
-		log.info("Adding recent file" + url);
+		// log.info("Adding recent file" + url);
 		RecentFileAction action = new RecentFileAction(url);
 		if ((actions.size() > 0) && (action.equals(actions.getFirst())))
 			return; // already there at the top of the list

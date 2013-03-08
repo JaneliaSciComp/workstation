@@ -46,6 +46,12 @@ extends DefaultBoundedRangeModel
 		setValue(level);
 	}
 	
+	@Override
+	public void setExtent(int extent) {
+		int newExtent = Math.max(extent, 2);
+		super.setExtent(newExtent);
+	}
+	
 	public void setGamma(double gamma) {
 		if (this.gamma == gamma)
 			return; // no change
@@ -68,7 +74,7 @@ extends DefaultBoundedRangeModel
 		double grayRatio = (grayLevel - getBlackLevel()) / (double)getExtent();
 		assert grayRatio > 0;
 		assert grayRatio < 1;
-		double newGamma = Math.log(grayRatio)/Math.log(0.5);
+		double newGamma = Math.log(0.5)/Math.log(grayRatio);
 		assert grayLevel == grayLevelFromGamma(newGamma, getValue(), getExtent());
 		setGamma(newGamma);
 	}
@@ -81,7 +87,7 @@ extends DefaultBoundedRangeModel
 		}
 		// Compute new value and extent to maintain upper value.
 		int oldExtent = getExtent();
-		int newValue = Math.min(Math.max(getMinimum(), value), oldValue + oldExtent);
+		int newValue = Math.min(Math.max(getMinimum(), value), oldValue + oldExtent - 2);
 		int newExtent = oldExtent + oldValue - newValue;
 		// Set new value and extent, and fire a single change event.
 		setRangeProperties(newValue, newExtent, getMinimum(),

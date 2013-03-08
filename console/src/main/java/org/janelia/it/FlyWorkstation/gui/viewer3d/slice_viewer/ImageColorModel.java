@@ -2,7 +2,6 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.awt.Color;
 import java.util.Vector;
-
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 
 public class ImageColorModel 
@@ -24,7 +23,7 @@ public class ImageColorModel
 	private boolean whiteSynchronized = true;
 
 	private Signal colorModelChangedSignal = new Signal();
-
+	private Signal colorModelInitializedSignal = new Signal();
 	
 	/*
 	public ImageColorModel() {
@@ -49,6 +48,10 @@ public class ImageColorModel
 		channel.getGammaChangedSignal().connect(colorModelChangedSignal);
 		channel.getWhiteLevelChangedSignal().connect(colorModelChangedSignal);
 		channel.getVisibilityChangedSignal().connect(colorModelChangedSignal);
+	}
+
+	public Signal getColorModelInitializedSignal() {
+		return colorModelInitializedSignal;
 	}
 
 	public boolean isBlackSynchronized() {
@@ -93,8 +96,9 @@ public class ImageColorModel
 			int ix = c % defaultChannelColors.length;
 			addChannel(defaultChannelColors[ix], bitDepth);
 		}
-		System.out.println("model channel count = "+channelCount);
+		// System.out.println("model channel count = "+channelCount);
 		resetColors(); // in case 1 or 2 channels
+		colorModelInitializedSignal.emit();
 	}
 	
 	public void reset(VolumeImage3d volumeImage) 

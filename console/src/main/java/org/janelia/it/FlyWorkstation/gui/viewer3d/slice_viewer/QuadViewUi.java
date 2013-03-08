@@ -86,10 +86,24 @@ public class QuadViewUi extends JFrame
 	private JSpinner zScanSpinner = new JSpinner();
 	private JSlider zoomSlider = new JSlider();
 	
+	private JPanel colorPanel = new JPanel();
+	private JSplitPane splitPane = new JSplitPane();
+	private ColorChannelWidget colorChannelWidget_0 = new ColorChannelWidget(0, sliceViewer.getImageColorModel());
+	private ColorChannelWidget colorChannelWidget_1 = new ColorChannelWidget(1, sliceViewer.getImageColorModel());
+	private ColorChannelWidget colorChannelWidget_2 = new ColorChannelWidget(2, sliceViewer.getImageColorModel());
+	private ColorChannelWidget colorChannelWidget_3 = new ColorChannelWidget(3, sliceViewer.getImageColorModel());
+	private final ColorChannelWidget colorWidgets[]  = {
+		colorChannelWidget_0, 
+		colorChannelWidget_1, 
+		colorChannelWidget_2, 
+		colorChannelWidget_3
+	};
+	
 	// Actions
 	private final Action openFolderAction = new OpenFolderAction(sliceViewer, sliceViewer);
 	private RecentFileList recentFileList;
 	private final Action resetViewAction = new ResetViewAction(sliceViewer);
+	private final Action resetColorsAction = new ResetColorsAction(sliceViewer.getImageColorModel());
 	// mode actions (and groups)
 	private final Action zoomMouseModeAction = new ZoomMouseModeAction(sliceViewer);
 	private final Action panModeAction = new PanModeAction(sliceViewer);
@@ -196,6 +210,10 @@ public class QuadViewUi extends JFrame
 	 */
 	public QuadViewUi() 
 	{
+		colorChannelWidget_3.setVisible(false);
+		colorChannelWidget_2.setVisible(false);
+		colorChannelWidget_1.setVisible(false);
+		colorChannelWidget_0.setVisible(false);
 		setupUi();
 		interceptModifierKeyPresses();
 	}
@@ -219,15 +237,33 @@ public class QuadViewUi extends JFrame
 		
 		JPanel toolBarPanel = setupToolBar();
 		
-		JSplitPane splitPane = new JSplitPane();
-		splitPane.setResizeWeight(0.95);
+		// JSplitPane splitPane = new JSplitPane();
+		splitPane.setResizeWeight(1.00);
 		splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
 		toolBarPanel.add(splitPane, BorderLayout.CENTER);
 		
-		JPanel colorPanel = new JPanel();
+		// JPanel colorPanel = new JPanel();
 		splitPane.setRightComponent(colorPanel);
 		colorPanel.setLayout(new BoxLayout(colorPanel, BoxLayout.Y_AXIS));
-		colorPanel.add(new UglyColorSlider(0, sliceViewer.getImageColorModel()));
+		
+		// Avoid loop to add color widgets, so WindowBuilder can parse this.
+		colorPanel.add(colorWidgets[0]);
+		colorPanel.add(colorWidgets[1]);
+		colorPanel.add(colorWidgets[2]);
+		colorPanel.add(colorWidgets[3]);
+		sliceViewer.getImageColorModel().getColorModelInitializedSignal().connect(new Slot() {
+			@Override
+			public void execute() {
+				// System.out.println("Updating slider visibility");
+				int sc = sliceViewer.getImageColorModel().getChannelCount();
+				int c = 0;
+				for (ColorChannelWidget w : colorWidgets) {
+					w.setVisible(c < sc);
+					c += 1;
+				}
+				splitPane.resetToPreferredSizes();
+			}
+		});
 		
 		JSplitPane splitPane_1 = new JSplitPane();
 		splitPane_1.setResizeWeight(1.00);
@@ -358,6 +394,10 @@ public class QuadViewUi extends JFrame
 		
 		Component verticalGlue = Box.createVerticalGlue();
 		buttonsPanel.add(verticalGlue);
+		
+		JButton btnNewButton_3 = new JButton("New button");
+		btnNewButton_3.setAction(resetColorsAction);
+		buttonsPanel.add(btnNewButton_3);
 		
 		JPanel statusBar = new JPanel();
 		statusBar.setMaximumSize(new Dimension(32767, 30));
@@ -570,6 +610,13 @@ public class QuadViewUi extends JFrame
 		JMenuItem menuItem = new JMenuItem("New menu item");
 		menuItem.setAction(advanceZSlicesAction);
 		mnZScan.add(menuItem);
+		
+		JSeparator separator_2 = new JSeparator();
+		mnView.add(separator_2);
+		
+		JMenuItem mntmNewMenuItem_3 = new JMenuItem("New menu item");
+		mntmNewMenuItem_3.setAction(resetColorsAction);
+		mnView.add(mntmNewMenuItem_3);
 		
 		JMenu mnHelp = new JMenu("Help");
 		menuBar.add(mnHelp);
