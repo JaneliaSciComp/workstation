@@ -42,6 +42,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
     private static final String COMPARTMENT_MASK_ONLY_SIGNAL = "/groups/scicomp/jacsData/MaskResources/Compartment/maskRGB.v3dpbd";
     private static final String COMPARTMENT_ENTITY_NAME = "Compartment";
     private static final int TARGET_MVOXELS = 25;
+    private static final byte REFERENCE_INTENSITY = 7;
 
     private Logger logger = LoggerFactory.getLogger( AlignmentBoardDataBuilder.class );
 
@@ -159,7 +160,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
                     referenceBean.setSignal( true );
                     referenceBean.setRgb(
                             new byte[] {
-                                    (byte)255, (byte) 255, (byte) 255, RenderMappingI.NO_SHADER_USE
+                                    REFERENCE_INTENSITY, REFERENCE_INTENSITY, REFERENCE_INTENSITY, RenderMappingI.NO_SHADER_USE
                             }
                     );
 
