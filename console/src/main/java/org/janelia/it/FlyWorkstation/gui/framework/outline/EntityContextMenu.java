@@ -650,7 +650,7 @@ public class EntityContextMenu extends JPopupMenu {
 
                         @Override
                         protected void hadSuccess() {
-                            SessionMgr.getBrowser().getEntityOutline().totalRefresh(true, null);
+                            // No need to update the UI, the event bus will get it done
                         }
 
                         @Override
@@ -691,8 +691,7 @@ public class EntityContextMenu extends JPopupMenu {
 
                     @Override
                     protected void hadSuccess() {
-                        // Update Tree UI
-                        SessionMgr.getBrowser().getEntityOutline().totalRefresh(true, null);
+                        // No need to update the UI, the event bus will get it done
                     }
 
                     @Override
@@ -741,7 +740,7 @@ public class EntityContextMenu extends JPopupMenu {
 
                         @Override
                         protected void hadSuccess() {
-                            SessionMgr.getBrowser().getEntityOutline().totalRefresh(true, null);
+                            // No need to update the UI, the event bus will get it done
                         }
 
                         @Override
@@ -785,8 +784,7 @@ public class EntityContextMenu extends JPopupMenu {
 
                     @Override
                     protected void hadSuccess() {
-                        // Update Tree UI
-                        SessionMgr.getBrowser().getEntityOutline().totalRefresh(true, null);
+                        // No need to update the UI, the event bus will get it done
                     }
 
                     @Override

@@ -150,7 +150,7 @@ public class EntityTree extends JPanel implements ActivatableView {
 
         showTree();
     }
-
+    
 	@Subscribe 
 	public void entityChanged(EntityChangeEvent event) {
 		Entity entity = event.getEntity();

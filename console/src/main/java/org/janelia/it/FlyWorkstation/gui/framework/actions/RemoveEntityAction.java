@@ -221,7 +221,6 @@ public class RemoveEntityAction implements Action {
 								throw new IllegalStateException("Unknown deletion type for EntityData.id="+ed.getId());
 							}
 						}
-//						ModelMgr.getModelMgr().invalidate(invalidIdSet);
 					}
 
 					@Override

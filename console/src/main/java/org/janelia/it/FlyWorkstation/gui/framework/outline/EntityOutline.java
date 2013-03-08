@@ -21,9 +21,11 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
+import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityCreateEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.dialogs.ScreenEvaluationDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
@@ -45,6 +47,8 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 	
 	private static final Logger log = LoggerFactory.getLogger(EntityOutline.class);
 	
+	private Entity root;
+	private List<Entity> entityRootList;
 	private ModelMgrAdapter mml;
 	private String currUniqueId;
 
@@ -86,11 +90,13 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 
     public void init(List<Entity> entityRootList) {
 		
+        this.entityRootList = entityRootList;
+        
 		EntityType rootType = new EntityType();
 		rootType.setName("");
 		rootType.setAttributes(new HashSet<EntityAttribute>());
 		
-		Entity root = new Entity();
+		this.root = new Entity();
 		root.setEntityType(rootType);
 		root.setName("Data");
 		
@@ -200,14 +206,21 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 						}
 						@Override
 						protected void hadSuccess() {
+						    SwingUtilities.invokeLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    selectEntityByUniqueId("/e_"+newFolder.getId());
+                                }
+                            });
+						    
 							// Update Tree UI
-							totalRefresh(true, new Callable<Void>() {
-								@Override
-								public Void call() throws Exception {
-									selectEntityByUniqueId("/e_"+newFolder.getId());
-									return null;
-								}
-							});
+//							totalRefresh(true, new Callable<Void>() {
+//								@Override
+//								public Void call() throws Exception {
+//									selectEntityByUniqueId("/e_"+newFolder.getId());
+//									return null;
+//								}
+//							});
 						}
 						@Override
 						protected void hadError(Throwable error) {
@@ -331,6 +344,41 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 	protected void nodeDoubleClicked(MouseEvent e) {
 	}
 
+    @Subscribe 
+    public void entityCreated(EntityCreateEvent event) {
+        Entity entity = event.getEntity();
+        if (entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_COMMON_ROOT)!=null) {
+            log.debug("New common root detected: '{}'",entity.getName());     
+            
+            
+            int index = 0;
+            for(EntityData ed : root.getOrderedEntityData()) {
+                if (!ModelMgrUtils.isOwner(ed.getChildEntity())) {
+                    break;
+                }
+                index++;
+            }
+            
+            log.trace("Will insert at "+index);
+            entityRootList.add(index, entity);
+            
+            int i = 0;
+            for(EntityData ed : root.getOrderedEntityData()) {
+                log.trace("i="+i+" orderIndex="+ed.getOrderIndex()+" "+ed.getChildEntity().getName());
+                if (i>=index) {
+                    log.trace("  Incrementing to "+(i+1));
+                    ed.setOrderIndex(i+1);
+                }
+                i++;
+            }
+            
+            EntityData newEd = addTopLevelEntity(root, entity);
+            newEd.setOrderIndex(index);
+            
+            addNodes(getDynamicTree().getRootNode(), newEd, index);
+        }
+    }
+    
 	@Subscribe 
 	public void entityInvalidated(EntityInvalidationEvent event) {
 		log.debug("Some entities were invalidated so we're refreshing the tree");
@@ -594,7 +642,7 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 		}
 		
 		RootedEntity rootedEntity = new RootedEntity(uniqueId, getEntityData(node));
-		log.debug("showEntityInActiveViewer: "+rootedEntity);
+		log.debug("showEntityInActiveViewer: "+rootedEntity.getName());
 		SessionMgr.getBrowser().getViewerManager().showEntityInActiveViewer(rootedEntity);
 	}
 }

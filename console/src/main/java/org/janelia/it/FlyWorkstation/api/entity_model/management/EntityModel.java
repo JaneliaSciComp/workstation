@@ -243,15 +243,12 @@ public class EntityModel {
             Collection<Long> parentIds = parentMap.get(entity.getId());
             if (parentIds!=null && !parentIds.isEmpty()) {
                 for(Long parentId : parentIds) {
-                    log.debug("Invalidating parent if present: {}",parentId);    
                     Entity parent = entityCache.getIfPresent(parentId);
                     if (parent!=null) {
+                        log.debug("Invalidating parent: {}",parentId);    
                         invalidate(parent, false);
                     }
                 }
-            }
-            else {
-                log.debug("Entity has no parents: {}",entity.getId());    
             }
             // Invalidate the entity AFTER invalidating its parents 
             // (otherwise the parentMap may not contain the information we need)
@@ -498,6 +495,7 @@ public class EntityModel {
     	synchronized(this) {
 	        entity = entityFacade.createEntity(entityTypeName, entityName);
 	        entity = putOrUpdate(entity);
+	        log.debug("Created new entity '{}' (id={})",entityName,entity.getId());
     	}
         notifyEntityCreated(entity);
         return entity;
@@ -518,6 +516,7 @@ public class EntityModel {
 	    	Entity newEntity = entityFacade.getEntityById(entity.getId());
 	    	newEntity.setName(newName);
 	    	canonicalEntity = putOrUpdate(entityFacade.saveEntity(newEntity));
+	    	log.debug("Renamed entity to '{}' (id={})",newName,entity.getId());
     	}
     	return canonicalEntity;
     }
@@ -584,7 +583,6 @@ public class EntityModel {
     	    Entity newEntity = entityFacade.saveEntity(entity);
 	    	replaceUnloadedChildrenWithForbiddenEntities(newEntity, true);
     	    canonicalEntity = putOrUpdate(newEntity);
-	    	
     	}
     	return canonicalEntity;
 	}
@@ -676,17 +674,22 @@ public class EntityModel {
     	    log.debug("Deleting entity tree "+entity.getId());
 	    	entityFacade.deleteEntityTree(entity.getId());
 	    	commonRootCache.remove(entity.getId());
-            invalidate(entity, true);
+
+	    	// Remove from cache
+	        entityCache.invalidate(entity.getId());
+	        commonRootCache.remove(entity.getId());
 	    	
-			// Go through the cache and invalidate any entities which have this entity as a child
-//			for(Entity parent : entityCache.asMap().values()) {
-//			    for(EntityData childEd : parent.getEntityData()) {
-//			        if (childEd.getChildEntity()!=null && childEd.getChildEntity().getId().equals(entity.getId())) {
-//			            log.debug("Invalidating tree rooted at parent "+parent.getId());
-//			            invalidate(parent, true);
-//			        }
-//			    }   
-//			}
+			// Go through the cache and remove the entity from any entities which have this entity as a child
+			for(Entity parent : entityCache.asMap().values()) {
+			    for(Iterator<EntityData> edIterator = parent.getEntityData().iterator(); edIterator.hasNext(); ) {
+			        EntityData childEd = edIterator.next();
+			        if (childEd.getChildEntity()!=null && childEd.getChildEntity().getId().equals(entity.getId())) {
+			            log.debug("  Removing parent link "+childEd.getId());
+			            edIterator.remove();
+			            notifyEntityChanged(parent);
+			        }
+			    }   
+			}
     	}
     	notifyEntityRemoved(entity);
     }
@@ -726,6 +729,7 @@ public class EntityModel {
 	    	ed.setChildEntity(entity); // replace with a canonical entities
 	    	ed.setParentEntity(parent);
 	    	parent.getEntityData().add(ed);
+            log.debug("Added entity (id={}) to parent (id={})",entity.getId(),parent.getId());
     	}
     	notifyEntityChanged(parent);		
     	return ed;
@@ -762,8 +766,11 @@ public class EntityModel {
 	    	EntityUtils.addAttributeAsTag(newFolder, EntityConstants.ATTRIBUTE_COMMON_ROOT);
 			newFolder = entityFacade.saveEntity(newFolder);
 			commonRootCache.put(newFolder.getId(), newFolder);
+			log.debug("Created new common root '{}' (id={})",newFolder,newFolder.getId());
+			newFolder =  putOrUpdate(newFolder);
     	}
-		return putOrUpdate(newFolder);
+        notifyEntityCreated(newFolder);
+        return newFolder;
     }
 
     /**
@@ -794,6 +801,7 @@ public class EntityModel {
 			checkArgument(rootTagEd!=null, "Entity is not a common root: "+commonRoot.getId());
 			entityFacade.removeEntityData(rootTagEd);
 			commonRootCache.remove(commonRoot.getId());
+			log.debug("Demoted common root '{}' (id={}) to regular folder",commonRoot,commonRoot.getId());
     	}
     }
     

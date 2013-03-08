@@ -165,6 +165,7 @@ public class ImagesPanel extends JScrollPane {
     
     public void removeRootedEntity(RootedEntity rootedEntity) {
     	AnnotatedImageButton button = buttons.get(rootedEntity.getId());
+    	if (button == null) return; // Button was already removed, probably because of a EntityChangedEvent
     	buttonsPanel.remove(button);
     	buttons.remove(rootedEntity.getId());
     }
