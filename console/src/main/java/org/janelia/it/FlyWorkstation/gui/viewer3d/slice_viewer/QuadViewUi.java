@@ -32,6 +32,8 @@ import javax.swing.JMenuItem;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicObservableCamera3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.color_slider.UglyColorSlider;
+
 import javax.swing.JSeparator;
 import java.awt.Component;
 import javax.swing.Box;
@@ -83,8 +85,6 @@ public class QuadViewUi extends JFrame
 	private JSlider zScanSlider = new JSlider();
 	private JSpinner zScanSpinner = new JSpinner();
 	private JSlider zoomSlider = new JSlider();
-	private JSlider blackSlider = new BlackLevelSlider(0, sliceViewer.getImageColorModel());
-	private JSlider whiteSlider = new WhiteLevelSlider(0, sliceViewer.getImageColorModel());
 	
 	// Actions
 	private final Action openFolderAction = new OpenFolderAction(sliceViewer, sliceViewer);
@@ -227,8 +227,6 @@ public class QuadViewUi extends JFrame
 		JPanel colorPanel = new JPanel();
 		splitPane.setRightComponent(colorPanel);
 		colorPanel.setLayout(new BoxLayout(colorPanel, BoxLayout.Y_AXIS));
-		colorPanel.add(blackSlider);
-		colorPanel.add(whiteSlider);
 		colorPanel.add(new UglyColorSlider(0, sliceViewer.getImageColorModel()));
 		
 		JSplitPane splitPane_1 = new JSplitPane();
