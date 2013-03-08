@@ -136,10 +136,18 @@ public class TextureMediator {
             reportError( "glTexImage", gl );
 
             // DEBUG
-            //if ( expectedRemaining < 1000000 )
-            //    testTextureContents(gl);
+            if ( expectedRemaining < 1000000 )
+                testTextureContents(gl);
         }
 
+    }
+
+    /** Release the texture data memory from the GPU. */
+    public void deleteTexture( GL2 gl ) {
+        IntBuffer textureNameBuffer = IntBuffer.allocate( 1 );
+        textureNameBuffer.put( textureName );
+        textureNameBuffer.rewind();
+        gl.glDeleteTextures( 1, textureNameBuffer );
     }
 
     public int getTextureOffset() {

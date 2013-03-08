@@ -14,7 +14,6 @@ import java.util.Map;
 public class Mip3d extends BaseGLViewer {
 	private static final long serialVersionUID = 1L;
 	private MipRenderer renderer = new MipRenderer();
-    private boolean clearOnLoad = true;
     private Map<Integer,byte[]> neuronNumToRGB;
 
 	public enum InteractionMode {
@@ -49,19 +48,6 @@ public class Mip3d extends BaseGLViewer {
 		repaint();
 	}
 
-    public void setClearOnLoad(boolean clearOnLoad) {
-        this.clearOnLoad = clearOnLoad;
-    }
-
-    /**
-     * Sets the info needed for the shader to colorize the otherwise luminance-only masks.
-     *
-     * @param neuronNumToRGB mapping: id of neuron mask to RGB output.
-     */
-    public void setMaskColorMappings(Map<Integer,byte[]> neuronNumToRGB) {
-        this.neuronNumToRGB = neuronNumToRGB;
-    }
-
     /**
      * Load a volume which may have a mask against it.
      *
@@ -70,9 +56,6 @@ public class Mip3d extends BaseGLViewer {
      * @return true if it worked; false otherwise.
      */
     public boolean loadVolume(String fileName, FileResolver resolver) {
-        if (clearOnLoad)
-            renderer.clear();
-
         VolumeLoader volumeLoader = new VolumeLoader(resolver);
         if (volumeLoader.loadVolume(fileName)) {
             VolumeBrick brick = new VolumeBrick(renderer);
@@ -93,10 +76,12 @@ public class Mip3d extends BaseGLViewer {
      * @param resolver flexibility: allows different ways of resolving the file, which may be server-based.
      * @return true if it worked; false otherwise.
      */
-	public boolean loadVolume(String fileName, VolumeMaskBuilder volumeMaskBuilder, FileResolver resolver) {
-        if (clearOnLoad)
-            renderer.clear();
-
+	public boolean loadVolume(
+            String fileName,
+            VolumeMaskBuilder volumeMaskBuilder,
+            FileResolver resolver,
+            Map<Integer,byte[]> neuronNumToRGB
+    ) {
 		VolumeLoader volumeLoader = new VolumeLoader(resolver);
 		if (volumeLoader.loadVolume(fileName)) {
             VolumeBrick brick = new VolumeBrick(renderer);
@@ -130,9 +115,6 @@ public class Mip3d extends BaseGLViewer {
     public boolean loadVolume(
             String fileName, float[] colorMask,  FileResolver resolver
     ) {
-        if (clearOnLoad)
-            renderer.clear();
-
         VolumeLoader volumeLoader = new VolumeLoader(resolver);
         if (volumeLoader.loadVolume(fileName)) {
             VolumeBrick brick = new VolumeBrick(renderer);

@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.concurrent.BrokenBarrierException;
@@ -69,10 +70,9 @@ public class ABLoadWorker extends SimpleWorker {
             FileResolver resolver = new CacheFileResolver();
             final CyclicBarrier barrier = new CyclicBarrier( signalRenderables.size() + 1 );
             for ( RenderableBean signalRenderable: signalRenderables ) {
-//                loadVolume(renderableBeans, resolver, signalRenderable);
-
                 // Multithreaded load.
-                LoadRunnable runnable = new LoadRunnable( renderableBeans, resolver, signalRenderable, barrier );
+                Collection<RenderableBean> nextSignalsRenderables = getRenderables( renderableBeans, signalRenderable.getSignalFile() );
+                LoadRunnable runnable = new LoadRunnable( nextSignalsRenderables, resolver, signalRenderable, barrier );
                 new Thread( runnable ).start();
             }
 
@@ -82,6 +82,8 @@ public class ABLoadWorker extends SimpleWorker {
                 ex.printStackTrace();
             }
         }
+
+        mip3d.refresh();
 
         // Strip any "show-loading" off the viewer.
         viewer.removeAll();
@@ -115,11 +117,9 @@ public class ABLoadWorker extends SimpleWorker {
 
         String signalFilename = signalRenderable.getSignalFile();
         Collection<String> labelFiles = getLabelsForSignalFile(renderableBeans, signalFilename);
-        Collection<RenderableBean> nextSignalsRenderables = getRenderables(renderableBeans, signalFilename);
-        mip3d.setMaskColorMappings(renderMapping.getMapping(nextSignalsRenderables));
 
         VolumeMaskBuilder volumeMaskBuilder = createMaskBuilder(
-                labelFiles, nextSignalsRenderables, resolver
+                labelFiles, renderableBeans, resolver
         );
 
         if ( volumeMaskBuilder == null ) {
@@ -141,10 +141,14 @@ public class ABLoadWorker extends SimpleWorker {
                     }
                 }
             }
-            mip3d.loadVolume( signalFilename, rgb, resolver );
+            if ( ! mip3d.loadVolume( signalFilename, rgb, resolver ) ) {
+                logger.error( "Failed to load {} to mip3d.", signalFilename );
+            }
         }
         else {
-            mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver );
+            if ( ! mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver, renderMapping.getMapping( renderableBeans ) ) ) {
+                logger.error( "Failed to load masked volume {} to mip3d.", signalFilename );
+            }
         }
 
         logger.info("In load thread, ENDED load of volume.");
@@ -215,15 +219,14 @@ public class ABLoadWorker extends SimpleWorker {
         VolumeMaskBuilder volumeMaskBuilder = null;
         // Build the masking texture info.
         if (labelFiles != null  &&  labelFiles.size() > 0) {
-            VolumeMaskBuilder builder = new VolumeMaskBuilder();
-            builder.setRenderables(renderables);
+            volumeMaskBuilder = new VolumeMaskBuilder();
+            volumeMaskBuilder.setRenderables(renderables);
             for ( String labelFile: labelFiles ) {
                 VolumeLoader volumeLoader = new VolumeLoader( resolver );
                 if ( volumeLoader.loadVolume(labelFile) ) {
-                    volumeLoader.populateVolumeAcceptor(builder);
+                    volumeLoader.populateVolumeAcceptor(volumeMaskBuilder);
                 }
             }
-            volumeMaskBuilder = builder;
         }
 
         return volumeMaskBuilder;

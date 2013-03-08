@@ -141,12 +141,22 @@ public class AlignmentBoardDataBuilder implements Serializable {
                         }
                     }
 
+                    // TEMP.
+                    //referenceFile = vol.getReferenceVolumePath();
+
                 }
+
 
                 sampleBean.setLabelFile( labelFile );
                 String signalFile = sample.getFast3dImageFilepath();
                 //String signalFile = sample.get3dImageFilepath(); // TEMP
 
+                if ( signalFile == null ) {
+                    logger.error( "No signal file found for {}/{}.", sample.getName(), sample.getId() );
+                }
+                else {
+                    logger.info( "Found signal file {} for {}.", signalFile, sample.getName() );
+                }
                 sampleBean.setSignalFile( signalFile );
                 renderableBeanList.add( sampleBean );
 
