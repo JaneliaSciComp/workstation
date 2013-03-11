@@ -19,12 +19,18 @@ import java.util.Map;
 public class ConfigurableColorMapping implements RenderMappingI {
 
     private Map<Long,Integer> guidToRenderMethod;
+    private Collection<RenderableBean> renderableBeans;
+
+    @Override
+    public void setRenderables( Collection<RenderableBean> renderables ) {
+        this.renderableBeans = renderables;
+    }
 
     public void setGuidToRenderMethod( Map<Long,Integer> guidToRenderMethod ) {
         this.guidToRenderMethod = guidToRenderMethod;
     }
 
-    public Map<Integer,byte[]> getMapping( Collection<RenderableBean> renderableBeans ) {
+    public Map<Integer,byte[]> getMapping() {
         return makeMaskMappings( renderableBeans );
     }
 

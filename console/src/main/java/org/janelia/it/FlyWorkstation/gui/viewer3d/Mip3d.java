@@ -14,7 +14,6 @@ import java.util.Map;
 public class Mip3d extends BaseGLViewer {
 	private static final long serialVersionUID = 1L;
 	private MipRenderer renderer = new MipRenderer();
-    private Map<Integer,byte[]> neuronNumToRGB;
 
 	public enum InteractionMode {
 		ROTATE,

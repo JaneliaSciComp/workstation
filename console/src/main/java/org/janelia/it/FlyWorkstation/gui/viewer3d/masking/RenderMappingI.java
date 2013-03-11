@@ -21,5 +21,6 @@ public interface RenderMappingI {
     public static final byte PASS_THROUGH_RENDERING = 4;
     public static final byte NO_SHADER_USE = 5;
 
-    Map<Integer,byte[]> getMapping( Collection<RenderableBean> fragments );
+    void setRenderables( Collection<RenderableBean> beans );
+    Map<Integer,byte[]> getMapping();
 }

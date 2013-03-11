@@ -18,7 +18,14 @@ import java.util.Collection;
  */
 public class ColorWheelColorMapping implements RenderMappingI {
 
-    public Map<Integer,byte[]> getMapping( Collection<RenderableBean> renderableBeans ) {
+    private Collection<RenderableBean> renderableBeans;
+
+    @Override
+    public void setRenderables(Collection<RenderableBean> beans) {
+        this.renderableBeans = beans;
+    }
+
+    public Map<Integer,byte[]> getMapping() {
         return makeMaskMappings( renderableBeans );
     }
 

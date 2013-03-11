@@ -55,7 +55,6 @@ public class AlignmentBoardViewer extends Viewer {
 
     public AlignmentBoardViewer(ViewerPane viewerPane) {
         super(viewerPane);
-        // *** Use of color wheel color mapping is temporary, awaiting changes.
         renderMapping = new ConfigurableColorMapping();
         setLayout(new BorderLayout());
         ModelMgr.getModelMgr().registerOnEventBus(this);
@@ -275,7 +274,13 @@ public class AlignmentBoardViewer extends Viewer {
     @Subscribe 
     public void handleItemChanged(AlignmentBoardItemChangeEvent event) {
         AlignmentBoardContext abContext = event.getAlignmentBoardContext();
-        this.updateBoard( abContext );
+        if ( event.getChangeType().equals( AlignmentBoardItemChangeEvent.ChangeType.VisibilityChange )  ||
+             event.getChangeType().equals( AlignmentBoardItemChangeEvent.ChangeType.ColorChange ) ) {
+
+        }
+        else {
+            this.updateBoard( abContext );
+        }
     }
 
     private void establishObserver() {
@@ -315,6 +320,30 @@ public class AlignmentBoardViewer extends Viewer {
 
             mip3d.refresh();
 
+            // Here, should load volumes, for all the different items given.
+            loadWorker = new ABLoadWorker( this, context, mip3d, getRenderMapping() );
+            loadWorker.execute();
+
+        }
+
+    }
+
+    /**
+     * This is called when the board visibility or coloring has been change.
+     */
+    private void updateRendering( AlignmentBoardContext context ) {
+        logger.info("Update-rendering called.");
+
+        if (context != null) {
+//            showLoadingIndicator();
+
+//            if ( mip3d == null ) {
+//                mip3d = new Mip3d();
+//            }
+
+//            mip3d.refresh();
+
+            // Here, simply make the rendering change.
             // Here, should load volumes, for all the different items given.
 
             loadWorker = new ABLoadWorker( this, context, mip3d, getRenderMapping() );

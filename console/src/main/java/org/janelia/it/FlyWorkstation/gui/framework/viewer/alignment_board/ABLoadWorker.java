@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.awt.BorderLayout;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Map;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
@@ -35,6 +36,7 @@ public class ABLoadWorker extends SimpleWorker {
     private Mip3d mip3d;
     private AlignmentBoardViewer viewer;
     private RenderMappingI renderMapping;
+    private Boolean loadFiles = true;
     private Logger logger;
 
     public ABLoadWorker(
@@ -45,6 +47,10 @@ public class ABLoadWorker extends SimpleWorker {
         this.mip3d = mip3d;
         this.viewer = viewer;
         this.renderMapping = renderMapping;
+    }
+
+    public void setLoadFilesFlag( Boolean loadFiles ) {
+        this.loadFiles = loadFiles;
     }
 
     @Override
@@ -58,36 +64,46 @@ public class ABLoadWorker extends SimpleWorker {
                         .setAlignmentBoardContext( context )
                             .getSamples();
 
-        if ( samples == null  ||  samples.size() == 0 ) {
-            logger.info( "No renderables found for alignment board " + context.getName() );
-            mip3d.clear();
+        if ( loadFiles ) {
+            if ( samples == null  ||  samples.size() == 0 ) {
+                logger.info( "No renderables found for alignment board " + context.getName() );
+                mip3d.clear();
+            }
+            else {
+                logger.info( "In load thread, after getting bean list." );
+
+                FileResolver resolver = new CacheFileResolver();
+                final CyclicBarrier barrier = new CyclicBarrier( samples.size() + 1 );
+                String filename = null;
+                for ( SampleData sampleData: samples ) {
+                    // Multithreaded load.
+                    filename = sampleData.getSignalFile();
+                    LoadRunnable runnable = new LoadRunnable( resolver, sampleData, barrier );
+                    new Thread( runnable ).start();
+                }
+
+                try {
+                    barrier.await();
+                } catch ( Exception ex ) {
+                    logger.error( "Barrier await failed during loading " + filename, ex );
+                    ex.printStackTrace();
+                }
+            }
+
+            mip3d.refresh();
+
+            // Strip any "show-loading" off the viewer.
+            viewer.removeAll();
+
+            // Add this last.  "show-loading" removes it.  This way, it is shown only
+            // when it becomes un-busy.
+            viewer.add( mip3d, BorderLayout.CENTER );
         }
         else {
-            logger.info( "In load thread, after getting bean list." );
-
-            FileResolver resolver = new CacheFileResolver();
-            final CyclicBarrier barrier = new CyclicBarrier( samples.size() + 1 );
             for ( SampleData sampleData: samples ) {
-                // Multithreaded load.
-                LoadRunnable runnable = new LoadRunnable( resolver, sampleData, barrier );
-                new Thread( runnable ).start();
-            }
-
-            try {
-                barrier.await();
-            } catch ( Exception ex ) {
-                ex.printStackTrace();
+                loadRenderChange( sampleData );
             }
         }
-
-        mip3d.refresh();
-
-        // Strip any "show-loading" off the viewer.
-        viewer.removeAll();
-
-        // Add this last.  "show-loading" removes it.  This way, it is shown only
-        // when it becomes un-busy.
-        viewer.add( mip3d, BorderLayout.CENTER );
 
         logger.info( "Ending load thread." );
     }
@@ -109,8 +125,17 @@ public class ABLoadWorker extends SimpleWorker {
         SessionMgr.getSessionMgr().handleException( error );
     }
 
+    private void loadRenderChange( SampleData sampleData ) {
+        logger.info( "In load of render change." );
+        Map<Integer,byte[]> map = renderMapping.getMapping();
+        logger.info( "End load of volume." );
+//        if ( ! mip3d.changeRendering(sampleData.getSignalFile(), map) ) {
+//            logger.error( "Failed to load masked volume {} to mip3d.", sampleData.getSignalFile() );
+//        }
+    }
+
     private void loadVolume( FileResolver resolver, SampleData sampleData ) {
-        logger.info("In load thread, STARTING load of volume " + new java.util.Date());
+        logger.info("In load thread, STARTING load of volume {}.", sampleData.getSignalFile());
 
         String signalFilename = sampleData.getSignalFile();
         // As of latest, only have a single label file.  However, would like to preserve readiness to use
@@ -127,7 +152,8 @@ public class ABLoadWorker extends SimpleWorker {
             loadNonMaskedVolume(resolver, signalFilename, signalRenderable);
         }
         else {
-            if ( ! mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver, renderMapping.getMapping( renderableBeans ) ) ) {
+            renderMapping.setRenderables( renderableBeans );
+            if ( ! mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver, renderMapping.getMapping() ) ) {
                 logger.error( "Failed to load masked volume {} to mip3d.", signalFilename );
             }
         }

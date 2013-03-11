@@ -74,7 +74,7 @@ public class RenderMapTextureBean implements TextureDataI {
 
     @Override
     public void setTextureData(byte[] textureData) {
-        this.mapData = textureData;
+        // Ignored.
     }
 
     @Override
