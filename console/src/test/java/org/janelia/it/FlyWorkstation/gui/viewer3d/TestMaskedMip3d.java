@@ -116,11 +116,11 @@ public class TestMaskedMip3d {
                         VolumeLoader vLoader = new VolumeLoader( resolver );
 
                         RenderableBean signalBean = new RenderableBean();
-                        signalBean.setLabelFileNum( 0 );
-                        signalBean.setTranslatedNum( 0 );
+                        signalBean.setLabelFileNum(0);
+                        signalBean.setTranslatedNum(0);
                         signalBean.setRgb(
-                                new byte[] {
-                                        (byte)0f, (byte)0f, (byte)0f, RenderMappingI.NON_RENDERING
+                                new byte[]{
+                                        (byte) 0f, (byte) 0f, (byte) 0f, RenderMappingI.NON_RENDERING
                                 }
                         );
                         beans.add( signalBean );
@@ -154,19 +154,19 @@ public class TestMaskedMip3d {
 
                         renderableBean = new RenderableBean();
                         renderableBean.setTranslatedNum(2);
-                        renderableBean.setLabelFileNum( 57 );
+                        renderableBean.setLabelFileNum(57);
                         renderableBean.setRenderableEntity( mockE );
                         beans.add(renderableBean);
 
                         renderableBean = new RenderableBean();
                         renderableBean.setTranslatedNum(3);
-                        renderableBean.setLabelFileNum( 58 );
+                        renderableBean.setLabelFileNum(58);
                         renderableBean.setRenderableEntity( mockE );
                         beans.add(renderableBean);
 
                         renderableBean = new RenderableBean();
                         renderableBean.setTranslatedNum(4);
-                        renderableBean.setLabelFileNum( 59 );
+                        renderableBean.setLabelFileNum(59);
                         renderableBean.setRenderableEntity( mockE );
                         beans.add(renderableBean);
 
@@ -175,8 +175,8 @@ public class TestMaskedMip3d {
                          */
                         for ( int i = 1; i < 128; i++ ) {
                             renderableBean = new RenderableBean();
-                            renderableBean.setTranslatedNum( 1+i );
-                            renderableBean.setLabelFileNum( i );
+                            renderableBean.setTranslatedNum(1 + i);
+                            renderableBean.setLabelFileNum(i);
                             renderableBean.setRenderableEntity( mockE );
                             beans.add(renderableBean);
                         }
@@ -190,7 +190,7 @@ public class TestMaskedMip3d {
                         ConfigurableColorMapping colorMapping = new ConfigurableColorMapping();
                         if ( args.length > 2 ) {
                             // This mock-entity needs ONLY its ID, a type, and a name.
-                            renderableBean.setRenderableEntity( mockE );
+                            renderableBean.setRenderableEntity(mockE);
 
                             // Here, establish a map suitable for testing.  It will get a UID-vs-render-method.
                             // This affects only the last-entered file.
@@ -199,7 +199,8 @@ public class TestMaskedMip3d {
 
                             colorMapping.setGuidToRenderMethod( guidToRenderMethod );
                         }
-                        finalMapping = colorMapping.getMapping( beans );
+                        colorMapping.setRenderables( beans );
+                        finalMapping = colorMapping.getMapping();
                     }
 
                     if ( ! mipWidget.loadVolume( fn, vmb, resolver, finalMapping ) ) {
