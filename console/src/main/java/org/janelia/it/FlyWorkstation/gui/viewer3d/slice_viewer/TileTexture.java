@@ -147,6 +147,8 @@ public class TileTexture
 					internalFormat,
 					pixelFormat,
 					false); // mipmap
+			if (bitDepth > 8)
+				textureData.setPixelType(GL2.GL_UNSIGNED_SHORT);
 		} catch (IOException e) {
 			// e.printStackTrace();
 			log.error("Tile load to RAM failed " + getIndex());

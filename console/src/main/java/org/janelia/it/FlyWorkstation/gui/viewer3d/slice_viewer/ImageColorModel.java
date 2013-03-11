@@ -141,8 +141,10 @@ public class ImageColorModel
 		int hardMax = (int)Math.pow(2.0, bitDepth) - 1;
 		init(volumeImage.getNumberOfChannels(), bitDepth);
 		if (hardMax != maxI) {
-			for (ChannelColorModel ccm : channels)
+			for (ChannelColorModel ccm : channels) {
 				ccm.setWhiteLevel(maxI);
+				ccm.setDataMax(maxI);
+			}
 		}
 	}
 
