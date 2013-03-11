@@ -1,21 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.exception_handlers;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.io.*;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.URLEncoder;
-import java.util.*;
-
-import javax.swing.*;
-
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.xml.InvalidXmlException;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.xml.XMLSecurityException;
@@ -28,6 +12,19 @@ import org.janelia.it.FlyWorkstation.gui.util.MailDialogueBox;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.util.text_component.StandardTextArea;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.*;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLEncoder;
+import java.util.*;
+import java.util.List;
 
 public class UserNotificationExceptionHandler implements ExceptionHandler {
 
@@ -50,26 +47,26 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
             displayDatabaseDown(throwable);
             return;
         }
-//     if (throwable instanceof api.stub.data.InvalidPropertyFormat) {
+//     if (throwable instanceof InvalidPropertyFormat) {
 //       displayBadPropertyFormat(throwable);
 //       return;
 //     }
-//     if (throwable instanceof api.stub.data.FatalCommError) {
-//       displayFatalComm(throwable);
-//       return;
-//     }
-//     if (throwable instanceof javax.naming.AuthenticationException || throwable instanceof SecurityException) {
-//       displayAuthentication(throwable);
-//       return;
-//     }
+     if (throwable instanceof FatalCommError) {
+       displayFatalComm(throwable);
+       return;
+     }
+     if (throwable instanceof javax.naming.AuthenticationException || throwable instanceof SecurityException) {
+       displayAuthentication(throwable);
+       return;
+     }
         if (throwable instanceof ConnectionStatusException) {
             displayConnectionStatus(throwable);
             return;
         }
-//     if (throwable instanceof InvalidXmlException) {
-//       presentOutputFrame((InvalidXmlException)throwable);
-//       return;
-//     }
+     if (throwable instanceof InvalidXmlException) {
+       presentOutputFrame((InvalidXmlException)throwable);
+       return;
+     }
 //     if (throwable instanceof CommandPostconditionException ||
 //         throwable instanceof CommandPreconditionException ||
 //         throwable instanceof CommandExecutionException) {
@@ -179,8 +176,30 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
     private void sendEmail(Throwable exception) {
         try {
 
-            MailDialogueBox mailDialogueBox = new MailDialogueBox("Fly Workstation Exception Report", "Problem Description:");
-            mailDialogueBox.show();
+            MailDialogueBox mailDialogueBox = new MailDialogueBox(SessionMgr.getBrowser(),
+                    (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL),
+                    "Fly Workstation Exception Report",
+                    "Problem Description:");
+            try {
+                StringBuilder sb = new StringBuilder();
+                sb.append("\nException Message:\n");
+                sb.append(exception.getMessage());
+                sb.append("\nException Trace:\n");
+                int stackLimit = 100;
+                int stopCounter = 0;
+                for (StackTraceElement element : exception.getStackTrace()) {
+                    sb.append(element.toString());
+                    sb.append("\n");
+                    if (stopCounter>stackLimit) { break; }
+                    stopCounter++;
+                }
+                mailDialogueBox.addMessageSuffix(sb.toString());
+            }
+            catch (Exception e) {
+                // Do nothing if the notification attempt fails.
+                e.printStackTrace();
+            }
+            mailDialogueBox.showPopupThenSendEmail();
 
 //            String emailFrom = null;
 //            while (emailFrom == null || emailFrom.equals("")) {

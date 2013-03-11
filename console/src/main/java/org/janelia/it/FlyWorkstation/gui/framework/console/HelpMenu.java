@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.MailDialogueBox;
 
 import javax.swing.*;
@@ -15,9 +16,11 @@ import java.awt.event.ActionListener;
 public class HelpMenu extends JMenu {
 
     JMenuItem bugReport = new JMenuItem("Report A Bug");
+    private JFrame parentFrame;
 
     public HelpMenu(Browser console) {
         super("Help");
+        parentFrame = console;
         add(new JMenuItem("Call Christopher - x4662"));
         add(new JMenuItem("Call Konrad - x4242"));
         add(new JMenuItem("Call Sean   - x4324"));
@@ -33,7 +36,9 @@ public class HelpMenu extends JMenu {
     }
 
     private void bugReport_actionPerformed(){
-        MailDialogueBox popup = new MailDialogueBox("Bug report");
-        popup.show();
+        MailDialogueBox popup = new MailDialogueBox(parentFrame,
+                (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL),
+                "Bug report");
+        popup.showPopupThenSendEmail();
     }
 }

@@ -1,12 +1,10 @@
 package org.janelia.it.FlyWorkstation.gui.util;
 
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.text_component.StandardTextArea;
 import org.janelia.it.jacs.shared.utils.MailHelper;
 
 import javax.swing.*;
-import java.awt.datatransfer.StringSelection;
 
 /**
  * Created with IntelliJ IDEA.
@@ -16,19 +14,26 @@ import java.awt.datatransfer.StringSelection;
  */
 public class MailDialogueBox {
 
+    private String fromEmail;
     private String subject = "";
     private String messagePrefix = "";
+    private String messageSuffix = "";
+    private JFrame parentFrame;
 
-    public MailDialogueBox(String subject) {
+    public MailDialogueBox(JFrame parentFrame, String fromEmail, String subject) {
+        this.fromEmail = fromEmail;
         this.subject = subject;
+        this.parentFrame = parentFrame;
     }
 
-    public MailDialogueBox(String subject, String messagePrefix){
+    public MailDialogueBox(JFrame parentFrame, String fromEmail, String subject, String messagePrefix){
+        this.fromEmail = fromEmail;
         this.subject = subject;
+        this.parentFrame = parentFrame;
         this.messagePrefix = messagePrefix;
     }
 
-    public void show(){
+    public void showPopupThenSendEmail(){
         String desc = null;
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -38,26 +43,30 @@ public class MailDialogueBox {
         panel.add(new JScrollPane(textArea));
         int ans;
         while (desc == null || desc.equals("")) {
-            ans = getOptionPane().showConfirmDialog(getParentFrame(), panel, "Problem Description", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+            ans = getOptionPane().showConfirmDialog(parentFrame, panel, "Problem Description", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (ans == JOptionPane.CANCEL_OPTION) return;
-            desc = messagePrefix + textArea.getText();
+            desc = messagePrefix + textArea.getText() +"\n";
         }
+        desc+=messageSuffix;
         ConsoleProperties.getString("console.HelpEmail");
         MailHelper helper = new MailHelper();
-        helper.sendEmail((String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL), ConsoleProperties.getString("console.HelpEmail"),
+        helper.sendEmail(fromEmail, ConsoleProperties.getString("console.HelpEmail"),
                 subject, desc);
     }
 
     private JOptionPane getOptionPane() {
         JFrame mainFrame = new JFrame();
-        JFrame parent = getParentFrame();
-        if (parent != null) mainFrame.setIconImage(getParentFrame().getIconImage());
+        if (parentFrame != null) mainFrame.setIconImage(parentFrame.getIconImage());
         JOptionPane optionPane = new JOptionPane();
         mainFrame.getContentPane().add(optionPane);
         return optionPane;
     }
 
-    private JFrame getParentFrame() {
-        return SessionMgr.getSessionMgr().getActiveBrowser();
+    /**
+     * This method gives the caller a way to place text at the end of the message.
+     * @param messageSuffixInformation Text to display after everything else.
+     */
+    public void addMessageSuffix(String messageSuffixInformation) {
+        this.messageSuffix = messageSuffixInformation;
     }
 }
