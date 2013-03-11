@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.renderable;
 
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -12,21 +12,10 @@ import org.janelia.it.jacs.model.entity.EntityConstants;
  * Holds information about a anything that can be rendered inside the alignment board.
  */
 public class RenderableBean {
-    private String labelFile;
-    private String signalFile;
     private int labelFileNum = -1;
     private int translatedNum;
     private byte[] rgb;
     private Entity renderableEntity;
-    private boolean signalRenderable = false;
-
-    public String getLabelFile() {
-        return labelFile;
-    }
-
-    public void setLabelFile(String labelFile) {
-        this.labelFile = labelFile;
-    }
 
     public int getLabelFileNum() {
         return labelFileNum;
@@ -67,23 +56,6 @@ public class RenderableBean {
                 labelFileNum = (Integer.parseInt( nameParts[ nameParts.length - 1 ] )) + 1;
             }
         }
-    }
-
-    public String getSignalFile() {
-        return signalFile;
-    }
-
-    public void setSignalFile(String signalFile) {
-        this.signalFile = signalFile;
-    }
-
-    /** Flag to indicate that this renderable _represents_ a signal, rather than a neuron fragment, etc. */
-    public void setSignal( boolean signalRenderable ) {
-        this.signalRenderable = signalRenderable;
-    }
-
-    public boolean isSignal() {
-        return signalRenderable;
     }
 
 }

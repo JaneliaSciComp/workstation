@@ -2,10 +2,11 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.RenderableBean;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeLoader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.SampleData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.AlignmentBoardDataBuilder;
@@ -14,10 +15,9 @@ import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.*;
-import java.util.ArrayList;
+import java.awt.BorderLayout;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
@@ -53,26 +53,23 @@ public class ABLoadWorker extends SimpleWorker {
         mip3d.clear();
 
         logger.info( "In load thread, before getting bean list." );
-        Collection<RenderableBean> renderableBeans =
+        Collection<SampleData> samples =
                 new AlignmentBoardDataBuilder()
-                    .setAlignmentBoardContext( context )
-                        .getRenderableBeanList();
+                        .setAlignmentBoardContext( context )
+                            .getSamples();
 
-        if ( renderableBeans == null  ||  renderableBeans.size() == 0 ) {
+        if ( samples == null  ||  samples.size() == 0 ) {
             logger.info( "No renderables found for alignment board " + context.getName() );
             mip3d.clear();
         }
         else {
             logger.info( "In load thread, after getting bean list." );
 
-            Collection<RenderableBean> signalRenderables = getSignalRenderables(renderableBeans);
-
             FileResolver resolver = new CacheFileResolver();
-            final CyclicBarrier barrier = new CyclicBarrier( signalRenderables.size() + 1 );
-            for ( RenderableBean signalRenderable: signalRenderables ) {
+            final CyclicBarrier barrier = new CyclicBarrier( samples.size() + 1 );
+            for ( SampleData sampleData: samples ) {
                 // Multithreaded load.
-                Collection<RenderableBean> nextSignalsRenderables = getRenderables( renderableBeans, signalRenderable.getSignalFile() );
-                LoadRunnable runnable = new LoadRunnable( nextSignalsRenderables, resolver, signalRenderable, barrier );
+                LoadRunnable runnable = new LoadRunnable( resolver, sampleData, barrier );
                 new Thread( runnable ).start();
             }
 
@@ -112,38 +109,22 @@ public class ABLoadWorker extends SimpleWorker {
         SessionMgr.getSessionMgr().handleException( error );
     }
 
-    private void loadVolume(Collection<RenderableBean> renderableBeans, FileResolver resolver, RenderableBean signalRenderable) {
+    private void loadVolume( FileResolver resolver, SampleData sampleData ) {
         logger.info("In load thread, STARTING load of volume " + new java.util.Date());
 
-        String signalFilename = signalRenderable.getSignalFile();
-        Collection<String> labelFiles = getLabelsForSignalFile(renderableBeans, signalFilename);
+        String signalFilename = sampleData.getSignalFile();
+        // As of latest, only have a single label file.  However, would like to preserve readiness to use
+        // multiple label files, for future applicability.
+        Collection<String> labelFiles = Arrays.asList( sampleData.getLabelFile() );
 
+        Collection<RenderableBean> renderableBeans = sampleData.getRenderableBeans();
         VolumeMaskBuilder volumeMaskBuilder = createMaskBuilder(
                 labelFiles, renderableBeans, resolver
         );
 
+        RenderableBean signalRenderable = sampleData.getSample();
         if ( volumeMaskBuilder == null ) {
-            float[] rgb = new float[] { 1.0f, 0.3f, 0.3f };  // Default value.
-            if ( signalRenderable.getRgb() != null ) {
-                byte[] signalByteColors = signalRenderable.getRgb();
-                if ( signalByteColors[ 3 ] == RenderMappingI.NON_RENDERING ) {
-                    for ( int i = 0; i < rgb.length; i++ ) {
-                        rgb[ i ] = 0.0f;
-                    }
-                }
-                else {
-                    for ( int i = 0; i < rgb.length; i++ ) {
-                        int signalIntColor = signalByteColors[ i ];
-                        if ( signalByteColors[ i ] < 0 ) {
-                            signalIntColor = 256 + signalIntColor;
-                        }
-                        rgb[ i ] = signalIntColor / 255.0f;
-                    }
-                }
-            }
-            if ( ! mip3d.loadVolume( signalFilename, rgb, resolver ) ) {
-                logger.error( "Failed to load {} to mip3d.", signalFilename );
-            }
+            loadNonMaskedVolume(resolver, signalFilename, signalRenderable);
         }
         else {
             if ( ! mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver, renderMapping.getMapping( renderableBeans ) ) ) {
@@ -151,57 +132,35 @@ public class ABLoadWorker extends SimpleWorker {
             }
         }
 
+        if ( sampleData.getReference() != null ) {
+            loadNonMaskedVolume(resolver, sampleData.getReferenceFile(), sampleData.getReference());
+        }
+
         logger.info("In load thread, ENDED load of volume.");
     }
 
-    /**
-     * Extract the subset of renderable beans that applies to the signal filename given.
-     *
-     * @param signalFilename find things pertaining to this signal file.
-     * @return all the renderables which refer to this signal file.
-     */
-    private Collection<RenderableBean> getRenderables(Collection<RenderableBean> renderableBeans, String signalFilename) {
-        Collection<RenderableBean> rtnVal = new HashSet<RenderableBean>();
-        for ( RenderableBean bean: renderableBeans ) {
-            if ( bean.getSignalFile() != null && bean.getSignalFile().equals( signalFilename ) ) {
-                rtnVal.add( bean );
+    private void loadNonMaskedVolume(FileResolver resolver, String signalFilename, RenderableBean signalRenderable) {
+        float[] rgb = new float[] { 1.0f, 0.3f, 0.3f };  // Default value.
+        if ( signalRenderable.getRgb() != null ) {
+            byte[] signalByteColors = signalRenderable.getRgb();
+            if ( signalByteColors[ 3 ] == RenderMappingI.NON_RENDERING ) {
+                for ( int i = 0; i < rgb.length; i++ ) {
+                    rgb[ i ] = 0.0f;
+                }
+            }
+            else {
+                for ( int i = 0; i < rgb.length; i++ ) {
+                    int signalIntColor = signalByteColors[ i ];
+                    if ( signalByteColors[ i ] < 0 ) {
+                        signalIntColor = 256 + signalIntColor;
+                    }
+                    rgb[ i ] = signalIntColor / 255.0f;
+                }
             }
         }
-        return rtnVal;
-    }
-
-    /**
-     * Extract the set of signal file names from the renderable beans.
-     *
-     * @return all signal file names found in any bean.
-     */
-    private Collection<RenderableBean> getSignalRenderables(Collection<RenderableBean> renderableBeans) {
-        Collection<RenderableBean> signalFileNames = new HashSet<RenderableBean>();
-        for ( RenderableBean bean: renderableBeans ) {
-            if ( bean.isSignal() ) {
-                signalFileNames.add( bean );
-            }
+        if ( ! mip3d.loadVolume( signalFilename, rgb, resolver ) ) {
+            logger.error( "Failed to load {} to mip3d.", signalFilename );
         }
-        return signalFileNames;
-    }
-
-    /**
-     * Extract the mask file names from the renderable beans.
-     *
-     *
-     * @param signalFilename which signal to find label file names against.
-     * @return all label file names from beans which refer to the signal file name given.
-     */
-    private Collection<String> getLabelsForSignalFile(Collection<RenderableBean> renderableBeans, String signalFilename) {
-        Collection<String> rtnVal = new HashSet<String>();
-        for ( RenderableBean bean: renderableBeans ) {
-            if ( bean.getSignalFile() != null  &&
-                 bean.getSignalFile().equals( signalFilename )  &&
-                 bean.getLabelFile() != null ) {
-                rtnVal.add( bean.getLabelFile() );
-            }
-        }
-        return rtnVal;
     }
 
     /**
@@ -233,23 +192,21 @@ public class ABLoadWorker extends SimpleWorker {
     }
 
     public class LoadRunnable implements Runnable {
-        private Collection<RenderableBean> renderableBeans;
-        private RenderableBean signalRenderable;
+        private SampleData sampleData;
         private FileResolver resolver;
         private CyclicBarrier barrier;
 
         public LoadRunnable(
-                Collection<RenderableBean> renderableBeans, FileResolver resolver, RenderableBean signalRenderable,
+                FileResolver resolver, SampleData signalRenderable,
                 CyclicBarrier barrier
         ) {
-            this.renderableBeans = renderableBeans;
             this.resolver = resolver;
-            this.signalRenderable = signalRenderable;
+            this.sampleData = signalRenderable;
             this.barrier = barrier;
         }
 
         public void run() {
-            ABLoadWorker.this.loadVolume(renderableBeans, resolver, signalRenderable);
+            ABLoadWorker.this.loadVolume(resolver, sampleData);
             try {
                 barrier.await();
             } catch ( BrokenBarrierException bbe ) {

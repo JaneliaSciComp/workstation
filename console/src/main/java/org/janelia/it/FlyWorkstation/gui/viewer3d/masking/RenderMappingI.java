@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.RenderableBean;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 
 import java.util.Collection;
 import java.util.Map;
