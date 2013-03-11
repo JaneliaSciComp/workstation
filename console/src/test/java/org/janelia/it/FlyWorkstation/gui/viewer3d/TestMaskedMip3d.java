@@ -4,6 +4,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -86,9 +87,9 @@ public class TestMaskedMip3d {
                     }
                     if ( args.length > 1 ) {
                         mf = args[ 1 ];
-                        mipWidget.clear();
-                        mipWidget.refresh();
                     }
+                    mipWidget.clear();
+                    mipWidget.refresh();
 
                     //String mf = fileBase + "1778036012035866722/ConsolidatedLabel.v3dpbd";
                     //String mf = fileBase + "1696292257579143266/ConsolidatedLabel.v3dpbd";
@@ -115,8 +116,6 @@ public class TestMaskedMip3d {
                         VolumeLoader vLoader = new VolumeLoader( resolver );
 
                         RenderableBean signalBean = new RenderableBean();
-                        signalBean.setSignalFile( fn );
-                        signalBean.setLabelFile( mf );
                         signalBean.setLabelFileNum( 0 );
                         signalBean.setTranslatedNum( 0 );
                         signalBean.setRgb(
@@ -124,7 +123,6 @@ public class TestMaskedMip3d {
                                         (byte)0f, (byte)0f, (byte)0f, RenderMappingI.NON_RENDERING
                                 }
                         );
-                        signalBean.setSignal( true );
                         beans.add( signalBean );
 
                         /*
@@ -145,9 +143,7 @@ public class TestMaskedMip3d {
                         mockE.setName("Entity: " + MOCK_UID);
 
                         RenderableBean renderableBean = new RenderableBean();
-                        renderableBean.setLabelFile(mf);
                         renderableBean.setTranslatedNum(1);
-                        renderableBean.setSignalFile( fn );
                         renderableBean.setLabelFileNum( 1 ); // In signal=label=reference scenario, this shows edgy outline
                         renderableBean.setRgb(
                                 new byte[] {
@@ -157,26 +153,20 @@ public class TestMaskedMip3d {
                         beans.add(renderableBean);
 
                         renderableBean = new RenderableBean();
-                        renderableBean.setLabelFile( mf );
                         renderableBean.setTranslatedNum(2);
                         renderableBean.setLabelFileNum( 57 );
-                        renderableBean.setSignalFile( fn );
                         renderableBean.setRenderableEntity( mockE );
                         beans.add(renderableBean);
 
                         renderableBean = new RenderableBean();
-                        renderableBean.setLabelFile( mf );
                         renderableBean.setTranslatedNum(3);
                         renderableBean.setLabelFileNum( 58 );
-                        renderableBean.setSignalFile( fn );
                         renderableBean.setRenderableEntity( mockE );
                         beans.add(renderableBean);
 
                         renderableBean = new RenderableBean();
-                        renderableBean.setLabelFile( mf );
                         renderableBean.setTranslatedNum(4);
                         renderableBean.setLabelFileNum( 59 );
-                        renderableBean.setSignalFile( fn );
                         renderableBean.setRenderableEntity( mockE );
                         beans.add(renderableBean);
 
@@ -185,10 +175,8 @@ public class TestMaskedMip3d {
                          */
                         for ( int i = 1; i < 128; i++ ) {
                             renderableBean = new RenderableBean();
-                            renderableBean.setLabelFile( mf );
                             renderableBean.setTranslatedNum( 1+i );
                             renderableBean.setLabelFileNum( i );
-                            renderableBean.setSignalFile( fn );
                             renderableBean.setRenderableEntity( mockE );
                             beans.add(renderableBean);
                         }
@@ -203,7 +191,6 @@ public class TestMaskedMip3d {
                         if ( args.length > 2 ) {
                             // This mock-entity needs ONLY its ID, a type, and a name.
                             renderableBean.setRenderableEntity( mockE );
-                            renderableBean.setSignalFile( fn );
 
                             // Here, establish a map suitable for testing.  It will get a UID-vs-render-method.
                             // This affects only the last-entered file.
