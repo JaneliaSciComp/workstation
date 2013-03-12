@@ -104,6 +104,8 @@ public class TestMaskedMip3d {
 
                     Map<Integer,byte[]> finalMapping = null;
                     VolumeMaskBuilder vmb = null;
+                    ConfigurableColorMapping colorMapping = null;
+
                     // Load the file into the mask-builder.
                     if ( mf != null ) {
                         File mfFile = new File( mf );
@@ -187,7 +189,7 @@ public class TestMaskedMip3d {
                         vLoader.populateVolumeAcceptor( vmb );
 
                         // Setup a testing color-wheel mapping.
-                        ConfigurableColorMapping colorMapping = new ConfigurableColorMapping();
+                        colorMapping = new ConfigurableColorMapping();
                         if ( args.length > 2 ) {
                             // This mock-entity needs ONLY its ID, a type, and a name.
                             renderableBean.setRenderableEntity(mockE);
@@ -200,10 +202,9 @@ public class TestMaskedMip3d {
                             colorMapping.setGuidToRenderMethod( guidToRenderMethod );
                         }
                         colorMapping.setRenderables( beans );
-                        finalMapping = colorMapping.getMapping();
                     }
 
-                    if ( ! mipWidget.loadVolume( fn, vmb, resolver, finalMapping ) ) {
+                    if ( ! mipWidget.loadVolume( fn, vmb, resolver, colorMapping ) ) {
                         throw new RuntimeException( "Failed to load " + fn );
                     }
 
