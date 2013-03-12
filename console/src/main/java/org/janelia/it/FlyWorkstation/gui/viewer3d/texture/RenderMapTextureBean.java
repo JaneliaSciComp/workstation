@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 
@@ -21,7 +22,8 @@ import java.util.Map;
 public class RenderMapTextureBean implements TextureDataI {
 
     private static final int BYTES_PER_ENTRY = 4;
-    private byte[] mapData;
+    private RenderMappingI renderMapping;
+    //private byte[] mapData;
     private boolean inverted = false; // Default probably carries the day.
     private Integer voxelComponentFormat = GL2.GL_UNSIGNED_INT_8_8_8_8_REV;
     private Collection<RenderableBean> renderables;
@@ -32,10 +34,19 @@ public class RenderMapTextureBean implements TextureDataI {
      * This implementation makes a big array of 64K * 3, to accommodate any possible neuron fragment number's
      * three colors.  It is wasteful in space, but far smaller than most uploaded textures.  It may be possible
      * to pack this into far smaller area, but with the sacrifice of processing time.
-     *
-     * @param renderingMap neuron number from label file, vs 3-byte color array (RGB)+1-byte rendering method.
      */
-    public void setMapping( Map<Integer,byte[]> renderingMap ) {
+    public void setMapping( RenderMappingI renderMapping ) {
+        this.renderMapping = renderMapping;
+    }
+
+    @Override
+    public void setTextureData(byte[] textureData) {
+        // Ignored.
+    }
+
+    @Override
+    public byte[] getTextureData() {
+        Map<Integer,byte[]> renderingMap = renderMapping.getMapping();
         if ( renderingMap == null || renderingMap.size() > 65535 ) {
             throw new IllegalArgumentException("Invalid inputs for render mapping");
         }
@@ -52,34 +63,7 @@ public class RenderMapTextureBean implements TextureDataI {
             }
         }
 
-        mapData = rawMap;
-
-    }
-
-    /** This collection-friendly pair of methods can employ direct mapping data only because these data are reasonably small. */
-    @Override
-    public boolean equals( Object other ) {
-        if ( other == null  ||  (! (other instanceof RenderMapTextureBean ) ) ) {
-            return false;
-        }
-        else {
-            return other.hashCode() == hashCode();
-        }
-    }
-
-    @Override
-    public int hashCode() {
-        return Arrays.hashCode( mapData );
-    }
-
-    @Override
-    public void setTextureData(byte[] textureData) {
-        // Ignored.
-    }
-
-    @Override
-    public byte[] getTextureData() {
-        return mapData;
+        return rawMap;
     }
 
     //  The size of the texture data will be 2**8 * 2**8 or 2**16: same as 65535

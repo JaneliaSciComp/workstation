@@ -26,10 +26,12 @@ public class ConfigurableColorMapping implements RenderMappingI {
         this.renderableBeans = renderables;
     }
 
+    /** This is used by the test-loop. It is specifically NOT an override. */
     public void setGuidToRenderMethod( Map<Long,Integer> guidToRenderMethod ) {
         this.guidToRenderMethod = guidToRenderMethod;
     }
 
+    @Override
     public Map<Integer,byte[]> getMapping() {
         return makeMaskMappings( renderableBeans );
     }

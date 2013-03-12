@@ -191,34 +191,4 @@ class MipRenderer
 		zoom(zoomRatio);
 	}
 
-    public void refresh() {
-        VolumeBrick volumeBrick = getVolumeBrick();
-        if ( volumeBrick != null )
-            volumeBrick.refresh();
-    }
-
-    public float[] getRgbValues() {
-        if ( getVolumeBrick() != null ) {
-            return getVolumeBrick().getColorMask();
-        }
-        else {
-            return null;
-        }
-    }
-
-    public void setRgbValues( float[] rgbChoices ) {
-        getVolumeBrick().setColorMask(rgbChoices[0], rgbChoices[1], rgbChoices[2]);
-    }
-
-    private VolumeBrick getVolumeBrick() {
-        VolumeBrick volumeBrick = null;
-        for ( GLActor actor: actors ) {
-            if ( actor instanceof VolumeBrick) {
-                volumeBrick = ((VolumeBrick)actor);
-                break;
-            }
-        }
-        return volumeBrick;
-    }
-
 }

@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.RenderMapTextureBean;
@@ -9,6 +11,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
+import java.util.Collection;
 import java.util.Map;
 
 public class Mip3d extends BaseGLViewer {
@@ -33,7 +36,21 @@ public class Mip3d extends BaseGLViewer {
     }
 
     public void refresh() {
-        renderer.refresh();
+        Collection<GLActor> actors = renderer.getActors();
+        for ( GLActor actor: actors ) {
+            if ( actor instanceof VolumeBrick ) {
+                ((VolumeBrick)actor).refresh();
+            }
+        }
+    }
+
+    public void refreshRendering() {
+        Collection<GLActor> actors = renderer.getActors();
+        for ( GLActor actor: actors ) {
+            if ( actor instanceof VolumeBrick ) {
+                ((VolumeBrick)actor).refreshColorMapping();
+            }
+        }
     }
 
     public void clear() {
@@ -79,7 +96,7 @@ public class Mip3d extends BaseGLViewer {
             String fileName,
             VolumeMaskBuilder volumeMaskBuilder,
             FileResolver resolver,
-            Map<Integer,byte[]> neuronNumToRGB
+            RenderMappingI renderMapping
     ) {
 		VolumeLoader volumeLoader = new VolumeLoader(resolver);
 		if (volumeLoader.loadVolume(fileName)) {
@@ -88,12 +105,10 @@ public class Mip3d extends BaseGLViewer {
             if ( volumeMaskBuilder != null ) {
                 brick.setMaskTextureData( volumeMaskBuilder.getCombinedTextureData() );
 
-                if ( neuronNumToRGB != null ) {
-                    RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
-                    renderMapTextureData.setMapping(neuronNumToRGB);
+                RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
+                renderMapTextureData.setMapping( renderMapping );
 
-                    brick.setColorMapTextureData( renderMapTextureData );
-                }
+                brick.setColorMapTextureData( renderMapTextureData );
             }
 
             addActorToRenderer(brick);
@@ -188,9 +203,16 @@ public class Mip3d extends BaseGLViewer {
 	}
 
     public void toggleRGBValue(int colorChannel, boolean isEnabled) {
-        float[] newValues = renderer.getRgbValues();
-        newValues[colorChannel]=isEnabled?1:0;
-        renderer.setRgbValues(newValues);
+        Collection<GLActor> actors = renderer.getActors();
+        for ( GLActor actor: actors ) {
+            if ( actor instanceof VolumeBrick ) {
+                VolumeBrick brick = (VolumeBrick)actor;
+                float[] newValues = brick.getColorMask();
+                newValues[colorChannel]=isEnabled?1:0;
+                brick.setColorMask( newValues[ 0 ], newValues[ 1 ], newValues[ 2 ] );
+            }
+        }
+
     }
 
     /** Special synchronized method, for adding actors. Supports multi-threaded brick-add. */

@@ -51,6 +51,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 	private IntBuffer signalData = Buffers.newDirectIntBuffer(signalTextureVoxels[0]* signalTextureVoxels[1]* signalTextureVoxels[2]);
     private boolean bSignalTextureNeedsUpload = false;
     private boolean bMaskTextureNeedsUpload = false;
+    private boolean bColorMapTextureNeedsUpload = false;
 
     private VolumeBrickShader volumeBrickShader = new VolumeBrickShader();
 
@@ -103,6 +104,9 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 		if (bUseShader) {
             if ( maskTextureMediator != null  &&  bMaskTextureNeedsUpload ) {
                 uploadMaskingTexture(gl);
+            }
+
+            if ( colorMapTextureMediator != null  &&  bColorMapTextureNeedsUpload ) {
                 uploadColorMapTexture(gl);
             }
 
@@ -135,6 +139,8 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 			uploadSignalTexture(gl);
         if (maskTextureMediator != null  &&  bMaskTextureNeedsUpload)
             uploadMaskingTexture(gl);
+        if (colorMapTextureMediator != null  &&  bColorMapTextureNeedsUpload)
+            uploadColorMapTexture(gl);
 
 		// debugging objects showing useful boundaries of what we want to render
 		gl.glColor3d(1,1,1);
@@ -313,7 +319,8 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         textureIds = null;
 		bSignalTextureNeedsUpload = true;
         bMaskTextureNeedsUpload = true;
-		bIsInitialized = false;
+        bColorMapTextureNeedsUpload = true;
+        bIsInitialized = false;
 	}
 
     @Override
@@ -382,6 +389,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 		*/
 		bSignalTextureNeedsUpload = true;
         bMaskTextureNeedsUpload = false; //Dummy data has no masking at this time.
+        bColorMapTextureNeedsUpload = false;
 		bUseSyntheticData = false;
 	}
 
@@ -398,6 +406,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         }
         maskTextureMediator.setTextureData(textureData);
         bMaskTextureNeedsUpload = true;
+        bColorMapTextureNeedsUpload = true;  // New mask implies new map.
     }
 
     /** Use this to feed color mapping between neuron number in mask, and color desired. */
@@ -408,7 +417,8 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
             textureMediators.add( colorMapTextureMediator );
         }
         colorMapTextureMediator.setTextureData( textureData );
-        bMaskTextureNeedsUpload = true;  // Tying this to the mask texture data.  It makes no sense sans mask.
+        bMaskTextureNeedsUpload = true;      // Given color map is new, mask must also need re-push.
+        bColorMapTextureNeedsUpload = true;
     }
 
     //---------------------------------IMPLEMENT VolumeDataAcceptor
@@ -427,6 +437,11 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     /** Call this when the brick is to be re-shown after an absense. */
     public void refresh() {
         bSignalTextureNeedsUpload = true;
+    }
+
+    /** Calling this causes the special mapping texture to be pushed again at display or init time. */
+    public void refreshColorMapping() {
+        bColorMapTextureNeedsUpload = true;
     }
 
     private void initMediators( GL2 gl ) {
@@ -485,6 +500,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     private void uploadColorMapTexture(GL2 gl) {
         if ( colorMapTextureMediator != null )
             colorMapTextureMediator.uploadTexture( gl );
+        bColorMapTextureNeedsUpload = false;
     }
 
     private void setTextureCoordinates( GL2 gl, double tX, double tY, double tZ ) {

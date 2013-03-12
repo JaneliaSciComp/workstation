@@ -1,9 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import java.awt.BorderLayout;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 import javax.swing.JLabel;
@@ -16,7 +14,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerPane;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.domain.Neuron;
@@ -50,12 +47,11 @@ public class AlignmentBoardViewer extends Viewer {
     private Mip3d mip3d;
     private ABLoadWorker loadWorker;
     private ModelMgrObserver modelMgrObserver;
-    private RenderMappingI renderMapping;
+    private Map<Long,RenderMappingI> renderMappings;
     private Logger logger = LoggerFactory.getLogger(AlignmentBoardViewer.class);
 
     public AlignmentBoardViewer(ViewerPane viewerPane) {
         super(viewerPane);
-        renderMapping = new ConfigurableColorMapping();
         setLayout(new BorderLayout());
         ModelMgr.getModelMgr().registerOnEventBus(this);
     }
@@ -157,20 +153,6 @@ public class AlignmentBoardViewer extends Viewer {
     @Override
     public void totalRefresh() {
         refresh();
-    }
-
-    /**
-     * The "controller" should set this color mapping value onto this viewer.  Creating this requires
-     * being able to create something that can map colors against renderable objects.
-     *
-     * @return the color mapping set for this viewer.
-     */
-    public RenderMappingI getRenderMapping() {
-        return renderMapping;
-    }
-
-    public void setRenderMapping(RenderMappingI renderMapping) {
-        this.renderMapping = renderMapping;
     }
 
     @Subscribe
@@ -277,6 +259,9 @@ public class AlignmentBoardViewer extends Viewer {
         if ( event.getChangeType().equals( AlignmentBoardItemChangeEvent.ChangeType.VisibilityChange )  ||
              event.getChangeType().equals( AlignmentBoardItemChangeEvent.ChangeType.ColorChange ) ) {
 
+            // Changing the render mapping values.
+            this.updateRendering( abContext );
+
         }
         else {
             this.updateBoard( abContext );
@@ -321,7 +306,10 @@ public class AlignmentBoardViewer extends Viewer {
             mip3d.refresh();
 
             // Here, should load volumes, for all the different items given.
-            loadWorker = new ABLoadWorker( this, context, mip3d, getRenderMapping() );
+            loadWorker = new ABLoadWorker( this, context, mip3d );
+            // Once execution is complete, the render mappings, whose mapping is created on
+            // construction fo the load worker, shall have been filled in.
+            renderMappings = loadWorker.getRenderMappings();
             loadWorker.execute();
 
         }
@@ -346,7 +334,11 @@ public class AlignmentBoardViewer extends Viewer {
             // Here, simply make the rendering change.
             // Here, should load volumes, for all the different items given.
 
-            loadWorker = new ABLoadWorker( this, context, mip3d, getRenderMapping() );
+            loadWorker = new ABLoadWorker( this, context, mip3d, renderMappings );
+            // Once execution is complete, the render mappings, whose mapping is created on
+            // construction fo the load worker, shall have been filled in.
+            renderMappings = loadWorker.getRenderMappings();
+            loadWorker.setLoadFilesFlag( Boolean.FALSE );
             loadWorker.execute();
 
         }

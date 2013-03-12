@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeLoader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import java.awt.BorderLayout;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
@@ -35,28 +37,37 @@ public class ABLoadWorker extends SimpleWorker {
     private AlignmentBoardContext context;
     private Mip3d mip3d;
     private AlignmentBoardViewer viewer;
-    private RenderMappingI renderMapping;
     private Boolean loadFiles = true;
     private Logger logger;
 
+    private Map<Long,RenderMappingI> renderMappings;
+
     public ABLoadWorker(
-            AlignmentBoardViewer viewer, AlignmentBoardContext context, Mip3d mip3d, RenderMappingI renderMapping
+            AlignmentBoardViewer viewer, AlignmentBoardContext context, Mip3d mip3d
+    ) {
+        this( viewer, context, mip3d, new HashMap<Long,RenderMappingI>() );
+    }
+
+    public ABLoadWorker(
+            AlignmentBoardViewer viewer, AlignmentBoardContext context, Mip3d mip3d, Map<Long,RenderMappingI> renderMappings
     ) {
         logger = LoggerFactory.getLogger( ABLoadWorker.class );
         this.context = context;
         this.mip3d = mip3d;
         this.viewer = viewer;
-        this.renderMapping = renderMapping;
+        this.renderMappings = renderMappings;
     }
 
     public void setLoadFilesFlag( Boolean loadFiles ) {
         this.loadFiles = loadFiles;
     }
 
+    public Map<Long,RenderMappingI> getRenderMappings() {
+        return renderMappings;
+    }
+
     @Override
     protected void doStuff() throws Exception {
-
-        mip3d.clear();
 
         logger.info( "In load thread, before getting bean list." );
         Collection<SampleData> samples =
@@ -65,44 +76,10 @@ public class ABLoadWorker extends SimpleWorker {
                             .getSamples();
 
         if ( loadFiles ) {
-            if ( samples == null  ||  samples.size() == 0 ) {
-                logger.info( "No renderables found for alignment board " + context.getName() );
-                mip3d.clear();
-            }
-            else {
-                logger.info( "In load thread, after getting bean list." );
-
-                FileResolver resolver = new CacheFileResolver();
-                final CyclicBarrier barrier = new CyclicBarrier( samples.size() + 1 );
-                String filename = null;
-                for ( SampleData sampleData: samples ) {
-                    // Multithreaded load.
-                    filename = sampleData.getSignalFile();
-                    LoadRunnable runnable = new LoadRunnable( resolver, sampleData, barrier );
-                    new Thread( runnable ).start();
-                }
-
-                try {
-                    barrier.await();
-                } catch ( Exception ex ) {
-                    logger.error( "Barrier await failed during loading " + filename, ex );
-                    ex.printStackTrace();
-                }
-            }
-
-            mip3d.refresh();
-
-            // Strip any "show-loading" off the viewer.
-            viewer.removeAll();
-
-            // Add this last.  "show-loading" removes it.  This way, it is shown only
-            // when it becomes un-busy.
-            viewer.add( mip3d, BorderLayout.CENTER );
+            multiThreadedDataLoad(samples);
         }
         else {
-            for ( SampleData sampleData: samples ) {
-                loadRenderChange( sampleData );
-            }
+            multiThreadedRenderChange(samples);
         }
 
         logger.info( "Ending load thread." );
@@ -113,7 +90,12 @@ public class ABLoadWorker extends SimpleWorker {
         viewer.revalidate();
         viewer.repaint();
 
-        mip3d.refresh();
+        if ( loadFiles ) {
+            mip3d.refresh();
+        }
+        else {
+            mip3d.refreshRendering();
+        }
 
     }
 
@@ -125,13 +107,86 @@ public class ABLoadWorker extends SimpleWorker {
         SessionMgr.getSessionMgr().handleException( error );
     }
 
+    private void multiThreadedDataLoad(Collection<SampleData> samples) {
+        mip3d.clear();
+
+        if ( samples == null  ||  samples.size() == 0 ) {
+            logger.info( "No renderables found for alignment board " + context.getName() );
+            mip3d.clear();
+        }
+        else {
+            logger.info( "In load thread, after getting bean list." );
+
+            FileResolver resolver = new CacheFileResolver();
+            final CyclicBarrier barrier = new CyclicBarrier( samples.size() + 1 );
+            String filename = null;
+            for ( SampleData sampleData: samples ) {
+                // Multithreaded load.
+                filename = sampleData.getSignalFile();
+                LoadRunnable runnable = new LoadRunnable( resolver, sampleData, barrier );
+                new Thread( runnable ).start();
+            }
+
+            try {
+                barrier.await();
+            } catch ( Exception ex ) {
+                logger.error( "Barrier await failed during loading " + filename, ex );
+                ex.printStackTrace();
+            }
+        }
+
+        mip3d.refresh();
+
+        // Strip any "show-loading" off the viewer.
+        viewer.removeAll();
+
+        // Add this last.  "show-loading" removes it.  This way, it is shown only
+        // when it becomes un-busy.
+        viewer.add(mip3d, BorderLayout.CENTER);
+    }
+
+    private void multiThreadedRenderChange(Collection<SampleData> samples) {
+        if ( samples == null  ||  samples.size() == 0 ) {
+            logger.info("No renderables found for alignment board " + context.getName());
+        }
+        else {
+            final CyclicBarrier barrier = new CyclicBarrier( samples.size() + 1 );
+            String filename = null;
+            for ( SampleData sampleData: samples ) {
+                // Multithreaded render update.
+                filename = sampleData.getSignalFile();
+                RenderRunnable runnable = new RenderRunnable( sampleData, barrier );
+                new Thread( runnable ).start();
+            }
+
+            try {
+                barrier.await();
+            } catch ( Exception ex ) {
+                logger.error( "Barrier await failed during loading " + filename, ex );
+                ex.printStackTrace();
+            }
+        }
+
+    }
+
     private void loadRenderChange( SampleData sampleData ) {
-        logger.info( "In load of render change." );
-        Map<Integer,byte[]> map = renderMapping.getMapping();
-        logger.info( "End load of volume." );
-//        if ( ! mip3d.changeRendering(sampleData.getSignalFile(), map) ) {
-//            logger.error( "Failed to load masked volume {} to mip3d.", sampleData.getSignalFile() );
-//        }
+        logger.info("In load volume, STARTING load of volume {}.", sampleData.getSignalFile());
+        if ( sampleData != null ) {
+            Long sampleId = sampleData.getSample().getRenderableEntity().getId();
+            RenderMappingI renderMapping = renderMappings.get( sampleId );
+            // NOTE: may be possible that the sample-data does NOT have associated render-mappings.
+            if ( renderMapping != null ) {
+                Collection<RenderableBean> renderables = sampleData.getRenderableBeans();
+                for ( RenderableBean bean: renderables ) {
+                    logger.debug( "Bean has rendering " +
+                            bean.getRgb()[0] + "," + bean.getRgb()[1] + "," + bean.getRgb()[2] + "," + bean.getRgb()[3]
+                    );
+                }
+                renderMapping.setRenderables( renderables );
+            }
+        }
+        logger.info( "Completed setting of render mappings." );
+
     }
 
     private void loadVolume( FileResolver resolver, SampleData sampleData ) {
@@ -152,10 +207,18 @@ public class ABLoadWorker extends SimpleWorker {
             loadNonMaskedVolume(resolver, signalFilename, signalRenderable);
         }
         else {
+            logger.info("Setting renderables. Size = {}", renderableBeans.size() );
+            RenderMappingI renderMapping = new ConfigurableColorMapping();
             renderMapping.setRenderables( renderableBeans );
-            if ( ! mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver, renderMapping.getMapping() ) ) {
+
+            // Retain the mapping given to the volume.
+            renderMappings.put( sampleData.getSample().getRenderableEntity().getId(), renderMapping );
+
+            // The volume's data is loaded here.
+            if ( ! mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver, renderMapping ) ) {
                 logger.error( "Failed to load masked volume {} to mip3d.", signalFilename );
             }
+
         }
 
         if ( sampleData.getReference() != null ) {
@@ -233,6 +296,30 @@ public class ABLoadWorker extends SimpleWorker {
 
         public void run() {
             ABLoadWorker.this.loadVolume(resolver, sampleData);
+            try {
+                barrier.await();
+            } catch ( BrokenBarrierException bbe ) {
+                bbe.printStackTrace();
+            } catch ( InterruptedException ie ) {
+                ie.printStackTrace();
+            }
+        }
+    }
+
+    public class RenderRunnable implements Runnable {
+        private SampleData sampleData;
+        private CyclicBarrier barrier;
+
+        public RenderRunnable(
+                SampleData signalRenderable,
+                CyclicBarrier barrier
+        ) {
+            this.sampleData = signalRenderable;
+            this.barrier = barrier;
+        }
+
+        public void run() {
+            ABLoadWorker.this.loadRenderChange( sampleData );
             try {
                 barrier.await();
             } catch ( BrokenBarrierException bbe ) {
