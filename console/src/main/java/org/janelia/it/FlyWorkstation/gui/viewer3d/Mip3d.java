@@ -1,6 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
-import com.jogamp.opengl.util.gl2.GLUT;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
@@ -145,7 +144,7 @@ public class Mip3d extends BaseGLViewer {
             return false;
     }
 
-    // TEMPORARY.
+    // todo consider having GAMMA passed along some other way--preference?
     public void setGamma( float gamma ) {
         for ( GLActor actor: renderer.getActors() ) {
             if ( actor instanceof  VolumeBrick ) {
@@ -154,7 +153,6 @@ public class Mip3d extends BaseGLViewer {
             }
         }
 
-        // Need: find some better way to goose the graphics system into redrawing its data.
         repaint();
     }
 
