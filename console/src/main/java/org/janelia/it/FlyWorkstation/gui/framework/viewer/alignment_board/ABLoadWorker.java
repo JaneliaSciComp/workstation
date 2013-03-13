@@ -34,6 +34,7 @@ import java.util.concurrent.CyclicBarrier;
  */
 public class ABLoadWorker extends SimpleWorker {
 
+    private static final float GAMMA_VALUE = 1.0f;
     private AlignmentBoardContext context;
     private Mip3d mip3d;
     private AlignmentBoardViewer viewer;
@@ -215,7 +216,7 @@ public class ABLoadWorker extends SimpleWorker {
             renderMappings.put( sampleData.getSample().getRenderableEntity().getId(), renderMapping );
 
             // The volume's data is loaded here.
-            if ( ! mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver, renderMapping ) ) {
+            if ( ! mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver, renderMapping, GAMMA_VALUE ) ) {
                 logger.error( "Failed to load masked volume {} to mip3d.", signalFilename );
             }
 
@@ -247,7 +248,7 @@ public class ABLoadWorker extends SimpleWorker {
                 }
             }
         }
-        if ( ! mip3d.loadVolume( signalFilename, rgb, resolver ) ) {
+        if ( ! mip3d.loadVolume( signalFilename, rgb, resolver, GAMMA_VALUE ) ) {
             logger.error( "Failed to load {} to mip3d.", signalFilename );
         }
     }

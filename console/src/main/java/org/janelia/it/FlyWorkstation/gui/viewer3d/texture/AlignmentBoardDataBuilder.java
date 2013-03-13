@@ -131,7 +131,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
                 if ( childItems != null ) {
                     for ( AlignedItem item: childItems ) {
                         if ( item.getItemWrapper() instanceof Neuron ) {
-                            RenderableBean neuronBean = createRenderableBean(sampleBean, translatedNum, item);
+                            RenderableBean neuronBean = createRenderableBean( translatedNum, item );
                             sampleData.addNeuronFragment( neuronBean );
                             translatedNum ++;
                         }
@@ -164,7 +164,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
         sampleDataList = null;
     }
 
-    private RenderableBean createRenderableBean(RenderableBean sampleBean, int translatedNum, AlignedItem item ) {
+    private RenderableBean createRenderableBean( int translatedNum, AlignedItem item ) {
         Neuron neuron = (Neuron)item.getItemWrapper();
         logger.debug(
                 "Creating Renderable Bean for: " + neuron.getName() + " original index=" + neuron.getMaskIndex() +
@@ -174,8 +174,6 @@ public class AlignmentBoardDataBuilder implements Serializable {
         RenderableBean neuronBean = new RenderableBean();
         neuronBean.setLabelFileNum( neuron.getMaskIndex() + 1 ); // From 0-based to 1-based.
         neuronBean.setTranslatedNum(translatedNum);
-        //neuronBean.setSignalFile(sampleBean.getSignalFile());
-        //neuronBean.setLabelFile(sampleBean.getLabelFile());
         neuronBean.setRenderableEntity(neuron.getInternalEntity());
 
         // See to the appearance.

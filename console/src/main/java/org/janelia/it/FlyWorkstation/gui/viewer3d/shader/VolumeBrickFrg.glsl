@@ -1,8 +1,10 @@
 // Fragment shader for all filtering applied by volume brick.
+#version 120
 uniform sampler3D signalTexture;
 uniform sampler3D maskingTexture;
 uniform sampler3D colorMapTexture;
 
+uniform float gammaAdjustment = 1.0;
 uniform vec4 colorMask;
 uniform int hasMaskingTexture;
 
@@ -105,6 +107,18 @@ vec4 volumeMask(vec4 origColor)
     return rtnVal;
 }
 
+vec4 gammaAdjust(vec4 origColor)
+{
+    vec4 adjustedColor = vec4(
+        pow(origColor[0], gammaAdjustment),
+        pow(origColor[1], gammaAdjustment),
+        pow(origColor[2], gammaAdjustment),
+        origColor[3]
+    );
+
+    return adjustedColor;
+}
+
 void main()
 {
     // NOTE: if the use of colorMask is commented away, the shader Java counterpart
@@ -113,7 +127,8 @@ void main()
     vec4 throwAwayUse = colorMask;
 
     vec4 origColor = colorFilter();
-    gl_FragColor = volumeMask(origColor);
+    vec4 maskedColor = volumeMask(origColor);
+    gl_FragColor = gammaAdjust(maskedColor);
 
 }
 

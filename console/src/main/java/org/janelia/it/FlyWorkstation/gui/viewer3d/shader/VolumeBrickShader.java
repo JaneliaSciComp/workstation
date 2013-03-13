@@ -27,6 +27,7 @@ public class VolumeBrickShader extends AbstractShader {
     private TextureMediator colorMapTextureMediator;
 
     private boolean volumeMaskApplied = false;
+    private float gammaAdjustment = 1.0f;
 
     @Override
     public String getVertexShader() {
@@ -48,6 +49,7 @@ public class VolumeBrickShader extends AbstractShader {
         gl.glUseProgram( shaderProgram );
 
         pushMaskUniform( gl, shaderProgram );
+        pushGammaUniform( gl, shaderProgram );
         pushFilterUniform( gl, shaderProgram );
         setTextureUniforms( gl );
     }
@@ -74,6 +76,19 @@ public class VolumeBrickShader extends AbstractShader {
     /** Calling this implies that all steps for setting up this special texture have been carried out. */
     public void setVolumeMaskApplied() {
         volumeMaskApplied = true;
+    }
+
+    /**
+     * A power trip: all colors from final texture calculation, raised to this power.  Color values within
+     * shader run the range 0.0..1.0.  Therefore, higher powers (values for gammaAdjustment) yield lower results,
+     * approaching 0.  A gammaAdjustment of 1.0 yields the original number, so that is the default.  Very low
+     * fractional values like 0.001, 0.00001, etc., approach a result of 1.0 (white).  Negative values should
+     * not be used as they would push the resulting value out of the normalized range.
+     *
+     * @param gammaAdjustment a value between 1.0 and 0.0.
+     */
+    public void setGammaAdjustment(float gammaAdjustment) {
+        this.gammaAdjustment = gammaAdjustment;
     }
 
     public void unload(GL2 gl) {
@@ -107,6 +122,14 @@ public class VolumeBrickShader extends AbstractShader {
         }
         gl.glUniform1i( hasMaskLoc, volumeMaskApplied ? 1 : 0 );
 
+    }
+
+    private void pushGammaUniform( GL2 gl, int shaderProgram ) {
+        int gammaAdjustmentLoc = gl.glGetUniformLocation(shaderProgram, "gammaAdjustment");
+        if ( gammaAdjustmentLoc == -1 ) {
+            throw new RuntimeException( "Failed to find gamma adjustment setting location." );
+        }
+        gl.glUniform1f(gammaAdjustmentLoc, gammaAdjustment);
     }
 
     private void pushFilterUniform(GL2 gl, int shaderProgram) {

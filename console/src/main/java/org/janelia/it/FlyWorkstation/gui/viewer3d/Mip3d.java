@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
+import com.jogamp.opengl.util.gl2.GLUT;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
@@ -12,7 +13,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.util.Collection;
-import java.util.Map;
 
 public class Mip3d extends BaseGLViewer {
 	private static final long serialVersionUID = 1L;
@@ -65,7 +65,7 @@ public class Mip3d extends BaseGLViewer {
 	}
 
     /**
-     * Load a volume which may have a mask against it.
+     * Load a simple signal volume.
      *
      * @param fileName for signal file data.
      * @param resolver flexibility: allows different ways of resolving the file, which may be server-based.
@@ -96,11 +96,13 @@ public class Mip3d extends BaseGLViewer {
             String fileName,
             VolumeMaskBuilder volumeMaskBuilder,
             FileResolver resolver,
-            RenderMappingI renderMapping
+            RenderMappingI renderMapping,
+            float gamma
     ) {
 		VolumeLoader volumeLoader = new VolumeLoader(resolver);
 		if (volumeLoader.loadVolume(fileName)) {
             VolumeBrick brick = new VolumeBrick(renderer);
+            brick.setGammaAdjustment( gamma );
 			volumeLoader.populateVolumeAcceptor(brick);
             if ( volumeMaskBuilder != null ) {
                 brick.setMaskTextureData( volumeMaskBuilder.getCombinedTextureData() );
@@ -127,11 +129,12 @@ public class Mip3d extends BaseGLViewer {
      * @return true if it worked; false otherwise.
      */
     public boolean loadVolume(
-            String fileName, float[] colorMask,  FileResolver resolver
+            String fileName, float[] colorMask,  FileResolver resolver, float gamma
     ) {
         VolumeLoader volumeLoader = new VolumeLoader(resolver);
         if (volumeLoader.loadVolume(fileName)) {
             VolumeBrick brick = new VolumeBrick(renderer);
+            brick.setGammaAdjustment( gamma );
             brick.setColorMask( colorMask[ 0 ], colorMask[ 1 ], colorMask[ 2 ] );
             volumeLoader.populateVolumeAcceptor(brick);
 
@@ -140,6 +143,19 @@ public class Mip3d extends BaseGLViewer {
         }
         else
             return false;
+    }
+
+    // TEMPORARY.
+    public void setGamma( float gamma ) {
+        for ( GLActor actor: renderer.getActors() ) {
+            if ( actor instanceof  VolumeBrick ) {
+                VolumeBrick vb = ( VolumeBrick) actor;
+                vb.setGammaAdjustment( gamma );
+            }
+        }
+
+        // Need: find some better way to goose the graphics system into redrawing its data.
+        repaint();
     }
 
     @Override

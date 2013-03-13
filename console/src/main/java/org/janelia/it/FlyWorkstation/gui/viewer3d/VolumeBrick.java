@@ -39,8 +39,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     private int[] textureIds;
 
-    private GLUT glut = new GLUT();    
-
     private float[] colorMask = { 1.0f, 1.0f, 1.0f };
     /**
      * Size of our opengl texture, which might be padded with extra voxels
@@ -58,6 +56,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     private RotationState rotationState;
     private boolean bIsInitialized;
     private boolean bUseSyntheticData = false;
+    private float gammaAdjustment = 1.0f;
 
     private Logger logger = LoggerFactory.getLogger( VolumeBrick.class );
 
@@ -81,6 +80,12 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     public float[] getColorMask() {
         return colorMask;
+    }
+
+    public void setGammaAdjustment( float gammaAdjustment ) {
+        if ( bUseShader  &&  volumeBrickShader != null ) {
+            this.gammaAdjustment = gammaAdjustment;
+        }
     }
 
 	@Override
@@ -175,7 +180,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
             if ( maskTextureMediator != null ) {
                 volumeBrickShader.setVolumeMaskApplied();
             }
-
+            volumeBrickShader.setGammaAdjustment( gammaAdjustment );
             volumeBrickShader.load(gl);
         }
 

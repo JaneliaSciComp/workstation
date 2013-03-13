@@ -48,6 +48,7 @@ public class AlignmentBoardViewer extends Viewer {
     private ABLoadWorker loadWorker;
     private ModelMgrObserver modelMgrObserver;
     private Map<Long,RenderMappingI> renderMappings;
+    private BrainGlow brainGlow;
     private Logger logger = LoggerFactory.getLogger(AlignmentBoardViewer.class);
 
     public AlignmentBoardViewer(ViewerPane viewerPane) {
@@ -141,12 +142,6 @@ public class AlignmentBoardViewer extends Viewer {
             }
 
             mip3d.refresh();
-
-            // Here, should load volumes, for all the different items given.
-//
-//            loadWorker = new ABLoadWorker( this, context, mip3d, getRenderMapping() );
-//            loadWorker.execute();
-
         }
     }
 
@@ -296,6 +291,11 @@ public class AlignmentBoardViewer extends Viewer {
     private void updateBoard( AlignmentBoardContext context ) {
         logger.info("Update-board called.");
 
+        // TEMP
+        //if ( brainGlow != null ) {
+        //    brainGlow.isRunning = false;
+        //} // TEMP
+
         if (context != null) {
             showLoadingIndicator();
 
@@ -314,6 +314,9 @@ public class AlignmentBoardViewer extends Viewer {
 
         }
 
+        // TEMP
+        //brainGlow = new BrainGlow();
+        //brainGlow.start();  // TEMP
     }
 
     /**
@@ -323,14 +326,6 @@ public class AlignmentBoardViewer extends Viewer {
         logger.info("Update-rendering called.");
 
         if (context != null) {
-//            showLoadingIndicator();
-
-//            if ( mip3d == null ) {
-//                mip3d = new Mip3d();
-//            }
-
-//            mip3d.refresh();
-
             // Here, simply make the rendering change.
             // Here, should load volumes, for all the different items given.
 
@@ -359,6 +354,32 @@ public class AlignmentBoardViewer extends Viewer {
         public void entityChildrenChanged(long entityId) {
             if (heardEntity.getId() == entityId) {
                 viewer.refresh();
+            }
+        }
+    }
+
+    public class BrainGlow extends Thread {
+        private float gamma = 0.0f;
+        public boolean isRunning = true;
+
+        public BrainGlow() {
+            super.start();
+        }
+
+        @Override
+        public void run() {
+            while ( isRunning ) {
+                long curTime = System.currentTimeMillis() % 50L;
+                if ( curTime > 25 ) {
+                    curTime = 50 - curTime;
+                }
+                gamma = 0.75f + (curTime / 100.0f);
+                mip3d.setGamma( gamma );
+                try {
+                    Thread.sleep( 60 );
+                } catch ( Exception ex ) {
+                    break;
+                }
             }
         }
     }

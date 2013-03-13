@@ -1,4 +1,5 @@
 // vertex shader to support dynamic selection of presented colors.
+#version 120
 uniform int hasMaskingTexture;
 
 void main(void)
