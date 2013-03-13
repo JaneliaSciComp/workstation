@@ -204,7 +204,7 @@ public class TestMaskedMip3d {
                         colorMapping.setRenderables( beans );
                     }
 
-                    if ( ! mipWidget.loadVolume( fn, vmb, resolver, colorMapping ) ) {
+                    if ( ! mipWidget.loadVolume( fn, vmb, resolver, colorMapping, 0.6f ) ) {
                         throw new RuntimeException( "Failed to load " + fn );
                     }
 
