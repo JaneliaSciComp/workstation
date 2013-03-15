@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.MaskBuilderI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
@@ -87,13 +88,13 @@ public class Mip3d extends BaseGLViewer {
      * Load a volume which may have a mask against it.
      *
      * @param fileName for signal file data.
-     * @param volumeMaskBuilder for mask file data.
+     * @param maskBuilder for mask file data.
      * @param resolver flexibility: allows different ways of resolving the file, which may be server-based.
      * @return true if it worked; false otherwise.
      */
 	public boolean loadVolume(
             String fileName,
-            VolumeMaskBuilder volumeMaskBuilder,
+            MaskBuilderI maskBuilder,
             FileResolver resolver,
             RenderMappingI renderMapping,
             float gamma
@@ -103,8 +104,8 @@ public class Mip3d extends BaseGLViewer {
             VolumeBrick brick = new VolumeBrick(renderer);
             brick.setGammaAdjustment( gamma );
 			volumeLoader.populateVolumeAcceptor(brick);
-            if ( volumeMaskBuilder != null ) {
-                brick.setMaskTextureData( volumeMaskBuilder.getCombinedTextureData() );
+            if ( maskBuilder != null ) {
+                brick.setMaskTextureData( maskBuilder.getCombinedTextureData() );
 
                 RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
                 renderMapTextureData.setMapping( renderMapping );
@@ -149,7 +150,7 @@ public class Mip3d extends BaseGLViewer {
         for ( GLActor actor: renderer.getActors() ) {
             if ( actor instanceof  VolumeBrick ) {
                 VolumeBrick vb = ( VolumeBrick) actor;
-                vb.setGammaAdjustment( gamma );
+                vb.setGammaAdjustment(gamma);
             }
         }
 
