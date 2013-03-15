@@ -14,7 +14,7 @@ import java.util.Collection;
  * Date: 1/23/13
  * Time: 10:23 AM
  *
- * Implement this to make an object holding/conveying all texture data about one input file.
+ * Implement this to make an object holding/conveying all texture data about one set of texture bytes.
  */
 public interface TextureDataI {
 
