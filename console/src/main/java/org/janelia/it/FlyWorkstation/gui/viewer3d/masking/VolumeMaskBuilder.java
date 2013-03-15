@@ -19,14 +19,13 @@ import java.util.*;
  * Builds up the volume mask "voxels", where the final product can be treated as a texture for
  * uploading to opengl.
  */
-public class VolumeMaskBuilder implements VolumeDataAcceptor {
+public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
 
     private static final int X_INX = 0;
     private static final int Y_INX = 1;
 
     private static final int SHADER_FRIENDLY_BYTE_COUNT = 2;
     private static final long UNSET_MASK_UID = -1L;
-    private static final int GPU_MULTIBYTE_DIVISIBILITY_VALUE = 4;
 
     private List<TextureDataI> maskingDataBeans = new ArrayList<TextureDataI>();
     private ByteOrder consensusByteOrder;
@@ -46,22 +45,9 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor {
     }
 
     public byte[] getVolumeMask() {
-//        if ( 0 == 0 )
-//            return ((MaskTextureDataBean)maskingDataBeans.get(0)).getTextureBytes();
-
         if ( renderables == null ) {
             return null;
         }
-
-//        Map<Long,Set<RenderableBean>> labelUidToRenderable = new HashMap<Long,Set<RenderableBean>>();
-//        for ( RenderableBean bean: renderables) {
-//            Set<RenderableBean> beans = labelUidToRenderable.get( bean.getLabelUid() );
-//            if ( beans == null ) {
-//                beans = new HashSet<RenderableBean>();
-//                labelUidToRenderable.put(bean.getLabelUid(), beans);
-//            }
-//            beans.add(bean);
-//        }
 
         Integer[] volumeMaskVoxels = getVolumeMaskVoxels();
 
