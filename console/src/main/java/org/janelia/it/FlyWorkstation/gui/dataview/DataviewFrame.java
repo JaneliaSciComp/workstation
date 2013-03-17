@@ -56,7 +56,6 @@ public class DataviewFrame extends JFrame {
     private void initUI() {
 
         searchConfig = new SearchConfiguration();
-        searchConfig.load();
 
         entityParentsPane = new EntityDataPane("Entity Data: Parents", true, false) {
             @Override
