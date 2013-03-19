@@ -13,10 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.io.RandomAccessFile;
-import java.net.URL;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.Arrays;
 
 /**
@@ -37,50 +33,33 @@ public class ChannelReadTest {
     private static final String CHAN_FILE_NAME = "prefix_1.chan";
     private static final String LOCAL_CHAN_FILE_PATH = MASK_CHAN_LOC + CHAN_FILE_NAME;
 
-    private InputStream testStream;
-    private RandomAccessFile testRAF;
-
-    // The input data is known to be little-endian or LSB.
-    private byte[] intArray = new byte[ 4 ];
-    private byte[] longArray = new byte[ 8 ];
+    private InputStream testMaskStream;
+    private InputStream testChannelStream;
 
     private Logger logger = LoggerFactory.getLogger( ChannelReadTest.class );
 
-    private ByteBuffer intBuffer = ByteBuffer.wrap( intArray );
-    {
-        intBuffer.order(ByteOrder.LITTLE_ENDIAN);
-    }
-
-    private ByteBuffer longBuffer = ByteBuffer.wrap( longArray );
-    {
-        longBuffer.order(ByteOrder.LITTLE_ENDIAN);
-    }
-
-//    @Before
+    //@Before
     public void setUp() throws  Exception {
-        testStream = this.getClass().getResourceAsStream(MASK_FILE_NAME);
-        if ( testStream == null ) {
-            testStream = new FileInputStream(LOCAL_MASK_FILE_PATH);
+        testMaskStream = this.getClass().getResourceAsStream( MASK_FILE_NAME );
+        if ( testMaskStream == null ) {
+            testMaskStream = new FileInputStream( LOCAL_MASK_FILE_PATH );
             logger.warn("Resorting to hardcoded mask path.");
         }
 
-        URL rafResource = this.getClass().getResource(CHAN_FILE_NAME);
-        if ( rafResource != null ) {
-            String rafLoc = rafResource.getFile();
-            testRAF = new RandomAccessFile( rafLoc, "r" );
-        }
-        else {
-            testRAF = new RandomAccessFile( LOCAL_CHAN_FILE_PATH, "r" );
+        testChannelStream = this.getClass().getResourceAsStream( CHAN_FILE_NAME );
+        if ( testChannelStream == null ) {
+            testChannelStream = new FileInputStream( LOCAL_CHAN_FILE_PATH );
             logger.warn("Resorting to hardcoded channel path.");
         }
     }
 
-//    @After
+    //@After
     public void tearDown() throws Exception {
-        testStream.close();
+        testMaskStream.close();
+        testChannelStream.close();
     }
 
-//    @Test
+    //@Test
     public void testReadOneFile() throws Exception {
         // Time-of-writing: only thing bean is used for is its tanslated number.
         RenderableBean bean = new RenderableBean();
@@ -91,11 +70,11 @@ public class ChannelReadTest {
         //loader.setRenderableBeans( Arrays.asList( bean ) );
 
         RenderablesChannelsBuilder builder = new RenderablesChannelsBuilder();
-        builder.init();
         loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList( builder ) );
 
-        loader.read( bean, testStream, testRAF );
+        loader.read( bean, testMaskStream, testChannelStream );
 
+        builder.test();
     }
 
 }

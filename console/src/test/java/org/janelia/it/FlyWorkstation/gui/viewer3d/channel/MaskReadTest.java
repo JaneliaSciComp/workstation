@@ -57,41 +57,6 @@ public class MaskReadTest {
         testStream.close();
     }
 
-    /*
-  Format for mask and channel files.
-  Mask files:
-  long xsize; // space
-  long ysize; // space
-  long zsize; // space
-  long x0; // bounding box
-  long x1; // bounding box, such that x0 is inclusive, x1 exclusive, etc
-  long y0; // bb
-  long y1; // bb
-  long z0; // bb
-  long z1; // bb
-  long totalVoxels;
-  unsigned char axis; // 0=yz(x), 1=xz(y), 2=xy(z)
-  { // For each ray
-    long skip;
-    long pairs;
-    { // For each pair
-        long start;
-        long end; // such that end-start is length, i.e., end is exclusive
-    }
-  }
-  Channel files:
-  long totalVoxels;
-  unsigned char channels; // number of channels
-  unsigned char recommendedRedChannel;
-  unsigned char recommendedGreenChannel;
-  unsigned char recommendedBlueChannel;
-  unsigned char bytesPerChannel; // 1=8-bit, 2=16-bit
-  { // For each channel
-    { // For each voxel
-        B value;
-    }
-  }
-    */
 //    @Test
     public void testReadChannelData() throws Exception {
         logger.info( "Reading channel data." );
@@ -105,7 +70,7 @@ public class MaskReadTest {
         //loader.setRenderableBeans(Arrays.asList( bean ) );
 
         // TODO make an alternative that takes the right stream:  see also RenMaskBldrTest.
-        loader.read( bean, new BufferedInputStream( testStream ) );
+        loader.read( bean, new BufferedInputStream( testStream ), null );
         logger.info( "Completed read-channel data." );
     }
 
