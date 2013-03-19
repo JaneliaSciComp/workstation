@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.VolumeLoaderI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.MaskBuilderI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
@@ -76,6 +77,39 @@ public class Mip3d extends BaseGLViewer {
         if (volumeLoader.loadVolume(fileName)) {
             VolumeBrick brick = new VolumeBrick(renderer);
             volumeLoader.populateVolumeAcceptor(brick);
+
+            addActorToRenderer(brick);
+            return true;
+        }
+        else
+            return false;
+    }
+
+    /**
+     * Load a volume which may have a mask against it.
+     *
+     * @param volumeLoader for pushing data into the brick.
+     * @param maskBuilder for mask file data.
+     * @return true if it worked; false otherwise.
+     */
+    public boolean setVolume(
+            VolumeLoaderI volumeLoader,
+            MaskBuilderI maskBuilder,
+            RenderMappingI renderMapping,
+            float gamma
+    ) {
+        if ( volumeLoader != null ) {
+            VolumeBrick brick = new VolumeBrick(renderer);
+            brick.setGammaAdjustment( gamma );
+            volumeLoader.populateVolumeAcceptor(brick);
+            if ( maskBuilder != null ) {
+                brick.setMaskTextureData( maskBuilder.getCombinedTextureData() );
+
+                RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
+                renderMapTextureData.setMapping( renderMapping );
+
+                brick.setColorMapTextureData( renderMapTextureData );
+            }
 
             addActorToRenderer(brick);
             return true;

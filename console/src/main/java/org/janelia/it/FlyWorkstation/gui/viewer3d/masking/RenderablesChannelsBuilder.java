@@ -1,9 +1,15 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeBrick;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.VolumeLoaderI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataBean;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteOrder;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -16,7 +22,7 @@ import java.util.TreeMap;
  * This implementation of a mask builder takes renderables as its driving data.  It will accept the renderables,
  * along with their applicable chunks of data, to produce its texture data volume, in memory.
  */
-public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder {
+public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder implements VolumeLoaderI {
 
     private ChannelMetaData channelMetaData;
     private byte[] volumeData;
@@ -161,7 +167,33 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder {
         this.setChannelCount( metaData.channelCount );
     }
 
+    @Override
+    public void populateVolumeAcceptor(VolumeDataAcceptor dataAcceptor) {
+        dataAcceptor.setTextureData( buildTextureData() );
+    }
+
     //-------------------------END:-----------IMPLEMENT MaskChanDataAcceptorI
 
     //----------------------------------------HELPER METHODS
+    private TextureDataI buildTextureData() {
+        TextureDataI textureData = new TextureDataBean( volumeData, (int)sx, (int)sy, (int)sz );
+
+        textureData.setColorSpace( VolumeBrick.TextureColorSpace.COLOR_SPACE_LINEAR );
+        textureData.setVolumeMicrometers(new Double[]{(double) sx, (double) sy, (double) sz});
+        textureData.setVoxelMicrometers(new Double[]{1.0, 1.0, 1.0});
+        textureData.setByteOrder( ByteOrder.LITTLE_ENDIAN );
+        textureData.setPixelByteCount( channelMetaData.byteCount );
+        textureData.setFilename( "Mask and Channel" );
+        textureData.setChannelCount( channelMetaData.channelCount );
+        textureData.setInverted( false );
+
+        // NOTE: if this is later needed, need to have a decider for the notion of luminance.
+//        if (! isLuminance  &&  (textureData.getPixelByteCount() == 4) ) {
+//            setAlphaToSaturateColors( textureData.getColorSpace() );
+//        }
+
+        return textureData;
+    }
+
+
 }

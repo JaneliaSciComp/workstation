@@ -10,12 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class VolumeLoader
-{
-
-    public enum FileType{
-        TIF, LSM, V3DMASK, V3DSIGNAL, MP4, UNKNOWN
-    };
+public class VolumeLoader implements VolumeLoaderI {
 
     private static final int MAX_FILE_LOAD_RETRY = 3;
     private static final int WAIT_BETWEEN_FILE_LOAD_RETRIES = 1000;
