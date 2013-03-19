@@ -1,20 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import java.awt.*;
-import java.awt.event.WindowEvent;
-import java.awt.print.PageFormat;
-import java.awt.print.PrinterJob;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.File;
-import java.io.FilenameFilter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
-import javax.swing.*;
-
+import com.google.common.collect.ComparisonChain;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.LoadRequestStatusObserverAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestState;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestStatus;
@@ -47,7 +33,19 @@ import org.janelia.it.jacs.model.entity.EntityData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ComparisonChain;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.WindowEvent;
+import java.awt.print.PageFormat;
+import java.awt.print.PrinterJob;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -124,7 +122,7 @@ public class Browser extends JFrame implements Cloneable {
     private SplitPickingPanel splitPickingPanel;
         
     private AnnotationSessionPropertyDialog annotationSessionPropertyPanel;
-    private RunImportDialog runImportDialog;
+    private ImportDialog importDialog;
     private RunNeuronSeparationDialog runNeuronSeparationDialog;
     private SearchConfiguration generalSearchConfig;
     private GeneralSearchDialog generalSearchDialog;
@@ -188,6 +186,11 @@ public class Browser extends JFrame implements Cloneable {
 
     static public void setMenuBarClass(Class aMenuBarClass) {
         menuBarClass = aMenuBarClass;
+    }
+
+    // todo Remove access to the menu bar
+    public JMenuBar getJMenuBar() {
+        return menuBar;
     }
 
     public void addBrowserObserver(BrowserObserver browserObserver) {
@@ -286,7 +289,7 @@ public class Browser extends JFrame implements Cloneable {
         ontologyOutline = new OntologyOutline();
         
         annotationSessionPropertyPanel = new AnnotationSessionPropertyDialog(entityOutline, ontologyOutline);
-        runImportDialog = new RunImportDialog();
+        importDialog = new ImportDialog("Import Files");
         runNeuronSeparationDialog = new RunNeuronSeparationDialog();
 
         generalSearchConfig = new SearchConfiguration();
@@ -1362,8 +1365,8 @@ public class Browser extends JFrame implements Cloneable {
 		return runNeuronSeparationDialog;
 	}
 
-    public RunImportDialog getRunImportDialog(){
-        return runImportDialog;
+    public ImportDialog getImportDialog(){
+        return importDialog;
     }
 
     public PatternSearchDialog getPatternSearchDialog() {
