@@ -39,13 +39,13 @@ public class FileMenu extends JMenu {
     JMenuItem menuOpenDataSource;
     JMenuItem menuFileExit;
     JMenuItem menuFilePrint;
+    JMenuItem menuNewSketch;
+    JMenuItem menuNewAlignmentBoard;
     JMenuItem menuListOpen;
     JMenuItem setLoginMI;
     JMenuItem menuFileImport;
     JMenuItem menuViewDetails;
-    private JMenu menuSetPreferences;
-    private JMenuItem menuPrefSystem;
-    private JMenuItem menuPrefViewer;
+    private JMenu menuNewItem;
 //    private JMenuItem menuPrefExport;
 //    private JMenuItem menuPrefImport;
 
@@ -83,6 +83,24 @@ public class FileMenu extends JMenu {
             }
         });
 
+        menuNewItem = new JMenu("New...");
+        menuNewSketch = new JMenuItem("Brain Sketch");
+        menuNewSketch.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                menuNewSketch_actionPerformed();
+            }
+        });
+        menuNewAlignmentBoard = new JMenuItem("Alignment Board");
+        menuNewAlignmentBoard.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                menuNewAlignmentBoard_actionPerformed();
+            }
+        });
+        menuNewItem.add(menuNewAlignmentBoard);
+        menuNewItem.add(menuNewSketch);
+
         menuListOpen = new JMenuItem("List Open Data Sources", 'L');
         menuListOpen.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -96,9 +114,6 @@ public class FileMenu extends JMenu {
                 menuFileImport_actionPerformed();
             }
         });
-
-        menuSetPreferences = new JMenu("Preferences");
-        menuSetPreferences.setMnemonic('P');
 
         menuFilePrint = new JMenuItem("Print Screen", 'P');
         menuFilePrint.addActionListener(new ActionListener() {
@@ -127,22 +142,6 @@ public class FileMenu extends JMenu {
             }
         });
 
-        menuPrefSystem = new JMenuItem("System", 'S');
-        menuPrefSystem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                establishPrefController(PrefController.APPLICATION_EDITOR);
-            }
-        });
-        menuSetPreferences.add(menuPrefSystem);
-
-        menuPrefViewer = new JMenuItem("Viewer", 'V');
-        menuPrefViewer.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                establishPrefController(PrefController.VIEWER_EDITOR);
-            }
-        });
-        menuSetPreferences.add(menuPrefViewer);
-        
 //        menuPrefExport = new JMenuItem("Export Preference File...", 'x');
 //        menuPrefExport.addActionListener(new ActionListener() {
 //            public void actionPerformed(ActionEvent e) {
@@ -259,12 +258,12 @@ public class FileMenu extends JMenu {
 
     private void addMenuItems() {
         removeAll();
-        add(setLoginMI);
+        add(menuNewItem);
         add(menuFileImport);
         add(new JSeparator());
 //        add(menuListOpen);
 //        add(menuFileImport);
-        add(menuSetPreferences);
+        add(setLoginMI);
         add(menuFilePrint);
         if (addedMenus.size() > 0) add(new JSeparator());
         for (JMenuItem addedMenu : addedMenus) {
@@ -279,7 +278,7 @@ public class FileMenu extends JMenu {
     }
 
     private void menuFileImport_actionPerformed(){
-        SessionMgr.getSessionMgr().getActiveBrowser().getRunImportDialog().showDialog();
+        SessionMgr.getSessionMgr().getActiveBrowser().getImportDialog().showDialog();
     }
 
     private void fileExit_actionPerformed() {
@@ -311,6 +310,14 @@ public class FileMenu extends JMenu {
                 FacadeManager.canProtocolAddMoreDataSources(protocol));
     }
 
+
+    private void menuNewSketch_actionPerformed() {
+
+    }
+
+    private void menuNewAlignmentBoard_actionPerformed() {
+
+    }
 
     private void viewDetails_actionPerformed(ActionEvent e, String protocol, Object dataSource) throws Exception {
         new EntityDetailsDialog().showForEntity(
