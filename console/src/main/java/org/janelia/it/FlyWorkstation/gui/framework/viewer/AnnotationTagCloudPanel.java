@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.dialogs.AnnotationBuilderDialog;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.BulkEditAnnotationKeyValueAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.RemoveAnnotationKeyValueAction;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.RemoveAnnotationTermAction;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.OntologyOutline;
@@ -99,6 +100,14 @@ public class AnnotationTagCloudPanel extends TagCloudPanel<OntologyAnnotation> i
                                 EntityConstants.VALUE_ONTOLOGY_TERM_TYPE_ENUM_TEXT.equals(tmpOntologyTermType)||
                                 EntityConstants.VALUE_ONTOLOGY_TERM_TYPE_INTERVAL.equals(tmpOntologyTermType)||
                                 EntityConstants.VALUE_ONTOLOGY_TERM_TYPE_TEXT.equals(tmpOntologyTermType)) {
+                            final BulkEditAnnotationKeyValueAction bulkEditAction = new BulkEditAnnotationKeyValueAction(tag);
+                            JMenuItem editByValueItem = new JMenuItem("  "+bulkEditAction.getName());
+                            editByValueItem.addActionListener(new ActionListener() {
+                                public void actionPerformed(ActionEvent actionEvent) {
+                                    bulkEditAction.doAction();
+                                }
+                            });
+                            popupMenu.add(editByValueItem);
                             final RemoveAnnotationKeyValueAction valueAction = new RemoveAnnotationKeyValueAction(tag);
                             JMenuItem deleteByValueItem = new JMenuItem("  "+valueAction.getName());
                             deleteByValueItem.addActionListener(new ActionListener() {

@@ -202,7 +202,12 @@ public class Hud extends ModalDialog {
                 if ( invertImage ) {
                     image = Utils.invertImage( image );
                 }
-
+                // Force the image to be on the screen
+                Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+                if (image.getHeight()>screenSize.height) {
+                    double scalingFactor = image.getHeight()/screenSize.height*0.8;
+                    image = Utils.getScaledImage(image, scalingFactor);
+                }
                 ImageIcon imageIcon = new ImageIcon(image);
                 previewLabel.setIcon( image == null ? null : imageIcon);
 

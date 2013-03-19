@@ -138,4 +138,7 @@ public class AnnotationBuilderDialog extends JDialog {
         annotationTextField.setText(newAnnotationValue);
     }
 
+    public String getOriginalAnnotationText() {
+        return originalAnnotationText;
+    }
 }
