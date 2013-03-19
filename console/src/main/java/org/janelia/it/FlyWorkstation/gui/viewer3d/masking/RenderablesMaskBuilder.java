@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
@@ -8,6 +9,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import javax.media.opengl.GL2;
 import java.nio.ByteOrder;
 import java.util.Collection;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +27,23 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     private float[] coordCoverage;
     private Logger logger = LoggerFactory.getLogger( RenderablesMaskBuilder.class );
     private Collection<RenderableBean> renderableBeans;
+    private byte[] volumeData;
+    private int byteCount = 1;
+
+    private boolean isInitialized = false;
+
+    //----------------------------------------ABSTRACT OVERRIDE IMPLEMENTATIONS
+
+    /**
+     * ORDER DEPENDENCY: call this only after the super space-set, and byte count set have been called.
+     */
+    @Override
+    public void init() {
+        if ( ! isInitialized ) {
+            volumeData = new byte[ (int)(sx * sy * sz) * byteCount ];
+            isInitialized = true;
+        }
+    }
 
     //----------------------------------------IMPLEMENT MaskChanDataAcceptorI
     /**
@@ -37,8 +56,10 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
      */
     @Override
     public int addMaskData(Integer maskNumber, long position) throws Exception {
+        init();
+
         // Assumed little-endian and two bytes.
-        byte[] maskData = super.getVolumeData();
+        byte[] maskData = volumeData;
         for ( int j = 0; j < getPixelByteCount(); j++ ) {
             maskData[ j + ((int)position * getPixelByteCount()) ] = (byte)( ( maskNumber >>> (8*j) ) & 0x00ff );
         }
@@ -47,7 +68,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     }
 
     @Override
-    public int addChannelData(byte[] channelData, long position) throws Exception {
+    public int addChannelData(List<byte[]> channelData, long position) throws Exception {
         throw new IllegalArgumentException( "Not implemented" );
     }
 
@@ -60,6 +81,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
         return Acceptable.mask;
     }
 
+    public void setChannelMetaData( ChannelMetaData metaData ) {}
     //-------------------------END:-----------IMPLEMENT MaskChanDataAcceptorI
 
     //----------------------------------------IMPLEMENT MaskBuilderI
@@ -91,14 +113,20 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
         return ByteOrder.nativeOrder();
     }
 
+    /** No channel data here. */
+    @Override
+    public int getChannelByteCount() {
+        return 0;
+    }
+
     @Override
     public int getPixelByteCount() {
-        return super.getByteCount();
+        return byteCount;
     }
 
     @Override
     public TextureDataI getCombinedTextureData() {
-        byte[] maskData = super.getVolumeData();
+        byte[] maskData = volumeData;
         Integer[] volumeVoxels = this.getVolumeMaskVoxels();
         TextureDataI textureData = new TextureDataBean( maskData, volumeVoxels[0], volumeVoxels[1], volumeVoxels[2] );
         textureData.setInverted( false );
@@ -127,7 +155,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
 
     @Override
     public byte[] getVolumeData() {
-        return super.getVolumeData();
+        return volumeData;
     }
 
     //-------------END------------------------IMPLEMENT MaskBuilderI

@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 
+import java.util.List;
+
 /**
  * Created with IntelliJ IDEA.
  * User: fosterl
@@ -14,9 +16,23 @@ public interface MaskChanDataAcceptorI {
     }
 
     /**
+     * Implement this if your implementation can accept "channel" data.
+     * @see Acceptable
+     * the caller will post channel-bytes data.  This method and
+     * @see #addMaskData(Integer, long)
+     * should be called together, as this channel data applies to a specific mask number.
+     *
+     * @param channelData all data applicable for the mask.
+     * @param position where in the logical output would this string fall?
+     * @return number of slots filled.  Should return 1.
+     * @throws Exception from called method.
+     */
+    int addChannelData( List<byte[]> channelData, long position ) throws Exception;
+
+    /**
      * Implement this if your implementation can accept "mask" data
      * @see Acceptable
-     * the caller will post mask-number data.
+     * the caller will post mask-number data.  Called once per mask.
      *
      * @param maskNumber this value is used to fill all positions between start and end.
      * @param position where in the logical output would this string fall?
@@ -24,20 +40,6 @@ public interface MaskChanDataAcceptorI {
      * @throws Exception
      */
     int addMaskData( Integer maskNumber, long position ) throws Exception;
-
-    /**
-     * Implement this if your implementation can accept "channel" data.
-     * @see Acceptable
-     * the caller will post channel-bytes data.  The data will be of
-     * @see #getChannelByteCount()
-     * bytes in length, per position.
-     *
-     * @param channelData bunch of bytes.  Size matches channel byte count times end - start.
-     * @param position where in the logical output would this string fall?
-     * @return number of slots filled.  Should return 1.
-     * @throws Exception from called method.
-     */
-    int addChannelData( byte[] channelData, long position ) throws Exception;
 
     /**
      * This allows a poke-in of the max dimensions.
@@ -62,4 +64,11 @@ public interface MaskChanDataAcceptorI {
      * @return agreed-upon number of bytes per channel.
      */
     int getChannelByteCount();
+
+    /**
+     * Allows passing-in of various data required at channel-data read time.
+     *
+     * @param metaData what's to know about channels.
+     */
+    public void setChannelMetaData( ChannelMetaData metaData );
 }

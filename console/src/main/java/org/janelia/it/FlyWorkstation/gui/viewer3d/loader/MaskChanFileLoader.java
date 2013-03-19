@@ -10,6 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -47,12 +48,12 @@ public class MaskChanFileLoader {
 
     private ChannelMetaData channelMetaData;
 
-
     //private Collection<RenderableBean> renderableBeans;
     private int byteCount = 0;
     private int dimensionOrder = -1;
     private Long totalVoxels;
     private Long channelTotalBytes;
+    private int cummulativeBytesReadCount;
 
     private Collection<MaskChanDataAcceptorI> maskAcceptors;
     private Collection<MaskChanDataAcceptorI> channelAcceptors;
@@ -138,21 +139,22 @@ public class MaskChanFileLoader {
         }
     }
 
-    public void read( RenderableBean bean, InputStream maskInputStream ) throws Exception {
-        read( bean, maskInputStream, null );
-    }
-
-    public void read( RenderableBean bean, InputStream maskInputStream, RandomAccessFile channelRAF )
+    public void read( RenderableBean bean, InputStream maskInputStream, InputStream channelStream )
             throws Exception {
         logger.info("Read called.");
 
-        long totalRead = 0;
+        cummulativeBytesReadCount = 0;
 
         // Get all the overhead stuff out of the way.
-        initializeStreams( maskInputStream, channelRAF );
+        logger.info( "Initializing Mask Stream." );
+        initializeMaskStream(maskInputStream);
         validateMaskVolume();
 
-        while ( totalRead < totalVoxels ) {
+        logger.info( "Reading channel data." );
+        List<byte[]> channelData = readChannelData( bean, channelStream );
+        logger.info( "Completed reading channel data." );
+
+        while ( cummulativeBytesReadCount < totalVoxels ) {
             Long skippedRayCount = readLong(maskInputStream);
             Long pairCount = readLong(maskInputStream);
             long[][] pairs = new long[ pairCount.intValue() ][ 2 ];
@@ -161,15 +163,14 @@ public class MaskChanFileLoader {
                 pairs[ i ][ 1 ] = readLong(maskInputStream);
             }
 
-            int nextRead = addData( bean, skippedRayCount, pairs );
-
-            totalRead += nextRead;
+            int nextRead = addData( bean, skippedRayCount, pairs, channelData );
             if ( nextRead == 0 ) {
                 throw new Exception("Zero bytes read.");
             }
 
         }
 
+        logger.info( "Read complete." );
     }
 
     /**
@@ -177,7 +178,7 @@ public class MaskChanFileLoader {
      *
      * @throws Exception thrown by any called methods.
      */
-    private void initializeStreams( InputStream maskInputStream, RandomAccessFile channelRAF ) throws Exception {
+    private void initializeMaskStream(InputStream maskInputStream) throws Exception {
         logger.info( "Grabbing overhead data from mask." );
 
         sx = readLong(maskInputStream);
@@ -205,28 +206,6 @@ public class MaskChanFileLoader {
         axis = readByte(maskInputStream);
         this.setDimensionOrder( axis );
 
-        //  Note: any type of read requires all the mask data.  But only mask-required will require
-        //  the channel data all available.
-        if ( channelAcceptors.size() > 0 ) {
-            // NOTE: if no channels needed, the intensity stream may be ignored.
-            // Open the file, and move pointers down to seek-ready point.
-            long totalIntensityVoxels = readLong( channelRAF );
-            if ( totalIntensityVoxels != totalVoxels ) {
-                throw new IllegalArgumentException( "Mismatch in file contents: total voxels of "
-                    + totalVoxels + " for mask, but total of " + totalIntensityVoxels + " for intensity/channel file."
-                );
-            }
-
-            channelMetaData = new ChannelMetaData();
-            channelMetaData.channelCount = readByte( channelRAF );
-            channelMetaData.redChannelInx = readByte( channelRAF );
-            channelMetaData.blueChannelInx = readByte( channelRAF );
-            channelMetaData.greenChannelInx = readByte( channelRAF );
-            channelMetaData.byteCount = readByte( channelRAF );
-
-            channelTotalBytes = totalVoxels * channelMetaData.byteCount * channelMetaData.channelCount;
-        }
-
         for ( MaskChanDataAcceptorI acceptor: maskAcceptors ) {
             acceptor.setSpaceSize( sx, sy, sz );
         }
@@ -237,30 +216,89 @@ public class MaskChanFileLoader {
     }
 
     /**
+     * Fetch any channel-data required for this bean.  Also, the needs of acceptors will be taken into account;
+     * there may be no need to read anything here at all.
+     *
+     * @param bean tells info of what to fetch.
+     * @return list of channel arrays, raw byte data.
+     * @throws Exception thrown by any called method.
+     */
+    private List<byte[]> readChannelData( RenderableBean bean, InputStream channelStream ) throws Exception {
+        List<byte[]> returnValue = new ArrayList<byte[]>();
+
+        //  Note: any type of read requires all the mask data.  But only mask-required will necessitate
+        //  the channel data all available.
+        if ( channelAcceptors.size() > 0 ) {
+            // NOTE: if no channels needed, the intensity stream may be ignored.
+            // Open the file, and move pointers down to seek-ready point.
+            long totalIntensityVoxels = readLong( channelStream );
+            if ( totalIntensityVoxels != totalVoxels ) {
+                throw new IllegalArgumentException( "Mismatch in file contents: total voxels of "
+                    + totalVoxels + " for mask, but total of " + totalIntensityVoxels + " for intensity/channel file."
+                );
+            }
+
+            channelMetaData = new ChannelMetaData();
+            channelMetaData.channelCount = readByte( channelStream );
+            channelMetaData.redChannelInx = readByte( channelStream );
+            channelMetaData.blueChannelInx = readByte( channelStream );
+            channelMetaData.greenChannelInx = readByte( channelStream );
+            channelMetaData.byteCount = readByte( channelStream );
+
+            channelTotalBytes = totalVoxels * channelMetaData.byteCount * channelMetaData.channelCount;
+            if ( channelTotalBytes > Integer.MAX_VALUE ) {
+                throw new Exception( "Excessive array size encountered.  Scaling error." );
+            }
+
+            for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {
+                acceptor.setChannelMetaData( channelMetaData );
+            }
+
+            // Pull in every channel's data.
+            for ( int i = 0; i < channelMetaData.channelCount; i++ ) {
+                byte[] nextChannelData = new byte[ channelTotalBytes.intValue() ];
+
+                channelStream.read( nextChannelData );
+                returnValue.add( nextChannelData );
+            }
+
+        }
+
+        return returnValue;
+    }
+
+    /**
      * This is called with relative ray "coords".  Here, a ray is a multiple of the length along the fastest-varying
      * axis.  All dimensions of a rectangular solid are made up of as rays whose logical end points precede
      * the logical start points of the ones which follow, but stacked into sheets which are in turn stacked
      * into the rect-solid.  Expected orderings are:  0=yz(x), 1=xz(y), 2=xy(z).
      *
+     * @param channelData available to "poke" into channel values for this renderable.
      * @param renderable describes all points belonging to all pairs.
      * @param skippedRayCount tells how many of these rays to bypass before interpreting first pair.
      * @param pairsAlongRay all these pairs define interval parts of the current ray.
      * @return total bytes read during this pairs-run.
      * @throws Exception thrown by caller or if bad inputs are received.
      */
-    private int addData( RenderableBean renderable, long skippedRayCount, long[][] pairsAlongRay ) throws Exception {
+    private int addData(
+            RenderableBean renderable,
+            long skippedRayCount,
+            long[][] pairsAlongRay,
+            List<byte[]> channelData ) throws Exception {
+
         latestRayNumber += skippedRayCount;
         long nextRayOffset = latestRayNumber * fastestSrcVaryingMax;
 
         long[] srcRayStartCoords = convertTo3D( nextRayOffset, fastestSrcVaryingMax, secondFastestSrcVaryingMax );
         long[] xyzCoords = convertToStandard3D( srcRayStartCoords );  // Initialize to ray-start-pos.
 
-        int totalBytesRead = 0;
+        int totalBytesAdded = 0;
 
         // Now, given we have dimension orderings, can leave two out of three coords in stasis, while only
         // the fastest-varying one, numbered 'axis', changes.
         long sliceSize = sx * sy;
         int translatedNum = renderable.getTranslatedNum();
+
         for ( long[] pairAlongRay: pairsAlongRay ) {
             for ( long rayPosition = pairAlongRay[ 0 ]; rayPosition < pairAlongRay[ 1 ]; rayPosition++ ) {
                 // WARNING: The use of offsets 0,1,2 below must remain in this loop, because moving them
@@ -279,24 +317,16 @@ public class MaskChanFileLoader {
 
                 // Here, must go to the channel data.
                 if ( channelAcceptors.size() > 0 ) {
-
-                    // TODO, push the channel data in from caller of "addData"
-                    // Fetch THIS channel data, and store it into the acceptor.
-                    byte[] channelData = new byte[ channelMetaData.channelCount * channelMetaData.byteCount ];
-                    int nextArrPos = 0;
-                    int inFilePos = START_OF_RAW_CHANNELS + (totalBytesRead * channelMetaData.byteCount );
-
-                    // NEED to seek the RAF to the right position, read in bytes to fill channel data, and copy
-                    //  that into the acceptor.
-
                     for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {
-                        acceptor.addChannelData( channelData, final1DCoord );
+                        acceptor.addChannelData( channelData, cummulativeBytesReadCount );
                     }
                 }
 
             }
 
-            totalBytesRead += pairAlongRay[ 1 ] - pairAlongRay[ 0 ];
+            long bytesReadFromPair = pairAlongRay[1] - pairAlongRay[0];
+            totalBytesAdded += bytesReadFromPair;
+            cummulativeBytesReadCount += bytesReadFromPair;
 
         }
 
@@ -305,7 +335,7 @@ public class MaskChanFileLoader {
         //   this one contains non-zero voxels, a skipped ray count of 0 will be passed.
         latestRayNumber ++;
 
-        return totalBytesRead;
+        return totalBytesAdded;
     }
 
     /** Call this prior to any update-data operations. */
@@ -461,11 +491,4 @@ public class MaskChanFileLoader {
         return longBuffer.getLong();
     }
 
-    public static class ChannelMetaData {
-        public int byteCount = -1;
-        public int channelCount = -1;
-        public int blueChannelInx = -1;
-        public int greenChannelInx = -1;
-        public int redChannelInx = -1;
-    }
 }
