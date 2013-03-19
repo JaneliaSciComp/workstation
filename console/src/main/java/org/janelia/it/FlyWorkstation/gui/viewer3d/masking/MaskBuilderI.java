@@ -18,7 +18,7 @@ import java.util.Collection;
 public interface MaskBuilderI {
     int GPU_MULTIBYTE_DIVISIBILITY_VALUE = 4;
 
-    byte[] getVolumeMask();
+    byte[] getVolumeData();
     Integer[] getVolumeMaskVoxels();
     ByteOrder getPixelByteOrder();
     int getPixelByteCount();

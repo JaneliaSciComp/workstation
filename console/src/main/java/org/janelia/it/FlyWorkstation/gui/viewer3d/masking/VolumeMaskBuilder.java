@@ -44,7 +44,8 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
     public VolumeMaskBuilder() {
     }
 
-    public byte[] getVolumeMask() {
+    @Override
+    public byte[] getVolumeData() {
         if ( renderables == null ) {
             return null;
         }
@@ -240,7 +241,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
      * @return "consensus" texture data object.
      */
     public TextureDataI getCombinedTextureData() {
-        TextureDataI rtnVal = new MaskTextureDataBean( getVolumeMask(), getVolumeMaskVoxels() );
+        TextureDataI rtnVal = new MaskTextureDataBean( getVolumeData(), getVolumeMaskVoxels() );
         rtnVal.setByteOrder(getPixelByteOrder());
         rtnVal.setPixelByteCount(getPixelByteCount());
         rtnVal.setHeader("Accumulated");

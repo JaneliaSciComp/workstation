@@ -1,125 +1,101 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.channel;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanFileLoader;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderablesChannelsBuilder;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
+
+//import org.junit.After;
+//import org.junit.Before;
+//import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.RandomAccessFile;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 
 /**
  * Created with IntelliJ IDEA.
  * User: fosterl
- * Date: 3/15/13
- * Time: 11:19 AM
+ * Date: 3/14/13
+ * Time: 4:47 PM
  *
- * This tests the read efficacy of channel files.
+ * This test will check the efficacy of the renderables mask builder.
  */
 public class ChannelReadTest {
 
-    ///Users/fosterl/Documents/alignment_board/Mask_Chan
-    private static final String TEST_FILE_NAME = "prefix_1.chan";
-    private static final String LOCAL_FILE_PATH = "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_1.chan";
+    private static final String MASK_CHAN_LOC = "/Users/fosterl/Documents/alignment_board/Mask_Chan/";
+
+    private static final String MASK_FILE_NAME = "prefix_1.mask";
+    private static final String LOCAL_MASK_FILE_PATH = MASK_CHAN_LOC + MASK_FILE_NAME;
+
+    private static final String CHAN_FILE_NAME = "prefix_1.chan";
+    private static final String LOCAL_CHAN_FILE_PATH = MASK_CHAN_LOC + CHAN_FILE_NAME;
 
     private InputStream testStream;
+    private RandomAccessFile testRAF;
 
     // The input data is known to be little-endian or LSB.
+    private byte[] intArray = new byte[ 4 ];
     private byte[] longArray = new byte[ 8 ];
+
+    private Logger logger = LoggerFactory.getLogger( ChannelReadTest.class );
+
+    private ByteBuffer intBuffer = ByteBuffer.wrap( intArray );
+    {
+        intBuffer.order(ByteOrder.LITTLE_ENDIAN);
+    }
 
     private ByteBuffer longBuffer = ByteBuffer.wrap( longArray );
     {
         longBuffer.order(ByteOrder.LITTLE_ENDIAN);
     }
 
-    @Before
-    public void setup() throws  Exception {
-        testStream = this.getClass().getResourceAsStream( TEST_FILE_NAME );
+//    @Before
+    public void setUp() throws  Exception {
+        testStream = this.getClass().getResourceAsStream(MASK_FILE_NAME);
         if ( testStream == null ) {
-            testStream = new FileInputStream( LOCAL_FILE_PATH );
+            testStream = new FileInputStream(LOCAL_MASK_FILE_PATH);
+            logger.warn("Resorting to hardcoded mask path.");
+        }
+
+        URL rafResource = this.getClass().getResource(CHAN_FILE_NAME);
+        if ( rafResource != null ) {
+            String rafLoc = rafResource.getFile();
+            testRAF = new RandomAccessFile( rafLoc, "r" );
+        }
+        else {
+            testRAF = new RandomAccessFile( LOCAL_CHAN_FILE_PATH, "r" );
+            logger.warn("Resorting to hardcoded channel path.");
         }
     }
 
-    @After
+//    @After
     public void tearDown() throws Exception {
         testStream.close();
     }
 
-    @Test
-    public void readChannelData() throws Exception {
-        Long totalVoxels = readLong( testStream );
-        Byte numberOfChannels = readByte( testStream );
-        Byte recommendedRedChannel = readByte( testStream );
-        Byte recommendedGreenChannel = readByte( testStream );
-        Byte recommendedBlueChannel = readByte( testStream );
-        Byte bytesPerChannel = readByte( testStream );
-    }
+//    @Test
+    public void testReadOneFile() throws Exception {
+        // Time-of-writing: only thing bean is used for is its tanslated number.
+        RenderableBean bean = new RenderableBean();
+        bean.setTranslatedNum( 1 );
 
-    /**
-     * Reads a single byte from the input stream, in LSB order.
-     *
-     * @param is an input stream pointing at data whose next value is a byte.
-     * @return next byte from the stream.
-     * @throws Exception thrown by called methods.
-     */
-    private byte readByte( InputStream is ) throws Exception {
-        return (byte)is.read();
-    }
+        MaskChanFileLoader loader = new MaskChanFileLoader();
+        loader.setByteCount( 2 );
+        //loader.setRenderableBeans( Arrays.asList( bean ) );
 
-    /**
-     * Reads a single long from the input stream, in LSB order.
-     *
-     * @param is an input stream pointing at data whose next value is a long.
-     * @return next long from the stream.
-     * @throws Exception thrown by called methods, or if insufficient data remains.
-     */
-    private long readLong( InputStream is ) throws Exception {
-        if ( is.read( longArray, 0, 8 ) < 8 ) {
-            throw new Exception( "Unexpected end of file while reading a long." );
-        }
-        longBuffer.rewind();
-        longBuffer.put( longArray );
-        longBuffer.rewind();
+        RenderablesChannelsBuilder builder = new RenderablesChannelsBuilder();
+        builder.init();
+        loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList( builder ) );
 
-        return longBuffer.getLong();
-    }
+        loader.read( bean, testStream, testRAF );
 
-    /*
-  Format for mask and channel files.
-  Mask files:
-  long xsize; // space
-  long ysize; // space
-  long zsize; // space
-  long x0; // bounding box
-  long x1; // bounding box, such that x0 is inclusive, x1 exclusive, etc
-  long y0; // bb
-  long y1; // bb
-  long z0; // bb
-  long z1; // bb
-  long totalVoxels;
-  unsigned char axis; // 0=yz(x), 1=xz(y), 2=xy(z)
-  { // For each ray
-    long skip;
-    long pairs;
-    { // For each pair
-        long start;
-        long end; // such that end-start is length, i.e., end is exclusive
     }
-  }
-  Channel files:
-  long totalVoxels;
-  unsigned char channels; // number of channels
-  unsigned char recommendedRedChannel;
-  unsigned char recommendedGreenChannel;
-  unsigned char recommendedBlueChannel;
-  unsigned char bytesPerChannel; // 1=8-bit, 2=16-bit
-  { // For each channel
-    { // For each voxel
-        B value;
-    }
-  }
-     */
-
 
 }

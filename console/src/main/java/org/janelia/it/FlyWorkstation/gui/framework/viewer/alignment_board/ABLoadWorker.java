@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.MaskBuilderI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeLoader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
@@ -199,7 +200,7 @@ public class ABLoadWorker extends SimpleWorker {
         Collection<String> labelFiles = Arrays.asList( sampleData.getLabelFile() );
 
         Collection<RenderableBean> renderableBeans = sampleData.getRenderableBeans();
-        VolumeMaskBuilder volumeMaskBuilder = createMaskBuilder(
+        MaskBuilderI volumeMaskBuilder = createMaskBuilder(
                 labelFiles, renderableBeans, resolver
         );
 
@@ -261,7 +262,7 @@ public class ABLoadWorker extends SimpleWorker {
      * @param renderables all items which may be rendered in this volume.
      * @param resolver for finding true paths of files.
      */
-    private VolumeMaskBuilder createMaskBuilder(
+    private MaskBuilderI createMaskBuilder(
             Collection<String> labelFiles, Collection<RenderableBean> renderables, FileResolver resolver
     ) {
 
