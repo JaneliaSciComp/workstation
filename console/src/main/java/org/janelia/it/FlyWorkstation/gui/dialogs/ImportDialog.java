@@ -2,7 +2,6 @@ package org.janelia.it.FlyWorkstation.gui.dialogs;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
-import org.janelia.it.FlyWorkstation.gui.framework.console.ConsoleMenuBar;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Perspective;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
@@ -260,10 +259,10 @@ public class ImportDialog extends ModalDialog {
 
             // Submit the job
             // todo Should do this the right way and not use the explicit method
-            ((ConsoleMenuBar)(SessionMgr.getBrowser().getJMenuBar())).modifyImageState(true);
+//            ((ConsoleMenuBar)(SessionMgr.getBrowser().getJMenuBar())).modifyImageState(true);
             ModelMgr.getModelMgr().submitJob(process, task.getObjectId());
             // todo remove this thread sleep
-            Thread.sleep(10000);
+//            Thread.sleep(10000);
             refreshTimer = new Timer(REFRESH_DELAY, new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -271,7 +270,7 @@ public class ImportDialog extends ModalDialog {
                         Task importCompleteYet = ModelMgr.getModelMgr().getTaskById(taskID);
                         if (importCompleteYet.isDone()) {
                             refreshTimer.stop();
-                            ((ConsoleMenuBar)(SessionMgr.getBrowser().getJMenuBar())).modifyImageState(false);
+//                            ((ConsoleMenuBar)(SessionMgr.getBrowser().getJMenuBar())).modifyImageState(false);
                             SessionMgr.getBrowser().getEntityOutline().refresh();
                         }
                     }
