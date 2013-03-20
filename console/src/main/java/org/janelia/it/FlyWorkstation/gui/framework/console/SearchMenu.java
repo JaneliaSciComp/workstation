@@ -45,6 +45,15 @@ public class SearchMenu extends JMenu {
         });
         add(giantFiberSearchMenuItem);
 
+        JMenuItem maskSearchMenuItem = new JMenuItem("Mask Search");
+        maskSearchMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                browser.getMaskSearchDialog().showDialog();
+            }
+        });
+        add(maskSearchMenuItem);
+
         final MAASearchDialog maaSearchDialog = browser.getMAASearchDialog();
         if (maaSearchDialog!=null && maaSearchDialog.isAccessible()) {
         	JMenuItem menuItem = new JMenuItem("MAA Screen Search");

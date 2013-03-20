@@ -1,14 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-
 import org.janelia.it.FlyWorkstation.gui.dialogs.DataSetListDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.ScreenEvaluationDialog;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
  * Created by IntelliJ IDEA.
@@ -18,13 +15,24 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
  */
 public class ServicesMenu extends JMenu {
 
+    private Browser currentBrowser;
+
     public ServicesMenu(final Browser browser) {
         super("Services");
-        
+        currentBrowser = browser;
+
+        JMenuItem cellCountingMenuItem = new JMenuItem("Cell Counting Service");
+        cellCountingMenuItem.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                currentBrowser.getRunCellCounterDialog().showDialog();
+            }
+        });
+        add(cellCountingMenuItem);
+
         JMenuItem neuronSeparationMenuItem = new JMenuItem("Neuron Separation Service");
         neuronSeparationMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-                SessionMgr.getSessionMgr().getActiveBrowser().getRunNeuronSeparationDialog().showDialog();
+                currentBrowser.getRunNeuronSeparationDialog().showDialog();
             }
         });
         add(neuronSeparationMenuItem);

@@ -1,16 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.*;
-import java.util.concurrent.Callable;
-
-import javax.swing.*;
-
 import net.miginfocom.swing.MigLayout;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
@@ -30,6 +20,14 @@ import org.janelia.it.jacs.shared.screen.ScreenEvalConstants;
 import org.janelia.it.jacs.shared.screen.ScreenEvalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Callable;
 
 /**
  * A dialog for searching Arnim's MAA annotations.
@@ -533,9 +531,6 @@ public class MAASearchDialog extends ModalDialog implements Accessibility, Actio
 	}
 
 	public boolean isAccessible() {
-		if (!"user:jenetta".equals(SessionMgr.getSubjectKey())) {
-			return false;
-		}
-		return true;
-	}
+        return "user:jenetta".equals(SessionMgr.getSubjectKey());
+    }
 }

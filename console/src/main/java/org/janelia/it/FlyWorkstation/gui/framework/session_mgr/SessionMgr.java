@@ -71,7 +71,6 @@ public class SessionMgr {
     private EmbeddedAxisServer axisServer;
     private EmbeddedWebServer webServer;
     private File settingsFile;
-    private String fileSep = File.separator;
     private String prefsDir = System.getProperty("user.home") + ConsoleProperties.getString("Console.Home.Path");
     private String prefsFile = prefsDir + ".FW_Settings";
     private Map browserModelsToBrowser = new HashMap();

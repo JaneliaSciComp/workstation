@@ -148,7 +148,7 @@ public class ImportDialog extends ModalDialog {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String path = pathTextField.getText();
-                if (null==path || "".equals(path) || !path.startsWith("/groups/") || !path.startsWith("/archive/")) {
+                if (null==path || "".equals(path) || !(path.startsWith("/groups/") || path.startsWith("/archive/"))) {
                     JOptionPane.showMessageDialog(ImportDialog.this,
                             "Please define a valid network path (/groups/...)", "Error", JOptionPane.ERROR_MESSAGE);
                     return;
