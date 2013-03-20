@@ -9,6 +9,7 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -26,9 +27,13 @@ public class MaskChanFileLoader {
     private static final int FLOAT_BYTES = Float.SIZE / 8;
     private static final int LONG_BYTES = Long.SIZE / 8;
     private static final int START_OF_RAW_CHANNELS = LONG_BYTES + 5;
+    private static final int REQUIRED_AXIAL_LENGTH_DIVISIBLE = 4;
     private long sx;
     private long sy;
     private long sz;
+
+    private Long[] volumeVoxels;
+    private float[] coordCoverage;
 
     //  These "microns" tell the extent of real-world space occupied by a single 3D point (or voxel).
     private float xMicrons;
@@ -206,11 +211,13 @@ public class MaskChanFileLoader {
         axis = readByte(maskInputStream);
         this.setDimensionOrder( axis );
 
+        volumeVoxels = getVolumeVoxels( sx, sy, sz );
+
         for ( MaskChanDataAcceptorI acceptor: maskAcceptors ) {
-            acceptor.setSpaceSize( sx, sy, sz );
+            acceptor.setSpaceSize( volumeVoxels[0], volumeVoxels[1], volumeVoxels[2], coordCoverage );
         }
         for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {
-            acceptor.setSpaceSize( sx, sy, sz );
+            acceptor.setSpaceSize( volumeVoxels[0], volumeVoxels[1], volumeVoxels[2], coordCoverage );
         }
 
     }
@@ -256,9 +263,14 @@ public class MaskChanFileLoader {
 
             // Pull in every channel's data.
             for ( int i = 0; i < channelMetaData.channelCount; i++ ) {
-                byte[] nextChannelData = new byte[ channelTotalBytes.intValue() ];
+                byte[] nextChannelData = new byte[ totalVoxels.intValue() ];
 
-                channelStream.read( nextChannelData );
+                int bytesRead = channelStream.read(nextChannelData);
+                if ( bytesRead  <  nextChannelData.length ) {
+                    throw new Exception(
+                            "Failed to read channel data for channel " + i + " read " + bytesRead + " bytes."
+                    );
+                }
                 returnValue.add( nextChannelData );
             }
 
@@ -292,12 +304,16 @@ public class MaskChanFileLoader {
         long[] srcRayStartCoords = convertTo3D( nextRayOffset, fastestSrcVaryingMax, secondFastestSrcVaryingMax );
         long[] xyzCoords = convertToStandard3D( srcRayStartCoords );  // Initialize to ray-start-pos.
 
-        int totalBytesAdded = 0;
+        int totalPositiongsAdded = 0;
+
 
         // Now, given we have dimension orderings, can leave two out of three coords in stasis, while only
         // the fastest-varying one, numbered 'axis', changes.
-        long sliceSize = sx * sy;
+
+
+        long sliceSize = volumeVoxels[0] * volumeVoxels[1]; // sx * sy
         int translatedNum = renderable.getTranslatedNum();
+        byte[] allChannelBytes = new byte[ channelMetaData.byteCount ];
 
         for ( long[] pairAlongRay: pairsAlongRay ) {
             for ( long rayPosition = pairAlongRay[ 0 ]; rayPosition < pairAlongRay[ 1 ]; rayPosition++ ) {
@@ -307,7 +323,7 @@ public class MaskChanFileLoader {
                 xyzCoords[ axis ] = rayPosition;   // Fastest-varying coord is the one walked by the pair-along-ray
 
                 long zOffset = xyzCoords[ 2 ] * sliceSize;  // Consuming all slices to current.
-                long yOffset = xyzCoords[ 1 ] * sx + zOffset;  // Consuming lines to remainder.
+                long yOffset = xyzCoords[ 1 ] * volumeVoxels[0] + zOffset;  // Consuming lines to remainder.
 
                 long final1DCoord = yOffset + xyzCoords[ 0 ] + pairAlongRay[ 0 ];
 
@@ -317,16 +333,19 @@ public class MaskChanFileLoader {
 
                 // Here, must go to the channel data.
                 if ( channelAcceptors.size() > 0 ) {
+                    for ( int i = 0; i < channelMetaData.byteCount; i++ ) {
+                        allChannelBytes[ i ] = channelData.get( i )[ cummulativeBytesReadCount + i ];
+                    }
                     for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {
-                        acceptor.addChannelData( channelData, cummulativeBytesReadCount );
+                        acceptor.addChannelData( allChannelBytes, final1DCoord );
                     }
                 }
 
             }
 
-            long bytesReadFromPair = pairAlongRay[1] - pairAlongRay[0];
-            totalBytesAdded += bytesReadFromPair;
-            cummulativeBytesReadCount += bytesReadFromPair;
+            long positionsReadFromPair = pairAlongRay[1] - pairAlongRay[0];
+            totalPositiongsAdded += positionsReadFromPair;
+            cummulativeBytesReadCount += (positionsReadFromPair * channelMetaData.byteCount);
 
         }
 
@@ -335,7 +354,28 @@ public class MaskChanFileLoader {
         //   this one contains non-zero voxels, a skipped ray count of 0 will be passed.
         latestRayNumber ++;
 
-        return totalBytesAdded;
+        return totalPositiongsAdded;
+    }
+
+    /** Size of volume mask.  Numbers of voxels in all three directions. */
+    private Long[] getVolumeVoxels( long sx, long sy, long sz ) {
+        Long[] voxels = { sx, sy, sz };
+
+        // May need to add more bytes to ensure that the coords are each multiples of a certain number of bytes.
+        // If we do, we must take that into account for applying texture coordinates.
+        coordCoverage = new float[] { 1.0f, 1.0f, 1.0f };
+        for ( int i = 0; i < voxels.length; i++ ) {
+            long leftover = voxels[i] % REQUIRED_AXIAL_LENGTH_DIVISIBLE;
+            if ( leftover > 0 ) {
+                long voxelModCount = REQUIRED_AXIAL_LENGTH_DIVISIBLE - leftover;
+                long newVoxelCount = voxels[ i ] + voxelModCount;
+                coordCoverage[ i ] = ((float)voxels[ i ]) / ((float)newVoxelCount);
+                voxels[ i ] = newVoxelCount;
+                logger.info("Expanding edge by " + voxelModCount);
+            }
+        }
+
+        return voxels;
     }
 
     /** Call this prior to any update-data operations. */
@@ -348,13 +388,16 @@ public class MaskChanFileLoader {
         //    );
         //}
 
-        if ( sx > Integer.MAX_VALUE || sy > Integer.MAX_VALUE || sz > Integer.MAX_VALUE ) {
-            throw new IllegalArgumentException(
-                    "One or more of the axial lengths (" + sx + "," + sy + "," + sz +
-                    ") exceeds max value for an integer.  If this is truly required, code redesign will be necessary."
-            );
+        for ( long volumeVoxel: volumeVoxels ) {
+            if ( volumeVoxel > Integer.MAX_VALUE ) {
+                throw new IllegalArgumentException(
+                        "One or more of the axial lengths (" + sx + "," + sy + "," + sz +
+                                ") exceeds max value for an integer, after padding to proper divisible size.  " +
+                                "If this is truly required, code redesign will be necessary."
+                );
+            }
         }
-        else if ( sx == 0 || sy == 0 || sz == 0 ) {
+        if ( sx == 0 || sy == 0 || sz == 0 ) {
             throw new IllegalArgumentException(
                     "One or more axial lengths are zero."
             );

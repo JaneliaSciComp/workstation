@@ -83,15 +83,6 @@ public class RenderMapTextureBean implements TextureDataI {
     }
 
     @Override
-    public boolean isLoaded() {
-        return false;
-    }
-
-    @Override
-    public void setLoaded(boolean loaded) {
-    }
-
-    @Override
     public void setSx(int sx) {
     }
 

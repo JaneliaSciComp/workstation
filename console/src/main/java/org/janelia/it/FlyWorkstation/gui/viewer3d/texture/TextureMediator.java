@@ -62,12 +62,18 @@ public class TextureMediator {
             logger.error("Attempted to upload texture before mediator was initialized.");
             throw new RuntimeException("Failed to upload texture");
         }
+
+        // DEBUG
+        //testRawBufferContents( textureData.getPixelByteCount(), textureData.getTextureData() );
+
         ByteBuffer data = ByteBuffer.wrap( textureData.getTextureData() );
         //System.out.println( "Loading texture data of capacity: " + data.capacity() );
         if ( data != null ) {
             data.rewind();
 
-            logger.info( "Coords are " + textureData.getSx() + " * " + textureData.getSy() + " * " + textureData.getSz() );
+            logger.info(
+                    "Coords are " + textureData.getSx() + " * " + textureData.getSy() + " * " + textureData.getSz()
+            );
             int maxCoord = getMaxTexCoord(gl);
             if ( textureData.getSx() > maxCoord  || textureData.getSy() > maxCoord || textureData.getSz() > maxCoord ) {
                 logger.warn(
@@ -77,7 +83,7 @@ public class TextureMediator {
             }
 
             int expectedRemaining = textureData.getSx() * textureData.getSy() * textureData.getSz()
-                    * textureData.getPixelByteCount();
+                    * textureData.getPixelByteCount() * textureData.getChannelCount();
             if ( expectedRemaining != data.remaining() ) {
                 logger.warn( "Invalid remainder vs texture data dimensions.  Sx=" + textureData.getSx() +
                              " Sy=" + textureData.getSy() + " Sz=" + textureData.getSz() +
@@ -132,12 +138,13 @@ public class TextureMediator {
                         this.getInternalFormat() + ":" + this.getVoxelComponentOrder() + ":" +
                         this.getStorageFormatMultiplier()
                 );
+                exGlTexImage.printStackTrace();
             }
             reportError( "glTexImage", gl );
 
             // DEBUG
-            if ( expectedRemaining < 1000000 )
-                testTextureContents(gl);
+            //if ( expectedRemaining < 1000000 )
+            //    testTextureContents(gl);
         }
 
     }
@@ -234,9 +241,7 @@ public class TextureMediator {
 
         int pixelByteCount = textureData.getPixelByteCount();
         int bufferSize = textureData.getSx() * textureData.getSy() * textureData.getSz() *
-                pixelByteCount;
-
-        java.util.Map<Integer,Integer> allFoundFrequencies = new java.util.HashMap<Integer,Integer>();
+                pixelByteCount * textureData.getChannelCount();
 
         byte[] rawBuffer = new byte[ bufferSize ];
         ByteBuffer buffer = ByteBuffer.wrap(rawBuffer);
@@ -244,6 +249,171 @@ public class TextureMediator {
         reportError( "TEST: Getting texture for testing", gl );
 
         buffer.rewind();
+
+        testRawBufferContents(pixelByteCount, rawBuffer);
+
+    }
+
+    /** This should be called immediately after some openGL call, to check error status. */
+    public void setTextureData( TextureDataI textureData ) {
+        this.textureData = textureData;
+    }
+
+    /** Allow client/creator to force a certain component order. */
+    public void setVoxelComponentOrderOverride(int voxelComponentOrderOverride) {
+        this.voxelComponentOrderOverride = voxelComponentOrderOverride;
+    }
+
+    private int getStorageFormatMultiplier() {
+        int orderId =  getVoxelComponentOrder();
+        if ( orderId == GL2.GL_BGRA ) {
+            return 4;
+        }
+        else {
+            return 1;
+        }
+    }
+
+    private void reportError( String operation, GL2 gl ) {
+        int errorNum = gl.glGetError();
+        String hexErrorNum = Integer.toHexString( errorNum );
+        if ( errorNum > 0 ) {
+            logger.error( "Error " + errorNum + "/x0" + hexErrorNum + " during " + operation +
+                          " on texture (by 'name' id) " + textureName );
+            //new Exception().printStackTrace(); // *** DEBUG ***
+        }
+
+    }
+    //--------------------------- Helpers for glTexImage3D
+    private int getVoxelComponentType() {
+        int rtnVal = GL2.GL_UNSIGNED_INT_8_8_8_8_REV;
+        if ( textureData.getExplicitVoxelComponentFormat() != null ) {
+            rtnVal = textureData.getExplicitVoxelComponentFormat();
+        }
+        else {
+            if ( textureData.getChannelCount() == 3 ) {
+                rtnVal = GL2.GL_UNSIGNED_INT_8_8_8_8;
+            }
+            else if ( textureData.getPixelByteCount()  == 1 ) {
+                // This: tested vs 1-byte mask.
+                rtnVal = GL2.GL_UNSIGNED_BYTE;
+            }
+
+            // This throws excepx for current read method.
+            if ( textureData.getPixelByteCount() == 2 ) {
+                rtnVal = GL2.GL_UNSIGNED_SHORT;
+            }
+        }
+
+        logger.info( "Voxel comp type num is {} for GL2.GL_UNSIGNED_INT_8_8_8_8_REV.", GL2.GL_UNSIGNED_INT_8_8_8_8_REV );
+        logger.info( "Voxel comp type num is {} for GL2.GL_UNSIGNED_INT_8_8_8_8.", GL2.GL_UNSIGNED_INT_8_8_8_8 );
+        logger.info( "Voxel comp type num is {} for GL2.GL_UNSIGNED_BYTE.", GL2.GL_UNSIGNED_BYTE );
+        logger.info( "Voxel comp type num is {} for GL2.GL_UNSIGNED_SHORT.", GL2.GL_UNSIGNED_SHORT );
+        logger.info( "Got voxel component type of {} for {}.", rtnVal, textureData.getFilename() );
+
+        return rtnVal;
+        // BLACK SCREEN. GL2.GL_UNSIGNED_BYTE_3_3_2,  // BLACK SCREEN for 143/266
+        // GL2.GL_UNSIGNED_SHORT_4_4_4_4_REV, // TWO-COLOR SCREEN for 143/266
+        // GL2.GL_UNSIGNED_SHORT_5_5_5_1, // 3-Color Screen for 143/266
+        // GL2.GL_UNSIGNED_SHORT_1_5_5_5_REV, // Different 3-Color Screen for 143/266
+        // GL2.GL_UNSIGNED_SHORT_5_6_5, // BLACK SCREEN for 143/266
+        // GL2.GL_UNSIGNED_SHORT_5_6_5_REV, // BLACK SCREEN for 143/266
+        // GL2.GL_BYTE, // YBD for 143/266
+        // GL2.GL_BYTE, // YBD for 143/266
+        // GL2.GL_UNSIGNED_BYTE, // Grey Neurons for 143/266
+        // GL2.GL_UNSIGNED_SHORT, // Stack Trace for 143/266
+    }
+
+    private int getMaxTexCoord(GL2 gl) {
+        IntBuffer rtnBuf = IntBuffer.allocate( 1 );
+        rtnBuf.rewind();
+        gl.glGetIntegerv(GL2.GL_MAX_TEXTURE_SIZE, rtnBuf);
+        int[] rtnVals = rtnBuf.array();
+        return rtnVals[ 0 ];
+    }
+
+    private int getInternalFormat() {
+        int internalFormat = GL2.GL_RGBA;
+        if (textureData.getColorSpace() == VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_SRGB)
+            internalFormat = GL2.GL_SRGB8_ALPHA8;
+
+        // This: tested against a mask file.
+        if (textureData.getChannelCount() == 1) {
+            internalFormat = GL2.GL_LUMINANCE;
+
+            if (textureData.getPixelByteCount() == 2) {
+                internalFormat = GL2.GL_LUMINANCE16;
+            }
+        }
+
+        if (textureData.getColorSpace() == VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_RGB) {
+            internalFormat = GL2.GL_RGB;
+        }
+
+        if ( textureData.getChannelCount() == 3 ) {
+            if ( textureData.getPixelByteCount() == 1 ) {
+                internalFormat = GL2.GL_SRGB8_ALPHA8;
+            }
+            else {
+                internalFormat = GL2.GL_RGBA16;
+            }
+        }
+
+        logger.info("Luminance format num = {}", GL2.GL_LUMINANCE);
+        logger.info("Alpha8 format num = {}", GL2.GL_SRGB8_ALPHA8);
+        logger.info("Luminance format num = {}", GL2.GL_LUMINANCE);
+        logger.info("Luminance16 format num = {}", GL2.GL_LUMINANCE16);
+        logger.info("RGBA format num = {}", GL2.GL_RGBA);
+        logger.info("RGB format num = {}", GL2.GL_RGB);
+        logger.info( "internalFormat = {} for {}", internalFormat, textureData.getFilename() );
+        return internalFormat;
+    }
+
+    private int getVoxelComponentOrder() {
+        int rtnVal = GL2.GL_BGRA;
+        if ( voxelComponentOrderOverride > -1 ) {
+            logger.info("OVERRIDDEN voxel component order to {}.", voxelComponentOrderOverride);
+            rtnVal = voxelComponentOrderOverride;
+        }
+        else {
+            if ( textureData.getChannelCount() == 1 ) {
+                rtnVal = GL2.GL_LUMINANCE;
+            }
+            if ( rtnVal == GL2.GL_LUMINANCE ) {
+                logger.info("GL_LUMINANCE voxel component order.");
+            }
+            else if ( textureData.getChannelCount() == 3 ) {
+                if ( textureData.getPixelByteCount() == 1 )
+                    rtnVal = GL2.GL_BGRA;
+                else
+                    rtnVal = GL2.GL_BGRA;
+            }
+            else {
+                logger.info("GL_BGRA voxel component order.");
+            }
+        }
+        return rtnVal;
+    }
+
+    //--------------------------- End: Helpers for glTexImage3D
+
+    /** Roll the relevant bytes of the integer down into a byte array. */
+    private int[] getInts(int i, int size) {
+        int[] rtnVal = new int[ size ];
+        int nextPos = 0;
+        rtnVal[ nextPos++ ] = (i & 0xff000000) >>> 24;
+        if ( size > 1 )
+            rtnVal[ nextPos++ ] = (i & 0x00ff0000) >>> 16;
+        if ( size > 2 )
+            rtnVal[ nextPos++ ] = (i & 0x0000ff00) >>> 8;
+        if ( size > 3 )
+            rtnVal[ nextPos ] = i & 0x000000ff;
+
+        return rtnVal;
+    }
+
+    private void testRawBufferContents(int pixelByteCount, byte[] rawBuffer) {
+        java.util.Map<Integer,Integer> allFoundFrequencies = new java.util.HashMap<Integer,Integer>();
 
         int nonZeroCount = 0;
         for ( int i = 0; i < rawBuffer.length; i++ ) {
@@ -301,146 +471,6 @@ public class TextureMediator {
             logger.info("Found {}  occurrences of {}.", allFoundFrequencies.get( key ), foundValue );
         }
         logger.info("End: Texture Values Dump---------------------");
-
-    }
-
-    /** This should be called immediately after some openGL call, to check error status. */
-    public void setTextureData( TextureDataI textureData ) {
-        this.textureData = textureData;
-    }
-
-    /** Allow client/creator to force a certain component order. */
-    public void setVoxelComponentOrderOverride(int voxelComponentOrderOverride) {
-        this.voxelComponentOrderOverride = voxelComponentOrderOverride;
-    }
-
-    private int getStorageFormatMultiplier() {
-        int orderId =  getVoxelComponentOrder();
-        if ( orderId == GL2.GL_BGRA ) {
-            return 4;
-        }
-        else {
-            return 1;
-        }
-    }
-
-    private void reportError( String operation, GL2 gl ) {
-        int errorNum = gl.glGetError();
-        String hexErrorNum = Integer.toHexString( errorNum );
-        if ( errorNum > 0 ) {
-            logger.error( "Error " + errorNum + "/x0" + hexErrorNum + " during " + operation +
-                          " on texture (by 'name' id) " + textureName );
-            //new Exception().printStackTrace(); // *** DEBUG ***
-        }
-
-    }
-    //--------------------------- Helpers for glTexImage3D
-    private int getVoxelComponentType() {
-        int rtnVal = GL2.GL_UNSIGNED_INT_8_8_8_8_REV;
-        if ( textureData.getExplicitVoxelComponentFormat() != null ) {
-            rtnVal = textureData.getExplicitVoxelComponentFormat();
-        }
-        else {
-            // This: tested vs 1-byte mask.
-            if ( textureData.getPixelByteCount()  == 1 ) {
-                rtnVal = GL2.GL_UNSIGNED_BYTE;
-            }
-
-            // This throws excepx for current read method.
-            if ( textureData.getPixelByteCount() == 2 ) {
-                rtnVal = GL2.GL_UNSIGNED_SHORT;
-            }
-        }
-
-        logger.info( "Voxel comp type num is {} for GL2.GL_UNSIGNED_INT_8_8_8_8_REV.", GL2.GL_UNSIGNED_INT_8_8_8_8_REV );
-        logger.info( "Voxel comp type num is {} for GL2.GL_UNSIGNED_INT_8_8_8_8.", GL2.GL_UNSIGNED_INT_8_8_8_8 );
-        logger.info( "Voxel comp type num is {} for GL2.GL_UNSIGNED_BYTE.", GL2.GL_UNSIGNED_BYTE );
-        logger.info( "Voxel comp type num is {} for GL2.GL_UNSIGNED_SHORT.", GL2.GL_UNSIGNED_SHORT );
-        logger.info( "Got voxel component type of {} for {}.", rtnVal, textureData.getFilename() );
-
-        return rtnVal;
-        // BLACK SCREEN. GL2.GL_UNSIGNED_BYTE_3_3_2,  // BLACK SCREEN for 143/266
-        // GL2.GL_UNSIGNED_SHORT_4_4_4_4_REV, // TWO-COLOR SCREEN for 143/266
-        // GL2.GL_UNSIGNED_SHORT_5_5_5_1, // 3-Color Screen for 143/266
-        // GL2.GL_UNSIGNED_SHORT_1_5_5_5_REV, // Different 3-Color Screen for 143/266
-        // GL2.GL_UNSIGNED_SHORT_5_6_5, // BLACK SCREEN for 143/266
-        // GL2.GL_UNSIGNED_SHORT_5_6_5_REV, // BLACK SCREEN for 143/266
-        // GL2.GL_BYTE, // YBD for 143/266
-        // GL2.GL_BYTE, // YBD for 143/266
-        // GL2.GL_UNSIGNED_BYTE, // Grey Neurons for 143/266
-        // GL2.GL_UNSIGNED_SHORT, // Stack Trace for 143/266
-    }
-
-    private int getMaxTexCoord(GL2 gl) {
-        IntBuffer rtnBuf = IntBuffer.allocate( 1 );
-        rtnBuf.rewind();
-        gl.glGetIntegerv(GL2.GL_MAX_TEXTURE_SIZE, rtnBuf);
-        int[] rtnVals = rtnBuf.array();
-        return rtnVals[ 0 ];
-    }
-
-    private int getInternalFormat() {
-        int internalFormat = GL2.GL_RGBA;
-        if (textureData.getColorSpace() == VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_SRGB)
-            internalFormat = GL2.GL_SRGB8_ALPHA8;
-
-        // This: tested against a mask file.
-        if (textureData.getChannelCount() == 1) {
-            internalFormat = GL2.GL_LUMINANCE;
-
-            if (textureData.getPixelByteCount() == 2) {
-                internalFormat = GL2.GL_LUMINANCE16;
-            }
-        }
-
-        if (textureData.getColorSpace() == VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_RGB)
-            internalFormat = GL2.GL_RGB;
-
-        logger.info("Luminance format num = {}", GL2.GL_LUMINANCE);
-        logger.info("Alpha8 format num = {}", GL2.GL_SRGB8_ALPHA8);
-        logger.info("Luminance format num = {}", GL2.GL_LUMINANCE);
-        logger.info("Luminance16 format num = {}", GL2.GL_LUMINANCE16);
-        logger.info("RGBA format num = {}", GL2.GL_RGBA);
-        logger.info("RGB format num = {}", GL2.GL_RGB);
-        logger.info( "internalFormat = {} for {}", internalFormat, textureData.getFilename() );
-        return internalFormat;
-    }
-
-    private int getVoxelComponentOrder() {
-        int rtnVal = GL2.GL_BGRA;
-        if ( voxelComponentOrderOverride > -1 ) {
-            logger.info("OVERRIDDEN voxel component order to {}.", voxelComponentOrderOverride);
-            rtnVal = voxelComponentOrderOverride;
-        }
-        else {
-            if ( textureData.getChannelCount() == 1 ) {
-                rtnVal = GL2.GL_LUMINANCE;
-            }
-            if ( rtnVal == GL2.GL_LUMINANCE ) {
-                logger.info("GL_LUMINANCE voxel component order.");
-            }
-            else {
-                logger.info("GL_BGRA voxel component order.");
-            }
-        }
-        return rtnVal;
-    }
-
-    //--------------------------- End: Helpers for glTexImage3D
-
-    /** Roll the relevant bytes of the integer down into a byte array. */
-    private int[] getInts(int i, int size) {
-        int[] rtnVal = new int[ size ];
-        int nextPos = 0;
-        rtnVal[ nextPos++ ] = (i & 0xff000000) >>> 24;
-        if ( size > 1 )
-            rtnVal[ nextPos++ ] = (i & 0x00ff0000) >>> 16;
-        if ( size > 2 )
-            rtnVal[ nextPos++ ] = (i & 0x0000ff00) >>> 8;
-        if ( size > 3 )
-            rtnVal[ nextPos ] = i & 0x000000ff;
-
-        return rtnVal;
     }
 
 //    private short[] getShorts(int i, int size) {

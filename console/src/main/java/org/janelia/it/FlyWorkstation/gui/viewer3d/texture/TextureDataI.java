@@ -27,10 +27,6 @@ public interface TextureDataI {
 
     int getSz();
 
-    boolean isLoaded();
-
-    void setLoaded(boolean loaded);
-
     boolean isInverted();
 
     void setInverted( boolean inverted );

@@ -249,7 +249,6 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
         rtnVal.setVoxelMicrometers(new Double[]{1.0, 1.0, 1.0});
         rtnVal.setFilename(firstFileName);
         rtnVal.setChannelCount( consensusChannelCount );
-        rtnVal.setLoaded(false);
         rtnVal.setCoordCoverage( coordCoverage );
 
         return rtnVal;

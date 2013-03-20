@@ -9,7 +9,11 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.media.opengl.GL2;
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -76,7 +80,12 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     public void init() {
         if ( needsChannelInit) {
             logger.info( "Initialize called..." );
-            long arrayLength = sx * sy * sz * channelMetaData.byteCount;
+            // The size of any one voxel will be the number of channels times the bytes per channel.
+            if ( channelMetaData.channelCount == 3 ) {
+                // Round out to four.
+                channelMetaData.channelCount ++;
+            }
+            long arrayLength = sx * sy * sz * channelMetaData.byteCount * channelMetaData.channelCount;
             if ( arrayLength > Integer.MAX_VALUE ) {
                 throw new IllegalArgumentException(
                         "Total length of input: " + arrayLength  +
@@ -118,23 +127,35 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     }
 
     /**
-     * Go to position indicated, and add this array of raw bytes.
+     * Go to position indicated, and add the single raw byte taken from each
+     * channel-data at next counter position.  Add each such byte to the output
+     * position provided.
+     * Width of channel data is expected to be same for each call.
      *
-     * @param position where it goes. Width of channel data is expected to be same for each call.
+     * @param volumePosition where it goes.  Not multiplied by number of channels.  Not an offset into the channel data!
      * @return total positions applied.
      * @throws Exception
      */
     @Override
-    public int addChannelData(List<byte[]> channelData, long position) throws Exception {
+    public int addChannelData(byte[] channelData, long volumePosition) throws Exception {
         init();
+
         // Assumed little-endian and two bytes.
-        byte[] data = volumeData;
+        int targetPos = (int)( volumePosition * channelMetaData.channelCount * channelMetaData.byteCount );
 
         // TODO use the suggested R/G/B to specify the ordering, rather than simply using the 'i' offset.
-        for ( int i = 0; i < getChannelByteCount(); i++ ) {
-            byte[] nextChannel = channelData.get( i );
-            //  block of in-memory, interleaving the channels as the offsets follow.
-            data[ (int)position + i ] = nextChannel[ (int)position ];
+        for ( int i = 0; i < channelData.length; i++ ) {
+            for ( int j = 0; j < channelMetaData.byteCount; j++ ) {
+                //  block of in-memory, interleaving the channels as the offsets follow.
+                volumeData[ targetPos + i + j ] = channelData[ j ];
+            }
+
+            // Pad out to the end.
+            if ( channelMetaData.channelCount > channelData.length ) {
+                for ( int j = channelData.length; j < channelMetaData.channelCount; j++ ) {
+                    volumeData[ targetPos + j ] = (byte)255;
+                }
+            }
         }
 
         return 1;
@@ -151,7 +172,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
 
     @Override
     public int getChannelByteCount() {
-        return channelMetaData.byteCount;
+        return channelMetaData.channelCount;
     }
 
     /**
@@ -176,6 +197,11 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
 
     //----------------------------------------HELPER METHODS
     private TextureDataI buildTextureData() {
+//        //TODO re-examine later...
+        for ( int i = 0; i < volumeData.length; i++ ) {
+            volumeData[i] = (byte)255;
+        }
+
         TextureDataI textureData = new TextureDataBean( volumeData, (int)sx, (int)sy, (int)sz );
 
         textureData.setColorSpace( VolumeBrick.TextureColorSpace.COLOR_SPACE_LINEAR );
@@ -183,9 +209,16 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         textureData.setVoxelMicrometers(new Double[]{1.0, 1.0, 1.0});
         textureData.setByteOrder( ByteOrder.LITTLE_ENDIAN );
         textureData.setPixelByteCount( channelMetaData.byteCount );
-        textureData.setFilename( "Mask and Channel" );
+        textureData.setFilename( "Channel Data" );
         textureData.setChannelCount( channelMetaData.channelCount );
         textureData.setInverted( false );
+        textureData.setCoordCoverage( coordCoverage );
+
+        textureData.setInterpolationMethod( GL2.GL_LINEAR );
+        textureData.setExplicitVoxelComponentFormat( GL2.GL_RGBA );
+
+        // TEMP.
+        //dumpVolume();
 
         // NOTE: if this is later needed, need to have a decider for the notion of luminance.
 //        if (! isLuminance  &&  (textureData.getPixelByteCount() == 4) ) {
@@ -195,5 +228,39 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         return textureData;
     }
 
+    private void dumpVolume() {
+        try {
+            java.io.PrintStream bos = new java.io.PrintStream( new java.io.FileOutputStream( "/users/fosterl/file_dump.txt" ) );
+            bos.println("VOLUME DATA BEGINS------");
+            int nextPos = 0;
+            byte[] inputArr = null;
+            while ( nextPos < volumeData.length ) {
+                inputArr = Arrays.copyOfRange( volumeData, nextPos, nextPos + (int)sx );
+                for ( int i = 0; i < inputArr.length; i++ ) {
+                    if ( inputArr[ i ] != 0 ) {
+                        // Print this one.
+                        bos.print( String.format( "%010d", nextPos ) );
+                        bos.print( ":  ");
+                        for ( int j = 0; j < inputArr.length; j++ ) {
+                            if ( inputArr[ j ] == (byte) 0 ) {
+                                bos.print( "  " );
+                            }
+                            else {
+                                bos.print( String.format( "%02x", (int)inputArr[ j ] ) );
+                            }
+                        }
+                        bos.println();
+
+                        break;
+                    }
+                }
+                nextPos += (int)sx;
+            }
+
+            bos.close();
+        } catch ( Exception ex ) {
+            ex.printStackTrace();
+        }
+    }
 
 }

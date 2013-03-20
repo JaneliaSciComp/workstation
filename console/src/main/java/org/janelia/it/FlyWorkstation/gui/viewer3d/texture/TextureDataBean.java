@@ -102,14 +102,6 @@ public class TextureDataBean implements TextureDataI {
         return sz;
     }
 
-    public boolean isLoaded() {
-        return loaded;
-    }
-
-    public void setLoaded(boolean loaded) {
-        this.loaded = loaded;
-    }
-
     public void setSx(int sx) {
         this.sx = sx;
     }

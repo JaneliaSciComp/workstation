@@ -20,16 +20,18 @@ public abstract class RenderablesVolumeBuilder implements MaskChanDataAcceptorI 
     protected long sx;
     protected long sy;
     protected long sz;
+    protected float[] coordCoverage;
 
     //----------------------------------------CONFIGURATOR METHODS
     public abstract void init();
 
     //----------------------------------------IMPLEMENT MaskChanDataAcceptorI (partially)
     @Override
-    public void setSpaceSize( long x, long y, long z ) {
+    public void setSpaceSize( long x, long y, long z, float[] coordCoverage ) {
         sx = x;
         sy = y;
         sz = z;
+        this.coordCoverage = coordCoverage;
     }
 
     //-------------------------END:-----------IMPLEMENT MaskChanDataAcceptorI

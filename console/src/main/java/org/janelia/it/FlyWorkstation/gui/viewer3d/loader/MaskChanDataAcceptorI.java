@@ -27,7 +27,7 @@ public interface MaskChanDataAcceptorI {
      * @return number of slots filled.  Should return 1.
      * @throws Exception from called method.
      */
-    int addChannelData( List<byte[]> channelData, long position ) throws Exception;
+    int addChannelData( byte[] channelData, long position ) throws Exception;
 
     /**
      * Implement this if your implementation can accept "mask" data
@@ -48,7 +48,7 @@ public interface MaskChanDataAcceptorI {
      * @param y max along y
      * @param z max along z
      */
-    void setSpaceSize( long x, long y, long z );
+    void setSpaceSize( long x, long y, long z, float[] coordCoverage );
 
     /**
      * Allows this impl to tell the caller which of the above add-mask methods are acceptable to it.

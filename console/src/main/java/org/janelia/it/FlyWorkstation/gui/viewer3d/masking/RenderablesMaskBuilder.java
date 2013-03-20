@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
  */
 public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements MaskBuilderI {
 
-    private float[] coordCoverage;
     private Logger logger = LoggerFactory.getLogger( RenderablesMaskBuilder.class );
     private Collection<RenderableBean> renderableBeans;
     private byte[] volumeData;
@@ -59,16 +58,16 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
         init();
 
         // Assumed little-endian and two bytes.
-        byte[] maskData = volumeData;
         for ( int j = 0; j < getPixelByteCount(); j++ ) {
-            maskData[ j + ((int)position * getPixelByteCount()) ] = (byte)( ( maskNumber >>> (8*j) ) & 0x00ff );
+            int volumeLoc = j + ((int) position * getPixelByteCount());
+            volumeData[ volumeLoc ] = (byte)( ( maskNumber >>> (8*j) ) & 0x00ff );
         }
 
         return 1;
     }
 
     @Override
-    public int addChannelData(List<byte[]> channelData, long position) throws Exception {
+    public int addChannelData(byte[] channelData, long position) throws Exception {
         throw new IllegalArgumentException( "Not implemented" );
     }
 
@@ -89,23 +88,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     /** Size of volume mask.  Numbers of voxels in all three directions. */
     @Override
     public Integer[] getVolumeMaskVoxels() {
-        Integer[] voxels = { Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE };
-
-        // May need to add more bytes to ensure that the coords are each multiples of 8 bytes.
-        // If we do, we must take that into account for applying texture coordinates.
-        coordCoverage = new float[] { 1.0f, 1.0f, 1.0f };
-        for ( int i = 0; i < voxels.length; i++ ) {
-            int leftover = voxels[i] % GPU_MULTIBYTE_DIVISIBILITY_VALUE;
-            if ( leftover > 0 ) {
-                int voxelModCount = GPU_MULTIBYTE_DIVISIBILITY_VALUE - leftover;
-                int newVoxelCount = voxels[ i ] + voxelModCount;
-                coordCoverage[ i ] = ((float)voxels[ i ]) / ((float)newVoxelCount);
-                voxels[ i ] = newVoxelCount;
-                logger.info("Expanding edge by " + voxelModCount);
-            }
-        }
-
-        return voxels;
+        return new Integer[] { (int)sx, (int)sy, (int)sz };
     }
 
     @Override
@@ -127,8 +110,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     @Override
     public TextureDataI getCombinedTextureData() {
         byte[] maskData = volumeData;
-        Integer[] volumeVoxels = this.getVolumeMaskVoxels();
-        TextureDataI textureData = new TextureDataBean( maskData, volumeVoxels[0], volumeVoxels[1], volumeVoxels[2] );
+        TextureDataI textureData = new TextureDataBean( maskData, (int)sx, (int)sy, (int)sz );
         textureData.setInverted( false );
         textureData.setChannelCount( getChannelByteCount() );
         // See also VolumeLoader.resolveColorSpace()
