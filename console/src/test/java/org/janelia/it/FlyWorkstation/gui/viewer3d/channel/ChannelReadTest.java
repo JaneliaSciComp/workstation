@@ -5,9 +5,9 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanFileLoader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderablesChannelsBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 
-//import org.junit.After;
-//import org.junit.Before;
-//import org.junit.Test;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +38,7 @@ public class ChannelReadTest {
 
     private Logger logger = LoggerFactory.getLogger( ChannelReadTest.class );
 
-    //@Before
+    @Before
     public void setUp() throws  Exception {
         testMaskStream = this.getClass().getResourceAsStream( MASK_FILE_NAME );
         if ( testMaskStream == null ) {
@@ -53,13 +53,13 @@ public class ChannelReadTest {
         }
     }
 
-    //@After
+    @After
     public void tearDown() throws Exception {
         testMaskStream.close();
         testChannelStream.close();
     }
 
-    //@Test
+    @Test
     public void testReadOneFile() throws Exception {
         // Time-of-writing: only thing bean is used for is its tanslated number.
         RenderableBean bean = new RenderableBean();

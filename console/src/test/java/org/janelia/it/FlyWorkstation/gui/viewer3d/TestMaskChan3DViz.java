@@ -130,6 +130,9 @@ public class TestMaskChan3DViz {
                         chanStream.close();
                     }
 
+                    // For DEBUG
+                    //vcb.test();
+
                     // Setup a testing color-wheel mapping.
                     ConfigurableColorMapping colorMapping = new ConfigurableColorMapping();
                     colorMapping.setRenderables( renderableBeans );
@@ -146,7 +149,7 @@ public class TestMaskChan3DViz {
 
                     // Now, the vmb and the vcb are fully populated with all data. Can hand that into the
                     // mip3d.
-                    if ( ! mipWidget.setVolume( vcb, vmb, colorMapping, 0.6f ) ) {
+                    if ( ! mipWidget.setVolume( vcb, null/*vmb*/, colorMapping, 0.6f ) ) {
                         throw new RuntimeException( "Failed to load." );
                     }
 

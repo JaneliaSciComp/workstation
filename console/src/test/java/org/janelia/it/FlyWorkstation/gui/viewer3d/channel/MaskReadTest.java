@@ -4,9 +4,9 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanFileLoader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderablesMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
-//import org.junit.After;
-//import org.junit.Before;
-//import org.junit.Test;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +44,7 @@ public class MaskReadTest {
         longBuffer.order(ByteOrder.LITTLE_ENDIAN);
     }
 
-//    @Before
+    @Before
     public void setUp() throws  Exception {
         testStream = this.getClass().getResourceAsStream( TEST_FILE_NAME );
         if ( testStream == null ) {
@@ -52,12 +52,12 @@ public class MaskReadTest {
         }
     }
 
-//    @After
+    @After
     public void tearDown() throws Exception {
         testStream.close();
     }
 
-//    @Test
+    @Test
     public void testReadChannelData() throws Exception {
         logger.info( "Reading channel data." );
         RenderablesMaskBuilder renderablesMaskBuilder = new RenderablesMaskBuilder();
