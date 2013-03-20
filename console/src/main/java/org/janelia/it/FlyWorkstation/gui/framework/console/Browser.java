@@ -144,8 +144,10 @@ public class Browser extends JFrame implements Cloneable {
     private boolean usingSplashPanel = true;
     private boolean isDrillingDownToSelectedEntity = false;
     private String currentAnnotationSessionTaskId;
-    
-    
+    private MaskSearchDialog arbitraryMaskSearchDialog;
+    private CellCounterDialog runCellCounterDialog;
+
+
     /**
      * Center Window, use passed realEstatePercent (0-1.0, where 1.0 is 100% of the screen)
      */
@@ -301,6 +303,8 @@ public class Browser extends JFrame implements Cloneable {
 
         patternSearchDialog = new PatternSearchDialog();
         giantFiberSearchDialog = new GiantFiberSearchDialog();
+        arbitraryMaskSearchDialog = new MaskSearchDialog();
+        runCellCounterDialog = new CellCounterDialog();
         screenEvaluationDialog = new ScreenEvaluationDialog(this);
         maaSearchDialog = new MAASearchDialog(this);
         dataSetListDialog = new DataSetListDialog();
@@ -1179,6 +1183,14 @@ public class Browser extends JFrame implements Cloneable {
         for (int i = 0; i < browserObservers.size(); i++) {
             ((BrowserObserver) browserObservers.get(i)).openBrowserCountChanged(SessionMgr.getSessionMgr().getNumberOfOpenBrowsers());
         }
+    }
+
+    public MaskSearchDialog getMaskSearchDialog() {
+        return arbitraryMaskSearchDialog;
+    }
+
+    public CellCounterDialog getRunCellCounterDialog() {
+        return runCellCounterDialog;
     }
 
 //    private void postEditorSpecificMenusChanged() {
