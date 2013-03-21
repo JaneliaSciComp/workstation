@@ -29,6 +29,7 @@ public class RenderMapTextureBean implements TextureDataI {
     private Collection<RenderableBean> renderables;
 
     private int interpolationMethod = GL2.GL_NEAREST;
+    private int voxelComponentOrder = GL2.GL_RGBA;
 
     /**
      * This implementation makes a big array of 64K * 3, to accommodate any possible neuron fragment number's
@@ -185,12 +186,12 @@ public class RenderMapTextureBean implements TextureDataI {
     }
 
     @Override
-    public Integer getExplicitVoxelComponentFormat() {
+    public Integer getExplicitVoxelComponentType() {
         return voxelComponentFormat;
     }
 
     @Override
-    public void setExplicitVoxelComponentFormat( int format ) {
+    public void setExplicitVoxelComponentType(int format) {
         this.voxelComponentFormat = format;
     }
 
@@ -212,6 +213,26 @@ public class RenderMapTextureBean implements TextureDataI {
     @Override
     public void setInterpolationMethod(int interpolationMethod) {
         this.interpolationMethod = interpolationMethod;
+    }
+
+    @Override
+    public Integer getExplicitInternalFormat() {
+        return TextureDataI.UNSET_VALUE;
+    }
+
+    @Override
+    public void setExplicitInternalFormat( Integer format ) {
+        throw new IllegalStateException( "If this is being called, this class is being used with wrong intent." );
+    }
+
+    @Override
+    public Integer getExplicitVoxelComponentOrder() {
+        return voxelComponentOrder;
+    }
+
+    @Override
+    public void setExplicitVoxelComponentOrder(Integer voxelComponentOrder) {
+        this.voxelComponentOrder = voxelComponentOrder;
     }
 }
 

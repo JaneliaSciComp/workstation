@@ -42,7 +42,9 @@ public class TextureDataBean implements TextureDataI {
 
     private boolean loaded;
     private boolean inverted = true; // Tested stored images were inverted.
-    private Integer voxelComponentFormat;
+    private Integer voxelComponentFormat = UNSET_VALUE;
+    private Integer internalFormat = UNSET_VALUE;
+    private Integer voxelComponentOrder = UNSET_VALUE;
 
     private int interpolationMethod = GL2.GL_LINEAR;
 
@@ -200,12 +202,12 @@ public class TextureDataBean implements TextureDataI {
     }
 
     @Override
-    public Integer getExplicitVoxelComponentFormat() {
+    public Integer getExplicitVoxelComponentType() {
         return voxelComponentFormat;
     }
 
     @Override
-    public void setExplicitVoxelComponentFormat( int format ) {
+    public void setExplicitVoxelComponentType(int format) {
         this.voxelComponentFormat = format;
     }
 
@@ -227,6 +229,26 @@ public class TextureDataBean implements TextureDataI {
     @Override
     public void setInterpolationMethod(int interpolationMethod) {
         this.interpolationMethod = interpolationMethod;
+    }
+
+    @Override
+    public Integer getExplicitInternalFormat() {
+        return internalFormat;
+    }
+
+    @Override
+    public void setExplicitInternalFormat(Integer internalFormat) {
+        this.internalFormat = internalFormat;
+    }
+
+    @Override
+    public Integer getExplicitVoxelComponentOrder() {
+        return voxelComponentOrder;
+    }
+
+    @Override
+    public void setExplicitVoxelComponentOrder(Integer voxelComponentOrder) {
+        this.voxelComponentOrder = voxelComponentOrder;
     }
 }
 

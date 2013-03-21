@@ -14,7 +14,6 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 
 import javax.media.opengl.GL2;
-import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Collection;
 
@@ -39,7 +38,9 @@ public class MaskTextureDataBean implements TextureDataI {
     private ByteOrder byteOrder = ByteOrder.LITTLE_ENDIAN;
     private int pixelByteCount = 1;
     private int channelCount = 0;
-    private Integer voxelComponentFormat;
+    private Integer voxelComponentFormat = TextureDataI.UNSET_VALUE;
+    private Integer explicitInternalFormat = TextureDataI.UNSET_VALUE;
+    private Integer explicitVoxelComponentOrder = TextureDataI.UNSET_VALUE;
 
     private boolean loaded;
     private boolean inverted = true; // Most tested masks were inverted.
@@ -196,12 +197,12 @@ public class MaskTextureDataBean implements TextureDataI {
     }
 
     @Override
-    public Integer getExplicitVoxelComponentFormat() {
+    public Integer getExplicitVoxelComponentType() {
         return voxelComponentFormat;
     }
 
     @Override
-    public void setExplicitVoxelComponentFormat( int format ) {
+    public void setExplicitVoxelComponentType(int format) {
         this.voxelComponentFormat = format;
     }
 
@@ -215,12 +216,34 @@ public class MaskTextureDataBean implements TextureDataI {
         return renderables;
     }
 
+    @Override
     public int getInterpolationMethod() {
         return interpolationMethod;
     }
 
+    @Override
     public void setInterpolationMethod(int interpolationMethod) {
         this.interpolationMethod = interpolationMethod;
+    }
+
+    @Override
+    public Integer getExplicitInternalFormat() {
+        return explicitInternalFormat;
+    }
+
+    @Override
+    public void setExplicitInternalFormat(Integer explicitInternalFormat) {
+        this.explicitInternalFormat = explicitInternalFormat;
+    }
+
+    @Override
+    public Integer getExplicitVoxelComponentOrder() {
+        return explicitVoxelComponentOrder;
+    }
+
+    @Override
+    public void setExplicitVoxelComponentOrder(Integer explicitVoxelComponentOrder) {
+        this.explicitVoxelComponentOrder = explicitVoxelComponentOrder;
     }
 }
 

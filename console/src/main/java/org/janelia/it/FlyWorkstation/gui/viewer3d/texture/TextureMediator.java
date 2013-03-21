@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import javax.media.opengl.GL2;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -25,12 +27,13 @@ public class TextureMediator {
     private int textureName;
     private int textureSymbolicId; // This is an ID like GL.GL_TEXTURE0.
     private int textureOffset; // This will be 0, 1, ...
-    private int voxelComponentOrderOverride = -1;
 
     private boolean isInitialized = false;
 
     private TextureDataI textureData;
     private Logger logger = LoggerFactory.getLogger( TextureMediator.class );
+
+    private Map<Integer,String> glConstantToName;
 
     public static int[] genTextureIds( GL2 gl, int count ) {
         int[] rtnVal = new int[ count ];
@@ -65,14 +68,15 @@ public class TextureMediator {
 
         // DEBUG
         //testRawBufferContents( textureData.getPixelByteCount(), textureData.getTextureData() );
-
         ByteBuffer data = ByteBuffer.wrap( textureData.getTextureData() );
         //System.out.println( "Loading texture data of capacity: " + data.capacity() );
         if ( data != null ) {
             data.rewind();
 
             logger.info(
-                    "Coords are " + textureData.getSx() + " * " + textureData.getSy() + " * " + textureData.getSz()
+                    "[" +
+                            textureData.getFilename() +
+                            "]: Coords are " + textureData.getSx() + " * " + textureData.getSy() + " * " + textureData.getSz()
             );
             int maxCoord = getMaxTexCoord(gl);
             if ( textureData.getSx() > maxCoord  || textureData.getSy() > maxCoord || textureData.getSz() > maxCoord ) {
@@ -184,6 +188,7 @@ public class TextureMediator {
      */
     public void setTextureCoordinates( GL2 gl, double tX, double tY, double tZ ) {
         float[] coordCoverage = textureData.getCoordCoverage();
+        logger.debug( "Tex Coords: (" + tX + "," + tY + "," + tZ + ")");
         gl.glMultiTexCoord3d(
                 textureSymbolicId, tX * coordCoverage[ 0 ], tY * coordCoverage[ 1 ], tZ * coordCoverage[ 2 ]
         );
@@ -198,9 +203,8 @@ public class TextureMediator {
     }
 
     public void setupTexture( GL2 gl ) {
-        logger.debug( "Interp Method of LINEAR == {}.", GL2.GL_LINEAR );
-        logger.debug( "Interp Method of NEAREST == {}.", GL2.GL_NEAREST );
-        logger.debug( "Texture Data for {} has interp of {}.", textureData.getFilename(), textureData.getInterpolationMethod() );
+        logger.debug( "Texture Data for {} has interp of {}.", textureData.getFilename(),
+                getConstantName( textureData.getInterpolationMethod() ) );
 
         if ( ! isInitialized ) {
             logger.error("Attempting to setup texture before mediator has been initialized.");
@@ -259,11 +263,6 @@ public class TextureMediator {
         this.textureData = textureData;
     }
 
-    /** Allow client/creator to force a certain component order. */
-    public void setVoxelComponentOrderOverride(int voxelComponentOrderOverride) {
-        this.voxelComponentOrderOverride = voxelComponentOrderOverride;
-    }
-
     private int getStorageFormatMultiplier() {
         int orderId =  getVoxelComponentOrder();
         if ( orderId == GL2.GL_BGRA ) {
@@ -287,8 +286,8 @@ public class TextureMediator {
     //--------------------------- Helpers for glTexImage3D
     private int getVoxelComponentType() {
         int rtnVal = GL2.GL_UNSIGNED_INT_8_8_8_8_REV;
-        if ( textureData.getExplicitVoxelComponentFormat() != null ) {
-            rtnVal = textureData.getExplicitVoxelComponentFormat();
+        if ( textureData.getExplicitVoxelComponentType() != TextureDataI.UNSET_VALUE ) {
+            rtnVal = textureData.getExplicitVoxelComponentType();
         }
         else {
             if ( textureData.getChannelCount() == 3 ) {
@@ -305,11 +304,7 @@ public class TextureMediator {
             }
         }
 
-        logger.info( "Voxel comp type num is {} for GL2.GL_UNSIGNED_INT_8_8_8_8_REV.", GL2.GL_UNSIGNED_INT_8_8_8_8_REV );
-        logger.info( "Voxel comp type num is {} for GL2.GL_UNSIGNED_INT_8_8_8_8.", GL2.GL_UNSIGNED_INT_8_8_8_8 );
-        logger.info( "Voxel comp type num is {} for GL2.GL_UNSIGNED_BYTE.", GL2.GL_UNSIGNED_BYTE );
-        logger.info( "Voxel comp type num is {} for GL2.GL_UNSIGNED_SHORT.", GL2.GL_UNSIGNED_SHORT );
-        logger.info( "Got voxel component type of {} for {}.", rtnVal, textureData.getFilename() );
+        logger.info( "Got voxel component type of {} for {}.", getConstantName( rtnVal ), textureData.getFilename() );
 
         return rtnVal;
         // BLACK SCREEN. GL2.GL_UNSIGNED_BYTE_3_3_2,  // BLACK SCREEN for 143/266
@@ -334,53 +329,48 @@ public class TextureMediator {
 
     private int getInternalFormat() {
         int internalFormat = GL2.GL_RGBA;
-        if (textureData.getColorSpace() == VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_SRGB)
-            internalFormat = GL2.GL_SRGB8_ALPHA8;
-
-        // This: tested against a mask file.
-        if (textureData.getChannelCount() == 1) {
-            internalFormat = GL2.GL_LUMINANCE;
-
-            if (textureData.getPixelByteCount() == 2) {
-                internalFormat = GL2.GL_LUMINANCE16;
-            }
+        if ( textureData.getExplicitInternalFormat() != TextureDataI.UNSET_VALUE ) {
+            internalFormat = textureData.getExplicitInternalFormat();
         }
-
-        if (textureData.getColorSpace() == VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_RGB) {
-            internalFormat = GL2.GL_RGB;
-        }
-
-        if ( textureData.getChannelCount() == 3 ) {
-            if ( textureData.getPixelByteCount() == 1 ) {
+        else {
+            if (textureData.getColorSpace() == VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_SRGB)
                 internalFormat = GL2.GL_SRGB8_ALPHA8;
+
+            // This: tested against a mask file.
+            if (textureData.getChannelCount() == 1) {
+                internalFormat = GL2.GL_LUMINANCE;
+
+                if (textureData.getPixelByteCount() == 2) {
+                    internalFormat = GL2.GL_LUMINANCE16;
+                }
             }
-            else {
-                internalFormat = GL2.GL_RGBA16;
+
+            if (textureData.getColorSpace() == VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_RGB) {
+                internalFormat = GL2.GL_RGB;
+            }
+
+            if ( textureData.getChannelCount() == 3 ) {
+                if ( textureData.getPixelByteCount() == 1 ) {
+                    internalFormat = GL2.GL_SRGB8_ALPHA8;
+                }
+                else {
+                    internalFormat = GL2.GL_RGBA16;
+                }
             }
         }
 
-        logger.info("Luminance format num = {}", GL2.GL_LUMINANCE);
-        logger.info("Alpha8 format num = {}", GL2.GL_SRGB8_ALPHA8);
-        logger.info("Luminance format num = {}", GL2.GL_LUMINANCE);
-        logger.info("Luminance16 format num = {}", GL2.GL_LUMINANCE16);
-        logger.info("RGBA format num = {}", GL2.GL_RGBA);
-        logger.info("RGB format num = {}", GL2.GL_RGB);
-        logger.info( "internalFormat = {} for {}", internalFormat, textureData.getFilename() );
+        logger.info( "internalFormat = {} for {}", getConstantName( internalFormat ), textureData.getFilename() );
         return internalFormat;
     }
 
     private int getVoxelComponentOrder() {
         int rtnVal = GL2.GL_BGRA;
-        if ( voxelComponentOrderOverride > -1 ) {
-            logger.info("OVERRIDDEN voxel component order to {}.", voxelComponentOrderOverride);
-            rtnVal = voxelComponentOrderOverride;
+        if ( textureData.getExplicitVoxelComponentOrder() != TextureDataI.UNSET_VALUE ) {
+            rtnVal = textureData.getExplicitVoxelComponentOrder();
         }
         else {
             if ( textureData.getChannelCount() == 1 ) {
                 rtnVal = GL2.GL_LUMINANCE;
-            }
-            if ( rtnVal == GL2.GL_LUMINANCE ) {
-                logger.info("GL_LUMINANCE voxel component order.");
             }
             else if ( textureData.getChannelCount() == 3 ) {
                 if ( textureData.getPixelByteCount() == 1 )
@@ -388,10 +378,9 @@ public class TextureMediator {
                 else
                     rtnVal = GL2.GL_BGRA;
             }
-            else {
-                logger.info("GL_BGRA voxel component order.");
-            }
         }
+
+        logger.info( "Voxel Component order/glTexImage3D 'format' {} for {}.", getConstantName( rtnVal ), textureData.getFilename() );
         return rtnVal;
     }
 
@@ -471,6 +460,48 @@ public class TextureMediator {
             logger.info("Found {}  occurrences of {}.", allFoundFrequencies.get( key ), foundValue );
         }
         logger.info("End: Texture Values Dump---------------------");
+    }
+
+    /** Gets a string name of an OpenGL constant used in this class.  For debugging purposes. */
+    private String getConstantName( Integer openGlEnumConstant ) {
+        String rtnVal = null;
+        if ( glConstantToName == null ) {
+            glConstantToName = new HashMap<Integer,String>();
+            glConstantToName.put( GL2.GL_UNSIGNED_INT_8_8_8_8_REV, "GL2.GL_UNSIGNED_INT_8_8_8_8_REV" );
+            glConstantToName.put( GL2.GL_UNSIGNED_INT_8_8_8_8, "GL2.GL_UNSIGNED_INT_8_8_8_8" );
+            glConstantToName.put( GL2.GL_UNSIGNED_BYTE, "GL2.GL_UNSIGNED_BYTE" );
+            glConstantToName.put( GL2.GL_UNSIGNED_SHORT, "GL2.GL_UNSIGNED_SHORT" );
+
+            glConstantToName.put( GL2.GL_LUMINANCE, "GL2.GL_LUMINANCE" );
+            glConstantToName.put( GL2.GL_SRGB8_ALPHA8, "GL2.GL_SRGB8_ALPHA8" );
+            glConstantToName.put( GL2.GL_LUMINANCE16, "GL2.GL_LUMINANCE16" );
+            glConstantToName.put( GL2.GL_RGBA, "GL2.GL_RGBA" );
+            glConstantToName.put( GL2.GL_RGB, "GL2.GL_RGB" );
+
+            glConstantToName.put( GL2.GL_LINEAR, "GL2.GL_LINEAR" );
+            glConstantToName.put( GL2.GL_NEAREST, "GL2.GL_NEAREST" );
+
+            glConstantToName.put( GL2.GL_UNSIGNED_BYTE_3_3_2, "GL2.GL_UNSIGNED_BYTE_3_3_2" );
+            glConstantToName.put( GL2.GL_UNSIGNED_SHORT_4_4_4_4_REV, "GL2.GL_UNSIGNED_SHORT_4_4_4_4_REV" );
+            glConstantToName.put( GL2.GL_UNSIGNED_SHORT_5_5_5_1, "GL2.GL_UNSIGNED_SHORT_5_5_5_1" );
+            glConstantToName.put( GL2.GL_UNSIGNED_SHORT_5_6_5, "GL2.GL_UNSIGNED_SHORT_5_6_5" );
+            glConstantToName.put( GL2.GL_UNSIGNED_SHORT_1_5_5_5_REV, "GL2.GL_UNSIGNED_SHORT_1_5_5_5_REV" );
+            glConstantToName.put( GL2.GL_BYTE, "GL2.GL_BYTE" );
+            glConstantToName.put( GL2.GL_UNSIGNED_BYTE, "GL2.GL_UNSIGNED_BYTE" );
+            glConstantToName.put( GL2.GL_UNSIGNED_SHORT, "GL2.GL_UNSIGNED_SHORT" );
+
+            glConstantToName.put( GL2.GL_BGRA, "GL2.GL_BGRA" );
+            glConstantToName.put( GL2.GL_RGBA16, "GL2.GL_RGBA16");
+            //glConstantToName.put( , "" );
+            //glConstantToName.put( , "" );
+
+        }
+        rtnVal = glConstantToName.get( openGlEnumConstant );
+        if ( rtnVal == null ) {
+            rtnVal = "::Unknown " + openGlEnumConstant + "/"+ Integer.toHexString( openGlEnumConstant );
+        }
+
+        return rtnVal;
     }
 
 //    private short[] getShorts(int i, int size) {
