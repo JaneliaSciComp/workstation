@@ -211,6 +211,9 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="JKtx" level="project" />
+    <orderEntry type="library" name="LZ4" level="project" />
+    <orderEntry type="library" name="Snappy" level="project" />
   </component>
   <component name="org.twodividedbyzero.idea.findbugs">
     <option name="_basePreferences">

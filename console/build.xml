@@ -25,6 +25,9 @@
 			<fileset dir="${common.module}/Solrj" includes="**/*.jar"/>
 			<fileset dir="${common.module}/Scripting" includes="**/*.jar"/>
 	        <fileset dir="${common.module}/Guava" includes="**/*.jar"/>
+            <fileset dir="${common.module}/LZ4" includes="**/*.jar"/>
+            <fileset dir="${common.module}/Snappy" includes="**/*.jar"/>
+            <fileset dir="${common.module}/JKtx" includes="**/*.jar"/>
 			<fileset dir="${common.module}/Logging" includes="**/*.jar"/>
 			<fileset dir="${common.module}/Jetty" includes="**/*.jar"/>
 			<fileset dir="${common.module}/GWT-Serializable" includes="**/*.jar"/>
