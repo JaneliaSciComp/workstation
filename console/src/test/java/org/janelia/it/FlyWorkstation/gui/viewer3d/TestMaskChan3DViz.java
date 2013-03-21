@@ -145,14 +145,21 @@ public class TestMaskChan3DViz {
                     Mip3d mipWidget = new Mip3d();
 
                     mipWidget.clear();
-                    mipWidget.refresh();
 
                     // Now, the vmb and the vcb are fully populated with all data. Can hand that into the
                     // mip3d.
-                    if ( ! mipWidget.setVolume( vcb, null/*vmb*/, colorMapping, 0.6f ) ) {
+                    //    WORKS
+                    //String fn = "/Volumes/jacsData/filestore/system/Separation/294/370/1742138165818294370/separate/fastLoad/ConsolidatedSignal2_25.mp4";
+                    //VolumeLoader volumeLoader = new VolumeLoader(new TrivialFileResolver());
+                    //volumeLoader.loadVolume( fn );
+
+                    //mipWidget.loadVolume( fn, new TrivialFileResolver() );
+
+                    if ( ! mipWidget.setVolume( vcb, null/*vmb*/, colorMapping, 1.0f ) ) {
                         throw new RuntimeException( "Failed to load." );
                     }
 
+                    //mipWidget.loadVolume( fn, vmb, new TrivialFileResolver(), colorMapping, 1.0f );
                     frame.getContentPane().add( mipWidget );
 
                     //Display the window.

@@ -25,6 +25,7 @@ public class TestMip3d {
                 JLabel label = new JLabel("Test MipWidget");
                 frame.getContentPane().add(label);
                 Mip3d mipWidget = new Mip3d();
+                mipWidget.clear();
                 try {
                 	// mipWidget.loadVolume("/Users/brunsc/smallRefTest.tif");
 
@@ -40,7 +41,7 @@ public class TestMip3d {
                     String fileBase = "/Users/fosterl/Documents/alignment_board/samples/";
                     //String fn = fileBase + "1735579170638921826/ConsolidatedSignal2_25.mp4";
                     //String fn = "/Volumes/jacsData/filestore/system/Separation/951/842/1742124964321951842/separate/ConsolidatedLabel.v3dpbd";
-                    //String fn = "/Volumes/jacsData/filestore/system/Separation/294/370/1742138165818294370/separate/fastLoad/ConsolidatedSignal2_25.mp4";
+                    String fn = "/Volumes/jacsData/filestore/system/Separation/294/370/1742138165818294370/separate/fastLoad/ConsolidatedSignal2_25.mp4";
 
                     // Compartment masks.
                     String guideBase = "/Volumes/jacsData/MaskResources/Compartment/guide/";
@@ -48,7 +49,7 @@ public class TestMip3d {
                     //String fn = guideBase + "Mask.v3dpbd";
                     //String fn = guideBase + "../maskIndex.v3dpbd";
 
-                    String fn = "/Users/fosterl/.FlyWorkstationSuite/Console/.jacs-file-cache/active/WebDAV/groups/scicomp/jacsData/filestore/leetlab/Separation/956/258/1834565641604956258/separate/fastLoad/ConsolidatedSignal2_25.mp4";
+                    //String fn = "/Users/fosterl/.FlyWorkstationSuite/Console/.jacs-file-cache/active/WebDAV/groups/scicomp/jacsData/filestore/leetlab/Separation/956/258/1834565641604956258/separate/fastLoad/ConsolidatedSignal2_25.mp4";
 
                     //String fn = "/Users/fosterl/mean_brain_295_ref_local_with_compartment_edges.tif";
                     //String fn = "/Users/fosterl/test1_256.tif";
