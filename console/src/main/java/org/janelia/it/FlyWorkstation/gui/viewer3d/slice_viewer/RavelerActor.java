@@ -79,9 +79,9 @@ implements GLActor
 	private RavelerTileServer server;
 	private boolean needsGlDisposal = false; // flag for deferred OpenGL data reset
 	private boolean needsTextureCacheClear = false; // flag for deferred clear of texture cache
-	private Map<TileIndex, TileTexture> textureCache = new Hashtable<TileIndex, TileTexture>();
+	private Map<RavelerZTileIndex, TileTexture> textureCache = new Hashtable<RavelerZTileIndex, TileTexture>();
 	private ExecutorService textureLoadExecutor = Executors.newFixedThreadPool(4);
-	private Set<TileIndex> neededTextures;
+	private Set<RavelerZTileIndex> neededTextures;
 	
 	private ImageColorModel imageColorModel;
 	private SliceColorShader shader = new SliceColorShader();
@@ -243,7 +243,7 @@ implements GLActor
 		}
 		
 		// Keep working on loading both emergency and latest tiles only.
-		Set<TileIndex> newNeededTextures = new HashSet<TileIndex>();
+		Set<RavelerZTileIndex> newNeededTextures = new HashSet<RavelerZTileIndex>();
 		newNeededTextures.addAll(emergencyTiles.getFastNeededTextures());
 		// Decide whether to load fastest textures or best textures
 		Tile2d.Stage stage = latestTiles.getMinStage();
@@ -270,7 +270,7 @@ implements GLActor
 		return imageColorModel;
 	}
 
-	public synchronized Set<TileIndex> getNeededTextures() {
+	public synchronized Set<RavelerZTileIndex> getNeededTextures() {
 		return neededTextures;
 	}
 
@@ -288,9 +288,9 @@ implements GLActor
 		needsGlDisposal = true;
 	}
 	
-	private void queueTextureLoad(Set<TileIndex> textures) 
+	private void queueTextureLoad(Set<RavelerZTileIndex> textures) 
 	{
-		for (TileIndex ix : textures) {
+		for (RavelerZTileIndex ix : textures) {
 			if (! textureCache.containsKey(ix)) {
 				if (server.getUrlStalk() == null)
 					continue;
@@ -305,13 +305,27 @@ implements GLActor
 		}
 	}
 
+	public void reportTextureTimings() {
+		if (textureCache.size() == 0) {
+			System.out.println("(No textures were loaded)");
+			return;
+		}
+		for (TileTexture texture : textureCache.values()) {
+			// Time to download image bytes
+			long value = texture.getDownloadDataTime();
+			if (value != texture.getInvalidTime()) {
+				value -= texture.getConstructTime();
+			}
+		}
+	}
+	
 	public void setImageColorModel(ImageColorModel imageColorModel) {
 		this.imageColorModel = imageColorModel;
 		shader.setImageColorModel(imageColorModel);
 		numeralShader.setImageColorModel(imageColorModel);
 	}
 
-	public synchronized void setNeededTextures(Set<TileIndex> neededTextures) {
+	public synchronized void setNeededTextures(Set<RavelerZTileIndex> neededTextures) {
 		this.neededTextures = neededTextures;
 	}
 

@@ -10,7 +10,7 @@ import java.util.Vector;
  * @author brunsc
  *
  */
-public class TileIndex 
+public class RavelerZTileIndex 
 {
 	public int getX() {
 		return x;
@@ -33,7 +33,7 @@ public class TileIndex
 	private final int z;
 	private final int zoom;
 	
-	public TileIndex(int x, int y, int z, int zoom) {
+	public RavelerZTileIndex(int x, int y, int z, int zoom) {
 		this.x = x;
 		this.y = y;
 		this.z = z;
@@ -48,7 +48,7 @@ public class TileIndex
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		TileIndex other = (TileIndex) obj;
+		RavelerZTileIndex other = (RavelerZTileIndex) obj;
 		if (x != other.x)
 			return false;
 		if (y != other.y)
@@ -64,7 +64,7 @@ public class TileIndex
 	{
 		List<TextureScore> result = new Vector<TextureScore>();
 		double score = 1.0;
-		TileIndex key = this;
+		RavelerZTileIndex key = this;
 		result.add(new TextureScore(key, score));
 		return result;
 	}
@@ -93,30 +93,30 @@ public class TileIndex
 	 * 
 	 * @return null if current zoom index is already zero
 	 */
-	public TileIndex zoomOut() {
+	public RavelerZTileIndex zoomOut() {
 		if (getZoom() <= 0)
 			return null; // Cannot zoom farther out than zero
 		int x = getX()/2;
 		int y = getY()/2;
 		int z = getZ();
 		int zoom = getZoom() - 1;
-		return new TileIndex(x, y, z, zoom);
+		return new RavelerZTileIndex(x, y, z, zoom);
 	}
 
 	// Retarded Java philosophy eschews built-in Pair type nor multiple return values
 	// thus the usual "add another class..." ad infinitum.
 	public static class TextureScore {
-		private TileIndex textureKey;
+		private RavelerZTileIndex textureKey;
 		private double score;
 
-		public TextureScore(TileIndex key, double score) {
+		public TextureScore(RavelerZTileIndex key, double score) {
 			this.textureKey = key;
 			this.score = score;
 		}
-		public TileIndex getTextureKey() {
+		public RavelerZTileIndex getTextureKey() {
 			return textureKey;
 		}
-		public void setTextureKey(TileIndex textureKey) {
+		public void setTextureKey(RavelerZTileIndex textureKey) {
 			this.textureKey = textureKey;
 		}
 		public double getScore() {

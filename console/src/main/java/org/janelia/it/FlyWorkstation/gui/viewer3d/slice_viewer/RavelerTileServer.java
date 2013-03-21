@@ -106,7 +106,7 @@ implements VolumeImage3d
 		
 		for (int x = xMin; x <= xMax; ++x) {
 			for (int y = yMin; y <= yMax; ++y) {
-				TileIndex key = new TileIndex(x, y, z, zoom);
+				RavelerZTileIndex key = new RavelerZTileIndex(x, y, z, zoom);
 				Tile2d tile = new Tile2d(key);
 				tile.setYMax(getBoundingBox3d().getMax().getY()); // To help flip y
 				result.add(tile);

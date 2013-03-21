@@ -33,20 +33,20 @@ implements GLActor
 	
 	private Stage stage = Stage.NO_TEXTURE_LOADED;
 	private TileTexture bestTexture;
-	private TileIndex index;
+	private RavelerZTileIndex index;
 	private double yMax; // To help flip Raveler tiles in Y
 
 	
-	public Tile2d(TileIndex key) {
+	public Tile2d(RavelerZTileIndex key) {
 		this.index = key;
 	}
 
 	// Choose the best available texture for this tile
-	public void assignTexture(Map<TileIndex, TileTexture> textureCache) 
+	public void assignTexture(Map<RavelerZTileIndex, TileTexture> textureCache) 
 	{
 		if (getStage().ordinal() >= Stage.BEST_TEXTURE_LOADED.ordinal())
 			return; // Already as good as it gets
-		TileIndex ix = getIndex();
+		RavelerZTileIndex ix = getIndex();
 		TileTexture texture = textureCache.get(ix);
 		if ((texture != null) && (texture.getStage().ordinal() >= TileTexture.Stage.RAM_LOADED.ordinal()))
 		{
@@ -69,7 +69,7 @@ implements GLActor
 		// No texture was found; maybe next time
 	}
 
-	public TileIndex getIndex() {
+	public RavelerZTileIndex getIndex() {
 		return index;
 	}
 
@@ -138,6 +138,11 @@ implements GLActor
 	        gl.glTexCoord2d(tcLeft, tcTop); gl.glVertex3d(x0, y1, z);
 		gl.glEnd();
 		texture.disable(gl);
+		
+		// Record display time, if first display for texture
+		if (bestTexture.getFirstDisplayTime() == bestTexture.getInvalidTime()) {
+			bestTexture.setFirstDisplayTime(System.nanoTime());
+		}
 	}
 
 	public void displayBoundingBox(GL2 gl) 
