@@ -109,8 +109,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
 
     @Override
     public TextureDataI getCombinedTextureData() {
-        byte[] maskData = volumeData;
-        TextureDataI textureData = new TextureDataBean( maskData, (int)sx, (int)sy, (int)sz );
+        TextureDataI textureData = new TextureDataBean( volumeData, (int)sx, (int)sy, (int)sz );
         textureData.setInverted( false );
         textureData.setChannelCount( getChannelByteCount() );
         // See also VolumeLoader.resolveColorSpace()
@@ -120,6 +119,8 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
         textureData.setInterpolationMethod( GL2.GL_NEAREST );
         textureData.setRenderables( renderableBeans );
         textureData.setCoordCoverage( coordCoverage );
+        textureData.setChannelCount( 1 );
+        //textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_BYTE );
 
         return textureData;
     }

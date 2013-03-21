@@ -151,13 +151,13 @@ public class MaskChanFileLoader {
         cummulativeBytesReadCount = 0;
 
         // Get all the overhead stuff out of the way.
-        logger.info( "Initializing Mask Stream." );
+        logger.debug( "Initializing Mask Stream." );
         initializeMaskStream(maskInputStream);
         validateMaskVolume();
 
-        logger.info( "Reading channel data." );
+        logger.debug( "Reading channel data." );
         List<byte[]> channelData = readChannelData( bean, channelStream );
-        logger.info( "Completed reading channel data." );
+        logger.debug( "Completed reading channel data." );
 
         while ( cummulativeBytesReadCount < totalVoxels ) {
             Long skippedRayCount = readLong(maskInputStream);
@@ -175,7 +175,7 @@ public class MaskChanFileLoader {
 
         }
 
-        logger.info( "Read complete." );
+        logger.debug( "Read complete." );
     }
 
     /**
@@ -184,7 +184,7 @@ public class MaskChanFileLoader {
      * @throws Exception thrown by any called methods.
      */
     private void initializeMaskStream(InputStream maskInputStream) throws Exception {
-        logger.info( "Grabbing overhead data from mask." );
+        logger.debug( "Grabbing overhead data from mask." );
 
         sx = readLong(maskInputStream);
         sy = readLong(maskInputStream);

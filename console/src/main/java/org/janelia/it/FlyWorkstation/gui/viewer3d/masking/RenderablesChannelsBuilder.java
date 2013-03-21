@@ -10,11 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.GL2;
-import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
 import java.nio.ByteOrder;
 import java.util.Arrays;
-import java.util.List;
 import java.util.TreeMap;
 
 /**
@@ -197,25 +194,58 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
 
     //----------------------------------------HELPER METHODS
     private TextureDataI buildTextureData() {
-//        //TODO re-examine later...
-        for ( int i = 0; i < volumeData.length; i++ ) {
-            volumeData[i] = (byte)255;
-        }
+        //TODO remove later...
+//        volumeData = new byte[(32 * 32 * 32) * 4];
+//        for ( int i = 0; i < volumeData.length; i++ ) {
+//            volumeData[i] = (byte)(i % 127);
+//        }
+//
+//        TextureDataI textureData = new TextureDataBean( volumeData, 32, 32, 32 );
+//        textureData.setVolumeMicrometers(new Double[]{ 32.0, 32.0, 32.0 });
 
-        TextureDataI textureData = new TextureDataBean( volumeData, (int)sx, (int)sy, (int)sz );
+//        for ( int i = 0; i < volumeData.length; i++ ) {
+//            volumeData[i] = (byte)0;
+//        }
+        TextureDataI textureData = new TextureDataBean( volumeData, (int)sx, (int)sy, (int)384 );
+        textureData.setVolumeMicrometers(new Double[]{(double) sx, (double) sy, (double)384 });
+        textureData.setCoordCoverage( coordCoverage );
+        textureData.setChannelCount( channelMetaData.channelCount );
 
         textureData.setColorSpace( VolumeBrick.TextureColorSpace.COLOR_SPACE_LINEAR );
-        textureData.setVolumeMicrometers(new Double[]{(double) sx, (double) sy, (double) sz});
         textureData.setVoxelMicrometers(new Double[]{1.0, 1.0, 1.0});
-        textureData.setByteOrder( ByteOrder.LITTLE_ENDIAN );
+        textureData.setByteOrder( ByteOrder.nativeOrder() );
         textureData.setPixelByteCount( channelMetaData.byteCount );
         textureData.setFilename( "Channel Data" );
-        textureData.setChannelCount( channelMetaData.channelCount );
         textureData.setInverted( false );
-        textureData.setCoordCoverage( coordCoverage );
 
         textureData.setInterpolationMethod( GL2.GL_LINEAR );
-        textureData.setExplicitVoxelComponentFormat( GL2.GL_RGBA );
+
+        // This set of inputs works against uploaded MP4 files.  T.o.Writing: YCD
+        /*
+        textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_INT_8_8_8_8 );
+        textureData.setExplicitVoxelComponentOrder( GL2.GL_RGBA );
+        textureData.setExplicitInternalFormat( GL2.GL_RGBA16 );
+         */
+
+        textureData.setExplicitVoxelComponentType( GL2.GL_BYTE ); //GL2.GL_UNSIGNED_INT_8_8_8_8 );
+        textureData.setExplicitVoxelComponentOrder( GL2.GL_RGBA );
+        textureData.setExplicitInternalFormat( GL2.GL_RGBA );
+
+        //  Because all have been tried with failure, assuming that the intuitive type of 8/8/8/8 is correct.
+        // YCD textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_INT_8_8_8_8_REV);
+        //  Invalid memory access of location 0x800000010 rip=0x112a70227 textureData.setExplicitVoxelComponentType(GL2.GL_INT);
+        // YCD textureData.setExplicitVoxelComponentType(GL2.GL_BYTE);
+        //  Invalid memory access of location 0x800000000 rip=0x1113fe53b textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_INT);
+
+        // textureData.setExplicitInternalFormat( GL2.GL_ALPHA8 );  // Time of Writing: yields black screen.
+        // YCD textureData.setExplicitInternalFormat( 4 );
+        // YCD textureData.setExplicitInternalFormat( GL2.GL_RGBA );
+        // YCD textureData.setExplicitInternalFormat( GL2.GL_SRGB8 );
+
+        // YCD textureData.setExplicitInternalFormat( GL2.GL_SRGB8_ALPHA8 );
+        // YCD textureData.setExplicitInternalFormat( GL2.GL_RGB8 );
+        //        textureData.setExplicitInternalFormat( GL2. );
+        //        textureData.setExplicitInternalFormat( GL2. );
 
         // TEMP.
         //dumpVolume();
