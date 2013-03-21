@@ -85,7 +85,7 @@ public class VolumeMaskBuilder implements VolumeDataAcceptor, MaskBuilderI {
                     int zOffsetOutput = z * dimMaskX * dimMaskY * consensusByteCount; // Slice number * next z
                     int zOffsetInput = z * dimBeanX * dimBeanY * maskBytCt;
                     for ( int y = 0; y < dimBeanY; y++ ) {
-                        int yOffsetOutput = calcYOffset( consensusByteCount, dimMaskX, dimMaskY, zOffsetOutput, y, false );    // TEMP
+                        int yOffsetOutput = calcYOffset( consensusByteCount, dimMaskX, dimMaskY, zOffsetOutput, y, false );
                         int yOffsetInput = calcYOffset( maskBytCt, dimBeanX, dimBeanY, zOffsetInput, y, texBean.isInverted() );
                         for ( int x = 0; x < dimBeanX; x++ ) {
                             int outputOffset = yOffsetOutput + x*consensusByteCount;
