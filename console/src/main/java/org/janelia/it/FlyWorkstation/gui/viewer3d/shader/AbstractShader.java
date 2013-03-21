@@ -6,6 +6,9 @@
  */
 package org.janelia.it.FlyWorkstation.gui.viewer3d.shader;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.media.opengl.GL2;
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -26,6 +29,8 @@ public abstract class AbstractShader
     public abstract String getFragmentShader();
     public abstract void load(GL2 gl);
     public abstract void unload(GL2 gl);
+
+    private Logger logger = LoggerFactory.getLogger( AbstractShader.class );
 
     public void init(GL2 gl) throws ShaderCreationException {
         // Create shader program
@@ -88,7 +93,9 @@ public abstract class AbstractShader
 				stringBuffer.append("\n");
 			}
 			String progString = stringBuffer.toString();
-            System.out.println("Shader contents: " + progString);
+            if ( logger.isDebugEnabled() ) {
+                logger.debug("\nShader contents: " + progString);
+            }
 			gl.glShaderSource(shaderId, 1, new String[]{progString}, (int[])null, 0);
 			gl.glCompileShader(shaderId);
 			
