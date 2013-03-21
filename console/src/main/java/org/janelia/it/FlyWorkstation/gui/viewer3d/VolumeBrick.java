@@ -417,7 +417,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     public void setColorMapTextureData( TextureDataI textureData ) {
         if ( colorMapTextureMediator == null ) {
             colorMapTextureMediator = new TextureMediator();
-            colorMapTextureMediator.setVoxelComponentOrderOverride( GL2.GL_RGBA );
             textureMediators.add( colorMapTextureMediator );
         }
         colorMapTextureMediator.setTextureData( textureData );
