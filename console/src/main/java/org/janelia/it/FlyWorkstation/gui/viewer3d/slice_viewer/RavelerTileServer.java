@@ -16,16 +16,10 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 public class RavelerTileServer 
 implements VolumeImage3d
 {
-	// private static final Logger log = LoggerFactory.getLogger(RavelerTileServer.class);
-	
-	private URL urlStalk; // url of top level folder
 	private BoundingBox3d boundingBox3d = new BoundingBox3d();
 	private int numberOfChannels = 3;
 	private int maximumIntensity = 255;
@@ -43,6 +37,7 @@ implements VolumeImage3d
 	private Signal dataChangedSignal = new Signal();
 	private double zoomOffset = 0.5; // tradeoff between optimal resolution (0.0) and speed.
 	private Signal volumeInitializedSignal = new Signal();
+	private PyramidTextureLoadAdapter loadAdapter;
 	
 	
 	public RavelerTileServer(String folderName) {
@@ -106,7 +101,7 @@ implements VolumeImage3d
 		
 		for (int x = xMin; x <= xMax; ++x) {
 			for (int y = yMin; y <= yMax; ++y) {
-				RavelerZTileIndex key = new RavelerZTileIndex(x, y, z, zoom);
+				PyramidTileIndex key = new PyramidTileIndex(x, y, z, zoom);
 				Tile2d tile = new Tile2d(key);
 				tile.setYMax(getBoundingBox3d().getMax().getY()); // To help flip y
 				result.add(tile);
@@ -140,10 +135,6 @@ implements VolumeImage3d
 		return dataChangedSignal;
 	}
 
-	public URL getUrlStalk() {
-		return urlStalk;
-	}
-
 	public Viewport getViewport() {
 		return viewport;
 	}
@@ -175,7 +166,7 @@ implements VolumeImage3d
 		if (! parseMetadata(folderUrl))
 			return false;
 		// Now we can start replacing the previous state
-		this.urlStalk = folderUrl;
+		loadAdapter = new RavelerLoadAdapter(folderUrl);
 
 		// queue disposal of textures on next display event
 		getVolumeInitializedSignal().emit();
@@ -273,6 +264,10 @@ implements VolumeImage3d
 
 	public void setViewport(Viewport viewport) {
 		this.viewport = viewport;
+	}
+
+	public PyramidTextureLoadAdapter getLoadAdapter() {
+		return loadAdapter;
 	}
 	
 

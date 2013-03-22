@@ -10,7 +10,7 @@ import java.util.Vector;
  * @author brunsc
  *
  */
-public class RavelerZTileIndex 
+public class PyramidTileIndex 
 {
 	public int getX() {
 		return x;
@@ -33,7 +33,7 @@ public class RavelerZTileIndex
 	private final int z;
 	private final int zoom;
 	
-	public RavelerZTileIndex(int x, int y, int z, int zoom) {
+	public PyramidTileIndex(int x, int y, int z, int zoom) {
 		this.x = x;
 		this.y = y;
 		this.z = z;
@@ -48,7 +48,7 @@ public class RavelerZTileIndex
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		RavelerZTileIndex other = (RavelerZTileIndex) obj;
+		PyramidTileIndex other = (PyramidTileIndex) obj;
 		if (x != other.x)
 			return false;
 		if (y != other.y)
@@ -64,7 +64,7 @@ public class RavelerZTileIndex
 	{
 		List<TextureScore> result = new Vector<TextureScore>();
 		double score = 1.0;
-		RavelerZTileIndex key = this;
+		PyramidTileIndex key = this;
 		result.add(new TextureScore(key, score));
 		return result;
 	}
@@ -93,30 +93,30 @@ public class RavelerZTileIndex
 	 * 
 	 * @return null if current zoom index is already zero
 	 */
-	public RavelerZTileIndex zoomOut() {
+	public PyramidTileIndex zoomOut() {
 		if (getZoom() <= 0)
 			return null; // Cannot zoom farther out than zero
 		int x = getX()/2;
 		int y = getY()/2;
 		int z = getZ();
 		int zoom = getZoom() - 1;
-		return new RavelerZTileIndex(x, y, z, zoom);
+		return new PyramidTileIndex(x, y, z, zoom);
 	}
 
 	// Retarded Java philosophy eschews built-in Pair type nor multiple return values
 	// thus the usual "add another class..." ad infinitum.
 	public static class TextureScore {
-		private RavelerZTileIndex textureKey;
+		private PyramidTileIndex textureKey;
 		private double score;
 
-		public TextureScore(RavelerZTileIndex key, double score) {
+		public TextureScore(PyramidTileIndex key, double score) {
 			this.textureKey = key;
 			this.score = score;
 		}
-		public RavelerZTileIndex getTextureKey() {
+		public PyramidTileIndex getTextureKey() {
 			return textureKey;
 		}
-		public void setTextureKey(RavelerZTileIndex textureKey) {
+		public void setTextureKey(PyramidTileIndex textureKey) {
 			this.textureKey = textureKey;
 		}
 		public double getScore() {

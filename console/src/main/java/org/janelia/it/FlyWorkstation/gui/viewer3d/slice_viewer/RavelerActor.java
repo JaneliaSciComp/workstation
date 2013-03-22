@@ -16,8 +16,6 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader.ShaderCr
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.NumeralShader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.SliceColorShader;
 
-import com.jogamp.opengl.util.texture.Texture;
-
 /**
  * Attempt to factor out GLActor portion of RavelerTileServer,
  * if it's not already too late.
@@ -79,9 +77,10 @@ implements GLActor
 	private RavelerTileServer server;
 	private boolean needsGlDisposal = false; // flag for deferred OpenGL data reset
 	private boolean needsTextureCacheClear = false; // flag for deferred clear of texture cache
-	private Map<RavelerZTileIndex, TileTexture> textureCache = new Hashtable<RavelerZTileIndex, TileTexture>();
+	private Map<PyramidTileIndex, TileTexture> textureCache = new Hashtable<PyramidTileIndex, TileTexture>();
 	private ExecutorService textureLoadExecutor = Executors.newFixedThreadPool(4);
-	private Set<RavelerZTileIndex> neededTextures;
+	private Set<PyramidTileIndex> neededTextures;
+	private PyramidTextureLoadAdapter loadAdapter;
 	
 	private ImageColorModel imageColorModel;
 	private SliceColorShader shader = new SliceColorShader();
@@ -187,7 +186,7 @@ implements GLActor
 		for (TileTexture tileTexture : textureCache.values()) {
 			if (tileTexture.getStage().ordinal() < TileTexture.Stage.GL_LOADED.ordinal())
 				continue;
-			Texture joglTexture = tileTexture.getTexture();
+			PyramidTexture joglTexture = tileTexture.getTexture();
 			joglTexture.destroy(gl);
 			tileTexture.setStage(TileTexture.Stage.RAM_LOADED);
 		}
@@ -243,7 +242,7 @@ implements GLActor
 		}
 		
 		// Keep working on loading both emergency and latest tiles only.
-		Set<RavelerZTileIndex> newNeededTextures = new HashSet<RavelerZTileIndex>();
+		Set<PyramidTileIndex> newNeededTextures = new HashSet<PyramidTileIndex>();
 		newNeededTextures.addAll(emergencyTiles.getFastNeededTextures());
 		// Decide whether to load fastest textures or best textures
 		Tile2d.Stage stage = latestTiles.getMinStage();
@@ -270,7 +269,7 @@ implements GLActor
 		return imageColorModel;
 	}
 
-	public synchronized Set<RavelerZTileIndex> getNeededTextures() {
+	public synchronized Set<PyramidTileIndex> getNeededTextures() {
 		return neededTextures;
 	}
 
@@ -288,20 +287,22 @@ implements GLActor
 		needsGlDisposal = true;
 	}
 	
-	private void queueTextureLoad(Set<RavelerZTileIndex> textures) 
+	private void queueTextureLoad(Set<PyramidTileIndex> textures) 
 	{
-		for (RavelerZTileIndex ix : textures) {
+		loadAdapter = server.getLoadAdapter(); // TODO - is tile server the right place to get LoadAdapter?
+		for (PyramidTileIndex ix : textures) {
 			if (! textureCache.containsKey(ix)) {
-				if (server.getUrlStalk() == null)
+				if (loadAdapter == null)
 					continue;
-				TileTexture t = new TileTexture(ix, server.getUrlStalk());
+				TileTexture t = new TileTexture(ix, loadAdapter);
 				t.getRamLoadedSignal().connect(getDataChangedSignal());
 				textureCache.put(ix, t);
 			}
 			TileTexture texture = textureCache.get(ix);
 			// TODO - maybe only submit UNINITIALIZED textures, if we don't wish to retry failed ones
+			// TODO - handle MISSING textures vs. ERROR textures
 			if (texture.getStage().ordinal() < TileTexture.Stage.LOAD_QUEUED.ordinal()) 
-				textureLoadExecutor.submit(new TileTextureLoader(texture, this));
+				textureLoadExecutor.submit(new PyramidTextureLoadWorker(texture, this));
 		}
 	}
 
@@ -325,7 +326,7 @@ implements GLActor
 		numeralShader.setImageColorModel(imageColorModel);
 	}
 
-	public synchronized void setNeededTextures(Set<RavelerZTileIndex> neededTextures) {
+	public synchronized void setNeededTextures(Set<PyramidTileIndex> neededTextures) {
 		this.neededTextures = neededTextures;
 	}
 

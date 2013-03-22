@@ -332,6 +332,7 @@ public class QuadViewUi extends JFrame
 			public void execute() {
 				// System.out.println("Updating slider visibility");
 				int sc = sliceViewer.getImageColorModel().getChannelCount();
+				colorPanel.setVisible(sc > 0);
 				int c = 0;
 				for (ColorChannelWidget w : colorWidgets) {
 					w.setVisible(c < sc);
@@ -339,6 +340,9 @@ public class QuadViewUi extends JFrame
 				}
 				colorLockPanel.setVisible(sc > 1);
 				splitPane.resetToPreferredSizes();
+				// TODO Trying without success to get sliders to initially paint correctly
+				colorPanel.validate();
+				colorPanel.repaint();
 			}
 		});
 		

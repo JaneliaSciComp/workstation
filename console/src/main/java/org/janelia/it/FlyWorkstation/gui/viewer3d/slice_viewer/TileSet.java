@@ -19,7 +19,7 @@ extends Vector<Tile2d>
 {
 	private static final long serialVersionUID = 1L;
 
-	public void assignTextures(Map<RavelerZTileIndex, TileTexture> textureCache) {
+	public void assignTextures(Map<PyramidTileIndex, TileTexture> textureCache) {
 		for (Tile2d tile : this) {
 			tile.assignTexture(textureCache);
 		}
@@ -51,7 +51,7 @@ extends Vector<Tile2d>
 
 	// Start loading textures to quickly populate these tiles, even if the
 	// textures are not the optimal resolution
-	public Set<RavelerZTileIndex> getFastNeededTextures() 
+	public Set<PyramidTileIndex> getFastNeededTextures() 
 	{
 		// Which tiles need to be textured?
 		Set<Tile2d> untexturedTiles = new HashSet<Tile2d>();
@@ -60,22 +60,22 @@ extends Vector<Tile2d>
 				untexturedTiles.add(tile);
 		}
 		// Whittle down the list one texture at a time.
-		Set<RavelerZTileIndex> neededTextures = new HashSet<RavelerZTileIndex>();
+		Set<PyramidTileIndex> neededTextures = new HashSet<PyramidTileIndex>();
 		// Warning! This algorithm is O(n^2) on the number of tiles! TODO
 		while (untexturedTiles.size() > 0) {
 			// Store a score for each candidate texture
-			Map<RavelerZTileIndex, Double> textureScores = new HashMap<RavelerZTileIndex, Double>();
+			Map<PyramidTileIndex, Double> textureScores = new HashMap<PyramidTileIndex, Double>();
 			// Remember which tiles could use a particular texture
-			Map<RavelerZTileIndex, Set<Tile2d>> tilesByTexture = new HashMap<RavelerZTileIndex, Set<Tile2d>>();
+			Map<PyramidTileIndex, Set<Tile2d>> tilesByTexture = new HashMap<PyramidTileIndex, Set<Tile2d>>();
 			// Accumulate a score for each candidate texture from each tile
 			// TODO - cache something so we don't need to do O(n) in this loop every time
 			// TODO - downweight textures that have already failed to load
 			for (Tile2d tile : untexturedTiles) {
-				for (RavelerZTileIndex.TextureScore textureScore : tile.getIndex().getTextureScores()) 
+				for (PyramidTileIndex.TextureScore textureScore : tile.getIndex().getTextureScores()) 
 				{
 					// TODO - maybe skip textures that have failed to load
 					double initialScore = 0.0;
-					RavelerZTileIndex textureKey = textureScore.getTextureKey();
+					PyramidTileIndex textureKey = textureScore.getTextureKey();
 					if (textureScores.containsKey(textureKey))
 						initialScore = textureScores.get(textureKey);
 					textureScores.put(textureKey, initialScore + textureScore.getScore());
@@ -87,9 +87,9 @@ extends Vector<Tile2d>
 			}
 			// Choose the highest scoring texture for inclusion
 			double bestScore = 0.0;
-			RavelerZTileIndex bestTexture = null;
+			PyramidTileIndex bestTexture = null;
 			// O(n) on candidate tile list is better than sorting
-			for (RavelerZTileIndex textureIndex : textureScores.keySet()) {
+			for (PyramidTileIndex textureIndex : textureScores.keySet()) {
 				if (textureScores.get(textureIndex) > bestScore) {
 					bestTexture = textureIndex;
 				}
@@ -105,9 +105,9 @@ extends Vector<Tile2d>
 	}
 
 	// Start loading textures of the optimal resolution for these tiles
-	public Set<RavelerZTileIndex> getBestNeededTextures() {
+	public Set<PyramidTileIndex> getBestNeededTextures() {
 		// Which tiles need to be textured?
-		Set<RavelerZTileIndex> neededTextures = new HashSet<RavelerZTileIndex>();
+		Set<PyramidTileIndex> neededTextures = new HashSet<PyramidTileIndex>();
 		for (Tile2d tile : this) {
 			// The best texture for each tile is always the one with the same index
 			// TODO - maybe skip textures that have failed to load
@@ -118,15 +118,15 @@ extends Vector<Tile2d>
 		return neededTextures;
 	}
 	
-	class ValueComparator implements Comparator<RavelerZTileIndex> {
-		Map<RavelerZTileIndex, Double> base;
+	class ValueComparator implements Comparator<PyramidTileIndex> {
+		Map<PyramidTileIndex, Double> base;
 		
-		public ValueComparator(Map<RavelerZTileIndex, Double> base) {
+		public ValueComparator(Map<PyramidTileIndex, Double> base) {
 			this.base = base;
 		}
 
 		@Override
-		public int compare(RavelerZTileIndex lhs, RavelerZTileIndex rhs) {
+		public int compare(PyramidTileIndex lhs, PyramidTileIndex rhs) {
 			if (base.get(lhs) >= base.get(rhs))
 				return -1;
 			return 1;					

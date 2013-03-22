@@ -7,7 +7,6 @@ import javax.media.opengl.GL2;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 
-import com.jogamp.opengl.util.texture.Texture;
 import com.jogamp.opengl.util.texture.TextureCoords;
 
 /**
@@ -33,20 +32,20 @@ implements GLActor
 	
 	private Stage stage = Stage.NO_TEXTURE_LOADED;
 	private TileTexture bestTexture;
-	private RavelerZTileIndex index;
+	private PyramidTileIndex index;
 	private double yMax; // To help flip Raveler tiles in Y
 
 	
-	public Tile2d(RavelerZTileIndex key) {
+	public Tile2d(PyramidTileIndex key) {
 		this.index = key;
 	}
 
 	// Choose the best available texture for this tile
-	public void assignTexture(Map<RavelerZTileIndex, TileTexture> textureCache) 
+	public void assignTexture(Map<PyramidTileIndex, TileTexture> textureCache) 
 	{
 		if (getStage().ordinal() >= Stage.BEST_TEXTURE_LOADED.ordinal())
 			return; // Already as good as it gets
-		RavelerZTileIndex ix = getIndex();
+		PyramidTileIndex ix = getIndex();
 		TileTexture texture = textureCache.get(ix);
 		if ((texture != null) && (texture.getStage().ordinal() >= TileTexture.Stage.RAM_LOADED.ordinal()))
 		{
@@ -69,7 +68,7 @@ implements GLActor
 		// No texture was found; maybe next time
 	}
 
-	public RavelerZTileIndex getIndex() {
+	public PyramidTileIndex getIndex() {
 		return index;
 	}
 
@@ -93,8 +92,8 @@ implements GLActor
 			return;
 		// log.info("Rendering tile "+getIndex());
 		bestTexture.init(gl);
-		Texture texture = bestTexture.getTexture();
-		assert texture != null;
+		PyramidTexture texture = bestTexture.getTexture();
+		assert(texture != null);
 		texture.enable(gl);
 		texture.bind(gl);
 		texture.setTexParameteri(gl, GL2.GL_TEXTURE_WRAP_S, GL2.GL_CLAMP_TO_EDGE);
@@ -147,7 +146,7 @@ implements GLActor
 
 	public void displayBoundingBox(GL2 gl) 
 	{
-		Texture texture = bestTexture.getTexture();
+		PyramidTexture texture = bestTexture.getTexture();
 		double voxelSize = 1.0; // TODO
 		int zoomScale = (int)(Math.pow(2.0, getIndex().getZoom()) + 0.1);
 		double tileWidth = texture.getWidth() * zoomScale * voxelSize;
