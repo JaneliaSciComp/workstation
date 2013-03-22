@@ -11,7 +11,7 @@ import com.jogamp.opengl.util.texture.TextureIO;
 public class JoglTextureData 
 implements PyramidTextureData 
 {
-	
+	private boolean linearized;
 	private TextureData joglTextureData;
 
 	public JoglTextureData(TextureData newTextureData) {
@@ -22,4 +22,13 @@ implements PyramidTextureData
 	public PyramidTexture createTexture(GL2 gl) {
 		return new JoglPyramidTexture(TextureIO.newTexture(gl, joglTextureData));
 	}
+
+	public boolean isLinearized() {
+		return linearized;
+	}
+
+	public void setLinearized(boolean linearized) {
+		this.linearized = linearized;
+	}
+
 }

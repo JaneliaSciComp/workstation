@@ -163,8 +163,9 @@ public class QuadViewUi extends JFrame
 			double zMin = sliceViewer.getBoundingBox3d().getMin().getZ();
 			double zMax = sliceViewer.getBoundingBox3d().getMax().getZ();
 			int z0 = (int)Math.round(zMin / sliceViewer.getZResolution());
-			int z1 = (int)Math.round(zMax / sliceViewer.getZResolution());
-			assert z1 >= z0;
+			int z1 = (int)Math.round(zMax / sliceViewer.getZResolution()) - 1;
+			if (z0 > z1)
+				z1 = z0;
 			// Z-scan is only relevant if there is more than one slice.
 			boolean useZScan = ((z1 - z0) > 1);
 			if (useZScan) {

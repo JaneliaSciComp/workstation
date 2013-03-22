@@ -23,7 +23,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.SliceColor
  * @author Christopher M. Bruns
  *
  */
-public class RavelerActor 
+public class SliceActor 
 implements GLActor
 {
 	/*
@@ -74,7 +74,7 @@ implements GLActor
 	// tiles are loading.
 	private TileSet lastGoodTiles;
 
-	private RavelerTileServer server;
+	private TileServer server;
 	private boolean needsGlDisposal = false; // flag for deferred OpenGL data reset
 	private boolean needsTextureCacheClear = false; // flag for deferred clear of texture cache
 	private Map<PyramidTileIndex, TileTexture> textureCache = new Hashtable<PyramidTileIndex, TileTexture>();
@@ -102,7 +102,7 @@ implements GLActor
 		}
 	};
 	
-	public RavelerActor(RavelerTileServer server)
+	public SliceActor(TileServer server)
 	{
 		this.server = server;
 		server.getVolumeInitializedSignal().connect(clearDataSlot);

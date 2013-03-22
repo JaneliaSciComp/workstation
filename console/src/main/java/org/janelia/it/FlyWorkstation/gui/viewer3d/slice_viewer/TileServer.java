@@ -1,15 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Hashtable;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
@@ -17,19 +11,10 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 
-public class RavelerTileServer 
+public class TileServer 
 implements VolumeImage3d
 {
 	private BoundingBox3d boundingBox3d = new BoundingBox3d();
-	private int numberOfChannels = 3;
-	private int maximumIntensity = 255;
-	private int bitDepth = 8;
-	private double xResolution = 1.0; // micrometers
-	private double yResolution = 1.0;
-	private double zResolution = 1.0;
-	private int zoomMax = 0;
-	private int zoomMin = 0;
-	private Map<String, String> metadata = new Hashtable<String, String>();
 	//
 	private Camera3d camera;
 	private Viewport viewport;
@@ -40,7 +25,7 @@ implements VolumeImage3d
 	private PyramidTextureLoadAdapter loadAdapter;
 	
 	
-	public RavelerTileServer(String folderName) {
+	public TileServer(String folderName) {
         try {
 			loadURL(new File(folderName).toURI().toURL());
 		} catch (MalformedURLException e) {
@@ -68,6 +53,9 @@ implements VolumeImage3d
 			double topZoom = Math.log(voxelsPerPixel) / Math.log(2.0);
 			zoom = (int)(topZoom + zoomOffset);
 		}
+		int zoomMin = 0;
+		PyramidTileFormat tileFormat = loadAdapter.getTileFormat();
+		int zoomMax = tileFormat.getZoomLevelCount() - 1;
 		zoom = Math.max(zoom, zoomMin);
 		zoom = Math.min(zoom, zoomMax);
 		// 2) z
@@ -81,14 +69,18 @@ implements VolumeImage3d
 		double yFMin = focus.getY() - 0.5*viewport.getHeight()/camera.getPixelsPerSceneUnit();
 		double yFMax = focus.getY() + 0.5*viewport.getHeight()/camera.getPixelsPerSceneUnit();
 		// Clip to volume space
-		xFMin = Math.max(xFMin, getBoundingBox3d().getMin().getX());
-		yFMin = Math.max(yFMin, getBoundingBox3d().getMin().getY());
-		xFMax = Math.min(xFMax, getBoundingBox3d().getMax().getX());
-		yFMax = Math.min(yFMax, getBoundingBox3d().getMax().getY());
+		// Subtract one half pixel to avoid loading an extra layer of tiles
+		double dx = 0.25 * tileFormat.getVoxelMicrometers()[0];
+		double dy = 0.25 * tileFormat.getVoxelMicrometers()[1];
+		xFMin = Math.max(xFMin, getBoundingBox3d().getMin().getX() + dx);
+		yFMin = Math.max(yFMin, getBoundingBox3d().getMin().getY() + dy);
+		xFMax = Math.min(xFMax, getBoundingBox3d().getMax().getX() - dx);
+		yFMax = Math.min(yFMax, getBoundingBox3d().getMax().getY() - dy);
 		double zoomFactor = Math.pow(2.0, zoom);
-		// TODO - store tile pixel size 1024 someplace
-		double tileWidth = 1024 * zoomFactor * getXResolution();
-		double tileHeight = 1024 * zoomFactor * getYResolution();
+		// get tile pixel size 1024 from loadAdapter
+		int tileSize[] = tileFormat.getTileSize();
+		double tileWidth = tileSize[0] * zoomFactor * getXResolution();
+		double tileHeight = tileSize[1] * zoomFactor * getYResolution();
 		// In tile units
 		int xMin = (int)Math.floor(xFMin / tileWidth);
 		int xMax = (int)Math.floor(xFMax / tileWidth);
@@ -102,7 +94,7 @@ implements VolumeImage3d
 		for (int x = xMin; x <= xMax; ++x) {
 			for (int y = yMin; y <= yMax; ++y) {
 				PyramidTileIndex key = new PyramidTileIndex(x, y, z, zoom);
-				Tile2d tile = new Tile2d(key);
+				Tile2d tile = new Tile2d(key, tileFormat);
 				tile.setYMax(getBoundingBox3d().getMax().getY()); // To help flip y
 				result.add(tile);
 			}
@@ -122,12 +114,12 @@ implements VolumeImage3d
 
 	@Override
 	public int getMaximumIntensity() {
-		return maximumIntensity;
+		return loadAdapter.getTileFormat().getIntensityMax();
 	}
 
 	@Override
 	public int getNumberOfChannels() {
-		return numberOfChannels;
+		return loadAdapter.getTileFormat().getChannelCount();
 	}
 
 	@Override
@@ -145,17 +137,17 @@ implements VolumeImage3d
 
 	@Override
 	public double getXResolution() {
-		return xResolution;
+		return loadAdapter.getTileFormat().getVoxelMicrometers()[0];
 	}
 
 	@Override
 	public double getYResolution() {
-		return yResolution;
+		return loadAdapter.getTileFormat().getVoxelMicrometers()[1];
 	}
 
 	@Override
 	public double getZResolution() {
-		return zResolution;
+		return loadAdapter.getTileFormat().getVoxelMicrometers()[2];
 	}	
 
 	@Override
@@ -163,10 +155,27 @@ implements VolumeImage3d
 		// Sanity check before overwriting current view
 		if (folderUrl == null)
 			return false;
-		if (! parseMetadata(folderUrl))
-			return false;
 		// Now we can start replacing the previous state
-		loadAdapter = new RavelerLoadAdapter(folderUrl);
+		try {
+			// TODO - create Factory method to insert the correct type of loadAdapter
+			boolean useRaveler = true;
+			if (useRaveler)
+				loadAdapter = new RavelerLoadAdapter(folderUrl);
+			else
+				loadAdapter = new BlockTiffOctreeLoadAdapter(new File(folderUrl.toURI()));
+			// Compute bounding box
+			PyramidTileFormat tf = loadAdapter.getTileFormat();
+			double sv[] = tf.getVoxelMicrometers();
+			int s0[] = tf.getOrigin();
+			int s1[] = tf.getVolumeSize();
+			Vec3 b0 = new Vec3(sv[0]*s0[0], sv[1]*s0[1], sv[2]*s0[2]);
+			Vec3 b1 = new Vec3(sv[0]*(s0[0]+s1[0]), sv[1]*(s0[1]+s1[1]), sv[2]*(s0[2]+s1[2]));
+			boundingBox3d.setMin(b0);
+			boundingBox3d.setMax(b1);
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+			return false;
+		}
 
 		// queue disposal of textures on next display event
 		getVolumeInitializedSignal().emit();
@@ -175,89 +184,6 @@ implements VolumeImage3d
 		return true;
 	}
 	
-	protected boolean parseMetadata(URL folderUrl) {
-		// Parse metadata BEFORE overwriting current data
-		try {
-			URL metadataUrl = new URL(folderUrl, "tiles/metadata.txt");
-			BufferedReader in = new BufferedReader(new InputStreamReader(metadataUrl.openStream()));
-			String line;
-			// finds lines like "key=value"
-			Pattern pattern = Pattern.compile("^(.*)=(.*)\\n?$");
-			metadata.clear();
-			while ((line = in.readLine()) != null) {
-				Matcher m = pattern.matcher(line);
-				if (! m.matches())
-					continue;
-				String key = m.group(1);
-				String value = m.group(2);
-				metadata.put(key, value);
-			}
-			// Parse particular metadata values
-			setDefaultParameters();
-			// TODO - parse voxel size first
-			if (metadata.containsKey("zmax"))
-				boundingBox3d.getMax().setZ(zResolution * Integer.parseInt(metadata.get("zmax")));
-			if (metadata.containsKey("zmin"))
-				boundingBox3d.getMin().setZ(zResolution * Integer.parseInt(metadata.get("zmin")));
-			if (metadata.containsKey("width")) {
-				boundingBox3d.getMin().setX(0.0);
-				boundingBox3d.getMax().setX(xResolution * (Integer.parseInt(metadata.get("width")) - 1) );
-			}
-			if (metadata.containsKey("height")) {
-				boundingBox3d.getMin().setY(0.0);
-				boundingBox3d.getMax().setY(yResolution * (Integer.parseInt(metadata.get("height")) - 1) );
-			}
-			assert(! boundingBox3d.isEmpty());
-	        // Data range
-	        if (metadata.containsKey("imax")) {
-	        		int i = Integer.parseInt(metadata.get("imax"));
-	            if (i < 1024) {
-	                maximumIntensity = 255; // 8-bit
-	            }
-	            else if (i < 16384) {
-	            		maximumIntensity = 4095; // 12-bit
-	            }
-	            else {
-	            		maximumIntensity = 65535; // 16-bit
-	            }
-	            if (i > 255) {
-	            		bitDepth = 16;
-	            }
-	        }
-	        if (metadata.containsKey("bitdepth")) {
-	        		bitDepth = Integer.parseInt(metadata.get("bitdepth"));
-	        }
-	        if (metadata.containsKey("channel-count")) {
-	        		numberOfChannels = Integer.parseInt(metadata.get("channel-count"));
-	        		System.out.println("channel count = "+numberOfChannels);
-	        }
-	        // Compute zoom min/max from dimensions...
-	        double tileMax = Math.max(boundingBox3d.getMax().getX() / xResolution / 1024.0, 
-	        		boundingBox3d.getMax().getY() / yResolution / 1024.0);
-	        if (tileMax != 0) {
-	        		zoomMax = (int)Math.ceil(Math.log(tileMax)/Math.log(2.0));
-	        }
-	        if (zoomMax < 0) {
-	            zoomMax = 0;
-	        }
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-			return false;
-		} catch (IOException e) {
-			e.printStackTrace();
-			return false;
-		}
-		return true;
-	}
-	
-	protected void setDefaultParameters() {
-		maximumIntensity= 255;
-		bitDepth = 8;
-		numberOfChannels = 3;
-		xResolution = yResolution = zResolution = 1.0; // micrometers
-		zoomMax = 0;
-	}
-
 	public void setCamera(Camera3d camera) {
 		this.camera = camera;
 	}

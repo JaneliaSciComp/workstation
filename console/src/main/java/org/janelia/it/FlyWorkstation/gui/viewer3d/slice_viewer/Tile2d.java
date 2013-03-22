@@ -10,11 +10,17 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import com.jogamp.opengl.util.texture.TextureCoords;
 
 /**
- * One rectangular region that forms part of the SliceViewer display,
- * when the RavelerTileServer is used.
+ * One rectangular region that forms part of the SliceViewer display.
  * 
  * A particular Tile2d may use a lower resolution TileTexture, in case
  * its corresponding full-resolution TileTexture is not yet available.
+ * 
+ * There is a subtle distinction between a Tile2d and a TileTexture.
+ * A Tile2d represents a square block of pixels on the screen viewport.
+ * A TileTexture represents a square image loadable from the data store.
+ * There is usually a one-to-one correspondence between Tile2d and
+ * TileTexture. But sometimes a Tile2d might use a sub-region of a 
+ * lower resolution TileTexture.
  * 
  * @author brunsc
  *
@@ -34,10 +40,12 @@ implements GLActor
 	private TileTexture bestTexture;
 	private PyramidTileIndex index;
 	private double yMax; // To help flip Raveler tiles in Y
+	private PyramidTileFormat tileFormat;
 
 	
-	public Tile2d(PyramidTileIndex key) {
+	public Tile2d(PyramidTileIndex key, PyramidTileFormat tileFormat) {
 		this.index = key;
+		this.tileFormat = tileFormat;
 	}
 
 	// Choose the best available texture for this tile
@@ -118,18 +126,17 @@ implements GLActor
 		double tcBottom = tc0.bottom() + dYTex;
 		double tcTop = tcBottom + tcYTotal/textureScale;
 		// compute corner vertices for tile, not for texture
-		double voxelSize = 1.0; // TODO
 		int zoomScale = (int)(Math.pow(2.0, getIndex().getZoom()) + 0.1);
-		double tileWidth = texture.getWidth() * zoomScale * voxelSize;
-		double tileHeight = texture.getHeight() * zoomScale * voxelSize;
+		double tileWidth = texture.getWidth() * zoomScale * tileFormat.getVoxelMicrometers()[0];
+		double tileHeight = texture.getHeight() * zoomScale * tileFormat.getVoxelMicrometers()[1];
 		gl.glBegin(GL2.GL_QUADS);
 			// draw quad
 	        double z = 0.0; // As far as OpenGL is concerned, all Z's are zero
-	        double x0 = getIndex().getX() * 1024.0 * zoomScale * voxelSize;
+	        double x0 = getIndex().getX() * tileFormat.getTileSize()[0] * zoomScale * tileFormat.getVoxelMicrometers()[0];
 	        double x1 = x0 + tileWidth;
 	        // Raveler tile index has origin at BOTTOM left, unlike TOP left for images and
 	        // our coordinate system
-	        double y0 = yMax - getIndex().getY() * 1024.0 * zoomScale * voxelSize;
+	        double y0 = yMax - getIndex().getY() * tileFormat.getTileSize()[1] * zoomScale * tileFormat.getVoxelMicrometers()[1];
 	        double y1 = y0 - tileHeight; // y inverted in OpenGL relative to image convention
 	        gl.glTexCoord2d(tcLeft, tcBottom); gl.glVertex3d(x0, y0, z);
 	        gl.glTexCoord2d(tcRight, tcBottom); gl.glVertex3d(x1, y0, z);
@@ -147,19 +154,18 @@ implements GLActor
 	public void displayBoundingBox(GL2 gl) 
 	{
 		PyramidTexture texture = bestTexture.getTexture();
-		double voxelSize = 1.0; // TODO
 		int zoomScale = (int)(Math.pow(2.0, getIndex().getZoom()) + 0.1);
-		double tileWidth = texture.getWidth() * zoomScale * voxelSize;
-		double tileHeight = texture.getHeight() * zoomScale * voxelSize;
+		double tileWidth = texture.getWidth() * zoomScale * tileFormat.getVoxelMicrometers()[0];
+		double tileHeight = texture.getHeight() * zoomScale * tileFormat.getVoxelMicrometers()[1];
 		gl.glColor3d(1.0, 1.0, 0.3);
 		gl.glBegin(GL2.GL_LINE_STRIP);
 			// draw quad
 	        double z = 0.0; // As far as OpenGL is concerned, all Z's are zero
-	        double x0 = getIndex().getX() * 1024.0 * zoomScale * voxelSize;
+	        double x0 = getIndex().getX() * tileFormat.getTileSize()[0] * zoomScale * tileFormat.getVoxelMicrometers()[0];
 	        double x1 = x0 + tileWidth;
 	        // Raveler tile index has origin at BOTTOM left, unlike TOP left for images and
 	        // our coordinate system
-	        double y0 = yMax - getIndex().getY() * 1024.0 * zoomScale * voxelSize;
+	        double y0 = yMax - getIndex().getY() * tileFormat.getTileSize()[1] * zoomScale * tileFormat.getVoxelMicrometers()[1];
 	        double y1 = y0 - tileHeight; // y inverted in OpenGL relative to image convention
 	        gl.glVertex3d(x0, y0, z);
 	        gl.glVertex3d(x1, y0, z);
@@ -185,8 +191,6 @@ implements GLActor
 
 	@Override
 	public void dispose(GL2 gl) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	public TileTexture getBestTexture() {

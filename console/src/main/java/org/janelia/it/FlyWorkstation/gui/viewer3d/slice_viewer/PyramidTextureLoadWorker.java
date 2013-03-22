@@ -14,9 +14,9 @@ public class PyramidTextureLoadWorker implements Runnable
 	private static final Logger log = LoggerFactory.getLogger(PyramidTextureLoadWorker.class);
 	
 	private TileTexture texture;
-	private RavelerActor ravelerActor;
+	private SliceActor ravelerActor;
 
-	public PyramidTextureLoadWorker(TileTexture texture, RavelerActor ravelerActor) 
+	public PyramidTextureLoadWorker(TileTexture texture, SliceActor ravelerActor) 
 	{
 		if (texture.getStage().ordinal() < TileTexture.Stage.LOAD_QUEUED.ordinal())
 			texture.setStage(TileTexture.Stage.LOAD_QUEUED);

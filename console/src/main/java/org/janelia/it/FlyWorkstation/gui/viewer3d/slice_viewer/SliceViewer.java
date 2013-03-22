@@ -48,11 +48,11 @@ implements MouseModalWidget, VolumeViewer
 	// protected PracticeBlueVolume volume0 = new PracticeBlueVolume();
 	// protected Simple2dImageVolume volume0 = new Simple2dImageVolume(
 	// 		"/Users/brunsc/svn/jacs/console/src/main/java/images/kittens.jpg");	
-	protected RavelerTileServer volume0 = new RavelerTileServer(
+	protected TileServer volume0 = new TileServer(
 			"/Volumes/jacsData/brunsTest/clack_test16/Z");
 	protected VolumeImage3d volumeImage = volume0;
 	// TODO - add dataChangedSignal to GLActor
-	protected RavelerActor volumeActor = new RavelerActor(volume0);
+	protected SliceActor volumeActor = new SliceActor(volume0);
 	private ImageColorModel imageColorModel;
 	
 	public Signal1<URL> getFileLoadedSignal() {
