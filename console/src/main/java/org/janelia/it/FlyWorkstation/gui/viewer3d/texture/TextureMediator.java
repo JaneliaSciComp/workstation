@@ -290,11 +290,8 @@ public class TextureMediator {
             rtnVal = textureData.getExplicitVoxelComponentType();
         }
         else {
-            if ( textureData.getChannelCount() == 3 ) {
-                rtnVal = GL2.GL_UNSIGNED_INT_8_8_8_8;
-            }
-            else if ( textureData.getPixelByteCount()  == 1 ) {
-                // This: tested vs 1-byte mask.
+            // This: tested vs 1-byte mask.
+            if ( textureData.getPixelByteCount()  == 1 ) {
                 rtnVal = GL2.GL_UNSIGNED_BYTE;
             }
 
@@ -349,14 +346,6 @@ public class TextureMediator {
                 internalFormat = GL2.GL_RGB;
             }
 
-            if ( textureData.getChannelCount() == 3 ) {
-                if ( textureData.getPixelByteCount() == 1 ) {
-                    internalFormat = GL2.GL_SRGB8_ALPHA8;
-                }
-                else {
-                    internalFormat = GL2.GL_RGBA16;
-                }
-            }
         }
 
         logger.info( "internalFormat = {} for {}", getConstantName( internalFormat ), textureData.getFilename() );
@@ -371,12 +360,6 @@ public class TextureMediator {
         else {
             if ( textureData.getChannelCount() == 1 ) {
                 rtnVal = GL2.GL_LUMINANCE;
-            }
-            else if ( textureData.getChannelCount() == 3 ) {
-                if ( textureData.getPixelByteCount() == 1 )
-                    rtnVal = GL2.GL_BGRA;
-                else
-                    rtnVal = GL2.GL_BGRA;
             }
         }
 

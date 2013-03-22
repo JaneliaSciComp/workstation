@@ -144,7 +144,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         for ( int i = 0; i < channelData.length; i++ ) {
             for ( int j = 0; j < channelMetaData.byteCount; j++ ) {
                 //  block of in-memory, interleaving the channels as the offsets follow.
-                volumeData[ targetPos + i + j ] = channelData[ j ];
+                volumeData[ targetPos + i + j ] = channelData[ i ];
             }
 
             // Pad out to the end.

@@ -9,7 +9,6 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import javax.media.opengl.GL2;
 import java.nio.ByteOrder;
 import java.util.Collection;
-import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +56,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     public int addMaskData(Integer maskNumber, long position) throws Exception {
         init();
 
-        // Assumed little-endian and two bytes.
+        // Assumed little-endian.
         for ( int j = 0; j < getPixelByteCount(); j++ ) {
             int volumeLoc = j + ((int) position * getPixelByteCount());
             volumeData[ volumeLoc ] = (byte)( ( maskNumber >>> (8*j) ) & 0x00ff );
@@ -109,7 +108,8 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
 
     @Override
     public TextureDataI getCombinedTextureData() {
-        TextureDataI textureData = new TextureDataBean( volumeData, (int)sx, (int)sy, (int)sz );
+        TextureDataI textureData = new TextureDataBean( volumeData, (int)sx, (int)sy, (int)384 );
+        textureData.setVolumeMicrometers( new Double[] { (double)sx, (double)sy, (double)384 } );
         textureData.setInverted( false );
         textureData.setChannelCount( getChannelByteCount() );
         // See also VolumeLoader.resolveColorSpace()
@@ -120,7 +120,8 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
         textureData.setRenderables( renderableBeans );
         textureData.setCoordCoverage( coordCoverage );
         textureData.setChannelCount( 1 );
-        //textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_BYTE );
+        textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_BYTE );
+        textureData.setExplicitInternalFormat( GL2.GL_LUMINANCE );
 
         return textureData;
     }
