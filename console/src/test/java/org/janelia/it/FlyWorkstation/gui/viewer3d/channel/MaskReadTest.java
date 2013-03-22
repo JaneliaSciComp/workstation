@@ -1,7 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.channel;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanFileLoader;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderablesMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.junit.After;
@@ -64,7 +64,7 @@ public class MaskReadTest {
         Collection<MaskChanDataAcceptorI> acceptors = new ArrayList<MaskChanDataAcceptorI>();
         acceptors.add( renderablesMaskBuilder );
 
-        MaskChanFileLoader loader = new MaskChanFileLoader();
+        MaskChanMultiFileLoader loader = new MaskChanMultiFileLoader();
         loader.setAcceptors(acceptors);
         RenderableBean bean = new RenderableBean();
         //loader.setRenderableBeans(Arrays.asList( bean ) );
