@@ -9,7 +9,6 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -22,11 +21,10 @@ import java.util.List;
  * This implementation of a mask builder takes renderables as its driving data.  It will accept the renderables,
  * along with their applicable chunks of data, to produce its texture data volume, in memory.
  */
-public class MaskChanFileLoader {
+public class MaskChanSingleFileLoader {
 
     private static final int FLOAT_BYTES = Float.SIZE / 8;
     private static final int LONG_BYTES = Long.SIZE / 8;
-    private static final int START_OF_RAW_CHANNELS = LONG_BYTES + 5;
     private static final int REQUIRED_AXIAL_LENGTH_DIVISIBLE = 4;
     private long sx;
     private long sy;
@@ -35,6 +33,11 @@ public class MaskChanFileLoader {
     private Long[] volumeVoxels;
     private float[] coordCoverage;
 
+    // These values are kept here for future reference.
+    //  These bounds tell the extent of the overall space, that the current renderable occupies.
+    private Long[] boundsXCoords;
+    private Long[] boundsYCoords;
+    private Long[] boundsZCoords;
     //  These "microns" tell the extent of real-world space occupied by a single 3D point (or voxel).
     private float xMicrons;
     private float yMicrons;
@@ -46,22 +49,16 @@ public class MaskChanFileLoader {
     private long slowestSrcVaryingMax;
     private long slowestSrcVaryingCoord;
 
-    private Long[] boundsXCoords;
-    private Long[] boundsYCoords;
-    private Long[] boundsZCoords;
     private Byte axis;
 
     private ChannelMetaData channelMetaData;
 
-    //private Collection<RenderableBean> renderableBeans;
-    private int byteCount = 0;
     private int dimensionOrder = -1;
     private Long totalVoxels;
-    private Long channelTotalBytes;
-    private int cummulativeBytesReadCount;
 
     private Collection<MaskChanDataAcceptorI> maskAcceptors;
     private Collection<MaskChanDataAcceptorI> channelAcceptors;
+    private RenderableBean renderableBean;
 
     // The input data is known to be little-endian or LSB.
     private byte[] longArray = new byte[ 8 ];
@@ -79,74 +76,30 @@ public class MaskChanFileLoader {
 
     // Tells how many rays have been passed over up to the current add call.
     private long latestRayNumber = 0;   // This is evolving state: it depends on previously-updated data.
+    private int cummulativeBytesReadCount = 0;  // evolving state.
 
-    private Logger logger = LoggerFactory.getLogger( MaskChanFileLoader.class );
+    private Logger logger = LoggerFactory.getLogger( MaskChanSingleFileLoader.class );
 
-    public void setByteCount( int byteCount ) {
-        this.byteCount = byteCount;
+    /**
+     * Construct a file loader for all data about a single renderable, and with all targets for that data.
+     *
+     * @param maskAcceptors these care about mask data per se.
+     * @param channelAcceptors this care about the channel data to which mask data refers.
+     * @param renderableBean all actions taken here are concerning this renderable.
+     */
+    public MaskChanSingleFileLoader(
+            Collection<MaskChanDataAcceptorI> maskAcceptors,
+            Collection<MaskChanDataAcceptorI> channelAcceptors,
+            RenderableBean renderableBean
+    ) {
+        this.maskAcceptors = maskAcceptors;
+        this.channelAcceptors = channelAcceptors;
+        this.renderableBean = renderableBean;
     }
 
-    public void setDimensionOrder( int dimensionOrder ) {
-        this.dimensionOrder = dimensionOrder;
-
-        // Expected orderings are:  0=yz(x), 1=xz(y), 2=xy(z)
-        long fastestSrcVaryingCoord;
-        if ( dimensionOrder == 0 ) {
-            fastestSrcVaryingMax = sx;
-            secondFastestSrcVaryingMax = sy;
-            slowestSrcVaryingMax = sz;
-
-            fastestSrcVaryingCoord = 0;
-            secondFastestSrcVaryingCoord = 1;
-            slowestSrcVaryingCoord = 2;
-
-        }
-        else if ( dimensionOrder == 1 ) {
-            fastestSrcVaryingMax = sy;
-            secondFastestSrcVaryingMax = sx;
-            slowestSrcVaryingMax = sz;
-
-            fastestSrcVaryingCoord = 1;
-            secondFastestSrcVaryingCoord = 0;
-            slowestSrcVaryingCoord = 2;
-        }
-        else if ( dimensionOrder == 2 ) {
-            fastestSrcVaryingMax = sz;
-            secondFastestSrcVaryingMax = sx;
-            slowestSrcVaryingMax = sy;
-
-            fastestSrcVaryingCoord = 2;
-            secondFastestSrcVaryingCoord = 0;
-            slowestSrcVaryingCoord = 1;
-        }
-        else {
-            throw new IllegalArgumentException( "Dimension order of " + dimensionOrder + " unexpected." );
-        }
-
-    }
-
-    /** Anything on this list could receive data from the files under study. */
-    public void setAcceptors( Collection<MaskChanDataAcceptorI> acceptors ) {
-        maskAcceptors = new ArrayList<MaskChanDataAcceptorI>();
-        channelAcceptors = new ArrayList<MaskChanDataAcceptorI>();
-
-        for ( MaskChanDataAcceptorI acceptor: acceptors ) {
-            if ( acceptor.getAcceptableInputs().equals( MaskChanDataAcceptorI.Acceptable.channel ) ) {
-                channelAcceptors.add( acceptor );
-            }
-            if ( acceptor.getAcceptableInputs().equals( MaskChanDataAcceptorI.Acceptable.mask ) ) {
-                maskAcceptors.add( acceptor );
-            }
-            if ( acceptor.getAcceptableInputs().equals( MaskChanDataAcceptorI.Acceptable.both ) ) {
-                channelAcceptors.add( acceptor );
-                maskAcceptors.add( acceptor );
-            }
-        }
-    }
-
-    public void read( RenderableBean bean, InputStream maskInputStream, InputStream channelStream )
+    public void read( InputStream maskInputStream, InputStream channelStream )
             throws Exception {
-        logger.info("Read called.");
+
         cummulativeBytesReadCount = 0;
         latestRayNumber = 0;
 
@@ -156,7 +109,7 @@ public class MaskChanFileLoader {
         validateMaskVolume();
 
         logger.debug( "Reading channel data." );
-        List<byte[]> channelData = readChannelData( bean, channelStream );
+        List<byte[]> channelData = readChannelData( channelStream );
         logger.debug( "Completed reading channel data." );
 
         while ( cummulativeBytesReadCount < totalVoxels ) {
@@ -168,7 +121,7 @@ public class MaskChanFileLoader {
                 pairs[ i ][ 1 ] = readLong(maskInputStream);
             }
 
-            int nextRead = addData( bean, skippedRayCount, pairs, channelData );
+            int nextRead = addData( skippedRayCount, pairs, channelData );
             if ( nextRead == 0 ) {
                 throw new Exception("Zero bytes read.");
             }
@@ -222,15 +175,53 @@ public class MaskChanFileLoader {
 
     }
 
+    private void setDimensionOrder( int dimensionOrder ) {
+        this.dimensionOrder = dimensionOrder;
+
+        // Expected orderings are:  0=yz(x), 1=xz(y), 2=xy(z)
+        long fastestSrcVaryingCoord;
+        if ( dimensionOrder == 0 ) {
+            fastestSrcVaryingMax = sx;
+            secondFastestSrcVaryingMax = sy;
+            slowestSrcVaryingMax = sz;
+
+            fastestSrcVaryingCoord = 0;
+            secondFastestSrcVaryingCoord = 1;
+            slowestSrcVaryingCoord = 2;
+
+        }
+        else if ( dimensionOrder == 1 ) {
+            fastestSrcVaryingMax = sy;
+            secondFastestSrcVaryingMax = sx;
+            slowestSrcVaryingMax = sz;
+
+            fastestSrcVaryingCoord = 1;
+            secondFastestSrcVaryingCoord = 0;
+            slowestSrcVaryingCoord = 2;
+        }
+        else if ( dimensionOrder == 2 ) {
+            fastestSrcVaryingMax = sz;
+            secondFastestSrcVaryingMax = sx;
+            slowestSrcVaryingMax = sy;
+
+            fastestSrcVaryingCoord = 2;
+            secondFastestSrcVaryingCoord = 0;
+            slowestSrcVaryingCoord = 1;
+        }
+        else {
+            throw new IllegalArgumentException( "Dimension order of " + dimensionOrder + " unexpected." );
+        }
+
+    }
+
     /**
      * Fetch any channel-data required for this bean.  Also, the needs of acceptors will be taken into account;
      * there may be no need to read anything here at all.
      *
-     * @param bean tells info of what to fetch.
      * @return list of channel arrays, raw byte data.
      * @throws Exception thrown by any called method.
      */
-    private List<byte[]> readChannelData( RenderableBean bean, InputStream channelStream ) throws Exception {
+    private List<byte[]> readChannelData( InputStream channelStream ) throws Exception {
         List<byte[]> returnValue = new ArrayList<byte[]>();
 
         //  Note: any type of read requires all the mask data.  But only mask-required will necessitate
@@ -252,7 +243,7 @@ public class MaskChanFileLoader {
             channelMetaData.greenChannelInx = readByte( channelStream );
             channelMetaData.byteCount = readByte( channelStream );
 
-            channelTotalBytes = totalVoxels * channelMetaData.byteCount * channelMetaData.channelCount;
+            long channelTotalBytes = totalVoxels * channelMetaData.byteCount * channelMetaData.channelCount;
             if ( channelTotalBytes > Integer.MAX_VALUE ) {
                 throw new Exception( "Excessive array size encountered.  Scaling error." );
             }
@@ -286,14 +277,12 @@ public class MaskChanFileLoader {
      * into the rect-solid.  Expected orderings are:  0=yz(x), 1=xz(y), 2=xy(z).
      *
      * @param channelData available to "poke" into channel values for this renderable.
-     * @param renderable describes all points belonging to all pairs.
      * @param skippedRayCount tells how many of these rays to bypass before interpreting first pair.
      * @param pairsAlongRay all these pairs define interval parts of the current ray.
      * @return total bytes read during this pairs-run.
      * @throws Exception thrown by caller or if bad inputs are received.
      */
     private int addData(
-            RenderableBean renderable,
             long skippedRayCount,
             long[][] pairsAlongRay,
             List<byte[]> channelData ) throws Exception {
@@ -311,7 +300,7 @@ public class MaskChanFileLoader {
         // the fastest-varying one, numbered 'axis', changes.
 
         long sliceSize = volumeVoxels[0] * volumeVoxels[1]; // sx * sy
-        int translatedNum = renderable.getTranslatedNum();
+        int translatedNum = renderableBean.getTranslatedNum();
         byte[] allChannelBytes = new byte[ channelMetaData.byteCount * channelMetaData.channelCount ];
         for ( long[] pairAlongRay: pairsAlongRay ) {
             for ( long rayPosition = pairAlongRay[ 0 ]; rayPosition < pairAlongRay[ 1 ]; rayPosition++ ) {
@@ -335,10 +324,6 @@ public class MaskChanFileLoader {
                         byte[] nextChannelData = channelData.get( i );
                         for ( int j=0; j < channelMetaData.byteCount; j++ ) {
                             int targetOffset = (i * channelMetaData.byteCount) + j;
-                            if ( targetOffset >= allChannelBytes.length )
-                                logger.error("Out-of-bounds on target");
-                            if ( cummulativeBytesReadCount + j >= nextChannelData.length )
-                                logger.error("Out-of-bounds on source " + cummulativeBytesReadCount + ":" + j);
                             allChannelBytes[ targetOffset ] = nextChannelData[ cummulativeBytesReadCount + j ];
                         }
                     }

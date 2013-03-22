@@ -62,15 +62,6 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         System.out.println("Found zeros in " + volumeDataZeroCount + " / " + volumeData.length + ", or " + ((double)volumeDataZeroCount/(double)volumeData.length * 100.0) + "%." );
     }
 
-    //----------------------------------------CONFIGURATOR METHODS/C'TORs
-    public void setByteCount( int byteCount ) {
-        this.channelMetaData.byteCount = byteCount;
-    }
-
-    public void setChannelCount( int channelCount ) {
-        this.channelMetaData.channelCount = channelCount;
-    }
-
     //----------------------------------------ABSTRACT OVERRIDE IMPLEMENTATIONS
     /** Call this prior to any update-data operations. */
     @Override
@@ -111,7 +102,9 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
                 );
             }
 
-            volumeData = new byte[ (int) arrayLength ];
+            if ( volumeData == null ) {
+                volumeData = new byte[ (int) arrayLength ];
+            }
             needsChannelInit = false;
         }
     }
@@ -188,8 +181,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     @Override
     public void setChannelMetaData(ChannelMetaData metaData) {
         this.channelMetaData = metaData;
-        this.setByteCount( metaData.byteCount );
-        this.setChannelCount( metaData.channelCount );
+        needsChannelInit = true;
     }
 
     @Override
@@ -201,18 +193,6 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
 
     //----------------------------------------HELPER METHODS
     private TextureDataI buildTextureData() {
-        //TODO remove later...
-//        volumeData = new byte[(32 * 32 * 32) * 4];
-//        for ( int i = 0; i < volumeData.length; i++ ) {
-//            volumeData[i] = (byte)(i % 127);
-//        }
-//
-//        TextureDataI textureData = new TextureDataBean( volumeData, 32, 32, 32 );
-//        textureData.setVolumeMicrometers(new Double[]{ 32.0, 32.0, 32.0 });
-
-//        for ( int i = 0; i < volumeData.length; i++ ) {
-//            volumeData[i] = (byte)0;
-//        }
         TextureDataI textureData = new TextureDataBean( volumeData, (int)sx, (int)sy, (int)384 );
         textureData.setVolumeMicrometers(new Double[]{(double) sx, (double) sy, (double)384 });
         textureData.setCoordCoverage( coordCoverage );
