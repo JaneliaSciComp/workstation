@@ -153,7 +153,7 @@ public class TestMaskChan3DViz {
 
                     //mipWidget.loadVolume( fn, new TrivialFileResolver() );
 
-                    if ( ! mipWidget.setVolume( vcb, null/*vmb*/, colorMapping, 1.0f ) ) {
+                    if ( ! mipWidget.setVolume( vcb, vmb, colorMapping, 1.0f ) ) {
                         throw new RuntimeException( "Failed to load." );
                     }
 
