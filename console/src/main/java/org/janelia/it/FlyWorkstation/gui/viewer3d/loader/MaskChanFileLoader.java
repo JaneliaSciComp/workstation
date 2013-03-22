@@ -147,8 +147,8 @@ public class MaskChanFileLoader {
     public void read( RenderableBean bean, InputStream maskInputStream, InputStream channelStream )
             throws Exception {
         logger.info("Read called.");
-
         cummulativeBytesReadCount = 0;
+        latestRayNumber = 0;
 
         // Get all the overhead stuff out of the way.
         logger.debug( "Initializing Mask Stream." );
@@ -263,7 +263,7 @@ public class MaskChanFileLoader {
 
             // Pull in every channel's data.
             for ( int i = 0; i < channelMetaData.channelCount; i++ ) {
-                byte[] nextChannelData = new byte[ totalVoxels.intValue() ];
+                byte[] nextChannelData = new byte[ totalVoxels.intValue() * channelMetaData.byteCount ];
 
                 int bytesRead = channelStream.read(nextChannelData);
                 if ( bytesRead  <  nextChannelData.length ) {
@@ -304,17 +304,15 @@ public class MaskChanFileLoader {
         long[] srcRayStartCoords = convertTo3D( nextRayOffset, fastestSrcVaryingMax, secondFastestSrcVaryingMax );
         long[] xyzCoords = convertToStandard3D( srcRayStartCoords );  // Initialize to ray-start-pos.
 
-        int totalPositiongsAdded = 0;
+        int totalPositionsAdded = 0;
 
 
         // Now, given we have dimension orderings, can leave two out of three coords in stasis, while only
         // the fastest-varying one, numbered 'axis', changes.
 
-
         long sliceSize = volumeVoxels[0] * volumeVoxels[1]; // sx * sy
         int translatedNum = renderable.getTranslatedNum();
-        byte[] allChannelBytes = new byte[ channelMetaData.byteCount ];
-
+        byte[] allChannelBytes = new byte[ channelMetaData.byteCount * channelMetaData.channelCount ];
         for ( long[] pairAlongRay: pairsAlongRay ) {
             for ( long rayPosition = pairAlongRay[ 0 ]; rayPosition < pairAlongRay[ 1 ]; rayPosition++ ) {
                 // WARNING: The use of offsets 0,1,2 below must remain in this loop, because moving them
@@ -331,21 +329,30 @@ public class MaskChanFileLoader {
                     acceptor.addMaskData( translatedNum, final1DCoord );
                 }
 
-                // Here, must go to the channel data.
+                // Here, must get the channel data.  This will include all bytes for each channel organized parallel.
                 if ( channelAcceptors.size() > 0 ) {
-                    for ( int i = 0; i < channelMetaData.byteCount; i++ ) {
-                        allChannelBytes[ i ] = channelData.get( i )[ cummulativeBytesReadCount + i ];
+                    for ( int i = 0; i < channelMetaData.channelCount; i++ ) {
+                        byte[] nextChannelData = channelData.get( i );
+                        for ( int j=0; j < channelMetaData.byteCount; j++ ) {
+                            int targetOffset = (i * channelMetaData.byteCount) + j;
+                            if ( targetOffset >= allChannelBytes.length )
+                                logger.error("Out-of-bounds on target");
+                            if ( cummulativeBytesReadCount + j >= nextChannelData.length )
+                                logger.error("Out-of-bounds on source " + cummulativeBytesReadCount + ":" + j);
+                            allChannelBytes[ targetOffset ] = nextChannelData[ cummulativeBytesReadCount + j ];
+                        }
                     }
                     for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {
                         acceptor.addChannelData( allChannelBytes, final1DCoord );
                     }
+
                 }
+                cummulativeBytesReadCount ++;
 
             }
 
             long positionsReadFromPair = pairAlongRay[1] - pairAlongRay[0];
-            totalPositiongsAdded += positionsReadFromPair;
-            cummulativeBytesReadCount += (positionsReadFromPair * channelMetaData.byteCount);
+            totalPositionsAdded += positionsReadFromPair;
 
         }
 
@@ -354,7 +361,7 @@ public class MaskChanFileLoader {
         //   this one contains non-zero voxels, a skipped ray count of 0 will be passed.
         latestRayNumber ++;
 
-        return totalPositiongsAdded;
+        return totalPositionsAdded;
     }
 
     /** Size of volume mask.  Numbers of voxels in all three directions. */

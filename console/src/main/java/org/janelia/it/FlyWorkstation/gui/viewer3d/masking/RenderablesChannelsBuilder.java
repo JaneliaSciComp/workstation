@@ -80,7 +80,14 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
             // The size of any one voxel will be the number of channels times the bytes per channel.
             if ( channelMetaData.channelCount == 3 ) {
                 // Round out to four.
-                channelMetaData.channelCount ++;
+                ChannelMetaData newChannelMetaData = new ChannelMetaData();
+                newChannelMetaData.channelCount = channelMetaData.channelCount + 1;
+                newChannelMetaData.byteCount = channelMetaData.byteCount;
+                newChannelMetaData.blueChannelInx = channelMetaData.blueChannelInx;
+                newChannelMetaData.greenChannelInx = channelMetaData.greenChannelInx;
+                newChannelMetaData.redChannelInx = channelMetaData.redChannelInx;
+
+                channelMetaData = newChannelMetaData;
             }
             long arrayLength = sx * sy * sz * channelMetaData.byteCount * channelMetaData.channelCount;
             if ( arrayLength > Integer.MAX_VALUE ) {
