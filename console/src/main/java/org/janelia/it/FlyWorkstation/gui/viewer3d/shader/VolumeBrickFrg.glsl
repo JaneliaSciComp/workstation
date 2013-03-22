@@ -49,6 +49,24 @@ vec4 volumeMask(vec4 origColor)
             // This finds the render-method byte, which is stored in the alpha byte of the uploaded mapping texture.
             float renderMethod = floor(mappedColor[ 3 ] * 255.1);
 
+            // DEBUG: first case: mapped color not found.
+            /*
+            if ( mappedColor[ 0 ] == mappedColor[ 1 ] && mappedColor[ 1 ] == mappedColor[ 2 ]  && mappedColor[ 2 ] == 0.0 ) {
+                mappedColor = vec4( 0.0, 1.0, 0.0, 1.0 );
+                renderMethod = 1.0;
+            }
+
+            // DEBUG: second case: masking color that had been used for the mapped color, comes up zero in that position.
+            if ( maskingColor[ 0 ] == maskingColor[ 1 ] && maskingColor[ 1 ] == maskingColor[ 2 ]  && maskingColor[ 2 ] == 0.0 ) {
+                mappedColor = vec4( 1.0, 0.0, 0.0, 1.0 );
+                renderMethod = 1.0;
+            }
+            else if ( maskingColor[ 0 ] != 0.0  ||  maskingColor[ 1 ] != 0.0  ||  maskingColor[ 2 ] != 0.0 ) {
+                // DEBUG: third case: the masking color does NOT come up zero under the position for the signal frag.
+                mappedColor = vec4( 0.0, 0.0, 1.0, 1.0 );
+                renderMethod = 1.0;
+            }
+            */
             // Find the max intensity.
             vec4 signalColor = origColor;
             float maxIntensity = 0.0;

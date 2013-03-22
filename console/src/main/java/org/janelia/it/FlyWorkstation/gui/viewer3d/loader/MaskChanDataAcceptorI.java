@@ -58,12 +58,12 @@ public interface MaskChanDataAcceptorI {
     public Acceptable getAcceptableInputs();
 
     /**
-     * Need this to tell how many bytes will be used per position.  Can help avoid misunderstandings between
-     * caller and this impl.
+     * Need this to calcluate how many bytes will be used per position.  Can help avoid misunderstandings between
+     * caller and this impl.   Probably multiplied by number of bytes per channel.
      *
      * @return agreed-upon number of bytes per channel.
      */
-    int getChannelByteCount();
+    int getChannelCount();
 
     /**
      * Allows passing-in of various data required at channel-data read time.

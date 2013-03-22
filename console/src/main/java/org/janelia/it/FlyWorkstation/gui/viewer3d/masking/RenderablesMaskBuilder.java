@@ -23,10 +23,12 @@ import org.slf4j.LoggerFactory;
  */
 public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements MaskBuilderI {
 
+    private static final int UNIVERSAL_MASK_BYTE_COUNT = 2;
+    private static final int UNIVERSAL_MASK_CHANNEL_COUNT = 1;
     private Logger logger = LoggerFactory.getLogger( RenderablesMaskBuilder.class );
     private Collection<RenderableBean> renderableBeans;
     private byte[] volumeData;
-    private int byteCount = 1;
+    private int byteCount = UNIVERSAL_MASK_BYTE_COUNT;
 
     private boolean isInitialized = false;
 
@@ -92,13 +94,13 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
 
     @Override
     public ByteOrder getPixelByteOrder() {
-        return ByteOrder.nativeOrder();
+        return ByteOrder.BIG_ENDIAN;
     }
 
-    /** No channel data here. */
+    /** Single channel data here. */
     @Override
-    public int getChannelByteCount() {
-        return 0;
+    public int getChannelCount() {
+        return UNIVERSAL_MASK_CHANNEL_COUNT;
     }
 
     @Override
@@ -108,20 +110,23 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
 
     @Override
     public TextureDataI getCombinedTextureData() {
+        // TEMPORARY: ensure number-1 is found in texture volume.
+//        for ( int i = 0; i < volumeData.length; i++ ) {
+//            volumeData[ i ] = 1;
+//        }
         TextureDataI textureData = new TextureDataBean( volumeData, (int)sx, (int)sy, (int)384 );
         textureData.setVolumeMicrometers( new Double[] { (double)sx, (double)sy, (double)384 } );
         textureData.setInverted( false );
-        textureData.setChannelCount( getChannelByteCount() );
+        textureData.setChannelCount( getChannelCount() );
         // See also VolumeLoader.resolveColorSpace()
-        textureData.setColorSpace( this.getTextureColorSpace() );
-        textureData.setByteOrder( this.getPixelByteOrder() );
-        textureData.setFilename( "Mask of All Renderables" );
-        textureData.setInterpolationMethod( GL2.GL_NEAREST );
-        textureData.setRenderables( renderableBeans );
-        textureData.setCoordCoverage( coordCoverage );
-        textureData.setChannelCount( 1 );
-        textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_BYTE );
-        textureData.setExplicitInternalFormat( GL2.GL_LUMINANCE );
+        textureData.setColorSpace(this.getTextureColorSpace());
+        textureData.setByteOrder(this.getPixelByteOrder());
+        textureData.setFilename("Mask of All Renderables");
+        textureData.setInterpolationMethod(GL2.GL_NEAREST);
+        textureData.setRenderables(renderableBeans);
+        textureData.setCoordCoverage(coordCoverage);
+        textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_SHORT );
+        textureData.setExplicitInternalFormat( GL2.GL_LUMINANCE16 );
 
         return textureData;
     }

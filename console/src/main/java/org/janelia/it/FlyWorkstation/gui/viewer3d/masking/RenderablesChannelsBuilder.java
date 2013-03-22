@@ -168,7 +168,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     }
 
     @Override
-    public int getChannelByteCount() {
+    public int getChannelCount() {
         return channelMetaData.channelCount;
     }
 
