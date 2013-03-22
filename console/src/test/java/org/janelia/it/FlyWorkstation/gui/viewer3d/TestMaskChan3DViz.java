@@ -2,11 +2,9 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanFileLoader;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.*;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
 import org.janelia.it.jacs.model.entity.Entity;
 
 import javax.swing.*;
@@ -110,7 +108,7 @@ public class TestMaskChan3DViz {
                     RenderablesChannelsBuilder vcb = new RenderablesChannelsBuilder();
 
                     // Setup the loader to traverse all this data on demand.
-                    MaskChanFileLoader loader = new MaskChanFileLoader();
+                    MaskChanMultiFileLoader loader = new MaskChanMultiFileLoader();
                     acceptors.add( vmb );
                     acceptors.add( vcb );
 
