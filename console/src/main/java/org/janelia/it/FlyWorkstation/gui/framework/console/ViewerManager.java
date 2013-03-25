@@ -148,6 +148,10 @@ public class ViewerManager {
 		if (EntityConstants.TYPE_ERROR.equals(type)) {
 			viewerClass = ErrorViewer.class;
 		}
+		else if (EntityConstants.TYPE_TEXT_FILE.equals(type)) {
+            viewerClass = TextFileViewer.class;
+        }
+		
 		return viewerClass;
 	}
 
