@@ -78,6 +78,7 @@
     </library>
     <library name="Guava" systemlibrary="false">
         <archive path="/Users/rokickik/dev/jacs/common/Guava/guava-13.0.1.jar" source="/Users/rokickik/dev/guava-libraries/guava/src"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Guava/gson-2.2.2.jar"/>
     </library>
     <library name="GWT" systemlibrary="false">
         <archive path="/Users/rokickik/dev/jacs/common/GWT/gwt-api-checker.jar"/>
@@ -204,6 +205,9 @@
         <archive path="/Users/rokickik/dev/jacs/common/Jetty/jetty-util-8.1.8.v20121106.jar"/>
         <archive path="/Users/rokickik/dev/jacs/common/Jetty/servlet-api-3.0.jar"/>
     </library>
+    <library name="JKtx" systemlibrary="false">
+        <archive path="/common/JKtx/jktx-1.6.jar"/>
+    </library>
     <library name="Jogl" systemlibrary="false">
         <archive path="/console/lib/Jogl/gluegen-rt-natives-linux-amd64.jar"/>
         <archive path="/console/lib/Jogl/gluegen-rt-natives-linux-i586.jar"/>
@@ -223,12 +227,12 @@
         <archive path="/Users/rokickik/dev/jacs/common/JUnit-Lib-3.8.1/junit.jar"/>
     </library>
     <library name="LOCI" systemlibrary="false">
-        <archive path="/Users/rokickik/dev/jacs/common/LOCI/scifio.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/LOCI/scifio.jar" source="/Users/rokickik/dev/bioformats/components/scifio/src"/>
         <archive path="/Users/rokickik/dev/jacs/common/LOCI/ome-xml.jar"/>
         <archive path="/Users/rokickik/dev/jacs/common/LOCI/ome-io.jar"/>
         <archive path="/Users/rokickik/dev/jacs/common/LOCI/ome_plugins.jar"/>
         <archive path="/Users/rokickik/dev/jacs/common/LOCI/metakit.jar"/>
-        <archive path="/Users/rokickik/dev/jacs/common/LOCI/loci-common.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/LOCI/loci-common.jar" source="/Users/rokickik/dev/bioformats/components/loci-legacy/src"/>
         <archive path="/Users/rokickik/dev/jacs/common/LOCI/loci_plugins.jar"/>
         <archive path="/Users/rokickik/dev/jacs/common/LOCI/bio-formats.jar"/>
     </library>
@@ -242,6 +246,9 @@
     <library name="Lucene" systemlibrary="false">
         <archive path="/Users/rokickik/dev/jacs/common/Lucene-2.3.1/lucene-core-2.3.1.jar"/>
     </library>
+    <library name="LZ4" systemlibrary="false">
+        <archive path="/common/LZ4/lz4-1.1.1.jar"/>
+    </library>
     <library name="MongoDB" systemlibrary="false">
         <archive path="/Users/rokickik/dev/jacs/common/MongoDB/mongo-2.7.3.jar"/>
     </library>
@@ -254,6 +261,9 @@
     <library name="Scripting" systemlibrary="false">
         <archive path="/Users/rokickik/dev/jacs/common/Scripting/groovy-all-1.8.6.jar"/>
         <archive path="/Users/rokickik/dev/jacs/common/Scripting/jython.jar"/>
+    </library>
+    <library name="Snappy" systemlibrary="false">
+        <archive path="/common/Snappy/snappy-java-1.0.5-M3.jar"/>
     </library>
     <library name="Solrj" systemlibrary="false">
         <archive path="/Users/rokickik/dev/jacs/common/Solrj/apache-solr-solrj-3.5.0.jar"/>
