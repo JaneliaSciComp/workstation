@@ -229,7 +229,7 @@ public class EntityModel {
 	    entities.add(entity);
 		invalidate(entities, recurse);
 	}
-    
+
     /**
      * Invalidate any number of entities in the cache, so that they will be reloaded on the next request. 
      * 
@@ -238,15 +238,33 @@ public class EntityModel {
      */
     public void invalidate(Collection<Entity> entities, boolean recurse) {
         Map<Long,Entity> visited = new HashMap<Long,Entity>();
+        invalidate(entities, visited, recurse);
+        notifyEntitiesInvalidated(visited.values());
+    }
+    
+    /**
+     * Invalidate any number of entities in the cache, so that they will be reloaded on the next request. 
+     * 
+     * @param entities
+     * @param recurse
+     */
+    private void invalidate(Collection<Entity> entities, Map<Long,Entity> visited, boolean recurse) {
+        log.debug("Invalidating {} entities (recurse={})",entities.size(),recurse);    
         for(Entity entity : entities) {
             // Invalidate parents too, because they hold references to invalid children now
             Collection<Long> parentIds = parentMap.get(entity.getId());
+            log.debug("Parent of {} = {}",entity.getId(),parentIds);
             if (parentIds!=null && !parentIds.isEmpty()) {
                 for(Long parentId : parentIds) {
+                    if (parentId.equals(entity.getId())) continue; // In case of self loops
                     Entity parent = entityCache.getIfPresent(parentId);
                     if (parent!=null) {
-                        log.debug("Invalidating parent: {}",parentId);    
-                        invalidate(parent, false);
+                        if (!visited.containsKey(parent.getId())) {
+                            log.debug("Invalidating parent: {}",parentId);    
+                            List<Entity> l = new ArrayList<Entity>();
+                            l.add(parent);
+                            invalidate(l, visited, false);
+                        }
                     }
                 }
             }
@@ -254,7 +272,6 @@ public class EntityModel {
             // (otherwise the parentMap may not contain the information we need)
             invalidate(entity, visited, recurse);
         }
-        notifyEntitiesInvalidated(visited.values());
     }
     
 	private void invalidate(Entity entity, Map<Long,Entity> visited, boolean recurse) {
