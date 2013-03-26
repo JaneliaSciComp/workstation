@@ -55,5 +55,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/LZ4"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Snappy"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/common"/>
 	<classpathentry kind="output" path="build/eclipse"/>
 </classpath>
