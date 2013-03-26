@@ -187,7 +187,7 @@ public class DownSampler {
                 int outX = 0;
                 for ( int x = 0; x < sx-xScale && outX < outSx; x += xScale ) {
                     byte[] value = getNeighborHoodDownSampling(
-                            fullSizeVolume, voxelBytes, xScale, yScale, zScale, z, y, x
+                            fullSizeVolume, voxelBytes, xScale, yScale, zScale, x, y, z
                     );
 
                     // Store the value into the output array.
@@ -235,7 +235,7 @@ public class DownSampler {
      * @return computed value: all bytes of the voxel.
      */
     private byte[] getNeighborHoodDownSampling(
-            byte[] fullSizeVolume, int voxelBytes, double xScale, double yScale, double zScale, int z, int y, int x
+            byte[] fullSizeVolume, int voxelBytes, double xScale, double yScale, double zScale, int x, int y, int z
     ) {
 
         byte[] value = null;
@@ -254,15 +254,10 @@ public class DownSampler {
 
                 for ( int xNbh = x; xNbh < x + xScale && xNbh < sx; xNbh++ ) {
                     byte[] voxelVal = new byte[ voxelBytes ];
-                    try {
                     System.arraycopy(
                             fullSizeVolume, nbhYOffset + (xNbh * voxelBytes), voxelVal, 0, voxelBytes
                     );
-                    } catch ( Exception ex ) {
-                        ex.printStackTrace();
-                    }
-                            //fullSizeVolume[ nbhYOffset + (x * voxelBytes) ];
-                            //fullSizeVolume[xNbh][yNbh][zNbh];
+
                     if ( isZero( voxelVal ) ) {
                         continue;  // Highest freq non-zero is kept.
                     }
