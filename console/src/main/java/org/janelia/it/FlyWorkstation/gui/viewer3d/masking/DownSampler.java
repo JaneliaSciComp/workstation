@@ -132,29 +132,6 @@ public class DownSampler {
     }
 
     /**
-     * Take a one-D array that is ordered-by-convention for 3D use in the GPU, and convert it into
-     * a 3D array (plus another dimension for possible multi-byte voxel values).
-     *
-     * @param oneDVolume the volume as standardized single dimension.
-     * @param voxelBytes how many bytes per voxel.
-     * @return converted array
-     */
-    private byte[][][][] create3DVolume( byte[] oneDVolume, int voxelBytes ) {
-        byte[][][][] solid = new byte[ (int)sx ][ (int)sy ][ (int)sz ][ voxelBytes ];
-
-        // Turning cubic.
-        for ( int iZ = 0; iZ < (int)sz; iZ++ ) {
-            for ( int iY = 0; iY < (int)sy; iY++ ) {
-                for ( int iX = 0; iX < (int)sx; iX++ ) {
-                    int oneDOffset = (int)(iZ * (sy * sz) + iY * sy + iX);
-                    System.arraycopy( oneDVolume, oneDOffset, solid[ iX ][ iY ][ iZ ], 0, voxelBytes );
-                }
-            }
-        }
-        return solid;
-    }
-
-    /**
      * This method will "down-sample" the 3D (times pixel bytes) volume to a manageable size
      * using a frequency-of-occurence algorithm, into some fraction of the original size, of cells.
      *
@@ -240,8 +217,8 @@ public class DownSampler {
 
         byte[] value = null;
 
-        java.util.Map<ByteArrayHashKey,Integer> frequencies =
-                new java.util.HashMap<ByteArrayHashKey,Integer>();
+        java.util.Map<Long,Integer> frequencies =
+                new java.util.HashMap<Long,Integer>();
 
         // Neighborhood starts at the x,y,z values of the loops.  There will be one
         // such neighborhood for each of these down-sampled coord sets: x,y,z
@@ -261,7 +238,7 @@ public class DownSampler {
                     if ( isZero( voxelVal ) ) {
                         continue;  // Highest freq non-zero is kept.
                     }
-                    ByteArrayHashKey key = new ByteArrayHashKey( voxelVal );
+                    Long key = getIndex( voxelVal );
                     Integer freq = frequencies.get( key );
                     if ( freq == null ) {
                         freq = 0;
@@ -287,37 +264,20 @@ public class DownSampler {
         return true;
     }
 
-    public static class ByteArrayHashKey {
-        private byte[] bytes;
-        public ByteArrayHashKey( byte[] bytes ) {
-            this.bytes = bytes;
+    /**
+     * Convert the voxel value into an integer.  Assumes 4 or fewer bytes per voxel.
+     *
+     * @param voxelValue input bytes
+     * @return integer conversion, based on LSB
+     */
+    private long getIndex( byte[] voxelValue ) {
+        long rtnVal = 0;
+        int arrLen = voxelValue.length;
+        for ( int i = 0; i < arrLen; i++ ) {
+            //finalVal += startingArray[ j ] << (8 * (arrLen - j - 1));
+            rtnVal += (voxelValue[ i ] << (8 * (arrLen - i - 1)));
         }
-        byte[] getBytes() { return bytes; }
-        @Override
-        public boolean equals( Object other ) {
-            if ( other != null && other instanceof ByteArrayHashKey ) {
-                ByteArrayHashKey otherKey = (ByteArrayHashKey)other;
-                if ( otherKey.getBytes().length != getBytes().length ) {
-                    return false;
-                }
-                else {
-                    boolean rtnVal = true;
-                    for ( int i = 0; i < otherKey.getBytes().length; i++ ) {
-                        if ( otherKey.getBytes()[i] != getBytes()[ i ] ) {
-                            return false;
-                        }
-                    }
-                    return true;
-                }
-            }
-            else {
-                return false;
-            }
-        }
-        @Override
-        public int hashCode() {
-            return bytes.hashCode();
-        }
+        return rtnVal;
     }
 
 }
