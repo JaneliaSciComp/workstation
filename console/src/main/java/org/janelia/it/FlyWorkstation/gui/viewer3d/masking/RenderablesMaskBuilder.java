@@ -110,12 +110,19 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
 
     @Override
     public TextureDataI getCombinedTextureData() {
-        // TEMPORARY: ensure number-1 is found in texture volume.
-//        for ( int i = 0; i < volumeData.length; i++ ) {
-//            volumeData[ i ] = 1;
-//        }
-        TextureDataI textureData = new TextureDataBean( volumeData, (int)sx, (int)sy, (int)384 );
-        textureData.setVolumeMicrometers( new Double[] { (double)sx, (double)sy, (double)384 } );
+        // TODO: same decisioning as the RenderablesChannelsBuilder re how much to downsample.
+        DownSampler downSampler = new DownSampler( sx, sy, sz );
+        DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(
+                volumeData, byteCount, 2.0, 2.0, 2.0
+        );
+        TextureDataI textureData = new TextureDataBean(
+                downSampling.getVolume(), downSampling.getSx(), downSampling.getSy(), downSampling.getSz()
+        );
+        textureData.setVolumeMicrometers(
+                new Double[] {
+                        (double)downSampling.getSx(), (double)downSampling.getSy(), (double)downSampling.getSz()
+                }
+        );
         textureData.setInverted( false );
         textureData.setChannelCount( getChannelCount() );
         // See also VolumeLoader.resolveColorSpace()
@@ -125,6 +132,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
         textureData.setInterpolationMethod(GL2.GL_NEAREST);
         textureData.setRenderables(renderableBeans);
         textureData.setCoordCoverage(coordCoverage);
+        textureData.setPixelByteCount(byteCount);
         textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_SHORT );
         textureData.setExplicitInternalFormat( GL2.GL_LUMINANCE16 );
 

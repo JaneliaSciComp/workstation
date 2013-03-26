@@ -193,9 +193,18 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
 
     //----------------------------------------HELPER METHODS
     private TextureDataI buildTextureData() {
-        TextureDataI textureData = new TextureDataBean( volumeData, (int)sx, (int)sy, (int)384 );
-        textureData.setVolumeMicrometers(new Double[]{(double) sx, (double) sy, (double)384 });
-        textureData.setCoordCoverage( coordCoverage );
+        // TODO: the decisioning -- how much to downsample, based on info re graphics card.
+        //
+        DownSampler downSampler = new DownSampler( sx, sy, sz );
+        DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(
+                volumeData, 4, 2.0, 2.0, 2.0
+        );
+        TextureDataI textureData = new TextureDataBean(
+                downSampling.getVolume(), downSampling.getSx(), downSampling.getSy(), downSampling.getSz()
+        );
+        textureData.setVolumeMicrometers(
+                new Double[]{(double) downSampling.getSx(), (double)downSampling.getSy(), (double)downSampling.getSz() }
+        );
         textureData.setChannelCount( channelMetaData.channelCount );
 
         textureData.setColorSpace( VolumeBrick.TextureColorSpace.COLOR_SPACE_LINEAR );
