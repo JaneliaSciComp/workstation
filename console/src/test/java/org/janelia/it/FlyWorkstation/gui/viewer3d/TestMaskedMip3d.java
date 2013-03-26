@@ -156,32 +156,51 @@ public class TestMaskedMip3d {
 
                         renderableBean = new RenderableBean();
                         renderableBean.setTranslatedNum(2);
-                        renderableBean.setLabelFileNum(57);
+                        renderableBean.setLabelFileNum(1);
                         renderableBean.setRenderableEntity( mockE );
                         beans.add(renderableBean);
 
                         renderableBean = new RenderableBean();
                         renderableBean.setTranslatedNum(3);
-                        renderableBean.setLabelFileNum(58);
+                        renderableBean.setLabelFileNum(2);
                         renderableBean.setRenderableEntity( mockE );
                         beans.add(renderableBean);
 
                         renderableBean = new RenderableBean();
                         renderableBean.setTranslatedNum(4);
-                        renderableBean.setLabelFileNum(59);
+                        renderableBean.setLabelFileNum(3);
                         renderableBean.setRenderableEntity( mockE );
                         beans.add(renderableBean);
 
-                        /**
-                         * special renderables for the ref channel.
-                         */
-                        for ( int i = 1; i < 128; i++ ) {
+                        renderableBean = new RenderableBean();
+                        renderableBean.setTranslatedNum(6);
+                        renderableBean.setLabelFileNum(5);
+                        renderableBean.setRenderableEntity( mockE );
+                        beans.add(renderableBean);
+
+                        renderableBean = new RenderableBean();
+                        renderableBean.setTranslatedNum(8);
+                        renderableBean.setLabelFileNum(7);
+                        renderableBean.setRenderableEntity( mockE );
+                        beans.add(renderableBean);
+
+                        for ( int i = 8; i < 21; i++ ) {
                             renderableBean = new RenderableBean();
-                            renderableBean.setTranslatedNum(1 + i);
-                            renderableBean.setLabelFileNum(i);
+                            renderableBean.setTranslatedNum(i);
+                            renderableBean.setLabelFileNum(i+1);
                             renderableBean.setRenderableEntity( mockE );
                             beans.add(renderableBean);
                         }
+//                        /**
+//                         * special renderables for the ref channel.
+//                         */
+//                        for ( int i = 1; i < 128; i++ ) {
+//                            renderableBean = new RenderableBean();
+//                            renderableBean.setTranslatedNum(1 + i);
+//                            renderableBean.setLabelFileNum(i);
+//                            renderableBean.setRenderableEntity( mockE );
+//                            beans.add(renderableBean);
+//                        }
 
                         vmb.setRenderables(beans);
 
