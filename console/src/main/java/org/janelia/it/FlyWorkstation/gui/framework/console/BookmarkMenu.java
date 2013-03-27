@@ -67,8 +67,8 @@ public class BookmarkMenu extends JMenu implements BookmarkListener {
   class MyBrowserListener extends BrowserModelListenerAdapter {
     public void browserCurrentSelectionChanged(Entity newSelection){
       lastSelection=newSelection;
-      if (lastSelection!=null && addBookmarkMI!=null && !newSelection.hasNullID()) addBookmarkMI.setEnabled(true);
-      if (lastSelection!=null && addBookmarkMI!=null && newSelection.hasNullID()) addBookmarkMI.setEnabled(false);
+//      if (lastSelection!=null && addBookmarkMI!=null && !newSelection.hasNullID()) addBookmarkMI.setEnabled(true);
+//      if (lastSelection!=null && addBookmarkMI!=null && newSelection.hasNullID()) addBookmarkMI.setEnabled(false);
       if (lastSelection==null && addBookmarkMI!=null) addBookmarkMI.setEnabled(false);
     }
   }
