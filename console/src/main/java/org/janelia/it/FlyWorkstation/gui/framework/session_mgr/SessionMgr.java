@@ -200,7 +200,7 @@ public class SessionMgr {
             PropertyConfigurator.getProperties().setProperty(FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, tmpCache.toString());
         }
         sessionCreationTime = new Date();
-        // TODO: Bundle FIJI with Fly Workstation
+        // TODO: Bundle FIJI with Workstation
     } //Singleton enforcement
 
 	private String getSafeModelProperty(String targetKey) {

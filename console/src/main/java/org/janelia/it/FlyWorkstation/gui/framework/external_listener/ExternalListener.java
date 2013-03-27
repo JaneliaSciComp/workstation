@@ -38,9 +38,9 @@ public class ExternalListener {
         browserRedirectTop = new String("<HTML><HEAD><META Http-equiv=\"refresh\" Content=\"0; Url=");
         browserRedirectBottom = new String("\"></HEAD><BODY></BODY></HTML>");
         String bodyString = "URL requests must contain an action varible, and must be  specified in" + " a GET request (URL encoded), not POST request, which is form encoded.  Valid formats are as follows: <BR><BR><B>Links:</B><BR> " + "&lt a href=http://localhost:30000?action=search&unknown_oid=17000001001565&redir=http://www.msn.com&gt Test &lt/a &gt" + "<BR><P><B>Forms:</B> (note method is Get, not Post)<BR> " + "&lt form method=\"Get\" action=\"http://localhost:30000\"&gt<BR>" + "&lt INPUT Type=hidden name=action value=search&gt<BR>" + "&lt INPUT Type=hidden name=redir value=http://www.msn.com&gt" + "&lt INPUT Type=hidden name=oid value=17000001001565&gt<BR>" + "&lt input type=\"submit\" value=Submit&gt<BR>" + "&lt /form&gt" + "<P><B>Valid actions:</B>" + "<P><B>search</B><BR>Required search parameters: " + DYNAMIC_STRING + "<BR><BR><P><B>redir</B><BR>redir is optional and can be left out for debugging<BR>" + "specifing redir=204 will send a 204 \"No Content\" header in return, which" + " will tell the web browser not to do anything.</BODY></HTML>";
-        errorString = new String("<HTML><HEAD><TITLE>ERROR 404 Bad Request!!</TITLE></HEAD><BODY><B>Fly Workstation URL Interface</B>" + "<BR><BR>Error 400 Bad Request<BR><a href=http://localhost:30000>Click here for instructions </a></BODY></HTML>");
-        instructionString = new String("<HTML><HEAD><TITLE>Fly Workstation URL Interface Instructions</TITLE></HEAD><BODY>" + "<B>Fly Workstation URL Interface Instructions</B><BR>The Fly Workstation can accept a URL based request for certain actions, allowing links to be " + " added to a web page that will tell the browser what to do.  " + bodyString);
-        commandAcceptedTop = new String("<HTML><HEAD><TITLE>Fly Workstation URL Interface Command</TITLE></HEAD><BODY><B>Fly Workstation URL Interface </B><BR><BR>" + "The Fly Workstation has accepted your command<BR>");
+        errorString = new String("<HTML><HEAD><TITLE>ERROR 404 Bad Request!!</TITLE></HEAD><BODY><B>Workstation URL Interface</B>" + "<BR><BR>Error 400 Bad Request<BR><a href=http://localhost:30000>Click here for instructions </a></BODY></HTML>");
+        instructionString = new String("<HTML><HEAD><TITLE>Workstation URL Interface Instructions</TITLE></HEAD><BODY>" + "<B>Workstation URL Interface Instructions</B><BR>The Workstation can accept a URL based request for certain actions, allowing links to be " + " added to a web page that will tell the browser what to do.  " + bodyString);
+        commandAcceptedTop = new String("<HTML><HEAD><TITLE>Workstation URL Interface Command</TITLE></HEAD><BODY><B>Workstation URL Interface </B><BR><BR>" + "The Workstation has accepted your command<BR>");
         commandAcceptedBottom = new String("</BODY>");
     }
 
@@ -179,7 +179,7 @@ public class ExternalListener {
         String dateStr = dateFormatter.format(date);
         sb.append("Date: " + dateStr + " ");
         sb.append(lineSep);
-        sb.append("Server: FlyWorkstation/" + FW_VERSION + " ");
+        sb.append("Server: Workstation/" + FW_VERSION + " ");
         sb.append(lineSep);
         sb.append("Last-modified: " + dateStr + " ");
         sb.append(lineSep);
@@ -200,7 +200,7 @@ public class ExternalListener {
         String dateStr = dateFormatter.format(date);
         sb.append("Date: " + dateStr + " ");
         sb.append(lineSep);
-        sb.append("Server: FlyWorkstation/" + FW_VERSION + " ");
+        sb.append("Server: Workstation/" + FW_VERSION + " ");
         sb.append(lineSep);
         sb.append("Last-modified: " + dateStr + " ");
         sb.append(lineSep);

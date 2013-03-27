@@ -82,12 +82,12 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
         if (((FatalCommError) throwable).getMachineName() != null) {
             messages[0] = "There has been a problem communicating with the Application Server.";
             messages[1] = "Please try again in several minutes. ";
-            messages[2] = "If the problem persists, please contact your Fly Workstation Administrator.";
+            messages[2] = "If the problem persists, please contact your Workstation Administrator.";
             messages[3] = "Please tell the administrator that: " + ((FatalCommError) throwable).getMachineName() + " is not responding.";
         }
         else {
             messages[0] = "The Application Server has had difficulty handling your request.";
-            messages[1] = "If the problem persists, please contact your Fly Workstation Administrator.";
+            messages[1] = "If the problem persists, please contact your Workstation Administrator.";
             messages[2] = "The server message is: " + throwable.getMessage();
         }
         //getParentFrame().setIconImage((new ImageIcon(this.getClass().getResource(System.getProperty("console.WindowCornerLogo"))).getImage()));
@@ -105,7 +105,7 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
         Object[] messages = new String[3];
         messages[0] = "Invalid Login to Application Server.";
         messages[1] = "Please (re)enter your credentials (File->Set Login...)";
-        messages[2] = "If the problem persists, please contact your Fly Workstation Administrator.";
+        messages[2] = "If the problem persists, please contact your Workstation Administrator.";
         getOptionPane().showMessageDialog(getParentFrame(), messages, "ERROR!!", JOptionPane.ERROR_MESSAGE);
     }
 
@@ -178,7 +178,7 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
 
             MailDialogueBox mailDialogueBox = new MailDialogueBox(SessionMgr.getBrowser(),
                     (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL),
-                    "Fly Workstation Exception Report",
+                    "Workstation Exception Report",
                     "Problem Description:");
             try {
                 StringBuilder sb = new StringBuilder();
@@ -230,7 +230,7 @@ public class UserNotificationExceptionHandler implements ExceptionHandler {
 //            connection.setDoOutput(true);
 //            connection.setDoInput(true);
 //            PrintStream out = new PrintStream(connection.getOutputStream());
-//            out.print("emailFrom=" + URLEncoder.encode(emailFrom, "UTF-8") + "&problemDescription=" + URLEncoder.encode(formMessage(exception, emailFrom, desc), "UTF-8") + "&subject=" + URLEncoder.encode("Fly Workstation Exception Report", "UTF-8"));
+//            out.print("emailFrom=" + URLEncoder.encode(emailFrom, "UTF-8") + "&problemDescription=" + URLEncoder.encode(formMessage(exception, emailFrom, desc), "UTF-8") + "&subject=" + URLEncoder.encode("Workstation Exception Report", "UTF-8"));
 //            out.close();
 //            connection.getInputStream();
 //            // Now we read the response

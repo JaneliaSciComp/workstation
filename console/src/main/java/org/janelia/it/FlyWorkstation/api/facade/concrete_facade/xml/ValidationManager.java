@@ -15,7 +15,7 @@ import java.io.*;
 import java.util.*;
 
 /**
- * Manages XML DTD, Schema validation for Fly Workstation.
+ * Manages XML DTD, Schema validation for the Workstation.
  */
 public class ValidationManager {
 

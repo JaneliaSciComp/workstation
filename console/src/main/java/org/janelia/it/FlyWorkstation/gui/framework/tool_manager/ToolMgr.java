@@ -41,7 +41,7 @@ public class ToolMgr extends PreferenceManager {
     private ToolMgr(){
         super();
         DEBUG = false;
-        userFileDescription = "Fly Workstation Tools";
+        userFileDescription = "Workstation Tools";
         // Set up the necessary attributes.
         setFileParameters();
 

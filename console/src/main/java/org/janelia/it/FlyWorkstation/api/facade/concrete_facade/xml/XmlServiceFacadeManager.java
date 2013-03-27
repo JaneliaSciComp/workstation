@@ -1,15 +1,15 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.xml;
 
+import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.*;
+import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.ConnectionStatus;
+import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.*;
-
-import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.*;
-import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.ConnectionStatus;
-import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
-import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 
 /**
  * This facade manager provides all facades to field requests for data
@@ -66,7 +66,7 @@ public class XmlServiceFacadeManager extends XmlFacadeManager {
             } // Permission granted.
             else {
                 if (URLS_PREF_FILE.exists())
-                    FacadeManager.handleException(new IllegalArgumentException("Service URL Settings File " + URLS_PREF_FILE.getAbsolutePath() + " exists but is not readable by the Fly Workstation.  Please change its permissions."));
+                    FacadeManager.handleException(new IllegalArgumentException("Service URL Settings File " + URLS_PREF_FILE.getAbsolutePath() + " exists but is not readable by the Workstation.  Please change its permissions."));
                 returnList = Collections.EMPTY_LIST;
             } // Not granted.
 
