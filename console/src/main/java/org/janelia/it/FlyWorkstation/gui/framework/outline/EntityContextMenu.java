@@ -1,26 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.*;
-import java.util.concurrent.Callable;
-
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.SpecialAnnotationChooserDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.TaskDetailsDialog;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.*;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Perspective;
@@ -33,6 +19,7 @@ import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
+import org.janelia.it.FlyWorkstation.ws.ExternalClient;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
@@ -49,6 +36,18 @@ import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Callable;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Context pop up menu for entities.
@@ -96,6 +95,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getGotoRelatedItem());
 
         setNextAddRequiresSeparator(true);
+        add(getImportItem());
         add(getNewFolderItem());
         add(getAddToRootFolderItem());
         add(getAddToSplitPickingSessionItem());
@@ -250,10 +250,8 @@ public class EntityContextMenu extends JPopupMenu {
                 toggleHudMI.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        if (rootedEntity != null) {
-                            Entity entity = rootedEntity.getEntity();
-                            Hud.getSingletonInstance().setEntityAndToggleDialog(entity);
-                        }
+                        Entity entity = rootedEntity.getEntity();
+                        Hud.getSingletonInstance().setEntityAndToggleDialog(entity);
                     }
                 });
             }
@@ -382,10 +380,8 @@ public class EntityContextMenu extends JPopupMenu {
                 alignBrdVwItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        if (rootedEntity != null) {
-                            SessionMgr.getBrowser().setPerspective(Perspective.AlignmentBoard);
-                            SessionMgr.getBrowser().getLayersPanel().openAlignmentBoard(rootedEntity.getEntityId());
-                        }
+                        SessionMgr.getBrowser().setPerspective(Perspective.AlignmentBoard);
+                        SessionMgr.getBrowser().getLayersPanel().openAlignmentBoard(rootedEntity.getEntityId());
                     }
                 });
             }
@@ -415,12 +411,12 @@ public class EntityContextMenu extends JPopupMenu {
 
         @Override
         public String toString() {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             for (EntityData pathEd : path) {
                 if (sb.length() <= 0) {
-                    sb.append(" / " + pathEd.getParentEntity().getName());
+                    sb.append(" / ").append(pathEd.getParentEntity().getName());
                 }
-                sb.append(" / " + pathEd.getChildEntity().getName());
+                sb.append(" / ").append(pathEd.getChildEntity().getName());
             }
             return sb.toString();
         }
@@ -1152,22 +1148,27 @@ public class EntityContextMenu extends JPopupMenu {
 
                         if (result != null) {
                             // Check that there is a valid NA instance running
-                            if (SessionMgr.getSessionMgr()
-                                    .getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
-                                log.debug("Client {} is not running. Starting a new instance.",
-                                        ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
-                                ToolMgr.runTool(ToolMgr.TOOL_NA);
-                                boolean notRunning = true;
-                                int killCount = 0;
-                                while (notRunning && killCount < 2) {
-                                    if (SessionMgr.getSessionMgr()
-                                            .getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
-                                        log.debug("Waiting for {} to start.", ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
-                                        Thread.sleep(3000);
-                                        killCount++;
-                                    } else {
-                                        notRunning = false;
+                            List<ExternalClient> clients = SessionMgr.getSessionMgr().getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
+                            // If no NA client then try to start one
+                            if (clients.isEmpty()) {
+                                startNA();
+                            }
+                            // If NA clients "exist", make sure they are up
+                            else {
+                                ArrayList<ExternalClient> finalList = new ArrayList<ExternalClient>();
+                                for (ExternalClient client : clients) {
+                                    boolean connected = client.isConnected();
+                                    if (!connected) {
+                                        log.debug("Removing client "+client.getName()+" as the heartbeat came back negative.");
+                                        SessionMgr.getSessionMgr().removeExternalClientByPort(client.getClientPort());
                                     }
+                                    else {
+                                        finalList.add(client);
+                                    }
+                                }
+                                // If none are up then start one
+                                if (finalList.size()==0) {
+                                    startNA();
                                 }
                             }
 
@@ -1228,6 +1229,25 @@ public class EntityContextMenu extends JPopupMenu {
         return null;
     }
 
+    private void startNA() throws Exception {
+        log.debug("Client {} is not running. Starting a new instance.",
+                ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
+        ToolMgr.runTool(ToolMgr.TOOL_NA);
+        boolean notRunning = true;
+        int killCount = 0;
+        while (notRunning && killCount < 2) {
+            if (SessionMgr.getSessionMgr()
+                    .getExternalClientsByName(ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
+                log.debug("Waiting for {} to start.", ModelMgr.NEURON_ANNOTATOR_CLIENT_NAME);
+                Thread.sleep(3000);
+                killCount++;
+            }
+            else {
+                notRunning = false;
+            }
+        }
+    }
+
     protected JMenuItem getVaa3dTriViewItem() {
         if (multiple)
             return null;
@@ -1268,6 +1288,32 @@ public class EntityContextMenu extends JPopupMenu {
                 }
             });
             return vaa3dMenuItem;
+        }
+        return null;
+    }
+
+    protected JMenuItem getImportItem() {
+        if (multiple) {return null;}
+        if (EntityConstants.TYPE_FOLDER.equals(rootedEntity.getEntity().getEntityType().getName())) {
+            JMenuItem newAttachmentItem = new JMenuItem("  Import File Here");
+            newAttachmentItem.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent actionEvent) {
+                    try {
+//                        // Update database
+//                        Entity parentFolder = rootedEntity.getEntity();
+//                        Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
+//                        ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder,
+//                                parentFolder.getMaxOrderIndex() + 1, EntityConstants.ATTRIBUTE_ENTITY);
+//
+                        browser.getImportDialog().showDialog();
+                    }
+                    catch (Exception ex) {
+                        SessionMgr.getSessionMgr().handleException(ex);
+                    }
+                }
+            });
+
+            return newAttachmentItem;
         }
         return null;
     }

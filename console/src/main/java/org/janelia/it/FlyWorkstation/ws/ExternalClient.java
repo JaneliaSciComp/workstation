@@ -6,9 +6,6 @@
  */
 package org.janelia.it.FlyWorkstation.ws;
 
-import java.net.URL;
-import java.util.Map;
-
 import org.apache.axiom.om.OMAbstractFactory;
 import org.apache.axiom.om.OMElement;
 import org.apache.axiom.om.OMFactory;
@@ -24,6 +21,10 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Map;
 
 /**
  * An external program that registers in hopes of receiving events from the workstation. Registration is a two-step 
@@ -51,14 +52,11 @@ public class ExternalClient {
 	}
 	
 	protected static final int CONNECTION_TIME_OUT_MILLIS = 5000;
-    protected static final int MAX_CONSECUTIVE_FAILURES = 2;
 	private final String name;
     private final int clientPort;
-    
-    private String namespace = "http://ws.FlyWorkstation.it.janelia.org/";
+
     private EndpointReference targetEPR;
-    private int failures = 0;
-    
+
     public ExternalClient(int clientPort, String name) {
         this.clientPort = clientPort;
         this.name = name;
@@ -71,7 +69,7 @@ public class ExternalClient {
 		this.targetEPR = new EndpointReference(endpointUrl);
     }
 
-    public ServiceClient getNewClient() throws Exception {
+    private ServiceClient getNewClient() throws Exception {
     	
         Options options = new Options();
         options.setTo(targetEPR);
@@ -81,7 +79,7 @@ public class ExternalClient {
         client.setOptions(options); 
     	client.getServiceContext().getConfigurationContext().setProperty(HTTPConstants.CACHED_HTTP_CLIENT, httpClient);
     	
-    	((MultiThreadedHttpConnectionManager)httpClient.getHttpConnectionManager()).closeIdleConnections(0);
+    	httpClient.getHttpConnectionManager().closeIdleConnections(0);
     	
         return client;
     }
@@ -98,6 +96,7 @@ public class ExternalClient {
     	log.info("Sending {} message to endpoint {}",operationName,targetEPR.getAddress());
     	
         OMFactory fac = OMAbstractFactory.getOMFactory();
+        String namespace = "http://ws.FlyWorkstation.it.janelia.org/";
         OMNamespace ns = fac.createOMNamespace(namespace, "ns");
         final OMElement operation = fac.createOMElement(operationName, ns);
         
@@ -113,24 +112,20 @@ public class ExternalClient {
 
 			@Override
 			protected void doStuff() throws Exception {
-		        client.fireAndForget(operation);
+                client.fireAndForget(operation);
 		        client.cleanupTransport();
 			}
 			
 			@Override
 			protected void hadSuccess() {
-				failures = 0;
 			}
 			
 			@Override
 			protected void hadError(Throwable error) {
 				log.error("Error sending message to "+targetEPR.getAddress(),error);
-				failures++;
-				if (failures >= MAX_CONSECUTIVE_FAILURES) {
-					log.info("Removing client "+targetEPR.getAddress()+
-							" because it exceeded max number of consecutive failures ("+failures+">="+MAX_CONSECUTIVE_FAILURES+")");
-					SessionMgr.getSessionMgr().removeExternalClientByPort(clientPort);
-				}
+                log.info("Removing client "+targetEPR.getAddress()+
+                        " because of communication failures");
+                SessionMgr.getSessionMgr().removeExternalClientByPort(clientPort);
 			}
 			
 		};
@@ -144,6 +139,24 @@ public class ExternalClient {
 
     public String getName() {
         return name;
+    }
+
+    /**
+     * Method to check existence of the SOAP server
+     * Could be much smarter
+     * @return returns true if the server responds intelligently
+     */
+    public boolean isConnected(){
+        try {
+            URL test = new URL("http://localhost:"+clientPort);
+            HttpURLConnection conn = (HttpURLConnection)test.openConnection();
+            String response = conn.getResponseMessage();
+            return ("Method Not Allowed".equals(response));
+        }
+        catch (Exception e) {
+            log.error("Error performing the health check on external client "+name);
+        }
+        return false;
     }
 
 }
