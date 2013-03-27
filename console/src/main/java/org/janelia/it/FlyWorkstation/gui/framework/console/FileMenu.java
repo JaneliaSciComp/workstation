@@ -258,7 +258,7 @@ public class FileMenu extends JMenu {
 
     private void addMenuItems() {
         removeAll();
-        add(menuNewItem);
+//        add(menuNewItem);
         add(menuFileImport);
         add(new JSeparator());
 //        add(menuListOpen);

@@ -1,6 +1,5 @@
-package org.janelia.it.FlyWorkstation.gui.application;
+package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.shared.file_chooser.FileChooser;
@@ -32,6 +31,7 @@ public class EditMenu extends JMenu {
 //    private JMenuItem menuPrefMainView;
     private JMenuItem menuPrefExport;
     private JMenuItem menuPrefImport;
+    private JMenuItem menuPrefViewer;
     private JMenu menuSetPreferences;
     private static String fileSep = File.separator;
     private static final String EXPORT_IMPORT_LOCATION = "PreferenceExportImportLocation";
@@ -73,24 +73,24 @@ public class EditMenu extends JMenu {
 //        menuReDo.setEnabled(false);
 //        add(menuReDo);
 //        add(new JSeparator());
-//        cutAction = new MyCutAction();
-//        cutAction.putValue(Action.NAME, "Cut");
-//        menuCut = new JMenuItem(cutAction);
-//        menuCut.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_X, java.awt.Event.META_MASK));
+        cutAction = new MyCutAction();
+        cutAction.putValue(Action.NAME, "Cut");
+        menuCut = new JMenuItem(cutAction);
+        menuCut.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_X, java.awt.Event.META_MASK));
 //        add(menuCut);
-//
-//        copyAction = new MyCopyAction();
-//        copyAction.putValue(Action.NAME, "Copy");
-//        menuCopy = new JMenuItem(copyAction);
-//        menuCopy.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, java.awt.Event.META_MASK));
+
+        copyAction = new MyCopyAction();
+        copyAction.putValue(Action.NAME, "Copy");
+        menuCopy = new JMenuItem(copyAction);
+        menuCopy.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_C, java.awt.Event.META_MASK));
 //        add(menuCopy);
-//
-//        pasteAction = new MyPasteAction();
-//        pasteAction.putValue(Action.NAME, "Paste");
-//        menuPaste = new JMenuItem(pasteAction);
-//        menuPaste.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_V, java.awt.Event.META_MASK));
+
+        pasteAction = new MyPasteAction();
+        pasteAction.putValue(Action.NAME, "Paste");
+        menuPaste = new JMenuItem(pasteAction);
+        menuPaste.setAccelerator(KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_V, java.awt.Event.META_MASK));
 //        add(menuPaste);
-//
+
         menuSetPreferences = new JMenu("Preferences");
         menuSetPreferences.setMnemonic('P');
         add(menuSetPreferences);
@@ -184,7 +184,14 @@ public class EditMenu extends JMenu {
                 }
             }
         });
-        menuSetPreferences.add(menuPrefExport);
+//        menuSetPreferences.add(menuPrefExport);
+        menuPrefViewer = new JMenuItem("Viewer", 'V');
+        menuPrefViewer.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                establishPrefController(PrefController.VIEWER_EDITOR);
+            }
+        });
+        menuSetPreferences.add(menuPrefViewer);
 
         menuPrefImport = new JMenuItem("Import Preference File...", 'I');
         menuPrefImport.addActionListener(new ActionListener() {
@@ -230,7 +237,7 @@ public class EditMenu extends JMenu {
                 }
             }
         });
-        menuSetPreferences.add(menuPrefImport);
+//        menuSetPreferences.add(menuPrefImport);
 
 //        ModifyManager.getModifyMgr().addObserver(new CommandObserver());
     }

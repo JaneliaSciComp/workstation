@@ -2,32 +2,41 @@ package org.janelia.it.FlyWorkstation.api.entity_model.management;
 
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.EntityType;
 
+import java.util.Date;
+import java.util.HashSet;
+
 /**
- * Factory interface for creating specific Genomic Entity subtypes using
- * a parameterized factory method (parameterized on EntityType).
- * All products must share the GenomicEntity interface.
+ * Factory interface for creating specific Entity subtypes using a parameterized factory method (parameterized on EntityType).
+ * All products must share the Entity interface.
  */
 public class EntityFactory {
     /**
      * Tries to ensure that the only class that creates an instance of a
-     * GenomicEntityFactory is the ModelMgr.
+     * EntityFactory is the ModelMgr.
      */
     public EntityFactory(Integer creationKey) {
         if (creationKey.intValue() != ModelMgr.getModelMgr().hashCode())
-            throw new IllegalStateException(" You must get the EntityInterval Factory from the ModelMgr!! ");
+            throw new IllegalStateException(" You must get the EntityFactory from the ModelMgr!! ");
     }
 
-    public Entity create(Long oid, String displayName, EntityType type, Entity parentEntity) {
+    public Entity create(Long id, String name, EntityType type, String ownerKey, Entity parent) {
+        Date date = new Date();
         Entity newEntity = null;
-        long entityTypeValue = type.getId();
-
-        Entity parent = null;
+        Entity entityParent = null;
+        if (parent != null) {
+            entityParent = parent;
+        }
         try {
-//            if (EntityConstants.TYPE_FOLDER_ID == entityTypeValue) {
-//                newEntity = new Entity(oid, displayName, null, null, type, new Date(), new Date(), new HashSet<EntityData>());
-//            }
+            // todo Switch to Java 7 and use switch-case on strings!
+            if (EntityConstants.TYPE_IMAGE_3D.equals(type)) {
+            }
+            else {
+                newEntity = new Entity(id, name, ownerKey, null, type, date, date, new HashSet<EntityData>());
+            }
         }
         catch (Exception fcEx) {
             FacadeManager.handleException(fcEx);
@@ -36,5 +45,4 @@ public class EntityFactory {
 
         return newEntity;
     }
-
 }
