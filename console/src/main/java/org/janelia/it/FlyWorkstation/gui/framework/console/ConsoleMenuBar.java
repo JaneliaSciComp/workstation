@@ -67,7 +67,7 @@ public class ConsoleMenuBar extends JMenuBar {
         helpMenu = new HelpMenu(console);
         viewMenu = new ViewMenu(console);
         imageLabel = new JLabel(staticIcon);
-        imageLabel.addMouseListener(new MyMouseListener());
+//        imageLabel.addMouseListener(new MyMouseListener());
     }
 
     private void addMenus() {
@@ -81,7 +81,7 @@ public class ConsoleMenuBar extends JMenuBar {
 //        add(ontologyMenu);
         add(helpMenu);
         add(menuGlue);
-        add(imageLabel);
+//        add(imageLabel);
     }
 
 //    public void add(Component comp, Position pos) {
