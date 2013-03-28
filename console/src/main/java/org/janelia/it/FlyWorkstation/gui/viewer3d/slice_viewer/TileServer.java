@@ -156,10 +156,19 @@ implements VolumeImage3d
 		// Sanity check before overwriting current view
 		if (folderUrl == null)
 			return false;
+		// Sniff which back end we need
+		boolean useRaveler = false;
+		try {
+			// Look for diagnostic block tiff file
+			URL testUrl = new URL(folderUrl, "default.0.tif");
+			testUrl.openStream();
+		} catch (MalformedURLException e1) {
+			e1.printStackTrace();
+		} catch (IOException e) {
+			useRaveler = true;
+		}
 		// Now we can start replacing the previous state
 		try {
-			// TODO - create Factory method to insert the correct type of loadAdapter
-			boolean useRaveler = true;
 			if (useRaveler)
 				loadAdapter = new RavelerLoadAdapter(folderUrl);
 			else
