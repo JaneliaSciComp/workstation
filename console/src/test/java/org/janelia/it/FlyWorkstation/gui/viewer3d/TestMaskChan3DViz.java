@@ -49,9 +49,10 @@ public class TestMaskChan3DViz {
                     /* Establish all renderables to be displayed. */
 
                     // Establish the renderable for the "signal".
+                    int nextTranslatedNum = 0;
                     RenderableBean signalBean = new RenderableBean();
                     signalBean.setLabelFileNum(0);
-                    signalBean.setTranslatedNum(0);
+                    signalBean.setTranslatedNum(nextTranslatedNum ++);
                     signalBean.setRgb(
                             new byte[]{
                                     (byte) 0f, (byte) 0f, (byte) 0f, RenderMappingI.NON_RENDERING
@@ -59,11 +60,39 @@ public class TestMaskChan3DViz {
                     );
                     renderableBeans.add( signalBean );
 
+                    // Must divie-up the inputs between compartments and Fragments.
+
+                    // Establish the compartment renderables.
+                    int nextArgument = 0;
+                    for ( int i = 0; i < args.length; i ++ ) {
+                        if ( ! args[ i ].toLowerCase().contains( "/compartment_" ) ) {
+                            break;
+                        }
+                        String fn = args[ i ];
+                        if ( fn.endsWith( MASK_EXTENSION ) ) {
+                            RenderableBean renderableBean = new RenderableBean();
+
+                            // File name should tell its own index number.
+                            int underPos = fn.lastIndexOf( '_' );
+                            String beanNumStr = fn.substring( underPos + 1, fn.indexOf( MASK_EXTENSION ) );
+                            int beanNum = Integer.parseInt( beanNumStr );
+                            renderableBean.setLabelFileNum( beanNum );
+                            renderableBean.setTranslatedNum( nextTranslatedNum );
+                            renderableBean.setRgb(
+                                    new byte[] { 0, 0, 0, RenderMappingI.COMPARTMENT_RENDERING }
+                            );
+                            renderableBeans.add( renderableBean );
+
+                            nextTranslatedNum ++;
+                        }
+                        nextArgument ++;
+                    }
+
+                    int lastNFArg = nextArgument;
+
                     // Establish the fragment renderables.
                     int colorDriver = 20;
-                    Entity mockE = new Entity();
-                    mockE.setId( MOCK_UID );
-                    for ( int i = 0; i < args.length; i += 2 ) {
+                    for ( int i = nextArgument; i < args.length; i += 2 ) {
                         RenderableBean renderableBean = new RenderableBean();
 
                         String fn = args[ i ];
@@ -73,9 +102,9 @@ public class TestMaskChan3DViz {
                             String beanNumStr = fn.substring( underPos + 1, fn.indexOf( MASK_EXTENSION ) );
                             int beanNum = Integer.parseInt( beanNumStr );
 
-                            renderableBean.setTranslatedNum( beanNum );     // Leaving translation original.
+                            renderableBean.setTranslatedNum( nextTranslatedNum );
                             renderableBean.setLabelFileNum( beanNum );
-                            int rComp = colorDriver % 2;
+                            int rComp = colorDriver % 5;
                             int gComp = colorDriver % 7;
                             int bComp = colorDriver % 11;
                             renderableBean.setRgb(
@@ -84,9 +113,9 @@ public class TestMaskChan3DViz {
                                             RenderMappingI.FRAGMENT_RENDERING
                                     }
                             );
-                            //renderableBean.setRenderableEntity( mockE );
                             renderableBeans.add(renderableBean);
 
+                            nextTranslatedNum ++;
                             colorDriver ++;
                         }
                         else {
@@ -95,7 +124,6 @@ public class TestMaskChan3DViz {
                             );
                         }
                     }
-
 
                     /* Establish all volume builders for this test. */
                     ArrayList<MaskChanDataAcceptorI> acceptors = new ArrayList<MaskChanDataAcceptorI>();
@@ -108,25 +136,51 @@ public class TestMaskChan3DViz {
                     RenderablesChannelsBuilder vcb = new RenderablesChannelsBuilder();
 
                     // Setup the loader to traverse all this data on demand.
-                    MaskChanMultiFileLoader loader = new MaskChanMultiFileLoader();
+                    MaskChanMultiFileLoader neuronFragmentLoader = new MaskChanMultiFileLoader();
                     acceptors.add( vmb );
                     acceptors.add( vcb );
 
-                    loader.setAcceptors( acceptors );
+                    neuronFragmentLoader.setAcceptors(acceptors);
+
+                    MaskChanMultiFileLoader compartmentLoader = new MaskChanMultiFileLoader();
+                    compartmentLoader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList( vmb ) );
 
                     // Iterating through these files will cause all the relevant data to be loaded into
-                    // the acceptors, which here are the mask builder and the channels builder.
-                    for ( int i = 0; i < args.length; i += 2 ) {
+                    // the acceptors, which here includes only the mask builder.
+                    for ( int i = 0; i < lastNFArg; i+= 2 ) {
                         InputStream maskStream = new BufferedInputStream( new FileInputStream( args[ i ] ) );
                         InputStream chanStream = new BufferedInputStream( new FileInputStream( args[ i + 1 ] ) );
 
                         // Only the neuron fragment renderables are relevant to this load.  The signal renderable
                         // is kept separate.  Hence skip the first (0th) renderable.
-                        loader.read( renderableBeans.get( (i/2) + 1 ), maskStream, chanStream );
+                        System.out.println( "Reading " + args[ i ] );
+                        compartmentLoader.read(renderableBeans.get((i / 2) + 1), maskStream, chanStream);
 
                         maskStream.close();
                         chanStream.close();
                     }
+
+                    compartmentLoader.close();
+
+                    // Iterating through these files will cause all the relevant data to be loaded into
+                    // the acceptors, which here are the mask builder and the channels builder.
+                    for ( int i = lastNFArg; i < renderableBeans.size(); i += 2 ) {
+                        //int fnPos = args[i].lastIndexOf('/');
+                        //String filename = args[i].substring( fnPos + 1 ).toLowerCase();
+
+                        InputStream maskStream = new BufferedInputStream( new FileInputStream( args[ i ] ) );
+                        InputStream chanStream = new BufferedInputStream( new FileInputStream( args[ i + 1 ] ) );
+
+                        // Only the neuron fragment renderables are relevant to this load.  The signal renderable
+                        // is kept separate.  Hence skip the first (0th) renderable.
+                        System.out.println( "Reading " + args[ i ] );
+                        neuronFragmentLoader.read(renderableBeans.get((i / 2) + 1), maskStream, chanStream);
+
+                        maskStream.close();
+                        chanStream.close();
+                    }
+
+                    neuronFragmentLoader.close();
 
                     // For DEBUG
                     //vcb.test();
