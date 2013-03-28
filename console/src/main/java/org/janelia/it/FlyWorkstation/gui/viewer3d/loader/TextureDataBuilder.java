@@ -4,6 +4,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeBrick;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 
+import javax.media.opengl.GL2;
 import java.nio.ByteOrder;
 
 /**
@@ -46,11 +47,15 @@ public abstract class TextureDataBuilder {
         }
         textureData.setByteOrder(pixelByteOrder);
         textureData.setPixelByteCount(pixelBytes);
-        textureData.setFilename( unCachedFileName );
+        textureData.setFilename(unCachedFileName);
         textureData.setChannelCount(channelCount);
 
-        if (! isLuminance  &&  (pixelBytes == 4)  &&  argbTextureIntArray != null ) {
+        if (! isLuminance  &&  (channelCount == 4)  &&  argbTextureIntArray != null ) {
             setAlphaToSaturateColors( colorSpace );
+
+            textureData.setExplicitVoxelComponentOrder( GL2.GL_RGBA );
+            textureData.setExplicitInternalFormat( GL2.GL_RGBA );
+            textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_INT_8_8_8_8_REV );
         }
         else {
             if ( unCachedFileName.contains( V3dMaskFileLoader.COMPARTMENT_MASK_INDEX ) ) {
