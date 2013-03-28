@@ -231,9 +231,14 @@ public class DownSampler {
 
                 for ( int xNbh = x; xNbh < x + xScale && xNbh < sx; xNbh++ ) {
                     byte[] voxelVal = new byte[ voxelBytes ];
+                    try {
                     System.arraycopy(
                             fullSizeVolume, nbhYOffset + (xNbh * voxelBytes), voxelVal, 0, voxelBytes
                     );
+                    } catch ( Exception ex ) {
+                        ex.printStackTrace();
+                        throw new RuntimeException(ex);
+                    }
 
                     if ( isZero( voxelVal ) ) {
                         continue;  // Highest freq non-zero is kept.

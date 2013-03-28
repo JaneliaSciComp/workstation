@@ -131,6 +131,22 @@ public class MaskChanSingleFileLoader {
         logger.debug( "Read complete." );
     }
 
+    //------------------------------------CONSISTENCY-CHECK METHODS
+    /**
+     * Returns the dimensions found for this particular
+     */
+    public Long[] getDimensions() {
+        return new Long[] { sx, sy, sz };
+    }
+
+    /**
+     * Returns the meta-data found for the incoming data.
+     */
+    public ChannelMetaData getChannelMetaData() {
+        return channelMetaData;
+    }
+
+    //------------------------------------HELPERS
     /**
      * Add all required data to all acceptors.
      *
@@ -224,24 +240,25 @@ public class MaskChanSingleFileLoader {
     private List<byte[]> readChannelData( InputStream channelStream ) throws Exception {
         List<byte[]> returnValue = new ArrayList<byte[]>();
 
+        // Open the file, and move pointers down to seek-ready point.
+        long totalIntensityVoxels = readLong( channelStream );
+        if ( totalIntensityVoxels != totalVoxels ) {
+            throw new IllegalArgumentException( "Mismatch in file contents: total voxels of "
+                    + totalVoxels + " for mask, but total of " + totalIntensityVoxels + " for intensity/channel file."
+            );
+        }
+
+        channelMetaData = new ChannelMetaData();
+        channelMetaData.channelCount = readByte( channelStream );
+        channelMetaData.redChannelInx = readByte( channelStream );
+        channelMetaData.blueChannelInx = readByte( channelStream );
+        channelMetaData.greenChannelInx = readByte( channelStream );
+        channelMetaData.byteCount = readByte( channelStream );
+
         //  Note: any type of read requires all the mask data.  But only mask-required will necessitate
         //  the channel data all available.
         if ( channelAcceptors.size() > 0 ) {
             // NOTE: if no channels needed, the intensity stream may be ignored.
-            // Open the file, and move pointers down to seek-ready point.
-            long totalIntensityVoxels = readLong( channelStream );
-            if ( totalIntensityVoxels != totalVoxels ) {
-                throw new IllegalArgumentException( "Mismatch in file contents: total voxels of "
-                    + totalVoxels + " for mask, but total of " + totalIntensityVoxels + " for intensity/channel file."
-                );
-            }
-
-            channelMetaData = new ChannelMetaData();
-            channelMetaData.channelCount = readByte( channelStream );
-            channelMetaData.redChannelInx = readByte( channelStream );
-            channelMetaData.blueChannelInx = readByte( channelStream );
-            channelMetaData.greenChannelInx = readByte( channelStream );
-            channelMetaData.byteCount = readByte( channelStream );
 
             long channelTotalBytes = totalVoxels * channelMetaData.byteCount * channelMetaData.channelCount;
             if ( channelTotalBytes > Integer.MAX_VALUE ) {

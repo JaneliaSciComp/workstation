@@ -19,7 +19,9 @@ import org.slf4j.LoggerFactory;
  * Time: 4:21 PM
  *
  * This implementation of a mask builder takes renderables as its driving data.  It will accept the renderables,
- * along with their applicable chunks of data, to produce its texture data volume, in memory.
+ * along with their applicable chunks of data, to produce its texture data volume, in memory. If multiple
+ * renderables have parts of their volumes overlapping, the last one added takes precence over any previously-
+ * added renderable.
  */
 public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements MaskBuilderI {
 
@@ -61,6 +63,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
         // Assumed little-endian.
         for ( int j = 0; j < getPixelByteCount(); j++ ) {
             int volumeLoc = j + ((int) position * getPixelByteCount());
+            // Here enforced: last-added value at any given position takes precedence over any previously-added value.
             volumeData[ volumeLoc ] = (byte)( ( maskNumber >>> (8*j) ) & 0x00ff );
         }
 

@@ -149,6 +149,8 @@ public class VolumeLoader implements VolumeLoaderI {
         TextureColorSpace colorSpace = TextureColorSpace.COLOR_SPACE_LINEAR;
         if (baseName.startsWith(VolumeFileLoaderI.CONSOLIDATED_SIGNAL_FILE))
             colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;
+        if (baseName.startsWith("Aligned20xScale"))
+            colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;
         if (baseName.startsWith(VolumeFileLoaderI.REFERENCE_FILE))
             colorSpace = TextureColorSpace.COLOR_SPACE_SRGB;
         // assume all mpegs are in sRGB color space

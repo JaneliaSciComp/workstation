@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
+import org.slf4j.Logger;
 
 
 /**
@@ -19,6 +20,9 @@ public abstract class RenderablesVolumeBuilder implements MaskChanDataAcceptorI 
     protected long sz;
     protected float[] coordCoverage;
 
+    private int nextVolumeCount = 0;
+    private VolumeConsistencyChecker checker = new VolumeConsistencyChecker();
+
     //----------------------------------------CONFIGURATOR METHODS
     public abstract void init();
 
@@ -29,6 +33,12 @@ public abstract class RenderablesVolumeBuilder implements MaskChanDataAcceptorI 
         sy = y;
         sz = z;
         this.coordCoverage = coordCoverage;
+        checker.accumulate( ++nextVolumeCount, new Long[]{ sx, sy, sz }, null );
+    }
+
+    @Override
+    public void endData( Logger logger ) {
+        checker.report( true, logger );
     }
 
     //-------------------------END:-----------IMPLEMENT MaskChanDataAcceptorI

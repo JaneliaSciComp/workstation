@@ -1,16 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeConsistencyChecker;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
-import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -25,6 +21,8 @@ public class MaskChanMultiFileLoader {
 
     private Collection<MaskChanDataAcceptorI> maskAcceptors;
     private Collection<MaskChanDataAcceptorI> channelAcceptors;
+
+    private VolumeConsistencyChecker checker = new VolumeConsistencyChecker();
 
     private Logger logger = LoggerFactory.getLogger( MaskChanMultiFileLoader.class );
 
@@ -61,7 +59,26 @@ public class MaskChanMultiFileLoader {
         MaskChanSingleFileLoader singleFileLoader =
                 new MaskChanSingleFileLoader( maskAcceptors, channelAcceptors, bean );
         singleFileLoader.read( maskInputStream, channelStream );
+
+        // Accumulate information for final sanity check.
+        checker.accumulate(
+                bean.getTranslatedNum(), singleFileLoader.getDimensions(), singleFileLoader.getChannelMetaData()
+        );
+
         logger.debug( "Read complete." );
+    }
+
+    /**
+     * Call this after all reading has been completed.
+     */
+    public void close() {
+        checker.report( true, logger );
+        for ( MaskChanDataAcceptorI acceptor: maskAcceptors ) {
+            acceptor.endData( logger );
+        }
+        for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {
+            acceptor.endData( logger );
+        }
     }
 
 }

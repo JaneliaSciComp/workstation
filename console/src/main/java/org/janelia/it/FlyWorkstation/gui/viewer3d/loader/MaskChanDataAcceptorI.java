@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 
+import org.slf4j.Logger;
+
 import java.util.List;
 
 /**
@@ -71,4 +73,9 @@ public interface MaskChanDataAcceptorI {
      * @param metaData what's to know about channels.
      */
     public void setChannelMetaData( ChannelMetaData metaData );
+
+    /**
+     * THis must be called after all data have been pushed into this acceptor.
+     */
+    public void endData( Logger logger );
 }
