@@ -25,7 +25,7 @@ public class V3dSignalFileLoader extends TextureDataBuilder implements VolumeFil
     @Override
     protected TextureDataI createTextureDataBean() {
         int interpolationMethod = GL.GL_LINEAR;
-        if ( channelCount == 3 ) {
+        if ( channelCount >= 3 ) {
             TextureDataBean textureDataBean = new TextureDataBean(argbTextureIntArray, sx, sy, sz);
             textureDataBean.setInterpolationMethod( interpolationMethod );
             return textureDataBean;
@@ -56,7 +56,7 @@ public class V3dSignalFileLoader extends TextureDataBuilder implements VolumeFil
         channelCount = sc;
         pixelByteOrder = sliceStream.getEndian();
 
-        if ( channelCount == 3 ) {
+        if ( channelCount >= 3 ) {
             loadV3dIntRaw( sliceStream, sc );
         }
         else if ( pixelBytes == 1 ) {
