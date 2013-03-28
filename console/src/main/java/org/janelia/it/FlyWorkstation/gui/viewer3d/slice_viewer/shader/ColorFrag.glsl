@@ -11,6 +11,10 @@ uniform vec4 channel_scale;
 void main()
 {
     vec4 in_color = texture2D(tileTexture, gl_TexCoord[0].xy);
+    // Two color images are loaded as luminance/alpha, so look in alpha
+    // for second intensity, not in green.
+    if (channel_count == 2)
+        in_color.g = in_color.a;
     vec3 out_color = vec3(0, 0, 0);
     for (int c = 0; c < channel_count; ++c) {
         float i = in_color[c]; // intensity

@@ -2,7 +2,6 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
-
 import javax.media.opengl.GL2;
 
 import com.jogamp.opengl.util.texture.awt.AWTTextureIO;

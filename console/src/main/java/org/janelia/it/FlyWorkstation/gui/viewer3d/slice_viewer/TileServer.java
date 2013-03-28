@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -173,6 +174,9 @@ implements VolumeImage3d
 			boundingBox3d.setMin(b0);
 			boundingBox3d.setMax(b1);
 		} catch (URISyntaxException e) {
+			e.printStackTrace();
+			return false;
+		} catch (IOException e) {
 			e.printStackTrace();
 			return false;
 		}

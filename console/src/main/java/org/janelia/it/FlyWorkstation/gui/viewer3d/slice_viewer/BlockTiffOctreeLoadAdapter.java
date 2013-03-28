@@ -1,11 +1,16 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Vector;
 
+import javax.media.jai.JAI;
+import javax.media.jai.NullOpImage;
+import javax.media.jai.OpImage;
+import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedImageAdapter;
 
 import com.sun.media.jai.codec.FileSeekableStream;
@@ -26,10 +31,11 @@ import com.sun.media.jai.codec.SeekableStream;
 public class BlockTiffOctreeLoadAdapter 
 extends PyramidTextureLoadAdapter 
 {
+	// Metadata
 	File topFolder;
 	
-	public BlockTiffOctreeLoadAdapter(
-			File topFolder) 
+	public BlockTiffOctreeLoadAdapter(File topFolder) 
+	throws IOException
 	{
 		setTopFolder(topFolder);
 	}
@@ -38,20 +44,11 @@ extends PyramidTextureLoadAdapter
 		return topFolder;
 	}
 
-	public void setTopFolder(File topFolder) {
+	public void setTopFolder(File topFolder) 
+	throws IOException
+	{
 		this.topFolder = topFolder;
-		// TODO populate tileFormat
-		// hard-code for the moment... TODO
-		tileFormat.setBitDepth(16);
-		tileFormat.setChannelCount(1); // TODO
-		tileFormat.setIntensityMax(65535);
-		int tileSize[] = {340, 494, 171};
-		tileFormat.setTileSize(tileSize);
-		int volumeSize[] = {680, 988, 342};
-		tileFormat.setVolumeSize(volumeSize);
-		double voxelMicrometers[] = {1.0, 1.0, 1.0}; // TODO
-		tileFormat.setVoxelMicrometers(voxelMicrometers);
-		tileFormat.setZoomLevelCount(2);
+		sniffMetadata(topFolder);
 	}
 
 	protected List<Integer> getOctreePath(PyramidTileIndex tileIndex) {
@@ -166,7 +163,7 @@ extends PyramidTextureLoadAdapter
 		int zoomScale = (int)Math.pow(2, tileIndex.getZoom());
 		int tileDepth = tileFormat.getTileSize()[2];
 		int relativeZ = (tileIndex.getZ() / zoomScale) % tileDepth;
-		BufferedImage channels[] = new BufferedImage[sc];
+		RenderedImage channels[] = new RenderedImage[sc];
 		for (int c = 0; c < sc; ++c) {
 			File tiff = new File(folder, "default."+c+".tif");
 			System.out.println(tileIndex+", "+tiff.toString());
@@ -176,16 +173,93 @@ extends PyramidTextureLoadAdapter
 				SeekableStream s = new FileSeekableStream(tiff);
 				ImageDecoder decoder = ImageCodec.createImageDecoder("tiff", s, null);
 				assert(relativeZ < decoder.getNumPages());
-				RenderedImageAdapter ria = new RenderedImageAdapter(
-						decoder.decodeAsRenderedImage(relativeZ));
-				channels[c] = ria.getAsBufferedImage();				
+				channels[c] = decoder.decodeAsRenderedImage(relativeZ);
 			} catch (IOException e) {
 				throw new TileLoadError(e);
 			}
 		}
-		// TODO combine channels into one image
-		// For now just use the first channel...
-		return convertToGlFormat(channels[0]);
+		// Combine channels into one image
+		RenderedImage composite = channels[0];
+		if (sc > 1) {
+			ParameterBlockJAI pb = new ParameterBlockJAI("bandmerge");
+			for (int c = 0; c < sc; ++c)
+				pb.addSource(channels[c]);
+			composite = JAI.create("bandmerge", pb);
+		}
+		
+		BufferedImage bufferedImage = new NullOpImage(composite, null, null, 
+				OpImage.OP_NETWORK_BOUND).getAsBufferedImage();
+
+		return convertToGlFormat(bufferedImage);
+	}
+	
+	protected void sniffMetadata(File topFolderParam) 
+	throws IOException
+	{
+		// Set some default parameters, to be replaced my measured parameters
+		tileFormat.setDefaultParameters();
+
+		// Count color channels by counting channel files
+		tileFormat.setChannelCount(0);
+		int channelCount = 0;
+		while (true) {
+			File tiff = new File(topFolderParam, "default."+channelCount+".tif");
+			if (! tiff.exists())
+				break;
+			channelCount += 1;
+		}
+		tileFormat.setChannelCount(channelCount);
+		if (channelCount < 1)
+			return;
+		
+		// Deduce octree depth from directory structure depth
+		int octreeDepth = 0;
+		File deepFolder = topFolderParam;
+		File deepFile = new File(topFolderParam, "default.0.tif");
+		while (deepFile.exists()) {
+			octreeDepth += 1;
+			File parentFolder = deepFolder;
+			// Check all possible children: some might be empty
+			for (int branch = 1; branch <= 8; ++branch) {
+				deepFolder = new File(parentFolder, ""+branch);
+				deepFile = new File(deepFolder, "default.0.tif");
+				if (deepFile.exists())
+					break; // found a deeper branch
+			}
+		}
+		int zoomFactor = (int)Math.pow(2, octreeDepth - 1);
+		tileFormat.setZoomLevelCount(octreeDepth);
+		
+		// Deduce other parameters from first image file contents
+		File tiff = new File(topFolderParam, "default.0.tif");
+		SeekableStream s = new FileSeekableStream(tiff);
+		ImageDecoder decoder = ImageCodec.createImageDecoder("tiff", s, null);
+		// Z dimension is related to number of tiff pages
+		int sz = decoder.getNumPages();
+		// Full volume could be much larger than this downsampled tile
+		tileFormat.getVolumeSize()[2] = zoomFactor * sz;
+		tileFormat.getTileSize()[2] = sz;
+		if (sz < 1)
+			return;
+		
+		// Get X/Y dimensions from first image
+		RenderedImageAdapter ria = new RenderedImageAdapter(
+				decoder.decodeAsRenderedImage(0));
+		int sx = ria.getWidth();
+		int sy = ria.getHeight();
+		tileFormat.getVolumeSize()[0] = zoomFactor * sx;
+		tileFormat.getVolumeSize()[1] = zoomFactor * sy;
+		tileFormat.getTileSize()[0] = sx;
+		tileFormat.getTileSize()[1] = sy;
+
+		int bitDepth = ria.getColorModel().getPixelSize();
+		tileFormat.setBitDepth(bitDepth);
+		tileFormat.setIntensityMax((int)Math.pow(2, bitDepth));
+
+		tileFormat.setSrgb(ria.getColorModel().getColorSpace().isCS_sRGB());
+		
+		// TODO - actual max intensity
+		// TODO - voxel size in micrometers
 	}
 
 }

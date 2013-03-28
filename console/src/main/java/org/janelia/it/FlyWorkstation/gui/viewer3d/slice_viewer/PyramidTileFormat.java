@@ -5,16 +5,16 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
  */
 public class PyramidTileFormat 
 {
-	private int[] origin = new int[3];
-	private int[] volumeSize = new int[3];
-	private int[] tileSize = new int[3];
-	private double[] voxelMicrometers = new double[3];
-	private int zoomLevelCount;
-	private int bitDepth;
-	private int channelCount;
-	private int intensityMax;
-	private int intensityMin;
-	private boolean srgb;
+	private int[] origin = {0,0,0};
+	private int[] volumeSize = {0,0,0};
+	private int[] tileSize = {1024, 1024, 1};
+	private double[] voxelMicrometers = {1,1,1};
+	private int zoomLevelCount = 0;
+	private int bitDepth = 8;
+	private int channelCount = 1;
+	private int intensityMax = 255;
+	private int intensityMin = 0;
+	private boolean srgb = false;
 
 	public PyramidTileFormat() 
 	{
