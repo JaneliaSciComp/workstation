@@ -284,6 +284,11 @@ public class TextureMediator {
 
     }
     //--------------------------- Helpers for glTexImage3D
+    // NOTES on these helpers:
+    //  -  It is often the case that "format" and "internal format" can and should be the same value.
+    //  -  "voxel component type" is aka "type" in the OpenGL documentation.
+    //  -  "voxel component order" is aka "format" in the OpenGL docs, but can confuse with internal format.
+
     private int getVoxelComponentType() {
         int rtnVal = GL2.GL_UNSIGNED_INT_8_8_8_8_REV;
         if ( textureData.getExplicitVoxelComponentType() != TextureDataI.UNSET_VALUE ) {
@@ -291,12 +296,12 @@ public class TextureMediator {
         }
         else {
             // This: tested vs 1-byte mask.
-            if ( textureData.getPixelByteCount()  == 1 ) {
+            if ( textureData.getChannelCount()  == 1 ) {
                 rtnVal = GL2.GL_UNSIGNED_BYTE;
             }
 
             // This throws excepx for current read method.
-            if ( textureData.getPixelByteCount() == 2 ) {
+            if ( textureData.getChannelCount() == 2 ) {
                 rtnVal = GL2.GL_UNSIGNED_SHORT;
             }
         }
