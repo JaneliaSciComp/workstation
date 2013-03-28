@@ -32,14 +32,20 @@ public class MaskSearchDialog extends ModalDialog {
 
     public static final String PREF_MASK_SEARCH_SERVICE_INPUT_DIR    = "MaskSearchService.InputDir";
     public static final String PREF_MASK_SEARCH_SERVICE_FOLDER_NAME  = "MaskSearchService.TopLevelFolderName";
+    public static final String PREF_MASK_SEARCH_SERVICE_MATRIX       = "MaskSearchService.Matrix";
+    public static final String PREF_MASK_SEARCH_QUERY_CHANNEL        = "MaskSearchService.QueryChannel";
 
     private static final String TOP_LEVEL_FOLDER_NAME = "'s Mask Search Data";
 
     private static final String TOOLTIP_INPUT_FILE      = "File to be used as the query";
     private static final String TOOLTIP_TOP_LEVEL_FOLDER= "Name of the folder where the results should go";
+    private static final String TOOLTIP_MATRIX = "Parameters that set the search qualities";
+    private static final String TOOLTIP_QUERY = "Channel with the signal to search against";
 
     private final JTextField pathTextField;
     private final JTextField folderField;
+    private final JTextField matrixTextField;
+    private final JTextField queryChannelTextField;
     private JFileChooser fileChooser;
 
     public MaskSearchDialog() {
@@ -65,6 +71,7 @@ public class MaskSearchDialog extends ModalDialog {
             folderField.setText(SessionMgr.getUsername()+TOP_LEVEL_FOLDER_NAME);
         }
         folderField.setToolTipText(TOOLTIP_TOP_LEVEL_FOLDER);
+
         topLevelFolderLabel.setLabelFor(folderField);
         GridBagConstraints c = new GridBagConstraints();
         c.ipadx = 5;
@@ -117,6 +124,41 @@ public class MaskSearchDialog extends ModalDialog {
             c.gridx = 2;
             attrPanel.add(_filePathButton, c);
         }
+
+        JLabel matrixFieldLabel  = new JLabel("Matrix:");
+        matrixFieldLabel.setToolTipText(TOOLTIP_MATRIX);
+        matrixTextField = new JTextField(40);
+        // Use the previous destination; otherwise, suggest the default user location
+        if (null!=SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_MATRIX)&&
+                !"".equals(SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_MATRIX))) {
+            matrixTextField.setText((String) SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_MATRIX));
+        }
+        else {
+            matrixTextField.setText(MaskSearchTask.DEFAULT_MATRIX);
+        }
+        matrixTextField.setToolTipText(TOOLTIP_MATRIX);
+        c.gridx=0;c.gridy=2;
+        attrPanel.add(matrixFieldLabel,c);
+        c.gridx=1;
+        attrPanel.add(matrixTextField,c);
+
+        JLabel queryChannelFieldLabel  = new JLabel("Query Channel:");
+        queryChannelFieldLabel.setToolTipText(TOOLTIP_QUERY);
+        queryChannelTextField = new JTextField(5);
+        // Use the previous destination; otherwise, suggest the default user location
+        if (null!=SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_QUERY_CHANNEL)&&
+                !"".equals(SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_QUERY_CHANNEL))) {
+            queryChannelTextField.setText((String) SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_QUERY_CHANNEL));
+        }
+        else {
+            queryChannelTextField.setText(MaskSearchTask.DEFAULT_QUERY_CHANNEL);
+        }
+        queryChannelTextField.setToolTipText(TOOLTIP_QUERY);
+        c.gridx=0;c.gridy=3;
+        attrPanel.add(queryChannelFieldLabel,c);
+        c.gridx=1;
+        attrPanel.add(queryChannelTextField,c);
+
         mainPanel.add(attrPanel);
         add(mainPanel, BorderLayout.CENTER);
 
@@ -146,12 +188,6 @@ public class MaskSearchDialog extends ModalDialog {
         buttonPane.add(cancelButton);
 
         add(buttonPane, BorderLayout.SOUTH);
-
-        // Get the user prefs and set
-        String userFolderName = (String) SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_FOLDER_NAME);
-        String userInputDir   = (String)SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_INPUT_DIR);
-        if (null!=userFolderName) { folderField.setText(userFolderName); }
-        if (null!=userInputDir)   { pathTextField.setText(userInputDir); }
     }
 
     public void runMaskSearchService() {
@@ -160,6 +196,8 @@ public class MaskSearchDialog extends ModalDialog {
 
         final String inputDirPath = pathTextField.getText().trim();
         final String topLevelFolderName = folderField.getText().trim();
+        final String matrixValue = matrixTextField.getText().trim();
+        final String queryChannel = queryChannelTextField.getText().trim();
 
         // Update user Preferences
         if (null!=topLevelFolderName) {
@@ -168,6 +206,12 @@ public class MaskSearchDialog extends ModalDialog {
         if (null!=inputDirPath) {
             SessionMgr.getSessionMgr().setModelProperty(PREF_MASK_SEARCH_SERVICE_INPUT_DIR,inputDirPath);
         }
+        if (null!=matrixValue) {
+            SessionMgr.getSessionMgr().setModelProperty(PREF_MASK_SEARCH_SERVICE_MATRIX,matrixValue);
+        }
+        if (null!=queryChannel) {
+            SessionMgr.getSessionMgr().setModelProperty(PREF_MASK_SEARCH_QUERY_CHANNEL,queryChannel);
+        }
         // Prompt a save of the user settings because we can't trust the Mac exit yet
         SessionMgr.getSessionMgr().saveUserSettings();
 
@@ -175,7 +219,7 @@ public class MaskSearchDialog extends ModalDialog {
 
             @Override
             protected void doStuff() throws Exception {
-                startMaskSearch(inputDirPath, topLevelFolderName);
+                startMaskSearch(inputDirPath, topLevelFolderName, matrixValue, queryChannel);
             }
 
             @Override
@@ -205,8 +249,9 @@ public class MaskSearchDialog extends ModalDialog {
     /**
      * Begin the separation task, wrapped in a continuous execution task.
      * @param path root directory to use for file discovery
+     * @param queryChannel
      */
-    private void startMaskSearch(String path, String topLevelFolderName) {
+    private void startMaskSearch(String path, String topLevelFolderName, String matrixValue, String queryChannel) {
         try {
             String process;
             Task task;
@@ -214,7 +259,7 @@ public class MaskSearchDialog extends ModalDialog {
 
             process = "MaskSearch";
             task = new MaskSearchTask(new HashSet<Node>(), owner, new ArrayList<org.janelia.it.jacs.model.tasks.Event>(),
-                    new HashSet<TaskParameter>(), path, topLevelFolderName);
+                    new HashSet<TaskParameter>(), path, topLevelFolderName, matrixValue, queryChannel);
             task.setJobName("Mask Search Task");
             task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
 
