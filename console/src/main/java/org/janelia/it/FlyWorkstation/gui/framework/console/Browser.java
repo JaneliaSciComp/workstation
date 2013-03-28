@@ -145,7 +145,6 @@ public class Browser extends JFrame implements Cloneable {
     private boolean isDrillingDownToSelectedEntity = false;
     private String currentAnnotationSessionTaskId;
     private MaskSearchDialog arbitraryMaskSearchDialog;
-    private CellCounterDialog runCellCounterDialog;
 
 
     /**
@@ -304,7 +303,6 @@ public class Browser extends JFrame implements Cloneable {
         patternSearchDialog = new PatternSearchDialog();
         giantFiberSearchDialog = new GiantFiberSearchDialog();
         arbitraryMaskSearchDialog = new MaskSearchDialog();
-        runCellCounterDialog = new CellCounterDialog();
         screenEvaluationDialog = new ScreenEvaluationDialog(this);
         maaSearchDialog = new MAASearchDialog(this);
         dataSetListDialog = new DataSetListDialog();
@@ -1187,10 +1185,6 @@ public class Browser extends JFrame implements Cloneable {
 
     public MaskSearchDialog getMaskSearchDialog() {
         return arbitraryMaskSearchDialog;
-    }
-
-    public CellCounterDialog getRunCellCounterDialog() {
-        return runCellCounterDialog;
     }
 
 //    private void postEditorSpecificMenusChanged() {

@@ -21,14 +21,6 @@ public class ServicesMenu extends JMenu {
         super("Services");
         currentBrowser = browser;
 
-        JMenuItem cellCountingMenuItem = new JMenuItem("Cell Counting Service");
-        cellCountingMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent actionEvent) {
-                currentBrowser.getRunCellCounterDialog().showDialog();
-            }
-        });
-        add(cellCountingMenuItem);
-
         JMenuItem neuronSeparationMenuItem = new JMenuItem("Neuron Separation Service");
         neuronSeparationMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
