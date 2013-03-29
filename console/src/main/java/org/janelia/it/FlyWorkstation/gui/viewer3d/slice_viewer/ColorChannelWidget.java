@@ -157,21 +157,15 @@ public class ColorChannelWidget extends JPanel
 			ActionListener cancelListener = new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
-					System.out.println("cancel");
+					// System.out.println("cancel");
 					setWhiteColor(originalColor);
 				}
 			};
 			ActionListener okListener = new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent arg0) {
-					System.out.println("ok");
+					// System.out.println("ok");
 					setWhiteColor(colorChooser.getColor());
-				}
-			};
-			PropertyChangeListener colorListener = new PropertyChangeListener() {
-				@Override
-				public void propertyChange(PropertyChangeEvent event) {
-					System.out.println("property changed "+event.getPropertyName());
 				}
 			};
 			colorChooser = new JColorChooser(Color.pink);
@@ -188,7 +182,6 @@ public class ColorChannelWidget extends JPanel
 					colorChooser,
 					okListener, cancelListener);
 			colorDialog.setVisible(false);
-			colorDialog.addPropertyChangeListener(colorListener);
 		}
 		
 		@Override

@@ -33,12 +33,19 @@ extends PyramidTextureLoadAdapter
 {
 	// Metadata
 	File topFolder;
+	public LoadTimer loadTimer = new LoadTimer();
 	
 	public BlockTiffOctreeLoadAdapter(File topFolder) 
 	throws IOException
 	{
 		getTextureCache().setIndexStyle(TextureCache.IndexStyle.OCTREE);
 		setTopFolder(topFolder);
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				loadTimer.report();
+			}
+		});
 	}
 	
 	public File getTopFolder() {
@@ -155,6 +162,9 @@ extends PyramidTextureLoadAdapter
 	public PyramidTextureData loadToRam(PyramidTileIndex tileIndex)
 			throws TileLoadError, MissingTileException 
 	{
+		// Create a local load timer to measure timings just in this thread
+		LoadTimer localLoadTimer = new LoadTimer();
+		localLoadTimer.mark("starting slice load");
 		// TODO - generalize to URL, if possible
 		// (though TIFF requires seek, right?)
 		// Compute octree path from Raveler-style tile indices
@@ -167,7 +177,7 @@ extends PyramidTextureLoadAdapter
 		RenderedImage channels[] = new RenderedImage[sc];
 		for (int c = 0; c < sc; ++c) {
 			File tiff = new File(folder, "default."+c+".tif");
-			System.out.println(tileIndex+", "+tiff.toString());
+			// System.out.println(tileIndex+", "+tiff.toString());
 			if (! tiff.exists())
 				throw new MissingTileException();
 			try {
@@ -178,6 +188,7 @@ extends PyramidTextureLoadAdapter
 			} catch (IOException e) {
 				throw new TileLoadError(e);
 			}
+			localLoadTimer.mark("loaded slice, channel "+c);
 		}
 		// Combine channels into one image
 		RenderedImage composite = channels[0];
@@ -186,12 +197,17 @@ extends PyramidTextureLoadAdapter
 			for (int c = 0; c < sc; ++c)
 				pb.addSource(channels[c]);
 			composite = JAI.create("bandmerge", pb);
+			localLoadTimer.mark("merged channels");
 		}
 		
 		BufferedImage bufferedImage = new NullOpImage(composite, null, null, 
 				OpImage.OP_NETWORK_BOUND).getAsBufferedImage();
+		localLoadTimer.mark("converted to BufferedImage");
 
-		return convertToGlFormat(bufferedImage);
+		PyramidTextureData result = convertToGlFormat(bufferedImage);
+		localLoadTimer.mark("converted to OpenGL format");
+		loadTimer.putAll(localLoadTimer);
+		return result;
 	}
 	
 	protected void sniffMetadata(File topFolderParam) 
