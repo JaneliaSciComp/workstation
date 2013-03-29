@@ -16,6 +16,7 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationEvent;
+import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityRemoveEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.ActivatableView;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityWrapperTransferHandler;
@@ -426,15 +427,14 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
 
         RootedEntity rootedEntity = alignedItem.getInternalRootedEntity();
         ModelMgr.getModelMgr().deleteEntityTree(rootedEntity.getEntityId());
-        
+
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                log.info("SENDING REMOVED EVENT");
                 AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
                         alignmentBoardContext, alignedItem, ChangeType.Removed);
                 ModelMgr.getModelMgr().postOnEventBus(event);
-//                refresh();
+                refresh();
             }
         });
     }
@@ -490,6 +490,18 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         refresh();
     }
     
+//    @Subscribe 
+//    public void entityChanged(EntityChangeEvent event) {
+//        log.debug("Some entities were changed so we're refreshing the tree");
+//        refresh();
+//    }
+
+    @Subscribe 
+    public void entityRemoved(EntityRemoveEvent event) {
+        log.debug("Some entities were removed so we're refreshing the tree");
+        refresh();
+    }
+    
     @Override
     public void refresh() {
         log.debug("refresh");
@@ -506,7 +518,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         if (alignmentBoardContext!=null) {
             loadAlignmentBoard(alignmentBoardContext.getId(), success);
         }
-    }
+    }    
     
     private class OutlineTreeCellRenderer extends DefaultOutlineCellRenderer {
         

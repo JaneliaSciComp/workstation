@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
@@ -123,7 +124,7 @@ public class EntityContextMenu extends JPopupMenu {
 
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
-        add(getCreateAlignBrdVwItem());
+        add(getOpenAlignmentBoardItem());
         
         if ((SessionMgr.getSubjectKey().equals("user:simpsonj") || SessionMgr.getSubjectKey()
                 .equals("group:simpsonlab")) && !this.multiple) {
@@ -371,12 +372,12 @@ public class EntityContextMenu extends JPopupMenu {
     }
 
     /** Makes the item for showing the entity in its own viewer iff the entity type is correct. */
-    public JMenuItem getCreateAlignBrdVwItem() {
+    public JMenuItem getOpenAlignmentBoardItem() {
         JMenuItem alignBrdVwItem = null;
-        if (rootedEntity != null && rootedEntity.getEntity() != null) {
+        if (rootedEntity != null && rootedEntity.getEntityData() != null) {
             Entity entity = rootedEntity.getEntity();
-            if (entity.getEntityType().getName().equals(EntityConstants.TYPE_ALIGNMENT_BOARD)) {
-                alignBrdVwItem = new JMenuItem("  Show in alignment board viewer");
+            if (entity!=null && entity.getEntityType().getName().equals(EntityConstants.TYPE_ALIGNMENT_BOARD)) {
+                alignBrdVwItem = new JMenuItem(" Open In Alignment Board Viewer");
                 alignBrdVwItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {

@@ -13,12 +13,12 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.LayersPanel;
 import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
-import org.janelia.it.jacs.model.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -102,10 +102,10 @@ public abstract class EntityWrapperTransferHandler extends TransferHandler {
             LayersPanel layersPanel = SessionMgr.getBrowser().getLayersPanel();
 			JComponent dropTarget = getDropTargetComponent();
             
-			if (!(dropTarget instanceof LayersPanel)) {
-//                log.info("Invalid drop target: {}",dropTarget);
-//	            log.info("  layersPanel: {}",layersPanel);
-//                log.info("  entityWrapperOutline: {}",entityWrapperOutline);
+			if (!(dropTarget instanceof LayersPanel) && !(dropTarget instanceof AlignmentBoardViewer)) {
+                log.info("Invalid drop target: {}",dropTarget);
+	            log.info("  layersPanel: {}",layersPanel);
+                log.info("  entityWrapperOutline: {}",entityWrapperOutline);
 	            return false;
 			}
 			
@@ -146,7 +146,7 @@ public abstract class EntityWrapperTransferHandler extends TransferHandler {
 
 	@Override
 	public boolean importData(TransferHandler.TransferSupport support) {
-
+	    
 		if (!canImport(support)) return false;
 
 		try {
@@ -188,104 +188,6 @@ public abstract class EntityWrapperTransferHandler extends TransferHandler {
 	    log.info("add entity wrapper : "+wrapper.getName());
 	    LayersPanel layersPanel = SessionMgr.getBrowser().getLayersPanel();
 	    layersPanel.addNewAlignedEntity(wrapper);
-	}
-	
-	/**
-	 * Add the given entities to the given target parent, both in the entity model, and in the view.
-	 * @param targetNode the new parent for the entities
-	 * @param entitiesToAdd list of entities to add to the the new parent
-	 * @param destIndex child insertion index in the new parent
-	 * @throws Exception
-	 */
-	protected void addEntities(DefaultMutableTreeNode targetNode, List<Entity> entitiesToAdd, int destIndex) throws Exception {
-
-//		Entity parentEntity = entityWrapperOutline.getEntity(targetNode);
-//		
-//		int i = destIndex;
-//		for(Entity entity : entitiesToAdd) {
-//			log.debug("will add {} to {}",entity.getName(),parentEntity.getName());
-//			i++;
-//		}
-//		log.debug("updating entity model");
-//
-//		// First update the entity model
-//		
-//		List<DefaultMutableTreeNode> toRemove = new ArrayList<DefaultMutableTreeNode>();		
-//		List<EntityData> eds = EntityUtils.getOrderedEntityDataWithChildren(parentEntity);
-//		
-//		int origSize = eds.size();
-//		int currIndex = destIndex;		
-//		
-//		for(Entity entity : entitiesToAdd) {
-//			// Add the entity to the new parent, generating the ED
-//			EntityData newEd = ModelMgr.getModelMgr().addEntityToParent(parentEntity, entity);
-//			log.debug("created new child {}",entity.getName());
-//			
-//			if (destIndex > origSize) {
-//				eds.add(newEd);
-//			} 
-//			else {
-//				eds.add(currIndex++, newEd);
-//			}
-//
-//			// Since entities have a single instance, we can no longer tell when we're reordering by comparing 
-//			// instances. We need a new way to implement this!
-//			
-//			if (MOVE_WHEN_REORDERING) {
-//		        Enumeration enumeration = targetNode.children();
-//		        while (enumeration.hasMoreElements()) {
-//		            DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) enumeration.nextElement();
-//		            EntityData ed = entityWrapperOutline.getEntityData(childNode);
-//					if (ed!=null && ed.getChildEntity()!=null && Utils.areSameEntity(entity, ed.getChildEntity()) && ed.getId()!=newEd.getId()) {
-//						toRemove.add(childNode);
-//					}
-//		        }
-//			}
-//		}
-//
-//		log.debug("renumbering children and adding to tree");
-//		
-//		// Renumber the children, re-add the new ones, and update the tree
-//		int index = 0;
-//		for (EntityData ed : eds) {
-//			log.debug("processing ed order={}",ed.getOrderIndex());
-//			if ((ed.getOrderIndex() == null) || (ed.getOrderIndex() != index)) {
-//				ed.setOrderIndex(index);
-//				
-//				// Remember actual entities
-//				Entity parent = ed.getParentEntity();
-//				Entity child = ed.getChildEntity();
-//				
-//				// For performance reasons, we have to replace the parent with a fake id-only entity. Otherwise, it 
-//				// tries to transfer the entire object graph every time, and it gradually grinds to a halt, since the 
-//				// object graph grows at some insane rate.
-//				Entity fakeParentEntity = new Entity();
-//				fakeParentEntity.setId(parentEntity.getId());
-//				ed.setParentEntity(fakeParentEntity);
-//
-//				Entity fakeChildEntity = new Entity();
-//				fakeChildEntity.setId(child.getId());
-//				ed.setChildEntity(fakeChildEntity);
-//				
-//				log.debug("will save ED {} with index={}",ed.getId(),index);
-//				EntityData savedEd = ModelMgr.getModelMgr().saveOrUpdateEntityData(ed);
-//				log.debug("saved ED {}",savedEd.getId());
-//				
-//				// Restore actual entities
-//				ed.setParentEntity(parent);
-//				ed.setChildEntity(child);
-//			}
-//			index++;
-//		}
-//		
-//		// Remove old eds, if the target is the same
-//		if (MOVE_WHEN_REORDERING) {
-//			for (DefaultMutableTreeNode childNode : toRemove) {
-//	            EntityData ed = entityWrapperOutline.getEntityData(childNode);
-//				ModelMgr.getModelMgr().removeEntityData(ed);
-//				log.debug("removed old ED {}",ed.getId());
-//			}
-//		}
 	}
 	
 	/**

@@ -4,11 +4,13 @@ import java.awt.BorderLayout;
 import java.util.*;
 import java.util.concurrent.Callable;
 
+import javax.swing.JComponent;
 import javax.swing.JLabel;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityWrapperTransferHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerPane;
@@ -55,6 +57,13 @@ public class AlignmentBoardViewer extends Viewer {
         super(viewerPane);
         setLayout(new BorderLayout());
         ModelMgr.getModelMgr().registerOnEventBus(this);
+        
+        setTransferHandler(new EntityWrapperTransferHandler() {
+            @Override
+            public JComponent getDropTargetComponent() {
+                return AlignmentBoardViewer.this;
+            }
+        });
     }
 
     @Override

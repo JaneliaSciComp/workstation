@@ -180,7 +180,7 @@ public class Icons {
             return getIcon(large ? "folder_files_large.png" : "bricks.png");
         }
         else if (EntityConstants.TYPE_IMAGE_TILE.equals(type)) {
-            return getIcon(large ? "folder_files_large.png" : "page_copy.png");
+            return getIcon(large ? "folder_files_large.png" : "plugin.png");
         }
         else if (EntityConstants.TYPE_TIF_2D.equals(type)) {
             return getIcon(large ? "file_large.png" : "image.png");
@@ -211,10 +211,6 @@ public class Icons {
         else if (EntityConstants.TYPE_ONTOLOGY_ELEMENT.equals(type) || EntityConstants.TYPE_ONTOLOGY_ROOT.equals(type)) {
             return getOntologyIcon(entity);
         }
-        else if (EntityConstants.TYPE_ALIGNMENT_BOARD.equals(type)) {
-            //todo get the ideal alignment board icon.
-            return getIcon(large ? "folder_files_large.png" : "folder_page.png");
-        }
         else if (EntityConstants.TYPE_ANNOTATION.equals(type)) {
             return getIcon("page_white_edit.png");
         }
@@ -239,7 +235,10 @@ public class Icons {
         else if (EntityConstants.TYPE_ALIGNMENT_BOARD.equals(type)) {
             return getIcon(large ? "folder_graphite_palette_large.png" : "folder_graphite_palette.png");
         }
-
+        else if (EntityConstants.TYPE_ALIGNED_ITEM.equals(type)) {
+            return getIcon(large ? "file_large.png" : "shape_handles.png");
+        }
+        
         return getIcon(large ? "error_large.png" : "bullet_error.png");
     }
 }

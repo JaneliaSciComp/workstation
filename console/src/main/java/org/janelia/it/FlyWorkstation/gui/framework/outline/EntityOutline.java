@@ -27,6 +27,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelection
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.dialogs.ScreenEvaluationDialog;
+import org.janelia.it.FlyWorkstation.gui.framework.console.Perspective;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
@@ -175,6 +176,7 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
             add(getRootItem());
             add(getNewRootFolderItem());
             add(getNewAlignmentBoardItem());
+            add(getOpenAlignmentBoardItem());
         }
 
 		protected JMenuItem getRootItem() {
@@ -271,6 +273,8 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
                                 @Override
                                 public Void call() throws Exception {
                                     selectEntityByUniqueId(newBoard.getUniqueId());
+                                    SessionMgr.getBrowser().setPerspective(Perspective.AlignmentBoard);
+                                    SessionMgr.getBrowser().getLayersPanel().openAlignmentBoard(newBoard.getEntityId());
                                     return null;
                                 }
                             });
@@ -286,7 +290,6 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 
             return newFolderItem;
         }
-
     }
 
 	/**
