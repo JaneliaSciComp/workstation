@@ -37,6 +37,7 @@ extends PyramidTextureLoadAdapter
 	public BlockTiffOctreeLoadAdapter(File topFolder) 
 	throws IOException
 	{
+		getTextureCache().setIndexStyle(TextureCache.IndexStyle.OCTREE);
 		setTopFolder(topFolder);
 	}
 	

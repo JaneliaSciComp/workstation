@@ -1,12 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
-import java.util.Map;
-
 import javax.media.opengl.GL2;
-
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
-
 import com.jogamp.opengl.util.texture.TextureCoords;
 
 /**
@@ -49,7 +45,7 @@ implements GLActor
 	}
 
 	// Choose the best available texture for this tile
-	public void assignTexture(Map<PyramidTileIndex, TileTexture> textureCache) 
+	public void assignTexture(TextureCache textureCache) 
 	{
 		if (getStage().ordinal() >= Stage.BEST_TEXTURE_LOADED.ordinal())
 			return; // Already as good as it gets

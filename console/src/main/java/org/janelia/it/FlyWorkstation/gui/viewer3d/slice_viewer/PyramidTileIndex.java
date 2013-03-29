@@ -12,6 +12,16 @@ import java.util.Vector;
  */
 public class PyramidTileIndex 
 {
+	private final int x;
+	private final int y;
+	private final int z;
+	private final int zoom;
+	private final int maxZoom;
+	
+	public int getMaxZoom() {
+		return maxZoom;
+	}
+
 	public int getX() {
 		return x;
 	}
@@ -28,16 +38,12 @@ public class PyramidTileIndex
 		return zoom;
 	}
 
-	private final int x;
-	private final int y;
-	private final int z;
-	private final int zoom;
-	
-	public PyramidTileIndex(int x, int y, int z, int zoom) {
+	public PyramidTileIndex(int x, int y, int z, int zoom, int maxZoom) {
 		this.x = x;
 		this.y = y;
 		this.z = z;
 		this.zoom = zoom;
+		this.maxZoom = maxZoom;
 	}
 
 	@Override
@@ -100,7 +106,7 @@ public class PyramidTileIndex
 		int y = getY()/2;
 		int z = getZ();
 		int zoom = getZoom() - 1;
-		return new PyramidTileIndex(x, y, z, zoom);
+		return new PyramidTileIndex(x, y, z, zoom, maxZoom);
 	}
 
 	// Retarded Java philosophy eschews built-in Pair type nor multiple return values

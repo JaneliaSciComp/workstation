@@ -1,8 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -74,10 +72,10 @@ implements GLActor
 	// tiles are loading.
 	private TileSet lastGoodTiles;
 
-	private TileServer server;
+	private TileServer tileServer;
 	private boolean needsGlDisposal = false; // flag for deferred OpenGL data reset
 	private boolean needsTextureCacheClear = false; // flag for deferred clear of texture cache
-	private Map<PyramidTileIndex, TileTexture> textureCache = new Hashtable<PyramidTileIndex, TileTexture>();
+	// private TextureCache textureCache = new TextureCache();
 	private ExecutorService textureLoadExecutor = Executors.newFixedThreadPool(4);
 	private Set<PyramidTileIndex> neededTextures;
 	private PyramidTextureLoadAdapter loadAdapter;
@@ -102,11 +100,11 @@ implements GLActor
 		}
 	};
 	
-	public SliceActor(TileServer server)
+	public SliceActor(TileServer tileServer)
 	{
-		this.server = server;
-		server.getVolumeInitializedSignal().connect(clearDataSlot);
-		server.getDataChangedSignal().connect(dataChangedSignal); 
+		this.tileServer = tileServer;
+		tileServer.getVolumeInitializedSignal().connect(clearDataSlot);
+		tileServer.getDataChangedSignal().connect(dataChangedSignal); 
 	}
 
 	@Override
@@ -124,7 +122,7 @@ implements GLActor
 			// log.info("Clearing tile cache");
 			dispose(gl);
 			if (needsTextureCacheClear) {
-				textureCache.clear();
+				tileServer.getTextureCache().clear();
 				for (Tile2d tile : tiles) {
 					tile.setBestTexture(null);
 					tile.setStage(Tile2d.Stage.NO_TEXTURE_LOADED);
@@ -183,7 +181,7 @@ implements GLActor
 	@Override
 	public void dispose(GL2 gl) {
 		// System.out.println("dispose RavelerTileServer");
-		for (TileTexture tileTexture : textureCache.values()) {
+		for (TileTexture tileTexture : tileServer.getTextureCache().values()) {
 			if (tileTexture.getStage().ordinal() < TileTexture.Stage.GL_LOADED.ordinal())
 				continue;
 			PyramidTexture joglTexture = tileTexture.getTexture();
@@ -195,7 +193,7 @@ implements GLActor
 
 	@Override
 	public BoundingBox3d getBoundingBox3d() {
-		return server.getBoundingBox3d();
+		return tileServer.getBoundingBox3d();
 	}
 	
 	public Signal getDataChangedSignal() {
@@ -206,12 +204,12 @@ implements GLActor
 	public TileSet getDisplayTiles() 
 	{
 		// Update latest tile set
-		latestTiles = server.createLatestTiles();
-		latestTiles.assignTextures(textureCache);
+		latestTiles = tileServer.createLatestTiles();
+		latestTiles.assignTextures(tileServer.getTextureCache());
 		
 		// Need to assign textures to emergency tiles too...
 		if (emergencyTiles != null)
-			emergencyTiles.assignTextures(textureCache);
+			emergencyTiles.assignTextures(tileServer.getTextureCache());
 		
 		// Maybe initialize emergency tiles
 		if (emergencyTiles == null)
@@ -289,16 +287,16 @@ implements GLActor
 	
 	private void queueTextureLoad(Set<PyramidTileIndex> textures) 
 	{
-		loadAdapter = server.getLoadAdapter(); // TODO - is tile server the right place to get LoadAdapter?
+		loadAdapter = tileServer.getLoadAdapter(); // TODO - is tile server the right place to get LoadAdapter?
 		for (PyramidTileIndex ix : textures) {
-			if (! textureCache.containsKey(ix)) {
+			if (! tileServer.getTextureCache().containsKey(ix)) {
 				if (loadAdapter == null)
 					continue;
 				TileTexture t = new TileTexture(ix, loadAdapter);
 				t.getRamLoadedSignal().connect(getDataChangedSignal());
-				textureCache.put(ix, t);
+				tileServer.getTextureCache().put(ix, t);
 			}
-			TileTexture texture = textureCache.get(ix);
+			TileTexture texture = tileServer.getTextureCache().get(ix);
 			// TODO - maybe only submit UNINITIALIZED textures, if we don't wish to retry failed ones
 			// TODO - handle MISSING textures vs. ERROR textures
 			if (texture.getStage().ordinal() < TileTexture.Stage.LOAD_QUEUED.ordinal()) 
@@ -307,11 +305,11 @@ implements GLActor
 	}
 
 	public void reportTextureTimings() {
-		if (textureCache.size() == 0) {
+		if (tileServer.getTextureCache().size() == 0) {
 			System.out.println("(No textures were loaded)");
 			return;
 		}
-		for (TileTexture texture : textureCache.values()) {
+		for (TileTexture texture : tileServer.getTextureCache().values()) {
 			// Time to download image bytes
 			long value = texture.getDownloadDataTime();
 			if (value != texture.getInvalidTime()) {

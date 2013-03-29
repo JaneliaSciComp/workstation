@@ -19,7 +19,7 @@ extends Vector<Tile2d>
 {
 	private static final long serialVersionUID = 1L;
 
-	public void assignTextures(Map<PyramidTileIndex, TileTexture> textureCache) {
+	public void assignTextures(TextureCache textureCache) {
 		for (Tile2d tile : this) {
 			tile.assignTexture(textureCache);
 		}

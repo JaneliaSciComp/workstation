@@ -25,6 +25,7 @@ extends PyramidTextureLoadAdapter
 	
 	public RavelerLoadAdapter(URL urlStalk) {
 		this.urlStalk = urlStalk;
+		getTextureCache().setIndexStyle(TextureCache.IndexStyle.QUADTREE);
 		parseMetadata(urlStalk);
 	}
 	

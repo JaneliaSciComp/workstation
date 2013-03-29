@@ -8,6 +8,8 @@ import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
 
 public abstract class PyramidTextureLoadAdapter 
 {
+	private TextureCache textureCache = new TextureCache();
+
 	public static class MissingTileException extends Exception {
 		private static final long serialVersionUID = 1L;
 	};
@@ -83,6 +85,10 @@ public abstract class PyramidTextureLoadAdapter
 
 	public PyramidTileFormat getTileFormat() {
 		return tileFormat;
+	}
+
+	public TextureCache getTextureCache() {
+		return textureCache;
 	}
 
 }

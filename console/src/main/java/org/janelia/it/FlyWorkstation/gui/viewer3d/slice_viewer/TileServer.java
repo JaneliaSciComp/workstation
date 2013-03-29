@@ -94,7 +94,7 @@ implements VolumeImage3d
 		
 		for (int x = xMin; x <= xMax; ++x) {
 			for (int y = yMin; y <= yMax; ++y) {
-				PyramidTileIndex key = new PyramidTileIndex(x, y, z, zoom);
+				PyramidTileIndex key = new PyramidTileIndex(x, y, z, zoom, zoomMax);
 				Tile2d tile = new Tile2d(key, tileFormat);
 				tile.setYMax(getBoundingBox3d().getMax().getY()); // To help flip y
 				result.add(tile);
@@ -128,6 +128,10 @@ implements VolumeImage3d
 		return dataChangedSignal;
 	}
 
+	public TextureCache getTextureCache() {
+		return loadAdapter.getTextureCache();
+	}
+	
 	public Viewport getViewport() {
 		return viewport;
 	}
@@ -169,10 +173,12 @@ implements VolumeImage3d
 		}
 		// Now we can start replacing the previous state
 		try {
-			if (useRaveler)
+			if (useRaveler) {
 				loadAdapter = new RavelerLoadAdapter(folderUrl);
-			else
+			}
+			else {
 				loadAdapter = new BlockTiffOctreeLoadAdapter(new File(folderUrl.toURI()));
+			}
 			// Compute bounding box
 			PyramidTileFormat tf = loadAdapter.getTileFormat();
 			double sv[] = tf.getVoxelMicrometers();
