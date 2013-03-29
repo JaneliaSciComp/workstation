@@ -110,15 +110,18 @@ extends PyramidTextureLoadAdapter
 		int depth = octreeDepth - tileIndex.getZoom();
 		assert(depth >= 0);
 		assert(depth <= octreeDepth);
-		// x and y are already corrected for tile size
+		// x and y are already corrected for tile size and zoom level
 		int x = tileIndex.getX();
 		int y = tileIndex.getY();
 		// ***NOTE Raveler Z is slice count, not tile count***
+		// so divide by tile Z dimension, to make z act like x and y
 		int z = tileIndex.getZ() / tileFormat.getTileSize()[2];
+		// and divide by zoom scale
+		z = z / (int)Math.pow(2, tileIndex.getZoom());
 		// start at lowest zoom to build up octree coordinates
 		for (int d = 0; d < (depth - 1); ++d) {
 			// How many Raveler tiles per octant at this zoom?
-			int scale = (int)(Math.pow(2, d)+0.1);
+			int scale = (int)(Math.pow(2, depth - 2 - d)+0.1);
 			int dx = x / scale;
 			int dy = y / scale;
 			int dz = z / scale;
