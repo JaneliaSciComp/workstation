@@ -367,6 +367,7 @@ public class AlignmentBoardViewer extends Viewer {
         }
     }
 
+    /** An experiment in animating the view.  If ever used, should be moved elsewhere. */
     public class BrainGlow extends Thread {
         private float gamma = 0.0f;
         public boolean isRunning = true;
