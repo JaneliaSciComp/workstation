@@ -296,12 +296,12 @@ public class TextureMediator {
         }
         else {
             // This: tested vs 1-byte mask.
-            if ( textureData.getChannelCount()  == 1 ) {
+            if ( textureData.getPixelByteCount()  == 1 ) {
                 rtnVal = GL2.GL_UNSIGNED_BYTE;
             }
 
             // This throws excepx for current read method.
-            if ( textureData.getChannelCount() == 2 ) {
+            if ( textureData.getPixelByteCount() == 2 ) {
                 rtnVal = GL2.GL_UNSIGNED_SHORT;
             }
         }
