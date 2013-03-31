@@ -134,7 +134,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
      * @throws Exception
      */
     @Override
-    public int addChannelData(byte[] channelData, long volumePosition) throws Exception {
+    public synchronized int addChannelData(byte[] channelData, long volumePosition) throws Exception {
         init();
 
         // Assumed little-endian and two bytes.

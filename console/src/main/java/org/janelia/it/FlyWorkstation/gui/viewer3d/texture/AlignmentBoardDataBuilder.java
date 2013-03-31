@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.MaskChanRenderableData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.SampleData;
@@ -157,6 +158,15 @@ public class AlignmentBoardDataBuilder implements Serializable {
      */
     public Collection<SampleData> getSamples() {
         return sampleDataList;
+    }
+
+    /**
+     * Returns all the renderable meta data, including compartments, neuron fragments, etc.
+     *
+     * @return beans plus their mask and channel files.
+     */
+    public Collection<MaskChanRenderableData> getRenderableDatas() {
+        return Collections.EMPTY_LIST;
     }
 
     //--------------------------------------HELPERS
