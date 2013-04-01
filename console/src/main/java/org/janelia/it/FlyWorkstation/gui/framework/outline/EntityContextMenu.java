@@ -96,7 +96,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getGotoRelatedItem());
 
         setNextAddRequiresSeparator(true);
-        add(getImportItem());
+//        add(getImportItem());
         add(getNewFolderItem());
         add(getAddToRootFolderItem());
         add(getAddToSplitPickingSessionItem());
