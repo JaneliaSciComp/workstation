@@ -203,12 +203,21 @@ extends PyramidTextureLoadAdapter
 			localLoadTimer.mark("merged channels");
 		}
 		
-		BufferedImage bufferedImage = new NullOpImage(composite, null, null, 
-				OpImage.OP_NETWORK_BOUND).getAsBufferedImage();
-		localLoadTimer.mark("converted to BufferedImage");
-
-		PyramidTextureData result = convertToGlFormat(bufferedImage);
-		localLoadTimer.mark("converted to OpenGL format");
+		boolean useJoglTexture = false;
+		PyramidTextureData result = null;
+		if (useJoglTexture) {
+			// JOGL texture wrapper implementation
+			BufferedImage bufferedImage = new NullOpImage(composite, null, null, 
+					OpImage.OP_IO_BOUND).getAsBufferedImage();
+			localLoadTimer.mark("converted to BufferedImage");
+			result = convertToGlFormat(bufferedImage);
+			localLoadTimer.mark("converted to OpenGL format");
+		} else {
+			// My texture wrapper implementation
+			TextureData2dGL tex = new TextureData2dGL();
+			tex.loadRenderedImage(composite);
+			result = tex;
+		}
 		loadTimer.putAll(localLoadTimer);
 		return result;
 	}

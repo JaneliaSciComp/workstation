@@ -88,7 +88,14 @@ extends PyramidTextureLoadAdapter
 		} catch (IOException e) {
 			throw new TileLoadError(e);
 		}
-		return convertToGlFormat(image);
+		final boolean useJoglTexture = false;
+		if (useJoglTexture) {
+			return convertToGlFormat(image);
+		} else {
+			TextureData2dGL tex = new TextureData2dGL();
+			tex.loadRenderedImage(image);
+			return tex;
+		}
 	}
 
 	protected boolean parseMetadata(URL folderUrl) {

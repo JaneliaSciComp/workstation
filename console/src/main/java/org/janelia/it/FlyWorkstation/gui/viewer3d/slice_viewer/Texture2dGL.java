@@ -10,9 +10,14 @@ implements PyramidTexture
 	private int textureId = 0;
 	private int width = 0;
 	private int height = 0;
-	private TextureCoords textureCoords = new TextureCoords(0, 0, 1, 1);
+	private TextureCoords textureCoords = new TextureCoords(0, 1, 1, 0);
 	private boolean linearized = false;
 
+	public Texture2dGL(int width, int height) {
+		this.width = width;
+		this.height = height;
+	}
+	
 	@Override
 	public void enable(GL2 gl) {
 		gl.glEnable(GL2.GL_TEXTURE_2D);
