@@ -147,7 +147,6 @@ public class RenderablesLoadWorker extends SimpleWorker {
             }
 
             final CyclicBarrier barrier = new CyclicBarrier( metaDatas.size() + 1 );
-            String filename = null;
             for ( MaskChanRenderableData metaData: metaDatas ) {
                 // Multithreaded load.
                 LoadRunnable runnable = new LoadRunnable( resolver, metaData, barrier );
@@ -171,13 +170,13 @@ public class RenderablesLoadWorker extends SimpleWorker {
                 }
 
             } catch ( BrokenBarrierException bbe ) {
-                logger.error( "Barrier await failed during loading " + filename, bbe );
+                logger.error( "Barrier await failed during set-volume.", bbe );
                 bbe.printStackTrace();
             } catch ( InterruptedException ie ) {
-                logger.error( "Thread interrupted during loading " + filename, ie );
+                logger.error( "Thread interrupted during set-volume.", ie );
                 ie.printStackTrace();
             } catch ( Exception ex ) {
-                logger.error( "Exception during loading " + filename, ex );
+                logger.error( "Exception during set-volume.", ex );
                 ex.printStackTrace();
             } finally {
                 if ( ! barrier.isBroken() ) {
@@ -233,9 +232,7 @@ public class RenderablesLoadWorker extends SimpleWorker {
                         )
                 );
 
-        // Only the neuron fragment renderables are relevant to this load.  The signal renderable
-        // is kept separate.  Hence skip the first (0th) renderable.
-        System.out.println( "Reading " + maskChanRenderableData.getMaskPath() );
+        //System.out.println( "Reading " + maskChanRenderableData.getMaskPath() );
 
         if ( maskChanRenderableData.isCompartment() )  {
             // Iterating through these files will cause all the relevant data to be loaded into
