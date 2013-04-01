@@ -231,11 +231,18 @@ public class DownSampler {
 
                 for ( int xNbh = x; xNbh < x + xScale && xNbh < sx; xNbh++ ) {
                     byte[] voxelVal = new byte[ voxelBytes ];
+                    int arrayCopyLoc = nbhYOffset + (xNbh * voxelBytes);
                     try {
                     System.arraycopy(
-                            fullSizeVolume, nbhYOffset + (xNbh * voxelBytes), voxelVal, 0, voxelBytes
+                            fullSizeVolume, arrayCopyLoc, voxelVal, 0, voxelBytes
                     );
                     } catch ( Exception ex ) {
+                        logger.error(
+                                "Exception while trying to copy to {} with max of {}.",
+                                arrayCopyLoc,
+                                fullSizeVolume.length
+                        );
+                        logger.info( "Expected dimensions are " + sx + " x " + sy + " x " + sz );
                         ex.printStackTrace();
                         throw new RuntimeException(ex);
                     }

@@ -42,6 +42,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     @Override
     public void init() {
         if ( ! isInitialized ) {
+            logger.info( "Initializing" );
             volumeData = new byte[ (int)(sx * sy * sz) * byteCount ];
             isInitialized = true;
         }
@@ -57,7 +58,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
      * @throws Exception thrown by called methods or if bad inputs are received.
      */
     @Override
-    public int addMaskData(Integer maskNumber, long position) throws Exception {
+    public synchronized int addMaskData(Integer maskNumber, long position) throws Exception {
         init();
 
         // Assumed little-endian.
@@ -113,6 +114,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
 
     @Override
     public TextureDataI getCombinedTextureData() {
+        logger.info( "Retrieving combined texture data." );
         // TODO: same decisioning as the RenderablesChannelsBuilder re how much to downsample.
         DownSampler downSampler = new DownSampler( sx, sy, sz );
         DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(
