@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
  * renderables have parts of their volumes overlapping, the last one added takes precence over any previously-
  * added renderable.
  */
-public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements MaskBuilderI {
+public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements MaskBuilderI, TextureBuilderI {
 
     private static final int UNIVERSAL_MASK_BYTE_COUNT = 2;
     private static final int UNIVERSAL_MASK_CHANNEL_COUNT = 1;
@@ -73,6 +73,12 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
 
     public void setChannelMetaData( ChannelMetaData metaData ) {}
     //-------------------------END:-----------IMPLEMENT MaskChanDataAcceptorI
+
+    //----------------------------------------IMPLEMENT TextureBuilderI
+    /** Alternate-use method. */
+    public TextureDataI buildTextureData() {
+        return this.getCombinedTextureData();
+    }
 
     //----------------------------------------IMPLEMENT MaskBuilderI
 

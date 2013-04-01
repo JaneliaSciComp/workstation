@@ -7,6 +7,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.RenderMapTextureBean;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 
 import javax.swing.*;
 import java.awt.*;
@@ -100,8 +101,7 @@ public class Mip3d extends BaseGLViewer {
     ) {
         if ( volumeLoader != null ) {
             VolumeBrick brick = new VolumeBrick(renderer);
-            brick.setGammaAdjustment( gamma );
-            volumeLoader.populateVolumeAcceptor(brick);
+            brick.setGammaAdjustment(gamma);
             if ( maskBuilder != null ) {
                 brick.setMaskTextureData( maskBuilder.getCombinedTextureData() );
 
@@ -110,12 +110,49 @@ public class Mip3d extends BaseGLViewer {
 
                 brick.setColorMapTextureData( renderMapTextureData );
             }
+            volumeLoader.populateVolumeAcceptor(brick);
 
             addActorToRenderer(brick);
             return true;
         }
         else
             return false;
+    }
+
+    /**
+     * A multi-thread-load-friendly overload of the set-volume method.  The texture objects may be
+     * built at the caller's leisure, rather than being requested of passed-in builders.
+     *
+     * @param signalTexture for the intensity data.
+     * @param maskTexture for the labels.
+     * @param renderMapping for the mapping of labels to rendering techniques.
+     * @param gamma brightness control.
+     * @return true if sufficient params passed.
+     */
+    public boolean setVolume(
+            TextureDataI signalTexture,
+            TextureDataI maskTexture,
+            RenderMappingI renderMapping,
+            float gamma ) {
+        if ( signalTexture != null ) {
+            VolumeBrick brick = new VolumeBrick( renderer );
+            brick.setGammaAdjustment( gamma );
+            brick.setTextureData( signalTexture );
+            if ( maskTexture != null ) {
+                brick.setMaskTextureData( maskTexture );
+
+                RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
+                renderMapTextureData.setMapping( renderMapping );
+                brick.setColorMapTextureData( renderMapTextureData );
+            }
+
+            addActorToRenderer(brick);
+
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     /**

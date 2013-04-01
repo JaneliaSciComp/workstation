@@ -10,6 +10,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableDataSourceI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,8 +43,8 @@ public class RenderablesLoadWorker extends SimpleWorker {
     private MaskChanMultiFileLoader neuronFragmentLoader;
     private RenderMappingI renderMapping;
 
-    private RenderablesMaskBuilder vmb;
-    private RenderablesChannelsBuilder vcb;
+    private RenderablesMaskBuilder maskTextureBuilder;
+    private RenderablesChannelsBuilder signalTextureBuilder;
     private RenderableDataSourceI dataSource;
 
     private FileResolver resolver;
@@ -85,20 +86,20 @@ public class RenderablesLoadWorker extends SimpleWorker {
         ArrayList<MaskChanDataAcceptorI> acceptors = new ArrayList<MaskChanDataAcceptorI>();
 
         // Establish the means for extracting the volume mask.
-        vmb = new RenderablesMaskBuilder();
-        vmb.setRenderables(renderableBeans);
+        maskTextureBuilder = new RenderablesMaskBuilder();
+        maskTextureBuilder.setRenderables(renderableBeans);
 
         // Establish the means for extracting the signal data.
-        vcb = new RenderablesChannelsBuilder();
+        signalTextureBuilder = new RenderablesChannelsBuilder();
 
         // Setup the loader to traverse all this data on demand.
         neuronFragmentLoader = new MaskChanMultiFileLoader();
-        acceptors.add(vmb);
-        acceptors.add(vcb);
+        acceptors.add(maskTextureBuilder);
+        acceptors.add(signalTextureBuilder);
         neuronFragmentLoader.setAcceptors(acceptors);
 
         compartmentLoader = new MaskChanMultiFileLoader();
-        compartmentLoader.setAcceptors(Arrays.<MaskChanDataAcceptorI>asList(vmb));
+        compartmentLoader.setAcceptors(Arrays.<MaskChanDataAcceptorI>asList(maskTextureBuilder));
 
         if ( loadFiles ) {
             multiThreadedDataLoad(renderableDatas);
@@ -132,6 +133,11 @@ public class RenderablesLoadWorker extends SimpleWorker {
         SessionMgr.getSessionMgr().handleException(error);
     }
 
+    /**
+     * Carries out all file-reading in parallel.
+     *
+     * @param metaDatas one thread for each of these.
+     */
     private void multiThreadedDataLoad(Collection<MaskChanRenderableData> metaDatas) {
         mip3d.clear();
 
@@ -146,43 +152,13 @@ public class RenderablesLoadWorker extends SimpleWorker {
                 resolver = new CacheFileResolver();
             }
 
-            final CyclicBarrier barrier = new CyclicBarrier( metaDatas.size() + 1 );
-            for ( MaskChanRenderableData metaData: metaDatas ) {
-                // Multithreaded load.
-                LoadRunnable runnable = new LoadRunnable( resolver, metaData, barrier );
-                new Thread( runnable ).start();
-            }
+            multiThreadedFileLoad( metaDatas );
 
-            try {
-                barrier.await();
+            compartmentLoader.close();
+            neuronFragmentLoader.close();
 
-                if ( barrier.isBroken() ) {
-                    throw new Exception( "Load failed." );
-                }
-                else {
-                    compartmentLoader.close();
-                    neuronFragmentLoader.close();
+            multiThreadedTextureBuild();
 
-                    // The volume's data is loaded here.
-                    if ( ! mip3d.setVolume( vcb, vmb, renderMapping, GAMMA_VALUE )) {
-                        logger.error( "Failed to load volume to mip3d." );
-                    }
-                }
-
-            } catch ( BrokenBarrierException bbe ) {
-                logger.error( "Barrier await failed during set-volume.", bbe );
-                bbe.printStackTrace();
-            } catch ( InterruptedException ie ) {
-                logger.error( "Thread interrupted during set-volume.", ie );
-                ie.printStackTrace();
-            } catch ( Exception ex ) {
-                logger.error( "Exception during set-volume.", ex );
-                ex.printStackTrace();
-            } finally {
-                if ( ! barrier.isBroken() ) {
-                    barrier.reset(); // Signal to others: failed.
-                }
-            }
 
         }
 
@@ -194,6 +170,81 @@ public class RenderablesLoadWorker extends SimpleWorker {
         // Add this last.  "show-loading" removes it.  This way, it is shown only
         // when it becomes un-busy.
         viewer.add(mip3d, BorderLayout.CENTER);
+    }
+
+    /**
+     * Carry out the texture building in parallel.  One thread for each texture type.
+     */
+    private void multiThreadedTextureBuild() {
+        // Multi-threading, part two.  Here, the renderable textures are created out of inputs.
+        final CyclicBarrier buildBarrier = new CyclicBarrier( 3 );
+        try {
+            // These two texture-build steps will proceed in parallel.
+            TexBuildRunnable signalBuilderRunnable = new TexBuildRunnable( signalTextureBuilder, buildBarrier );
+            TexBuildRunnable maskBuilderRunnable = new TexBuildRunnable( maskTextureBuilder, buildBarrier );
+
+            new Thread( signalBuilderRunnable ).start();
+            new Thread( maskBuilderRunnable ).start();
+
+            buildBarrier.await();
+
+            if ( buildBarrier.isBroken() ) {
+                throw new Exception( "Tex build failed." );
+            }
+
+            TextureDataI signalTexture = signalBuilderRunnable.getTextureData();
+            TextureDataI maskTexture = maskBuilderRunnable.getTextureData();
+
+
+            if ( ! mip3d.setVolume( signalTexture, maskTexture, renderMapping, GAMMA_VALUE ) ) {
+                logger.error( "Failed to load volume to mip3d." );
+            }
+
+        } catch ( BrokenBarrierException bbe ) {
+            logger.error( "Barrier await failed during texture build.", bbe );
+            bbe.printStackTrace();
+        } catch ( InterruptedException ie ) {
+            logger.error( "Thread interrupted during texture build.", ie );
+            ie.printStackTrace();
+        } catch ( Exception ex ) {
+            logger.error( "Exception during texture build.", ex );
+            ex.printStackTrace();
+        } finally {
+            if ( ! buildBarrier.isBroken() ) {
+                buildBarrier.reset(); // Signal to others: failed.
+            }
+        }
+    }
+
+    private void multiThreadedFileLoad(Collection<MaskChanRenderableData> metaDatas) {
+        final CyclicBarrier loadBarrier = new CyclicBarrier( metaDatas.size() + 1 );
+        for ( MaskChanRenderableData metaData: metaDatas ) {
+            // Multithreaded load.
+            LoadRunnable runnable = new LoadRunnable( resolver, metaData, loadBarrier );
+            new Thread( runnable ).start();
+        }
+
+        try {
+            loadBarrier.await();
+
+            if ( loadBarrier.isBroken() ) {
+                throw new Exception( "Load failed." );
+            }
+
+        } catch ( BrokenBarrierException bbe ) {
+            logger.error( "Barrier await failed during file load.", bbe );
+            bbe.printStackTrace();
+        } catch ( InterruptedException ie ) {
+            logger.error( "Thread interrupted during file load.", ie );
+            ie.printStackTrace();
+        } catch ( Exception ex ) {
+            logger.error( "Exception during file load.", ex );
+            ex.printStackTrace();
+        } finally {
+            if ( ! loadBarrier.isBroken() ) {
+                loadBarrier.reset(); // Signal to others: failed.
+            }
+        }
     }
 
     private void renderChange(Collection<MaskChanRenderableData> metaDatas) {
@@ -280,6 +331,34 @@ public class RenderablesLoadWorker extends SimpleWorker {
                 bbe.printStackTrace();
             } catch ( InterruptedException ie ) {
                 ie.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Simply makes a texture builder build its texture, inside a thread.  Once complete, the getter for the
+     * texture data may be called.  Not before.
+     */
+    public class TexBuildRunnable implements Runnable {
+        private TextureBuilderI textureBuilder;
+        private CyclicBarrier barrier;
+        private TextureDataI textureData;
+
+        public TexBuildRunnable( TextureBuilderI textureBuilder, CyclicBarrier barrier ) {
+            this.textureBuilder = textureBuilder;
+            this.barrier = barrier;
+        }
+
+        public TextureDataI getTextureData() {
+            return textureData;
+        }
+
+        public void run() {
+            try {
+                textureData = textureBuilder.buildTextureData();
+                barrier.await();
+            } catch ( Exception ex ) {
+                ex.printStackTrace();
             }
         }
     }
