@@ -135,7 +135,7 @@ public class ImportDialog extends ModalDialog {
         advancedOptionsPanel.add(getEntityTypeChooser());
 
         mainPanel.add(attrPanel);
-        mainPanel.add(advancedOptionsPanel);
+//        mainPanel.add(advancedOptionsPanel);
 
         add(mainPanel, BorderLayout.CENTER);
 //        SpringUtilities.makeCompactGrid(attrPanel, attrPanel.getComponentCount()/3, 2, 6, 6, 6, 6);
