@@ -311,7 +311,7 @@ public class Browser extends JFrame implements Cloneable {
 
         outlookBar = new JOutlookBar2();
         outlookBar.addBar(BAR_DATA, Icons.getIcon("folders_explorer_medium.png"), entityOutline);
-        outlookBar.addBar(BAR_SAMPLES, Icons.getIcon("folders_explorer_medium.png"), entityWrapperOutline);
+//        outlookBar.addBar(BAR_SAMPLES, Icons.getIcon("folders_explorer_medium.png"), entityWrapperOutline);
         outlookBar.addBar(BAR_SESSIONS, Icons.getIcon("cart_medium.png"), sessionOutline);
         outlookBar.addBar(BAR_TASKS, Icons.getIcon("cog_medium.png"), taskOutline);
         
