@@ -52,7 +52,7 @@ public class SearchMenu extends JMenu {
                 browser.getMaskSearchDialog().showDialog();
             }
         });
-        add(maskSearchMenuItem);
+//        add(maskSearchMenuItem);
 
         final MAASearchDialog maaSearchDialog = browser.getMAASearchDialog();
         if (maaSearchDialog!=null && maaSearchDialog.isAccessible()) {
