@@ -239,9 +239,17 @@ public class DownSamplerTest {
     };
 
     @Test
-    public void doDownSample() throws Exception {
+    public void doDownSample2PerVoxel() throws Exception {
         doDownSample( "2-bytes per voxel/tube", RAW_VOLUME, 8, 8, 8, 2.0, 2 );
+    }
+
+    @Test
+    public void doDownSampleTube1PerVoxel() throws Exception {
         doDownSample( "1-byte-per-voxel/tube", ONE_BYTE_VOLUME, 16, 8, 8, 2.0, 1 );
+    }
+
+    @Test
+    public void doDownSampleCircle1PerVoxel() throws Exception {
         doDownSample( "1-byte-per-voxel/circle", CIRCLE_VOLUME, 16, 8, 8, 2.0, 1 );
     }
 
