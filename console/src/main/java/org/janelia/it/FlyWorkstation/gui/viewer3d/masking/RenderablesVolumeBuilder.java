@@ -23,9 +23,6 @@ public abstract class RenderablesVolumeBuilder implements MaskChanDataAcceptorI 
     private int nextVolumeCount = 0;
     private VolumeConsistencyChecker checker = new VolumeConsistencyChecker();
 
-    //----------------------------------------CONFIGURATOR METHODS
-    public abstract void init();
-
     //----------------------------------------IMPLEMENT MaskChanDataAcceptorI (partially)
     @Override
     public synchronized void setSpaceSize( long x, long y, long z, float[] coordCoverage ) {

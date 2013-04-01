@@ -25,6 +25,8 @@ import java.util.TreeMap;
  */
 public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder implements VolumeLoaderI {
 
+    private static final String COUNT_DISCREPANCY_FORMAT = "%s count mismatch. Old count was %d; new count is %d.\n";
+
     private ChannelMetaData channelMetaData;
     private byte[] volumeData;
 
@@ -60,53 +62,6 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         }
 
         System.out.println("Found zeros in " + volumeDataZeroCount + " / " + volumeData.length + ", or " + ((double)volumeDataZeroCount/(double)volumeData.length * 100.0) + "%." );
-    }
-
-    //----------------------------------------ABSTRACT OVERRIDE IMPLEMENTATIONS
-    /** Call this prior to any update-data operations. */
-    @Override
-    public void init() {
-        if ( needsChannelInit) {
-            logger.info( "Initialize called..." );
-            // The size of any one voxel will be the number of channels times the bytes per channel.
-            if ( channelMetaData.channelCount == 3 ) {
-                // Round out to four.
-                ChannelMetaData newChannelMetaData = new ChannelMetaData();
-                newChannelMetaData.channelCount = channelMetaData.channelCount + 1;
-                newChannelMetaData.byteCount = channelMetaData.byteCount;
-                newChannelMetaData.blueChannelInx = channelMetaData.blueChannelInx;
-                newChannelMetaData.greenChannelInx = channelMetaData.greenChannelInx;
-                newChannelMetaData.redChannelInx = channelMetaData.redChannelInx;
-
-                channelMetaData = newChannelMetaData;
-            }
-            long arrayLength = sx * sy * sz * channelMetaData.byteCount * channelMetaData.channelCount;
-            if ( arrayLength > Integer.MAX_VALUE ) {
-                throw new IllegalArgumentException(
-                        "Total length of input: " + arrayLength  +
-                                " exceeds maximum array size capacity.  " +
-                                "If this is truly required, code redesign will be necessary."
-                );
-            }
-            if ( arrayLength == 0 ) {
-                throw new IllegalArgumentException(
-                        "Array length of zero, for all data."
-                );
-            }
-
-            if ( sx > Integer.MAX_VALUE || sy > Integer.MAX_VALUE || sz > Integer.MAX_VALUE ) {
-                throw new IllegalArgumentException(
-                        "One or more of the axial lengths (" + sx + "," + sy + "," + sz +
-                                ") exceeds max value for an integer.  " +
-                                "If this is truly required, code redesign will be necessary."
-                );
-            }
-
-            if ( volumeData == null ) {
-                volumeData = new byte[ (int) arrayLength ];
-            }
-            needsChannelInit = false;
-        }
     }
 
     //----------------------------------------IMPLEMENT MaskChanDataAcceptorI
@@ -167,8 +122,13 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         return Acceptable.channel;
     }
 
+    /**
+     * Note: this can throw Null Pointer Exception, if channel meta data has not yet been set.
+     * @return number of channels in file.
+     */
     @Override
     public int getChannelCount() {
+        checkReady();
         return channelMetaData.channelCount;
     }
 
@@ -179,9 +139,37 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
      * @param metaData what's to know about channels.
      */
     @Override
-    public void setChannelMetaData(ChannelMetaData metaData) {
-        this.channelMetaData = metaData;
-        needsChannelInit = true;
+    public synchronized void setChannelMetaData(ChannelMetaData metaData) {
+        if ( channelMetaData == null ) {
+            this.channelMetaData = metaData;
+            needsChannelInit = true;
+        }
+        else {
+            StringBuilder errSb = new StringBuilder();
+            if ( metaData.rawChannelCount != this.channelMetaData.rawChannelCount ) {
+                errSb.append(
+                        String.format(
+                                COUNT_DISCREPANCY_FORMAT,
+                                "Channel",
+                                this.channelMetaData.rawChannelCount,
+                                metaData.rawChannelCount
+                        )
+                );
+            }
+            if ( metaData.byteCount != this.channelMetaData.byteCount ) {
+                errSb.append(
+                        String.format(
+                                COUNT_DISCREPANCY_FORMAT,
+                                "Byte",
+                                this.channelMetaData.byteCount,
+                                metaData.byteCount
+                        )
+                );
+            }
+            if ( errSb.length() > 0 ) {
+                throw new RuntimeException( errSb.toString() );
+            }
+        }
     }
 
     @Override
@@ -193,6 +181,62 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     //-------------------------END:-----------IMPLEMENT MaskChanDataAcceptorI
 
     //----------------------------------------HELPER METHODS
+    /** Call this prior to any update-data operations. */
+    private void init() {
+        if ( needsChannelInit) {
+            checkReady();
+            logger.info( "Initialize called..." );
+            // The size of any one voxel will be the number of channels times the bytes per channel.
+            if ( channelMetaData.rawChannelCount == 3 ) {
+                // Round out to four.
+                ChannelMetaData newChannelMetaData = new ChannelMetaData();
+                newChannelMetaData.channelCount = channelMetaData.rawChannelCount + 1;
+                newChannelMetaData.rawChannelCount = channelMetaData.rawChannelCount;
+                newChannelMetaData.byteCount = channelMetaData.byteCount;
+                newChannelMetaData.blueChannelInx = channelMetaData.blueChannelInx;
+                newChannelMetaData.greenChannelInx = channelMetaData.greenChannelInx;
+                newChannelMetaData.redChannelInx = channelMetaData.redChannelInx;
+
+                channelMetaData = newChannelMetaData;
+            }
+            long arrayLength = sx * sy * sz * channelMetaData.byteCount * channelMetaData.channelCount;
+            if ( arrayLength > Integer.MAX_VALUE ) {
+                throw new IllegalArgumentException(
+                        "Total length of input: " + arrayLength  +
+                                " exceeds maximum array size capacity.  " +
+                                "If this is truly required, code redesign will be necessary."
+                );
+            }
+            if ( arrayLength == 0 ) {
+                throw new IllegalArgumentException(
+                        "Array length of zero, for all data."
+                );
+            }
+
+            if ( sx > Integer.MAX_VALUE || sy > Integer.MAX_VALUE || sz > Integer.MAX_VALUE ) {
+                throw new IllegalArgumentException(
+                        "One or more of the axial lengths (" + sx + "," + sy + "," + sz +
+                                ") exceeds max value for an integer.  " +
+                                "If this is truly required, code redesign will be necessary."
+                );
+            }
+
+            if ( volumeData == null ) {
+                volumeData = new byte[ (int) arrayLength ];
+            }
+            needsChannelInit = false;
+        }
+    }
+
+    private void checkReady() {
+        if ( channelMetaData == null ) {
+            throw new IllegalStateException( "Must set channel meta data prior to this call." );
+        }
+        if ( sx == 0L ) {
+            throw new IllegalStateException( "Must have volume size parameters set prior to this call." );
+        }
+    }
+
     private TextureDataI buildTextureData() {
         // TODO: the decisioning -- how much to downsample, based on info re graphics card.
         //

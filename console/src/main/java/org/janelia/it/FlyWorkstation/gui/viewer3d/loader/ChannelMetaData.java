@@ -12,6 +12,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 public class ChannelMetaData {
     public int byteCount = -1;
     public int channelCount = -1;
+    public int rawChannelCount = -1;
     public int blueChannelInx = -1;
     public int greenChannelInx = -1;
     public int redChannelInx = -1;

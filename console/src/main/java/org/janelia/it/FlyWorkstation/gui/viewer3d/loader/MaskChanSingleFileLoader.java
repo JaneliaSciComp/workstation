@@ -249,7 +249,8 @@ public class MaskChanSingleFileLoader {
         }
 
         channelMetaData = new ChannelMetaData();
-        channelMetaData.channelCount = readByte( channelStream );
+        channelMetaData.rawChannelCount = readByte( channelStream );
+        channelMetaData.channelCount = channelMetaData.rawChannelCount;
         channelMetaData.redChannelInx = readByte( channelStream );
         channelMetaData.blueChannelInx = readByte( channelStream );
         channelMetaData.greenChannelInx = readByte( channelStream );
@@ -475,17 +476,6 @@ public class MaskChanSingleFileLoader {
      */
     private byte readByte( InputStream is ) throws Exception {
         return (byte)is.read();
-    }
-
-    /**
-     * Reads a single byte from the input stream, in LSB order.
-     *
-     * @param raf a random access file, being read at current file pointer.
-     * @return next byte from the stream.
-     * @throws Exception thrown by called methods.
-     */
-    private byte readByte( RandomAccessFile raf ) throws Exception {
-        return (byte)raf.readUnsignedByte();
     }
 
     /**

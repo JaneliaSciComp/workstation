@@ -34,20 +34,6 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
 
     private boolean isInitialized = false;
 
-    //----------------------------------------ABSTRACT OVERRIDE IMPLEMENTATIONS
-
-    /**
-     * ORDER DEPENDENCY: call this only after the super space-set, and byte count set have been called.
-     */
-    @Override
-    public void init() {
-        if ( ! isInitialized ) {
-            logger.info( "Initializing" );
-            volumeData = new byte[ (int)(sx * sy * sz) * byteCount ];
-            isInitialized = true;
-        }
-    }
-
     //----------------------------------------IMPLEMENT MaskChanDataAcceptorI
     /**
      * This is called with data to be loaded.
@@ -163,4 +149,15 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     //-------------END------------------------IMPLEMENT MaskBuilderI
 
     //----------------------------------------HELPER METHODS
+    /**
+     * ORDER DEPENDENCY: call this only after the super space-set, and byte count set have been called.
+     */
+    public void init() {
+        if ( ! isInitialized ) {
+            logger.info( "Initializing" );
+            volumeData = new byte[ (int)(sx * sy * sz) * byteCount ];
+            isInitialized = true;
+        }
+    }
+
 }
