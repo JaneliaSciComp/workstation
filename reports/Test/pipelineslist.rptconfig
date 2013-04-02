@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<report xmlns="http://www.eclipse.org/birt/2005/design" version="3.2.23" id="1">
+    <list-property name="configVars">
+        <structure>
+            <property name="name">__isdisplay__User_176_0</property>
+            <property name="value">zhaot</property>
+        </structure>
+        <structure>
+            <property name="name">__isdisplay__startdate_180_1</property>
+            <property name="value">Feb 20, 2012</property>
+        </structure>
+        <structure>
+            <property name="name">__isdisplay__enddate_181_2</property>
+            <property name="value">Mar 15, 2013</property>
+        </structure>
+        <structure>
+            <property name="name">User_176_3</property>
+            <property name="value">zhaot</property>
+        </structure>
+        <structure>
+            <property name="name">User_176_type_</property>
+            <property name="value">string</property>
+        </structure>
+        <structure>
+            <property name="name">startdate_180_4</property>
+            <property name="value">2012-02-20</property>
+        </structure>
+        <structure>
+            <property name="name">startdate_180_type_</property>
+            <property name="value">date</property>
+        </structure>
+        <structure>
+            <property name="name">enddate_181_5</property>
+            <property name="value">2013-03-15</property>
+        </structure>
+        <structure>
+            <property name="name">enddate_181_type_</property>
+            <property name="value">date</property>
+        </structure>
+    </list-property>
+</report>
