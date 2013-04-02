@@ -16,8 +16,6 @@ import java.awt.Dimension;
  */
 public class TestMaskChan3DViz {
 
-    private static final long MOCK_UID = 777L;
-    private static final String MASK_EXTENSION = ".mask";
     private static final Dimension FRAME_SIZE = new Dimension(100, 10);
 
     /**
