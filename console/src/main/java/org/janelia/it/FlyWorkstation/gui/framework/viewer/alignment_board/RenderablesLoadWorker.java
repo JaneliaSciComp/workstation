@@ -302,6 +302,10 @@ public class RenderablesLoadWorker extends SimpleWorker {
         logger.info("In load thread, ENDED load of renderable {}.", maskChanRenderableData.getBean().getLabelFileNum() );
     }
 
+    public RenderMappingI getRenderMapping() {
+        return renderMapping;
+    }
+
     public class LoadRunnable implements Runnable {
         private MaskChanRenderableData metaData;
         private FileResolver resolver;
