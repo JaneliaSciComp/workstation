@@ -16,7 +16,10 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerPane;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableDataSourceI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ABContextDataSource;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.domain.Neuron;
 import org.janelia.it.FlyWorkstation.model.domain.Sample;
@@ -47,14 +50,16 @@ public class AlignmentBoardViewer extends Viewer {
     private RootedEntity albRootedEntity;
 
     private Mip3d mip3d;
-    private ABLoadWorker loadWorker;
+    private RenderablesLoadWorker loadWorker;
     private ModelMgrObserver modelMgrObserver;
-    private Map<Long,RenderMappingI> renderMappings;
+    private RenderMappingI renderMapping;
     private BrainGlow brainGlow;
     private Logger logger = LoggerFactory.getLogger(AlignmentBoardViewer.class);
 
     public AlignmentBoardViewer(ViewerPane viewerPane) {
         super(viewerPane);
+
+        renderMapping = new ConfigurableColorMapping();
         setLayout(new BorderLayout());
         ModelMgr.getModelMgr().registerOnEventBus(this);
         
@@ -75,7 +80,6 @@ public class AlignmentBoardViewer extends Viewer {
     public void showLoadingIndicator() {
         removeAll();
         add(new JLabel(Icons.getLoadingIcon()));
-        //this.updateUI();
         revalidate();
         repaint();
     }
@@ -315,10 +319,8 @@ public class AlignmentBoardViewer extends Viewer {
             mip3d.refresh();
 
             // Here, should load volumes, for all the different items given.
-            loadWorker = new ABLoadWorker( this, context, mip3d );
-            // Once execution is complete, the render mappings, whose mapping is created on
-            // construction fo the load worker, shall have been filled in.
-            renderMappings = loadWorker.getRenderMappings();
+            //loadWorker = new ABLoadWorker( this, context, mip3d );
+            loadWorker = new RenderablesLoadWorker( this, new ABContextDataSource( context ), mip3d, renderMapping );
             loadWorker.execute();
 
         }
@@ -338,10 +340,8 @@ public class AlignmentBoardViewer extends Viewer {
             // Here, simply make the rendering change.
             // Here, should load volumes, for all the different items given.
 
-            loadWorker = new ABLoadWorker( this, context, mip3d, renderMappings );
-            // Once execution is complete, the render mappings, whose mapping is created on
-            // construction fo the load worker, shall have been filled in.
-            renderMappings = loadWorker.getRenderMappings();
+            //loadWorker = new ABLoadWorker( this, context, mip3d, renderMappings );
+            loadWorker = new RenderablesLoadWorker( this, new ABContextDataSource(context), mip3d, renderMapping );
             loadWorker.setLoadFilesFlag( Boolean.FALSE );
             loadWorker.execute();
 

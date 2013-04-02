@@ -52,12 +52,13 @@ public class RenderablesLoadWorker extends SimpleWorker {
     private Logger logger;
 
     public RenderablesLoadWorker(
-            JComponent container, RenderableDataSourceI dataSource, Mip3d mip3d
+            JComponent container, RenderableDataSourceI dataSource, Mip3d mip3d, RenderMappingI renderMapping
     ) {
         logger = LoggerFactory.getLogger(RenderablesLoadWorker.class);
         this.dataSource = dataSource;
         this.mip3d = mip3d;
         this.viewer = container;
+        this.renderMapping = renderMapping;
     }
 
     public void setResolver( FileResolver resolver ) {
@@ -79,7 +80,6 @@ public class RenderablesLoadWorker extends SimpleWorker {
             renderableBeans.add( renderableData.getBean() );
         }
 
-        renderMapping = new ConfigurableColorMapping();
         renderMapping.setRenderables( renderableBeans );
 
         /* Establish all volume builders for this test. */
