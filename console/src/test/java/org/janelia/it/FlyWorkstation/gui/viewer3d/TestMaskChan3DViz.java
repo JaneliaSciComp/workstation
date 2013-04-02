@@ -2,6 +2,8 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.RenderablesLoadWorker;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
 
 import javax.swing.*;
@@ -49,8 +51,12 @@ public class TestMaskChan3DViz {
 
                     // Now, the vmb and the vcb are fully populated with all data. Can hand that into the
                     // mip3d.
+                    RenderMappingI renderMapping = new ConfigurableColorMapping();
                     RenderablesLoadWorker loadWorker = new RenderablesLoadWorker(
-                            (JComponent)frame.getContentPane(), new Chan3DVizDataSource( args ), mipWidget
+                            (JComponent)frame.getContentPane(),
+                            new Chan3DVizDataSource( args ),
+                            mipWidget,
+                            renderMapping
                     );
                     loadWorker.setResolver( new TrivialFileResolver() );
                     loadWorker.execute();
