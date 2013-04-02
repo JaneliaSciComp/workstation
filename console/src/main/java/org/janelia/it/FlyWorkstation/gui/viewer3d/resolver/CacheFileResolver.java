@@ -19,6 +19,6 @@ public class CacheFileResolver implements FileResolver {
         if ( cachedFile != null )
             return cachedFile.getAbsolutePath();
         else
-            return null;
+            return fileName;
     }
 }
