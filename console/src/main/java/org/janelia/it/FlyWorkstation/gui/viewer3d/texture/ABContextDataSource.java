@@ -6,12 +6,13 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableDataSourceI;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 
 /** Implements the data source, to avoid having to mock up an entire context just to test. */
 public class ABContextDataSource implements RenderableDataSourceI {
@@ -19,53 +20,56 @@ public class ABContextDataSource implements RenderableDataSourceI {
     private static final String MASK_EXTENSION = ".mask";
     private AlignmentBoardContext context;
     private String[] filenames;
+
+    private Logger logger = LoggerFactory.getLogger( ABContextDataSource.class );
     public ABContextDataSource(String[] filenames) {
         this.filenames = filenames;
     }
 
     public ABContextDataSource( AlignmentBoardContext context ) {
         this.context = context;
+        String rootPath = "/groups/scicomp/jacsData/maskChannelTest4";
         filenames = new String[] {
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_1.mask",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_1.chan",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_2.mask",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_2.chan",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_3.mask",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_3.chan",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_4.mask",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_4.chan",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_5.mask",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_5.chan",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_6.mask",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_6.chan",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_7.mask",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_7.chan",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_8.mask",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_8.chan",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_9.mask",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_9.chan",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_10.mask",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_10.chan",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_11.mask",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_11.chan",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_12.mask",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_12.chan",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_13.mask",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_13.chan",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_14.mask",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_14.chan",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_15.mask",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_15.chan",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_16.mask",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_16.chan",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_17.mask",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_17.chan",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_18.mask",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_18.chan",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_19.mask",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_19.chan",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_20.mask",
-                "/Users/fosterl/Documents/alignment_board/Mask_Chan/prefix_20.chan",
+                rootPath + "/prefix_1.mask",
+                rootPath + "/prefix_1.chan",
+                rootPath + "/prefix_2.mask",
+                rootPath + "/prefix_2.chan",
+                rootPath + "/prefix_3.mask",
+                rootPath + "/prefix_3.chan",
+                rootPath + "/prefix_4.mask",
+                rootPath + "/prefix_4.chan",
+                rootPath + "/prefix_5.mask",
+                rootPath + "/prefix_5.chan",
+                rootPath + "/prefix_6.mask",
+                rootPath + "/prefix_6.chan",
+                rootPath + "/prefix_7.mask",
+                rootPath + "/prefix_7.chan",
+                rootPath + "/prefix_8.mask",
+                rootPath + "/prefix_8.chan",
+                rootPath + "/prefix_9.mask",
+                rootPath + "/prefix_9.chan",
+                rootPath + "/prefix_10.mask",
+                rootPath + "/prefix_10.chan",
+                rootPath + "/prefix_11.mask",
+                rootPath + "/prefix_11.chan",
+                rootPath + "/prefix_12.mask",
+                rootPath + "/prefix_12.chan",
+//                rootPath + "/prefix_13.mask",
+//                rootPath + "/prefix_13.chan",
+//                rootPath + "/prefix_14.mask",
+//                rootPath + "/prefix_14.chan",
+//                rootPath + "/prefix_15.mask",
+//                rootPath + "/prefix_15.chan",
+//                rootPath + "/prefix_16.mask",
+//                rootPath + "/prefix_16.chan",
+//                rootPath + "/prefix_17.mask",
+//                rootPath + "/prefix_17.chan",
+//                rootPath + "/prefix_18.mask",
+//                rootPath + "/prefix_18.chan",
+//                rootPath + "/prefix_19.mask",
+//                rootPath + "/prefix_19.chan",
+//                rootPath + "/prefix_20.mask",
+//                rootPath + "/prefix_20.chan",
         };
     }
 
@@ -77,6 +81,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
     @Override
     public Collection<MaskChanRenderableData> getRenderableDatas() {
 
+        logger.info( "Getting renderable datas." );
         Collection<MaskChanRenderableData> rtnVal = new ArrayList<MaskChanRenderableData>();
 
         // Establish the renderable for the "signal".
@@ -132,7 +137,8 @@ public class ABContextDataSource implements RenderableDataSourceI {
         Collection<AlignedItem> neuronFragments = new ArrayList<AlignedItem>();
         for ( AlignedItem item: context.getAlignedItems() ) {
             for ( AlignedItem childItem: item.getAlignedItems() ) {
-                neuronFragments.add( childItem );
+                if ( childItem.isVisible() )
+                    neuronFragments.add( childItem );
             }
         }
 
