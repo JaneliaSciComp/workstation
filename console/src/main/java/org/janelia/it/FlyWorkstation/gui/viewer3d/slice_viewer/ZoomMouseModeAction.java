@@ -20,7 +20,7 @@ public class ZoomMouseModeAction extends AbstractAction
 		putValue(ACCELERATOR_KEY, accelerator);
 		putValue(SHORT_DESCRIPTION, 
 				"Set mouse mode to Zoom in and out."
-				+ "\nShortcut: " + acc);
+				+ "\n (Shortcut: " + acc + ")");
 		this.widget = widget;
 	}
 	

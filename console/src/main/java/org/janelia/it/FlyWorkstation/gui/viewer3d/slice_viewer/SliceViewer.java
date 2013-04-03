@@ -162,6 +162,7 @@ implements MouseModalWidget, VolumeViewer
 			Point2D p = getPixelOffsetFromCenter(event.getPoint());
 			camera.incrementFocusPixels(p.getX(), p.getY(), 0.0);
 		}
+		requestFocusInWindow();
 	}
 	
 	@Override

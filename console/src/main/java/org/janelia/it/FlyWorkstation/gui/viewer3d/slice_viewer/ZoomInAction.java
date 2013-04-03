@@ -1,11 +1,15 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
+import javax.swing.KeyStroke;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
+
+import com.jogamp.newt.event.KeyEvent;
 
 public class ZoomInAction extends AbstractAction 
 {
@@ -16,8 +20,16 @@ public class ZoomInAction extends AbstractAction
 		this.camera = camera;
 		putValue(NAME, "Zoom In");
 		putValue(SMALL_ICON, Icons.getIcon("magnify_plus.png"));
+		putValue(MNEMONIC_KEY, KeyEvent.VK_PLUS);
+		// ctrl-plus on windows, cmd-plus on Mac
+		KeyStroke accelerator = KeyStroke.getKeyStroke(
+				KeyEvent.VK_EQUALS,
+				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+		putValue(ACCELERATOR_KEY, accelerator);
 		putValue(SHORT_DESCRIPTION,
-				"Zoom in to magnified image.");
+				"Zoom in to magnified image."
+				+"\n (Shortcut: "+accelerator+")"
+				);
 	}
 	
 	@Override

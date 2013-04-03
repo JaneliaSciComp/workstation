@@ -1,8 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
+import javax.swing.KeyStroke;
+
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
+
+import com.jogamp.newt.event.KeyEvent;
 
 public class NextZSliceAction
 extends ZScanAction
@@ -13,7 +17,13 @@ extends ZScanAction
 		super(image, camera, 1);
 		putValue(NAME, "Next Z Slice");
 		putValue(SMALL_ICON, Icons.getIcon("z_stack_down.png"));
+		putValue(MNEMONIC_KEY, KeyEvent.VK_PAGE_DOWN);
+		KeyStroke accelerator = KeyStroke.getKeyStroke(
+			KeyEvent.VK_PAGE_DOWN, 0);
+		putValue(ACCELERATOR_KEY, accelerator);
 		putValue(SHORT_DESCRIPTION,
-				"View next Z slice");		
+				"View next Z slice"
+				+"\n (Shortcut: "+accelerator+")"
+				);		
 	}
 }

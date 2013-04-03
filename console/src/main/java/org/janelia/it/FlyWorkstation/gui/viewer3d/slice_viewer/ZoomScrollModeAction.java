@@ -16,7 +16,8 @@ public class ZoomScrollModeAction extends AbstractAction
 		putValue(NAME, "Zoom");
 		putValue(SMALL_ICON, Icons.getIcon("magnify_glass.png"));
 		putValue(SHORT_DESCRIPTION, 
-				"Set scroll wheel mode to Zoom in and out.");
+				"Set scroll wheel mode to Zoom in and out."
+				+ "\n (hold SHIFT key to activate)");
 		this.widget = widget;
 		zoomMode.setComponent(widget);
 	}

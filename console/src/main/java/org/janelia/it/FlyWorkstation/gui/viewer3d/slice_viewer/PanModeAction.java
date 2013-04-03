@@ -20,7 +20,7 @@ public class PanModeAction extends AbstractAction
 		putValue(ACCELERATOR_KEY, accelerator);
 		putValue(SHORT_DESCRIPTION, 
 				"Set mouse mode to Pan left right up or down."
-				+ "\nShortcut: " + acc);
+				+ "\n (Shortcut: " + acc + ")");
 		this.widget = widget;
 	}
 	
