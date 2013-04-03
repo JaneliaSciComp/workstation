@@ -33,7 +33,6 @@ import javax.swing.JMenuItem;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicObservableCamera3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.color_slider.UglyColorSlider;
 
 import javax.swing.JSeparator;
 import java.awt.Component;
@@ -85,7 +84,7 @@ public class QuadViewUi extends JFrame
 	private JPanel zScanPanel = new JPanel();
 	private JSlider zScanSlider = new JSlider();
 	private JSpinner zScanSpinner = new JSpinner();
-	private JSlider zoomSlider = new JSlider();
+	private JSlider zoomSlider = new JSlider(SwingConstants.VERTICAL, 0, 1000, 500);
 	
 	private JPanel colorPanel = new JPanel();
 	private JPanel colorLockPanel = new JPanel();
@@ -433,10 +432,14 @@ public class QuadViewUi extends JFrame
 		btnNewButton_2.setHideActionText(true);
 		btnNewButton_2.setAction(zoomInAction);
 		panel_1.add(btnNewButton_2);
-		zoomSlider.setMaximum(1000);
 		
 		// JSlider zoomSlider = new JSlider();
 		zoomSlider.setOrientation(SwingConstants.VERTICAL);
+		zoomSlider.setMaximum(1000);
+		// Kludge to get decent vertical JSlider on Windows
+		zoomSlider.setPaintTicks(true);
+		zoomSlider.setMajorTickSpacing(1000);
+		//
 		panel_1.add(zoomSlider);
 		zoomSlider.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent arg0) {

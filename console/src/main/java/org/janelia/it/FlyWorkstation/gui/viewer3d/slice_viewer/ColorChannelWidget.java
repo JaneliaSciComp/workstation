@@ -4,8 +4,6 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
@@ -23,6 +21,7 @@ public class ColorChannelWidget extends JPanel
 {
 	private static final long serialVersionUID = 1L;
 	private final int channelIndex;
+	private VisibilityButton visibilityButton;
 	private ImageColorModel imageColorModel;
 	private ColorButton colorButton;
 	private UglyColorSlider slider;
@@ -36,9 +35,9 @@ public class ColorChannelWidget extends JPanel
 		// B: All components in a BoxLayout should have the same alignment
 		// C: Therefore, the slider widget should be right aligned
 		// setAlignmentX(Component.RIGHT_ALIGNMENT);
-		add(new VisibilityButton());
-		if (slider == null)
-			slider = new UglyColorSlider(channelIndex, imageColorModel);
+		visibilityButton = new VisibilityButton();
+		add(visibilityButton);
+		slider = new UglyColorSlider(channelIndex, imageColorModel);
 		add(slider);
 		add(colorButton);
 		updateColor();
@@ -90,6 +89,7 @@ public class ColorChannelWidget extends JPanel
 			setRolloverSelectedIcon(Icons.getIcon("eye.png"));
 			setSelected(true);
 			setToolTipText("Click to show/hide color channel " + channelIndex);
+			setMaximumSize(getPreferredSize()); // after loading icon on Windows
 		}
 	}
 	
@@ -107,6 +107,7 @@ public class ColorChannelWidget extends JPanel
 			setColor(whiteColor);
 			setIcon(icon);
 			setToolTipText("Click to change channel "+channelIndex+" color");
+			setMaximumSize(getPreferredSize()); // after loading icon on Windows
 		}
 		
 		public void setColor(Color color) {
