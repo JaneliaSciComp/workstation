@@ -29,6 +29,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
 
     private ChannelMetaData channelMetaData;
     private byte[] volumeData;
+    private double downSampleRate = 2.0;
 
     protected boolean needsChannelInit = false; // Initialized for emphasis.
     private Logger logger = LoggerFactory.getLogger( RenderablesChannelsBuilder.class );
@@ -181,18 +182,27 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     //----------------------------------------IMPLEMENT TextureBuilderI
     @Override
     public TextureDataI buildTextureData() {
-        // TODO: the decisioning -- how much to downsample, based on info re graphics card.
+        // TODO: user input: how much to downsample, based on info re graphics card.
         //
-        DownSampler downSampler = new DownSampler( sx, sy, sz );
-        DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(
-                volumeData, 4, 2.0, 2.0, 2.0
-        );
-        TextureDataI textureData = new TextureDataBean(
-                downSampling.getVolume(), downSampling.getSx(), downSampling.getSy(), downSampling.getSz()
-        );
-        textureData.setVolumeMicrometers(
-                new Double[]{(double) downSampling.getSx(), (double)downSampling.getSy(), (double)downSampling.getSz() }
-        );
+        TextureDataI textureData = null;
+        if ( downSampleRate != 0.0 ) {
+            DownSampler downSampler = new DownSampler( sx, sy, sz );
+            DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(
+                    volumeData, 4, downSampleRate, downSampleRate, downSampleRate
+            );
+            textureData = new TextureDataBean(
+                    downSampling.getVolume(), downSampling.getSx(), downSampling.getSy(), downSampling.getSz()
+            );
+            textureData.setVolumeMicrometers(
+                    new Double[]{(double) downSampling.getSx(), (double)downSampling.getSy(), (double)downSampling.getSz() }
+            );
+        }
+        else {
+            textureData = new TextureDataBean(
+                    volumeData, (int)sx, (int)sy, 100 //(int)sz
+            );
+            textureData.setVolumeMicrometers( new Double[] { (double)sx, (double)sy, (double)sz } );
+        }
         textureData.setChannelCount( channelMetaData.channelCount );
 
         textureData.setColorSpace( VolumeBrick.TextureColorSpace.COLOR_SPACE_LINEAR );
@@ -336,4 +346,11 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         }
     }
 
+    public double getDownSampleRate() {
+        return downSampleRate;
+    }
+
+    public void setDownSampleRate(double downSampleRate) {
+        this.downSampleRate = downSampleRate;
+    }
 }

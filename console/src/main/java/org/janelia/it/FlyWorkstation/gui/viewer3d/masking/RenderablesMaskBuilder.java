@@ -31,6 +31,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     private Collection<RenderableBean> renderableBeans;
     private byte[] volumeData;
     private int byteCount = UNIVERSAL_MASK_BYTE_COUNT;
+    private double downSampleRate = 2.0;
 
     private boolean isInitialized = false;
 
@@ -108,18 +109,26 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     public TextureDataI getCombinedTextureData() {
         logger.info( "Retrieving combined texture data." );
         // TODO: same decisioning as the RenderablesChannelsBuilder re how much to downsample.
-        DownSampler downSampler = new DownSampler( sx, sy, sz );
-        DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(
-                volumeData, byteCount, 2.0, 2.0, 2.0
-        );
-        TextureDataI textureData = new TextureDataBean(
-                downSampling.getVolume(), downSampling.getSx(), downSampling.getSy(), downSampling.getSz()
-        );
-        textureData.setVolumeMicrometers(
-                new Double[] {
-                        (double)downSampling.getSx(), (double)downSampling.getSy(), (double)downSampling.getSz()
-                }
-        );
+        TextureDataI textureData;
+        if ( downSampleRate != 0.0 ) {
+            DownSampler downSampler = new DownSampler( sx, sy, sz );
+            DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(
+                    volumeData, byteCount, downSampleRate, downSampleRate, downSampleRate
+            );
+            textureData = new TextureDataBean(
+                    downSampling.getVolume(), downSampling.getSx(), downSampling.getSy(), downSampling.getSz()
+            );
+            textureData.setVolumeMicrometers(
+                    new Double[]{(double) downSampling.getSx(), (double)downSampling.getSy(), (double)downSampling.getSz() }
+            );
+        }
+        else {
+            textureData = new TextureDataBean(
+                    volumeData, (int)sx, (int)sy, 100 //(int)sz
+            );
+            textureData.setVolumeMicrometers( new Double[] { (double)sx, (double)sy, (double)sz } );
+        }
+
         textureData.setInverted( false );
         textureData.setChannelCount( getChannelCount() );
         // See also VolumeLoader.resolveColorSpace()
@@ -166,4 +175,11 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
         }
     }
 
+    public double getDownSampleRate() {
+        return downSampleRate;
+    }
+
+    public void setDownSampleRate(double downSampleRate) {
+        this.downSampleRate = downSampleRate;
+    }
 }

@@ -4,12 +4,16 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.MaskChanRenderableData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableDataSourceI;
+import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
+import org.janelia.it.FlyWorkstation.model.domain.Neuron;
+import org.janelia.it.FlyWorkstation.model.domain.Sample;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -17,6 +21,11 @@ import java.util.Iterator;
 /** Implements the data source, to avoid having to mock up an entire context just to test. */
 public class ABContextDataSource implements RenderableDataSourceI {
 
+    // This data was manually extracted from some Yoshi/standard-space-size data.  It is named as:
+    //   prefix_1822248087368761442_9.mask
+    // where '9' above is the label number, the usual mask/chan extensions apply, and the number shown
+    // should match the location for the previously-known files fetched from the older pipeline.
+    private static final String TEMP_ROOT_PATH = "/Volumes/jacsData/maskChannelTestYoshi/prefix_";
     private static final String MASK_EXTENSION = ".mask";
     private AlignmentBoardContext context;
     private String[] filenames;
@@ -28,32 +37,31 @@ public class ABContextDataSource implements RenderableDataSourceI {
 
     public ABContextDataSource( AlignmentBoardContext context ) {
         this.context = context;
-        String rootPath = "/groups/scicomp/jacsData/maskChannelTest4";
-        filenames = new String[] {
-                rootPath + "/prefix_1.mask",
-                rootPath + "/prefix_1.chan",
-                rootPath + "/prefix_2.mask",
-                rootPath + "/prefix_2.chan",
-                rootPath + "/prefix_3.mask",
-                rootPath + "/prefix_3.chan",
-                rootPath + "/prefix_4.mask",
-                rootPath + "/prefix_4.chan",
-                rootPath + "/prefix_5.mask",
-                rootPath + "/prefix_5.chan",
-                rootPath + "/prefix_6.mask",
-                rootPath + "/prefix_6.chan",
-                rootPath + "/prefix_7.mask",
-                rootPath + "/prefix_7.chan",
-                rootPath + "/prefix_8.mask",
-                rootPath + "/prefix_8.chan",
-                rootPath + "/prefix_9.mask",
-                rootPath + "/prefix_9.chan",
-                rootPath + "/prefix_10.mask",
-                rootPath + "/prefix_10.chan",
-                rootPath + "/prefix_11.mask",
-                rootPath + "/prefix_11.chan",
-                rootPath + "/prefix_12.mask",
-                rootPath + "/prefix_12.chan",
+//        filenames = new String[] {
+//                rootPath + "/prefix_1.mask",
+//                rootPath + "/prefix_1.chan",
+//                rootPath + "/prefix_2.mask",
+//                rootPath + "/prefix_2.chan",
+//                rootPath + "/prefix_3.mask",
+//                rootPath + "/prefix_3.chan",
+//                rootPath + "/prefix_4.mask",
+//                rootPath + "/prefix_4.chan",
+//                rootPath + "/prefix_5.mask",
+//                rootPath + "/prefix_5.chan",
+//                rootPath + "/prefix_6.mask",
+//                rootPath + "/prefix_6.chan",
+//                rootPath + "/prefix_7.mask",
+//                rootPath + "/prefix_7.chan",
+//                rootPath + "/prefix_8.mask",
+//                rootPath + "/prefix_8.chan",
+//                rootPath + "/prefix_9.mask",
+//                rootPath + "/prefix_9.chan",
+//                rootPath + "/prefix_10.mask",
+//                rootPath + "/prefix_10.chan",
+//                rootPath + "/prefix_11.mask",
+//                rootPath + "/prefix_11.chan",
+//                rootPath + "/prefix_12.mask",
+//                rootPath + "/prefix_12.chan",
 //                rootPath + "/prefix_13.mask",
 //                rootPath + "/prefix_13.chan",
 //                rootPath + "/prefix_14.mask",
@@ -70,7 +78,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
 //                rootPath + "/prefix_19.chan",
 //                rootPath + "/prefix_20.mask",
 //                rootPath + "/prefix_20.chan",
-        };
+//        };
     }
 
     @Override
@@ -80,6 +88,67 @@ public class ABContextDataSource implements RenderableDataSourceI {
 
     @Override
     public Collection<MaskChanRenderableData> getRenderableDatas() {
+        logger.info( "Getting renderable datas." );
+        Collection<MaskChanRenderableData> rtnVal = new ArrayList<MaskChanRenderableData>();
+
+        int nextTranslatedNum = 0;
+
+        // Establish the fragment renderables.
+        for ( AlignedItem alignedItem : context.getAlignedItems() ) {
+
+            EntityWrapper itemEntity = alignedItem.getItemWrapper();
+            if ( itemEntity instanceof Sample) {
+                Sample sample = (Sample)itemEntity;
+                RenderableBean sampleDataBean = new RenderableBean();
+                sampleDataBean.setLabelFileNum(0);
+                sampleDataBean.setTranslatedNum(nextTranslatedNum++);
+                sampleDataBean.setRgb(
+                        new byte[]{
+                                (byte) 0f, (byte) 0f, (byte) 0f, RenderMappingI.NON_RENDERING
+                        }
+                );
+                sampleDataBean.setRenderableEntity(sample.getInternalEntity());
+                MaskChanRenderableData sampleRenderable = new MaskChanRenderableData();
+                sampleRenderable.setBean(sampleDataBean);
+                sampleRenderable.setCompartment(false);
+
+                rtnVal.add( sampleRenderable );
+
+                long sampleId = sample.getId();
+
+                Collection<AlignedItem> childItems = alignedItem.getAlignedItems();
+                int translatedNum = 1;
+                if ( childItems != null ) {
+                    for ( AlignedItem item: childItems ) {
+                        if ( item.getItemWrapper() instanceof Neuron) {
+                            RenderableBean neuronBean = createRenderableBean( translatedNum, item );
+                            MaskChanRenderableData nfRenderable = new MaskChanRenderableData();
+                            nfRenderable.setBean( neuronBean );
+                            nfRenderable.setCompartment( false );
+                            rtnVal.add( nfRenderable );
+
+                            Neuron neuronItem = (Neuron)item.getItemWrapper();
+                            nfRenderable.setMaskPath( getMaskPath( neuronItem, sampleId ) );
+                            nfRenderable.setChannelPath( getChannelPath( neuronItem, sampleId ) );
+
+                            rtnVal.add( nfRenderable );
+                            translatedNum ++;
+                        }
+                    }
+                }
+
+
+            }
+        }
+
+
+        return rtnVal;
+    }
+
+    /*
+    @deprecated
+     */
+    public Collection<MaskChanRenderableData> getRenderableDatas_old() {
 
         logger.info( "Getting renderable datas." );
         Collection<MaskChanRenderableData> rtnVal = new ArrayList<MaskChanRenderableData>();
@@ -197,4 +266,76 @@ public class ABContextDataSource implements RenderableDataSourceI {
 
         return rtnVal;
     }
+
+    //------------------------------------------------------------HELPERS
+
+    /**
+     * This will implement the fetch of mask file name.
+     *
+     * @param neuron has a mask file associated.
+     * @return that mask file.
+     */
+    private String getMaskPath( Neuron neuron, long id ) {
+        String path = TEMP_ROOT_PATH + id + "_" + ( 1 + neuron.getMaskIndex() ) + ".mask";
+        if ( ! new File( path ).canRead() ) {
+            path = null;
+        }
+        return path;
+    }
+
+    /**
+     * This will implement the fetch of channel file name.
+     *
+     * @param neuron has a channel file associated.
+     * @return that channel file.
+     */
+    private String getChannelPath( Neuron neuron, long id ) {
+        String path = TEMP_ROOT_PATH + id + "_" + ( 1 + neuron.getMaskIndex() ) + ".chan";
+        if ( ! new File( path ).canRead() ) {
+            path = null;
+        }
+        return path;
+    }
+
+    private RenderableBean createRenderableBean( int translatedNum, AlignedItem item ) {
+        Neuron neuron = (Neuron)item.getItemWrapper();
+        logger.debug(
+                "Creating Renderable Bean for: " + neuron.getName() + " original index=" + neuron.getMaskIndex() +
+                        " new index=" + translatedNum
+        );
+
+        RenderableBean neuronBean = new RenderableBean();
+        neuronBean.setLabelFileNum( neuron.getMaskIndex() + 1 ); // From 0-based to 1-based.
+        neuronBean.setTranslatedNum(translatedNum);
+        neuronBean.setRenderableEntity(neuron.getInternalEntity());
+
+        // See to the appearance.
+        Color neuronColor = item.getColor();
+        if ( neuronColor == null ) {
+            // If visible, leave RGB as null, and allow downstream automated-color to take place.
+            // Otherwise, if not visible, ensure that the bean has a non-render setting.
+            if ( ! item.isVisible() ) {
+                byte[] rgb = new byte[ 4 ];
+                rgb[ 0 ] = 0;
+                rgb[ 1 ] = 0;
+                rgb[ 2 ] = 0;
+                rgb[ 3 ] = RenderMappingI.NON_RENDERING;
+                neuronBean.setRgb( rgb );
+            }
+        }
+        else {
+            logger.info( "Neuron color is {} for {}.", neuronColor, item.getItemWrapper().getName() );
+            // A Neuron Color was set, but the neuron could still be "turned off" for render.
+            byte[] rgb = new byte[ 4 ];
+            rgb[ 0 ] = (byte)neuronColor.getRed();
+            rgb[ 1 ] = (byte)neuronColor.getGreen();
+            rgb[ 2 ] = (byte)neuronColor.getBlue();
+            rgb[ 3 ] = item.isVisible()    ?    RenderMappingI.FRAGMENT_RENDERING : RenderMappingI.NON_RENDERING;
+            neuronBean.setRgb( rgb );
+        }
+
+        return neuronBean;
+    }
+
+
 }

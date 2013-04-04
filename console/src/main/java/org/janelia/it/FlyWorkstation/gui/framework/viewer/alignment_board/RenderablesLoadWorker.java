@@ -10,6 +10,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableDataSourceI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
@@ -34,7 +35,7 @@ import java.util.concurrent.CyclicBarrier;
  */
 public class RenderablesLoadWorker extends SimpleWorker {
 
-    private static final float GAMMA_VALUE = 1.0f;
+    private static final float GAMMA_VALUE = 0.5f;
     private Mip3d mip3d;
     private JComponent viewer;
     private Boolean loadFiles = true;
@@ -149,7 +150,8 @@ public class RenderablesLoadWorker extends SimpleWorker {
             logger.info( "In load thread, after getting bean list." );
 
             if ( resolver == null ) {
-                resolver = new CacheFileResolver();
+                resolver = new TrivialFileResolver();  // todo swap comments, in production.
+                //resolver = new CacheFileResolver();
             }
 
             multiThreadedFileLoad( metaDatas );
@@ -262,13 +264,24 @@ public class RenderablesLoadWorker extends SimpleWorker {
     }
 
     private void loadVolume( FileResolver resolver, MaskChanRenderableData maskChanRenderableData ) throws Exception {
-        logger.info(
+        logger.debug(
                 "In load thread, STARTING load of renderable {}.",
                 maskChanRenderableData.getBean().getTranslatedNum()
         );
 
         // Special case: the "signal" renderable may have no mask or channel file.
-        if ( maskChanRenderableData.getMaskPath() == null   &&   maskChanRenderableData.getChannelPath() != null ) {
+        if ( maskChanRenderableData.getMaskPath() == null   ||   maskChanRenderableData.getChannelPath() == null ) {
+            logger.debug(
+                    "Renderable {} has either a missing mask or channel file -- {}.",
+                    maskChanRenderableData.getBean().getTranslatedNum(),
+                    maskChanRenderableData.getMaskPath() + maskChanRenderableData.getChannelPath()
+            );
+            return;
+        }
+
+        // Special case: the "signal" renderable will have a translated label number of zero.  It will not
+        // require a file load.
+        if ( maskChanRenderableData.getBean().getTranslatedNum() == 0 ) {
             return;
         }
 
@@ -299,7 +312,7 @@ public class RenderablesLoadWorker extends SimpleWorker {
         maskStream.close();
         chanStream.close();
 
-        logger.info("In load thread, ENDED load of renderable {}.", maskChanRenderableData.getBean().getLabelFileNum() );
+        logger.debug("In load thread, ENDED load of renderable {}.", maskChanRenderableData.getBean().getLabelFileNum() );
     }
 
     public RenderMappingI getRenderMapping() {

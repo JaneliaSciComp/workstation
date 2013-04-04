@@ -55,7 +55,7 @@ public class MaskChanMultiFileLoader {
      */
     public void read( RenderableBean bean, InputStream maskInputStream, InputStream channelStream )
             throws Exception {
-        logger.info("Read called.");
+        logger.debug("Read called.");
         MaskChanSingleFileLoader singleFileLoader =
                 new MaskChanSingleFileLoader( maskAcceptors, channelAcceptors, bean );
         singleFileLoader.read( maskInputStream, channelStream );
