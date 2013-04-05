@@ -36,7 +36,11 @@ public class FileProxyService extends AbstractHandler {
 
         Pattern pattern = Pattern.compile("/(\\w+)(/.+)");
         Matcher matcher = pattern.matcher(request.getPathInfo());
-        matcher.find();
+        
+        if (!matcher.matches()) {
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            return;
+        }
         
         String proxyType = matcher.group(1);
         String standardPath = matcher.group(2);
