@@ -87,4 +87,9 @@ implements PyramidTexture
 		this.textureCoords = textureCoords;
 	}
 
+	@Override
+	public int getUsedWidth() {
+		TextureCoords tc = getImageTexCoords();
+		return (int)Math.round(getWidth() * Math.abs(tc.right() - tc.left()));
+	}
 }

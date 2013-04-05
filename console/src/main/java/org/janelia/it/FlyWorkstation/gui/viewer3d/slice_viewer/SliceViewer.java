@@ -11,6 +11,7 @@ import java.awt.geom.Point2D;
 import java.net.URL;
 
 import javax.media.opengl.GLProfile;
+import javax.swing.JOptionPane;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BaseGLViewer;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
@@ -65,7 +66,11 @@ implements MouseModalWidget, VolumeViewer
 		@Override
 		public void execute(URL url) {
 			// log.info("loadUrlSlot");
-			loadURL(url);
+			if (! loadURL(url)) {
+				JOptionPane.showMessageDialog(SliceViewer.this, 
+						"Error loading volume from\n  "+url
+						+"\nIs the share mounted?");
+			}
 		}
 	};
 	
@@ -102,6 +107,7 @@ implements MouseModalWidget, VolumeViewer
 		return loadUrlSlot;
 	}
 
+	// Context menu?
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		// TODO Auto-generated method stub

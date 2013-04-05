@@ -22,4 +22,8 @@ public interface PyramidTexture {
 
 	void destroy(GL2 gl);
 
+	// Actual texture width might need to be padded to a multiple of 2 or 4 or 8
+	// "used width" could be a slightly smaller, possibly odd, value
+	int getUsedWidth();
+
 }

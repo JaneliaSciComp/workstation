@@ -136,10 +136,18 @@ implements GLActor
 			tile.init(gl);
 		}
 		
-		// Render tile textures
-		// TODO - pixellate at high zoom
+		// Render tile textures.
+		// Pixelate at high zoom.
+		double ppu = tileServer.getCamera().getPixelsPerSceneUnit();
+		double upv = tileServer.getXResolution();
+		double pixelsPerVoxel = ppu*upv;
+		// System.out.println("pixelsPerVoxel = "+pixelsPerVoxel);
+		int filter = GL2.GL_LINEAR; // blended voxels at lower zoom
+		if (pixelsPerVoxel > 10.0)
+			filter = GL2.GL_NEAREST; // distinct voxels at high zoom
 		shader.load(gl);
 		for (Tile2d tile: tiles) {
+			tile.setFilter(filter);
 			tile.display(gl);
 		}
 		shader.unload(gl);
@@ -147,7 +155,7 @@ implements GLActor
 		// TODO optional numeral display at high zoom
 
 		// Outline tiles for viewer debugging
-		boolean bOutlineTiles = false;
+		final boolean bOutlineTiles = false;
 		if (bOutlineTiles) {
 			for (Tile2d tile: tiles) {
 				tile.displayBoundingBox(gl);
@@ -155,7 +163,7 @@ implements GLActor
 		}
 		
 		// Outline volume for debugging
-		boolean bOutlineVolume = false;
+		final boolean bOutlineVolume = false;
 		if (bOutlineVolume)
 			displayBoundingBox(gl);
 	}

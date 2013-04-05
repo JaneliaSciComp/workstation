@@ -119,24 +119,29 @@ implements PyramidTextureData
 		//
 		Raster raster = image.getData();
 		int pixelData[] = new int[this.channelCount];
+		int padData[] = new int[this.channelCount]; // color for edge padding
 		final boolean is16Bit = (this.bitDepth == 16);
 		if (is16Bit) {
 			for (int y = 0; y < this.height; ++y) {
+				// Choose ragged right edge pad color from right
+				// edge of used portion of scan line.
+				raster.getPixel(this.usedWidth-1, y, padData);
 				for (int x = 0; x < this.width; ++x) {
-					if (x < this.usedWidth) {
+					if (x < this.usedWidth) { // used portion of scan line
 						raster.getPixel(x, y, pixelData);
 						for (int i : pixelData) {
 							shortBuffer.put((short)i);
 						}
-					} else { // zero pad right edge
-						for (int i : pixelData) {
-							shortBuffer.put((short)0);
+					} else { // (not zero) pad right edge
+						for (int i : padData) {
+							shortBuffer.put((short)i);
 						}						
 					}
 				}
 			}
 		} else { // 8-bit
 			for (int y = 0; y < this.height; ++y) {
+				raster.getPixel(this.usedWidth-1, y, padData);
 				for (int x = 0; x < this.width; ++x) {
 					if (x < this.usedWidth) {
 						raster.getPixel(x, y, pixelData);
@@ -144,8 +149,8 @@ implements PyramidTextureData
 							byteBuffer.put((byte)i);
 						}
 					} else { // zero pad right edge
-						for (int i : pixelData) {
-							byteBuffer.put((byte)0);
+						for (int i : padData) {
+							byteBuffer.put((byte)i);
 						}
 					}
 				}

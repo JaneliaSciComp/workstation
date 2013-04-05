@@ -23,7 +23,9 @@ extends PyramidTextureLoadAdapter
 
 	private URL urlStalk;
 	
-	public RavelerLoadAdapter(URL urlStalk) {
+	public RavelerLoadAdapter(URL urlStalk) 
+	throws IOException
+	{
 		this.urlStalk = urlStalk;
 		getTextureCache().setIndexStyle(TextureCache.IndexStyle.QUADTREE);
 		parseMetadata(urlStalk);
@@ -98,7 +100,9 @@ extends PyramidTextureLoadAdapter
 		}
 	}
 
-	protected boolean parseMetadata(URL folderUrl) {
+	protected boolean parseMetadata(URL folderUrl) 
+	throws IOException
+	{
 		// Parse metadata BEFORE overwriting current data
 		try {
 			URL metadataUrl = new URL(folderUrl, "tiles/metadata.txt");
@@ -169,9 +173,6 @@ extends PyramidTextureLoadAdapter
 	        }
 	        tf.setZoomLevelCount(zoomMax + 1);
 		} catch (MalformedURLException e) {
-			e.printStackTrace();
-			return false;
-		} catch (IOException e) {
 			e.printStackTrace();
 			return false;
 		}

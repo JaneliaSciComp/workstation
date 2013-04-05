@@ -37,6 +37,7 @@ implements GLActor
 	private PyramidTileIndex index;
 	private double yMax; // To help flip Raveler tiles in Y
 	private PyramidTileFormat tileFormat;
+	private int filter = GL2.GL_LINEAR;
 
 	
 	public Tile2d(PyramidTileIndex key, PyramidTileFormat tileFormat) {
@@ -72,6 +73,14 @@ implements GLActor
 		// No texture was found; maybe next time
 	}
 
+	public int getFilter() {
+		return filter;
+	}
+
+	public void setFilter(int filter) {
+		this.filter = filter;
+	}
+
 	public PyramidTileIndex getIndex() {
 		return index;
 	}
@@ -102,7 +111,6 @@ implements GLActor
 		texture.bind(gl);
 		texture.setTexParameteri(gl, GL2.GL_TEXTURE_WRAP_S, GL2.GL_CLAMP_TO_EDGE);
 		texture.setTexParameteri(gl, GL2.GL_TEXTURE_WRAP_T, GL2.GL_CLAMP_TO_EDGE);
-		int filter = GL2.GL_LINEAR; // TODO - pixelate at high zoom
 		texture.setTexParameteri(gl, GL2.GL_TEXTURE_MIN_FILTER, filter);
 		texture.setTexParameteri(gl, GL2.GL_TEXTURE_MAG_FILTER, filter);
 		TextureCoords tc0 = texture.getImageTexCoords();
@@ -123,7 +131,7 @@ implements GLActor
 		double tcTop = tcBottom + tcYTotal/textureScale;
 		// compute corner vertices for tile, not for texture
 		int zoomScale = (int)(Math.pow(2.0, getIndex().getZoom()) + 0.1);
-		double tileWidth = texture.getWidth() * zoomScale * tileFormat.getVoxelMicrometers()[0];
+		double tileWidth = texture.getUsedWidth() * zoomScale * tileFormat.getVoxelMicrometers()[0];
 		double tileHeight = texture.getHeight() * zoomScale * tileFormat.getVoxelMicrometers()[1];
 		gl.glBegin(GL2.GL_QUADS);
 			// draw quad
@@ -151,7 +159,7 @@ implements GLActor
 	{
 		PyramidTexture texture = bestTexture.getTexture();
 		int zoomScale = (int)(Math.pow(2.0, getIndex().getZoom()) + 0.1);
-		double tileWidth = texture.getWidth() * zoomScale * tileFormat.getVoxelMicrometers()[0];
+		double tileWidth = texture.getUsedWidth() * zoomScale * tileFormat.getVoxelMicrometers()[0];
 		double tileHeight = texture.getHeight() * zoomScale * tileFormat.getVoxelMicrometers()[1];
 		gl.glColor3d(1.0, 1.0, 0.3);
 		gl.glBegin(GL2.GL_LINE_STRIP);

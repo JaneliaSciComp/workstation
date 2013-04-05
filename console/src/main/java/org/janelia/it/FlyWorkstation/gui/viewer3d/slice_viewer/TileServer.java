@@ -30,7 +30,6 @@ implements VolumeImage3d
         try {
 			loadURL(new File(folderName).toURI().toURL());
 		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -172,13 +171,23 @@ implements VolumeImage3d
 			useRaveler = true;
 		}
 		// Now we can start replacing the previous state
+		PyramidTextureLoadAdapter testLoadAdapter = null;
 		try {
 			if (useRaveler) {
-				loadAdapter = new RavelerLoadAdapter(folderUrl);
+				testLoadAdapter = new RavelerLoadAdapter(folderUrl);
 			}
 			else {
-				loadAdapter = new BlockTiffOctreeLoadAdapter(new File(folderUrl.toURI()));
+				testLoadAdapter = new BlockTiffOctreeLoadAdapter(new File(folderUrl.toURI()));
 			}
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+			return false;
+		} catch (IOException e) {
+			// e.printStackTrace();
+			return false;
+		}
+		if (testLoadAdapter != null) {
+			loadAdapter = testLoadAdapter;
 			// Compute bounding box
 			PyramidTileFormat tf = loadAdapter.getTileFormat();
 			double sv[] = tf.getVoxelMicrometers();
@@ -188,19 +197,13 @@ implements VolumeImage3d
 			Vec3 b1 = new Vec3(sv[0]*(s0[0]+s1[0]), sv[1]*(s0[1]+s1[1]), sv[2]*(s0[2]+s1[2]));
 			boundingBox3d.setMin(b0);
 			boundingBox3d.setMax(b1);
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-			return false;
-		} catch (IOException e) {
-			e.printStackTrace();
-			return false;
+			// queue disposal of textures on next display event
+			getVolumeInitializedSignal().emit();
+			getDataChangedSignal().emit();
+			return true;
 		}
-
-		// queue disposal of textures on next display event
-		getVolumeInitializedSignal().emit();
-		getDataChangedSignal().emit();
-		
-		return true;
+		else
+			return false;
 	}
 	
 	public void setCamera(Camera3d camera) {

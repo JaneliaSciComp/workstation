@@ -58,4 +58,10 @@ public class JoglPyramidTexture implements PyramidTexture
 		joglTexture.destroy(gl);
 	}
 
+	@Override
+	public int getUsedWidth() {
+		TextureCoords tc = getImageTexCoords();
+		return (int)Math.round(getWidth() * Math.abs(tc.right() - tc.left()));
+	}
+
 }
