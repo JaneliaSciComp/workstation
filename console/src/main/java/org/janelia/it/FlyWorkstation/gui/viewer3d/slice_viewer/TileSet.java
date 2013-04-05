@@ -27,14 +27,15 @@ extends Vector<Tile2d>
 	
 	public boolean canDisplay() 
 	{
+		// Changed to return true if ANY tile can display something.
 		for (Tile2d tile : this) {
 			TileTexture texture = tile.getBestTexture();
 			if (texture == null)
-				return false;
-			if (texture.getStage().ordinal() < TileTexture.Stage.RAM_LOADED.ordinal())
-				return false;
+				continue;
+			if (texture.getStage().ordinal() >= TileTexture.Stage.RAM_LOADED.ordinal())
+				return true;
 		}
-		return true;
+		return false;
 	}
 
 	public Tile2d.Stage getMinStage() {
@@ -118,7 +119,7 @@ extends Vector<Tile2d>
 		return neededTextures;
 	}
 	
-	class ValueComparator implements Comparator<PyramidTileIndex> {
+	static class ValueComparator implements Comparator<PyramidTileIndex> {
 		Map<PyramidTileIndex, Double> base;
 		
 		public ValueComparator(Map<PyramidTileIndex, Double> base) {

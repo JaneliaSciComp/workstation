@@ -14,14 +14,14 @@ public class PyramidTextureLoadWorker implements Runnable
 	private static final Logger log = LoggerFactory.getLogger(PyramidTextureLoadWorker.class);
 	
 	private TileTexture texture;
-	private SliceActor ravelerActor;
+	private SliceActor sliceActor;
 
-	public PyramidTextureLoadWorker(TileTexture texture, SliceActor ravelerActor) 
+	public PyramidTextureLoadWorker(TileTexture texture, SliceActor sliceActor) 
 	{
 		if (texture.getStage().ordinal() < TileTexture.Stage.LOAD_QUEUED.ordinal())
 			texture.setStage(TileTexture.Stage.LOAD_QUEUED);
 		this.texture = texture;
-		this.ravelerActor = ravelerActor;
+		this.sliceActor = sliceActor;
 	}
 
 	@Override
@@ -34,7 +34,7 @@ public class PyramidTextureLoadWorker implements Runnable
 			return; // already loaded or loading
 		}
 		// Don't load this texture if it is no longer needed
-		if (! ravelerActor.getNeededTextures().contains(texture.getIndex())) {
+		if (! sliceActor.getNeededTextures().contains(texture.getIndex())) {
 			if (texture.getStage() == TileTexture.Stage.LOAD_QUEUED)
 				// revert to not-queued
 				texture.setStage(TileTexture.Stage.UNINITIALIZED);

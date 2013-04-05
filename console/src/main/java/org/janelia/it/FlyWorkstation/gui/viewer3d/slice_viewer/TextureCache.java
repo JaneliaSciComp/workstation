@@ -26,7 +26,11 @@ public class TextureCache
 	public void clear() {cache.clear();}
 	
 	boolean containsKey(PyramidTileIndex quadtreeIndex) {
-		return cache.containsKey(indexInterpolator.fromQuadtreeIndex(quadtreeIndex));
+		PyramidTileIndex otherIndex = indexInterpolator.fromQuadtreeIndex(quadtreeIndex);
+		boolean result = cache.containsKey(otherIndex);
+		// if (! result)
+		// 	System.out.println("cache miss "+quadtreeIndex+"/"+otherIndex);
+		return result;
 	}
 	
 	TileTexture get(PyramidTileIndex quadtreeIndex) {
@@ -53,7 +57,9 @@ public class TextureCache
 
 	public TileTexture put(PyramidTileIndex quadtreeIndex, TileTexture value)
 	{
-		return cache.put(indexInterpolator.fromQuadtreeIndex(quadtreeIndex), value);
+		PyramidTileIndex otherIndex = indexInterpolator.fromQuadtreeIndex(quadtreeIndex);
+		// System.out.println("Inserting cache "+quadtreeIndex+"/"+otherIndex);
+		return cache.put(otherIndex, value);
 	}
 	
 	public int size() {return cache.size();}

@@ -59,6 +59,7 @@ implements GLActor
 			setStage(Stage.BEST_TEXTURE_LOADED);
 			return;
 		}
+		// System.out.println("cache miss "+ix);
 		ix = ix.zoomOut(); // Try some lower resolution textures
 		while (ix != null) {
 			texture = textureCache.get(ix);
@@ -68,6 +69,7 @@ implements GLActor
 				setStage(Stage.COARSE_TEXTURE_LOADED);
 				return;
 			}
+			// System.out.println("cache miss "+ix);
 			ix = ix.zoomOut();
 		}
 		// No texture was found; maybe next time
@@ -115,7 +117,7 @@ implements GLActor
 		texture.setTexParameteri(gl, GL2.GL_TEXTURE_MAG_FILTER, filter);
 		TextureCoords tc0 = texture.getImageTexCoords();
 		// Adjust texture coordinates for relative zoom level
-		int dZoom = getIndex().getZoom() - bestTexture.getIndex().getZoom();
+		int dZoom = bestTexture.getIndex().getZoom() - getIndex().getZoom();
 		int textureScale = (int)(Math.pow(2, dZoom) + 0.1);
 		// Remember texture coordinates might already not go from 0->1
 		double tcXTotal = tc0.right() - tc0.left();

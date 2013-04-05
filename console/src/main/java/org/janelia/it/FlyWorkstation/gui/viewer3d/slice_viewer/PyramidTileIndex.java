@@ -100,12 +100,12 @@ public class PyramidTileIndex
 	 * @return null if current zoom index is already zero
 	 */
 	public PyramidTileIndex zoomOut() {
-		if (getZoom() <= 0)
+		if (getZoom() >= maxZoom)
 			return null; // Cannot zoom farther out than zero
 		int x = getX()/2;
 		int y = getY()/2;
 		int z = getZ();
-		int zoom = getZoom() - 1;
+		int zoom = getZoom() + 1;
 		return new PyramidTileIndex(x, y, z, zoom, maxZoom);
 	}
 
