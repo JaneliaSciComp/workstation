@@ -12,12 +12,13 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.log4j.lf5.util.StreamUtils;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileCache;
-import org.janelia.it.FlyWorkstation.shared.util.filecache.WebDavClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,10 +55,25 @@ public class FileProxyService extends AbstractHandler {
             OutputStream output = null;
             
             try {
+                // Read from WebDav
                 URL effectiveUrl = SessionMgr.getURL(standardPath);
+                HttpClient client = SessionMgr.getSessionMgr().getWebDavClient().getHttpClient();
+                GetMethod get = new GetMethod(effectiveUrl.toString());
+                client.executeMethod(get);
+                Header contentLength = get.getResponseHeader("Content-Length");
+                input = get.getResponseBodyAsStream();
+                
+                // Write to proxy client
                 response.setContentType("application/octet-stream");
                 response.setStatus(HttpServletResponse.SC_OK);
-                input = effectiveUrl.openStream();
+                if (contentLength!=null) {
+                    try {
+                        response.setContentLength(Integer.parseInt(contentLength.getValue()));
+                    }
+                    catch (NumberFormatException e) {
+                        log.error("Could not parse content length: "+contentLength.getValue());
+                    }
+                }
                 output = response.getOutputStream();
                 StreamUtils.copy(input, output);
             } 

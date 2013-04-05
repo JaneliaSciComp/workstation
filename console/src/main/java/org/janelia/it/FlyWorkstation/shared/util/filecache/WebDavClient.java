@@ -242,6 +242,10 @@ public class WebDavClient {
 
         return multiStatusResponses;
     }
+    
+    public HttpClient getHttpClient() {
+        return httpClient;
+    }
 
     private static final Logger LOG = LoggerFactory.getLogger(WebDavClient.class);
 }
