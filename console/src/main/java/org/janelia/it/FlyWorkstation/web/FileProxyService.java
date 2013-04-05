@@ -64,8 +64,15 @@ public class FileProxyService extends AbstractHandler {
                 input = get.getResponseBodyAsStream();
                 
                 // Write to proxy client
-                response.setContentType("application/octet-stream");
-                response.setStatus(HttpServletResponse.SC_OK);
+                Header contentType = get.getResponseHeader("Content-Type");
+                if (contentType==null) {
+                    response.setContentType("application/octet-stream");    
+                }
+                else {
+                    response.setContentType(contentType.getValue());
+                }
+                
+                response.setStatus(get.getStatusCode());
                 if (contentLength!=null) {
                     try {
                         response.setContentLength(Integer.parseInt(contentLength.getValue()));
