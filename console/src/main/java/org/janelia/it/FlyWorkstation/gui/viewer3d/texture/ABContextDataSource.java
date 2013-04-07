@@ -37,48 +37,6 @@ public class ABContextDataSource implements RenderableDataSourceI {
 
     public ABContextDataSource( AlignmentBoardContext context ) {
         this.context = context;
-//        filenames = new String[] {
-//                rootPath + "/prefix_1.mask",
-//                rootPath + "/prefix_1.chan",
-//                rootPath + "/prefix_2.mask",
-//                rootPath + "/prefix_2.chan",
-//                rootPath + "/prefix_3.mask",
-//                rootPath + "/prefix_3.chan",
-//                rootPath + "/prefix_4.mask",
-//                rootPath + "/prefix_4.chan",
-//                rootPath + "/prefix_5.mask",
-//                rootPath + "/prefix_5.chan",
-//                rootPath + "/prefix_6.mask",
-//                rootPath + "/prefix_6.chan",
-//                rootPath + "/prefix_7.mask",
-//                rootPath + "/prefix_7.chan",
-//                rootPath + "/prefix_8.mask",
-//                rootPath + "/prefix_8.chan",
-//                rootPath + "/prefix_9.mask",
-//                rootPath + "/prefix_9.chan",
-//                rootPath + "/prefix_10.mask",
-//                rootPath + "/prefix_10.chan",
-//                rootPath + "/prefix_11.mask",
-//                rootPath + "/prefix_11.chan",
-//                rootPath + "/prefix_12.mask",
-//                rootPath + "/prefix_12.chan",
-//                rootPath + "/prefix_13.mask",
-//                rootPath + "/prefix_13.chan",
-//                rootPath + "/prefix_14.mask",
-//                rootPath + "/prefix_14.chan",
-//                rootPath + "/prefix_15.mask",
-//                rootPath + "/prefix_15.chan",
-//                rootPath + "/prefix_16.mask",
-//                rootPath + "/prefix_16.chan",
-//                rootPath + "/prefix_17.mask",
-//                rootPath + "/prefix_17.chan",
-//                rootPath + "/prefix_18.mask",
-//                rootPath + "/prefix_18.chan",
-//                rootPath + "/prefix_19.mask",
-//                rootPath + "/prefix_19.chan",
-//                rootPath + "/prefix_20.mask",
-//                rootPath + "/prefix_20.chan",
-//        };
     }
 
     @Override
@@ -89,6 +47,9 @@ public class ABContextDataSource implements RenderableDataSourceI {
     @Override
     public Collection<MaskChanRenderableData> getRenderableDatas() {
         logger.info( "Getting renderable datas." );
+        if ( filenames != null ) {
+            return getRenderableDatas_old();
+        }
         Collection<MaskChanRenderableData> rtnVal = new ArrayList<MaskChanRenderableData>();
 
         int nextTranslatedNum = 0;
@@ -278,6 +239,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
     private String getMaskPath( Neuron neuron, long id ) {
         String path = TEMP_ROOT_PATH + id + "_" + ( 1 + neuron.getMaskIndex() ) + ".mask";
         if ( ! new File( path ).canRead() ) {
+            logger.error( "Did we forget to mount jacsData from workstation?" );
             path = null;
         }
         return path;
@@ -292,6 +254,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
     private String getChannelPath( Neuron neuron, long id ) {
         String path = TEMP_ROOT_PATH + id + "_" + ( 1 + neuron.getMaskIndex() ) + ".chan";
         if ( ! new File( path ).canRead() ) {
+            logger.error( "Did we forget to mount jacsData from workstation?" );
             path = null;
         }
         return path;

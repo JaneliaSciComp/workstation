@@ -47,19 +47,25 @@ public class RenderablesLoadWorker extends SimpleWorker {
     private RenderablesMaskBuilder maskTextureBuilder;
     private RenderablesChannelsBuilder signalTextureBuilder;
     private RenderableDataSourceI dataSource;
+    private double downSampleRate;
 
     private FileResolver resolver;
 
     private Logger logger;
 
     public RenderablesLoadWorker(
-            JComponent container, RenderableDataSourceI dataSource, Mip3d mip3d, RenderMappingI renderMapping
+            JComponent container,
+            RenderableDataSourceI dataSource,
+            Mip3d mip3d,
+            RenderMappingI renderMapping,
+            double downSampleRate
     ) {
         logger = LoggerFactory.getLogger(RenderablesLoadWorker.class);
         this.dataSource = dataSource;
         this.mip3d = mip3d;
         this.viewer = container;
         this.renderMapping = renderMapping;
+        this.downSampleRate = downSampleRate;
     }
 
     public void setResolver( FileResolver resolver ) {
@@ -87,11 +93,11 @@ public class RenderablesLoadWorker extends SimpleWorker {
         ArrayList<MaskChanDataAcceptorI> acceptors = new ArrayList<MaskChanDataAcceptorI>();
 
         // Establish the means for extracting the volume mask.
-        maskTextureBuilder = new RenderablesMaskBuilder();
+        maskTextureBuilder = new RenderablesMaskBuilder( downSampleRate );
         maskTextureBuilder.setRenderables(renderableBeans);
 
         // Establish the means for extracting the signal data.
-        signalTextureBuilder = new RenderablesChannelsBuilder();
+        signalTextureBuilder = new RenderablesChannelsBuilder( downSampleRate );
 
         // Setup the loader to traverse all this data on demand.
         neuronFragmentLoader = new MaskChanMultiFileLoader();
@@ -244,7 +250,7 @@ public class RenderablesLoadWorker extends SimpleWorker {
             ex.printStackTrace();
         } finally {
             if ( ! loadBarrier.isBroken() ) {
-                loadBarrier.reset(); // Signal to others: failed.
+                loadBarrier.reset(); // Signal to others.
             }
         }
     }
@@ -271,7 +277,7 @@ public class RenderablesLoadWorker extends SimpleWorker {
 
         // Special case: the "signal" renderable may have no mask or channel file.
         if ( maskChanRenderableData.getMaskPath() == null   ||   maskChanRenderableData.getChannelPath() == null ) {
-            logger.debug(
+            logger.warn(
                     "Renderable {} has either a missing mask or channel file -- {}.",
                     maskChanRenderableData.getBean().getTranslatedNum(),
                     maskChanRenderableData.getMaskPath() + maskChanRenderableData.getChannelPath()

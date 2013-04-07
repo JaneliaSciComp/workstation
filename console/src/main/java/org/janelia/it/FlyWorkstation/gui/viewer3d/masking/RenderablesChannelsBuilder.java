@@ -34,9 +34,10 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     protected boolean needsChannelInit = false; // Initialized for emphasis.
     private Logger logger = LoggerFactory.getLogger( RenderablesChannelsBuilder.class );
 
-    public RenderablesChannelsBuilder() {
+    public RenderablesChannelsBuilder( double downSampleRate ) {
         super();  // ...and I _mean_ that!
         needsChannelInit = true; // Must initialize the channel-specific data.
+        this.downSampleRate = downSampleRate;
     }
 
     // DEBUG/TEST
@@ -182,8 +183,6 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     //----------------------------------------IMPLEMENT TextureBuilderI
     @Override
     public TextureDataI buildTextureData() {
-        // TODO: user input: how much to downsample, based on info re graphics card.
-        //
         TextureDataI textureData = null;
         if ( downSampleRate != 0.0 ) {
             DownSampler downSampler = new DownSampler( sx, sy, sz );

@@ -37,6 +37,11 @@ public class Mip3d extends BaseGLViewer {
         popupMenu.add(resetViewItem);
     }
 
+    /** External addition to this conveniently-central popup menu. */
+    public void addMenuAction( Action action ) {
+        popupMenu.add( action );
+    }
+
     public void refresh() {
         Collection<GLActor> actors = renderer.getActors();
         for ( GLActor actor: actors ) {
@@ -216,7 +221,6 @@ public class Mip3d extends BaseGLViewer {
             return false;
     }
 
-    // todo consider having GAMMA passed along some other way--preference?
     public void setGamma( float gamma ) {
         for ( GLActor actor: renderer.getActors() ) {
             if ( actor instanceof  VolumeBrick ) {

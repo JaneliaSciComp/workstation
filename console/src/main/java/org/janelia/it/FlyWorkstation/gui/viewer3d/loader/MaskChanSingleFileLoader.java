@@ -108,7 +108,7 @@ public class MaskChanSingleFileLoader {
         initializeMaskStream(maskInputStream);
         validateMaskVolume();
 
-        logger.debug( "Reading channel data." );
+        logger.debug("Reading channel data.");
         List<byte[]> channelData = readChannelData( channelStream );
         logger.debug( "Completed reading channel data." );
 
@@ -306,9 +306,9 @@ public class MaskChanSingleFileLoader {
             List<byte[]> channelData ) throws Exception {
 
         latestRayNumber += skippedRayCount;
-        long nextRayOffset = latestRayNumber * fastestSrcVaryingMax;
+        long nextRayOffset = latestRayNumber * fastestSrcVaryingMax; // No need byte-count in source coords.
 
-        long[] srcRayStartCoords = convertTo3D( nextRayOffset, fastestSrcVaryingMax, secondFastestSrcVaryingMax );
+        long[] srcRayStartCoords = convertTo3D( nextRayOffset );
         long[] xyzCoords = convertToStandard3D( srcRayStartCoords );  // Initialize to ray-start-pos.
 
         int totalPositionsAdded = 0;
@@ -350,7 +350,7 @@ public class MaskChanSingleFileLoader {
                     }
 
                 }
-                cummulativeBytesReadCount ++;
+                cummulativeBytesReadCount += channelMetaData.byteCount;
 
             }
 
@@ -418,9 +418,10 @@ public class MaskChanSingleFileLoader {
 
     }
 
-    private long[] convertTo3D( long coord1DSource, long fastestSrcVaryingMax, long nextFastestSrcVaryingMax ) {
+    private long[] convertTo3D( long coord1DSource ) {
         // This works because the whole solid is made up of a stack of slices.
-        long sizeOfSlice = fastestSrcVaryingMax * nextFastestSrcVaryingMax;
+        //  ALSO, no need for byte-count in calculations for source coordinates.
+        long sizeOfSlice = fastestSrcVaryingMax * secondFastestSrcVaryingMax;
         long sliceRemainder = coord1DSource % sizeOfSlice;
         long sliceNumber = coord1DSource / sizeOfSlice;   // Last slice _before_ current one.
 

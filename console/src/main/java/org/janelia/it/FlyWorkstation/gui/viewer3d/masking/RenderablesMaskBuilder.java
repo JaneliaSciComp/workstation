@@ -34,6 +34,9 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     private double downSampleRate = 2.0;
 
     private boolean isInitialized = false;
+    public RenderablesMaskBuilder( double downSampleRate ) {
+        this.downSampleRate = downSampleRate;
+    }
 
     //----------------------------------------IMPLEMENT MaskChanDataAcceptorI
     /**

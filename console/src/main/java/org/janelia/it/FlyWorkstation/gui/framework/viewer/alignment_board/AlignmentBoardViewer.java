@@ -16,9 +16,9 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerPane;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardSettingsDialog;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableDataSourceI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ABContextDataSource;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.domain.Neuron;
@@ -54,6 +54,7 @@ public class AlignmentBoardViewer extends Viewer {
     private ModelMgrObserver modelMgrObserver;
     private RenderMappingI renderMapping;
     private BrainGlow brainGlow;
+    private AlignmentBoardSettingsDialog settings;
     private Logger logger = LoggerFactory.getLogger(AlignmentBoardViewer.class);
 
     public AlignmentBoardViewer(ViewerPane viewerPane) {
@@ -151,7 +152,7 @@ public class AlignmentBoardViewer extends Viewer {
             showLoadingIndicator();
 
             if ( mip3d == null ) {
-                mip3d = new Mip3d();
+                mip3d = createMip3d();
             }
 
             mip3d.refresh();
@@ -313,14 +314,16 @@ public class AlignmentBoardViewer extends Viewer {
             showLoadingIndicator();
 
             if ( mip3d == null ) {
-                mip3d = new Mip3d();
+                mip3d = createMip3d();
             }
 
             mip3d.refresh();
 
             // Here, should load volumes, for all the different items given.
             //loadWorker = new ABLoadWorker( this, context, mip3d );
-            loadWorker = new RenderablesLoadWorker( this, new ABContextDataSource( context ), mip3d, renderMapping );
+            loadWorker = new RenderablesLoadWorker(
+                    this, new ABContextDataSource( context ), mip3d, renderMapping, settings.getDownsampleRate()
+            );
             loadWorker.execute();
 
         }
@@ -328,6 +331,22 @@ public class AlignmentBoardViewer extends Viewer {
         // TEMP
         //brainGlow = new BrainGlow();
         //brainGlow.start();  // TEMP
+    }
+
+    /**
+     * Build out the Mip3D object for rendering all.  Make listeners on it so the viewer change its data
+     * as needed.
+     */
+    private Mip3d createMip3d() {
+        Mip3d rtnVal = new Mip3d();
+        settings = new AlignmentBoardSettingsDialog( rtnVal );
+        settings.setDownSampleRate( AlignmentBoardSettingsDialog.DEFAULT_DOWNSAMPLE_RATE );
+        settings.addSettingsListener(
+                new AlignmentBoardSettingsListener( rtnVal, this )
+        );
+
+        rtnVal.addMenuAction( settings.getLaunchAction() );
+        return rtnVal;
     }
 
     /**
@@ -341,7 +360,9 @@ public class AlignmentBoardViewer extends Viewer {
             // Here, should load volumes, for all the different items given.
 
             //loadWorker = new ABLoadWorker( this, context, mip3d, renderMappings );
-            loadWorker = new RenderablesLoadWorker( this, new ABContextDataSource(context), mip3d, renderMapping );
+            loadWorker = new RenderablesLoadWorker(
+                    this, new ABContextDataSource(context), mip3d, renderMapping, settings.getDownsampleRate()
+            );
             loadWorker.setLoadFilesFlag( Boolean.FALSE );
             loadWorker.execute();
 
@@ -350,6 +371,26 @@ public class AlignmentBoardViewer extends Viewer {
     }
 
     //------------------------------Inner Classes
+    public static class AlignmentBoardSettingsListener implements AlignmentBoardSettingsDialog.SettingsListener {
+        private Mip3d mip3d;
+        private AlignmentBoardViewer viewer;
+        public AlignmentBoardSettingsListener( Mip3d mip3d, AlignmentBoardViewer viewer ) {
+            this.mip3d = mip3d;
+            this.viewer = viewer;
+        }
+        @Override
+        public void setBrightness(double brightness) {
+            mip3d.setGamma( (float)brightness );
+        }
+
+        @Override
+        public void setDownsampleRate(double downsampleRate) {
+            // SessionMgr.getSessionMgr().getLayersPanel().getAlignmentBoardContext()
+            AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
+            viewer.updateBoard(context);
+        }
+    }
+
     /** Listens for changes to the child-set of the heard-entity. */
     public static class ModelMgrListener extends ModelMgrAdapter {
         private Entity heardEntity;
