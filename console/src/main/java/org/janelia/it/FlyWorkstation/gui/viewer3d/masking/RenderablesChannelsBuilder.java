@@ -98,10 +98,11 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         int targetPos = (int)( volumePosition * channelMetaData.channelCount * channelMetaData.byteCount );
 
         // TODO use the suggested R/G/B to specify the ordering, rather than simply using the 'i' offset.
-        for ( int i = 0; i < channelData.length; i++ ) {
+        for ( int i = 0; i < channelMetaData.rawChannelCount; i++ ) {
             for ( int j = 0; j < channelMetaData.byteCount; j++ ) {
                 //  block of in-memory, interleaving the channels as the offsets follow.
-                volumeData[ targetPos + i + j ] = channelData[ i ];
+                //volumeData[ targetPos + i + j ] = channelData[ i ];
+                volumeData[ targetPos + (i * channelMetaData.byteCount) + j ] = channelData[ (i * channelMetaData.byteCount) + j ];
             }
 
             // Pad out to the end.
@@ -187,7 +188,11 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         if ( downSampleRate != 0.0 ) {
             DownSampler downSampler = new DownSampler( sx, sy, sz );
             DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(
-                    volumeData, 4, downSampleRate, downSampleRate, downSampleRate
+                    volumeData,
+                    channelMetaData.channelCount* channelMetaData.byteCount,
+                    downSampleRate,
+                    downSampleRate,
+                    downSampleRate
             );
             textureData = new TextureDataBean(
                     downSampling.getVolume(), downSampling.getSx(), downSampling.getSy(), downSampling.getSz()
@@ -220,7 +225,10 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         textureData.setExplicitInternalFormat( GL2.GL_RGBA16 );
          */
 
-        textureData.setExplicitVoxelComponentType( GL2.GL_BYTE ); //GL2.GL_UNSIGNED_INT_8_8_8_8 );
+        if ( channelMetaData.byteCount == 1 )
+            textureData.setExplicitVoxelComponentType( GL2.GL_BYTE ); //GL2.GL_UNSIGNED_INT_8_8_8_8 );
+        else if ( channelMetaData.byteCount == 2 )
+            textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_SHORT );
         textureData.setExplicitVoxelComponentOrder( GL2.GL_RGBA );
         textureData.setExplicitInternalFormat( GL2.GL_RGBA );
 

@@ -92,6 +92,13 @@ public class AlignmentBoardSettingsDialog extends JDialog {
     public void setDownSampleRate( double downSampleRate ) {
         int downSampleRateInt = (int)Math.round(downSampleRate);
         Integer downsampleIndex = downSampleRateToIndex.get( downSampleRateInt );
+        if ( downsampleIndex == null ) {
+            JOptionPane.showMessageDialog(
+                    centering,
+                    "Invalid downsample rate of " + downSampleRate + " given.  Instead setting image size to 1/2."
+            );
+            downsampleIndex = 2;
+        }
         downSampleRateDropdown.setSelectedIndex( downsampleIndex );
         currentDownSampleRate = downSampleRate;
     }
@@ -124,7 +131,7 @@ public class AlignmentBoardSettingsDialog extends JDialog {
         brightnessSlider.setOrientation( JSlider.HORIZONTAL );
 
         downSampleRateToIndex = new HashMap<Integer,Integer>();
-        downSampleRateToIndex.put( 0, 0 );
+        downSampleRateToIndex.put( 1, 0 );
         downSampleRateToIndex.put( 2, 1 );
         downSampleRateToIndex.put( 4, 2 );
         downSampleRateToIndex.put( 6, 3 );

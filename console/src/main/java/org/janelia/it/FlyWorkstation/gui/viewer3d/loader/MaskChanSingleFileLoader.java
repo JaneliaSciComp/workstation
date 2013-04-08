@@ -56,6 +56,10 @@ public class MaskChanSingleFileLoader {
     private int dimensionOrder = -1;
     private Long totalVoxels;
 
+    private long srcSliceSize;
+    private long targetSliceSize;
+
+
     private Collection<MaskChanDataAcceptorI> maskAcceptors;
     private Collection<MaskChanDataAcceptorI> channelAcceptors;
     private RenderableBean renderableBean;
@@ -76,7 +80,7 @@ public class MaskChanSingleFileLoader {
 
     // Tells how many rays have been passed over up to the current add call.
     private long latestRayNumber = 0;   // This is evolving state: it depends on previously-updated data.
-    private int cummulativeBytesReadCount = 0;  // evolving state.
+    private int cummulativeVoxelsReadCount = 0;  // evolving state.
 
     private Logger logger = LoggerFactory.getLogger( MaskChanSingleFileLoader.class );
 
@@ -100,7 +104,7 @@ public class MaskChanSingleFileLoader {
     public void read( InputStream maskInputStream, InputStream channelStream )
             throws Exception {
 
-        cummulativeBytesReadCount = 0;
+        cummulativeVoxelsReadCount = 0;
         latestRayNumber = 0;
 
         // Get all the overhead stuff out of the way.
@@ -112,7 +116,7 @@ public class MaskChanSingleFileLoader {
         List<byte[]> channelData = readChannelData( channelStream );
         logger.debug( "Completed reading channel data." );
 
-        while ( cummulativeBytesReadCount < totalVoxels ) {
+        while ( cummulativeVoxelsReadCount < totalVoxels ) {
             Long skippedRayCount = readLong(maskInputStream);
             Long pairCount = readLong(maskInputStream);
             long[][] pairs = new long[ pairCount.intValue() ][ 2 ];
@@ -182,6 +186,10 @@ public class MaskChanSingleFileLoader {
 
         volumeVoxels = getVolumeVoxels( sx, sy, sz );
 
+        targetSliceSize = volumeVoxels[0] * volumeVoxels[1]; // sx * sy
+
+        srcSliceSize = fastestSrcVaryingMax * secondFastestSrcVaryingMax;
+
         for ( MaskChanDataAcceptorI acceptor: maskAcceptors ) {
             acceptor.setSpaceSize( volumeVoxels[0], volumeVoxels[1], volumeVoxels[2], coordCoverage );
         }
@@ -204,7 +212,6 @@ public class MaskChanSingleFileLoader {
             fastestSrcVaryingCoord = 0;
             secondFastestSrcVaryingCoord = 1;
             slowestSrcVaryingCoord = 2;
-
         }
         else if ( dimensionOrder == 1 ) {
             fastestSrcVaryingMax = sy;
@@ -308,7 +315,7 @@ public class MaskChanSingleFileLoader {
         latestRayNumber += skippedRayCount;
         long nextRayOffset = latestRayNumber * fastestSrcVaryingMax; // No need byte-count in source coords.
 
-        long[] srcRayStartCoords = convertTo3D( nextRayOffset );
+        long[] srcRayStartCoords = convertToSrc3D( nextRayOffset );
         long[] xyzCoords = convertToStandard3D( srcRayStartCoords );  // Initialize to ray-start-pos.
 
         int totalPositionsAdded = 0;
@@ -317,7 +324,6 @@ public class MaskChanSingleFileLoader {
         // Now, given we have dimension orderings, can leave two out of three coords in stasis, while only
         // the fastest-varying one, numbered 'axis', changes.
 
-        long sliceSize = volumeVoxels[0] * volumeVoxels[1]; // sx * sy
         int translatedNum = renderableBean.getTranslatedNum();
         byte[] allChannelBytes = new byte[ channelMetaData.byteCount * channelMetaData.channelCount ];
         for ( long[] pairAlongRay: pairsAlongRay ) {
@@ -327,10 +333,14 @@ public class MaskChanSingleFileLoader {
                 // particular axis, across all runs of this code.
                 xyzCoords[ axis ] = rayPosition;   // Fastest-varying coord is the one walked by the pair-along-ray
 
-                long zOffset = xyzCoords[ 2 ] * sliceSize;  // Consuming all slices to current.
+                long zOffset = xyzCoords[ 2 ] * targetSliceSize;  // Consuming all slices to current.
                 long yOffset = xyzCoords[ 1 ] * volumeVoxels[0] + zOffset;  // Consuming lines to remainder.
 
-                long final1DCoord = yOffset + xyzCoords[ 0 ] + pairAlongRay[ 0 ];
+                long final1DCoord = yOffset + xyzCoords[ 0 ];
+                // Arbitrarily picking one renderable...
+                if ( translatedNum == 10 ) {
+                    int zzz = 0;
+                }
 
                 for ( MaskChanDataAcceptorI acceptor: maskAcceptors ) {
                     acceptor.addMaskData( translatedNum, final1DCoord );
@@ -342,7 +352,7 @@ public class MaskChanSingleFileLoader {
                         byte[] nextChannelData = channelData.get( i );
                         for ( int j=0; j < channelMetaData.byteCount; j++ ) {
                             int targetOffset = (i * channelMetaData.byteCount) + j;
-                            allChannelBytes[ targetOffset ] = nextChannelData[ cummulativeBytesReadCount + j ];
+                            allChannelBytes[ targetOffset ] = nextChannelData[ (cummulativeVoxelsReadCount * channelMetaData.byteCount) + j ];
                         }
                     }
                     for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {
@@ -350,7 +360,7 @@ public class MaskChanSingleFileLoader {
                     }
 
                 }
-                cummulativeBytesReadCount += channelMetaData.byteCount;
+                cummulativeVoxelsReadCount++;
 
             }
 
@@ -418,12 +428,11 @@ public class MaskChanSingleFileLoader {
 
     }
 
-    private long[] convertTo3D( long coord1DSource ) {
+    private long[] convertToSrc3D(long coord1DSource) {
         // This works because the whole solid is made up of a stack of slices.
         //  ALSO, no need for byte-count in calculations for source coordinates.
-        long sizeOfSlice = fastestSrcVaryingMax * secondFastestSrcVaryingMax;
-        long sliceRemainder = coord1DSource % sizeOfSlice;
-        long sliceNumber = coord1DSource / sizeOfSlice;   // Last slice _before_ current one.
+        long sliceRemainder = coord1DSource % srcSliceSize;
+        long sliceNumber = coord1DSource / srcSliceSize;   // Last slice _before_ current one.
 
         long sizeOfLine = fastestSrcVaryingMax;
         long lineNumber = sliceRemainder / sizeOfLine;    // Last line _before_ current one.

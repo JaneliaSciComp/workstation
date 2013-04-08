@@ -475,6 +475,7 @@ public class TextureMediator {
             glConstantToName.put( GL2.GL_UNSIGNED_SHORT_5_6_5, "GL2.GL_UNSIGNED_SHORT_5_6_5" );
             glConstantToName.put( GL2.GL_UNSIGNED_SHORT_1_5_5_5_REV, "GL2.GL_UNSIGNED_SHORT_1_5_5_5_REV" );
             glConstantToName.put( GL2.GL_BYTE, "GL2.GL_BYTE" );
+            glConstantToName.put( GL2.GL_SHORT, "GL2.GL_SHORT" );
             glConstantToName.put( GL2.GL_UNSIGNED_BYTE, "GL2.GL_UNSIGNED_BYTE" );
             glConstantToName.put( GL2.GL_UNSIGNED_SHORT, "GL2.GL_UNSIGNED_SHORT" );
 
