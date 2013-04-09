@@ -1,14 +1,14 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import java.lang.reflect.Constructor;
-import java.util.concurrent.Callable;
-
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.*;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.lang.reflect.Constructor;
+import java.util.concurrent.Callable;
 
 /**
  * Manages the viewers in the central panel, deciding, for instance, when to use a particular viewer class. 
@@ -151,7 +151,7 @@ public class ViewerManager {
 		else if (EntityConstants.TYPE_TEXT_FILE.equals(type)) {
             viewerClass = TextFileViewer.class;
         }
-		
+
 		return viewerClass;
 	}
 

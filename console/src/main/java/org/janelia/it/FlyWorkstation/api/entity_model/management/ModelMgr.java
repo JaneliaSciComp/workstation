@@ -1,14 +1,11 @@
 package org.janelia.it.FlyWorkstation.api.entity_model.management;
 
-import java.awt.Color;
-import java.awt.EventQueue;
-import java.util.*;
-import java.util.concurrent.Executor;
-
-import javax.swing.SwingUtilities;
-
+import com.google.common.eventbus.AsyncEventBus;
+import com.google.common.eventbus.EventBus;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
+import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskFilter;
+import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskRequest;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.roles.ExceptionHandler;
 import org.janelia.it.FlyWorkstation.api.stub.data.NoDataException;
@@ -20,6 +17,7 @@ import org.janelia.it.FlyWorkstation.model.utils.OntologyKeyBind;
 import org.janelia.it.FlyWorkstation.model.utils.OntologyKeyBindings;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.shared.exception_handlers.PrintStackTraceHandler;
+import org.janelia.it.FlyWorkstation.shared.util.ThreadQueue;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.compute.api.support.SageTerm;
@@ -40,8 +38,11 @@ import org.janelia.it.jacs.shared.annotation.FilterResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.AsyncEventBus;
-import com.google.common.eventbus.EventBus;
+import javax.swing.*;
+import java.awt.*;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Executor;
 
 public class ModelMgr {
 	
@@ -53,7 +54,8 @@ public class ModelMgr {
     public static final String CATEGORY_KEYBINDS_ONTOLOGY = "Keybind:Ontology:";
     
     private static ModelMgr modelManager = new ModelMgr();
-    
+    private ThreadQueue threadQueue;
+
     private final EventBus modelEventBus;
     private final EntityModel entityModel;
     private final EntitySelectionModel entitySelectionModel;
@@ -825,8 +827,9 @@ public class ModelMgr {
         FacadeManager.getFacadeManager().getComputeFacade().cancelTaskById(taskId);
     }
 
-    public void submitJob(String processDefName, Long taskId) throws Exception {
-        FacadeManager.getFacadeManager().getComputeFacade().submitJob(processDefName, taskId);
+    public TaskRequest submitJob(String processDefName, Task task) throws Exception {
+        FacadeManager.getFacadeManager().getComputeFacade().submitJob(processDefName, task.getObjectId());
+        return new TaskRequest(new TaskFilter(task.getJobName(), task.getObjectId()));
     }
     
     public List<Task> getUserParentTasks() throws Exception {
@@ -986,4 +989,12 @@ public class ModelMgr {
 	public Color getUserAnnotationColor(String username) {
 		return userColorMapping.getColor(username);
 	}
+
+    public ThreadQueue getLoaderThreadQueue() {
+        if (threadQueue==null){
+            threadQueue=new ThreadQueue(6,"LoaderGroup",Thread.MIN_PRIORITY,true);
+        }
+        return threadQueue;
+    }
+
 }

@@ -1,8 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
+import org.janelia.it.FlyWorkstation.api.entity_model.access.TaskRequestStatusObserverAdapter;
+import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskRequest;
+import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskRequestState;
+import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskRequestStatus;
+import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskThreadBase;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
-import org.janelia.it.FlyWorkstation.gui.framework.console.Perspective;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -34,6 +37,8 @@ public class MaskSearchDialog extends ModalDialog {
     public static final String PREF_MASK_SEARCH_SERVICE_FOLDER_NAME  = "MaskSearchService.TopLevelFolderName";
     public static final String PREF_MASK_SEARCH_SERVICE_MATRIX       = "MaskSearchService.Matrix";
     public static final String PREF_MASK_SEARCH_QUERY_CHANNEL        = "MaskSearchService.QueryChannel";
+    public static final String PREF_MASK_SEARCH_MAX_HITS             = "MaskSearchService.MaxHits";
+    public static final String PREF_MASK_SEARCH_SKIP_ZEROES          = "MaskSearchService.SkipZeroes";
 
     private static final String TOP_LEVEL_FOLDER_NAME = "'s Mask Search Data";
 
@@ -46,11 +51,15 @@ public class MaskSearchDialog extends ModalDialog {
     private final JTextField folderField;
     private final JTextField matrixTextField;
     private final JTextField queryChannelTextField;
+    private final JTextField maxHitsTextField;
+    private final JCheckBox  skipZeroesCheckBox;
     private JFileChooser fileChooser;
+    private Long currentTaskId;
+    private TaskRequest searchRequest;
 
     public MaskSearchDialog() {
 
-        setTitle("Launch Mask Search");
+        setTitle("Launch Pattern Mask Search");
 
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new VerticalLayout(5));
@@ -128,7 +137,7 @@ public class MaskSearchDialog extends ModalDialog {
         JLabel matrixFieldLabel  = new JLabel("Matrix:");
         matrixFieldLabel.setToolTipText(TOOLTIP_MATRIX);
         matrixTextField = new JTextField(40);
-        // Use the previous destination; otherwise, suggest the default user location
+        // Use the previous setting; otherwise, suggest the default matrix setting
         if (null!=SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_MATRIX)&&
                 !"".equals(SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_MATRIX))) {
             matrixTextField.setText((String) SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SERVICE_MATRIX));
@@ -144,8 +153,8 @@ public class MaskSearchDialog extends ModalDialog {
 
         JLabel queryChannelFieldLabel  = new JLabel("Query Channel:");
         queryChannelFieldLabel.setToolTipText(TOOLTIP_QUERY);
-        queryChannelTextField = new JTextField(5);
-        // Use the previous destination; otherwise, suggest the default user location
+        queryChannelTextField = new JTextField(40);
+        // Use the previous setting; otherwise, suggest the default channel setting
         if (null!=SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_QUERY_CHANNEL)&&
                 !"".equals(SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_QUERY_CHANNEL))) {
             queryChannelTextField.setText((String) SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_QUERY_CHANNEL));
@@ -158,6 +167,34 @@ public class MaskSearchDialog extends ModalDialog {
         attrPanel.add(queryChannelFieldLabel,c);
         c.gridx=1;
         attrPanel.add(queryChannelTextField,c);
+
+        JLabel maxHitsFieldLabel  = new JLabel("Max Hits:");
+        maxHitsTextField = new JTextField(40);
+        // Use the previous setting; otherwise, suggest the default max hits setting
+        if (null!=SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_MAX_HITS)&&
+                !"".equals(SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_MAX_HITS))) {
+            maxHitsTextField.setText((String) SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_MAX_HITS));
+        }
+        else {
+            maxHitsTextField.setText(MaskSearchTask.DEFAULT_MAX_HITS);
+        }
+        c.gridx=0;c.gridy=4;
+        attrPanel.add(maxHitsFieldLabel,c);
+        c.gridx=1;
+        attrPanel.add(maxHitsTextField,c);
+
+        skipZeroesCheckBox = new JCheckBox("Search Non-Zero Mask Only");
+        // Use the previous setting; otherwise, suggest the default max hits setting
+        if (null!=SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SKIP_ZEROES)&&
+                !"".equals(SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SKIP_ZEROES))) {
+            skipZeroesCheckBox.setSelected(Boolean.valueOf((String) SessionMgr.getSessionMgr().getModelProperty(PREF_MASK_SEARCH_SKIP_ZEROES)));
+        }
+        else {
+            skipZeroesCheckBox.setSelected(Boolean.valueOf(MaskSearchTask.DEFAULT_SKIP_ZEROES));
+        }
+        skipZeroesCheckBox.setHorizontalTextPosition(SwingConstants.LEFT);
+        c.gridx=1;c.gridy=5;
+        attrPanel.add(skipZeroesCheckBox,c);
 
         mainPanel.add(attrPanel);
         add(mainPanel, BorderLayout.CENTER);
@@ -198,6 +235,8 @@ public class MaskSearchDialog extends ModalDialog {
         final String topLevelFolderName = folderField.getText().trim();
         final String matrixValue = matrixTextField.getText().trim();
         final String queryChannel = queryChannelTextField.getText().trim();
+        final String maxHits = maxHitsTextField.getText().trim();
+        final String skipZeroes = Boolean.toString(skipZeroesCheckBox.isSelected());
 
         // Update user Preferences
         if (null!=topLevelFolderName) {
@@ -212,6 +251,12 @@ public class MaskSearchDialog extends ModalDialog {
         if (null!=queryChannel) {
             SessionMgr.getSessionMgr().setModelProperty(PREF_MASK_SEARCH_QUERY_CHANNEL,queryChannel);
         }
+        if (null!=maxHits) {
+            SessionMgr.getSessionMgr().setModelProperty(PREF_MASK_SEARCH_MAX_HITS,maxHits);
+        }
+        if (null!=skipZeroes) {
+            SessionMgr.getSessionMgr().setModelProperty(PREF_MASK_SEARCH_SKIP_ZEROES,skipZeroes);
+        }
         // Prompt a save of the user settings because we can't trust the Mac exit yet
         SessionMgr.getSessionMgr().saveUserSettings();
 
@@ -219,14 +264,14 @@ public class MaskSearchDialog extends ModalDialog {
 
             @Override
             protected void doStuff() throws Exception {
-                startMaskSearch(inputDirPath, topLevelFolderName, matrixValue, queryChannel);
+                startMaskSearch(inputDirPath, topLevelFolderName, matrixValue, queryChannel, maxHits, skipZeroes);
             }
 
             @Override
             protected void hadSuccess() {
                 Utils.setDefaultCursor(MaskSearchDialog.this);
-                Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
-                browser.setPerspective(Perspective.TaskMonitoring);
+//                Browser browser = SessionMgr.getSessionMgr().getActiveBrowser();
+//                browser.setPerspective(Perspective.TaskMonitoring);
                 setVisible(false);
             }
 
@@ -248,26 +293,94 @@ public class MaskSearchDialog extends ModalDialog {
 
     /**
      * Begin the separation task, wrapped in a continuous execution task.
-     * @param path root directory to use for file discovery
-     * @param queryChannel
      */
-    private void startMaskSearch(String path, String topLevelFolderName, String matrixValue, String queryChannel) {
+    private void startMaskSearch(String path, String topLevelFolderName, String matrixValue, String queryChannel,
+                                 String maxHits, String skipZeroes) {
         try {
-            String process;
-            Task task;
             String owner = SessionMgr.getSubjectKey();
-
-            process = "MaskSearch";
-            task = new MaskSearchTask(new HashSet<Node>(), owner, new ArrayList<org.janelia.it.jacs.model.tasks.Event>(),
-                    new HashSet<TaskParameter>(), path, topLevelFolderName, matrixValue, queryChannel);
+            String process = "MaskSearch";
+            Task task = new MaskSearchTask(new HashSet<Node>(), owner, new ArrayList<org.janelia.it.jacs.model.tasks.Event>(),
+                    new HashSet<TaskParameter>(), path, topLevelFolderName, matrixValue, queryChannel, maxHits, skipZeroes);
             task.setJobName("Mask Search Task");
             task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
-
-            ModelMgr.getModelMgr().submitJob(process, task.getObjectId());
+            currentTaskId = task.getObjectId();
+            searchRequest = ModelMgr.getModelMgr().submitJob(process, task);
+            final TaskRequestStatus taskStatus = searchRequest.getTaskRequestStatus();
+            if (searchRequest.getTaskFilter().getTaskFilterStatus().isCompleted()) {
+                taskStatus.setTaskRequestState(TaskRequestStatus.COMPLETE);
+                return;
+            }
+            taskStatus.setPendingTaskRequestAndStateToWaiting(searchRequest);
+            final SearchWatcher searchWatcher = new SearchWatcher(searchRequest);
+            ModelMgr.getModelMgr().getLoaderThreadQueue().addQueue(searchWatcher);
+            waitForLoading(taskStatus);
         }
         catch (Exception e) {
             SessionMgr.getSessionMgr().handleException(e);
         }
     }
+
+    /**
+     * Wait for the loadRequestStatus to finish before continuing
+     */
+    protected void waitForLoading(final TaskRequestStatus ls) {
+        if (ls.getTaskRequestState() == TaskRequestStatus.RUNNING || ls.getTaskRequestState() == TaskRequestStatus.WAITING) {
+            ls.addTaskRequestStatusObserver(new TaskObserver(Thread.currentThread()), false);
+            synchronized (this) {
+                try {
+                    wait(10000); //max of 10000 to avoid deadlock
+                }
+                catch (Exception ex) {
+                } //expect inturrupted exception, do nothing
+            }
+        }
+    }
+
+    final class SearchWatcher extends TaskThreadBase {
+
+        boolean monitorState = true;
+        public SearchWatcher(final TaskRequest request) {
+            super(request);
+        }
+
+        public SearchWatcher(final TaskRequest request, final boolean monitorState) {
+            super(request);
+            this.monitorState = monitorState;
+        }
+
+        public void run() {
+            if (monitorState) {
+                taskRequestStatus.setTaskRequestState(TaskRequestStatus.RUNNING);
+            }
+            try {
+                Task task = ModelMgr.getModelMgr().getTaskById(this.taskRequest.getTaskFilter().getTaskId());
+                if (monitorState) {
+                    if (task.isDone()) {
+                        taskRequestStatus.setTaskRequestState(TaskRequestStatus.COMPLETE);
+                    }
+                }
+
+            }
+            catch (Exception ex) {
+                SessionMgr.getSessionMgr().handleException(ex);
+            }
+        }
+    }
+
+    static final class TaskObserver extends TaskRequestStatusObserverAdapter {
+        final Thread waitingThread;
+
+        public TaskObserver(final Thread waitingThread) {
+            this.waitingThread = waitingThread;
+        }
+
+        public void stateChanged(final TaskRequestStatus loadRequestStatus, final TaskRequestState newState) {
+            if (loadRequestStatus.getTaskRequestState() == TaskRequestStatus.COMPLETE) {
+                loadRequestStatus.removeTaskRequestStatusObserver(this);
+                waitingThread.interrupt();
+            }
+        }
+    }
+
 
 }

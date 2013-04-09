@@ -1,19 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.FileWriter;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Callable;
-
-import javax.swing.*;
-import javax.swing.Timer;
-
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Ordering;
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
@@ -39,9 +28,18 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
-import com.google.common.eventbus.Subscribe;
+import javax.swing.*;
+import javax.swing.Timer;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileWriter;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Callable;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * A panel that may be inserted into the right-most view pane and serves as a workflow driver for the GAL4 split line 
@@ -911,7 +909,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
         log.info("Submitting task "+task.getDisplayName()+" id="+task.getObjectId());
         
         runningTasks.add(task.getObjectId());
-        ModelMgr.getModelMgr().submitJob("ScreenSampleCrossService", task.getObjectId());
+        ModelMgr.getModelMgr().submitJob("ScreenSampleCrossService", task);
     }
     
     private String createNextCrossLabel() {

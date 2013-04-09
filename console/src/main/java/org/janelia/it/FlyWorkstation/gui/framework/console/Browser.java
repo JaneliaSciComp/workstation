@@ -1,9 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
 import com.google.common.collect.ComparisonChain;
-import org.janelia.it.FlyWorkstation.api.entity_model.access.LoadRequestStatusObserverAdapter;
-import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestState;
-import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestStatus;
+import org.janelia.it.FlyWorkstation.api.entity_model.access.TaskRequestStatusObserverAdapter;
+import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskRequestState;
+import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskRequestStatus;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.dialogs.*;
@@ -21,6 +21,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.Layers
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.JOutlookBar;
 import org.janelia.it.FlyWorkstation.gui.util.JOutlookBar2;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.SliceViewViewer;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapperFactory;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
@@ -311,7 +312,7 @@ public class Browser extends JFrame implements Cloneable {
 
         outlookBar = new JOutlookBar2();
         outlookBar.addBar(BAR_DATA, Icons.getIcon("folders_explorer_medium.png"), entityOutline);
-//        outlookBar.addBar(BAR_SAMPLES, Icons.getIcon("folders_explorer_medium.png"), entityWrapperOutline);
+        outlookBar.addBar(BAR_SAMPLES, Icons.getIcon("folders_explorer_medium.png"), entityWrapperOutline);
         outlookBar.addBar(BAR_SESSIONS, Icons.getIcon("cart_medium.png"), sessionOutline);
         outlookBar.addBar(BAR_TASKS, Icons.getIcon("cog_medium.png"), taskOutline);
         
@@ -1210,10 +1211,9 @@ public class Browser extends JFrame implements Cloneable {
     private class BrowserModelObserver extends BrowserModelListenerAdapter {
         public void browserCurrentSelectionChanged(Entity newSelection) {
             if (newSelection != null) {
-//                LoadRequestStatus lrs = newSelection.loadPropertiesBackground();
+//                TaskRequestStatus lrs = newSelection.loadPropertiesBackground();
 //
-//                if (lrs.getLoadRequestState()
-//                       .equals(LoadRequestStatus.COMPLETE)) {
+//                if (lrs.getTaskRequestState().equals(TaskRequestStatus.COMPLETE)) {
 //                    String description = "Entity";
 //
 ////                    if (newSelection instanceof Feature) {
@@ -1226,11 +1226,11 @@ public class Browser extends JFrame implements Cloneable {
 ////                        description = newSelection.getDescriptiveText();
 ////                    }
 //
-//                    statusBar.setDescription("Current Selection: " +
-//                                             description);
-//                } else {
+                    statusBar.setDescription("Current Selection: " + newSelection.getName());
+//                }
+//                else {
 //                    descriptionObserver.setEntityAndToggleDialog(newSelection);
-//                    lrs.addLoadRequestStatusObserver(descriptionObserver, true);
+//                    lrs.addTaskRequestStatusObserver(descriptionObserver, true);
 //                    statusBar.setDescription(
 //                            "Current Selection: Loading Properties");
 //                }
@@ -1265,15 +1265,15 @@ public class Browser extends JFrame implements Cloneable {
         }
     }
 
-    class DescriptionObserver extends LoadRequestStatusObserverAdapter {
+    class DescriptionObserver extends TaskRequestStatusObserverAdapter {
         private Entity ge;
 
         public void setEntity(Entity ge) {
             this.ge = ge;
         }
 
-        public void stateChanged(LoadRequestStatus loadRequestStatus, LoadRequestState newState) {
-            if (newState == LoadRequestStatus.COMPLETE) {
+        public void stateChanged(TaskRequestStatus taskRequestStatus, TaskRequestState newState) {
+            if (newState == TaskRequestStatus.COMPLETE) {
                 String description = "Test";
 
 //                if (ge instanceof Entity) {
@@ -1285,7 +1285,7 @@ public class Browser extends JFrame implements Cloneable {
 //                }
 
                 statusBar.setDescription("Current Selection: " + description);
-                loadRequestStatus.removeLoadRequestStatusObserver(this);
+                taskRequestStatus.removeTaskRequestStatusObserver(this);
             }
         }
     }
@@ -1511,6 +1511,12 @@ public class Browser extends JFrame implements Cloneable {
             outlookBar.setVisibleBarByName(Browser.BAR_TASKS);
             selectRightPanel(OUTLINE_ONTOLOGY);
             viewerManager.clearAllViewers();
+            break;
+        case SliceViewer:
+            viewerManager.clearAllViewers();
+            viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), SliceViewViewer.class);
+//            viewerManager.getMainViewerPane().getViewer().refresh();
+//            viewerManager.getMainViewerPane().setVisible(true);
             break;
         case ImageBrowser:
         default:

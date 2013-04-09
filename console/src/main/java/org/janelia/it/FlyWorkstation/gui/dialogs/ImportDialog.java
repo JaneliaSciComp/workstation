@@ -135,7 +135,7 @@ public class ImportDialog extends ModalDialog {
         advancedOptionsPanel.add(getEntityTypeChooser());
 
         mainPanel.add(attrPanel);
-//        mainPanel.add(advancedOptionsPanel);
+        mainPanel.add(advancedOptionsPanel);
 
         add(mainPanel, BorderLayout.CENTER);
 //        SpringUtilities.makeCompactGrid(attrPanel, attrPanel.getComponentCount()/3, 2, 6, 6, 6, 6);
@@ -260,7 +260,7 @@ public class ImportDialog extends ModalDialog {
             // Submit the job
             // todo Should do this the right way and not use the explicit method
 //            ((ConsoleMenuBar)(SessionMgr.getBrowser().getJMenuBar())).modifyImageState(true);
-            ModelMgr.getModelMgr().submitJob(process, task.getObjectId());
+            ModelMgr.getModelMgr().submitJob(process, task);
             // todo remove this thread sleep
 //            Thread.sleep(10000);
             refreshTimer = new Timer(REFRESH_DELAY, new ActionListener() {

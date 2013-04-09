@@ -17,6 +17,7 @@ public class SearchMenu extends JMenu {
 
     public SearchMenu(final Browser browser) {
         super("Search");
+        this.setMnemonic('S');
 
         JMenuItem searchMenuItem = new JMenuItem("Search");
         searchMenuItem.addActionListener(new ActionListener() {
@@ -36,6 +37,15 @@ public class SearchMenu extends JMenu {
         });
         add(patternSearchMenuItem);
 
+        JMenuItem maskSearchMenuItem = new JMenuItem("Pattern Mask Search");
+        maskSearchMenuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                browser.getMaskSearchDialog().showDialog();
+            }
+        });
+        add(maskSearchMenuItem);
+
         JMenuItem giantFiberSearchMenuItem = new JMenuItem("Giant Fiber Mask Search");
         giantFiberSearchMenuItem.addActionListener(new ActionListener() {
             @Override
@@ -44,15 +54,6 @@ public class SearchMenu extends JMenu {
             }
         });
         add(giantFiberSearchMenuItem);
-
-        JMenuItem maskSearchMenuItem = new JMenuItem("Mask Search");
-        maskSearchMenuItem.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent actionEvent) {
-                browser.getMaskSearchDialog().showDialog();
-            }
-        });
-//        add(maskSearchMenuItem);
 
         final MAASearchDialog maaSearchDialog = browser.getMAASearchDialog();
         if (maaSearchDialog!=null && maaSearchDialog.isAccessible()) {

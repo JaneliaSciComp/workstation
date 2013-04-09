@@ -38,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
@@ -96,7 +95,7 @@ public class EntityContextMenu extends JPopupMenu {
         add(getGotoRelatedItem());
 
         setNextAddRequiresSeparator(true);
-//        add(getImportItem());
+        add(getImportItem());
         add(getNewFolderItem());
         add(getAddToRootFolderItem());
         add(getAddToSplitPickingSessionItem());
@@ -125,7 +124,8 @@ public class EntityContextMenu extends JPopupMenu {
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
         add(getOpenAlignmentBoardItem());
-        
+        add(getOpenSliceViewerItem());
+
         if ((SessionMgr.getSubjectKey().equals("user:simpsonj") || SessionMgr.getSubjectKey()
                 .equals("group:simpsonlab")) && !this.multiple) {
             add(getSpecialAnnotationSession());
@@ -377,7 +377,7 @@ public class EntityContextMenu extends JPopupMenu {
         if (rootedEntity != null && rootedEntity.getEntityData() != null) {
             Entity entity = rootedEntity.getEntity();
             if (entity!=null && entity.getEntityType().getName().equals(EntityConstants.TYPE_ALIGNMENT_BOARD)) {
-                alignBrdVwItem = new JMenuItem(" Open In Alignment Board Viewer");
+                alignBrdVwItem = new JMenuItem("  Open In Alignment Board Viewer");
                 alignBrdVwItem.addActionListener(new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
@@ -389,6 +389,25 @@ public class EntityContextMenu extends JPopupMenu {
         }
 
         return alignBrdVwItem;
+    }
+
+    public JMenuItem getOpenSliceViewerItem() {
+        JMenuItem sliceVwItem = null;
+        if (rootedEntity != null && rootedEntity.getEntityData() != null) {
+            Entity entity = rootedEntity.getEntity();
+            if (entity.getEntityType().getName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+                sliceVwItem = new JMenuItem("  Open Slice Viewer");
+                sliceVwItem.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        SessionMgr.getBrowser().setPerspective(Perspective.SliceViewer);
+                        SessionMgr.getBrowser().getViewerManager().getActiveViewer().loadEntity(rootedEntity);
+                    }
+                });
+            }
+        }
+
+        return sliceVwItem;
     }
 
     private class EntityDataPath {
@@ -920,7 +939,7 @@ public class EntityContextMenu extends JPopupMenu {
                         task.setParameter(NeuronMergeTask.PARAM_commaSeparatedNeuronFragmentList,
                                 Task.csvStringFromCollection(fragmentIds));
                         task = (NeuronMergeTask) ModelMgr.getModelMgr().saveOrUpdateTask(task);
-                        ModelMgr.getModelMgr().submitJob("NeuronMerge", task.getObjectId());
+                        ModelMgr.getModelMgr().submitJob("NeuronMerge", task);
                     }
 
                     @Override
@@ -976,7 +995,7 @@ public class EntityContextMenu extends JPopupMenu {
                             new ArrayList<Event>(), taskParameters, "sortBySimilarity", "Sort By Similarity");
                     task.setJobName("Sort By Similarity Task");
                     task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
-                    ModelMgr.getModelMgr().submitJob("SortBySimilarity", task.getObjectId());
+                    ModelMgr.getModelMgr().submitJob("SortBySimilarity", task);
 
                     final TaskDetailsDialog dialog = new TaskDetailsDialog(true);
                     dialog.showForTask(task);
@@ -1217,7 +1236,7 @@ public class EntityContextMenu extends JPopupMenu {
                                         new ArrayList<Event>(), taskParameters, "syncFromArchive", "Sync From Archive");
                                 task.setJobName("Sync From Archive Task");
                                 task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
-                                ModelMgr.getModelMgr().submitJob("SyncFromArchive", task.getObjectId());
+                                ModelMgr.getModelMgr().submitJob("SyncFromArchive", task);
                             }
                         }
                     } catch (Exception e) {

@@ -1,17 +1,14 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import java.awt.Event;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.QuadViewUi;
+import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.KeyStroke;
-
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 
 /**
  * Created by IntelliJ IDEA.
@@ -67,5 +64,14 @@ public class ViewMenu extends JMenu {
         });
         resetWindow.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, SystemInfo.isMac?Event.META_MASK:Event.CTRL_MASK));
         add(resetWindow);
+
+        JMenuItem sliceWindow = new JMenuItem("Slice Viewer");
+        sliceWindow.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                QuadViewUi quadView = new QuadViewUi();
+                quadView.setVisible(true);
+            }
+        });
+        add(sliceWindow);
     }
 }

@@ -9,6 +9,7 @@ public enum Perspective {
     
     ImageBrowser("Image Browsing"),
     AlignmentBoard("Alignment Board"),
+    SliceViewer("Slice Viewer"),
     SplitPicker("Split Picking"),
     AnnotationSession("Annotation Session"),
     TaskMonitoring("Task Monitoring");

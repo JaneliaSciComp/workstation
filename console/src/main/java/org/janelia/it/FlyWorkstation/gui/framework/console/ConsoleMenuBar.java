@@ -33,8 +33,6 @@ public class ConsoleMenuBar extends JMenuBar {
     protected JMenu ontologyMenu;
     protected JMenu helpMenu;
     protected JMenu viewMenu;
-    // todo Remove this dumb counter for animation
-    private int dumbCounter = 0;
 //    protected JMenu windowMenu;
     protected Component menuGlue = Box.createHorizontalGlue();
 
@@ -67,7 +65,7 @@ public class ConsoleMenuBar extends JMenuBar {
         helpMenu = new HelpMenu(console);
         viewMenu = new ViewMenu(console);
         imageLabel = new JLabel(staticIcon);
-//        imageLabel.addMouseListener(new MyMouseListener());
+        imageLabel.addMouseListener(new MyMouseListener());
     }
 
     private void addMenus() {
@@ -81,7 +79,7 @@ public class ConsoleMenuBar extends JMenuBar {
 //        add(ontologyMenu);
         add(helpMenu);
         add(menuGlue);
-//        add(imageLabel);
+        add(imageLabel);
     }
 
 //    public void add(Component comp, Position pos) {
@@ -161,15 +159,8 @@ public class ConsoleMenuBar extends JMenuBar {
         console.repaint();
     }
 
-    // todo Remove this public access to the Progress Meter
-    public void modifyImageState(boolean animated) {
+    void modifyImageState(boolean animated) {
         if (animated) {
-            dumbCounter++;
-        }
-        else {
-            dumbCounter--;
-        }
-        if (dumbCounter>0) {
             imageLabel.setIcon(animatedIcon);
         }
         else {
@@ -211,7 +202,7 @@ public class ConsoleMenuBar extends JMenuBar {
       public void mouseReleased(MouseEvent e){}
       public void mouseEntered(MouseEvent e) {
           Point loc = imageLabel.getLocation();
-          meter.setLocation(new Point(loc.x-imageLabel.getWidth(), loc.y+imageLabel.getHeight()+meter.getHeight()));
+          meter.setLocation(new Point(loc.x-imageLabel.getWidth(), loc.y+imageLabel.getHeight()+meter.getHeight()+20));
           meter.setVisible(true);
           modifyImageState(true);
       }

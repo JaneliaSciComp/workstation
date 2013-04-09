@@ -1,54 +1,17 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
-import java.awt.BorderLayout;
-import java.awt.EventQueue;
-
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.border.EmptyBorder;
-import javax.swing.BoxLayout;
-import java.awt.Dimension;
-
-import javax.swing.AbstractAction;
-import javax.swing.AbstractButton;
-import javax.swing.ActionMap;
-import javax.swing.InputMap;
-import javax.swing.JComponent;
-import javax.swing.JToolBar;
-import javax.swing.JLabel;
-import javax.swing.JSplitPane;
-import javax.swing.JSlider;
-import javax.swing.KeyStroke;
-import javax.swing.SpinnerNumberModel;
-import javax.swing.SwingConstants;
-import javax.swing.JButton;
-import javax.swing.JMenuBar;
-import javax.swing.JMenu;
-import javax.swing.UIManager;
-
-import java.awt.Color;
-import javax.swing.JSpinner;
-import javax.swing.Action;
-import javax.swing.JMenuItem;
-
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicObservableCamera3d;
 
-import javax.swing.JSeparator;
-import java.awt.Component;
-import javax.swing.Box;
-import javax.swing.JToggleButton;
-import java.awt.Insets;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.EtchedBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.net.URL;
-
-import javax.swing.ImageIcon;
-import javax.swing.ButtonGroup;
-import javax.swing.JRadioButtonMenuItem;
-import javax.swing.border.EtchedBorder;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ChangeEvent;
 
 /** 
  * Main window for QuadView application.
@@ -57,25 +20,23 @@ import javax.swing.event.ChangeEvent;
  * @author Christopher M. Bruns
  *
  */
-public class QuadViewUi extends JFrame 
+public class QuadViewUi extends JPanel
 {
 	private static final long serialVersionUID = 1L;
 
-	static {
-		// Use top menu bar on Mac
-		if (System.getProperty("os.name").contains("Mac")) {
-			  System.setProperty("apple.laf.useScreenMenuBar", "true");
-			  System.setProperty("com.apple.mrj.application.apple.menu.about.name", "QuadView");
-		}
-		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (Exception e) {
-			System.out.println("Warning: Failed to set native look and feel.");
-		}		
-	}
+//	static {
+//		// Use top menu bar on Mac
+//		if (System.getProperty("os.name").contains("Mac")) {
+//			  System.setProperty("apple.laf.useScreenMenuBar", "true");
+//			  System.setProperty("com.apple.mrj.application.apple.menu.about.name", "QuadView");
+//		}
+//		try {
+//			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+//		} catch (Exception e) {
+//			System.out.println("Warning: Failed to set native look and feel.");
+//		}
+//	}
 
-	private JPanel contentPane;
-	
 	// One shared camera for all viewers.
 	// (there's only one viewer now actually, but you know...)
 	private BasicObservableCamera3d camera = new BasicObservableCamera3d();
@@ -88,6 +49,8 @@ public class QuadViewUi extends JFrame
 	
 	private JPanel colorPanel = new JPanel();
 	private JPanel colorLockPanel = new JPanel();
+    private JMenuBar menuBar = new JMenuBar();
+    private JPanel toolBarPanel = new JPanel();
 	private JSplitPane splitPane = new JSplitPane();
 	private ColorChannelWidget colorChannelWidget_0 = new ColorChannelWidget(0, sliceViewer.getImageColorModel());
 	private ColorChannelWidget colorChannelWidget_1 = new ColorChannelWidget(1, sliceViewer.getImageColorModel());
@@ -190,17 +153,24 @@ public class QuadViewUi extends JFrame
 		}
 		// TODO update zoom range too?
 	};
-	
-	/**
+
+    /**
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					QuadViewUi frame = new QuadViewUi();
-					frame.setVisible(true);
-				} catch (Exception e) {
+                    JFrame mainFrame = new JFrame();
+                    mainFrame.setTitle("QuadView");
+                    mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                    mainFrame.setResizable(true);
+                    mainFrame.setBounds(100, 100, 994, 653);
+                    QuadViewUi contentPane = new QuadViewUi(mainFrame, true);
+                    mainFrame.setContentPane(contentPane);
+
+                    mainFrame.setVisible(true);
+                } catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
@@ -210,34 +180,26 @@ public class QuadViewUi extends JFrame
 	/**
 	 * Create the frame.
 	 */
-	public QuadViewUi() 
+	public QuadViewUi(JFrame parentFrame, boolean overrideFrameMenuBar)
 	{
 		colorChannelWidget_3.setVisible(false);
 		colorChannelWidget_2.setVisible(false);
 		colorChannelWidget_1.setVisible(false);
 		colorChannelWidget_0.setVisible(false);
-		setupUi();
-		interceptModifierKeyPresses();
+		setupUi(parentFrame, overrideFrameMenuBar);
+        interceptModifierKeyPresses();
 	}
 
-	private void setupUi() {
-		setTitle("QuadView");
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setResizable(true);
-		
-		setBounds(100, 100, 994, 653);
-		contentPane = new JPanel();
-		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-		setContentPane(contentPane);
-		contentPane.setLayout(new BoxLayout(contentPane, BoxLayout.Y_AXIS));
-		
+	private void setupUi(JFrame parentFrame, boolean overrideFrameMenuBar) {
+        setBounds(100, 100, 994, 653);
+        setBorder(new EmptyBorder(5, 5, 5, 5));
+		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+
 		JPanel glassPane = new HudPanel();
-		setGlassPane(glassPane);
+		parentFrame.setGlassPane(glassPane);
 		// glassPane.setVisible(true);
-		
-		setupMenu();
-		
-		JPanel toolBarPanel = setupToolBar();
+        setupMenu(parentFrame, overrideFrameMenuBar);
+        JPanel toolBarPanel = setupToolBar();
 		
 		// JSplitPane splitPane = new JSplitPane();
 		splitPane.setResizeWeight(1.00);
@@ -382,7 +344,7 @@ public class QuadViewUi extends JFrame
 		zScanPanel.add(button_1);
 		zScanSlider.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent arg0) {
-				setZSlice((Integer)zScanSlider.getValue());
+				setZSlice(zScanSlider.getValue());
 			}
 		});
 		
@@ -487,7 +449,7 @@ public class QuadViewUi extends JFrame
 		JPanel statusBar = new JPanel();
 		statusBar.setMaximumSize(new Dimension(32767, 30));
 		statusBar.setMinimumSize(new Dimension(10, 30));
-		contentPane.add(statusBar);
+		add(statusBar);
 		statusBar.setLayout(new BoxLayout(statusBar, BoxLayout.X_AXIS));
 		
 		JLabel lblNewLabel = new JLabel("status area");
@@ -497,7 +459,7 @@ public class QuadViewUi extends JFrame
 	private void interceptModifierKeyPresses() 
 	{ 
         // Intercept Shift key strokes at the highest level JComponent we can find.
-        InputMap inputMap = contentPane.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, KeyEvent.SHIFT_DOWN_MASK, false),
         		"ModifierPressed");
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, KeyEvent.CTRL_DOWN_MASK, false),
@@ -508,7 +470,7 @@ public class QuadViewUi extends JFrame
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0, true),
 				"ModifierReleased");
 
-        ActionMap actionMap = contentPane.getActionMap();
+        ActionMap actionMap = getActionMap();
         actionMap.put("ModifierPressed", new AbstractAction() 
         {
 			private static final long serialVersionUID = 1L;
@@ -528,8 +490,7 @@ public class QuadViewUi extends JFrame
 	}
 
 	private JPanel setupToolBar() {
-		JPanel toolBarPanel = new JPanel();
-		contentPane.add(toolBarPanel);
+		add(toolBarPanel);
 		toolBarPanel.setLayout(new BorderLayout(0, 0));
 		
 		JToolBar toolBar = new JToolBar();
@@ -613,98 +574,122 @@ public class QuadViewUi extends JFrame
 		return true;
 	}
 
-	private void setupMenu() {
-		JMenuBar menuBar = new JMenuBar();
-		setJMenuBar(menuBar);
-		
-		JMenu mnFile = new JMenu("File");
-		menuBar.add(mnFile);
-		
-		JMenuItem mntmNewMenuItem_1 = new JMenuItem("New menu item");
-		mntmNewMenuItem_1.setAction(openFolderAction);
-		mnFile.add(mntmNewMenuItem_1);
-		
-		JMenu mnNewMenu = new JMenu("Open Recent");
-		mnNewMenu.setVisible(false);
-		mnFile.add(mnNewMenu);
-		recentFileList = new RecentFileList(mnNewMenu);
-		sliceViewer.getFileLoadedSignal().connect(rememberLoadedFileSlot);
-		recentFileList.getOpenUrlRequestedSignal().connect(sliceViewer.getLoadUrlSlot());
-		
-		JMenu mnEdit = new JMenu("Edit");
-		menuBar.add(mnEdit);
-		
-		JMenu mnView = new JMenu("View");
-		menuBar.add(mnView);
-		
-		JMenu mnMouseMode = new JMenu("Mouse Mode");
-		mnMouseMode.setIcon(new ImageIcon(QuadViewUi.class.getResource("/images/mouse_left.png")));
-		mnView.add(mnMouseMode);
-		
-		JRadioButtonMenuItem panModeItem = new JRadioButtonMenuItem("New radio item");
-		panModeItem.setSelected(true);
-		panModeItem.setAction(panModeAction);
-		mnMouseMode.add(panModeItem);
-		
-		JRadioButtonMenuItem zoomMouseModeItem = new JRadioButtonMenuItem("New radio item");
-		zoomMouseModeItem.setAction(zoomMouseModeAction);
-		mnMouseMode.add(zoomMouseModeItem);
-		
-		JMenu mnScrollMode = new JMenu("Scroll Mode");
-		mnScrollMode.setIcon(new ImageIcon(QuadViewUi.class.getResource("/images/mouse_scroll.png")));
-		mnView.add(mnScrollMode);
-		
-		JRadioButtonMenuItem rdbtnmntmNewRadioItem = new JRadioButtonMenuItem("New radio item");
-		rdbtnmntmNewRadioItem.setSelected(true);
-		rdbtnmntmNewRadioItem.setAction(zScanScrollModeAction);
-		mnScrollMode.add(rdbtnmntmNewRadioItem);
-		
-		JRadioButtonMenuItem mntmNewMenuItem_2 = new JRadioButtonMenuItem("New menu item");
-		mntmNewMenuItem_2.setAction(zoomScrollModeAction);
-		mnScrollMode.add(mntmNewMenuItem_2);
-		
-		JSeparator separator = new JSeparator();
-		mnView.add(separator);
-		
-		JMenu mnZoom = new JMenu("Zoom");
-		mnView.add(mnZoom);
-		
-		mnZoom.add(resetZoomAction);
-		mnZoom.add(zoomOutAction);
-		mnZoom.add(zoomInAction);
-		mnZoom.add(zoomMaxAction);
-		
-		JSeparator separator_1 = new JSeparator();
-		mnView.add(separator_1);
-		
-		JMenu mnZScan = new JMenu("Z Scan");
-		mnView.add(mnZScan);
-		
-		JMenuItem mntmNewMenuItem = new JMenuItem("New menu item");
-		mntmNewMenuItem.setAction(goBackZSlicesAction);
-		mnZScan.add(mntmNewMenuItem);
-		
-		JMenuItem menuItem_2 = new JMenuItem("New menu item");
-		menuItem_2.setAction(previousZSliceAction);
-		mnZScan.add(menuItem_2);
-		
-		JMenuItem menuItem_1 = new JMenuItem("New menu item");
-		menuItem_1.setAction(nextZSliceAction);
-		mnZScan.add(menuItem_1);
-		
-		JMenuItem menuItem = new JMenuItem("New menu item");
-		menuItem.setAction(advanceZSlicesAction);
-		mnZScan.add(menuItem);
-		
-		JSeparator separator_2 = new JSeparator();
-		mnView.add(separator_2);
-		
-		JMenuItem mntmNewMenuItem_3 = new JMenuItem("New menu item");
-		mntmNewMenuItem_3.setAction(resetColorsAction);
-		mnView.add(mntmNewMenuItem_3);
-		
-		JMenu mnHelp = new JMenu("Help");
-		menuBar.add(mnHelp);
-	}
+    private void setupMenu(JFrame parentFrame, boolean overrideFrameMenuBar) {
+        if (overrideFrameMenuBar) {
+            parentFrame.setJMenuBar(menuBar);
+            addFileMenuItem();
+            addEditMenuItem();
+            addViewMenuItem();
+            addHelpMenuItem();
+        }
+        else {
+            toolBarPanel.add(addViewMenuItem());
+//            JPanel tempPanel = new JPanel();
+//            tempPanel.setLayout(new BoxLayout(tempPanel, BoxLayout.LINE_AXIS));
+//            tempPanel.add(menuBar);
+//            tempPanel.add(Box.createHorizontalGlue());
+//            add(tempPanel);
+        }
+    }
 
+    private JMenuItem addViewMenuItem() {
+        JMenu mnView = new JMenu("View");
+        menuBar.add(mnView);
+
+        JMenu mnMouseMode = new JMenu("Mouse Mode");
+        mnMouseMode.setIcon(new ImageIcon(QuadViewUi.class.getResource("/images/mouse_left.png")));
+        mnView.add(mnMouseMode);
+
+        JRadioButtonMenuItem panModeItem = new JRadioButtonMenuItem("New radio item");
+        panModeItem.setSelected(true);
+        panModeItem.setAction(panModeAction);
+        mnMouseMode.add(panModeItem);
+
+        JRadioButtonMenuItem zoomMouseModeItem = new JRadioButtonMenuItem("New radio item");
+        zoomMouseModeItem.setAction(zoomMouseModeAction);
+        mnMouseMode.add(zoomMouseModeItem);
+
+        JMenu mnScrollMode = new JMenu("Scroll Mode");
+        mnScrollMode.setIcon(new ImageIcon(QuadViewUi.class.getResource("/images/mouse_scroll.png")));
+        mnView.add(mnScrollMode);
+
+        JRadioButtonMenuItem rdbtnmntmNewRadioItem = new JRadioButtonMenuItem("New radio item");
+        rdbtnmntmNewRadioItem.setSelected(true);
+        rdbtnmntmNewRadioItem.setAction(zScanScrollModeAction);
+        mnScrollMode.add(rdbtnmntmNewRadioItem);
+
+        JRadioButtonMenuItem mntmNewMenuItem_2 = new JRadioButtonMenuItem("New menu item");
+        mntmNewMenuItem_2.setAction(zoomScrollModeAction);
+        mnScrollMode.add(mntmNewMenuItem_2);
+
+        JSeparator separator = new JSeparator();
+        mnView.add(separator);
+
+        JMenu mnZoom = new JMenu("Zoom");
+        mnView.add(mnZoom);
+
+        mnZoom.add(resetZoomAction);
+        mnZoom.add(zoomOutAction);
+        mnZoom.add(zoomInAction);
+        mnZoom.add(zoomMaxAction);
+
+        JSeparator separator_1 = new JSeparator();
+        mnView.add(separator_1);
+
+        JMenu mnZScan = new JMenu("Z Scan");
+        mnView.add(mnZScan);
+
+        JMenuItem mntmNewMenuItem = new JMenuItem("New menu item");
+        mntmNewMenuItem.setAction(goBackZSlicesAction);
+        mnZScan.add(mntmNewMenuItem);
+
+        JMenuItem menuItem_2 = new JMenuItem("New menu item");
+        menuItem_2.setAction(previousZSliceAction);
+        mnZScan.add(menuItem_2);
+
+        JMenuItem menuItem_1 = new JMenuItem("New menu item");
+        menuItem_1.setAction(nextZSliceAction);
+        mnZScan.add(menuItem_1);
+
+        JMenuItem menuItem = new JMenuItem("New menu item");
+        menuItem.setAction(advanceZSlicesAction);
+        mnZScan.add(menuItem);
+
+        JSeparator separator_2 = new JSeparator();
+        mnView.add(separator_2);
+
+        JMenuItem mntmNewMenuItem_3 = new JMenuItem("New menu item");
+        mntmNewMenuItem_3.setAction(resetColorsAction);
+        mnView.add(mntmNewMenuItem_3);
+        return mnView;
+    }
+
+    public JMenuItem addFileMenuItem() {
+        JMenu mnFile = new JMenu("File");
+        menuBar.add(mnFile);
+
+        JMenuItem mntmNewMenuItem_1 = new JMenuItem("New menu item");
+        mntmNewMenuItem_1.setAction(openFolderAction);
+        mnFile.add(mntmNewMenuItem_1);
+
+        JMenu mnNewMenu = new JMenu("Open Recent");
+        mnNewMenu.setVisible(false);
+        mnFile.add(mnNewMenu);
+        recentFileList = new RecentFileList(mnNewMenu);
+        sliceViewer.getFileLoadedSignal().connect(rememberLoadedFileSlot);
+        recentFileList.getOpenUrlRequestedSignal().connect(sliceViewer.getLoadUrlSlot());
+        return mnFile;
+    }
+
+    public JMenuItem addEditMenuItem() {
+        JMenu mnEdit = new JMenu("Edit");
+        menuBar.add(mnEdit);
+        return mnEdit;
+    }
+
+    public JMenuItem addHelpMenuItem() {
+        JMenu mnHelp = new JMenu("Help");
+        menuBar.add(mnHelp);
+        return mnHelp;
+    }
 }

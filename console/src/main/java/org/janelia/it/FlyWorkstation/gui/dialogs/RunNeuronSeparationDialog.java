@@ -1,18 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.dialogs;
 
-import java.awt.BorderLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-
-import javax.swing.*;
-
 import loci.plugins.config.SpringUtilities;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Perspective;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -26,6 +15,14 @@ import org.janelia.it.jacs.model.tasks.TaskParameter;
 import org.janelia.it.jacs.model.tasks.fileDiscovery.MCFODataPipelineTask;
 import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
 import org.janelia.it.jacs.model.user_data.Node;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 
 /**
  * A dialog for starting a continuous neuron separation pipeline task which runs every N minutes and discovers new files
@@ -316,10 +313,10 @@ public class RunNeuronSeparationDialog extends ModalDialog {
                 ceTask.setJobName("Continuous Neuron Separation Service");
                 ceTask = ModelMgr.getModelMgr().saveOrUpdateTask(ceTask);
 
-                ModelMgr.getModelMgr().submitJob("ContinuousExecution", ceTask.getObjectId());
+                ModelMgr.getModelMgr().submitJob("ContinuousExecution", ceTask);
             }
             else {
-                ModelMgr.getModelMgr().submitJob(process, task.getObjectId());
+                ModelMgr.getModelMgr().submitJob(process, task);
             }
         }
     	catch (Exception e) {

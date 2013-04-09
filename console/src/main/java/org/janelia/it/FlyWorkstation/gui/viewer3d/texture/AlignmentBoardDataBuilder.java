@@ -341,7 +341,7 @@ public class AlignmentBoardDataBuilder implements Serializable {
                     new ArrayList<Event>(), taskParameters, "syncFromArchive", "Sync From Archive");
             task.setJobName("Sync From Archive Task");
             task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
-            ModelMgr.getModelMgr().submitJob("SyncFromArchive", task.getObjectId());
+            ModelMgr.getModelMgr().submitJob("SyncFromArchive", task);
 
         }
         catch (Exception ex) {

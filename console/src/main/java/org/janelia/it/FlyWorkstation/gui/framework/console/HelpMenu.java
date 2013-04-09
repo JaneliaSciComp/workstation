@@ -20,6 +20,7 @@ public class HelpMenu extends JMenu {
 
     public HelpMenu(Browser console) {
         super("Help");
+        this.setMnemonic('H');
         parentFrame = console;
         add(new JMenuItem("Call Christopher - x4662"));
         add(new JMenuItem("Call Konrad - x4242"));
