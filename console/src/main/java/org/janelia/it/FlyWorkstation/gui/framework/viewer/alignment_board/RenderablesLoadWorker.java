@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardSettingsDialog;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.*;
@@ -35,7 +36,6 @@ import java.util.concurrent.CyclicBarrier;
  */
 public class RenderablesLoadWorker extends SimpleWorker {
 
-    private static final float GAMMA_VALUE = 0.5f;
     private Mip3d mip3d;
     private JComponent viewer;
     private Boolean loadFiles = true;
@@ -204,7 +204,9 @@ public class RenderablesLoadWorker extends SimpleWorker {
             TextureDataI maskTexture = maskBuilderRunnable.getTextureData();
 
 
-            if ( ! mip3d.setVolume( signalTexture, maskTexture, renderMapping, GAMMA_VALUE ) ) {
+            if ( ! mip3d.setVolume(
+                    signalTexture, maskTexture, renderMapping, (float)AlignmentBoardSettingsDialog.DEFAULT_GAMMA
+            ) ) {
                 logger.error( "Failed to load volume to mip3d." );
             }
 

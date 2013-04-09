@@ -4,15 +4,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListDataListener;
-import java.awt.GridLayout;
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.*;
+import java.util.List;
 
 /**
  * Created with IntelliJ IDEA.
@@ -25,11 +24,16 @@ import java.util.*;
  */
 public class AlignmentBoardSettingsDialog extends JDialog {
     public static final double DEFAULT_DOWNSAMPLE_RATE = 2.0;
+    private static final String DOWN_SAMPLE_TOOLTIP = "Data sent to screen may be too large for your graphics card.\n" +
+            "Therefore, they are downsampled at a default rate of 1.0:" + DEFAULT_DOWNSAMPLE_RATE +
+            ".\nHowever, you may wish to move that rate up or down, depending on your knowledge of the\n" +
+            "advanced hardware on your system.  Higher values mean larger, blockier voxels, and less memory.";
     public static final double DEFAULT_GAMMA = 1.0;
 
     private static final String LAUNCH_AS = "Alignment Board Settings";
     private static final String LAUNCH_DESCRIPTION = "Present a dialog allowing users to change settings.";
-    private static final Dimension SIZE = new Dimension( 400, 400 );
+    private static final Dimension SIZE = new Dimension( 350, 250 );
+    private static final String GAMMA_TOOLTIP = "Adjust the gamma level, or brightness.";
 
     private Component centering;
     private JButton go;
@@ -146,12 +150,16 @@ public class AlignmentBoardSettingsDialog extends JDialog {
         setLayout( new BorderLayout() );
         brightnessSlider = new JSlider();
         brightnessSlider.setMaximum( 10 );
-        brightnessSlider.setMinimum( 0 );
-        brightnessSlider.setMajorTickSpacing( 5 );
-        brightnessSlider.setMinorTickSpacing( 1 );
-        brightnessSlider.setLabelTable( brightnessSlider.createStandardLabels( 1 ) );
-        brightnessSlider.setOrientation( JSlider.HORIZONTAL );
-        brightnessSlider.setValue( 5 );  // Center it up.
+        brightnessSlider.setMinimum(0);
+        brightnessSlider.setMajorTickSpacing(5);
+        brightnessSlider.setMinorTickSpacing(1);
+        brightnessSlider.setLabelTable(brightnessSlider.createStandardLabels(1));
+        brightnessSlider.setOrientation(JSlider.HORIZONTAL);
+        brightnessSlider.setValue(5);  // Center it up.
+        brightnessSlider.setPaintLabels(true);
+        brightnessSlider.setPaintTicks(true);
+        brightnessSlider.setToolTipText( GAMMA_TOOLTIP );
+        brightnessSlider.setBorder(new TitledBorder("Brightness"));
 
         downSampleRateToIndex = new HashMap<Integer,Integer>();
         downSampleRateToIndex.put( 1, 0 );
@@ -162,19 +170,37 @@ public class AlignmentBoardSettingsDialog extends JDialog {
         downSampleRateDropdown = new JComboBox(
                 new ABSDComboBoxModel( downSampleRateToIndex )
         );
+        downSampleRateDropdown.setBorder( new TitledBorder( "Down Sample Rate" ) );
+        downSampleRateDropdown.setToolTipText( DOWN_SAMPLE_TOOLTIP );
 
         JPanel centralPanel = new JPanel();
-        centralPanel.setLayout( new GridLayout( 2, 1 ) );
-        //brightnessSlider.setBorder( new TitledBorder( "Brightness" ) );
-        downSampleRateDropdown.setBorder( new TitledBorder( "Down Sample Rate" ) );
-        downSampleRateDropdown.setToolTipText(
-                "Data shown on screen may be too large for your graphics card.\n" +
-                "  Therefore, they are downsampled at a default rate of 1.0:" + DEFAULT_DOWNSAMPLE_RATE +
-                ", however, you may wish to move that rate up or down, depending on your knowledge of the\n" +
-                "advanced hardware on your system."
+        centralPanel.setLayout( new GridBagLayout() );
+        /*
+         * Run-down of GBC constructor params.
+         * @param gridx     The initial gridx value.
+         * @param gridy     The initial gridy value.
+         * @param gridwidth The initial gridwidth value.
+         * @param gridheight        The initial gridheight value.
+         * @param weightx   The initial weightx value.
+         * @param weighty   The initial weighty value.
+         * @param anchor    The initial anchor value.
+         * @param fill      The initial fill value.
+         * @param insets    The initial insets value.
+         * @param ipadx     The initial ipadx value.
+         * @param ipady     The initial ipady value.
+
+         */
+        Insets insets = new Insets( 3, 3, 3, 3 );
+        GridBagConstraints brightnessConstraints = new GridBagConstraints(
+                0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
         );
-        centralPanel.add( brightnessSlider );
-        centralPanel.add( downSampleRateDropdown );
+
+        GridBagConstraints downSampleConstraints = new GridBagConstraints(
+                0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.SOUTH, GridBagConstraints.BOTH, insets, 0, 0
+        );
+
+        centralPanel.add( brightnessSlider, brightnessConstraints );
+        centralPanel.add( downSampleRateDropdown, downSampleConstraints );
         add( centralPanel, BorderLayout.CENTER );
 
         JPanel bottomButtonPanel = new JPanel();
@@ -197,8 +223,9 @@ public class AlignmentBoardSettingsDialog extends JDialog {
         // Mac-like layout for buttons.
         bottomButtonPanel.add( cancel, BorderLayout.WEST );
         bottomButtonPanel.add( go, BorderLayout.EAST );
-
-        add( bottomButtonPanel, BorderLayout.SOUTH );
+        Insets buttonBorderInsets = new Insets( 2, 2, 2, 2 );
+        bottomButtonPanel.setBorder( new EmptyBorder( buttonBorderInsets ) );
+        add(bottomButtonPanel, BorderLayout.SOUTH);
     }
 
     //-------------------------------------------------INNER CLASSES/INTERFACES
