@@ -9,11 +9,13 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerPane;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
+import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -65,7 +67,12 @@ public class SliceViewViewer extends Viewer {
         sliceSample = newEntity;
 
         refresh();
-
+        try {
+            viewUI.loadURL(sliceSample.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH));
+        }
+        catch (MalformedURLException e) {
+            SessionMgr.getSessionMgr().handleException(e);
+        }
         // Listen for further changes, so can refresh again later.
         establishObserver();
     }

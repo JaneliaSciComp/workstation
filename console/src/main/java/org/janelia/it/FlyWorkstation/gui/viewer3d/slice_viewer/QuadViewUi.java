@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
+import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicObservableCamera3d;
 
@@ -11,6 +12,10 @@ import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.io.File;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 /** 
@@ -197,6 +202,17 @@ public class QuadViewUi extends JPanel
 
 		JPanel glassPane = new HudPanel();
 		parentFrame.setGlassPane(glassPane);
+        MouseListener buttonMouseListener = new MouseHandler() {
+
+            @Override
+            protected void popupTriggered(MouseEvent e) {
+                if (e.isConsumed()) return;
+                getButtonPopupMenu().show(e.getComponent(), e.getX(), e.getY());
+                e.consume();
+            }
+        };
+        sliceViewer.addMouseListener(buttonMouseListener);
+
 		// glassPane.setVisible(true);
         setupMenu(parentFrame, overrideFrameMenuBar);
         JPanel toolBarPanel = setupToolBar();
@@ -584,6 +600,7 @@ public class QuadViewUi extends JPanel
         }
         else {
             toolBarPanel.add(addViewMenuItem());
+            // Listener for clicking on buttons
 //            JPanel tempPanel = new JPanel();
 //            tempPanel.setLayout(new BoxLayout(tempPanel, BoxLayout.LINE_AXIS));
 //            tempPanel.add(menuBar);
@@ -691,5 +708,24 @@ public class QuadViewUi extends JPanel
         JMenu mnHelp = new JMenu("Help");
         menuBar.add(mnHelp);
         return mnHelp;
+    }
+
+    public JPopupMenu getButtonPopupMenu() {
+        JPopupMenu popupMenu = new JPopupMenu();
+        popupMenu.add(addFileMenuItem());
+        popupMenu.add(addViewMenuItem());
+        return popupMenu;
+    }
+
+    public void loadURL(String pathToFile) throws MalformedURLException {
+        File tmpFile = new File(pathToFile);
+        if (!tmpFile.exists()) {
+            JOptionPane.showMessageDialog(this.getParent(),
+                    "Error opening folder " + tmpFile.getName(),
+                    "Could not load folder.",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        sliceViewer.loadURL(tmpFile.toURI().toURL());
     }
 }

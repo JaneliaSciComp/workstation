@@ -148,7 +148,6 @@ public class Icons {
      * delegates to getOntologyIcon(). 
      * @param entity
      * @param large format icon?
-     * @see getOntologyIcon()
      * @return
      */
     public static ImageIcon getIcon(Entity entity, boolean large) {
@@ -161,7 +160,8 @@ public class Icons {
             return getIcon(large ? "folder_large.png" : "folder.png");
         }
         else if (EntityConstants.TYPE_SAMPLE.equals(type)
-                || EntityConstants.TYPE_SCREEN_SAMPLE.equals(type)) {
+                || EntityConstants.TYPE_SCREEN_SAMPLE.equals(type)
+                || EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE.equals(type)) {
             return getIcon(large ? "folder_files_large.png" : "beaker.png");
         }
         else if (EntityConstants.TYPE_SCREEN_SAMPLE_CROSS.equals(type)) {
