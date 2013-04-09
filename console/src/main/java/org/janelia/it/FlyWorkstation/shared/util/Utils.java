@@ -12,8 +12,14 @@ import java.awt.image.ColorModel;
 import java.awt.image.PixelGrabber;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.util.List;
 
 import javax.media.jai.operator.InvertDescriptor;
@@ -409,4 +415,63 @@ public class Utils {
         Cursor grabClosedCursor = Toolkit.getDefaultToolkit().createCustomCursor(grabClosedIcon.getImage(), new Point(0, 0), "img");
         component.setCursor(grabClosedCursor);
     }
+    
+    /**
+     * Copy the input stream to the output stream, using a buffer of the given size. This method uses the old-style 
+     * java.io calls.
+     * @param input
+     * @param output
+     * @param bufferSize
+     * @throws IOException
+     */
+	public static void copy(InputStream input, OutputStream output, int bufferSize) throws IOException {
+		byte[] buf = new byte[bufferSize];
+		int bytesRead = input.read(buf);
+		while (bytesRead != -1) {
+			output.write(buf, 0, bytesRead);
+			bytesRead = input.read(buf);
+		}
+		output.flush();
+	}
+
+	/**
+	 * Copy the input stream to the output stream, using a buffer of the given size. This method uses the new-style 
+     * java.nio calls, and should be faster than copy(), in theory.
+	 * @param input
+	 * @param output
+	 * @param bufferSize
+	 * @throws IOException
+	 */
+    public static void copyNio(InputStream input, OutputStream output, int bufferSize) throws IOException {
+		final ReadableByteChannel inputChannel = Channels.newChannel(input);
+		final WritableByteChannel outputChannel = Channels.newChannel(output);
+		fastChannelCopy(inputChannel, outputChannel, bufferSize);
+		inputChannel.close();
+		outputChannel.close();
+	}
+
+	/**
+	 * Adapted from http://thomaswabner.wordpress.com/2007/10/09/fast-stream-copy-using-javanio-channels/
+	 * @param src
+	 * @param dest
+	 * @throws IOException
+	 */
+    public static void fastChannelCopy(final ReadableByteChannel src, final WritableByteChannel dest, int bufferSize) throws IOException {
+		final ByteBuffer buffer = ByteBuffer.allocateDirect(bufferSize);
+		while (src.read(buffer) != -1) {
+			// prepare the buffer to be drained
+			buffer.flip();
+			// write to the channel, may block
+			dest.write(buffer);
+			// If partial transfer, shift remainder down
+			// If buffer is empty, same as doing clear()
+			buffer.compact();
+		}
+		// EOF will leave buffer in fill state
+		buffer.flip();
+		// make sure the buffer is fully drained.
+		while (buffer.hasRemaining()) {
+			dest.write(buffer);
+		}
+	}
 }
