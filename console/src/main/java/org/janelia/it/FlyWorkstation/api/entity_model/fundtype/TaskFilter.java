@@ -2,18 +2,24 @@ package org.janelia.it.FlyWorkstation.api.entity_model.fundtype;
 
 import org.janelia.it.jacs.model.entity.EntityType;
 
-public class LoadFilter implements java.io.Serializable {
+public class TaskFilter implements java.io.Serializable {
 
     private String name;
+    private Long taskId;
     private EntityTypeSet entityTypes = null;
-    private LoadFilterStatus loadFilterStatus;
+    private TaskFilterStatus taskFilterStatus;
+
+    public TaskFilter(String name) {
+        this.name = name;
+    }
 
     /**
      * Use this constructor for simplistic filters, like properties.
      */
-    public LoadFilter(String name) {
+    public TaskFilter(String name, Long taskId) {
         this.name = name;
-        loadFilterStatus = new LoadFilterStatus(this);
+        this.taskId = taskId;
+        taskFilterStatus = new TaskFilterStatus(this);
     }
 
     /**
@@ -23,7 +29,7 @@ public class LoadFilter implements java.io.Serializable {
      * @parameter name- name of filter
      * @parameter entityTypes- the set of entityTypes that will be returned
      */
-    public LoadFilter(String name, EntityTypeSet entityTypes) {
+    public TaskFilter(String name, EntityTypeSet entityTypes) {
         this(name);
         this.entityTypes = entityTypes;
     }
@@ -51,11 +57,18 @@ public class LoadFilter implements java.io.Serializable {
     }
 
     public String toString() {
-        return "LoadFilter: " + getFilterName();
+        return "TaskFilter: " + getFilterName();
     }
 
-    public LoadFilterStatus getLoadFilterStatus() {
-        return loadFilterStatus;
+    public TaskFilterStatus getTaskFilterStatus() {
+        return taskFilterStatus;
     }
 
+    public Long getTaskId() {
+        return taskId;
+    }
+
+    public void setTaskId(Long taskId) {
+        this.taskId = taskId;
+    }
 }

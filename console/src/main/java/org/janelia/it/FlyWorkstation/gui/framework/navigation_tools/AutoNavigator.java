@@ -6,9 +6,9 @@ package org.janelia.it.FlyWorkstation.gui.framework.navigation_tools;
  * @version $Id: AutoNavigator.java,v 1.2 2011/03/08 16:16:49 saffordt Exp $
  */
 
-import org.janelia.it.FlyWorkstation.api.entity_model.access.LoadRequestStatusObserverAdapter;
-import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestState;
-import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestStatus;
+import org.janelia.it.FlyWorkstation.api.entity_model.access.TaskRequestStatusObserverAdapter;
+import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskRequestState;
+import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskRequestStatus;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -112,11 +112,11 @@ public class AutoNavigator {
 //                    ModelMgr.getModelMgr().addSelectedGenomeVersion((GenomeVersion)entity);
 //                }
 //                else if ((entity instanceof Species) && navPath.length > 1) {
-//                    LoadRequest request = ((Species)entity).getChromosomeLoadRequest();
+//                    TaskRequest request = ((Species)entity).getChromosomeLoadRequest();
 //                    waitForLoading (((Axis)entity).loadAlignmentsToEntitiesBackground(request));
 //                } // Species is next in path
 //                else if ((entity instanceof Chromosome) && navPath.length>1) {
-//                    LoadRequest request = ((Chromosome)entity).getGenomicAxisLoadRequest();
+//                    TaskRequest request = ((Chromosome)entity).getGenomicAxisLoadRequest();
 //                    waitForLoading (((Axis)entity).loadAlignmentsToEntitiesBackground(request));
 //                } // Chromosome is next in path
 //                else if ((entity instanceof GenomicAxis) && navPath.length > 1) {
@@ -133,7 +133,7 @@ public class AutoNavigator {
 //                    }
 //                    GenomicAxis axis = (GenomicAxis)entity;
 //                    if ( genomeVersion.getLoadedGenomicEntityForOid(navPath[1].getOID()) == null) {
-//                        LoadRequest request = buildLoadRequest(navPath[1], axis);
+//                        TaskRequest request = buildLoadRequest(navPath[1], axis);
 //
 //                        if ((request != null) && reasonableRequestForAxis(request, axis))
 //                            waitForLoading (axis.loadAlignmentsToEntitiesBackground(request));
@@ -141,8 +141,8 @@ public class AutoNavigator {
 //                        if (genomeVersion.getLoadedGenomicEntityForOid(navPath[1].getOID()) == null) {
 //                            if (navPath[1].getNodeType() == NavigationNode.NON_CURATED) {
 //                                // Re-try whole process with low-priority.
-//                                LoadFilter filter = axis.getLowPriPreComputeLoadFilter();
-//                                request = new LoadRequest(navPath[1].getRangeOnParent(), filter);
+//                                TaskFilter filter = axis.getLowPriPreComputeLoadFilter();
+//                                request = new TaskRequest(navPath[1].getRangeOnParent(), filter);
 //                                if (reasonableRequestForAxis(request, axis))
 //                                    waitForLoading (axis.loadAlignmentsToEntitiesBackground(request));
 //                             } // non-curation node
@@ -188,8 +188,8 @@ public class AutoNavigator {
          * Load request created is to be used for loading entities
          * against a genomic axis.
          */
-//        private LoadRequest buildLoadRequest(NavigationNode node, GenomicAxis axis) {
-//            LoadFilter filter = null;
+//        private TaskRequest buildLoadRequest(NavigationNode node, GenomicAxis axis) {
+//            TaskFilter filter = null;
 //            if (node.getNodeType() == node.CURATED) {
 //                filter = axis.getCurationLoadFilter();
 //            } // Curation
@@ -209,14 +209,14 @@ public class AutoNavigator {
 //                return null; // Null for now.
 //            } // Unknown
 //
-//            LoadRequest request = new LoadRequest(node.getRangeOnParent(), filter);
+//            TaskRequest request = new TaskRequest(node.getRangeOnParent(), filter);
 //            return request;
 //        } // End method
 //
-        private void waitForLoading(LoadRequestStatus ls) {
-            if (ls.getLoadRequestState() != LoadRequestStatus.COMPLETE &&
-                ls.getLoadRequestState() != LoadRequestStatus.INACTIVE) {
-                ls.addLoadRequestStatusObserver(new LoadObserver(this),true);
+        private void waitForLoading(TaskRequestStatus ls) {
+            if (ls.getTaskRequestState() != TaskRequestStatus.COMPLETE &&
+                ls.getTaskRequestState() != TaskRequestStatus.INACTIVE) {
+                ls.addTaskRequestStatusObserver(new TaskObserver(this), true);
                 synchronized(this) {
                     try {
                         wait();
@@ -229,7 +229,7 @@ public class AutoNavigator {
         }
 
 //        /** Is this request sensible to run against this axis? */
-//        private boolean reasonableRequestForAxis(LoadRequest request, Axis axis) {
+//        private boolean reasonableRequestForAxis(TaskRequest request, Axis axis) {
 //            int maxOfAllRanges = Integer.MIN_VALUE;
 //            Range nextRange = null;
 //            for (Iterator it = request.getRequestedRanges().iterator(); it.hasNext(); ) {
@@ -245,17 +245,17 @@ public class AutoNavigator {
 //        }
     } // End inner class
 
-    class LoadObserver extends LoadRequestStatusObserverAdapter {
+    class TaskObserver extends TaskRequestStatusObserverAdapter {
         Thread waitingThread;
 
-        public LoadObserver(Thread waitingThread) {
+        public TaskObserver(Thread waitingThread) {
             this.waitingThread = waitingThread;
         }
 
-        public void stateChanged(LoadRequestStatus loadRequestStatus, LoadRequestState newState){
-         //   System.out.println("Received "+newState+" status Sending notify for "+loadRequestStatus);
-            if (newState == LoadRequestStatus.COMPLETE) {
-                loadRequestStatus.removeLoadRequestStatusObserver(this);
+        public void stateChanged(TaskRequestStatus taskRequestStatus, TaskRequestState newState){
+         //   System.out.println("Received "+newState+" status Sending notify for "+taskRequestStatus);
+            if (newState == TaskRequestStatus.COMPLETE) {
+                taskRequestStatus.removeTaskRequestStatusObserver(this);
                 waitingThread.interrupt();
             }
         }

@@ -6,11 +6,11 @@ package org.janelia.it.FlyWorkstation.api.entity_model.fundtype;
  * Date: 7/22/11
  * Time: 3:59 PM
  */
-public class LoadRequestState implements java.io.Serializable {
+public class TaskRequestState implements java.io.Serializable {
 
     private String stateName;
 
-    LoadRequestState(String stateName) {
+    TaskRequestState(String stateName) {
         this.stateName = stateName;
     }
 
@@ -19,8 +19,8 @@ public class LoadRequestState implements java.io.Serializable {
     }
 
     public boolean equals(Object targetStatus) {
-        if (targetStatus instanceof LoadRequestState) {
-            if (((LoadRequestState) targetStatus).stateName.equals(this.stateName)) return true;
+        if (targetStatus instanceof TaskRequestState) {
+            if (((TaskRequestState) targetStatus).stateName.equals(this.stateName)) return true;
         }
         return false;
     }

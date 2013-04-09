@@ -27,16 +27,16 @@ public class ActiveThreadModel extends MTObservable {
         return activeThreadModel;
     }
 
-    public LoadRequestStatus[] getActiveLoadRequestStatusObjects() {
+    public TaskRequestStatus[] getActiveLoadRequestStatusObjects() {
         Set activeEntries = null;
         synchronized (statusObjects) {
             activeEntries = statusObjects.entrySet();
         }
         List statusObjects = new ArrayList();
-        for (Iterator it = activeEntries.iterator(); it.hasNext(); ) {
-            statusObjects.add(((Map.Entry) it.next()).getValue());
+        for (Object activeEntry : activeEntries) {
+            statusObjects.add(((Map.Entry) activeEntry).getValue());
         }
-        return (LoadRequestStatus[]) statusObjects.toArray(new LoadRequestStatus[statusObjects.size()]);
+        return (TaskRequestStatus[]) statusObjects.toArray(new TaskRequestStatus[statusObjects.size()]);
     }
 
     public int getActiveThreadCount() {
@@ -54,17 +54,17 @@ public class ActiveThreadModel extends MTObservable {
         }
     }
 
-    void addActiveLoadRequestStatus(LoadRequestStatus loadRequestStatus) {
-        statusObjects.put(loadRequestStatus, loadRequestStatus);
+    void addActiveTaskRequestStatus(TaskRequestStatus taskRequestStatus) {
+        statusObjects.put(taskRequestStatus, taskRequestStatus);
         setChanged();
-        notifyObservers(loadRequestStatus);
+        notifyObservers(taskRequestStatus);
         clearChanged();
     }
 
-    void removeActiveLoadRequestStatus(LoadRequestStatus loadRequestStatus) {
-        statusObjects.remove(loadRequestStatus);
+    void removeActiveTaskRequestStatus(TaskRequestStatus taskRequestStatus) {
+        statusObjects.remove(taskRequestStatus);
         setChanged();
-        notifyObservers(loadRequestStatus);
+        notifyObservers(taskRequestStatus);
         clearChanged();
     }
 

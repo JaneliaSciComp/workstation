@@ -1,9 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.framework.progress_meter;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.access.LoadRequestStatusObserverAdapter;
+import org.janelia.it.FlyWorkstation.api.entity_model.access.TaskRequestStatusObserverAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.ActiveThreadModel;
-import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestState;
-import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.LoadRequestStatus;
+import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskRequestState;
+import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskRequestStatus;
 
 import javax.swing.*;
 import java.awt.*;
@@ -21,8 +21,8 @@ public class ProgressMeter extends JDialog {
   //Allow for 112.5 seconds of timer
   private static int TIMER_TICK=1500;
   private static int MAX_TIMER_PERCENT=75;
-  private LoadRequestStatusObserverAdapter statusObserver =
-     new MyLoadRequestStatusObserver();
+  private TaskRequestStatusObserverAdapter statusObserver =
+     new MyTaskRequestStatusObserver();
 
   static {
       ProgressMeter.getProgressMeter();
@@ -50,10 +50,10 @@ public class ProgressMeter extends JDialog {
     }
   }
 
-  public synchronized void addProgressBar(LoadRequestStatus statusObject) {
+  public synchronized void addProgressBar(TaskRequestStatus statusObject) {
      String name = statusObject.getId();
-     if (statusObject.getLoadRequest().isUnloadRequest()) name = "Unloading "+name;
-     else name = "Loading "+name;
+     if (statusObject.getTaskRequest().isUnloadRequest()) {name = "Unloading "+name;}
+     else {name = "Running "+name;}
      if (meters.containsKey(statusObject)) return;
      Meter meter=new Meter(name,100,this.getWidth());
      if (meters.size()==0)  {
@@ -68,7 +68,7 @@ public class ProgressMeter extends JDialog {
      repaint();
   }
 
-  public synchronized void removeProgressBar(LoadRequestStatus statusObject) {
+  public synchronized void removeProgressBar(TaskRequestStatus statusObject) {
     if (!meters.containsKey(statusObject)) return;
     try {
      panel1.remove((Component)meters.get(statusObject));
@@ -87,7 +87,7 @@ public class ProgressMeter extends JDialog {
      repaint();
   }
 
-  public synchronized void modifyProgress(LoadRequestStatus statusObject,int progress) {
+  public synchronized void modifyProgress(TaskRequestStatus statusObject,int progress) {
      if (meters.containsKey(statusObject))
       ((Meter)meters.get(statusObject)).setValueFromLoad(progress);
   }
@@ -136,20 +136,20 @@ public class ProgressMeter extends JDialog {
 
   }
 
-  private class MyLoadRequestStatusObserver extends LoadRequestStatusObserverAdapter {
-    public void stateChanged(LoadRequestStatus loadRequestStatus, LoadRequestState newState){
-      if (newState==LoadRequestStatus.LOADING || newState==LoadRequestStatus.UNLOADING) {
-        addProgressBar(loadRequestStatus);
+  private class MyTaskRequestStatusObserver extends TaskRequestStatusObserverAdapter {
+    public void stateChanged(TaskRequestStatus taskRequestStatus, TaskRequestState newState){
+      if (newState== TaskRequestStatus.LOADING || newState== TaskRequestStatus.UNLOADING) {
+        addProgressBar(taskRequestStatus);
       }
-      if (newState==LoadRequestStatus.COMPLETE ) {
-           loadRequestStatus.removeLoadRequestStatusObserver(this);
-           removeProgressBar(loadRequestStatus);
+      if (newState== TaskRequestStatus.COMPLETE ) {
+           taskRequestStatus.removeTaskRequestStatusObserver(this);
+           removeProgressBar(taskRequestStatus);
       }
     }
 
-    public void notifiedPercentageChanged(LoadRequestStatus loadRequestStatus,
+    public void notifiedPercentageChanged(TaskRequestStatus taskRequestStatus,
       int newPercent){
-        modifyProgress(loadRequestStatus, newPercent);
+        modifyProgress(taskRequestStatus, newPercent);
     }
   }
 
@@ -168,9 +168,9 @@ public class ProgressMeter extends JDialog {
 
   public class MyObserver implements Observer {
     public void update(Observable o, Object arg) {
-      if (o instanceof ActiveThreadModel && arg instanceof LoadRequestStatus) {  //adding AND deleting active threads
-         LoadRequestStatus status=(LoadRequestStatus)arg;
-         status.addLoadRequestStatusObserver(statusObserver,true);
+      if (o instanceof ActiveThreadModel && arg instanceof TaskRequestStatus) {  //adding AND deleting active threads
+         TaskRequestStatus status=(TaskRequestStatus)arg;
+         status.addTaskRequestStatusObserver(statusObserver, true);
       }
     }
   }

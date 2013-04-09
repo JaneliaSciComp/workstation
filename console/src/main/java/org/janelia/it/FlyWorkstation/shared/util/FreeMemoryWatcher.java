@@ -14,7 +14,7 @@ public class FreeMemoryWatcher extends MTObservable {
     private Thread updater;
     private Runtime runtime = Runtime.getRuntime();
     private long totalMemory, reservedMemory;
-//    private  LoadRequestStatusObserverAdapter statusObserver =
+//    private  TaskRequestStatusObserverAdapter statusObserver =
 //       new MyLoadRequestStatusObserver();
 
 
@@ -61,16 +61,16 @@ public class FreeMemoryWatcher extends MTObservable {
     }
 
 
-//    public LoadRequestStatusObserverAdapter getLoadStatusObserver(){
+//    public TaskRequestStatusObserverAdapter getLoadStatusObserver(){
 //      return statusObserver;
 //    }
 //
 //
-//     private class MyLoadRequestStatusObserver extends LoadRequestStatusObserverAdapter {
-//      public void stateChanged(LoadRequestStatus loadRequestStatus, LoadRequestState newState){
+//     private class MyLoadRequestStatusObserver extends TaskRequestStatusObserverAdapter {
+//      public void stateChanged(TaskRequestStatus taskRequestStatus, TaskRequestState newState){
 //
-//        if (newState==LoadRequestStatus.COMPLETE ) {
-//             loadRequestStatus.removeLoadRequestStatusObserver(this);
+//        if (newState==TaskRequestStatus.COMPLETE ) {
+//             taskRequestStatus.removeTaskRequestStatusObserver(this);
 //             System.gc();
 //        }
 //      }

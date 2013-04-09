@@ -6,28 +6,28 @@ package org.janelia.it.FlyWorkstation.api.entity_model.fundtype;
  * Date: 7/22/11
  * Time: 4:00 PM
  */
-public class LoadRequest implements java.io.Serializable {
+public class TaskRequest implements java.io.Serializable {
 
     //  private RangeSet ranges;
 //  private Bin bin;
-    private LoadFilter loadFilter;
-    private LoadRequestStatus loadRequestStatus;
+    private TaskFilter taskFilter;
+    private TaskRequestStatus taskRequestStatus;
     private boolean isUnloadRequest;
 
 
-    public LoadRequest(LoadFilter loadFilter) {
-        this.loadFilter = loadFilter;
-        loadRequestStatus = new LoadRequestStatus(loadFilter);
+    public TaskRequest(TaskFilter taskFilter) {
+        this.taskFilter = taskFilter;
+        taskRequestStatus = new TaskRequestStatus(taskFilter);
     }
 
-//  public LoadRequest(Range range,LoadFilter loadFilter) {
-//     this(range,loadFilter,false);
+//  public TaskRequest(Range range,TaskFilter taskFilter) {
+//     this(range,taskFilter,false);
 //  }
 //
-//  public LoadRequest(Range range,LoadFilter loadFilter,boolean isUnloadRequest) {
-//     this(loadFilter);
+//  public TaskRequest(Range range,TaskFilter taskFilter,boolean isUnloadRequest) {
+//     this(taskFilter);
 //     this.isUnloadRequest=isUnloadRequest;
-//     LoadFilterStatus lfStatus=loadFilter.getLoadFilterStatus();
+//     TaskFilterStatus lfStatus=taskFilter.getTaskFilterStatus();
 //     if (!isUnloadRequest && lfStatus instanceof RangeLoadFilterStatus) {
 //           RangeLoadFilterStatus rlfStatus=(RangeLoadFilterStatus)lfStatus;
 //           ranges=rlfStatus.processRangeRequest(range);
@@ -38,8 +38,8 @@ public class LoadRequest implements java.io.Serializable {
 //     }
 //  }
 //
-//  public LoadRequest(Bin bin,LoadFilter loadFilter) {
-//     this(loadFilter);
+//  public TaskRequest(Bin bin,TaskFilter taskFilter) {
+//     this(taskFilter);
 //     this.bin=bin;
 //  }
 //
@@ -64,11 +64,11 @@ public class LoadRequest implements java.io.Serializable {
 //    return Collections.unmodifiableSet(ranges);
 //  }
 
-    public LoadFilter getLoadFilter() {
-        return loadFilter;
+    public TaskFilter getTaskFilter() {
+        return taskFilter;
     }
 
-    public LoadRequestStatus getLoadRequestStatus() {
-        return loadRequestStatus;
+    public TaskRequestStatus getTaskRequestStatus() {
+        return taskRequestStatus;
     }
 }

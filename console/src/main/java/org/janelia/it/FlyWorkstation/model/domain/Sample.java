@@ -1,14 +1,14 @@
 package org.janelia.it.FlyWorkstation.model.domain;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A wrapper for Sample entities. Provides access to common features of Samples, and loads separated Neurons as 
@@ -23,7 +23,7 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
     private String imagePathFast3d;
     private List<Neuron> neuronSet;
     private MaskedVolume maskedVolume;
-    
+
     public Sample(RootedEntity entity) {
         super(entity);
     }
@@ -169,4 +169,5 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
     public MaskedVolume getMaskedVolume() {
         return maskedVolume;
     }
+
 }
