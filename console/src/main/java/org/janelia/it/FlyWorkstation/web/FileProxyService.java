@@ -6,6 +6,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.util.Enumeration;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,6 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.httpclient.*;
 import org.apache.commons.httpclient.auth.AuthScope;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.commons.httpclient.methods.HeadMethod;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -38,6 +40,9 @@ public class FileProxyService extends AbstractHandler {
     public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
 
+    	String method = request.getMethod();
+    	log.info("Method: "+method);
+    	
         StopWatch stopwatch = new StopWatch("stream");
         Long length = null;
         
@@ -71,37 +76,55 @@ public class FileProxyService extends AbstractHandler {
                 log.info("Requesting URL: "+effectiveUrl);
                 
                 HttpClient client = SessionMgr.getSessionMgr().getWebDavClient().getHttpClient();
-                GetMethod get = new GetMethod(effectiveUrl.toString());
-                client.executeMethod(get);
-                Header contentLength = get.getResponseHeader("Content-Length");
-                input = get.getResponseBodyAsStream();
                 
-                // Write to proxy client
-                Header contentType = get.getResponseHeader("Content-Type");
-                if (contentType==null) {
-                    response.setContentType("application/octet-stream");    
-                }
-                else {
-                    response.setContentType(contentType.getValue());
-                }
-                
-                response.setStatus(get.getStatusCode());
-                if (contentLength!=null) {
-                    try {
-                    	length = Long.parseLong(contentLength.getValue());
-                        // Does not support longs:
-                        //response.setContentLength(length);
+                if ("HEAD".equals(method)) {
+                	HeadMethod head = new HeadMethod(effectiveUrl.toString());	
+                    client.executeMethod(head);
+
+                    Header contentType = head.getResponseHeader("Content-Type");
+                    if (contentType==null) {
+                        response.setContentType("application/octet-stream");    
                     }
-                    catch (NumberFormatException e) {
-                        log.error("Could not parse content length: "+contentLength.getValue());
+                    else {
+                        response.setContentType(contentType.getValue());
+                    }
+
+                    Header contentLength = head.getResponseHeader("Content-Length");
+                    if (contentLength!=null) {
+                    	response.addHeader("Content-length", contentLength.getValue());
                     }
                     
-                    log.info("Writing "+contentLength.getValue()+" bytes");
-                    response.addHeader("Content-length", contentLength.getValue());
+                    response.setStatus(head.getStatusCode());
                 }
-                
-                output = response.getOutputStream();
-                copyNio(input, output, BUFFER_SIZE);
+                else if ("GET".equals(method)) {
+
+                    GetMethod get = new GetMethod(effectiveUrl.toString());
+                    client.executeMethod(get);
+                    
+                    Header contentType = get.getResponseHeader("Content-Type");
+                    if (contentType==null) {
+                        response.setContentType("application/octet-stream");    
+                    }
+                    else {
+                        response.setContentType(contentType.getValue());
+                    }
+
+                    Header contentLength = get.getResponseHeader("Content-Length");
+                    if (contentLength!=null) {
+                    	response.addHeader("Content-length", contentLength.getValue());
+                    	length = Long.parseLong(contentLength.getValue());
+                    }
+                    
+                    response.setStatus(get.getStatusCode());
+               
+                    log.info("Writing "+contentLength.getValue()+" bytes");
+                    input = get.getResponseBodyAsStream();
+                    output = response.getOutputStream();
+                    copyNio(input, output, BUFFER_SIZE);
+                }
+                else {
+                	throw new IllegalStateException("Unsupported method for Workstation file proxy service: "+method);
+                }
             } 
             catch (FileNotFoundException e) {
                 log.error("File not found: "+standardPath);
