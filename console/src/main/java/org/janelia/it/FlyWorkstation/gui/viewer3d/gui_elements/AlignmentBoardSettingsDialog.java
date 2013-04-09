@@ -1,5 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ListDataListener;
@@ -22,6 +25,7 @@ import java.util.*;
  */
 public class AlignmentBoardSettingsDialog extends JDialog {
     public static final double DEFAULT_DOWNSAMPLE_RATE = 2.0;
+    public static final double DEFAULT_GAMMA = 1.0;
 
     private static final String LAUNCH_AS = "Alignment Board Settings";
     private static final String LAUNCH_DESCRIPTION = "Present a dialog allowing users to change settings.";
@@ -32,13 +36,16 @@ public class AlignmentBoardSettingsDialog extends JDialog {
     private JSlider brightnessSlider;
     private JComboBox downSampleRateDropdown;
 
-    private double currentGamma;
+    private double currentGamma = DEFAULT_GAMMA;
     private double currentDownSampleRate;
 
     private boolean readyForOutput = false;
 
     private Map<Integer,Integer> downSampleRateToIndex;
     private Collection<SettingsListener> listeners;
+
+    private Logger logger = LoggerFactory.getLogger( AlignmentBoardSettingsDialog.class );
+
 
     /**
      * @param centering this dialog will be centered over the "centering" component.
@@ -77,12 +84,24 @@ public class AlignmentBoardSettingsDialog extends JDialog {
         return (Integer)downSampleRateDropdown.getItemAt( downSampleRateDropdown.getSelectedIndex() );
     }
 
+    /**
+     * Compute a factor suitable for gamma adjustment in the shader, given a range of 0..10 from the slider.
+     * Max-point of 10 yields 0.0 (exponent takes to 1.0 in shader).
+     * Mid-point of 5 yields 1.0, or same output.
+     * Low point of 0 yeilds 2.0.
+     *
+     * Smaller values get pushed more dim with lower slider pos.  Values close to 1.0 do not get diminished much.
+     * May require further attention after testing.
+     *
+     * @return computation above
+     */
     public double getGammaFactor() {
         if ( ! readyForOutput )
             return currentGamma;
         int value = brightnessSlider.getValue();
-        double rtnVal = 11.0 - value;
-        return 1.0;
+        double rtnVal = (value - 10.0) / -5.0;
+        logger.info( "Returning gamma factor of {} for {}.", rtnVal, value );
+        return rtnVal;
     }
 
     public boolean isReadyForOutput() {
@@ -127,8 +146,12 @@ public class AlignmentBoardSettingsDialog extends JDialog {
         setLayout( new BorderLayout() );
         brightnessSlider = new JSlider();
         brightnessSlider.setMaximum( 10 );
-        brightnessSlider.setMinimum(1);
+        brightnessSlider.setMinimum( 0 );
+        brightnessSlider.setMajorTickSpacing( 5 );
+        brightnessSlider.setMinorTickSpacing( 1 );
+        brightnessSlider.setLabelTable( brightnessSlider.createStandardLabels( 1 ) );
         brightnessSlider.setOrientation( JSlider.HORIZONTAL );
+        brightnessSlider.setValue( 5 );  // Center it up.
 
         downSampleRateToIndex = new HashMap<Integer,Integer>();
         downSampleRateToIndex.put( 1, 0 );
@@ -142,7 +165,7 @@ public class AlignmentBoardSettingsDialog extends JDialog {
 
         JPanel centralPanel = new JPanel();
         centralPanel.setLayout( new GridLayout( 2, 1 ) );
-        brightnessSlider.setBorder( new TitledBorder( "Brightness" ) );
+        //brightnessSlider.setBorder( new TitledBorder( "Brightness" ) );
         downSampleRateDropdown.setBorder( new TitledBorder( "Down Sample Rate" ) );
         downSampleRateDropdown.setToolTipText(
                 "Data shown on screen may be too large for your graphics card.\n" +
@@ -163,13 +186,14 @@ public class AlignmentBoardSettingsDialog extends JDialog {
                 fireSettingsEvent();
             }
         });
-        JButton cancel = new JButton( "Cancel" );
+        JButton cancel = new JButton( "Done/Cancel" );
         cancel.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent ae ) {
                 readyForOutput = false;
                 setVisible( false );
             }
         });
+
         // Mac-like layout for buttons.
         bottomButtonPanel.add( cancel, BorderLayout.WEST );
         bottomButtonPanel.add( go, BorderLayout.EAST );

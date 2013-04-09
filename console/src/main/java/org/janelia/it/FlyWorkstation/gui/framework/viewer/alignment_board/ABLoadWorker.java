@@ -35,7 +35,7 @@ import java.util.concurrent.CyclicBarrier;
  */
 public class ABLoadWorker extends SimpleWorker {
 
-    private static final float GAMMA_VALUE = 1.0f;
+    private static final float GAMMA_VALUE = 1.5f;
     private AlignmentBoardContext context;
     private Mip3d mip3d;
     private AlignmentBoardViewer viewer;

@@ -118,6 +118,8 @@ public class MaskChanSingleFileLoader {
 
         while ( cummulativeVoxelsReadCount < totalVoxels ) {
             Long skippedRayCount = readLong(maskInputStream);
+            assert saneSkipCount( skippedRayCount ) :
+                    String.format( "Skipped Ray Count %d failed.\n", skippedRayCount );
             Long pairCount = readLong(maskInputStream);
             long[][] pairs = new long[ pairCount.intValue() ][ 2 ];
             for ( int i = 0; i < pairCount; i++ ) {
@@ -148,6 +150,54 @@ public class MaskChanSingleFileLoader {
      */
     public ChannelMetaData getChannelMetaData() {
         return channelMetaData;
+    }
+
+    /**
+     * Check that the ray-skip count makes sense, given the bounding coordinates of the 2nd-
+     * fastest-varying dimension.
+     *
+     * @param skippedRayCount how many rays (spans of the fastest-varying dimension) is the cursor moved?
+     * @return always true, to allow multiple assertion-driven tests.
+     */
+    private long lastRayCount = 0;
+    private boolean saneSkipCount( long skippedRayCount ) {
+        if ( lastRayCount == 0 ) {
+            // Skip the very first ray count.
+            lastRayCount = skippedRayCount;
+            return true;
+        }
+        lastRayCount = skippedRayCount;
+
+        if ( skippedRayCount == 0 )
+            return true;
+
+        Long[] bounds = null;
+        if ( dimensionOrder == 2 ) {
+            bounds = boundsYCoords;
+        }
+        else {
+            bounds = boundsZCoords;
+        }
+
+        long boundsWidth = bounds[1] - bounds[0];                        // How many rays does the box span?
+        long skipModulo = skippedRayCount % secondFastestSrcVaryingMax;  // Leftover from possible multiple plane-wrap
+        if (
+                skipModulo > boundsWidth  &&
+                boundsWidth < secondFastestSrcVaryingMax / 2   &&           // Conservative test.
+                        Math.abs( secondFastestSrcVaryingMax - skipModulo ) > boundsWidth  // Avoid false positive wrap-before
+           ) {
+            logger.error(
+                    String.format(
+                            "With bounds %d:%d, skipped ray count of %d exceeds bounding box, and dimension order %d." +
+                                    "  2nd-varying max is %d, coord is %d.",
+                            bounds[0], bounds[1], skippedRayCount, dimensionOrder, secondFastestSrcVaryingMax,
+                            secondFastestSrcVaryingCoord
+                    )
+            );
+        }
+
+        return true;
+
     }
 
     //------------------------------------HELPERS
@@ -206,30 +256,30 @@ public class MaskChanSingleFileLoader {
         long fastestSrcVaryingCoord;
         if ( dimensionOrder == 0 ) {
             fastestSrcVaryingMax = sx;
-            secondFastestSrcVaryingMax = sy;
-            slowestSrcVaryingMax = sz;
+            secondFastestSrcVaryingMax = sz;
+            slowestSrcVaryingMax = sy;
 
             fastestSrcVaryingCoord = 0;
-            secondFastestSrcVaryingCoord = 1;
-            slowestSrcVaryingCoord = 2;
+            secondFastestSrcVaryingCoord = 2;
+            slowestSrcVaryingCoord = 1;
         }
         else if ( dimensionOrder == 1 ) {
             fastestSrcVaryingMax = sy;
-            secondFastestSrcVaryingMax = sx;
-            slowestSrcVaryingMax = sz;
+            secondFastestSrcVaryingMax = sz;
+            slowestSrcVaryingMax = sx;
 
             fastestSrcVaryingCoord = 1;
-            secondFastestSrcVaryingCoord = 0;
-            slowestSrcVaryingCoord = 2;
+            secondFastestSrcVaryingCoord = 2;
+            slowestSrcVaryingCoord = 0;
         }
         else if ( dimensionOrder == 2 ) {
             fastestSrcVaryingMax = sz;
-            secondFastestSrcVaryingMax = sx;
-            slowestSrcVaryingMax = sy;
+            secondFastestSrcVaryingMax = sy;
+            slowestSrcVaryingMax = sx;
 
             fastestSrcVaryingCoord = 2;
-            secondFastestSrcVaryingCoord = 0;
-            slowestSrcVaryingCoord = 1;
+            secondFastestSrcVaryingCoord = 1;
+            slowestSrcVaryingCoord = 0;
         }
         else {
             throw new IllegalArgumentException( "Dimension order of " + dimensionOrder + " unexpected." );
@@ -338,7 +388,16 @@ public class MaskChanSingleFileLoader {
 
                 long final1DCoord = yOffset + xyzCoords[ 0 ];
                 // Arbitrarily picking one renderable...
+                if ( translatedNum == 11 ) {
+                    int zzz = 0;
+                }
                 if ( translatedNum == 10 ) {
+                    int zzz = 0;
+                }
+                if ( translatedNum == 9 ) {
+                    int zzz = 0;
+                }
+                if ( translatedNum == 8 ) {
                     int zzz = 0;
                 }
 
@@ -456,22 +515,26 @@ public class MaskChanSingleFileLoader {
      */
     private long[] convertToStandard3D( long[] srcCoords ) {
         long[] returnVal = null;
+        // Expected orderings are:  0=yz(x), 1=xz(y), 2=xy(z)
         if ( dimensionOrder == 0 ) {
-            // X,Y,Z
-            returnVal = srcCoords;
+            // 0=yz(x)
+            returnVal = new long[ 3 ];
+            returnVal[ 0 ] = srcCoords[ 0 ];
+            returnVal[ 1 ] = srcCoords[ 2 ];
+            returnVal[ 2 ] = srcCoords[ 1 ];
         }
         else if ( dimensionOrder == 1 ) {
-            // Y,X,Z
-            returnVal = new long[ 3 ];
-            returnVal[ 0 ] = srcCoords[ 1 ];   // File's 2nd-> X
-            returnVal[ 1 ] = srcCoords[ 0 ];   // File's 1st-> Y
-            returnVal[ 2 ] = srcCoords[ 2 ];   // File's 3rd-> Z
-        }
-        else if ( dimensionOrder == 2 ) {
-            // Z,X,Y
+            // 1=xz(y)
             returnVal = new long[ 3 ];
             returnVal[ 0 ] = srcCoords[ 1 ];   // File's 2nd-> X
             returnVal[ 1 ] = srcCoords[ 2 ];   // File's 3rd-> Y
+            returnVal[ 2 ] = srcCoords[ 0 ];   // File's 1st-> Z
+        }
+        else if ( dimensionOrder == 2 ) {
+            // 2=xy(z)
+            returnVal = new long[ 3 ];
+            returnVal[ 0 ] = srcCoords[ 2 ];   // File's 3rd-> X
+            returnVal[ 1 ] = srcCoords[ 1 ];   // File's 2nd-> Y
             returnVal[ 2 ] = srcCoords[ 0 ];   // File's 1st-> Z
         }
         return returnVal;
