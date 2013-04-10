@@ -27,9 +27,13 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
 
     private static final String COUNT_DISCREPANCY_FORMAT = "%s count mismatch. Old count was %d; new count is %d.\n";
 
+    private static final int FIXED_BYTE_PER_CHANNEL = 1;
+
     private ChannelMetaData channelMetaData;
     private byte[] volumeData;
     private double downSampleRate = 2.0;
+
+    private ChannelInterpreterI channelInterpreter;
 
     protected boolean needsChannelInit = false; // Initialized for emphasis.
     private Logger logger = LoggerFactory.getLogger( RenderablesChannelsBuilder.class );
@@ -84,7 +88,8 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
      * Go to position indicated, and add the single raw byte taken from each
      * channel-data at next counter position.  Add each such byte to the output
      * position provided.
-     * Width of channel data is expected to be same for each call.
+     * Width of channel data is allowed by this routine to vary for each call.  Width will be
+     * computed from the size of the incoming byte array.
      *
      * @param volumePosition where it goes.  Not multiplied by number of channels.  Not an offset into the channel data!
      * @return total positions applied.
@@ -94,24 +99,8 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     public synchronized int addChannelData(byte[] channelData, long volumePosition) throws Exception {
         init();
 
-        // Assumed little-endian and two bytes.
-        int targetPos = (int)( volumePosition * channelMetaData.channelCount * channelMetaData.byteCount );
-
-        // TODO use the suggested R/G/B to specify the ordering, rather than simply using the 'i' offset.
-        for ( int i = 0; i < channelMetaData.rawChannelCount; i++ ) {
-            for ( int j = 0; j < channelMetaData.byteCount; j++ ) {
-                //  block of in-memory, interleaving the channels as the offsets follow.
-                //volumeData[ targetPos + i + j ] = channelData[ i ];
-                volumeData[ targetPos + (i * channelMetaData.byteCount) + j ] = channelData[ (i * channelMetaData.byteCount) + j ];
-            }
-
-            // Pad out to the end.
-            if ( channelMetaData.channelCount > channelData.length ) {
-                for ( int j = channelData.length; j < channelMetaData.channelCount; j++ ) {
-                    volumeData[ targetPos + j ] = (byte)255;
-                }
-            }
-        }
+        int targetPos = (int)( volumePosition * channelMetaData.channelCount * FIXED_BYTE_PER_CHANNEL );
+        channelInterpreter.interpretChannelBytes(channelData, targetPos);
 
         return 1;
     }
@@ -189,7 +178,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
             DownSampler downSampler = new DownSampler( paddedSx, paddedSy, paddedSz );
             DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(
                     volumeData,
-                    channelMetaData.channelCount* channelMetaData.byteCount,
+                    channelMetaData.channelCount* FIXED_BYTE_PER_CHANNEL,
                     downSampleRate,
                     downSampleRate,
                     downSampleRate
@@ -213,8 +202,8 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
 
         textureData.setColorSpace( VolumeBrick.TextureColorSpace.COLOR_SPACE_LINEAR );
         textureData.setVoxelMicrometers(new Double[]{1.0, 1.0, 1.0});
-        textureData.setByteOrder( ByteOrder.nativeOrder() );
-        textureData.setPixelByteCount( channelMetaData.byteCount );
+        textureData.setByteOrder(ByteOrder.nativeOrder());
+        textureData.setPixelByteCount(FIXED_BYTE_PER_CHANNEL);
         textureData.setFilename( "Channel Data" );
         textureData.setInverted( false );
         textureData.setCoordCoverage( coordCoverage );
@@ -228,9 +217,9 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         textureData.setExplicitInternalFormat( GL2.GL_RGBA16 );
          */
 
-        if ( channelMetaData.byteCount == 1 )
+        if ( FIXED_BYTE_PER_CHANNEL == 1 )
             textureData.setExplicitVoxelComponentType( GL2.GL_BYTE ); //GL2.GL_UNSIGNED_INT_8_8_8_8 );
-        else if ( channelMetaData.byteCount == 2 )
+        else if ( FIXED_BYTE_PER_CHANNEL == 2 )
             textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_SHORT );
         textureData.setExplicitVoxelComponentOrder( GL2.GL_RGBA );
         textureData.setExplicitInternalFormat( GL2.GL_RGBA );
@@ -270,6 +259,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         if ( needsChannelInit) {
             checkReady();
             logger.info( "Initialize called..." );
+
             // The size of any one voxel will be the number of channels times the bytes per channel.
             if ( channelMetaData.rawChannelCount == 3 ) {
                 // Round out to four.
@@ -309,6 +299,9 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
             if ( volumeData == null ) {
                 volumeData = new byte[ (int) arrayLength ];
             }
+
+            channelInterpreter = new ChannelInterpreterToByte( channelMetaData, volumeData );
+
             needsChannelInit = false;
         }
     }
@@ -364,4 +357,5 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     public void setDownSampleRate(double downSampleRate) {
         this.downSampleRate = downSampleRate;
     }
+
 }

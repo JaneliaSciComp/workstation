@@ -313,8 +313,8 @@ public class MaskChanSingleFileLoader {
         channelMetaData.greenChannelInx = readByte( channelStream );
         channelMetaData.byteCount = readByte( channelStream );
 
-        //  Note: any type of read requires all the mask data.  But only mask-required will necessitate
-        //  the channel data all available.
+        //  Note: any type of read requires all the mask data.  But only channel-required will necessitate
+        //  the channel data all be available.
         if ( channelAcceptors.size() > 0 ) {
             // NOTE: if no channels needed, the intensity stream may be ignored.
 

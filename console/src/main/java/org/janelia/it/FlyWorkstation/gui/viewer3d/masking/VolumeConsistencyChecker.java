@@ -72,7 +72,7 @@ public class VolumeConsistencyChecker {
                 else {
                     ChannelMetaData nextCMD = channelMetaDatas.get( key );
                     if ( consensusCMD.byteCount != nextCMD.byteCount ) {
-                        logger.error(
+                        logger.info(
                                 String.format( "Byte count of %d for renderable with target label of %d," +
                                         " mismatches consensus byte count of %d.",
                                         nextCMD.byteCount,
