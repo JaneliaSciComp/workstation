@@ -1203,41 +1203,39 @@ public class EntityContextMenu extends JPopupMenu {
                             log.debug("Requesting entity view in Neuron Annotator: " + result.getId());
                             ModelMgr.getModelMgr().notifyEntityViewRequestedInNeuronAnnotator(result.getId());
 
-                            // TODO: in the future, this check won't be
-                            // necessary, since all separations will be fast
-                            // loading
-                            boolean fastLoad = false;
-                            result = ModelMgr.getModelMgr().loadLazyEntity(result, false);
-                            for (Entity child : result.getChildren()) {
-                                if (child.getName().equals("Supporting Files")) {
-                                    child = ModelMgr.getModelMgr().loadLazyEntity(child, false);
-                                    for (Entity grandchild : child.getChildren()) {
-                                        if (grandchild.getName().equals("Fast Load")) {
-                                            fastLoad = true;
-                                            break;
-                                        }
-                                    }
-                                    if (fastLoad)
-                                        break;
-                                }
-                            }
-
-                            if (fastLoad) {
-                                log.debug("Found fastLoad files. Syncing from archive...");
-
-                                // This is a fast loading separation. Ensure all
-                                // files are copied from archive.
-                                String filePath = result.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH)
-                                        + "/archive";
-
-                                HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
-                                taskParameters.add(new TaskParameter("file path", filePath, null));
-                                Task task = new GenericTask(new HashSet<Node>(), SessionMgr.getSubjectKey(),
-                                        new ArrayList<Event>(), taskParameters, "syncFromArchive", "Sync From Archive");
-                                task.setJobName("Sync From Archive Task");
-                                task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
-                                ModelMgr.getModelMgr().submitJob("SyncFromArchive", task);
-                            }
+                            // TODO: delete this later. It's not longer necessary with the advent of NA streaming.
+//                            boolean fastLoad = false;
+//                            result = ModelMgr.getModelMgr().loadLazyEntity(result, false);
+//                            for (Entity child : result.getChildren()) {
+//                                if (child.getName().equals("Supporting Files")) {
+//                                    child = ModelMgr.getModelMgr().loadLazyEntity(child, false);
+//                                    for (Entity grandchild : child.getChildren()) {
+//                                        if (grandchild.getName().equals("Fast Load")) {
+//                                            fastLoad = true;
+//                                            break;
+//                                        }
+//                                    }
+//                                    if (fastLoad)
+//                                        break;
+//                                }
+//                            }
+//
+//                            if (fastLoad) {
+//                                log.debug("Found fastLoad files. Syncing from archive...");
+//
+//                                // This is a fast loading separation. Ensure all
+//                                // files are copied from archive.
+//                                String filePath = result.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH)
+//                                        + "/archive";
+//
+//                                HashSet<TaskParameter> taskParameters = new HashSet<TaskParameter>();
+//                                taskParameters.add(new TaskParameter("file path", filePath, null));
+//                                Task task = new GenericTask(new HashSet<Node>(), SessionMgr.getSubjectKey(),
+//                                        new ArrayList<Event>(), taskParameters, "syncFromArchive", "Sync From Archive");
+//                                task.setJobName("Sync From Archive Task");
+//                                task = ModelMgr.getModelMgr().saveOrUpdateTask(task);
+//                                ModelMgr.getModelMgr().submitJob("SyncFromArchive", task);
+//                            }
                         }
                     } catch (Exception e) {
                         SessionMgr.getSessionMgr().handleException(e);
