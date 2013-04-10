@@ -198,7 +198,9 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
                     downSampling.getVolume(), downSampling.getSx(), downSampling.getSy(), downSampling.getSz()
             );
             textureData.setVolumeMicrometers(
-                    new Double[]{(double) downSampling.getSx(), (double)downSampling.getSy(), (double)downSampling.getSz() }
+                    new Double[]{
+                            (double) downSampling.getSx(), (double)downSampling.getSy(), (double)downSampling.getSz()
+                    }
             );
         }
         else {
@@ -215,6 +217,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         textureData.setPixelByteCount( channelMetaData.byteCount );
         textureData.setFilename( "Channel Data" );
         textureData.setInverted( false );
+        textureData.setCoordCoverage( coordCoverage );
 
         textureData.setInterpolationMethod( GL2.GL_LINEAR );
 

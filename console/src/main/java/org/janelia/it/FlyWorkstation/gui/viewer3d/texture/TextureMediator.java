@@ -188,14 +188,18 @@ public class TextureMediator {
      */
     public void setTextureCoordinates( GL2 gl, double tX, double tY, double tZ ) {
         float[] coordCoverage = textureData.getCoordCoverage();
-        logger.info( "Tex Coords: (" + tX + "," + tY + "," + tZ + ")");
+        if ( logger.isDebugEnabled() ) {
+            logger.debug( "Tex Coords: (" + tX + "," + tY + "," + tZ + ")");
+        }
         gl.glMultiTexCoord3d(
                 textureSymbolicId, tX * coordCoverage[ 0 ], tY * coordCoverage[ 1 ], tZ * coordCoverage[ 2 ]
         );
-        logger.info(
+        if ( logger.isDebugEnabled() ) {
+            logger.debug(
                 "Adjusted Tex Coords: (" + tX * coordCoverage[ 0 ] + "," + tY * coordCoverage[ 1 ] + ","
                         + tZ * coordCoverage[ 2 ] + ")"
-        );
+            );
+        }
     }
 
     public Double[] getVolumeMicrometers() {
