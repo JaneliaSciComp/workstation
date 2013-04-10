@@ -69,7 +69,7 @@ public class ChannelReadTest {
         //loader.setByteCount( 2 );
         //loader.setRenderableBeans( Arrays.asList( bean ) );
 
-        RenderablesChannelsBuilder builder = new RenderablesChannelsBuilder();
+        RenderablesChannelsBuilder builder = new RenderablesChannelsBuilder( 2.0 );
         loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList( builder ) );
 
         loader.read( bean, testMaskStream, testChannelStream );

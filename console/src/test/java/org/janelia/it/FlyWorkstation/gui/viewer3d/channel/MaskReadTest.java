@@ -60,7 +60,7 @@ public class MaskReadTest {
     @Test
     public void testReadChannelData() throws Exception {
         logger.info( "Reading channel data." );
-        RenderablesMaskBuilder renderablesMaskBuilder = new RenderablesMaskBuilder();
+        RenderablesMaskBuilder renderablesMaskBuilder = new RenderablesMaskBuilder( 2.0 );
         Collection<MaskChanDataAcceptorI> acceptors = new ArrayList<MaskChanDataAcceptorI>();
         acceptors.add( renderablesMaskBuilder );
 
