@@ -1,10 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanSingleFileLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Map;
 
 /**
  * Created with IntelliJ IDEA.
@@ -44,9 +41,9 @@ public class DownSampler {
         DownsampledTextureData rtnVal = getDownSampledVolumeHelper(
                 oneDVolume, //create3DVolume( oneDVolume, voxelBytes ),
                 voxelBytes,
-                reScaleForDivisibility( sx, xScale ),
-                reScaleForDivisibility( sy, yScale ),
-                reScaleForDivisibility( sz, zScale )
+                xScale,
+                yScale,
+                zScale
         );
 
         return rtnVal;
@@ -108,27 +105,6 @@ public class DownSampler {
         public double getzScale() {
             return zScale;
         }
-    }
-
-    /**
-     * Prior to the downsample call, wish to ensure we have proper divisibility of the
-     * resulting x,y,z coordinates.  Therefore, the scale may be reduced still further
-     * to accommodate this.
-     *
-     * @param size original size in some dimension.
-     * @param originalScale desired downscale divisor (i.e., divide by 2.0)
-     * @return a new downscale divisor that would ensure divisibility by required value.
-     */
-    private double reScaleForDivisibility( long size, double originalScale ) {
-        double rtnVal = originalScale;
-        int scaledDim = (int)( size / originalScale );
-        int leftover = scaledDim % MaskChanSingleFileLoader.REQUIRED_AXIAL_LENGTH_DIVISIBLE;
-        if ( leftover != 0 ) {
-            scaledDim -= leftover;
-            rtnVal = ((double)size / (double)scaledDim);
-        }
-        logger.info( "For size=" + size + " and orig scale=" + originalScale + " rescaling to=" + rtnVal );
-        return rtnVal;
     }
 
     /**

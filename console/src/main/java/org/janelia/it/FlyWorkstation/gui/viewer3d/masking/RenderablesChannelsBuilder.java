@@ -186,7 +186,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     public TextureDataI buildTextureData() {
         TextureDataI textureData = null;
         if ( downSampleRate != 0.0 ) {
-            DownSampler downSampler = new DownSampler( sx, sy, sz );
+            DownSampler downSampler = new DownSampler( paddedSx, paddedSy, paddedSz );
             DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(
                     volumeData,
                     channelMetaData.channelCount* channelMetaData.byteCount,
@@ -203,9 +203,9 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         }
         else {
             textureData = new TextureDataBean(
-                    volumeData, (int)sx, (int)sy, 100 //(int)sz
+                    volumeData, (int)paddedSx, (int)paddedSy, (int)paddedSz
             );
-            textureData.setVolumeMicrometers( new Double[] { (double)sx, (double)sy, (double)sz } );
+            textureData.setVolumeMicrometers( new Double[] { (double)paddedSx, (double)paddedSy, (double)paddedSz } );
         }
         textureData.setChannelCount( channelMetaData.channelCount );
 
@@ -280,7 +280,8 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
 
                 channelMetaData = newChannelMetaData;
             }
-            long arrayLength = sx * sy * sz * channelMetaData.byteCount * channelMetaData.channelCount;
+            long arrayLength = paddedSx * paddedSy * paddedSz *
+                               channelMetaData.byteCount * channelMetaData.channelCount;
             if ( arrayLength > Integer.MAX_VALUE ) {
                 throw new IllegalArgumentException(
                         "Total length of input: " + arrayLength  +

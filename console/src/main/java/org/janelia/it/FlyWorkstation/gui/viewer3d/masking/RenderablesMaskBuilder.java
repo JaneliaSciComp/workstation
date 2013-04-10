@@ -89,7 +89,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     /** Size of volume mask.  Numbers of voxels in all three directions. */
     @Override
     public Integer[] getVolumeMaskVoxels() {
-        return new Integer[] { (int)sx, (int)sy, (int)sz };
+        return new Integer[] { (int)paddedSx, (int)paddedSy, (int)paddedSz };
     }
 
     @Override
@@ -113,8 +113,8 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
         logger.info( "Retrieving combined texture data." );
         // TODO: same decisioning as the RenderablesChannelsBuilder re how much to downsample.
         TextureDataI textureData;
-        if ( downSampleRate != 0.0 ) {
-            DownSampler downSampler = new DownSampler( sx, sy, sz );
+        if ( downSampleRate != 1.0 ) {
+            DownSampler downSampler = new DownSampler( paddedSx, paddedSy, paddedSz );
             DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(
                     volumeData, byteCount, downSampleRate, downSampleRate, downSampleRate
             );
@@ -127,9 +127,9 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
         }
         else {
             textureData = new TextureDataBean(
-                    volumeData, (int)sx, (int)sy, 100 //(int)sz
+                    volumeData, (int)paddedSx, (int)paddedSy, (int)paddedSz
             );
-            textureData.setVolumeMicrometers( new Double[] { (double)sx, (double)sy, (double)sz } );
+            textureData.setVolumeMicrometers( new Double[] { (double)paddedSx, (double)paddedSy, (double)paddedSz } );
         }
 
         textureData.setInverted( false );
@@ -173,7 +173,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     public void init() {
         if ( ! isInitialized ) {
             logger.info( "Initializing" );
-            volumeData = new byte[ (int)(sx * sy * sz) * byteCount ];
+            volumeData = new byte[ (int)(paddedSx * paddedSy * paddedSz) * byteCount ];
             isInitialized = true;
         }
     }

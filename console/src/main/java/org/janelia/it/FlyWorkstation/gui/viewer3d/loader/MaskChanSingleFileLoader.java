@@ -23,7 +23,7 @@ import java.util.List;
  */
 public class MaskChanSingleFileLoader {
 
-    public static final int REQUIRED_AXIAL_LENGTH_DIVISIBLE = 4;
+    public static final int REQUIRED_AXIAL_LENGTH_DIVISIBLE = 256;
     private static final int FLOAT_BYTES = Float.SIZE / 8;
     private static final int LONG_BYTES = Long.SIZE / 8;
     private long sx;
@@ -241,10 +241,10 @@ public class MaskChanSingleFileLoader {
         srcSliceSize = fastestSrcVaryingMax * secondFastestSrcVaryingMax;
 
         for ( MaskChanDataAcceptorI acceptor: maskAcceptors ) {
-            acceptor.setSpaceSize( volumeVoxels[0], volumeVoxels[1], volumeVoxels[2], coordCoverage );
+            acceptor.setSpaceSize( sx, sy, sz, volumeVoxels[0], volumeVoxels[1], volumeVoxels[2], coordCoverage );
         }
         for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {
-            acceptor.setSpaceSize( volumeVoxels[0], volumeVoxels[1], volumeVoxels[2], coordCoverage );
+            acceptor.setSpaceSize( sx, sy, sz, volumeVoxels[0], volumeVoxels[1], volumeVoxels[2], coordCoverage );
         }
 
     }
@@ -387,19 +387,6 @@ public class MaskChanSingleFileLoader {
                 long yOffset = xyzCoords[ 1 ] * volumeVoxels[0] + zOffset;  // Consuming lines to remainder.
 
                 long final1DCoord = yOffset + xyzCoords[ 0 ];
-                // Arbitrarily picking one renderable...
-                if ( translatedNum == 11 ) {
-                    int zzz = 0;
-                }
-                if ( translatedNum == 10 ) {
-                    int zzz = 0;
-                }
-                if ( translatedNum == 9 ) {
-                    int zzz = 0;
-                }
-                if ( translatedNum == 8 ) {
-                    int zzz = 0;
-                }
 
                 for ( MaskChanDataAcceptorI acceptor: maskAcceptors ) {
                     acceptor.addMaskData( translatedNum, final1DCoord );
@@ -444,18 +431,16 @@ public class MaskChanSingleFileLoader {
         // If we do, we must take that into account for applying texture coordinates.
         coordCoverage = new float[] { 1.0f, 1.0f, 1.0f };
 
-        // Axial-length-divisibilty is not necessary while using down-sampling.
-        //
-        //    for ( int i = 0; i < voxels.length; i++ ) {
-        //        long leftover = voxels[i] % REQUIRED_AXIAL_LENGTH_DIVISIBLE;
-        //        if ( leftover > 0 ) {
-        //            long voxelModCount = REQUIRED_AXIAL_LENGTH_DIVISIBLE - leftover;
-        //            long newVoxelCount = voxels[ i ] + voxelModCount;
-        //            coordCoverage[ i ] = ((float)voxels[ i ]) / ((float)newVoxelCount);
-        //            voxels[ i ] = newVoxelCount;
-        //            logger.info("Expanding edge by " + voxelModCount);
-        //        }
-        //    }
+        for ( int i = 0; i < voxels.length; i++ ) {
+            long leftover = voxels[i] % REQUIRED_AXIAL_LENGTH_DIVISIBLE;
+            if ( leftover > 0 ) {
+                long voxelModCount = REQUIRED_AXIAL_LENGTH_DIVISIBLE - leftover;
+                long newVoxelCount = voxels[ i ] + voxelModCount;
+//                coordCoverage[ i ] = ((float)voxels[ i ]) / ((float)newVoxelCount);
+                voxels[ i ] = newVoxelCount;
+                logger.info("Expanding edge by " + voxelModCount);
+            }
+        }
 
         return voxels;
     }

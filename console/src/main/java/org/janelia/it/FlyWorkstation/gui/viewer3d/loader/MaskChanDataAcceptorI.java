@@ -49,8 +49,12 @@ public interface MaskChanDataAcceptorI {
      * @param x max along x
      * @param y max along y
      * @param z max along z
+     * @param paddedX max along x after padding
+     * @param paddedY max along y after padding
+     * @param paddedZ max along z after padding
      */
-    void setSpaceSize( long x, long y, long z, float[] coordCoverage );
+    void setSpaceSize( long x, long y, long z,
+                       long paddedX, long paddedY, long paddedZ, float[] coordCoverage );
 
     /**
      * Allows this impl to tell the caller which of the above add-mask methods are acceptable to it.

@@ -165,7 +165,7 @@ public class AlignmentBoardSettingsDialog extends JDialog {
         downSampleRateToIndex.put( 1, 0 );
         downSampleRateToIndex.put( 2, 1 );
         downSampleRateToIndex.put( 4, 2 );
-        downSampleRateToIndex.put( 6, 3 );
+        downSampleRateToIndex.put( 8, 3 );
 
         downSampleRateDropdown = new JComboBox(
                 new ABSDComboBoxModel( downSampleRateToIndex )

@@ -18,6 +18,11 @@ public abstract class RenderablesVolumeBuilder implements MaskChanDataAcceptorI 
     protected long sx;
     protected long sy;
     protected long sz;
+
+    protected long paddedSx;
+    protected long paddedSy;
+    protected long paddedSz;
+
     protected float[] coordCoverage;
 
     private int nextVolumeCount = 0;
@@ -25,11 +30,17 @@ public abstract class RenderablesVolumeBuilder implements MaskChanDataAcceptorI 
 
     //----------------------------------------IMPLEMENT MaskChanDataAcceptorI (partially)
     @Override
-    public synchronized void setSpaceSize( long x, long y, long z, float[] coordCoverage ) {
+    public synchronized void setSpaceSize(
+            long x, long y, long z,
+            long paddedX, long paddedY, long paddedZ,
+            float[] coordCoverage ) {
         if ( sx == 0 ) {
             sx = x;
             sy = y;
             sz = z;
+            paddedSx = paddedX;
+            paddedSy = paddedY;
+            paddedSz = paddedZ;
             this.coordCoverage = coordCoverage;
             checker.accumulate( ++nextVolumeCount, new Long[]{ sx, sy, sz }, null );
         }
