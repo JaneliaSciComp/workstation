@@ -10,4 +10,5 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
  */
 public interface ChannelInterpreterI {
     void interpretChannelBytes(byte[] channelData, int targetPos);
+    void close();
 }

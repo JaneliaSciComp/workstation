@@ -173,6 +173,8 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     //----------------------------------------IMPLEMENT TextureBuilderI
     @Override
     public TextureDataI buildTextureData() {
+        channelInterpreter.close();
+
         TextureDataI textureData = null;
         if ( downSampleRate != 0.0 ) {
             DownSampler downSampler = new DownSampler( paddedSx, paddedSy, paddedSz );

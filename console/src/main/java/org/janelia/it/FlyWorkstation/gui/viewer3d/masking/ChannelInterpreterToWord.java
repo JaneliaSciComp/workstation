@@ -56,4 +56,7 @@ public class ChannelInterpreterToWord implements ChannelInterpreterI {
             }
         }
     }
+
+    @Override
+    public void close() {}
 }

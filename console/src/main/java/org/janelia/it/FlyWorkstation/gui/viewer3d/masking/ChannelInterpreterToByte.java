@@ -1,6 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Created with IntelliJ IDEA.
@@ -17,6 +19,9 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
     private byte[] volumeData;
 
     private int[] orderedRgbIndexes = new int[ 3 ];
+
+    private int maxValue = 0;
+    private Logger logger = LoggerFactory.getLogger( ChannelInterpreterToByte.class );
 
     public ChannelInterpreterToByte(ChannelMetaData channelMetaData, byte[] volumeData) {
         this.channelMetaData = channelMetaData;
@@ -40,10 +45,16 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
             // This is a local down-sample from N-bytes-per-channel to the required number only.
             for ( int j = 0; j < channelMetaData.byteCount; j++ ) {
                 int nextByte = channelData[ (i * channelMetaData.byteCount) + j ];
+                if ( nextByte < 0 )
+                    nextByte += 256;
                 int shifter = channelMetaData.byteCount - j - 1;
-                finalValue += nextByte << (8 * shifter);
+                finalValue += (nextByte << (8 * shifter));
             }
             finalValue /= 256;
+
+            if ( finalValue > maxValue ) {
+                maxValue = finalValue;
+            }
 
             //  block of in-memory, interleaving the channels as the offsets follow.
             int channelInx = orderedRgbIndexes[ i ];
@@ -56,5 +67,10 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
                 volumeData[ targetPos + j ] = (byte)255;
             }
         }
+    }
+
+    @Override
+    public void close() {
+        logger.info( "Maximum value found during channel interpretation was {}.", maxValue );
     }
 }
