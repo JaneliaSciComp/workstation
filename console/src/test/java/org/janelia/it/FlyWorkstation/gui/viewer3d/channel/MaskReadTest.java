@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.channel;
 
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardSettingsDialog;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderablesMaskBuilder;
@@ -60,7 +62,11 @@ public class MaskReadTest {
     @Test
     public void testReadChannelData() throws Exception {
         logger.info( "Reading channel data." );
-        RenderablesMaskBuilder renderablesMaskBuilder = new RenderablesMaskBuilder( 2.0 );
+        AlignmentBoardSettings settings = new AlignmentBoardSettings();
+        settings.setShowChannelData( true );
+        settings.setGammaFactor( AlignmentBoardSettingsDialog.DEFAULT_GAMMA );
+        settings.setDownSampleRate( AlignmentBoardSettingsDialog.DEFAULT_DOWNSAMPLE_RATE );
+        RenderablesMaskBuilder renderablesMaskBuilder = new RenderablesMaskBuilder( settings );
         Collection<MaskChanDataAcceptorI> acceptors = new ArrayList<MaskChanDataAcceptorI>();
         acceptors.add( renderablesMaskBuilder );
 
