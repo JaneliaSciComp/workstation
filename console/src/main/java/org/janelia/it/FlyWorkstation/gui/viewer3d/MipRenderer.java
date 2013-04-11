@@ -12,13 +12,14 @@ class MipRenderer
     extends BaseRenderer
     implements RotationState
 {
+    private static final double DEFAULT_CAMERA_FOCUS_DISTANCE = 20.0;
+
     // camera parameters
     Vec3 focusInGround = new Vec3(0,0,0);
     private Vec3 upInCamera = new Vec3(0,-1,0);
     private Rotation R_ground_camera = new Rotation();
-    private double defaultCameraFocusDistance = 20.0;
-    double cameraFocusDistance = defaultCameraFocusDistance;
-    private double distanceToScreenInPixels = 1500;
+    double cameraFocusDistance = DEFAULT_CAMERA_FOCUS_DISTANCE;
+    private double distanceToScreenInPixels = 2000;
     private double defaultHeightInPixels = 400.0;
     private double widthInPixels = defaultHeightInPixels;
     private double heightInPixels = defaultHeightInPixels;
@@ -43,6 +44,9 @@ class MipRenderer
     public void display(GLAutoDrawable gLDrawable) 
     {
 	    super.display(gLDrawable); // fills background
+        widthInPixels = gLDrawable.getWidth();
+        heightInPixels = gLDrawable.getHeight();
+
         final GL2 gl = gLDrawable.getGL().getGL2();
         gl.glPushAttrib(GL2.GL_TRANSFORM_BIT);
         gl.glMatrixMode(GL2.GL_PROJECTION);
@@ -52,6 +56,7 @@ class MipRenderer
         gl.glPushMatrix();
         gl.glLoadIdentity();
 
+        gLDrawable.getWidth();
         Vec3 f = focusInGround;
         Vec3 u = R_ground_camera.times(upInCamera);
         Vec3 c = f.plus(R_ground_camera.times(new Vec3(0,0,-cameraFocusDistance)));
@@ -84,24 +89,13 @@ class MipRenderer
     		return cameraFocusDistance / distanceToScreenInPixels;
     }
 
-    public void resetView() 
+    public void resetView()
     {
-    		// Adjust view to fit the actual objects present
-    		BoundingBox3d boundingBox = new BoundingBox3d();
-    		for (GLActor actor : actors) {
-    			boundingBox.include(actor.getBoundingBox3d());
-    		}
-    		if (boundingBox.isEmpty())
-    			boundingBox.include(new Vec3(0,0,0));
-    		focusInGround = boundingBox.getCenter();
-    		R_ground_camera = new Rotation();
-    		double heightInMicrometers = boundingBox.getHeight();
-    		if (! (heightInMicrometers >= 0.0)) // watch for NaN!
-    			heightInMicrometers = 2.0; // whatever
-    		// System.out.println("Focus = " + focusInGround);
-    		// System.out.println("Image height = " + heightInMicrometers);
-    		cameraFocusDistance = 1.05 * distanceToScreenInPixels * heightInMicrometers / heightInPixels;
-    		// cameraFocusDistance = defaultCameraFocusDistance * defaultHeightInPixels / heightInPixels;
+        // Adjust view to fit the actual objects present
+        BoundingBox3d boundingBox = getBoundingBox();
+        focusInGround = boundingBox.getCenter();
+        R_ground_camera = new Rotation();
+        resetCameraFocus(boundingBox);
     }
 
     @Override
@@ -127,6 +121,9 @@ class MipRenderer
         updateProjection(gl);
         gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glLoadIdentity();
+
+        BoundingBox3d boundingBox = getBoundingBox();
+        resetCameraFocus( boundingBox );
     }
 
 	public void rotatePixels(double dx, double dy, double dz) {
@@ -190,5 +187,50 @@ class MipRenderer
 		double zoomRatio = 1.0 + dC/denom;
 		zoom(zoomRatio);
 	}
+
+    private double maxAspectRatio(BoundingBox3d boundingBox) {
+
+        double boundingAspectRatio = Math.max(
+                boundingBox.getWidth() / boundingBox.getHeight(), boundingBox.getHeight() / boundingBox.getWidth()
+        );
+        boolean horizontalBox = boundingBox.getWidth() > boundingBox.getHeight();
+
+        double glAspectRatio = Math.max(
+                widthInPixels / heightInPixels, heightInPixels / widthInPixels
+        );
+        boolean horizontalGl = widthInPixels > heightInPixels;
+
+        if ( horizontalGl && horizontalBox ) {
+            return Math.max(
+                    boundingAspectRatio, glAspectRatio
+            );
+
+        }
+        else {
+            return boundingAspectRatio * glAspectRatio;
+        }
+
+    }
+
+    private void resetCameraFocus(BoundingBox3d boundingBox) {
+        double heightInMicrometers = boundingBox.getHeight();
+        if (! (heightInMicrometers >= 0.0)) // watch for NaN!
+            heightInMicrometers = 2.0; // whatever
+
+        // System.out.println("Focus = " + focusInGround);
+        // cameraFocusDistance = DEFAULT_CAMERA_FOCUS_DISTANCE * defaultHeightInPixels / heightInPixels;
+        double finalAspectRatio = maxAspectRatio(boundingBox);
+        cameraFocusDistance = finalAspectRatio * 1.05 * distanceToScreenInPixels * heightInMicrometers / heightInPixels;
+    }
+
+    private BoundingBox3d getBoundingBox() {
+        BoundingBox3d boundingBox = new BoundingBox3d();
+        for (GLActor actor : actors) {
+            boundingBox.include(actor.getBoundingBox3d());
+        }
+        if (boundingBox.isEmpty())
+            boundingBox.include(new Vec3(0,0,0));
+        return boundingBox;
+    }
 
 }
