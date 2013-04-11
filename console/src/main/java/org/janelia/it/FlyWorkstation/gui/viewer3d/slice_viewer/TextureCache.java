@@ -4,6 +4,9 @@ import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /*
  * Wrap texture cache so indices can be interpolated for either quadtrees
  * or octrees.
@@ -14,6 +17,8 @@ public class TextureCache
 		QUADTREE,
 		OCTREE
 	}
+	
+	private static final Logger log = LoggerFactory.getLogger(TextureCache.class);
 	
 	private IndexStyle indexStyle = IndexStyle.QUADTREE;
 	
@@ -72,21 +77,30 @@ public class TextureCache
 	{
 		@Override
 		public PyramidTileIndex fromQuadtreeIndex(PyramidTileIndex quadtreeIndex) {
-			int zoomFactor = (int)Math.pow(2, quadtreeIndex.getMaxZoom() - quadtreeIndex.getZoom());
+			int zoomFactor = (int)Math.pow(2, quadtreeIndex.getZoom());
 			int z = quadtreeIndex.getZ() / zoomFactor;
-			return new PyramidTileIndex(
+			PyramidTileIndex result = new PyramidTileIndex(
 					quadtreeIndex.getX(), 
 					quadtreeIndex.getY(), 
 					z, 
 					quadtreeIndex.getZoom(), 
 					quadtreeIndex.getMaxZoom());
+			// log.info("q: "+quadtreeIndex+"; o: "+result);
+			return result;
 		}
 
 		@Override
 		public PyramidTileIndex toQuadtreeIndex(PyramidTileIndex otherIndex) {
-			int zoomFactor = (int)Math.pow(2, otherIndex.getMaxZoom() - otherIndex.getZoom());
+			int zoomFactor = (int)Math.pow(2, otherIndex.getZoom());
 			int z = otherIndex.getZ() * zoomFactor;
-			return new PyramidTileIndex(otherIndex.getX(), otherIndex.getY(), z, otherIndex.getZoom(), otherIndex.getMaxZoom());
+			PyramidTileIndex result = new PyramidTileIndex(
+					otherIndex.getX(), 
+					otherIndex.getY(), 
+					z, 
+					otherIndex.getZoom(), 
+					otherIndex.getMaxZoom());
+			// log.info("o: "+otherIndex+"; q:"+result);
+			return result;
 		}
 	}
 	

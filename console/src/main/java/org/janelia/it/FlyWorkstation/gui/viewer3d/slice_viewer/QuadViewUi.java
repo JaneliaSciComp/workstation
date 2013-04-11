@@ -3,6 +3,8 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicObservableCamera3d;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -28,6 +30,7 @@ import java.net.URL;
 public class QuadViewUi extends JPanel
 {
 	private static final long serialVersionUID = 1L;
+	private static final Logger log = LoggerFactory.getLogger(QuadViewUi.class);
 
 //	static {
 //		// Use top menu bar on Mac
@@ -166,6 +169,7 @@ public class QuadViewUi extends JPanel
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
+					// log.error("Hey! Does this print?");
                     JFrame mainFrame = new JFrame();
                     mainFrame.setTitle("QuadView");
                     mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

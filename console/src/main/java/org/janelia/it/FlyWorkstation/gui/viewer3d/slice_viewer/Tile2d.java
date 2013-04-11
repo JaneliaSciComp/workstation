@@ -3,6 +3,9 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 import javax.media.opengl.GL2;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.jogamp.opengl.util.texture.TextureCoords;
 
 /**
@@ -30,7 +33,7 @@ implements GLActor
 	    BEST_TEXTURE_LOADED
 	}
 
-	// private static final Logger log = LoggerFactory.getLogger(TileTexture.class);
+	private static final Logger log = LoggerFactory.getLogger(Tile2d.class);
 	
 	private Stage stage = Stage.NO_TEXTURE_LOADED;
 	private TileTexture bestTexture;
@@ -159,6 +162,8 @@ implements GLActor
 
 	public void displayBoundingBox(GL2 gl) 
 	{
+		if (bestTexture == null)
+			return;
 		PyramidTexture texture = bestTexture.getTexture();
 		int zoomScale = (int)(Math.pow(2.0, getIndex().getZoom()) + 0.1);
 		double tileWidth = texture.getUsedWidth() * zoomScale * tileFormat.getVoxelMicrometers()[0];

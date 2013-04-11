@@ -13,6 +13,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.NumeralShader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.SliceColorShader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Attempt to factor out GLActor portion of RavelerTileServer,
@@ -24,6 +26,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.SliceColor
 public class SliceActor 
 implements GLActor
 {
+	private static final Logger log = LoggerFactory.getLogger(SliceActor.class);
+
 	/*
 	 * A TileSet is a group of rectangles that complete the SliceViewer image
 	 * display.
@@ -141,9 +145,9 @@ implements GLActor
 		double ppu = tileServer.getCamera().getPixelsPerSceneUnit();
 		double upv = tileServer.getXResolution();
 		double pixelsPerVoxel = ppu*upv;
-		// System.out.println("pixelsPerVoxel = "+pixelsPerVoxel);
+		// log.info("pixelsPerVoxel = "+pixelsPerVoxel);
 		int filter = GL2.GL_LINEAR; // blended voxels at lower zoom
-		if (pixelsPerVoxel > 10.0)
+		if (pixelsPerVoxel > 5.0)
 			filter = GL2.GL_NEAREST; // distinct voxels at high zoom
 		shader.load(gl);
 		for (Tile2d tile: tiles) {
