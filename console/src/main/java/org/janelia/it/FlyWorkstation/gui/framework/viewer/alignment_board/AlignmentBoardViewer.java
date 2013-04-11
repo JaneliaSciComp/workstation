@@ -322,7 +322,7 @@ public class AlignmentBoardViewer extends Viewer {
             // Here, should load volumes, for all the different items given.
             //loadWorker = new ABLoadWorker( this, context, mip3d );
             loadWorker = new RenderablesLoadWorker(
-                    this, new ABContextDataSource( context ), mip3d, renderMapping, settings.getDownsampleRate()
+                    this, new ABContextDataSource( context ), mip3d, renderMapping, settings.getAlignmentBoardSettings()
             );
             loadWorker.execute();
 
@@ -361,7 +361,7 @@ public class AlignmentBoardViewer extends Viewer {
 
             //loadWorker = new ABLoadWorker( this, context, mip3d, renderMappings );
             loadWorker = new RenderablesLoadWorker(
-                    this, new ABContextDataSource(context), mip3d, renderMapping, settings.getDownsampleRate()
+                    this, new ABContextDataSource(context), mip3d, renderMapping, settings.getAlignmentBoardSettings()
             );
             loadWorker.setLoadFilesFlag( Boolean.FALSE );
             loadWorker.execute();
@@ -384,8 +384,7 @@ public class AlignmentBoardViewer extends Viewer {
         }
 
         @Override
-        public void setDownsampleRate(double downsampleRate) {
-            // SessionMgr.getSessionMgr().getLayersPanel().getAlignmentBoardContext()
+        public void updateSettings() {
             AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
             viewer.updateBoard(context);
         }

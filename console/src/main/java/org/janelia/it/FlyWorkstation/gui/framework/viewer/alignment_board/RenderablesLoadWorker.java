@@ -47,7 +47,7 @@ public class RenderablesLoadWorker extends SimpleWorker {
     private RenderablesMaskBuilder maskTextureBuilder;
     private RenderablesChannelsBuilder signalTextureBuilder;
     private RenderableDataSourceI dataSource;
-    private double downSampleRate;
+    private AlignmentBoardSettings alignmentBoardSettings;
 
     private FileResolver resolver;
 
@@ -58,14 +58,14 @@ public class RenderablesLoadWorker extends SimpleWorker {
             RenderableDataSourceI dataSource,
             Mip3d mip3d,
             RenderMappingI renderMapping,
-            double downSampleRate
+            AlignmentBoardSettings settings
     ) {
         logger = LoggerFactory.getLogger(RenderablesLoadWorker.class);
         this.dataSource = dataSource;
         this.mip3d = mip3d;
         this.viewer = container;
         this.renderMapping = renderMapping;
-        this.downSampleRate = downSampleRate;
+        this.alignmentBoardSettings = settings;
     }
 
     public void setResolver( FileResolver resolver ) {
@@ -93,11 +93,11 @@ public class RenderablesLoadWorker extends SimpleWorker {
         ArrayList<MaskChanDataAcceptorI> acceptors = new ArrayList<MaskChanDataAcceptorI>();
 
         // Establish the means for extracting the volume mask.
-        maskTextureBuilder = new RenderablesMaskBuilder( downSampleRate );
+        maskTextureBuilder = new RenderablesMaskBuilder( alignmentBoardSettings );
         maskTextureBuilder.setRenderables(renderableBeans);
 
         // Establish the means for extracting the signal data.
-        signalTextureBuilder = new RenderablesChannelsBuilder( downSampleRate );
+        signalTextureBuilder = new RenderablesChannelsBuilder( alignmentBoardSettings );
 
         // Setup the loader to traverse all this data on demand.
         neuronFragmentLoader = new MaskChanMultiFileLoader();
@@ -277,10 +277,20 @@ public class RenderablesLoadWorker extends SimpleWorker {
                 maskChanRenderableData.getBean().getTranslatedNum()
         );
 
-        // Special case: the "signal" renderable may have no mask or channel file.
-        if ( maskChanRenderableData.getMaskPath() == null   ||   maskChanRenderableData.getChannelPath() == null ) {
+        // Mask file is always needed.
+        if ( maskChanRenderableData.getMaskPath() == null ) {
             logger.warn(
-                    "Renderable {} has either a missing mask or channel file -- {}.",
+                    "Renderable {} has a missing mask file -- {}.",
+                    maskChanRenderableData.getBean().getTranslatedNum(),
+                    maskChanRenderableData.getMaskPath() + maskChanRenderableData.getChannelPath()
+            );
+            return;
+        }
+
+        // Channel file is optional.
+        if ( alignmentBoardSettings.isShowChannelData()  &&  maskChanRenderableData.getChannelPath() == null ) {
+            logger.warn(
+                    "Renderable {} has a missing channel file -- {}.",
                     maskChanRenderableData.getBean().getTranslatedNum(),
                     maskChanRenderableData.getMaskPath() + maskChanRenderableData.getChannelPath()
             );
@@ -293,18 +303,21 @@ public class RenderablesLoadWorker extends SimpleWorker {
             return;
         }
 
+        //  The mask stream is required in all cases.  But the channel path is optional.
         InputStream maskStream =
                 new BufferedInputStream(
                         new FileInputStream( resolver.getResolvedFilename( maskChanRenderableData.getMaskPath() )
                         )
                 );
-        InputStream chanStream =
-                new BufferedInputStream(
-                        new FileInputStream( resolver.getResolvedFilename( maskChanRenderableData.getChannelPath() )
-                        )
-                );
 
-        //System.out.println( "Reading " + maskChanRenderableData.getMaskPath() );
+        InputStream chanStream = null;
+        if ( alignmentBoardSettings.isShowChannelData() ) {
+            chanStream =
+                    new BufferedInputStream(
+                            new FileInputStream( resolver.getResolvedFilename( maskChanRenderableData.getChannelPath() )
+                            )
+                    );
+        }
 
         if ( maskChanRenderableData.isCompartment() )  {
             // Iterating through these files will cause all the relevant data to be loaded into
@@ -318,7 +331,8 @@ public class RenderablesLoadWorker extends SimpleWorker {
         }
 
         maskStream.close();
-        chanStream.close();
+        if ( chanStream != null )
+            chanStream.close();
 
         logger.debug("In load thread, ENDED load of renderable {}.", maskChanRenderableData.getBean().getLabelFileNum() );
     }

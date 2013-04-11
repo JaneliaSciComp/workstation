@@ -84,6 +84,8 @@ public class MaskChanSingleFileLoader {
 
     private Logger logger = LoggerFactory.getLogger( MaskChanSingleFileLoader.class );
 
+    private byte[] allFChannelBytes;
+
     /**
      * Construct a file loader for all data about a single renderable, and with all targets for that data.
      *
@@ -109,12 +111,20 @@ public class MaskChanSingleFileLoader {
 
         // Get all the overhead stuff out of the way.
         logger.debug( "Initializing Mask Stream." );
+
         initializeMaskStream(maskInputStream);
         validateMaskVolume();
 
-        logger.debug("Reading channel data.");
-        List<byte[]> channelData = readChannelData( channelStream );
-        logger.debug( "Completed reading channel data." );
+        List<byte[]> channelData = null;
+        if ( channelStream == null ) {
+            createEmptyChannelMetaData();
+        }
+        else {
+            logger.debug("Reading channel data.");
+            channelData = readChannelData( channelStream );
+
+            logger.debug( "Completed reading channel data." );
+        }
 
         while ( cummulativeVoxelsReadCount < totalVoxels ) {
             Long skippedRayCount = readLong(maskInputStream);
@@ -135,6 +145,25 @@ public class MaskChanSingleFileLoader {
         }
 
         logger.debug( "Read complete." );
+    }
+
+    private void createEmptyChannelMetaData() {
+        channelMetaData = new ChannelMetaData();
+        channelMetaData.rawChannelCount = 3;
+        channelMetaData.channelCount = 4;
+        channelMetaData.redChannelInx = 0;
+        channelMetaData.blueChannelInx = 1;
+        channelMetaData.greenChannelInx = 2;
+        channelMetaData.byteCount = 1;
+
+        allFChannelBytes = new byte[ channelMetaData.channelCount ];
+        allFChannelBytes[ 0 ] = 127;
+
+        if ( channelAcceptors != null ) {
+            for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {
+                acceptor.setChannelMetaData( channelMetaData );
+            }
+        }
     }
 
     //------------------------------------CONSISTENCY-CHECK METHODS
@@ -395,10 +424,16 @@ public class MaskChanSingleFileLoader {
                 // Here, must get the channel data.  This will include all bytes for each channel organized parallel.
                 if ( channelAcceptors.size() > 0 ) {
                     for ( int i = 0; i < channelMetaData.channelCount; i++ ) {
-                        byte[] nextChannelData = channelData.get( i );
-                        for ( int j=0; j < channelMetaData.byteCount; j++ ) {
-                            int targetOffset = (i * channelMetaData.byteCount) + j;
-                            allChannelBytes[ targetOffset ] = nextChannelData[ (cummulativeVoxelsReadCount * channelMetaData.byteCount) + j ];
+                        if ( channelData != null ) {
+                            byte[] nextChannelData = channelData.get( i );
+                            for ( int j=0; j < channelMetaData.byteCount; j++ ) {
+                                //                                                   REVERSING byte order for Java
+                                int targetOffset = (i * channelMetaData.byteCount) + channelMetaData.byteCount - j - 1;
+                                allChannelBytes[ targetOffset ] = nextChannelData[ (cummulativeVoxelsReadCount * channelMetaData.byteCount) + j ];
+                            }
+                        }
+                        else {
+                            allChannelBytes = allFChannelBytes;
                         }
                     }
                     for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {

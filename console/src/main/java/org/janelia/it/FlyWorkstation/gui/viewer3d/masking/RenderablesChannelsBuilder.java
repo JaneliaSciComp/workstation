@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeBrick;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
@@ -31,17 +32,17 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
 
     private ChannelMetaData channelMetaData;
     private byte[] volumeData;
-    private double downSampleRate = 2.0;
 
     private ChannelInterpreterI channelInterpreter;
+    private AlignmentBoardSettings settings;
 
     protected boolean needsChannelInit = false; // Initialized for emphasis.
     private Logger logger = LoggerFactory.getLogger( RenderablesChannelsBuilder.class );
 
-    public RenderablesChannelsBuilder( double downSampleRate ) {
+    public RenderablesChannelsBuilder( AlignmentBoardSettings settings ) {
         super();  // ...and I _mean_ that!
         needsChannelInit = true; // Must initialize the channel-specific data.
-        this.downSampleRate = downSampleRate;
+        this.settings = settings;
     }
 
     // DEBUG/TEST
@@ -176,6 +177,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         channelInterpreter.close();
 
         TextureDataI textureData = null;
+        double downSampleRate = settings.getDownSampleRate();
         if ( downSampleRate != 0.0 ) {
             DownSampler downSampler = new DownSampler( paddedSx, paddedSy, paddedSz );
             DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(
@@ -350,14 +352,6 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         } catch ( Exception ex ) {
             ex.printStackTrace();
         }
-    }
-
-    public double getDownSampleRate() {
-        return downSampleRate;
-    }
-
-    public void setDownSampleRate(double downSampleRate) {
-        this.downSampleRate = downSampleRate;
     }
 
 }

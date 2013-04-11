@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
@@ -31,11 +32,11 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     private Collection<RenderableBean> renderableBeans;
     private byte[] volumeData;
     private int byteCount = UNIVERSAL_MASK_BYTE_COUNT;
-    private double downSampleRate = 2.0;
+    private AlignmentBoardSettings settings;
 
     private boolean isInitialized = false;
-    public RenderablesMaskBuilder( double downSampleRate ) {
-        this.downSampleRate = downSampleRate;
+    public RenderablesMaskBuilder( AlignmentBoardSettings settings ) {
+        this.settings = settings;
     }
 
     //----------------------------------------IMPLEMENT MaskChanDataAcceptorI
@@ -113,6 +114,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
         logger.info( "Retrieving combined texture data." );
         // TODO: same decisioning as the RenderablesChannelsBuilder re how much to downsample.
         TextureDataI textureData;
+        double downSampleRate = settings.getDownSampleRate();
         if ( downSampleRate != 1.0 ) {
             DownSampler downSampler = new DownSampler( paddedSx, paddedSy, paddedSz );
             DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(
@@ -178,11 +180,4 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
         }
     }
 
-    public double getDownSampleRate() {
-        return downSampleRate;
-    }
-
-    public void setDownSampleRate(double downSampleRate) {
-        this.downSampleRate = downSampleRate;
-    }
 }

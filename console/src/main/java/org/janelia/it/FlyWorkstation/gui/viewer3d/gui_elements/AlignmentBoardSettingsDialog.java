@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements;
 
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,10 +39,12 @@ public class AlignmentBoardSettingsDialog extends JDialog {
     private Component centering;
     private JButton go;
     private JSlider brightnessSlider;
+    private JRadioButton useSignalDataRadio;
     private JComboBox downSampleRateDropdown;
 
     private double currentGamma = DEFAULT_GAMMA;
     private double currentDownSampleRate;
+    private boolean currentUseSignalData = true;
 
     private boolean readyForOutput = false;
 
@@ -65,11 +68,23 @@ public class AlignmentBoardSettingsDialog extends JDialog {
 
     /** Control who observes.  Synchronized for thread safety. */
     public synchronized void addSettingsListener( SettingsListener listener ) {
-        listeners.add( listener );
+        listeners.add(listener);
     }
 
     public synchronized void removeSettingsListener( SettingsListener listener ) {
-        listeners.remove( listener );
+        listeners.remove(listener);
+    }
+
+    /**
+     * Returns all settings here, at one swoop.
+     * @return user input.
+     */
+    public AlignmentBoardSettings getAlignmentBoardSettings() {
+        AlignmentBoardSettings settings = new AlignmentBoardSettings();
+        settings.setDownSampleRate( getDownsampleRate() );
+        settings.setGammaFactor( getGammaFactor() );
+        settings.setShowChannelData( isUseSignalData() );
+        return settings;
     }
 
     /**
@@ -126,6 +141,19 @@ public class AlignmentBoardSettingsDialog extends JDialog {
         currentDownSampleRate = downSampleRate;
     }
 
+    public void setUseSignalData( boolean use ) {
+        this.currentUseSignalData = use;
+    }
+
+    public boolean isUseSignalData() {
+        if ( ! readyForOutput ) {
+            return this.currentUseSignalData;
+        }
+        else {
+            return useSignalDataRadio.isSelected();
+        }
+    }
+
     //--------------------------------------------HELPERS
 
     /**
@@ -139,10 +167,16 @@ public class AlignmentBoardSettingsDialog extends JDialog {
                 listener.setBrightness( currentGamma );
             }
             double newDownSampleRate = getDownsampleRate();
-            if ( newDownSampleRate != currentDownSampleRate ) {
+            boolean newUseSignal = isUseSignalData();
+            if ( newDownSampleRate != currentDownSampleRate  ||
+                    newUseSignal != currentUseSignalData ) {
+
                 currentDownSampleRate = newDownSampleRate;
-                listener.setDownsampleRate( currentDownSampleRate );
+                currentUseSignalData = newUseSignal;
+                listener.updateSettings();
+
             }
+
         }
     }
 
@@ -173,6 +207,9 @@ public class AlignmentBoardSettingsDialog extends JDialog {
         downSampleRateDropdown.setBorder( new TitledBorder( "Down Sample Rate" ) );
         downSampleRateDropdown.setToolTipText( DOWN_SAMPLE_TOOLTIP );
 
+        useSignalDataRadio = new JRadioButton( "Use Signal Data" );
+        useSignalDataRadio.setSelected( true );
+
         JPanel centralPanel = new JPanel();
         centralPanel.setLayout( new GridBagLayout() );
         /*
@@ -196,12 +233,17 @@ public class AlignmentBoardSettingsDialog extends JDialog {
         );
 
         GridBagConstraints downSampleConstraints = new GridBagConstraints(
-                0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.SOUTH, GridBagConstraints.BOTH, insets, 0, 0
+                0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
+        );
+
+        GridBagConstraints signalDataConstraints = new GridBagConstraints(
+                0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
         );
 
         centralPanel.add( brightnessSlider, brightnessConstraints );
         centralPanel.add( downSampleRateDropdown, downSampleConstraints );
-        add( centralPanel, BorderLayout.CENTER );
+        centralPanel.add( useSignalDataRadio, signalDataConstraints );
+        add(centralPanel, BorderLayout.CENTER);
 
         JPanel bottomButtonPanel = new JPanel();
         bottomButtonPanel.setLayout( new BorderLayout() );
@@ -277,7 +319,7 @@ public class AlignmentBoardSettingsDialog extends JDialog {
     /** Callers should implmeent this to observe the input settings provided by uesr. */
     public static interface SettingsListener {
         void setBrightness( double brightness );
-        void setDownsampleRate( double downsampleRate );
+        void updateSettings();
     }
 
     public class LaunchAction extends AbstractAction {
