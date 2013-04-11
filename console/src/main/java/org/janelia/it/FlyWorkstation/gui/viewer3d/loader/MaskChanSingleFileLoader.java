@@ -156,7 +156,7 @@ public class MaskChanSingleFileLoader {
         channelMetaData.greenChannelInx = 2;
         channelMetaData.byteCount = 1;
 
-        allFChannelBytes = new byte[ channelMetaData.channelCount ];
+        allFChannelBytes = new byte[ channelMetaData.channelCount * channelMetaData.byteCount ];
         allFChannelBytes[ 0 ] = 127;
 
         if ( channelAcceptors != null ) {

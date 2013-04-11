@@ -40,25 +40,34 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
 
     @Override
     public void interpretChannelBytes(byte[] channelData, int targetPos) {
-        for ( int i = 0; i < channelMetaData.rawChannelCount; i++ ) {
-            int finalValue = 0;
-            // This is a local down-sample from N-bytes-per-channel to the required number only.
-            for ( int j = 0; j < channelMetaData.byteCount; j++ ) {
-                int nextByte = channelData[ (i * channelMetaData.byteCount) + j ];
-                if ( nextByte < 0 )
-                    nextByte += 256;
-                int shifter = channelMetaData.byteCount - j - 1;
-                finalValue += (nextByte << (8 * shifter));
+        if ( channelMetaData.byteCount == 1 ) {
+            // 1:1 straight copy to volume.
+            for ( int channelInx = 0; channelInx < channelMetaData.rawChannelCount; channelInx++ ) {
+                volumeData[ targetPos + channelInx ] = channelData[ channelInx ];
             }
-            finalValue /= 256;
+        }
+        else {
+            // N:1 divide by max-byte.
+            for ( int i = 0; i < channelMetaData.rawChannelCount; i++ ) {
+                int finalValue = 0;
+                // This is a local down-sample from N-bytes-per-channel to the required number only.
+                for ( int j = 0; j < channelMetaData.byteCount; j++ ) {
+                    int nextByte = channelData[ (i * channelMetaData.byteCount) + j ];
+                    if ( nextByte < 0 )
+                        nextByte += 256;
+                    int shifter = channelMetaData.byteCount - j - 1;
+                    finalValue += (nextByte << (8 * shifter));
+                }
+                finalValue /= 256;
 
-            if ( finalValue > maxValue ) {
-                maxValue = finalValue;
+                if ( finalValue > maxValue ) {
+                    maxValue = finalValue;
+                }
+
+                //  block of in-memory, interleaving the channels as the offsets follow.
+                int channelInx = orderedRgbIndexes[ i ];
+                volumeData[ targetPos + channelInx ] = (byte)finalValue;
             }
-
-            //  block of in-memory, interleaving the channels as the offsets follow.
-            int channelInx = orderedRgbIndexes[ i ];
-            volumeData[ targetPos + channelInx ] = (byte)finalValue;
         }
 
         // Pad out to the end, to create the alpha byte(s).
