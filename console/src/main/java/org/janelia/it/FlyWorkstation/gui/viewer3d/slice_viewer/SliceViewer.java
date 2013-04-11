@@ -50,7 +50,8 @@ implements MouseModalWidget, VolumeViewer
 	// protected Simple2dImageVolume volume0 = new Simple2dImageVolume(
 	// 		"/Users/brunsc/svn/jacs/console/src/main/java/images/kittens.jpg");	
 	protected TileServer volume0 = new TileServer(
-			"/Volumes/jacsData/brunsTest/clack_test16/Z");
+            "Q:\\\\brunsTest\\clack_test16\\Z");
+//			"/Volumes/jacsData/brunsTest/clack_test16/Z");
 	protected VolumeImage3d volumeImage = volume0;
 	// TODO - add dataChangedSignal to GLActor
 	protected SliceActor volumeActor = new SliceActor(volume0);
