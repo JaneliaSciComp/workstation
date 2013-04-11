@@ -38,13 +38,25 @@ public class DownSampler {
     protected DownsampledTextureData getDownSampledVolume(
             byte[] oneDVolume, int voxelBytes, double xScale, double yScale, double zScale
     ) {
-        DownsampledTextureData rtnVal = getDownSampledVolumeHelper(
-                oneDVolume, //create3DVolume( oneDVolume, voxelBytes ),
-                voxelBytes,
-                xScale,
-                yScale,
-                zScale
-        );
+        DownsampledTextureData rtnVal;
+        if ( xScale == yScale  &&  yScale == zScale  &&  zScale == 1.0 ) {
+            // Trivial case.
+            rtnVal = new DownsampledTextureData(
+                    oneDVolume,
+                    (int)sx, (int)sy, (int)sz,
+                    voxelBytes,
+                    xScale, yScale, zScale
+            );
+        }
+        else {
+            rtnVal = getDownSampledVolumeHelper(
+                    oneDVolume, //create3DVolume( oneDVolume, voxelBytes ),
+                    voxelBytes,
+                    xScale,
+                    yScale,
+                    zScale
+            );
+        }
 
         return rtnVal;
     }
