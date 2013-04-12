@@ -82,7 +82,7 @@ implements GLActor
 	// private TextureCache textureCache = new TextureCache();
 	private ExecutorService textureLoadExecutor = Executors.newFixedThreadPool(4);
 	private Set<PyramidTileIndex> neededTextures;
-	private PyramidTextureLoadAdapter loadAdapter;
+	// private PyramidTextureLoadAdapter loadAdapter;
 	
 	private ImageColorModel imageColorModel;
 	private SliceColorShader shader = new SliceColorShader();
@@ -299,20 +299,19 @@ implements GLActor
 	
 	private void queueTextureLoad(Set<PyramidTileIndex> textures) 
 	{
-		loadAdapter = tileServer.getLoadAdapter(); // TODO - is tile server the right place to get LoadAdapter?
+		// TODO - is tile server the right place to get LoadAdapter?
+		PyramidTextureLoadAdapter loadAdapter = tileServer.getLoadAdapter(); 
+		if (loadAdapter == null)
+			return;
 		for (PyramidTileIndex ix : textures) {
-			if (! tileServer.getTextureCache().containsKey(ix)) {
-				if (loadAdapter == null)
-					continue;
-				TileTexture t = new TileTexture(ix, loadAdapter);
-				t.getRamLoadedSignal().connect(getDataChangedSignal());
-				tileServer.getTextureCache().put(ix, t);
-			}
-			TileTexture texture = tileServer.getTextureCache().get(ix);
+			boolean isVirginTexture = ! tileServer.getTextureCache().containsKey(ix);
+			TileTexture texture = tileServer.getTextureCache().getOrCreate(ix, loadAdapter);
+			if (isVirginTexture)
+				texture.getRamLoadedSignal().connect(getDataChangedSignal());
 			// TODO - maybe only submit UNINITIALIZED textures, if we don't wish to retry failed ones
 			// TODO - handle MISSING textures vs. ERROR textures
 			if (texture.getStage().ordinal() < TileTexture.Stage.LOAD_QUEUED.ordinal()) 
-				textureLoadExecutor.submit(new PyramidTextureLoadWorker(texture, this));
+				textureLoadExecutor.submit(new ActiveTextureLoadWorker(texture, this));
 		}
 	}
 

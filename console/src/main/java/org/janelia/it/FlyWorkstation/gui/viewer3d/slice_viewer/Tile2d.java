@@ -44,6 +44,9 @@ implements GLActor
 
 	
 	public Tile2d(PyramidTileIndex key, PyramidTileFormat tileFormat) {
+		if (key == null) {
+			log.error("Tile with null index constructed");
+		}
 		this.index = key;
 		this.tileFormat = tileFormat;
 	}
@@ -54,6 +57,10 @@ implements GLActor
 		if (getStage().ordinal() >= Stage.BEST_TEXTURE_LOADED.ordinal())
 			return; // Already as good as it gets
 		PyramidTileIndex ix = getIndex();
+		if (ix == null) {
+			log.error("Tile with null index");
+			return;
+		}
 		TileTexture texture = textureCache.get(ix);
 		if ((texture != null) && (texture.getStage().ordinal() >= TileTexture.Stage.RAM_LOADED.ordinal()))
 		{
@@ -66,16 +73,51 @@ implements GLActor
 		ix = ix.zoomOut(); // Try some lower resolution textures
 		while (ix != null) {
 			texture = textureCache.get(ix);
-			if ((texture != null) && (texture.getStage().ordinal() >= TileTexture.Stage.RAM_LOADED.ordinal()))
-			{
+			if (texture == null) {
+				// log.info("cache miss no texture "+ix);
+				if (ix.getZoom() == ix.getMaxZoom()) {
+					log.error("should have this texture "+ix+", "+textureCache.size());
+					// texture = textureCache.get(ix);
+				}
+			}
+			else if (texture.getStage().ordinal() < TileTexture.Stage.RAM_LOADED.ordinal()) {
+				// log.info("cache miss texture not loaded "+ix);
+			}
+			else {
 				bestTexture = texture;
 				setStage(Stage.COARSE_TEXTURE_LOADED);
 				return;
 			}
-			// System.out.println("cache miss "+ix);
 			ix = ix.zoomOut();
 		}
 		// No texture was found; maybe next time
+		// log.info("texture cache miss "+getIndex());
+	}
+
+	
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((index == null) ? 0 : index.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Tile2d other = (Tile2d) obj;
+		if (index == null) {
+			if (other.index != null)
+				return false;
+		} else if (!index.equals(other.index))
+			return false;
+		return true;
 	}
 
 	public int getFilter() {
@@ -112,6 +154,8 @@ implements GLActor
 		bestTexture.init(gl);
 		PyramidTexture texture = bestTexture.getTexture();
 		assert(texture != null);
+		if (texture == null)
+			return;
 		texture.enable(gl);
 		texture.bind(gl);
 		texture.setTexParameteri(gl, GL2.GL_TEXTURE_WRAP_S, GL2.GL_CLAMP_TO_EDGE);

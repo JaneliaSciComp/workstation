@@ -11,10 +11,14 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 
 public class TileServer 
 implements VolumeImage3d
 {
+	// private static final Logger log = LoggerFactory.getLogger(TileServer.class);
+
 	private BoundingBox3d boundingBox3d = new BoundingBox3d();
 	//
 	private Camera3d camera;
@@ -24,7 +28,8 @@ implements VolumeImage3d
 	private double zoomOffset = 0.5; // tradeoff between optimal resolution (0.0) and speed.
 	private Signal volumeInitializedSignal = new Signal();
 	private PyramidTextureLoadAdapter loadAdapter;
-	
+	private TileSet previousTiles;
+	private Signal tileSetChangedSignal = new Signal();
 	
 	public TileServer(String folderName) {
         try {
@@ -36,9 +41,19 @@ implements VolumeImage3d
 
 	public TileSet createLatestTiles()
 	{
-		return createLatestTiles(getCamera(), getViewport());
+		TileSet result = createLatestTiles(getCamera(), getViewport());
+		if (! result.equals(previousTiles)) {
+			// log.info("Tile set changed");
+			tileSetChangedSignal.emit();
+		}
+		previousTiles = result;
+		return result;
 	}
 	
+	public Signal getTileSetChangedSignal() {
+		return tileSetChangedSignal;
+	}
+
 	protected TileSet createLatestTiles(Camera3d camera, Viewport viewport)
 	{
 		TileSet result = new TileSet();
@@ -177,7 +192,10 @@ implements VolumeImage3d
 				testLoadAdapter = new RavelerLoadAdapter(folderUrl);
 			}
 			else {
-				testLoadAdapter = new BlockTiffOctreeLoadAdapter(new File(folderUrl.toURI()));
+				File fileFolder = new File(folderUrl.toURI());
+				BlockTiffOctreeLoadAdapter btola = new BlockTiffOctreeLoadAdapter();
+				btola.setTopFolder(fileFolder);
+				testLoadAdapter = btola;
 			}
 		} catch (URISyntaxException e) {
 			e.printStackTrace();

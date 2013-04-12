@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.Vector;
 
 /**
  * A group of Tile2d that together form a complete image on the SliceViewer,
@@ -15,7 +14,7 @@ import java.util.Vector;
  *
  */
 public class TileSet 
-extends Vector<Tile2d>
+extends HashSet<Tile2d>
 {
 	private static final long serialVersionUID = 1L;
 
@@ -27,14 +26,23 @@ extends Vector<Tile2d>
 	
 	public boolean canDisplay() 
 	{
-		// Changed to return true if ANY tile can display something.
+		if (this.size() == 0)
+			return true;
+		// Display if a threshold number of tiles are displayable
+		double minProportion = 0.3;
+		int threshold = (int)(minProportion * this.size() + 0.5);
+		int textureCount = 0;
 		for (Tile2d tile : this) {
 			TileTexture texture = tile.getBestTexture();
 			if (texture == null)
 				continue;
 			if (texture.getStage().ordinal() >= TileTexture.Stage.RAM_LOADED.ordinal())
-				return true;
+				textureCount += 1;
 		}
+		if (textureCount == 0)
+			return false;
+		if (textureCount >= threshold)
+			return true;
 		return false;
 	}
 

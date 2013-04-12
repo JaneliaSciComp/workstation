@@ -33,7 +33,7 @@ implements PyramidTextureData
 	private int border = 0;
 	private int format = GL2.GL_RGB; // # channels
 	private int type = GL2.GL_BYTE; // precision/byte-order
-	private Buffer pixels = null; // prefer direct buffer; array backed buffer works too
+	private ByteBuffer pixels = null; // prefer direct buffer; array backed buffer works too
 
 	// Derived properties
 	private boolean linearized = false; // whether srgb corrected to linear in hardware
@@ -241,7 +241,7 @@ implements PyramidTextureData
 		return type;
 	}
 
-	public Buffer getPixels() {
+	public ByteBuffer getPixels() {
 		return pixels;
 	}
 
@@ -255,6 +255,56 @@ implements PyramidTextureData
 
 	public int getChannelCount() {
 		return channelCount;
+	}
+
+	public MinMax getMinMax() {
+		ByteBuffer bb = getPixels();
+		if (bb.capacity() < 1)
+			return null;
+		MinMax result = new MinMax();
+		bb.rewind();
+		boolean foundValue = false;
+		if (getBitDepth() == 16) {
+			ShortBuffer buf = bb.asShortBuffer();
+			while (buf.hasRemaining()) {
+				int val = buf.get();
+				if (val == 0)
+					continue;
+				if (! foundValue) { // initialize with first non-zero value
+					result.min = val;
+					result.max = val;
+					foundValue = true;
+				}
+				if (val > result.max)
+					result.max = val;
+				if (val < result.min)
+					result.min = val;
+			}
+		}
+		else {
+			while (bb.hasRemaining()) {
+				int val = bb.get();
+				if (val == 0)
+					continue;
+				if (! foundValue) { // initialize with first non-zero value
+					result.min = val;
+					result.max = val;
+					foundValue = true;
+				}
+				if (val > result.max)
+					result.max = val;
+				if (val < result.min)
+					result.min = val;
+			}
+		}
+		if (! foundValue)
+			return null;
+		return result;
+	}
+	
+	static public class MinMax {
+		public int min;
+		public int max;
 	}
 
 }

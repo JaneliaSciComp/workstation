@@ -1,11 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.util.Collection;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 
 /*
  * Wrap texture cache so indices can be interpolated for either quadtrees
@@ -18,28 +18,67 @@ public class TextureCache
 		OCTREE
 	}
 	
-	private static final Logger log = LoggerFactory.getLogger(TextureCache.class);
+	public PyramidIndexInterpolator getIndexInterpolator() {
+		return indexInterpolator;
+	}
+
+	// private static final Logger log = LoggerFactory.getLogger(TextureCache.class);
 	
 	private IndexStyle indexStyle = IndexStyle.QUADTREE;
 	
 	// Cache actually stores octree or quadtree or whatever index.
 	// Interface uses quadtree index.
 	// ...with the index interpolator class to mediate between the two.
-	private Map<PyramidTileIndex, TileTexture> cache = new Hashtable<PyramidTileIndex, TileTexture>();
-	PyramidIndexInterpolator indexInterpolator = new QuadtreeInterpolator();
+	private Map<PyramidTileIndex, TileTexture> cache = new HashMap<PyramidTileIndex, TileTexture>();
+	private PyramidIndexInterpolator indexInterpolator = new QuadtreeInterpolator();
+	public Signal getCacheClearedSignal() {
+		return cacheClearedSignal;
+	}
 
-	public void clear() {cache.clear();}
-	
-	boolean containsKey(PyramidTileIndex quadtreeIndex) {
-		PyramidTileIndex otherIndex = indexInterpolator.fromQuadtreeIndex(quadtreeIndex);
-		boolean result = cache.containsKey(otherIndex);
-		// if (! result)
-		// 	System.out.println("cache miss "+quadtreeIndex+"/"+otherIndex);
-		return result;
+	private Signal cacheClearedSignal = new Signal();
+
+	public TextureCache() {
+		// log.info("Creating texture cache");
 	}
 	
-	TileTexture get(PyramidTileIndex quadtreeIndex) {
-		return cache.get(indexInterpolator.fromQuadtreeIndex(quadtreeIndex));
+	synchronized public void clear() {
+		// log.info("Clearing texture cache");
+		cache.clear();
+		cacheClearedSignal.emit();
+	}
+	
+	boolean containsKey(PyramidTileIndex quadtreeIndex) {
+		return cache.containsKey(getCanonicalIndex(quadtreeIndex));
+	}
+	
+	synchronized TileTexture get(PyramidTileIndex quadtreeIndex) {
+		PyramidTileIndex index = getCanonicalIndex(quadtreeIndex);
+		return cache.get(index);
+	}
+	
+	synchronized TileTexture getOrCreate(
+			PyramidTileIndex quadtreeIndex, 
+			PyramidTextureLoadAdapter loadAdapter) 
+	{
+		PyramidTileIndex index = getCanonicalIndex(quadtreeIndex);
+		if (! containsKey(index)) {
+			cache.put(index, new TileTexture(index, loadAdapter));
+		}
+		return cache.get(index);
+	}
+	
+	/**
+	 * For quadtrees, getCanonicalIndex() returns the index passed in.
+	 * For octrees, returns a canonicalized version of the input quadtree index.
+	 * @param index
+	 * @return
+	 */
+	public PyramidTileIndex getCanonicalIndex(PyramidTileIndex index) {
+		if (indexInterpolator == null)
+			return null;
+		PyramidTileIndex result = indexInterpolator.fromQuadtreeIndex(index);
+		result = indexInterpolator.toQuadtreeIndex(result);
+		return result;
 	}
 	
 	public IndexStyle getIndexStyle() {
@@ -60,11 +99,11 @@ public class TextureCache
 		}
 	}
 
-	public TileTexture put(PyramidTileIndex quadtreeIndex, TileTexture value)
+	synchronized public TileTexture put(PyramidTileIndex quadtreeIndex, TileTexture value)
 	{
-		PyramidTileIndex otherIndex = indexInterpolator.fromQuadtreeIndex(quadtreeIndex);
-		// System.out.println("Inserting cache "+quadtreeIndex+"/"+otherIndex);
-		return cache.put(otherIndex, value);
+		PyramidTileIndex ix = getCanonicalIndex(quadtreeIndex);
+		// log.info("inserting texture at "+ix);
+		return cache.put(ix, value);
 	}
 	
 	public int size() {return cache.size();}
@@ -117,5 +156,5 @@ public class TextureCache
 			return otherIndex;
 		}
 	}
-	
+
 }

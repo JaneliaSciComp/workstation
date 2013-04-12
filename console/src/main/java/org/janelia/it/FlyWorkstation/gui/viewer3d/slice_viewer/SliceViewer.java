@@ -23,8 +23,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 
 // Viewer widget for viewing 2D quadtree tiles from pyramid data structure
 public class SliceViewer 
@@ -32,7 +32,7 @@ extends BaseGLViewer
 implements MouseModalWidget, VolumeViewer
 {
 	private static final long serialVersionUID = 1L;
-	private static final Logger log = LoggerFactory.getLogger(SliceViewer.class);
+	// private static final Logger log = LoggerFactory.getLogger(SliceViewer.class);
 	static public GLProfile glProfile;
 	static {
 		glProfile = BaseGLViewer.profile;

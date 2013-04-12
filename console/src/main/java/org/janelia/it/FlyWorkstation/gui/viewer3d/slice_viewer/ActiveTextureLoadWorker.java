@@ -9,14 +9,14 @@ import org.slf4j.LoggerFactory;
  * @author brunsc
  *
  */
-public class PyramidTextureLoadWorker implements Runnable 
+public class ActiveTextureLoadWorker implements Runnable 
 {
-	private static final Logger log = LoggerFactory.getLogger(PyramidTextureLoadWorker.class);
+	private static final Logger log = LoggerFactory.getLogger(ActiveTextureLoadWorker.class);
 	
 	private TileTexture texture;
 	private SliceActor sliceActor;
 
-	public PyramidTextureLoadWorker(TileTexture texture, SliceActor sliceActor) 
+	public ActiveTextureLoadWorker(TileTexture texture, SliceActor sliceActor) 
 	{
 		if (texture.getStage().ordinal() < TileTexture.Stage.LOAD_QUEUED.ordinal())
 			texture.setStage(TileTexture.Stage.LOAD_QUEUED);
