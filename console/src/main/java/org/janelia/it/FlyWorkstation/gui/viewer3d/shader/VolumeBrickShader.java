@@ -28,6 +28,12 @@ public class VolumeBrickShader extends AbstractShader {
 
     private boolean volumeMaskApplied = false;
     private float gammaAdjustment = 1.0f;
+    // As all -1, sends signal "no cropping required."
+    private int[] cropCoords = new int[] {
+        -1, -1,  // startX, endX
+        -1, -1,  // startY, endY
+        -1, -1   // startZ, endZ
+    };
 
     @Override
     public String getVertexShader() {
@@ -51,6 +57,8 @@ public class VolumeBrickShader extends AbstractShader {
         pushMaskUniform( gl, shaderProgram );
         pushGammaUniform( gl, shaderProgram );
         pushFilterUniform( gl, shaderProgram );
+        pushCropUniforms( gl, shaderProgram );
+
         setTextureUniforms( gl );
     }
 
@@ -91,6 +99,20 @@ public class VolumeBrickShader extends AbstractShader {
         this.gammaAdjustment = gammaAdjustment;
     }
 
+    /** Allow caller to tell which crop coords to upload when the time comes. */
+    public void setCropCoords( int[] cropCoords ) {
+        if ( cropCoords.length < 6 ) {
+            throw new IllegalArgumentException("Crop coords need a start and end in three dimensions.");
+        }
+        this.cropCoords = cropCoords;
+    }
+
+    public void setCropCoords( int[] xStartEnd, int[] yStartEnd, int[] zStartEnd ) {
+        setCropX( xStartEnd );
+        setCropY( yStartEnd );
+        setCropZ( zStartEnd );
+    }
+
     public void unload(GL2 gl) {
         gl.glUseProgram(previousShader);
     }
@@ -110,8 +132,23 @@ public class VolumeBrickShader extends AbstractShader {
         if ( signalTextureLoc == -1 ) {
             throw new RuntimeException( "Failed to find " + shaderUniformName + " texture location." );
         }
-        gl.glUniform1i( signalTextureLoc, textureMediator.getTextureOffset() );
+        gl.glUniform1i(signalTextureLoc, textureMediator.getTextureOffset());
         // This did not work.  GL.GL_TEXTURE1 ); //textureIds[ 1 ] );
+    }
+
+    private void setCropX( int[] startXendX ) {
+        cropCoords[ 0 ] = startXendX[ 0 ];
+        cropCoords[ 1 ] = startXendX[ 1 ];
+    }
+
+    private void setCropY( int[] startYendY ) {
+        cropCoords[ 2 ] = startYendY[ 0 ];
+        cropCoords[ 3 ] = startYendY[ 1 ];
+    }
+
+    private void setCropZ( int[] startZendZ ) {
+        cropCoords[ 4 ] = startZendZ[ 0 ];
+        cropCoords[ 5 ] = startZendZ[ 1 ];
     }
 
     private void pushMaskUniform( GL2 gl, int shaderProgram ) {
@@ -130,6 +167,36 @@ public class VolumeBrickShader extends AbstractShader {
             throw new RuntimeException( "Failed to find gamma adjustment setting location." );
         }
         gl.glUniform1f(gammaAdjustmentLoc, gammaAdjustment);
+    }
+
+    /** Upload all cropping starts/ends to GPU. */
+    private void pushCropUniforms( GL2 gl, int shaderProgram ) {
+        if ( cropCoords[ 0 ] > -1 ) {
+            for ( int i = 0; i < 6; i++ ) {
+                // Example: startCropX is for item i == 0.
+                // Example: endCropZ is for item i == 5.
+                String startEnd = i % 2 == 0 ? "start" : "end";
+                String xyz = "XYZ".substring( i/2, i/2 + 1 );
+                String cropUniformName = String.format("%sCrop%s", startEnd, xyz);
+                int adjustmentLoc = gl.glGetUniformLocation(shaderProgram, cropUniformName);
+                if ( adjustmentLoc == -1 ) {
+                    throw new RuntimeException( "Failed to find uniform location for " + cropUniformName );
+                }
+                System.out.println(
+                        "Have adjustment location of " + adjustmentLoc + " for " + cropUniformName +
+                                ", and setting it to " + cropCoords[ i ]
+                );
+                float scaledValue = (float) cropCoords[i] / signalTextureMediator.getVolumeMicrometers()[i / 2].floatValue();
+                gl.glUniform1f(
+                        adjustmentLoc,
+                        scaledValue
+                );
+                int setUniformError = gl.glGetError();
+                if ( setUniformError != 0 ) {
+                    throw new RuntimeException( "Failed to set uniform for " + cropUniformName + " error is " + setUniformError );
+                }
+            }
+        }
     }
 
     private void pushFilterUniform(GL2 gl, int shaderProgram) {

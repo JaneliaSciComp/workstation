@@ -8,6 +8,15 @@ uniform float gammaAdjustment = 1.0;
 uniform vec4 colorMask;
 uniform int hasMaskingTexture;
 
+// "Cropping" region driven by feeds into the shader.
+// As soon as any cropping is done, ALL the below must have values in other than -1.
+uniform float startCropX = -1.0;
+uniform float endCropX = 1.0;
+uniform float startCropY = -1.0;
+uniform float endCropY = 1.0;
+uniform float startCropZ = -1.0;
+uniform float endCropZ = 1.0;
+
 // This takes the color as represented in the texture volume for this fragment and
 // eliminates colors opted out by the user.
 vec4 colorFilter()
@@ -137,6 +146,40 @@ vec4 gammaAdjust(vec4 origColor)
     return adjustedColor;
 }
 
+vec4 crop(vec4 origColor)
+{
+    vec3 point = gl_TexCoord[ 0 ].xyz;
+    bool inCrop = true;
+    if ( startCropX > -0.5 ) {
+        if ( point.x < startCropX ) {
+            inCrop = false;
+        }
+        else if ( point.x > endCropX ) {
+            inCrop = false;
+        }
+        else if ( point.y < startCropY ) {
+            inCrop = false;
+        }
+        else if ( point.y > endCropY ) {
+            inCrop = false;
+        }
+        else if ( point.z < startCropZ ) {
+            inCrop = false;
+        }
+        else if ( point.z > endCropZ ) {
+            inCrop = false;
+        }
+    }
+    if ( inCrop == true ) {
+        return origColor;
+    }
+    else {
+        // Very light crop color.
+        return vec4( 0.05 * origColor.x, 0.05 * origColor.y, 0.05 * origColor.z, 1.0 );
+//        return vec4( 0.2 , 0.2 , 0.2 , 1.0 );
+    }
+}
+
 void main()
 {
     // NOTE: if the use of colorMask is commented away, the shader Java counterpart
@@ -146,7 +189,8 @@ void main()
 
     vec4 origColor = colorFilter();
     vec4 maskedColor = volumeMask(origColor);
-    gl_FragColor = gammaAdjust(maskedColor);
+    vec4 gammaAdjustedColor = gammaAdjust(maskedColor);
+    gl_FragColor = crop(gammaAdjustedColor);
 
 }
 
