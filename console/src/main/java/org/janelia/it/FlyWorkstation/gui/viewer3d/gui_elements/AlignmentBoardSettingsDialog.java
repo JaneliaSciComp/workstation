@@ -25,10 +25,13 @@ import java.util.List;
  */
 public class AlignmentBoardSettingsDialog extends JDialog {
     public static final double DEFAULT_DOWNSAMPLE_RATE = 2.0;
-    private static final String DOWN_SAMPLE_TOOLTIP = "Data sent to screen may be too large for your graphics card.\n" +
+    private static final String DOWN_SAMPLE_TOOLTIP =
+            "<html>" +
+            "Data sent to screen may be too large for your graphics card.<br>" +
             "Therefore, they are downsampled at a default rate of 1.0:" + DEFAULT_DOWNSAMPLE_RATE +
-            ".\nHowever, you may wish to move that rate up or down, depending on your knowledge of the\n" +
-            "advanced hardware on your system.  Higher values mean larger, blockier voxels, and less memory.";
+            ".<br>However, you may wish to move that rate up or down, depending on your knowledge of the<br>" +
+            "advanced hardware on your system.  Higher values mean larger, blockier voxels, and less memory."
+            + "</html>";
     public static final double DEFAULT_GAMMA = 1.0;
 
     private static final String LAUNCH_AS = "Alignment Board Settings";
@@ -39,7 +42,7 @@ public class AlignmentBoardSettingsDialog extends JDialog {
     private Component centering;
     private JButton go;
     private JSlider brightnessSlider;
-    private JRadioButton useSignalDataRadio;
+    private JCheckBox useSignalDataCheckbox;
     private JComboBox downSampleRateDropdown;
 
     private double currentGamma = DEFAULT_GAMMA;
@@ -118,7 +121,7 @@ public class AlignmentBoardSettingsDialog extends JDialog {
         if ( ! readyForOutput )
             return currentGamma;
         int value = brightnessSlider.getValue();
-        double rtnVal = (value - 10.0) / -5.0;
+        double rtnVal = (((double)value/100.0) - 10.0) / -5.0;
         logger.info( "Returning gamma factor of {} for {}.", rtnVal, value );
         return rtnVal;
     }
@@ -150,7 +153,7 @@ public class AlignmentBoardSettingsDialog extends JDialog {
             return this.currentUseSignalData;
         }
         else {
-            return useSignalDataRadio.isSelected();
+            return useSignalDataCheckbox.isSelected();
         }
     }
 
@@ -183,13 +186,13 @@ public class AlignmentBoardSettingsDialog extends JDialog {
     private void createGui() {
         setLayout( new BorderLayout() );
         brightnessSlider = new JSlider();
-        brightnessSlider.setMaximum( 10 );
+        brightnessSlider.setMaximum( 1000 );
         brightnessSlider.setMinimum(0);
-        brightnessSlider.setMajorTickSpacing(5);
-        brightnessSlider.setMinorTickSpacing(1);
-        brightnessSlider.setLabelTable(brightnessSlider.createStandardLabels(1));
+        brightnessSlider.setMajorTickSpacing(500);
+        brightnessSlider.setMinorTickSpacing(100);
+        brightnessSlider.setLabelTable(brightnessSlider.createStandardLabels(100));
         brightnessSlider.setOrientation(JSlider.HORIZONTAL);
-        brightnessSlider.setValue(5);  // Center it up.
+        brightnessSlider.setValue(500);  // Center it up.
         brightnessSlider.setPaintLabels(true);
         brightnessSlider.setPaintTicks(true);
         brightnessSlider.setToolTipText( GAMMA_TOOLTIP );
@@ -207,8 +210,8 @@ public class AlignmentBoardSettingsDialog extends JDialog {
         downSampleRateDropdown.setBorder( new TitledBorder( "Down Sample Rate" ) );
         downSampleRateDropdown.setToolTipText( DOWN_SAMPLE_TOOLTIP );
 
-        useSignalDataRadio = new JRadioButton( "Use Signal Data" );
-        useSignalDataRadio.setSelected( true );
+        useSignalDataCheckbox = new JCheckBox( "Use Signal Data" );
+        useSignalDataCheckbox.setSelected(true);
 
         JPanel centralPanel = new JPanel();
         centralPanel.setLayout( new GridBagLayout() );
@@ -225,15 +228,14 @@ public class AlignmentBoardSettingsDialog extends JDialog {
          * @param insets    The initial insets value.
          * @param ipadx     The initial ipadx value.
          * @param ipady     The initial ipady value.
-
          */
         Insets insets = new Insets( 3, 3, 3, 3 );
         GridBagConstraints brightnessConstraints = new GridBagConstraints(
-                0, 0, 1, 1, 0.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
+                0, 0, 3, 1, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
         );
 
         GridBagConstraints downSampleConstraints = new GridBagConstraints(
-                0, 1, 1, 1, 0.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
+                0, 1, 1, 1, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
         );
 
         GridBagConstraints signalDataConstraints = new GridBagConstraints(
@@ -242,7 +244,7 @@ public class AlignmentBoardSettingsDialog extends JDialog {
 
         centralPanel.add( brightnessSlider, brightnessConstraints );
         centralPanel.add( downSampleRateDropdown, downSampleConstraints );
-        centralPanel.add( useSignalDataRadio, signalDataConstraints );
+        centralPanel.add( useSignalDataCheckbox, signalDataConstraints );
         add(centralPanel, BorderLayout.CENTER);
 
         JPanel bottomButtonPanel = new JPanel();
