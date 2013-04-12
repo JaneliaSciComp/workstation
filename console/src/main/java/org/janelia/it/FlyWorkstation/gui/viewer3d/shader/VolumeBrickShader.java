@@ -29,10 +29,13 @@ public class VolumeBrickShader extends AbstractShader {
     private boolean volumeMaskApplied = false;
     private float gammaAdjustment = 1.0f;
     // As all -1, sends signal "no cropping required."
-    private int[] cropCoords = new int[] {
-        -1, -1,  // startX, endX
-        -1, -1,  // startY, endY
-        -1, -1   // startZ, endZ
+    private float[] cropCoords = new float[] {
+//        0.0f, 1.0f,  // startX, endX
+//        0.6f, 0.7f,  // startY, endY
+//        0.1f, 0.8f   // startZ, endZ
+            -1.0f, -1.0f,  // startX, endX
+            -1.0f, -1.0f,  // startY, endY
+            -1.0f, -1.0f   // startZ, endZ
     };
 
     @Override
@@ -99,15 +102,22 @@ public class VolumeBrickShader extends AbstractShader {
         this.gammaAdjustment = gammaAdjustment;
     }
 
-    /** Allow caller to tell which crop coords to upload when the time comes. */
-    public void setCropCoords( int[] cropCoords ) {
+    /**
+     *  Allow caller to tell which crop coords to upload when the time comes.  These will be specified
+     *  as values between 0.0 and 1.0.
+     */
+    public void setCropCoords( float[] cropCoords ) {
         if ( cropCoords.length < 6 ) {
             throw new IllegalArgumentException("Crop coords need a start and end in three dimensions.");
         }
         this.cropCoords = cropCoords;
     }
 
-    public void setCropCoords( int[] xStartEnd, int[] yStartEnd, int[] zStartEnd ) {
+    /**
+     *  Allow caller to tell which crop coords to upload when the time comes.  These will be specified
+     *  as values between 0.0 and 1.0.
+     */
+    public void setCropCoords( float[] xStartEnd, float[] yStartEnd, float[] zStartEnd ) {
         setCropX( xStartEnd );
         setCropY( yStartEnd );
         setCropZ( zStartEnd );
@@ -136,19 +146,24 @@ public class VolumeBrickShader extends AbstractShader {
         // This did not work.  GL.GL_TEXTURE1 ); //textureIds[ 1 ] );
     }
 
-    private void setCropX( int[] startXendX ) {
-        cropCoords[ 0 ] = startXendX[ 0 ];
-        cropCoords[ 1 ] = startXendX[ 1 ];
+    private void setCropX( float[] startXendX ) {
+        setCropAny( startXendX, 0, 1 );
     }
 
-    private void setCropY( int[] startYendY ) {
-        cropCoords[ 2 ] = startYendY[ 0 ];
-        cropCoords[ 3 ] = startYendY[ 1 ];
+    private void setCropY( float[] startYendY ) {
+        setCropAny( startYendY, 2, 3 );
     }
 
-    private void setCropZ( int[] startZendZ ) {
-        cropCoords[ 4 ] = startZendZ[ 0 ];
-        cropCoords[ 5 ] = startZendZ[ 1 ];
+    private void setCropZ( float[] startZendZ ) {
+        setCropAny( startZendZ, 4, 5 );
+    }
+
+    private void setCropAny( float[] startEnd, int startCoord, int endCoord ) {
+        if ( startEnd[ 0 ] > startEnd[ 1 ] ) {
+            throw new IllegalArgumentException("Invalid range " + startEnd[ 0 ] + ".." + startEnd[ 1 ]);
+        }
+        cropCoords[ startCoord ] = startEnd[ 0 ];
+        cropCoords[ endCoord ] = startEnd[ 1 ];
     }
 
     private void pushMaskUniform( GL2 gl, int shaderProgram ) {
@@ -182,14 +197,13 @@ public class VolumeBrickShader extends AbstractShader {
                 if ( adjustmentLoc == -1 ) {
                     throw new RuntimeException( "Failed to find uniform location for " + cropUniformName );
                 }
-                System.out.println(
-                        "Have adjustment location of " + adjustmentLoc + " for " + cropUniformName +
-                                ", and setting it to " + cropCoords[ i ]
-                );
-                float scaledValue = (float) cropCoords[i] / signalTextureMediator.getVolumeMicrometers()[i / 2].floatValue();
+                //System.out.println(
+                //        "Have adjustment location of " + adjustmentLoc + " for " + cropUniformName +
+                //                ", and setting it to " + cropCoords[ i ]
+                //);
                 gl.glUniform1f(
                         adjustmentLoc,
-                        scaledValue
+                        cropCoords[i]
                 );
                 int setUniformError = gl.glGetError();
                 if ( setUniformError != 0 ) {
