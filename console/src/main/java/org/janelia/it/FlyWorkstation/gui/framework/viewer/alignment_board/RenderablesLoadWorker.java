@@ -1,15 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardSettingsDialog;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.*;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.MaskChanRenderableData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableDataSourceI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
@@ -17,8 +13,6 @@ import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import java.awt.*;
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -36,8 +30,6 @@ import java.util.concurrent.CyclicBarrier;
  */
 public class RenderablesLoadWorker extends SimpleWorker {
 
-    private Mip3d mip3d;
-    private JComponent viewer;
     private Boolean loadFiles = true;
 
     private MaskChanMultiFileLoader compartmentLoader;
@@ -49,23 +41,23 @@ public class RenderablesLoadWorker extends SimpleWorker {
     private RenderableDataSourceI dataSource;
     private AlignmentBoardSettings alignmentBoardSettings;
 
+    private AlignmentBoardControllable controlCallback;
+
     private FileResolver resolver;
 
     private Logger logger;
 
     public RenderablesLoadWorker(
-            JComponent container,
             RenderableDataSourceI dataSource,
-            Mip3d mip3d,
             RenderMappingI renderMapping,
+            AlignmentBoardControllable controlCallback,
             AlignmentBoardSettings settings
     ) {
         logger = LoggerFactory.getLogger(RenderablesLoadWorker.class);
         this.dataSource = dataSource;
-        this.mip3d = mip3d;
-        this.viewer = container;
         this.renderMapping = renderMapping;
         this.alignmentBoardSettings = settings;
+        this.controlCallback = controlCallback;
     }
 
     public void setResolver( FileResolver resolver ) {
@@ -120,24 +112,12 @@ public class RenderablesLoadWorker extends SimpleWorker {
 
     @Override
     protected void hadSuccess() {
-        viewer.revalidate();
-        viewer.repaint();
-
-        if ( loadFiles ) {
-            mip3d.refresh();
-        }
-        else {
-            mip3d.refreshRendering();
-        }
-
+        controlCallback.loadCompletion(true, loadFiles, null);
     }
 
     @Override
     protected void hadError(Throwable error) {
-        viewer.removeAll();
-        viewer.revalidate();
-        viewer.repaint();
-        SessionMgr.getSessionMgr().handleException(error);
+        controlCallback.loadCompletion(false, loadFiles, error);
     }
 
     /**
@@ -146,11 +126,10 @@ public class RenderablesLoadWorker extends SimpleWorker {
      * @param metaDatas one thread for each of these.
      */
     private void multiThreadedDataLoad(Collection<MaskChanRenderableData> metaDatas) {
-        mip3d.clear();
+        controlCallback.clearDisplay();
 
         if ( metaDatas == null  ||  metaDatas.size() == 0 ) {
             logger.info( "No renderables found for alignment board " + dataSource.getName() );
-            mip3d.clear();
         }
         else {
             logger.info( "In load thread, after getting bean list." );
@@ -170,14 +149,7 @@ public class RenderablesLoadWorker extends SimpleWorker {
 
         }
 
-        mip3d.refresh();
-
-        // Strip any "show-loading" off the viewer.
-        viewer.removeAll();
-
-        // Add this last.  "show-loading" removes it.  This way, it is shown only
-        // when it becomes un-busy.
-        viewer.add(mip3d, BorderLayout.CENTER);
+        controlCallback.dataLoadComplete();
     }
 
     /**
@@ -203,12 +175,7 @@ public class RenderablesLoadWorker extends SimpleWorker {
             TextureDataI signalTexture = signalBuilderRunnable.getTextureData();
             TextureDataI maskTexture = maskBuilderRunnable.getTextureData();
 
-
-            if ( ! mip3d.setVolume(
-                    signalTexture, maskTexture, renderMapping, (float)AlignmentBoardSettingsDialog.DEFAULT_GAMMA
-            ) ) {
-                logger.error( "Failed to load volume to mip3d." );
-            }
+            controlCallback.loadVolume(signalTexture, maskTexture);
 
         } catch ( BrokenBarrierException bbe ) {
             logger.error( "Barrier await failed during texture build.", bbe );

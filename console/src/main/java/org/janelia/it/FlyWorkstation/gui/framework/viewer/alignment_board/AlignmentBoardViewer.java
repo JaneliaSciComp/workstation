@@ -20,6 +20,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardSet
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ABContextDataSource;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.domain.Neuron;
 import org.janelia.it.FlyWorkstation.model.domain.Sample;
@@ -42,7 +43,7 @@ import com.google.common.eventbus.Subscribe;
  *
  * Shows alignment board relevant entities in 3D.
  */
-public class AlignmentBoardViewer extends Viewer {
+public class AlignmentBoardViewer extends Viewer implements AlignmentBoardControllable {
 
     private static final Logger log = LoggerFactory.getLogger(AlignmentBoardViewer.class);
     
@@ -277,6 +278,66 @@ public class AlignmentBoardViewer extends Viewer {
         }
     }
 
+    //---------------------------------------IMPLEMNTATION of AlignmentBoardControllable
+    @Override
+    public void clearDisplay() {
+        mip3d.clear();
+    }
+
+    /**
+     * Callback from loader threads to control loading information.
+     *
+     * @param signalTexture for the signal
+     * @param maskTexture for the mask
+     */
+    @Override
+    public void loadVolume( TextureDataI signalTexture, TextureDataI maskTexture ) {
+
+        if ( ! mip3d.setVolume(
+                signalTexture, maskTexture, renderMapping, (float)AlignmentBoardSettingsDialog.DEFAULT_GAMMA
+        ) ) {
+            logger.error( "Failed to load volume to mip3d." );
+        }
+
+    }
+
+    @Override
+    public void dataLoadComplete() {
+        mip3d.refresh();
+
+        // Strip any "show-loading" off the viewer.
+        removeAll();
+
+        // Add this last.  "show-loading" removes it.  This way, it is shown only
+        // when it becomes un-busy.
+        add(mip3d, BorderLayout.CENTER);
+
+    }
+
+    @Override
+    public void loadCompletion( boolean successful, boolean loadFiles, Throwable error ) {
+        if ( successful ) {
+            revalidate();
+            repaint();
+
+            if ( loadFiles ) {
+                mip3d.refresh();
+            }
+            else {
+                mip3d.refreshRendering();
+            }
+
+        }
+        else {
+            removeAll();
+            revalidate();
+            repaint();
+            SessionMgr.getSessionMgr().handleException(error);
+        }
+
+    }
+
+    //---------------------------------------HELPERS
     private void establishObserver() {
         modelMgrObserver = new ModelMgrListener( this, alignmentBoard );
         ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
@@ -322,7 +383,7 @@ public class AlignmentBoardViewer extends Viewer {
             // Here, should load volumes, for all the different items given.
             //loadWorker = new ABLoadWorker( this, context, mip3d );
             loadWorker = new RenderablesLoadWorker(
-                    this, new ABContextDataSource( context ), mip3d, renderMapping, settings.getAlignmentBoardSettings()
+                    new ABContextDataSource( context ), renderMapping, this, settings.getAlignmentBoardSettings()
             );
             loadWorker.execute();
 
@@ -361,7 +422,7 @@ public class AlignmentBoardViewer extends Viewer {
 
             //loadWorker = new ABLoadWorker( this, context, mip3d, renderMappings );
             loadWorker = new RenderablesLoadWorker(
-                    this, new ABContextDataSource(context), mip3d, renderMapping, settings.getAlignmentBoardSettings()
+                    new ABContextDataSource(context), renderMapping, this, settings.getAlignmentBoardSettings()
             );
             loadWorker.setLoadFilesFlag( Boolean.FALSE );
             loadWorker.execute();
