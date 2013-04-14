@@ -116,7 +116,7 @@ public class TestMaskChan3DViz {
         }
 
         @Override
-        public void dataLoadComplete() {
+        public void displayReady() {
             mip3d.refresh();
 
             // Strip any "show-loading" off the viewer.
