@@ -1,11 +1,16 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
-import java.awt.BorderLayout;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.Callable;
 
-import javax.swing.JComponent;
-import javax.swing.JLabel;
+import javax.swing.*;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
@@ -17,6 +22,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerPane;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardSettingsDialog;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.RangeSlider;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ABContextDataSource;
@@ -46,12 +52,22 @@ import com.google.common.eventbus.Subscribe;
 public class AlignmentBoardViewer extends Viewer implements AlignmentBoardControllable {
 
     private static final Logger log = LoggerFactory.getLogger(AlignmentBoardViewer.class);
-    
+    private static final String GEO_SEARCH_TOOLTIP = "<html>" +
+            "Adjust the X, Y, and Z sliders, to leave only the template volume of <br>" +
+            "search lit.  This template volume will then be used to derive the coordinates, <br>" +
+            "to search other specimens and present the resulting overlappoing volume." +
+            "</html>";
+
     private Entity alignmentBoard;
     private RootedEntity albRootedEntity;
 
     private Mip3d mip3d;
     private RenderablesLoadWorker loadWorker;
+    private RangeSlider xSlider;
+    private RangeSlider ySlider;
+    private RangeSlider zSlider;
+    private JPanel wrapperPanel;
+
     private ModelMgrObserver modelMgrObserver;
     private RenderMappingI renderMapping;
     private BrainGlow brainGlow;
@@ -298,11 +314,29 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         ) ) {
             logger.error( "Failed to load volume to mip3d." );
         }
+        else {
+            xSlider.setMaximum( signalTexture.getSx() );
+            ySlider.setMaximum( signalTexture.getSy() );
+            zSlider.setMaximum( signalTexture.getSz() );
+
+            xSlider.setValue( 0 );
+            xSlider.setUpperValue( signalTexture.getSx() );
+            ySlider.setValue( 0 );
+            ySlider.setUpperValue( signalTexture.getSy() );
+            zSlider.setValue( 0 );
+            zSlider.setUpperValue( signalTexture.getSz() );
+
+            ChangeListener listener = new SliderChangeListener( xSlider, ySlider, zSlider, mip3d );
+
+            xSlider.addChangeListener( listener );
+            ySlider.addChangeListener( listener );
+            zSlider.addChangeListener( listener );
+        }
 
     }
 
     @Override
-    public void dataLoadComplete() {
+    public void displayReady() {
         mip3d.refresh();
 
         // Strip any "show-loading" off the viewer.
@@ -310,7 +344,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
         // Add this last.  "show-loading" removes it.  This way, it is shown only
         // when it becomes un-busy.
-        add(mip3d, BorderLayout.CENTER);
+        add(wrapperPanel, BorderLayout.CENTER);
 
     }
 
@@ -376,6 +410,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
             if ( mip3d == null ) {
                 mip3d = createMip3d();
+                wrapperPanel = createWrapperPanel( mip3d );
             }
 
             mip3d.refresh();
@@ -407,6 +442,37 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         );
 
         rtnVal.addMenuAction( settings.getLaunchAction() );
+        return rtnVal;
+    }
+
+    private JPanel createWrapperPanel( Mip3d mip3d ) {
+        JPanel rtnVal = new JPanel();
+        rtnVal.setLayout( new BorderLayout() );
+        xSlider = new RangeSlider( 0, 100 );  // Dummy starting ranges.
+        ySlider = new RangeSlider( 0, 100 );
+        zSlider = new RangeSlider( 0, 100 );
+        xSlider.setBorder( new TitledBorder( "Selection X Bounds" ) );
+        ySlider.setBorder( new TitledBorder( "Selection Y Bounds" ) );
+        zSlider.setBorder( new TitledBorder( "Selection Z Bounds" ) );
+        JButton searchButton = new JButton( "Geometric Search" );
+        JPanel sliderPanel = new JPanel();
+        sliderPanel.setLayout( new GridLayout( 1, 4 ) );
+        sliderPanel.add( xSlider );
+        sliderPanel.add( ySlider );
+        sliderPanel.add( zSlider );
+        sliderPanel.add( searchButton );
+        sliderPanel.setToolTipText(GEO_SEARCH_TOOLTIP);
+        searchButton.addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent ae ) {
+                logger.info(
+                        "Selection covers (X): " + xSlider.getValue() + ".." + xSlider.getUpperValue() +
+                        " and (Y): " + ySlider.getValue() + ".." + ySlider.getUpperValue() +
+                        " and (Z): " + zSlider.getValue() + ".." + zSlider.getUpperValue()
+                );
+            }
+        });
+        rtnVal.add( mip3d, BorderLayout.CENTER );
+        rtnVal.add( sliderPanel, BorderLayout.SOUTH );
         return rtnVal;
     }
 
@@ -467,6 +533,30 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             }
         }
     }
+
+    // Add listener to update display.
+    public static class SliderChangeListener implements ChangeListener {
+        private RangeSlider[] sliders;
+        private Mip3d mip3d;
+
+        public SliderChangeListener( RangeSlider xSlider, RangeSlider ySlider, RangeSlider zSlider, Mip3d mip3d ) {
+            this.sliders = new RangeSlider[] {
+                xSlider, ySlider, zSlider
+            };
+            this.mip3d = mip3d;
+        }
+
+        public void stateChanged(ChangeEvent e) {
+            float[] cropCoords = new float[ 6 ];
+            for ( int i = 0; i < 3; i++ ) {
+                cropCoords[ i * 2 ] = (float)sliders[ i ].getValue() / (float)sliders[ i ].getMaximum();
+                cropCoords[ i * 2 + 1 ] = (float)sliders[ i ].getUpperValue() / (float)sliders[ i ].getMaximum();
+            }
+            mip3d.setCropCoords( cropCoords );
+        }
+    }
+
+
 
     /** An experiment in animating the view.  If ever used, should be moved elsewhere. */
     public class BrainGlow extends Thread {

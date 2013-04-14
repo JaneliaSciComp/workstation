@@ -232,6 +232,17 @@ public class Mip3d extends BaseGLViewer {
         repaint();
     }
 
+    public void setCropCoords( float[] cropCoords ) {
+        for ( GLActor actor: renderer.getActors() ) {
+            if ( actor instanceof  VolumeBrick ) {
+                VolumeBrick vb = ( VolumeBrick) actor;
+                vb.setCropCoords( cropCoords );
+            }
+        }
+
+        repaint();
+    }
+
     @Override
     public void mouseDragged(MouseEvent event) {
         Point p1 = event.getPoint();

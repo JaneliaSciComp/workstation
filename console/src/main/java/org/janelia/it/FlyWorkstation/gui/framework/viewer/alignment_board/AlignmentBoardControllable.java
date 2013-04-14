@@ -23,8 +23,18 @@ public interface AlignmentBoardControllable {
      */
     void loadVolume( TextureDataI signalTexture, TextureDataI maskTexture );
 
-    void dataLoadComplete();
+    /** The display can be moved out of "show-busy". */
+    void displayReady();
 
+    /**
+      */
+    /**
+     * Data load is complete. Error status known.
+     *
+     * @param successful Error or not?
+     * @param loadFiles Files were loaded = T, display level mod, only = F
+     * @param error any exception thrown during op, or null.
+     */
     void loadCompletion( boolean successful, boolean loadFiles, Throwable error );
 
 }

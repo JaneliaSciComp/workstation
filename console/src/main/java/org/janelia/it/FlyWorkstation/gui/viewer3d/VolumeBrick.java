@@ -447,6 +447,10 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         bColorMapTextureNeedsUpload = true;
     }
 
+    public void setCropCoords( float[] cropCoords ) {
+        volumeBrickShader.setCropCoords( cropCoords );
+    }
+
     private void initMediators( GL2 gl ) {
         textureIds = TextureMediator.genTextureIds( gl, textureMediators.size() );
         if ( signalTextureMediator != null ) {

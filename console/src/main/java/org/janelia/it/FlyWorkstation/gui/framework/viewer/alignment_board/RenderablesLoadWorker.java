@@ -149,7 +149,7 @@ public class RenderablesLoadWorker extends SimpleWorker {
 
         }
 
-        controlCallback.dataLoadComplete();
+        controlCallback.displayReady();
     }
 
     /**
