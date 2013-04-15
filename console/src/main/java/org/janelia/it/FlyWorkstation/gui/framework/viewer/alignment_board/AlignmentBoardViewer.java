@@ -245,8 +245,11 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 }
                 
                 if (sample.getNeuronSet()!=null) {
+                    log.debug("  neurons:");
                     for(Neuron neuron : sample.getNeuronSet()) {
-                        log.debug("  Neuron: "+neuron.getName()+" (mask index = "+neuron.getMaskIndex()+")");
+                        log.debug("    "+neuron.getName()+" (mask index = "+neuron.getMaskIndex()+")");
+                        log.debug("    * mask: "+neuron.getMask3dImageFilepath());
+                        log.debug("    * chan: "+neuron.getChan3dImageFilepath());
                     }
                 }
 
