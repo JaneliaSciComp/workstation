@@ -1,18 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.event.ActionEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
-import java.awt.geom.Point2D;
-import java.net.URL;
-
-import javax.media.opengl.GLProfile;
-import javax.swing.JOptionPane;
-
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BaseGLViewer;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation;
@@ -23,6 +10,15 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
+
+import javax.media.opengl.GLProfile;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
+import java.awt.geom.Point2D;
+import java.net.URL;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
@@ -50,8 +46,8 @@ implements MouseModalWidget, VolumeViewer
 	// protected Simple2dImageVolume volume0 = new Simple2dImageVolume(
 	// 		"/Users/brunsc/svn/jacs/console/src/main/java/images/kittens.jpg");	
 	protected TileServer volume0 = new TileServer(
-            "Q:\\\\brunsTest\\clack_test16\\Z");
-//			"/Volumes/jacsData/brunsTest/clack_test16/Z");
+//            "Q:\\\\brunsTest\\clack_test16\\Z");
+			"/groups/scicomp/jacsData/brunsTest/clack_test16/Z");
 	protected VolumeImage3d volumeImage = volume0;
 	// TODO - add dataChangedSignal to GLActor
 	protected SliceActor volumeActor = new SliceActor(volume0);

@@ -79,7 +79,7 @@ public class ConsoleMenuBar extends JMenuBar {
 //        add(ontologyMenu);
         add(helpMenu);
         add(menuGlue);
-        add(imageLabel);
+//        add(imageLabel);
     }
 
 //    public void add(Component comp, Position pos) {
@@ -160,16 +160,16 @@ public class ConsoleMenuBar extends JMenuBar {
     }
 
     void modifyImageState(boolean animated) {
-        if (animated) {
-            imageLabel.setIcon(animatedIcon);
-        }
-        else {
-            imageLabel.setIcon(staticIcon);
-        }
-//        redraw();
-        imageLabel.repaint();
-        validate();
-        console.repaint();
+//        if (animated) {
+//            imageLabel.setIcon(animatedIcon);
+//        }
+//        else {
+//            imageLabel.setIcon(staticIcon);
+//        }
+////        redraw();
+//        imageLabel.repaint();
+//        validate();
+//        console.repaint();
     }
 
 
