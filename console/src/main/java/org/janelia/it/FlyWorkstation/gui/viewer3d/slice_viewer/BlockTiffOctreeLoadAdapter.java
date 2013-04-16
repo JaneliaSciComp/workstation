@@ -10,8 +10,8 @@ import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedImageAdapter;
 
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sun.media.jai.codec.FileSeekableStream;
 import com.sun.media.jai.codec.ImageCodec;
@@ -31,63 +31,15 @@ import com.sun.media.jai.codec.SeekableStream;
 public class BlockTiffOctreeLoadAdapter 
 extends PyramidTextureLoadAdapter 
 {
-	// private static final Logger log = LoggerFactory.getLogger(BlockTiffOctreeLoadAdapter.class);
+	private static final Logger log = LoggerFactory.getLogger(BlockTiffOctreeLoadAdapter.class);
 
 	// Metadata
 	private File topFolder;
-	private TexturePreFetcher texturePreFetcher = new TexturePreFetcher();
 	public LoadTimer loadTimer = new LoadTimer();
-	
-	// Initiate loading of low resolution textures
-	private Slot startPreFetchSlot = new Slot() {
-		@Override
-		public void execute() {
-			// queue load of all low resolution textures
-			texturePreFetcher.clear();
-			texturePreFetcher.setTextureCache(getTextureCache());
-			texturePreFetcher.setLoadAdapter(BlockTiffOctreeLoadAdapter.this);
-			int maxZoom = getTileFormat().getZoomLevelCount() - 1;
-			int x = 0; // only one value of x and y at lowest resolution
-			int y = 0;
-			int zMin = getTileFormat().getOrigin()[2];
-			int zMax = zMin + getTileFormat().getVolumeSize()[2];
-			PyramidTileIndex previousIndex = null;
-			for (int z = zMin; z <= zMax; ++z) {
-				PyramidTileIndex index = new PyramidTileIndex(x, y, z, maxZoom, maxZoom);
-				index = getTextureCache().getCanonicalIndex(index);
-				if (! index.equals(previousIndex)) {
-					texturePreFetcher.loadTexture(index);
-					previousIndex = index;
-				}
-			}
-			
-			/*
-			// queue load of many other textures, FOR TESTING ONLY
-			int zoom = 0; // get all textures for maximum zoom (should be 3000)
-			// Choose a tile in the center of the screen
-			x = (int)(0.5 * getTileFormat().getVolumeSize()[0] / getTileFormat().getTileSize()[0]);
-			y = (int)(0.5 * getTileFormat().getVolumeSize()[1] / getTileFormat().getTileSize()[1]);
-			previousIndex = null;
-			for (int z = zMin; z <= zMax; ++z) {
-				PyramidTileIndex index = new PyramidTileIndex(x, y, z, zoom, maxZoom);
-				index = getTextureCache().getCanonicalIndex(index);
-				if (! index.equals(previousIndex)) {
-					texturePreFetcher.loadTexture(index);
-					previousIndex = index;
-				}
-			}
-			/* */
-			
-			// log.info("Finished submitting textures");
-		}		
-	};
-	
 	
 	public BlockTiffOctreeLoadAdapter()
 	{
 		getTextureCache().setIndexStyle(TextureCache.IndexStyle.OCTREE);
-		// Don't pre-fetch before cache is cleared...
-		getTextureCache().getCacheClearedSignal().connect(startPreFetchSlot);
 		// Report performance statistics when program closes
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
@@ -332,5 +284,6 @@ extends PyramidTextureLoadAdapter
 		// TODO - actual max intensity
 		// TODO - voxel size in micrometers
 	}
+
 
 }

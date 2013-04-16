@@ -45,12 +45,12 @@ implements MouseModalWidget, VolumeViewer
 	// protected PracticeBlueVolume volume0 = new PracticeBlueVolume();
 	// protected Simple2dImageVolume volume0 = new Simple2dImageVolume(
 	// 		"/Users/brunsc/svn/jacs/console/src/main/java/images/kittens.jpg");	
-	protected TileServer volume0 = new TileServer(
+	protected TileServer tileServer = new TileServer(
 //            "Q:\\\\brunsTest\\clack_test16\\Z");
 			"/groups/scicomp/jacsData/brunsTest/clack_test16/Z");
-	protected VolumeImage3d volumeImage = volume0;
+	protected VolumeImage3d volumeImage = tileServer;
 	// TODO - add dataChangedSignal to GLActor
-	protected SliceActor volumeActor = new SliceActor(volume0);
+	protected SliceActor volumeActor = new SliceActor(tileServer);
 	private ImageColorModel imageColorModel;
 	
 	public Signal1<URL> getFileLoadedSignal() {
@@ -83,7 +83,7 @@ implements MouseModalWidget, VolumeViewer
 		wheelMode = new ZScanMode(this);
 		addGLEventListener(renderer);
 		setCamera(new BasicObservableCamera3d());
-		volume0.setViewport(viewport);
+		tileServer.setViewport(viewport);
 		mouseMode.setComponent(this);
 		wheelMode.setComponent(this);
 		// gray background for testing
@@ -95,20 +95,13 @@ implements MouseModalWidget, VolumeViewer
         setToolTipText("Double click to center on a point.");
         setImageColorModel(new ImageColorModel(volumeImage));
         renderer.addActor(volumeActor);
-        volumeActor.getDataChangedSignal().connect(getRepaintSlot());
+        tileServer.getViewTextureChangedSignal().connect(getRepaintSlot());
         imageColorModel.getColorModelChangedSignal().connect(getRepaintSlot());
         resetView();
 	}
 
 	public Slot1<URL> getLoadUrlSlot() {
 		return loadUrlSlot;
-	}
-
-	// Context menu?
-	@Override
-	public void actionPerformed(ActionEvent arg0) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	public BoundingBox3d getBoundingBox3d() 
@@ -268,7 +261,7 @@ implements MouseModalWidget, VolumeViewer
 		renderer.setCamera(camera);
 		mouseMode.setCamera(camera);
 		wheelMode.setCamera(camera);
-		volume0.setCamera(camera);
+		tileServer.setCamera(camera);
 	}
 	
 	public void setWheelMode(WheelMode wheelMode) {
@@ -290,6 +283,10 @@ implements MouseModalWidget, VolumeViewer
 	@Override
 	public Rotation getRotation() {
 		return camera.getRotation();
+	}
+
+	public TileServer getTileServer() {
+		return tileServer;
 	}
 
 	@Override
@@ -388,11 +385,6 @@ implements MouseModalWidget, VolumeViewer
 	@Override
 	public Signal1<Double> getZoomChangedSignal() {
 		return camera.getZoomChangedSignal();
-	}
-
-	@Override
-	public Signal getDataChangedSignal() {
-		return volumeActor.getDataChangedSignal();
 	}
 
 	@Override

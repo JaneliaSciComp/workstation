@@ -1,7 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import java.awt.Point;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -18,7 +17,7 @@ import org.slf4j.LoggerFactory;
 public abstract class BaseGLViewer 
 //extends GLCanvas // in case heavyweight widget is preferred
 extends GLJPanel // in case lightweight widget is required
-implements MouseListener, MouseMotionListener, ActionListener,
+implements MouseListener, MouseMotionListener,
 MouseWheelListener
 {
 	private static final long serialVersionUID = 1L;

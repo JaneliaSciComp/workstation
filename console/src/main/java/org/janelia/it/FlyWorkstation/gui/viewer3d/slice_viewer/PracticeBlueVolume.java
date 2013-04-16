@@ -13,7 +13,6 @@ public class PracticeBlueVolume
 implements VolumeImage3d, GLActor
 {
 	private GLActor actor = new PracticeBlueTileActor();
-	private Signal dataChangedSignal = new Signal();
 	
 	@Override
 	public BoundingBox3d getBoundingBox3d() {
@@ -58,11 +57,6 @@ implements VolumeImage3d, GLActor
 	@Override
 	public int getMaximumIntensity() {
 		return 255;
-	}
-
-	@Override
-	public Signal getDataChangedSignal() {
-		return dataChangedSignal;
 	}
 
 	@Override

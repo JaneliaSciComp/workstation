@@ -340,7 +340,7 @@ public class QuadViewUi extends JPanel
 		sliceViewer.setCamera(camera);
 		sliceViewer.setBackground(Color.DARK_GRAY);
 		viewerPanel.add(sliceViewer);
-        sliceViewer.getDataChangedSignal().connect(updateRangesSlot);
+        sliceViewer.getTileServer().getVolumeInitializedSignal().connect(updateRangesSlot);
 		sliceViewer.getZoomChangedSignal().connect(changeZoom);
         sliceViewer.getCamera().getFocusChangedSignal().connect(changeZ);
 		sliceViewer.getFileLoadedSignal().connect(rememberLoadedFileSlot);

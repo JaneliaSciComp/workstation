@@ -31,6 +31,9 @@ public class TextureCache
 	// ...with the index interpolator class to mediate between the two.
 	private Map<PyramidTileIndex, TileTexture> cache = new HashMap<PyramidTileIndex, TileTexture>();
 	private PyramidIndexInterpolator indexInterpolator = new QuadtreeInterpolator();
+
+	// private Deque<PyramidTileIndex> historyCache = new 
+	
 	public Signal getCacheClearedSignal() {
 		return cacheClearedSignal;
 	}

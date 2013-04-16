@@ -1,7 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Loads a TileTexture image into memory. Should be used in a worker thread.
@@ -11,9 +11,10 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
  */
 public class PreFetchTextureLoadWorker implements Runnable 
 {
+	private static final Logger log = LoggerFactory.getLogger(PreFetchTextureLoadWorker.class);
+
 	private TileTexture texture;
 	private boolean cancelled = false;
-	// private static final Logger log = LoggerFactory.getLogger(PreFetchTextureLoadWorker.class);
 
 	public synchronized boolean isCancelled() {
 		return cancelled;
@@ -38,11 +39,15 @@ public class PreFetchTextureLoadWorker implements Runnable
 			return;
 		
 		// Don't load this texture if it is already loaded
-		if (texture.getStage().ordinal() >= TileTexture.Stage.RAM_LOADING.ordinal())
-			return; // already loaded or loading
+		if (texture.getStage().ordinal() == TileTexture.Stage.RAM_LOADING.ordinal()) {
+			log.info("Texture already being loaded in another thread");
+			return; // already loading
+		}
+		else if (texture.getStage().ordinal() > TileTexture.Stage.RAM_LOADING.ordinal())
+			return; // already loaded
 
 		// Load file
-		// log.info("Loading texture "+texture.getIndex());
+		log.info("Loading texture "+texture.getIndex());
 		texture.loadImageToRam();
 	}
 }
