@@ -3,7 +3,6 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces;
 import java.net.URL;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal;
 
 public interface VolumeImage3d 
 {
@@ -14,6 +13,5 @@ public interface VolumeImage3d
 	public double getYResolution(); // in scene units
 	public double getZResolution(); // in scene units
 	public int getNumberOfChannels(); // e.g. "3" for RGB
-	public Signal getDataChangedSignal();
 	public boolean loadURL(URL url);
 }

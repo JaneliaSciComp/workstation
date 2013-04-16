@@ -133,6 +133,8 @@ public class ImageColorModel
 	
 	public void reset(VolumeImage3d volumeImage) 
 	{
+		if (volumeImage == null)
+			return;
 		int maxI = volumeImage.getMaximumIntensity();
 		assert maxI <= 65535;
 		int bitDepth = 8;

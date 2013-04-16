@@ -28,7 +28,7 @@ import java.util.concurrent.CyclicBarrier;
  *
  * Loads renderable-oriented data into the Alignment Board and MIP3d.
  */
-public class RenderablesLoadWorker extends SimpleWorker {
+public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader {
 
     private Boolean loadFiles = true;
 
@@ -68,6 +68,87 @@ public class RenderablesLoadWorker extends SimpleWorker {
         this.loadFiles = loadFiles;
     }
 
+    //------------------------------------------IMPLEMENTS VolumeLoader
+    /**
+     * Loads one renderable's data into the volume under construction.
+     *
+     * @param maskChanRenderableData renderable data to be applied to volume.
+     * @throws Exception from called methods.
+     */
+    public void loadVolume( MaskChanRenderableData maskChanRenderableData ) throws Exception {
+        logger.debug(
+                "In load thread, STARTING load of renderable {}.",
+                maskChanRenderableData.getBean().getTranslatedNum()
+        );
+
+        // Mask file is always needed.
+        if ( maskChanRenderableData.getMaskPath() == null ) {
+            if ( maskChanRenderableData.getBean().getTranslatedNum() == 1 ) {
+                int nada = 7;
+            }
+            logger.warn(
+                    "Renderable {} has a missing mask file. ID is {}.",
+                    maskChanRenderableData.getBean().getTranslatedNum(),
+                            + maskChanRenderableData.getBean().getRenderableEntity().getId()
+            );
+            return;
+        }
+
+        // Channel file is optional, unless channel data must be shown.
+        if ( alignmentBoardSettings.isShowChannelData()  &&  maskChanRenderableData.getChannelPath() == null ) {
+            logger.warn(
+                    "Renderable {} has a missing channel file -- {}.",
+                    maskChanRenderableData.getBean().getTranslatedNum(),
+                    maskChanRenderableData.getMaskPath() + maskChanRenderableData.getChannelPath()
+            );
+            return;
+        }
+
+        // Special case: the "signal" renderable will have a translated label number of zero.  It will not
+        // require a file load.
+        if ( maskChanRenderableData.getBean().getTranslatedNum() == 0 ) {
+            return;
+        }
+
+        //  The mask stream is required in all cases.  But the channel path is optional.
+        InputStream maskStream =
+                new BufferedInputStream(
+                        new FileInputStream( resolver.getResolvedFilename( maskChanRenderableData.getMaskPath() )
+                        )
+                );
+
+        InputStream chanStream = null;
+        if ( alignmentBoardSettings.isShowChannelData() ) {
+            chanStream =
+                    new BufferedInputStream(
+                            new FileInputStream( resolver.getResolvedFilename( maskChanRenderableData.getChannelPath() )
+                            )
+                    );
+        }
+
+        if ( maskChanRenderableData.isCompartment() )  {
+            // Iterating through these files will cause all the relevant data to be loaded into
+            // the acceptors, which here includes only the mask builder.
+            compartmentLoader.read(maskChanRenderableData.getBean(), maskStream, chanStream);
+        }
+        else {
+            // Iterating through these files will cause all the relevant data to be loaded into
+            // the acceptors, which here are the mask builder and the channels builder.
+            neuronFragmentLoader.read(maskChanRenderableData.getBean(), maskStream, chanStream);
+        }
+
+        maskStream.close();
+        if ( chanStream != null )
+            chanStream.close();
+
+        logger.debug("In load thread, ENDED load of renderable {}.", maskChanRenderableData.getBean().getLabelFileNum() );
+    }
+
+    public RenderMappingI getRenderMapping() {
+        return renderMapping;
+    }
+
+    //----------------------------------------------OVERRIDE SimpleWorker
     @Override
     protected void doStuff() throws Exception {
 
@@ -197,7 +278,7 @@ public class RenderablesLoadWorker extends SimpleWorker {
         final CyclicBarrier loadBarrier = new CyclicBarrier( metaDatas.size() + 1 );
         for ( MaskChanRenderableData metaData: metaDatas ) {
             // Multithreaded load.
-            LoadRunnable runnable = new LoadRunnable( resolver, metaData, loadBarrier );
+            LoadRunnable runnable = new LoadRunnable( metaData, this, loadBarrier );
             new Thread( runnable ).start();
         }
 
@@ -236,137 +317,6 @@ public class RenderablesLoadWorker extends SimpleWorker {
             renderMapping.setRenderables( beans );
         }
 
-    }
-
-    private void loadVolume( FileResolver resolver, MaskChanRenderableData maskChanRenderableData ) throws Exception {
-        logger.debug(
-                "In load thread, STARTING load of renderable {}.",
-                maskChanRenderableData.getBean().getTranslatedNum()
-        );
-
-        // Mask file is always needed.
-        if ( maskChanRenderableData.getMaskPath() == null ) {
-            logger.warn(
-                    "Renderable {} has a missing mask file -- {}.",
-                    maskChanRenderableData.getBean().getTranslatedNum(),
-                    maskChanRenderableData.getMaskPath() + maskChanRenderableData.getChannelPath()
-            );
-            return;
-        }
-
-        // Channel file is optional.
-        if ( alignmentBoardSettings.isShowChannelData()  &&  maskChanRenderableData.getChannelPath() == null ) {
-            logger.warn(
-                    "Renderable {} has a missing channel file -- {}.",
-                    maskChanRenderableData.getBean().getTranslatedNum(),
-                    maskChanRenderableData.getMaskPath() + maskChanRenderableData.getChannelPath()
-            );
-            return;
-        }
-
-        // Special case: the "signal" renderable will have a translated label number of zero.  It will not
-        // require a file load.
-        if ( maskChanRenderableData.getBean().getTranslatedNum() == 0 ) {
-            return;
-        }
-
-        //  The mask stream is required in all cases.  But the channel path is optional.
-        InputStream maskStream =
-                new BufferedInputStream(
-                        new FileInputStream( resolver.getResolvedFilename( maskChanRenderableData.getMaskPath() )
-                        )
-                );
-
-        InputStream chanStream = null;
-        if ( alignmentBoardSettings.isShowChannelData() ) {
-            chanStream =
-                    new BufferedInputStream(
-                            new FileInputStream( resolver.getResolvedFilename( maskChanRenderableData.getChannelPath() )
-                            )
-                    );
-        }
-
-        if ( maskChanRenderableData.isCompartment() )  {
-            // Iterating through these files will cause all the relevant data to be loaded into
-            // the acceptors, which here includes only the mask builder.
-            compartmentLoader.read(maskChanRenderableData.getBean(), maskStream, chanStream);
-        }
-        else {
-            // Iterating through these files will cause all the relevant data to be loaded into
-            // the acceptors, which here are the mask builder and the channels builder.
-            neuronFragmentLoader.read(maskChanRenderableData.getBean(), maskStream, chanStream);
-        }
-
-        maskStream.close();
-        if ( chanStream != null )
-            chanStream.close();
-
-        logger.debug("In load thread, ENDED load of renderable {}.", maskChanRenderableData.getBean().getLabelFileNum() );
-    }
-
-    public RenderMappingI getRenderMapping() {
-        return renderMapping;
-    }
-
-    public class LoadRunnable implements Runnable {
-        private MaskChanRenderableData metaData;
-        private FileResolver resolver;
-        private CyclicBarrier barrier;
-
-        public LoadRunnable(
-                FileResolver resolver, MaskChanRenderableData signalRenderable,
-                CyclicBarrier barrier
-        ) {
-            this.resolver = resolver;
-            this.metaData = signalRenderable;
-            this.barrier = barrier;
-        }
-
-        public void run() {
-            try {
-                RenderablesLoadWorker.this.loadVolume(resolver, metaData);
-            } catch ( Exception ex ) {
-                ex.printStackTrace();
-                barrier.reset();   // This tells others that the barrier is broken.
-                throw new RuntimeException( ex );
-            }
-
-            try {
-                barrier.await();
-            } catch ( BrokenBarrierException bbe ) {
-                bbe.printStackTrace();
-            } catch ( InterruptedException ie ) {
-                ie.printStackTrace();
-            }
-        }
-    }
-
-    /**
-     * Simply makes a texture builder build its texture, inside a thread.  Once complete, the getter for the
-     * texture data may be called.  Not before.
-     */
-    public class TexBuildRunnable implements Runnable {
-        private TextureBuilderI textureBuilder;
-        private CyclicBarrier barrier;
-        private TextureDataI textureData;
-
-        public TexBuildRunnable( TextureBuilderI textureBuilder, CyclicBarrier barrier ) {
-            this.textureBuilder = textureBuilder;
-            this.barrier = barrier;
-        }
-
-        public TextureDataI getTextureData() {
-            return textureData;
-        }
-
-        public void run() {
-            try {
-                textureData = textureBuilder.buildTextureData();
-                barrier.await();
-            } catch ( Exception ex ) {
-                ex.printStackTrace();
-            }
-        }
     }
 
 }

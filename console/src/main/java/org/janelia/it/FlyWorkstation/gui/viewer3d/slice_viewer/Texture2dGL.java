@@ -38,6 +38,11 @@ implements PyramidTexture
 	}
 
 	@Override
+	public int getTextureId() {
+		return textureId;
+	}
+
+	@Override
 	public void setTexParameteri(GL2 gl, int key, int value) {
 		gl.glTexParameteri(GL2.GL_TEXTURE_2D, key, value);
 	}

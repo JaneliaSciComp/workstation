@@ -33,7 +33,6 @@ public class Folder extends EntityWrapper {
             if (childEd.getChildEntity()==null) continue;
             try {
                 EntityWrapper child = EntityWrapperFactory.wrap(getInternalRootedEntity().getChild(childEd));
-                child.setParent(this);
                 addChild(child);
             }
             catch (IllegalArgumentException e) {

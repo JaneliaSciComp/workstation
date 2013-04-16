@@ -117,7 +117,6 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
                 ModelMgr.getModelMgr().loadLazyEntity(fragmentCollection.getEntity(), false);
                 for(RootedEntity neuronFragment : fragmentCollection.getChildrenOfType(EntityConstants.TYPE_NEURON_FRAGMENT)) {
                     Neuron neuron = new Neuron(neuronFragment);
-                    neuron.setParent(this);
                     neuronSet.add(neuron);
                     addChild(neuron);
                 }

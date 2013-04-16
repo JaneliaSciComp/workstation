@@ -58,4 +58,24 @@ public class RenderableBean {
         }
     }
 
+    /** Establish equality based on contained entity. */
+    @Override
+    public boolean equals( Object o ) {
+        boolean rtnVal = false;
+        if ( o != null  &&  o instanceof RenderableBean ) {
+            RenderableBean other = (RenderableBean)o;
+            if ( other.getRenderableEntity().getId() == getRenderableEntity().getId() ) {
+                rtnVal = true;
+            }
+        }
+
+        return rtnVal;
+    }
+
+    /** Hash based on contained entity. */
+    @Override
+    public int hashCode() {
+        return getRenderableEntity().getId().hashCode();
+    }
+
 }

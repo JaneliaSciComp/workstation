@@ -31,7 +31,6 @@ public class TileTexture
 	private PyramidTileIndex index;
 	// private URL url;
 	private PyramidTextureData textureData;
-	private Signal ramLoaded = new Signal();
 	private PyramidTexture texture;
 	private PyramidTextureLoadAdapter loadAdapter;
 	
@@ -44,6 +43,8 @@ public class TileTexture
 	private long convertToGlTime = invalidTime;
 	private long uploadTextureTime = invalidTime;
 	private long firstDisplayTime = invalidTime;
+
+	private Signal1<PyramidTileIndex> ramLoadedSignal = new Signal1<PyramidTileIndex>();
 
 	public TileTexture(PyramidTileIndex index, PyramidTextureLoadAdapter loadAdapter) {
 		this.index = index;
@@ -86,8 +87,8 @@ public class TileTexture
 		return index;
 	}
 
-	public Signal getRamLoadedSignal() {
-		return ramLoaded;
+	public Signal1<PyramidTileIndex> getRamLoadedSignal() {
+		return ramLoadedSignal;
 	}
 
 	public PyramidTexture getTexture() {

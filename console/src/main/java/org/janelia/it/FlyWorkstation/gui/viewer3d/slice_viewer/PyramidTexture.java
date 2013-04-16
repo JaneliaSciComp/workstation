@@ -18,6 +18,8 @@ public interface PyramidTexture {
 
 	int getHeight();
 
+	public int getTextureId();
+
 	void disable(GL2 gl);
 
 	void destroy(GL2 gl);

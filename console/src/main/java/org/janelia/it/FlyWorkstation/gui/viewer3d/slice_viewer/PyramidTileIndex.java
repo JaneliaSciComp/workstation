@@ -18,26 +18,6 @@ public class PyramidTileIndex
 	private final int zoom;
 	private final int maxZoom;
 	
-	public int getMaxZoom() {
-		return maxZoom;
-	}
-
-	public int getX() {
-		return x;
-	}
-
-	public int getY() {
-		return y;
-	}
-
-	public int getZ() {
-		return z;
-	}
-
-	public int getZoom() {
-		return zoom;
-	}
-
 	public PyramidTileIndex(int x, int y, int z, int zoom, int maxZoom) {
 		this.x = x;
 		this.y = y;
@@ -64,6 +44,26 @@ public class PyramidTileIndex
 		if (zoom != other.zoom)
 			return false;
 		return true;
+	}
+
+	public int getMaxZoom() {
+		return maxZoom;
+	}
+
+	public int getX() {
+		return x;
+	}
+
+	public int getY() {
+		return y;
+	}
+
+	public int getZ() {
+		return z;
+	}
+
+	public int getZoom() {
+		return zoom;
 	}
 
 	public List<TextureScore> getTextureScores() 

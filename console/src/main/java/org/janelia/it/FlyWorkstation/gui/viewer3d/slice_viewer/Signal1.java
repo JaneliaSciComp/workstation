@@ -22,6 +22,7 @@ implements BasicSignalSlot1<T>
 		addObserver(noArgListener);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void update(Observable o, Object arg) {
 		emit((T) arg);	

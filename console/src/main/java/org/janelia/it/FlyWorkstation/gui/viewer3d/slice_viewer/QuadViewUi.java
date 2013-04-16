@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicObservableCamera3d;
@@ -93,6 +94,13 @@ public class QuadViewUi extends JPanel
 	private final Action previousZSliceAction = new PreviousZSliceAction(sliceViewer, sliceViewer);
 	private final Action advanceZSlicesAction = new AdvanceZSlicesAction(sliceViewer, sliceViewer, 10);
 	private final Action goBackZSlicesAction = new GoBackZSlicesAction(sliceViewer, sliceViewer, -10);
+	// 
+	private final Action clearCacheAction = new AbstractAction() {
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			sliceViewer.getTileServer().clearCache();
+		}
+	};
 
 	// Slots
 	protected Slot1<Vec3> changeZ = new Slot1<Vec3>() {
@@ -197,6 +205,10 @@ public class QuadViewUi extends JPanel
 		colorChannelWidget_0.setVisible(false);
 		setupUi(parentFrame, overrideFrameMenuBar);
         interceptModifierKeyPresses();
+        // 
+        clearCacheAction.putValue(Action.NAME, "Clear Cache");
+        clearCacheAction.putValue(Action.SHORT_DESCRIPTION, 
+				"Empty image cache (for testing only)");
 	}
 
 	private void setupUi(JFrame parentFrame, boolean overrideFrameMenuBar) {
@@ -340,7 +352,7 @@ public class QuadViewUi extends JPanel
 		sliceViewer.setCamera(camera);
 		sliceViewer.setBackground(Color.DARK_GRAY);
 		viewerPanel.add(sliceViewer);
-        sliceViewer.getDataChangedSignal().connect(updateRangesSlot);
+        sliceViewer.getTileServer().getVolumeInitializedSignal().connect(updateRangesSlot);
 		sliceViewer.getZoomChangedSignal().connect(changeZoom);
         sliceViewer.getCamera().getFocusChangedSignal().connect(changeZ);
 		sliceViewer.getFileLoadedSignal().connect(rememberLoadedFileSlot);
@@ -461,6 +473,13 @@ public class QuadViewUi extends JPanel
 		
 		Component verticalGlue = Box.createVerticalGlue();
 		buttonsPanel.add(verticalGlue);
+		
+		JButton btnClearCache = new JButton("Clear Cache");
+		btnClearCache.setAction(clearCacheAction);
+		buttonsPanel.add(btnClearCache);
+		
+		Component verticalGlue_1 = Box.createVerticalGlue();
+		buttonsPanel.add(verticalGlue_1);
 		
 		JButton btnNewButton_3 = new JButton("New button");
 		btnNewButton_3.setAction(resetColorsAction);
@@ -732,4 +751,12 @@ public class QuadViewUi extends JPanel
         }
         sliceViewer.loadURL(tmpFile.toURI().toURL());
     }
+	private class SwingAction extends AbstractAction {
+		public SwingAction() {
+			putValue(NAME, "SwingAction");
+			putValue(SHORT_DESCRIPTION, "Some short description");
+		}
+		public void actionPerformed(ActionEvent e) {
+		}
+	}
 }

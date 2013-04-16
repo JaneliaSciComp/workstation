@@ -695,16 +695,44 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
             final Boolean isVisible = (Boolean)value;
             SimpleWorker worker = new SimpleWorker() {
                 
+                private AlignedItem parent;
+                
                 @Override
                 protected void doStuff() throws Exception {
                     alignedItem.setIsVisible(isVisible);
+                    
+                    EntityWrapper parentWrapper = alignedItem.getParent();
+                    if (parentWrapper!=null) {
+                        if (parentWrapper instanceof AlignedItem && !(parentWrapper instanceof AlignmentBoardContext)) {
+                            parent = (AlignedItem)parentWrapper;
+                            if (isVisible) {
+                                parent.setIsVisible(isVisible);    
+                            }
+                        }
+                    }
+                    
+                    for(AlignedItem child : alignedItem.getAlignedItems()) {
+                        child.setIsVisible(isVisible);
+                    }
                 }
                 
                 @Override
                 protected void hadSuccess() {
+                    outline.revalidate();
+                    outline.repaint();
+                    if (parent!=null && isVisible) {
+                        AlignmentBoardItemChangeEvent parentEvent = new AlignmentBoardItemChangeEvent(
+                                alignmentBoardContext, parent, ChangeType.VisibilityChange);
+                        ModelMgr.getModelMgr().postOnEventBus(parentEvent);
+                    }
                     AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
                             alignmentBoardContext, alignedItem, ChangeType.VisibilityChange);
                     ModelMgr.getModelMgr().postOnEventBus(event);
+                    for(AlignedItem child : alignedItem.getAlignedItems()) {
+                        AlignmentBoardItemChangeEvent childEvent = new AlignmentBoardItemChangeEvent(
+                                alignmentBoardContext, child, ChangeType.VisibilityChange);
+                        ModelMgr.getModelMgr().postOnEventBus(childEvent);    
+                    }
                 }
                 
                 @Override

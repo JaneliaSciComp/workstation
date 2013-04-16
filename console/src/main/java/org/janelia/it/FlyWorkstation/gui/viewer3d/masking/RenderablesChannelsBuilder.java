@@ -81,7 +81,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
      * @throws Exception thrown by called methods or if bad inputs are received.
      */
     @Override
-    public int addMaskData(Integer maskNumber, long position) throws Exception {
+    public int addMaskData(Integer maskNumber, long position, long x, long y, long z) throws Exception {
         throw new IllegalArgumentException( "Not implemented" );
     }
 
@@ -97,7 +97,8 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
      * @throws Exception
      */
     @Override
-    public synchronized int addChannelData(byte[] channelData, long volumePosition) throws Exception {
+    public synchronized int addChannelData(byte[] channelData, long volumePosition, long x, long y, long z)
+            throws Exception {
         init();
 
         int targetPos = (int)( volumePosition * channelMetaData.channelCount * FIXED_BYTE_PER_CHANNEL );

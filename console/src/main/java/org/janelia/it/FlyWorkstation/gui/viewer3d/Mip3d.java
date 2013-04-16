@@ -12,11 +12,12 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.util.Collection;
 
-public class Mip3d extends BaseGLViewer {
+public class Mip3d extends BaseGLViewer implements ActionListener {
 	private static final long serialVersionUID = 1L;
 	private MipRenderer renderer = new MipRenderer();
 

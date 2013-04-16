@@ -49,7 +49,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
      * @throws Exception thrown by called methods or if bad inputs are received.
      */
     @Override
-    public synchronized int addMaskData(Integer maskNumber, long position) throws Exception {
+    public synchronized int addMaskData(Integer maskNumber, long position, long x, long y, long z ) throws Exception {
         init();
 
         // Assumed little-endian.
@@ -63,7 +63,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     }
 
     @Override
-    public int addChannelData(byte[] channelData, long position) throws Exception {
+    public int addChannelData(byte[] channelData, long position, long x, long y, long z) throws Exception {
         throw new IllegalArgumentException( "Not implemented" );
     }
 
@@ -112,7 +112,6 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     @Override
     public TextureDataI getCombinedTextureData() {
         logger.info( "Retrieving combined texture data." );
-        // TODO: same decisioning as the RenderablesChannelsBuilder re how much to downsample.
         TextureDataI textureData;
         double downSampleRate = settings.getDownSampleRate();
         if ( downSampleRate != 1.0 ) {
