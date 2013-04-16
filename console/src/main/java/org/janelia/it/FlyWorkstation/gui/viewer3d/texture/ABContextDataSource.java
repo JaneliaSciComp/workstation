@@ -52,7 +52,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         }
         Collection<MaskChanRenderableData> rtnVal = new ArrayList<MaskChanRenderableData>();
 
-        int nextTranslatedNum = 0;
+        int nextTranslatedNum = 1;
 
         // Establish the fragment renderables.
         for ( AlignedItem alignedItem : context.getAlignedItems() ) {
@@ -61,8 +61,8 @@ public class ABContextDataSource implements RenderableDataSourceI {
             if ( itemEntity instanceof Sample) {
                 Sample sample = (Sample)itemEntity;
                 RenderableBean sampleDataBean = new RenderableBean();
-                sampleDataBean.setLabelFileNum(0);
-                sampleDataBean.setTranslatedNum(nextTranslatedNum++);
+                sampleDataBean.setLabelFileNum( 0 );
+                sampleDataBean.setTranslatedNum( 0 ); // Always zero for any sample.
                 sampleDataBean.setRgb(
                         new byte[]{
                                 (byte) 0f, (byte) 0f, (byte) 0f, RenderMappingI.NON_RENDERING
@@ -78,22 +78,20 @@ public class ABContextDataSource implements RenderableDataSourceI {
                 long sampleId = sample.getId();
 
                 Collection<AlignedItem> childItems = alignedItem.getAlignedItems();
-                int translatedNum = 1;
                 if ( childItems != null ) {
                     for ( AlignedItem item: childItems ) {
                         if ( item.getItemWrapper() instanceof Neuron) {
-                            RenderableBean neuronBean = createRenderableBean( translatedNum, item );
+                            RenderableBean neuronBean = createRenderableBean( nextTranslatedNum, item );
                             MaskChanRenderableData nfRenderable = new MaskChanRenderableData();
                             nfRenderable.setBean( neuronBean );
                             nfRenderable.setCompartment( false );
-                            rtnVal.add( nfRenderable );
 
                             Neuron neuronItem = (Neuron)item.getItemWrapper();
                             nfRenderable.setMaskPath( getMaskPath( neuronItem, sampleId ) );
                             nfRenderable.setChannelPath( getChannelPath( neuronItem, sampleId ) );
 
                             rtnVal.add( nfRenderable );
-                            translatedNum ++;
+                            nextTranslatedNum ++;
                         }
                     }
                 }
@@ -237,7 +235,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
      * @return that mask file.
      */
     private String getMaskPath( Neuron neuron, long id ) {
-        String path = TEMP_ROOT_PATH + id + "_" + ( 1 + neuron.getMaskIndex() ) + ".mask";
+        String path = TEMP_ROOT_PATH + id + "_" + ( neuron.getMaskIndex() ) + ".mask";
         if ( ! new File( path ).canRead() ) {
             logger.error( "Did we forget to mount jacsData from workstation?" );
             path = null;
@@ -252,23 +250,26 @@ public class ABContextDataSource implements RenderableDataSourceI {
      * @return that channel file.
      */
     private String getChannelPath( Neuron neuron, long id ) {
-        String path = TEMP_ROOT_PATH + id + "_" + ( 1 + neuron.getMaskIndex() ) + ".chan";
+        String path = TEMP_ROOT_PATH + id + "_" + ( neuron.getMaskIndex() ) + ".chan";
         if ( ! new File( path ).canRead() ) {
-            logger.error( "Did we forget to mount jacsData from workstation?" );
+            logger.error( "Cannot open {} for {}.", path, neuron.getId() + "/" + neuron.getName() );
             path = null;
+        }
+        else {
+            logger.info( "Assigning file {} to {}.", path, neuron.getId() + "/" + neuron.getName() );
         }
         return path;
     }
 
     private RenderableBean createRenderableBean( int translatedNum, AlignedItem item ) {
         Neuron neuron = (Neuron)item.getItemWrapper();
-        logger.debug(
+        logger.info(
                 "Creating Renderable Bean for: " + neuron.getName() + " original index=" + neuron.getMaskIndex() +
                         " new index=" + translatedNum
         );
 
         RenderableBean neuronBean = new RenderableBean();
-        neuronBean.setLabelFileNum( neuron.getMaskIndex() + 1 ); // From 0-based to 1-based.
+        neuronBean.setLabelFileNum( neuron.getMaskIndex() );
         neuronBean.setTranslatedNum(translatedNum);
         neuronBean.setRenderableEntity(neuron.getInternalEntity());
 
