@@ -197,7 +197,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         
             EntityWrapper itemEntity = alignedItem.getItemWrapper();
             
-            if (itemEntity instanceof Sample) {
+            if ( itemEntity instanceof Sample  &&  alignedItem.isVisible() ) {
             
                 Sample sample = (Sample)itemEntity;
                 

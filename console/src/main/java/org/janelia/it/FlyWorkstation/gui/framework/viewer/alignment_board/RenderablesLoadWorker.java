@@ -69,7 +69,13 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     }
 
     //------------------------------------------IMPLEMENTS VolumeLoader
-    public void loadVolume(  MaskChanRenderableData maskChanRenderableData ) throws Exception {
+    /**
+     * Loads one renderable's data into the volume under construction.
+     *
+     * @param maskChanRenderableData renderable data to be applied to volume.
+     * @throws Exception from called methods.
+     */
+    public void loadVolume( MaskChanRenderableData maskChanRenderableData ) throws Exception {
         logger.debug(
                 "In load thread, STARTING load of renderable {}.",
                 maskChanRenderableData.getBean().getTranslatedNum()
@@ -77,15 +83,18 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
         // Mask file is always needed.
         if ( maskChanRenderableData.getMaskPath() == null ) {
+            if ( maskChanRenderableData.getBean().getTranslatedNum() == 1 ) {
+                int nada = 7;
+            }
             logger.warn(
-                    "Renderable {} has a missing mask file -- {}.",
+                    "Renderable {} has a missing mask file. ID is {}.",
                     maskChanRenderableData.getBean().getTranslatedNum(),
-                    maskChanRenderableData.getMaskPath() + maskChanRenderableData.getChannelPath()
+                            + maskChanRenderableData.getBean().getRenderableEntity().getId()
             );
             return;
         }
 
-        // Channel file is optional.
+        // Channel file is optional, unless channel data must be shown.
         if ( alignmentBoardSettings.isShowChannelData()  &&  maskChanRenderableData.getChannelPath() == null ) {
             logger.warn(
                     "Renderable {} has a missing channel file -- {}.",
