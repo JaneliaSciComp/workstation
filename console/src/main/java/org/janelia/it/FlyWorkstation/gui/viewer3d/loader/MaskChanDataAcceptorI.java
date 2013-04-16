@@ -21,15 +21,18 @@ public interface MaskChanDataAcceptorI {
      * Implement this if your implementation can accept "channel" data.
      * @see Acceptable
      * the caller will post channel-bytes data.  This method and
-     * @see #addMaskData(Integer, long)
+     * @see #addMaskData(Integer, long, long, long, long)
      * should be called together, as this channel data applies to a specific mask number.
      *
      * @param channelData all data applicable for the mask.
      * @param position where in the logical output would this string fall?
+     * @param x logical x coordinate.
+     * @param y logical y coordinate.
+     * @param z logical z coordinate.
      * @return number of slots filled.  Should return 1.
      * @throws Exception from called method.
      */
-    int addChannelData( byte[] channelData, long position ) throws Exception;
+    int addChannelData( byte[] channelData, long position, long x, long y, long z ) throws Exception;
 
     /**
      * Implement this if your implementation can accept "mask" data
@@ -38,10 +41,13 @@ public interface MaskChanDataAcceptorI {
      *
      * @param maskNumber this value is used to fill all positions between start and end.
      * @param position where in the logical output would this string fall?
+     * @param x logical x coordinate.
+     * @param y logical y coordinate.
+     * @param z logical z coordinate.
      * @return number of slots filled.  Should return 1.
      * @throws Exception
      */
-    int addMaskData( Integer maskNumber, long position ) throws Exception;
+    int addMaskData( Integer maskNumber, long position, long x, long y, long z ) throws Exception;
 
     /**
      * This allows a poke-in of the max dimensions.

@@ -25,6 +25,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardSet
 import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.RangeSlider;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.MaskChanRenderableData;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableDataSourceI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ABContextDataSource;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
@@ -472,6 +474,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                         " and (Y): " + ySlider.getValue() + ".." + ySlider.getUpperValue() +
                         " and (Z): " + zSlider.getValue() + ".." + zSlider.getUpperValue()
                 );
+                writeBackVolumeSelection();
+
             }
         });
         rtnVal.add( mip3d, BorderLayout.CENTER );
@@ -498,6 +502,96 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
         }
 
+    }
+
+    /** This control-callback writes the user's selected volume to a file on disk. */
+    private void writeBackVolumeSelection() {
+        Map<Integer,byte[]> renderableIdVsRenderMethod = renderMapping.getMapping();
+
+        // Determine whether the user has slid the sliders out of default position.
+        boolean partialVolumeConstraints = false;
+        if ( xSlider.getValue() != 0  ||  ySlider.getValue() != 0  ||  zSlider.getValue() != 0 ) {
+            partialVolumeConstraints = true;
+        }
+        else if ( xSlider.getUpperValue() != xSlider.getMaximum()  ||
+                  ySlider.getUpperValue() != ySlider.getMaximum()  ||
+                  zSlider.getUpperValue() != zSlider.getMaximum() ) {
+            partialVolumeConstraints = true;
+        }
+
+        final float[] cropCoords =
+                partialVolumeConstraints ?
+                        getCropCoords( new RangeSlider[] { xSlider, ySlider, zSlider } ) :
+                        null;
+
+        // Convert crop coords back into full-range values, and invert any downsample.
+        if ( cropCoords != null ) {
+            double downSampleRate = settings.getDownsampleRate();
+            cropCoords[ 0 ] = (float)(xSlider.getMaximum() * downSampleRate * cropCoords[ 0 ]);
+            cropCoords[ 1 ] = (float)(xSlider.getMaximum() * downSampleRate * cropCoords[ 1 ]);
+
+            cropCoords[ 2 ] = (float)(ySlider.getMaximum() * downSampleRate * cropCoords[ 2 ]);
+            cropCoords[ 3 ] = (float)(ySlider.getMaximum() * downSampleRate * cropCoords[ 3 ]);
+
+            cropCoords[ 4 ] = (float)(zSlider.getMaximum() * downSampleRate * cropCoords[ 4 ]);
+            cropCoords[ 5 ] = (float)(zSlider.getMaximum() * downSampleRate * cropCoords[ 5 ]);
+        }
+
+        ABContextDataSource dataSource = new ABContextDataSource(
+                SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext()
+        );
+
+        Collection<MaskChanRenderableData> searchDatas = new ArrayList<MaskChanRenderableData>();
+        for ( MaskChanRenderableData data: dataSource.getRenderableDatas() ) {
+            byte[] rendition = renderableIdVsRenderMethod.get( data.getBean().getTranslatedNum() );
+            if ( rendition != null  &&  rendition[ 3 ] != RenderMappingI.NON_RENDERING ) {
+                searchDatas.add( data );
+            }
+        }
+
+        VolumeSearchLoadWorker.Callback callback = new VolumeSearchLoadWorker.Callback() {
+            @Override
+            public void loadSucceeded() {
+            }
+
+            @Override
+            public void loadFailed(Throwable ex) {
+                ex.printStackTrace();
+                SessionMgr.getSessionMgr().handleException( ex );
+            }
+
+            @Override
+            public void loadVolume(TextureDataI texture) {
+                byte[] textureBytes = texture.getTextureData();
+
+                Map<Byte,Integer> byteValToCount = new HashMap<Byte,Integer>();
+                for ( int i = 0; i < textureBytes.length; i ++ ) {
+                    Integer oldVal = byteValToCount.get( textureBytes[ i ] );
+                    if ( oldVal == null ) {
+                        oldVal = new Integer( 0 );
+                    }
+                    byteValToCount.put( textureBytes[i], ++oldVal );
+                }
+
+                for ( Byte b: byteValToCount.keySet() ) {
+                    System.out.println("Value " + b + " appears " + byteValToCount.get( b ) + " times.");
+                }
+            }
+        };
+
+        VolumeSearchLoadWorker volumeSearchLoadWorker = new VolumeSearchLoadWorker(
+                searchDatas, cropCoords, callback
+        );
+        volumeSearchLoadWorker.execute();
+    }
+
+    private static float[] getCropCoords( RangeSlider[] sliders) {
+        float[] cropCoords = new float[ 6 ];
+        for ( int i = 0; i < 3; i++ ) {
+            cropCoords[ i * 2 ] = (float)sliders[ i ].getValue() / (float)sliders[ i ].getMaximum();
+            cropCoords[ i * 2 + 1 ] = (float)sliders[ i ].getUpperValue() / (float)sliders[ i ].getMaximum();
+        }
+        return cropCoords;
     }
 
     //------------------------------Inner Classes
@@ -550,16 +644,11 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         }
 
         public void stateChanged(ChangeEvent e) {
-            float[] cropCoords = new float[ 6 ];
-            for ( int i = 0; i < 3; i++ ) {
-                cropCoords[ i * 2 ] = (float)sliders[ i ].getValue() / (float)sliders[ i ].getMaximum();
-                cropCoords[ i * 2 + 1 ] = (float)sliders[ i ].getUpperValue() / (float)sliders[ i ].getMaximum();
-            }
+            float[] cropCoords = getCropCoords( sliders );
             mip3d.setCropCoords( cropCoords );
         }
+
     }
-
-
 
     /** An experiment in animating the view.  If ever used, should be moved elsewhere. */
     public class BrainGlow extends Thread {

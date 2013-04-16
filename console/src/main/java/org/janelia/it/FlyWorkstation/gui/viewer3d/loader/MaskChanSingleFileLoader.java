@@ -30,6 +30,8 @@ public class MaskChanSingleFileLoader {
     private long sy;
     private long sz;
 
+    private int minimumAxialDivisibility = REQUIRED_AXIAL_LENGTH_DIVISIBLE;
+
     private Long[] volumeVoxels;
     private float[] coordCoverage;
 
@@ -101,6 +103,10 @@ public class MaskChanSingleFileLoader {
         this.maskAcceptors = maskAcceptors;
         this.channelAcceptors = channelAcceptors;
         this.renderableBean = renderableBean;
+    }
+
+    public void setAxialLengthDivisibility( int minDivisibility ) {
+        minimumAxialDivisibility = minDivisibility;
     }
 
     public void read( InputStream maskInputStream, InputStream channelStream )
@@ -418,7 +424,7 @@ public class MaskChanSingleFileLoader {
                 long final1DCoord = yOffset + xyzCoords[ 0 ];
 
                 for ( MaskChanDataAcceptorI acceptor: maskAcceptors ) {
-                    acceptor.addMaskData( translatedNum, final1DCoord );
+                    acceptor.addMaskData( translatedNum, final1DCoord, xyzCoords[ 0 ], xyzCoords[ 1 ], xyzCoords[ 2 ] );
                 }
 
                 // Here, must get the channel data.  This will include all bytes for each channel organized parallel.
@@ -437,7 +443,9 @@ public class MaskChanSingleFileLoader {
                         }
                     }
                     for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {
-                        acceptor.addChannelData( allChannelBytes, final1DCoord );
+                        acceptor.addChannelData(
+                                allChannelBytes, final1DCoord, xyzCoords[ 0 ], xyzCoords[ 1 ], xyzCoords[ 2 ]
+                        );
                     }
 
                 }
@@ -467,9 +475,9 @@ public class MaskChanSingleFileLoader {
         coordCoverage = new float[] { 1.0f, 1.0f, 1.0f };
 
         for ( int i = 0; i < voxels.length; i++ ) {
-            long leftover = voxels[i] % REQUIRED_AXIAL_LENGTH_DIVISIBLE;
+            long leftover = voxels[i] % minimumAxialDivisibility;
             if ( leftover > 0 ) {
-                long voxelModCount = REQUIRED_AXIAL_LENGTH_DIVISIBLE - leftover;
+                long voxelModCount = minimumAxialDivisibility - leftover;
                 long newVoxelCount = voxels[ i ] + voxelModCount;
                 coordCoverage[ i ] = ((float)voxels[ i ]) / ((float)newVoxelCount);
                 voxels[ i ] = newVoxelCount;

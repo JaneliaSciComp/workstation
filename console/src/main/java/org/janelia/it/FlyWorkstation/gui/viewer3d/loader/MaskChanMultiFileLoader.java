@@ -23,6 +23,7 @@ public class MaskChanMultiFileLoader {
     private Collection<MaskChanDataAcceptorI> channelAcceptors;
 
     private VolumeConsistencyChecker checker = new VolumeConsistencyChecker();
+    private boolean enforcePadding;
 
     private Logger logger = LoggerFactory.getLogger( MaskChanMultiFileLoader.class );
 
@@ -58,6 +59,11 @@ public class MaskChanMultiFileLoader {
         logger.debug( "Read called." );
         MaskChanSingleFileLoader singleFileLoader =
                 new MaskChanSingleFileLoader( maskAcceptors, channelAcceptors, bean );
+
+        // Here, may override the pad-out to ensure resulting volume exactly matches the original space.
+        if ( ! enforcePadding ) {
+            singleFileLoader.setAxialLengthDivisibility( 1 );
+        }
         singleFileLoader.read( maskInputStream, channelStream );
 
         // Accumulate information for final sanity check.
@@ -81,4 +87,7 @@ public class MaskChanMultiFileLoader {
         }
     }
 
+    public void setEnforcePadding(boolean enforcePadding) {
+        this.enforcePadding = enforcePadding;
+    }
 }
