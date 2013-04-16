@@ -5,12 +5,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 
 public class TexturePreFetcher 
 {
-	private static final Logger log = LoggerFactory.getLogger(TexturePreFetcher.class);
+	// private static final Logger log = LoggerFactory.getLogger(TexturePreFetcher.class);
 
 	private TextureCache textureCache; // holds texture
 	private PyramidTextureLoadAdapter loadAdapter; // knows how to load textures
@@ -45,22 +45,7 @@ public class TexturePreFetcher
 			texture.getRamLoadedSignal().connect(tileServer.getOnTextureLoadedSlot());
 		// TODO - maybe only submit UNINITIALIZED textures, if we don't wish to retry failed ones
 		// TODO - handle MISSING textures vs. ERROR textures
-		textureLoadExecutor.submit(new ActiveTextureLoadWorker(texture, tileServer));
-	}
-	
-	private synchronized void loadTexture(PyramidTileIndex quadtreeIndex) 
-	{
-		if (textureCache == null)
-			return;
-		if (loadAdapter == null)
-			return;
-		TileTexture texture = textureCache.getOrCreate(quadtreeIndex, loadAdapter);
-		// Reload "queued" textures for now; at least until books are balanced...
-		if (texture.getStage().ordinal() > TileTexture.Stage.LOAD_QUEUED.ordinal()) {
-			// log.info("texture already loaded "+texture.getIndex());
-			return; // texture load already started
-		}
-		textureLoadExecutor.submit(new PreFetchTextureLoadWorker(texture));
+		textureLoadExecutor.submit(new ActiveTextureLoadWorker(texture));
 	}
 	
 	public synchronized void clear() {

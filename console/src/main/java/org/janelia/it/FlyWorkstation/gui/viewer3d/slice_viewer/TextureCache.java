@@ -2,7 +2,9 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
@@ -13,6 +15,7 @@ import java.util.Map;
  */
 public class TextureCache 
 {
+
 	public static enum IndexStyle {
 		QUADTREE,
 		OCTREE
@@ -29,7 +32,10 @@ public class TextureCache
 	// Cache actually stores octree or quadtree or whatever index.
 	// Interface uses quadtree index.
 	// ...with the index interpolator class to mediate between the two.
-	private Map<PyramidTileIndex, TileTexture> cache = new HashMap<PyramidTileIndex, TileTexture>();
+	// private Map<PyramidTileIndex, TileTexture> cache = new HashMap<PyramidTileIndex, TileTexture>();
+	private HistoryCache historyCache = new HistoryCache();
+	private Map<PyramidTileIndex, TileTexture> persistentCache = new HashMap<PyramidTileIndex, TileTexture>();
+	
 	private PyramidIndexInterpolator indexInterpolator = new QuadtreeInterpolator();
 
 	// private Deque<PyramidTileIndex> historyCache = new 
@@ -46,17 +52,22 @@ public class TextureCache
 	
 	synchronized public void clear() {
 		// log.info("Clearing texture cache");
-		cache.clear();
+		historyCache.clear();
+		persistentCache.clear();
 		cacheClearedSignal.emit();
 	}
 	
 	boolean containsKey(PyramidTileIndex quadtreeIndex) {
-		return cache.containsKey(getCanonicalIndex(quadtreeIndex));
+		return persistentCache.containsKey(quadtreeIndex)
+				|| historyCache.containsKey(getCanonicalIndex(quadtreeIndex));
 	}
 	
 	synchronized TileTexture get(PyramidTileIndex quadtreeIndex) {
 		PyramidTileIndex index = getCanonicalIndex(quadtreeIndex);
-		return cache.get(index);
+		if (persistentCache.containsKey(index))
+			return persistentCache.get(index);
+		else
+			return historyCache.get(index);
 	}
 	
 	synchronized TileTexture getOrCreate(
@@ -64,10 +75,15 @@ public class TextureCache
 			PyramidTextureLoadAdapter loadAdapter) 
 	{
 		PyramidTileIndex index = getCanonicalIndex(quadtreeIndex);
-		if (! containsKey(index)) {
-			cache.put(index, new TileTexture(index, loadAdapter));
-		}
-		return cache.get(index);
+		if (containsKey(index))
+			return get(index);
+		TileTexture texture = new TileTexture(index, loadAdapter);
+		// Store lowest resolution tiles into the persistent cache
+		if (index.getZoom() == index.getMaxZoom())
+			persistentCache.put(index, texture);
+		else
+			historyCache.addFirst(texture);
+		return texture;
 	}
 	
 	/**
@@ -102,17 +118,23 @@ public class TextureCache
 		}
 	}
 
+	/*
 	synchronized public TileTexture put(PyramidTileIndex quadtreeIndex, TileTexture value)
 	{
 		PyramidTileIndex ix = getCanonicalIndex(quadtreeIndex);
 		// log.info("inserting texture at "+ix);
-		return cache.put(ix, value);
+		return ache.addFirst(value);
 	}
+	*/
 	
-	public int size() {return cache.size();}
+	public int size() {return historyCache.size() + persistentCache.size();}
 	
-	public Collection<TileTexture> values() {return cache.values();}
-	
+	public Collection<TileTexture> values() {
+		Set<TileTexture> result = new HashSet<TileTexture>();
+		result.addAll(historyCache.values());
+		result.addAll(persistentCache.values());
+		return result;
+	}
 	
 	static public class OctreeInterpolator
 	implements PyramidIndexInterpolator

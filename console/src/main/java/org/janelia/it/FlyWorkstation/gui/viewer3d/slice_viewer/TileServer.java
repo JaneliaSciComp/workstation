@@ -14,13 +14,13 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 
 public class TileServer 
 implements VolumeImage3d
 {
-	private static final Logger log = LoggerFactory.getLogger(TileServer.class);
+	// private static final Logger log = LoggerFactory.getLogger(TileServer.class);
 	
 	/*
 	 * A TileSet is a group of rectangles that complete the SliceViewer image
@@ -154,6 +154,8 @@ implements VolumeImage3d
 				zoom = ix1.getZoom(); // Zoom out one level for precache
 				break; // only need one tile to initialize...
 			}
+			int zMin = getLoadAdapter().getTileFormat().getOrigin()[2];
+			int zMax = zMin + getLoadAdapter().getTileFormat().getVolumeSize()[2] - 1;
 			for (int deltaZ = 1; deltaZ <= 50; ++deltaZ) {
 				// Step away from center in z, one unique step at a time.
 				// Drive to the next unique z value in each direction.
@@ -196,12 +198,12 @@ implements VolumeImage3d
 					PyramidTileIndex p = new PyramidTileIndex(ix.getX(), ix.getY(), 
 							zPlus, 
 							zoom, ix.getMaxZoom());
-					if (! queuedTextures.contains(m))
+					if ((zMinus >= zMin) && ! queuedTextures.contains(m))
 					{
 						futurePreFetcher.loadDisplayedTexture(m, TileServer.this);
 						queuedTextures.add(m);
 					}
-					if (! queuedTextures.contains(p)) {
+					if ((zPlus <= zMax) && ! queuedTextures.contains(p)) {
 						futurePreFetcher.loadDisplayedTexture(p, TileServer.this);
 						queuedTextures.add(p);
 					}
@@ -214,7 +216,13 @@ implements VolumeImage3d
 		@Override
 		public void execute(PyramidTileIndex ix) {
 			// log.info("texture loaded "+ix+"; "+neededTextures.size());
-			viewTextureChangedSignal.emit(); // too often?
+			// 
+			// TODO - The "needed" textures SHOULD be the only ones we need
+			// to send a repaint signal for. But updating is better for some
+			// reason when we emit every time. And the performance does not seem
+			// bad, so leaving like this for now.
+			if (neededTextures.size() > 0)
+				viewTextureChangedSignal.emit(); // too often?
 			/*
 			if (neededTextures.contains(ix)) {
 				log.info("View texture loaded"+ix);
@@ -236,6 +244,15 @@ implements VolumeImage3d
 		}
 	}
 
+	public void clearCache() {
+		TextureCache cache = getTextureCache();
+		if (cache == null)
+			return;
+		cache.clear();
+		startMinResPreFetchSlot.execute(); // start loading low-res volume
+		viewTextureChangedSignal.emit(); // start loading current view
+	}
+	
 	public TileSet createLatestTiles()
 	{
 		return createLatestTiles(getCamera(), getViewport());

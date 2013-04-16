@@ -11,6 +11,7 @@ implements BasicSignalSlot1<T>
 	// Override this execute() method for your particular slot
 	public abstract void execute(T arg);
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void update(Observable o, Object arg) {
 		execute( (T) arg);	
