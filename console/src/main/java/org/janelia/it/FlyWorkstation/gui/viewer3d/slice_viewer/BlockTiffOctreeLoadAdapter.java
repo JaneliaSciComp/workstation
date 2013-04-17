@@ -10,8 +10,8 @@ import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedImageAdapter;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 
 import com.sun.media.jai.codec.FileSeekableStream;
 import com.sun.media.jai.codec.ImageCodec;
@@ -31,7 +31,7 @@ import com.sun.media.jai.codec.SeekableStream;
 public class BlockTiffOctreeLoadAdapter 
 extends PyramidTextureLoadAdapter 
 {
-	private static final Logger log = LoggerFactory.getLogger(BlockTiffOctreeLoadAdapter.class);
+	// private static final Logger log = LoggerFactory.getLogger(BlockTiffOctreeLoadAdapter.class);
 
 	// Metadata
 	private File topFolder;
@@ -165,7 +165,7 @@ extends PyramidTextureLoadAdapter
 	}
 	
 	@Override
-	public PyramidTextureData loadToRam(PyramidTileIndex tileIndex)
+	public TextureData2dGL loadToRam(PyramidTileIndex tileIndex)
 			throws TileLoadError, MissingTileException 
 	{
 		// Create a local load timer to measure timings just in this thread
@@ -206,7 +206,7 @@ extends PyramidTextureLoadAdapter
 			localLoadTimer.mark("merged channels");
 		}
 		
-		PyramidTextureData result = null;
+		TextureData2dGL result = null;
 		// My texture wrapper implementation
 		TextureData2dGL tex = new TextureData2dGL();
 		tex.loadRenderedImage(composite);

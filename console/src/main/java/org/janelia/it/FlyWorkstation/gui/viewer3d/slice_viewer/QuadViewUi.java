@@ -1,11 +1,10 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
-import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicObservableCamera3d;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -31,20 +30,7 @@ import java.net.URL;
 public class QuadViewUi extends JPanel
 {
 	private static final long serialVersionUID = 1L;
-	private static final Logger log = LoggerFactory.getLogger(QuadViewUi.class);
-
-//	static {
-//		// Use top menu bar on Mac
-//		if (System.getProperty("os.name").contains("Mac")) {
-//			  System.setProperty("apple.laf.useScreenMenuBar", "true");
-//			  System.setProperty("com.apple.mrj.application.apple.menu.about.name", "QuadView");
-//		}
-//		try {
-//			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-//		} catch (Exception e) {
-//			System.out.println("Warning: Failed to set native look and feel.");
-//		}
-//	}
+	// private static final Logger log = LoggerFactory.getLogger(QuadViewUi.class);
 
 	// One shared camera for all viewers.
 	// (there's only one viewer now actually, but you know...)
@@ -96,9 +82,17 @@ public class QuadViewUi extends JPanel
 	private final Action goBackZSlicesAction = new GoBackZSlicesAction(sliceViewer, sliceViewer, -10);
 	// 
 	private final Action clearCacheAction = new AbstractAction() {
+		private static final long serialVersionUID = 1L;
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
 			sliceViewer.getTileServer().clearCache();
+		}
+	};
+	private final Action autoContrastAction = new AbstractAction() {
+		private static final long serialVersionUID = 1L;
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			sliceViewer.autoContrastNow();
 		}
 	};
 
@@ -170,30 +164,6 @@ public class QuadViewUi extends JPanel
 		// TODO update zoom range too?
 	};
 
-    /**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					// log.error("Hey! Does this print?");
-                    JFrame mainFrame = new JFrame();
-                    mainFrame.setTitle("QuadView");
-                    mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                    mainFrame.setResizable(true);
-                    mainFrame.setBounds(100, 100, 994, 653);
-                    QuadViewUi contentPane = new QuadViewUi(mainFrame, true);
-                    mainFrame.setContentPane(contentPane);
-
-                    mainFrame.setVisible(true);
-                } catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
-
 	/**
 	 * Create the frame.
 	 */
@@ -209,6 +179,10 @@ public class QuadViewUi extends JPanel
         clearCacheAction.putValue(Action.NAME, "Clear Cache");
         clearCacheAction.putValue(Action.SHORT_DESCRIPTION, 
 				"Empty image cache (for testing only)");
+        //
+        autoContrastAction.putValue(Action.NAME, "Auto Contrast");
+        autoContrastAction.putValue(Action.SHORT_DESCRIPTION, 
+				"Optimize contrast for current view");
 	}
 
 	private void setupUi(JFrame parentFrame, boolean overrideFrameMenuBar) {
@@ -481,9 +455,13 @@ public class QuadViewUi extends JPanel
 		Component verticalGlue_1 = Box.createVerticalGlue();
 		buttonsPanel.add(verticalGlue_1);
 		
-		JButton btnNewButton_3 = new JButton("New button");
-		btnNewButton_3.setAction(resetColorsAction);
-		buttonsPanel.add(btnNewButton_3);
+		JButton autoContrastButton = new JButton();
+		autoContrastButton.setAction(autoContrastAction);
+		buttonsPanel.add(autoContrastButton);
+		
+		JButton resetColorsButton = new JButton();
+		resetColorsButton.setAction(resetColorsAction);
+		buttonsPanel.add(resetColorsButton);
 		
 		JPanel statusBar = new JPanel();
 		statusBar.setMaximumSize(new Dimension(32767, 30));
@@ -751,12 +729,4 @@ public class QuadViewUi extends JPanel
         }
         sliceViewer.loadURL(tmpFile.toURI().toURL());
     }
-	private class SwingAction extends AbstractAction {
-		public SwingAction() {
-			putValue(NAME, "SwingAction");
-			putValue(SHORT_DESCRIPTION, "Some short description");
-		}
-		public void actionPerformed(ActionEvent e) {
-		}
-	}
 }

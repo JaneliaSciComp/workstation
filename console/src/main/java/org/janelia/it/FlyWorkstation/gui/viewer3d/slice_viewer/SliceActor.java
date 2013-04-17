@@ -56,6 +56,7 @@ implements GLActor
 		if (tiles == null)
 			return;
 		// Possibly eliminate texture cache
+		// TODO - eliminate any previously deleted textures from texture cache
 		if (needsGlDisposal) {
 			// log.info("Clearing tile cache");
 			dispose(gl);
@@ -90,7 +91,9 @@ implements GLActor
 		}
 		shader.unload(gl);
 		
-		// TODO optional numeral display at high zoom
+		if (pixelsPerVoxel > 15.0) {
+			// TODO optional numeral display at high zoom			
+		}
 
 		// Outline tiles for viewer debugging
 		final boolean bOutlineTiles = false;
@@ -127,12 +130,14 @@ implements GLActor
 	@Override
 	public void dispose(GL2 gl) {
 		// System.out.println("dispose RavelerTileServer");
-		for (TileTexture tileTexture : tileServer.getTextureCache().values()) {
-			if (tileTexture.getStage().ordinal() < TileTexture.Stage.GL_LOADED.ordinal())
-				continue;
-			PyramidTexture joglTexture = tileTexture.getTexture();
-			joglTexture.destroy(gl);
-			tileTexture.setStage(TileTexture.Stage.RAM_LOADED);
+		if ((tileServer != null) && (tileServer.getTextureCache() != null)) {
+			for (TileTexture tileTexture : tileServer.getTextureCache().values()) {
+				if (tileTexture.getStage().ordinal() < TileTexture.Stage.GL_LOADED.ordinal())
+					continue;
+				PyramidTexture joglTexture = tileTexture.getTexture();
+				joglTexture.destroy(gl);
+				tileTexture.setStage(TileTexture.Stage.RAM_LOADED);
+			}
 		}
 		needsGlDisposal = false;
 	}

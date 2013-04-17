@@ -14,13 +14,12 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 import javax.media.opengl.GLProfile;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Point2D;
 import java.net.URL;
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // Viewer widget for viewing 2D quadtree tiles from pyramid data structure
 public class SliceViewer 
@@ -28,7 +27,7 @@ extends BaseGLViewer
 implements MouseModalWidget, VolumeViewer
 {
 	private static final long serialVersionUID = 1L;
-	// private static final Logger log = LoggerFactory.getLogger(SliceViewer.class);
+	private static final Logger log = LoggerFactory.getLogger(SliceViewer.class);
 	static public GLProfile glProfile;
 	static {
 		glProfile = BaseGLViewer.profile;
@@ -49,7 +48,6 @@ implements MouseModalWidget, VolumeViewer
 //            "Q:\\\\brunsTest\\clack_test16\\Z");
 			"/groups/scicomp/jacsData/brunsTest/clack_test16/Z");
 	protected VolumeImage3d volumeImage = tileServer;
-	// TODO - add dataChangedSignal to GLActor
 	protected SliceActor volumeActor = new SliceActor(tileServer);
 	private ImageColorModel imageColorModel;
 	
@@ -98,6 +96,41 @@ implements MouseModalWidget, VolumeViewer
         tileServer.getViewTextureChangedSignal().connect(getRepaintSlot());
         imageColorModel.getColorModelChangedSignal().connect(getRepaintSlot());
         resetView();
+	}
+
+	public void autoContrastNow() {
+		ImageBrightnessStats bs = tileServer.getCurrentBrightnessStats();
+		if (bs == null)
+			return;
+		// Remember which channel has the extreme values
+		int min = Integer.MIN_VALUE;
+		int max = Integer.MAX_VALUE;
+		int minChan = 0;
+		int maxChan = 0;
+		// Set one channel at a time
+		for (int c = 0; c < bs.size(); ++c) {
+			if (c >= imageColorModel.getChannelCount())
+				break;
+			ChannelColorModel chanModel = imageColorModel.getChannel(c);
+			ChannelBrightnessStats chanStats = bs.get(c);
+			chanModel.setBlackLevel(chanStats.getMin());
+			chanModel.setWhiteLevel(chanStats.getMax());
+			if (chanStats.getMax() >= max) {
+				max = chanStats.getMax();
+				maxChan = c;
+			}
+			if (chanStats.getMin() <= min) {
+				min = chanStats.getMin();
+				minChan = c;
+			}
+		}
+		// In case black and/or white levels are locked,
+		// re-specify the most extreme values
+		if (bs.size() > 1) {
+			imageColorModel.getChannel(maxChan).setWhiteLevel(max);
+			imageColorModel.getChannel(minChan).setBlackLevel(min);
+			log.info("max = "+max+"; min = "+min);
+		}
 	}
 
 	public Slot1<URL> getLoadUrlSlot() {

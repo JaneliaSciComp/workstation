@@ -30,7 +30,7 @@ public class TileTexture
 	private Stage stage = Stage.UNINITIALIZED;
 	private PyramidTileIndex index;
 	// private URL url;
-	private PyramidTextureData textureData;
+	private TextureData2dGL textureData;
 	private PyramidTexture texture;
 	private PyramidTextureLoadAdapter loadAdapter;
 	
@@ -133,6 +133,12 @@ public class TileTexture
 
 	public void setStage(Stage stage) {
 		this.stage = stage;
+	}
+
+	public ImageBrightnessStats getBrightnessStats() {
+		if (stage.ordinal() < Stage.RAM_LOADED.ordinal())
+			return null;
+		return textureData.getBrightnessStats();
 	}
 
 }

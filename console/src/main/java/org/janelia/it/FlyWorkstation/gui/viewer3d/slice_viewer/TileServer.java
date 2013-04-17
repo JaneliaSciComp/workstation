@@ -556,4 +556,16 @@ implements VolumeImage3d
 		this.neededTextures = result;
 	}
 
+	public ImageBrightnessStats getCurrentBrightnessStats() {
+		ImageBrightnessStats result = null;
+		for (Tile2d tile : latestTiles) {
+			ImageBrightnessStats bs = tile.getBrightnessStats();
+			if (result == null)
+				result = bs;
+			else if (bs != null)
+				result.combine(tile.getBrightnessStats());
+		}
+		return result;
+	}
+
 }
