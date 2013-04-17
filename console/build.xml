@@ -15,7 +15,7 @@
 		<path id="compile.classpath">
 	        <fileset dir="${model.module}/build/jars" includes="jacs-model.jar" />
 	        <fileset dir="${shared.module}/build/jars" includes="jacs-shared.jar" />
-		    <fileset dir="${compute.module}/build/jars" includes="**/*.jar"/>
+		    <fileset dir="${compute.module}/build/jars" includes="*.jar"/>
 			<fileset dir="${common.module}/Hibernate-3.2" includes="**/*.jar"/>
 			<fileset dir="${common.module}/LOCI" includes="**/*.jar"/>
 			<fileset dir="${common.module}/Axis2-1.5.5" includes="**/*.jar"/>
