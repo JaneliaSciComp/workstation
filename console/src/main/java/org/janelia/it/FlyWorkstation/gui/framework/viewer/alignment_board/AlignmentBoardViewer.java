@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -12,6 +13,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import loci.formats.out.TiffWriter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
@@ -21,6 +23,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerPane;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.exporter.TiffExporter;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardSettingsDialog;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.RangeSlider;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
@@ -571,6 +574,19 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                         oldVal = new Integer( 0 );
                     }
                     byteValToCount.put( textureBytes[i], ++oldVal );
+
+                }
+
+                try {
+                    TiffExporter exporter = new TiffExporter();
+                    exporter.export( texture );
+                    exporter.close();
+
+                } catch ( Exception ex ) {
+                    ex.printStackTrace();
+                    logger.error( "Exception on tif export " + ex.getMessage() );
+                    SessionMgr.getSessionMgr().handleException( ex );
+
                 }
 
                 for ( Byte b: byteValToCount.keySet() ) {
