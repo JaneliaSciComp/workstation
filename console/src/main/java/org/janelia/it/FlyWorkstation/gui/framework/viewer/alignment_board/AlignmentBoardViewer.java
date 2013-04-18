@@ -1,16 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
-import javax.swing.border.TitledBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
@@ -22,12 +17,10 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerPane;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardSettingsDialog;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.RangeSlider;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ABContextDataSource;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CoordCropper3D;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.VolumeWritebackHandler;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.domain.Neuron;
@@ -327,7 +320,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
         // Add this last.  "show-loading" removes it.  This way, it is shown only
         // when it becomes un-busy.
-        add(wrapperPanel, BorderLayout.CENTER);
+        add( wrapperPanel, BorderLayout.CENTER );
 
     }
 
@@ -399,7 +392,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             mip3d.refresh();
 
             // Here, should load volumes, for all the different items given.
-            //loadWorker = new ABLoadWorker( this, context, mip3d );
             loadWorker = new RenderablesLoadWorker(
                     new ABContextDataSource( context ), renderMapping, this, settings.getAlignmentBoardSettings()
             );
@@ -432,7 +424,12 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         JPanel rtnVal = new JPanel();
         rtnVal.setLayout( new BorderLayout() );
         rtnVal.add( mip3d, BorderLayout.CENTER );
-//        rtnVal.add( sliderPanel, BorderLayout.NORTH );
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout( new BorderLayout() );
+        JButton launchSettingsButton = new JButton();
+        launchSettingsButton.setAction(settings.getLaunchAction());
+        buttonPanel.add(launchSettingsButton, BorderLayout.EAST);
+        rtnVal.add( buttonPanel, BorderLayout.NORTH );
         return rtnVal;
     }
 
@@ -489,6 +486,11 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     renderMapping, absoluteCropCoords
             );
             writebackHandler.writeBackVolumeSelection();
+        }
+
+        @Override
+        public void setCropBlackout( boolean blackout ) {
+            mip3d.setCropOutLevel( blackout ? 0.0f : Mip3d.DEFAULT_CROPOUT );
         }
     }
 

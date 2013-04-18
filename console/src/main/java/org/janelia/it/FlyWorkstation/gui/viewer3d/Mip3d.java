@@ -18,7 +18,8 @@ import java.awt.event.MouseWheelEvent;
 import java.util.Collection;
 
 public class Mip3d extends BaseGLViewer implements ActionListener {
-	private static final long serialVersionUID = 1L;
+    public static final float DEFAULT_CROPOUT = 0.05f;
+    private static final long serialVersionUID = 1L;
 	private MipRenderer renderer = new MipRenderer();
 
 	public enum InteractionMode {
@@ -238,6 +239,17 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
             if ( actor instanceof  VolumeBrick ) {
                 VolumeBrick vb = ( VolumeBrick) actor;
                 vb.setCropCoords( cropCoords );
+            }
+        }
+
+        repaint();
+    }
+
+    public void setCropOutLevel( float cropOutLevel ) {
+        for ( GLActor actor: renderer.getActors() ) {
+            if ( actor instanceof  VolumeBrick ) {
+                VolumeBrick vb = ( VolumeBrick) actor;
+                vb.setCropOutLevel(cropOutLevel);
             }
         }
 

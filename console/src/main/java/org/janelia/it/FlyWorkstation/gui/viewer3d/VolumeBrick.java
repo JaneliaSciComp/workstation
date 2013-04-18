@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.jogamp.common.nio.Buffers;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardSettingsDialog;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.VolumeBrickShader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
@@ -56,6 +57,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     private boolean bIsInitialized;
     private boolean bUseSyntheticData = false;
     private float gammaAdjustment = 1.0f;
+    public float cropOutLevel = Mip3d.DEFAULT_CROPOUT;
 
     private Logger logger = LoggerFactory.getLogger( VolumeBrick.class );
 
@@ -87,7 +89,11 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         }
     }
 
-	@Override
+    public void setCropOutLevel(float cropOutLevel) {
+        this.cropOutLevel = cropOutLevel;
+    }
+
+    @Override
 	public void init(GL2 gl) {
         // Avoid carrying out any operations if there is no real data.
         if ( signalTextureMediator == null  &&  maskTextureMediator == null ) {
@@ -180,6 +186,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
                 volumeBrickShader.setVolumeMaskApplied();
             }
             volumeBrickShader.setGammaAdjustment( gammaAdjustment );
+            volumeBrickShader.setCropOutLevel( cropOutLevel );
             volumeBrickShader.load(gl);
         }
 

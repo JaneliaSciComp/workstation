@@ -1,9 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements;
 
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CoordCropper3D;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.VolumeWritebackHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,8 +12,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListDataListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
 import java.util.*;
 import java.util.List;
 
@@ -45,10 +42,11 @@ public class AlignmentBoardSettingsDialog extends JDialog {
             "to search other specimens and present the resulting overlappoing volume." +
             "</html>";
 
-    private static final String LAUNCH_AS = "Alignment Board Settings";
+    private static final String LAUNCH_AS = "Settings";
     private static final String LAUNCH_DESCRIPTION = "Present a dialog allowing users to change settings.";
-    private static final Dimension SIZE = new Dimension( 350, 250 );
+    private static final Dimension SIZE = new Dimension( 400, 380 );
     private static final String GAMMA_TOOLTIP = "Adjust the gamma level, or brightness.";
+    private static final Dimension DN_SAMPLE_DROPDOWN_SIZE = new Dimension(130, 50);
 
     private Component centering;
     private JButton go;
@@ -60,6 +58,8 @@ public class AlignmentBoardSettingsDialog extends JDialog {
     private RangeSlider ySlider;
     private RangeSlider zSlider;
 
+    private JCheckBox blackoutCheckbox;
+
     private double currentGamma = DEFAULT_GAMMA;
     private double currentDownSampleRate;
     private boolean currentUseSignalData = true;
@@ -70,7 +70,6 @@ public class AlignmentBoardSettingsDialog extends JDialog {
     private Collection<SettingsListener> listeners;
 
     private Logger logger = LoggerFactory.getLogger( AlignmentBoardSettingsDialog.class );
-
 
     /**
      * @param centering this dialog will be centered over the "centering" component.
@@ -109,14 +108,14 @@ public class AlignmentBoardSettingsDialog extends JDialog {
         logger.info("Volume maxima provided {}, {}, " + z , x, y );
         xSlider.setValue(0);
         xSlider.setMaximum(x);
-        xSlider.setUpperValue( x );
+        xSlider.setUpperValue(x);
 
         ySlider.setValue(0);
         ySlider.setMaximum(y);
         ySlider.setUpperValue(y);
 
         zSlider.setValue( 0 );
-        zSlider.setMaximum( z );
+        zSlider.setMaximum(z);
         zSlider.setUpperValue(z);
     }
 
@@ -221,9 +220,15 @@ public class AlignmentBoardSettingsDialog extends JDialog {
 
     private synchronized void fireSavebackEvent( float[] absoluteCoords ) {
         for ( SettingsListener listener: listeners ) {
-            listener.exportSelection( absoluteCoords );
+            listener.exportSelection(absoluteCoords);
         }
 
+    }
+
+    private synchronized void fireBlackOutCrop( boolean blackout ) {
+        for ( SettingsListener listener: listeners ) {
+            listener.setCropBlackout(blackout);
+        }
     }
 
     private void createGui() {
@@ -243,14 +248,21 @@ public class AlignmentBoardSettingsDialog extends JDialog {
         ySlider.setBorder( new TitledBorder( "Selection Y Bounds" ) );
         zSlider.setBorder( new TitledBorder( "Selection Z Bounds" ) );
 
+        blackoutCheckbox = new JCheckBox( "Non-selected region blacked out" );
+        blackoutCheckbox.setSelected( false );
+        blackoutCheckbox.addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent ae ) {
+                fireBlackOutCrop( blackoutCheckbox.isSelected() );
+            }
+        });
+
         JButton searchButton = new JButton( "Geometric Search" );
-        JPanel sliderPanel = new JPanel();
-        sliderPanel.setLayout( new GridLayout( 1, 4 ) );
-        sliderPanel.add( xSlider );
-        sliderPanel.add( ySlider );
-        sliderPanel.add( zSlider );
-        sliderPanel.add( searchButton );
-        sliderPanel.setToolTipText(GEO_SEARCH_TOOLTIP);
+        JPanel regionSelectionPanel = new JPanel();
+        regionSelectionPanel.setLayout(new GridLayout(1, 3));
+        regionSelectionPanel.add(xSlider);
+        regionSelectionPanel.add(ySlider);
+        regionSelectionPanel.add(zSlider);
+        regionSelectionPanel.setToolTipText(GEO_SEARCH_TOOLTIP);
         searchButton.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent ae ) {
                 logger.info(
@@ -329,21 +341,34 @@ public class AlignmentBoardSettingsDialog extends JDialog {
         );
 
         GridBagConstraints downSampleConstraints = new GridBagConstraints(
-                0, 1, 1, 1, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
+                0, 1, 3, 1, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
+        downSampleRateDropdown.setMinimumSize(DN_SAMPLE_DROPDOWN_SIZE);
+        downSampleRateDropdown.setMaximumSize(DN_SAMPLE_DROPDOWN_SIZE);
+        downSampleRateDropdown.setPreferredSize(DN_SAMPLE_DROPDOWN_SIZE);
 
         GridBagConstraints signalDataConstraints = new GridBagConstraints(
-                0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
+                1, 1, 1, 1, 0.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
 
         GridBagConstraints sliderPanelConstraints = new GridBagConstraints(
-                0, 3, 2, 1, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
+                0, 2, 2, 1, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
+        );
+
+        GridBagConstraints blackoutCheckboxConstraints = new GridBagConstraints(
+                0, 3, 3, 1, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
+        );
+
+        GridBagConstraints geoSearchBtnConstraints = new GridBagConstraints(
+                0, 4, 1, 1, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
 
         centralPanel.add( brightnessSlider, brightnessConstraints );
         centralPanel.add( downSampleRateDropdown, downSampleConstraints );
         centralPanel.add( useSignalDataCheckbox, signalDataConstraints );
-        centralPanel.add( sliderPanel, sliderPanelConstraints );
+        centralPanel.add( blackoutCheckbox, blackoutCheckboxConstraints );
+        centralPanel.add( regionSelectionPanel, sliderPanelConstraints );
+        centralPanel.add( searchButton, geoSearchBtnConstraints );
         add(centralPanel, BorderLayout.CENTER);
 
         JPanel bottomButtonPanel = new JPanel();
@@ -423,6 +448,7 @@ public class AlignmentBoardSettingsDialog extends JDialog {
         void updateSettings();
         void setSelectedCoords( float[] normalizedCoords );
         void exportSelection( float[] absoluteCoords );
+        void setCropBlackout( boolean blackout );
     }
 
     public class LaunchAction extends AbstractAction {

@@ -4,6 +4,7 @@
  */
 package org.janelia.it.FlyWorkstation.gui.viewer3d.shader;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator;
 
 import javax.media.opengl.GL2;
@@ -28,6 +29,7 @@ public class VolumeBrickShader extends AbstractShader {
 
     private boolean volumeMaskApplied = false;
     private float gammaAdjustment = 1.0f;
+    private float cropOutLevel = Mip3d.DEFAULT_CROPOUT;
     // As all -1, sends signal "no cropping required."
     private float[] cropCoords = new float[] {
 //        0.0f, 1.0f,  // startX, endX
@@ -82,6 +84,15 @@ public class VolumeBrickShader extends AbstractShader {
 
     public void setColorMask( float[] rgb ) {
         this.rgb = rgb;
+    }
+
+    /**
+     * How bright should "out-of-crop-volume" voxels shine?
+     *
+     * @param cropOutLevel 0 means blacked out; 1.0 means bright as anything else.
+     */
+    public void setCropOutLevel(float cropOutLevel) {
+        this.cropOutLevel = cropOutLevel;
     }
 
     /** Calling this implies that all steps for setting up this special texture have been carried out. */
@@ -209,6 +220,20 @@ public class VolumeBrickShader extends AbstractShader {
                 if ( setUniformError != 0 ) {
                     throw new RuntimeException( "Failed to set uniform for " + cropUniformName + " error is " + setUniformError );
                 }
+
+            }
+
+            int cropLevelLoc = gl.glGetUniformLocation(shaderProgram, "cropOutLevel");
+            if ( cropLevelLoc == -1 ) {
+                throw new RuntimeException( "Failed to find unifomrm location for crop-out level" );
+            }
+            gl.glUniform1f(
+                    cropLevelLoc,
+                    cropOutLevel
+            );
+            int setUniformError = gl.glGetError();
+            if ( setUniformError != 0 ) {
+                throw new RuntimeException( "Failed to set uniform for crop-out level" );
             }
         }
     }
@@ -237,5 +262,4 @@ public class VolumeBrickShader extends AbstractShader {
         );
 
     }
-
 }

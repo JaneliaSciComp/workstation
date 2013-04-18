@@ -5,6 +5,7 @@ uniform sampler3D maskingTexture;
 uniform sampler3D colorMapTexture;
 
 uniform float gammaAdjustment = 1.0;
+uniform float cropOutLevel = 0.05;
 uniform vec4 colorMask;
 uniform int hasMaskingTexture;
 
@@ -175,7 +176,7 @@ vec4 crop(vec4 origColor)
     }
     else {
         // Very light crop color.
-        return vec4( 0.05 * origColor.x, 0.05 * origColor.y, 0.05 * origColor.z, 1.0 );
+        return vec4( cropOutLevel * origColor.x, cropOutLevel * origColor.y, cropOutLevel * origColor.z, 1.0 );
 //        return vec4( 0.2 , 0.2 , 0.2 , 1.0 );
     }
 }
