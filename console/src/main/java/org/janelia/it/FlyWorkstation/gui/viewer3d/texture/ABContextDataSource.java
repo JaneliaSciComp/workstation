@@ -86,6 +86,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
                             nfRenderable.setBean( neuronBean );
                             nfRenderable.setCompartment( false );
 
+                            //sampleId = 1735570990882095202L; // Push different set of input files.
                             Neuron neuronItem = (Neuron)item.getItemWrapper();
                             nfRenderable.setMaskPath( getMaskPath( neuronItem, sampleId ) );
                             nfRenderable.setChannelPath( getChannelPath( neuronItem, sampleId ) );
