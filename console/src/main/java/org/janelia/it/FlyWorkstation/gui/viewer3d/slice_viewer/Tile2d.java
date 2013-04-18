@@ -256,4 +256,10 @@ implements GLActor
 		this.yMax  = yMax;
 	}
 
+	public ImageBrightnessStats getBrightnessStats() {
+		if (bestTexture == null)
+			return null;
+		return bestTexture.getBrightnessStats();
+	}
+
 }

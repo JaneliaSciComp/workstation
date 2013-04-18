@@ -61,7 +61,9 @@ public class Hud extends ModalDialog {
         previewLabel.setRequestFocusEnabled(false);
         init3dGui();
         add(previewLabel, BorderLayout.CENTER);
-        mip3d.setDoubleBuffered(true);
+        if (mip3d!=null) {
+            mip3d.setDoubleBuffered(true);
+        }
 	}
 
     public void toggleDialog() {

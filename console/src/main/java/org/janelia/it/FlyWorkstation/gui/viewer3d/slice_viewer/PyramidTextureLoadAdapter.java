@@ -20,7 +20,7 @@ public abstract class PyramidTextureLoadAdapter
 	
 	protected PyramidTileFormat tileFormat = new PyramidTileFormat();
 
-	abstract PyramidTextureData loadToRam(PyramidTileIndex tileIndex)
+	abstract TextureData2dGL loadToRam(PyramidTileIndex tileIndex)
 		throws TileLoadError, MissingTileException;
 
 	public PyramidTileFormat getTileFormat() {

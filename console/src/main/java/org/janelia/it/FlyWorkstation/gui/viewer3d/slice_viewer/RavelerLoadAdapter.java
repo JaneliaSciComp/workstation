@@ -57,7 +57,7 @@ extends PyramidTextureLoadAdapter
 	}
 
 	@Override
-	public PyramidTextureData loadToRam(PyramidTileIndex index) 
+	public TextureData2dGL loadToRam(PyramidTileIndex index) 
 	throws TileLoadError, MissingTileException
 	{
 		int z = index.getZ();

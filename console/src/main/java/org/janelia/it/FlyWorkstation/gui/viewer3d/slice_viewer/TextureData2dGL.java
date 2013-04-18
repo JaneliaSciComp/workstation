@@ -257,54 +257,40 @@ implements PyramidTextureData
 		return channelCount;
 	}
 
-	public MinMax getMinMax() {
+	public ImageBrightnessStats getBrightnessStats() 
+	{
 		ByteBuffer bb = getPixels();
+		if (bb == null)
+			return null;
 		if (bb.capacity() < 1)
 			return null;
-		MinMax result = new MinMax();
-		bb.rewind();
-		boolean foundValue = false;
-		if (getBitDepth() == 16) {
-			ShortBuffer buf = bb.asShortBuffer();
-			while (buf.hasRemaining()) {
-				int val = buf.get();
-				if (val == 0)
-					continue;
-				if (! foundValue) { // initialize with first non-zero value
-					result.min = val;
-					result.max = val;
-					foundValue = true;
-				}
-				if (val > result.max)
-					result.max = val;
-				if (val < result.min)
-					result.min = val;
-			}
-		}
-		else {
-			while (bb.hasRemaining()) {
-				int val = bb.get();
-				if (val == 0)
-					continue;
-				if (! foundValue) { // initialize with first non-zero value
-					result.min = val;
-					result.max = val;
-					foundValue = true;
-				}
-				if (val > result.max)
-					result.max = val;
-				if (val < result.min)
-					result.min = val;
-			}
-		}
-		if (! foundValue)
+		if (height*width*channelCount < 1)
 			return null;
+		ImageBrightnessStats result = new ImageBrightnessStats();
+		bb.rewind();
+		// Initialize channel statistics
+		for (int c = 0; c < channelCount; ++c)
+			result.add(new ChannelBrightnessStats());
+		// Read pixel values
+		ShortBuffer buf16 = bb.asShortBuffer(); // ...which might be 16-bit values...
+		for (int y = 0; y < height; ++y) {
+			for (int x = 0; x < width; ++x) {
+				for (int c = 0; c < channelCount; ++c) {
+					ChannelBrightnessStats chanStats = result.get(c);
+					int val = 0;
+					if (getBitDepth() > 8)
+						val = buf16.get(); // 16 bit value
+					else
+						val = bb.get(); // 8 bit value
+					if (val == 0)
+						continue; // zero means "no data"
+					chanStats.setMax(Math.max(chanStats.getMax(), val));
+					chanStats.setMin(Math.min(chanStats.getMin(), val));
+				}
+			}
+		}
+		bb.rewind();
 		return result;
-	}
-	
-	static public class MinMax {
-		public int min;
-		public int max;
 	}
 
 }
