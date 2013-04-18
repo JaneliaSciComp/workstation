@@ -39,6 +39,8 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
     private JTextField nameInput;
     private JLabel identifierLabel;
     private JTextField identifierInput;
+    private JLabel suffixLabel;
+    private JTextField suffixInput;
     private JCheckBox sageSyncCheckbox;
     private HashMap<String,JCheckBox> processCheckboxes = new HashMap<String,JCheckBox>();
     
@@ -134,6 +136,12 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
         identifierLabel.setLabelFor(identifierInput);
         attrPanel.add(identifierLabel, "gap para");
         attrPanel.add(identifierInput);
+
+        suffixLabel = new JLabel("Sample Name Suffix: ");
+        suffixInput = new JTextField(40);
+        suffixLabel.setLabelFor(suffixInput);
+        attrPanel.add(suffixLabel, "gap para");
+        attrPanel.add(suffixInput);
         
         sageSyncCheckbox = new JCheckBox("Synchronize images from SAGE");
         attrPanel.add(sageSyncCheckbox, "gap para, span 2");
@@ -147,6 +155,10 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
 			if (dataSetIdentifier!=null) {
 				identifierInput.setText(dataSetIdentifier);
 	    	}		
+			String sampleNameSuffix = dataSetEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SAMPLE_NAME_SUFFIX);
+            if (sampleNameSuffix!=null) {
+                suffixInput.setText(sampleNameSuffix);
+            }   
         	if (dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAGE_SYNC)!=null) {
         		sageSyncCheckbox.setSelected(true);
         	}
@@ -176,6 +188,18 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
 					dataSetEntity.setName(nameInput.getText());	
 				}
 				
+				String sampleNameSuffix = suffixInput.getText();
+				if (!StringUtils.isEmpty(sampleNameSuffix)) {
+				    ModelMgr.getModelMgr().setAttributeValue(dataSetEntity, EntityConstants.ATTRIBUTE_SAMPLE_NAME_SUFFIX, sampleNameSuffix);    
+				}
+				else {
+                    EntityData suffixEd = dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAMPLE_NAME_SUFFIX);
+                    if (suffixEd!=null) {
+                        dataSetEntity.getEntityData().remove(suffixEd);
+                        ModelMgr.getModelMgr().removeEntityData(suffixEd);
+                    }
+				}
+				
 				ModelMgr.getModelMgr().setAttributeValue(dataSetEntity, EntityConstants.ATTRIBUTE_PIPELINE_PROCESS, getCheckboxValues(processCheckboxes));
 				
 				if (sageSyncCheckbox.isSelected()) {
@@ -184,8 +208,8 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
 				else {
 					EntityData sageSyncEd = dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAGE_SYNC);
 					if (sageSyncEd!=null) {
-						ModelMgr.getModelMgr().removeEntityData(sageSyncEd);
-						dataSetEntity.getEntityData().remove(sageSyncEd);
+					    dataSetEntity.getEntityData().remove(sageSyncEd);
+					    ModelMgr.getModelMgr().removeEntityData(sageSyncEd);
 					}
 				}
 			}

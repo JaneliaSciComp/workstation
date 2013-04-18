@@ -67,6 +67,12 @@ public class DataSetListDialog extends ModalDialog implements Accessibility, Ref
                     	if (EntityConstants.ATTRIBUTE_PIPELINE_PROCESS.equals(column.getName())) {
                     		return decodeEnumList(PipelineProcess.class, value);
                     	}
+                    	else if (EntityConstants.ATTRIBUTE_SAMPLE_NAME_SUFFIX.equals(column.getName())) {
+                            return value;
+                        }
+                    	else if (EntityConstants.ATTRIBUTE_SAGE_SYNC.equals(column.getName())) {
+                            return new Boolean(value!=null);
+                        }
                     	else {
                     		return value;	
                     	}
@@ -140,7 +146,9 @@ public class DataSetListDialog extends ModalDialog implements Accessibility, Ref
         
         dynamicTable.addColumn("Name");
         dynamicTable.addColumn(EntityConstants.ATTRIBUTE_PIPELINE_PROCESS);
-
+        dynamicTable.addColumn(EntityConstants.ATTRIBUTE_SAMPLE_NAME_SUFFIX);
+        dynamicTable.addColumn(EntityConstants.ATTRIBUTE_SAGE_SYNC);
+        
         JButton addButton = new JButton("Add new");
         addButton.setToolTipText("Add a new data set definition");
         addButton.addActionListener(new ActionListener() {
