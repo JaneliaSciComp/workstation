@@ -1,12 +1,17 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements;
 
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CoordCropper3D;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.VolumeWritebackHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.ListDataListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -34,6 +39,12 @@ public class AlignmentBoardSettingsDialog extends JDialog {
             + "</html>";
     public static final double DEFAULT_GAMMA = 1.0;
 
+    private static final String GEO_SEARCH_TOOLTIP = "<html>" +
+            "Adjust the X, Y, and Z sliders, to leave only the template volume of <br>" +
+            "search lit.  This template volume will then be used to derive the coordinates, <br>" +
+            "to search other specimens and present the resulting overlappoing volume." +
+            "</html>";
+
     private static final String LAUNCH_AS = "Alignment Board Settings";
     private static final String LAUNCH_DESCRIPTION = "Present a dialog allowing users to change settings.";
     private static final Dimension SIZE = new Dimension( 350, 250 );
@@ -44,6 +55,10 @@ public class AlignmentBoardSettingsDialog extends JDialog {
     private JSlider brightnessSlider;
     private JCheckBox useSignalDataCheckbox;
     private JComboBox downSampleRateDropdown;
+
+    private RangeSlider xSlider;
+    private RangeSlider ySlider;
+    private RangeSlider zSlider;
 
     private double currentGamma = DEFAULT_GAMMA;
     private double currentDownSampleRate;
@@ -61,7 +76,7 @@ public class AlignmentBoardSettingsDialog extends JDialog {
      * @param centering this dialog will be centered over the "centering" component.
      */
     public AlignmentBoardSettingsDialog( Component centering ) {
-        this.setModal( true );
+        this.setModal( false );
         this.setSize(SIZE);
         this.centering = centering;
         this.listeners = new ArrayList<SettingsListener>();
@@ -88,6 +103,21 @@ public class AlignmentBoardSettingsDialog extends JDialog {
         settings.setGammaFactor( getGammaFactor() );
         settings.setShowChannelData( isUseSignalData() );
         return settings;
+    }
+
+    public void setVolumeMaxima( int x, int y, int z ) {
+        logger.info("Volume maxima provided {}, {}, " + z , x, y );
+        xSlider.setValue(0);
+        xSlider.setMaximum(x);
+        xSlider.setUpperValue( x );
+
+        ySlider.setValue(0);
+        ySlider.setMaximum(y);
+        ySlider.setUpperValue(y);
+
+        zSlider.setValue( 0 );
+        zSlider.setMaximum( z );
+        zSlider.setUpperValue(z);
     }
 
     /**
@@ -183,8 +213,72 @@ public class AlignmentBoardSettingsDialog extends JDialog {
         }
     }
 
+    private synchronized void fireSettingsEvent( float[] cropCoords ) {
+        for ( SettingsListener listener: listeners ) {
+            listener.setSelectedCoords( cropCoords );
+        }
+    }
+
+    private synchronized void fireSavebackEvent( float[] absoluteCoords ) {
+        for ( SettingsListener listener: listeners ) {
+            listener.exportSelection( absoluteCoords );
+        }
+
+    }
+
     private void createGui() {
         setLayout( new BorderLayout() );
+
+        xSlider = new RangeSlider( 0, 100 );  // Dummy starting ranges.
+        ySlider = new RangeSlider( 0, 100 );
+        zSlider = new RangeSlider( 0, 100 );
+
+        ChangeListener listener = new SliderChangeListener( xSlider, ySlider, zSlider, this );
+
+        xSlider.addChangeListener( listener );
+        ySlider.addChangeListener( listener );
+        zSlider.addChangeListener( listener );
+
+        xSlider.setBorder( new TitledBorder( "Selection X Bounds" ) );
+        ySlider.setBorder( new TitledBorder( "Selection Y Bounds" ) );
+        zSlider.setBorder( new TitledBorder( "Selection Z Bounds" ) );
+
+        JButton searchButton = new JButton( "Geometric Search" );
+        JPanel sliderPanel = new JPanel();
+        sliderPanel.setLayout( new GridLayout( 1, 4 ) );
+        sliderPanel.add( xSlider );
+        sliderPanel.add( ySlider );
+        sliderPanel.add( zSlider );
+        sliderPanel.add( searchButton );
+        sliderPanel.setToolTipText(GEO_SEARCH_TOOLTIP);
+        searchButton.addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent ae ) {
+                logger.info(
+                        "Selection covers (X): " + xSlider.getValue() + ".." + xSlider.getUpperValue() +
+                                " and (Y): " + ySlider.getValue() + ".." + ySlider.getUpperValue() +
+                                " and (Z): " + zSlider.getValue() + ".." + zSlider.getUpperValue()
+                );
+                boolean partialVolumeConstraints = false;
+                if ( xSlider.getValue() != 0  ||  ySlider.getValue() != 0  ||  zSlider.getValue() != 0 ) {
+                    partialVolumeConstraints = true;
+                }
+                else if ( xSlider.getUpperValue() != xSlider.getMaximum()  ||
+                        ySlider.getUpperValue() != ySlider.getMaximum()  ||
+                        zSlider.getUpperValue() != zSlider.getMaximum() ) {
+                    partialVolumeConstraints = true;
+                }
+
+                CoordCropper3D cropper = new CoordCropper3D();
+                float[] absoluteCropCoords =
+                        partialVolumeConstraints ?
+                                cropper.getCropCoords( xSlider, ySlider, zSlider, getDownsampleRate() ) :
+                                null;
+
+                fireSavebackEvent( absoluteCropCoords );
+
+            }
+        });
+
         brightnessSlider = new JSlider();
         brightnessSlider.setMaximum( 1000 );
         brightnessSlider.setMinimum(0);
@@ -242,9 +336,14 @@ public class AlignmentBoardSettingsDialog extends JDialog {
                 0, 2, 1, 1, 0.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
         );
 
+        GridBagConstraints sliderPanelConstraints = new GridBagConstraints(
+                0, 3, 2, 1, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
+        );
+
         centralPanel.add( brightnessSlider, brightnessConstraints );
         centralPanel.add( downSampleRateDropdown, downSampleConstraints );
         centralPanel.add( useSignalDataCheckbox, signalDataConstraints );
+        centralPanel.add( sliderPanel, sliderPanelConstraints );
         add(centralPanel, BorderLayout.CENTER);
 
         JPanel bottomButtonPanel = new JPanel();
@@ -318,10 +417,12 @@ public class AlignmentBoardSettingsDialog extends JDialog {
         }
     }
 
-    /** Callers should implmeent this to observe the input settings provided by uesr. */
+    /** Callers should implement this to observe the input settings provided by uesr. */
     public static interface SettingsListener {
         void setBrightness( double brightness );
         void updateSettings();
+        void setSelectedCoords( float[] normalizedCoords );
+        void exportSelection( float[] absoluteCoords );
     }
 
     public class LaunchAction extends AbstractAction {
@@ -354,4 +455,27 @@ public class AlignmentBoardSettingsDialog extends JDialog {
         }
 
     }
+
+    // Add listener to update display.
+    public static class SliderChangeListener implements ChangeListener {
+        private RangeSlider[] sliders;
+        private AlignmentBoardSettingsDialog dialog;
+
+        public SliderChangeListener(
+                RangeSlider xSlider, RangeSlider ySlider, RangeSlider zSlider, AlignmentBoardSettingsDialog dialog
+        ) {
+            this.sliders = new RangeSlider[] {
+                    xSlider, ySlider, zSlider
+            };
+            this.dialog = dialog;
+        }
+
+        public void stateChanged(ChangeEvent e) {
+            float[] cropCoords = new CoordCropper3D().getNormalizedCropCoords( sliders );
+            dialog.fireSettingsEvent( cropCoords );
+
+        }
+
+    }
+
 }

@@ -3,7 +3,6 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -13,7 +12,6 @@ import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import loci.formats.out.TiffWriter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
@@ -23,15 +21,14 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerPane;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.exporter.TiffExporter;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardSettingsDialog;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.RangeSlider;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.MaskChanRenderableData;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableDataSourceI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ABContextDataSource;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CoordCropper3D;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.VolumeWritebackHandler;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.domain.Neuron;
 import org.janelia.it.FlyWorkstation.model.domain.Sample;
@@ -57,20 +54,12 @@ import com.google.common.eventbus.Subscribe;
 public class AlignmentBoardViewer extends Viewer implements AlignmentBoardControllable {
 
     private static final Logger log = LoggerFactory.getLogger(AlignmentBoardViewer.class);
-    private static final String GEO_SEARCH_TOOLTIP = "<html>" +
-            "Adjust the X, Y, and Z sliders, to leave only the template volume of <br>" +
-            "search lit.  This template volume will then be used to derive the coordinates, <br>" +
-            "to search other specimens and present the resulting overlappoing volume." +
-            "</html>";
 
     private Entity alignmentBoard;
     private RootedEntity albRootedEntity;
 
     private Mip3d mip3d;
     private RenderablesLoadWorker loadWorker;
-    private RangeSlider xSlider;
-    private RangeSlider ySlider;
-    private RangeSlider zSlider;
     private JPanel wrapperPanel;
 
     private ModelMgrObserver modelMgrObserver;
@@ -323,22 +312,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             logger.error( "Failed to load volume to mip3d." );
         }
         else {
-            xSlider.setMaximum( signalTexture.getSx() );
-            ySlider.setMaximum( signalTexture.getSy() );
-            zSlider.setMaximum( signalTexture.getSz() );
+            settings.setVolumeMaxima(signalTexture.getSx(), signalTexture.getSy(), signalTexture.getSz());
 
-            xSlider.setValue( 0 );
-            xSlider.setUpperValue( signalTexture.getSx() );
-            ySlider.setValue( 0 );
-            ySlider.setUpperValue( signalTexture.getSy() );
-            zSlider.setValue( 0 );
-            zSlider.setUpperValue( signalTexture.getSz() );
-
-            ChangeListener listener = new SliderChangeListener( xSlider, ySlider, zSlider, mip3d );
-
-            xSlider.addChangeListener( listener );
-            ySlider.addChangeListener( listener );
-            zSlider.addChangeListener( listener );
         }
 
     }
@@ -438,7 +413,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     }
 
     /**
-     * Build out the Mip3D object for rendering all.  Make listeners on it so the viewer change its data
+     * Build out the Mip3D object for rendering all.  Make listeners on it so the viewer changes its data
      * as needed.
      */
     private Mip3d createMip3d() {
@@ -446,7 +421,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         settings = new AlignmentBoardSettingsDialog( rtnVal );
         settings.setDownSampleRate( AlignmentBoardSettingsDialog.DEFAULT_DOWNSAMPLE_RATE );
         settings.addSettingsListener(
-                new AlignmentBoardSettingsListener( rtnVal, this )
+                new AlignmentBoardSettingsListener( rtnVal, renderMapping, this )
         );
 
         rtnVal.addMenuAction( settings.getLaunchAction() );
@@ -456,33 +431,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private JPanel createWrapperPanel( Mip3d mip3d ) {
         JPanel rtnVal = new JPanel();
         rtnVal.setLayout( new BorderLayout() );
-        xSlider = new RangeSlider( 0, 100 );  // Dummy starting ranges.
-        ySlider = new RangeSlider( 0, 100 );
-        zSlider = new RangeSlider( 0, 100 );
-        xSlider.setBorder( new TitledBorder( "Selection X Bounds" ) );
-        ySlider.setBorder( new TitledBorder( "Selection Y Bounds" ) );
-        zSlider.setBorder( new TitledBorder( "Selection Z Bounds" ) );
-        JButton searchButton = new JButton( "Geometric Search" );
-        JPanel sliderPanel = new JPanel();
-        sliderPanel.setLayout( new GridLayout( 1, 4 ) );
-        sliderPanel.add( xSlider );
-        sliderPanel.add( ySlider );
-        sliderPanel.add( zSlider );
-        sliderPanel.add( searchButton );
-        sliderPanel.setToolTipText(GEO_SEARCH_TOOLTIP);
-        searchButton.addActionListener( new ActionListener() {
-            public void actionPerformed( ActionEvent ae ) {
-                logger.info(
-                        "Selection covers (X): " + xSlider.getValue() + ".." + xSlider.getUpperValue() +
-                        " and (Y): " + ySlider.getValue() + ".." + ySlider.getUpperValue() +
-                        " and (Z): " + zSlider.getValue() + ".." + zSlider.getUpperValue()
-                );
-                writeBackVolumeSelection();
-
-            }
-        });
         rtnVal.add( mip3d, BorderLayout.CENTER );
-        rtnVal.add( sliderPanel, BorderLayout.SOUTH );
+//        rtnVal.add( sliderPanel, BorderLayout.NORTH );
         return rtnVal;
     }
 
@@ -507,116 +457,15 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
     }
 
-    /** This control-callback writes the user's selected volume to a file on disk. */
-    private void writeBackVolumeSelection() {
-        Map<Integer,byte[]> renderableIdVsRenderMethod = renderMapping.getMapping();
-
-        // Determine whether the user has slid the sliders out of default position.
-        boolean partialVolumeConstraints = false;
-        if ( xSlider.getValue() != 0  ||  ySlider.getValue() != 0  ||  zSlider.getValue() != 0 ) {
-            partialVolumeConstraints = true;
-        }
-        else if ( xSlider.getUpperValue() != xSlider.getMaximum()  ||
-                  ySlider.getUpperValue() != ySlider.getMaximum()  ||
-                  zSlider.getUpperValue() != zSlider.getMaximum() ) {
-            partialVolumeConstraints = true;
-        }
-
-        final float[] cropCoords =
-                partialVolumeConstraints ?
-                        getCropCoords( new RangeSlider[] { xSlider, ySlider, zSlider } ) :
-                        null;
-
-        // Convert crop coords back into full-range values, and invert any downsample.
-        if ( cropCoords != null ) {
-            double downSampleRate = settings.getDownsampleRate();
-            cropCoords[ 0 ] = (float)(xSlider.getMaximum() * downSampleRate * cropCoords[ 0 ]);
-            cropCoords[ 1 ] = (float)(xSlider.getMaximum() * downSampleRate * cropCoords[ 1 ]);
-
-            cropCoords[ 2 ] = (float)(ySlider.getMaximum() * downSampleRate * cropCoords[ 2 ]);
-            cropCoords[ 3 ] = (float)(ySlider.getMaximum() * downSampleRate * cropCoords[ 3 ]);
-
-            cropCoords[ 4 ] = (float)(zSlider.getMaximum() * downSampleRate * cropCoords[ 4 ]);
-            cropCoords[ 5 ] = (float)(zSlider.getMaximum() * downSampleRate * cropCoords[ 5 ]);
-        }
-
-        ABContextDataSource dataSource = new ABContextDataSource(
-                SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext()
-        );
-
-        Collection<MaskChanRenderableData> searchDatas = new ArrayList<MaskChanRenderableData>();
-        for ( MaskChanRenderableData data: dataSource.getRenderableDatas() ) {
-            byte[] rendition = renderableIdVsRenderMethod.get( data.getBean().getTranslatedNum() );
-            if ( rendition != null  &&  rendition[ 3 ] != RenderMappingI.NON_RENDERING ) {
-                searchDatas.add( data );
-            }
-        }
-
-        VolumeSearchLoadWorker.Callback callback = new VolumeSearchLoadWorker.Callback() {
-            @Override
-            public void loadSucceeded() {
-            }
-
-            @Override
-            public void loadFailed(Throwable ex) {
-                ex.printStackTrace();
-                SessionMgr.getSessionMgr().handleException( ex );
-            }
-
-            @Override
-            public void loadVolume(TextureDataI texture) {
-                byte[] textureBytes = texture.getTextureData();
-
-                Map<Byte,Integer> byteValToCount = new HashMap<Byte,Integer>();
-                for ( int i = 0; i < textureBytes.length; i ++ ) {
-                    Integer oldVal = byteValToCount.get( textureBytes[ i ] );
-                    if ( oldVal == null ) {
-                        oldVal = new Integer( 0 );
-                    }
-                    byteValToCount.put( textureBytes[i], ++oldVal );
-
-                }
-
-                try {
-                    TiffExporter exporter = new TiffExporter();
-                    exporter.export( texture );
-                    exporter.close();
-
-                } catch ( Exception ex ) {
-                    ex.printStackTrace();
-                    logger.error( "Exception on tif export " + ex.getMessage() );
-                    SessionMgr.getSessionMgr().handleException( ex );
-
-                }
-
-                for ( Byte b: byteValToCount.keySet() ) {
-                    System.out.println("Value " + b + " appears " + byteValToCount.get( b ) + " times.");
-                }
-            }
-        };
-
-        VolumeSearchLoadWorker volumeSearchLoadWorker = new VolumeSearchLoadWorker(
-                searchDatas, cropCoords, callback
-        );
-        volumeSearchLoadWorker.execute();
-    }
-
-    private static float[] getCropCoords( RangeSlider[] sliders) {
-        float[] cropCoords = new float[ 6 ];
-        for ( int i = 0; i < 3; i++ ) {
-            cropCoords[ i * 2 ] = (float)sliders[ i ].getValue() / (float)sliders[ i ].getMaximum();
-            cropCoords[ i * 2 + 1 ] = (float)sliders[ i ].getUpperValue() / (float)sliders[ i ].getMaximum();
-        }
-        return cropCoords;
-    }
-
     //------------------------------Inner Classes
     public static class AlignmentBoardSettingsListener implements AlignmentBoardSettingsDialog.SettingsListener {
         private Mip3d mip3d;
         private AlignmentBoardViewer viewer;
-        public AlignmentBoardSettingsListener( Mip3d mip3d, AlignmentBoardViewer viewer ) {
+        private RenderMappingI renderMapping;
+        public AlignmentBoardSettingsListener( Mip3d mip3d, RenderMappingI renderMapping, AlignmentBoardViewer viewer ) {
             this.mip3d = mip3d;
             this.viewer = viewer;
+            this.renderMapping = renderMapping;
         }
         @Override
         public void setBrightness(double brightness) {
@@ -627,6 +476,19 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         public void updateSettings() {
             AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
             viewer.updateBoard(context);
+        }
+
+        @Override
+        public void setSelectedCoords(float[] cropCoords) {
+            mip3d.setCropCoords(cropCoords);
+        }
+
+        @Override
+        public void exportSelection( float[] absoluteCropCoords ) {
+            VolumeWritebackHandler writebackHandler = new VolumeWritebackHandler(
+                    renderMapping, absoluteCropCoords
+            );
+            writebackHandler.writeBackVolumeSelection();
         }
     }
 
@@ -645,25 +507,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 viewer.refresh();
             }
         }
-    }
-
-    // Add listener to update display.
-    public static class SliderChangeListener implements ChangeListener {
-        private RangeSlider[] sliders;
-        private Mip3d mip3d;
-
-        public SliderChangeListener( RangeSlider xSlider, RangeSlider ySlider, RangeSlider zSlider, Mip3d mip3d ) {
-            this.sliders = new RangeSlider[] {
-                xSlider, ySlider, zSlider
-            };
-            this.mip3d = mip3d;
-        }
-
-        public void stateChanged(ChangeEvent e) {
-            float[] cropCoords = getCropCoords( sliders );
-            mip3d.setCropCoords( cropCoords );
-        }
-
     }
 
     /** An experiment in animating the view.  If ever used, should be moved elsewhere. */
