@@ -257,12 +257,6 @@ public class AlignmentBoardSettingsDialog extends JDialog {
         });
 
         JButton searchButton = new JButton( "Geometric Search" );
-        JPanel regionSelectionPanel = new JPanel();
-        regionSelectionPanel.setLayout(new GridLayout(1, 3));
-        regionSelectionPanel.add(xSlider);
-        regionSelectionPanel.add(ySlider);
-        regionSelectionPanel.add(zSlider);
-        regionSelectionPanel.setToolTipText(GEO_SEARCH_TOOLTIP);
         searchButton.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent ae ) {
                 logger.info(
@@ -270,26 +264,26 @@ public class AlignmentBoardSettingsDialog extends JDialog {
                                 " and (Y): " + ySlider.getValue() + ".." + ySlider.getUpperValue() +
                                 " and (Z): " + zSlider.getValue() + ".." + zSlider.getUpperValue()
                 );
-                boolean partialVolumeConstraints = false;
-                if ( xSlider.getValue() != 0  ||  ySlider.getValue() != 0  ||  zSlider.getValue() != 0 ) {
-                    partialVolumeConstraints = true;
-                }
-                else if ( xSlider.getUpperValue() != xSlider.getMaximum()  ||
-                        ySlider.getUpperValue() != ySlider.getMaximum()  ||
-                        zSlider.getUpperValue() != zSlider.getMaximum() ) {
-                    partialVolumeConstraints = true;
-                }
-
-                CoordCropper3D cropper = new CoordCropper3D();
-                float[] absoluteCropCoords =
-                        partialVolumeConstraints ?
-                                cropper.getCropCoords( xSlider, ySlider, zSlider, getDownsampleRate() ) :
-                                null;
-
+                float[] absoluteCropCoords = getCropCoords();
                 fireSavebackEvent( absoluteCropCoords );
 
             }
         });
+
+        JButton saveButton = new JButton( "Save as TIFF" );
+        saveButton.addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent ae ) {
+                float[] absoluteCropCoords = getCropCoords();
+                fireSavebackEvent( absoluteCropCoords );
+            }
+        });
+
+        JPanel regionSelectionPanel = new JPanel();
+        regionSelectionPanel.setLayout(new GridLayout(1, 3));
+        regionSelectionPanel.add(xSlider);
+        regionSelectionPanel.add(ySlider);
+        regionSelectionPanel.add(zSlider);
+        regionSelectionPanel.setToolTipText(GEO_SEARCH_TOOLTIP);
 
         brightnessSlider = new JSlider();
         brightnessSlider.setMaximum( 1000 );
@@ -363,12 +357,17 @@ public class AlignmentBoardSettingsDialog extends JDialog {
                 0, 4, 1, 1, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
 
+        GridBagConstraints saveBtnConstraints = new GridBagConstraints(
+                1, 4, 1, 1, 1.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, insets, 0, 0
+        );
+
         centralPanel.add( brightnessSlider, brightnessConstraints );
         centralPanel.add( downSampleRateDropdown, downSampleConstraints );
         centralPanel.add( useSignalDataCheckbox, signalDataConstraints );
         centralPanel.add( blackoutCheckbox, blackoutCheckboxConstraints );
         centralPanel.add( regionSelectionPanel, sliderPanelConstraints );
         centralPanel.add( searchButton, geoSearchBtnConstraints );
+        centralPanel.add( saveButton, saveBtnConstraints );
         add(centralPanel, BorderLayout.CENTER);
 
         JPanel bottomButtonPanel = new JPanel();
@@ -394,6 +393,23 @@ public class AlignmentBoardSettingsDialog extends JDialog {
         Insets buttonBorderInsets = new Insets( 2, 2, 2, 2 );
         bottomButtonPanel.setBorder( new EmptyBorder( buttonBorderInsets ) );
         add(bottomButtonPanel, BorderLayout.SOUTH);
+    }
+
+    private float[] getCropCoords() {
+        boolean partialVolumeConstraints = false;
+        if ( xSlider.getValue() != 0  ||  ySlider.getValue() != 0  ||  zSlider.getValue() != 0 ) {
+            partialVolumeConstraints = true;
+        }
+        else if ( xSlider.getUpperValue() != xSlider.getMaximum()  ||
+                ySlider.getUpperValue() != ySlider.getMaximum()  ||
+                zSlider.getUpperValue() != zSlider.getMaximum() ) {
+            partialVolumeConstraints = true;
+        }
+
+        CoordCropper3D cropper = new CoordCropper3D();
+        return partialVolumeConstraints ?
+                cropper.getCropCoords( xSlider, ySlider, zSlider, getDownsampleRate() ) :
+                null;
     }
 
     //-------------------------------------------------INNER CLASSES/INTERFACES

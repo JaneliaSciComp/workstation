@@ -39,7 +39,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     private int[] textureIds;
 
-    private float[] colorMask = { 1.0f, 1.0f, 1.0f };
     /**
      * Size of our opengl texture, which might be padded with extra voxels
      * to reach a multiple of 8
@@ -56,13 +55,17 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     private RotationState rotationState;
     private boolean bIsInitialized;
     private boolean bUseSyntheticData = false;
-    private float gammaAdjustment = 1.0f;
-    public float cropOutLevel = Mip3d.DEFAULT_CROPOUT;
+
+    private VolumeModel volumeModel;
 
     private Logger logger = LoggerFactory.getLogger( VolumeBrick.class );
 
     VolumeBrick(MipRenderer mipRenderer) {
 		rotationState = mipRenderer;
+    }
+
+    public void setVolumeModel( VolumeModel volumeModel ) {
+        this.volumeModel = volumeModel;
     }
 
     /**
@@ -74,23 +77,16 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         if ( red < 0.0f  ||  green < 0.0f  ||  blue < 0.0f ) {
             throw new RuntimeException( "Invalid, negative value(s) provided." );
         }
+        float[] colorMask = new float[ 3 ];
         colorMask[ 0 ] = red;
         colorMask[ 1 ] = green;
         colorMask[ 2 ] = blue;
+
+        volumeModel.setColorMask( colorMask );
     }
 
     public float[] getColorMask() {
-        return colorMask;
-    }
-
-    public void setGammaAdjustment( float gammaAdjustment ) {
-        if ( bUseShader  &&  volumeBrickShader != null ) {
-            this.gammaAdjustment = gammaAdjustment;
-        }
-    }
-
-    public void setCropOutLevel(float cropOutLevel) {
-        this.cropOutLevel = cropOutLevel;
+        return volumeModel.getColorMask();
     }
 
     @Override
@@ -181,12 +177,13 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
             // gl.glBlendFunc(GL2.GL_ONE_MINUS_DST_COLOR, GL2.GL_ZERO); // inverted?  http://stackoverflow.com/questions/2656905/opengl-invert-framebuffer-pixels
         }
         if (bUseShader) {
-            volumeBrickShader.setColorMask(colorMask);
+            volumeBrickShader.setColorMask(volumeModel.getColorMask());
             if ( maskTextureMediator != null ) {
                 volumeBrickShader.setVolumeMaskApplied();
             }
-            volumeBrickShader.setGammaAdjustment( gammaAdjustment );
-            volumeBrickShader.setCropOutLevel( cropOutLevel );
+            volumeBrickShader.setGammaAdjustment( volumeModel.getGammaAdjustment() );
+            volumeBrickShader.setCropOutLevel( volumeModel.getCropOutLevel() );
+            volumeBrickShader.setCropCoords( volumeModel.getCropCoords() );
             volumeBrickShader.load(gl);
         }
 
@@ -452,10 +449,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     /** Calling this causes the special mapping texture to be pushed again at display or init time. */
     public void refreshColorMapping() {
         bColorMapTextureNeedsUpload = true;
-    }
-
-    public void setCropCoords( float[] cropCoords ) {
-        volumeBrickShader.setCropCoords( cropCoords );
     }
 
     private void initMediators( GL2 gl ) {

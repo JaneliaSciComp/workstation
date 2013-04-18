@@ -4,7 +4,6 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.VolumeLoaderI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.MaskBuilderI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.VolumeMaskBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.RenderMapTextureBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
@@ -21,6 +20,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
     public static final float DEFAULT_CROPOUT = 0.05f;
     private static final long serialVersionUID = 1L;
 	private MipRenderer renderer = new MipRenderer();
+    private VolumeModel volumeModel = new VolumeModel();
 
 	public enum InteractionMode {
 		ROTATE,
@@ -108,7 +108,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
     ) {
         if ( volumeLoader != null ) {
             VolumeBrick brick = new VolumeBrick(renderer);
-            brick.setGammaAdjustment(gamma);
+            volumeModel.setGammaAdjustment( gamma );
             if ( maskBuilder != null ) {
                 brick.setMaskTextureData( maskBuilder.getCombinedTextureData() );
 
@@ -143,7 +143,8 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
             float gamma ) {
         if ( signalTexture != null ) {
             VolumeBrick brick = new VolumeBrick( renderer );
-            brick.setGammaAdjustment( gamma );
+            brick.setVolumeModel( volumeModel );
+            volumeModel.setGammaAdjustment( gamma );
             brick.setTextureData( signalTexture );
             if ( maskTexture != null ) {
                 brick.setMaskTextureData( maskTexture );
@@ -180,7 +181,8 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
 		VolumeLoader volumeLoader = new VolumeLoader(resolver);
 		if (volumeLoader.loadVolume(fileName)) {
             VolumeBrick brick = new VolumeBrick(renderer);
-            brick.setGammaAdjustment( gamma );
+            volumeModel.setGammaAdjustment( gamma );
+            brick.setVolumeModel( volumeModel );
 			volumeLoader.populateVolumeAcceptor(brick);
             if ( maskBuilder != null ) {
                 brick.setMaskTextureData( maskBuilder.getCombinedTextureData() );
@@ -212,8 +214,9 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
         VolumeLoader volumeLoader = new VolumeLoader(resolver);
         if (volumeLoader.loadVolume(fileName)) {
             VolumeBrick brick = new VolumeBrick(renderer);
-            brick.setGammaAdjustment( gamma );
-            brick.setColorMask( colorMask[ 0 ], colorMask[ 1 ], colorMask[ 2 ] );
+            volumeModel.setColorMask( colorMask );
+            volumeModel.setGammaAdjustment( gamma );
+            brick.setVolumeModel( volumeModel );
             volumeLoader.populateVolumeAcceptor(brick);
 
             addActorToRenderer(brick);
@@ -224,35 +227,17 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
     }
 
     public void setGamma( float gamma ) {
-        for ( GLActor actor: renderer.getActors() ) {
-            if ( actor instanceof  VolumeBrick ) {
-                VolumeBrick vb = ( VolumeBrick) actor;
-                vb.setGammaAdjustment(gamma);
-            }
-        }
-
+        volumeModel.setGammaAdjustment( gamma );
         repaint();
     }
 
     public void setCropCoords( float[] cropCoords ) {
-        for ( GLActor actor: renderer.getActors() ) {
-            if ( actor instanceof  VolumeBrick ) {
-                VolumeBrick vb = ( VolumeBrick) actor;
-                vb.setCropCoords( cropCoords );
-            }
-        }
-
+        volumeModel.setCropCoords( cropCoords );
         repaint();
     }
 
     public void setCropOutLevel( float cropOutLevel ) {
-        for ( GLActor actor: renderer.getActors() ) {
-            if ( actor instanceof  VolumeBrick ) {
-                VolumeBrick vb = ( VolumeBrick) actor;
-                vb.setCropOutLevel(cropOutLevel);
-            }
-        }
-
+        volumeModel.setCropOutLevel( cropOutLevel );
         repaint();
     }
 
@@ -317,16 +302,9 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
 	}
 
     public void toggleRGBValue(int colorChannel, boolean isEnabled) {
-        Collection<GLActor> actors = renderer.getActors();
-        for ( GLActor actor: actors ) {
-            if ( actor instanceof VolumeBrick ) {
-                VolumeBrick brick = (VolumeBrick)actor;
-                float[] newValues = brick.getColorMask();
-                newValues[colorChannel]=isEnabled?1:0;
-                brick.setColorMask( newValues[ 0 ], newValues[ 1 ], newValues[ 2 ] );
-            }
-        }
-
+        float[] newValues = volumeModel.getColorMask();
+        volumeModel.setColorMask( newValues );
+        newValues[colorChannel]=isEnabled?1:0;
     }
 
     /** Special synchronized method, for adding actors. Supports multi-threaded brick-add. */
