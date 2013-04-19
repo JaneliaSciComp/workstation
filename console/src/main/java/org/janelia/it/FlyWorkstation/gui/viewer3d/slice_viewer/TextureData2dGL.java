@@ -4,7 +4,6 @@ import java.awt.image.ColorModel;
 import java.awt.image.IndexColorModel;
 import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
@@ -18,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import com.jogamp.opengl.util.texture.TextureCoords;
 
 public class TextureData2dGL 
-implements PyramidTextureData
+implements TextureDataI
 {
 	protected static GLU glu = new GLU();
 	private static Logger logger = LoggerFactory.getLogger(TextureData2dGL.class);
@@ -158,6 +157,11 @@ implements PyramidTextureData
 		}
 		pixels = byteBuffer;
 		return;
+	}
+	
+	public void releaseMemory() {
+		width = height = usedWidth = 0;
+		pixels = null;
 	}
 	
 	public void setBitDepth(int bitDepth) {

@@ -190,8 +190,6 @@ public class QuadViewUi extends JPanel
         setBorder(new EmptyBorder(5, 5, 5, 5));
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-		JPanel glassPane = new HudPanel();
-		parentFrame.setGlassPane(glassPane);
         MouseListener buttonMouseListener = new MouseHandler() {
 
             @Override

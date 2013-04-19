@@ -12,17 +12,17 @@ import java.util.Vector;
  *
  */
 public class ZScanTileGenerator 
-implements Iterator<PyramidTileIndex>
+implements Iterator<TileIndex>
 {
 	ZIter zIter;
 	TileSet baseTiles;
 	Iterator<Tile2d> baseIter;
 	int z;
 
-	public ZScanTileGenerator(TileSet tileSet, PyramidTileFormat tileFormat) {
+	public ZScanTileGenerator(TileSet tileSet, TileFormat tileFormat) {
 		this.baseTiles = tileSet;
 		// NOTE - assumes that all tiles in set have same Z value
-		PyramidTileIndex exampleIndex = tileSet.iterator().next().getIndex();
+		TileIndex exampleIndex = tileSet.iterator().next().getIndex();
 		int deltaZ = 1;
 		int zMin = tileFormat.getOrigin()[2];
 		int zMax = zMin + tileFormat.getVolumeSize()[2];
@@ -38,7 +38,7 @@ implements Iterator<PyramidTileIndex>
 	}
 
 	@Override
-	public PyramidTileIndex next() {
+	public TileIndex next() {
 		// TODO Auto-generated method stub
 		return null;
 	}

@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
-public abstract class PyramidTextureLoadAdapter 
+public abstract class AbstractTextureLoadAdapter 
 {
 	private TextureCache textureCache = new TextureCache();
 
@@ -18,12 +18,12 @@ public abstract class PyramidTextureLoadAdapter
 		}
 	};
 	
-	protected PyramidTileFormat tileFormat = new PyramidTileFormat();
+	protected TileFormat tileFormat = new TileFormat();
 
-	abstract TextureData2dGL loadToRam(PyramidTileIndex tileIndex)
+	abstract TextureData2dGL loadToRam(TileIndex tileIndex)
 		throws TileLoadError, MissingTileException;
 
-	public PyramidTileFormat getTileFormat() {
+	public TileFormat getTileFormat() {
 		return tileFormat;
 	}
 

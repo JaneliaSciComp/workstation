@@ -13,7 +13,7 @@ public class TexturePreFetcher
 	// private static final Logger log = LoggerFactory.getLogger(TexturePreFetcher.class);
 
 	private TextureCache textureCache; // holds texture
-	private PyramidTextureLoadAdapter loadAdapter; // knows how to load textures
+	private AbstractTextureLoadAdapter loadAdapter; // knows how to load textures
 	private ThreadPoolExecutor textureLoadExecutor;
 
 	public TexturePreFetcher(int threadPoolSize) {
@@ -28,24 +28,19 @@ public class TexturePreFetcher
 	 * Like loadTexture, but emits an update signal when complete.
 	 * @param quadtreeIndex
 	 */
-	public synchronized void loadDisplayedTexture(PyramidTileIndex quadtreeIndex, TileServer tileServer) 
+	public synchronized void loadDisplayedTexture(TileIndex index, TileServer tileServer) 
 	{
 		if (textureCache == null)
 			return;
 		if (loadAdapter == null)
 			return;
-		boolean isVirginTexture = ! getTextureCache().containsKey(quadtreeIndex);
-		TileTexture texture = textureCache.getOrCreate(quadtreeIndex, loadAdapter);
-		// Reload "queued" textures for now; at least until books are balanced...
-		if (texture.getStage().ordinal() > TileTexture.Stage.LOAD_QUEUED.ordinal()) {
-			// log.info("texture already loaded "+texture.getIndex());
-			return; // texture load already started
-		}
-		if (isVirginTexture)
-			texture.getRamLoadedSignal().connect(tileServer.getOnTextureLoadedSlot());
-		// TODO - maybe only submit UNINITIALIZED textures, if we don't wish to retry failed ones
+		if (textureCache.containsKey(index))
+			return; // we already have this one!
+		// TODO - is it already queued?
+		TileTexture texture = new TileTexture(index, loadAdapter);
+		texture.getRamLoadedSignal().connect(tileServer.getOnTextureLoadedSlot());
 		// TODO - handle MISSING textures vs. ERROR textures
-		textureLoadExecutor.submit(new ActiveTextureLoadWorker(texture));
+		textureLoadExecutor.submit(new TextureLoadWorker(texture, textureCache));
 	}
 	
 	public synchronized void clear() {
@@ -58,11 +53,11 @@ public class TexturePreFetcher
 		}
 	}
 	
-	public PyramidTextureLoadAdapter getLoadAdapter() {
+	public AbstractTextureLoadAdapter getLoadAdapter() {
 		return loadAdapter;
 	}
 
-	public void setLoadAdapter(PyramidTextureLoadAdapter loadAdapter) {
+	public void setLoadAdapter(AbstractTextureLoadAdapter loadAdapter) {
 		this.loadAdapter = loadAdapter;
 	}
 

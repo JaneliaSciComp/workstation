@@ -24,7 +24,7 @@ import com.jogamp.opengl.util.texture.awt.AWTTextureIO;
 /**
  * Test implementation for showing 2D images in slice viewer.
  */
-public class Simple2dImageVolume implements VolumeImage3d, GLActor 
+public class Basic2dImageVolume implements VolumeImage3d, GLActor 
 {
 	TextureData textureData;
 	Texture texture;
@@ -33,7 +33,7 @@ public class Simple2dImageVolume implements VolumeImage3d, GLActor
 	int channelCount = 0;
 	int maxIntensity = 255;
 	
-	Simple2dImageVolume(String fileName) {
+	Basic2dImageVolume(String fileName) {
 		try {
 			URL url = new File(fileName).toURI().toURL();
 			loadURL(url);

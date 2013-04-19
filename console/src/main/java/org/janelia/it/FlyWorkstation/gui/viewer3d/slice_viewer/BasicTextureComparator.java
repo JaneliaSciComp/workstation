@@ -7,18 +7,18 @@ import java.util.Comparator;
  * @author brunsc
  *
  */
-public class BasicTextureComparator implements Comparator<PyramidTileIndex> {
+public class BasicTextureComparator implements Comparator<TileIndex> {
 
-	private PyramidTileIndex viewPosition;
+	private TileIndex viewPosition;
 	
 	@Override
-	public int compare(PyramidTileIndex ix1, PyramidTileIndex ix2) {
+	public int compare(TileIndex ix1, TileIndex ix2) {
 		int d1 = distance(viewPosition, ix1);
 		int d2 = distance(viewPosition, ix2);
 		return d1-d2; // TODO other direction?
 	}
 	
-	private int distance(PyramidTileIndex ix1, PyramidTileIndex ix2) 
+	private int distance(TileIndex ix1, TileIndex ix2) 
 	{		
 		int dx = Math.abs(ix1.getX() - ix2.getX());
 		int dy = Math.abs(ix1.getY() - ix2.getY());

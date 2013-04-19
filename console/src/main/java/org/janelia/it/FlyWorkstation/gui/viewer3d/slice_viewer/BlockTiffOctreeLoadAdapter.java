@@ -29,7 +29,7 @@ import com.sun.media.jai.codec.SeekableStream;
  * intensity range 0-65535
  */
 public class BlockTiffOctreeLoadAdapter 
-extends PyramidTextureLoadAdapter 
+extends AbstractTextureLoadAdapter 
 {
 	// private static final Logger log = LoggerFactory.getLogger(BlockTiffOctreeLoadAdapter.class);
 
@@ -39,7 +39,7 @@ extends PyramidTextureLoadAdapter
 	
 	public BlockTiffOctreeLoadAdapter()
 	{
-		tileFormat.setIndexStyle(PyramidTileIndex.IndexStyle.OCTREE);
+		tileFormat.setIndexStyle(TileIndex.IndexStyle.OCTREE);
 		// Report performance statistics when program closes
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override
@@ -62,7 +62,7 @@ extends PyramidTextureLoadAdapter
 		// That must occur AFTER volume initialized signal is sent.
 	}
 
-	protected List<Integer> getOctreePath(PyramidTileIndex tileIndex) {
+	protected List<Integer> getOctreePath(TileIndex tileIndex) {
 		Vector<Integer> result = new Vector<Integer>();
 		
 		int octreeDepth = tileFormat.getZoomLevelCount();
@@ -107,7 +107,7 @@ extends PyramidTextureLoadAdapter
 	/*
 	 * Return path to tiff file containing a particular slice
 	 */
-	protected File getFilePath(PyramidTileIndex tileIndex) {
+	protected File getFilePath(TileIndex tileIndex) {
 		File path = new File("");
 		int octreeDepth = tileFormat.getZoomLevelCount();
 		int depth = octreeDepth - tileIndex.getZoom();
@@ -165,7 +165,7 @@ extends PyramidTextureLoadAdapter
 	}
 	
 	@Override
-	public TextureData2dGL loadToRam(PyramidTileIndex tileIndex)
+	public TextureData2dGL loadToRam(TileIndex tileIndex)
 			throws TileLoadError, MissingTileException 
 	{
 		// Create a local load timer to measure timings just in this thread

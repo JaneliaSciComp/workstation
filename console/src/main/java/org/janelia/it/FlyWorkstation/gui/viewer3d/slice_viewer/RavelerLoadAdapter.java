@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 
 public class RavelerLoadAdapter 
-extends PyramidTextureLoadAdapter 
+extends AbstractTextureLoadAdapter 
 {
 
 	private URL urlStalk;
@@ -27,7 +27,7 @@ extends PyramidTextureLoadAdapter
 	throws IOException
 	{
 		this.urlStalk = urlStalk;
-		tileFormat.setIndexStyle(PyramidTileIndex.IndexStyle.QUADTREE);
+		tileFormat.setIndexStyle(TileIndex.IndexStyle.QUADTREE);
 		parseMetadata(urlStalk);
 	}
 	
@@ -57,7 +57,7 @@ extends PyramidTextureLoadAdapter
 	}
 
 	@Override
-	public TextureData2dGL loadToRam(PyramidTileIndex index) 
+	public TextureData2dGL loadToRam(TileIndex index) 
 	throws TileLoadError, MissingTileException
 	{
 		int z = index.getZ();
@@ -116,7 +116,7 @@ extends PyramidTextureLoadAdapter
 				metadata.put(key, value);
 			}
 			// Parse particular metadata values
-			PyramidTileFormat tf = getTileFormat();
+			TileFormat tf = getTileFormat();
 			tf.setDefaultParameters();
 			tf.getTileSize()[0] = 1024;
 			tf.getTileSize()[1] = 1024;

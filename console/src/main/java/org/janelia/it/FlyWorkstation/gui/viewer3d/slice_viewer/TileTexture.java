@@ -2,8 +2,8 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import javax.media.opengl.GL2;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.PyramidTextureLoadAdapter.MissingTileException;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.PyramidTextureLoadAdapter.TileLoadError;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.AbstractTextureLoadAdapter.MissingTileException;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.AbstractTextureLoadAdapter.TileLoadError;
 
 /*
  * Note the subtle distinction between Tile2d and TileTexture
@@ -28,11 +28,11 @@ public class TileTexture
 	}
 	
 	private Stage stage = Stage.UNINITIALIZED;
-	private PyramidTileIndex index;
+	private TileIndex index;
 	// private URL url;
 	private TextureData2dGL textureData;
 	private PyramidTexture texture;
-	private PyramidTextureLoadAdapter loadAdapter;
+	private AbstractTextureLoadAdapter loadAdapter;
 	
 	// time stamps for performance measurement
 	private long constructTime = System.nanoTime();
@@ -44,9 +44,9 @@ public class TileTexture
 	private long uploadTextureTime = invalidTime;
 	private long firstDisplayTime = invalidTime;
 
-	private Signal1<PyramidTileIndex> ramLoadedSignal = new Signal1<PyramidTileIndex>();
+	private Signal1<TileIndex> ramLoadedSignal = new Signal1<TileIndex>();
 
-	public TileTexture(PyramidTileIndex index, PyramidTextureLoadAdapter loadAdapter) {
+	public TileTexture(TileIndex index, AbstractTextureLoadAdapter loadAdapter) {
 		this.index = index;
 		this.loadAdapter = loadAdapter;
 	}
@@ -57,6 +57,14 @@ public class TileTexture
 
 	public long getFirstDisplayTime() {
 		return firstDisplayTime;
+	}
+
+	public void releaseMemory() {
+		if (textureData != null)
+			textureData.releaseMemory();
+		textureData = null;
+		setStage(Stage.UNINITIALIZED);
+		texture = null;
 	}
 
 	public void setFirstDisplayTime(long firstDisplayTime) {
@@ -83,11 +91,11 @@ public class TileTexture
 		return uploadTextureTime;
 	}
 
-	public PyramidTileIndex getIndex() {
+	public TileIndex getIndex() {
 		return index;
 	}
 
-	public Signal1<PyramidTileIndex> getRamLoadedSignal() {
+	public Signal1<TileIndex> getRamLoadedSignal() {
 		return ramLoadedSignal;
 	}
 
@@ -123,7 +131,7 @@ public class TileTexture
 		return true;
 	}
 
-	public void setIndex(PyramidTileIndex index) {
+	public void setIndex(TileIndex index) {
 		this.index = index;
 	}
 

@@ -8,8 +8,6 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
-
-import org.eclipse.jetty.util.log.Log;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
@@ -70,7 +68,7 @@ implements VolumeImage3d
 	// LastGoodTiles always hold a displayable tile set, even when emergency
 	// tiles are loading.
 	private TileSet lastGoodTiles;
-	private Set<PyramidTileIndex> neededTextures;
+	private Set<TileIndex> neededTextures;
 
 	// One thread pool to load minimal representation of volume
 	private TexturePreFetcher minResPreFetcher = new TexturePreFetcher(4);
@@ -83,7 +81,7 @@ implements VolumeImage3d
 	private Viewport viewport;
 	// signal for tile loaded
 	private double zoomOffset = 0.5; // tradeoff between optimal resolution (0.0) and speed.
-	private PyramidTextureLoadAdapter loadAdapter;
+	private AbstractTextureLoadAdapter loadAdapter;
 	private TileSet previousTiles;
 	
 	private Signal viewTextureChangedSignal = new Signal();
@@ -98,18 +96,25 @@ implements VolumeImage3d
 				return;
 			// queue load of all low resolution textures
 			minResPreFetcher.clear();
-			PyramidTileFormat tileFormat = loadAdapter.getTileFormat();
+			TileFormat tileFormat = loadAdapter.getTileFormat();
 			int maxZoom = tileFormat.getZoomLevelCount() - 1;
 			int x = 0; // only one value of x and y at lowest resolution
 			int y = 0;
 			int zMin = tileFormat.getOrigin()[2];
 			int zMax = zMin + tileFormat.getVolumeSize()[2];
 
-			PyramidTileIndex index = new PyramidTileIndex(x, y, zMin, maxZoom, 
+			// Start at center and move out
+			int z0 = (zMin + zMax)/2;
+			TileIndex index1 = new TileIndex(x, y, z0, maxZoom, 
 					maxZoom, tileFormat.getIndexStyle());
-			while (index.getZ() <= zMax) {
-				minResPreFetcher.loadDisplayedTexture(index, TileServer.this);
-				index = index.nextZ();
+			TileIndex index2 = index1.nextZ();
+			while ( (index1.getZ() >= zMin) || (index2.getZ() <= zMax) ) {
+				if (index1.getZ() >= zMin)
+					minResPreFetcher.loadDisplayedTexture(index1, TileServer.this);
+				if (index2.getZ() <= zMax)
+					minResPreFetcher.loadDisplayedTexture(index2, TileServer.this);					
+				index1 = index1.previousZ();
+				index2 = index2.nextZ();
 			}
 		}		
 	};
@@ -124,12 +129,12 @@ implements VolumeImage3d
 			if (tileSet.size() < 1)
 				return;
 			
-			Set<PyramidTileIndex> queuedTextures = new HashSet<PyramidTileIndex>();
+			Set<TileIndex> queuedTextures = new HashSet<TileIndex>();
 
 			// First in line are current display tiles
 			// TODO - separate these into low res and max res
 			// getDisplayTiles(); // update current view
-			for (PyramidTileIndex ix : neededTextures) {
+			for (TileIndex ix : neededTextures) {
 				if (queuedTextures.contains(ix))
 					continue;
 				// log.info("queue load of "+ix);
@@ -137,22 +142,15 @@ implements VolumeImage3d
 				queuedTextures.add(ix);
 			}
 
-			// Shift perfect texture for each viewed tile into the history cache
-			// (i.e. not the future cache)
-			for (Tile2d tile : tileSet) {
-				PyramidTileIndex index = tile.getIndex();
-				getTextureCache().markHistorical(index, getLoadAdapter());
-			}
-			
 			// Pre-fetch adjacent Z slices:
 			// For initial testing, pre fetch in Z only at first
 			int zMinus, zPlus, z0, zoom;
 			zMinus = zPlus = z0 = zoom = -1;
-			PyramidTileFormat tileFormat = getLoadAdapter().getTileFormat();
-			PyramidTileIndex.IndexStyle indexStyle = tileFormat.getIndexStyle();
+			TileFormat tileFormat = getLoadAdapter().getTileFormat();
+			TileIndex.IndexStyle indexStyle = tileFormat.getIndexStyle();
 			// Choose one tile to initialize search area in Z
-			PyramidTileIndex ix0 = new PyramidTileIndex(0,0,0,0,0,indexStyle);
-			PyramidTileIndex ix1 = new PyramidTileIndex(0,0,0,0,0,indexStyle);
+			TileIndex ix0 = new TileIndex(0,0,0,0,0,indexStyle);
+			TileIndex ix1 = new TileIndex(0,0,0,0,0,indexStyle);
 			for (Tile2d tile : tileSet) {
 				ix0 = tile.getIndex();
 				// Zoom out one level for pre-cache
@@ -168,18 +166,17 @@ implements VolumeImage3d
 			while (((zMinus >= zMin) || (zPlus <= zMax)) // something is within Z-bounds
 					&& (queuedTextures.size() < (getTextureCache().getFutureCache().getMaxSize() - 100))) // future cache is not full
 			{
-			// for (int deltaZ = 1; deltaZ <= 50; ++deltaZ) {
 				// Step away from center in z, one unique step at a time.
 				// Drive to the next unique z value in each direction.
 				// minus Z:
-				PyramidTileIndex ixMinus = new PyramidTileIndex(
+				TileIndex ixMinus = new TileIndex(
 						ix1.getX(), ix1.getY(),
 						zMinus,
 						zoom, ix1.getMaxZoom(), indexStyle);
 				ixMinus = ixMinus.previousZ();
 				zMinus = ixMinus.getCanonicalZ();
 				// plus Z:
-				PyramidTileIndex ixPlus = new PyramidTileIndex(
+				TileIndex ixPlus = new TileIndex(
 						ix1.getX(), ix1.getY(),
 						zPlus,
 						zoom, ix1.getMaxZoom(), indexStyle);
@@ -188,14 +185,14 @@ implements VolumeImage3d
 				// log.info("zminus = "+zMinus+"; zplus = "+zPlus);
 				//
 				for (Tile2d tile : tileSet) {
-					PyramidTileIndex ix = tile.getIndex();
+					TileIndex ix = tile.getIndex();
 					ix = ix.zoomOut();
 					if (ix == null)
 						ix = tile.getIndex();
-					PyramidTileIndex m = new PyramidTileIndex(ix.getX(), ix.getY(), 
+					TileIndex m = new TileIndex(ix.getX(), ix.getY(), 
 							zMinus, 
 							zoom, ix.getMaxZoom(), indexStyle);
-					PyramidTileIndex p = new PyramidTileIndex(ix.getX(), ix.getY(), 
+					TileIndex p = new TileIndex(ix.getX(), ix.getY(), 
 							zPlus, 
 							zoom, ix.getMaxZoom(), indexStyle);
 					if ((zMinus >= zMin) && ! queuedTextures.contains(m))
@@ -210,13 +207,13 @@ implements VolumeImage3d
 				}
 			}
 			long endTime = System.nanoTime();
-			log.info("Prefetch fill elapsed time = "+(endTime-startTime)/1e6+" ms");
+			// log.info("Prefetch fill elapsed time = "+(endTime-startTime)/1e6+" ms");
 		}
 	};
 	
-	private Slot1<PyramidTileIndex> onTextureLoadedSlot = new Slot1<PyramidTileIndex>() {
+	private Slot1<TileIndex> onTextureLoadedSlot = new Slot1<TileIndex>() {
 		@Override
-		public void execute(PyramidTileIndex ix) {
+		public void execute(TileIndex ix) {
 			// log.info("texture loaded "+ix+"; "+neededTextures.size());
 			// 
 			// TODO - The "needed" textures SHOULD be the only ones we need
@@ -234,7 +231,7 @@ implements VolumeImage3d
 		}
 	};
 	
-	public Slot1<PyramidTileIndex> getOnTextureLoadedSlot() {
+	public Slot1<TileIndex> getOnTextureLoadedSlot() {
 		return onTextureLoadedSlot;
 	}
 
@@ -277,7 +274,7 @@ implements VolumeImage3d
 			zoom = (int)(topZoom + zoomOffset);
 		}
 		int zoomMin = 0;
-		PyramidTileFormat tileFormat = loadAdapter.getTileFormat();
+		TileFormat tileFormat = loadAdapter.getTileFormat();
 		int zoomMax = tileFormat.getZoomLevelCount() - 1;
 		zoom = Math.max(zoom, zoomMin);
 		zoom = Math.min(zoom, zoomMax);
@@ -314,10 +311,10 @@ implements VolumeImage3d
 		int yMin = (int)Math.floor((bottomY - yFMax) / tileHeight);
 		int yMax = (int)Math.floor((bottomY - yFMin) / tileHeight);
 		
-		PyramidTileIndex.IndexStyle indexStyle = tileFormat.getIndexStyle();
+		TileIndex.IndexStyle indexStyle = tileFormat.getIndexStyle();
 		for (int x = xMin; x <= xMax; ++x) {
 			for (int y = yMin; y <= yMax; ++y) {
-				PyramidTileIndex key = new PyramidTileIndex(x, y, z, zoom, 
+				TileIndex key = new TileIndex(x, y, z, zoom, 
 						zoomMax, indexStyle);
 				Tile2d tile = new Tile2d(key, tileFormat);
 				tile.setYMax(getBoundingBox3d().getMax().getY()); // To help flip y
@@ -328,7 +325,7 @@ implements VolumeImage3d
 		return result;
 	}
 	
-	public synchronized Set<PyramidTileIndex> getNeededTextures() {
+	public synchronized Set<TileIndex> getNeededTextures() {
 		return neededTextures;
 	}
 
@@ -374,6 +371,14 @@ implements VolumeImage3d
 		latestTiles = createLatestTiles();
 		latestTiles.assignTextures(getTextureCache());
 		
+		// Push latest textures to front of LRU cache
+		for (Tile2d tile : latestTiles) {
+			TileTexture texture = tile.getBestTexture();
+			if (texture == null)
+				continue;
+			getTextureCache().markHistorical(texture.getIndex());
+		}
+		
 		// Need to assign textures to emergency tiles too...
 		if (emergencyTiles != null)
 			emergencyTiles.assignTextures(getTextureCache());
@@ -407,7 +412,7 @@ implements VolumeImage3d
 		}
 		
 		// Keep working on loading both emergency and latest tiles only.
-		Set<PyramidTileIndex> newNeededTextures = new LinkedHashSet<PyramidTileIndex>();
+		Set<TileIndex> newNeededTextures = new LinkedHashSet<TileIndex>();
 		newNeededTextures.addAll(emergencyTiles.getFastNeededTextures());
 		// Decide whether to load fastest textures or best textures
 		Tile2d.Stage stage = latestTiles.getMinStage();
@@ -487,7 +492,7 @@ implements VolumeImage3d
 			useRaveler = true;
 		}
 		// Now we can start replacing the previous state
-		PyramidTextureLoadAdapter testLoadAdapter = null;
+		AbstractTextureLoadAdapter testLoadAdapter = null;
 		try {
 			if (useRaveler) {
 				testLoadAdapter = new RavelerLoadAdapter(folderUrl);
@@ -516,7 +521,7 @@ implements VolumeImage3d
 			// Don't pre-fetch before cache is cleared...
 			getTextureCache().getCacheClearedSignal().connect(startMinResPreFetchSlot);
 			// Compute bounding box
-			PyramidTileFormat tf = loadAdapter.getTileFormat();
+			TileFormat tf = loadAdapter.getTileFormat();
 			double sv[] = tf.getVoxelMicrometers();
 			int s0[] = tf.getOrigin();
 			int s1[] = tf.getVolumeSize();
@@ -546,13 +551,13 @@ implements VolumeImage3d
 		this.viewport = viewport;
 	}
 
-	public PyramidTextureLoadAdapter getLoadAdapter() {
+	public AbstractTextureLoadAdapter getLoadAdapter() {
 		return loadAdapter;
 	}
 
-	public synchronized void setNeededTextures(Set<PyramidTileIndex> neededTextures) {
-		Set<PyramidTileIndex> result = new LinkedHashSet<PyramidTileIndex>();
-		for (PyramidTileIndex ix : neededTextures) {
+	public synchronized void setNeededTextures(Set<TileIndex> neededTextures) {
+		Set<TileIndex> result = new LinkedHashSet<TileIndex>();
+		for (TileIndex ix : neededTextures) {
 			result.add(ix);
 			// log.info("Need texture "+ix);
 		}

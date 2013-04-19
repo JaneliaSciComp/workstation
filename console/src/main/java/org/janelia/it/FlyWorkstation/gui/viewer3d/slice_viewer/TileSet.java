@@ -60,7 +60,7 @@ extends HashSet<Tile2d>
 
 	// Start loading textures to quickly populate these tiles, even if the
 	// textures are not the optimal resolution
-	public Set<PyramidTileIndex> getFastNeededTextures() 
+	public Set<TileIndex> getFastNeededTextures() 
 	{
 		// Which tiles need to be textured?
 		Set<Tile2d> untexturedTiles = new HashSet<Tile2d>();
@@ -69,22 +69,22 @@ extends HashSet<Tile2d>
 				untexturedTiles.add(tile);
 		}
 		// Whittle down the list one texture at a time.
-		Set<PyramidTileIndex> neededTextures = new HashSet<PyramidTileIndex>();
+		Set<TileIndex> neededTextures = new HashSet<TileIndex>();
 		// Warning! This algorithm is O(n^2) on the number of tiles! TODO
 		while (untexturedTiles.size() > 0) {
 			// Store a score for each candidate texture
-			Map<PyramidTileIndex, Double> textureScores = new HashMap<PyramidTileIndex, Double>();
+			Map<TileIndex, Double> textureScores = new HashMap<TileIndex, Double>();
 			// Remember which tiles could use a particular texture
-			Map<PyramidTileIndex, Set<Tile2d>> tilesByTexture = new HashMap<PyramidTileIndex, Set<Tile2d>>();
+			Map<TileIndex, Set<Tile2d>> tilesByTexture = new HashMap<TileIndex, Set<Tile2d>>();
 			// Accumulate a score for each candidate texture from each tile
 			// TODO - cache something so we don't need to do O(n) in this loop every time
 			// TODO - downweight textures that have already failed to load
 			for (Tile2d tile : untexturedTiles) {
-				for (PyramidTileIndex.TextureScore textureScore : tile.getIndex().getTextureScores()) 
+				for (TileIndex.TextureScore textureScore : tile.getIndex().getTextureScores()) 
 				{
 					// TODO - maybe skip textures that have failed to load
 					double initialScore = 0.0;
-					PyramidTileIndex textureKey = textureScore.getTextureKey();
+					TileIndex textureKey = textureScore.getTextureKey();
 					if (textureScores.containsKey(textureKey))
 						initialScore = textureScores.get(textureKey);
 					textureScores.put(textureKey, initialScore + textureScore.getScore());
@@ -96,9 +96,9 @@ extends HashSet<Tile2d>
 			}
 			// Choose the highest scoring texture for inclusion
 			double bestScore = 0.0;
-			PyramidTileIndex bestTexture = null;
+			TileIndex bestTexture = null;
 			// O(n) on candidate tile list is better than sorting
-			for (PyramidTileIndex textureIndex : textureScores.keySet()) {
+			for (TileIndex textureIndex : textureScores.keySet()) {
 				if (textureScores.get(textureIndex) > bestScore) {
 					bestTexture = textureIndex;
 				}
@@ -114,9 +114,9 @@ extends HashSet<Tile2d>
 	}
 
 	// Start loading textures of the optimal resolution for these tiles
-	public Set<PyramidTileIndex> getBestNeededTextures() {
+	public Set<TileIndex> getBestNeededTextures() {
 		// Which tiles need to be textured?
-		Set<PyramidTileIndex> neededTextures = new HashSet<PyramidTileIndex>();
+		Set<TileIndex> neededTextures = new HashSet<TileIndex>();
 		for (Tile2d tile : this) {
 			// The best texture for each tile is always the one with the same index
 			// TODO - maybe skip textures that have failed to load
@@ -127,15 +127,15 @@ extends HashSet<Tile2d>
 		return neededTextures;
 	}
 	
-	static class ValueComparator implements Comparator<PyramidTileIndex> {
-		Map<PyramidTileIndex, Double> base;
+	static class ValueComparator implements Comparator<TileIndex> {
+		Map<TileIndex, Double> base;
 		
-		public ValueComparator(Map<PyramidTileIndex, Double> base) {
+		public ValueComparator(Map<TileIndex, Double> base) {
 			this.base = base;
 		}
 
 		@Override
-		public int compare(PyramidTileIndex lhs, PyramidTileIndex rhs) {
+		public int compare(TileIndex lhs, TileIndex rhs) {
 			if (base.get(lhs) >= base.get(rhs))
 				return -1;
 			return 1;					

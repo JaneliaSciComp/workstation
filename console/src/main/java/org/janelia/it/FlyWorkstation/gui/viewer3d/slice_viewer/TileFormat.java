@@ -1,11 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.PyramidTileIndex.IndexStyle;
-
 /*
  * Common metadata to back end tile data formats
  */
-public class PyramidTileFormat 
+public class TileFormat 
 {
 	private int[] origin = {0,0,0};
 	private int[] volumeSize = {0,0,0};
@@ -17,18 +15,18 @@ public class PyramidTileFormat
 	private int intensityMax = 255;
 	private int intensityMin = 0;
 	private boolean srgb = false;
-	private PyramidTileIndex.IndexStyle indexStyle = PyramidTileIndex.IndexStyle.QUADTREE;
+	private TileIndex.IndexStyle indexStyle = TileIndex.IndexStyle.QUADTREE;
 
-	public PyramidTileFormat() 
+	public TileFormat() 
 	{
 		setDefaultParameters();
 	}
 	
-	public PyramidTileIndex.IndexStyle getIndexStyle() {
+	public TileIndex.IndexStyle getIndexStyle() {
 		return indexStyle;
 	}
 
-	public void setIndexStyle(PyramidTileIndex.IndexStyle indexStyle) {
+	public void setIndexStyle(TileIndex.IndexStyle indexStyle) {
 		this.indexStyle = indexStyle;
 	}
 

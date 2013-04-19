@@ -9,17 +9,19 @@ import org.slf4j.LoggerFactory;
  * @author brunsc
  *
  */
-public class ActiveTextureLoadWorker implements Runnable 
+public class TextureLoadWorker implements Runnable 
 {
-	private static final Logger log = LoggerFactory.getLogger(ActiveTextureLoadWorker.class);
+	private static final Logger log = LoggerFactory.getLogger(TextureLoadWorker.class);
 	
 	private TileTexture texture;
+	private TextureCache textureCache;
 
-	public ActiveTextureLoadWorker(TileTexture texture) 
+	public TextureLoadWorker(TileTexture texture, TextureCache textureCache) 
 	{
 		if (texture.getStage().ordinal() < TileTexture.Stage.LOAD_QUEUED.ordinal())
 			texture.setStage(TileTexture.Stage.LOAD_QUEUED);
 		this.texture = texture;
+		this.textureCache = textureCache;
 	}
 
 	@Override
@@ -38,8 +40,10 @@ public class ActiveTextureLoadWorker implements Runnable
 		}
 		// Load file
 		// log.info("Loading texture "+texture.getIndex());
-		if (texture.loadImageToRam())
+		if (texture.loadImageToRam()) {
+			textureCache.add(texture);
 			texture.getRamLoadedSignal().emit(texture.getIndex()); // inform consumers (RavelerTileServer?)
+		}
 		else {
 			log.warn("Failed to load texture " + texture.getIndex());
 		}

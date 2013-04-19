@@ -6,24 +6,24 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
-
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HistoryCache 
 {
-	// private static final Logger log = LoggerFactory.getLogger(HistoryCache.class);	
+	private static final Logger log = LoggerFactory.getLogger(HistoryCache.class);	
 	
 	// Dictionary to look up elements
-	private Map<PyramidTileIndex, LRUTexture> map = new HashMap<PyramidTileIndex, LRUTexture>();
+	private Map<TileIndex, LRUTexture> map = new HashMap<TileIndex, LRUTexture>();
 	// Buffer for opengl textures to delete when a context becomes available
 	private Set<Integer> obsoleteGlTextures = new HashSet<Integer>();
 	private LRUTexture head = null;
 	private LRUTexture tail = null;
-	private int maxSize = 3000;
+	private int maxSize = 300;
+	private boolean fullReported = false;
 
 	private void addFirst(LRUTexture lru) {
-		PyramidTileIndex ix = lru.texture.getIndex();
+		TileIndex ix = lru.texture.getIndex();
 		if (head == null) // first element of empty cache
 			tail = lru;
 		else { // head != null
@@ -38,7 +38,7 @@ public class HistoryCache
 	}
 	
 	public synchronized void addFirst(TileTexture tex) {
-		PyramidTileIndex ix = tex.getIndex();
+		TileIndex ix = tex.getIndex();
 		if (head != null) {
 			if (head.texture.getIndex() == ix)
 				return; // we're already there
@@ -65,7 +65,6 @@ public class HistoryCache
 	public synchronized void clear() {
 		head = null;
 		tail = null;
-		// TODO - actually delete those OpenGL textures some day
 		for (LRUTexture lru : map.values()) {
 			if (lru == null)
 				continue;
@@ -78,16 +77,17 @@ public class HistoryCache
 			int id = texture1.getTextureId();
 			if (id < 1)
 				continue;
-			obsoleteGlTextures.add(id);
+			obsoleteGlTextures.add(id); // remember OpenGl texture IDs for later deletion.
 		}
 		map.clear();
+		fullReported = false;
 	}
 
-	public boolean containsKey(PyramidTileIndex ix) {
+	public boolean containsKey(TileIndex ix) {
 		return map.containsKey(ix);
 	}
 
-	public TileTexture get(PyramidTileIndex ix) {
+	public TileTexture get(TileIndex ix) {
 		if (! map.containsKey(ix))
 			return null;
 		return map.get(ix).texture;
@@ -118,6 +118,10 @@ public class HistoryCache
 	}
 
 	public synchronized TileTexture removeLast() {
+		if (! fullReported) {
+			log.info("Cache is full");
+			fullReported = true;
+		}
 		if (tail == null)
 			return null;
 		TileTexture result = tail.texture;
@@ -133,10 +137,11 @@ public class HistoryCache
 					obsoleteGlTextures.add(id);
 			}
 		}
+		result.releaseMemory();
 		return result;
 	}
 	
-	public synchronized TileTexture remove(PyramidTileIndex index) {
+	public synchronized TileTexture remove(TileIndex index) {
 		if (! map.containsKey(index))
 			return null;
 		LRUTexture result = map.get(index);

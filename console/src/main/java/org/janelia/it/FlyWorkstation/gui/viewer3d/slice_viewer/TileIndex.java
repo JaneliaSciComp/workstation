@@ -10,7 +10,7 @@ import java.util.Vector;
  * @author brunsc
  *
  */
-public class PyramidTileIndex 
+public class TileIndex 
 {
 	public static enum IndexStyle {
 		QUADTREE,
@@ -27,7 +27,7 @@ public class PyramidTileIndex
 	private final IndexStyle indexStyle;
 	private final int deltaZ;
 	
-	public PyramidTileIndex(int x, int y, int z, 
+	public TileIndex(int x, int y, int z, 
 			int zoom, int maxZoom, IndexStyle indexStyle) 
 	{
 		this.x = x;
@@ -51,7 +51,7 @@ public class PyramidTileIndex
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		PyramidTileIndex other = (PyramidTileIndex) obj;
+		TileIndex other = (TileIndex) obj;
 		if (x != other.x)
 			return false;
 		if (y != other.y)
@@ -96,7 +96,7 @@ public class PyramidTileIndex
 	{
 		List<TextureScore> result = new Vector<TextureScore>();
 		double score = 1.0;
-		PyramidTileIndex key = this;
+		TileIndex key = this;
 		result.add(new TextureScore(key, score));
 		return result;
 	}
@@ -119,8 +119,8 @@ public class PyramidTileIndex
 		return "TileIndex [x="+x+"; y="+y+"; z="+z+"; zoom="+zoom+"]";
 	}
 
-	public PyramidTileIndex clone() {
-		return new PyramidTileIndex(
+	public TileIndex clone() {
+		return new TileIndex(
 				x, 
 				y, 
 				z, 
@@ -129,8 +129,8 @@ public class PyramidTileIndex
 				indexStyle);
 	}
 
-	public PyramidTileIndex nextZ() {
-		return new PyramidTileIndex(
+	public TileIndex nextZ() {
+		return new TileIndex(
 		x, 
 		y, 
 		z + deltaZ, 
@@ -139,8 +139,8 @@ public class PyramidTileIndex
 		indexStyle);
 	}
 	
-	public PyramidTileIndex previousZ() {
-		return new PyramidTileIndex(
+	public TileIndex previousZ() {
+		return new TileIndex(
 		x, 
 		y, 
 		z - deltaZ, 
@@ -155,31 +155,31 @@ public class PyramidTileIndex
 	 * 
 	 * @return null if current zoom index is already zero
 	 */
-	public PyramidTileIndex zoomOut() {
+	public TileIndex zoomOut() {
 		if (getZoom() >= maxZoom)
 			return null; // Cannot zoom farther out than zero
 		int x = getX()/2;
 		int y = getY()/2;
 		int z = getZ();
 		int zoom = getZoom() + 1;
-		return new PyramidTileIndex(x, y, z, zoom, 
+		return new TileIndex(x, y, z, zoom, 
 				maxZoom, indexStyle);
 	}
 
 	// Retarded Java philosophy eschews built-in Pair type nor multiple return values
 	// thus the usual "add another class..." ad infinitum.
 	public static class TextureScore {
-		private PyramidTileIndex textureKey;
+		private TileIndex textureKey;
 		private double score;
 
-		public TextureScore(PyramidTileIndex key, double score) {
+		public TextureScore(TileIndex key, double score) {
 			this.textureKey = key;
 			this.score = score;
 		}
-		public PyramidTileIndex getTextureKey() {
+		public TileIndex getTextureKey() {
 			return textureKey;
 		}
-		public void setTextureKey(PyramidTileIndex textureKey) {
+		public void setTextureKey(TileIndex textureKey) {
 			this.textureKey = textureKey;
 		}
 		public double getScore() {

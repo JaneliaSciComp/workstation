@@ -1,10 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
-import java.nio.IntBuffer;
-
 import javax.media.opengl.GL2;
-
-import org.eclipse.jetty.util.log.Log;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
@@ -63,18 +59,24 @@ implements GLActor
 		if ( (tileServer != null) && (tileServer.getTextureCache() != null) ) {
 			int obsoleteIds[] = tileServer.getTextureCache().popObsoleteTextureIds();
 			if (obsoleteIds.length > 0) {
-				log.info("deleting "+obsoleteIds.length+" OpenGL textures");
+				// log.info("deleting "+obsoleteIds.length+" OpenGL textures");
 				gl.glDeleteTextures(obsoleteIds.length, obsoleteIds, 0);
 			}
 		}
 		
 		// Possibly eliminate texture cache
-		// TODO - eliminate any previously deleted textures from texture cache
 		if (needsGlDisposal) {
 			// log.info("Clearing tile cache");
 			dispose(gl);
 			if (needsTextureCacheClear) {
 				tileServer.getTextureCache().clear();
+				// delete texture opengl ids
+				int obsoleteIds[] = tileServer.getTextureCache().popObsoleteTextureIds();
+				if (obsoleteIds.length > 0) {
+					log.info("deleting "+obsoleteIds.length+" OpenGL textures");
+					gl.glDeleteTextures(obsoleteIds.length, obsoleteIds, 0);
+				}
+				// Note that tiles now have no textures
 				for (Tile2d tile : tiles) {
 					tile.setBestTexture(null);
 					tile.setStage(Tile2d.Stage.NO_TEXTURE_LOADED);
@@ -104,9 +106,8 @@ implements GLActor
 		}
 		shader.unload(gl);
 
-		// TODO optional numeral display at high zoom			
+		// Optional numeral display at high zoom			
 		if (pixelsPerVoxel > 40.0) {
-			PyramidTileFormat tileFormat = tileServer.getLoadAdapter().getTileFormat();
 			numeralShader.setMicrometersPerPixel(1.0/pixelsPerVoxel);
 			// fetch (typical?) texture dimensions
 			int th = 10;

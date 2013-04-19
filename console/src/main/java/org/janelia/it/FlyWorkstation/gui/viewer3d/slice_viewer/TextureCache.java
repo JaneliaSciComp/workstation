@@ -5,9 +5,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /*
  * Wrap texture cache so indices can be interpolated for either quadtrees
@@ -15,13 +14,11 @@ import java.util.Set;
  */
 public class TextureCache 
 {
-	// private static final Logger log = LoggerFactory.getLogger(TextureCache.class);
-	
-	// private IndexStyle indexStyle = IndexStyle.QUADTREE;
+	private static final Logger log = LoggerFactory.getLogger(TextureCache.class);
 
-	private HistoryCache historyCache = new HistoryCache();
-	private HistoryCache futureCache = new HistoryCache();
-	private Map<PyramidTileIndex, TileTexture> persistentCache = new HashMap<PyramidTileIndex, TileTexture>();
+	private HistoryCache historyCache = new HistoryCache(); // textures that have been displayed, ordered by LRU
+	private HistoryCache futureCache = new HistoryCache(); // textures we predict will be displayed
+	private HistoryCache persistentCache = new HistoryCache(); // lowest resolution textures for everything
 	
 	public Signal getCacheClearedSignal() {
 		return cacheClearedSignal;
@@ -29,10 +26,18 @@ public class TextureCache
 
 	private Signal cacheClearedSignal = new Signal();
 
-	public TextureCache() {
-		// log.info("Creating texture cache");
+	public synchronized void add(TileTexture texture) {
+		TileIndex index = texture.getIndex();
+		if (containsKey(index))
+			log.warn("Adding texture that is already in cache "+index);
+		if (index.getZoom() == index.getMaxZoom()) {
+			// log.info("adding persistent texture "+index);
+			persistentCache.addFirst(texture);
+		}
+		else
+			futureCache.addFirst(texture);
 	}
-	
+
 	synchronized public void clear() {
 		// log.info("Clearing texture cache");
 		futureCache.clear();
@@ -41,13 +46,13 @@ public class TextureCache
 		cacheClearedSignal.emit();
 	}
 
-	boolean containsKey(PyramidTileIndex index) {
+	boolean containsKey(TileIndex index) {
 		return persistentCache.containsKey(index)
 				|| historyCache.containsKey(index)
 				|| futureCache.containsKey(index);
 	}
 	
-	synchronized TileTexture get(PyramidTileIndex index) {
+	synchronized TileTexture get(TileIndex index) {
 		if (persistentCache.containsKey(index))
 			return persistentCache.get(index);
 		else if (historyCache.containsKey(index))
@@ -56,32 +61,18 @@ public class TextureCache
 			return futureCache.get(index);
 	}
 	
-	synchronized TileTexture getOrCreate(
-			PyramidTileIndex index, 
-			PyramidTextureLoadAdapter loadAdapter) 
-	{
-		if (containsKey(index))
-			return get(index);
-		TileTexture texture = new TileTexture(index, loadAdapter);
-		// Store lowest resolution tiles into the persistent cache
-		if (index.getZoom() == index.getMaxZoom())
-			persistentCache.put(index, texture);
-		else
-			futureCache.addFirst(texture);
-		return texture;
-	}
-	
 	// Indicate that a particular texture has been viewed, rather than simply
 	// pre-fetched.
-	public void markHistorical(PyramidTileIndex index, PyramidTextureLoadAdapter loadAdapter) {
-		if (persistentCache.containsKey(index))
-			return; // persistent cache has priority over historical cache
-		TileTexture texture = historyCache.get(index);
-		if (texture == null) { // texture was not already in history cache
-			// Move texture from future cache to history cache
-			texture = futureCache.remove(index);
-			if (texture == null) // This texture wasn't yet in ANY cache
-				texture = new TileTexture(index, loadAdapter);
+	public void markHistorical(TileIndex index) {
+		// Only future cached textures need to be moved.
+		// (textures in the persistent cache should remain there)
+		TileTexture texture = futureCache.remove(index);
+		if (texture == null)
+			texture = historyCache.get(index);
+		if (texture == null) {
+			if (! persistentCache.containsKey(index))
+				log.warn("Failed to find historical texture "+index);
+			return;
 		}
 		historyCache.addFirst(texture); // move texture to the front of the queue
 	}
@@ -96,6 +87,10 @@ public class TextureCache
 		return result;
 	}
 	
+	/**
+	 * Do not use to modify future cache.
+	 * @return
+	 */
 	public HistoryCache getFutureCache() {
 		return futureCache;
 	}
@@ -103,6 +98,7 @@ public class TextureCache
 	public int[] popObsoleteTextureIds() {
 		Set<Integer> ids = futureCache.popObsoleteGlTextures();
 		ids.addAll(historyCache.popObsoleteGlTextures());
+		ids.addAll(persistentCache.popObsoleteGlTextures());
 		int result[] = new int[ids.size()];
 		int i = 0;
 		for (int val : ids) {

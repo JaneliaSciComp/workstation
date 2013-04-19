@@ -37,13 +37,13 @@ implements GLActor
 	
 	private Stage stage = Stage.NO_TEXTURE_LOADED;
 	private TileTexture bestTexture;
-	private PyramidTileIndex index;
+	private TileIndex index;
 	private double yMax; // To help flip Raveler tiles in Y
-	private PyramidTileFormat tileFormat;
+	private TileFormat tileFormat;
 	private int filter = GL2.GL_LINEAR;
 
 	
-	public Tile2d(PyramidTileIndex key, PyramidTileFormat tileFormat) {
+	public Tile2d(TileIndex key, TileFormat tileFormat) {
 		if (key == null) {
 			log.error("Tile with null index constructed");
 		}
@@ -56,7 +56,7 @@ implements GLActor
 	{
 		if (getStage().ordinal() >= Stage.BEST_TEXTURE_LOADED.ordinal())
 			return; // Already as good as it gets
-		PyramidTileIndex ix = getIndex();
+		TileIndex ix = getIndex();
 		if (ix == null) {
 			log.error("Tile with null index");
 			return;
@@ -76,7 +76,7 @@ implements GLActor
 			if (texture == null) {
 				// log.info("cache miss no texture "+ix);
 				if (ix.getZoom() == ix.getMaxZoom()) {
-					log.error("should have this texture "+ix+", "+textureCache.size());
+					// log.warn("should already have this persistent texture "+ix+", "+textureCache.size());
 					// texture = textureCache.get(ix);
 				}
 			}
@@ -128,7 +128,7 @@ implements GLActor
 		this.filter = filter;
 	}
 
-	public PyramidTileIndex getIndex() {
+	public TileIndex getIndex() {
 		return index;
 	}
 
