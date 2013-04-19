@@ -39,7 +39,7 @@ extends PyramidTextureLoadAdapter
 	
 	public BlockTiffOctreeLoadAdapter()
 	{
-		getTextureCache().setIndexStyle(TextureCache.IndexStyle.OCTREE);
+		tileFormat.setIndexStyle(PyramidTileIndex.IndexStyle.OCTREE);
 		// Report performance statistics when program closes
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			@Override

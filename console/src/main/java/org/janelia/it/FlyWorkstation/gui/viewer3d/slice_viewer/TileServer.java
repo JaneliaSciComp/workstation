@@ -104,14 +104,12 @@ implements VolumeImage3d
 			int y = 0;
 			int zMin = tileFormat.getOrigin()[2];
 			int zMax = zMin + tileFormat.getVolumeSize()[2];
-			PyramidTileIndex previousIndex = null;
-			for (int z = zMin; z <= zMax; ++z) {
-				PyramidTileIndex index = new PyramidTileIndex(x, y, z, maxZoom, maxZoom);
-				index = getTextureCache().getCanonicalIndex(index);
-				if (! index.equals(previousIndex)) {
-					minResPreFetcher.loadDisplayedTexture(index, TileServer.this);
-					previousIndex = index;
-				}
+
+			PyramidTileIndex index = new PyramidTileIndex(x, y, zMin, maxZoom, 
+					maxZoom, tileFormat.getIndexStyle());
+			while (index.getZ() <= zMax) {
+				minResPreFetcher.loadDisplayedTexture(index, TileServer.this);
+				index = index.nextZ();
 			}
 		}		
 	};
@@ -142,7 +140,7 @@ implements VolumeImage3d
 			// Shift perfect texture for each viewed tile into the history cache
 			// (i.e. not the future cache)
 			for (Tile2d tile : tileSet) {
-				PyramidTileIndex index = getTextureCache().getCanonicalIndex(tile.getIndex());
+				PyramidTileIndex index = tile.getIndex();
 				getTextureCache().markHistorical(index, getLoadAdapter());
 			}
 			
@@ -150,12 +148,13 @@ implements VolumeImage3d
 			// For initial testing, pre fetch in Z only at first
 			int zMinus, zPlus, z0, zoom;
 			zMinus = zPlus = z0 = zoom = -1;
+			PyramidTileFormat tileFormat = getLoadAdapter().getTileFormat();
+			PyramidTileIndex.IndexStyle indexStyle = tileFormat.getIndexStyle();
 			// Choose one tile to initialize search area in Z
-			PyramidTileIndex ix0 = new PyramidTileIndex(0,0,0,0,0);
-			PyramidTileIndex ix1 = new PyramidTileIndex(0,0,0,0,0);
+			PyramidTileIndex ix0 = new PyramidTileIndex(0,0,0,0,0,indexStyle);
+			PyramidTileIndex ix1 = new PyramidTileIndex(0,0,0,0,0,indexStyle);
 			for (Tile2d tile : tileSet) {
 				ix0 = tile.getIndex();
-				ix0 = getTextureCache().getCanonicalIndex(ix0); // uniqueify on Z for octree
 				// Zoom out one level for pre-cache
 				ix1 = ix0.zoomOut();
 				if (ix1 == null)
@@ -164,8 +163,8 @@ implements VolumeImage3d
 				zoom = ix1.getZoom(); // Zoom out one level for precache
 				break; // only need one tile to initialize...
 			}
-			int zMin = getLoadAdapter().getTileFormat().getOrigin()[2];
-			int zMax = zMin + getLoadAdapter().getTileFormat().getVolumeSize()[2] - 1;
+			int zMin = tileFormat.getOrigin()[2];
+			int zMax = zMin + tileFormat.getVolumeSize()[2] - 1;
 			while (((zMinus >= zMin) || (zPlus <= zMax)) // something is within Z-bounds
 					&& (queuedTextures.size() < (getTextureCache().getFutureCache().getMaxSize() - 100))) // future cache is not full
 			{
@@ -175,29 +174,17 @@ implements VolumeImage3d
 				// minus Z:
 				PyramidTileIndex ixMinus = new PyramidTileIndex(
 						ix1.getX(), ix1.getY(),
-						zMinus - 1,
-						zoom, ix1.getMaxZoom());
-				while (getTextureCache().getCanonicalIndex(ixMinus).getZ() == zMinus) 
-				{
-					ixMinus = new PyramidTileIndex(
-							ixMinus.getX(), ixMinus.getY(),
-							ixMinus.getZ() - 1,
-							zoom, ixMinus.getMaxZoom());
-				}
-				zMinus = getTextureCache().getCanonicalIndex(ixMinus).getZ();
+						zMinus,
+						zoom, ix1.getMaxZoom(), indexStyle);
+				ixMinus = ixMinus.previousZ();
+				zMinus = ixMinus.getCanonicalZ();
 				// plus Z:
 				PyramidTileIndex ixPlus = new PyramidTileIndex(
 						ix1.getX(), ix1.getY(),
-						zPlus + 1,
-						zoom, ix1.getMaxZoom());
-				while (getTextureCache().getCanonicalIndex(ixPlus).getZ() == zPlus) 
-				{
-					ixPlus = new PyramidTileIndex(
-							ixPlus.getX(), ixPlus.getY(),
-							ixPlus.getZ() + 1,
-							zoom, ixPlus.getMaxZoom());
-				}
-				zPlus = getTextureCache().getCanonicalIndex(ixPlus).getZ();
+						zPlus,
+						zoom, ix1.getMaxZoom(), indexStyle);
+				ixPlus = ixPlus.nextZ();
+				zPlus = ixPlus.getCanonicalZ();
 				// log.info("zminus = "+zMinus+"; zplus = "+zPlus);
 				//
 				for (Tile2d tile : tileSet) {
@@ -207,10 +194,10 @@ implements VolumeImage3d
 						ix = tile.getIndex();
 					PyramidTileIndex m = new PyramidTileIndex(ix.getX(), ix.getY(), 
 							zMinus, 
-							zoom, ix.getMaxZoom());
+							zoom, ix.getMaxZoom(), indexStyle);
 					PyramidTileIndex p = new PyramidTileIndex(ix.getX(), ix.getY(), 
 							zPlus, 
-							zoom, ix.getMaxZoom());
+							zoom, ix.getMaxZoom(), indexStyle);
 					if ((zMinus >= zMin) && ! queuedTextures.contains(m))
 					{
 						futurePreFetcher.loadDisplayedTexture(m, TileServer.this);
@@ -327,9 +314,11 @@ implements VolumeImage3d
 		int yMin = (int)Math.floor((bottomY - yFMax) / tileHeight);
 		int yMax = (int)Math.floor((bottomY - yFMin) / tileHeight);
 		
+		PyramidTileIndex.IndexStyle indexStyle = tileFormat.getIndexStyle();
 		for (int x = xMin; x <= xMax; ++x) {
 			for (int y = yMin; y <= yMax; ++y) {
-				PyramidTileIndex key = new PyramidTileIndex(x, y, z, zoom, zoomMax);
+				PyramidTileIndex key = new PyramidTileIndex(x, y, z, zoom, 
+						zoomMax, indexStyle);
 				Tile2d tile = new Tile2d(key, tileFormat);
 				tile.setYMax(getBoundingBox3d().getMax().getY()); // To help flip y
 				result.add(tile);
@@ -564,7 +553,6 @@ implements VolumeImage3d
 	public synchronized void setNeededTextures(Set<PyramidTileIndex> neededTextures) {
 		Set<PyramidTileIndex> result = new LinkedHashSet<PyramidTileIndex>();
 		for (PyramidTileIndex ix : neededTextures) {
-			ix = getTextureCache().getCanonicalIndex(ix);
 			result.add(ix);
 			// log.info("Need texture "+ix);
 		}

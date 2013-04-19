@@ -12,18 +12,35 @@ import java.util.Vector;
  */
 public class PyramidTileIndex 
 {
+	public static enum IndexStyle {
+		QUADTREE,
+		OCTREE
+	}
+
 	private final int x;
 	private final int y;
 	private final int z;
 	private final int zoom;
+	private final int canonicalZ; // Uniquified on octree zoom level
+	// Perhaps the following items should be in some sort of shared format type
 	private final int maxZoom;
+	private final IndexStyle indexStyle;
+	private final int deltaZ;
 	
-	public PyramidTileIndex(int x, int y, int z, int zoom, int maxZoom) {
+	public PyramidTileIndex(int x, int y, int z, 
+			int zoom, int maxZoom, IndexStyle indexStyle) 
+	{
 		this.x = x;
 		this.y = y;
 		this.z = z;
 		this.zoom = zoom;
 		this.maxZoom = maxZoom;
+		this.indexStyle = indexStyle;
+		if (indexStyle == IndexStyle.OCTREE)
+			deltaZ = (int)Math.pow(2, zoom);
+		else
+			deltaZ = 1;
+		canonicalZ = (z/deltaZ)*deltaZ;
 	}
 
 	@Override
@@ -39,13 +56,22 @@ public class PyramidTileIndex
 			return false;
 		if (y != other.y)
 			return false;
-		if (z != other.z)
+		if (canonicalZ != other.canonicalZ)
 			return false;
 		if (zoom != other.zoom)
 			return false;
 		return true;
 	}
 
+	public int getCanonicalZ() {
+		return canonicalZ;
+	}
+	
+	// How many fine Z-slices represent a single step at this zoom level?
+	public int getDeltaZ() {
+		return deltaZ;
+	}
+	
 	public int getMaxZoom() {
 		return maxZoom;
 	}
@@ -83,7 +109,7 @@ public class PyramidTileIndex
 		int result = 1;
 		result = prime * result + x;
 		result = prime * result + y;
-		result = prime * result + z;
+		result = prime * result + canonicalZ;
 		result = prime * result + zoom;
 		return result;
 	}
@@ -93,6 +119,36 @@ public class PyramidTileIndex
 		return "TileIndex [x="+x+"; y="+y+"; z="+z+"; zoom="+zoom+"]";
 	}
 
+	public PyramidTileIndex clone() {
+		return new PyramidTileIndex(
+				x, 
+				y, 
+				z, 
+				zoom, 
+				maxZoom, 
+				indexStyle);
+	}
+
+	public PyramidTileIndex nextZ() {
+		return new PyramidTileIndex(
+		x, 
+		y, 
+		z + deltaZ, 
+		zoom, 
+		maxZoom, 
+		indexStyle);
+	}
+	
+	public PyramidTileIndex previousZ() {
+		return new PyramidTileIndex(
+		x, 
+		y, 
+		z - deltaZ, 
+		zoom, 
+		maxZoom, 
+		indexStyle);
+	}
+	
 	/**
 	 * Returns the index of the next lower resolution tile that 
 	 * contains the tile represented by this index.
@@ -106,7 +162,8 @@ public class PyramidTileIndex
 		int y = getY()/2;
 		int z = getZ();
 		int zoom = getZoom() + 1;
-		return new PyramidTileIndex(x, y, z, zoom, maxZoom);
+		return new PyramidTileIndex(x, y, z, zoom, 
+				maxZoom, indexStyle);
 	}
 
 	// Retarded Java philosophy eschews built-in Pair type nor multiple return values

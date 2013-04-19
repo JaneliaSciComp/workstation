@@ -27,7 +27,7 @@ extends PyramidTextureLoadAdapter
 	throws IOException
 	{
 		this.urlStalk = urlStalk;
-		getTextureCache().setIndexStyle(TextureCache.IndexStyle.QUADTREE);
+		tileFormat.setIndexStyle(PyramidTileIndex.IndexStyle.QUADTREE);
 		parseMetadata(urlStalk);
 	}
 	
