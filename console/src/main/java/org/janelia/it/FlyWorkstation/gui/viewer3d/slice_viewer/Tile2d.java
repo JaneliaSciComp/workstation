@@ -212,8 +212,8 @@ implements GLActor
 		int zoomScale = (int)(Math.pow(2.0, getIndex().getZoom()) + 0.1);
 		double tileWidth = texture.getUsedWidth() * zoomScale * tileFormat.getVoxelMicrometers()[0];
 		double tileHeight = texture.getHeight() * zoomScale * tileFormat.getVoxelMicrometers()[1];
-		gl.glColor3d(1.0, 1.0, 0.3);
 		gl.glBegin(GL2.GL_LINE_STRIP);
+			gl.glColor3d(1.0f, 1.0f, 0.3f);
 			// draw quad
 	        double z = 0.0; // As far as OpenGL is concerned, all Z's are zero
 	        double x0 = getIndex().getX() * tileFormat.getTileSize()[0] * zoomScale * tileFormat.getVoxelMicrometers()[0];

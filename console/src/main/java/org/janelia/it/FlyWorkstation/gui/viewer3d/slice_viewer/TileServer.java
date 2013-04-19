@@ -9,18 +9,19 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.eclipse.jetty.util.log.Log;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TileServer 
 implements VolumeImage3d
 {
-	// private static final Logger log = LoggerFactory.getLogger(TileServer.class);
+	private static final Logger log = LoggerFactory.getLogger(TileServer.class);
 	
 	/*
 	 * A TileSet is a group of rectangles that complete the SliceViewer image
@@ -118,6 +119,8 @@ implements VolumeImage3d
 	private Slot1<TileSet> updateFuturePreFetchSlot = new Slot1<TileSet>() {
 		@Override
 		public void execute(TileSet tileSet) {
+			long startTime = System.nanoTime();
+			
 			// log.info("updatePreFetchSlot");
 			futurePreFetcher.clear();
 			if (tileSet.size() < 1)
@@ -134,6 +137,13 @@ implements VolumeImage3d
 				// log.info("queue load of "+ix);
 				futurePreFetcher.loadDisplayedTexture(ix, TileServer.this);
 				queuedTextures.add(ix);
+			}
+
+			// Shift perfect texture for each viewed tile into the history cache
+			// (i.e. not the future cache)
+			for (Tile2d tile : tileSet) {
+				PyramidTileIndex index = getTextureCache().getCanonicalIndex(tile.getIndex());
+				getTextureCache().markHistorical(index, getLoadAdapter());
 			}
 			
 			// Pre-fetch adjacent Z slices:
@@ -156,7 +166,10 @@ implements VolumeImage3d
 			}
 			int zMin = getLoadAdapter().getTileFormat().getOrigin()[2];
 			int zMax = zMin + getLoadAdapter().getTileFormat().getVolumeSize()[2] - 1;
-			for (int deltaZ = 1; deltaZ <= 50; ++deltaZ) {
+			while (((zMinus >= zMin) || (zPlus <= zMax)) // something is within Z-bounds
+					&& (queuedTextures.size() < (getTextureCache().getFutureCache().getMaxSize() - 100))) // future cache is not full
+			{
+			// for (int deltaZ = 1; deltaZ <= 50; ++deltaZ) {
 				// Step away from center in z, one unique step at a time.
 				// Drive to the next unique z value in each direction.
 				// minus Z:
@@ -209,6 +222,8 @@ implements VolumeImage3d
 					}
 				}
 			}
+			long endTime = System.nanoTime();
+			log.info("Prefetch fill elapsed time = "+(endTime-startTime)/1e6+" ms");
 		}
 	};
 	

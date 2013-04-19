@@ -28,18 +28,17 @@ public class TextureCache
 	// private static final Logger log = LoggerFactory.getLogger(TextureCache.class);
 	
 	private IndexStyle indexStyle = IndexStyle.QUADTREE;
-	
+
 	// Cache actually stores octree or quadtree or whatever index.
 	// Interface uses quadtree index.
 	// ...with the index interpolator class to mediate between the two.
 	// private Map<PyramidTileIndex, TileTexture> cache = new HashMap<PyramidTileIndex, TileTexture>();
 	private HistoryCache historyCache = new HistoryCache();
+	private HistoryCache futureCache = new HistoryCache(); // TODO use this one too
 	private Map<PyramidTileIndex, TileTexture> persistentCache = new HashMap<PyramidTileIndex, TileTexture>();
 	
 	private PyramidIndexInterpolator indexInterpolator = new QuadtreeInterpolator();
 
-	// private Deque<PyramidTileIndex> historyCache = new 
-	
 	public Signal getCacheClearedSignal() {
 		return cacheClearedSignal;
 	}
@@ -52,6 +51,7 @@ public class TextureCache
 	
 	synchronized public void clear() {
 		// log.info("Clearing texture cache");
+		futureCache.clear();
 		historyCache.clear();
 		persistentCache.clear();
 		cacheClearedSignal.emit();
@@ -59,15 +59,18 @@ public class TextureCache
 	
 	boolean containsKey(PyramidTileIndex quadtreeIndex) {
 		return persistentCache.containsKey(quadtreeIndex)
-				|| historyCache.containsKey(getCanonicalIndex(quadtreeIndex));
+				|| historyCache.containsKey(getCanonicalIndex(quadtreeIndex))
+				|| futureCache.containsKey(getCanonicalIndex(quadtreeIndex));
 	}
 	
 	synchronized TileTexture get(PyramidTileIndex quadtreeIndex) {
 		PyramidTileIndex index = getCanonicalIndex(quadtreeIndex);
 		if (persistentCache.containsKey(index))
 			return persistentCache.get(index);
-		else
+		else if (historyCache.containsKey(index))
 			return historyCache.get(index);
+		else
+			return futureCache.get(index);
 	}
 	
 	synchronized TileTexture getOrCreate(
@@ -82,7 +85,7 @@ public class TextureCache
 		if (index.getZoom() == index.getMaxZoom())
 			persistentCache.put(index, texture);
 		else
-			historyCache.addFirst(texture);
+			futureCache.addFirst(texture);
 		return texture;
 	}
 	
@@ -104,6 +107,22 @@ public class TextureCache
 		return indexStyle;
 	}
 
+	// Indicate that a particular texture has been viewed, rather than simply
+	// pre-fetched.
+	public void markHistorical(PyramidTileIndex index, PyramidTextureLoadAdapter loadAdapter) {
+		PyramidTileIndex ix = getCanonicalIndex(index);
+		if (persistentCache.containsKey(ix))
+			return; // persistent cache has priority over historical cache
+		TileTexture texture = historyCache.get(ix);
+		if (texture == null) { // texture was not already in history cache
+			// Move texture from future cache to history cache
+			texture = futureCache.remove(ix);
+			if (texture == null) // This texture wasn't yet in ANY cache
+				texture = new TileTexture(index, loadAdapter);
+		}
+		historyCache.addFirst(texture); // move texture to the front of the queue
+	}
+	
 	public void setIndexStyle(IndexStyle indexStyle) {
 		if (indexStyle == this.indexStyle)
 			return;
@@ -127,11 +146,12 @@ public class TextureCache
 	}
 	*/
 	
-	public int size() {return historyCache.size() + persistentCache.size();}
+	public int size() {return futureCache.size() + historyCache.size() + persistentCache.size();}
 	
 	public Collection<TileTexture> values() {
 		Set<TileTexture> result = new HashSet<TileTexture>();
 		result.addAll(historyCache.values());
+		result.addAll(futureCache.values());
 		result.addAll(persistentCache.values());
 		return result;
 	}
@@ -180,6 +200,22 @@ public class TextureCache
 		public PyramidTileIndex toQuadtreeIndex(PyramidTileIndex otherIndex) {
 			return otherIndex;
 		}
+	}
+
+	public HistoryCache getFutureCache() {
+		return futureCache;
+	}
+
+	public int[] popObsoleteTextureIds() {
+		Set<Integer> ids = futureCache.popObsoleteGlTextures();
+		ids.addAll(historyCache.popObsoleteGlTextures());
+		int result[] = new int[ids.size()];
+		int i = 0;
+		for (int val : ids) {
+			result[i] = val;
+			i += 1;
+		}
+		return result;
 	}
 
 }

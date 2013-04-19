@@ -279,9 +279,9 @@ implements PyramidTextureData
 					ChannelBrightnessStats chanStats = result.get(c);
 					int val = 0;
 					if (getBitDepth() > 8)
-						val = buf16.get(); // 16 bit value
+						val = (buf16.get() & 0xffff); // unsigned 16 bit value
 					else
-						val = bb.get(); // 8 bit value
+						val = (bb.get() & 0xff); // unsigned 8 bit value
 					if (val == 0)
 						continue; // zero means "no data"
 					chanStats.setMax(Math.max(chanStats.getMax(), val));

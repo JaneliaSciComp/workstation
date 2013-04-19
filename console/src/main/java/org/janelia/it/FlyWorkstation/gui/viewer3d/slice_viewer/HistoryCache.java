@@ -18,8 +18,9 @@ public class HistoryCache
 	private Map<PyramidTileIndex, LRUTexture> map = new HashMap<PyramidTileIndex, LRUTexture>();
 	// Buffer for opengl textures to delete when a context becomes available
 	private Set<Integer> obsoleteGlTextures = new HashSet<Integer>();
-	LRUTexture head = null;
-	LRUTexture tail = null;
+	private LRUTexture head = null;
+	private LRUTexture tail = null;
+	private int maxSize = 3000;
 
 	private void addFirst(LRUTexture lru) {
 		PyramidTileIndex ix = lru.texture.getIndex();
@@ -55,11 +56,9 @@ public class HistoryCache
 		}
 		else { // this is a new texture, which could grow the cache size
 			addFirst(new LRUTexture(tex));
-			// TODO - make cache size limit user adjustable, or at least smart.
-			while ((size() > 5000) && (removeLast() != null))
+			while ((size() > maxSize) && (removeLast() != null))
 				;
 			// log.info("cache size = "+size());
-			// TODO - don't remove persistent items, like lowest resolution volume
 		}
 	}
 
@@ -100,11 +99,25 @@ public class HistoryCache
 		return head.texture;
 	}
 	
+	public int getMaxSize() {
+		return maxSize;
+	}
+
+	public Set<Integer> popObsoleteGlTextures() {
+		Set<Integer> result = obsoleteGlTextures;
+		obsoleteGlTextures = new HashSet<Integer>();
+		return result;
+	}
+
+	public void setMaxSize(int maxSize) {
+		this.maxSize = maxSize;
+	}
+
 	public int size() {
 		return map.size();
 	}
 
-	public TileTexture removeLast() {
+	public synchronized TileTexture removeLast() {
 		if (tail == null)
 			return null;
 		TileTexture result = tail.texture;
@@ -121,6 +134,18 @@ public class HistoryCache
 			}
 		}
 		return result;
+	}
+	
+	public synchronized TileTexture remove(PyramidTileIndex index) {
+		if (! map.containsKey(index))
+			return null;
+		LRUTexture result = map.get(index);
+		if (result.next != null)
+			result.next.previous = result.previous;
+		if (result.previous != null)
+			result.previous.next = result.next;
+		map.remove(index);
+		return result.texture;
 	}
 	
 	public Collection<TileTexture> values() {

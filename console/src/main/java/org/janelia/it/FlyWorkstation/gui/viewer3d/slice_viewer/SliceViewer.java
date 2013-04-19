@@ -103,8 +103,8 @@ implements MouseModalWidget, VolumeViewer
 		if (bs == null)
 			return;
 		// Remember which channel has the extreme values
-		int min = Integer.MIN_VALUE;
-		int max = Integer.MAX_VALUE;
+		int min = Integer.MAX_VALUE;
+		int max = Integer.MIN_VALUE;
 		int minChan = 0;
 		int maxChan = 0;
 		// Set one channel at a time

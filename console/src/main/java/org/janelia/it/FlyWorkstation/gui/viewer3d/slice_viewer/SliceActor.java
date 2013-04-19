@@ -1,15 +1,18 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
+import java.nio.IntBuffer;
+
 import javax.media.opengl.GL2;
 
+import org.eclipse.jetty.util.log.Log;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.NumeralShader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.SliceColorShader;
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Attempt to factor out GLActor portion of RavelerTileServer,
@@ -21,7 +24,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.SliceColor
 public class SliceActor 
 implements GLActor
 {
-	// private static final Logger log = LoggerFactory.getLogger(SliceActor.class);
+	private static final Logger log = LoggerFactory.getLogger(SliceActor.class);
 
 	private TileServer tileServer;
 	private boolean needsGlDisposal = false; // flag for deferred OpenGL data reset
@@ -55,6 +58,16 @@ implements GLActor
 	{
 		if (tiles == null)
 			return;
+		
+		// Delete uncached textures
+		if ( (tileServer != null) && (tileServer.getTextureCache() != null) ) {
+			int obsoleteIds[] = tileServer.getTextureCache().popObsoleteTextureIds();
+			if (obsoleteIds.length > 0) {
+				log.info("deleting "+obsoleteIds.length+" OpenGL textures");
+				gl.glDeleteTextures(obsoleteIds.length, obsoleteIds, 0);
+			}
+		}
+		
 		// Possibly eliminate texture cache
 		// TODO - eliminate any previously deleted textures from texture cache
 		if (needsGlDisposal) {
@@ -90,9 +103,31 @@ implements GLActor
 			tile.display(gl);
 		}
 		shader.unload(gl);
-		
-		if (pixelsPerVoxel > 15.0) {
-			// TODO optional numeral display at high zoom			
+
+		// TODO optional numeral display at high zoom			
+		if (pixelsPerVoxel > 40.0) {
+			PyramidTileFormat tileFormat = tileServer.getLoadAdapter().getTileFormat();
+			numeralShader.setMicrometersPerPixel(1.0/pixelsPerVoxel);
+			// fetch (typical?) texture dimensions
+			int th = 10;
+			int tw = 10;
+			for (Tile2d tile: tiles) {
+				TileTexture texture = tile.getBestTexture();
+				if (texture != null) {
+					th = texture.getTexture().getHeight();
+					tw = texture.getTexture().getWidth();
+					break;
+				}
+			}
+			numeralShader.setTexturePixels(tw, th);
+			// render numerals
+			numeralShader.load(gl);
+			for (Tile2d tile: tiles) {
+				tile.setFilter(GL2.GL_NEAREST);
+				// numeralShader.setTexturePixels(???);
+				tile.display(gl);
+			}
+			numeralShader.unload(gl);
 		}
 
 		// Outline tiles for viewer debugging
@@ -104,7 +139,7 @@ implements GLActor
 		}
 		
 		// Outline volume for debugging
-		final boolean bOutlineVolume = false;
+		final boolean bOutlineVolume = true;
 		if (bOutlineVolume)
 			displayBoundingBox(gl);
 	}
@@ -155,6 +190,7 @@ implements GLActor
 	public void init(GL2 gl) {
 		try {
 			shader.init(gl);
+			numeralShader.init(gl);
 		} catch (ShaderCreationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
