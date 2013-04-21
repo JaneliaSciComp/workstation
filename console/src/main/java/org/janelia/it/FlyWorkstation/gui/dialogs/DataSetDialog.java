@@ -32,15 +32,18 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
  */
 public class DataSetDialog extends ModalDialog implements Accessibility {
     
-	private DataSetListDialog parentDialog;
+    private static final String SLIDE_CODE_PATTERN = "{Slide Code}";
+	private static final String DEFAULT_SAMPLE_NAME_PATTERN = "{Line}-"+SLIDE_CODE_PATTERN;
+
+    private DataSetListDialog parentDialog;
 	
     private JPanel attrPanel;
     private JLabel nameLabel;
     private JTextField nameInput;
     private JLabel identifierLabel;
     private JTextField identifierInput;
-    private JLabel suffixLabel;
-    private JTextField suffixInput;
+    private JLabel sampleNamePatternLabel;
+    private JTextField sampleNamePatternInput;
     private JCheckBox sageSyncCheckbox;
     private HashMap<String,JCheckBox> processCheckboxes = new HashMap<String,JCheckBox>();
     
@@ -137,11 +140,12 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
         attrPanel.add(identifierLabel, "gap para");
         attrPanel.add(identifierInput);
 
-        suffixLabel = new JLabel("Sample Name Suffix: ");
-        suffixInput = new JTextField(40);
-        suffixLabel.setLabelFor(suffixInput);
-        attrPanel.add(suffixLabel, "gap para");
-        attrPanel.add(suffixInput);
+        sampleNamePatternLabel = new JLabel("Sample Name Pattern: ");
+        sampleNamePatternInput = new JTextField(40);
+        sampleNamePatternInput.setText(DEFAULT_SAMPLE_NAME_PATTERN);
+        sampleNamePatternLabel.setLabelFor(sampleNamePatternInput);
+        attrPanel.add(sampleNamePatternLabel, "gap para");
+        attrPanel.add(sampleNamePatternInput);
         
         sageSyncCheckbox = new JCheckBox("Synchronize images from SAGE");
         attrPanel.add(sageSyncCheckbox, "gap para, span 2");
@@ -155,9 +159,9 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
 			if (dataSetIdentifier!=null) {
 				identifierInput.setText(dataSetIdentifier);
 	    	}		
-			String sampleNameSuffix = dataSetEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SAMPLE_NAME_SUFFIX);
-            if (sampleNameSuffix!=null) {
-                suffixInput.setText(sampleNameSuffix);
+			String sampleNamePattern = dataSetEntity.getValueByAttributeName(EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN);
+            if (sampleNamePattern!=null) {
+                sampleNamePatternInput.setText(sampleNamePattern);
             }   
         	if (dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAGE_SYNC)!=null) {
         		sageSyncCheckbox.setSelected(true);
@@ -175,7 +179,14 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
     private void saveAndClose() {
     	
     	Utils.setWaitingCursor(DataSetDialog.this);
-    	
+
+        final String sampleNamePattern = sampleNamePatternInput.getText();
+        if (!sampleNamePattern.contains(SLIDE_CODE_PATTERN)) {
+            JOptionPane.showMessageDialog(SessionMgr.getSessionMgr().getActiveBrowser(),
+                    "Sample name pattern must contain the unique identifier \""+SLIDE_CODE_PATTERN+"\"", "Invalid Sample Name Pattern", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        
         SimpleWorker worker = new SimpleWorker() {
 
 			@Override
@@ -188,15 +199,14 @@ public class DataSetDialog extends ModalDialog implements Accessibility {
 					dataSetEntity.setName(nameInput.getText());	
 				}
 				
-				String sampleNameSuffix = suffixInput.getText();
-				if (!StringUtils.isEmpty(sampleNameSuffix)) {
-				    ModelMgr.getModelMgr().setAttributeValue(dataSetEntity, EntityConstants.ATTRIBUTE_SAMPLE_NAME_SUFFIX, sampleNameSuffix);    
+				if (!StringUtils.isEmpty(sampleNamePattern)) {
+				    ModelMgr.getModelMgr().setAttributeValue(dataSetEntity, EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN, sampleNamePattern);    
 				}
 				else {
-                    EntityData suffixEd = dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAMPLE_NAME_SUFFIX);
-                    if (suffixEd!=null) {
-                        dataSetEntity.getEntityData().remove(suffixEd);
-                        ModelMgr.getModelMgr().removeEntityData(suffixEd);
+                    EntityData patternEd = dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN);
+                    if (patternEd!=null) {
+                        dataSetEntity.getEntityData().remove(patternEd);
+                        ModelMgr.getModelMgr().removeEntityData(patternEd);
                     }
 				}
 				
