@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.MaskChanRenderableData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
@@ -13,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -54,6 +54,8 @@ public class ABContextDataSource implements RenderableDataSourceI {
 
         int nextTranslatedNum = 1;
 
+        int liveFileCount = 0;
+
         // Establish the fragment renderables.
         for ( AlignedItem alignedItem : context.getAlignedItems() ) {
 
@@ -88,8 +90,14 @@ public class ABContextDataSource implements RenderableDataSourceI {
 
                             //sampleId = 1735570990882095202L; // Push different set of input files.
                             Neuron neuronItem = (Neuron)item.getItemWrapper();
-                            nfRenderable.setMaskPath( getMaskPath( neuronItem, sampleId ) );
-                            nfRenderable.setChannelPath( getChannelPath( neuronItem, sampleId ) );
+                            String maskPath = getMaskPath(neuronItem, sampleId);
+                            nfRenderable.setMaskPath( maskPath );
+                            String channelPath = getChannelPath(neuronItem, sampleId);
+                            nfRenderable.setChannelPath( channelPath );
+
+                            liveFileCount += getCorrectFilesFoundCount(
+                                    "" + neuronBean.getRenderableEntity(), maskPath, channelPath
+                            );
 
                             rtnVal.add( nfRenderable );
                             nextTranslatedNum ++;
@@ -101,6 +109,12 @@ public class ABContextDataSource implements RenderableDataSourceI {
             }
         }
 
+        //  Prevent user from seeing "forever working" indicator when there is nothing to see.
+        if ( liveFileCount == 0 ) {
+            String message = "No mask or channel file sets found.  Nothing to display.";
+            logger.error( message );
+            throw new RuntimeException( message );
+        }
 
         return rtnVal;
     }
@@ -236,11 +250,13 @@ public class ABContextDataSource implements RenderableDataSourceI {
      * @return that mask file.
      */
     private String getMaskPath( Neuron neuron, long id ) {
-        String path = TEMP_ROOT_PATH + id + "_" + ( neuron.getMaskIndex() ) + ".mask";
-        if ( ! new File( path ).canRead() ) {
-            logger.error( "Did we forget to mount jacsData from workstation?" );
-            path = null;
-        }
+        String path = null;
+        path = neuron.getMask3dImageFilepath();
+//        path = TEMP_ROOT_PATH + id + "_" + ( neuron.getMaskIndex() ) + ".mask";
+//        if ( ! new File( path ).canRead() ) {
+//            logger.error( "Did we forget to mount jacsData from workstation?" );
+//            path = null;
+//        }
         return path;
     }
 
@@ -251,15 +267,33 @@ public class ABContextDataSource implements RenderableDataSourceI {
      * @return that channel file.
      */
     private String getChannelPath( Neuron neuron, long id ) {
-        String path = TEMP_ROOT_PATH + id + "_" + ( neuron.getMaskIndex() ) + ".chan";
-        if ( ! new File( path ).canRead() ) {
-            logger.error( "Cannot open {} for {}.", path, neuron.getId() + "/" + neuron.getName() );
-            path = null;
+
+        String path = null;
+        path = neuron.getChan3dImageFilepath();
+//        path = TEMP_ROOT_PATH + id + "_" + ( neuron.getMaskIndex() ) + ".chan";
+//        if ( ! new File( path ).canRead() ) {
+//            logger.error( "Cannot open {} for {}.", path, neuron.getId() + "/" + neuron.getName() );
+//            path = null;
+//        }
+//        else {
+//            logger.info( "Assigning file {} to {}.", path, neuron.getId() + "/" + neuron.getName() );
+//        }
+        return path;
+    }
+
+    /**
+     * Checks if the mask paths make sense (non null), and if so, returns 1 for the count.
+     */
+    private int getCorrectFilesFoundCount(String id, String maskPath, String channelPath) {
+        int rtnVal = 0;
+        if ( maskPath == null  ||  channelPath == null ) {
+            logger.warn( "{} has either no channel or no mask path.", id );
         }
         else {
-            logger.info( "Assigning file {} to {}.", path, neuron.getId() + "/" + neuron.getName() );
+            rtnVal ++;
         }
-        return path;
+
+        return rtnVal;
     }
 
     private RenderableBean createRenderableBean( int translatedNum, AlignedItem item ) {
