@@ -110,7 +110,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         }
 
         //  Prevent user from seeing "forever working" indicator when there is nothing to see.
-        if ( liveFileCount == 0 ) {
+        if ( liveFileCount == 0  &&  context.getAlignedItems().size() > 0 ) {
             String message = "No mask or channel file sets found.  Nothing to display.";
             logger.error( message );
             throw new RuntimeException( message );

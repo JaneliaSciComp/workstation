@@ -6,6 +6,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.*;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.MaskChanRenderableData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableDataSourceI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
@@ -216,8 +217,8 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             logger.info( "In load thread, after getting bean list." );
 
             if ( resolver == null ) {
-                resolver = new TrivialFileResolver();  // todo swap comments, in production.
-                //resolver = new CacheFileResolver();
+                //resolver = new TrivialFileResolver();  // todo swap comments, in production.
+                resolver = new CacheFileResolver();
             }
 
             multiThreadedFileLoad( metaDatas );
