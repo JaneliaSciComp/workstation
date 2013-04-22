@@ -175,8 +175,8 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
         public void addRootMenuItems() {
             add(getRootItem());
             add(getNewRootFolderItem());
-//            add(getNewAlignmentBoardItem());
-//            add(getOpenAlignmentBoardItem());
+            add(getNewAlignmentBoardItem());
+            add(getOpenAlignmentBoardItem());
         }
 
 		protected JMenuItem getRootItem() {
