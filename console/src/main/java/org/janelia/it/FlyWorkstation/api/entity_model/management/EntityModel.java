@@ -56,9 +56,7 @@ import com.google.common.collect.Multimap;
 public class EntityModel {
 
 	private static final Logger log = LoggerFactory.getLogger(EntityModel.class);
-	
-	private static final String ALIGNMENT_BOARD_FOLDER_NAME = "Alignment Boards";
-	
+		
 	private final AnnotationFacade annotationFacade;
 	private final EntityFacade entityFacade;
 	private final Cache<Long,Entity> entityCache;
@@ -865,20 +863,21 @@ public class EntityModel {
      * @return canonical entity instance
      * @throws Exception
      */
-    public RootedEntity createAlignmentBoard(String boardName) throws Exception {
+    public RootedEntity createAlignmentBoard(String alignmentBoardName, String alignmentSpace, String opticalRes, String pixelRes) throws Exception {
         synchronized(this) {
-            Entity alignmentBoardFolder = getCommonRootFolder(ALIGNMENT_BOARD_FOLDER_NAME);
-            if (alignmentBoardFolder==null) {
-                alignmentBoardFolder = createCommonRootFolder(ALIGNMENT_BOARD_FOLDER_NAME);
-            }
             
-            Entity boardEntity = entityFacade.createEntity(EntityConstants.TYPE_ALIGNMENT_BOARD, boardName);
-            putOrUpdate(boardEntity);
-            EntityData childEd = alignmentBoardFolder.addChildEntity(boardEntity);
-            boardEntity = entityFacade.saveEntity(alignmentBoardFolder);
+            Entity boardEntity = annotationFacade.createAlignmentBoard(alignmentBoardName, alignmentSpace, opticalRes, pixelRes);
+            Entity alignmentBoardFolder = getCommonRootFolder(EntityConstants.NAME_ALIGNMENT_BOARDS);
             
             RootedEntity abRootedEntity = new RootedEntity(alignmentBoardFolder);
 
+            EntityData childEd = null;
+            for(EntityData ed : alignmentBoardFolder.getEntityData()) {
+                if (ed.getChildEntity()!=null && ed.getChildEntity().getId().equals(boardEntity.getId())) {
+                    childEd = ed;
+                }
+            }
+            
             return abRootedEntity.getChild(childEd);
         }
     }

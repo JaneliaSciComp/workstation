@@ -30,7 +30,9 @@ import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableImage;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
+import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -246,19 +248,24 @@ public class Browser extends JFrame implements Cloneable {
         sessionOutline = new SessionOutline(this);
         // todo We should probably pass the user info to the server rather than filter the complete list on the console.
 		
+        
+        final Comparator<Entity> commonRootComparator = new Comparator<Entity>(){
+            public int compare(Entity o1, Entity o2) {
+                return ComparisonChain.start()
+                    .compareTrueFirst(ModelMgrUtils.isOwner(o1), ModelMgrUtils.isOwner(o2))
+                    .compare(o1.getOwnerKey(), o2.getOwnerKey())
+                    .compareTrueFirst(EntityUtils.isProtected(o1), EntityUtils.isProtected(o2))
+                    .compareTrueFirst(o1.getName().equals(EntityConstants.NAME_DATA_SETS), o2.getName().equals(EntityConstants.NAME_DATA_SETS))
+                    .compareTrueFirst(o1.getName().equals(EntityConstants.NAME_SHARED_DATA), o2.getName().equals(EntityConstants.NAME_SHARED_DATA))
+                    .compare(o1.getId(), o2.getId()).result();
+            }
+        };
+        
         entityOutline = new EntityOutline() {
 			@Override
 			public List<Entity> loadRootList() throws Exception {
 				List<Entity> roots = ModelMgr.getModelMgr().getCommonRootEntities();
-				Collections.sort(roots, new Comparator<Entity>(){
-					public int compare(Entity o1, Entity o2) {
-						return ComparisonChain.start()
-							.compareTrueFirst(ModelMgrUtils.isOwner(o1), ModelMgrUtils.isOwner(o2))
-							.compare(o1.getOwnerKey(), o2.getOwnerKey())
-							.compare(o1.getId(), o2.getId()).result();
-					}
-				});
-
+				Collections.sort(roots, commonRootComparator);
 				return roots;
 			}
 		};
@@ -267,14 +274,7 @@ public class Browser extends JFrame implements Cloneable {
             @Override
             public List<EntityWrapper> loadRootList() throws Exception {
                 List<Entity> roots = ModelMgr.getModelMgr().getCommonRootEntities();
-                Collections.sort(roots, new Comparator<Entity>(){
-                    public int compare(Entity o1, Entity o2) {
-                        return ComparisonChain.start()
-                            .compareTrueFirst(ModelMgrUtils.isOwner(o1), ModelMgrUtils.isOwner(o2))
-                            .compare(o1.getOwnerKey(), o2.getOwnerKey())
-                            .compare(o1.getId(), o2.getId()).result();
-                    }
-                });
+                Collections.sort(roots, commonRootComparator);
                 List<EntityWrapper> wrappers = new ArrayList<EntityWrapper>();
                 for(Entity rootEntity : roots) {
                     EntityData ed = new EntityData();

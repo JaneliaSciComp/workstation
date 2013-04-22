@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.util;
 
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -154,10 +155,32 @@ public class Icons {
         String type = entity.getEntityType().getName();
         
         if (EntityConstants.TYPE_FOLDER.equals(type)) {
-        	if (EntityUtils.isProtected(entity)) {
-        		return getIcon(large ? "folder_large.png" : "folder_key.png");	
-        	}
-            return getIcon(large ? "folder_large.png" : "folder.png");
+            if (large) return getIcon("folder_large.png");
+            
+            String typeSuffix = "";
+            if (EntityUtils.isProtected(entity)) {
+                if (entity.getName().equals(EntityConstants.NAME_DATA_SETS)) {
+                    typeSuffix = "_database";
+                }
+                else if (entity.getName().equals(EntityConstants.NAME_SHARED_DATA)) {
+                    typeSuffix = "_user";
+                }
+                else {
+                    typeSuffix = "_key";
+                }
+            }
+            
+            if (entity.getOwnerKey()!=null && !ModelMgrUtils.isOwner(entity)) {
+                return getIcon("folder_blue"+typeSuffix+".png");
+            }
+            else {
+                if (entity.getName().equals(EntityConstants.NAME_ALIGNMENT_BOARDS)) {
+                    return getIcon("folder_palette.png");
+                }
+                else {
+                    return getIcon("folder"+typeSuffix+".png");    
+                }
+            }
         }
         else if (EntityConstants.TYPE_SAMPLE.equals(type)
                 || EntityConstants.TYPE_SCREEN_SAMPLE.equals(type)

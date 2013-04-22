@@ -116,4 +116,9 @@ public class EJBAnnotationFacade extends EJBEntityFacade implements AnnotationFa
     public List<Entity> getDataSets() throws Exception {
     	return EJBFactory.getRemoteAnnotationBean().getUserDataSets(Arrays.asList(SessionMgr.getSubjectKey()));
 	}
+    
+    @Override
+    public Entity createAlignmentBoard(String alignmentBoardName, String alignmentSpace, String opticalRes, String pixelRes) throws Exception {
+        return EJBFactory.getRemoteAnnotationBean().createAlignmentBoard(SessionMgr.getSubjectKey(), alignmentBoardName, alignmentSpace, opticalRes, pixelRes);
+    }
 }

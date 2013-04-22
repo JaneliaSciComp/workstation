@@ -527,19 +527,14 @@ public class ModelMgr {
         return entityModel.createCommonRootFolder(name);
     }
 
-    public RootedEntity createAlignmentBoard(String name) throws Exception {
-        return entityModel.createAlignmentBoard(name);
+    public RootedEntity createAlignmentBoard(String alignmentBoardName, String alignmentSpace, String opticalRes, String pixelRes) throws Exception {
+        return entityModel.createAlignmentBoard(alignmentBoardName, alignmentSpace, opticalRes, pixelRes);
     }
 
     public void demoteCommonRootToFolder(Entity commonRoot) throws Exception {
     	 entityModel.demoteCommonRootToFolder(commonRoot);
     }
     
-//    public void deleteEntityById(Long entityId) throws Exception {
-//        entityModel.deleteEntity(entityModel.getEntityById(entityId));
-//        notifyEntityRemoved(entityId);
-//    }
-
     public void removeEntityData(EntityData ed) throws Exception {
     	entityModel.deleteEntityData(ed);
         notifyEntityDataRemoved(ed.getId());

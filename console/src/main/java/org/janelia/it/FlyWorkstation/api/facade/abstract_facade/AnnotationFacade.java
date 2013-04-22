@@ -52,4 +52,6 @@ public interface AnnotationFacade {
 	public Entity createDataSet(String dataSetName) throws Exception;
 	
 	public List<Entity> getDataSets() throws Exception;
+	
+	public Entity createAlignmentBoard(String alignmentBoardName, String alignmentSpace, String opticalRes, String pixelRes) throws Exception;
 }

@@ -255,16 +255,8 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
                         @Override
                         protected void doStuff() throws Exception {
                             // Update database
-                            newBoard = ModelMgr.getModelMgr().createAlignmentBoard(boardName);
-                            
                             // TODO: this should ask the user what kind of alignment board they want to create
-                            // for now it's hardcoded
-                            Entity board = newBoard.getEntity();
-                            board.setValueByAttributeName(EntityConstants.ATTRIBUTE_ALIGNMENT_SPACE, "Unified 20x Alignment Space");
-                            board.setValueByAttributeName(EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION, "0.62x0.62x0.62");
-                            board.setValueByAttributeName(EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION, "1024x512x218");
-                            ModelMgr.getModelMgr().saveOrUpdateEntity(board);
-                            
+                            newBoard = ModelMgr.getModelMgr().createAlignmentBoard(boardName, "Unified 20x Alignment Space", "0.62x0.62x0.62", "1024x512x218");
                         }
                         @Override
                         protected void hadSuccess() {
