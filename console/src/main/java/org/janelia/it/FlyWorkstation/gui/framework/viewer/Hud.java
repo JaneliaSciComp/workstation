@@ -123,6 +123,8 @@ public class Hud extends ModalDialog {
         else {
             this.remove(mip3d);
             this.add(previewLabel, BorderLayout.CENTER);
+            this.validate();
+            this.repaint();
         }
         rgbMenu.setEnabled(is3D);
         this.validate();
