@@ -40,7 +40,7 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
 
     @Override
     public void interpretChannelBytes(byte[] channelData, int targetPos) {
-        if ( channelMetaData.byteCount == 1 ) {
+        if ( channelMetaData.byteCount == 1  &&  channelMetaData.channelCount == 1 ) {
             // 1:1 straight copy to volume.
             for ( int channelInx = 0; channelInx < channelMetaData.rawChannelCount; channelInx++ ) {
                 volumeData[ targetPos + channelInx ] = channelData[ channelInx ];
@@ -58,7 +58,10 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
                     int shifter = channelMetaData.byteCount - j - 1;
                     finalValue += (nextByte << (8 * shifter));
                 }
-                finalValue /= 256;
+                if ( channelMetaData.byteCount == 2 )
+                    finalValue /= 256;
+                else if ( channelMetaData.byteCount == 3 )
+                    finalValue /= 65535;
 
                 if ( finalValue > maxValue ) {
                     maxValue = finalValue;

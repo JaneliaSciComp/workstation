@@ -268,14 +268,14 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
             // The size of any one voxel will be the number of channels times the bytes per channel.
             if ( channelMetaData.rawChannelCount == 3 ) {
                 // Round out to four.
-                ChannelMetaData newChannelMetaData = new ChannelMetaData();
+                ChannelMetaData newChannelMetaData = cloneChannelMetaData();
                 newChannelMetaData.channelCount = channelMetaData.rawChannelCount + 1;
-                newChannelMetaData.rawChannelCount = channelMetaData.rawChannelCount;
-                newChannelMetaData.byteCount = channelMetaData.byteCount;
-                newChannelMetaData.blueChannelInx = channelMetaData.blueChannelInx;
-                newChannelMetaData.greenChannelInx = channelMetaData.greenChannelInx;
-                newChannelMetaData.redChannelInx = channelMetaData.redChannelInx;
-
+                channelMetaData = newChannelMetaData;
+            }
+            else if ( channelMetaData.rawChannelCount == 2 ) {
+                // Round out to four.
+                ChannelMetaData newChannelMetaData = cloneChannelMetaData();
+                newChannelMetaData.channelCount = channelMetaData.rawChannelCount + 2;
                 channelMetaData = newChannelMetaData;
             }
             long arrayLength = paddedSx * paddedSy * paddedSz *
@@ -309,6 +309,16 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
 
             needsChannelInit = false;
         }
+    }
+
+    private ChannelMetaData cloneChannelMetaData() {
+        ChannelMetaData newChannelMetaData = new ChannelMetaData();
+        newChannelMetaData.rawChannelCount = channelMetaData.rawChannelCount;
+        newChannelMetaData.byteCount = channelMetaData.byteCount;
+        newChannelMetaData.blueChannelInx = channelMetaData.blueChannelInx;
+        newChannelMetaData.greenChannelInx = channelMetaData.greenChannelInx;
+        newChannelMetaData.redChannelInx = channelMetaData.redChannelInx;
+        return newChannelMetaData;
     }
 
     private void checkReady() {
