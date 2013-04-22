@@ -4,7 +4,6 @@ import org.janelia.it.FlyWorkstation.gui.dialogs.ModalDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
-import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
@@ -17,6 +16,8 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.net.URL;
 
 /**
  * A persistent heads-up display for a synchronized image. 
@@ -185,10 +186,8 @@ public class Hud extends ModalDialog {
             // Ensure we have an image and that it is cached.
             if ( image == null ) {
                 logger.info("In HUD: must load image.");
-// TODO: LocalFileCache - convert call to following when we're ready for full local cache cutover (and confirm with Les)
-//                final File imageFile = SessionMgr.getFile(imagePath, false);
-//                image = Utils.readImage(imageFile.getAbsolutePath());
-                image = Utils.readImage(PathTranslator.convertPath( imagePath ) );
+                final File imageFile = SessionMgr.getCachedFile(imagePath, false);
+                image = Utils.readImage(imageFile.getAbsolutePath());
 
                 if ( ic != null ) {
                     ic.put( imagePath, image );
