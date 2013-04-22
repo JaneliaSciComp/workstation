@@ -1,6 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.VolumeLoaderI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.MaskBuilderI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
@@ -14,10 +13,16 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
-import java.util.Collection;
 
 public class Mip3d extends BaseGLViewer implements ActionListener {
     public static final float DEFAULT_CROPOUT = 0.05f;
+    /** All -1 sends signal: no cropping requried. */
+    public static final float[] DEFAULT_CROP_COORDS = new float[] {
+        -1.0f, -1.0f,  // startX, endX
+        -1.0f, -1.0f,  // startY, endY
+        -1.0f, -1.0f   // startZ, endZ
+    };
+
     private static final long serialVersionUID = 1L;
 	private MipRenderer renderer = new MipRenderer();
     private VolumeModel volumeModel = new VolumeModel();
@@ -45,21 +50,11 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
     }
 
     public void refresh() {
-        Collection<GLActor> actors = renderer.getActors();
-        for ( GLActor actor: actors ) {
-            if ( actor instanceof VolumeBrick ) {
-                ((VolumeBrick)actor).refresh();
-            }
-        }
+        volumeModel.setVolumeUpdate();
     }
 
     public void refreshRendering() {
-        Collection<GLActor> actors = renderer.getActors();
-        for ( GLActor actor: actors ) {
-            if ( actor instanceof VolumeBrick ) {
-                ((VolumeBrick)actor).refreshColorMapping();
-            }
-        }
+        volumeModel.setRenderUpdate();
     }
 
     public void clear() {
@@ -83,7 +78,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
     public boolean loadVolume(String fileName, FileResolver resolver) {
         VolumeLoader volumeLoader = new VolumeLoader(resolver);
         if (volumeLoader.loadVolume(fileName)) {
-            VolumeBrick brick = new VolumeBrick(renderer);
+            VolumeBrick brick = new VolumeBrick(renderer, volumeModel);
             volumeLoader.populateVolumeAcceptor(brick);
 
             addActorToRenderer(brick);
@@ -107,7 +102,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
             float gamma
     ) {
         if ( volumeLoader != null ) {
-            VolumeBrick brick = new VolumeBrick(renderer);
+            VolumeBrick brick = new VolumeBrick(renderer, volumeModel);
             volumeModel.setGammaAdjustment( gamma );
             if ( maskBuilder != null ) {
                 brick.setMaskTextureData( maskBuilder.getCombinedTextureData() );
@@ -142,8 +137,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
             RenderMappingI renderMapping,
             float gamma ) {
         if ( signalTexture != null ) {
-            VolumeBrick brick = new VolumeBrick( renderer );
-            brick.setVolumeModel( volumeModel );
+            VolumeBrick brick = new VolumeBrick( renderer, volumeModel );
             volumeModel.setGammaAdjustment( gamma );
             brick.setTextureData( signalTexture );
             if ( maskTexture != null ) {
@@ -180,9 +174,8 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
     ) {
 		VolumeLoader volumeLoader = new VolumeLoader(resolver);
 		if (volumeLoader.loadVolume(fileName)) {
-            VolumeBrick brick = new VolumeBrick(renderer);
+            VolumeBrick brick = new VolumeBrick(renderer, volumeModel);
             volumeModel.setGammaAdjustment( gamma );
-            brick.setVolumeModel( volumeModel );
 			volumeLoader.populateVolumeAcceptor(brick);
             if ( maskBuilder != null ) {
                 brick.setMaskTextureData( maskBuilder.getCombinedTextureData() );
@@ -213,10 +206,9 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
     ) {
         VolumeLoader volumeLoader = new VolumeLoader(resolver);
         if (volumeLoader.loadVolume(fileName)) {
-            VolumeBrick brick = new VolumeBrick(renderer);
+            VolumeBrick brick = new VolumeBrick(renderer, volumeModel);
             volumeModel.setColorMask( colorMask );
             volumeModel.setGammaAdjustment( gamma );
-            brick.setVolumeModel( volumeModel );
             volumeLoader.populateVolumeAcceptor(brick);
 
             addActorToRenderer(brick);

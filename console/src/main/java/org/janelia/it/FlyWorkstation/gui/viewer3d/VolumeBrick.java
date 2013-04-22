@@ -6,7 +6,6 @@ import java.util.List;
 
 import com.jogamp.common.nio.Buffers;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardSettingsDialog;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.VolumeBrickShader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
@@ -53,6 +52,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     private VolumeBrickShader volumeBrickShader = new VolumeBrickShader();
 
     private RotationState rotationState;
+    private VolumeModel.UpdateListener updateVolumeListener;
     private boolean bIsInitialized;
     private boolean bUseSyntheticData = false;
 
@@ -60,12 +60,9 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     private Logger logger = LoggerFactory.getLogger( VolumeBrick.class );
 
-    VolumeBrick(MipRenderer mipRenderer) {
-		rotationState = mipRenderer;
-    }
-
-    public void setVolumeModel( VolumeModel volumeModel ) {
-        this.volumeModel = volumeModel;
+    VolumeBrick(MipRenderer mipRenderer, VolumeModel volumeModel) {
+        rotationState = mipRenderer;
+        setVolumeModel( volumeModel );
     }
 
     /**
@@ -309,18 +306,9 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     }
 
-    private void reportError(GL2 gl, String source) {
-        int errNum = gl.glGetError();
-        if ( errNum > 0 ) {
-            logger.warn(
-                    "Error {}/0x0{} encountered in " + source,
-                    errNum, Integer.toHexString(errNum)
-            );
-        }
-    }
-
     @Override
 	public void dispose(GL2 gl) {
+        volumeModel.removeUpdateListener(updateVolumeListener);
 		gl.glDeleteTextures(1, textureIds, 0);
 		// Retarded JOGL GLJPanel frequently reallocates the GL context
 		// during resize. So we need to be ready to reinitialize everything.
@@ -451,6 +439,23 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         bColorMapTextureNeedsUpload = true;
     }
 
+    /** This is a constructor-helper.  It has the listener setup required to properly use the volume model. */
+    private void setVolumeModel( VolumeModel volumeModel ) {
+        this.volumeModel = volumeModel;
+        updateVolumeListener = new VolumeModel.UpdateListener() {
+            @Override
+            public void updateVolume() {
+                refresh();
+            }
+
+            @Override
+            public void updateRendering() {
+                refreshColorMapping();
+            }
+        };
+        volumeModel.addUpdateListener(updateVolumeListener);
+    }
+
     private void initMediators( GL2 gl ) {
         textureIds = TextureMediator.genTextureIds( gl, textureMediators.size() );
         if ( signalTextureMediator != null ) {
@@ -543,6 +548,16 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     private void printPoint(double[] p) {
         System.out.printf("%s, %s, %s%n", Double.toString(p[0]), Double.toString(p[1]), Double.toString(p[2]));
+    }
+
+    private void reportError(GL2 gl, String source) {
+        int errNum = gl.glGetError();
+        if ( errNum > 0 ) {
+            logger.warn(
+                    "Error {}/0x0{} encountered in " + source,
+                    errNum, Integer.toHexString(errNum)
+            );
+        }
     }
 
 }

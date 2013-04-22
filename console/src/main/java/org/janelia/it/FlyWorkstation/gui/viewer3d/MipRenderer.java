@@ -26,7 +26,7 @@ class MipRenderer
     // scene objects
     public MipRenderer() {
 		// actors.add(new TeapotActor()); // solid shading is not supported right now
-        addActor( new VolumeBrick(this));
+        addActor( new VolumeBrick( this, new VolumeModel() ) );
     }
     
     public void centerOnPixel(Point p) {

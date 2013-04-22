@@ -42,7 +42,6 @@ public class Hud3DController implements ActionListener {
     }
 
     public void set3dWidget() {
-//        mip3d.refresh();
         hud.add( mip3d, BorderLayout.CENTER );
     }
 

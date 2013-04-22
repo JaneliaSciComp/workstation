@@ -30,15 +30,7 @@ public class VolumeBrickShader extends AbstractShader {
     private boolean volumeMaskApplied = false;
     private float gammaAdjustment = 1.0f;
     private float cropOutLevel = Mip3d.DEFAULT_CROPOUT;
-    // As all -1, sends signal "no cropping required."
-    private float[] cropCoords = new float[] {
-//        0.0f, 1.0f,  // startX, endX
-//        0.6f, 0.7f,  // startY, endY
-//        0.1f, 0.8f   // startZ, endZ
-            -1.0f, -1.0f,  // startX, endX
-            -1.0f, -1.0f,  // startY, endY
-            -1.0f, -1.0f   // startZ, endZ
-    };
+    private float[] cropCoords = Mip3d.DEFAULT_CROP_COORDS;
 
     @Override
     public String getVertexShader() {
@@ -118,6 +110,10 @@ public class VolumeBrickShader extends AbstractShader {
      *  as values between 0.0 and 1.0.
      */
     public void setCropCoords( float[] cropCoords ) {
+        // Null crop coords will be mis-interpretted.
+        if ( cropCoords == null ) {
+            return;
+        }
         if ( cropCoords.length < 6 ) {
             throw new IllegalArgumentException("Crop coords need a start and end in three dimensions.");
         }
