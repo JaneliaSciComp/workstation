@@ -1,11 +1,15 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
-import java.awt.*;
-import java.util.*;
+import java.awt.BorderLayout;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
@@ -168,13 +172,9 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         refresh();
     }
 
-    @Subscribe
-    public void handleBoardOpened(AlignmentBoardOpenEvent event) {
-        
-        //AlignmentBoardContext abContext = event.getAlignmentBoardContext();
-        AlignmentBoardContext abContext = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
+    private void printAlignmentBoardContext(AlignmentBoardContext abContext) {
 
-        log.debug("Alignment board opened: "+abContext.getName());
+        log.debug("Alignment board: "+abContext.getName());
         log.debug("* Alignment space: "+abContext.getAlignmentContext().getAlignmentSpaceName());
         log.debug("* Optical resolution: "+abContext.getAlignmentContext().getOpticalResolution());
         log.debug("* Pixel resolution: "+abContext.getAlignmentContext().getPixelResolution());
@@ -231,14 +231,16 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                         log.debug("  * reference metadata: "+vol.getFastMetadataPath(ArtifactType.Reference, size));
                     }
                 }
-                
-                if (sample.getNeuronSet()!=null) {
-                    log.debug("  neurons:");
-                    for(Neuron neuron : sample.getNeuronSet()) {
-                        log.debug("    "+neuron.getName()+" (mask index = "+neuron.getMaskIndex()+")");
+
+                log.debug("  neurons:");
+                for(AlignedItem neuronAlignedItem : alignedItem.getAlignedItems()) {
+                    EntityWrapper neuronItemEntity = neuronAlignedItem.getItemWrapper();
+                    if (neuronItemEntity instanceof Neuron) {
+                        Neuron neuron = (Neuron)neuronItemEntity;
+                        log.debug("    "+neuron.getName()+" (visible="+neuronAlignedItem.isVisible()+", maskIndex="+neuron.getMaskIndex()+")");
                         log.debug("    * mask: "+neuron.getMask3dImageFilepath());
                         log.debug("    * chan: "+neuron.getChan3dImageFilepath());
-                    }
+                    }   
                 }
 
             }
@@ -247,33 +249,35 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             }
 
         }
-
-        // The true update!
-        this.updateBoard( abContext );
     }
     
-    @Subscribe 
-    public void printItemChanged(AlignmentBoardItemChangeEvent event) {
-
-        AlignmentBoardContext abContext = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
-        //AlignmentBoardContext abContext = event.getAlignmentBoardContext();
-
-        AlignedItem alignedItem = event.getAlignedItem();
-
-        log.info("* Change Type: "+event.getChangeType());
+    private void printItemChanged(AlignedItem alignedItem, String changeType) {
+        log.info("Alignment board item changed");
+        log.info("* Change Type: "+changeType);
         log.info("* Item Alias: "+alignedItem.getName());
         log.info("* Item Name: "+alignedItem.getItemWrapper().getName());
         log.info("* Item Visibility: "+alignedItem.isVisible());
         log.info("* Item Color: "+alignedItem.getColor()+" (hex="+alignedItem.getColorHex()+")");
+    }
+    
+    @Subscribe
+    public void handleBoardOpened(AlignmentBoardOpenEvent event) {
+        
+        AlignmentBoardContext abContext = event.getAlignmentBoardContext();
+        printAlignmentBoardContext(abContext);
 
-        log.info("Item changed on alignment context: "+abContext.getName());
-        log.info("* Item: "+event.getAlignedItem().getName());
+        // The true update!
+        this.updateBoard( abContext );
     }
 
     @Subscribe 
     public void handleItemChanged(AlignmentBoardItemChangeEvent event) {
-        AlignmentBoardContext abContext = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
-        //AlignmentBoardContext abContext = event.getAlignmentBoardContext();
+
+        AlignmentBoardContext abContext = event.getAlignmentBoardContext();
+        
+        printItemChanged(event.getAlignedItem(), event.getChangeType().toString());
+        printAlignmentBoardContext(abContext);
+        
         if ( event.getChangeType().equals( AlignmentBoardItemChangeEvent.ChangeType.VisibilityChange )  ||
              event.getChangeType().equals( AlignmentBoardItemChangeEvent.ChangeType.ColorChange ) ) {
 

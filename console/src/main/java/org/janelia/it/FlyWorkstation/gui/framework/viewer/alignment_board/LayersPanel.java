@@ -15,6 +15,7 @@ import javax.swing.table.TableColumnModel;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
+import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityChangeEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityRemoveEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
@@ -33,7 +34,6 @@ import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.netbeans.swing.outline.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -365,33 +365,17 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         else if (wrapper instanceof Neuron) {
 
             Neuron neuron = (Neuron)wrapper;
+            Sample sample = (Sample)wrapper.getParent();
             
-            Entity sampleEntity = ModelMgr.getModelMgr().getAncestorWithType(neuron.getInternalEntity(), EntityConstants.TYPE_SAMPLE);
-            
-            if (sampleEntity==null) {
-                throw new IllegalStateException("Cannot find Sample for Neuron "+neuron.getId());
-            }
-            
-            AlignedItem sampleAlignedItem = alignmentBoardContext.getAlignedItemWithEntityId(sampleEntity.getId());
-            Sample sample = null;
-            
+            AlignedItem sampleAlignedItem = alignmentBoardContext.getAlignedItemWithEntityId(sample.getId());
             if (sampleAlignedItem==null) {
-                sample = new Sample(new RootedEntity(sampleEntity));            
-                if (sample.getChildren()==null) {
-                    sample.loadContextualizedChildren(alignmentBoardContext.getAlignmentContext());
-                }
-                
                 sampleAlignedItem = ModelMgr.getModelMgr().addAlignedItem(alignmentBoardContext, sample);
                 sampleAlignedItem.loadContextualizedChildren(alignmentBoardContext.getAlignmentContext());
-            }
-            else {
-                sample = (Sample)sampleAlignedItem.getItemWrapper();
             }
             
             sampleAlignedItem.setIsVisible(true);
             
             AlignedItem neuronItem = sampleAlignedItem.getAlignedItemWithEntityId(neuron.getId());
-            
             if (neuronItem == null) {
                 neuronItem = ModelMgr.getModelMgr().addAlignedItem(sampleAlignedItem, neuron);
                 neuronItem.loadContextualizedChildren(alignmentBoardContext.getAlignmentContext());
@@ -410,6 +394,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                refresh();
                 for(AlignmentBoardEvent event : events) {
                     ModelMgr.getModelMgr().postOnEventBus(event);
                 }
@@ -426,15 +411,18 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
     public void removeAlignedEntity(final AlignedItem alignedItem) throws Exception {
 
         RootedEntity rootedEntity = alignedItem.getInternalRootedEntity();
+        log.debug("DELETE");
         ModelMgr.getModelMgr().deleteEntityTree(rootedEntity.getEntityId());
-
+        log.debug("POST DELETE");
+        
+        final AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
+                alignmentBoardContext, alignedItem, ChangeType.Removed);
+        
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
-                        alignmentBoardContext, alignedItem, ChangeType.Removed);
+                log.debug("POSTING DELETION EVENT");
                 ModelMgr.getModelMgr().postOnEventBus(event);
-                refresh();
             }
         });
     }
@@ -490,16 +478,36 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         refresh();
     }
     
-//    @Subscribe 
-//    public void entityChanged(EntityChangeEvent event) {
-//        log.debug("Some entities were changed so we're refreshing the tree");
-//        refresh();
-//    }
-
+    private AlignedItem findAlignedItemByEntityId(AlignedItem alignedItem, Long entityId) {
+        if (alignedItem.getId().equals(entityId)) {
+            return alignedItem;
+        }
+        for(AlignedItem childItem : alignedItem.getAlignedItems()) {
+            AlignedItem foundItem = findAlignedItemByEntityId(childItem, entityId);
+            if (foundItem!=null) {
+                return foundItem;
+            }
+        }
+        return null;
+    }
+    
     @Subscribe 
     public void entityRemoved(EntityRemoveEvent event) {
-        log.debug("Some entities were removed so we're refreshing the tree");
-        refresh();
+        log.debug("Some entities were removed, let's check if we care...");
+        final AlignedItem removedItem = findAlignedItemByEntityId(alignmentBoardContext, event.getEntity().getId());
+        if (removedItem!=null) {
+            log.debug("The removed item was one of our aligned items! Refresh everything.");
+            // TODO: surgically modify the in-memory model without reloading everything
+            loadAlignmentBoard(alignmentBoardContext.getId(), new Callable<Void>() {
+                @Override
+                public Void call() throws Exception {
+                    final AlignmentBoardItemChangeEvent abEvent = new AlignmentBoardItemChangeEvent(
+                            alignmentBoardContext, removedItem, ChangeType.Removed);
+                    ModelMgr.getModelMgr().postOnEventBus(abEvent);
+                    return null;
+                }
+            });
+        }
     }
     
     @Override
@@ -515,6 +523,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
     }
     
     private void refresh(final boolean invalidateCache, final Callable<Void> success) {
+        // TODO: respect cache invalidation parameter
         if (alignmentBoardContext!=null) {
             loadAlignmentBoard(alignmentBoardContext.getId(), success);
         }

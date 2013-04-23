@@ -106,7 +106,7 @@ public abstract class EntityWrapper {
         initChildren();
     }
 
-    protected void addChild(EntityWrapper child) {
+    public void addChild(EntityWrapper child) {
         child.setParent(this);
         if (children==null) {
             this.children = new ArrayList<EntityWrapper>();

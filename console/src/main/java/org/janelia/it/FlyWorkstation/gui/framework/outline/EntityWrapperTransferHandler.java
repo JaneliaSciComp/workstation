@@ -164,7 +164,7 @@ public abstract class EntityWrapperTransferHandler extends TransferHandler {
                 
                 @Override
                 protected void hadSuccess() {
-                    SessionMgr.getBrowser().getLayersPanel().refresh();
+                    //SessionMgr.getBrowser().getLayersPanel().refresh();
                 }
                 
                 @Override

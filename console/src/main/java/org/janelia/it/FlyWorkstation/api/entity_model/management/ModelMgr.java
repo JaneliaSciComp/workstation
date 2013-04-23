@@ -531,6 +531,22 @@ public class ModelMgr {
         return entityModel.createAlignmentBoard(alignmentBoardName, alignmentSpace, opticalRes, pixelRes);
     }
 
+    public AlignedItem addAlignedItem(AlignedItem parent, EntityWrapper wrapper) throws Exception {
+
+        // Create and add a new aligned item context entity
+        Entity parentEntity = parent.getInternalEntity();
+        Entity alignedItemEntity = createEntity(EntityConstants.TYPE_ALIGNED_ITEM, wrapper.getName());
+        EntityData alignedItemEd = addEntityToParent(parentEntity, alignedItemEntity, parentEntity.getMaxOrderIndex()+1, EntityConstants.ATTRIBUTE_ITEM);
+        
+        // Add the actual entity to the aligned item
+        addEntityToParent(alignedItemEntity, wrapper.getInternalEntity(), alignedItemEntity.getMaxOrderIndex()+1, EntityConstants.ATTRIBUTE_ENTITY);
+        
+        // Add and return the aligned item
+        AlignedItem newItem = new AlignedItem(parent.getInternalRootedEntity().getChild(alignedItemEd));
+        parent.addChild(newItem);
+        return newItem;
+    }
+    
     public void demoteCommonRootToFolder(Entity commonRoot) throws Exception {
     	 entityModel.demoteCommonRootToFolder(commonRoot);
     }
@@ -935,23 +951,6 @@ public class ModelMgr {
 
     public FilterResult patternSearchGetFilteredResults(String type, Map<String, Set<DataFilter>> filterMap) throws Exception {
         return FacadeManager.getFacadeManager().getAnnotationFacade().patternSearchGetFilteredResults(type, filterMap);
-    }
-
-    public AlignedItem addAlignedItem(EntityWrapper parent, EntityWrapper wrapper) throws Exception {
-
-        // TODO: consider putting this login in the aligned item
-        Entity abEntity = parent.getInternalEntity();
-        
-        // Add the aligned item
-        Entity alignedItem = createEntity(EntityConstants.TYPE_ALIGNED_ITEM, wrapper.getName());
-        EntityData aignedItemEd = addEntityToParent(abEntity, alignedItem, abEntity.getMaxOrderIndex()+1, EntityConstants.ATTRIBUTE_ITEM);
-        RootedEntity alignedItemRe = parent.getInternalRootedEntity().getChild(aignedItemEd);
-        
-        // Add the actual entity 
-        addEntityToParent(alignedItem, wrapper.getInternalEntity(), alignedItem.getMaxOrderIndex()+1, EntityConstants.ATTRIBUTE_ENTITY);
-        
-        // But return the aligned item
-        return new AlignedItem(alignedItemRe);
     }
 
     public void registerOnEventBus(Object object) {
