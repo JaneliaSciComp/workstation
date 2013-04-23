@@ -868,6 +868,8 @@ public class EntityModel {
             
             Entity boardEntity = annotationFacade.createAlignmentBoard(alignmentBoardName, alignmentSpace, opticalRes, pixelRes);
             Entity alignmentBoardFolder = getCommonRootFolder(EntityConstants.NAME_ALIGNMENT_BOARDS);
+            invalidate(alignmentBoardFolder, false);
+            alignmentBoardFolder = getCommonRootFolder(EntityConstants.NAME_ALIGNMENT_BOARDS);
             
             RootedEntity abRootedEntity = new RootedEntity(alignmentBoardFolder);
 
@@ -876,6 +878,10 @@ public class EntityModel {
                 if (ed.getChildEntity()!=null && ed.getChildEntity().getId().equals(boardEntity.getId())) {
                     childEd = ed;
                 }
+            }
+            
+            if (childEd==null) {
+                throw new IllegalStateException("Could not retrieve the new alignment board");
             }
             
             return abRootedEntity.getChild(childEd);

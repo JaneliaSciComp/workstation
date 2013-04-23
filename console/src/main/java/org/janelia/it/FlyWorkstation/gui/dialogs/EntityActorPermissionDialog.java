@@ -171,12 +171,12 @@ public class EntityActorPermissionDialog extends ModalDialog implements Accessib
 					eap.setPermissions(permissions);
 					ModelMgr.getModelMgr().saveOrUpdatePermission(eap);
 				}
+				ModelMgr.getModelMgr().invalidateCache(entity, recursive);
 			}
 			
 			@Override
 			protected void hadSuccess() {	
 				parentDialog.refresh();
-				ModelMgr.getModelMgr().invalidateCache(entity, recursive);
 				Utils.setDefaultCursor(parentDialog);
 			}
 			
