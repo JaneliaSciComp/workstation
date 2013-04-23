@@ -33,11 +33,17 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     private byte[] volumeData;
     private int byteCount = UNIVERSAL_MASK_BYTE_COUNT;
     private AlignmentBoardSettings settings;
+    private boolean binary;   // Only two possible values for any given voxel.  1-byte per voxel.
 
     private boolean isInitialized = false;
     public RenderablesMaskBuilder( AlignmentBoardSettings settings, Collection<RenderableBean> renderableBeans ) {
         this.settings = settings;
         this.renderableBeans = renderableBeans;
+    }
+
+    public RenderablesMaskBuilder( AlignmentBoardSettings settings, Collection<RenderableBean> renderableBeans, boolean binary ) {
+        this( settings, renderableBeans );
+        this.binary = binary;
     }
 
     //----------------------------------------IMPLEMENT MaskChanDataAcceptorI
@@ -56,8 +62,13 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
         // Assumed little-endian.
         for ( int j = 0; j < getPixelByteCount(); j++ ) {
             int volumeLoc = j + ((int) position * getPixelByteCount());
-            // Here enforced: last-added value at any given position takes precedence over any previously-added value.
-            volumeData[ volumeLoc ] = (byte)( ( maskNumber >>> (8*j) ) & 0x00ff );
+            if ( binary ) {
+                volumeData[ volumeLoc ] = (byte)255;
+            }
+            else {
+                // Here enforced: last-added value at any given position takes precedence over any previously-added value.
+                volumeData[ volumeLoc ] = (byte)( ( maskNumber >>> (8*j) ) & 0x00ff );
+            }
         }
 
         return 1;

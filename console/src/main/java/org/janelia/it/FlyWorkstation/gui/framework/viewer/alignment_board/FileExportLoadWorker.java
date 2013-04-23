@@ -110,7 +110,8 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         customWritebackSettings.setGammaFactor( 1.0 );
         customWritebackSettings.setShowChannelData( false );
 
-        textureBuilder = new RenderablesMaskBuilder( customWritebackSettings, renderableBeans );
+        // Using only binary values.
+        textureBuilder = new RenderablesMaskBuilder( customWritebackSettings, renderableBeans, true );
 
         // Setup the loader to traverse all this data on demand.
         loader = new MaskChanMultiFileLoader();
