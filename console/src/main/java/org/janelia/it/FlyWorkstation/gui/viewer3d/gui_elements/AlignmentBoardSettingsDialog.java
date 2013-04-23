@@ -329,7 +329,7 @@ public class AlignmentBoardSettingsDialog extends JDialog {
          * @param ipadx     The initial ipadx value.
          * @param ipady     The initial ipady value.
          */
-        Insets insets = new Insets( 3, 3, 3, 3 );
+        Insets insets = new Insets( 8, 8, 8, 8 );
         GridBagConstraints brightnessConstraints = new GridBagConstraints(
                 0, 0, 3, 1, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
         );
@@ -390,8 +390,7 @@ public class AlignmentBoardSettingsDialog extends JDialog {
         // Mac-like layout for buttons.
         bottomButtonPanel.add( cancel, BorderLayout.WEST );
         bottomButtonPanel.add( go, BorderLayout.EAST );
-        Insets buttonBorderInsets = new Insets( 2, 2, 2, 2 );
-        bottomButtonPanel.setBorder( new EmptyBorder( buttonBorderInsets ) );
+        bottomButtonPanel.setBorder( new EmptyBorder( insets ) );
         add(bottomButtonPanel, BorderLayout.SOUTH);
     }
 
