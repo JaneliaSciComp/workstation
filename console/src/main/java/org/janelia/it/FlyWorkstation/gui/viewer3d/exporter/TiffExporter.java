@@ -40,48 +40,51 @@ public class TiffExporter {
 
     public void export( TextureDataI texture ) throws Exception {
 
-        int textureSize = texture.getSz() * texture.getSy() * texture.getSx();
-        logger.info( "Exporting texture {}.  Size={}", texture.getFilename(), textureSize );
-        ByteBuffer byteBuffer = ByteBuffer.wrap( texture.getTextureData() );
-        byteBuffer.rewind();
-        byteBuffer.order( ByteOrder.LITTLE_ENDIAN );
-
-        short[] argb = null;
-        if ( texture.getPixelByteCount() == 2 ) {
-            argb = getShortArray(textureSize, byteBuffer);
-        }
-
-        Collection<BufferedImage> imageList = new ArrayList<BufferedImage>( texture.getSz() );
-        for ( int z = 0; z < texture.getSz(); z++ ) {
-            BufferedImage slice = null;
-            if ( texture.getPixelByteCount() == 2 ) {
-                slice = createBufferedImage( texture, argb, z );
-            }
-            else {
-                slice = createBufferedImage( texture, texture.getTextureData(), z );
-            }
-            imageList.add( slice );
-        }
-
         JFileChooser fileChooser = new JFileChooser( "Choose Export File" );
+        fileChooser.setDialogTitle( "Save" );
         fileChooser.setToolTipText( "Pick an output location for the exported file." );
         fileChooser.showOpenDialog( null );
-
         // Get the file, and enforce the extension if none given by user.
         File chosenFile = fileChooser.getSelectedFile();
-        if (! chosenFile.getName().contains( "." ) ) {
-            chosenFile = new File( chosenFile.getAbsolutePath() + ".tiff" );
+        if ( chosenFile != null ) {
+            if (! chosenFile.getName().contains( "." ) ) {
+                chosenFile = new File( chosenFile.getAbsolutePath() + ".tiff" );
+            }
+
+            int textureSize = texture.getSz() * texture.getSy() * texture.getSx();
+            logger.info( "Exporting texture {}.  Size={}", texture.getFilename(), textureSize );
+            ByteBuffer byteBuffer = ByteBuffer.wrap( texture.getTextureData() );
+            byteBuffer.rewind();
+            byteBuffer.order( ByteOrder.LITTLE_ENDIAN );
+
+            short[] argb = null;
+            if ( texture.getPixelByteCount() == 2 ) {
+                argb = getShortArray(textureSize, byteBuffer);
+            }
+
+            Collection<BufferedImage> imageList = new ArrayList<BufferedImage>( texture.getSz() );
+            for ( int z = 0; z < texture.getSz(); z++ ) {
+                BufferedImage slice = null;
+                if ( texture.getPixelByteCount() == 2 ) {
+                    slice = createBufferedImage( texture, argb, z );
+                }
+                else {
+                    slice = createBufferedImage( texture, texture.getTextureData(), z );
+                }
+                imageList.add( slice );
+            }
+
+            OutputStream os = new BufferedOutputStream( new FileOutputStream( chosenFile ) );
+            TIFFEncodeParam params = new TIFFEncodeParam();
+            params.setLittleEndian( true );
+
+            ImageEncoder ienc = ImageCodec.createImageEncoder( "tiff", os, params );
+            BufferedImage nextImage = imageList.iterator().next();
+            params.setExtraImages( imageList.iterator() );
+            ienc.encode( nextImage );
+
+            os.close();
         }
-        OutputStream os = new BufferedOutputStream( new FileOutputStream( chosenFile ) );
-        TIFFEncodeParam params = new TIFFEncodeParam();
-        params.setLittleEndian( true );
-
-        ImageEncoder ienc = ImageCodec.createImageEncoder( "tiff", os, params );
-        BufferedImage nextImage = imageList.iterator().next();
-        params.setExtraImages( imageList.iterator() );
-        ienc.encode( nextImage );
-
-        os.close();
     }
 
     private short[] getShortArray(int textureSize, ByteBuffer byteBuffer) {

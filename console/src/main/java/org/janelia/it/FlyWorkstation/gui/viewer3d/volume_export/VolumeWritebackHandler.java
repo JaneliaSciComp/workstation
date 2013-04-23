@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.FileExportLoadWorker;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.exporter.TiffExporter;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.CompletionListener;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.MaskChanRenderableData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
@@ -27,15 +28,19 @@ import java.util.Map;
 public class VolumeWritebackHandler {
     private RenderMappingI renderMapping;
     private float[] cropCoords;
+    private CompletionListener completionListener;
 
     private Logger logger = LoggerFactory.getLogger( VolumeWritebackHandler.class );
 
     public VolumeWritebackHandler(
             RenderMappingI renderMapping,
-            float[] cropCoords ) {
+            float[] cropCoords,
+            CompletionListener completionListener
+    ) {
 
         this.cropCoords = cropCoords;
         this.renderMapping = renderMapping;
+        this.completionListener = completionListener;
 
     }
 
@@ -58,10 +63,12 @@ public class VolumeWritebackHandler {
         FileExportLoadWorker.Callback callback = new FileExportLoadWorker.Callback() {
             @Override
             public void loadSucceeded() {
+                completionListener.complete();
             }
 
             @Override
             public void loadFailed(Throwable ex) {
+                completionListener.complete();
                 ex.printStackTrace();
                 SessionMgr.getSessionMgr().handleException( ex );
             }

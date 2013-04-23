@@ -67,7 +67,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private boolean readyForOutput = false;
 
     private Map<Integer,Integer> downSampleRateToIndex;
-    private Collection<SettingsListener> listeners;
+    private Collection<ControlsListener> listeners;
 
     private Logger logger = LoggerFactory.getLogger( AlignmentBoardControlsDialog.class );
 
@@ -78,17 +78,17 @@ public class AlignmentBoardControlsDialog extends JDialog {
         this.setModal( false );
         this.setSize(SIZE);
         this.centering = centering;
-        this.listeners = new ArrayList<SettingsListener>();
+        this.listeners = new ArrayList<ControlsListener>();
         this.setDefaultCloseOperation( WindowConstants.HIDE_ON_CLOSE );
         createGui();
     }
 
     /** Control who observes.  Synchronized for thread safety. */
-    public synchronized void addSettingsListener( SettingsListener listener ) {
+    public synchronized void addSettingsListener( ControlsListener listener ) {
         listeners.add(listener);
     }
 
-    public synchronized void removeSettingsListener( SettingsListener listener ) {
+    public synchronized void removeSettingsListener( ControlsListener listener ) {
         listeners.remove(listener);
     }
 
@@ -192,7 +192,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
      * This will fire only those listener methods affected by the current user commitment.
      */
     private synchronized void fireSettingsEvent() {
-        for ( SettingsListener listener: listeners ) {
+        for ( ControlsListener listener: listeners ) {
             double newGamma = getGammaFactor();
             if ( newGamma != currentGamma ) {
                 currentGamma = newGamma;
@@ -213,20 +213,20 @@ public class AlignmentBoardControlsDialog extends JDialog {
     }
 
     private synchronized void fireSettingsEvent( float[] cropCoords ) {
-        for ( SettingsListener listener: listeners ) {
+        for ( ControlsListener listener: listeners ) {
             listener.setSelectedCoords( cropCoords );
         }
     }
 
-    private synchronized void fireSavebackEvent( float[] absoluteCoords ) {
-        for ( SettingsListener listener: listeners ) {
-            listener.exportSelection(absoluteCoords);
+    private synchronized void fireSavebackEvent( float[] absoluteCoords, CompletionListener completionListener ) {
+        for ( ControlsListener listener: listeners ) {
+            listener.exportSelection( absoluteCoords, completionListener );
         }
 
     }
 
     private synchronized void fireBlackOutCrop( boolean blackout ) {
-        for ( SettingsListener listener: listeners ) {
+        for ( ControlsListener listener: listeners ) {
             listener.setCropBlackout(blackout);
         }
     }
@@ -256,7 +256,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
             }
         });
 
-        JButton searchButton = new JButton( "Geometric Search" );
+        final JButton searchButton = new JButton( "Geometric Search" );
         searchButton.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent ae ) {
                 logger.info(
@@ -264,17 +264,33 @@ public class AlignmentBoardControlsDialog extends JDialog {
                                 " and (Y): " + ySlider.getValue() + ".." + ySlider.getUpperValue() +
                                 " and (Z): " + zSlider.getValue() + ".." + zSlider.getUpperValue()
                 );
+                searchButton.setEnabled( false );
+                CompletionListener buttonEnableListener = new CompletionListener() {
+                    @Override
+                    public void complete() {
+                        searchButton.setEnabled( true );
+                    }
+                };
+
                 float[] absoluteCropCoords = getCropCoords();
-                fireSavebackEvent( absoluteCropCoords );
+                fireSavebackEvent( absoluteCropCoords, buttonEnableListener );
 
             }
         });
 
-        JButton saveButton = new JButton( "Save as TIFF" );
+        final JButton saveButton = new JButton( "Save as TIFF" );
         saveButton.addActionListener( new ActionListener() {
+            CompletionListener buttonEnableListener = new CompletionListener() {
+                @Override
+                public void complete() {
+                    saveButton.setEnabled( true );
+                }
+            };
+
             public void actionPerformed( ActionEvent ae ) {
+                saveButton.setEnabled( false );
                 float[] absoluteCropCoords = getCropCoords();
-                fireSavebackEvent( absoluteCropCoords );
+                fireSavebackEvent( absoluteCropCoords, buttonEnableListener );
             }
         });
 
@@ -458,11 +474,11 @@ public class AlignmentBoardControlsDialog extends JDialog {
     }
 
     /** Callers should implement this to observe the input settings provided by uesr. */
-    public static interface SettingsListener {
+    public static interface ControlsListener {
         void setBrightness( double brightness );
         void updateSettings();
         void setSelectedCoords( float[] normalizedCoords );
-        void exportSelection( float[] absoluteCoords );
+        void exportSelection( float[] absoluteCoords, CompletionListener completionListener );
         void setCropBlackout( boolean blackout );
     }
 

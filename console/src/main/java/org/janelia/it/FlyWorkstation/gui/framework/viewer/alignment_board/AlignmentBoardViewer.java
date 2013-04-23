@@ -21,6 +21,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerPane;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardControlsDialog;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.CompletionListener;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ABContextDataSource;
@@ -419,7 +420,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         settings = new AlignmentBoardControlsDialog( rtnVal );
         settings.setDownSampleRate( AlignmentBoardControlsDialog.DEFAULT_DOWNSAMPLE_RATE );
         settings.addSettingsListener(
-                new AlignmentBoardSettingsListener( rtnVal, renderMapping, this )
+                new AlignmentBoardControlsListener( rtnVal, renderMapping, this )
         );
 
         rtnVal.addMenuAction( settings.getLaunchAction() );
@@ -461,11 +462,11 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     }
 
     //------------------------------Inner Classes
-    public static class AlignmentBoardSettingsListener implements AlignmentBoardControlsDialog.SettingsListener {
+    public static class AlignmentBoardControlsListener implements AlignmentBoardControlsDialog.ControlsListener {
         private Mip3d mip3d;
         private AlignmentBoardViewer viewer;
         private RenderMappingI renderMapping;
-        public AlignmentBoardSettingsListener( Mip3d mip3d, RenderMappingI renderMapping, AlignmentBoardViewer viewer ) {
+        public AlignmentBoardControlsListener(Mip3d mip3d, RenderMappingI renderMapping, AlignmentBoardViewer viewer) {
             this.mip3d = mip3d;
             this.viewer = viewer;
             this.renderMapping = renderMapping;
@@ -487,9 +488,11 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         }
 
         @Override
-        public void exportSelection( float[] absoluteCropCoords ) {
+        public void exportSelection(
+                float[] absoluteCropCoords, CompletionListener completionListener
+        ) {
             VolumeWritebackHandler writebackHandler = new VolumeWritebackHandler(
-                    renderMapping, absoluteCropCoords
+                    renderMapping, absoluteCropCoords, completionListener
             );
             writebackHandler.writeBackVolumeSelection();
         }
