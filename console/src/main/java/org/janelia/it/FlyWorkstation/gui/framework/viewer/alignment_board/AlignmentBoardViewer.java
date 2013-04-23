@@ -171,7 +171,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     @Subscribe
     public void handleBoardOpened(AlignmentBoardOpenEvent event) {
         
-        AlignmentBoardContext abContext = event.getAlignmentBoardContext();
+        //AlignmentBoardContext abContext = event.getAlignmentBoardContext();
+        AlignmentBoardContext abContext = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
 
         log.debug("Alignment board opened: "+abContext.getName());
         log.debug("* Alignment space: "+abContext.getAlignmentContext().getAlignmentSpaceName());
@@ -254,7 +255,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     @Subscribe 
     public void printItemChanged(AlignmentBoardItemChangeEvent event) {
 
-        AlignmentBoardContext abContext = event.getAlignmentBoardContext();
+        AlignmentBoardContext abContext = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
+        //AlignmentBoardContext abContext = event.getAlignmentBoardContext();
 
         AlignedItem alignedItem = event.getAlignedItem();
 
@@ -266,12 +268,12 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
         log.info("Item changed on alignment context: "+abContext.getName());
         log.info("* Item: "+event.getAlignedItem().getName());
-        log.info("* Change Type: "+event.getChangeType());    
     }
 
     @Subscribe 
     public void handleItemChanged(AlignmentBoardItemChangeEvent event) {
-        AlignmentBoardContext abContext = event.getAlignmentBoardContext();
+        AlignmentBoardContext abContext = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
+        //AlignmentBoardContext abContext = event.getAlignmentBoardContext();
         if ( event.getChangeType().equals( AlignmentBoardItemChangeEvent.ChangeType.VisibilityChange )  ||
              event.getChangeType().equals( AlignmentBoardItemChangeEvent.ChangeType.ColorChange ) ) {
 
