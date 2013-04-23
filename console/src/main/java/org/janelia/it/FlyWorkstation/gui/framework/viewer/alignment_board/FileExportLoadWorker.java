@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderablesChannelsBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.TextureBuilderI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.FilteringAcceptorDecorator;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
@@ -106,12 +107,13 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
 
         // Establish the means for extracting the volume mask.
         AlignmentBoardSettings customWritebackSettings = new AlignmentBoardSettings();
-        customWritebackSettings.setDownSampleRate( 1.0 );
-        customWritebackSettings.setGammaFactor( 1.0 );
+        customWritebackSettings.setDownSampleRate(1.0);
+        customWritebackSettings.setGammaFactor(1.0);
         customWritebackSettings.setShowChannelData( false );
 
         // Using only binary values.
         textureBuilder = new RenderablesMaskBuilder( customWritebackSettings, renderableBeans, true );
+//        textureBuilder = new RenderablesChannelsBuilder( customWritebackSettings, renderableBeans );
 
         // Setup the loader to traverse all this data on demand.
         loader = new MaskChanMultiFileLoader();
