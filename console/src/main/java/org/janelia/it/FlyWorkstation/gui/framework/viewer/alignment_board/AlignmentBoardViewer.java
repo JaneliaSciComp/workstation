@@ -16,7 +16,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerPane;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardSettingsDialog;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardControlsDialog;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ABContextDataSource;
@@ -58,7 +58,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private ModelMgrObserver modelMgrObserver;
     private RenderMappingI renderMapping;
     private BrainGlow brainGlow;
-    private AlignmentBoardSettingsDialog settings;
+    private AlignmentBoardControlsDialog settings;
     private Logger logger = LoggerFactory.getLogger(AlignmentBoardViewer.class);
 
     public AlignmentBoardViewer(ViewerPane viewerPane) {
@@ -302,7 +302,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     public void loadVolume( TextureDataI signalTexture, TextureDataI maskTexture ) {
 
         if ( ! mip3d.setVolume(
-                signalTexture, maskTexture, renderMapping, (float)AlignmentBoardSettingsDialog.DEFAULT_GAMMA
+                signalTexture, maskTexture, renderMapping, (float) AlignmentBoardControlsDialog.DEFAULT_GAMMA
         ) ) {
             logger.error( "Failed to load volume to mip3d." );
         }
@@ -412,8 +412,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
      */
     private Mip3d createMip3d() {
         Mip3d rtnVal = new Mip3d();
-        settings = new AlignmentBoardSettingsDialog( rtnVal );
-        settings.setDownSampleRate( AlignmentBoardSettingsDialog.DEFAULT_DOWNSAMPLE_RATE );
+        settings = new AlignmentBoardControlsDialog( rtnVal );
+        settings.setDownSampleRate( AlignmentBoardControlsDialog.DEFAULT_DOWNSAMPLE_RATE );
         settings.addSettingsListener(
                 new AlignmentBoardSettingsListener( rtnVal, renderMapping, this )
         );
@@ -457,7 +457,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     }
 
     //------------------------------Inner Classes
-    public static class AlignmentBoardSettingsListener implements AlignmentBoardSettingsDialog.SettingsListener {
+    public static class AlignmentBoardSettingsListener implements AlignmentBoardControlsDialog.SettingsListener {
         private Mip3d mip3d;
         private AlignmentBoardViewer viewer;
         private RenderMappingI renderMapping;

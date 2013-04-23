@@ -25,7 +25,7 @@ import java.util.List;
  * This will have the responsibility of presenting the user with choices for modifying data and behavior about
  * the Alignment Board Viewer.
  */
-public class AlignmentBoardSettingsDialog extends JDialog {
+public class AlignmentBoardControlsDialog extends JDialog {
     public static final double DEFAULT_DOWNSAMPLE_RATE = 2.0;
     private static final String DOWN_SAMPLE_TOOLTIP =
             "<html>" +
@@ -42,7 +42,7 @@ public class AlignmentBoardSettingsDialog extends JDialog {
             "to search other specimens and present the resulting overlappoing volume." +
             "</html>";
 
-    private static final String LAUNCH_AS = "Settings";
+    private static final String LAUNCH_AS = "Controls";
     private static final String LAUNCH_DESCRIPTION = "Present a dialog allowing users to change settings.";
     private static final Dimension SIZE = new Dimension( 400, 380 );
     private static final String GAMMA_TOOLTIP = "Adjust the gamma level, or brightness.";
@@ -69,12 +69,12 @@ public class AlignmentBoardSettingsDialog extends JDialog {
     private Map<Integer,Integer> downSampleRateToIndex;
     private Collection<SettingsListener> listeners;
 
-    private Logger logger = LoggerFactory.getLogger( AlignmentBoardSettingsDialog.class );
+    private Logger logger = LoggerFactory.getLogger( AlignmentBoardControlsDialog.class );
 
     /**
      * @param centering this dialog will be centered over the "centering" component.
      */
-    public AlignmentBoardSettingsDialog( Component centering ) {
+    public AlignmentBoardControlsDialog(Component centering) {
         this.setModal( false );
         this.setSize(SIZE);
         this.centering = centering;
@@ -491,8 +491,8 @@ public class AlignmentBoardSettingsDialog extends JDialog {
             int height = (int)SIZE.getHeight();
             int x = centering.getLocation().x + ( centering.getWidth() / 2 ) - ( width / 2 );
             int y = centering.getLocation().y + ( centering.getHeight() / 2 ) - ( height / 2 );
-            AlignmentBoardSettingsDialog.this.setLocation( x, y );
-            AlignmentBoardSettingsDialog.this.setVisible( true );
+            AlignmentBoardControlsDialog.this.setLocation( x, y );
+            AlignmentBoardControlsDialog.this.setVisible( true );
         }
 
     }
@@ -500,10 +500,10 @@ public class AlignmentBoardSettingsDialog extends JDialog {
     // Add listener to update display.
     public static class SliderChangeListener implements ChangeListener {
         private RangeSlider[] sliders;
-        private AlignmentBoardSettingsDialog dialog;
+        private AlignmentBoardControlsDialog dialog;
 
         public SliderChangeListener(
-                RangeSlider xSlider, RangeSlider ySlider, RangeSlider zSlider, AlignmentBoardSettingsDialog dialog
+                RangeSlider xSlider, RangeSlider ySlider, RangeSlider zSlider, AlignmentBoardControlsDialog dialog
         ) {
             this.sliders = new RangeSlider[] {
                     xSlider, ySlider, zSlider
