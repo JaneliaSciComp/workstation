@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.TextureBuilderI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.FilteringAcceptorDecorator;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
@@ -33,7 +34,7 @@ import java.util.concurrent.CyclicBarrier;
 public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
 
     private MaskChanMultiFileLoader loader;
-    private RenderablesMaskBuilder maskTextureBuilder;
+    private TextureBuilderI textureBuilder;
     private Collection<MaskChanRenderableData> renderableDatas;
     private float[] cropCoords;
     private Callback callback;
@@ -108,17 +109,17 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         customWritebackSettings.setDownSampleRate( 1.0 );
         customWritebackSettings.setGammaFactor( 1.0 );
         customWritebackSettings.setShowChannelData( false );
-        maskTextureBuilder = new RenderablesMaskBuilder( customWritebackSettings );
-        maskTextureBuilder.setRenderables(renderableBeans);
+
+        textureBuilder = new RenderablesMaskBuilder( customWritebackSettings, renderableBeans );
 
         // Setup the loader to traverse all this data on demand.
         loader = new MaskChanMultiFileLoader();
         loader.setEnforcePadding( false ); // Do not extend dimensions of resulting volume beyond established space.
         if ( cropCoords == null ) {
-            loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList( maskTextureBuilder ) );
+            loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList(textureBuilder) );
         }
         else {
-            MaskChanDataAcceptorI filter = new FilteringAcceptorDecorator( maskTextureBuilder, cropCoords );
+            MaskChanDataAcceptorI filter = new FilteringAcceptorDecorator(textureBuilder, cropCoords );
             loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList( filter ) );
         }
 
@@ -167,7 +168,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
 
     private void buildTexture() {
         // These two texture-build steps will proceed in parallel.
-        TextureDataI textureData = maskTextureBuilder.buildTextureData();
+        TextureDataI textureData = textureBuilder.buildTextureData();
         callback.loadVolume(textureData);
     }
 

@@ -35,8 +35,9 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     private AlignmentBoardSettings settings;
 
     private boolean isInitialized = false;
-    public RenderablesMaskBuilder( AlignmentBoardSettings settings ) {
+    public RenderablesMaskBuilder( AlignmentBoardSettings settings, Collection<RenderableBean> renderableBeans ) {
         this.settings = settings;
+        this.renderableBeans = renderableBeans;
     }
 
     //----------------------------------------IMPLEMENT MaskChanDataAcceptorI
@@ -153,11 +154,6 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     public VolumeDataAcceptor.TextureColorSpace getTextureColorSpace() {
         // See also VolumeLoader.resolveColorSpace()
         return VolumeDataAcceptor.TextureColorSpace.COLOR_SPACE_LINEAR;
-    }
-
-    @Override
-    public void setRenderables(Collection<RenderableBean> renderables) {
-        renderableBeans = renderables;
     }
 
     @Override

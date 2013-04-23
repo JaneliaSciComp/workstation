@@ -164,11 +164,10 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         ArrayList<MaskChanDataAcceptorI> acceptors = new ArrayList<MaskChanDataAcceptorI>();
 
         // Establish the means for extracting the volume mask.
-        maskTextureBuilder = new RenderablesMaskBuilder( alignmentBoardSettings );
-        maskTextureBuilder.setRenderables(renderableBeans);
+        maskTextureBuilder = new RenderablesMaskBuilder( alignmentBoardSettings, renderableBeans );
 
         // Establish the means for extracting the signal data.
-        signalTextureBuilder = new RenderablesChannelsBuilder( alignmentBoardSettings );
+        signalTextureBuilder = new RenderablesChannelsBuilder( alignmentBoardSettings, renderableBeans );
 
         // Setup the loader to traverse all this data on demand.
         neuronFragmentLoader = new MaskChanMultiFileLoader();

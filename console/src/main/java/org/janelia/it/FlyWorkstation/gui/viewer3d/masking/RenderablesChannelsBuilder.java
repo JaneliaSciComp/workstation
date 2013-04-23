@@ -5,6 +5,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeBrick;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.VolumeLoaderI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.slf4j.Logger;
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import javax.media.opengl.GL2;
 import java.nio.ByteOrder;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.TreeMap;
 
 /**
@@ -35,14 +37,16 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
 
     private ChannelInterpreterI channelInterpreter;
     private AlignmentBoardSettings settings;
+    private Collection<RenderableBean> renderableBeans;
 
     protected boolean needsChannelInit = false; // Initialized for emphasis.
     private Logger logger = LoggerFactory.getLogger( RenderablesChannelsBuilder.class );
 
-    public RenderablesChannelsBuilder( AlignmentBoardSettings settings ) {
+    public RenderablesChannelsBuilder( AlignmentBoardSettings settings, Collection<RenderableBean> renderableBeans ) {
         super();  // ...and I _mean_ that!
         needsChannelInit = true; // Must initialize the channel-specific data.
         this.settings = settings;
+        this.renderableBeans = renderableBeans;
     }
 
     // DEBUG/TEST
@@ -228,6 +232,8 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
             textureData.setExplicitVoxelComponentType( GL2.GL_UNSIGNED_SHORT );
         textureData.setExplicitVoxelComponentOrder( GL2.GL_RGBA );
         textureData.setExplicitInternalFormat( GL2.GL_RGBA );
+
+        textureData.setRenderables( renderableBeans );
 
         //  Because all have been tried with failure, assuming that the intuitive type of 8/8/8/8 is correct.
         // YCD textureData.setExplicitVoxelComponentType(GL2.GL_UNSIGNED_INT_8_8_8_8_REV);

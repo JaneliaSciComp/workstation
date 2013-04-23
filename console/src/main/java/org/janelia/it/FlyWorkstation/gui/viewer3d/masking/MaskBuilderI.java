@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 
@@ -24,6 +25,5 @@ public interface MaskBuilderI {
     int getPixelByteCount();
     TextureDataI getCombinedTextureData();
     VolumeDataAcceptor.TextureColorSpace getTextureColorSpace();
-    void setRenderables(Collection<RenderableBean> renderables);
 
 }

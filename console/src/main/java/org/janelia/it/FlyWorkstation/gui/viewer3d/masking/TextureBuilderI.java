@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 
 /**
@@ -10,6 +11,6 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
  *
  * Implement this to create texture data objects suitable for Mip3d.
  */
-public interface TextureBuilderI {
+public interface TextureBuilderI extends MaskChanDataAcceptorI {
     TextureDataI buildTextureData();
 }
