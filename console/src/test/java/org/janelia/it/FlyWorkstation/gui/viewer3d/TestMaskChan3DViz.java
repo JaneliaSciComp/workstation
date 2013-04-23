@@ -4,12 +4,11 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardControllable;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.RenderablesLoadWorker;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardSettingsDialog;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardControlsDialog;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.TrivialFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
-import org.jdesktop.swingx.JXTaskPaneContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,8 +59,8 @@ public class TestMaskChan3DViz {
                     // mip3d.
                     AlignmentBoardSettings settings = new AlignmentBoardSettings();
                     settings.setShowChannelData( true );
-                    settings.setGammaFactor( AlignmentBoardSettingsDialog.DEFAULT_GAMMA );
-                    settings.setDownSampleRate( AlignmentBoardSettingsDialog.DEFAULT_DOWNSAMPLE_RATE );
+                    settings.setGammaFactor( AlignmentBoardControlsDialog.DEFAULT_GAMMA );
+                    settings.setDownSampleRate( AlignmentBoardControlsDialog.DEFAULT_DOWNSAMPLE_RATE );
 
                     RenderMappingI renderMapping = new ConfigurableColorMapping();
                     RenderablesLoadWorker loadWorker = new RenderablesLoadWorker(
@@ -108,7 +107,7 @@ public class TestMaskChan3DViz {
         public void loadVolume(TextureDataI signalTexture, TextureDataI maskTexture) {
 
             if ( ! mip3d.setVolume(
-                    signalTexture, maskTexture, renderMapping, (float)AlignmentBoardSettingsDialog.DEFAULT_GAMMA
+                    signalTexture, maskTexture, renderMapping, (float) AlignmentBoardControlsDialog.DEFAULT_GAMMA
             ) ) {
                 logger.error( "Failed to load volume to mip3d." );
             }

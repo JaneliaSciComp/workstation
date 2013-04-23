@@ -15,7 +15,7 @@ import java.awt.event.WindowEvent;
  */
 public class AlignmentBoardSettingsDisplayTest {
     public static void main(String[] args) {
-        AlignmentBoardSettingsDialog testDialog = new AlignmentBoardSettingsDialog( new JFrame() );
+        AlignmentBoardControlsDialog testDialog = new AlignmentBoardControlsDialog( new JFrame() );
         testDialog.addWindowListener( new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
