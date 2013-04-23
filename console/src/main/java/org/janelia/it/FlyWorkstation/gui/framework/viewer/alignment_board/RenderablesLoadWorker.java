@@ -84,9 +84,6 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
         // Mask file is always needed.
         if ( maskChanRenderableData.getMaskPath() == null ) {
-            if ( maskChanRenderableData.getBean().getTranslatedNum() == 1 ) {
-                int nada = 7;
-            }
             logger.warn(
                     "Renderable {} has a missing mask file. ID is {}.",
                     maskChanRenderableData.getBean().getTranslatedNum(),
@@ -278,6 +275,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     private void multiThreadedFileLoad(Collection<MaskChanRenderableData> metaDatas) {
         final CyclicBarrier loadBarrier = new CyclicBarrier( metaDatas.size() + 1 );
         for ( MaskChanRenderableData metaData: metaDatas ) {
+            logger.info( "Loading mask path " + metaData.getMaskPath() );
             // Multithreaded load.
             LoadRunnable runnable = new LoadRunnable( metaData, this, loadBarrier );
             new Thread( runnable ).start();
