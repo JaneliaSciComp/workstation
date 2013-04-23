@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -15,6 +17,7 @@ public class TexturePreFetcher
 	private TextureCache textureCache; // holds texture
 	private AbstractTextureLoadAdapter loadAdapter; // knows how to load textures
 	private ThreadPoolExecutor textureLoadExecutor;
+	private Map<TileIndex, TileIndex> recentRequests; // LRU list of recent requests
 
 	public TexturePreFetcher(int threadPoolSize) {
 		textureLoadExecutor = new ThreadPoolExecutor(
@@ -22,6 +25,14 @@ public class TexturePreFetcher
 				threadPoolSize,
 				0, TimeUnit.SECONDS,
 				new LinkedBlockingQueue<Runnable>());
+		// Remember recently requested textures, to avoid requesting them again right away
+		recentRequests = new LinkedHashMap<TileIndex, TileIndex>(100, 0.75f, true) {
+			private static final long serialVersionUID = 1L;
+			@Override
+			protected boolean removeEldestEntry(Map.Entry<TileIndex, TileIndex> eldest) {
+				return size() > 100;
+			}
+		};
 	}
 
 	/**
@@ -37,10 +48,14 @@ public class TexturePreFetcher
 		if (textureCache.containsKey(index))
 			return; // we already have this one!
 		// TODO - is it already queued?
+		// This "recentRequests" hack is not solving the problem.
+		if (recentRequests.containsKey(index))
+			return;
 		TileTexture texture = new TileTexture(index, loadAdapter);
 		texture.getRamLoadedSignal().connect(tileServer.getOnTextureLoadedSlot());
 		// TODO - handle MISSING textures vs. ERROR textures
 		textureLoadExecutor.submit(new TextureLoadWorker(texture, textureCache));
+		recentRequests.put(index, index);
 	}
 	
 	public synchronized void clear() {

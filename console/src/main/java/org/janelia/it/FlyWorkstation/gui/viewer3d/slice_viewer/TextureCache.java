@@ -1,9 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,9 +14,9 @@ public class TextureCache
 {
 	private static final Logger log = LoggerFactory.getLogger(TextureCache.class);
 
-	private HistoryCache historyCache = new HistoryCache(); // textures that have been displayed, ordered by LRU
-	private HistoryCache futureCache = new HistoryCache(); // textures we predict will be displayed
-	private HistoryCache persistentCache = new HistoryCache(); // lowest resolution textures for everything
+	private HistoryCache historyCache = new HistoryCache(1500); // textures that have been displayed, ordered by LRU
+	private HistoryCache futureCache = new HistoryCache(1500); // textures we predict will be displayed
+	private PersistentCache persistentCache = new PersistentCache(); // lowest resolution textures for everything
 	
 	public Signal getCacheClearedSignal() {
 		return cacheClearedSignal;
@@ -32,10 +30,14 @@ public class TextureCache
 			log.warn("Adding texture that is already in cache "+index);
 		if (index.getZoom() == index.getMaxZoom()) {
 			// log.info("adding persistent texture "+index);
-			persistentCache.addFirst(texture);
+			persistentCache.put(texture.getIndex(), texture);
 		}
-		else
-			futureCache.addFirst(texture);
+		else {
+			futureCache.put(index, texture);
+			if (! futureCache.containsKey(index)) {
+				log.error("Future cache insert failed.");
+			}
+		}
 	}
 
 	synchronized public void clear() {
@@ -60,21 +62,18 @@ public class TextureCache
 		else
 			return futureCache.get(index);
 	}
-	
+
 	// Indicate that a particular texture has been viewed, rather than simply
 	// pre-fetched.
-	public void markHistorical(TileIndex index) {
+	public synchronized void markHistorical(TileTexture tile) {
+		if (tile == null)
+			return;
 		// Only future cached textures need to be moved.
 		// (textures in the persistent cache should remain there)
-		TileTexture texture = futureCache.remove(index);
-		if (texture == null)
-			texture = historyCache.get(index);
-		if (texture == null) {
-			if (! persistentCache.containsKey(index))
-				log.warn("Failed to find historical texture "+index);
+		if (persistentCache.containsKey(tile.getIndex()))
 			return;
-		}
-		historyCache.addFirst(texture); // move texture to the front of the queue
+		futureCache.remove(tile);
+		historyCache.put(tile.getIndex(), tile); // move texture to the front of the queue
 	}
 	
 	public int size() {return futureCache.size() + historyCache.size() + persistentCache.size();}

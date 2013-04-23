@@ -95,6 +95,13 @@ public class QuadViewUi extends JPanel
 			sliceViewer.autoContrastNow();
 		}
 	};
+	private final Action collectGarbageAction = new AbstractAction() {
+		private static final long serialVersionUID = 1L;
+		@Override
+		public void actionPerformed(ActionEvent arg0) {
+			System.gc();
+		}
+	};
 
 	// Slots
 	protected Slot1<Vec3> changeZ = new Slot1<Vec3>() {
@@ -183,6 +190,8 @@ public class QuadViewUi extends JPanel
         autoContrastAction.putValue(Action.NAME, "Auto Contrast");
         autoContrastAction.putValue(Action.SHORT_DESCRIPTION, 
 				"Optimize contrast for current view");
+        // 
+        collectGarbageAction.putValue(Action.NAME, "Collect Garbage");
 	}
 
 	private void setupUi(JFrame parentFrame, boolean overrideFrameMenuBar) {

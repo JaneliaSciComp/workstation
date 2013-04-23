@@ -146,8 +146,10 @@ implements GLActor
 
 	@Override
 	public void display(GL2 gl) {
-		if (bestTexture == null)
+		if (bestTexture == null) {
+			log.info("tile with no texture "+getIndex());
 			return;
+		}
 		if (getStage().ordinal() < Stage.COARSE_TEXTURE_LOADED.ordinal())
 			return;
 		// log.info("Rendering tile "+getIndex());
@@ -156,6 +158,9 @@ implements GLActor
 		assert(texture != null);
 		if (texture == null)
 			return;
+		if (! bestTexture.getIndex().equals(getIndex())) {
+			// log.info("using imperfect texture "+bestTexture.getIndex()+" for tile "+getIndex());
+		}
 		texture.enable(gl);
 		texture.bind(gl);
 		texture.setTexParameteri(gl, GL2.GL_TEXTURE_WRAP_S, GL2.GL_CLAMP_TO_EDGE);

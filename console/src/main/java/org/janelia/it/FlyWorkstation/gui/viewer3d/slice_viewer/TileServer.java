@@ -149,23 +149,27 @@ implements VolumeImage3d
 			TileFormat tileFormat = getLoadAdapter().getTileFormat();
 			TileIndex.IndexStyle indexStyle = tileFormat.getIndexStyle();
 			// Choose one tile to initialize search area in Z
-			TileIndex ix0 = new TileIndex(0,0,0,0,0,indexStyle);
-			TileIndex ix1 = new TileIndex(0,0,0,0,0,indexStyle);
-			for (Tile2d tile : tileSet) {
-				ix0 = tile.getIndex();
-				// Zoom out one level for pre-cache
-				ix1 = ix0.zoomOut();
-				if (ix1 == null)
-					ix1 = ix0;
-				z0 = zMinus = zPlus = ix1.getZ();
-				zoom = ix1.getZoom(); // Zoom out one level for precache
-				break; // only need one tile to initialize...
-			}
+			TileIndex ix0 = tileSet.iterator().next().getIndex();
+			// Zoom out one level for pre-cache
+			TileIndex ix1 = ix0; // ix0.zoomOut();
+			if (ix1 == null)
+				ix1 = ix0;
+			z0 = zMinus = zPlus = ix1.getZ();
+			zoom = ix1.getZoom(); // Zoom out one level for precache
 			int zMin = tileFormat.getOrigin()[2];
 			int zMax = zMin + tileFormat.getVolumeSize()[2] - 1;
+			int zStepCount = 0;
 			while (((zMinus >= zMin) || (zPlus <= zMax)) // something is within Z-bounds
 					&& (queuedTextures.size() < (getTextureCache().getFutureCache().getMaxSize() - 100))) // future cache is not full
 			{
+				// Zoom out one level at +- 3, +- 20
+				if ((zStepCount == 3) || (zStepCount == 20)) {
+					TileIndex ixNew = ix1.zoomOut();
+					if (ixNew != null)
+						ix1 = ixNew;
+					zoom = ix1.getZoom();
+				}
+				zStepCount += 1;
 				// Step away from center in z, one unique step at a time.
 				// Drive to the next unique z value in each direction.
 				// minus Z:
@@ -186,7 +190,8 @@ implements VolumeImage3d
 				//
 				for (Tile2d tile : tileSet) {
 					TileIndex ix = tile.getIndex();
-					ix = ix.zoomOut();
+					while (ix.getZoom() < zoom)
+						ix = ix.zoomOut();
 					if (ix == null)
 						ix = tile.getIndex();
 					TileIndex m = new TileIndex(ix.getX(), ix.getY(), 
@@ -376,7 +381,7 @@ implements VolumeImage3d
 			TileTexture texture = tile.getBestTexture();
 			if (texture == null)
 				continue;
-			getTextureCache().markHistorical(texture.getIndex());
+			getTextureCache().markHistorical(texture);
 		}
 		
 		// Need to assign textures to emergency tiles too...

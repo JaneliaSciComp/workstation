@@ -1,106 +1,62 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.Vector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HistoryCache 
+public class HistoryCache
+implements Map<TileIndex, TileTexture>
 {
 	private static final Logger log = LoggerFactory.getLogger(HistoryCache.class);	
 	
-	// Dictionary to look up elements
-	private Map<TileIndex, LRUTexture> map = new HashMap<TileIndex, LRUTexture>();
-	// Buffer for opengl textures to delete when a context becomes available
+	// Store deleted opengl texture ids, for deferred disposal.
 	private Set<Integer> obsoleteGlTextures = new HashSet<Integer>();
-	private LRUTexture head = null;
-	private LRUTexture tail = null;
-	private int maxSize = 300;
+	// Flag to help report when cache has filled.
 	private boolean fullReported = false;
+	// To allow lookup by index
+	private Map<TileIndex, TileTexture> map;
+	private int MAX_ENTRIES;
 
-	private void addFirst(LRUTexture lru) {
-		TileIndex ix = lru.texture.getIndex();
-		if (head == null) // first element of empty cache
-			tail = lru;
-		else { // head != null
-			if (head.texture.getIndex() == ix)
-				return; // already head
-			head.previous = lru;
-		}
-		lru.next = head;
-		lru.previous = null;
-		head = lru;
-		map.put(ix, lru);
-	}
-	
-	public synchronized void addFirst(TileTexture tex) {
-		TileIndex ix = tex.getIndex();
-		if (head != null) {
-			if (head.texture.getIndex() == ix)
-				return; // we're already there
-		}
-		if (map.containsKey(ix)) { // need to move from previous position to head
-			LRUTexture oldItem = map.get(ix);
-			// Splice out item from previous location
-			if (oldItem.next != null)
-				oldItem.next.previous = oldItem.previous;
-			if (oldItem.previous != null)
-				oldItem.previous.next = oldItem.next;
-			// Insert at head
-			addFirst(oldItem);
-			return;
-		}
-		else { // this is a new texture, which could grow the cache size
-			addFirst(new LRUTexture(tex));
-			while ((size() > maxSize) && (removeLast() != null))
-				;
-			// log.info("cache size = "+size());
-		}
+	public HistoryCache(int maxSize) {
+		this.MAX_ENTRIES = maxSize;
+		// Create a synchronized, least-recently-used map container, with a size limit.
+		// Use synchronizedMap() to generate thread-safe container.
+		map = Collections.synchronizedMap(new LinkedHashMap<TileIndex, TileTexture>(
+				maxSize, 0.75f, true) { // "true" for access-order, based on get()/add() calls
+			private static final long serialVersionUID = 1L;
+			@Override
+			// Fix size of LRU cache
+			protected boolean removeEldestEntry(Map.Entry<TileIndex, TileTexture> eldest) {
+				boolean result = (size() > MAX_ENTRIES);
+				if (result && ! fullReported) {
+					log.info("cache full");
+					fullReported = true;
+				}
+				return result;
+			}
+		});
 	}
 
+	@Override
 	public synchronized void clear() {
-		head = null;
-		tail = null;
-		for (LRUTexture lru : map.values()) {
-			if (lru == null)
+		for (TileTexture tile : map.values()) {
+			if (tile == null)
 				continue;
-			TileTexture texture0 = lru.texture;
-			if (texture0 == null)
-				continue;
-			PyramidTexture texture1 = texture0.getTexture();
+			PyramidTexture texture1 = tile.getTexture();
 			if (texture1 == null)
 				continue;
 			int id = texture1.getTextureId();
 			if (id < 1)
 				continue;
-			obsoleteGlTextures.add(id); // remember OpenGl texture IDs for later deletion.
+			obsoleteGlTextures.add(id); // remember OpenGl texture IDs for later deletion.			
 		}
 		map.clear();
 		fullReported = false;
-	}
-
-	public boolean containsKey(TileIndex ix) {
-		return map.containsKey(ix);
-	}
-
-	public TileTexture get(TileIndex ix) {
-		if (! map.containsKey(ix))
-			return null;
-		return map.get(ix).texture;
-	}
-	
-	public TileTexture getFirst() {
-		if (head == null)
-			return null;
-		return head.texture;
-	}
-	
-	public int getMaxSize() {
-		return maxSize;
 	}
 
 	public Set<Integer> popObsoleteGlTextures() {
@@ -108,67 +64,85 @@ public class HistoryCache
 		obsoleteGlTextures = new HashSet<Integer>();
 		return result;
 	}
-
-	public void setMaxSize(int maxSize) {
-		this.maxSize = maxSize;
+	
+	@Override
+	public TileTexture remove(Object item) {
+		TileTexture tile = map.remove(item);
+		if (tile == null)
+			return tile;
+		// Stored OpenGL texture ID, if any.
+		PyramidTexture texture1 = tile.getTexture();
+		if (texture1 == null)
+			return tile;
+		int id = texture1.getTextureId();
+		if (id > 0)
+			obsoleteGlTextures.add(id);
+		return tile;
 	}
 
+	@Override
+	public boolean containsKey(Object key) {
+		return map.containsKey(key);
+	}
+
+	@Override
+	public boolean containsValue(Object value) {
+		return map.containsValue(value);
+	}
+
+	@Override
+	public Set<java.util.Map.Entry<TileIndex, TileTexture>> entrySet() {
+		return map.entrySet();
+	}
+
+	/**
+	 * NOTE - get marks the retrieved item as most-recently-accessed.
+	 * @param key
+	 * @return
+	 */
+	@Override
+	public TileTexture get(Object key) {
+		return map.get(key);
+	}
+
+	public int getMaxSize() {
+		return MAX_ENTRIES;
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return map.isEmpty();
+	}
+
+	@Override
+	public Set<TileIndex> keySet() {
+		return map.keySet();
+	}
+
+	/**
+	 * NOTE - put marks the value as most-recently-accessed.
+	 * @param key
+	 * @param value
+	 * @return
+	 */
+	@Override
+	public TileTexture put(TileIndex key, TileTexture value) {
+		return map.put(key, value);
+	}
+
+	@Override
+	public void putAll(Map<? extends TileIndex, ? extends TileTexture> m) {
+		map.putAll(m);
+	}
+
+	@Override
 	public int size() {
 		return map.size();
 	}
 
-	public synchronized TileTexture removeLast() {
-		if (! fullReported) {
-			log.info("Cache is full");
-			fullReported = true;
-		}
-		if (tail == null)
-			return null;
-		TileTexture result = tail.texture;
-		tail = tail.previous;
-		map.remove(result.getIndex());
-		if (map.isEmpty())
-			head = null;
-		if (result != null) {
-			PyramidTexture texture1 = result.getTexture();
-			if (texture1 != null) {
-				int id = texture1.getTextureId();
-				if (id > 0)
-					obsoleteGlTextures.add(id);
-			}
-		}
-		result.releaseMemory();
-		return result;
-	}
-	
-	public synchronized TileTexture remove(TileIndex index) {
-		if (! map.containsKey(index))
-			return null;
-		LRUTexture result = map.get(index);
-		if (result.next != null)
-			result.next.previous = result.previous;
-		if (result.previous != null)
-			result.previous.next = result.next;
-		map.remove(index);
-		return result.texture;
-	}
-	
+	@Override
 	public Collection<TileTexture> values() {
-		Vector<TileTexture> result = new Vector<TileTexture>();
-		for (LRUTexture lru : map.values()) {
-			result.add(lru.texture);
-		}
-		return result;
+		return map.values();
 	}
 
-	
-	static class LRUTexture {
-		LRUTexture next = null;
-		LRUTexture previous = null;
-		TileTexture texture;
-		
-		LRUTexture(TileTexture tex) {
-			this.texture = tex;
-		}
-	}
 }
