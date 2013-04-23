@@ -38,19 +38,11 @@ public class TiffExporter {
         super();
     }
 
-    public void export( TextureDataI texture ) throws Exception {
+    public void export( TextureDataI texture, File chosenFile ) throws Exception {
 
-        JFileChooser fileChooser = new JFileChooser( "Choose Export File" );
-        fileChooser.setDialogTitle( "Save" );
-        fileChooser.setToolTipText( "Pick an output location for the exported file." );
-        fileChooser.showOpenDialog( null );
-        // Get the file, and enforce the extension if none given by user.
-        File chosenFile = fileChooser.getSelectedFile();
+        chosenFile = enforcePreferredExtension(chosenFile);
+
         if ( chosenFile != null ) {
-            if (! chosenFile.getName().contains( "." ) ) {
-                chosenFile = new File( chosenFile.getAbsolutePath() + ".tiff" );
-            }
-
             int textureSize = texture.getSz() * texture.getSy() * texture.getSx();
             logger.info( "Exporting texture {}.  Size={}", texture.getFilename(), textureSize );
             ByteBuffer byteBuffer = ByteBuffer.wrap( texture.getTextureData() );
@@ -85,6 +77,13 @@ public class TiffExporter {
 
             os.close();
         }
+    }
+
+    private File enforcePreferredExtension(File chosenFile) {
+        if (! chosenFile.getName().contains( "." ) ) {
+            chosenFile = new File( chosenFile.getAbsolutePath() + ".tiff" );
+        }
+        return chosenFile;
     }
 
     private short[] getShortArray(int textureSize, ByteBuffer byteBuffer) {

@@ -12,6 +12,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -75,33 +77,44 @@ public class VolumeWritebackHandler {
 
             @Override
             public void loadVolume(TextureDataI texture) {
-                byte[] textureBytes = texture.getTextureData();
+                JFileChooser fileChooser = new JFileChooser( "Choose Export File" );
+                fileChooser.setDialogTitle( "Save" );
+                fileChooser.setToolTipText( "Pick an output location for the exported file." );
+                fileChooser.showOpenDialog( null );
 
-                Map<Byte,Integer> byteValToCount = new HashMap<Byte,Integer>();
-                for ( int i = 0; i < textureBytes.length; i ++ ) {
-                    Integer oldVal = byteValToCount.get( textureBytes[ i ] );
-                    if ( oldVal == null ) {
-                        oldVal = new Integer( 0 );
+                // Get the file.
+                File chosenFile = fileChooser.getSelectedFile();
+
+                if ( chosenFile != null ) {
+                    byte[] textureBytes = texture.getTextureData();
+
+                    Map<Byte,Integer> byteValToCount = new HashMap<Byte,Integer>();
+                    for ( int i = 0; i < textureBytes.length; i ++ ) {
+                        Integer oldVal = byteValToCount.get( textureBytes[ i ] );
+                        if ( oldVal == null ) {
+                            oldVal = new Integer( 0 );
+                        }
+                        byteValToCount.put( textureBytes[i], ++oldVal );
+
                     }
-                    byteValToCount.put( textureBytes[i], ++oldVal );
 
+                    try {
+                        TiffExporter exporter = new TiffExporter();
+                        exporter.export( texture, chosenFile );
+                        exporter.close();
+
+                    } catch ( Exception ex ) {
+                        ex.printStackTrace();
+                        logger.error( "Exception on tif export " + ex.getMessage() );
+                        SessionMgr.getSessionMgr().handleException( ex );
+
+                    }
+
+                    for ( Byte b: byteValToCount.keySet() ) {
+                        System.out.println("Value " + b + " appears " + byteValToCount.get( b ) + " times.");
+                    }
                 }
 
-                try {
-                    TiffExporter exporter = new TiffExporter();
-                    exporter.export( texture );
-                    exporter.close();
-
-                } catch ( Exception ex ) {
-                    ex.printStackTrace();
-                    logger.error( "Exception on tif export " + ex.getMessage() );
-                    SessionMgr.getSessionMgr().handleException( ex );
-
-                }
-
-                for ( Byte b: byteValToCount.keySet() ) {
-                    System.out.println("Value " + b + " appears " + byteValToCount.get( b ) + " times.");
-                }
             }
         };
 
