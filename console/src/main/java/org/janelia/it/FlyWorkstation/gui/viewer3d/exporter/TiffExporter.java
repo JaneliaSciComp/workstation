@@ -66,7 +66,13 @@ public class TiffExporter {
         JFileChooser fileChooser = new JFileChooser( "Choose Export File" );
         fileChooser.setToolTipText( "Pick an output location for the exported file." );
         fileChooser.showOpenDialog( null );
-        OutputStream os = new BufferedOutputStream( new FileOutputStream( fileChooser.getSelectedFile() ) );
+
+        // Get the file, and enforce the extension if none given by user.
+        File chosenFile = fileChooser.getSelectedFile();
+        if (! chosenFile.getName().contains( "." ) ) {
+            chosenFile = new File( chosenFile.getAbsolutePath() + ".tiff" );
+        }
+        OutputStream os = new BufferedOutputStream( new FileOutputStream( chosenFile ) );
         TIFFEncodeParam params = new TIFFEncodeParam();
         params.setLittleEndian( true );
 

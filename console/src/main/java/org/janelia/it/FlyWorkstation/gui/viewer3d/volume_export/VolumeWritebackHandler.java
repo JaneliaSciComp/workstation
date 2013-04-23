@@ -1,10 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.VolumeSearchLoadWorker;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.FileExportLoadWorker;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.exporter.TiffExporter;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.MaskChanRenderableData;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ABContextDataSource;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.slf4j.Logger;
@@ -54,7 +55,7 @@ public class VolumeWritebackHandler {
             }
         }
 
-        VolumeSearchLoadWorker.Callback callback = new VolumeSearchLoadWorker.Callback() {
+        FileExportLoadWorker.Callback callback = new FileExportLoadWorker.Callback() {
             @Override
             public void loadSucceeded() {
             }
@@ -97,10 +98,11 @@ public class VolumeWritebackHandler {
             }
         };
 
-        VolumeSearchLoadWorker volumeSearchLoadWorker = new VolumeSearchLoadWorker(
+        FileExportLoadWorker fileExportLoadWorker = new FileExportLoadWorker(
                 searchDatas, cropCoords, callback
         );
-        volumeSearchLoadWorker.execute();
+        fileExportLoadWorker.setResolver(new CacheFileResolver());
+        fileExportLoadWorker.execute();
     }
 
 }

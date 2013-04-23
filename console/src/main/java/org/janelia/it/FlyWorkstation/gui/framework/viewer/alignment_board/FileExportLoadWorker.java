@@ -28,9 +28,9 @@ import java.util.concurrent.CyclicBarrier;
  * Date: 3/29/13
  * Time: 11:16 AM
  *
- * Loads renderable-oriented data into the Alignment Board and MIP3d.
+ * Sends "loaded" data back to an output file.
  */
-public class VolumeSearchLoadWorker extends SimpleWorker implements VolumeLoader {
+public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
 
     private MaskChanMultiFileLoader loader;
     private RenderablesMaskBuilder maskTextureBuilder;
@@ -42,12 +42,12 @@ public class VolumeSearchLoadWorker extends SimpleWorker implements VolumeLoader
 
     private Logger logger;
 
-    public VolumeSearchLoadWorker(
+    public FileExportLoadWorker(
             Collection<MaskChanRenderableData> renderableDatas,
             float[] cropCoords,
             Callback callback
     ) {
-        logger = LoggerFactory.getLogger(VolumeSearchLoadWorker.class);
+        logger = LoggerFactory.getLogger(FileExportLoadWorker.class);
         this.renderableDatas = renderableDatas;
         this.callback = callback;
         this.cropCoords = cropCoords;
