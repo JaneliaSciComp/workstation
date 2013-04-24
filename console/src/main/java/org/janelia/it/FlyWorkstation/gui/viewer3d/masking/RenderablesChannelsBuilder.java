@@ -255,9 +255,9 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         //dumpVolume();
 
         // NOTE: if this is later needed, need to have a decider for the notion of luminance.
-//        if (! isLuminance  &&  (textureData.getPixelByteCount() == 4) ) {
-//            setAlphaToSaturateColors( textureData.getColorSpace() );
-//        }
+        //        if (! isLuminance  &&  (textureData.getPixelByteCount() == 4) ) {
+        //            setAlphaToSaturateColors( textureData.getColorSpace() );
+        //        }
 
         return textureData;
     }

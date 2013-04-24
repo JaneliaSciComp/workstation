@@ -62,67 +62,88 @@ public class VolumeWritebackHandler {
             }
         }
 
-        FileExportLoadWorker.Callback callback = new FileExportLoadWorker.Callback() {
-            @Override
-            public void loadSucceeded() {
-                completionListener.complete();
-            }
+        FileExportLoadWorker.Callback callback = new ExportCallback();
 
-            @Override
-            public void loadFailed(Throwable ex) {
-                completionListener.complete();
-                ex.printStackTrace();
-                SessionMgr.getSessionMgr().handleException( ex );
-            }
+        FileExportLoadWorker.FileExportParamBean paramBean = new FileExportLoadWorker.FileExportParamBean();
+        paramBean.setBinary( false );
+        paramBean.setCallback( callback );
+        paramBean.setCropCoords( cropCoords );
+        paramBean.setRenderableDatas( searchDatas );
 
-            @Override
-            public void loadVolume(TextureDataI texture) {
-                JFileChooser fileChooser = new JFileChooser( "Choose Export File" );
-                fileChooser.setDialogTitle( "Save" );
-                fileChooser.setToolTipText( "Pick an output location for the exported file." );
-                fileChooser.showOpenDialog( null );
-
-                // Get the file.
-                File chosenFile = fileChooser.getSelectedFile();
-
-                if ( chosenFile != null ) {
-                    byte[] textureBytes = texture.getTextureData();
-
-                    Map<Byte,Integer> byteValToCount = new HashMap<Byte,Integer>();
-                    for ( int i = 0; i < textureBytes.length; i ++ ) {
-                        Integer oldVal = byteValToCount.get( textureBytes[ i ] );
-                        if ( oldVal == null ) {
-                            oldVal = new Integer( 0 );
-                        }
-                        byteValToCount.put( textureBytes[i], ++oldVal );
-
-                    }
-
-                    try {
-                        TiffExporter exporter = new TiffExporter();
-                        exporter.export( texture, chosenFile );
-                        exporter.close();
-
-                    } catch ( Exception ex ) {
-                        ex.printStackTrace();
-                        logger.error( "Exception on tif export " + ex.getMessage() );
-                        SessionMgr.getSessionMgr().handleException( ex );
-
-                    }
-
-                    for ( Byte b: byteValToCount.keySet() ) {
-                        System.out.println("Value " + b + " appears " + byteValToCount.get( b ) + " times.");
-                    }
-                }
-
-            }
-        };
-
-        FileExportLoadWorker fileExportLoadWorker = new FileExportLoadWorker(
-                searchDatas, cropCoords, callback
-        );
+        FileExportLoadWorker fileExportLoadWorker = new FileExportLoadWorker( paramBean );
         fileExportLoadWorker.setResolver(new CacheFileResolver());
         fileExportLoadWorker.execute();
     }
 
+    /**
+     * This class has responsibility for exporting the collected texture.
+     */
+    private class ExportCallback implements FileExportLoadWorker.Callback {
+        @Override
+        public void loadSucceeded() {
+            completionListener.complete();
+        }
+
+        @Override
+        public void loadFailed(Throwable ex) {
+            completionListener.complete();
+            ex.printStackTrace();
+            SessionMgr.getSessionMgr().handleException( ex );
+        }
+
+        @Override
+        public void loadVolume(TextureDataI texture) {
+            File chosenFile = getUserFileChoice();
+            if ( chosenFile != null ) {
+                try {
+                    TiffExporter exporter = new TiffExporter();
+                    exporter.export( texture, chosenFile );
+                    exporter.close();
+
+                } catch ( Exception ex ) {
+                    ex.printStackTrace();
+                    logger.error( "Exception on tif export " + ex.getMessage() );
+                    SessionMgr.getSessionMgr().handleException( ex );
+
+                }
+
+                frequencyReport(texture);
+            }
+
+        }
+
+        /** Prompt for the user's output file to save, and return it. */
+        private File getUserFileChoice() {
+            JFileChooser fileChooser = new JFileChooser( "Choose Export File" );
+            fileChooser.setDialogTitle( "Save" );
+            fileChooser.setToolTipText( "Pick an output location for the exported file." );
+            fileChooser.showOpenDialog( null );
+
+            // Get the file.
+            return fileChooser.getSelectedFile();
+        }
+
+        /** This is a simple testing mechanism to sanity-check the contents of the texture being saved. */
+        private void frequencyReport( TextureDataI texture ) {
+            byte[] textureBytes = texture.getTextureData();
+
+            Map<Byte,Integer> byteValToCount = new HashMap<Byte,Integer>();
+            for ( int i = 0; i < textureBytes.length; i ++ ) {
+                Integer oldVal = byteValToCount.get( textureBytes[ i ] );
+                if ( oldVal == null ) {
+                    oldVal = 0;
+                }
+                byteValToCount.put( textureBytes[i], ++oldVal );
+
+            }
+
+            StringBuilder bldr = new StringBuilder( "---------------------" );
+            bldr.append( System.getProperty( "line.separator" ) );
+            for ( Byte b: byteValToCount.keySet() ) {
+                bldr.append( String.format( "Value %d appears %d times.", b, byteValToCount.get( b ) ) );
+                bldr.append( System.getProperty("line.separator") );
+            }
+            logger.info( bldr.toString() );
+        }
+    }
 }

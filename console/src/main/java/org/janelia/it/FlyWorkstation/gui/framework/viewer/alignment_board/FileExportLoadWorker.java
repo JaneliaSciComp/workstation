@@ -36,23 +36,16 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
 
     private MaskChanMultiFileLoader loader;
     private TextureBuilderI textureBuilder;
-    private Collection<MaskChanRenderableData> renderableDatas;
-    private float[] cropCoords;
-    private Callback callback;
+    private FileExportParamBean paramBean;
 
     private FileResolver resolver;
 
     private Logger logger;
 
-    public FileExportLoadWorker(
-            Collection<MaskChanRenderableData> renderableDatas,
-            float[] cropCoords,
-            Callback callback
-    ) {
+    public FileExportLoadWorker( FileExportParamBean paramBean ) {
         logger = LoggerFactory.getLogger(FileExportLoadWorker.class);
-        this.renderableDatas = renderableDatas;
-        this.callback = callback;
-        this.cropCoords = cropCoords;
+        this.paramBean = paramBean;
+        this.paramBean.exceptIfNotInit();
     }
 
     public void setResolver( FileResolver resolver ) {
@@ -101,7 +94,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
     protected void doStuff() throws Exception {
 
         Collection<RenderableBean> renderableBeans = new ArrayList<RenderableBean>();
-        for ( MaskChanRenderableData renderableData: renderableDatas ) {
+        for ( MaskChanRenderableData renderableData: paramBean.getRenderableDatas() ) {
             renderableBeans.add( renderableData.getBean() );
         }
 
@@ -111,34 +104,39 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         customWritebackSettings.setGammaFactor(1.0);
         customWritebackSettings.setShowChannelData( false );
 
-        // Using only binary values.
-        textureBuilder = new RenderablesMaskBuilder( customWritebackSettings, renderableBeans, true );
-//        textureBuilder = new RenderablesChannelsBuilder( customWritebackSettings, renderableBeans );
+        if ( paramBean.isBinary() ) {
+            // Using only binary values.
+            textureBuilder = new RenderablesMaskBuilder( customWritebackSettings, renderableBeans, true );
+        }
+        else {
+            // Using full color values.
+            textureBuilder = new RenderablesChannelsBuilder( customWritebackSettings, renderableBeans );
+        }
 
         // Setup the loader to traverse all this data on demand.
         loader = new MaskChanMultiFileLoader();
         loader.setEnforcePadding( false ); // Do not extend dimensions of resulting volume beyond established space.
-        if ( cropCoords == null ) {
+        if ( paramBean.getCropCoords() == null ) {
             loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList(textureBuilder) );
         }
         else {
-            MaskChanDataAcceptorI filter = new FilteringAcceptorDecorator(textureBuilder, cropCoords );
+            MaskChanDataAcceptorI filter = new FilteringAcceptorDecorator(textureBuilder, paramBean.getCropCoords() );
             loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList( filter ) );
         }
 
-        multiThreadedDataLoad(renderableDatas);
+        multiThreadedDataLoad( paramBean.getRenderableDatas() );
 
         logger.info("Ending load thread.");
     }
 
     @Override
     protected void hadSuccess() {
-        callback.loadSucceeded();
+        paramBean.getCallback().loadSucceeded();
     }
 
     @Override
     protected void hadError(Throwable error) {
-        callback.loadFailed( error );
+        paramBean.getCallback().loadFailed( error );
     }
 
     /**
@@ -155,7 +153,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
             logger.info( "In load thread, after getting bean list." );
 
             if ( resolver == null ) {
-                resolver = new TrivialFileResolver();  // todo swap comments, in production.
+                resolver = new TrivialFileResolver();
                 //resolver = new CacheFileResolver();
             }
 
@@ -172,7 +170,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
     private void buildTexture() {
         // These two texture-build steps will proceed in parallel.
         TextureDataI textureData = textureBuilder.buildTextureData();
-        callback.loadVolume(textureData);
+        paramBean.getCallback().loadVolume(textureData);
     }
 
     private void multiThreadedFileLoad(Collection<MaskChanRenderableData> metaDatas) {
@@ -210,6 +208,54 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         void loadSucceeded();
         void loadFailed( Throwable ex );
         void loadVolume( TextureDataI texture );
+    }
+
+    /**
+     * This is a parameterization to the constructor for the "outer" class.
+     */
+    public static class FileExportParamBean {
+        private Collection<MaskChanRenderableData> renderableDatas;
+        private float[] cropCoords;
+        private Callback callback;
+        private boolean binary;
+
+        public Collection<MaskChanRenderableData> getRenderableDatas() {
+            return renderableDatas;
+        }
+
+        public void setRenderableDatas(Collection<MaskChanRenderableData> renderableDatas) {
+            this.renderableDatas = renderableDatas;
+        }
+
+        public float[] getCropCoords() {
+            return cropCoords;
+        }
+
+        public void setCropCoords(float[] cropCoords) {
+            this.cropCoords = cropCoords;
+        }
+
+        public Callback getCallback() {
+            return callback;
+        }
+
+        public void setCallback(Callback callback) {
+            this.callback = callback;
+        }
+
+        public boolean isBinary() {
+            return binary;
+        }
+
+        public void setBinary(boolean binary) {
+            this.binary = binary;
+        }
+
+        public void exceptIfNotInit() {
+            if ( cropCoords == null  ||  renderableDatas == null  ||  callback == null ) {
+                throw new IllegalArgumentException( "Parameters to file-export insufficient.  No nulls allowed." );
+            }
+        }
     }
 
 }

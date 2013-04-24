@@ -14,6 +14,7 @@ import java.awt.image.*;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,7 +30,9 @@ import java.util.Collection;
 public class TiffExporter {
     private Logger logger = LoggerFactory.getLogger( TiffExporter.class );
 
-//    private File tifFile;
+    private enum VoxelType {
+        BYTE, SHORT, INT
+    }
 
     /**
      * Construct with temp-file name. Uses TIFF format, and tif/tiff extensions.
@@ -45,24 +48,13 @@ public class TiffExporter {
         if ( chosenFile != null ) {
             int textureSize = texture.getSz() * texture.getSy() * texture.getSx();
             logger.info( "Exporting texture {}.  Size={}", texture.getFilename(), textureSize );
-            ByteBuffer byteBuffer = ByteBuffer.wrap( texture.getTextureData() );
-            byteBuffer.rewind();
-            byteBuffer.order( ByteOrder.LITTLE_ENDIAN );
 
-            short[] argb = null;
-            if ( texture.getPixelByteCount() == 2 ) {
-                argb = getShortArray(textureSize, byteBuffer);
-            }
+            VoxelType voxelType = getVoxelType( texture );
 
             Collection<BufferedImage> imageList = new ArrayList<BufferedImage>( texture.getSz() );
             for ( int z = 0; z < texture.getSz(); z++ ) {
-                BufferedImage slice = null;
-                if ( texture.getPixelByteCount() == 2 ) {
-                    slice = createBufferedImage( texture, argb, z );
-                }
-                else {
-                    slice = createBufferedImage( texture, texture.getTextureData(), z );
-                }
+                BufferedImage slice;
+                slice = createBufferedImage( texture, z, textureSize, voxelType );
                 imageList.add( slice );
             }
 
@@ -101,22 +93,69 @@ public class TiffExporter {
         return argb;
     }
 
+    private int[] getIntArray(int textureSize, ByteBuffer byteBuffer) {
+        IntBuffer argbBuffer = byteBuffer.asIntBuffer();
+        argbBuffer.rewind();
+        int[] argb;
+        if ( argbBuffer.hasArray() )  {
+            argb = argbBuffer.array();
+        }
+        else {
+            argb = new int[ textureSize ];
+            logger.info( "Size of int buffer is {}.", argbBuffer.remaining() );
+            argbBuffer.get( argb );
+        }
+        return argb;
+    }
+
     public void close() {
 
     }
 
-    private BufferedImage createBufferedImage( TextureDataI textureData, short[] argb, int sliceNum ) {
+    private BufferedImage createBufferedImage(
+            TextureDataI textureData, int sliceNum, int textureSize, VoxelType type
+    ) {
         BufferedImage rtnVal = null;
         try {
+            int bufImgType = BufferedImage.TYPE_BYTE_GRAY;
+            if ( type == VoxelType.SHORT )
+                bufImgType = BufferedImage.TYPE_USHORT_GRAY;
+            else if ( type == VoxelType.INT )
+                bufImgType = BufferedImage.TYPE_INT_ARGB;
 
-            int sliceSize = textureData.getSx() * textureData.getSy();
-            int sliceOffset = sliceNum * sliceSize;
-            rtnVal = new BufferedImage( textureData.getSx(), textureData.getSy(), BufferedImage.TYPE_USHORT_GRAY );
-            DataBuffer dataBuffer = new DataBufferUShort( argb, sliceSize, sliceOffset );
-            Raster raster = RasterFactory.createPackedRaster(
-                    dataBuffer, textureData.getSx(), textureData.getSy(), 16, new Point(0, 0)
-            );
-            rtnVal.setData( raster );
+            if ( type == VoxelType.INT ) {
+            /*
+                public void setRGB(int startX, int startY, int w, int h,
+                        int[] rgbArray, int offset, int scansize) {
+             */
+                int sliceSize = textureData.getSx() * textureData.getSy();
+                int sliceOffset = sliceNum * sliceSize;
+                rtnVal = new BufferedImage( textureData.getSx(), textureData.getSy(), bufImgType );
+
+                ByteBuffer byteBuffer = ByteBuffer.wrap( textureData.getTextureData() );
+                byteBuffer.rewind();
+                byteBuffer.order( ByteOrder.LITTLE_ENDIAN );
+                int[] intArr = getIntArray( textureSize, byteBuffer );
+                rtnVal.setRGB( 0, 0, textureData.getSx(), textureData.getSy(), intArr, sliceOffset, textureData.getSx() );
+
+            }
+            else {
+                int sliceSize = textureData.getSx() * textureData.getSy();
+                int sliceOffset = sliceNum * sliceSize;
+                rtnVal = new BufferedImage( textureData.getSx(), textureData.getSy(), bufImgType );
+
+                DataBuffer dataBuffer = createDataBuffer( textureData, textureSize, sliceSize, sliceOffset, type );
+
+                int dataTypeSize = DataBuffer.getDataTypeSize( dataBuffer.getDataType() );
+                Raster raster = RasterFactory.createPackedRaster(
+                        dataBuffer,
+                        textureData.getSx(),
+                        textureData.getSy(),
+                        dataTypeSize,
+                        new Point( 0, 0 )
+                );
+                rtnVal.setData( raster );
+            }
 
         } catch (Exception e) {
             logger.error( e.getMessage() );
@@ -126,25 +165,53 @@ public class TiffExporter {
         return rtnVal;
     }
 
-    private BufferedImage createBufferedImage( TextureDataI textureData, byte[] argb, int sliceNum ) {
-        BufferedImage rtnVal = null;
-        try {
+    private DataBuffer createDataBuffer(
+            TextureDataI textureData, int textureSize, int sliceSize, int sliceOffset, VoxelType type
+    ) {
+        DataBuffer rtnVal = null;
+        switch ( type ) {
+            case BYTE :
+            {
+                byte[] byteArr = textureData.getTextureData();
+                rtnVal = new DataBufferByte( byteArr, sliceSize, sliceOffset );
+                break;
+            }
+            case INT:
+            {
+                ByteBuffer byteBuffer = ByteBuffer.wrap( textureData.getTextureData() );
+                byteBuffer.rewind();
+                byteBuffer.order( ByteOrder.LITTLE_ENDIAN );
 
-            int sliceSize = textureData.getSx() * textureData.getSy();
-            int sliceOffset = sliceNum * sliceSize;
-            rtnVal = new BufferedImage( textureData.getSx(), textureData.getSy(), BufferedImage.TYPE_BYTE_GRAY );
-            DataBuffer dataBuffer = new DataBufferByte( argb, sliceSize, sliceOffset );
-            Raster raster = RasterFactory.createPackedRaster(
-                    dataBuffer, textureData.getSx(), textureData.getSy(), 8, new Point(0, 0)
-            );
-            rtnVal.setData( raster );
+                int[] intArr = getIntArray( textureSize, byteBuffer );
+                rtnVal = new DataBufferInt( intArr, sliceSize, sliceOffset );
+                break;
+            }
+            case SHORT:
+            {
+                ByteBuffer byteBuffer = ByteBuffer.wrap( textureData.getTextureData() );
+                byteBuffer.rewind();
+                byteBuffer.order( ByteOrder.LITTLE_ENDIAN );
 
-        } catch (Exception e) {
-            logger.error( e.getMessage() );
-            e.printStackTrace();
+                short[] shortArr = getShortArray( textureSize, byteBuffer );
+                rtnVal = new DataBufferUShort( shortArr, sliceSize, sliceOffset );
+                break;
+            }
         }
-
         return rtnVal;
+
+    }
+
+    /** Encode the texture's target upload type as an enum constant. */
+    private VoxelType getVoxelType( TextureDataI texture ) {
+        if ( texture.getPixelByteCount() == 2 ) {
+            return VoxelType.SHORT;
+        }
+        else if ( texture.getChannelCount() >= 3  &&  texture.getPixelByteCount() == 1 ) {
+            return VoxelType.INT;
+        }
+        else {
+            return VoxelType.BYTE;
+        }
     }
 
 }
