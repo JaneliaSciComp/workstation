@@ -1,12 +1,16 @@
 package org.janelia.it.FlyWorkstation.gui.framework.actions;
 
+import java.io.File;
+
+import javax.swing.JOptionPane;
+
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
+import org.janelia.it.FlyWorkstation.shared.util.FileCallable;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
-
-import java.io.File;
 
 /**
  * Given an entity with a File Path, reveal the path in Finder.
@@ -45,61 +49,29 @@ public class OpenInFinderAction implements Action {
 	@Override
 	public void doAction() {
 		try {
-			String filePath = EntityUtils.getAnyFilePath(entity);
+			final String filePath = EntityUtils.getAnyFilePath(entity);
 			if (filePath == null) {
 				throw new Exception("Entity has no file path");
 			}
-
-			File file = new File(PathTranslator.convertPath(filePath));
-			File parent = file.getParentFile();
 			
-			if (file.isFile() && parent!=null && !parent.canRead()) {
-				throw new Exception("Cannot access "+file.getAbsolutePath());
+			final File file = new File(PathTranslator.convertPath(filePath));
+			if (file.canRead()) {
+			    revealFile(file);
 			}
-			else if (file.isDirectory() && !file.canRead()) {
-				throw new Exception("Cannot access "+file.getAbsolutePath());
-			}
-            else if (!file.exists()) {
-                throw new Exception("Cannot access "+file.getAbsolutePath());
-            }
-			
-            String[] cmdArr=null;
-			if (SystemInfo.isMac) {
-                if (file.isFile()) {
-                    cmdArr=new String[3];
-                    cmdArr[0]="/usr/bin/open";
-                    cmdArr[1]="-R";
-                    cmdArr[2]=file.getAbsolutePath();
-                } else {
-                    cmdArr=new String[2];
-                    cmdArr[0]="/usr/bin/open";
-                    cmdArr[1]=file.getAbsolutePath();
-                }
-			}
-			else if (SystemInfo.isLinux) {
-                cmdArr=new String[2];
-                cmdArr[0]="gnome-open";
-				if (file.isFile()) {
-                    cmdArr[1]=file.getParentFile().getAbsolutePath();
-				}
-				else {
-                    cmdArr[1]=file.getAbsolutePath();
-				}
-			}
-            else if (SystemInfo.isWindows) {
-                cmdArr=new String[2];
-                cmdArr[0]="explorer";
-                if (file.isFile()) {
-                    cmdArr[1]="/select,"+file.getAbsolutePath();
-                }
-                else {
-                    cmdArr[1]="/e,"+file.getAbsolutePath();
-                }
-            }
-            int returnCode = Runtime.getRuntime().exec(cmdArr).waitFor();
-			if ((returnCode != 0 && !SystemInfo.isWindows) ||
-                 (returnCode>1 && SystemInfo.isWindows)) {
-				throw new Exception("Error opening file: "+file.getAbsolutePath());
+			else {
+	            Utils.cacheAndProcessFileAsync(filePath, new FileCallable() {
+	                @Override
+	                public void call(File file) throws Exception {
+	                    if (file==null) {
+	                        JOptionPane.showMessageDialog(SessionMgr.getSessionMgr().getActiveBrowser(),
+	                                "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
+	                    }
+	                    else {
+	                        revealFile(file);    
+	                    }
+	                }
+	            });
+			    
 			}
 		}
 		catch (Exception e) {
@@ -107,4 +79,57 @@ public class OpenInFinderAction implements Action {
 		}
 	}
 
+	private void revealFile(File file) throws Exception {
+
+        File parent = file.getParentFile();
+        
+        if (file.isFile() && parent!=null && !parent.canRead()) {
+            throw new Exception("Cannot access "+file.getAbsolutePath());
+        }
+        else if (file.isDirectory() && !file.canRead()) {
+            throw new Exception("Cannot access "+file.getAbsolutePath());
+        }
+        else if (!file.exists()) {
+            throw new Exception("Cannot access "+file.getAbsolutePath());
+        }
+        
+        String[] cmdArr=null;
+        if (SystemInfo.isMac) {
+            if (file.isFile()) {
+                cmdArr=new String[3];
+                cmdArr[0]="/usr/bin/open";
+                cmdArr[1]="-R";
+                cmdArr[2]=file.getAbsolutePath();
+            } else {
+                cmdArr=new String[2];
+                cmdArr[0]="/usr/bin/open";
+                cmdArr[1]=file.getAbsolutePath();
+            }
+        }
+        else if (SystemInfo.isLinux) {
+            cmdArr=new String[2];
+            cmdArr[0]="gnome-open";
+            if (file.isFile()) {
+                cmdArr[1]=file.getParentFile().getAbsolutePath();
+            }
+            else {
+                cmdArr[1]=file.getAbsolutePath();
+            }
+        }
+        else if (SystemInfo.isWindows) {
+            cmdArr=new String[2];
+            cmdArr[0]="explorer";
+            if (file.isFile()) {
+                cmdArr[1]="/select,"+file.getAbsolutePath();
+            }
+            else {
+                cmdArr[1]="/e,"+file.getAbsolutePath();
+            }
+        }
+        int returnCode = Runtime.getRuntime().exec(cmdArr).waitFor();
+        if ((returnCode != 0 && !SystemInfo.isWindows) ||
+             (returnCode>1 && SystemInfo.isWindows)) {
+            throw new Exception("Error opening file: "+file.getAbsolutePath());
+        }
+	}
 }

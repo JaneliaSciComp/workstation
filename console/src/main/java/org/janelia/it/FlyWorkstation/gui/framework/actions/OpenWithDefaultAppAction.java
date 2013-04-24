@@ -4,8 +4,9 @@ import java.awt.Desktop;
 import java.io.File;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
+import org.janelia.it.FlyWorkstation.shared.util.FileCallable;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 
@@ -45,22 +46,12 @@ public class OpenWithDefaultAppAction implements Action {
 				throw new Exception("Entity has no file path");
 			}
 
-// TODO: LocalFileCache - convert to following when we're ready for full local cache cutover
-//            final File file = SessionMgr.getFile(filePath, false);
-//            final Desktop desktop = Desktop.getDesktop();
-//            desktop.open(file);
-
-			File file = new File(PathTranslator.convertPath(filePath));
-			File parent = file.getParentFile();
-
-			if (file.isFile() && parent!=null && !parent.canRead()) {
-				throw new Exception("Cannot access "+file.getAbsolutePath());
-			}
-			else if (file.isDirectory() && !file.canRead()) {
-				throw new Exception("Cannot access "+file.getAbsolutePath());
-			}
-
-			Desktop.getDesktop().open(file);
+			Utils.cacheAndProcessFileAsync(filePath, new FileCallable() {
+                @Override
+                public void call(File param) throws Exception {
+                    Desktop.getDesktop().open(getFile());
+                }
+            });
 		}
 		catch (Exception e) {
 			SessionMgr.getSessionMgr().handleException(e);

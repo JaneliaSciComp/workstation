@@ -1,7 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.application;
 
 import java.awt.SplashScreen;
-import java.util.MissingResourceException;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -179,14 +178,6 @@ public class ConsoleApp {
             modelMgr.initErrorOntology();
             modelMgr.addModelMgrObserver(sessionMgr.getAxisServer());
             
-            // Make sure we can access the data mount
-//            if ((! sessionMgr.isLocalFileCacheAvailable()) &&
-//                (! FacadeManager.isDataSourceConnectivityValid())) {
-//                throw new MissingResourceException(FacadeManager.getDataSourceHelpInformation(),
-//                                                   ConsoleApp.class.getName(),
-//                                                   "Missing Data Mount");
-//            }
-
             Browser browser = sessionMgr.newBrowser();
             
             if (splash!=null) splash.close();

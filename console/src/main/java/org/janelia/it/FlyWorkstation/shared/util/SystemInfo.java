@@ -15,6 +15,10 @@
  */
 package org.janelia.it.FlyWorkstation.shared.util;
 
+import java.io.File;
+
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+
 /**
  * Adapted from IDEA code base.
  */
@@ -108,5 +112,20 @@ public class SystemInfo {
 
     private static boolean isSnowLeopard() {
         return isMac && isLeopard() && !OS_VERSION.startsWith("10.5");
+    }
+    
+    public static File getDownloadsDir() {
+        if (SystemInfo.isMac) {
+            return new File(System.getProperty("user.home"),"Downloads/");
+        }
+        else if (SystemInfo.isLinux) {
+            return new File("/tmp/");
+        }
+        else if (SystemInfo.isWindows) {
+            return new File(SessionMgr.getSessionMgr().getApplicationOutputDirectory()+"/tmp/");
+        }
+        else {
+            throw new IllegalStateException("Operation system not supported: "+SystemInfo.OS_NAME);
+        }
     }
 }

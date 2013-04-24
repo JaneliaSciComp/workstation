@@ -10,10 +10,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.PixelGrabber;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
@@ -36,6 +33,9 @@ import loci.formats.IFormatReader;
 import loci.formats.gui.BufferedImageReader;
 import loci.formats.in.*;
 
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 
 /**
@@ -474,4 +474,36 @@ public class Utils {
 			dest.write(buffer);
 		}
 	}
+    
+    public static void cacheAndProcessFileAsync(final String filePath, final FileCallable callback) {
+        SimpleWorker worker = new SimpleWorker() {
+            
+            private File file;
+            
+            @Override
+            protected void doStuff() throws Exception {
+                file = SessionMgr.getCachedFile(filePath, false);
+            }
+            
+            @Override
+            protected void hadSuccess() {
+                try {
+                    if (callback!=null) {
+                        callback.setParam(file);
+                        callback.call();
+                    }
+                }
+                catch (Exception e) {
+                    hadError(e);
+                }
+            }
+            
+            @Override
+            protected void hadError(Throwable error) {
+                SessionMgr.getSessionMgr().handleException(error);
+            }
+        };
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Copying file...", ""));
+        worker.execute();
+    }
 }
