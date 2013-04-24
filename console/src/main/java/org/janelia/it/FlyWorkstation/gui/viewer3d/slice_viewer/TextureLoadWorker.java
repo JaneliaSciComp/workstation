@@ -43,6 +43,7 @@ public class TextureLoadWorker implements Runnable
 		if (texture.loadImageToRam()) {
 			textureCache.add(texture);
 			texture.getRamLoadedSignal().emit(texture.getIndex()); // inform consumers (RavelerTileServer?)
+			// log.info("Loaded texture "+texture.getIndex());
 		}
 		else {
 			log.warn("Failed to load texture " + texture.getIndex());

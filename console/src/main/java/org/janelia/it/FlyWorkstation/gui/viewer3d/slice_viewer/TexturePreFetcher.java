@@ -38,24 +38,33 @@ public class TexturePreFetcher
 	/**
 	 * Like loadTexture, but emits an update signal when complete.
 	 * @param quadtreeIndex
+	 * 
+	 * Returns "true" if this tile would occupy desired space in the future cache.
 	 */
-	public synchronized void loadDisplayedTexture(TileIndex index, TileServer tileServer) 
+	public synchronized boolean loadDisplayedTexture(TileIndex index, TileServer tileServer) 
 	{
 		if (textureCache == null)
-			return;
+			return false;
 		if (loadAdapter == null)
-			return;
+			return false;
+		if (textureCache.getFutureCache().containsKey(index)) {
+			textureCache.getFutureCache().get(index); // move cached texture to back of queue
+			return true;
+		}
 		if (textureCache.containsKey(index))
-			return; // we already have this one!
+			return false; // we already have this one!
 		// TODO - is it already queued?
 		// This "recentRequests" hack is not solving the problem.
 		if (recentRequests.containsKey(index))
-			return;
+			return false;
 		TileTexture texture = new TileTexture(index, loadAdapter);
 		texture.getRamLoadedSignal().connect(tileServer.getOnTextureLoadedSlot());
 		// TODO - handle MISSING textures vs. ERROR textures
 		textureLoadExecutor.submit(new TextureLoadWorker(texture, textureCache));
 		recentRequests.put(index, index);
+		// Lowest resolution textures are in the persistent cache, and thus
+		// do not impact the future cache.
+		return (index.getZoom() != index.getMaxZoom());
 	}
 	
 	public synchronized void clear() {

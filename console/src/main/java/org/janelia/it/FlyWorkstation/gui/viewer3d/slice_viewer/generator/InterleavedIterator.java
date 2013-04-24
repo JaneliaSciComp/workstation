@@ -9,7 +9,8 @@ import java.util.Iterator;
  *
  */
 public class InterleavedIterator<E> 
-implements Iterator<E>, Iterable<E> {
+implements Iterator<E>, Iterable<E> 
+{
 	private Iterator<E> first;
 	private Iterator<E> second;
 	private boolean useFirst = true;

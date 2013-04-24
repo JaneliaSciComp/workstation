@@ -6,6 +6,7 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
@@ -13,8 +14,13 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.MinResZGenerator;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.UmbrellaZGenerator;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.ZGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.sun.xml.internal.bind.v2.runtime.reflect.Accessor.GetterSetterReflection;
 
 public class TileServer 
 implements VolumeImage3d
@@ -71,9 +77,9 @@ implements VolumeImage3d
 	private Set<TileIndex> neededTextures;
 
 	// One thread pool to load minimal representation of volume
-	private TexturePreFetcher minResPreFetcher = new TexturePreFetcher(4);
+	private TexturePreFetcher minResPreFetcher = new TexturePreFetcher(10);
 	// One thread pool to load current and prefetch textures
-	private TexturePreFetcher futurePreFetcher = new TexturePreFetcher(4);
+	private TexturePreFetcher futurePreFetcher = new TexturePreFetcher(10);
 
 	private BoundingBox3d boundingBox3d = new BoundingBox3d();
 	//
@@ -96,27 +102,10 @@ implements VolumeImage3d
 				return;
 			// queue load of all low resolution textures
 			minResPreFetcher.clear();
-			TileFormat tileFormat = loadAdapter.getTileFormat();
-			int maxZoom = tileFormat.getZoomLevelCount() - 1;
-			int x = 0; // only one value of x and y at lowest resolution
-			int y = 0;
-			int zMin = tileFormat.getOrigin()[2];
-			int zMax = zMin + tileFormat.getVolumeSize()[2];
-
-			// Start at center and move out
-			int z0 = (zMin + zMax)/2;
-			TileIndex index1 = new TileIndex(x, y, z0, maxZoom, 
-					maxZoom, tileFormat.getIndexStyle());
-			TileIndex index2 = index1.nextZ();
-			while ( (index1.getZ() >= zMin) || (index2.getZ() <= zMax) ) {
-				if (index1.getZ() >= zMin)
-					minResPreFetcher.loadDisplayedTexture(index1, TileServer.this);
-				if (index2.getZ() <= zMax)
-					minResPreFetcher.loadDisplayedTexture(index2, TileServer.this);					
-				index1 = index1.previousZ();
-				index2 = index2.nextZ();
-			}
-		}		
+			MinResZGenerator g = new MinResZGenerator(loadAdapter.getTileFormat());
+			for (TileIndex i : g)
+				minResPreFetcher.loadDisplayedTexture(i, TileServer.this);
+		}
 	};
 
 	private Slot1<TileSet> updateFuturePreFetchSlot = new Slot1<TileSet>() {
@@ -129,88 +118,44 @@ implements VolumeImage3d
 			if (tileSet.size() < 1)
 				return;
 			
-			Set<TileIndex> queuedTextures = new HashSet<TileIndex>();
+			Set<TileIndex> cacheableTextures = new HashSet<TileIndex>();
+			int maxCacheable = getTextureCache().getFutureCache().getMaxSize() - 100;
 
 			// First in line are current display tiles
 			// TODO - separate these into low res and max res
 			// getDisplayTiles(); // update current view
 			for (TileIndex ix : neededTextures) {
-				if (queuedTextures.contains(ix))
+				if (cacheableTextures.contains(ix))
 					continue;
 				// log.info("queue load of "+ix);
-				futurePreFetcher.loadDisplayedTexture(ix, TileServer.this);
-				queuedTextures.add(ix);
+				if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
+					cacheableTextures.add(ix);
 			}
 
-			// Pre-fetch adjacent Z slices:
-			// For initial testing, pre fetch in Z only at first
-			int zMinus, zPlus, z0, zoom;
-			zMinus = zPlus = z0 = zoom = -1;
-			TileFormat tileFormat = getLoadAdapter().getTileFormat();
-			TileIndex.IndexStyle indexStyle = tileFormat.getIndexStyle();
-			// Choose one tile to initialize search area in Z
-			TileIndex ix0 = tileSet.iterator().next().getIndex();
-			// Zoom out one level for pre-cache
-			TileIndex ix1 = ix0; // ix0.zoomOut();
-			if (ix1 == null)
-				ix1 = ix0;
-			z0 = zMinus = zPlus = ix1.getZ();
-			zoom = ix1.getZoom(); // Zoom out one level for precache
-			int zMin = tileFormat.getOrigin()[2];
-			int zMax = zMin + tileFormat.getVolumeSize()[2] - 1;
-			int zStepCount = 0;
-			while (((zMinus >= zMin) || (zPlus <= zMax)) // something is within Z-bounds
-					&& (queuedTextures.size() < (getTextureCache().getFutureCache().getMaxSize() - 100))) // future cache is not full
-			{
-				// Zoom out one level at +- 3, +- 20
-				if ((zStepCount == 3) || (zStepCount == 20)) {
-					TileIndex ixNew = ix1.zoomOut();
-					if (ixNew != null)
-						ix1 = ixNew;
-					zoom = ix1.getZoom();
-				}
-				zStepCount += 1;
-				// Step away from center in z, one unique step at a time.
-				// Drive to the next unique z value in each direction.
-				// minus Z:
-				TileIndex ixMinus = new TileIndex(
-						ix1.getX(), ix1.getY(),
-						zMinus,
-						zoom, ix1.getMaxZoom(), indexStyle);
-				ixMinus = ixMinus.previousZ();
-				zMinus = ixMinus.getCanonicalZ();
-				// plus Z:
-				TileIndex ixPlus = new TileIndex(
-						ix1.getX(), ix1.getY(),
-						zPlus,
-						zoom, ix1.getMaxZoom(), indexStyle);
-				ixPlus = ixPlus.nextZ();
-				zPlus = ixPlus.getCanonicalZ();
-				// log.info("zminus = "+zMinus+"; zplus = "+zPlus);
-				//
-				for (Tile2d tile : tileSet) {
-					TileIndex ix = tile.getIndex();
-					while (ix.getZoom() < zoom)
-						ix = ix.zoomOut();
-					if (ix == null)
-						ix = tile.getIndex();
-					TileIndex m = new TileIndex(ix.getX(), ix.getY(), 
-							zMinus, 
-							zoom, ix.getMaxZoom(), indexStyle);
-					TileIndex p = new TileIndex(ix.getX(), ix.getY(), 
-							zPlus, 
-							zoom, ix.getMaxZoom(), indexStyle);
-					if ((zMinus >= zMin) && ! queuedTextures.contains(m))
-					{
-						futurePreFetcher.loadDisplayedTexture(m, TileServer.this);
-						queuedTextures.add(m);
-					}
-					if ((zPlus <= zMax) && ! queuedTextures.contains(p)) {
-						futurePreFetcher.loadDisplayedTexture(p, TileServer.this);
-						queuedTextures.add(p);
-					}
-				}
+			// Get nearby Z-tiles, with decreasing LOD
+			Iterable<TileIndex> zGen = new UmbrellaZGenerator(getLoadAdapter().getTileFormat(), tileSet);
+			for (TileIndex ix : zGen) {
+				if (cacheableTextures.contains(ix))
+					continue;
+				if (cacheableTextures.size() >= maxCacheable)
+					break;
+				if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
+					cacheableTextures.add(ix);
 			}
+			
+			// Get more Z-tiles, at current LOD
+			zGen = new ZGenerator(getLoadAdapter().getTileFormat(), tileSet);
+			for (TileIndex ix : zGen) {
+				if (cacheableTextures.contains(ix))
+					continue;
+				if (cacheableTextures.size() >= maxCacheable)
+					break;
+				if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
+					cacheableTextures.add(ix);
+			}
+
+			// log.info("Number of queued textures = "+cacheableTextures.size());			
+			
 			long endTime = System.nanoTime();
 			// log.info("Prefetch fill elapsed time = "+(endTime-startTime)/1e6+" ms");
 		}

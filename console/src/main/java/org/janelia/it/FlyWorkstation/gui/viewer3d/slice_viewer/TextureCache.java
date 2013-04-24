@@ -95,8 +95,9 @@ public class TextureCache
 	}
 
 	public int[] popObsoleteTextureIds() {
-		Set<Integer> ids = futureCache.popObsoleteGlTextures();
-		ids.addAll(historyCache.popObsoleteGlTextures());
+		Set<Integer> ids = historyCache.popObsoleteGlTextures();
+		// future cache ids were probably moved to history cache, so do not delete them.
+		// ids.addAll(futureCache.popObsoleteGlTextures()); 
 		ids.addAll(persistentCache.popObsoleteGlTextures());
 		int result[] = new int[ids.size()];
 		int i = 0;

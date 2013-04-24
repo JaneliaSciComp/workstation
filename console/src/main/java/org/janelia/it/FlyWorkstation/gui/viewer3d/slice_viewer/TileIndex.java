@@ -101,6 +101,10 @@ public class TileIndex
 		return result;
 	}
 	
+	public IndexStyle getIndexStyle() {
+		return indexStyle;
+	}
+
 	// For hashability, we need hashCode() and equals() methods.
 	// Pro tip: Use eclipse to autogenerate hashCode and equals methods!
 	@Override
