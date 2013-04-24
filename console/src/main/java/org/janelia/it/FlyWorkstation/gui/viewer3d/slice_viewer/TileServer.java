@@ -6,7 +6,6 @@ import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
@@ -19,8 +18,6 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.Umbrell
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.ZGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.sun.xml.internal.bind.v2.runtime.reflect.Accessor.GetterSetterReflection;
 
 public class TileServer 
 implements VolumeImage3d
