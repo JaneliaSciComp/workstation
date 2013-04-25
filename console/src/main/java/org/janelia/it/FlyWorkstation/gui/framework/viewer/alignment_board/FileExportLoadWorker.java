@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.ControlsListener;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderablesChannelsBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.TextureBuilderI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.FilteringAcceptorDecorator;
@@ -83,7 +84,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
                 );
 
         InputStream channelStream = null;
-        if ( ! paramBean.isBinary() ) {
+        if ( paramBean.getMethod() == ControlsListener.ExportMethod.color ) {
             channelStream = new BufferedInputStream(
                     new FileInputStream(
                             resolver.getResolvedFilename( maskChanRenderableData.getChannelPath() )
@@ -113,11 +114,11 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         customWritebackSettings.setGammaFactor(1.0);
         customWritebackSettings.setShowChannelData( false );
 
-        if ( paramBean.isBinary() ) {
+        if ( paramBean.getMethod() == ControlsListener.ExportMethod.binary ) {
             // Using only binary values.
             textureBuilder = new RenderablesMaskBuilder( customWritebackSettings, renderableBeans, true );
         }
-        else {
+        else if ( paramBean.getMethod() == ControlsListener.ExportMethod.color ) {
             // Using full color values.
             textureBuilder = new RenderablesChannelsBuilder( customWritebackSettings, renderableBeans );
         }
@@ -226,7 +227,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         private Collection<MaskChanRenderableData> renderableDatas;
         private float[] cropCoords;
         private Callback callback;
-        private boolean binary;
+        private ControlsListener.ExportMethod method;
 
         public Collection<MaskChanRenderableData> getRenderableDatas() {
             return renderableDatas;
@@ -252,18 +253,18 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
             this.callback = callback;
         }
 
-        public boolean isBinary() {
-            return binary;
-        }
-
-        public void setBinary(boolean binary) {
-            this.binary = binary;
-        }
-
         public void exceptIfNotInit() {
             if ( cropCoords == null  ||  renderableDatas == null  ||  callback == null ) {
                 throw new IllegalArgumentException( "Parameters to file-export insufficient.  No nulls allowed." );
             }
+        }
+
+        public ControlsListener.ExportMethod getMethod() {
+            return method;
+        }
+
+        public void setMethod(ControlsListener.ExportMethod method) {
+            this.method = method;
         }
     }
 

@@ -22,6 +22,7 @@ import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardControlsDialog;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.CompletionListener;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.ControlsListener;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ABContextDataSource;
@@ -462,7 +463,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     }
 
     //------------------------------Inner Classes
-    public static class AlignmentBoardControlsListener implements AlignmentBoardControlsDialog.ControlsListener {
+    public static class AlignmentBoardControlsListener implements ControlsListener {
         private Mip3d mip3d;
         private AlignmentBoardViewer viewer;
         private RenderMappingI renderMapping;
@@ -490,11 +491,11 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         @Override
         public void exportSelection(
                 float[] absoluteCropCoords, CompletionListener completionListener,
-                boolean binary) {
+                ControlsListener.ExportMethod method ) {
             VolumeWritebackHandler writebackHandler = new VolumeWritebackHandler(
-                    renderMapping, absoluteCropCoords, completionListener
+                    renderMapping, absoluteCropCoords, completionListener, mip3d
             );
-            writebackHandler.writeBackVolumeSelection( binary );
+            writebackHandler.writeBackVolumeSelection( method );
         }
 
         @Override

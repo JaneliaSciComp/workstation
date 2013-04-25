@@ -41,11 +41,12 @@ public class TiffExporter {
         super();
     }
 
+    /** Exports a tiff stack representing all planes of the input texture. */
     public void export( TextureDataI texture, File chosenFile ) throws Exception {
 
-        chosenFile = enforcePreferredExtension(chosenFile);
-
         if ( chosenFile != null ) {
+            chosenFile = enforcePreferredExtension(chosenFile);
+
             int textureSize = texture.getSz() * texture.getSy() * texture.getSx();
             logger.info( "Exporting texture {}.  Size={}", texture.getFilename(), textureSize );
 
@@ -66,6 +67,24 @@ public class TiffExporter {
             BufferedImage nextImage = imageList.iterator().next();
             params.setExtraImages( imageList.iterator() );
             ienc.encode( nextImage );
+
+            os.close();
+        }
+    }
+
+    /** Exports a single tiff based on the input image. */
+    public void export( BufferedImage image, File chosenFile ) throws Exception {
+        if ( chosenFile != null ) {
+            chosenFile = enforcePreferredExtension(chosenFile);
+
+            logger.info( "Exporting image of area {}.", image.getHeight() * image.getWidth() );
+
+            OutputStream os = new BufferedOutputStream( new FileOutputStream( chosenFile ) );
+            TIFFEncodeParam params = new TIFFEncodeParam();
+            params.setLittleEndian( true );
+
+            ImageEncoder ienc = ImageCodec.createImageEncoder( "tiff", os, params );
+            ienc.encode( image );
 
             os.close();
         }

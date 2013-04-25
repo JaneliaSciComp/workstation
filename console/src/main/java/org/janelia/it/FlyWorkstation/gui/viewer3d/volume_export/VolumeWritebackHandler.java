@@ -2,17 +2,21 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.FileExportLoadWorker;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.exporter.TiffExporter;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.CompletionListener;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.ControlsListener;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.MaskChanRenderableData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ABContextDataSource;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,6 +34,7 @@ import java.util.Map;
 public class VolumeWritebackHandler {
     private RenderMappingI renderMapping;
     private float[] cropCoords;
+    private Mip3d mip3d;
     private CompletionListener completionListener;
 
     private Logger logger = LoggerFactory.getLogger( VolumeWritebackHandler.class );
@@ -37,46 +42,99 @@ public class VolumeWritebackHandler {
     public VolumeWritebackHandler(
             RenderMappingI renderMapping,
             float[] cropCoords,
-            CompletionListener completionListener
+            CompletionListener completionListener,
+            Mip3d mip3d
     ) {
 
         this.cropCoords = cropCoords;
         this.renderMapping = renderMapping;
         this.completionListener = completionListener;
-
+        this.mip3d = mip3d;
     }
 
     /**
      * This control-callback writes the user's selected volume to a file on disk.
      *
-     * @param binary true = 1/0 writeback; false = color writeback.
+     * @param method how to write the file.
      */
-    public void writeBackVolumeSelection(boolean binary) {
-        Map<Integer,byte[]> renderableIdVsRenderMethod = renderMapping.getMapping();
+    public void writeBackVolumeSelection( ControlsListener.ExportMethod method ) {
+        if ( method == ControlsListener.ExportMethod.mip ) {
 
-        ABContextDataSource dataSource = new ABContextDataSource(
-                SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext()
-        );
+            SimpleWorker mipExportWorker = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    // Need to take a screen shot of the MIP3D object.
+                    // Get a buffered image of the component.
+                    java.awt.image.BufferedImage bufferedImage = new java.awt.image.BufferedImage(
+                            mip3d.getWidth(), mip3d.getHeight(), java.awt.image.BufferedImage.TYPE_INT_RGB
+                    );
+                    Graphics2D graphics = bufferedImage.createGraphics();
+                    mip3d.paint(graphics);
 
-        Collection<MaskChanRenderableData> searchDatas = new ArrayList<MaskChanRenderableData>();
-        for ( MaskChanRenderableData data: dataSource.getRenderableDatas() ) {
-            byte[] rendition = renderableIdVsRenderMethod.get( data.getBean().getTranslatedNum() );
-            if ( rendition != null  &&  rendition[ 3 ] != RenderMappingI.NON_RENDERING ) {
-                searchDatas.add( data );
-            }
+                    File writeBackFile = getUserFileChoice();
+                    if ( writeBackFile != null ) {
+                        // Write the tiff.
+                        TiffExporter exporter = new TiffExporter();
+                        exporter.export( bufferedImage, writeBackFile );
+                    }
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    completionListener.complete();
+                }
+
+                @Override
+                protected void hadError(Throwable ex) {
+                    completionListener.complete();
+
+                    ex.printStackTrace();
+                    logger.error( ex.getMessage() );
+                    SessionMgr.getSessionMgr().handleException( ex );
+                };
+            };
+            mipExportWorker.execute();
+
         }
+        else {
+            // Save back volume as three-D tiff.
+            Map<Integer,byte[]> renderableIdVsRenderMethod = renderMapping.getMapping();
 
-        FileExportLoadWorker.Callback callback = new ExportCallback();
+            ABContextDataSource dataSource = new ABContextDataSource(
+                    SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext()
+            );
 
-        FileExportLoadWorker.FileExportParamBean paramBean = new FileExportLoadWorker.FileExportParamBean();
-        paramBean.setBinary( binary );
-        paramBean.setCallback( callback );
-        paramBean.setCropCoords( cropCoords );
-        paramBean.setRenderableDatas( searchDatas );
+            Collection<MaskChanRenderableData> searchDatas = new ArrayList<MaskChanRenderableData>();
+            for ( MaskChanRenderableData data: dataSource.getRenderableDatas() ) {
+                byte[] rendition = renderableIdVsRenderMethod.get( data.getBean().getTranslatedNum() );
+                if ( rendition != null  &&  rendition[ 3 ] != RenderMappingI.NON_RENDERING ) {
+                    searchDatas.add( data );
+                }
+            }
 
-        FileExportLoadWorker fileExportLoadWorker = new FileExportLoadWorker( paramBean );
-        fileExportLoadWorker.setResolver(new CacheFileResolver());
-        fileExportLoadWorker.execute();
+            FileExportLoadWorker.Callback callback = new ExportCallback();
+
+            FileExportLoadWorker.FileExportParamBean paramBean = new FileExportLoadWorker.FileExportParamBean();
+            paramBean.setMethod(method);
+            paramBean.setCallback(callback);
+            paramBean.setCropCoords( cropCoords );
+            paramBean.setRenderableDatas( searchDatas );
+
+            FileExportLoadWorker fileExportLoadWorker = new FileExportLoadWorker( paramBean );
+            fileExportLoadWorker.setResolver(new CacheFileResolver());
+            fileExportLoadWorker.execute();
+        }
+    }
+
+    /** Prompt for the user's output file to save, and return it. */
+    private File getUserFileChoice() {
+        JFileChooser fileChooser = new JFileChooser( "Choose Export File" );
+        fileChooser.setDialogTitle( "Save" );
+        fileChooser.setToolTipText( "Pick an output location for the exported file." );
+        fileChooser.showOpenDialog( null );
+
+        // Get the file.
+        return fileChooser.getSelectedFile();
     }
 
     /**
@@ -114,17 +172,6 @@ public class VolumeWritebackHandler {
                 frequencyReport(texture);
             }
 
-        }
-
-        /** Prompt for the user's output file to save, and return it. */
-        private File getUserFileChoice() {
-            JFileChooser fileChooser = new JFileChooser( "Choose Export File" );
-            fileChooser.setDialogTitle( "Save" );
-            fileChooser.setToolTipText( "Pick an output location for the exported file." );
-            fileChooser.showOpenDialog( null );
-
-            // Get the file.
-            return fileChooser.getSelectedFile();
         }
 
         /** This is a simple testing mechanism to sanity-check the contents of the texture being saved. */

@@ -47,15 +47,16 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
     private static final String LAUNCH_AS = "Controls";
     private static final String LAUNCH_DESCRIPTION = "Present a dialog allowing users to change settings.";
-    private static final Dimension SIZE = new Dimension( 400, 380 );
+    private static final Dimension SIZE = new Dimension( 450, 430 );
     private static final String GAMMA_TOOLTIP = "Adjust the gamma level, or brightness.";
     private static final Dimension DN_SAMPLE_DROPDOWN_SIZE = new Dimension(130, 50);
-    private static final boolean BINARY_SAVE = true;
-    private static final boolean COLOR = false;
-    private static final boolean COLOR_SAVE = COLOR;
+    private static final String COMMIT_CHANGES = "Commit Changes";
+    private static final String DISMISS_DIALOG = "Done";
+    private static final String SAVE_SCREEN_SHOT_MIP = "Screen Shot/MIP";
+    private static final String DOWN_SAMPLE_RATE = "Down Sample Rate";
+    private static final String USE_SIGNAL_DATA = "Use Signal Data";
 
     private Component centering;
-    private JButton go;
     private JSlider brightnessSlider;
     private JCheckBox useSignalDataCheckbox;
     private JComboBox downSampleRateDropdown;
@@ -225,10 +226,10 @@ public class AlignmentBoardControlsDialog extends JDialog {
     }
 
     private synchronized void fireSavebackEvent(
-            float[] absoluteCoords, CompletionListener completionListener, boolean binary
+            float[] absoluteCoords, CompletionListener completionListener, ControlsListener.ExportMethod method
     ) {
         for ( ControlsListener listener: listeners ) {
-            listener.exportSelection( absoluteCoords, completionListener, binary );
+            listener.exportSelection( absoluteCoords, completionListener, method );
         }
 
     }
@@ -264,6 +265,16 @@ public class AlignmentBoardControlsDialog extends JDialog {
             }
         });
 
+        final JButton commitButton = new JButton( COMMIT_CHANGES );
+        commitButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent ae) {
+                readyForOutput = true;
+                fireSettingsEvent();
+                commitButton.setEnabled( false );
+            }
+        });
+        commitButton.setEnabled( false );
+
         final JButton searchSaveButton = new JButton( SAVE_AS_SEARCH_TIFF );
         searchSaveButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
@@ -281,7 +292,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
                 };
 
                 float[] absoluteCropCoords = getCropCoords();
-                fireSavebackEvent(absoluteCropCoords, buttonEnableListener, BINARY_SAVE);
+                fireSavebackEvent( absoluteCropCoords, buttonEnableListener, ControlsListener.ExportMethod.binary );
 
             }
         });
@@ -291,14 +302,30 @@ public class AlignmentBoardControlsDialog extends JDialog {
             CompletionListener buttonEnableListener = new CompletionListener() {
                 @Override
                 public void complete() {
-                    colorSaveButton.setEnabled(true);
+                    colorSaveButton.setEnabled( true );
                 }
             };
 
             public void actionPerformed(ActionEvent ae) {
-                colorSaveButton.setEnabled(false);
+                colorSaveButton.setEnabled( false );
                 float[] absoluteCropCoords = getCropCoords();
-                fireSavebackEvent(absoluteCropCoords, buttonEnableListener, COLOR_SAVE);
+                fireSavebackEvent( absoluteCropCoords, buttonEnableListener, ControlsListener.ExportMethod.color );
+            }
+        });
+
+        final JButton screenShotButton = new JButton( SAVE_SCREEN_SHOT_MIP );
+        screenShotButton.addActionListener(new ActionListener() {
+            CompletionListener buttonEnableListener = new CompletionListener() {
+                @Override
+                public void complete() {
+                    screenShotButton.setEnabled(true);
+                }
+            };
+
+            public void actionPerformed( ActionEvent ae ) {
+                screenShotButton.setEnabled( false );
+                float[] absoluteCropCoords = getCropCoords();
+                fireSavebackEvent( absoluteCropCoords, buttonEnableListener, ControlsListener.ExportMethod.mip );
             }
         });
 
@@ -331,11 +358,28 @@ public class AlignmentBoardControlsDialog extends JDialog {
         downSampleRateDropdown = new JComboBox(
                 new ABSDComboBoxModel( downSampleRateToIndex )
         );
-        downSampleRateDropdown.setBorder( new TitledBorder( "Down Sample Rate" ) );
+        downSampleRateDropdown.setBorder( new TitledBorder( DOWN_SAMPLE_RATE ) );
         downSampleRateDropdown.setToolTipText( DOWN_SAMPLE_TOOLTIP );
 
-        useSignalDataCheckbox = new JCheckBox( "Use Signal Data" );
+        useSignalDataCheckbox = new JCheckBox( USE_SIGNAL_DATA );
         useSignalDataCheckbox.setSelected(true);
+
+        // Prepare button for commit-to-screen.  If the user touches any of these, the commit-button is active.
+        MouseAdapter commitEnablerMouseListener = new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                super.mousePressed(e);
+                commitButton.setEnabled( true );
+            }
+        };
+
+        brightnessSlider.addMouseListener( commitEnablerMouseListener );
+        downSampleRateDropdown.addMouseListener( commitEnablerMouseListener );
+        for ( Component c: downSampleRateDropdown.getComponents() ) {
+            // NOTE: must add the listener to all subcomponents of the combo box, or response is unreliable.
+            c.addMouseListener( commitEnablerMouseListener );
+        }
+        useSignalDataCheckbox.addMouseListener( commitEnablerMouseListener );
 
         JPanel centralPanel = new JPanel();
         centralPanel.setLayout( new GridBagLayout() );
@@ -369,41 +413,44 @@ public class AlignmentBoardControlsDialog extends JDialog {
                 1, 1, 1, 1, 0.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
 
+        GridBagConstraints commitBtnConstraints = new GridBagConstraints(
+                0, 2, 2, 2, 1.0, 1.0, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, insets, 0, 0
+        );
+
         GridBagConstraints sliderPanelConstraints = new GridBagConstraints(
-                0, 2, 2, 1, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
+                0, 4, 3, 1, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
         );
 
         GridBagConstraints blackoutCheckboxConstraints = new GridBagConstraints(
-                0, 3, 3, 1, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
+                0, 5, 3, 1, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
 
-        GridBagConstraints geoSearchBtnConstraints = new GridBagConstraints(
-                0, 4, 1, 1, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
+        GridBagConstraints saveSearchConstraints = new GridBagConstraints(
+                0, 6, 1, 1, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
 
-        GridBagConstraints saveBtnConstraints = new GridBagConstraints(
-                1, 4, 1, 1, 1.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, insets, 0, 0
+        GridBagConstraints saveColorConstraints = new GridBagConstraints(
+                1, 6, 1, 1, 1.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, insets, 0, 0
+        );
+
+        GridBagConstraints saveScreenShotConstraints = new GridBagConstraints(
+                2, 6, 1, 1, 1.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
 
         centralPanel.add( brightnessSlider, brightnessConstraints );
         centralPanel.add( downSampleRateDropdown, downSampleConstraints );
         centralPanel.add( useSignalDataCheckbox, signalDataConstraints );
+        centralPanel.add( commitButton, commitBtnConstraints );
         centralPanel.add( blackoutCheckbox, blackoutCheckboxConstraints );
         centralPanel.add( regionSelectionPanel, sliderPanelConstraints );
-        centralPanel.add( searchSaveButton, geoSearchBtnConstraints );
-        centralPanel.add( colorSaveButton, saveBtnConstraints );
+        centralPanel.add( searchSaveButton, saveSearchConstraints );
+        centralPanel.add( colorSaveButton, saveColorConstraints );
+        centralPanel.add( screenShotButton, saveScreenShotConstraints );
         add(centralPanel, BorderLayout.CENTER);
 
         JPanel bottomButtonPanel = new JPanel();
-        bottomButtonPanel.setLayout( new BorderLayout() );
-        go = new JButton( "OK" );
-        go.addActionListener( new ActionListener() {
-            public void actionPerformed( ActionEvent ae ) {
-                readyForOutput = true;
-                fireSettingsEvent();
-            }
-        });
-        JButton cancel = new JButton( "Done/Cancel" );
+        bottomButtonPanel.setLayout(new BorderLayout());
+        JButton cancel = new JButton( DISMISS_DIALOG );
         cancel.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent ae ) {
                 readyForOutput = false;
@@ -413,7 +460,6 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
         // Mac-like layout for buttons.
         bottomButtonPanel.add( cancel, BorderLayout.WEST );
-        bottomButtonPanel.add( go, BorderLayout.EAST );
         bottomButtonPanel.setBorder( new EmptyBorder( insets ) );
         add(bottomButtonPanel, BorderLayout.SOUTH);
     }
@@ -479,15 +525,6 @@ public class AlignmentBoardControlsDialog extends JDialog {
         public Object getSelectedItem() {
             return selectedItem;
         }
-    }
-
-    /** Callers should implement this to observe the input settings provided by uesr. */
-    public static interface ControlsListener {
-        void setBrightness( double brightness );
-        void updateSettings();
-        void setSelectedCoords( float[] normalizedCoords );
-        void exportSelection(float[] absoluteCoords, CompletionListener completionListener, boolean binary);
-        void setCropBlackout( boolean blackout );
     }
 
     public class LaunchAction extends AbstractAction {
