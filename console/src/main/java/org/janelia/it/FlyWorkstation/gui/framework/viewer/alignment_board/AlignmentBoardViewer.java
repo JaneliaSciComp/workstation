@@ -174,94 +174,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         refresh();
     }
 
-    private void printAlignmentBoardContext(AlignmentBoardContext abContext) {
-
-        log.debug("Alignment board: "+abContext.getName());
-        log.debug("* Alignment space: "+abContext.getAlignmentContext().getAlignmentSpaceName());
-        log.debug("* Optical resolution: "+abContext.getAlignmentContext().getOpticalResolution());
-        log.debug("* Pixel resolution: "+abContext.getAlignmentContext().getPixelResolution());
-        
-        for(AlignedItem alignedItem : abContext.getAlignedItems()) {
-        
-            EntityWrapper itemEntity = alignedItem.getItemWrapper();
-            
-            if ( itemEntity instanceof Sample  &&  alignedItem.isVisible() ) {
-            
-                Sample sample = (Sample)itemEntity;
-                
-                log.debug("  Sample: "+sample.getName());
-                log.debug("  * 3d image: "+sample.get3dImageFilepath());
-                log.debug("  * fast 3d image: "+sample.getFast3dImageFilepath());
-                
-                if (sample.getChildren()==null) {
-                    log.warn("  Sample children not loaded");
-                }
-                if (sample.getNeuronSet()==null) {
-                    log.warn("  Sample neurons not loaded");
-                }
-                
-                MaskedVolume vol = sample.getMaskedVolume();
-                if (vol!=null) {
-                    log.debug("    original separation volumes:");
-                    log.debug("    * reference vol: "+vol.getReferenceVolumePath());
-                    log.debug("    * signal vol: "+vol.getSignalVolumePath());
-                    log.debug("    * signal label: "+vol.getSignalLabelPath());
-                    
-                    log.debug("    fast load 8-bit volumes:");
-                    log.debug("    * fast signal: "+vol.getFastVolumePath(ArtifactType.ConsolidatedSignal, Size.Full, Channels.All, true));
-                    log.debug("    * fast label: "+vol.getFastVolumePath(ArtifactType.ConsolidatedLabel, Size.Full, Channels.All, true));
-                    log.info("    * fast reference: "+vol.getFastVolumePath(ArtifactType.Reference, Size.Full, Channels.All, true));
-    
-                    log.debug("    subsampled volumes:");
-                    for(Size size : Size.values()) {
-                        log.debug("    * "+size+"/signal: "+vol.getFastVolumePath(ArtifactType.ConsolidatedSignal, size, Channels.All, true));
-                        log.debug("    * "+size+"/label: "+vol.getFastVolumePath(ArtifactType.ConsolidatedLabel, size, Channels.All, true));
-                        log.info("    * "+size+"/reference: "+vol.getFastVolumePath(ArtifactType.Reference, size, Channels.All, true));
-                    }
-    
-                    log.debug("    mpeg4 volumes:");
-                    for(Size size : Size.values()) {
-                        for(Channels channels : Channels.values()) {
-                            log.debug("    * "+size+"/"+channels+" signal: "+vol.getFastVolumePath(ArtifactType.ConsolidatedSignal, size, channels, false));
-                        }
-                        log.info("    * "+size+"/reference: "+vol.getFastVolumePath(ArtifactType.Reference, size, Channels.All, false));
-                    }
-                    
-                    log.debug("  metadata files:");
-                    for(Size size : Size.values()) {
-                        log.debug("  * signal metadata: "+vol.getFastMetadataPath(ArtifactType.ConsolidatedSignal, size));
-                        log.debug("  * reference metadata: "+vol.getFastMetadataPath(ArtifactType.Reference, size));
-                    }
-                }
-
-                log.debug("  neurons:");
-                for(AlignedItem neuronAlignedItem : alignedItem.getAlignedItems()) {
-                    EntityWrapper neuronItemEntity = neuronAlignedItem.getItemWrapper();
-                    if (neuronItemEntity instanceof Neuron) {
-                        Neuron neuron = (Neuron)neuronItemEntity;
-                        log.debug("    "+neuron.getName()+" (visible="+neuronAlignedItem.isVisible()+", maskIndex="+neuron.getMaskIndex()+")");
-                        log.debug("    * mask: "+neuron.getMask3dImageFilepath());
-                        log.debug("    * chan: "+neuron.getChan3dImageFilepath());
-                    }   
-                }
-
-            }
-            else {
-                log.error("Cannot handle entites of type: "+itemEntity.getType());    
-            }
-
-        }
-    }
-    
-    private void printItemChanged(AlignedItem alignedItem, String changeType) {
-        log.info("Alignment board item changed");
-        log.info("* Change Type: "+changeType);
-        log.info("* Item Alias: "+alignedItem.getName());
-        log.info("* Item Name: "+alignedItem.getItemWrapper().getName());
-        log.info("* Item Visibility: "+alignedItem.isVisible());
-        log.info("* Item Color: "+alignedItem.getColor()+" (hex="+alignedItem.getColorHex()+")");
-    }
-    
     @Subscribe
     public void handleBoardOpened(AlignmentBoardOpenEvent event) {
         
@@ -292,7 +204,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         }
     }
 
-    //---------------------------------------IMPLEMNTATION of AlignmentBoardControllable
+    //---------------------------------------IMPLEMENTATION of AlignmentBoardControllable
     @Override
     public void clearDisplay() {
         mip3d.clear();
@@ -356,6 +268,94 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     }
 
     //---------------------------------------HELPERS
+    private void printAlignmentBoardContext(AlignmentBoardContext abContext) {
+
+        log.debug("Alignment board: "+abContext.getName());
+        log.debug("* Alignment space: "+abContext.getAlignmentContext().getAlignmentSpaceName());
+        log.debug("* Optical resolution: "+abContext.getAlignmentContext().getOpticalResolution());
+        log.debug("* Pixel resolution: "+abContext.getAlignmentContext().getPixelResolution());
+
+        for(AlignedItem alignedItem : abContext.getAlignedItems()) {
+
+            EntityWrapper itemEntity = alignedItem.getItemWrapper();
+
+            if ( itemEntity instanceof Sample  &&  alignedItem.isVisible() ) {
+
+                Sample sample = (Sample)itemEntity;
+
+                log.debug("  Sample: "+sample.getName());
+                log.debug("  * 3d image: "+sample.get3dImageFilepath());
+                log.debug("  * fast 3d image: "+sample.getFast3dImageFilepath());
+
+                if (sample.getChildren()==null) {
+                    log.warn("  Sample children not loaded");
+                }
+                if (sample.getNeuronSet()==null) {
+                    log.warn("  Sample neurons not loaded");
+                }
+
+                MaskedVolume vol = sample.getMaskedVolume();
+                if (vol!=null) {
+                    log.debug("    original separation volumes:");
+                    log.debug("    * reference vol: "+vol.getReferenceVolumePath());
+                    log.debug("    * signal vol: "+vol.getSignalVolumePath());
+                    log.debug("    * signal label: "+vol.getSignalLabelPath());
+
+                    log.debug("    fast load 8-bit volumes:");
+                    log.debug("    * fast signal: "+vol.getFastVolumePath(ArtifactType.ConsolidatedSignal, Size.Full, Channels.All, true));
+                    log.debug("    * fast label: "+vol.getFastVolumePath(ArtifactType.ConsolidatedLabel, Size.Full, Channels.All, true));
+                    log.info("    * fast reference: "+vol.getFastVolumePath(ArtifactType.Reference, Size.Full, Channels.All, true));
+
+                    log.debug("    subsampled volumes:");
+                    for(Size size : Size.values()) {
+                        log.debug("    * "+size+"/signal: "+vol.getFastVolumePath(ArtifactType.ConsolidatedSignal, size, Channels.All, true));
+                        log.debug("    * "+size+"/label: "+vol.getFastVolumePath(ArtifactType.ConsolidatedLabel, size, Channels.All, true));
+                        log.info("    * "+size+"/reference: "+vol.getFastVolumePath(ArtifactType.Reference, size, Channels.All, true));
+                    }
+
+                    log.debug("    mpeg4 volumes:");
+                    for(Size size : Size.values()) {
+                        for(Channels channels : Channels.values()) {
+                            log.debug("    * "+size+"/"+channels+" signal: "+vol.getFastVolumePath(ArtifactType.ConsolidatedSignal, size, channels, false));
+                        }
+                        log.info("    * "+size+"/reference: "+vol.getFastVolumePath(ArtifactType.Reference, size, Channels.All, false));
+                    }
+
+                    log.debug("  metadata files:");
+                    for(Size size : Size.values()) {
+                        log.debug("  * signal metadata: "+vol.getFastMetadataPath(ArtifactType.ConsolidatedSignal, size));
+                        log.debug("  * reference metadata: "+vol.getFastMetadataPath(ArtifactType.Reference, size));
+                    }
+                }
+
+                log.debug("  neurons:");
+                for(AlignedItem neuronAlignedItem : alignedItem.getAlignedItems()) {
+                    EntityWrapper neuronItemEntity = neuronAlignedItem.getItemWrapper();
+                    if (neuronItemEntity instanceof Neuron) {
+                        Neuron neuron = (Neuron)neuronItemEntity;
+                        log.debug("    "+neuron.getName()+" (visible="+neuronAlignedItem.isVisible()+", maskIndex="+neuron.getMaskIndex()+")");
+                        log.debug("    * mask: "+neuron.getMask3dImageFilepath());
+                        log.debug("    * chan: "+neuron.getChan3dImageFilepath());
+                    }
+                }
+
+            }
+            else {
+                log.error("Cannot handle entites of type: "+itemEntity.getType());
+            }
+
+        }
+    }
+
+    private void printItemChanged(AlignedItem alignedItem, String changeType) {
+        log.info("Alignment board item changed");
+        log.info("* Change Type: "+changeType);
+        log.info("* Item Alias: "+alignedItem.getName());
+        log.info("* Item Name: "+alignedItem.getItemWrapper().getName());
+        log.info("* Item Visibility: "+alignedItem.isVisible());
+        log.info("* Item Color: "+alignedItem.getColor()+" (hex="+alignedItem.getColorHex()+")");
+    }
+
     private void establishObserver() {
         modelMgrObserver = new ModelMgrListener( this, alignmentBoard );
         ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
@@ -383,33 +383,38 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
      */
     private void updateBoard( AlignmentBoardContext context ) {
         logger.info("Update-board called.");
+        try {
+            // TEMP
+            //if ( brainGlow != null ) {
+            //    brainGlow.isRunning = false;
+            //} // TEMP
 
-        // TEMP
-        //if ( brainGlow != null ) {
-        //    brainGlow.isRunning = false;
-        //} // TEMP
+            if (context != null) {
+                showLoadingIndicator();
 
-        if (context != null) {
-            showLoadingIndicator();
+                if ( mip3d == null ) {
+                    mip3d = createMip3d();
+                    wrapperPanel = createWrapperPanel( mip3d );
+                }
 
-            if ( mip3d == null ) {
-                mip3d = createMip3d();
-                wrapperPanel = createWrapperPanel( mip3d );
+                mip3d.refresh();
+
+                // Here, should load volumes, for all the different items given.
+                loadWorker = new RenderablesLoadWorker(
+                        new ABContextDataSource( context ), renderMapping, this, settings.getAlignmentBoardSettings()
+                );
+                loadWorker.execute();
+
             }
 
-            mip3d.refresh();
+            // TEMP
+            //brainGlow = new BrainGlow();
+            //brainGlow.start();  // TEMP
 
-            // Here, should load volumes, for all the different items given.
-            loadWorker = new RenderablesLoadWorker(
-                    new ABContextDataSource( context ), renderMapping, this, settings.getAlignmentBoardSettings()
-            );
-            loadWorker.execute();
-
+        } catch ( Throwable th ) {
+            SessionMgr.getSessionMgr().handleException( th );
         }
 
-        // TEMP
-        //brainGlow = new BrainGlow();
-        //brainGlow.start();  // TEMP
     }
 
     /**
@@ -447,17 +452,21 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private void updateRendering( AlignmentBoardContext context ) {
         logger.info("Update-rendering called.");
 
-        if (context != null) {
-            // Here, simply make the rendering change.
-            // Here, should load volumes, for all the different items given.
+        try {
+            if (context != null) {
+                // Here, simply make the rendering change.
+                // Here, should load volumes, for all the different items given.
 
-            //loadWorker = new ABLoadWorker( this, context, mip3d, renderMappings );
-            loadWorker = new RenderablesLoadWorker(
-                    new ABContextDataSource(context), renderMapping, this, settings.getAlignmentBoardSettings()
-            );
-            loadWorker.setLoadFilesFlag( Boolean.FALSE );
-            loadWorker.execute();
+                //loadWorker = new ABLoadWorker( this, context, mip3d, renderMappings );
+                loadWorker = new RenderablesLoadWorker(
+                        new ABContextDataSource(context), renderMapping, this, settings.getAlignmentBoardSettings()
+                );
+                loadWorker.setLoadFilesFlag( Boolean.FALSE );
+                loadWorker.execute();
 
+            }
+        } catch ( Throwable th ) {
+            SessionMgr.getSessionMgr().handleException( th );
         }
 
     }
@@ -495,7 +504,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             VolumeWritebackHandler writebackHandler = new VolumeWritebackHandler(
                     renderMapping, absoluteCropCoords, completionListener, mip3d
             );
-            writebackHandler.writeBackVolumeSelection( method );
+            writebackHandler.writeBackVolumeSelection(method);
         }
 
         @Override
