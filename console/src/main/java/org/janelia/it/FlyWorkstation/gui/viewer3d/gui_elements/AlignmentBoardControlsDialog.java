@@ -42,11 +42,17 @@ public class AlignmentBoardControlsDialog extends JDialog {
             "to search other specimens and present the resulting overlappoing volume." +
             "</html>";
 
+    private static final String SAVE_AS_SEARCH_TIFF = "Save Search TIFF";
+    private static final String SAVE_AS_COLOR_TIFF = "Save Color TIFF";
+
     private static final String LAUNCH_AS = "Controls";
     private static final String LAUNCH_DESCRIPTION = "Present a dialog allowing users to change settings.";
     private static final Dimension SIZE = new Dimension( 400, 380 );
     private static final String GAMMA_TOOLTIP = "Adjust the gamma level, or brightness.";
     private static final Dimension DN_SAMPLE_DROPDOWN_SIZE = new Dimension(130, 50);
+    private static final boolean BINARY_SAVE = true;
+    private static final boolean COLOR = false;
+    private static final boolean COLOR_SAVE = COLOR;
 
     private Component centering;
     private JButton go;
@@ -218,9 +224,11 @@ public class AlignmentBoardControlsDialog extends JDialog {
         }
     }
 
-    private synchronized void fireSavebackEvent( float[] absoluteCoords, CompletionListener completionListener ) {
+    private synchronized void fireSavebackEvent(
+            float[] absoluteCoords, CompletionListener completionListener, boolean binary
+    ) {
         for ( ControlsListener listener: listeners ) {
-            listener.exportSelection( absoluteCoords, completionListener );
+            listener.exportSelection( absoluteCoords, completionListener, binary );
         }
 
     }
@@ -256,41 +264,41 @@ public class AlignmentBoardControlsDialog extends JDialog {
             }
         });
 
-        final JButton searchButton = new JButton( "Geometric Search" );
-        searchButton.addActionListener( new ActionListener() {
-            public void actionPerformed( ActionEvent ae ) {
+        final JButton searchSaveButton = new JButton( SAVE_AS_SEARCH_TIFF );
+        searchSaveButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent ae) {
                 logger.info(
                         "Selection covers (X): " + xSlider.getValue() + ".." + xSlider.getUpperValue() +
                                 " and (Y): " + ySlider.getValue() + ".." + ySlider.getUpperValue() +
                                 " and (Z): " + zSlider.getValue() + ".." + zSlider.getUpperValue()
                 );
-                searchButton.setEnabled( false );
+                searchSaveButton.setEnabled(false);
                 CompletionListener buttonEnableListener = new CompletionListener() {
                     @Override
                     public void complete() {
-                        searchButton.setEnabled( true );
+                        searchSaveButton.setEnabled(true);
                     }
                 };
 
                 float[] absoluteCropCoords = getCropCoords();
-                fireSavebackEvent( absoluteCropCoords, buttonEnableListener );
+                fireSavebackEvent(absoluteCropCoords, buttonEnableListener, BINARY_SAVE);
 
             }
         });
 
-        final JButton saveButton = new JButton( "Save as TIFF" );
-        saveButton.addActionListener( new ActionListener() {
+        final JButton colorSaveButton = new JButton( SAVE_AS_COLOR_TIFF );
+        colorSaveButton.addActionListener(new ActionListener() {
             CompletionListener buttonEnableListener = new CompletionListener() {
                 @Override
                 public void complete() {
-                    saveButton.setEnabled( true );
+                    colorSaveButton.setEnabled(true);
                 }
             };
 
-            public void actionPerformed( ActionEvent ae ) {
-                saveButton.setEnabled( false );
+            public void actionPerformed(ActionEvent ae) {
+                colorSaveButton.setEnabled(false);
                 float[] absoluteCropCoords = getCropCoords();
-                fireSavebackEvent( absoluteCropCoords, buttonEnableListener );
+                fireSavebackEvent(absoluteCropCoords, buttonEnableListener, COLOR_SAVE);
             }
         });
 
@@ -382,8 +390,8 @@ public class AlignmentBoardControlsDialog extends JDialog {
         centralPanel.add( useSignalDataCheckbox, signalDataConstraints );
         centralPanel.add( blackoutCheckbox, blackoutCheckboxConstraints );
         centralPanel.add( regionSelectionPanel, sliderPanelConstraints );
-        centralPanel.add( searchButton, geoSearchBtnConstraints );
-        centralPanel.add( saveButton, saveBtnConstraints );
+        centralPanel.add( searchSaveButton, geoSearchBtnConstraints );
+        centralPanel.add( colorSaveButton, saveBtnConstraints );
         add(centralPanel, BorderLayout.CENTER);
 
         JPanel bottomButtonPanel = new JPanel();
@@ -478,7 +486,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
         void setBrightness( double brightness );
         void updateSettings();
         void setSelectedCoords( float[] normalizedCoords );
-        void exportSelection( float[] absoluteCoords, CompletionListener completionListener );
+        void exportSelection(float[] absoluteCoords, CompletionListener completionListener, boolean binary);
         void setCropBlackout( boolean blackout );
     }
 

@@ -489,12 +489,12 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
         @Override
         public void exportSelection(
-                float[] absoluteCropCoords, CompletionListener completionListener
-        ) {
+                float[] absoluteCropCoords, CompletionListener completionListener,
+                boolean binary) {
             VolumeWritebackHandler writebackHandler = new VolumeWritebackHandler(
                     renderMapping, absoluteCropCoords, completionListener
             );
-            writebackHandler.writeBackVolumeSelection();
+            writebackHandler.writeBackVolumeSelection( binary );
         }
 
         @Override

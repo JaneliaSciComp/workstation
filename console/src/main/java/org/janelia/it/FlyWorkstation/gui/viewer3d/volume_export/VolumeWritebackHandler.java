@@ -46,8 +46,12 @@ public class VolumeWritebackHandler {
 
     }
 
-    /** This control-callback writes the user's selected volume to a file on disk. */
-    public void writeBackVolumeSelection() {
+    /**
+     * This control-callback writes the user's selected volume to a file on disk.
+     *
+     * @param binary true = 1/0 writeback; false = color writeback.
+     */
+    public void writeBackVolumeSelection(boolean binary) {
         Map<Integer,byte[]> renderableIdVsRenderMethod = renderMapping.getMapping();
 
         ABContextDataSource dataSource = new ABContextDataSource(
@@ -65,7 +69,7 @@ public class VolumeWritebackHandler {
         FileExportLoadWorker.Callback callback = new ExportCallback();
 
         FileExportLoadWorker.FileExportParamBean paramBean = new FileExportLoadWorker.FileExportParamBean();
-        paramBean.setBinary( false );
+        paramBean.setBinary( binary );
         paramBean.setCallback( callback );
         paramBean.setCropCoords( cropCoords );
         paramBean.setRenderableDatas( searchDatas );
