@@ -100,12 +100,22 @@ public class CachedFile implements Serializable {
      *                   ensure that only complete files are available
      *                   in the cache.
      *
+     * @throws IllegalArgumentException
+     *   if the remote file is a directory.
+     *
      * @throws IllegalStateException
      *   if the copy fails for any reason.
      */
-    public void loadRemoteFile(File tempFile) throws IllegalStateException {
+    public void loadRemoteFile(File tempFile)
+            throws IllegalArgumentException, IllegalStateException {
 
         final URL remoteFileUrl = webDavFile.getUrl();
+
+        if (webDavFile.isDirectory()) {
+            throw new IllegalArgumentException(
+                    "Requested load of directory " + remoteFileUrl +
+                    ".  Only files may be requested.");
+        }
 
         InputStream input = null;
         FileOutputStream output = null;
@@ -157,7 +167,9 @@ public class CachedFile implements Serializable {
                             " to " + localFile.getAbsolutePath());
         }
 
-        saveMetadata();
+        if (metaFile != null) {
+            saveMetadata();
+        }
     }
 
     /**

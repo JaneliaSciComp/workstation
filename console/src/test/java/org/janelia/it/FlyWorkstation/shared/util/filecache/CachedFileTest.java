@@ -23,6 +23,7 @@ public class CachedFileTest extends TestCase {
     private File testCacheRootDirectory;
     private File testCacheTempDirectory;
     private File testCacheActiveDirectory;
+    private File testRemoteDirectory;
     private File testRemoteFile;
 
     public CachedFileTest(String testName) {
@@ -37,11 +38,12 @@ public class CachedFileTest extends TestCase {
     protected void setUp() throws Exception {
         LOG.info("setUp: entry ----------------------------------------");
         final File parentDirectory = (new File(".")).getCanonicalFile();
-        testCacheRootDirectory = createDirectory(parentDirectory,
-                                                 "test-cache-" + buildTimestampName());
+        final String rootName = "test-cache-" + buildTimestampName();
+        testCacheRootDirectory = createDirectory(parentDirectory, rootName);
         testCacheTempDirectory = createDirectory(testCacheRootDirectory, "temp");
         testCacheActiveDirectory = createDirectory(testCacheRootDirectory, "active");
-        testRemoteFile = createFile(parentDirectory, 1);
+        testRemoteDirectory = createDirectory(parentDirectory, rootName + "-remote");
+        testRemoteFile = createFile(testRemoteDirectory, 1);
         LOG.info("setUp: exit ----------------------------------------");
     }
 
@@ -52,17 +54,16 @@ public class CachedFileTest extends TestCase {
         deleteFile(testCacheTempDirectory);
         deleteFile(testCacheRootDirectory);
         deleteFile(testRemoteFile);
+        deleteFile(testRemoteDirectory);
         LOG.info("tearDown: exit --------------------------------------");
     }
 
     public void testLoadAndDelete() throws Exception {
 
-        final WebDavFile webDavFile = new WebDavFile(testRemoteFile);
-        final String urlPath = webDavFile.getUrl().getPath();
-        final File activeFile = new File(testCacheActiveDirectory,
-                                         urlPath);
-        final File tempFile = new File(testCacheTempDirectory,
-                                       "test-temp-file");
+        WebDavFile webDavFile = new WebDavFile(testRemoteFile);
+        String urlPath = webDavFile.getUrl().getPath();
+        File activeFile = new File(testCacheActiveDirectory, urlPath);
+        File tempFile = new File(testCacheTempDirectory, "test-temp-file");
 
         CachedFile cachedFile = new CachedFile(webDavFile, activeFile);
         cachedFile.loadRemoteFile(tempFile);
@@ -87,6 +88,19 @@ public class CachedFileTest extends TestCase {
         cachedFile.remove(testCacheActiveDirectory);
 
         validateDirectoryFileCount("after remove", testCacheActiveDirectory, 0);
+
+        webDavFile = new WebDavFile(testRemoteDirectory);
+        urlPath = webDavFile.getUrl().getPath();
+        activeFile = new File(testCacheActiveDirectory, urlPath);
+        tempFile = new File(testCacheTempDirectory, "test-temp-dir");
+        cachedFile = new CachedFile(webDavFile, activeFile);
+        try {
+            cachedFile.loadRemoteFile(tempFile);
+            fail("attempt to load directory should have caused exception");
+        } catch (IllegalArgumentException e) {
+            LOG.debug("attempt to load directory correctly caused exception", e);
+        }
+
     }
 
     private File createDirectory(File parent,
