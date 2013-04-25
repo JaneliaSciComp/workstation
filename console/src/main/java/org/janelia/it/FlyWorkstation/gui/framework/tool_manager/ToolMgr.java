@@ -8,7 +8,9 @@ import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.preferences.InfoObject;
 import org.janelia.it.FlyWorkstation.shared.preferences.PrefMgrListener;
 import org.janelia.it.FlyWorkstation.shared.preferences.PreferenceManager;
+import org.janelia.it.FlyWorkstation.shared.util.FileCallable;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +19,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
+
+import javax.swing.JOptionPane;
 
 /**
  * Created with IntelliJ IDEA.
@@ -276,39 +280,52 @@ public class ToolMgr extends PreferenceManager {
         }
     }
 
-    public static void openFile(String tool, String pathToTarget, String mode) throws Exception {
-        ToolInfo tmpTool = getTool(tool);
-        File tmpToolFile = new File(tmpTool.getPath());
-        String exeCmd = tmpTool.getPath();
+    public static void openFile(final String tool, final String standardFilepath, final String mode) throws Exception {
+        
+        if (standardFilepath == null) {
+            throw new Exception("Entity has no file path");
+        }
 
-// TODO: LocalFileCache - convert to following when we're ready for full local cache cutover (need to discuss delay for loading file to cache)
-//        final File targetFile = SessionMgr.getFile(pathToTarget, false);
-//        final String targetPath = targetFile.getAbsolutePath();
+        Utils.processStandardFilepath(standardFilepath, new FileCallable() {
+            @Override
+            public void call(File file) throws Exception {
+                if (file==null) {
+                    JOptionPane.showMessageDialog(SessionMgr.getSessionMgr().getActiveBrowser(),
+                            "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+                else {
+                    ToolInfo tmpTool = getTool(tool);
+                    File tmpToolFile = new File(tmpTool.getPath());
+                    String exeCmd = tmpTool.getPath();
 
-        if (TOOL_VAA3D.equals(tool)) {
-            exeCmd = tmpTool.getPath()+" -i "+ PathTranslator.convertPath(pathToTarget);
-            if (MODE_3D.equals(mode)) {
-                exeCmd+=" -v";
+                    if (TOOL_VAA3D.equals(tool)) {
+                        exeCmd = tmpTool.getPath()+" -i "+ file.getAbsolutePath();
+                        if (MODE_3D.equals(mode)) {
+                            exeCmd+=" -v";
+                        }
+                    }
+                    if (TOOL_FIJI.equals(tool)) {
+                        if (tmpTool.getPath().endsWith(".app")) {
+                            tmpTool.setPath(tmpTool.getPath()+"/Contents/MacOS/fiji-macosx");
+                        }
+                        exeCmd = tmpTool.getPath()+ " " + file.getAbsolutePath();
+                    }
+                    System.out.println("Running command: "+exeCmd);
+                    if (tmpToolFile.exists()&&tmpToolFile.canExecute()) {
+                        if (exeCmd.endsWith(".app")) {
+                            runTool(tool);
+                        }
+                        else {
+                            Runtime.getRuntime().exec(exeCmd);
+                        }
+                    }
+                    else {
+                        throw new IOException("Tool "+tool+" does not exist or cannot be executed.");
+                    }
+                }
             }
-        }
-        if (TOOL_FIJI.equals(tool)) {
-            if (tmpTool.getPath().endsWith(".app")) {
-                tmpTool.setPath(tmpTool.getPath()+"/Contents/MacOS/fiji-macosx");
-            }
-            exeCmd = tmpTool.getPath()+ " " + PathTranslator.convertPath(pathToTarget);
-        }
-        System.out.println("Running command: "+exeCmd);
-        if (tmpToolFile.exists()&&tmpToolFile.canExecute()) {
-            if (exeCmd.endsWith(".app")) {
-                runTool(tool);
-            }
-            else {
-                Runtime.getRuntime().exec(exeCmd);
-            }
-        }
-        else {
-            throw new IOException("Tool "+tool+" does not exist or cannot be executed.");
-        }
+        });
+
     }
 
     public void fireToolsChanged() {

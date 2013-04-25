@@ -21,6 +21,7 @@ import java.util.List;
 
 import javax.media.jai.operator.InvertDescriptor;
 import javax.swing.ImageIcon;
+import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -34,6 +35,7 @@ import loci.formats.gui.BufferedImageReader;
 import loci.formats.in.*;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -475,6 +477,11 @@ public class Utils {
 		}
 	}
     
+    /**
+     * Cache the given file and then execute the callback once the file is available.
+     * @param filePath
+     * @param callback
+     */
     public static void cacheAndProcessFileAsync(final String filePath, final FileCallable callback) {
         SimpleWorker worker = new SimpleWorker() {
             
@@ -503,7 +510,40 @@ public class Utils {
                 SessionMgr.getSessionMgr().handleException(error);
             }
         };
-        worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Copying file...", ""));
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Retrieving file...", ""));
         worker.execute();
+    }
+    
+    /**
+     * Run the FileCallable processing callback on the given file, either on the remote file directly, if the
+     * remote file system is mounted, or after caching the file locally.
+     * @param filePath
+     * @param callback
+     */
+    public static void processStandardFilepath(final String filePath, final FileCallable callback) {
+
+        final File file = new File(PathTranslator.convertPath(filePath));
+        if (file.canRead()) {
+            try {
+                callback.call(file);
+            }
+            catch (Exception e) {
+                SessionMgr.getSessionMgr().handleException(e);
+            }
+        }
+        else {
+            Utils.cacheAndProcessFileAsync(filePath, new FileCallable() {
+                @Override
+                public void call(File file) throws Exception {
+                    if (file==null) {
+                        JOptionPane.showMessageDialog(SessionMgr.getSessionMgr().getActiveBrowser(),
+                                "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                    else {
+                        callback.call(file);
+                    }
+                }
+            });
+        }
     }
 }

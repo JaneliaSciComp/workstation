@@ -3,6 +3,8 @@ package org.janelia.it.FlyWorkstation.gui.framework.actions;
 import java.awt.Desktop;
 import java.io.File;
 
+import javax.swing.JOptionPane;
+
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.util.FileCallable;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
@@ -46,10 +48,16 @@ public class OpenWithDefaultAppAction implements Action {
 				throw new Exception("Entity has no file path");
 			}
 
-			Utils.cacheAndProcessFileAsync(filePath, new FileCallable() {
+			Utils.processStandardFilepath(filePath, new FileCallable() {
                 @Override
-                public void call(File param) throws Exception {
-                    Desktop.getDesktop().open(getFile());
+                public void call(File file) throws Exception {
+                    if (file==null) {
+                        JOptionPane.showMessageDialog(SessionMgr.getSessionMgr().getActiveBrowser(),
+                                "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                    else {
+                        Desktop.getDesktop().open(file);
+                    }
                 }
             });
 		}

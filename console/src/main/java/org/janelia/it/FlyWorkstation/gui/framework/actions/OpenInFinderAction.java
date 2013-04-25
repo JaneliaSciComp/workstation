@@ -54,25 +54,18 @@ public class OpenInFinderAction implements Action {
 				throw new Exception("Entity has no file path");
 			}
 			
-			final File file = new File(PathTranslator.convertPath(filePath));
-			if (file.canRead()) {
-			    revealFile(file);
-			}
-			else {
-	            Utils.cacheAndProcessFileAsync(filePath, new FileCallable() {
-	                @Override
-	                public void call(File file) throws Exception {
-	                    if (file==null) {
-	                        JOptionPane.showMessageDialog(SessionMgr.getSessionMgr().getActiveBrowser(),
-	                                "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
-	                    }
-	                    else {
-	                        revealFile(file);    
-	                    }
-	                }
-	            });
-			    
-			}
+            Utils.processStandardFilepath(filePath, new FileCallable() {
+                @Override
+                public void call(File file) throws Exception {
+                    if (file==null) {
+                        JOptionPane.showMessageDialog(SessionMgr.getSessionMgr().getActiveBrowser(),
+                                "Could not open file path", "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                    else {
+                        revealFile(file);    
+                    }
+                }
+            });
 		}
 		catch (Exception e) {
 			SessionMgr.getSessionMgr().handleException(e);
