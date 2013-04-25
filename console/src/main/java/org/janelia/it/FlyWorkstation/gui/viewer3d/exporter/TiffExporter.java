@@ -124,10 +124,6 @@ public class TiffExporter {
                 bufImgType = BufferedImage.TYPE_4BYTE_ABGR;
 
             if ( type == VoxelType.INT ) {
-            /*
-                public void setRGB(int startX, int startY, int w, int h,
-                        int[] rgbArray, int offset, int scansize) {
-             */
                 int sliceSize = textureData.getSx() * textureData.getSy();
                 int sliceOffset = sliceNum * sliceSize;
                 rtnVal = new BufferedImage( textureData.getSx(), textureData.getSy(), bufImgType );
