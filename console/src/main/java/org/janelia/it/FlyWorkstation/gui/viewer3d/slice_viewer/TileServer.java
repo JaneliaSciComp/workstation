@@ -13,6 +13,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.LodGenerator;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.MinResZGenerator;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.UmbrellaZGenerator;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.ZGenerator;
@@ -129,6 +130,19 @@ implements VolumeImage3d
 					cacheableTextures.add(ix);
 			}
 
+			/* TODO - LOD tiles are not working yet...
+			// Get level-of-detail tiles
+			Iterable<TileIndex> lodGen = new LodGenerator(TileServer.this);
+			for (TileIndex ix : lodGen) {
+				if (cacheableTextures.contains(ix))
+					continue;
+				if (cacheableTextures.size() >= maxCacheable)
+					break;
+				if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
+					cacheableTextures.add(ix);
+			}
+			*/
+			
 			// Get nearby Z-tiles, with decreasing LOD
 			Iterable<TileIndex> zGen = new UmbrellaZGenerator(getLoadAdapter().getTileFormat(), tileSet);
 			for (TileIndex ix : zGen) {
@@ -204,7 +218,7 @@ implements VolumeImage3d
 		return createLatestTiles(getCamera(), getViewport());
 	}
 	
-	protected TileSet createLatestTiles(Camera3d camera, Viewport viewport)
+	public TileSet createLatestTiles(Camera3d camera, Viewport viewport)
 	{
 		TileSet result = new TileSet();
 		if (loadAdapter == null)
