@@ -82,9 +82,18 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
                         )
                 );
 
+        InputStream channelStream = null;
+        if ( ! paramBean.isBinary() ) {
+            channelStream = new BufferedInputStream(
+                    new FileInputStream(
+                            resolver.getResolvedFilename( maskChanRenderableData.getChannelPath() )
+                    )
+            );
+        }
+
         // Iterating through these files will cause all the relevant data to be loaded into
         // the acceptors, which here includes only the mask builder.
-        loader.read(maskChanRenderableData.getBean(), maskStream, null);
+        loader.read(maskChanRenderableData.getBean(), maskStream, channelStream);
         maskStream.close();
 
         logger.debug("In load thread, ENDED load of renderable {}.", maskChanRenderableData.getBean().getLabelFileNum() );

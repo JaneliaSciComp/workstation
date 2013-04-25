@@ -73,11 +73,9 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
             }
         }
 
-        // Pad out to the end, to create the alpha byte(s).
+        // Pad out to the end, to create the alpha byte.
         if ( channelMetaData.channelCount > channelMetaData.rawChannelCount ) {
-            for ( int j = channelMetaData.rawChannelCount; j < channelMetaData.channelCount; j++ ) {
-                volumeData[ targetPos + j ] = (byte)255;
-            }
+            volumeData[ targetPos + channelMetaData.channelCount - 1 ] = (byte)255;
         }
     }
 

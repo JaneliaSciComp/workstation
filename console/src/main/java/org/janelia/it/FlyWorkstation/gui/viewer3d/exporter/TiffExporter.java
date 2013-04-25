@@ -121,7 +121,7 @@ public class TiffExporter {
             if ( type == VoxelType.SHORT )
                 bufImgType = BufferedImage.TYPE_USHORT_GRAY;
             else if ( type == VoxelType.INT )
-                bufImgType = BufferedImage.TYPE_INT_ARGB;
+                bufImgType = BufferedImage.TYPE_4BYTE_ABGR;
 
             if ( type == VoxelType.INT ) {
             /*
