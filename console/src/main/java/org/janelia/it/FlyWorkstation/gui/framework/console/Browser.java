@@ -364,7 +364,11 @@ public class Browser extends JFrame implements Cloneable {
           
         BrowserPosition consolePosition = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
         if (null == consolePosition) {
-            consolePosition = getNewBrowserPosition();
+            consolePosition = resetBrowserPosition();
+        }        
+        else {
+            setSize(consolePosition.getBrowserSize());
+            setLocation(consolePosition.getBrowserLocation());
         }
         
         layersPanel = new LayersPanel();
@@ -392,9 +396,6 @@ public class Browser extends JFrame implements Cloneable {
         centerLeftHorizontalSplitPane.setDividerLocation(consolePosition.getHorizontalLeftDividerLocation());
         centerLeftHorizontalSplitPane.setBorder(BorderFactory.createEmptyBorder());
         
-        setSize(consolePosition.getBrowserSize());
-        setLocation(consolePosition.getBrowserLocation());
-
 //        searchToolbar.setVisible(false);
 
         if (menuBarClass == null) {
@@ -1209,6 +1210,8 @@ public class Browser extends JFrame implements Cloneable {
 //    }
 
     private class BrowserModelObserver extends BrowserModelListenerAdapter {
+        
+        @Override
         public void browserCurrentSelectionChanged(Entity newSelection) {
             if (newSelection != null) {
 //                TaskRequestStatus lrs = newSelection.loadPropertiesBackground();
@@ -1239,11 +1242,12 @@ public class Browser extends JFrame implements Cloneable {
                 statusBar.setDescription("");
             }
         }
-
+        
+        @Override
         public void browserClosing() {
             setVisible(false);
             SessionMgr.getSessionMgr().removeSessionModelListener(modelListener);
-
+            
             BrowserPosition position = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
 
             if (position == null) {
@@ -1312,7 +1316,10 @@ public class Browser extends JFrame implements Cloneable {
             if (key.equals(SessionMgr.DISPLAY_FREE_MEMORY_METER_PROPERTY)) {
                 useFreeMemoryViewer(((Boolean) newValue).booleanValue());
             }
+            log.debug("Model change detected for "+key+", saving user settings");
+            SessionMgr.getSessionMgr().saveUserSettings();
         }
+        
     }
 
     public ViewerManager getViewerManager() {
@@ -1470,18 +1477,6 @@ public class Browser extends JFrame implements Cloneable {
 //        sessionOutline.selectSession(currentAnnotationSessionTaskId);
 //    }
 
-    public BrowserPosition getNewBrowserPosition() {
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        BrowserPosition position = new BrowserPosition();
-        position.setScreenSize(screenSize);
-        position.setBrowserSize(screenSize);
-        position.setBrowserLocation(new Point(0, 0));
-        position.setHorizontalLeftDividerLocation(400);
-        position.setHorizontalRightDividerLocation(1100);
-        position.setVerticalDividerLocation(800);
-        return position;
-    }
-
     public JOutlookBar getOutlookBar() {
         return outlookBar;
     }
@@ -1527,17 +1522,30 @@ public class Browser extends JFrame implements Cloneable {
         }
     }
 
-    public void resetWindow() {
+    public BrowserPosition resetBrowserPosition() {
+        
+        BrowserPosition position = new BrowserPosition();
+        position.setHorizontalLeftDividerLocation(400);
+        position.setHorizontalRightDividerLocation(1100);
+        position.setVerticalDividerLocation(800);
+
         int offsetY = 0;
         String lafName = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.DISPLAY_LOOK_AND_FEEL);
         if (SystemInfo.isMac && lafName!=null && lafName.contains("synthetica")) {
             offsetY=20;
         }
-        BrowserPosition consolePosition = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
-        consolePosition.setBrowserLocation(new Point(0, offsetY));
-        SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, consolePosition);        
-        setSize(consolePosition.getBrowserSize());
-        setLocation(consolePosition.getBrowserLocation());
-    }
+        
+        position.setBrowserLocation(new Point(0, offsetY));
+        
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        position.setScreenSize(screenSize);
+        position.setBrowserSize(new Dimension(screenSize.width, screenSize.height-offsetY));
+        
+        SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, position);
 
+        setSize(position.getBrowserSize());
+        setLocation(position.getBrowserLocation());
+        
+        return position;
+    }
 }

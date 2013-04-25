@@ -19,7 +19,9 @@ import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.gui.framework.exception_handlers.ExitHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.exception_handlers.UserNotificationExceptionHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModelListenerAdapter;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModel;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ApplicationSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.panels.DataSourceSettingsPanel;
 import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
@@ -82,6 +84,9 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
             sessionMgr.registerPreferenceInterface(DataSourceSettingsPanel.class, DataSourceSettingsPanel.class);
             sessionMgr.registerPreferenceInterface(ViewerSettingsPanel.class, ViewerSettingsPanel.class);
     
+            SessionModel sessionModel = SessionMgr.getSessionMgr().getSessionModel();
+            sessionModel.addModelListener(new ModelObserver());
+            
             // Assuming that the user has entered the login/password information, now validate
             String username = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
             String email = (String)SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL);
@@ -112,7 +117,17 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
         mainPane.setBorder(BorderFactory.createEmptyBorder(padding, padding, padding, padding));
         add(mainPane, BorderLayout.CENTER);
 	}
-	
+
+    private class ModelObserver extends BrowserModelListenerAdapter {
+        
+        @Override
+        public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
+            log.info("Model change detected, saving user settings");
+            SessionMgr.getSessionMgr().saveUserSettings();
+        }
+        
+    }
+    
 	public void checkVersions() throws Exception {
 
 		mainLabel = new JLabel("Checking for updates...");

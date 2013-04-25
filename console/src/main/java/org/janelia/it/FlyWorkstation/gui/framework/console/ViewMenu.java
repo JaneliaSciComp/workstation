@@ -58,7 +58,7 @@ public class ViewMenu extends JMenu {
         JMenuItem resetWindow = new JMenuItem("Reset Window");
         resetWindow.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                SessionMgr.getBrowser().resetWindow();
+                SessionMgr.getBrowser().resetBrowserPosition();
             }
         });
         resetWindow.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, SystemInfo.isMac?Event.META_MASK:Event.CTRL_MASK));

@@ -32,7 +32,7 @@ public class SessionModel extends GenericModel {
         return sessionModel;
     } //Only the SessionManager should have direct access.
 
-    BrowserModel addBrowserModel() {
+    public BrowserModel addBrowserModel() {
         BrowserModel browserModel = new BrowserModel();
         browserModels.addElement(browserModel);
         fireBrowserAdded(browserModel);

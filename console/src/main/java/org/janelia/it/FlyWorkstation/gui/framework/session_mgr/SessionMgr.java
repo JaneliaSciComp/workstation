@@ -743,6 +743,7 @@ public class SessionMgr {
 
     class MyBrowserListener extends WindowAdapter {
         public void windowClosed(WindowEvent e) {
+            log.info("Window is closing...");
         	e.getWindow().removeWindowListener(this);
             SessionMgr.getSessionMgr().saveUserSettings();
         }

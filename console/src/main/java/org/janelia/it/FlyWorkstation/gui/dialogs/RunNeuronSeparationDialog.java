@@ -225,9 +225,6 @@ public class RunNeuronSeparationDialog extends ModalDialog {
             SessionMgr.getSessionMgr().setModelProperty(PREF_NEURON_SERVICE_RERUN_SCALE,SCALE_MINUTES);
         }
 
-    	// Prompt a save of the user settings because we can't trust the Mac exit yet
-        SessionMgr.getSessionMgr().saveUserSettings();
-
         final int loopTimerInMinutes = rerunMins;
     	
     	SimpleWorker executeWorker = new SimpleWorker() {

@@ -1,6 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.framework.session_mgr;
 
 import org.janelia.it.FlyWorkstation.shared.util.EmptyIterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -15,6 +17,9 @@ import java.util.TreeMap;
  */
 
 public abstract class GenericModel {
+    
+    private static final Logger log = LoggerFactory.getLogger(GenericModel.class);
+    
     protected ArrayList<GenericModelListener> modelListeners = new ArrayList<GenericModelListener>();
     protected TreeMap modelProperties;
 
@@ -24,11 +29,11 @@ public abstract class GenericModel {
     }  //Constructor can only be called within the package
 
 
-    void addModelListener(GenericModelListener modelListener) {
+    public void addModelListener(GenericModelListener modelListener) {
         if (!modelListeners.contains(modelListener)) modelListeners.add(modelListener);
     }
 
-    void removeModelListener(GenericModelListener modelListener) {
+    public void removeModelListener(GenericModelListener modelListener) {
         modelListeners.remove(modelListener);
     }
 
@@ -71,9 +76,9 @@ public abstract class GenericModel {
     }
 
     private void fireModelPropertyChangeEvent(Object key, Object oldValue, Object newValue) {
-        GenericModelListener modelListener;
-        for (Object modelListener1 : modelListeners) {
-            modelListener = (GenericModelListener) modelListener1;
+        log.debug("Firing model property change for "+key+": valueDiffers?="+(newValue!=null && !newValue.equals(oldValue)));
+        for (GenericModelListener modelListener : modelListeners) {
+            log.debug("  telling "+modelListener);
             modelListener.modelPropertyChanged(key, oldValue, newValue);
         }
     }

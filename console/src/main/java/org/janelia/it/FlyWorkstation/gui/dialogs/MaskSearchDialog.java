@@ -257,8 +257,6 @@ public class MaskSearchDialog extends ModalDialog {
         if (null!=skipZeroes) {
             SessionMgr.getSessionMgr().setModelProperty(PREF_MASK_SEARCH_SKIP_ZEROES,skipZeroes);
         }
-        // Prompt a save of the user settings because we can't trust the Mac exit yet
-        SessionMgr.getSessionMgr().saveUserSettings();
 
         SimpleWorker executeWorker = new SimpleWorker() {
 

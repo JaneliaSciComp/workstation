@@ -272,7 +272,6 @@ public class PrefController {
      */
     private void applyButton_actionPerformed() {
         propagateApplyChanges();
-        SessionMgr.getSessionMgr().saveUserSettings();
         if (!SessionMgr.getSessionMgr().isLoggedIn() || null== SessionMgr.getUserEmail()) {
             Object[] options = {"Fix Login", "Exit Program"};
             final int answer = JOptionPane.showOptionDialog(null, "Please correct your login or email information.", "Login Information Invalid",

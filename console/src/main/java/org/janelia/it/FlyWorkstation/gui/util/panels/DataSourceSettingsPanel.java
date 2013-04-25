@@ -9,6 +9,8 @@ import org.janelia.it.FlyWorkstation.gui.util.swing_models.CollectionJListModel;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
 import org.janelia.it.FlyWorkstation.shared.util.text_component.StandardTextField;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -24,6 +26,9 @@ import java.util.Iterator;
 import java.util.List;
 
 public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
+    
+    private static final Logger log = LoggerFactory.getLogger(DataSourceSettingsPanel.class);
+    
     private String userLogin = "";
     private String userPassword = "";
     private String userEmail = "";
@@ -150,6 +155,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
                 runAsTextField.setText("");
                 runAsUser="";
             }
+            log.info("Setting properties in model...");
             SessionMgr.getSessionMgr().setModelProperty(SessionMgr.RUN_AS_USER, runAsUser);
             SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, userLogin);
             SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_PASSWORD, userPassword);
@@ -158,7 +164,6 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
             boolean loginSuccess = SessionMgr.getSessionMgr().loginSubject();
             if (loginSuccess) {
                 runAsPanel.setVisible(SessionMgr.authenticatedSubjectIsInGroup("admin"));
-                SessionMgr.getSessionMgr().saveUserSettings();
             }
 
             // End login apply code
