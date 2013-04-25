@@ -158,6 +158,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
             boolean loginSuccess = SessionMgr.getSessionMgr().loginSubject();
             if (loginSuccess) {
                 runAsPanel.setVisible(SessionMgr.authenticatedSubjectIsInGroup("admin"));
+                SessionMgr.getSessionMgr().saveUserSettings();
             }
 
             // End login apply code
@@ -297,9 +298,6 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         JFormattedTextField.AbstractFormatter formatter = ftf.getFormatter();
         DefaultFormatter df = (DefaultFormatter) formatter;
         df.setAllowsInvalid(false);
-
-        // disable cache management for non-admin users while we test
-        fileCacheSpinner.setEnabled(SessionMgr.authenticatedSubjectIsInGroup("admin"));
 
         diskCachePanel.add(fileCacheSpinner);
         diskCachePanel.add(Box.createHorizontalGlue());
