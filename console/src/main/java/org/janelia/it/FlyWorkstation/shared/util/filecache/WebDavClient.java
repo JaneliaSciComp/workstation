@@ -134,11 +134,26 @@ public class WebDavClient {
             throws WebDavRetrievalException {
 
         final String href = url.toString();
-        MultiStatusResponse[] multiStatusResponses = getResponses(href, DavConstants.DEPTH_0);
+        MultiStatusResponse[] multiStatusResponses = getResponses(href, DavConstants.DEPTH_0, 0);
         if ((multiStatusResponses == null) || (multiStatusResponses.length == 0)) {
             throw new WebDavRetrievalException("empty response returned for " + href);
         }
         return new WebDavFile(url, multiStatusResponses[0]);
+    }
+
+    /**
+     * @param  url  file or directory URL.
+     *              Note that this URL does not need to include a trailing slash.
+     *
+     * @return true if the specified URL identifies a directory, otherwise false.
+     *
+     * @throws WebDavRetrievalException
+     *   if the information cannot be retrieved or the URL identifies a non-existent file.
+     */
+    public boolean isDirectory(URL url)
+            throws WebDavRetrievalException {
+        final WebDavFile webDavFile = findFile(url);
+        return webDavFile.isDirectory();
     }
 
     /**
@@ -195,7 +210,7 @@ public class WebDavClient {
 
         final String href = url.toString();
         List<WebDavFile> webDavFileList = new ArrayList<WebDavFile>(1024);
-        MultiStatusResponse[] multiStatusResponses = getResponses(href, depth);
+        MultiStatusResponse[] multiStatusResponses = getResponses(href, depth, 0);
         if ((multiStatusResponses == null) || (multiStatusResponses.length == 0)) {
             throw new WebDavRetrievalException("empty response returned for " + href);
         }
@@ -210,7 +225,8 @@ public class WebDavClient {
     }
 
     private MultiStatusResponse[] getResponses(String href,
-                                               int depth)
+                                               int depth,
+                                               int callCount)
             throws WebDavRetrievalException {
 
         MultiStatusResponse[] multiStatusResponses = null;
@@ -225,6 +241,16 @@ public class WebDavClient {
             if (responseCode == HttpStatus.SC_MULTI_STATUS) {
                 final MultiStatus multiStatus = method.getResponseBodyAsMultiStatus();
                 multiStatusResponses = multiStatus.getResponses();
+            } else if (responseCode == HttpStatus.SC_MOVED_PERMANENTLY) {
+                final Header locationHeader = method.getResponseHeader("Location");
+                if (locationHeader != null) {
+                    final String movedHref = locationHeader.getValue();
+                    if (callCount == 0) {
+                        return getResponses(movedHref, depth, 1);
+                    }
+                }
+                throw new WebDavRetrievalException(responseCode + " response code returned for " + href,
+                                                   responseCode);
             } else {
                 throw new WebDavRetrievalException(responseCode + " response code returned for " + href,
                                                    responseCode);
