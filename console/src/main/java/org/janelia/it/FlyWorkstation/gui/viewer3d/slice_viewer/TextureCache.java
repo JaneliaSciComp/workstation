@@ -14,8 +14,8 @@ public class TextureCache
 {
 	private static final Logger log = LoggerFactory.getLogger(TextureCache.class);
 
-	private HistoryCache historyCache = new HistoryCache(1500); // textures that have been displayed, ordered by LRU
-	private HistoryCache futureCache = new HistoryCache(1500); // textures we predict will be displayed
+	private HistoryCache historyCache = new HistoryCache(1000); // textures that have been displayed, ordered by LRU
+	private HistoryCache futureCache = new HistoryCache(3000); // textures we predict will be displayed
 	private PersistentCache persistentCache = new PersistentCache(); // lowest resolution textures for everything
 	
 	public Signal getCacheClearedSignal() {
