@@ -688,9 +688,11 @@ public class SessionMgr {
                 if (relogin) {
                     log.info("Clearing all caches");    
                     ModelMgr.getModelMgr().invalidateCache();
-                    log.info("Refreshing all views");
-                    SessionMgr.getBrowser().getEntityOutline().refresh();
-                    SessionMgr.getBrowser().getViewerManager().clearAllViewers();
+                    if (SessionMgr.getBrowser()!=null) {
+                        log.info("Refreshing all views");
+                        SessionMgr.getBrowser().getEntityOutline().refresh();
+                        SessionMgr.getBrowser().getViewerManager().clearAllViewers();
+                    }
                 }
             }
 
@@ -706,8 +708,10 @@ public class SessionMgr {
     
     public void logoutUser() {
     	try {
-    		ModelMgr.getModelMgr().logoutSubject();
-    		log.info("Logged out with: {}",loggedInSubject.getKey());
+    	    if (loggedInSubject!=null) {
+        		ModelMgr.getModelMgr().logoutSubject();
+        		log.info("Logged out with: {}",loggedInSubject.getKey());
+    	    }
     		isLoggedIn = false;
         	loggedInSubject = null;
             authenticatedSubject = null;
