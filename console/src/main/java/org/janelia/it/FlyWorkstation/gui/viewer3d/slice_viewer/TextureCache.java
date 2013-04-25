@@ -94,6 +94,10 @@ public class TextureCache
 		return futureCache;
 	}
 
+	public HistoryCache getHistoryCache() {
+		return historyCache;
+	}
+
 	public int[] popObsoleteTextureIds() {
 		Set<Integer> ids = historyCache.popObsoleteGlTextures();
 		// future cache ids were probably moved to history cache, so do not delete them.

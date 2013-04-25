@@ -20,10 +20,10 @@ implements Map<TileIndex, TileTexture>
 	private boolean fullReported = false;
 	// To allow lookup by index
 	private Map<TileIndex, TileTexture> map;
-	private int MAX_ENTRIES;
+	private int maxEntries;
 
 	public HistoryCache(int maxSize) {
-		this.MAX_ENTRIES = maxSize;
+		this.maxEntries = maxSize;
 		// Create a synchronized, least-recently-used map container, with a size limit.
 		// Use synchronizedMap() to generate thread-safe container.
 		map = Collections.synchronizedMap(new LinkedHashMap<TileIndex, TileTexture>(
@@ -32,7 +32,7 @@ implements Map<TileIndex, TileTexture>
 			@Override
 			// Fix size of LRU cache
 			protected boolean removeEldestEntry(Map.Entry<TileIndex, TileTexture> eldest) {
-				boolean result = (size() > MAX_ENTRIES);
+				boolean result = (size() > maxEntries);
 				if (result && ! fullReported) {
 					log.info("cache full");
 					fullReported = true;
@@ -105,8 +105,16 @@ implements Map<TileIndex, TileTexture>
 		return map.get(key);
 	}
 
+	public int getMaxEntries() {
+		return maxEntries;
+	}
+
+	public void setMaxEntries(int maxEntries) {
+		this.maxEntries = maxEntries;
+	}
+
 	public int getMaxSize() {
-		return MAX_ENTRIES;
+		return maxEntries;
 	}
 
 	@Override

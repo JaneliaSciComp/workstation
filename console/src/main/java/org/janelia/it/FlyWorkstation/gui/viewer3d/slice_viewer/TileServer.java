@@ -116,7 +116,7 @@ implements VolumeImage3d
 				return;
 			
 			Set<TileIndex> cacheableTextures = new HashSet<TileIndex>();
-			int maxCacheable = getTextureCache().getFutureCache().getMaxSize() - 100;
+			int maxCacheable = (int)(0.90 * getTextureCache().getFutureCache().getMaxSize());
 
 			// First in line are current display tiles
 			// TODO - separate these into low res and max res
@@ -483,6 +483,7 @@ implements VolumeImage3d
 			if (lastGoodTiles != null)
 				lastGoodTiles.clear();
 			// queue disposal of textures on next display event
+			setCacheSizesAsFractionOfMaxHeap(0.20, 0.40);
 			getVolumeInitializedSignal().emit();
 			return true;
 		}
@@ -490,6 +491,21 @@ implements VolumeImage3d
 			return false;
 	}
 
+	public void setCacheSizesAsFractionOfMaxHeap(double historyFraction, double futureFraction) {
+		if ((historyFraction + futureFraction) >= 1.0)
+			log.warn("Combined cache sizes are larger than max heap size.");
+		Runtime rt = Runtime.getRuntime();
+		long maxHeapBytes = rt.maxMemory();
+		TileFormat format = loadAdapter.getTileFormat();
+		long tileBytes = format.getTileBytes();
+		int historyTileMax = (int)(historyFraction * maxHeapBytes / tileBytes);
+		int futureTileMax = (int)(futureFraction * maxHeapBytes / tileBytes);
+		getTextureCache().getHistoryCache().setMaxEntries(historyTileMax);
+		getTextureCache().getFutureCache().setMaxEntries(futureTileMax);
+		log.info("History cache size = "+historyTileMax);
+		log.info("Future cache size = "+futureTileMax);
+	}
+	
 	public void setCamera(Camera3d camera) {
 		this.camera = camera;
 	}

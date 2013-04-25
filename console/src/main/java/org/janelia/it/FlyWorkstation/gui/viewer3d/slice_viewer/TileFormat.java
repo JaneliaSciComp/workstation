@@ -125,4 +125,11 @@ public class TileFormat
 		this.srgb = srgb;
 	}
 
+	public long getTileBytes() {
+		int w = getTileSize()[0];
+		int h = getTileSize()[1];
+		int bpp = getChannelCount() * getBitDepth() / 8;
+		return w * h * bpp;
+	}
+
 }
