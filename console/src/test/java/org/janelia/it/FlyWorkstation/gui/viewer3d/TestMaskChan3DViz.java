@@ -107,7 +107,7 @@ public class TestMaskChan3DViz {
         public void loadVolume(TextureDataI signalTexture, TextureDataI maskTexture) {
 
             if ( ! mip3d.setVolume(
-                    signalTexture, maskTexture, renderMapping, (float) AlignmentBoardControlsDialog.DEFAULT_GAMMA
+                    signalTexture, maskTexture, renderMapping, null, (float) AlignmentBoardControlsDialog.DEFAULT_GAMMA
             ) ) {
                 logger.error( "Failed to load volume to mip3d." );
             }
