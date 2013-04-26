@@ -1,11 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.util.panels;
 
-import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.xml.XmlServiceFacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.framework.roles.PrefEditor;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.util.swing_models.CollectionJListModel;
 import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
 import org.janelia.it.FlyWorkstation.shared.util.text_component.StandardTextField;
 import org.slf4j.Logger;
@@ -20,10 +18,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
     
@@ -53,33 +47,14 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
     JLabel emailLabel = new JLabel("* Email Address:");
     JTextField emailTextField = new StandardTextField();
 
-    //    JPanel requiredPanel = new JPanel();
     private JRadioButton fileCacheEnabledRadioButton;
     private JRadioButton fileCacheDisabledRadioButton;
     private JSpinner fileCacheSpinner;
     private JProgressBar fileCacheUsageBar;
     private JButton fileCacheClearButton;
 
-    private static final String LOCATION_PROP_NAME = "XmlGenomeVersionLocation";
-//    private static final int PREFERRED_JLIST_HEIGHT = 165;
-
-//    private JButton addDirectoryButton;
-//    private JComboBox validationComboBox;
-    private static String fileSep = File.separator;
-    protected File directoryPrefFile = new File(SessionMgr.getSessionMgr().getApplicationOutputDirectory() + fileSep + "userPrefs." + LOCATION_PROP_NAME);
-
-//    private JList currentDirectoryJList;
-//    private CollectionJListModel directoryLocationModel;
-//    private static final int VERY_WIDE = 800;
-//    private JList urlJList = null;
-//    private CollectionJListModel urlLocationModel;
-    private JButton removeUrlButton = new JButton("Remove Selected URL");
-//    private JButton addUrlButton = new JButton("Add to Current URLs");
-    private JTextField addUrlField = new StandardTextField();
-    private JButton removeDirectoryButton = new JButton("Remove Selected Directory");
-    private static final int MAX_DIR_LENGTH = 60;
-
-    public DataSourceSettingsPanel(JFrame parentFrame) {
+    public DataSourceSettingsPanel(@SuppressWarnings("UnusedParameters")
+                                   JFrame parentFrame) {
         final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
         try {
             userLogin = (String) getModelProperty(SessionMgr.USER_NAME, "");
@@ -139,7 +114,6 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
      * pressed in the Controller frame.
      */
     public String[] applyChanges() {
-        ArrayList delayedChanges = new ArrayList();
         userLogin = loginTextField.getText().trim();
         userPassword = new String(passwordTextField.getPassword());
         userEmail = emailTextField.getText().trim();
@@ -180,47 +154,15 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
                 runAsPanel.setVisible(SessionMgr.authenticatedSubjectIsInGroup("admin"));
             }
 
-            // End login apply code
-
-            // Begin Datasource directory selection apply code
-//         List list = FacadeManager.getInUseProtocolStrings();
-//         for (Iterator it = list.iterator(); it.hasNext();) {
-//            if (it.next().equals(FacadeManager.getEJBProtocolString()))
-//               delayedChanges.add("Changing the User Login while currently Logged in");
-//         }
             FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
         }
-//        try {
-//            if (directoryLocationModel.isModified()) {
-//                if (ModelMgr.getModelMgr().getNumberOfLoadedOntologies() > 0)
-//                    delayedChanges.add("Changing the XML Directories");
-//                setNewDirectoryLocations(directoryLocationModel.getList());
-//            } // Change required.
-//
-//            String userChosenValidation = (String) validationComboBox.getSelectedItem();
-////         if (!userChosenValidation.equals(ValidationManager.getInstance().getDisplayableValidationSetting())) {
-////            ValidationManager.getInstance().setDisplayableValidationSetting(userChosenValidation);
-////            delayedChanges.add("Changing XML File Validation Preference");
-////         } // Change required.
-//
-//        } // End try to save changes.
-//        catch (Exception ex) {
-//            SessionMgr.getSessionMgr().handleException(ex);
-//        } // End catch for delete
-//        // End datasource dir selection, apply code
-//
-//        if (urlLocationModel.isModified()) {
-//            delayedChanges.add("Changing the XML Service URLs");
-//        }
-//
-//        setNewUrlLocations(urlLocationModel.getList());
 
         if (cacheDisabledChanged || cacheCapacityChanged) {
             updateFileCacheComponents(true);
         }
 
         settingsChanged = false;
-        return (String[]) delayedChanges.toArray(new String[delayedChanges.size()]);
+        return new String[0];
     }
 
     /**
@@ -583,152 +525,6 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
 
         }
 
-    }
-
-//    private void addUrlButtonActionPerformed(ActionEvent ae) {
-//        try {
-//            URL url = new URL(addUrlField.getText());
-//            settingsChanged = true;
-//            String valueToAdd = url.toString(); //addUrlField.getText().trim();
-//            if ((valueToAdd != null) && (valueToAdd.length() > 0)) {
-//                urlLocationModel.add(valueToAdd);
-//                removeUrlButton.setEnabled(true);
-//            } // User entered something.
-//        }
-//        catch (MalformedURLException ex) {
-//            JOptionPane.showMessageDialog(DataSourceSettingsPanel.this, "The typed URL is not valid", "Error", JOptionPane.ERROR_MESSAGE);
-//            return;
-//        }
-//        this.repaint();
-//    }
-
-//    private void showNewXmlDirectoryChooser() {
-//        JFileChooser chooser = null;
-//
-//        if (directoryLocationModel.getSize() == 0) chooser = new FileChooser();
-//        else chooser = new FileChooser(new File((String) directoryLocationModel.findLast()));
-//        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-//        chooser.setMultiSelectionEnabled(true);
-//        int returnVal = chooser.showOpenDialog(parentFrame);
-//        if (returnVal == JFileChooser.APPROVE_OPTION) {
-//            settingsChanged = true;
-//            File[] files = chooser.getSelectedFiles();
-//            for (int i = 0; i < files.length; i++) {
-//                directoryLocationModel.add(files[i].getAbsolutePath());
-//            } // For all files.
-//            currentDirectoryJList.updateUI();
-//            removeDirectoryButton.setEnabled(true);
-//        } // Got approved.
-//
-//    } // End method
-
-    /**
-     * Gets the old location settings.
-     */
-    private List getExistingDirectoryLocations() {
-        List returnCollection = new ArrayList();
-
-        /** @todo when possible change this to use Model Property implementation. */
-        // Set the default directory from a preset preference if possible.
-        //
-        ObjectInputStream istream = null;
-        try {
-
-            String nextDirectory = null;
-            if (directoryPrefFile.canRead() && directoryPrefFile.exists()) {
-                FileInputStream fis = new FileInputStream(directoryPrefFile);
-                istream = new ObjectInputStream(fis);
-                while (null != (nextDirectory = (String) istream.readObject())) {
-                    returnCollection.add(nextDirectory);
-                } // For all directories.
-
-            } // Permission granted.
-
-        } // End try
-        catch (Exception ex) {
-        } // End catch block for pref file open exceptions.
-        finally {
-            try {
-                istream.close();
-            } // Close up shop
-            catch (Exception ex) {
-                // Do nothing.
-            } // End catch for closing
-        } // After all is said and done...
-
-        return returnCollection;
-    } // End method
-
-    /**
-     * Sets the user's new pref.
-     */
-    private void setNewDirectoryLocations(List locationList) {
-        /** @todo when possible change this to use Model Property implementation. */
-
-        // Now attempt to writeback the user's currently-selected directory as the
-        // new preference for reading XML files.
-        //
-        try {
-            if (locationList != null) {
-                ObjectOutputStream ostream = new ObjectOutputStream(new FileOutputStream(directoryPrefFile));
-                for (Iterator it = locationList.iterator(); it.hasNext(); ) {
-                    ostream.writeObject(it.next());
-                } // For all directories.
-                ostream.close();
-            } // Permission granted.
-            else {
-                SessionMgr.getSessionMgr().handleException(new IllegalArgumentException("XML Directory List is null or Cannot Write " + directoryPrefFile.getAbsoluteFile()));
-            } // Not granted
-        } // End try block.
-        catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(new IllegalArgumentException("XML Directory Prefs " + directoryPrefFile.getAbsoluteFile() + " File Cannot be Written"));
-        } // End catch block for writeback of preferred directory.
-
-    } // End method
-
-    /**
-     * Sets the user's new prefs.
-     */
-    private void setNewUrlLocations(List newLocs) {
-        XmlServiceFacadeManager.setNewLocations(newLocs);
-    } // End method
-
-    /**
-     * Gets the old settings.
-     */
-    private List getExistingUrlLocations() {
-        return XmlServiceFacadeManager.getExistingLocations();
-    } // End method
-
-    /**
-     * Listens for removal button actions against JLists.  JLists
-     * must have CollectionJListModel models!
-     */
-    public class ModelRemovalListener implements ActionListener {
-
-        JList widgetForRemoval = null;
-
-        ModelRemovalListener(JList widgetForRemoval) {
-            this.widgetForRemoval = widgetForRemoval;
-        } // End constructor
-
-        public void actionPerformed(ActionEvent ae) {
-            // Looking for button event.
-            JButton button = null;
-            if (ae.getSource() instanceof JButton) button = (JButton) ae.getSource();
-            else return;
-
-            if (widgetForRemoval.getSelectedValues() != null) {
-                Object[] removables = widgetForRemoval.getSelectedValues();
-                CollectionJListModel listModel = (CollectionJListModel) widgetForRemoval.getModel();
-                for (Object removable : removables) listModel.remove(removable);
-
-                button.setEnabled(listModel.getSize() > 0);
-
-                settingsChanged = true;
-
-            } // One or more items has been selected.
-        } // End method
     }
 
     private Object getModelProperty(String key,
