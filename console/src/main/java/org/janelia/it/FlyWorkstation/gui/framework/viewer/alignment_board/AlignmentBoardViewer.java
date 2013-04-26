@@ -1,10 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import java.awt.BorderLayout;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 import javax.swing.JButton;
@@ -64,6 +61,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
     private ModelMgrObserver modelMgrObserver;
     private RenderMappingI renderMapping;
+    private Collection<float[]> cropCoordsCollection;
     private BrainGlow brainGlow;
     private AlignmentBoardControlsDialog settings;
     private Logger logger = LoggerFactory.getLogger(AlignmentBoardViewer.class);
@@ -72,6 +70,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         super(viewerPane);
 
         renderMapping = new ConfigurableColorMapping();
+        cropCoordsCollection = new ArrayList<float[]>();
         setLayout(new BorderLayout());
         ModelMgr.getModelMgr().registerOnEventBus(this);
         
@@ -221,7 +220,11 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     public void loadVolume( TextureDataI signalTexture, TextureDataI maskTexture ) {
 
         if ( ! mip3d.setVolume(
-                signalTexture, maskTexture, renderMapping, (float) AlignmentBoardControlsDialog.DEFAULT_GAMMA
+                signalTexture,
+                maskTexture,
+                renderMapping,
+                cropCoordsCollection,
+                (float) AlignmentBoardControlsDialog.DEFAULT_GAMMA
         ) ) {
             logger.error( "Failed to load volume to mip3d." );
         }

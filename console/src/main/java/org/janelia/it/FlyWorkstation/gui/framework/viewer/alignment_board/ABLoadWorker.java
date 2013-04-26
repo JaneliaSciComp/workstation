@@ -18,10 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.BorderLayout;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
@@ -43,21 +40,27 @@ public class ABLoadWorker extends SimpleWorker {
     private Logger logger;
 
     private Map<Long,RenderMappingI> renderMappings;
+    private Collection<float[]> cropCoordsCollection;
 
     public ABLoadWorker(
             AlignmentBoardViewer viewer, AlignmentBoardContext context, Mip3d mip3d
     ) {
-        this( viewer, context, mip3d, new HashMap<Long,RenderMappingI>() );
+        this( viewer, context, mip3d, new HashMap<Long,RenderMappingI>(), null );
     }
 
     public ABLoadWorker(
-            AlignmentBoardViewer viewer, AlignmentBoardContext context, Mip3d mip3d, Map<Long,RenderMappingI> renderMappings
+            AlignmentBoardViewer viewer,
+            AlignmentBoardContext context,
+            Mip3d mip3d,
+            Map<Long,RenderMappingI> renderMappings,
+            Collection<float[]> cropCoordsCollection
     ) {
         logger = LoggerFactory.getLogger( ABLoadWorker.class );
         this.context = context;
         this.mip3d = mip3d;
         this.viewer = viewer;
         this.renderMappings = renderMappings;
+        this.cropCoordsCollection = cropCoordsCollection;
     }
 
     public void setLoadFilesFlag( Boolean loadFiles ) {
@@ -217,7 +220,9 @@ public class ABLoadWorker extends SimpleWorker {
             renderMappings.put( sampleData.getSample().getRenderableEntity().getId(), renderMapping );
 
             // The volume's data is loaded here.
-            if ( ! mip3d.loadVolume( signalFilename, volumeMaskBuilder, resolver, renderMapping, GAMMA_VALUE ) ) {
+            if ( ! mip3d.loadVolume(
+                    signalFilename, volumeMaskBuilder, resolver, renderMapping, cropCoordsCollection, GAMMA_VALUE
+            ) ) {
                 logger.error( "Failed to load masked volume {} to mip3d.", signalFilename );
             }
 

@@ -6,7 +6,6 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 
 import javax.media.opengl.GL2;
 import java.nio.ByteOrder;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
@@ -22,7 +21,15 @@ import java.util.Map;
 public class RenderMapTextureBean implements TextureDataI {
 
     private static final int BYTES_PER_ENTRY = 4;
+    private static final int MAP_SIZE = 65536;
+    private static final int MAX_COORD_SETS = 192;   // This number yields end Y value divisible by 4.
+    private static final int ENTRIES_PER_COORD_SET = 6;
+    private static final int BYTES_PER_COORD_SET = ENTRIES_PER_COORD_SET * BYTES_PER_ENTRY;
+    private static final String HEADER = "Map of Colors to Neuron Fragment Numbers and Crop Coord Sets";
+    private static final int LINE_WIDTH = 256;
+
     private RenderMappingI renderMapping;
+    private Collection<float[]> cropCoordCollection;
     //private byte[] mapData;
     private boolean inverted = false; // Default probably carries the day.
     private Integer voxelComponentFormat = GL2.GL_UNSIGNED_INT_8_8_8_8_REV;
@@ -40,6 +47,15 @@ public class RenderMapTextureBean implements TextureDataI {
         this.renderMapping = renderMapping;
     }
 
+    /**
+     * Setting crop coords for the byte array. These need to be de-normalized to non 0..1 values.
+     *
+     * @param cropCoordCollection collection of 6-float axial position delimiters. 2 for each 3D axis.
+     */
+    public void setCropCoords( Collection<float[]> cropCoordCollection ) {
+        this.cropCoordCollection = cropCoordCollection;
+    }
+
     @Override
     public void setTextureData(byte[] textureData) {
         // Ignored.
@@ -48,11 +64,11 @@ public class RenderMapTextureBean implements TextureDataI {
     @Override
     public byte[] getTextureData() {
         Map<Integer,byte[]> renderingMap = renderMapping.getMapping();
-        if ( renderingMap == null || renderingMap.size() > 65535 ) {
+        if ( renderingMap == null || renderingMap.size() > MAP_SIZE ) {
             throw new IllegalArgumentException("Invalid inputs for render mapping");
         }
 
-        byte[] rawMap = new byte[ 65536 * BYTES_PER_ENTRY ];
+        byte[] rawMap = new byte[ getRawBufferSize() ];
         for ( Integer neuronNumber: renderingMap.keySet() ) {
             byte[] rendition = renderingMap.get( neuronNumber );
             if ( rendition.length != 4 ) {
@@ -64,18 +80,39 @@ public class RenderMapTextureBean implements TextureDataI {
             }
         }
 
+        // Need de-normalized as-int values in the crop coords.
+        if ( cropCoordCollection != null ) {
+            if ( cropCoordCollection.size() > MAX_COORD_SETS ) {
+                throw new IllegalArgumentException("Invalid inputs for crop coordinate sets");
+            }
+
+            int nextCropBoxOffset = BYTES_PER_ENTRY * MAP_SIZE;
+            for ( float[] cropCoords: cropCoordCollection ) {
+                // These are guaranteed non-fractional.
+                for ( int i = 0; i < cropCoords.length; i++ ) {
+                    int iValue = (int) cropCoords[ i ];
+                    for ( int j = 0; j < Integer.SIZE; j++ ) {
+                        rawMap[ nextCropBoxOffset + j + (cropCoords.length * i) ] =
+                                (byte)(iValue >>> ( 24 - (8 * j) ) & 0xff);
+                    }
+                }
+                nextCropBoxOffset += BYTES_PER_COORD_SET;
+            }
+        }
+
         return rawMap;
     }
 
-    //  The size of the texture data will be 2**8 * 2**8 or 2**16: same as 65535
+    //  The size of the texture data will be 2**8 * 2**8 or 2**16: same as 65535, and then add enough 256x4 lines
+    //  to include the selection coordinate boxes.
     @Override
     public int getSx() {
-        return 256;
+        return LINE_WIDTH;
     }
 
     @Override
     public int getSy() {
-        return 256;
+        return getRawBufferSize() / BYTES_PER_ENTRY / LINE_WIDTH;
     }
 
     @Override
@@ -124,7 +161,7 @@ public class RenderMapTextureBean implements TextureDataI {
 
     @Override
     public String getHeader() {
-        return "Map of colors to neuron fragment numbers";
+        return HEADER;
     }
 
     @Override
@@ -233,6 +270,21 @@ public class RenderMapTextureBean implements TextureDataI {
     @Override
     public void setExplicitVoxelComponentOrder(Integer voxelComponentOrder) {
         this.voxelComponentOrder = voxelComponentOrder;
+    }
+
+    private int getRawBufferSize() {
+        System.out.println("Returning raw buffer size of " + (MAP_SIZE * BYTES_PER_ENTRY + roundUp256( MAX_COORD_SETS * ENTRIES_PER_COORD_SET * BYTES_PER_ENTRY )));
+        return MAP_SIZE * BYTES_PER_ENTRY + roundUp256( MAX_COORD_SETS * ENTRIES_PER_COORD_SET * BYTES_PER_ENTRY );
+    }
+
+    private int roundUp256( int value ) {
+        if ( value % 256 == 0 ) {
+            return value;
+        }
+        else {
+            System.out.println("Returning round-up of " + (((value / 256) + 1) * 256));
+            return ((value / 256) + 1) * 256;
+        }
     }
 }
 

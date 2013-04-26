@@ -90,39 +90,6 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
     }
 
     /**
-     * Load a volume which may have a mask against it.
-     *
-     * @param volumeLoader for pushing data into the brick.
-     * @param maskBuilder for mask file data.
-     * @return true if it worked; false otherwise.
-     */
-    public boolean setVolume(
-            VolumeLoaderI volumeLoader,
-            MaskBuilderI maskBuilder,
-            RenderMappingI renderMapping,
-            float gamma
-    ) {
-        if ( volumeLoader != null ) {
-            VolumeBrick brick = new VolumeBrick(renderer, volumeModel);
-            volumeModel.setGammaAdjustment( gamma );
-            if ( maskBuilder != null ) {
-                brick.setMaskTextureData( maskBuilder.getCombinedTextureData() );
-
-                RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
-                renderMapTextureData.setMapping( renderMapping );
-
-                brick.setColorMapTextureData( renderMapTextureData );
-            }
-            volumeLoader.populateVolumeAcceptor(brick);
-
-            addActorToRenderer(brick);
-            return true;
-        }
-        else
-            return false;
-    }
-
-    /**
      * A multi-thread-load-friendly overload of the set-volume method.  The texture objects may be
      * built at the caller's leisure, rather than being requested of passed-in builders.
      *
@@ -136,6 +103,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
             TextureDataI signalTexture,
             TextureDataI maskTexture,
             RenderMappingI renderMapping,
+            Collection<float[]> cropCoordCollection,
             float gamma ) {
         if ( signalTexture != null ) {
             VolumeBrick brick = new VolumeBrick( renderer, volumeModel );
@@ -146,6 +114,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
 
                 RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
                 renderMapTextureData.setMapping( renderMapping );
+                renderMapTextureData.setCropCoords( cropCoordCollection );
                 brick.setColorMapTextureData( renderMapTextureData );
             }
 
@@ -171,6 +140,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
             MaskBuilderI maskBuilder,
             FileResolver resolver,
             RenderMappingI renderMapping,
+            Collection<float[]> cropCoordCollection,
             float gamma
     ) {
 		VolumeLoader volumeLoader = new VolumeLoader(resolver);
@@ -183,6 +153,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
 
                 RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
                 renderMapTextureData.setMapping( renderMapping );
+                renderMapTextureData.setCropCoords( cropCoordCollection );
 
                 brick.setColorMapTextureData( renderMapTextureData );
             }
