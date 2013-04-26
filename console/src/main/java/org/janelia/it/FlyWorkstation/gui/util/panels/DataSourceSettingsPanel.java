@@ -6,7 +6,6 @@ import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefControlle
 import org.janelia.it.FlyWorkstation.gui.framework.roles.PrefEditor;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.swing_models.CollectionJListModel;
-import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
 import org.janelia.it.FlyWorkstation.shared.util.text_component.StandardTextField;
 import org.slf4j.Logger;
@@ -34,7 +33,8 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
     private String userPassword = "";
     private String userEmail = "";
     private String runAsUser = "";
-    private Integer cacheSize;
+    private Boolean cacheDisabled;
+    private Integer cacheCapacity;
     private boolean settingsChanged = false;
     JLabel requiredField = new JLabel("* indicates a required field");
 
@@ -54,12 +54,11 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
     JTextField emailTextField = new StandardTextField();
 
     //    JPanel requiredPanel = new JPanel();
-    JPanel diskCachePanel = new JPanel();
-    TitledBorder diskCacheBorder;
-    JLabel diskCacheLabel = new JLabel("Disk Cache Size (GB):");
-    JSpinner fileCacheSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 1000, 1));
-    JProgressBar cacheUsageBar = new JProgressBar(0, 100);
-    JButton clearCacheButton = new JButton("Clear Cache");
+    private JRadioButton fileCacheEnabledRadioButton;
+    private JRadioButton fileCacheDisabledRadioButton;
+    private JSpinner fileCacheSpinner;
+    private JProgressBar fileCacheUsageBar;
+    private JButton fileCacheClearButton;
 
     private static final String LOCATION_PROP_NAME = "XmlGenomeVersionLocation";
 //    private static final int PREFERRED_JLIST_HEIGHT = 165;
@@ -83,16 +82,13 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
     public DataSourceSettingsPanel(JFrame parentFrame) {
         final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
         try {
-            userLogin = (String) sessionMgr.getModelProperty(SessionMgr.USER_NAME);
-            if (userLogin == null) {userLogin = "";}
-            userPassword = (String) sessionMgr.getModelProperty(SessionMgr.USER_PASSWORD);
-            if (userPassword == null) {userPassword = "";}
-            userEmail = (String) sessionMgr.getModelProperty(SessionMgr.USER_EMAIL);
-            if (userEmail == null) {userEmail = "";}
-            cacheSize = sessionMgr.getFileCacheGigabyteCapacity();
-            if (null==cacheSize) {cacheSize = ConsoleProperties.getInt(SessionMgr.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);}
-            runAsUser = (String) sessionMgr.getModelProperty(SessionMgr.RUN_AS_USER);
-            if (null == runAsUser) {runAsUser="";}
+            userLogin = (String) getModelProperty(SessionMgr.USER_NAME, "");
+            userPassword = (String) getModelProperty(SessionMgr.USER_PASSWORD, "");
+            userEmail = (String) getModelProperty(SessionMgr.USER_EMAIL, "");
+            cacheDisabled = (Boolean) getModelProperty(SessionMgr.FILE_CACHE_DISABLED_PROPERTY, false);
+            cacheCapacity = (Integer) getModelProperty(SessionMgr.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY,
+                                                   SessionMgr.MIN_FILE_CACHE_GIGABYTE_CAPACITY);
+            runAsUser = (String) getModelProperty(SessionMgr.RUN_AS_USER, "");
             jbInit();
         }
         catch (Exception ex) {
@@ -132,7 +128,8 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
             !userPassword.equals(new String(passwordTextField.getPassword())) ||
             !userEmail.equals(emailTextField.getText().trim()) ||
             !runAsUser.equals(runAsTextField.getText().trim()) ||
-            !cacheSize.equals(fileCacheSpinner.getValue()))
+            !cacheDisabled.equals(fileCacheDisabledRadioButton.isSelected()) ||
+            !cacheCapacity.equals(fileCacheSpinner.getValue()))
             settingsChanged = true;
         return settingsChanged;
     }
@@ -147,14 +144,27 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         userPassword = new String(passwordTextField.getPassword());
         userEmail = emailTextField.getText().trim();
         runAsUser = runAsTextField.getText().trim();
-        cacheSize = (Integer) fileCacheSpinner.getValue();
+        cacheDisabled = fileCacheDisabledRadioButton.isSelected();
+        cacheCapacity = (Integer) fileCacheSpinner.getValue();
 
         final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
+
+        final boolean cacheDisabledChanged =
+                ! cacheDisabled.equals(sessionMgr.getModelProperty(SessionMgr.FILE_CACHE_DISABLED_PROPERTY));
+        if (cacheDisabledChanged) {
+            sessionMgr.setFileCacheDisabled(cacheDisabled);
+        }
+
+        final boolean cacheCapacityChanged =
+                ! cacheCapacity.equals(sessionMgr.getFileCacheGigabyteCapacity());
+        if (cacheCapacityChanged) {
+            sessionMgr.setFileCacheGigabyteCapacity(cacheCapacity);
+        }
+
         if ((!userLogin.equals(sessionMgr.getModelProperty(SessionMgr.USER_NAME))) ||
             (!userPassword.equals(sessionMgr.getModelProperty(SessionMgr.USER_PASSWORD))) ||
             (!userEmail.equals(sessionMgr.getModelProperty(SessionMgr.USER_EMAIL))) ||
-            (!runAsUser.equals(sessionMgr.getModelProperty(SessionMgr.RUN_AS_USER))) ||
-            (!cacheSize.equals(sessionMgr.getFileCacheGigabyteCapacity()))) {
+            (!runAsUser.equals(sessionMgr.getModelProperty(SessionMgr.RUN_AS_USER)))) {
             // If the login has changed then wipe out the runAs field and value.
             if ((!userLogin.equals(sessionMgr.getModelProperty(SessionMgr.USER_NAME)))) {
                 runAsTextField.setText("");
@@ -165,7 +175,6 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
             sessionMgr.setModelProperty(SessionMgr.USER_NAME, userLogin);
             sessionMgr.setModelProperty(SessionMgr.USER_PASSWORD, userPassword);
             sessionMgr.setModelProperty(SessionMgr.USER_EMAIL, userEmail);
-            sessionMgr.setFileCacheGigabyteCapacity(cacheSize);
             boolean loginSuccess = SessionMgr.getSessionMgr().loginSubject();
             if (loginSuccess) {
                 runAsPanel.setVisible(SessionMgr.authenticatedSubjectIsInGroup("admin"));
@@ -205,6 +214,11 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
 //        }
 //
 //        setNewUrlLocations(urlLocationModel.getList());
+
+        if (cacheDisabledChanged || cacheCapacityChanged) {
+            updateFileCacheComponents(true);
+        }
+
         settingsChanged = false;
         return (String[]) delayedChanges.toArray(new String[delayedChanges.size()]);
     }
@@ -292,50 +306,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         emailPanel.add(userEmailPanel);
         emailPanel.add(Box.createVerticalStrut(10));
 
-        diskCacheBorder = new TitledBorder("Disk Cache");
-        diskCachePanel.setBorder(diskCacheBorder);
-        diskCachePanel.setLayout(new BoxLayout(diskCachePanel, BoxLayout.X_AXIS));
-        diskCachePanel.setMaximumSize(new Dimension(600, 50));
-        diskCachePanel.add(diskCacheLabel);
-        diskCachePanel.add(Box.createHorizontalStrut(10));
-
-        fileCacheSpinner.setMaximumSize(new Dimension(200, 100));
-        fileCacheSpinner.setValue(cacheSize);
-
-        // configure spinner to dis-allow invalid edits
-        JSpinner.NumberEditor editor = (JSpinner.NumberEditor) fileCacheSpinner.getEditor();
-        JFormattedTextField ftf = editor.getTextField();
-        JFormattedTextField.AbstractFormatter formatter = ftf.getFormatter();
-        DefaultFormatter df = (DefaultFormatter) formatter;
-        df.setAllowsInvalid(false);
-
-        diskCachePanel.add(fileCacheSpinner);
-
-        diskCachePanel.add(Box.createHorizontalStrut(10));
-        diskCachePanel.add(cacheUsageBar);
-
-        cacheUsageBar.setUI(new NonAnimatedProgressBarUI());
-        cacheUsageBar.setForeground(Color.GRAY);
-        cacheUsageBar.setBackground(Color.DARK_GRAY);
-        cacheUsageBar.setStringPainted(true);
-
-        final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
-        final double usage = sessionMgr.getFileCacheGigabyteUsage();
-        final int capacity = sessionMgr.getFileCacheGigabyteCapacity();
-        final double percentage = (usage / capacity) * 100.0;
-        cacheUsageBar.setValue((int) percentage);
-
-        diskCachePanel.add(Box.createHorizontalGlue());
-        diskCachePanel.add(clearCacheButton);
-
-        clearCacheButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                SessionMgr.getSessionMgr().clearFileCache();
-                cacheUsageBar.setValue(0);
-                cacheUsageBar.repaint();
-            }
-        });
+        JPanel fileCachePanel = buildFileCachePanel();
 
         JPanel notePanel = new JPanel();
         notePanel.setMaximumSize(new Dimension(600,100));
@@ -347,7 +318,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         add(Box.createVerticalStrut(10));
         add(emailPanel);
         add(Box.createVerticalStrut(10));
-        add(diskCachePanel);
+        add(fileCachePanel);
         add(Box.createVerticalGlue());
         add(notePanel);
 
@@ -481,6 +452,138 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
 //        add(Box.createVerticalStrut(10));
     }
 
+    private JPanel buildFileCachePanel() {
+
+        JPanel fileCachePanel = new JPanel();
+
+        fileCachePanel.setBorder(new TitledBorder("Local Disk Cache"));
+        fileCachePanel.setLayout(new GridBagLayout());
+        fileCachePanel.setMaximumSize(new Dimension(600, 200));
+
+        // ---------------------
+        fileCacheEnabledRadioButton = new JRadioButton("Enabled");
+        fileCacheDisabledRadioButton = new JRadioButton("Disabled");
+
+        JPanel cacheRadioPanel = new JPanel();
+        cacheRadioPanel.setLayout(new BoxLayout(cacheRadioPanel, BoxLayout.X_AXIS));
+
+        ButtonGroup group = new ButtonGroup();
+        group.add(fileCacheEnabledRadioButton);
+        group.add(fileCacheDisabledRadioButton);
+        cacheRadioPanel.add(fileCacheEnabledRadioButton);
+        cacheRadioPanel.add(Box.createHorizontalStrut(10));
+        cacheRadioPanel.add(fileCacheDisabledRadioButton);
+        cacheRadioPanel.add(Box.createHorizontalStrut(10));
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.NONE;
+        c.anchor = GridBagConstraints.WEST;
+        c.weightx = 0.5;
+        c.weighty = 0.5;
+        c.gridx = 0;
+        c.gridy = 0;
+
+        fileCachePanel.add(new JLabel("Caching:"), c);
+
+        c.gridx = 1;
+        fileCachePanel.add(cacheRadioPanel, c);
+
+        c.gridx = 0;
+        c.gridy = 1;
+        fileCachePanel.add(new JLabel("Capacity (GB):"), c);
+
+        // ---------------------
+        fileCacheSpinner = new JSpinner(
+                new SpinnerNumberModel(SessionMgr.MIN_FILE_CACHE_GIGABYTE_CAPACITY,
+                        SessionMgr.MIN_FILE_CACHE_GIGABYTE_CAPACITY,
+                        SessionMgr.MAX_FILE_CACHE_GIGABYTE_CAPACITY,
+                        1));
+        fileCacheSpinner.setMaximumSize(new Dimension(200, 100));
+
+        // configure spinner to dis-allow invalid edits
+        JSpinner.NumberEditor editor = (JSpinner.NumberEditor) fileCacheSpinner.getEditor();
+        JFormattedTextField ftf = editor.getTextField();
+        JFormattedTextField.AbstractFormatter formatter = ftf.getFormatter();
+        DefaultFormatter df = (DefaultFormatter) formatter;
+        df.setAllowsInvalid(false);
+
+        c.gridx = 1;
+        fileCachePanel.add(fileCacheSpinner, c);
+
+        // ---------------------
+        fileCacheUsageBar = new JProgressBar(0, 100);
+        fileCacheUsageBar.setUI(new NonAnimatedProgressBarUI());
+        fileCacheUsageBar.setBorder(BorderFactory.createLineBorder(fileCacheUsageBar.getForeground()));
+        fileCacheUsageBar.setForeground(Color.GRAY);
+        fileCacheUsageBar.setBackground(Color.DARK_GRAY);
+        fileCacheUsageBar.setStringPainted(true);
+
+        c.gridx = 0;
+        c.gridy = 2;
+        fileCachePanel.add(new JLabel("Usage:"), c);
+
+        c.gridx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        fileCachePanel.add(fileCacheUsageBar, c);
+
+        // ---------------------
+        fileCacheClearButton = new JButton("Clear Cache");
+        fileCacheClearButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SessionMgr.getSessionMgr().clearFileCache();
+                updateFileCacheComponents(false);
+            }
+        });
+
+        c.fill = GridBagConstraints.NONE;
+        c.anchor = GridBagConstraints.EAST;
+        c.gridx = 2;
+        fileCachePanel.add(fileCacheClearButton, c);
+
+        updateFileCacheComponents(false);
+
+        return fileCachePanel;
+    }
+
+    private void updateFileCacheComponents(boolean waitForReload) {
+
+        final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
+        final int capacity = sessionMgr.getFileCacheGigabyteCapacity();
+
+        fileCacheSpinner.setValue(capacity);
+
+        if (sessionMgr.isFileCacheAvailable()) {
+
+            fileCacheEnabledRadioButton.setSelected(true);
+            fileCacheSpinner.setEnabled(true);
+
+            if (waitForReload) {
+                try {
+                    // HACK! - give the cache a chance to reload before refreshing this view
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    log.warn("ignoring exception", e);
+                }
+            }
+
+            final double usage = sessionMgr.getFileCacheGigabyteUsage();
+            final double percentage = (usage / capacity) * 100.0;
+            fileCacheUsageBar.setValue((int) percentage);
+            fileCacheUsageBar.setVisible(true);
+
+            fileCacheClearButton.setEnabled(true);
+
+        } else {
+
+            fileCacheDisabledRadioButton.setSelected(true);
+            fileCacheSpinner.setEnabled(false);
+            fileCacheUsageBar.setVisible(false);
+            fileCacheClearButton.setEnabled(false);
+
+        }
+
+    }
 
 //    private void addUrlButtonActionPerformed(ActionEvent ae) {
 //        try {
@@ -628,17 +731,28 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         } // End method
     }
 
+    private Object getModelProperty(String key,
+                                    Object defaultValue) {
+        final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
+        Object value = sessionMgr.getModelProperty(key);
+        if (value == null) {
+            value = defaultValue;
+        }
+        return value;
+    }
+
     /**
      * Overrides the default animated progress bar L&F.
      */
-    public class NonAnimatedProgressBarUI extends BasicProgressBarUI {
+    private class NonAnimatedProgressBarUI extends BasicProgressBarUI {
+
         @Override
         protected Color getSelectionForeground() {
-            return Color.WHITE;
+            return getForeground();
         }
         @Override
         protected Color getSelectionBackground() {
-            return Color.WHITE;
+            return getForeground();
         }
     }
 }
