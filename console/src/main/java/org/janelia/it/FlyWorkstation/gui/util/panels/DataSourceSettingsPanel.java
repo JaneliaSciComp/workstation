@@ -57,6 +57,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
     TitledBorder diskCacheBorder;
     JLabel diskCacheLabel = new JLabel("Disk Cache Size (GB):");
     JSpinner fileCacheSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 1000, 1));
+    JButton clearCacheButton = new JButton("Clear Cache");
 
     private static final String LOCATION_PROP_NAME = "XmlGenomeVersionLocation";
 //    private static final int PREFERRED_JLIST_HEIGHT = 165;
@@ -305,7 +306,17 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         df.setAllowsInvalid(false);
 
         diskCachePanel.add(fileCacheSpinner);
+
         diskCachePanel.add(Box.createHorizontalGlue());
+//        diskCachePanel.add(Box.createHorizontalStrut(10));
+        diskCachePanel.add(clearCacheButton);
+
+        clearCacheButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                 SessionMgr.clearFileCache();
+            }
+        });
 
         JPanel notePanel = new JPanel();
         notePanel.setMaximumSize(new Dimension(600,100));

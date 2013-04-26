@@ -370,6 +370,7 @@ public class LocalFileCache {
      * asynchronously by a separate pool of threads.
      */
     public void clear() {
+        LOG.info("clear: entry, scheduling removal of {} files from cache", urlToFileCache.size());
         urlToFileCache.invalidateAll();
     }
 

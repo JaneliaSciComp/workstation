@@ -852,11 +852,11 @@ public class SessionMgr {
     /**
      * Removes all locally cached files.
      */
-//    public static void clearFileCache() {
-//        final SessionMgr mgr = SessionMgr.getSessionMgr();
-//        LocalFileCache cache = mgr.getLocalFileCache();
-//        cache.clear();
-//    }
+    public static void clearFileCache() {
+        final SessionMgr mgr = SessionMgr.getSessionMgr();
+        LocalFileCache cache = mgr.getLocalFileCache();
+        cache.clear();
+    }
 
     /**
      * If local caching is enabled, this method will cache the requested
