@@ -17,7 +17,7 @@ import java.net.URL;
  * along with a companion file that contains a serialized form of this
  * object's metadata about the file. For example retrieval of the file
  * .../separate/ConsolidatedSignalMIP.png results in creation of a companion file
- * .../separate/ConsolidatedSignalMIP.png.jacs-cached-file.
+ * .../separate/.ConsolidatedSignalMIP.png.jacs-cached-file.
  * Creation of these companion files allows the most important parts of the
  * in-memory cache (namely the remote URL and etag) to be persisted without
  * requiring centralized/synchronized management.
@@ -42,7 +42,10 @@ public class CachedFile implements Serializable {
         this.webDavFile = webDavFile;
         this.localFile = localFile;
         if (! webDavFile.isDirectory()) {
-            this.metaFile = new File(localFile.getAbsolutePath() + META_FILE_SUFFIX);
+            // prefix with name '.' so that the meta files are
+            // hidden/obscured when 'reveal in finder' is used
+            this.metaFile = new File(localFile.getParentFile(),
+                                     "." + localFile.getName() + META_FILE_SUFFIX);
         }
     }
 
