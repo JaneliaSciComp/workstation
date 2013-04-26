@@ -850,6 +850,16 @@ public class SessionMgr {
     }
 
     /**
+     * @return the total size (in gigabytes) of all currently cached files.
+     */
+    public static double getFileCacheGigabyteUsage() {
+        final SessionMgr mgr = SessionMgr.getSessionMgr();
+        LocalFileCache cache = mgr.getLocalFileCache();
+        final long kilobyteUsage = cache.getNumberOfKilobytes();
+        return (double) kilobyteUsage / (1024.0 * 1024.0);
+    }
+
+    /**
      * Removes all locally cached files.
      */
     public static void clearFileCache() {

@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
+import javax.swing.plaf.basic.BasicProgressBarUI;
 import javax.swing.text.DefaultFormatter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -57,6 +58,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
     TitledBorder diskCacheBorder;
     JLabel diskCacheLabel = new JLabel("Disk Cache Size (GB):");
     JSpinner fileCacheSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 1000, 1));
+    JProgressBar cacheUsageBar = new JProgressBar(0, 100);
     JButton clearCacheButton = new JButton("Clear Cache");
 
     private static final String LOCATION_PROP_NAME = "XmlGenomeVersionLocation";
@@ -307,14 +309,28 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
 
         diskCachePanel.add(fileCacheSpinner);
 
+        diskCachePanel.add(Box.createHorizontalStrut(10));
+        diskCachePanel.add(cacheUsageBar);
+
+        cacheUsageBar.setUI(new NonAnimatedProgressBarUI());
+        cacheUsageBar.setForeground(Color.GRAY);
+        cacheUsageBar.setBackground(Color.DARK_GRAY);
+        cacheUsageBar.setStringPainted(true);
+
+        final double usage = SessionMgr.getFileCacheGigabyteUsage();
+        final int capacity = SessionMgr.getFileCacheGigabyteCapacity();
+        final double percentage = (usage / capacity) * 100.0;
+        cacheUsageBar.setValue((int) percentage);
+
         diskCachePanel.add(Box.createHorizontalGlue());
-//        diskCachePanel.add(Box.createHorizontalStrut(10));
         diskCachePanel.add(clearCacheButton);
 
         clearCacheButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                 SessionMgr.clearFileCache();
+                SessionMgr.clearFileCache();
+                cacheUsageBar.setValue(0);
+                cacheUsageBar.repaint();
             }
         });
 
@@ -462,6 +478,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
 //        add(Box.createVerticalStrut(10));
     }
 
+
 //    private void addUrlButtonActionPerformed(ActionEvent ae) {
 //        try {
 //            URL url = new URL(addUrlField.getText());
@@ -606,5 +623,19 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
 
             } // One or more items has been selected.
         } // End method
+    }
+
+    /**
+     * Overrides the default animated progress bar L&F.
+     */
+    public class NonAnimatedProgressBarUI extends BasicProgressBarUI {
+        @Override
+        protected Color getSelectionForeground() {
+            return Color.WHITE;
+        }
+        @Override
+        protected Color getSelectionBackground() {
+            return Color.WHITE;
+        }
     }
 }
