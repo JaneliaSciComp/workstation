@@ -378,6 +378,49 @@ public class SessionMgr {
     }
 
     /**
+     * @return the maximum number of gigabytes to store in the local file cache.
+     */
+    public int getFileCacheGigabyteCapacity() {
+        return (Integer) getModelProperty(SessionMgr.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
+    }
+
+    /**
+     * Sets the local file cache capacity and saves the setting as a session preference.
+     *
+     * @param  gigabyteCapacity  cache capacity in gigabytes.
+     */
+    public void setFileCacheGigabyteCapacity(int gigabyteCapacity) {
+        setModelProperty(SessionMgr.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, gigabyteCapacity);
+        if (isLocalFileCacheAvailable()) {
+            final long kilobyteCapacity = gigabyteCapacity * 1024 * 1024;
+            if (kilobyteCapacity != localFileCache.getKilobyteCapacity()) {
+                localFileCache.setKilobyteCapacity(kilobyteCapacity);
+            }
+        }
+    }
+
+    /**
+     * @return the total size (in gigabytes) of all currently cached files.
+     */
+    public double getFileCacheGigabyteUsage() {
+        double usage = 0.0;
+        if (isLocalFileCacheAvailable()) {
+            final long kilobyteUsage = localFileCache.getNumberOfKilobytes();
+            usage = kilobyteUsage / (1024.0 * 1024.0);
+        }
+        return usage;
+    }
+
+    /**
+     * Removes all locally cached files.
+     */
+    public void clearFileCache() {
+        if (isLocalFileCacheAvailable()) {
+            localFileCache.clear();
+        }
+    }
+
+    /**
      * Register an editor for a model type
      *
      */
@@ -822,50 +865,6 @@ public class SessionMgr {
             throw new SystemError("Not logged in");
         }
         return subject.getEmail();
-    }
-
-    /**
-     * @return the maximum number of gigabytes to store in the local file cache.
-     */
-    public static int getFileCacheGigabyteCapacity() {
-        final SessionMgr mgr = SessionMgr.getSessionMgr();
-        return (Integer) mgr.getModelProperty(SessionMgr.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);
-    }
-
-    /**
-     * Sets the local file cache capacity and saves the setting as a session preference.
-     *
-     * @param  gigabyteCapacity  cache capacity in gigabytes.
-     */
-    public static void setFileCacheGigabyteCapacity(int gigabyteCapacity) {
-        final SessionMgr mgr = SessionMgr.getSessionMgr();
-        mgr.setModelProperty(SessionMgr.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, gigabyteCapacity);
-        if (mgr.isLocalFileCacheAvailable()) {
-            LocalFileCache cache = mgr.getLocalFileCache();
-            final long kilobyteCapacity = gigabyteCapacity * 1024 * 1024;
-            if (kilobyteCapacity != cache.getKilobyteCapacity()) {
-                cache.setKilobyteCapacity(kilobyteCapacity);
-            }
-        }
-    }
-
-    /**
-     * @return the total size (in gigabytes) of all currently cached files.
-     */
-    public static double getFileCacheGigabyteUsage() {
-        final SessionMgr mgr = SessionMgr.getSessionMgr();
-        LocalFileCache cache = mgr.getLocalFileCache();
-        final long kilobyteUsage = cache.getNumberOfKilobytes();
-        return (double) kilobyteUsage / (1024.0 * 1024.0);
-    }
-
-    /**
-     * Removes all locally cached files.
-     */
-    public static void clearFileCache() {
-        final SessionMgr mgr = SessionMgr.getSessionMgr();
-        LocalFileCache cache = mgr.getLocalFileCache();
-        cache.clear();
     }
 
     /**

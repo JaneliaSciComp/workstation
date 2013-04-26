@@ -81,21 +81,22 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
     private static final int MAX_DIR_LENGTH = 60;
 
     public DataSourceSettingsPanel(JFrame parentFrame) {
+        final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
         try {
-            userLogin = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME);
+            userLogin = (String) sessionMgr.getModelProperty(SessionMgr.USER_NAME);
             if (userLogin == null) {userLogin = "";}
-            userPassword = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_PASSWORD);
+            userPassword = (String) sessionMgr.getModelProperty(SessionMgr.USER_PASSWORD);
             if (userPassword == null) {userPassword = "";}
-            userEmail = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL);
+            userEmail = (String) sessionMgr.getModelProperty(SessionMgr.USER_EMAIL);
             if (userEmail == null) {userEmail = "";}
-            cacheSize = SessionMgr.getFileCacheGigabyteCapacity();
+            cacheSize = sessionMgr.getFileCacheGigabyteCapacity();
             if (null==cacheSize) {cacheSize = ConsoleProperties.getInt(SessionMgr.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY);}
-            runAsUser = (String) SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER);
+            runAsUser = (String) sessionMgr.getModelProperty(SessionMgr.RUN_AS_USER);
             if (null == runAsUser) {runAsUser="";}
             jbInit();
         }
         catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
+            sessionMgr.handleException(ex);
         }
     }
 
@@ -148,22 +149,23 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         runAsUser = runAsTextField.getText().trim();
         cacheSize = (Integer) fileCacheSpinner.getValue();
 
-        if ((!userLogin.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME))) ||
-            (!userPassword.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_PASSWORD))) ||
-            (!userEmail.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_EMAIL))) ||
-            (!runAsUser.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.RUN_AS_USER))) ||
-            (!cacheSize.equals(SessionMgr.getFileCacheGigabyteCapacity()))) {
+        final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
+        if ((!userLogin.equals(sessionMgr.getModelProperty(SessionMgr.USER_NAME))) ||
+            (!userPassword.equals(sessionMgr.getModelProperty(SessionMgr.USER_PASSWORD))) ||
+            (!userEmail.equals(sessionMgr.getModelProperty(SessionMgr.USER_EMAIL))) ||
+            (!runAsUser.equals(sessionMgr.getModelProperty(SessionMgr.RUN_AS_USER))) ||
+            (!cacheSize.equals(sessionMgr.getFileCacheGigabyteCapacity()))) {
             // If the login has changed then wipe out the runAs field and value.
-            if ((!userLogin.equals(SessionMgr.getSessionMgr().getModelProperty(SessionMgr.USER_NAME)))) {
+            if ((!userLogin.equals(sessionMgr.getModelProperty(SessionMgr.USER_NAME)))) {
                 runAsTextField.setText("");
                 runAsUser="";
             }
             log.info("Setting properties in model...");
-            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.RUN_AS_USER, runAsUser);
-            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_NAME, userLogin);
-            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_PASSWORD, userPassword);
-            SessionMgr.getSessionMgr().setModelProperty(SessionMgr.USER_EMAIL, userEmail);
-            SessionMgr.setFileCacheGigabyteCapacity(cacheSize);
+            sessionMgr.setModelProperty(SessionMgr.RUN_AS_USER, runAsUser);
+            sessionMgr.setModelProperty(SessionMgr.USER_NAME, userLogin);
+            sessionMgr.setModelProperty(SessionMgr.USER_PASSWORD, userPassword);
+            sessionMgr.setModelProperty(SessionMgr.USER_EMAIL, userEmail);
+            sessionMgr.setFileCacheGigabyteCapacity(cacheSize);
             boolean loginSuccess = SessionMgr.getSessionMgr().loginSubject();
             if (loginSuccess) {
                 runAsPanel.setVisible(SessionMgr.authenticatedSubjectIsInGroup("admin"));
@@ -317,8 +319,9 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         cacheUsageBar.setBackground(Color.DARK_GRAY);
         cacheUsageBar.setStringPainted(true);
 
-        final double usage = SessionMgr.getFileCacheGigabyteUsage();
-        final int capacity = SessionMgr.getFileCacheGigabyteCapacity();
+        final SessionMgr sessionMgr = SessionMgr.getSessionMgr();
+        final double usage = sessionMgr.getFileCacheGigabyteUsage();
+        final int capacity = sessionMgr.getFileCacheGigabyteCapacity();
         final double percentage = (usage / capacity) * 100.0;
         cacheUsageBar.setValue((int) percentage);
 
@@ -328,7 +331,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
         clearCacheButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                SessionMgr.clearFileCache();
+                SessionMgr.getSessionMgr().clearFileCache();
                 cacheUsageBar.setValue(0);
                 cacheUsageBar.repaint();
             }
