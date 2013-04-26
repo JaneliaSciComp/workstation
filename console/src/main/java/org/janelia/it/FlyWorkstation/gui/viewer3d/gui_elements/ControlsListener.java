@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements;
 
+import java.util.Collection;
+
 /**
  * Created with IntelliJ IDEA.
  * User: fosterl
@@ -12,8 +14,8 @@ public interface ControlsListener {
     public enum ExportMethod { binary, color, mip }
     void setBrightness( double brightness );
     void updateSettings();
-    void setSelectedCoords( float[] normalizedCoords );
-    void exportSelection(float[] absoluteCoords, CompletionListener completionListener, ExportMethod method );
+    void setSelectedCoords( Collection<float[]> normalizedCoords );
+    void exportSelection( Collection<float[]> absoluteCoords, CompletionListener completionListener, ExportMethod method );
     void setCropBlackout( boolean blackout );
 }
 

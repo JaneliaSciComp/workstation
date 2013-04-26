@@ -126,7 +126,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         // Setup the loader to traverse all this data on demand.
         loader = new MaskChanMultiFileLoader();
         loader.setEnforcePadding( false ); // Do not extend dimensions of resulting volume beyond established space.
-        if ( paramBean.getCropCoords() == null ) {
+        if ( paramBean.getCropCoords() == null || paramBean.getCropCoords().size() == 0 ) {
             loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList(textureBuilder) );
         }
         else {
@@ -225,7 +225,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
      */
     public static class FileExportParamBean {
         private Collection<MaskChanRenderableData> renderableDatas;
-        private float[] cropCoords;
+        private Collection<float[]> cropCoords;
         private Callback callback;
         private ControlsListener.ExportMethod method;
 
@@ -237,11 +237,11 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
             this.renderableDatas = renderableDatas;
         }
 
-        public float[] getCropCoords() {
+        public Collection<float[]> getCropCoords() {
             return cropCoords;
         }
 
-        public void setCropCoords(float[] cropCoords) {
+        public void setCropCoords(Collection<float[]> cropCoords) {
             this.cropCoords = cropCoords;
         }
 

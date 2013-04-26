@@ -4,6 +4,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.slf4j.Logger;
 
+import java.util.Collection;
+
 /**
  * Created with IntelliJ IDEA.
  * User: fosterl
@@ -14,21 +16,20 @@ import org.slf4j.Logger;
  */
 public class FilteringAcceptorDecorator implements MaskChanDataAcceptorI {
     private MaskChanDataAcceptorI wrappedAcceptor;
-    private float[] cropCoords;
+    private Collection<float[]> cropCoordsCollection;
 
-    public FilteringAcceptorDecorator(MaskChanDataAcceptorI wrappedAcceptor, float[] cropCoords) {
+    public FilteringAcceptorDecorator(MaskChanDataAcceptorI wrappedAcceptor, Collection<float[]> cropCoordsCollection) {
         this.wrappedAcceptor = wrappedAcceptor;
-        this.cropCoords = cropCoords;
+        this.cropCoordsCollection = cropCoordsCollection;
     }
 
     @Override
     public int addChannelData(byte[] channelData, long position, long x, long y, long z) throws Exception {
         if ( wrappedAcceptor.getAcceptableInputs() != Acceptable.mask ) {
-            if ( x >= cropCoords[ 0 ]  &&  x <= cropCoords[ 1 ]  &&
-                    y >= cropCoords[ 2 ]  &&  y <= cropCoords[ 3 ]  &&
-                    z >= cropCoords[ 4 ]  &&  z <= cropCoords[ 5 ] ) {
-
-                return wrappedAcceptor.addChannelData( channelData, position, x, y, z );
+            for ( float[] cropCoords: cropCoordsCollection ) {
+                if ( inCrop( x, y, z, cropCoords ) ) {
+                    return wrappedAcceptor.addChannelData( channelData, position, x, y, z );
+                }
             }
         }
 
@@ -38,11 +39,10 @@ public class FilteringAcceptorDecorator implements MaskChanDataAcceptorI {
     @Override
     public int addMaskData(Integer maskNumber, long position, long x, long y, long z) throws Exception {
         if ( wrappedAcceptor.getAcceptableInputs() != Acceptable.channel ) {
-            if ( x >= cropCoords[ 0 ]  &&  x <= cropCoords[ 1 ]  &&
-                    y >= cropCoords[ 2 ]  &&  y <= cropCoords[ 3 ]  &&
-                    z >= cropCoords[ 4 ]  &&  z <= cropCoords[ 5 ] ) {
-
-                return wrappedAcceptor.addMaskData( maskNumber, position, x, y, z );
+            for ( float[] cropCoords: cropCoordsCollection ) {
+                if ( inCrop( x, y, z, cropCoords ) ) {
+                    return wrappedAcceptor.addMaskData( maskNumber, position, x, y, z );
+                }
             }
         }
 
@@ -72,5 +72,12 @@ public class FilteringAcceptorDecorator implements MaskChanDataAcceptorI {
     @Override
     public void endData(Logger logger) {
         wrappedAcceptor.endData( logger );
+    }
+
+    /** Test for coordinate bounds met by x,y,z */
+    private boolean inCrop( long x, long y, long z, float[] cropCoords ) {
+        return ( x >= cropCoords[ 0 ]  &&  x <= cropCoords[ 1 ]  &&
+                 y >= cropCoords[ 2 ]  &&  y <= cropCoords[ 3 ]  &&
+                 z >= cropCoords[ 4 ]  &&  z <= cropCoords[ 5 ] );
     }
 }

@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import java.awt.BorderLayout;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -493,13 +494,15 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         }
 
         @Override
-        public void setSelectedCoords(float[] cropCoords) {
-            mip3d.setCropCoords(cropCoords);
+        public void setSelectedCoords(Collection<float[]> cropCoords) {
+            if ( cropCoords.size() > 0 )
+                mip3d.setCropCoords(cropCoords);
         }
 
         @Override
         public void exportSelection(
-                float[] absoluteCropCoords, CompletionListener completionListener,
+                Collection<float[]> absoluteCropCoords,
+                CompletionListener completionListener,
                 ControlsListener.ExportMethod method ) {
             VolumeWritebackHandler writebackHandler = new VolumeWritebackHandler(
                     renderMapping, absoluteCropCoords, completionListener, mip3d

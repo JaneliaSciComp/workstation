@@ -13,6 +13,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
+import java.util.Collection;
 
 public class Mip3d extends BaseGLViewer implements ActionListener {
     public static final float DEFAULT_CROPOUT = 0.05f;
@@ -223,8 +224,9 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
         repaint();
     }
 
-    public void setCropCoords( float[] cropCoords ) {
-        volumeModel.setCropCoords( cropCoords );
+    public void setCropCoords( Collection<float[]> cropCoords ) {
+        if ( cropCoords != null  && cropCoords.size() > 0 )
+            volumeModel.setCropCoords( cropCoords );
         repaint();
     }
 

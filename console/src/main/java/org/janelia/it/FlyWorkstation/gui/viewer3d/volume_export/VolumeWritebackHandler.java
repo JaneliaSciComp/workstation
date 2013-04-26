@@ -33,7 +33,7 @@ import java.util.Map;
  */
 public class VolumeWritebackHandler {
     private RenderMappingI renderMapping;
-    private float[] cropCoords;
+    private Collection<float[]> cropCoords;
     private Mip3d mip3d;
     private CompletionListener completionListener;
 
@@ -41,7 +41,7 @@ public class VolumeWritebackHandler {
 
     public VolumeWritebackHandler(
             RenderMappingI renderMapping,
-            float[] cropCoords,
+            Collection<float[]> cropCoords,
             CompletionListener completionListener,
             Mip3d mip3d
     ) {

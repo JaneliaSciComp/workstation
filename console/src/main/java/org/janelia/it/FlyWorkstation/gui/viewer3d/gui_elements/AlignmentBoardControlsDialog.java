@@ -219,14 +219,18 @@ public class AlignmentBoardControlsDialog extends JDialog {
         }
     }
 
-    private synchronized void fireSettingsEvent( float[] cropCoords ) {
-        for ( ControlsListener listener: listeners ) {
-            listener.setSelectedCoords( cropCoords );
+    private synchronized void fireSettingsEvent(Collection<float[]> cropCoordCollection) {
+        if ( cropCoordCollection.size() > 0 ) {
+            for ( ControlsListener listener: listeners ) {
+                listener.setSelectedCoords( cropCoordCollection );
+            }
         }
     }
 
     private synchronized void fireSavebackEvent(
-            float[] absoluteCoords, CompletionListener completionListener, ControlsListener.ExportMethod method
+            Collection<float[]> absoluteCoords,
+            CompletionListener completionListener,
+            ControlsListener.ExportMethod method
     ) {
         for ( ControlsListener listener: listeners ) {
             listener.exportSelection( absoluteCoords, completionListener, method );
@@ -292,7 +296,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
                 };
 
                 float[] absoluteCropCoords = getCropCoords();
-                fireSavebackEvent( absoluteCropCoords, buttonEnableListener, ControlsListener.ExportMethod.binary );
+                fireSavebackEvent( Collections.singletonList( absoluteCropCoords ), buttonEnableListener, ControlsListener.ExportMethod.binary );
 
             }
         });
@@ -309,7 +313,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
             public void actionPerformed(ActionEvent ae) {
                 colorSaveButton.setEnabled( false );
                 float[] absoluteCropCoords = getCropCoords();
-                fireSavebackEvent( absoluteCropCoords, buttonEnableListener, ControlsListener.ExportMethod.color );
+                fireSavebackEvent( Collections.singletonList( absoluteCropCoords ), buttonEnableListener, ControlsListener.ExportMethod.color );
             }
         });
 
@@ -325,7 +329,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
             public void actionPerformed( ActionEvent ae ) {
                 screenShotButton.setEnabled( false );
                 float[] absoluteCropCoords = getCropCoords();
-                fireSavebackEvent( absoluteCropCoords, buttonEnableListener, ControlsListener.ExportMethod.mip );
+                fireSavebackEvent( Collections.singletonList( absoluteCropCoords ), buttonEnableListener, ControlsListener.ExportMethod.mip );
             }
         });
 
@@ -574,8 +578,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
         public void stateChanged(ChangeEvent e) {
             float[] cropCoords = new CoordCropper3D().getNormalizedCropCoords( sliders );
-            dialog.fireSettingsEvent( cropCoords );
-
+            dialog.fireSettingsEvent( Collections.singletonList( cropCoords ) );
         }
 
     }
