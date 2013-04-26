@@ -42,7 +42,7 @@ public class CachedFile implements Serializable {
         this.webDavFile = webDavFile;
         this.localFile = localFile;
         if (! webDavFile.isDirectory()) {
-            // prefix with name '.' so that the meta files are
+            // prefix name with '.' so that the meta files are
             // hidden/obscured when 'reveal in finder' is used
             this.metaFile = new File(localFile.getParentFile(),
                                      "." + localFile.getName() + META_FILE_SUFFIX);
