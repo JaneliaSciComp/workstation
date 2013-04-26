@@ -22,6 +22,7 @@ public class LocalFileCacheTest extends TestCase {
     private MockWebDavClient mockClient;
     private List<File> testRemoteFiles;
     private int singleFileKilobytes;
+    private int immediateFileCount;
     private int maxNumberOfCachedFiles;
     private File remoteTestDirectory;
     private List<File> filesToDeleteDuringTearDown;
@@ -69,7 +70,8 @@ public class LocalFileCacheTest extends TestCase {
                 CachedFileTest.createFile(nestedRemoteDirectory,
                                           singleFileKilobytes));
 
-        for (int i = 0; i < 3; i++) {
+        immediateFileCount = 3;
+        for (int i = 0; i < immediateFileCount; i++) {
             testRemoteFiles.add(
                     CachedFileTest.createFile(remoteTestDirectory,
                                               singleFileKilobytes));
@@ -228,6 +230,39 @@ public class LocalFileCacheTest extends TestCase {
         Assert.assertFalse("remote and effective URLs should differ after file is cached",
                 remoteUrl.equals(effectiveUrl));
     }
+
+    public void testGetImmediateDirectory() throws Exception {
+        // double capacity to ensure that limit is based upon immediate check
+        cache.setKilobyteCapacity(cache.getKilobyteCapacity() * 2);
+
+        final URL remoteDirectoryUrl = remoteTestDirectory.toURI().toURL();
+        File localDirectory  = cache.getDirectory(remoteDirectoryUrl, false, false);
+
+        Assert.assertTrue("local directory for " + remoteDirectoryUrl + " does not exist",
+                          localDirectory.exists());
+
+        final long numberOfFiles = cache.getNumberOfFiles();
+
+        Assert.assertEquals("cache contains incorrect number of files",
+                            immediateFileCount, numberOfFiles);
+    }
+
+    public void testGetAllDirectory() throws Exception {
+        // double capacity so that all files can be cached
+        cache.setKilobyteCapacity(cache.getKilobyteCapacity() * 2);
+
+        final URL remoteDirectoryUrl = remoteTestDirectory.toURI().toURL();
+        File localDirectory  = cache.getDirectory(remoteDirectoryUrl, true, false);
+
+        Assert.assertTrue("local directory for " + remoteDirectoryUrl + " does not exist",
+                localDirectory.exists());
+
+        final long numberOfFiles = cache.getNumberOfFiles();
+
+        Assert.assertEquals("cache contains incorrect number of files",
+                            testRemoteFiles.size(), numberOfFiles);
+    }
+
 
     private static final Logger LOG = LoggerFactory.getLogger(LocalFileCacheTest.class);
 }

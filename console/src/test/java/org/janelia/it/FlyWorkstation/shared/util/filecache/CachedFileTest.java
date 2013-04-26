@@ -20,6 +20,8 @@ import java.util.Date;
  */
 public class CachedFileTest extends TestCase {
 
+    private static int fileCount = 0;
+
     private File testCacheRootDirectory;
     private File testCacheTempDirectory;
     private File testCacheActiveDirectory;
@@ -189,8 +191,9 @@ public class CachedFileTest extends TestCase {
     /**
      * @return a new timestamp directory name based on the current time.
      */
-    public static String buildTimestampName() {
-        return TIMESTAMP_FORMAT.format(new Date());
+    public synchronized static String buildTimestampName() {
+        fileCount++;
+        return TIMESTAMP_FORMAT.format(new Date()) + "-" + fileCount;
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(CachedFileTest.class);

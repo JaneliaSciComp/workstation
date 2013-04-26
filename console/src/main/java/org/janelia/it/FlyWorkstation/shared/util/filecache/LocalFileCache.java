@@ -310,6 +310,60 @@ public class LocalFileCache {
     }
 
     /**
+     * Locally caches all files in the specified remote directory
+     * and returns the corresponding local directory.
+     * Any files not in the cache are retrieved/copied (on the current
+     * thread of execution) before control is returned to the caller.
+     *
+     * @param  remoteDirectoryUrl  remote URL for the directory.
+     *
+     * @param  fetchFilesInAllSubDirectories  if true, all files within the
+     *                                        directory and its sub-directories
+     *                                        will be retrieved; otherwise
+     *                                        only files in the immediate
+     *                                        directory are retrieved.
+     *
+     * @param  forceRefresh   if true, will force removal of any existing
+     *                        cached file before retrieving it again from
+     *                        the remote source.
+     *
+     * @return the local cached instance of the specified remote directory.
+     *
+     * @throws FileNotCacheableException
+     *   if any of the directory's files cannot be cached locally or
+     *   if the directory does not exist or is empty.
+     */
+    public File getDirectory(URL remoteDirectoryUrl,
+                             boolean fetchFilesInAllSubDirectories,
+                             boolean forceRefresh)
+            throws FileNotCacheableException {
+
+        try {
+            List<WebDavFile> webDavFiles;
+
+            if (fetchFilesInAllSubDirectories) {
+                webDavFiles = webDavClient.findAllInternalFiles(remoteDirectoryUrl);
+            } else {
+                webDavFiles = webDavClient.findImmediateInternalFiles(remoteDirectoryUrl);
+            }
+
+            for (WebDavFile webDavFile : webDavFiles) {
+                getFile(webDavFile.getUrl(), forceRefresh);
+            }
+
+        } catch (Exception e) {
+            throw new FileNotCacheableException("failed to retrieve " + remoteDirectoryUrl, e);
+        }
+
+        final File localDirectory = new File(activeDirectory, remoteDirectoryUrl.getPath());
+        if (! localDirectory.exists()) {
+            throw new FileNotCacheableException("local cache directory missing for " + remoteDirectoryUrl);
+        }
+
+        return localDirectory;
+    }
+
+    /**
      * Clears and removes all locally cached files.
      * Entries will be removed from the in-memory metadata cache immediately.
      * The locally cached files will be removed from the file system

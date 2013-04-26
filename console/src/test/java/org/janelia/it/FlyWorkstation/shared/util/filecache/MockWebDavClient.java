@@ -63,23 +63,44 @@ public class MockWebDavClient extends WebDavClient {
         return list.get(0);
     }
 
-        @Override
+    @Override
     public List<WebDavFile> findAllInternalFiles(URL url)
             throws WebDavRetrievalException {
-        return getFiles(url);
+        return getFiles(url, true);
     }
 
     @Override
     public List<WebDavFile> findImmediateInternalFiles(URL url)
             throws WebDavRetrievalException {
-        return getFiles(url);
+        return getFiles(url, false);
     }
 
-    private List<WebDavFile> getFiles(URL url) {
-        List<WebDavFile> list = urlToFileList.get(url);
-        if (list == null) {
-            list = new ArrayList<WebDavFile>();
+    private List<WebDavFile> getFiles(URL url,
+                                      boolean addAll) {
+
+        List<WebDavFile> list = new ArrayList<WebDavFile>();
+
+        final String directoryPath = url.getPath();
+        String path;
+        File file;
+        File parent;
+        for (URL registeredUrl : urlToFileList.keySet()) {
+            for (WebDavFile webDavFile : urlToFileList.get(registeredUrl)) {
+                path = webDavFile.getUrl().getPath();
+                if (addAll) {
+                    if (path.startsWith(directoryPath)) {
+                        list.add(webDavFile);
+                    }
+                } else {
+                    file = new File(path);
+                    parent = file.getParentFile();
+                    if (directoryPath.equals(parent.getAbsolutePath() + "/")) {
+                        list.add(webDavFile);
+                    }
+                }
+            }
         }
+
         return list;
     }
 }
