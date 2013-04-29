@@ -893,11 +893,9 @@ public class SessionMgr {
     }
 
     /**
-     * If local caching is enabled, this method will cache the requested
-     * system file (as needed) and return the cached file.
-     * If local caching is disabled, this method will simply convert
-     * the specified path for the current platform assuming that
-     * the file is to be loaded via remote mount.
+     * If local caching is enabled, this method will synchronously cache
+     * the requested system file (as needed) and return the cached file.
+     * If local caching is disabled, null is returned.
      *
      * @param  standardPath  the standard system path for the file.
      *
@@ -906,10 +904,11 @@ public class SessionMgr {
      *                       being returned.  In most cases, this
      *                       should be set to false.
      *
-     * @return an accessible file for the specified path.
+     * @return an accessible file for the specified path or
+     *         null if caching is disabled or the file cannot be cached.
      */
     public static File getCachedFile(String standardPath,
-                               boolean forceRefresh) {
+                                     boolean forceRefresh) {
 
         final SessionMgr mgr = SessionMgr.getSessionMgr();
 
@@ -923,8 +922,7 @@ public class SessionMgr {
             } catch (Exception e) {
                 log.error("Failed to retrieve " + standardPath + " from local cache", e);
             }
-        }
-        else {
+        } else {
             log.error("Local file cache is not available");
         }
 
@@ -936,7 +934,6 @@ public class SessionMgr {
      * URL on the WebDAV server. It might even be a mounted location, if WebDAV is disabled. 
      * @param standardPath a standard system path
      * @return an accessible URL for the specified path
-     * @throws Exception
      */
     public static URL getURL(String standardPath) {
         try {
