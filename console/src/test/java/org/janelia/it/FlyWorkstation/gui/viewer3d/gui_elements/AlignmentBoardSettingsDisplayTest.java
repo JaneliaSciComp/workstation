@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CropCoordSet;
+
 import javax.swing.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -15,7 +17,9 @@ import java.awt.event.WindowEvent;
  */
 public class AlignmentBoardSettingsDisplayTest {
     public static void main(String[] args) {
-        AlignmentBoardControlsDialog testDialog = new AlignmentBoardControlsDialog( new JFrame() );
+        AlignmentBoardControlsDialog testDialog = new AlignmentBoardControlsDialog(
+                new JFrame(), CropCoordSet.getDefaultCropCoordSet()
+        );
         testDialog.addWindowListener( new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
