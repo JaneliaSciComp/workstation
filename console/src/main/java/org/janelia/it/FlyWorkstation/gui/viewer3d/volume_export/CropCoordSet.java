@@ -33,9 +33,8 @@ public class CropCoordSet {
 
     /** Push the current, putative coord volume into the accepted collection.  */
     public void acceptCurrentCoordinates() {
-        if ( currentCoordinates != null ) {
+        if ( currentCoordinates != null  &&  ! alreadyAccepted( getAcceptedCoordinates(), getCurrentCoordinates() ) ) {
             acceptedCoordinates.add( currentCoordinates );
-            currentCoordinates = null;
         }
     }
 
@@ -60,6 +59,28 @@ public class CropCoordSet {
     public static CropCoordSet getDefaultCropCoordSet() {
         CropCoordSet rtnVal = new CropCoordSet();
         rtnVal.setCurrentCoordinates( DEFAULT_CROP_COORDS );
+        return rtnVal;
+    }
+
+    /** It is possible for the current coord to have already been accepted. */
+    public static boolean alreadyAccepted( Collection<float[]> acceptedCoordinates, float[] currentCoordinates ) {
+        boolean rtnVal = false;
+        for ( float[] nextAccepted: acceptedCoordinates ) {
+            // See if any of the accepted ones is the same.
+            boolean comparesSame = true;
+            for ( int i = 0; i < nextAccepted.length  &&  comparesSame; i++ ) {
+                if ( nextAccepted[ i ] != currentCoordinates[ i ] ) {
+                    comparesSame = false;
+                }
+            }
+
+            // If any matches all coords, this one is already in.
+            if ( comparesSame ) {
+                rtnVal = true;
+                break;
+            }
+        }
+
         return rtnVal;
     }
 }

@@ -303,7 +303,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
                     }
                 };
 
-                Collection<float[]> acceptedCords = getMicrometerCropCoords();
+                Collection<float[]> acceptedCords = getCombinedCropCoords();
                 fireSavebackEvent( acceptedCords, buttonEnableListener, ControlsListener.ExportMethod.binary );
 
             }
@@ -320,7 +320,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
             public void actionPerformed(ActionEvent ae) {
                 colorSaveButton.setEnabled( false );
-                Collection<float[]> acceptedCords = getMicrometerCropCoords();
+                Collection<float[]> acceptedCords = getCombinedCropCoords();
                 fireSavebackEvent(acceptedCords, buttonEnableListener, ControlsListener.ExportMethod.color);
             }
         });
@@ -336,7 +336,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
             public void actionPerformed( ActionEvent ae ) {
                 screenShotButton.setEnabled( false );
-                Collection<float[]> acceptedCords = getMicrometerCropCoords();
+                Collection<float[]> acceptedCords = getCombinedCropCoords();
                 fireSavebackEvent( acceptedCords, buttonEnableListener, ControlsListener.ExportMethod.mip );
             }
         });
@@ -498,14 +498,20 @@ public class AlignmentBoardControlsDialog extends JDialog {
         }
         return micrometerCropCoords;
     }
-//    private Collection<float[]> getCombinedCropCoords() {
-//        float[] absoluteCropCoords = getCurrentCropCoords();
-//        Collection<float[]> acceptedCords = cropCoordSet.getAcceptedCoordinates();
-//        Collection<float[]> combinedCoords = new HashSet<float[]>();
-//        combinedCoords.add( absoluteCropCoords );
-//        combinedCoords.addAll( acceptedCords );
-//        return combinedCoords;
-//    }
+
+    private Collection<float[]> getCombinedCropCoords() {
+        float[] absoluteCropCoords = getCurrentCropCoords();
+        Collection<float[]> acceptedCoords = getMicrometerCropCoords();
+        if ( ! CropCoordSet.alreadyAccepted( acceptedCoords, absoluteCropCoords ) ) {
+            Collection<float[]> combinedCoords = new HashSet<float[]>();
+            combinedCoords.add( absoluteCropCoords );
+            combinedCoords.addAll( acceptedCoords );
+            return combinedCoords;
+        }
+        else {
+            return acceptedCoords;
+        }
+    }
 
     private float[] getCurrentCropCoords() {
         boolean partialVolumeConstraints = false;
