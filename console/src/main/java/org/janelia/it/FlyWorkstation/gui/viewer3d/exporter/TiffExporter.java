@@ -106,7 +106,7 @@ public class TiffExporter {
         }
         else {
             argb = new short[ textureSize ];
-            logger.info( "Size of argb buffer is {}.", argbBuffer.remaining() );
+            logger.debug( "Size of argb buffer is {}.", argbBuffer.remaining() );
             argbBuffer.get( argb );
         }
         return argb;
@@ -121,7 +121,7 @@ public class TiffExporter {
         }
         else {
             argb = new int[ textureSize ];
-            logger.info( "Size of int buffer is {}.", argbBuffer.remaining() );
+            logger.debug( "Size of int buffer is {}.", argbBuffer.remaining() );
             argbBuffer.get( argb );
         }
         return argb;

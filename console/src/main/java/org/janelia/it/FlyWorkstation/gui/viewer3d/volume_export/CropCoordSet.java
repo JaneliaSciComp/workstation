@@ -1,8 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 
 /**
@@ -31,6 +29,14 @@ public class CropCoordSet {
 
     public CropCoordSet() {
         acceptedCoordinates = new HashSet<float[]>();
+    }
+
+    /** Push the current, putative coord volume into the accepted collection.  */
+    public void acceptCurrentCoordinates() {
+        if ( currentCoordinates != null ) {
+            acceptedCoordinates.add( currentCoordinates );
+            currentCoordinates = null;
+        }
     }
 
     /** These have already been accepted as part of the finished selection, by the user. */

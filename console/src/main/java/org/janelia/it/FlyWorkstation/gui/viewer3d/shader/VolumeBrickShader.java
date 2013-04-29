@@ -113,13 +113,11 @@ public class VolumeBrickShader extends AbstractShader {
      *  as values between 0.0 and 1.0.
      */
     public void setCropCoords( CropCoordSet cropCoordSet ) {
-        // Null crop coords will be mis-interpretted.
-        if ( cropCoordSet.getCurrentCoordinates() == null  &&  cropCoordSet.getAcceptedCoordinates().size() == 0 ) {
-            return;
-        }
-        for ( float[] cropCoords: cropCoordSet.getAcceptedCoordinates() ) {
-            if ( cropCoords.length < 6 ) {
-                throw new IllegalArgumentException("Crop coords need a start and end in three dimensions.");
+        if ( cropCoordSet.getAcceptedCoordinates().size() > 0 ) {
+            for ( float[] cropCoords: cropCoordSet.getAcceptedCoordinates() ) {
+                if ( cropCoords.length < 6 ) {
+                    throw new IllegalArgumentException("Crop coords need a start and end in three dimensions.");
+                }
             }
         }
         this.cropCoordSet = cropCoordSet;

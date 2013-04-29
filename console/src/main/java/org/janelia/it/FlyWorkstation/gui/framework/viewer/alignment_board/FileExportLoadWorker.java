@@ -180,6 +180,9 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
     private void buildTexture() {
         // These two texture-build steps will proceed in parallel.
         TextureDataI textureData = textureBuilder.buildTextureData();
+        if ( textureData == null ) {
+            throw new RuntimeException( "Null Texture Data Created." );
+        }
         paramBean.getCallback().loadVolume(textureData);
     }
 

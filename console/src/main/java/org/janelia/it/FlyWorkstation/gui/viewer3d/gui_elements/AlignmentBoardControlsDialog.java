@@ -303,8 +303,8 @@ public class AlignmentBoardControlsDialog extends JDialog {
                     }
                 };
 
-                float[] absoluteCropCoords = getCurrentCropCoords();
-                fireSavebackEvent( Collections.singletonList( absoluteCropCoords ), buttonEnableListener, ControlsListener.ExportMethod.binary );
+                Collection<float[]> acceptedCords = getMicrometerCropCoords();
+                fireSavebackEvent( acceptedCords, buttonEnableListener, ControlsListener.ExportMethod.binary );
 
             }
         });
@@ -320,8 +320,8 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
             public void actionPerformed(ActionEvent ae) {
                 colorSaveButton.setEnabled( false );
-                float[] absoluteCropCoords = getCurrentCropCoords();
-                fireSavebackEvent( Collections.singletonList( absoluteCropCoords ), buttonEnableListener, ControlsListener.ExportMethod.color );
+                Collection<float[]> acceptedCords = getMicrometerCropCoords();
+                fireSavebackEvent(acceptedCords, buttonEnableListener, ControlsListener.ExportMethod.color);
             }
         });
 
@@ -336,8 +336,8 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
             public void actionPerformed( ActionEvent ae ) {
                 screenShotButton.setEnabled( false );
-                float[] absoluteCropCoords = getCurrentCropCoords();
-                fireSavebackEvent( Collections.singletonList( absoluteCropCoords ), buttonEnableListener, ControlsListener.ExportMethod.mip );
+                Collection<float[]> acceptedCords = getMicrometerCropCoords();
+                fireSavebackEvent( acceptedCords, buttonEnableListener, ControlsListener.ExportMethod.mip );
             }
         });
 
@@ -350,7 +350,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
         orButton.setToolTipText( OR_BUTTON_TIP );
         orButton.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent ae ) {
-                cropCoordSet.setCurrentCoordinates(getCurrentCropCoords());
+                cropCoordSet.acceptCurrentCoordinates();
                 fireSettingsEvent( cropCoordSet );
             }
         });
@@ -485,6 +485,27 @@ public class AlignmentBoardControlsDialog extends JDialog {
         bottomButtonPanel.setBorder( new EmptyBorder( insets ) );
         add(bottomButtonPanel, BorderLayout.SOUTH);
     }
+
+    private Collection<float[]> getMicrometerCropCoords() {
+        Collection<float[]> micrometerCropCoords = new HashSet<float[]>( cropCoordSet.getAcceptedCoordinates().size() );
+        int[] maxima = new int[] {
+                xSlider.getMaximum(), ySlider.getMaximum(), zSlider.getMaximum()
+        };
+        for ( float[] nextAccepted: cropCoordSet.getAcceptedCoordinates() ) {
+            CoordCropper3D cropper3D = new CoordCropper3D();
+            float[] adjusted = cropper3D.getDenormalizedCropCoords( nextAccepted, maxima, getDownsampleRate() );
+            micrometerCropCoords.add( adjusted );
+        }
+        return micrometerCropCoords;
+    }
+//    private Collection<float[]> getCombinedCropCoords() {
+//        float[] absoluteCropCoords = getCurrentCropCoords();
+//        Collection<float[]> acceptedCords = cropCoordSet.getAcceptedCoordinates();
+//        Collection<float[]> combinedCoords = new HashSet<float[]>();
+//        combinedCoords.add( absoluteCropCoords );
+//        combinedCoords.addAll( acceptedCords );
+//        return combinedCoords;
+//    }
 
     private float[] getCurrentCropCoords() {
         boolean partialVolumeConstraints = false;
