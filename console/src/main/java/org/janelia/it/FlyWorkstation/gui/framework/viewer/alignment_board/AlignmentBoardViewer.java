@@ -25,6 +25,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMappi
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ABContextDataSource;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CropCoordSet;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.VolumeWritebackHandler;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.domain.Neuron;
@@ -61,7 +62,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
     private ModelMgrObserver modelMgrObserver;
     private RenderMappingI renderMapping;
-    private Collection<float[]> cropCoordsCollection;
+    private CropCoordSet cropCoordSet;
     private BrainGlow brainGlow;
     private AlignmentBoardControlsDialog settings;
     private Logger logger = LoggerFactory.getLogger(AlignmentBoardViewer.class);
@@ -70,7 +71,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         super(viewerPane);
 
         renderMapping = new ConfigurableColorMapping();
-        cropCoordsCollection = new ArrayList<float[]>();
+        cropCoordSet = CropCoordSet.getDefaultCropCoordSet();
         setLayout(new BorderLayout());
         ModelMgr.getModelMgr().registerOnEventBus(this);
         
@@ -223,7 +224,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 signalTexture,
                 maskTexture,
                 renderMapping,
-                cropCoordsCollection,
+                cropCoordSet,
                 (float) AlignmentBoardControlsDialog.DEFAULT_GAMMA
         ) ) {
             logger.error( "Failed to load volume to mip3d." );
@@ -427,7 +428,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
      */
     private Mip3d createMip3d() {
         Mip3d rtnVal = new Mip3d();
-        settings = new AlignmentBoardControlsDialog( rtnVal );
+        settings = new AlignmentBoardControlsDialog( rtnVal, cropCoordSet );
         settings.setDownSampleRate( AlignmentBoardControlsDialog.DEFAULT_DOWNSAMPLE_RATE );
         settings.addSettingsListener(
                 new AlignmentBoardControlsListener( rtnVal, renderMapping, this )
@@ -497,9 +498,10 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         }
 
         @Override
-        public void setSelectedCoords(Collection<float[]> cropCoords) {
-            if ( cropCoords.size() > 0 )
-                mip3d.setCropCoords(cropCoords);
+        public void setSelectedCoords( CropCoordSet cropCoordSet ) {
+            if ( cropCoordSet.getCurrentCoordinates() != null  ||  cropCoordSet.getAcceptedCoordinates().size() > 0 ) {
+                mip3d.setCropCoords( cropCoordSet );
+            }
         }
 
         @Override

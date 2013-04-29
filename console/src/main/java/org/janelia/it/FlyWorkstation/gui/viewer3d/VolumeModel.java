@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CropCoordSet;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -14,19 +16,19 @@ import java.util.Collection;
  * the GLActor abstraction.
  */
 public class VolumeModel {
-    private Collection<float[]> cropCoords = Arrays.asList( Mip3d.DEFAULT_CROP_COORDS );
+    private CropCoordSet cropCoordSet = CropCoordSet.getDefaultCropCoordSet();
     private float gammaAdjustment = 1.0f;
     private float cropOutLevel = Mip3d.DEFAULT_CROPOUT;
     private float[] colorMask = { 1.0f, 1.0f, 1.0f };
 
     private Collection<UpdateListener> listeners = new ArrayList<UpdateListener>();
 
-    public Collection<float[]> getCropCoords() {
-        return cropCoords;
+    public CropCoordSet getCropCoords() {
+        return cropCoordSet;
     }
 
-    public void setCropCoords(Collection<float[]> cropCoords) {
-        this.cropCoords = cropCoords;
+    public void setCropCoords(CropCoordSet cropCoordSet) {
+        this.cropCoordSet = cropCoordSet;
     }
 
     public float getGammaAdjustment() {

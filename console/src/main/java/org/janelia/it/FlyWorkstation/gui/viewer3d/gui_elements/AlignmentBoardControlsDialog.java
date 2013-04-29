@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements;
 
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CoordCropper3D;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CropCoordSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,6 +56,9 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private static final String SAVE_SCREEN_SHOT_MIP = "Screen Shot/MIP";
     private static final String DOWN_SAMPLE_RATE = "Down Sample Rate";
     private static final String USE_SIGNAL_DATA = "Use Signal Data";
+    private static final String OR_BUTTON_TIP = "<html>Combine <font color='red'>this</font> selection region<br>" +
+            "with previous selection region(s)<br></html>";
+    private static final String OR_BUTTON_LABEL = "OR";
 
     private Component centering;
     private JSlider brightnessSlider;
@@ -74,6 +78,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private boolean readyForOutput = false;
 
     private Map<Integer,Integer> downSampleRateToIndex;
+    private CropCoordSet cropCoordSet;
     private Collection<ControlsListener> listeners;
 
     private Logger logger = LoggerFactory.getLogger( AlignmentBoardControlsDialog.class );
@@ -81,11 +86,12 @@ public class AlignmentBoardControlsDialog extends JDialog {
     /**
      * @param centering this dialog will be centered over the "centering" component.
      */
-    public AlignmentBoardControlsDialog(Component centering) {
+    public AlignmentBoardControlsDialog(Component centering, CropCoordSet cropCoordSet ) {
         this.setModal( false );
         this.setSize(SIZE);
         this.centering = centering;
         this.listeners = new ArrayList<ControlsListener>();
+        this.cropCoordSet = cropCoordSet;
         this.setDefaultCloseOperation( WindowConstants.HIDE_ON_CLOSE );
         createGui();
     }
@@ -219,10 +225,10 @@ public class AlignmentBoardControlsDialog extends JDialog {
         }
     }
 
-    private synchronized void fireSettingsEvent(Collection<float[]> cropCoordCollection) {
-        if ( cropCoordCollection.size() > 0 ) {
+    private synchronized void fireSettingsEvent( CropCoordSet cropCoordSet ) {
+        if ( cropCoordSet.getAcceptedCoordinates().size() > 0  ||  cropCoordSet.getCurrentCoordinates() != null ) {
             for ( ControlsListener listener: listeners ) {
-                listener.setSelectedCoords( cropCoordCollection );
+                listener.setSelectedCoords( cropCoordSet );
             }
         }
     }
@@ -251,7 +257,9 @@ public class AlignmentBoardControlsDialog extends JDialog {
         ySlider = new RangeSlider( 0, 100 );
         zSlider = new RangeSlider( 0, 100 );
 
-        ChangeListener listener = new SliderChangeListener( xSlider, ySlider, zSlider, this );
+        ChangeListener listener = new SliderChangeListener(
+                new RangeSlider[]{ xSlider, ySlider, zSlider }, cropCoordSet, this
+        );
 
         xSlider.addChangeListener( listener );
         ySlider.addChangeListener( listener );
@@ -295,7 +303,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
                     }
                 };
 
-                float[] absoluteCropCoords = getCropCoords();
+                float[] absoluteCropCoords = getCurrentCropCoords();
                 fireSavebackEvent( Collections.singletonList( absoluteCropCoords ), buttonEnableListener, ControlsListener.ExportMethod.binary );
 
             }
@@ -312,7 +320,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
             public void actionPerformed(ActionEvent ae) {
                 colorSaveButton.setEnabled( false );
-                float[] absoluteCropCoords = getCropCoords();
+                float[] absoluteCropCoords = getCurrentCropCoords();
                 fireSavebackEvent( Collections.singletonList( absoluteCropCoords ), buttonEnableListener, ControlsListener.ExportMethod.color );
             }
         });
@@ -328,16 +336,26 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
             public void actionPerformed( ActionEvent ae ) {
                 screenShotButton.setEnabled( false );
-                float[] absoluteCropCoords = getCropCoords();
+                float[] absoluteCropCoords = getCurrentCropCoords();
                 fireSavebackEvent( Collections.singletonList( absoluteCropCoords ), buttonEnableListener, ControlsListener.ExportMethod.mip );
             }
         });
 
         JPanel regionSelectionPanel = new JPanel();
-        regionSelectionPanel.setLayout(new GridLayout(1, 3));
+        regionSelectionPanel.setLayout(new GridLayout(1, 4));
         regionSelectionPanel.add(xSlider);
         regionSelectionPanel.add(ySlider);
         regionSelectionPanel.add(zSlider);
+        JButton orButton = new JButton( OR_BUTTON_LABEL );
+        orButton.setToolTipText( OR_BUTTON_TIP );
+        orButton.addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent ae ) {
+                cropCoordSet.setCurrentCoordinates(getCurrentCropCoords());
+                fireSettingsEvent( cropCoordSet );
+            }
+        });
+        regionSelectionPanel.add(orButton);
+
         regionSelectionPanel.setToolTipText(GEO_SEARCH_TOOLTIP);
 
         brightnessSlider = new JSlider();
@@ -421,7 +439,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
                 0, 2, 2, 2, 1.0, 1.0, GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, insets, 0, 0
         );
 
-        GridBagConstraints sliderPanelConstraints = new GridBagConstraints(
+        GridBagConstraints regionSelectionPanelConstraints = new GridBagConstraints(
                 0, 4, 3, 1, 1.0, 0.0, GridBagConstraints.NORTH, GridBagConstraints.BOTH, insets, 0, 0
         );
 
@@ -446,7 +464,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
         centralPanel.add( useSignalDataCheckbox, signalDataConstraints );
         centralPanel.add( commitButton, commitBtnConstraints );
         centralPanel.add( blackoutCheckbox, blackoutCheckboxConstraints );
-        centralPanel.add( regionSelectionPanel, sliderPanelConstraints );
+        centralPanel.add( regionSelectionPanel, regionSelectionPanelConstraints );
         centralPanel.add( searchSaveButton, saveSearchConstraints );
         centralPanel.add( colorSaveButton, saveColorConstraints );
         centralPanel.add( screenShotButton, saveScreenShotConstraints );
@@ -468,7 +486,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
         add(bottomButtonPanel, BorderLayout.SOUTH);
     }
 
-    private float[] getCropCoords() {
+    private float[] getCurrentCropCoords() {
         boolean partialVolumeConstraints = false;
         if ( xSlider.getValue() != 0  ||  ySlider.getValue() != 0  ||  zSlider.getValue() != 0 ) {
             partialVolumeConstraints = true;
@@ -562,23 +580,26 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
     }
 
-    // Add listener to update display.
+    /** This listener updates the current display with latest slider tweaks. */
     public static class SliderChangeListener implements ChangeListener {
         private RangeSlider[] sliders;
         private AlignmentBoardControlsDialog dialog;
+        private CropCoordSet cropCoordSet;
 
         public SliderChangeListener(
-                RangeSlider xSlider, RangeSlider ySlider, RangeSlider zSlider, AlignmentBoardControlsDialog dialog
+                RangeSlider[] rangeSliders,
+                CropCoordSet cropCoordSet,
+                AlignmentBoardControlsDialog dialog
         ) {
-            this.sliders = new RangeSlider[] {
-                    xSlider, ySlider, zSlider
-            };
+            this.sliders = rangeSliders;
+            this.cropCoordSet = cropCoordSet;
             this.dialog = dialog;
         }
 
         public void stateChanged(ChangeEvent e) {
             float[] cropCoords = new CoordCropper3D().getNormalizedCropCoords( sliders );
-            dialog.fireSettingsEvent( Collections.singletonList( cropCoords ) );
+            cropCoordSet.setCurrentCoordinates( cropCoords );
+            dialog.fireSettingsEvent( cropCoordSet );
         }
 
     }

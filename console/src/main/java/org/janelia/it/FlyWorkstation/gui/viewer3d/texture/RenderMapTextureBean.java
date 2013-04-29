@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CropCoordSet;
 
 import javax.media.opengl.GL2;
 import java.nio.ByteOrder;
@@ -29,7 +30,7 @@ public class RenderMapTextureBean implements TextureDataI {
     private static final int LINE_WIDTH = 256;
 
     private RenderMappingI renderMapping;
-    private Collection<float[]> cropCoordCollection;
+    private CropCoordSet cropCoordSet;
     //private byte[] mapData;
     private boolean inverted = false; // Default probably carries the day.
     private Integer voxelComponentFormat = GL2.GL_UNSIGNED_INT_8_8_8_8_REV;
@@ -50,10 +51,10 @@ public class RenderMapTextureBean implements TextureDataI {
     /**
      * Setting crop coords for the byte array. These need to be de-normalized to non 0..1 values.
      *
-     * @param cropCoordCollection collection of 6-float axial position delimiters. 2 for each 3D axis.
+     * @param cropCoordSet collection of 6-float axial position delimiters. 2 for each 3D axis.
      */
-    public void setCropCoords( Collection<float[]> cropCoordCollection ) {
-        this.cropCoordCollection = cropCoordCollection;
+    public void setCropCoords( CropCoordSet cropCoordSet ) {
+        this.cropCoordSet = cropCoordSet;
     }
 
     @Override
@@ -81,13 +82,13 @@ public class RenderMapTextureBean implements TextureDataI {
         }
 
         // Need de-normalized as-int values in the crop coords.
-        if ( cropCoordCollection != null ) {
-            if ( cropCoordCollection.size() > MAX_COORD_SETS ) {
+        if ( cropCoordSet != null ) {
+            if ( cropCoordSet.getAcceptedCoordinates().size() > MAX_COORD_SETS ) {
                 throw new IllegalArgumentException("Invalid inputs for crop coordinate sets");
             }
 
             int nextCropBoxOffset = BYTES_PER_ENTRY * MAP_SIZE;
-            for ( float[] cropCoords: cropCoordCollection ) {
+            for ( float[] cropCoords: cropCoordSet.getAcceptedCoordinates() ) {
                 // These are guaranteed non-fractional.
                 for ( int i = 0; i < cropCoords.length; i++ ) {
                     int iValue = (int) cropCoords[ i ];

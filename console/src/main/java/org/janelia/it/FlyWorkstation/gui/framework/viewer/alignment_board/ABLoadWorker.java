@@ -12,6 +12,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.SampleData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.CacheFileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.AlignmentBoardDataBuilder;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CropCoordSet;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
@@ -40,7 +41,7 @@ public class ABLoadWorker extends SimpleWorker {
     private Logger logger;
 
     private Map<Long,RenderMappingI> renderMappings;
-    private Collection<float[]> cropCoordsCollection;
+    private CropCoordSet cropCoordSet;
 
     public ABLoadWorker(
             AlignmentBoardViewer viewer, AlignmentBoardContext context, Mip3d mip3d
@@ -53,14 +54,14 @@ public class ABLoadWorker extends SimpleWorker {
             AlignmentBoardContext context,
             Mip3d mip3d,
             Map<Long,RenderMappingI> renderMappings,
-            Collection<float[]> cropCoordsCollection
+            CropCoordSet cropCoordSet
     ) {
         logger = LoggerFactory.getLogger( ABLoadWorker.class );
         this.context = context;
         this.mip3d = mip3d;
         this.viewer = viewer;
         this.renderMappings = renderMappings;
-        this.cropCoordsCollection = cropCoordsCollection;
+        this.cropCoordSet = cropCoordSet;
     }
 
     public void setLoadFilesFlag( Boolean loadFiles ) {
@@ -221,7 +222,7 @@ public class ABLoadWorker extends SimpleWorker {
 
             // The volume's data is loaded here.
             if ( ! mip3d.loadVolume(
-                    signalFilename, volumeMaskBuilder, resolver, renderMapping, cropCoordsCollection, GAMMA_VALUE
+                    signalFilename, volumeMaskBuilder, resolver, renderMapping, cropCoordSet, GAMMA_VALUE
             ) ) {
                 logger.error( "Failed to load masked volume {} to mip3d.", signalFilename );
             }

@@ -59,24 +59,6 @@ vec4 volumeMask(vec4 origColor)
             // This finds the render-method byte, which is stored in the alpha byte of the uploaded mapping texture.
             float renderMethod = floor(mappedColor[ 3 ] * 255.1);
 
-            // DEBUG: first case: mapped color not found.
-            /*
-            if ( mappedColor[ 0 ] == mappedColor[ 1 ] && mappedColor[ 1 ] == mappedColor[ 2 ]  && mappedColor[ 2 ] == 0.0 ) {
-                mappedColor = vec4( 0.0, 1.0, 0.0, 1.0 );
-                renderMethod = 1.0;
-            }
-
-            // DEBUG: second case: masking color that had been used for the mapped color, comes up zero in that position.
-            if ( maskingColor[ 0 ] == maskingColor[ 1 ] && maskingColor[ 1 ] == maskingColor[ 2 ]  && maskingColor[ 2 ] == 0.0 ) {
-                mappedColor = vec4( 1.0, 0.0, 0.0, 1.0 );
-                renderMethod = 1.0;
-            }
-            else if ( maskingColor[ 0 ] != 0.0  ||  maskingColor[ 1 ] != 0.0  ||  maskingColor[ 2 ] != 0.0 ) {
-                // DEBUG: third case: the masking color does NOT come up zero under the position for the signal frag.
-                mappedColor = vec4( 0.0, 0.0, 1.0, 1.0 );
-                renderMethod = 1.0;
-            }
-            */
             // Find the max intensity.
             vec4 signalColor = origColor;
             float maxIntensity = 0.0;
@@ -147,30 +129,74 @@ vec4 gammaAdjust(vec4 origColor)
     return adjustedColor;
 }
 
-vec4 crop(vec4 origColor)
+int getAxialCoord(int nextCoordSetLoc)
 {
-    vec3 point = gl_TexCoord[ 0 ].xyz;
+    float visY = floor(nextCoordSetLoc / 256.0);
+    float visX = (nextCoordSetLoc - 256.0 * visY) / 256.0;
+    vec3 cmCoord = vec3( visX, visY, 0.0 );
+    vec4 axialCoordVec = texture3D(colorMapTexture, cmCoord);
+
+    int axialCoord = int( axialCoordVec[ 3 ]+ (axialCoordVec[ 2 ] * 255.1) + (axialCoordVec[ 1 ] * 65535.1) + (axialCoordVec[ 0 ] * 16777215.1 ) );
+
+    return axialCoord;
+}
+
+bool getInCrop(vec3 point, float pStartCropX, float pEndCropX, float pStartCropY, float pEndCropY, float pStartCropZ, float pEndCropZ)
+{
     bool inCrop = true;
-    if ( startCropX > -0.5 ) {
-        if ( point.x < startCropX ) {
+    if ( pStartCropX > -0.5 ) {
+        if ( point.x < pStartCropX ) {
             inCrop = false;
         }
-        else if ( point.x > endCropX ) {
+        else if ( point.x > pEndCropX ) {
             inCrop = false;
         }
-        else if ( point.y < startCropY ) {
+        else if ( point.y < pStartCropY ) {
             inCrop = false;
         }
-        else if ( point.y > endCropY ) {
+        else if ( point.y > pEndCropY ) {
             inCrop = false;
         }
-        else if ( point.z < startCropZ ) {
+        else if ( point.z < pStartCropZ ) {
             inCrop = false;
         }
-        else if ( point.z > endCropZ ) {
+        else if ( point.z > pEndCropZ ) {
             inCrop = false;
         }
     }
+    return inCrop;
+}
+
+vec4 crop(vec4 origColor)
+{
+    vec3 point = gl_TexCoord[ 0 ].xyz;
+    bool inCrop = getInCrop(point, startCropX, endCropX, startCropY, endCropY, startCropZ, endCropZ);
+
+    if ( ! inCrop ) {
+        // Not in the current user selection.  Try all saved selections.
+        int nextCoordSetLoc = 65535;
+
+        // Up to max possible crops, or bail-on-signal.
+        for ( int i = 0; (! inCrop) && i < 192; i++ )
+        {
+            int axialStX = getAxialCoord(nextCoordSetLoc);
+            int axialEnX = getAxialCoord(nextCoordSetLoc + 1);
+            int axialStY = getAxialCoord(nextCoordSetLoc + 2);
+            int axialEnY = getAxialCoord(nextCoordSetLoc + 3);
+            int axialStZ = getAxialCoord(nextCoordSetLoc + 4);
+            int axialEnZ = getAxialCoord(nextCoordSetLoc + 5);
+
+            if (axialStX==0 && axialEnX==0 && axialStY==0 && axialEnY==0 && axialStZ==0 && axialEnZ==0)
+            {
+                break; // All-zero is NO crop-box.
+            }
+
+            inCrop = getInCrop(point, axialStX, axialEnX, axialStY, axialEnY, axialStZ, axialEnZ);
+
+            nextCoordSetLoc += 6;
+        }
+    }
+
     if ( inCrop == true ) {
         return origColor;
     }

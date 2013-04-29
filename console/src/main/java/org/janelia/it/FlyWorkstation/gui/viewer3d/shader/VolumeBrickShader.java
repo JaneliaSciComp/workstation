@@ -6,6 +6,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.shader;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CropCoordSet;
 
 import javax.media.opengl.GL2;
 import java.nio.IntBuffer;
@@ -32,7 +33,7 @@ public class VolumeBrickShader extends AbstractShader {
     private boolean volumeMaskApplied = false;
     private float gammaAdjustment = 1.0f;
     private float cropOutLevel = Mip3d.DEFAULT_CROPOUT;
-    private Collection<float[]> cropCoordsCollection = Arrays.asList( Mip3d.DEFAULT_CROP_COORDS );
+    private CropCoordSet cropCoordSet = CropCoordSet.getDefaultCropCoordSet();
 
     @Override
     public String getVertexShader() {
@@ -111,17 +112,17 @@ public class VolumeBrickShader extends AbstractShader {
      *  Allow caller to tell which crop coords to upload when the time comes.  These will be specified
      *  as values between 0.0 and 1.0.
      */
-    public void setCropCoords( Collection<float[]> cropCoordsCollection ) {
+    public void setCropCoords( CropCoordSet cropCoordSet ) {
         // Null crop coords will be mis-interpretted.
-        if ( cropCoordsCollection == null  ||  cropCoordsCollection.size() == 0 ) {
+        if ( cropCoordSet.getCurrentCoordinates() == null  &&  cropCoordSet.getAcceptedCoordinates().size() == 0 ) {
             return;
         }
-        for ( float[] cropCoords: cropCoordsCollection ) {
+        for ( float[] cropCoords: cropCoordSet.getAcceptedCoordinates() ) {
             if ( cropCoords.length < 6 ) {
                 throw new IllegalArgumentException("Crop coords need a start and end in three dimensions.");
             }
         }
-        this.cropCoordsCollection = cropCoordsCollection;
+        this.cropCoordSet = cropCoordSet;
     }
 
     public void unload(GL2 gl) {
@@ -167,8 +168,8 @@ public class VolumeBrickShader extends AbstractShader {
 
     /** Upload all cropping starts/ends to GPU. */
     private void pushCropUniforms( GL2 gl, int shaderProgram ) {
-        if ( cropCoordsCollection != null  &&  cropCoordsCollection.size() > 0 ) {
-            float[] cropCoords = cropCoordsCollection.iterator().next();
+        if ( cropCoordSet != null  &&  cropCoordSet.getCurrentCoordinates() != null ) {
+            float[] cropCoords = cropCoordSet.getCurrentCoordinates();
             if ( cropCoords[ 0 ] > -1 ) {
                 for ( int i = 0; i < 6; i++ ) {
                     // Example: startCropX is for item i == 0.

@@ -1,11 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.VolumeLoaderI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.MaskBuilderI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.RenderMapTextureBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CropCoordSet;
 
 import javax.swing.*;
 import java.awt.*;
@@ -17,12 +17,6 @@ import java.util.Collection;
 
 public class Mip3d extends BaseGLViewer implements ActionListener {
     public static final float DEFAULT_CROPOUT = 0.05f;
-    /** All -1 sends signal: no cropping requried. */
-    public static final float[] DEFAULT_CROP_COORDS = new float[] {
-        -1.0f, -1.0f,  // startX, endX
-        -1.0f, -1.0f,  // startY, endY
-        -1.0f, -1.0f   // startZ, endZ
-    };
 
     private static final long serialVersionUID = 1L;
 	private MipRenderer renderer = new MipRenderer();
@@ -103,7 +97,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
             TextureDataI signalTexture,
             TextureDataI maskTexture,
             RenderMappingI renderMapping,
-            Collection<float[]> cropCoordCollection,
+            CropCoordSet cropCoordSet,
             float gamma ) {
         if ( signalTexture != null ) {
             VolumeBrick brick = new VolumeBrick( renderer, volumeModel );
@@ -114,7 +108,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
 
                 RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
                 renderMapTextureData.setMapping( renderMapping );
-                renderMapTextureData.setCropCoords( cropCoordCollection );
+                renderMapTextureData.setCropCoords( cropCoordSet );
                 brick.setColorMapTextureData( renderMapTextureData );
             }
 
@@ -140,20 +134,20 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
             MaskBuilderI maskBuilder,
             FileResolver resolver,
             RenderMappingI renderMapping,
-            Collection<float[]> cropCoordCollection,
+            CropCoordSet cropCoordSet,
             float gamma
     ) {
 		VolumeLoader volumeLoader = new VolumeLoader(resolver);
 		if (volumeLoader.loadVolume(fileName)) {
             VolumeBrick brick = new VolumeBrick(renderer, volumeModel);
-            volumeModel.setGammaAdjustment( gamma );
+            volumeModel.setGammaAdjustment(gamma);
 			volumeLoader.populateVolumeAcceptor(brick);
             if ( maskBuilder != null ) {
                 brick.setMaskTextureData( maskBuilder.getCombinedTextureData() );
 
                 RenderMapTextureBean renderMapTextureData = new RenderMapTextureBean();
                 renderMapTextureData.setMapping( renderMapping );
-                renderMapTextureData.setCropCoords( cropCoordCollection );
+                renderMapTextureData.setCropCoords( cropCoordSet );
 
                 brick.setColorMapTextureData( renderMapTextureData );
             }
@@ -195,9 +189,9 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
         repaint();
     }
 
-    public void setCropCoords( Collection<float[]> cropCoords ) {
-        if ( cropCoords != null  && cropCoords.size() > 0 )
-            volumeModel.setCropCoords( cropCoords );
+    public void setCropCoords( CropCoordSet cropCoordSet ) {
+        if ( cropCoordSet.getCurrentCoordinates() != null  || cropCoordSet.getAcceptedCoordinates().size() > 0 )
+            volumeModel.setCropCoords( cropCoordSet );
         repaint();
     }
 
@@ -268,7 +262,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
 
     public void toggleRGBValue(int colorChannel, boolean isEnabled) {
         float[] newValues = volumeModel.getColorMask();
-        volumeModel.setColorMask( newValues );
+        volumeModel.setColorMask(newValues);
         newValues[colorChannel]=isEnabled?1:0;
     }
 
