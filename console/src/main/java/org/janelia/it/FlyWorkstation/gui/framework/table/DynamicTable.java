@@ -9,12 +9,16 @@ import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.*;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.util.MouseForwarder;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A reusable table component with configurable columns.
@@ -22,7 +26,9 @@ import org.janelia.it.FlyWorkstation.shared.util.Utils;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public abstract class DynamicTable extends JPanel {
-
+    
+    private static final Logger log = LoggerFactory.getLogger(DynamicTable.class);
+    
 	private static final int DEFAULT_MIN_COLUMN_WIDTH = 100;
     private static final int DEFAULT_MAX_COLUMN_WIDTH = 500;
     
@@ -108,6 +114,11 @@ public abstract class DynamicTable extends JPanel {
     			TableCellEditor editor = DynamicTable.this.getCellEditor(row, col);
     			return editor==null ? super.getCellEditor(row, col) : editor;
     		}
+    		@Override
+    		public Class<?> getColumnClass(int column) {
+                Class clazz = DynamicTable.this.getColumnClass(column);
+                return clazz==null ? super.getColumnClass(column) : clazz;
+    		}
     	};
         table.setFillsViewportHeight(true);
         table.setColumnSelectionAllowed(false);
@@ -143,6 +154,9 @@ public abstract class DynamicTable extends JPanel {
 				}
                 int row = table.rowAtPoint(e.getPoint());
                 if (row>=0) {
+                    int col = table.columnAtPoint(e.getPoint());
+                    // Don't process clicking on editable columns
+                    if (getColumns().get(col).isEditable()) return;
                 	rowClicked(row);
                 }
                 else {
@@ -154,6 +168,9 @@ public abstract class DynamicTable extends JPanel {
 			@Override
 			protected void doubleLeftClicked(MouseEvent e) {
 				if (e.isConsumed()) return;
+				int col = table.columnAtPoint(e.getPoint());
+				// Don't process clicking on editable columns
+			    if (getColumns().get(col).isEditable()) return;
                 int row = table.rowAtPoint(e.getPoint());
                 if (row>=0) {
                 	rowDoubleClicked(row);
@@ -251,6 +268,15 @@ public abstract class DynamicTable extends JPanel {
         repaint();
     }
     
+    /**
+     * Override this to know when a value was edited. 
+     * @param dc
+     * @param row
+     * @param data
+     */
+    protected void valueChanged(DynamicColumn dc, int row, Object data) {
+    }
+    
 //	private class HeaderListener extends MouseAdapter {
 //
 //		public void mousePressed(MouseEvent e) {
@@ -287,6 +313,13 @@ public abstract class DynamicTable extends JPanel {
      */
     public TableCellEditor getCellEditor(int row, int col) {
     	return null;
+    }
+    
+    /**
+     * Override this method to return a custom class for a given column.
+     */
+    public Class<?> getColumnClass(int column) {
+        return null;
     }
     
     /**
@@ -547,7 +580,7 @@ public abstract class DynamicTable extends JPanel {
 
             for(DynamicColumn column : displayedColumns) {
         		Object value = getValue(row.getUserObject(), column);
-        		rowData.add(value == null ? "" : value.toString());
+        		rowData.add(value == null ? "" : value);
             }
 
             data.add(rowData);
@@ -559,12 +592,23 @@ public abstract class DynamicTable extends JPanel {
             		return columns.get(mColIndex).isEditable();
             	}
             	catch (ArrayIndexOutOfBoundsException e) {
-            		e.printStackTrace();
+            		log.error("Error getting column",e);
             		return false;
             	}
             }
         };
 
+        tableModel.addTableModelListener(new TableModelListener() {
+            public void tableChanged(TableModelEvent e) {
+                int row = e.getFirstRow();
+                int column = e.getColumn();
+                TableModel model = (TableModel)e.getSource();
+                DynamicColumn dc = getColumns().get(column);
+                Object data = model.getValueAt(row, column);
+                valueChanged(dc, row, data);
+            } 
+        });
+        
         table.setModel(tableModel);
         
         TableColumnModel colModel = table.getTableHeader().getColumnModel();

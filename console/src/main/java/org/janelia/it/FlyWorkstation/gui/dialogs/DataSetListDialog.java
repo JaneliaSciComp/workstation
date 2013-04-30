@@ -16,12 +16,14 @@ import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicColumn;
+import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicRow;
 import org.janelia.it.FlyWorkstation.gui.framework.table.DynamicTable;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.model.entity.cv.NamedEnum;
 import org.janelia.it.jacs.model.entity.cv.PipelineProcess;
 
@@ -142,12 +144,56 @@ public class DataSetListDialog extends ModalDialog implements Accessibility, Ref
     			final Entity dataSetEntity = (Entity)getRows().get(row).getUserObject();
 				dataSetDialog.showForDataSet(dataSetEntity);
 			}
+
+            @Override
+            public Class<?> getColumnClass(int column) {
+                DynamicColumn dc = getColumns().get(column);
+                if (dc.getName().equals(EntityConstants.ATTRIBUTE_SAGE_SYNC)) {
+                    return Boolean.class;
+                }
+                return super.getColumnClass(column);
+            }
+
+            @Override
+            protected void valueChanged(DynamicColumn dc, int row, Object data) {
+                if (dc.getName().equals(EntityConstants.ATTRIBUTE_SAGE_SYNC)) {
+                    final Boolean selected = data==null? Boolean.FALSE : (Boolean)data;
+                    DynamicRow dr = getRows().get(row);
+                    final Entity dataSetEntity = (Entity)dr.getUserObject();
+                    SimpleWorker worker = new SimpleWorker() {
+                        
+                        @Override
+                        protected void doStuff() throws Exception {
+                            if (selected) {
+                                ModelMgr.getModelMgr().setAttributeAsTag(dataSetEntity, EntityConstants.ATTRIBUTE_SAGE_SYNC);
+                            }
+                            else {
+                                EntityData sageSyncEd = dataSetEntity.getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_SAGE_SYNC);
+                                if (sageSyncEd!=null) {
+                                    dataSetEntity.getEntityData().remove(sageSyncEd);
+                                    ModelMgr.getModelMgr().removeEntityData(sageSyncEd);
+                                }
+                            }
+                        }
+                        
+                        @Override
+                        protected void hadSuccess() {
+                        }
+                        
+                        @Override
+                        protected void hadError(Throwable error) {
+                            SessionMgr.getSessionMgr().handleException(error);
+                        }
+                    };
+                    worker.execute();
+                }
+            }
         };
         
         dynamicTable.addColumn("Name");
         dynamicTable.addColumn(EntityConstants.ATTRIBUTE_PIPELINE_PROCESS);
         dynamicTable.addColumn(EntityConstants.ATTRIBUTE_SAMPLE_NAME_PATTERN);
-        dynamicTable.addColumn(EntityConstants.ATTRIBUTE_SAGE_SYNC);
+        dynamicTable.addColumn(EntityConstants.ATTRIBUTE_SAGE_SYNC).setEditable(true);
         
         JButton addButton = new JButton("Add new");
         addButton.setToolTipText("Add a new data set definition");
