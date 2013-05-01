@@ -460,9 +460,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         try {
             if (context != null) {
                 // Here, simply make the rendering change.
-                // Here, should load volumes, for all the different items given.
-
-                //loadWorker = new ABLoadWorker( this, context, mip3d, renderMappings );
                 loadWorker = new RenderablesLoadWorker(
                         new ABContextDataSource(context), renderMapping, this, settings.getAlignmentBoardSettings()
                 );
@@ -501,6 +498,11 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         public void setSelectedCoords( CropCoordSet cropCoordSet ) {
             if ( cropCoordSet.getCurrentCoordinates() != null  ||  cropCoordSet.getAcceptedCoordinates().size() > 0 ) {
                 mip3d.setCropCoords( cropCoordSet );
+
+                if ( cropCoordSet.getAcceptedCoordinates().size() > 0 ) {
+                    AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
+                    viewer.updateRendering( context );
+                }
             }
         }
 

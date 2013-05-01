@@ -6,7 +6,9 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CropCoordSet;
 
 import javax.media.opengl.GL2;
+import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.IntBuffer;
 import java.util.Collection;
 import java.util.Map;
 
@@ -28,6 +30,7 @@ public class RenderMapTextureBean implements TextureDataI {
     private static final int BYTES_PER_COORD_SET = ENTRIES_PER_COORD_SET * BYTES_PER_ENTRY;
     private static final String HEADER = "Map of Colors to Neuron Fragment Numbers and Crop Coord Sets";
     private static final int LINE_WIDTH = 256;
+    private static final float CONVENTIONAL_COORD_MULTIPLIER = 255.0f;
 
     private RenderMappingI renderMapping;
     private CropCoordSet cropCoordSet;
@@ -83,25 +86,48 @@ public class RenderMapTextureBean implements TextureDataI {
 
         // Need de-normalized as-int values in the crop coords.
         if ( cropCoordSet != null ) {
-            if ( cropCoordSet.getAcceptedCoordinates().size() > MAX_COORD_SETS ) {
+            Collection<float[]> acceptedCoordinates = cropCoordSet.getAcceptedCoordinates();
+            if ( acceptedCoordinates.size() > MAX_COORD_SETS ) {
                 throw new IllegalArgumentException("Invalid inputs for crop coordinate sets");
             }
 
             int nextCropBoxOffset = BYTES_PER_ENTRY * MAP_SIZE;
-            for ( float[] cropCoords: cropCoordSet.getAcceptedCoordinates() ) {
-                // These are guaranteed non-fractional.
+            for ( float[] cropCoords: acceptedCoordinates ) {
+
+                // Must multiply the normalized/fractional coordinates to integer, by multiplying by
+                // a value that does not need to be pushed to the shader, but is simply conventional.
                 for ( int i = 0; i < cropCoords.length; i++ ) {
-                    int iValue = (int) cropCoords[ i ];
-                    for ( int j = 0; j < Integer.SIZE; j++ ) {
-                        rawMap[ nextCropBoxOffset + j + (cropCoords.length * i) ] =
-                                (byte)(iValue >>> ( 24 - (8 * j) ) & 0xff);
+                    int iValue = (int) (cropCoords[ i ] * CONVENTIONAL_COORD_MULTIPLIER);
+                    for ( int j = 0; j < BYTES_PER_ENTRY; j++ ) {
+                        int nextByte = (iValue >>> (24 - (8 * j)) & 0xff);
+                        rawMap[ nextCropBoxOffset + (BYTES_PER_ENTRY - 1 - j + (BYTES_PER_ENTRY * i) ) ] = (byte)nextByte;
                     }
                 }
+                dumpAtLoc( nextCropBoxOffset, cropCoords, rawMap );
                 nextCropBoxOffset += BYTES_PER_COORD_SET;
             }
+
         }
 
         return rawMap;
+    }
+
+    private void dumpAtLoc( int nextCropBoxOffset, float[] cropCoords, byte[] rawMap ) {
+        System.out.println("----Added to uploadable texture, there coord values (x,y,z order):");
+        for ( int i = 0; i < cropCoords.length / 2; i++ ) {
+            System.out.println( "range " + cropCoords[i*2] + " .. " + cropCoords[i*2+1]);
+        }
+        System.out.print( "Raw Bytes: ");
+        for ( int i = nextCropBoxOffset; i < nextCropBoxOffset + (cropCoords.length * 4); i++ ) {
+            int rawVal = rawMap[ i ];
+            if ( rawVal < 0 ) {
+                rawVal += 128;
+            }
+            System.out.print( Integer.toHexString( rawVal ) );
+            System.out.print( " " );
+        }
+        System.out.println();
+
     }
 
     //  The size of the texture data will be 2**8 * 2**8 or 2**16: same as 65535, and then add enough 256x4 lines
