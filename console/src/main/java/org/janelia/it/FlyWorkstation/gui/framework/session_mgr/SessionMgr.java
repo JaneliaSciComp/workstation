@@ -41,7 +41,7 @@ import java.util.List;
 
 public class SessionMgr {
 
-    public static final int MIN_FILE_CACHE_GIGABYTE_CAPACITY = 10;
+    public static final int MIN_FILE_CACHE_GIGABYTE_CAPACITY = 50;
     public static final int MAX_FILE_CACHE_GIGABYTE_CAPACITY = 1000;
 
     private static final Logger log = LoggerFactory.getLogger(SessionMgr.class);
