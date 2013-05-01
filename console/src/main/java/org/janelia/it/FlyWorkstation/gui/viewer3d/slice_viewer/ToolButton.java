@@ -16,7 +16,7 @@ implements MouseListener, ActionListener
 {
 	private static final long serialVersionUID = 1L;
 	private int autoRepeatInitialDelay = 300; // milliseconds
-	private int autoRepeatDelay = 100; // milliseconds
+	private int autoRepeatDelay = 30; // milliseconds
 	private Timer autoRepeatTimer = new Timer(autoRepeatDelay, this);
 
 	public ToolButton(Action action)
@@ -25,11 +25,29 @@ implements MouseListener, ActionListener
 		init();
 	}
 	
+	public int getAutoRepeatInitialDelay() {
+		return autoRepeatInitialDelay;
+	}
+
+	public int getAutoRepeatDelay() {
+		return autoRepeatDelay;
+	}
+
+	public void setAutoRepeatInitialDelay(int autoRepeatInitialDelay) {
+		this.autoRepeatInitialDelay = autoRepeatInitialDelay;
+		autoRepeatTimer.setInitialDelay(autoRepeatInitialDelay);
+	}
+
+	public void setAutoRepeatDelay(int autoRepeatDelay) {
+		this.autoRepeatDelay = autoRepeatDelay;
+		autoRepeatTimer.setDelay(autoRepeatDelay);
+	}
+
 	protected void init()
 	{
 		addMouseListener(this);
 		if (autoRepeatTimer != null) {
-			autoRepeatTimer.setRepeats(true); // Just one shot at a time
+			autoRepeatTimer.setRepeats(true);
 			autoRepeatTimer.setInitialDelay(autoRepeatInitialDelay);
 		}
 		setHideActionText(true); // Want icon only; no text

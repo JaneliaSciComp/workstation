@@ -401,12 +401,14 @@ public class QuadViewUi extends JPanel
 		controlsPanel.add(panel_1);
 		panel_1.setLayout(new BoxLayout(panel_1, BoxLayout.Y_AXIS));
 		
-		ToolButton btnNewButton_2 = new ToolButton(zoomInAction);
-		btnNewButton_2.setAlignmentX(0.5f);
-		btnNewButton_2.setMargin(new Insets(0, 0, 0, 0));
-		btnNewButton_2.setHideActionText(true);
-		btnNewButton_2.setAction(zoomInAction);
-		panel_1.add(btnNewButton_2);
+		ToolButton zoomInButton = new ToolButton(zoomInAction);
+		zoomInButton.setAlignmentX(0.5f);
+		zoomInButton.setMargin(new Insets(0, 0, 0, 0));
+		zoomInButton.setHideActionText(true);
+		zoomInButton.setAction(zoomInAction);
+		// Use a more modest auto repeat for zoom
+		zoomInButton.setAutoRepeatDelay(150);
+		panel_1.add(zoomInButton);
 		
 		// JSlider zoomSlider = new JSlider();
 		zoomSlider.setOrientation(SwingConstants.VERTICAL);
@@ -429,12 +431,13 @@ public class QuadViewUi extends JPanel
 			}
 		});
 		
-		ToolButton button = new ToolButton(zoomOutAction);
-		button.setAction(zoomOutAction);
-		button.setMargin(new Insets(0, 0, 0, 0));
-		button.setHideActionText(true);
-		button.setAlignmentX(0.5f);
-		panel_1.add(button);
+		ToolButton zoomOutButton = new ToolButton(zoomOutAction);
+		zoomOutButton.setAction(zoomOutAction);
+		zoomOutButton.setMargin(new Insets(0, 0, 0, 0));
+		zoomOutButton.setHideActionText(true);
+		zoomOutButton.setAlignmentX(0.5f);
+		zoomOutButton.setAutoRepeatDelay(150); // slow down auto zoom
+		panel_1.add(zoomOutButton);
 		
 		JPanel buttonsPanel = new JPanel();
 		controlsPanel.add(buttonsPanel);

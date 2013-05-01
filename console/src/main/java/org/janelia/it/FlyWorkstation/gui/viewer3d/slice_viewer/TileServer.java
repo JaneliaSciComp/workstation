@@ -497,7 +497,7 @@ implements VolumeImage3d
 			if (lastGoodTiles != null)
 				lastGoodTiles.clear();
 			// queue disposal of textures on next display event
-			setCacheSizesAsFractionOfMaxHeap(0.20, 0.40);
+			setCacheSizesAsFractionOfMaxHeap(0.15, 0.35);
 			getVolumeInitializedSignal().emit();
 			return true;
 		}
