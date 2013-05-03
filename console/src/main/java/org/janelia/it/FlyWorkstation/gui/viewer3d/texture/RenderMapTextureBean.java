@@ -121,7 +121,7 @@ public class RenderMapTextureBean implements TextureDataI {
         for ( int i = nextCropBoxOffset; i < nextCropBoxOffset + (cropCoords.length * 4); i++ ) {
             int rawVal = rawMap[ i ];
             if ( rawVal < 0 ) {
-                rawVal += 128;
+                rawVal += 255;
             }
             System.out.print( Integer.toHexString( rawVal ) );
             System.out.print( " " );
@@ -281,7 +281,7 @@ public class RenderMapTextureBean implements TextureDataI {
 
     @Override
     public Integer getExplicitInternalFormat() {
-        return TextureDataI.UNSET_VALUE;
+        return GL2.GL_RGBA;//TextureDataI.UNSET_VALUE;
     }
 
     @Override

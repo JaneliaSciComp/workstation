@@ -124,7 +124,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
                     );
         }
 
-        if ( maskChanRenderableData.isCompartment() )  {
+        if ( maskChanRenderableData.isCompartment() ) {
             // Iterating through these files will cause all the relevant data to be loaded into
             // the acceptors, which here includes only the mask builder.
             compartmentLoader.read(maskChanRenderableData.getBean(), maskStream, chanStream);

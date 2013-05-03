@@ -179,7 +179,8 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     //----------------------------------------IMPLEMENT TextureBuilderI
     @Override
     public TextureDataI buildTextureData() {
-        channelInterpreter.close();
+        if ( channelInterpreter != null )
+            channelInterpreter.close();
 
         TextureDataI textureData = null;
         double downSampleRate = settings.getDownSampleRate();

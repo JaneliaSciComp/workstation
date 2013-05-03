@@ -209,6 +209,18 @@ vec4 crop(vec4 origColor)
         {
 
             float axialStX = getAxialCoord(nextCoordSetLoc);
+//float dbgR = 0.0;
+//float dbgG = 0.0;
+//float dbgB = 0.0;
+//if ( axialStX > 0.06 )
+//{dbgR = 255.0; }
+//else if ( axialStX > 0.055 )
+//{dbgG = 255.0; }
+//else if ( axialStX > 0.05 )
+//{dbgB = 255.0;  }
+//if ( 0 == 0 )
+//{ return vec4(dbgR, dbgG, dbgB, 1.0); }
+
             float axialEnX = getAxialCoord(nextCoordSetLoc + 1);
             float axialStY = getAxialCoord(nextCoordSetLoc + 2);
             float axialEnY = getAxialCoord(nextCoordSetLoc + 3);
