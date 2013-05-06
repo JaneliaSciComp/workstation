@@ -287,9 +287,6 @@ public class DataviewContextMenu extends AbstractContextMenu<Entity> {
     	JMenuItem menuItem = null;
         if (!StringUtils.isEmpty(filepath)) {
         	menuItem = getActionItem(new OpenInFinderAction(entity));
-            if (!PathTranslator.isMounted()) {
-                menuItem.setEnabled(false);
-            }
         }
         return menuItem;
 	}
