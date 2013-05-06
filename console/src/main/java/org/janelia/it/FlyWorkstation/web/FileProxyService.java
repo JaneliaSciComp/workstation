@@ -12,14 +12,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.HeadMethod;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.FlyWorkstation.shared.util.WorkstationFile;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,55 +65,31 @@ public class FileProxyService extends AbstractHandler {
             OutputStream output = null;
             
             try {
+                WorkstationFile wfile = new WorkstationFile(standardPath);
+               
                 // Read from WebDav
-                URL effectiveUrl = SessionMgr.getURL(standardPath);
-                log.info("Proxying {} for: {}",method,effectiveUrl);
+                wfile.get("HEAD".equals(method));
+                log.info("Proxying {} for: {}",method,wfile.getEffectiveURL());
+                if (wfile.getStatusCode()!=null) {
+                    response.setStatus(wfile.getStatusCode());
+                }
+                else {
+                    response.setStatus(500);
+                }
                 
-                HttpClient client = SessionMgr.getSessionMgr().getWebDavClient().getHttpClient();
-                
+                if (wfile.getContentType()!=null) {
+                    response.setContentType(wfile.getContentType());
+                }
+                if (wfile.getLength()!=null) {
+                    response.addHeader("Content-length", wfile.getLength().toString());
+                }
+
                 if ("HEAD".equals(method)) {
-                	HeadMethod head = new HeadMethod(effectiveUrl.toString());	
-                    client.executeMethod(head);
-
-                    response.setStatus(head.getStatusCode());
-                    
-                    Header contentType = head.getResponseHeader("Content-Type");
-                    if (contentType==null) {
-                        response.setContentType("application/octet-stream");    
-                    }
-                    else {
-                        response.setContentType(contentType.getValue());
-                    }
-
-                    Header contentLength = head.getResponseHeader("Content-Length");
-                    if (contentLength!=null) {
-                    	response.addHeader("Content-length", contentLength.getValue());
-                    }
-                    
+                    // This method is supported, but there is nothing more to do
                 }
                 else if ("GET".equals(method)) {
-
-                    GetMethod get = new GetMethod(effectiveUrl.toString());
-                    client.executeMethod(get);
-
-                    response.setStatus(get.getStatusCode());
-                    
-                    Header contentType = get.getResponseHeader("Content-Type");
-                    if (contentType==null) {
-                        response.setContentType("application/octet-stream");    
-                    }
-                    else {
-                        response.setContentType(contentType.getValue());
-                    }
-
-                    Header contentLength = get.getResponseHeader("Content-Length");
-                    if (contentLength!=null) {
-                    	response.addHeader("Content-length", contentLength.getValue());
-                        log.debug("Writing {} bytes", contentLength.getValue());
-                    	length = Long.parseLong(contentLength.getValue());
-                    }
-                    
-                    input = get.getResponseBodyAsStream();
+                    log.debug("Writing {} bytes", wfile.getLength());
+                    input = wfile.getStream();
                     output = response.getOutputStream();
                     Utils.copyNio(input, output, BUFFER_SIZE);
                 }

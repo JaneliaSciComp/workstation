@@ -115,41 +115,11 @@ public class PathTranslator {
 
         return entity;
     }
-    
-    public static boolean isMounted() {
-        File jacsData = new File(jacsDataPath);
-        return jacsData.canRead();
-    }
-    
-    public static String getMountHelpMessage() {
-        String message = "";
-        if (SystemInfo.isMac) {
-        	if (JACS_DATA_PATH_NFS.equals(jacsDataPath)) {
-        		message = "The jacsData file share is not mounted as "+jacsDataPath+". Please contact the Helpdesk.";
-        	}
-        	else {
-        		message = "The jacsData file share is not mounted. From Finder choose 'Go' and 'Connect to Server' " +
-                "then enter '"+JACS_DATA_MOUNT_MAC+"' and press 'Connect'.";	
-        	}
-        }
-        else if (SystemInfo.isLinux) {
-            message = "The jacsData file share is not mounted as "+jacsDataPath+". Please contact the Helpdesk.";
-        }
-        else if (SystemInfo.isWindows) {
-            message = "The jacsData file share is not mounted as "+jacsDataPath+". From Windows Explorer choose 'Tools' and 'Map Network Drive' "+
-                    "then choose 'Drive' Q and specify folder "+JACS_DATA_MOUNT_WINDOWS+" and press 'Finish'.";
-        }
-        return message;
-    }
 
-    public static String getOsSpecificRootPath() {
+    private static String getOsSpecificRootPath() {
         if (SystemInfo.isMac) { return PathTranslator.JACS_DATA_PATH_MAC; }
         else if (SystemInfo.isLinux) { return PathTranslator.JACS_DATA_PATH_NFS; }
         else if (SystemInfo.isWindows) {return PathTranslator.JACS_DATA_PATH_WINDOWS; }
         return "";
     }
-
-	public static String getJacsDataPath() {
-		return jacsDataPath;
-	}
 }

@@ -299,16 +299,4 @@ public class FacadeManager {
         if (exceptionHandlers == null) return;
         exceptionHandlers.remove(handler);
     }
-
-    static public boolean isDataSourceConnectivityValid() {
-        return PathTranslator.isMounted();
-    }
-    
-    static public String getDataSourceHelpInformation() {
-        return PathTranslator.getMountHelpMessage();
-    }
-    
-    static public String getJacsDataPath() {
-        return PathTranslator.getJacsDataPath();
-    }
 }

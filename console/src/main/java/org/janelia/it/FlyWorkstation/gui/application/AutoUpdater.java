@@ -28,6 +28,7 @@ import org.janelia.it.FlyWorkstation.gui.util.panels.ViewerSettingsPanel;
 import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
+import org.janelia.it.FlyWorkstation.shared.util.WorkstationFile;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.compute.api.ComputeBeanRemote;
 import org.janelia.it.jacs.shared.utils.FileUtil;
@@ -51,14 +52,15 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 	private static final int STATE_DOWNLOAD = 1;
 	private static final int STATE_DECOMPRESS = 2;
 	private static final int STATE_APPLY = 2;
-	
+
+    private static final int PADDING = 20;
+    
     // Obligatory Mac garbage in case the user is cursed with that OS
     static {
         System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Workstation AutoUpdate");
         System.setProperty("apple.eawt.quitStrategy", "CLOSE_ALL_WINDOWS");
     }
 
-	private static final int padding = 20;
 	
 	private JPanel mainPane;
 	private JLabel mainLabel;
@@ -67,6 +69,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 	private String serverVersion;
 	private String clientVersion;
 	private String suiteDir;
+    private int state = 0;
 	
 	public AutoUpdater() {
 		
@@ -114,7 +117,7 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
         getContentPane().setLayout(new BorderLayout());
         setSize(400, 200);
         mainPane = new JPanel(new BorderLayout());
-        mainPane.setBorder(BorderFactory.createEmptyBorder(padding, padding, padding, padding));
+        mainPane.setBorder(BorderFactory.createEmptyBorder(PADDING, PADDING, PADDING, PADDING));
         add(mainPane, BorderLayout.CENTER);
 	}
 
@@ -373,9 +376,8 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 				}
 
 				try {
-    				URL remoteFileURL = SessionMgr.getURL(remoteFile.getAbsolutePath());
-    				log.info("Downloading update from {}",remoteFileURL);
-    				copyURLToFile(remoteFileURL, downloadFile);
+    				log.info("Downloading update from {}",remoteFile.getAbsolutePath());
+    				copyURLToFile(remoteFile.getAbsolutePath(), downloadFile);
 				}
 				catch (Exception e) {
 				    throw new Exception("Error downloading new version",e);
@@ -433,10 +435,8 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 	            printPathAndExit("",1);
 			}
 
-		    /**
-		     * Copied from Apache's commons-io, so that we could add progress indication
-		     */
-			private void copyURLToFile(URL source, File destination) throws IOException {
+			private void copyURLToFile(String standardPath, File destination) throws Exception {
+			    
 		        //does destination directory exist ?
 		        if (destination.getParentFile() != null
 		            && !destination.getParentFile().exists()) {
@@ -450,35 +450,33 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 		            throw new IOException(message);
 		        }
 
-		        InputStream input = null;
-		        long length = 10000000;
-		        if (!source.getProtocol().equals("file")) {
-	                HttpClient client = SessionMgr.getSessionMgr().getWebDavClient().getHttpClient();
-
-	                GetMethod get = new GetMethod(source.toString());
-	                client.executeMethod(get);
-
-	                
-	                Header contentLength = get.getResponseHeader("Content-Length");
-	                if (contentLength!=null) {
-	                    length = Long.parseLong(contentLength.getValue());
-	                }
-	                input = get.getResponseBodyAsStream();
+		        WorkstationFile wfile = new WorkstationFile(standardPath);
+		        wfile.get();
+		        
+		        InputStream input = wfile.getStream();
+		        long length = wfile.getLength();
+		        
+		        log.info("Effective URL: "+wfile.getEffectiveURL());
+		        log.info("Length: "+length);
+		        
+		        if (length==0) {
+                    throw new Exception("Length of file was 0");
+                }
+		        
+		        if (wfile.getStatusCode()!=200) {
+		            throw new Exception("Status code was "+wfile.getStatusCode());
 		        }
-		        else {
-		            File sourceFile = new File(source.getPath());
-		            length = sourceFile.length();
-		            input = source.openStream();
-		        }
-                
+		        
 		        try {
 		            FileOutputStream output = new FileOutputStream(destination);
 		            try {
 		                copy(input, output, length);
-		            } finally {
+		            } 
+		            finally {
 		                org.apache.commons.io.IOUtils.closeQuietly(output);
 		            }
-		        } finally {
+		        } 
+		        finally {
 		            org.apache.commons.io.IOUtils.closeQuietly(input);
 		        }
 		    }
@@ -502,8 +500,6 @@ public class AutoUpdater extends JFrame implements PropertyChangeListener {
 		updater.addPropertyChangeListener(this);
 		updater.execute();
 	}
-        
-	private int state = 0;
 	
 	/**
      * Invoked when the workers progress property changes.
