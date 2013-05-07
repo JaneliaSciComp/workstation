@@ -10,9 +10,6 @@ import java.net.URL;
 
 import javax.swing.*;
 
-import org.apache.commons.httpclient.Header;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.GetMethod;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFacadeManager;
 import org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb.EJBFactory;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
