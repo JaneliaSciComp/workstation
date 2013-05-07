@@ -331,7 +331,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         Entity internalEntity = item.getInternalEntity();
         MaskIndexed maskIndexed = (MaskIndexed)item.getItemWrapper();
         int maskIndex = maskIndexed.getMaskIndex();
-        logger.info(
+        logger.debug(
                 "Creating Renderable Bean for: " + item.getItemWrapper().getName() + " original index=" + maskIndex +
                         " new index=" + translatedNum
         );

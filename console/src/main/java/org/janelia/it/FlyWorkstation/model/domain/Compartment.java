@@ -1,7 +1,10 @@
 package org.janelia.it.FlyWorkstation.model.domain;
 
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
+import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityAttribute;
 import org.janelia.it.jacs.model.entity.EntityConstants;
+import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 
 /**
@@ -28,16 +31,26 @@ public class Compartment extends EntityWrapper implements Viewable2d, Masked3d, 
 
     @Override
     public String getMask3dImageFilepath() {
-        return getInternalEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_MASK_IMAGE);
+        return getFilePath(EntityConstants.ATTRIBUTE_MASK_IMAGE);
     }
 
     @Override
     public String getChan3dImageFilepath() {
-        return getInternalEntity().getValueByAttributeName(EntityConstants.ATTRIBUTE_CHAN_IMAGE);
+        return getFilePath(EntityConstants.ATTRIBUTE_CHAN_IMAGE);
     }
 
     @Override
     public String get2dImageFilepath() {
         return null;
+    }
+
+    private String getFilePath( String attribName ) {
+        String rtnVal = getInternalEntity().getValueByAttributeName( attribName );
+        if ( rtnVal == null ) {
+            EntityData childData = getInternalEntity().getEntityDataByAttributeName( attribName );
+            Entity childEntity = childData.getChildEntity();
+            rtnVal = childEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_FILE_PATH );
+        }
+        return rtnVal;
     }
 }

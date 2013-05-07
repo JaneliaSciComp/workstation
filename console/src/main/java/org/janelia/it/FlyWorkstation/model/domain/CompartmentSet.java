@@ -70,7 +70,7 @@ public class CompartmentSet extends AlignedEntityWrapper implements Viewable2d, 
         List<Entity> compartmentSets = ModelMgr.getModelMgr().getEntitiesByTypeName(EntityConstants.TYPE_COMPARTMENT_SET);
 
         for ( Entity compartmentSetEntity: compartmentSets ) {
-            log.info("Checking compartment set '{}', (id={})", compartmentSetEntity.getName(), compartmentSetEntity.getId());
+            log.debug("Checking compartment set '{}', (id={})", compartmentSetEntity.getName(), compartmentSetEntity.getId());
             ModelMgr.getModelMgr().loadLazyEntity( compartmentSetEntity, false );
 
             String alignmentSpaceName = compartmentSetEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_ALIGNMENT_SPACE );
@@ -86,7 +86,7 @@ public class CompartmentSet extends AlignedEntityWrapper implements Viewable2d, 
                 compartmentSetEntity = ModelMgr.getModelMgr().getEntityAndChildren( compartmentSetEntity.getId() );
                 Set<Entity> children = compartmentSetEntity.getChildren();
                 for ( Entity child: children ) {
-                    log.info("Adding child compartment of {}.", child.getName());
+                    log.debug("Adding child compartment of {}.", child.getName());
                     if ( child.getEntityType().getName().equals( EntityConstants.TYPE_COMPARTMENT ) ) {
                         ModelMgr.getModelMgr().loadLazyEntity( child, false );
                         Compartment compartmentWrapper = new Compartment( new RootedEntity( child ) );
