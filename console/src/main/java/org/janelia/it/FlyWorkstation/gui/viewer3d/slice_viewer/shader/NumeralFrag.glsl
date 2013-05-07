@@ -67,7 +67,11 @@ void main()
     if (dy < 0.05) discard;
     dy = (dy - 0.05)/(0.90); // rescale to 0-1
 
-    float intensity = texture2D(tileTexture, gl_TexCoord[0].xy)[int(channel)];
+    int c = int(channel);
+    // 2-channel images store second channel in alpha (channel 3)
+    if ((channel_count == 2) && (c == 1))
+        c = 3;
+    float intensity = texture2D(tileTexture, gl_TexCoord[0].xy)[c];
     if (srgb_gamma)
         intensity = sRGB_gamma_correct(intensity);
     intensity = floor(format_max * intensity + 0.5); // exact integer

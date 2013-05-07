@@ -1,45 +1,48 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action;
 
-import java.awt.event.MouseWheelEvent;
+import java.awt.event.ActionEvent;
+
+import javax.swing.AbstractAction;
+
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 
-public class ZScanMode 
-implements WheelMode
+/**
+ * Base class for z slice scanning actions in slice viewer.
+ * 
+ * @author Christopher M. Bruns
+ *
+ */
+public class ZScanAction extends AbstractAction 
 {
-	BasicMouseMode mode = new BasicMouseMode();
+	private static final long serialVersionUID = 1L;
 	private VolumeImage3d image;
-
-	public ZScanMode(VolumeImage3d image) {
+	private Camera3d camera;
+	private int sliceCount;
+	
+	ZScanAction(VolumeImage3d image, Camera3d camera, int sliceCount)
+	{
 		this.image = image;
+		this.camera = camera;
+		this.sliceCount = sliceCount;		
 	}
 	
 	@Override
-	public MouseModalWidget getComponent() {
-		return mode.getComponent();
-	}
-
-	@Override
-	public Camera3d getCamera() {
-		return mode.getCamera();
-	}
-
-	@Override
-	public void mouseWheelMoved(MouseWheelEvent event) 
+	public void actionPerformed(ActionEvent e) 
 	{
-		Camera3d camera = getCamera();
-		if (camera == null)
-			return;
-		int notches = event.getWheelRotation();
-		if (notches == 0)
-			return;
-
 		Vec3 oldFocus = camera.getFocus();
 		double oldZ = oldFocus.getZ();
 		int oldZIndex = (int)(Math.round(oldZ / image.getZResolution()) + 0.1);
-		int sliceCount = notches;
 		int newZIndex = oldZIndex + sliceCount;
+		// Scoot to next multiple of 10, for performance
+		if (Math.abs(sliceCount) > 1) {
+			int dz = newZIndex % sliceCount;
+			if (dz > sliceCount/2.0)
+				dz -= sliceCount;
+			newZIndex -= dz; // newZIndex is now a multiple of sliceCount
+			assert newZIndex % sliceCount == 0;
+		}
 		double newZ = newZIndex * image.getZResolution();
 		double maxZ = image.getBoundingBox3d().getMax().getZ();
 		double minZ = image.getBoundingBox3d().getMin().getZ();
@@ -55,13 +58,4 @@ implements WheelMode
 		camera.setFocus(newFocus);
 	}
 
-	@Override
-	public void setCamera(Camera3d camera) {
-		mode.setCamera(camera);
-	}
-
-	@Override
-	public void setComponent(MouseModalWidget widget) {
-		mode.setComponent(widget);
-	}
 }

@@ -10,6 +10,10 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.MouseMode;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.PanMode;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.WheelMode;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZScanMode;
 
 import javax.media.opengl.GLProfile;
 import javax.swing.*;

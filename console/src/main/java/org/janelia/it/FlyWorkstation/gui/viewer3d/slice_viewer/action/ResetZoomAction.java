@@ -1,8 +1,10 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action;
 
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
+
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.SliceViewer;
 
 public class ResetZoomAction extends AbstractAction {
 	private static final long serialVersionUID = 1L;

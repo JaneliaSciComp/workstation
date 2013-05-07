@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action;
 
 import java.awt.event.ActionEvent;
 import java.net.URL;
@@ -6,6 +6,7 @@ import java.net.URL;
 import javax.swing.AbstractAction;
 
 import org.eclipse.jetty.util.log.Log;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal1;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

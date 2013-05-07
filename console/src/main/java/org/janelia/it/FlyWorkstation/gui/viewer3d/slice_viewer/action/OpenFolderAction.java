@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action;
 
 import java.awt.event.ActionEvent;
 import java.io.File;
@@ -19,7 +19,7 @@ public class OpenFolderAction extends AbstractAction
 	private VolumeImage3d image;
 	private JFileChooser fileChooser = new JFileChooser();
 	
-	OpenFolderAction(VolumeImage3d image, JComponent parent) {
+	public OpenFolderAction(VolumeImage3d image, JComponent parent) {
 		this.image = image;
 		this.parent = parent;
 		fileChooser.setDialogTitle("Choose quadtree folder");

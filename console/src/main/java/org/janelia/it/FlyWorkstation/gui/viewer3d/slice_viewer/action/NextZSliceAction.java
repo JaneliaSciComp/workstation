@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action;
 
 import javax.swing.KeyStroke;
 
@@ -13,7 +13,7 @@ extends ZScanAction
 {
 	private static final long serialVersionUID = 1L;
 
-	NextZSliceAction(VolumeImage3d image, Camera3d camera) {
+	public NextZSliceAction(VolumeImage3d image, Camera3d camera) {
 		super(image, camera, 1);
 		putValue(NAME, "Next Z Slice");
 		putValue(SMALL_ICON, Icons.getIcon("z_stack_down.png"));

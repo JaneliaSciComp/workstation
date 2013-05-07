@@ -180,21 +180,31 @@ extends AbstractTextureLoadAdapter
 		int zoomScale = (int)Math.pow(2, tileIndex.getZoom());
 		int tileDepth = tileFormat.getTileSize()[2];
 		int relativeZ = (tileIndex.getZ() / zoomScale) % tileDepth;
+		
+		ImageDecoder[] decoders = createImageDecoders(folder);
+		
+		TextureData2dGL result = loadSlice(relativeZ,
+				decoders);
+
+		loadTimer.putAll(localLoadTimer);
+		return result;
+	}
+
+	public TextureData2dGL loadSlice(int relativeZ, ImageDecoder[] decoders) 
+	throws TileLoadError 
+	{
+		int sc = tileFormat.getChannelCount();
+		// 2 - decode image
 		RenderedImage channels[] = new RenderedImage[sc];
 		for (int c = 0; c < sc; ++c) {
-			File tiff = new File(folder, "default."+c+".tif");
-			// System.out.println(tileIndex+", "+tiff.toString());
-			if (! tiff.exists())
-				throw new MissingTileException();
 			try {
-				SeekableStream s = new FileSeekableStream(tiff);
-				ImageDecoder decoder = ImageCodec.createImageDecoder("tiff", s, null);
+				ImageDecoder decoder = decoders[c];
 				assert(relativeZ < decoder.getNumPages());
 				channels[c] = decoder.decodeAsRenderedImage(relativeZ);
 			} catch (IOException e) {
 				throw new TileLoadError(e);
 			}
-			localLoadTimer.mark("loaded slice, channel "+c);
+			// localLoadTimer.mark("loaded slice, channel "+c);
 		}
 		// Combine channels into one image
 		RenderedImage composite = channels[0];
@@ -203,7 +213,7 @@ extends AbstractTextureLoadAdapter
 			for (int c = 0; c < sc; ++c)
 				pb.addSource(channels[c]);
 			composite = JAI.create("bandmerge", pb);
-			localLoadTimer.mark("merged channels");
+			// localLoadTimer.mark("merged channels");
 		}
 		
 		TextureData2dGL result = null;
@@ -211,9 +221,28 @@ extends AbstractTextureLoadAdapter
 		TextureData2dGL tex = new TextureData2dGL();
 		tex.loadRenderedImage(composite);
 		result = tex;
-
-		loadTimer.putAll(localLoadTimer);
 		return result;
+	}
+
+	// TODO - cache decoders if folder has not changed
+	public ImageDecoder[] createImageDecoders(File folder)
+			throws MissingTileException, TileLoadError 
+	{
+		int sc = tileFormat.getChannelCount();
+		ImageDecoder decoders[] = new ImageDecoder[sc];
+		for (int c = 0; c < sc; ++c) {
+			File tiff = new File(folder, "default."+c+".tif");
+			// System.out.println(tileIndex+", "+tiff.toString());
+			if (! tiff.exists())
+				throw new MissingTileException();
+			try {
+				SeekableStream s = new FileSeekableStream(tiff);
+				decoders[c] = ImageCodec.createImageDecoder("tiff", s, null);
+			} catch (IOException e) {
+				throw new TileLoadError(e);
+			}
+		}
+		return decoders;
 	}
 	
 	protected void sniffMetadata(File topFolderParam) 

@@ -40,6 +40,7 @@ implements TextureDataI
 	private int bitDepth = 8;
 	private int channelCount = 3;
 	private float textureCoordX = 1.0f;
+	private boolean swapBytes = false;
 
 	private void checkGlError(GL2 gl, String message) 
 	{
@@ -56,6 +57,10 @@ implements TextureDataI
 		texture.enable(gl);
 		texture.bind(gl);
 		pixels.rewind();
+		if (swapBytes)
+			gl.glPixelStorei(GL2.GL_UNPACK_SWAP_BYTES, GL2.GL_TRUE);
+		else
+			gl.glPixelStorei(GL2.GL_UNPACK_SWAP_BYTES, GL2.GL_FALSE);
 		gl.glTexImage2D(
 				target,
 				mipmapLevel,
@@ -78,6 +83,14 @@ implements TextureDataI
 	@Override
 	public boolean isLinearized() {
 		return linearized;
+	}
+
+	public boolean isSwapBytes() {
+		return swapBytes;
+	}
+
+	public void setSwapBytes(boolean swapBytes) {
+		this.swapBytes = swapBytes;
 	}
 
 	public void loadRenderedImage(RenderedImage image) {
@@ -243,6 +256,14 @@ implements TextureDataI
 
 	public int getType() {
 		return type;
+	}
+
+	public int getUsedWidth() {
+		return usedWidth;
+	}
+
+	public void setUsedWidth(int usedWidth) {
+		this.usedWidth = usedWidth;
 	}
 
 	public ByteBuffer getPixels() {

@@ -1,9 +1,11 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action;
 
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.ImageColorModel;
 
 public class ResetColorsAction 
 extends AbstractAction 

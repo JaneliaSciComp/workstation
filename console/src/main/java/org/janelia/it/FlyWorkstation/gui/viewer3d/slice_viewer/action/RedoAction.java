@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action;
 
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -7,14 +7,15 @@ import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
 
 // PanModeAction puts the slice viewer into Pan mode.
-public class UndoAction extends AbstractAction 
+public class RedoAction extends AbstractAction 
 {
 	private static final long serialVersionUID = 1L;
 
-	public UndoAction() {
-		putValue(NAME, "Undo");
-		// control-Z or command-Z (on Mac)
-		KeyStroke accelerator = KeyStroke.getKeyStroke(KeyEvent.VK_Z, 
+	public RedoAction() {
+		putValue(NAME, "Redo");
+		// control-Y windows or command-shift-Z (on Mac)
+		// TODO - command-shift z on Mac
+		KeyStroke accelerator = KeyStroke.getKeyStroke(KeyEvent.VK_Y, 
 				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
 		putValue(ACCELERATOR_KEY, accelerator);
 		setEnabled(false);
@@ -22,6 +23,6 @@ public class UndoAction extends AbstractAction
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		System.out.println("Undo");  // TODO
+		System.out.println("Redo");  // TODO
 	}
 }

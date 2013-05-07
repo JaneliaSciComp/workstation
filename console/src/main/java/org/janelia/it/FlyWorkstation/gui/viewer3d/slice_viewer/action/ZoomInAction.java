@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action;
 
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
@@ -11,31 +11,30 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 
 import com.jogamp.newt.event.KeyEvent;
 
-public class ZoomOutAction extends AbstractAction 
+public class ZoomInAction extends AbstractAction 
 {
 	private static final long serialVersionUID = 1L;
 	protected Camera3d camera;
 
-	public ZoomOutAction(Camera3d camera) {
+	public ZoomInAction(Camera3d camera) {
 		this.camera = camera;
-		putValue(NAME, "Zoom Out");
-		putValue(SMALL_ICON, Icons.getIcon("magnify_minus.png"));
-		putValue(MNEMONIC_KEY, KeyEvent.VK_MINUS); // works with keyboard
-		// ctrl-minus on windows, cmd-minus on Mac
+		putValue(NAME, "Zoom In");
+		putValue(SMALL_ICON, Icons.getIcon("magnify_plus.png"));
+		putValue(MNEMONIC_KEY, KeyEvent.VK_PLUS);
+		// ctrl-plus on windows, cmd-plus on Mac
 		KeyStroke accelerator = KeyStroke.getKeyStroke(
-				KeyEvent.VK_MINUS,
+				KeyEvent.VK_EQUALS,
 				Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
 		putValue(ACCELERATOR_KEY, accelerator);
 		putValue(SHORT_DESCRIPTION,
-				"Zoom out to shrunken image."
+				"Zoom in to magnified image."
 				+"\n (Shortcut: "+accelerator+")"
 				);
 	}
 	
 	@Override
-	public void actionPerformed(ActionEvent event) 
-	{
-		camera.incrementZoom(1.0/1.414);
+	public void actionPerformed(ActionEvent event) {
+		camera.incrementZoom(1.414);
 	}
 
 }

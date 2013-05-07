@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -8,6 +8,7 @@ import java.util.prefs.Preferences;
 
 import javax.swing.JMenu;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal1;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +30,7 @@ public class RecentFileList
 
 	private Signal1<URL> openUrlRequestedSignal = new Signal1<URL>();
 	
-	RecentFileList(JMenu menu)
+	public RecentFileList(JMenu menu)
 	{
 		this.menu = menu;
 		prefs = Preferences.userNodeForPackage(this.getClass());
