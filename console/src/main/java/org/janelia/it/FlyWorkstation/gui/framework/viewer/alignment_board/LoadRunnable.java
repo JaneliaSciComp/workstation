@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
+import org.apache.juli.JdkLoggerFormatter;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.MaskChanRenderableData;
 
 import java.util.concurrent.BrokenBarrierException;
@@ -23,14 +24,17 @@ public class LoadRunnable implements Runnable {
     public void run() {
         try {
             volumeLoader.loadVolume(metaData);
+            System.out.println( "Finished loading " + metaData.getMaskPath() );
         } catch ( Exception ex ) {
             ex.printStackTrace();
-            barrier.reset();   // This tells others that the barrier is broken.
+            if ( barrier != null )
+                barrier.reset();   // This tells others that the barrier is broken.
             throw new RuntimeException( ex );
         }
 
         try {
-            barrier.await();
+            if ( barrier != null )
+                barrier.await();
         } catch ( BrokenBarrierException bbe ) {
             bbe.printStackTrace();
         } catch ( InterruptedException ie ) {

@@ -18,8 +18,7 @@ import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.*;
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -217,7 +216,8 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
                 resolver = new CacheFileResolver();
             }
 
-            multiThreadedFileLoad( metaDatas );
+            sequentialFileLoad( metaDatas );
+            //multiThreadedFileLoad( metaDatas, 10 );
 
             compartmentLoader.close();
             neuronFragmentLoader.close();
@@ -271,10 +271,36 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         }
     }
 
+    private void sequentialFileLoad( Collection<MaskChanRenderableData> metaDatas ) {
+        for ( MaskChanRenderableData metaData: metaDatas ) {
+            logger.info( "Scheduling mask path {} for load.", metaData.getMaskPath() );
+            LoadRunnable runnable = new LoadRunnable( metaData, this, null );
+            runnable.run();
+        }
+    }
+
+    private void multiThreadedFileLoad( Collection<MaskChanRenderableData> metaDatas, int maxThreads ) {
+        ExecutorService threadPool = Executors.newFixedThreadPool( maxThreads );
+        for ( MaskChanRenderableData metaData: metaDatas ) {
+            logger.info( "Scheduling mask path {} for load.", metaData.getMaskPath() );
+            LoadRunnable runnable = new LoadRunnable( metaData, this, null );
+            threadPool.submit( runnable );
+        }
+        try {
+            // Now that the pools is laden, we call the milder shutdown, which lets us wait for completion of all.
+            logger.info("Awaiting shutdown.");
+            threadPool.shutdown();
+            threadPool.awaitTermination( 10, TimeUnit.MINUTES );
+            logger.info("Thread pool termination complete.");
+        } catch ( InterruptedException ie ) {
+            ie.printStackTrace();
+        }
+    }
+
     private void multiThreadedFileLoad(Collection<MaskChanRenderableData> metaDatas) {
         final CyclicBarrier loadBarrier = new CyclicBarrier( metaDatas.size() + 1 );
         for ( MaskChanRenderableData metaData: metaDatas ) {
-            logger.info( "Loading mask path " + metaData.getMaskPath() );
+            logger.info( "Loading mask path {}.", metaData.getMaskPath() );
             // Multithreaded load.
             LoadRunnable runnable = new LoadRunnable( metaData, this, loadBarrier );
             new Thread( runnable ).start();
