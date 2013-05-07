@@ -1,15 +1,13 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 
-import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.MaskChanRenderableData;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableDataSourceI;
-import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
-import org.janelia.it.FlyWorkstation.model.domain.Neuron;
-import org.janelia.it.FlyWorkstation.model.domain.Sample;
+import org.janelia.it.FlyWorkstation.model.domain.*;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
+import org.janelia.it.jacs.model.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,50 +60,44 @@ public class ABContextDataSource implements RenderableDataSourceI {
             EntityWrapper itemEntity = alignedItem.getItemWrapper();
             if ( itemEntity instanceof Sample) {
                 Sample sample = (Sample)itemEntity;
-                RenderableBean sampleDataBean = new RenderableBean();
-                sampleDataBean.setLabelFileNum( 0 );
-                sampleDataBean.setTranslatedNum( 0 ); // Always zero for any sample.
-                sampleDataBean.setRgb(
-                        new byte[]{
-                                (byte) 0f, (byte) 0f, (byte) 0f, RenderMappingI.NON_RENDERING
-                        }
-                );
-                sampleDataBean.setRenderableEntity(sample.getInternalEntity());
-                MaskChanRenderableData sampleRenderable = new MaskChanRenderableData();
-                sampleRenderable.setBean(sampleDataBean);
-                sampleRenderable.setCompartment(false);
+                Entity internalEntity = sample.getInternalEntity();
 
-                rtnVal.add( sampleRenderable );
+                MaskChanRenderableData containerRenderable = getNonRenderingRenderableData(internalEntity);
 
-                long sampleId = sample.getId();
+                rtnVal.add( containerRenderable );
 
                 Collection<AlignedItem> childItems = alignedItem.getAlignedItems();
                 if ( childItems != null ) {
                     for ( AlignedItem item: childItems ) {
                         if ( item.getItemWrapper() instanceof Neuron) {
-                            RenderableBean neuronBean = createRenderableBean( nextTranslatedNum, item );
-                            MaskChanRenderableData nfRenderable = new MaskChanRenderableData();
-                            nfRenderable.setBean( neuronBean );
-                            nfRenderable.setCompartment( false );
+                            liveFileCount += getRenderableData(rtnVal, nextTranslatedNum++, false, item);
+                        }
+                    }
+                }
+            }
+            else if ( itemEntity instanceof Neuron ) {
+                liveFileCount += getRenderableData(rtnVal, nextTranslatedNum, false, alignedItem);
+            }
+            else if ( itemEntity instanceof CompartmentSet) {
+                CompartmentSet compartmentSet = (CompartmentSet)itemEntity;
+                Entity internalEntity = compartmentSet.getInternalEntity();
 
-                            //sampleId = 1735570990882095202L; // Push different set of input files.
-                            Neuron neuronItem = (Neuron)item.getItemWrapper();
-                            String maskPath = getMaskPath(neuronItem, sampleId);
-                            nfRenderable.setMaskPath( maskPath );
-                            String channelPath = getChannelPath(neuronItem, sampleId);
-                            nfRenderable.setChannelPath( channelPath );
+                MaskChanRenderableData containerRenderable = getNonRenderingRenderableData(internalEntity);
 
-                            liveFileCount += getCorrectFilesFoundCount(
-                                    "" + neuronBean.getRenderableEntity(), maskPath, channelPath
-                            );
+                rtnVal.add( containerRenderable );
 
-                            rtnVal.add( nfRenderable );
-                            nextTranslatedNum ++;
+                Collection<AlignedItem> childItems = alignedItem.getAlignedItems();
+                if ( childItems != null ) {
+                    for ( AlignedItem item: childItems ) {
+                        if ( item.getItemWrapper() instanceof Compartment ) {
+                            liveFileCount += getRenderableData(rtnVal, nextTranslatedNum++, true, item);
                         }
                     }
                 }
 
-
+            }
+            else if ( itemEntity instanceof Compartment ) {
+                liveFileCount += getRenderableData(rtnVal, nextTranslatedNum, true, alignedItem);
             }
         }
 
@@ -131,7 +123,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         int nextTranslatedNum = 0;
         RenderableBean signalBean = new RenderableBean();
         signalBean.setLabelFileNum(0);
-        signalBean.setTranslatedNum(nextTranslatedNum ++);
+        signalBean.setTranslatedNum(nextTranslatedNum++);
         signalBean.setRgb(
                 new byte[]{
                         (byte) 0f, (byte) 0f, (byte) 0f, RenderMappingI.NON_RENDERING
@@ -140,7 +132,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
 
         MaskChanRenderableData signalData = new MaskChanRenderableData();
         signalData.setBean(signalBean);
-        signalData.setCompartment( false );
+        signalData.setCompartment(false);
 
         // Must divie-up the inputs between compartments and Fragments.
 
@@ -244,41 +236,80 @@ public class ABContextDataSource implements RenderableDataSourceI {
     //------------------------------------------------------------HELPERS
 
     /**
+     * Creates a container renderable which will not be shown.  It exists for its children's reference.
+     *
+     * @param internalEntity entity being wrapped by this data.
+     * @return the renderable being created.
+     */
+    private MaskChanRenderableData getNonRenderingRenderableData(Entity internalEntity) {
+        RenderableBean containerDataBean = new RenderableBean();
+        containerDataBean.setLabelFileNum(0);
+        containerDataBean.setTranslatedNum(0); // Always zero for any sample.
+        containerDataBean.setRgb(
+                new byte[]{
+                        (byte) 0f, (byte) 0f, (byte) 0f, RenderMappingI.NON_RENDERING
+                }
+        );
+        containerDataBean.setRenderableEntity(internalEntity);
+
+        MaskChanRenderableData containerRenderable = new MaskChanRenderableData();
+        containerRenderable.setBean(containerDataBean);
+        containerRenderable.setCompartment(false);
+        return containerRenderable;
+    }
+
+    /**
+     * Create the common part of the renderable data.
+     *
+     * @param maskChanRenderableDatas to this collection will be added the new renderable data.
+     * @param nextTranslatedNum will be the target render-method id for this data
+     * @param isCompartment for special treatment of compartments.
+     * @param item being wrapped.
+     * @return
+     */
+    private int getRenderableData(
+            Collection<MaskChanRenderableData> maskChanRenderableDatas,
+            int nextTranslatedNum,
+            boolean isCompartment,
+            AlignedItem item) {
+
+        RenderableBean renderableBean = createRenderableBean( nextTranslatedNum, isCompartment, item );
+        MaskChanRenderableData nfRenderable = new MaskChanRenderableData();
+        nfRenderable.setBean( renderableBean );
+        nfRenderable.setCompartment( isCompartment );
+
+        Masked3d masked = (Masked3d)item.getItemWrapper();
+        String maskPath = getMaskPath(masked);
+        nfRenderable.setMaskPath( maskPath );
+        String channelPath = getChannelPath(masked);
+        nfRenderable.setChannelPath( channelPath );
+
+        int liveFileCount = getCorrectFilesFoundCount(
+                "" + renderableBean.getRenderableEntity(), maskPath, channelPath
+        );
+
+        maskChanRenderableDatas.add( nfRenderable );
+        return liveFileCount;
+    }
+
+    /**
      * This will implement the fetch of mask file name.
      *
-     * @param neuron has a mask file associated.
+     * @param masked has a mask file associated.
      * @return that mask file.
      */
-    private String getMaskPath( Neuron neuron, long id ) {
-        String path = null;
-        path = neuron.getMask3dImageFilepath();
-//        path = TEMP_ROOT_PATH + id + "_" + ( neuron.getMaskIndex() ) + ".mask";
-//        if ( ! new File( path ).canRead() ) {
-//            logger.error( "Did we forget to mount jacsData from workstation?" );
-//            path = null;
-//        }
-        return path;
+    private String getMaskPath( Masked3d masked ) {
+        return masked.getMask3dImageFilepath();
     }
 
     /**
      * This will implement the fetch of channel file name.
      *
-     * @param neuron has a channel file associated.
+     * @param masked has a channel file associated.
      * @return that channel file.
      */
-    private String getChannelPath( Neuron neuron, long id ) {
-
-        String path = null;
-        path = neuron.getChan3dImageFilepath();
-//        path = TEMP_ROOT_PATH + id + "_" + ( neuron.getMaskIndex() ) + ".chan";
-//        if ( ! new File( path ).canRead() ) {
-//            logger.error( "Cannot open {} for {}.", path, neuron.getId() + "/" + neuron.getName() );
-//            path = null;
-//        }
-//        else {
-//            logger.info( "Assigning file {} to {}.", path, neuron.getId() + "/" + neuron.getName() );
-//        }
-        return path;
+    private String getChannelPath( Masked3d masked ) {
+        return masked.getChan3dImageFilepath();
     }
 
     /**
@@ -296,21 +327,23 @@ public class ABContextDataSource implements RenderableDataSourceI {
         return rtnVal;
     }
 
-    private RenderableBean createRenderableBean( int translatedNum, AlignedItem item ) {
-        Neuron neuron = (Neuron)item.getItemWrapper();
+    private RenderableBean createRenderableBean( int translatedNum, boolean isCompartment, AlignedItem item ) {
+        Entity internalEntity = item.getInternalEntity();
+        MaskIndexed maskIndexed = (MaskIndexed)item.getItemWrapper();
+        int maskIndex = maskIndexed.getMaskIndex();
         logger.info(
-                "Creating Renderable Bean for: " + neuron.getName() + " original index=" + neuron.getMaskIndex() +
+                "Creating Renderable Bean for: " + item.getItemWrapper().getName() + " original index=" + maskIndex +
                         " new index=" + translatedNum
         );
 
-        RenderableBean neuronBean = new RenderableBean();
-        neuronBean.setLabelFileNum( neuron.getMaskIndex() );
-        neuronBean.setTranslatedNum(translatedNum);
-        neuronBean.setRenderableEntity(neuron.getInternalEntity());
+        RenderableBean renderableBean = new RenderableBean();
+        renderableBean.setLabelFileNum(maskIndex);
+        renderableBean.setTranslatedNum(translatedNum);
+        renderableBean.setRenderableEntity(internalEntity);
 
         // See to the appearance.
-        Color neuronColor = item.getColor();
-        if ( neuronColor == null ) {
+        Color renderColor = item.getColor();
+        if ( renderColor == null ) {
             // If visible, leave RGB as null, and allow downstream automated-color to take place.
             // Otherwise, if not visible, ensure that the bean has a non-render setting.
             if ( ! item.isVisible() ) {
@@ -319,21 +352,35 @@ public class ABContextDataSource implements RenderableDataSourceI {
                 rgb[ 1 ] = 0;
                 rgb[ 2 ] = 0;
                 rgb[ 3 ] = RenderMappingI.NON_RENDERING;
-                neuronBean.setRgb( rgb );
+                renderableBean.setRgb(rgb);
+            }
+            else if ( isCompartment ) {
+                renderableBean.setRgb(
+                        new byte[]{
+                                (byte) 50f, (byte) 50f, (byte) 50f, RenderMappingI.COMPARTMENT_RENDERING
+                        }
+                );
             }
         }
         else {
-            logger.info( "Neuron color is {} for {}.", neuronColor, item.getItemWrapper().getName() );
+            logger.info( "Render color is {} for {}.", renderColor, item.getItemWrapper().getName() );
             // A Neuron Color was set, but the neuron could still be "turned off" for render.
             byte[] rgb = new byte[ 4 ];
-            rgb[ 0 ] = (byte)neuronColor.getRed();
-            rgb[ 1 ] = (byte)neuronColor.getGreen();
-            rgb[ 2 ] = (byte)neuronColor.getBlue();
-            rgb[ 3 ] = item.isVisible()    ?    RenderMappingI.FRAGMENT_RENDERING : RenderMappingI.NON_RENDERING;
-            neuronBean.setRgb( rgb );
+            rgb[ 0 ] = (byte)renderColor.getRed();
+            rgb[ 1 ] = (byte)renderColor.getGreen();
+            rgb[ 2 ] = (byte)renderColor.getBlue();
+            byte renderMethod = RenderMappingI.FRAGMENT_RENDERING;
+            if ( ! item.isVisible() ) {
+                renderMethod = RenderMappingI.NON_RENDERING;
+            }
+            else if ( isCompartment ) {
+                renderMethod = RenderMappingI.COMPARTMENT_RENDERING;
+            }
+            rgb[ 3 ] = renderMethod;
+            renderableBean.setRgb(rgb);
         }
 
-        return neuronBean;
+        return renderableBean;
     }
 
 

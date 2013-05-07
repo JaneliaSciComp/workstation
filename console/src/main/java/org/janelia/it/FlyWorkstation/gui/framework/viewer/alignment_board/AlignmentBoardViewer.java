@@ -27,9 +27,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ABContextDataSource;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CropCoordSet;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.VolumeWritebackHandler;
-import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
-import org.janelia.it.FlyWorkstation.model.domain.Neuron;
-import org.janelia.it.FlyWorkstation.model.domain.Sample;
+import org.janelia.it.FlyWorkstation.model.domain.*;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.*;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.ArtifactType;
@@ -197,7 +195,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
              event.getChangeType().equals( AlignmentBoardItemChangeEvent.ChangeType.ColorChange ) ) {
 
             // Changing the render mapping values.
-            this.updateRendering( abContext );
+            if ( settings != null )
+                this.updateRendering( abContext );
 
         }
         else {
@@ -345,8 +344,11 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 }
 
             }
+            else if ( itemEntity instanceof CompartmentSet && alignedItem.isVisible() ) {
+                log.info( itemEntity.getName() + ": compartment set" );
+            }
             else {
-                log.error("Cannot handle entites of type: "+itemEntity.getType());
+                log.warn("No knowledge of entities of type: "+itemEntity.getType());
             }
 
         }
