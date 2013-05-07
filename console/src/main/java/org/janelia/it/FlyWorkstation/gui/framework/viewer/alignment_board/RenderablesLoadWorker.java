@@ -216,8 +216,8 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
                 resolver = new CacheFileResolver();
             }
 
-            sequentialFileLoad( metaDatas );
-            //multiThreadedFileLoad( metaDatas, 10 );
+            //sequentialFileLoad( metaDatas );
+            multiThreadedFileLoad( metaDatas, 20 );
 
             compartmentLoader.close();
             neuronFragmentLoader.close();
@@ -271,20 +271,12 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         }
     }
 
-    private void sequentialFileLoad( Collection<MaskChanRenderableData> metaDatas ) {
-        for ( MaskChanRenderableData metaData: metaDatas ) {
-            logger.info( "Scheduling mask path {} for load.", metaData.getMaskPath() );
-            LoadRunnable runnable = new LoadRunnable( metaData, this, null );
-            runnable.run();
-        }
-    }
-
     private void multiThreadedFileLoad( Collection<MaskChanRenderableData> metaDatas, int maxThreads ) {
         ExecutorService threadPool = Executors.newFixedThreadPool( maxThreads );
         for ( MaskChanRenderableData metaData: metaDatas ) {
             logger.info( "Scheduling mask path {} for load.", metaData.getMaskPath() );
             LoadRunnable runnable = new LoadRunnable( metaData, this, null );
-            threadPool.submit( runnable );
+            threadPool.execute( runnable );
         }
         try {
             // Now that the pools is laden, we call the milder shutdown, which lets us wait for completion of all.
@@ -297,35 +289,14 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         }
     }
 
-    private void multiThreadedFileLoad(Collection<MaskChanRenderableData> metaDatas) {
-        final CyclicBarrier loadBarrier = new CyclicBarrier( metaDatas.size() + 1 );
+    //  THis is a bypass alternative to resort to in case of problems with multi-threaded file load.
+    //   On 5/7/2013, I experienced a problem (cleared by bouncing IntelliJ IDEA) with multithreading.
+    //   the tasks were all completing, but there was never any triggering of the "end" detection for whole pool.
+    private void sequentialFileLoad( Collection<MaskChanRenderableData> metaDatas ) {
         for ( MaskChanRenderableData metaData: metaDatas ) {
-            logger.info( "Loading mask path {}.", metaData.getMaskPath() );
-            // Multithreaded load.
-            LoadRunnable runnable = new LoadRunnable( metaData, this, loadBarrier );
-            new Thread( runnable ).start();
-        }
-
-        try {
-            loadBarrier.await();
-
-            if ( loadBarrier.isBroken() ) {
-                throw new Exception( "Load failed." );
-            }
-
-        } catch ( BrokenBarrierException bbe ) {
-            logger.error( "Barrier await failed during file load.", bbe );
-            bbe.printStackTrace();
-        } catch ( InterruptedException ie ) {
-            logger.error( "Thread interrupted during file load.", ie );
-            ie.printStackTrace();
-        } catch ( Exception ex ) {
-            logger.error( "Exception during file load.", ex );
-            ex.printStackTrace();
-        } finally {
-            if ( ! loadBarrier.isBroken() ) {
-                loadBarrier.reset(); // Signal to others.
-            }
+            logger.info( "Scheduling mask path {} for load.", metaData.getMaskPath() );
+            LoadRunnable runnable = new LoadRunnable( metaData, this, null );
+            runnable.run();
         }
     }
 
