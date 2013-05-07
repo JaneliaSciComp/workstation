@@ -30,6 +30,7 @@ import java.util.concurrent.*;
  */
 public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader {
 
+    private static final int MAX_FILE_LOAD_THREADS = 20;
     private Boolean loadFiles = true;
 
     private MaskChanMultiFileLoader compartmentLoader;
@@ -216,8 +217,8 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
                 resolver = new CacheFileResolver();
             }
 
-            //sequentialFileLoad( metaDatas );
-            multiThreadedFileLoad( metaDatas, 20 );
+            sequentialFileLoad( metaDatas );
+            //multiThreadedFileLoad( metaDatas, MAX_FILE_LOAD_THREADS );
 
             compartmentLoader.close();
             neuronFragmentLoader.close();

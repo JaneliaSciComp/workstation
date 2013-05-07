@@ -25,6 +25,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
     // should match the location for the previously-known files fetched from the older pipeline.
     private static final String TEMP_ROOT_PATH = "/Volumes/jacsData/maskChannelTestYoshi/prefix_";
     private static final String MASK_EXTENSION = ".mask";
+    private static final byte COMPARTMENT_INTENSITY = (byte) 0f;
     private AlignmentBoardContext context;
     private String[] filenames;
 
@@ -126,7 +127,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         signalBean.setTranslatedNum(nextTranslatedNum++);
         signalBean.setRgb(
                 new byte[]{
-                        (byte) 0f, (byte) 0f, (byte) 0f, RenderMappingI.NON_RENDERING
+                        COMPARTMENT_INTENSITY, COMPARTMENT_INTENSITY, COMPARTMENT_INTENSITY, RenderMappingI.NON_RENDERING
                 }
         );
 
@@ -247,7 +248,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         containerDataBean.setTranslatedNum(0); // Always zero for any sample.
         containerDataBean.setRgb(
                 new byte[]{
-                        (byte) 0f, (byte) 0f, (byte) 0f, RenderMappingI.NON_RENDERING
+                        COMPARTMENT_INTENSITY, COMPARTMENT_INTENSITY, COMPARTMENT_INTENSITY, RenderMappingI.NON_RENDERING
                 }
         );
         containerDataBean.setRenderableEntity(internalEntity);
@@ -357,7 +358,10 @@ public class ABContextDataSource implements RenderableDataSourceI {
             else if ( isCompartment ) {
                 renderableBean.setRgb(
                         new byte[]{
-                                (byte) 50f, (byte) 50f, (byte) 50f, RenderMappingI.COMPARTMENT_RENDERING
+                                COMPARTMENT_INTENSITY,
+                                COMPARTMENT_INTENSITY,
+                                COMPARTMENT_INTENSITY,
+                                RenderMappingI.COMPARTMENT_RENDERING
                         }
                 );
             }

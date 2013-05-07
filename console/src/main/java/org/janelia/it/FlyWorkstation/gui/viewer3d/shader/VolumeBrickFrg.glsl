@@ -96,10 +96,12 @@ vec4 volumeMask(vec4 origColor)
             {
                 // Special case: a translucent compartment.  Here, make a translucent gray appearance.
                 // For gray mappings, fill in solid gray for anything empty, but otherwise just use original.
-                if ( maxIntensity < 0.05 ) {
-                    mappedColor = vec4( 1.0, 1.0, 1.0, 1.0 );
+                if ( maxIntensity < 0.05 )
+                {
+                    mappedColor = vec4( 2.5, 2.5, 2.5, 2.5 ); // Need to "overpower" the gamma correction with >1 val
                 }
-                else {
+                else
+                {
                     mappedColor = origColor; // TEMP?
                 }
 
@@ -112,7 +114,8 @@ vec4 volumeMask(vec4 origColor)
             {
                 // This takes the mapped color, and multiplies it by the
                 // maximum intensity of any signal color.
-                for (int i = 0; i < 3; i++) {
+                for (int i = 0; i < 3; i++)
+                {
                     rtnVal[i] = mappedColor[ i ] * maxIntensity;
                 }
             }
