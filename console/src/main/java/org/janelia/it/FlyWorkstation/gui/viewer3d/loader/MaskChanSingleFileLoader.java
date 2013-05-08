@@ -177,9 +177,6 @@ public class MaskChanSingleFileLoader {
      * Returns the dimensions found for this particular
      */
     public Long[] getDimensions() {
-if (zeroZCount > 500 ) {
-System.out.println("Getting high zero-z count for axis=" + this.axis + ", dim-order=" + this.dimensionOrder + ", " + this.sx + " x " + this.sy + " x " + this.sz );
-}
         return new Long[] { sx, sy, sz };
     }
 
@@ -423,12 +420,6 @@ System.out.println("Getting high zero-z count for axis=" + this.axis + ", dim-or
 
                 long zOffset = xyzCoords[ 2 ] * targetSliceSize;  // Consuming all slices to current.
                 long yOffset = xyzCoords[ 1 ] * volumeVoxels[0] + zOffset;  // Consuming lines to remainder.
-if ( zOffset < 2  &&  axis == 1 ) {
-zeroZCount ++;
-if ( zeroZCount > 200 ){
-int ddd=0;
-}
-}
 
                 long final1DCoord = yOffset + xyzCoords[ 0 ];
 
@@ -524,7 +515,6 @@ int ddd=0;
 
     }
 
-int zeroZCount = 0; // DEBUG
     private long[] convertToSrc3D(long coord1DSource) {
         // This works because the whole solid is made up of a stack of slices.
         //  ALSO, no need for byte-count in calculations for source coordinates.
