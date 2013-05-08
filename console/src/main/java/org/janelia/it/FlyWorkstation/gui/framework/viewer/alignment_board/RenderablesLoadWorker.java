@@ -275,7 +275,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     private void multiThreadedFileLoad( Collection<MaskChanRenderableData> metaDatas, int maxThreads ) {
         ExecutorService threadPool = Executors.newFixedThreadPool( maxThreads );
         for ( MaskChanRenderableData metaData: metaDatas ) {
-            logger.info( "Scheduling mask path {} for load.", metaData.getMaskPath() );
+            logger.debug( "Scheduling mask path {} for load.", metaData.getMaskPath() );
             LoadRunnable runnable = new LoadRunnable( metaData, this, null );
             threadPool.execute( runnable );
         }
@@ -295,7 +295,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     //   the tasks were all completing, but there was never any triggering of the "end" detection for whole pool.
     private void sequentialFileLoad( Collection<MaskChanRenderableData> metaDatas ) {
         for ( MaskChanRenderableData metaData: metaDatas ) {
-            logger.info( "Scheduling mask path {} for load.", metaData.getMaskPath() );
+            logger.debug( "Scheduling mask path {} for load.", metaData.getMaskPath() );
             LoadRunnable runnable = new LoadRunnable( metaData, this, null );
             runnable.run();
         }

@@ -365,7 +365,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
             }
         }
         else {
-            logger.info( "Render color is {} for {}.", renderColor, item.getItemWrapper().getName() );
+            logger.debug( "Render color is {} for {}.", renderColor, item.getItemWrapper().getName() );
             // A Neuron Color was set, but the neuron could still be "turned off" for render.
             byte[] rgb = new byte[ 4 ];
             rgb[ 0 ] = (byte)renderColor.getRed();
