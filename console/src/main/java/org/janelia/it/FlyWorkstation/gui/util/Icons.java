@@ -193,7 +193,8 @@ public class Icons {
         else if (EntityConstants.TYPE_SUPPORTING_DATA.equals(type)) {
             return getIcon(large ? "folder_files_large.png" : "folder_page.png");
         }
-        else if (EntityConstants.TYPE_SAMPLE_PROCESSING_RESULT.equals(type)) {
+        else if (EntityConstants.TYPE_SAMPLE_PROCESSING_RESULT.equals(type) ||
+                 EntityConstants.TYPE_CELL_COUNTING_RESULT.equals(type)) {
             return getIcon(large ? "folder_files_large.png" : "folder_image.png");
         }
         else if (EntityConstants.TYPE_ALIGNMENT_RESULT.equals(type)) {
