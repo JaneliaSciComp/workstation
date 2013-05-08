@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -13,6 +14,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.AbstractTextureLoadAdapter.MissingTileException;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.AbstractTextureLoadAdapter.TileLoadError;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.LodGenerator;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.MinResZGenerator;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.UmbrellaZGenerator;
@@ -109,6 +112,9 @@ implements VolumeImage3d
 	private Slot1<TileSet> updateFuturePreFetchSlot = new Slot1<TileSet>() {
 		@Override
 		public void execute(TileSet tileSet) {
+			if (tileSet == null)
+				return;
+			
 			long startTime = System.nanoTime();
 			
 			// log.info("updatePreFetchSlot");
@@ -441,68 +447,79 @@ implements VolumeImage3d
 		// Sanity check before overwriting current view
 		if (folderUrl == null)
 			return false;
+		
 		// Sniff which back end we need
-		boolean useRaveler = false;
-		try {
-			// Look for diagnostic block tiff file
-			URL testUrl = new URL(folderUrl, "default.0.tif");
-			testUrl.openStream();
-		} catch (MalformedURLException e1) {
-			e1.printStackTrace();
-		} catch (IOException e) {
-			useRaveler = true;
-		}
-		// Now we can start replacing the previous state
 		AbstractTextureLoadAdapter testLoadAdapter = null;
-		try {
-			if (useRaveler) {
-				testLoadAdapter = new RavelerLoadAdapter(folderUrl);
-			}
-			else {
+		URL testUrl;
+		if (testLoadAdapter == null) {
+			// Is this a PAM octree folder?
+			try {
+				testUrl = new URL(folderUrl, "slice_00000.pam");
+				InputStream is = testUrl.openStream();
+				is.close();
+				PamOctreeLoadAdapter pola = new PamOctreeLoadAdapter();
+				pola.setTopFolder(folderUrl);
+				testLoadAdapter = pola;
+			} 
+			catch (IOException e2) {} // not a PAM folder
+			catch (MissingTileException e) {} 
+			catch (TileLoadError e) {}
+		}
+		
+		// Is this a Block tiff octree folder?
+		if (testLoadAdapter == null) {
+			try {
+				// Look for diagnostic block tiff file
+				testUrl = new URL(folderUrl, "default.0.tif");
+				testUrl.openStream();
 				File fileFolder = new File(folderUrl.toURI());
 				BlockTiffOctreeLoadAdapter btola = new BlockTiffOctreeLoadAdapter();
 				btola.setTopFolder(fileFolder);
 				getTileSetChangedSignal().connect(getUpdateFuturePreFetchSlot());
 				testLoadAdapter = btola;
-			}
-		} catch (URISyntaxException e) {
-			e.printStackTrace();
-			return false;
-		} catch (IOException e) {
-			// e.printStackTrace();
-			return false;
+			} catch (MalformedURLException e1) {} 
+			catch (IOException e) {} 
+			catch (URISyntaxException e) {}
 		}
-		if (testLoadAdapter != null) {
-			loadAdapter = testLoadAdapter;
-			// Initialize pre-fetchers
-			minResPreFetcher.setTextureCache(getTextureCache());
-			minResPreFetcher.setLoadAdapter(loadAdapter);
-			futurePreFetcher.setTextureCache(getTextureCache());
-			futurePreFetcher.setLoadAdapter(loadAdapter);
-			// Don't pre-fetch before cache is cleared...
-			getTextureCache().getCacheClearedSignal().connect(startMinResPreFetchSlot);
-			// Compute bounding box
-			TileFormat tf = loadAdapter.getTileFormat();
-			double sv[] = tf.getVoxelMicrometers();
-			int s0[] = tf.getOrigin();
-			int s1[] = tf.getVolumeSize();
-			Vec3 b0 = new Vec3(sv[0]*s0[0], sv[1]*s0[1], sv[2]*s0[2]);
-			Vec3 b1 = new Vec3(sv[0]*(s0[0]+s1[0]), sv[1]*(s0[1]+s1[1]), sv[2]*(s0[2]+s1[2]));
-			boundingBox3d.setMin(b0);
-			boundingBox3d.setMax(b1);
-			// remove old data
-			emergencyTiles = null;
-			if (latestTiles != null)
-				latestTiles.clear();
-			if (lastGoodTiles != null)
-				lastGoodTiles.clear();
-			// queue disposal of textures on next display event
-			setCacheSizesAsFractionOfMaxHeap(0.15, 0.35);
-			getVolumeInitializedSignal().emit();
-			return true;
+
+		// Is this a Raveler format?
+		if (testLoadAdapter == null) {
+			try {
+				testLoadAdapter = new RavelerLoadAdapter(folderUrl);
+			} catch (IOException e) {}
 		}
-		else
-			return false;
+
+		// Did we identify a folder format?
+		if (testLoadAdapter == null)
+			return false; // NO
+		
+		loadAdapter = testLoadAdapter;
+		// Initialize pre-fetchers
+		minResPreFetcher.setTextureCache(getTextureCache());
+		minResPreFetcher.setLoadAdapter(loadAdapter);
+		futurePreFetcher.setTextureCache(getTextureCache());
+		futurePreFetcher.setLoadAdapter(loadAdapter);
+		// Don't pre-fetch before cache is cleared...
+		getTextureCache().getCacheClearedSignal().connect(startMinResPreFetchSlot);
+		// Compute bounding box
+		TileFormat tf = loadAdapter.getTileFormat();
+		double sv[] = tf.getVoxelMicrometers();
+		int s0[] = tf.getOrigin();
+		int s1[] = tf.getVolumeSize();
+		Vec3 b0 = new Vec3(sv[0]*s0[0], sv[1]*s0[1], sv[2]*s0[2]);
+		Vec3 b1 = new Vec3(sv[0]*(s0[0]+s1[0]), sv[1]*(s0[1]+s1[1]), sv[2]*(s0[2]+s1[2]));
+		boundingBox3d.setMin(b0);
+		boundingBox3d.setMax(b1);
+		// remove old data
+		emergencyTiles = null;
+		if (latestTiles != null)
+			latestTiles.clear();
+		if (lastGoodTiles != null)
+			lastGoodTiles.clear();
+		// queue disposal of textures on next display event
+		setCacheSizesAsFractionOfMaxHeap(0.15, 0.35);
+		getVolumeInitializedSignal().emit();
+		return true;
 	}
 
 	public void setCacheSizesAsFractionOfMaxHeap(double historyFraction, double futureFraction) {

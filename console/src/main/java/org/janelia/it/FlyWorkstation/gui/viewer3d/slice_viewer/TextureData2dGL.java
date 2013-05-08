@@ -182,12 +182,32 @@ implements TextureDataI
 		updateTexImageParams();
 	}
 	
+	public void setTarget(int target) {
+		this.target = target;
+	}
+
+	public void setWidth(int width) {
+		this.width = width;
+	}
+
+	public void setHeight(int height) {
+		this.height = height;
+	}
+
+	public void setPixels(ByteBuffer pixels) {
+		this.pixels = pixels;
+	}
+
+	public void setChannelCount(int channelCount) {
+		this.channelCount = channelCount;
+	}
+
 	@Override
 	public void setLinearized(boolean isLinearized) {
 		linearized = isLinearized;
 	}
 	
-	private void updateTexImageParams() {
+	public void updateTexImageParams() {
 		linearized = false;
 		if (bitDepth == 8)
 			type = GL2.GL_UNSIGNED_BYTE;

@@ -107,7 +107,8 @@ extends AbstractTextureLoadAdapter
 	/*
 	 * Return path to tiff file containing a particular slice
 	 */
-	protected File getFilePath(TileIndex tileIndex) {
+	public static File getOctreeFilePath(TileIndex tileIndex, TileFormat tileFormat) 
+	{
 		File path = new File("");
 		int octreeDepth = tileFormat.getZoomLevelCount();
 		int depth = octreeDepth - tileIndex.getZoom();
@@ -174,8 +175,8 @@ extends AbstractTextureLoadAdapter
 		// TODO - generalize to URL, if possible
 		// (though TIFF requires seek, right?)
 		// Compute octree path from Raveler-style tile indices
-		File folder = new File(topFolder, getFilePath(tileIndex).toString());
-		int sc = tileFormat.getChannelCount();
+		File folder = new File(topFolder, 
+				getOctreeFilePath(tileIndex, tileFormat).toString());
 		// Compute local z slice
 		int zoomScale = (int)Math.pow(2, tileIndex.getZoom());
 		int tileDepth = tileFormat.getTileSize()[2];
