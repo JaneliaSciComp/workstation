@@ -2,7 +2,6 @@ package org.janelia.it.FlyWorkstation.model.domain;
 
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityAttribute;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.StringUtils;
@@ -42,6 +41,21 @@ public class Compartment extends EntityWrapper implements Viewable2d, Masked3d, 
     @Override
     public String get2dImageFilepath() {
         return null;
+    }
+
+    public int[] getColor() {
+        int[] rtnVal = null;
+
+        String colorString = getInternalEntity().getValueByAttributeName( EntityConstants.ATTRIBUTE_COLOR );
+        if ( colorString != null  &&  colorString.length() == 6 ) {
+            rtnVal = new int[ 3 ];
+            for ( int i = 0; i < rtnVal.length; i++ ) {
+                String nextHexNum = colorString.substring( i * 2, (i * 2) + 2 );
+                rtnVal[ i ] = Integer.parseInt( nextHexNum, 16 );
+            }
+        }
+
+        return rtnVal;
     }
 
     private String getFilePath( String attribName ) {

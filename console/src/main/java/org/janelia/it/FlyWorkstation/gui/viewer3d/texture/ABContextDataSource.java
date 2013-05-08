@@ -12,9 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.*;
 
 /** Implements the data source, to avoid having to mock up an entire context just to test. */
 public class ABContextDataSource implements RenderableDataSourceI {
@@ -23,9 +21,9 @@ public class ABContextDataSource implements RenderableDataSourceI {
     //   prefix_1822248087368761442_9.mask
     // where '9' above is the label number, the usual mask/chan extensions apply, and the number shown
     // should match the location for the previously-known files fetched from the older pipeline.
-    private static final String TEMP_ROOT_PATH = "/Volumes/jacsData/maskChannelTestYoshi/prefix_";
     private static final String MASK_EXTENSION = ".mask";
     private static final byte COMPARTMENT_INTENSITY = (byte) 0f;
+    private static final byte NON_RENDER_INTENSITY = (byte) 0f;
     private AlignmentBoardContext context;
     private String[] filenames;
 
@@ -127,7 +125,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         signalBean.setTranslatedNum(nextTranslatedNum++);
         signalBean.setRgb(
                 new byte[]{
-                        COMPARTMENT_INTENSITY, COMPARTMENT_INTENSITY, COMPARTMENT_INTENSITY, RenderMappingI.NON_RENDERING
+                        NON_RENDER_INTENSITY, NON_RENDER_INTENSITY, NON_RENDER_INTENSITY, RenderMappingI.NON_RENDERING
                 }
         );
 
@@ -248,7 +246,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         containerDataBean.setTranslatedNum(0); // Always zero for any sample.
         containerDataBean.setRgb(
                 new byte[]{
-                        COMPARTMENT_INTENSITY, COMPARTMENT_INTENSITY, COMPARTMENT_INTENSITY, RenderMappingI.NON_RENDERING
+                        NON_RENDER_INTENSITY, NON_RENDER_INTENSITY, NON_RENDER_INTENSITY, RenderMappingI.NON_RENDERING
                 }
         );
         containerDataBean.setRenderableEntity(internalEntity);
@@ -356,14 +354,14 @@ public class ABContextDataSource implements RenderableDataSourceI {
                 renderableBean.setRgb(rgb);
             }
             else if ( isCompartment ) {
-                renderableBean.setRgb(
-                        new byte[]{
-                                COMPARTMENT_INTENSITY,
-                                COMPARTMENT_INTENSITY,
-                                COMPARTMENT_INTENSITY,
-                                RenderMappingI.COMPARTMENT_RENDERING
-                        }
-                );
+                Compartment compartment = (Compartment)item.getItemWrapper();
+                byte[] rgb = new byte[ 4 ];
+                int[] rawColor = compartment.getColor();
+                for ( int i = 0; i < 3; i++ ) {
+                    rgb[ i ] = (byte)rawColor[ i ];
+                }
+                rgb[ 3 ] = RenderMappingI.COMPARTMENT_RENDERING;
+                renderableBean.setRgb( rgb );
             }
         }
         else {

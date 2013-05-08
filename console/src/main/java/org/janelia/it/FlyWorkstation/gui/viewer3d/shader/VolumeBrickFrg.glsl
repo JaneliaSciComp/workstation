@@ -41,6 +41,16 @@ vec3 getMapCoord( float location )
     return cmCoord;
 }
 
+float computeMaxIntensity( vec4 inputColor ) {
+    float maxIntensity = 0.0;
+    for (int i = 0; i < 3; i++)
+    {
+        if ( inputColor[i] > maxIntensity )
+            maxIntensity = inputColor[i];
+    }
+    return maxIntensity;
+}
+
 // This takes the results of the color filter and creates "coloring relief" of areas given by the
 // masking texture.
 vec4 volumeMask(vec4 origColor)
@@ -69,12 +79,7 @@ vec4 volumeMask(vec4 origColor)
 
             // Find the max intensity.
             vec4 signalColor = origColor;
-            float maxIntensity = 0.0;
-            for (int i = 0; i < 3; i++)
-            {
-                if ( signalColor[i] > maxIntensity )
-                    maxIntensity = signalColor[i];
-            }
+            float maxIntensity = computeMaxIntensity( signalColor );
 
             if ( mappedColor[ 3 ] == 0.0 )
             {
@@ -94,20 +99,18 @@ vec4 volumeMask(vec4 origColor)
             }
             else if ( renderMethod == 2.0 )
             {
+                float maxMappedIntensity = computeMaxIntensity( mappedColor );
+
                 // Special case: a translucent compartment.  Here, make a translucent gray appearance.
                 // For gray mappings, fill in solid gray for anything empty, but otherwise just use original.
-                if ( maxIntensity < 0.05 )
+                if ( maxMappedIntensity < 0.05 )
                 {
-                    mappedColor = vec4( 2.5, 2.5, 2.5, 2.5 ); // Need to "overpower" the gamma correction with >1 val
-                }
-                else
-                {
-                    mappedColor = origColor; // TEMP?
+                    mappedColor = vec4( 3.0, 3.0, 3.0, 1.0 ); // Need to "overpower" the gamma correction with >1 val
                 }
 
                 for (int i = 0; i < 3; i++)
                 {
-                    rtnVal[i] = mappedColor[ i ] * maxIntensity;
+                    rtnVal[i] = mappedColor[ i ] * 0.1;
                 }
             }
             else if ( renderMethod == 1.0 )
