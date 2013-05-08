@@ -73,12 +73,12 @@ public class RenderMapTextureBean implements TextureDataI {
         }
 
         byte[] rawMap = new byte[ getRawBufferSize() ];
-        for ( Integer neuronNumber: renderingMap.keySet() ) {
-            byte[] rendition = renderingMap.get( neuronNumber );
+        for ( Integer maskNumber: renderingMap.keySet() ) {
+            byte[] rendition = renderingMap.get( maskNumber );
             if ( rendition.length != 4 ) {
                 throw new IllegalArgumentException( "Invalid size of RGB color map target.  Must be 4." );
             }
-            int entryOffset = neuronNumber * BYTES_PER_ENTRY;
+            int entryOffset = maskNumber * BYTES_PER_ENTRY;
             for ( int i = 0; i < BYTES_PER_ENTRY; i++ ) {
                 rawMap[ entryOffset + i ] = rendition[ i ];
             }
