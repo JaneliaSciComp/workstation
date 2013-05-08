@@ -177,6 +177,9 @@ public class MaskChanSingleFileLoader {
      * Returns the dimensions found for this particular
      */
     public Long[] getDimensions() {
+if (zeroZCount > 500 ) {
+System.out.println("Getting high zero-z count for axis=" + this.axis + ", dim-order=" + this.dimensionOrder + ", " + this.sx + " x " + this.sy + " x " + this.sz );
+}
         return new Long[] { sx, sy, sz };
     }
 
@@ -420,6 +423,12 @@ public class MaskChanSingleFileLoader {
 
                 long zOffset = xyzCoords[ 2 ] * targetSliceSize;  // Consuming all slices to current.
                 long yOffset = xyzCoords[ 1 ] * volumeVoxels[0] + zOffset;  // Consuming lines to remainder.
+if ( zOffset < 2  &&  axis == 1 ) {
+zeroZCount ++;
+if ( zeroZCount > 200 ){
+int ddd=0;
+}
+}
 
                 long final1DCoord = yOffset + xyzCoords[ 0 ];
 
@@ -515,6 +524,7 @@ public class MaskChanSingleFileLoader {
 
     }
 
+int zeroZCount = 0; // DEBUG
     private long[] convertToSrc3D(long coord1DSource) {
         // This works because the whole solid is made up of a stack of slices.
         //  ALSO, no need for byte-count in calculations for source coordinates.
@@ -526,7 +536,6 @@ public class MaskChanSingleFileLoader {
 
         // This works because the whole solid is made up of mulitples of multiples of fastest-varying-coord max.
         long pointNumber = coord1DSource % sizeOfLine;
-
         // After these calculations, the three-D coord of the original point in _its_ coord system is:
         //  pointNumber, lineNumber, sliceNumber
         return new long[] {
@@ -554,9 +563,9 @@ public class MaskChanSingleFileLoader {
         else if ( dimensionOrder == 1 ) {
             // 1=xz(y)
             returnVal = new long[ 3 ];
-            returnVal[ 0 ] = srcCoords[ 1 ];   // File's 2nd-> X
-            returnVal[ 1 ] = srcCoords[ 2 ];   // File's 3rd-> Y
-            returnVal[ 2 ] = srcCoords[ 0 ];   // File's 1st-> Z
+            returnVal[ 0 ] = srcCoords[ 2 ];
+            returnVal[ 1 ] = srcCoords[ 0 ];
+            returnVal[ 2 ] = srcCoords[ 1 ];
         }
         else if ( dimensionOrder == 2 ) {
             // 2=xy(z)
