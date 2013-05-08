@@ -459,6 +459,7 @@ implements VolumeImage3d
 				is.close();
 				PamOctreeLoadAdapter pola = new PamOctreeLoadAdapter();
 				pola.setTopFolder(folderUrl);
+				getTileSetChangedSignal().connect(getUpdateFuturePreFetchSlot());
 				testLoadAdapter = pola;
 			} 
 			catch (IOException e2) {} // not a PAM folder

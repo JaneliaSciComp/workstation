@@ -60,6 +60,9 @@ void main()
     float voffset = top_margin - 0.5 * (top_margin - bottom_margin - h * channel_count);
     float chan0 = (voffset - local_coords.y)/h;
     float channel = floor(chan0);
+    // For some reason, channels are inverted. We want red at top, alpha at bottom
+    channel = channel_count - channel - 1;
+    //
     if (channel < 0) discard;
     if (channel >= channel_count) discard;
     float dy = 1.0 - fract(chan0);

@@ -151,7 +151,7 @@ public class TileTexture
 			return false;
 		} catch (MissingTileException e) { // texture correctly has no data
 			setStage(Stage.MISSING);
-			return false; // TODO false really?
+			return true; // because missing is a valid state
 		}
 		setStage(Stage.RAM_LOADED); // Yay!
 		return true;

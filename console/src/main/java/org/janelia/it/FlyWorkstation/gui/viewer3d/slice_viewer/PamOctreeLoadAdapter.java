@@ -1,7 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -42,8 +41,14 @@ extends AbstractTextureLoadAdapter
 	{
 		URL folder;
 		try {
-			folder = new URL(topFolder, 
-					BlockTiffOctreeLoadAdapter.getOctreeFilePath(tileIndex, tileFormat).toString());
+			// second part of URL must not begin with "/", or it will be treated as absolute
+			String subFolder = BlockTiffOctreeLoadAdapter.getOctreeFilePath(tileIndex, tileFormat).toString();
+			subFolder = subFolder.replaceAll("\\\\", "/"); // replace backslash with slash (Windows File->URL)
+			subFolder = subFolder.replaceAll("^[/]+", ""); // remove leading slash, if present
+			if ( (subFolder.length() > 0) && (! subFolder.endsWith("/")) )
+				subFolder = subFolder+"/";
+			System.out.println(subFolder);
+			folder = new URL(topFolder, subFolder);
 		} catch (MalformedURLException e) {
 			throw new TileLoadError(e);
 		}
@@ -55,6 +60,7 @@ extends AbstractTextureLoadAdapter
 		URL sliceUrl;
 		try {
 			sliceUrl = new URL(folder, "slice_"+sliceIndexFormat.format(relativeZ)+".pam");
+			System.out.println(topFolder+" : "+folder+" : "+sliceUrl);
 		} catch (MalformedURLException e) {
 			throw new TileLoadError(e);
 		}
@@ -178,8 +184,9 @@ extends AbstractTextureLoadAdapter
 			// Check all possible children: some might be empty
 			for (int branch = 1; branch <= 8; ++branch) {
 				try {
-					deepFolder = new URL(parentFolder, ""+branch);
+					deepFolder = new URL(parentFolder, ""+branch+"/");
 					deepFile = new URL(deepFolder, firstFile);
+					System.out.println(parentFolder+" : "+deepFolder+" : "+deepFile);
 				} catch (MalformedURLException e) {
 					throw new TileLoadError(e);
 				}
