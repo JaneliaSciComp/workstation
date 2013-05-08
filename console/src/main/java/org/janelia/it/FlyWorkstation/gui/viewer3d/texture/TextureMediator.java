@@ -147,8 +147,8 @@ public class TextureMediator {
             reportError( "glTexImage", gl );
 
             // DEBUG
-            if ( expectedRemaining < 1000000 )
-                testTextureContents(gl);
+            //if ( expectedRemaining < 1000000 )
+            //    testTextureContents(gl);
         }
 
     }

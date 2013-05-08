@@ -58,13 +58,7 @@ public class ConfigurableColorMapping implements RenderMappingI {
                 rgb = colorWheel[ translatedNum % colorWheel.length ];
                 Entity entity = renderableBean.getRenderableEntity();
                 if ( entity != null ) {
-                    String entityTypeName = entity.getEntityType().getName();
-                    if ( entityTypeName.equals(EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
-                        rgb[ 3 ] = RenderMappingI.FRAGMENT_RENDERING;
-                    }
-                    else {
-                        rgb[ 3 ] = RenderMappingI.NON_RENDERING;
-                    }
+                    rgb[ 3 ] = RenderMappingI.FRAGMENT_RENDERING;
                 }
                 else {
                     rgb[ 3 ] = RenderMappingI.PASS_THROUGH_RENDERING;
