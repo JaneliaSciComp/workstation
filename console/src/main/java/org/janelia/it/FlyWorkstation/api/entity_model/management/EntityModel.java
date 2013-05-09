@@ -250,6 +250,7 @@ public class EntityModel {
         log.debug("Invalidating {} entities (recurse={})",entities.size(),recurse);    
         for(Entity entity : entities) {
             // Invalidate parents too, because they hold references to invalid children now
+            if (entity==null) continue;
             Collection<Long> parentIds = parentMap.get(entity.getId());
             log.debug("Parent of {} = {}",entity.getId(),parentIds);
             if (parentIds!=null && !parentIds.isEmpty()) {
@@ -417,6 +418,7 @@ public class EntityModel {
 	public Entity getEntityAndChildren(long entityId) throws Exception {
 		synchronized (this) {
 			Entity entity = getEntityById(entityId);
+			if (entity==null) return null;
 			if (!EntityUtils.areLoaded(entity.getEntityData())) {
 				refreshChildren(entity);
 			}
@@ -796,7 +798,7 @@ public class EntityModel {
      */
     public Entity getCommonRootFolder(String folderName) throws Exception {
         for(Entity commonRoot : getCommonRoots()) {
-            if (commonRoot.getName().equals(folderName)) {
+            if (commonRoot.getName().equals(folderName) && ModelMgrUtils.isOwner(commonRoot)) {
                 return commonRoot;
             }
         }
@@ -868,13 +870,32 @@ public class EntityModel {
             
             Entity boardEntity = annotationFacade.createAlignmentBoard(alignmentBoardName, alignmentSpace, opticalRes, pixelRes);
             Entity alignmentBoardFolder = getCommonRootFolder(EntityConstants.NAME_ALIGNMENT_BOARDS);
-            invalidate(alignmentBoardFolder, false);
-            alignmentBoardFolder = getCommonRootFolder(EntityConstants.NAME_ALIGNMENT_BOARDS);
+            if (alignmentBoardFolder==null) {
+                for(Entity entity : getEntitiesByName(EntityConstants.NAME_ALIGNMENT_BOARDS)) {
+                    if (EntityUtils.isCommonRoot(entity) && ModelMgrUtils.isOwner(entity)) {
+                        alignmentBoardFolder = entity;
+                        log.info("Found aboard: "+alignmentBoardFolder.getId()+" "+alignmentBoardFolder.getOwnerKey());
+                    }
+                }
+                alignmentBoardFolder = putOrUpdate(alignmentBoardFolder);
+                commonRootCache.put(alignmentBoardFolder.getId(),alignmentBoardFolder);
+                notifyEntityCreated(alignmentBoardFolder);
+            }
+            else {
+                invalidate(alignmentBoardFolder, false);
+                alignmentBoardFolder = getCommonRootFolder(EntityConstants.NAME_ALIGNMENT_BOARDS);
+            }
             
             RootedEntity abRootedEntity = new RootedEntity(alignmentBoardFolder);
 
+            loadLazyEntity(alignmentBoardFolder, false);
+            
             EntityData childEd = null;
             for(EntityData ed : alignmentBoardFolder.getEntityData()) {
+                if (ed.getChildEntity()!=null) {
+                    log.info("CHILD: "+ed.getChildEntity().getId());
+                }
+                        
                 if (ed.getChildEntity()!=null && ed.getChildEntity().getId().equals(boardEntity.getId())) {
                     childEd = ed;
                 }

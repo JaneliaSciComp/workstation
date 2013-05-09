@@ -31,6 +31,7 @@ public class EntityWrapperFactory {
         else if (EntityConstants.TYPE_COMPARTMENT.equals(type)) {
             return new Compartment(rootedEntity);
         }
-         throw new IllegalArgumentException("Cannot wrap entity type: "+type);
+         
+        throw new IllegalArgumentException("Cannot wrap entity type: "+type);
     }
 }

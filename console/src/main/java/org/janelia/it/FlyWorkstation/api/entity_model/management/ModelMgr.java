@@ -656,7 +656,7 @@ public class ModelMgr {
 
     public Entity getCommonRootEntityByName(String name) throws Exception {
         for(Entity entity : ModelMgr.getModelMgr().getCommonRootEntities()) {
-            if (name.equals(entity.getName())) {
+            if (name.equals(entity.getName()) && ModelMgrUtils.isOwner(entity)) {
                 return entity;
             }
         }

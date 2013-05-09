@@ -42,7 +42,12 @@ public class AlignedItem extends EntityWrapper {
         RootedEntity rootedEntity = getInternalRootedEntity();
         EntityData itemEd = rootedEntity.getEntity().getEntityDataByAttributeName(EntityConstants.ATTRIBUTE_ENTITY);
         if (itemEd!=null) {
-            this.itemWrapper = EntityWrapperFactory.wrap(rootedEntity.getChild(itemEd));
+            try {
+                this.itemWrapper = EntityWrapperFactory.wrap(rootedEntity.getChild(itemEd));
+            }
+            catch (IllegalArgumentException e) {
+                log.warn("Can't add child: "+itemEd.getChildEntity().getName()+", "+e);
+            }
         }
         
         for(RootedEntity child : rootedEntity.getChildrenForAttribute(EntityConstants.ATTRIBUTE_ITEM)) {

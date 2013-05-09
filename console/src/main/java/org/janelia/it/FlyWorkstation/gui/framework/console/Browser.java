@@ -277,10 +277,16 @@ public class Browser extends JFrame implements Cloneable {
                 Collections.sort(roots, commonRootComparator);
                 List<EntityWrapper> wrappers = new ArrayList<EntityWrapper>();
                 for(Entity rootEntity : roots) {
+                    if (rootEntity.getName().equals(EntityConstants.NAME_ALIGNMENT_BOARDS)) continue;
                     EntityData ed = new EntityData();
                     ed.setChildEntity(rootEntity);
                     RootedEntity rootedEntity = new RootedEntity("/e_"+rootEntity.getId(), ed);
-                    wrappers.add(EntityWrapperFactory.wrap(rootedEntity));
+                    try {
+                        wrappers.add(EntityWrapperFactory.wrap(rootedEntity));
+                    }
+                    catch (IllegalArgumentException e) {
+                        log.warn("Can't add child: "+rootedEntity.getName()+", "+e);
+                    }
                 }
                 return wrappers;
             }
