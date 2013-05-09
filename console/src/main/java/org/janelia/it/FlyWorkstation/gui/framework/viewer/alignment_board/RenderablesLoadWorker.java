@@ -124,14 +124,11 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
                     );
         }
 
+        // Feed data to the acceptors.
         if ( maskChanRenderableData.isCompartment() ) {
-            // Iterating through these files will cause all the relevant data to be loaded into
-            // the acceptors, which here includes only the mask builder.
             compartmentLoader.read(maskChanRenderableData.getBean(), maskStream, chanStream);
         }
         else {
-            // Iterating through these files will cause all the relevant data to be loaded into
-            // the acceptors, which here are the mask builder and the channels builder.
             neuronFragmentLoader.read(maskChanRenderableData.getBean(), maskStream, chanStream);
         }
 
@@ -176,7 +173,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         neuronFragmentLoader.setAcceptors(acceptors);
 
         compartmentLoader = new MaskChanMultiFileLoader();
-        compartmentLoader.setAcceptors(Arrays.<MaskChanDataAcceptorI>asList(maskTextureBuilder));
+        compartmentLoader.setAcceptors(/*Arrays.<MaskChanDataAcceptorI>asList(maskTextureBuilder)*/ acceptors );
 
         if ( loadFiles ) {
             multiThreadedDataLoad(renderableDatas);

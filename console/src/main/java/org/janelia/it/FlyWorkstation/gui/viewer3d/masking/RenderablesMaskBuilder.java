@@ -75,7 +75,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
     }
 
     @Override
-    public int addChannelData(byte[] channelData, long position, long x, long y, long z) throws Exception {
+    public int addChannelData(byte[] channelData, long position, long x, long y, long z, ChannelMetaData channelMetaData) throws Exception {
         throw new IllegalArgumentException( "Not implemented" );
     }
 

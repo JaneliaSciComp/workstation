@@ -47,6 +47,13 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         needsChannelInit = true; // Must initialize the channel-specific data.
         this.settings = settings;
         this.renderableBeans = renderableBeans;
+
+        channelMetaData = new ChannelMetaData();
+        channelMetaData.rawChannelCount = 3; // Forcing a good upper bound.
+        channelMetaData.byteCount = 2; // Forcing a good upper bound.
+        channelMetaData.redChannelInx = 0;
+        channelMetaData.greenChannelInx = 1;
+        channelMetaData.blueChannelInx = 2;
     }
 
     // DEBUG/TEST
@@ -96,17 +103,20 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
      * Width of channel data is allowed by this routine to vary for each call.  Width will be
      * computed from the size of the incoming byte array.
      *
+     *
      * @param volumePosition where it goes.  Not multiplied by number of channels.  Not an offset into the channel data!
+     * @param channelMetaData helps interpret the placement of channel data, where applicable.
      * @return total positions applied.
      * @throws Exception
      */
     @Override
-    public synchronized int addChannelData(byte[] channelData, long volumePosition, long x, long y, long z)
-            throws Exception {
+    public synchronized int addChannelData(
+            byte[] channelData, long volumePosition, long x, long y, long z, ChannelMetaData channelMetaData
+    ) throws Exception {
         init();
 
-        int targetPos = (int)( volumePosition * channelMetaData.channelCount * FIXED_BYTE_PER_CHANNEL );
-        channelInterpreter.interpretChannelBytes(channelData, targetPos);
+        int targetPos = (int)( volumePosition * this.channelMetaData.channelCount * FIXED_BYTE_PER_CHANNEL );
+        channelInterpreter.interpretChannelBytes(channelMetaData, channelData, targetPos);
 
         return 1;
     }
@@ -144,7 +154,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         }
         else {
             StringBuilder errSb = new StringBuilder();
-            if ( metaData.rawChannelCount != this.channelMetaData.rawChannelCount ) {
+            if ( metaData.rawChannelCount > this.channelMetaData.rawChannelCount ) {
                 errSb.append(
                         String.format(
                                 COUNT_DISCREPANCY_FORMAT,
@@ -154,7 +164,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
                         )
                 );
             }
-            if ( metaData.byteCount != this.channelMetaData.byteCount ) {
+            if ( metaData.byteCount > this.channelMetaData.byteCount ) {
                 errSb.append(
                         String.format(
                                 COUNT_DISCREPANCY_FORMAT,
@@ -312,7 +322,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
                 volumeData = new byte[ (int) arrayLength ];
             }
 
-            channelInterpreter = new ChannelInterpreterToByte( channelMetaData, volumeData );
+            channelInterpreter = new ChannelInterpreterToByte( volumeData );
 
             needsChannelInit = false;
         }

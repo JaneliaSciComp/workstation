@@ -16,5 +16,16 @@ public class ChannelMetaData {
     public int blueChannelInx = -1;
     public int greenChannelInx = -1;
     public int redChannelInx = -1;
+    private int[] orderedRgbIndexes;
+
+    public int[] getOrderedRgbIndexes() {
+        if ( orderedRgbIndexes == null ) {
+            orderedRgbIndexes = new int[ 3 ];
+            orderedRgbIndexes[ 0 ] = redChannelInx;
+            orderedRgbIndexes[ 1 ] = greenChannelInx;
+            orderedRgbIndexes[ 2 ] = blueChannelInx;
+        }
+        return orderedRgbIndexes;
+    }
 }
 

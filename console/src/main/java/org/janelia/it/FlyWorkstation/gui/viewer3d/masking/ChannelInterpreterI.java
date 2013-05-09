@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
+
 /**
  * Created with IntelliJ IDEA.
  * User: fosterl
@@ -9,6 +11,6 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
  * Implement this to help figure out what to do, as an acceptor of channel bytes read from input files.
  */
 public interface ChannelInterpreterI {
-    void interpretChannelBytes(byte[] channelData, int targetPos);
+    void interpretChannelBytes(ChannelMetaData channelMetaDatas, byte[] channelData, int targetPos);
     void close();
 }

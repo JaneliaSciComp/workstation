@@ -24,11 +24,11 @@ public class FilteringAcceptorDecorator implements MaskChanDataAcceptorI {
     }
 
     @Override
-    public int addChannelData(byte[] channelData, long position, long x, long y, long z) throws Exception {
+    public int addChannelData(byte[] channelData, long position, long x, long y, long z, ChannelMetaData channelMetaData) throws Exception {
         if ( wrappedAcceptor.getAcceptableInputs() != Acceptable.mask ) {
             for ( float[] cropCoords: cropCoordsCollection ) {
                 if ( inCrop( x, y, z, cropCoords ) ) {
-                    return wrappedAcceptor.addChannelData( channelData, position, x, y, z );
+                    return wrappedAcceptor.addChannelData( channelData, position, x, y, z, channelMetaData);
                 }
             }
         }

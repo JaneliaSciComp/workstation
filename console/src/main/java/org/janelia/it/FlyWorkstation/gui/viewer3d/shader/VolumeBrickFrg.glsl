@@ -110,7 +110,7 @@ vec4 volumeMask(vec4 origColor)
 
                 for (int i = 0; i < 3; i++)
                 {
-                    rtnVal[i] = mappedColor[ i ] * 0.1;
+                    rtnVal[i] = mappedColor[ i ] * 0.1 * maxIntensity;
                 }
             }
             else if ( renderMethod == 1.0 )

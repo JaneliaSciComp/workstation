@@ -15,31 +15,18 @@ import org.slf4j.LoggerFactory;
  * loop) values can be done in only one place.
  */
 public class ChannelInterpreterToByte implements ChannelInterpreterI {
-    private ChannelMetaData channelMetaData;
     private byte[] volumeData;
-
-    private int[] orderedRgbIndexes = new int[ 3 ];
 
     private int maxValue = 0;
     private Logger logger = LoggerFactory.getLogger( ChannelInterpreterToByte.class );
 
-    public ChannelInterpreterToByte(ChannelMetaData channelMetaData, byte[] volumeData) {
-        this.channelMetaData = channelMetaData;
+    public ChannelInterpreterToByte(byte[] volumeData) {
         this.volumeData = volumeData;
 
-        if ( channelMetaData.byteCount < 1 ) {
-            throw new IllegalStateException(
-                    "This interpreter is for down-sampling.  Do not use it for expanding bytes-per-channel."
-            );
-        }
-
-        orderedRgbIndexes[ 0 ] = channelMetaData.redChannelInx;
-        orderedRgbIndexes[ 1 ] = channelMetaData.greenChannelInx;
-        orderedRgbIndexes[ 2 ] = channelMetaData.blueChannelInx;
     }
 
     @Override
-    public void interpretChannelBytes(byte[] channelData, int targetPos) {
+    public void interpretChannelBytes(ChannelMetaData channelMetaData, byte[] channelData, int targetPos) {
         if ( channelMetaData.byteCount == 1  &&  channelMetaData.channelCount == 1 ) {
             // 1:1 straight copy to volume.
             for ( int channelInx = 0; channelInx < channelMetaData.rawChannelCount; channelInx++ ) {
@@ -47,6 +34,8 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
             }
         }
         else {
+            int[] orderedRgbIndexes = channelMetaData.getOrderedRgbIndexes();
+
             // N:1 divide by max-byte.
             for ( int i = 0; i < channelMetaData.rawChannelCount; i++ ) {
                 int finalValue = 0;

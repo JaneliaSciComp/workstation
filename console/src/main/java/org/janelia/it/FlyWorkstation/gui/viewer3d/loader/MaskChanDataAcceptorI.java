@@ -29,10 +29,13 @@ public interface MaskChanDataAcceptorI {
      * @param x logical x coordinate.
      * @param y logical y coordinate.
      * @param z logical z coordinate.
+     * @param channelMetaData aids in interpretting the channel data.
      * @return number of slots filled.  Should return 1.
      * @throws Exception from called method.
      */
-    int addChannelData( byte[] channelData, long position, long x, long y, long z ) throws Exception;
+    int addChannelData(
+            byte[] channelData, long position, long x, long y, long z, ChannelMetaData channelMetaData
+    ) throws Exception;
 
     /**
      * Implement this if your implementation can accept "mask" data
