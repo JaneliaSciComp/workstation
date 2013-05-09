@@ -132,6 +132,7 @@ implements GLActor
 		}
 
 		// Outline tiles for viewer debugging
+		// TODO - why are outlines black on Windows?
 		final boolean bOutlineTiles = false;
 		if (bOutlineTiles) {
 			for (Tile2d tile: tiles) {

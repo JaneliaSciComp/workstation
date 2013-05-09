@@ -1,14 +1,20 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.Arrays;
+
+import org.apache.commons.io.IOUtils;
 
 public class PamOctreeLoadAdapter 
 extends AbstractTextureLoadAdapter
@@ -47,7 +53,7 @@ extends AbstractTextureLoadAdapter
 			subFolder = subFolder.replaceAll("^[/]+", ""); // remove leading slash, if present
 			if ( (subFolder.length() > 0) && (! subFolder.endsWith("/")) )
 				subFolder = subFolder+"/";
-			System.out.println(subFolder);
+			// System.out.println(subFolder);
 			folder = new URL(topFolder, subFolder);
 		} catch (MalformedURLException e) {
 			throw new TileLoadError(e);
@@ -60,7 +66,7 @@ extends AbstractTextureLoadAdapter
 		URL sliceUrl;
 		try {
 			sliceUrl = new URL(folder, "slice_"+sliceIndexFormat.format(relativeZ)+".pam");
-			System.out.println(topFolder+" : "+folder+" : "+sliceUrl);
+			// System.out.println(topFolder+" : "+folder+" : "+sliceUrl);
 		} catch (MalformedURLException e) {
 			throw new TileLoadError(e);
 		}
@@ -70,20 +76,24 @@ extends AbstractTextureLoadAdapter
 	protected TextureData2dGL loadToRam(URL pamUrl) 
 	throws MissingTileException, TileLoadError 
 	{
-		InputStream stream;
+		// Read file into memory first
+		byte fileBuffer[];
 		try {
-			stream = pamUrl.openStream();
+			InputStream stream = new BufferedInputStream(pamUrl.openStream());
+			fileBuffer = IOUtils.toByteArray(stream);
 		} catch (IOException e) {
 			throw new MissingTileException();
 		}
-		BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+		BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(fileBuffer)));
 		// Parse header section
 		String line;
+		int measuredHeaderSize = 0;
 		try {
 			line = reader.readLine();
 		} catch (IOException e) {
 			throw new TileLoadError(e);
 		}
+		measuredHeaderSize += line.length() + 1;
 		if (! line.matches("^P7$"))
 			throw new TileLoadError("Not a PAM file");
 		int w, h, sc, bpp;
@@ -95,6 +105,7 @@ extends AbstractTextureLoadAdapter
 			} catch (IOException e) {
 				throw new TileLoadError(e);
 			}
+			measuredHeaderSize += line.length() + 1;
 			if (line.matches("ENDHDR"))
 				break;
 			String tokens[] = line.split(" ");
@@ -121,12 +132,9 @@ extends AbstractTextureLoadAdapter
 		if (usedWidth == 0)
 			usedWidth = w;
 		int byteCount = w*h*sc*bpp/8;
-		byte byteArray[] = new byte[byteCount];
-		try {
-			stream.read(byteArray);
-		} catch (IOException e) {
-			throw new TileLoadError(e);
-		}
+		// Compute offset to image data (header size), rather than track it tediously above...
+		int headerOffset = fileBuffer.length - byteCount;
+		// System.out.println(headerOffset+" : "+measuredHeaderSize);
 		// Populate texture
 		TextureData2dGL result = new TextureData2dGL();
 		result.setBitDepth(bpp);
@@ -134,7 +142,12 @@ extends AbstractTextureLoadAdapter
 		result.setUsedWidth(usedWidth);
 		result.setHeight(h);
 		result.setChannelCount(sc);
-		result.setPixels(ByteBuffer.wrap(byteArray));
+		// Seems necessary to have backing array actually begin with first pixel.
+		byte pixelArray[] = Arrays.copyOfRange(fileBuffer, headerOffset, byteCount+headerOffset);
+		ByteBuffer pixelBuffer = ByteBuffer.wrap(pixelArray);
+		pixelBuffer.rewind();
+		pixelBuffer.order(ByteOrder.BIG_ENDIAN);
+		result.setPixels(pixelBuffer);
 		result.updateTexImageParams();
 		result.setSwapBytes(true); // pam is big endian
 		return result;
@@ -186,7 +199,7 @@ extends AbstractTextureLoadAdapter
 				try {
 					deepFolder = new URL(parentFolder, ""+branch+"/");
 					deepFile = new URL(deepFolder, firstFile);
-					System.out.println(parentFolder+" : "+deepFolder+" : "+deepFile);
+					// System.out.println(parentFolder+" : "+deepFolder+" : "+deepFile);
 				} catch (MalformedURLException e) {
 					throw new TileLoadError(e);
 				}
@@ -231,7 +244,7 @@ extends AbstractTextureLoadAdapter
 				throw new TileLoadError(e);
 			}
 		}
-		int tileSize[] = {tex.getWidth(), tex.getHeight(), z};
+		int tileSize[] = {tex.getUsedWidth(), tex.getHeight(), z};
 		tileFormat.setTileSize(tileSize);
 		int volumeSize[] = {
 				tileSize[0] * zoomFactor,

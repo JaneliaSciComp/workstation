@@ -188,6 +188,8 @@ implements TextureDataI
 
 	public void setWidth(int width) {
 		this.width = width;
+		if (width != 0)
+			textureCoordX = this.usedWidth / (float)this.width;
 	}
 
 	public void setHeight(int height) {
@@ -284,6 +286,8 @@ implements TextureDataI
 
 	public void setUsedWidth(int usedWidth) {
 		this.usedWidth = usedWidth;
+		if (width != 0)
+			textureCoordX = this.usedWidth / (float)this.width;
 	}
 
 	public ByteBuffer getPixels() {
