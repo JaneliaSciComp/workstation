@@ -1,19 +1,16 @@
 package org.janelia.it.FlyWorkstation.gui.util.panels;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.framework.roles.PrefEditor;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ImagesPanel;
+
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class ViewerSettingsPanel extends JPanel implements PrefEditor {
     private boolean settingsChanged = false;
@@ -159,8 +156,7 @@ public class ViewerSettingsPanel extends JPanel implements PrefEditor {
         annotationTableHeight.setEnabled(false);
         
         final JLabel tableHeightLabel = new JLabel("Annotation table height: ");
-        tableHeightLabel.setForeground(Color.gray);
-        
+
         final JPanel tableHeightPanel = new JPanel();
         tableHeightPanel.setLayout(new BoxLayout(tableHeightPanel, BoxLayout.LINE_AXIS));
         tableHeightPanel.add(Box.createHorizontalStrut(15));
@@ -173,7 +169,6 @@ public class ViewerSettingsPanel extends JPanel implements PrefEditor {
             public void actionPerformed(ActionEvent evt) {
                 settingsChanged = true;
                 annotationTableHeight.setEnabled(showAnnotationTables.isSelected());
-				tableHeightLabel.setForeground(showAnnotationTables.isSelected()?Color.black:Color.gray);
             }
         });
         if (sessionMgr.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY) == null) {
@@ -182,7 +177,6 @@ public class ViewerSettingsPanel extends JPanel implements PrefEditor {
         else {
         	showAnnotationTables.setSelected((Boolean) sessionMgr.getModelProperty(SHOW_ANNOTATION_TABLES_PROPERTY));
         	annotationTableHeight.setEnabled(showAnnotationTables.isSelected());
-        	tableHeightLabel.setForeground(showAnnotationTables.isSelected()?Color.black:Color.gray);
         }
         
         onlySessionAnnotations.setAlignmentX(Component.LEFT_ALIGNMENT);
