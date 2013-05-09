@@ -45,7 +45,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
     public Collection<MaskChanRenderableData> getRenderableDatas() {
         logger.info( "Getting renderable datas." );
         if ( filenames != null ) {
-            return getRenderableDatas_old();
+            return getRenderableDatasForFileList();
         }
         Collection<MaskChanRenderableData> rtnVal = new ArrayList<MaskChanRenderableData>();
 
@@ -53,7 +53,6 @@ public class ABContextDataSource implements RenderableDataSourceI {
 
         int liveFileCount = 0;
 
-        // Establish the fragment renderables.
         for ( AlignedItem alignedItem : context.getAlignedItems() ) {
 
             EntityWrapper itemEntity = alignedItem.getItemWrapper();
@@ -113,7 +112,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
     /*
     @deprecated
      */
-    public Collection<MaskChanRenderableData> getRenderableDatas_old() {
+    public Collection<MaskChanRenderableData> getRenderableDatasForFileList() {
 
         logger.info( "Getting renderable datas." );
         Collection<MaskChanRenderableData> rtnVal = new ArrayList<MaskChanRenderableData>();

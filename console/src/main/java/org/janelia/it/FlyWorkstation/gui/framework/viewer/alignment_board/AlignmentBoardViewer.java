@@ -273,85 +273,87 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
     //---------------------------------------HELPERS
     private void printAlignmentBoardContext(AlignmentBoardContext abContext) {
+        if ( log.isDebugEnabled() ) {
+            log.debug("Alignment board: "+abContext.getName());
+            log.debug("* Alignment space: "+abContext.getAlignmentContext().getAlignmentSpaceName());
+            log.debug("* Optical resolution: "+abContext.getAlignmentContext().getOpticalResolution());
+            log.debug("* Pixel resolution: "+abContext.getAlignmentContext().getPixelResolution());
 
-        log.debug("Alignment board: "+abContext.getName());
-        log.debug("* Alignment space: "+abContext.getAlignmentContext().getAlignmentSpaceName());
-        log.debug("* Optical resolution: "+abContext.getAlignmentContext().getOpticalResolution());
-        log.debug("* Pixel resolution: "+abContext.getAlignmentContext().getPixelResolution());
+            for(AlignedItem alignedItem : abContext.getAlignedItems()) {
 
-        for(AlignedItem alignedItem : abContext.getAlignedItems()) {
+                EntityWrapper itemEntity = alignedItem.getItemWrapper();
 
-            EntityWrapper itemEntity = alignedItem.getItemWrapper();
+                if ( itemEntity instanceof Sample  &&  alignedItem.isVisible() ) {
 
-            if ( itemEntity instanceof Sample  &&  alignedItem.isVisible() ) {
+                    Sample sample = (Sample)itemEntity;
 
-                Sample sample = (Sample)itemEntity;
+                    log.debug("  Sample: "+sample.getName());
+                    log.debug("  * 3d image: "+sample.get3dImageFilepath());
+                    log.debug("  * fast 3d image: "+sample.getFast3dImageFilepath());
 
-                log.debug("  Sample: "+sample.getName());
-                log.debug("  * 3d image: "+sample.get3dImageFilepath());
-                log.debug("  * fast 3d image: "+sample.getFast3dImageFilepath());
-
-                if (sample.getChildren()==null) {
-                    log.warn("  Sample children not loaded");
-                }
-                if (sample.getNeuronSet()==null) {
-                    log.warn("  Sample neurons not loaded");
-                }
-
-                MaskedVolume vol = sample.getMaskedVolume();
-                if (vol!=null) {
-                    log.debug("    original separation volumes:");
-                    log.debug("    * reference vol: "+vol.getReferenceVolumePath());
-                    log.debug("    * signal vol: "+vol.getSignalVolumePath());
-                    log.debug("    * signal label: "+vol.getSignalLabelPath());
-
-                    log.debug("    fast load 8-bit volumes:");
-                    log.debug("    * fast signal: "+vol.getFastVolumePath(ArtifactType.ConsolidatedSignal, Size.Full, Channels.All, true));
-                    log.debug("    * fast label: "+vol.getFastVolumePath(ArtifactType.ConsolidatedLabel, Size.Full, Channels.All, true));
-                    log.debug("    * fast reference: "+vol.getFastVolumePath(ArtifactType.Reference, Size.Full, Channels.All, true));
-
-                    log.debug("    subsampled volumes:");
-                    for(Size size : Size.values()) {
-                        log.debug("    * "+size+"/signal: "+vol.getFastVolumePath(ArtifactType.ConsolidatedSignal, size, Channels.All, true));
-                        log.debug("    * "+size+"/label: "+vol.getFastVolumePath(ArtifactType.ConsolidatedLabel, size, Channels.All, true));
-                        log.debug("    * "+size+"/reference: "+vol.getFastVolumePath(ArtifactType.Reference, size, Channels.All, true));
+                    if (sample.getChildren()==null) {
+                        log.warn("  Sample children not loaded");
+                    }
+                    if (sample.getNeuronSet()==null) {
+                        log.warn("  Sample neurons not loaded");
                     }
 
-                    log.debug("    mpeg4 volumes:");
-                    for(Size size : Size.values()) {
-                        for(Channels channels : Channels.values()) {
-                            log.debug("    * "+size+"/"+channels+" signal: "+vol.getFastVolumePath(ArtifactType.ConsolidatedSignal, size, channels, false));
+                    MaskedVolume vol = sample.getMaskedVolume();
+                    if (vol!=null) {
+                        log.debug("    original separation volumes:");
+                        log.debug("    * reference vol: "+vol.getReferenceVolumePath());
+                        log.debug("    * signal vol: "+vol.getSignalVolumePath());
+                        log.debug("    * signal label: "+vol.getSignalLabelPath());
+
+                        log.debug("    fast load 8-bit volumes:");
+                        log.debug("    * fast signal: "+vol.getFastVolumePath(ArtifactType.ConsolidatedSignal, Size.Full, Channels.All, true));
+                        log.debug("    * fast label: "+vol.getFastVolumePath(ArtifactType.ConsolidatedLabel, Size.Full, Channels.All, true));
+                        log.debug("    * fast reference: "+vol.getFastVolumePath(ArtifactType.Reference, Size.Full, Channels.All, true));
+
+                        log.debug("    subsampled volumes:");
+                        for(Size size : Size.values()) {
+                            log.debug("    * "+size+"/signal: "+vol.getFastVolumePath(ArtifactType.ConsolidatedSignal, size, Channels.All, true));
+                            log.debug("    * "+size+"/label: "+vol.getFastVolumePath(ArtifactType.ConsolidatedLabel, size, Channels.All, true));
+                            log.debug("    * "+size+"/reference: "+vol.getFastVolumePath(ArtifactType.Reference, size, Channels.All, true));
                         }
-                        log.info("    * "+size+"/reference: "+vol.getFastVolumePath(ArtifactType.Reference, size, Channels.All, false));
+
+                        log.debug("    mpeg4 volumes:");
+                        for(Size size : Size.values()) {
+                            for(Channels channels : Channels.values()) {
+                                log.debug("    * "+size+"/"+channels+" signal: "+vol.getFastVolumePath(ArtifactType.ConsolidatedSignal, size, channels, false));
+                            }
+                            log.debug("    * "+size+"/reference: "+vol.getFastVolumePath(ArtifactType.Reference, size, Channels.All, false));
+                        }
+
+                        log.debug("  metadata files:");
+                        for(Size size : Size.values()) {
+                            log.debug("  * signal metadata: "+vol.getFastMetadataPath(ArtifactType.ConsolidatedSignal, size));
+                            log.debug("  * reference metadata: "+vol.getFastMetadataPath(ArtifactType.Reference, size));
+                        }
                     }
 
-                    log.debug("  metadata files:");
-                    for(Size size : Size.values()) {
-                        log.debug("  * signal metadata: "+vol.getFastMetadataPath(ArtifactType.ConsolidatedSignal, size));
-                        log.debug("  * reference metadata: "+vol.getFastMetadataPath(ArtifactType.Reference, size));
+                    log.debug("  neurons:");
+                    for(AlignedItem neuronAlignedItem : alignedItem.getAlignedItems()) {
+                        EntityWrapper neuronItemEntity = neuronAlignedItem.getItemWrapper();
+                        if (neuronItemEntity instanceof Neuron) {
+                            Neuron neuron = (Neuron)neuronItemEntity;
+                            log.debug("    "+neuron.getName()+" (visible="+neuronAlignedItem.isVisible()+", maskIndex="+neuron.getMaskIndex()+")");
+                            log.debug("    * mask: "+neuron.getMask3dImageFilepath());
+                            log.debug("    * chan: "+neuron.getChan3dImageFilepath());
+                        }
                     }
+
+                }
+                else if ( itemEntity instanceof CompartmentSet && alignedItem.isVisible() ) {
+                    log.debug( itemEntity.getName() + ": compartment set" );
+                }
+                else {
+                    log.warn("No knowledge of entities of type: "+itemEntity.getType());
                 }
 
-                log.debug("  neurons:");
-                for(AlignedItem neuronAlignedItem : alignedItem.getAlignedItems()) {
-                    EntityWrapper neuronItemEntity = neuronAlignedItem.getItemWrapper();
-                    if (neuronItemEntity instanceof Neuron) {
-                        Neuron neuron = (Neuron)neuronItemEntity;
-                        log.debug("    "+neuron.getName()+" (visible="+neuronAlignedItem.isVisible()+", maskIndex="+neuron.getMaskIndex()+")");
-                        log.debug("    * mask: "+neuron.getMask3dImageFilepath());
-                        log.debug("    * chan: "+neuron.getChan3dImageFilepath());
-                    }
-                }
-
             }
-            else if ( itemEntity instanceof CompartmentSet && alignedItem.isVisible() ) {
-                log.debug( itemEntity.getName() + ": compartment set" );
-            }
-            else {
-                log.warn("No knowledge of entities of type: "+itemEntity.getType());
-            }
-
         }
+
     }
 
     private void printItemChanged(AlignedItem alignedItem, String changeType) {
