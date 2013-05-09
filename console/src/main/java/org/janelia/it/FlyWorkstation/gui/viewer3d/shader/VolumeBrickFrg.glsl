@@ -157,13 +157,15 @@ float getAxialCoord(int coordSetLoc)
     vec3 cmCoord = getMapCoord( coordSetLoc );
     vec4 axialCoordVec = texture3D( colorMapTexture, cmCoord );
 
-    // To get each coord across to the shader as int, its normalized version was first multiplied by a standard value.
-    float axialCoord = axialCoordVec[ 0 ];// / 255.0;
-     //((axialCoordVec[0] * 255.1) );
-//                       + (axialCoordVec[1] * 255.1) * 256.0)
-//                       + axialCoordVec[2] * 65535.1
-//                        axialCoordVec[3] * 16777215.1 )
-//          / 255.0;   // Now divide by this standard value
+    // To get each coord across to the shader in a normalized float, its normalized version
+    // was first multiplied by a standard value.   Note that there was an automatic division by
+    // 255 in each float making up the axialCoordVec "color".  Therefore we do not divide overall
+    // by the number used to multiply on the CPU side, but rather by _that number_ dividied by 256.
+    float axialCoord = (axialCoordVec[0]
+                       + (axialCoordVec[1] * 255.1)
+                       + (axialCoordVec[2] * 65535.1)
+                       + (axialCoordVec[3] * 16777215.1) )
+          / 8.0;   // Now divide by this standard value  2048 / 256 = 8
     return axialCoord;
 }
 

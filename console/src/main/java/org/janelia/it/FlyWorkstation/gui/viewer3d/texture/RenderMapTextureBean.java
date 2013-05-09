@@ -30,7 +30,7 @@ public class RenderMapTextureBean implements TextureDataI {
     private static final int BYTES_PER_COORD_SET = ENTRIES_PER_COORD_SET * BYTES_PER_ENTRY;
     private static final String HEADER = "Map of Colors to Neuron Fragment Numbers and Crop Coord Sets";
     private static final int LINE_WIDTH = 256;
-    private static final float CONVENTIONAL_COORD_MULTIPLIER = 255.0f;
+    private static final float CONVENTIONAL_COORD_MULTIPLIER = 2048.0f;
 
     private RenderMappingI renderMapping;
     private CropCoordSet cropCoordSet;

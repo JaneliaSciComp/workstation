@@ -48,7 +48,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
     private static final String LAUNCH_AS = "Controls";
     private static final String LAUNCH_DESCRIPTION = "Present a dialog allowing users to change settings.";
-    private static final Dimension SIZE = new Dimension( 450, 430 );
+    private static final Dimension SIZE = new Dimension( 450, 530 );
     private static final String GAMMA_TOOLTIP = "Adjust the gamma level, or brightness.";
     private static final Dimension DN_SAMPLE_DROPDOWN_SIZE = new Dimension(130, 50);
     private static final String COMMIT_CHANGES = "Commit Changes";
@@ -59,6 +59,8 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private static final String OR_BUTTON_TIP = "<html>Combine <font color='red'>this</font> selection region<br>" +
             "with previous selection region(s)<br></html>";
     private static final String OR_BUTTON_LABEL = "OR";
+    private static final String CLEAR_BUTTON_LABEL = "Clear Selection";
+    private static final String CLEAR_BUTTON_TOOLTIP_TEXT = "Drop all sub-volume selections made in this session.";
 
     private Component centering;
     private JSlider brightnessSlider;
@@ -233,13 +235,20 @@ public class AlignmentBoardControlsDialog extends JDialog {
         }
     }
 
+    private synchronized void fireForceCropEvent( CropCoordSet cropCoordSet ) {
+        for ( ControlsListener listener: listeners ) {
+            listener.setSelectedCoords( cropCoordSet );
+            listener.updateSettings();
+        }
+    }
+
     private synchronized void fireSavebackEvent(
             Collection<float[]> absoluteCoords,
             CompletionListener completionListener,
             ControlsListener.ExportMethod method
     ) {
         for ( ControlsListener listener: listeners ) {
-            listener.exportSelection( absoluteCoords, completionListener, method );
+            listener.exportSelection(absoluteCoords, completionListener, method);
         }
 
     }
@@ -342,10 +351,22 @@ public class AlignmentBoardControlsDialog extends JDialog {
         });
 
         JPanel regionSelectionPanel = new JPanel();
-        regionSelectionPanel.setLayout(new GridLayout(1, 4));
+        regionSelectionPanel.setLayout(new GridLayout(4, 1));
         regionSelectionPanel.add(xSlider);
         regionSelectionPanel.add(ySlider);
         regionSelectionPanel.add(zSlider);
+
+        JButton clearButton = new JButton( CLEAR_BUTTON_LABEL );
+        clearButton.setToolTipText( CLEAR_BUTTON_TOOLTIP_TEXT );
+        clearButton.addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent ae ) {
+                resetSelectionSliders();
+                cropCoordSet.setCurrentCoordinates( getCurrentCropCoords() );
+                cropCoordSet.setAcceptedCoordinates(new ArrayList<float[]>());
+                fireForceCropEvent(cropCoordSet);
+            }
+        });
+
         JButton orButton = new JButton( OR_BUTTON_LABEL );
         orButton.setToolTipText( OR_BUTTON_TIP );
         orButton.addActionListener( new ActionListener() {
@@ -354,7 +375,12 @@ public class AlignmentBoardControlsDialog extends JDialog {
                 fireSettingsEvent( cropCoordSet );
             }
         });
-        regionSelectionPanel.add(orButton);
+
+        JPanel accumulatorButtonsPanel = new JPanel();
+        accumulatorButtonsPanel.setLayout( new BorderLayout() );
+        accumulatorButtonsPanel.add( orButton, BorderLayout.EAST );
+        accumulatorButtonsPanel.add( clearButton, BorderLayout.WEST );
+        regionSelectionPanel.add( accumulatorButtonsPanel );
 
         regionSelectionPanel.setToolTipText(GEO_SEARCH_TOOLTIP);
 
@@ -484,6 +510,17 @@ public class AlignmentBoardControlsDialog extends JDialog {
         bottomButtonPanel.add( cancel, BorderLayout.WEST );
         bottomButtonPanel.setBorder( new EmptyBorder( insets ) );
         add(bottomButtonPanel, BorderLayout.SOUTH);
+    }
+
+    private void resetSelectionSliders() {
+        resetSelectionSlider(xSlider);
+        resetSelectionSlider(ySlider);
+        resetSelectionSlider(zSlider);
+    }
+
+    private void resetSelectionSlider( RangeSlider rangeSlider ) {
+        rangeSlider.setUpperValue(rangeSlider.getMaximum());
+        rangeSlider.setValue(rangeSlider.getMinimum());
     }
 
     private Collection<float[]> getMicrometerCropCoords() {
