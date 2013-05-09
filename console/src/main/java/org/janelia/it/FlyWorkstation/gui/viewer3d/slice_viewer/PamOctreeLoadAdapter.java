@@ -14,6 +14,8 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Arrays;
 
+import net.jpountz.lz4.LZ4BlockInputStream;
+
 import org.apache.commons.io.IOUtils;
 
 public class PamOctreeLoadAdapter 
@@ -26,7 +28,7 @@ extends AbstractTextureLoadAdapter
 	public static void main(String[] args) {
 		PamOctreeLoadAdapter pola = new PamOctreeLoadAdapter();
 		try {
-			pola.loadToRam(new URL("file:/Users/brunsc/test/slice_00000.pam"));
+			pola.loadToRam(new URL("file:/Users/brunsc/test/slice_00000.pam.lz4"));
 		} catch (MissingTileException e) {
 			e.printStackTrace();
 		} catch (TileLoadError e) {
@@ -65,7 +67,7 @@ extends AbstractTextureLoadAdapter
 		
 		URL sliceUrl;
 		try {
-			sliceUrl = new URL(folder, "slice_"+sliceIndexFormat.format(relativeZ)+".pam");
+			sliceUrl = new URL(folder, "slice_"+sliceIndexFormat.format(relativeZ)+".pam.lz4");
 			// System.out.println(topFolder+" : "+folder+" : "+sliceUrl);
 		} catch (MalformedURLException e) {
 			throw new TileLoadError(e);
@@ -79,21 +81,20 @@ extends AbstractTextureLoadAdapter
 		// Read file into memory first
 		byte fileBuffer[];
 		try {
-			InputStream stream = new BufferedInputStream(pamUrl.openStream());
-			fileBuffer = IOUtils.toByteArray(stream);
+			InputStream compressedStream = new BufferedInputStream(pamUrl.openStream());
+			InputStream pamStream = new LZ4BlockInputStream(compressedStream);
+			fileBuffer = IOUtils.toByteArray(pamStream);
 		} catch (IOException e) {
 			throw new MissingTileException();
 		}
 		BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(fileBuffer)));
 		// Parse header section
 		String line;
-		int measuredHeaderSize = 0;
 		try {
 			line = reader.readLine();
 		} catch (IOException e) {
 			throw new TileLoadError(e);
 		}
-		measuredHeaderSize += line.length() + 1;
 		if (! line.matches("^P7$"))
 			throw new TileLoadError("Not a PAM file");
 		int w, h, sc, bpp;
@@ -105,7 +106,6 @@ extends AbstractTextureLoadAdapter
 			} catch (IOException e) {
 				throw new TileLoadError(e);
 			}
-			measuredHeaderSize += line.length() + 1;
 			if (line.matches("ENDHDR"))
 				break;
 			String tokens[] = line.split(" ");
@@ -165,9 +165,8 @@ extends AbstractTextureLoadAdapter
 	}
 	
 	private static boolean urlExists(URL url) {
-		InputStream is;
 		try {
-			is = url.openStream();
+			url.openStream();
 		} catch (IOException e) {
 			return false;
 		}
@@ -177,7 +176,7 @@ extends AbstractTextureLoadAdapter
 	protected void sniffMetadata(URL topFolderParam) 
 	throws MissingTileException, TileLoadError
 	{
-		final String firstFile = "slice_00000.pam";
+		final String firstFile = "slice_00000.pam.lz4";
 		
 		// Set some default parameters, to be replaced my measured parameters
 		tileFormat.setDefaultParameters();
@@ -231,7 +230,7 @@ extends AbstractTextureLoadAdapter
 		URL testFile;
 		try {
 			testFile = new URL(topFolderParam, 
-					"slice_"+sliceIndexFormat.format(z)+".pam");
+					"slice_"+sliceIndexFormat.format(z)+".pam.lz4");
 		} catch (MalformedURLException e) {
 			throw new TileLoadError(e);
 		}
@@ -239,7 +238,7 @@ extends AbstractTextureLoadAdapter
 			z += 1;
 			try {
 				testFile = new URL(topFolderParam, 
-						"slice_"+sliceIndexFormat.format(z)+".pam");
+						"slice_"+sliceIndexFormat.format(z)+".pam.lz4");
 			} catch (MalformedURLException e) {
 				throw new TileLoadError(e);
 			}

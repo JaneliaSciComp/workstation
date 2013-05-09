@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -11,14 +12,14 @@ import java.nio.ShortBuffer;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
+import net.jpountz.lz4.LZ4BlockOutputStream;
+import net.jpountz.lz4.LZ4Compressor;
+import net.jpountz.lz4.LZ4Factory;
+
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.AbstractTextureLoadAdapter.MissingTileException;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.AbstractTextureLoadAdapter.TileLoadError;
-import org.omg.CORBA_2_3.portable.OutputStream;
 
-import com.sun.media.jai.codec.FileSeekableStream;
-import com.sun.media.jai.codec.ImageCodec;
 import com.sun.media.jai.codec.ImageDecoder;
-import com.sun.media.jai.codec.SeekableStream;
 
 /**
  * Convert block tiff octree render artifacts to slice pam/lz4 artifacts.
@@ -78,13 +79,19 @@ public class TiffToPam {
 		TileFormat tileFormat = loadAdapter.getTileFormat();
 		int sz = tileFormat.getTileSize()[2];
 		NumberFormat format = new DecimalFormat("00000");
+		LZ4Factory factory = LZ4Factory.fastestInstance();
+		LZ4Compressor compressor = factory.highCompressor();
 		for (int z = 0; z < sz; ++z) {
 			try {
 				TextureData2dGL tex = loadAdapter.loadSlice(z, decoder);
 				// Write pam file
-				File pamFile = new File(outputFolder, "slice_"+format.format(z)+".pam");
+				File pamFile = new File(outputFolder, "slice_"+format.format(z)+".pam.lz4");
 				// System.out.println(pamFile.getAbsolutePath());
-				FileOutputStream pamStream = new FileOutputStream(pamFile);
+				FileOutputStream compressedStream = new FileOutputStream(pamFile);
+				OutputStream pamStream = new LZ4BlockOutputStream(
+						compressedStream
+						, 65536
+						, compressor);
 				// Write header of pam file
 				PrintWriter writer = new PrintWriter(pamStream);
 				/*	 
