@@ -20,6 +20,7 @@ public class EntitySelectionModel {
     public static final String CATEGORY_ALIGNMENT_BOARD_VIEW = "alignmentBoardViewer"; //LLF
 
 	private final Map<String, List<String>> selectionModels = new HashMap<String, List<String>>();
+    private List<String> latestGlobalSelection = new ArrayList<String>();
 	
 	public EntitySelectionModel() {
 		selectionModels.put(CATEGORY_OUTLINE, new ArrayList<String>());
@@ -39,15 +40,20 @@ public class EntitySelectionModel {
 	public void deselectAll(String category) {
 		List<String> selected = getCategory(category);
 		selected.clear();
+        if (selected.equals(latestGlobalSelection)) {
+            latestGlobalSelection.clear();
+        }
 	}
 	
 	public void selectEntity(String category, String identifier, boolean clearAll) {
 		List<String> selected = getCategory(category);
 		if (clearAll) {
 			selected.clear();
+            latestGlobalSelection.clear();
 		}
 		if (selected.contains(identifier)) return;
 		selected.add(identifier);
+        latestGlobalSelection.add(identifier);
 		ModelMgr.getModelMgr().notifyEntitySelected(category, identifier, clearAll);
 	}
 
@@ -55,6 +61,7 @@ public class EntitySelectionModel {
 		List<String> selected = getCategory(category);
 		if (!selected.contains(identifier)) return;
 		selected.remove(identifier);
+        latestGlobalSelection.remove(identifier);
 		ModelMgr.getModelMgr().notifyEntityDeselected(category, identifier);
 	}
 
@@ -63,10 +70,17 @@ public class EntitySelectionModel {
 		return selected;
 	}
     
-    public String getLastSelectedEntityId(String category) {
+    public String getLastSelectedEntityIdByCategory(String category) {
     	List<String> selected = getCategory(category);
     	if (selected.isEmpty()) return null;
     	return selected.get(selected.size()-1);
+    }
+
+    public List<String> getLatestGlobalSelection(){
+        if (null!=latestGlobalSelection && latestGlobalSelection.size()>0) {
+            return latestGlobalSelection;
+        }
+        return null;
     }
 
 }

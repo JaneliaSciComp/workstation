@@ -6,20 +6,7 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.util.HashSet;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreePath;
-
+import com.google.common.eventbus.Subscribe;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityCreateEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationEvent;
@@ -37,7 +24,18 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.eventbus.Subscribe;
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.util.HashSet;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * The entity tree which lives in the right-hand "Data" panel and drives the viewers. 
@@ -60,6 +58,9 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 		this.mml = new ModelMgrAdapter() {
             @Override
             public void entitySelected(String category, String entityId, boolean clearAll) {
+                // If we already know the entity is selected, do nothing
+                if (null!=currUniqueId && currUniqueId.equals(entityId)) return;
+                // else process the change in selection
                 if (EntitySelectionModel.CATEGORY_OUTLINE.equals(category)) {
                     selectEntityByUniqueId(entityId);
                 }

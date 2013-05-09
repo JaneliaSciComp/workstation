@@ -273,7 +273,7 @@ public class IconDemoPanel extends Viewer {
 		} 
 		else {
 			// With shift, we select ranges
-			String lastSelected = ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityId(getSelectionCategory());
+			String lastSelected = ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityIdByCategory(getSelectionCategory());
 			if (rangeSelect && lastSelected != null) {
 				// Walk through the buttons and select everything between the last and current selections
 				boolean selecting = false;
@@ -1347,7 +1347,7 @@ public class IconDemoPanel extends Viewer {
 	}
 
 	public synchronized RootedEntity getLastSelectedEntity() {
-		String entityId = ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityId(getSelectionCategory());
+		String entityId = ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityIdByCategory(getSelectionCategory());
 		if (entityId == null) return null;
 		AnnotatedImageButton button = imagesPanel.getButtonById(entityId);
 		if (button == null) return null;

@@ -1,6 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.DataSourceSelector;
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
@@ -11,6 +10,8 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.FlyWorkstation.gui.util.panels.DataSourceSettingsPanel;
+import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.jacs.model.entity.Entity;
 
 import javax.swing.*;
 import java.awt.*;
@@ -270,6 +271,8 @@ public class FileMenu extends JMenu {
             add(addedMenu);
         }
         add(new JSeparator());
+        add(menuViewDetails);
+        add(new JSeparator());
         add(menuFileExit);
     }
 
@@ -320,9 +323,11 @@ public class FileMenu extends JMenu {
     }
 
     private void viewDetails_actionPerformed(ActionEvent e, String protocol, Object dataSource) throws Exception {
-        new EntityDetailsDialog().showForEntity(
-                ModelMgr.getModelMgr().getEntityById(
-                        ModelMgr.getModelMgr().getEntitySelectionModel().getLastSelectedEntityId(EntitySelectionModel.CATEGORY_OUTLINE)));
+        java.util.List<String> tmpSelections = ModelMgr.getModelMgr().getEntitySelectionModel().getLatestGlobalSelection();
+        if (null!=tmpSelections && tmpSelections.size()==1) {
+            Entity tmpSelectedEntity = ModelMgr.getModelMgr().getEntityById(Utils.getEntityIdFromUniqueId(tmpSelections.get(0)));
+            if (null!=tmpSelectedEntity) {new EntityDetailsDialog().showForEntity(tmpSelectedEntity);}
+        }
     }
 
 
