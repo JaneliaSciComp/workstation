@@ -1,21 +1,33 @@
 package org.janelia.it.FlyWorkstation.shared.util.filecache;
 
-import org.apache.commons.httpclient.*;
+import org.apache.commons.httpclient.Credentials;
+import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpState;
+import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.commons.httpclient.auth.AuthScope;
+import org.apache.commons.httpclient.methods.InputStreamRequestEntity;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.apache.http.HttpStatus;
 import org.apache.jackrabbit.webdav.DavConstants;
 import org.apache.jackrabbit.webdav.MultiStatus;
 import org.apache.jackrabbit.webdav.MultiStatusResponse;
+import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
+import org.apache.jackrabbit.webdav.client.methods.PutMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.Authenticator;
-import java.net.MalformedURLException;
-import java.net.PasswordAuthentication;
-import java.net.URL;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -27,6 +39,10 @@ public class WebDavClient {
 
     private String baseUrl;
     private HttpClient httpClient;
+    private String uploadClientHostAddress;
+    private String uploadClientStartTimestamp;
+    private long uploadCount;
+    private String userName;
 
     /**
      * Constructs a client with default authentication credentials.
@@ -56,6 +72,20 @@ public class WebDavClient {
             LOG.warn("<init>: no credentials saved for WebDAV requests");
         }
 
+        InetAddress address;
+        try {
+            address = InetAddress.getLocalHost();
+            this.uploadClientHostAddress = address.getHostAddress();
+        } catch (UnknownHostException e) {
+            this.uploadClientHostAddress = "unknown";
+            LOG.warn("failed to derive client host address, ignoring error", e);
+        }
+
+        final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS");
+        this.uploadClientStartTimestamp = sdf.format(new Date());
+
+        this.userName = "anonymous";
+        this.uploadCount = 0;
     }
 
     /**
@@ -64,6 +94,13 @@ public class WebDavClient {
     protected WebDavClient() {
         this.baseUrl = "file:/";
         this.httpClient = null;
+    }
+
+    /**
+     * @return the HTTP client instance used for issuing all WebDAV requests.
+     */
+    public HttpClient getHttpClient() {
+        return httpClient;
     }
 
     /**
@@ -81,13 +118,36 @@ public class WebDavClient {
     }
 
     /**
+     * @param  rootUploadPath  root path for all uploads
+     *                         (e.g. '/groups/scicomp/jacsData/upload').
+     *
+     * @return a "very-likely" unique path under the specified root upload path.
+     */
+    public String getUniqueUploadDirectoryPath(String rootUploadPath) {
+        StringBuilder path = new StringBuilder(128);
+        path.append(rootUploadPath);
+        if (! rootUploadPath.endsWith("/")) {
+            path.append('/');
+        }
+        path.append(uploadClientStartTimestamp);
+        path.append("__");
+        path.append(uploadClientHostAddress);
+        path.append("__");
+        path.append(userName);
+        path.append("__");
+        path.append(incrementUploadCount());
+        path.append('/');
+        return path.toString();
+    }
+
+    /**
      * Sets the default credentials for all requests.
      *
      * @param  credentials  default credentials.
      */
     public void setCredentials(UsernamePasswordCredentials credentials) {
-        LOG.info("setCredentials: entry, userName={}",
-                 credentials.getUserName());
+        userName = credentials.getUserName();
+        LOG.info("setCredentials: entry, userName={}", userName);
         final HttpState clientState = this.httpClient.getState();
         clientState.setCredentials(AuthScope.ANY, credentials);
     }
@@ -127,16 +187,16 @@ public class WebDavClient {
      *
      * @return WebDAV information for the specified file.
      *
-     * @throws WebDavRetrievalException
+     * @throws WebDavException
      *   if the file information cannot be retrieved.
      */
     public WebDavFile findFile(URL url)
-            throws WebDavRetrievalException {
+            throws WebDavException {
 
         final String href = url.toString();
         MultiStatusResponse[] multiStatusResponses = getResponses(href, DavConstants.DEPTH_0, 0);
         if ((multiStatusResponses == null) || (multiStatusResponses.length == 0)) {
-            throw new WebDavRetrievalException("empty response returned for " + href);
+            throw new WebDavException("empty response returned for " + href);
         }
         return new WebDavFile(url, multiStatusResponses[0]);
     }
@@ -147,11 +207,11 @@ public class WebDavClient {
      *
      * @return true if the specified URL identifies a directory, otherwise false.
      *
-     * @throws WebDavRetrievalException
+     * @throws WebDavException
      *   if the information cannot be retrieved or the URL identifies a non-existent file.
      */
     public boolean isDirectory(URL url)
-            throws WebDavRetrievalException {
+            throws WebDavException {
         final WebDavFile webDavFile = findFile(url);
         return webDavFile.isDirectory();
     }
@@ -164,11 +224,11 @@ public class WebDavClient {
      *
      * @return list of immediate files in the directory.
      *
-     * @throws WebDavRetrievalException
+     * @throws WebDavException
      *   if the directory information cannot be retrieved.
      */
     public List<WebDavFile> findImmediateInternalFiles(URL directoryUrl)
-            throws WebDavRetrievalException {
+            throws WebDavException {
         return findInternalFiles(directoryUrl, DavConstants.DEPTH_1);
     }
 
@@ -180,11 +240,11 @@ public class WebDavClient {
      *
      * @return list of all files in the directory or its children.
      *
-     * @throws WebDavRetrievalException
+     * @throws WebDavException
      *   if the directory information cannot be retrieved.
      */
     public List<WebDavFile> findAllInternalFiles(URL directoryUrl)
-            throws WebDavRetrievalException {
+            throws WebDavException {
         return findInternalFiles(directoryUrl, DavConstants.DEPTH_INFINITY);
     }
 
@@ -198,21 +258,128 @@ public class WebDavClient {
         try {
             findFile(directoryUrl);
             canRead = true;
-        } catch (WebDavRetrievalException e) {
+        } catch (WebDavException e) {
             LOG.error("failed to access " + directoryUrl, e);
         }
         return canRead;
     }
 
+    public void createDirectory(URL directoryUrl)
+            throws WebDavException {
+
+        MkColMethod method = null;
+        Integer responseCode = null;
+
+        try {
+            method = new MkColMethod(directoryUrl.toString());
+
+            responseCode = httpClient.executeMethod(method);
+
+            if (responseCode != HttpServletResponse.SC_CREATED) {
+                throw new WebDavException(responseCode + " returned for MKCOL " + directoryUrl,
+                                          responseCode);
+            }
+        } catch (WebDavException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new WebDavException("failed to MKCOL " + directoryUrl, e, responseCode);
+        } finally {
+            if (method != null) {
+                method.releaseConnection();
+            }
+        }
+    }
+
+    /**
+     * Saves the specified file to the server.
+     *
+     * @param  url   server URL for the new file.
+     * @param  file  file to save.
+     *
+     * @throws IllegalArgumentException
+     *   if the file cannot be read.
+     *
+     * @throws WebDavException
+     *   if the save fails for any other reason.
+     */
+    public void saveFile(URL url,
+                         File file)
+            throws IllegalArgumentException, WebDavException {
+
+        InputStream fileStream = null;
+
+        if (file == null) {
+            throw new IllegalArgumentException("file must be defined");
+        }
+
+        try {
+            fileStream = new FileInputStream(file);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("failed to open stream for " + file.getAbsolutePath(), e);
+        } finally {
+            if (fileStream != null) {
+                try {
+                    fileStream.close();
+                } catch (IOException e) {
+                    LOG.warn("failed to close input stream for " + file.getAbsolutePath() +
+                            ", ignoring exception", e);
+                }
+            }
+        }
+
+        saveFile(url, fileStream);
+    }
+
+    /**
+     * Save the specified stream to the server.
+     *
+     * This method is protected (instead of private) so that it can
+     * be used for testing.
+     *
+     * @param  url         server URL for the new file.
+     * @param  fileStream  file contents to save.
+     *
+     * @throws WebDavException
+     *   if the save fails for any reason.
+     */
+    protected void saveFile(URL url,
+                            InputStream fileStream)
+            throws WebDavException {
+
+        PutMethod method = null;
+        Integer responseCode = null;
+
+        try {
+            method = new PutMethod(url.toString());
+            method.setRequestEntity(new InputStreamRequestEntity(fileStream));
+
+            responseCode = httpClient.executeMethod(method);
+
+            if ((responseCode != HttpServletResponse.SC_CREATED) &&
+                (responseCode != HttpServletResponse.SC_NO_CONTENT)) {
+                throw new WebDavException(responseCode + " returned for PUT " + url,
+                                          responseCode);
+            }
+        } catch (WebDavException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new WebDavException("failed to PUT " + url, e, responseCode);
+        } finally {
+            if (method != null) {
+                method.releaseConnection();
+            }
+        }
+    }
+
     private List<WebDavFile> findInternalFiles(URL url,
                                                int depth)
-            throws WebDavRetrievalException {
+            throws WebDavException {
 
         final String href = url.toString();
         List<WebDavFile> webDavFileList = new ArrayList<WebDavFile>(1024);
         MultiStatusResponse[] multiStatusResponses = getResponses(href, depth, 0);
         if ((multiStatusResponses == null) || (multiStatusResponses.length == 0)) {
-            throw new WebDavRetrievalException("empty response returned for " + href);
+            throw new WebDavException("empty response returned for " + href);
         }
         WebDavFile webDavFile;
         for (MultiStatusResponse msr : multiStatusResponses) {
@@ -227,7 +394,7 @@ public class WebDavClient {
     private MultiStatusResponse[] getResponses(String href,
                                                int depth,
                                                int callCount)
-            throws WebDavRetrievalException {
+            throws WebDavException {
 
         MultiStatusResponse[] multiStatusResponses = null;
         PropFindMethod method = null;
@@ -249,17 +416,17 @@ public class WebDavClient {
                         return getResponses(movedHref, depth, 1);
                     }
                 }
-                throw new WebDavRetrievalException(responseCode + " response code returned for " + href,
-                                                   responseCode);
+                throw new WebDavException(responseCode + " response code returned for " + href,
+                                          responseCode);
             } else {
-                throw new WebDavRetrievalException(responseCode + " response code returned for " + href,
-                                                   responseCode);
+                throw new WebDavException(responseCode + " response code returned for " + href,
+                                          responseCode);
             }
 
-        } catch (WebDavRetrievalException e) {
+        } catch (WebDavException e) {
             throw e;
         } catch (Exception e) {
-            throw new WebDavRetrievalException("failed to retrieve WebDAV information for " + href, e);
+            throw new WebDavException("failed to retrieve WebDAV information for " + href, e);
         } finally {
             if (method != null) {
                 method.releaseConnection();
@@ -268,9 +435,10 @@ public class WebDavClient {
 
         return multiStatusResponses;
     }
-    
-    public HttpClient getHttpClient() {
-        return httpClient;
+
+    private synchronized long incrementUploadCount() {
+        uploadCount++;
+        return uploadCount;
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(WebDavClient.class);

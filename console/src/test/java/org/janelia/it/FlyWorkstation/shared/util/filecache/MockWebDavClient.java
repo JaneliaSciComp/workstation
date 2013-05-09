@@ -55,23 +55,23 @@ public class MockWebDavClient extends WebDavClient {
 
     @Override
     public WebDavFile findFile(URL url)
-            throws WebDavRetrievalException {
+            throws WebDavException {
         List<WebDavFile> list = urlToFileList.get(url);
         if ((list == null) || (list.size() == 0)) {
-            throw new WebDavRetrievalException("no test file registered for " + url);
+            throw new WebDavException("no test file registered for " + url);
         }
         return list.get(0);
     }
 
     @Override
     public List<WebDavFile> findAllInternalFiles(URL url)
-            throws WebDavRetrievalException {
+            throws WebDavException {
         return getFiles(url, true);
     }
 
     @Override
     public List<WebDavFile> findImmediateInternalFiles(URL url)
-            throws WebDavRetrievalException {
+            throws WebDavException {
         return getFiles(url, false);
     }
 

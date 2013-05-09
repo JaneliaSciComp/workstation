@@ -7,7 +7,9 @@ import junit.framework.TestSuite;
 import org.apache.commons.httpclient.UsernamePasswordCredentials;
 import org.apache.http.HttpStatus;
 
+import java.io.ByteArrayInputStream;
 import java.net.URL;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -16,6 +18,8 @@ import java.util.List;
  * @author Eric Trautman
  */
 public class WebDavClientTest extends TestCase {
+
+    private static final String JACS_WEBDAV_TEST_ROOT_PATH = "/opt/jacs-webdav-test";
 
     private WebDavClient client;
     private URL testUrlWithoutSlash;
@@ -32,7 +36,7 @@ public class WebDavClientTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         client = new WebDavClient("http://jacs.int.janelia.org/WebDAV", 100, 100);
-        final String testHref = "/opt/jacs-webdav-test/unit-test-files";
+        final String testHref = JACS_WEBDAV_TEST_ROOT_PATH + "/test-read/unit-test-files";
         testUrlWithoutSlash = client.getWebDavUrl(testHref);
         testUrlWithSlash = client.getWebDavUrl(testHref + "/");
     }
@@ -42,7 +46,7 @@ public class WebDavClientTest extends TestCase {
             client.findImmediateInternalFiles(testUrlWithSlash);
             Assert.fail("request for " + testUrlWithSlash +
                         " should have failed without credentials");
-        } catch (WebDavRetrievalException e) {
+        } catch (WebDavException e) {
             Assert.assertEquals(
                     "invalid status code returned for unauthorized request",
                     new Integer(HttpStatus.SC_UNAUTHORIZED),
@@ -56,12 +60,13 @@ public class WebDavClientTest extends TestCase {
         // NOTE:
         //
         //   These credentials are maintained on the jacs server in
-        //     /opt/jacs-webdav-test-auth/.htpasswd
+        //     /opt/jacs-webdav-test/auth/.htpasswd
         //
         //   The user file was created using the htpasswd utility.
         //   The Apache server configuration in /etc/httpd/conf.d/
         //   references the user file to limit access to the
-        //   /opt/jacs-webdav-test/ directory.
+        //   /opt/jacs-webdav-test/test-read and /opt/jacs-webdav-test/test-write
+        //   directories.
         //
         //   This allows us to hard code the password here without
         //   worrying about security risks.
@@ -112,6 +117,30 @@ public class WebDavClientTest extends TestCase {
         Assert.assertTrue(
                 "isDirectory convenience method should have returned true for " + testUrlWithSlash,
                 client.isDirectory(testUrlWithSlash));
+
+        // ----------------------------------------
+        // Test MKCOL and PUT ...
+
+        Date now = new Date();
+        final String contentsString = "This test was run on " + now + ".\n";
+        ByteArrayInputStream testFileStream = new ByteArrayInputStream(contentsString.getBytes());
+        final String rootUploadPath = JACS_WEBDAV_TEST_ROOT_PATH + "/test-write";
+        final String uploadDirectoryPath = client.getUniqueUploadDirectoryPath(rootUploadPath);
+        final URL uploadDirectoryUrl = client.getWebDavUrl(uploadDirectoryPath);
+
+        client.createDirectory(uploadDirectoryUrl);
+        Assert.assertTrue(
+                "isDirectory convenience method should have returned true for " + uploadDirectoryUrl,
+                client.isDirectory(uploadDirectoryUrl));
+
+        final URL writeTestUrl = client.getWebDavUrl(uploadDirectoryPath + "test.txt");
+        client.saveFile(writeTestUrl, testFileStream);
+
+        webDavFile = client.findFile(writeTestUrl);
+        Assert.assertEquals(
+                "invalid kilobyte size returned for " + writeTestUrl,
+                1,
+                webDavFile.getKilobytes());
     }
 
 }
