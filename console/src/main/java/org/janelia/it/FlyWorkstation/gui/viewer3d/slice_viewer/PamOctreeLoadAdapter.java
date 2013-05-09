@@ -84,6 +84,8 @@ extends AbstractTextureLoadAdapter
 			InputStream compressedStream = new BufferedInputStream(pamUrl.openStream());
 			InputStream pamStream = new LZ4BlockInputStream(compressedStream);
 			fileBuffer = IOUtils.toByteArray(pamStream);
+			compressedStream.close();
+			pamStream.close();
 		} catch (IOException e) {
 			throw new MissingTileException();
 		}

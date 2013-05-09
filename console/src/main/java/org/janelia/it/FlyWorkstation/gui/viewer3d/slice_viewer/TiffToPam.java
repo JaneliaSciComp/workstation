@@ -29,6 +29,7 @@ import com.sun.media.jai.codec.ImageDecoder;
 public class TiffToPam {
 	
 	private BlockTiffOctreeLoadAdapter loadAdapter;
+	private boolean recursive = false;
 
 	/**
 	 * @param args
@@ -140,15 +141,18 @@ public class TiffToPam {
 				result = false;
 			}
 		}
-		// Convert eight possible octree subfolders
-		for (int ix = 1; ix <= 8; ++ix) {
-			String ixString = ""+ix;
-			File inFolder2 = new File(inputFolder, ixString);
-			if (! inFolder2.exists())
-				continue;
-			File outFolder2 = new File(outputFolder, ixString);
-			if (! convertFolder(inFolder2, outFolder2))
-				result = false;
+		
+		if (recursive) {
+			// Convert eight possible octree subfolders
+			for (int ix = 1; ix <= 8; ++ix) {
+				String ixString = ""+ix;
+				File inFolder2 = new File(inputFolder, ixString);
+				if (! inFolder2.exists())
+					continue;
+				File outFolder2 = new File(outputFolder, ixString);
+				if (! convertFolder(inFolder2, outFolder2))
+					result = false;
+			}
 		}
 		
 		return result;
