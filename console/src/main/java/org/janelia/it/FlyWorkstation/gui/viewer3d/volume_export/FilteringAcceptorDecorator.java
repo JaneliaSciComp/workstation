@@ -76,6 +76,9 @@ public class FilteringAcceptorDecorator implements MaskChanDataAcceptorI {
 
     /** Test for coordinate bounds met by x,y,z */
     private boolean inCrop( long x, long y, long z, float[] cropCoords ) {
+        if ( cropCoords == null ) {
+            return true;
+        }
         return ( x >= cropCoords[ 0 ]  &&  x <= cropCoords[ 1 ]  &&
                  y >= cropCoords[ 2 ]  &&  y <= cropCoords[ 3 ]  &&
                  z >= cropCoords[ 4 ]  &&  z <= cropCoords[ 5 ] );
