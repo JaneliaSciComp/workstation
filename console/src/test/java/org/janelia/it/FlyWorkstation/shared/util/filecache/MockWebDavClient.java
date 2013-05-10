@@ -75,6 +75,22 @@ public class MockWebDavClient extends WebDavClient {
         return getFiles(url, false);
     }
 
+    @Override
+    public void createDirectory(URL directoryUrl)
+            throws WebDavException {
+        List<WebDavFile> webDavFileList = new ArrayList<WebDavFile>();
+        webDavFileList.add(new WebDavFile(new File(directoryUrl.getPath())));
+        urlToFileList.put(directoryUrl, webDavFileList);
+    }
+
+    @Override
+    public void saveFile(URL url,
+                         File file) {
+        List<WebDavFile> webDavFileList = new ArrayList<WebDavFile>();
+        webDavFileList.add(new WebDavFile(file));
+        urlToFileList.put(url, webDavFileList);
+    }
+
     private List<WebDavFile> getFiles(URL url,
                                       boolean addAll) {
 

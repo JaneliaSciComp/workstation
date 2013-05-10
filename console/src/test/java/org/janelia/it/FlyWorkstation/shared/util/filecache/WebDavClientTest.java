@@ -19,7 +19,27 @@ import java.util.List;
  */
 public class WebDavClientTest extends TestCase {
 
-    private static final String JACS_WEBDAV_TEST_ROOT_PATH = "/opt/jacs-webdav-test";
+    public static final String JACS_WEBDAV_TEST_ROOT_PATH = "/opt/jacs-webdav-test";
+    public static final String JACS_WEBDAV_TEST_WRITE_ROOT_PATH = JACS_WEBDAV_TEST_ROOT_PATH + "/test-write";
+
+    // --------------------------------------------------------
+    // NOTE:
+    //
+    //   These credentials are maintained on the jacs server in
+    //     /opt/jacs-webdav-test/auth/.htpasswd
+    //
+    //   The user file was created using the htpasswd utility.
+    //   The Apache server configuration in /etc/httpd/conf.d/
+    //   references the user file to limit access to the
+    //   /opt/jacs-webdav-test/test-read and /opt/jacs-webdav-test/test-write
+    //   directories.
+    //
+    //   This allows us to hard code the password here without
+    //   worrying about security risks.
+    // --------------------------------------------------------
+
+    public static final UsernamePasswordCredentials WEBDAV_TEST_USER_CREDENTIALS =
+            new UsernamePasswordCredentials("testuser", "testuser");
 
     private WebDavClient client;
     private URL testUrlWithoutSlash;
@@ -35,7 +55,7 @@ public class WebDavClientTest extends TestCase {
 
     @Override
     protected void setUp() throws Exception {
-        client = new WebDavClient("http://jacs.int.janelia.org/WebDAV", 100, 100);
+        client = new WebDavClient(WebDavClient.JACS_WEBDAV_BASE_URL, 100, 100);
         final String testHref = JACS_WEBDAV_TEST_ROOT_PATH + "/test-read/unit-test-files";
         testUrlWithoutSlash = client.getWebDavUrl(testHref);
         testUrlWithSlash = client.getWebDavUrl(testHref + "/");
@@ -56,26 +76,7 @@ public class WebDavClientTest extends TestCase {
 
     public void testWithCredentials() throws Exception {
 
-        // --------------------------------------------------------
-        // NOTE:
-        //
-        //   These credentials are maintained on the jacs server in
-        //     /opt/jacs-webdav-test/auth/.htpasswd
-        //
-        //   The user file was created using the htpasswd utility.
-        //   The Apache server configuration in /etc/httpd/conf.d/
-        //   references the user file to limit access to the
-        //   /opt/jacs-webdav-test/test-read and /opt/jacs-webdav-test/test-write
-        //   directories.
-        //
-        //   This allows us to hard code the password here without
-        //   worrying about security risks.
-        // --------------------------------------------------------
-
-        final UsernamePasswordCredentials credentials =
-                new UsernamePasswordCredentials("testuser",
-                                                "testuser");
-        client.setCredentials(credentials);
+        client.setCredentials(WEBDAV_TEST_USER_CREDENTIALS);
 
         WebDavFile webDavFile = client.findFile(testUrlWithSlash);
         Assert.assertTrue("base directory should be identified as a directory",
@@ -124,7 +125,7 @@ public class WebDavClientTest extends TestCase {
         Date now = new Date();
         final String contentsString = "This test was run on " + now + ".\n";
         ByteArrayInputStream testFileStream = new ByteArrayInputStream(contentsString.getBytes());
-        final String rootUploadPath = JACS_WEBDAV_TEST_ROOT_PATH + "/test-write";
+        final String rootUploadPath = JACS_WEBDAV_TEST_WRITE_ROOT_PATH;
         final String uploadDirectoryPath = client.getUniqueUploadDirectoryPath(rootUploadPath);
         final URL uploadDirectoryUrl = client.getWebDavUrl(uploadDirectoryPath);
 

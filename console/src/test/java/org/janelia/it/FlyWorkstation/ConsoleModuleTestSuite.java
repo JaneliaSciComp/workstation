@@ -6,6 +6,7 @@ import junit.framework.TestSuite;
 import org.janelia.it.FlyWorkstation.shared.util.filecache.CachedFileTest;
 import org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileCacheTest;
 import org.janelia.it.FlyWorkstation.shared.util.filecache.WebDavClientTest;
+import org.janelia.it.FlyWorkstation.shared.util.filecache.WebDavUploaderTest;
 
 public class ConsoleModuleTestSuite extends TestSuite {
 
@@ -19,6 +20,7 @@ public class ConsoleModuleTestSuite extends TestSuite {
         suite.addTestSuite(CachedFileTest.class);
         suite.addTestSuite(LocalFileCacheTest.class);
         suite.addTestSuite(WebDavClientTest.class);
+        suite.addTestSuite(WebDavUploaderTest.class);
         return suite;
     }
 

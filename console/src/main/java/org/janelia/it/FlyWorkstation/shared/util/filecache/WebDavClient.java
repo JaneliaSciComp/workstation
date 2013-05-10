@@ -37,6 +37,8 @@ import java.util.List;
  */
 public class WebDavClient {
 
+    public static final String JACS_WEBDAV_BASE_URL = "http://jacs.int.janelia.org/WebDAV";
+
     private String baseUrl;
     private HttpClient httpClient;
     private String uploadClientHostAddress;
@@ -264,6 +266,14 @@ public class WebDavClient {
         return canRead;
     }
 
+    /**
+     * Creates a directory on the server.
+     *
+     * @param  directoryUrl  URL (and path) for new directory.
+     *
+     * @throws WebDavException
+     *   if the directory cannot be created or it already exists.
+     */
     public void createDirectory(URL directoryUrl)
             throws WebDavException {
 
@@ -306,7 +316,7 @@ public class WebDavClient {
                          File file)
             throws IllegalArgumentException, WebDavException {
 
-        InputStream fileStream = null;
+        InputStream fileStream;
 
         if (file == null) {
             throw new IllegalArgumentException("file must be defined");
@@ -316,18 +326,18 @@ public class WebDavClient {
             fileStream = new FileInputStream(file);
         } catch (Exception e) {
             throw new IllegalArgumentException("failed to open stream for " + file.getAbsolutePath(), e);
-        } finally {
-            if (fileStream != null) {
-                try {
-                    fileStream.close();
-                } catch (IOException e) {
-                    LOG.warn("failed to close input stream for " + file.getAbsolutePath() +
-                            ", ignoring exception", e);
-                }
-            }
         }
 
-        saveFile(url, fileStream);
+        try {
+            saveFile(url, fileStream);
+        } finally {
+            try {
+                fileStream.close();
+            } catch (IOException e) {
+                LOG.warn("failed to close input stream for " + file.getAbsolutePath() +
+                        ", ignoring exception", e);
+            }
+        }
     }
 
     /**

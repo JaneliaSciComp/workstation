@@ -116,7 +116,7 @@ public class SessionMgr {
 
         webDavClient = new WebDavClient(
                 ConsoleProperties.getString("console.webDavClient.baseUrl",
-                                            "http://jacs.int.janelia.org/WebDAV"),
+                                            WebDavClient.JACS_WEBDAV_BASE_URL),
                 ConsoleProperties.getInt("console.webDavClient.maxConnectionsPerHost", 100),
                 ConsoleProperties.getInt("console.webDavClient.maxTotalConnections", 100));
 
