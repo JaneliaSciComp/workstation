@@ -124,7 +124,16 @@ public class LocalFileLoader {
                 unregisteredSiblings.remove(file);
                 unregisteredSiblings.remove(cachedFile.getLocalFile());
             } catch (Exception e) {
-                LOG.warn("registerFile: failed to load " + file.getAbsolutePath(), e);
+                LOG.warn("registerFile: failed to load " + file.getAbsolutePath() + ", removing file", e);
+                try {
+                    if (file.delete()) {
+                        unregisteredSiblings.remove(file);
+                    } else {
+                        LOG.warn("registerFile: failed to remove problem meta-file " + file.getAbsolutePath());
+                    }
+                } catch (Exception e2) {
+                    LOG.warn("registerFile: failed to remove problem meta-file " + file.getAbsolutePath(), e2);
+                }
             }
         }
     }

@@ -45,7 +45,7 @@ public class CachedFile implements Serializable {
             // prefix name with '.' so that the meta files are
             // hidden/obscured when 'reveal in finder' is used
             this.metaFile = new File(localFile.getParentFile(),
-                                     "." + localFile.getName() + META_FILE_SUFFIX);
+                                     getMetaFileName(localFile));
         }
     }
 
@@ -311,6 +311,15 @@ public class CachedFile implements Serializable {
     public static boolean isMetaFile(File file) {
         final String name = file.getName();
         return name.endsWith(META_FILE_SUFFIX);
+    }
+
+    /**
+     * @param  localFile  locally cached file.
+     *
+     * @return the conventional meta file name for the specified cached file.
+     */
+    public static String getMetaFileName(File localFile) {
+        return "." + localFile.getName() + META_FILE_SUFFIX;
     }
 
     /**

@@ -263,6 +263,42 @@ public class LocalFileCacheTest extends TestCase {
                             testRemoteFiles.size(), numberOfFiles);
     }
 
+    public void testCleanUpCorruptMetaFile() throws Exception {
+
+        File remoteFile = testRemoteFiles.get(0);
+        final URL remoteUrl = remoteFile.toURI().toURL();
+        File cachedFile = cache.getFile(remoteUrl);
+
+        Assert.assertEquals("should only be one cached files at start",
+                            1, cache.getNumberOfFiles());
+
+        File metaFile = new File(cachedFile.getParentFile(),
+                                 CachedFile.getMetaFileName(cachedFile));
+
+        Assert.assertTrue("valid meta file " + metaFile.getAbsolutePath() + " is missing",
+                          metaFile.exists());
+
+        File testFile = CachedFileTest.createFile(cachedFile.getParentFile(), 1);
+        File corruptMetaFile = new File(cachedFile.getParentFile(),
+                                        CachedFile.getMetaFileName(testFile));
+        if (! testFile.renameTo(corruptMetaFile)) {
+            fail("failed to rename " + testFile.getAbsolutePath() + " to " + corruptMetaFile.getAbsolutePath());
+        }
+
+        Assert.assertTrue("corrupt meta file " + corruptMetaFile.getAbsolutePath() + " is missing before test",
+                          corruptMetaFile.exists());
+
+        // reset capacity to force cache reload (and clean-up of corrupt meta file)
+        cache.setKilobyteCapacity(cache.getKilobyteCapacity() * 2);
+
+        // give async reload a chance to complete
+        Thread.sleep(500);
+
+        if (corruptMetaFile.exists()) {
+            CachedFileTest.deleteFile(corruptMetaFile);
+            fail("corrupt meta file " + corruptMetaFile.getAbsolutePath() + " was not removed after reload");
+        }
+    }
 
     private static final Logger LOG = LoggerFactory.getLogger(LocalFileCacheTest.class);
 }
