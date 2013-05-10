@@ -1,26 +1,12 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.awt.Toolkit;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.*;
-import java.util.concurrent.Callable;
-
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
-
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.SpecialAnnotationChooserDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.TaskDetailsDialog;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.*;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Perspective;
@@ -49,6 +35,19 @@ import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.Callable;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Context pop up menu for entities.
@@ -219,6 +218,7 @@ public class EntityContextMenu extends JPopupMenu {
         if (multiple)
             return null;
         JMenuItem detailsMenuItem = new JMenuItem("  View Details");
+        detailsMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_I, java.awt.Event.META_MASK));
         detailsMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
