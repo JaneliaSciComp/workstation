@@ -126,6 +126,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         // Setup the loader to traverse all this data on demand.
         loader = new MaskChanMultiFileLoader();
         loader.setEnforcePadding( false ); // Do not extend dimensions of resulting volume beyond established space.
+        loader.setCheckForConsistency( false );  // Do not force all files to share characteristics like channel count.
         if ( paramBean.getCropCoords() == null || paramBean.getCropCoords().size() == 0 ) {
             loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList(textureBuilder) );
         }

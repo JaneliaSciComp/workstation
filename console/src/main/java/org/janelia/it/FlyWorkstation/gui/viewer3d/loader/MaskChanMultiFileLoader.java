@@ -19,6 +19,8 @@ import java.util.*;
  */
 public class MaskChanMultiFileLoader {
 
+    private boolean checkForConsistency = true;
+
     private Collection<MaskChanDataAcceptorI> maskAcceptors;
     private Collection<MaskChanDataAcceptorI> channelAcceptors;
 
@@ -67,9 +69,11 @@ public class MaskChanMultiFileLoader {
         singleFileLoader.read( maskInputStream, channelStream );
 
         // Accumulate information for final sanity check.
-        checker.accumulate(
+        if ( isCheckForConsistency() ) {
+            checker.accumulate(
                 bean.getTranslatedNum(), singleFileLoader.getDimensions(), singleFileLoader.getChannelMetaData()
-        );
+            );
+        }
 
         logger.debug( "Read complete." );
     }
@@ -78,7 +82,9 @@ public class MaskChanMultiFileLoader {
      * Call this after all reading has been completed.
      */
     public void close() {
-        checker.report( true, logger );
+        if ( isCheckForConsistency() ) {
+            checker.report( true, logger );
+        }
         for ( MaskChanDataAcceptorI acceptor: maskAcceptors ) {
             acceptor.endData( logger );
         }
@@ -89,5 +95,13 @@ public class MaskChanMultiFileLoader {
 
     public void setEnforcePadding(boolean enforcePadding) {
         this.enforcePadding = enforcePadding;
+    }
+
+    public boolean isCheckForConsistency() {
+        return checkForConsistency;
+    }
+
+    public void setCheckForConsistency(boolean checkForConsistency) {
+        this.checkForConsistency = checkForConsistency;
     }
 }
