@@ -454,7 +454,7 @@ implements VolumeImage3d
 		if (testLoadAdapter == null) {
 			// Is this a PAM octree folder?
 			try {
-				testUrl = new URL(folderUrl, "slice_00000.pam.lz4");
+				testUrl = new URL(folderUrl, "slice_00000.pam");
 				InputStream is = testUrl.openStream();
 				is.close();
 				PamOctreeLoadAdapter pola = new PamOctreeLoadAdapter();

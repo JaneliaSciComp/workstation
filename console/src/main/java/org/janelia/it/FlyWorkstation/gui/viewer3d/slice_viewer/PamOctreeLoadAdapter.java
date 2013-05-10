@@ -28,7 +28,7 @@ extends AbstractTextureLoadAdapter
 	public static void main(String[] args) {
 		PamOctreeLoadAdapter pola = new PamOctreeLoadAdapter();
 		try {
-			pola.loadToRam(new URL("file:/Users/brunsc/test/slice_00000.pam.lz4"));
+			pola.loadToRam(new URL("file:/Users/brunsc/test/slice_00000.pam"));
 		} catch (MissingTileException e) {
 			e.printStackTrace();
 		} catch (TileLoadError e) {
@@ -67,7 +67,7 @@ extends AbstractTextureLoadAdapter
 		
 		URL sliceUrl;
 		try {
-			sliceUrl = new URL(folder, "slice_"+sliceIndexFormat.format(relativeZ)+".pam.lz4");
+			sliceUrl = new URL(folder, "slice_"+sliceIndexFormat.format(relativeZ)+".pam");
 			// System.out.println(topFolder+" : "+folder+" : "+sliceUrl);
 		} catch (MalformedURLException e) {
 			throw new TileLoadError(e);
@@ -81,11 +81,11 @@ extends AbstractTextureLoadAdapter
 		// Read file into memory first
 		byte fileBuffer[];
 		try {
-			InputStream compressedStream = new BufferedInputStream(pamUrl.openStream());
-			InputStream pamStream = new LZ4BlockInputStream(compressedStream);
-			fileBuffer = IOUtils.toByteArray(pamStream);
-			compressedStream.close();
-			pamStream.close();
+			InputStream pamStream0 = new BufferedInputStream(pamUrl.openStream());
+			// InputStream pamStream1 = new LZ4BlockInputStream(pamStream0);
+			fileBuffer = IOUtils.toByteArray(pamStream0);
+			// compressedStream.close();
+			pamStream0.close();
 		} catch (IOException e) {
 			throw new MissingTileException();
 		}
@@ -178,7 +178,7 @@ extends AbstractTextureLoadAdapter
 	protected void sniffMetadata(URL topFolderParam) 
 	throws MissingTileException, TileLoadError
 	{
-		final String firstFile = "slice_00000.pam.lz4";
+		final String firstFile = "slice_00000.pam";
 		
 		// Set some default parameters, to be replaced my measured parameters
 		tileFormat.setDefaultParameters();
@@ -232,7 +232,7 @@ extends AbstractTextureLoadAdapter
 		URL testFile;
 		try {
 			testFile = new URL(topFolderParam, 
-					"slice_"+sliceIndexFormat.format(z)+".pam.lz4");
+					"slice_"+sliceIndexFormat.format(z)+".pam");
 		} catch (MalformedURLException e) {
 			throw new TileLoadError(e);
 		}
@@ -240,7 +240,7 @@ extends AbstractTextureLoadAdapter
 			z += 1;
 			try {
 				testFile = new URL(topFolderParam, 
-						"slice_"+sliceIndexFormat.format(z)+".pam.lz4");
+						"slice_"+sliceIndexFormat.format(z)+".pam");
 			} catch (MalformedURLException e) {
 				throw new TileLoadError(e);
 			}
@@ -252,5 +252,70 @@ extends AbstractTextureLoadAdapter
 				tileSize[1] * zoomFactor,
 				tileSize[2] * zoomFactor};
 		tileFormat.setVolumeSize(volumeSize);
+	}
+	
+	public static byte[] packChannels(byte unpacked[], int numChannels, int bytesPerIntensity) {
+		int totalBytes = unpacked.length;
+		int totalGroups = numChannels * bytesPerIntensity;
+		int groupBytes = totalBytes / totalGroups;
+		// initialize input buffers
+		ByteBuffer in[] = new ByteBuffer[totalGroups];
+		for (int g = 0; g < totalGroups; ++g) {
+			in[g] = ByteBuffer.wrap(unpacked, g*groupBytes, groupBytes);
+			// in[g].rewind();
+		}
+		byte result[] = new byte[totalBytes];
+		ByteBuffer out = ByteBuffer.wrap(result);
+		out.rewind();
+		while (in[0].hasRemaining())
+		{
+			for (ByteBuffer i : in) {
+				out.put(i.get());
+			}
+		}
+		return result;
+	}
+	
+	/**
+	 * unpack native image byte order 
+	 * 		1a 1b 2a 2b 3a 3b 1a ...
+	 * to more compressible
+	 * 		1a 1a ... 1b 1b ... 2a 2a ... 2b 2b ... 3a 3a ... 3b 3b
+	 * @param packed
+	 * @param numChannels
+	 * @param bytesPerIntensity
+	 * @return
+	 */
+	public static byte[] unpackChannels(byte packed[], int numChannels, int bytesPerIntensity) {
+		int totalBytes = packed.length;
+		int totalGroups = numChannels * bytesPerIntensity;
+		int groupBytes = totalBytes / totalGroups;
+		// initialize output buffers
+		ByteBuffer out[] = new ByteBuffer[totalGroups];
+		byte result[] = new byte[totalBytes];
+		for (int g = 0; g < totalGroups; ++g) {
+			out[g] = ByteBuffer.wrap(result, g*groupBytes, groupBytes);
+			// out[g].rewind();
+		}
+		ByteBuffer in = ByteBuffer.wrap(packed);
+		in.rewind();
+		while (in.hasRemaining())
+		{
+			for (ByteBuffer o : out) {
+				o.put(in.get());
+			}
+		}
+		
+		// TODO temporary sanity check
+		byte sanity[] = packChannels(result, numChannels, bytesPerIntensity);
+		for (int i = 0; i < totalBytes; ++i) {
+			byte a = packed[i];
+			byte b = sanity[i];
+			if (a != b) {
+				System.out.println("error");
+			}
+		}
+		
+		return result;
 	}
 }

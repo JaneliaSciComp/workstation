@@ -80,21 +80,26 @@ public class TiffToPam {
 		TileFormat tileFormat = loadAdapter.getTileFormat();
 		int sz = tileFormat.getTileSize()[2];
 		NumberFormat format = new DecimalFormat("00000");
+		// LZ4 does not work well with Liver images...
+		/*
 		LZ4Factory factory = LZ4Factory.fastestInstance();
 		LZ4Compressor compressor = factory.highCompressor();
+		 */
 		for (int z = 0; z < sz; ++z) {
 			try {
 				TextureData2dGL tex = loadAdapter.loadSlice(z, decoder);
 				// Write pam file
-				File pamFile = new File(outputFolder, "slice_"+format.format(z)+".pam.lz4");
+				File pamFile = new File(outputFolder, "slice_"+format.format(z)+".pam");
 				// System.out.println(pamFile.getAbsolutePath());
-				FileOutputStream compressedStream = new FileOutputStream(pamFile);
-				OutputStream pamStream = new LZ4BlockOutputStream(
-						compressedStream
+				FileOutputStream pamStream0 = new FileOutputStream(pamFile);
+				/*
+				OutputStream pamStream2 = new LZ4BlockOutputStream(
+						pamStream0
 						, 65536
 						, compressor);
+						*/
 				// Write header of pam file
-				PrintWriter writer = new PrintWriter(pamStream);
+				PrintWriter writer = new PrintWriter(pamStream0);
 				/*	 
 					P7
 					WIDTH 227
@@ -129,10 +134,12 @@ public class TiffToPam {
 					out.put(in);
 					bb = swap;
 				}
-				pamStream.write(bb);
+				// bb = PamOctreeLoadAdapter.unpackChannels(bb, tex.getChannelCount(), tex.getBitDepth()/8);
+				// bb = PamOctreeLoadAdapter.packChannels(bb, tex.getChannelCount(), tex.getBitDepth()/8); // control
+				pamStream0.write(bb);
 				// TODO - write as lz4 pam
-				pamStream.flush();
-				pamStream.close();
+				pamStream0.flush();
+				pamStream0.close();
 			} catch (TileLoadError e) {
 				result = false;
 			} catch (FileNotFoundException e) {
