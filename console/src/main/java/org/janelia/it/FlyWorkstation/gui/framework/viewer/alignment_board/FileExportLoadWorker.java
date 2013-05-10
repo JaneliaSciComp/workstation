@@ -120,6 +120,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         }
         else if ( paramBean.getMethod() == ControlsListener.ExportMethod.color ) {
             // Using full color values.
+            customWritebackSettings.setShowChannelData( true );
             textureBuilder = new RenderablesChannelsBuilder( customWritebackSettings, renderableBeans );
         }
 
