@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,6 +104,7 @@ public class MaskChanSingleFileLoader {
         this.maskAcceptors = maskAcceptors;
         this.channelAcceptors = channelAcceptors;
         this.renderableBean = renderableBean;
+
     }
 
     public void setAxialLengthDivisibility( int minDivisibility ) {
@@ -529,6 +531,9 @@ public class MaskChanSingleFileLoader {
         long pointNumber = coord1DSource % sizeOfLine;
         // After these calculations, the three-D coord of the original point in _its_ coord system is:
         //  pointNumber, lineNumber, sliceNumber
+        if ( renderableBean.isInvertedY() ) {
+            lineNumber = secondFastestSrcVaryingMax - lineNumber - 1;
+        }
         return new long[] {
                 pointNumber, lineNumber, sliceNumber
         };
