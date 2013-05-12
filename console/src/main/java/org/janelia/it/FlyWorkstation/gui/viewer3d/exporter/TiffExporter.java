@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.media.jai.RasterFactory;
-import javax.swing.*;
 import java.awt.*;
 import java.awt.image.*;
 import java.io.*;
@@ -143,33 +142,11 @@ public class TiffExporter {
                 bufImgType = BufferedImage.TYPE_4BYTE_ABGR;
 
             if ( type == VoxelType.INT ) {
-                int sliceSize = textureData.getSx() * textureData.getSy();
-                int sliceOffset = sliceNum * sliceSize;
-                rtnVal = new BufferedImage( textureData.getSx(), textureData.getSy(), bufImgType );
-
-                ByteBuffer byteBuffer = ByteBuffer.wrap( textureData.getTextureData() );
-                byteBuffer.rewind();
-                byteBuffer.order( ByteOrder.LITTLE_ENDIAN );
-                int[] intArr = getIntArray( textureSize, byteBuffer );
-                rtnVal.setRGB( 0, 0, textureData.getSx(), textureData.getSy(), intArr, sliceOffset, textureData.getSx() );
+                rtnVal = getFlatBufferedImage(textureData, sliceNum, textureSize, bufImgType);
 
             }
             else {
-                int sliceSize = textureData.getSx() * textureData.getSy();
-                int sliceOffset = sliceNum * sliceSize;
-                rtnVal = new BufferedImage( textureData.getSx(), textureData.getSy(), bufImgType );
-
-                DataBuffer dataBuffer = createDataBuffer( textureData, textureSize, sliceSize, sliceOffset, type );
-
-                int dataTypeSize = DataBuffer.getDataTypeSize( dataBuffer.getDataType() );
-                Raster raster = RasterFactory.createPackedRaster(
-                        dataBuffer,
-                        textureData.getSx(),
-                        textureData.getSy(),
-                        dataTypeSize,
-                        new Point( 0, 0 )
-                );
-                rtnVal.setData( raster );
+                rtnVal = getBufferedImage(textureData, sliceNum, textureSize, type, bufImgType);
             }
 
         } catch (Exception e) {
@@ -177,6 +154,40 @@ public class TiffExporter {
             e.printStackTrace();
         }
 
+        return rtnVal;
+    }
+
+    private BufferedImage getFlatBufferedImage(TextureDataI textureData, int sliceNum, int textureSize, int bufImgType) {
+        BufferedImage rtnVal;
+        int sliceSize = textureData.getSx() * textureData.getSy();
+        int sliceOffset = sliceNum * sliceSize;
+        rtnVal = new BufferedImage( textureData.getSx(), textureData.getSy(), bufImgType );
+
+        ByteBuffer byteBuffer = ByteBuffer.wrap( textureData.getTextureData() );
+        byteBuffer.rewind();
+        byteBuffer.order( ByteOrder.LITTLE_ENDIAN );
+        int[] intArr = getIntArray( textureSize, byteBuffer );
+        rtnVal.setRGB( 0, 0, textureData.getSx(), textureData.getSy(), intArr, sliceOffset, textureData.getSx() );
+        return rtnVal;
+    }
+
+    private BufferedImage getBufferedImage(TextureDataI textureData, int sliceNum, int textureSize, VoxelType type, int bufImgType) {
+        BufferedImage rtnVal;
+        int sliceSize = textureData.getSx() * textureData.getSy();
+        int sliceOffset = sliceNum * sliceSize;
+        rtnVal = new BufferedImage( textureData.getSx(), textureData.getSy(), bufImgType );
+
+        DataBuffer dataBuffer = createDataBuffer( textureData, textureSize, sliceSize, sliceOffset, type );
+
+        int dataTypeSize = DataBuffer.getDataTypeSize( dataBuffer.getDataType() );
+        Raster raster = RasterFactory.createPackedRaster(
+                dataBuffer,
+                textureData.getSx(),
+                textureData.getSy(),
+                dataTypeSize,
+                new Point(0, 0)
+        );
+        rtnVal.setData( raster );
         return rtnVal;
     }
 
