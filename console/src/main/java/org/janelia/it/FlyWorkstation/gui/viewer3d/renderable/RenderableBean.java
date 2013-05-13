@@ -16,6 +16,7 @@ public class RenderableBean {
     private int translatedNum;
     private byte[] rgb;
     private Entity renderableEntity;
+    private boolean invertedY;
 
     public int getLabelFileNum() {
         return labelFileNum;
@@ -78,4 +79,11 @@ public class RenderableBean {
         return getRenderableEntity().getId().hashCode();
     }
 
+    public boolean isInvertedY() {
+        return invertedY;
+    }
+
+    public void setInvertedY(boolean invertedY) {
+        this.invertedY = invertedY;
+    }
 }

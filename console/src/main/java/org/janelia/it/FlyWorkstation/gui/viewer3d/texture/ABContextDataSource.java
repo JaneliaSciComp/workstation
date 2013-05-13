@@ -338,6 +338,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
         renderableBean.setLabelFileNum(maskIndex);
         renderableBean.setTranslatedNum(translatedNum);
         renderableBean.setRenderableEntity(internalEntity);
+        renderableBean.setInvertedY( ! isCompartment );
 
         // See to the appearance.
         Color renderColor = item.getColor();
