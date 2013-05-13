@@ -269,6 +269,7 @@ public class MaskChanSingleFileLoader {
 
         totalVoxels = readLong(maskInputStream);
         axis = readByte(maskInputStream);
+        logger.debug( "Got axis key of {}", axis );
         this.setDimensionOrder( axis );
 
         volumeVoxels = getVolumeVoxels( sx, sy, sz );
@@ -418,7 +419,12 @@ public class MaskChanSingleFileLoader {
                 // WARNING: The use of offsets 0,1,2 below must remain in this loop, because moving them
                 // out of the loop could confound the walk-along-fastest-coord, which is not specific to any
                 // particular axis, across all runs of this code.
-                xyzCoords[ axis ] = rayPosition;   // Fastest-varying coord is the one walked by the pair-along-ray
+                if ( renderableBean.isInvertedY() && axis == 1 ) {
+                    xyzCoords[ axis ] = sy - rayPosition - 1;
+                }
+                else {
+                    xyzCoords[ axis ] = rayPosition;   // Fastest-varying coord is the one walked by the pair-along-ray
+                }
 
                 long zOffset = xyzCoords[ 2 ] * targetSliceSize;  // Consuming all slices to current.
                 long yOffset = xyzCoords[ 1 ] * volumeVoxels[0] + zOffset;  // Consuming lines to remainder.
@@ -531,9 +537,6 @@ public class MaskChanSingleFileLoader {
         long pointNumber = coord1DSource % sizeOfLine;
         // After these calculations, the three-D coord of the original point in _its_ coord system is:
         //  pointNumber, lineNumber, sliceNumber
-        if ( renderableBean.isInvertedY() ) {
-            lineNumber = secondFastestSrcVaryingMax - lineNumber - 1;
-        }
         return new long[] {
                 pointNumber, lineNumber, sliceNumber
         };
@@ -547,29 +550,33 @@ public class MaskChanSingleFileLoader {
      * @return cannonical axis-ordered coordinate triple for output.
      */
     private long[] convertToStandard3D( long[] srcCoords ) {
-        long[] returnVal = null;
+        long[] returnVal = new long[ 3 ];
         // Expected orderings are:  0=yz(x), 1=xz(y), 2=xy(z)
         if ( dimensionOrder == 0 ) {
             // 0=yz(x)
-            returnVal = new long[ 3 ];
             returnVal[ 0 ] = srcCoords[ 0 ];
             returnVal[ 1 ] = srcCoords[ 2 ];
             returnVal[ 2 ] = srcCoords[ 1 ];
         }
         else if ( dimensionOrder == 1 ) {
             // 1=xz(y)
-            returnVal = new long[ 3 ];
             returnVal[ 0 ] = srcCoords[ 2 ];
             returnVal[ 1 ] = srcCoords[ 0 ];
             returnVal[ 2 ] = srcCoords[ 1 ];
         }
         else if ( dimensionOrder == 2 ) {
             // 2=xy(z)
-            returnVal = new long[ 3 ];
             returnVal[ 0 ] = srcCoords[ 2 ];   // File's 3rd-> X
             returnVal[ 1 ] = srcCoords[ 1 ];   // File's 2nd-> Y
             returnVal[ 2 ] = srcCoords[ 0 ];   // File's 1st-> Z
         }
+        else {
+            throw new IllegalArgumentException( "Unknown dimension order constant " + dimensionOrder );
+        }
+        if ( renderableBean.isInvertedY() ) {
+            returnVal[ 1 ] = sy - returnVal[ 1 ] - 1;
+        }
+
         return returnVal;
     }
 

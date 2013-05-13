@@ -76,6 +76,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
             return;
         }
 
+        logger.debug( "File {} in progress.", maskChanRenderableData.getMaskPath() );
         //  The mask stream is required in all cases.  But the channel path is optional.
         InputStream maskStream =
                 new BufferedInputStream(
@@ -93,9 +94,13 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         }
 
         // Iterating through these files will cause all the relevant data to be loaded into
-        // the acceptors, which here includes only the mask builder.
+        // the acceptors.
         loader.read(maskChanRenderableData.getBean(), maskStream, channelStream);
         maskStream.close();
+
+        if ( channelStream != null ) {
+            channelStream.close();
+        }
 
         logger.debug("In load thread, ENDED load of renderable {}.", maskChanRenderableData.getBean().getLabelFileNum() );
     }
@@ -112,10 +117,10 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         AlignmentBoardSettings customWritebackSettings = new AlignmentBoardSettings();
         customWritebackSettings.setDownSampleRate(1.0);
         customWritebackSettings.setGammaFactor(1.0);
-        customWritebackSettings.setShowChannelData( false );
 
         if ( paramBean.getMethod() == ControlsListener.ExportMethod.binary ) {
             // Using only binary values.
+            customWritebackSettings.setShowChannelData( false );
             textureBuilder = new RenderablesMaskBuilder( customWritebackSettings, renderableBeans, true );
         }
         else if ( paramBean.getMethod() == ControlsListener.ExportMethod.color ) {

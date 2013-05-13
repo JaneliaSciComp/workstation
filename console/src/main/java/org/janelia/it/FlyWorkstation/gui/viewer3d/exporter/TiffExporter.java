@@ -143,7 +143,6 @@ public class TiffExporter {
 
             if ( type == VoxelType.INT ) {
                 rtnVal = getFlatBufferedImage(textureData, sliceNum, textureSize, bufImgType);
-
             }
             else {
                 rtnVal = getBufferedImage(textureData, sliceNum, textureSize, type, bufImgType);
@@ -167,6 +166,11 @@ public class TiffExporter {
         byteBuffer.rewind();
         byteBuffer.order( ByteOrder.LITTLE_ENDIAN );
         int[] intArr = getIntArray( textureSize, byteBuffer );
+        for ( int i = 0; i < intArr.length; i++ ) {
+            if ( intArr[ i ] != 0 ) {
+                System.out.print( intArr[i] + " " );
+            }
+        }
         rtnVal.setRGB( 0, 0, textureData.getSx(), textureData.getSy(), intArr, sliceOffset, textureData.getSx() );
         return rtnVal;
     }
