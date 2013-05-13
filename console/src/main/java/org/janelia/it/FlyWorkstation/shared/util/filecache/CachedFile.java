@@ -27,6 +27,8 @@ import java.net.URL;
  */
 public class CachedFile implements Serializable {
 
+    private static final long serialVersionUID = 1522075002459504180L;
+
     private WebDavFile webDavFile;
     private File localFile;
     private File metaFile;
