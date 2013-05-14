@@ -103,7 +103,7 @@ public class RenderMapTextureBean implements TextureDataI {
                         rawMap[ nextCropBoxOffset + (BYTES_PER_ENTRY - 1 - j + (BYTES_PER_ENTRY * i) ) ] = (byte)nextByte;
                     }
                 }
-                dumpAtLoc( nextCropBoxOffset, cropCoords, rawMap );
+                //dumpAtLoc( nextCropBoxOffset, cropCoords, rawMap );
                 nextCropBoxOffset += BYTES_PER_COORD_SET;
             }
 
@@ -300,7 +300,7 @@ public class RenderMapTextureBean implements TextureDataI {
     }
 
     private int getRawBufferSize() {
-        System.out.println("Returning raw buffer size of " + (MAP_SIZE * BYTES_PER_ENTRY + roundUp256( MAX_COORD_SETS * ENTRIES_PER_COORD_SET * BYTES_PER_ENTRY )));
+        //System.out.println("Returning raw buffer size of " + (MAP_SIZE * BYTES_PER_ENTRY + roundUp256( MAX_COORD_SETS * ENTRIES_PER_COORD_SET * BYTES_PER_ENTRY )));
         return MAP_SIZE * BYTES_PER_ENTRY + roundUp256( MAX_COORD_SETS * ENTRIES_PER_COORD_SET * BYTES_PER_ENTRY );
     }
 

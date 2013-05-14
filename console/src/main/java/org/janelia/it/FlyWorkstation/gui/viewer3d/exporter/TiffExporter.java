@@ -164,13 +164,9 @@ public class TiffExporter {
 
         ByteBuffer byteBuffer = ByteBuffer.wrap( textureData.getTextureData() );
         byteBuffer.rewind();
-        byteBuffer.order( ByteOrder.LITTLE_ENDIAN );
+        //byteBuffer.order( ByteOrder.LITTLE_ENDIAN );
         int[] intArr = getIntArray( textureSize, byteBuffer );
-        for ( int i = 0; i < intArr.length; i++ ) {
-            if ( intArr[ i ] != 0 ) {
-                System.out.print( intArr[i] + " " );
-            }
-        }
+        //analyzeIntBuff( intArr, sliceNum );
         rtnVal.setRGB( 0, 0, textureData.getSx(), textureData.getSy(), intArr, sliceOffset, textureData.getSx() );
         return rtnVal;
     }
@@ -242,6 +238,51 @@ public class TiffExporter {
         else {
             return VoxelType.BYTE;
         }
+    }
+
+    // DEBUG CODE: find out if anything useful is in this array.
+    private void analyzeIntBuff( int[] intArr, int sliceNum ) {
+        logger.info("Checking for non-zeros in slice {}.", sliceNum);
+        int nonZeroCount = 0;
+        int[] positionCount = new int[ 4 ];
+        for ( int i = 0; i < intArr.length; i++ ) {
+            if ( intArr[ i ] != 0 ) {
+                nonZeroCount ++;
+                // Try and determine whether the alpha byte is set properly.
+                //  NOTE: hi-byte yields nada.
+                int hiByte = (intArr[ i ] >>> 24) & 0xff;
+                if ( hiByte != 0 ) {
+                    positionCount[ 0 ] ++;
+                }
+                else {
+                    intArr[i] = intArr[ i ] | (0xff << 24);
+                }
+
+                int loByte = (intArr[ i ] & 0xff);
+                if ( loByte != 0 ) {
+                    positionCount[ 3 ] ++;
+                }
+
+                int byteVal = (intArr[ i ] >>> 16 ) & 0xff;
+                if ( byteVal != 0 ) {
+                    positionCount[ 1 ] ++;
+                }
+
+                byteVal = (intArr[i] >>> 8 ) & 0xff;
+                if ( byteVal != 0 ) {
+                    positionCount[ 2 ] ++;
+                }
+            }
+        }
+
+        if ( nonZeroCount > 0 ) {
+            for ( int i = 0; i < 4; i++ ) {
+                if ( positionCount[ i ] != 0 ) {
+                    logger.info( "Position {} has {} non-zero values.", i, positionCount[ i ] );
+                }
+            }
+        }
+
     }
 
 }

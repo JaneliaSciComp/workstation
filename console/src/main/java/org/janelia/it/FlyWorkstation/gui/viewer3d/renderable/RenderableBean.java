@@ -84,7 +84,6 @@ public class RenderableBean {
     }
 
     public void setInvertedY(boolean invertedY) {
-        //System.out.println("Y sense of bean " + this.renderableEntity.getName() + " is " + invertedY );
         this.invertedY = invertedY;
     }
 }
