@@ -16,6 +16,8 @@ import org.apache.jackrabbit.webdav.MultiStatusResponse;
 import org.apache.jackrabbit.webdav.client.methods.MkColMethod;
 import org.apache.jackrabbit.webdav.client.methods.PropFindMethod;
 import org.apache.jackrabbit.webdav.client.methods.PutMethod;
+import org.apache.jackrabbit.webdav.property.DavPropertyName;
+import org.apache.jackrabbit.webdav.property.DavPropertyNameSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,7 +96,7 @@ public class WebDavClient {
      * Constructs an empty client for testing.
      */
     protected WebDavClient() {
-        this.baseUrl = "file:/";
+        this.baseUrl = "file:";
         this.httpClient = null;
     }
 
@@ -201,6 +203,24 @@ public class WebDavClient {
             throw new WebDavException("empty response returned for " + href);
         }
         return new WebDavFile(url, multiStatusResponses[0]);
+    }
+
+    /**
+     * @param  url  file or directory URL.
+     *              Note that this URL does not need to include a trailing slash.
+     *
+     * @return true if the specified URL identifies a resource on the remote server,
+     *         otherwise false.
+     *
+     * @throws WebDavException
+     *   if the information cannot be retrieved.
+     */
+    public boolean isAvailable(URL url)
+            throws WebDavException {
+        final String href = url.toString();
+        final int responseCode = getResourceTypeResponseCode(href);
+        return ((responseCode == HttpStatus.SC_MULTI_STATUS) ||
+                 (responseCode == HttpStatus.SC_MOVED_PERMANENTLY));
     }
 
     /**
@@ -446,10 +466,44 @@ public class WebDavClient {
         return multiStatusResponses;
     }
 
+    private int getResourceTypeResponseCode(String href)
+            throws WebDavException {
+
+        int responseCode;
+
+        PropFindMethod method = null;
+        try {
+            method = new PropFindMethod(href,
+                                        RESOURCE_TYPE_PROPERTY_ONLY,
+                                        DavConstants.DEPTH_0);
+            responseCode = httpClient.executeMethod(method);
+        } catch (Exception e) {
+            throw new WebDavException("failed to retrieve WebDAV information for " + href, e);
+        } finally {
+            if (method != null) {
+                method.releaseConnection();
+            }
+        }
+
+        return responseCode;
+    }
+
     private synchronized long incrementUploadCount() {
         uploadCount++;
         return uploadCount;
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(WebDavClient.class);
+
+    /**
+     * The set of WebDAV properties required to populate a
+     * {@link WebDavFile} instance.
+     */
+    private static final DavPropertyNameSet RESOURCE_TYPE_PROPERTY_ONLY;
+    static {
+        DavPropertyNameSet nameSet = new DavPropertyNameSet();
+        nameSet.add(DavPropertyName.RESOURCETYPE);
+        RESOURCE_TYPE_PROPERTY_ONLY = nameSet;
+    }
+
 }

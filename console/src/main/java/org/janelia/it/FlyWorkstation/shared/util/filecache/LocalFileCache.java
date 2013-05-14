@@ -462,7 +462,7 @@ public class LocalFileCache {
      */
     private void loadCacheFromFilesystem() {
 
-        LocalFileLoader loader = new LocalFileLoader(activeDirectory, false);
+        LocalFileLoader loader = new LocalFileLoader(activeDirectory, false, webDavClient);
         final List<CachedFile> cachedFiles = loader.locateCachedFiles();
         for (CachedFile cachedFile : cachedFiles) {
             urlToFileCache.put(cachedFile.getUrl(), cachedFile);

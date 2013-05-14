@@ -23,7 +23,7 @@ public class MockWebDavClient extends WebDavClient {
     }
 
     public void mapFileUsingDefaultUrl(File file) {
-        WebDavFile webDavFile = new WebDavFile(file);
+        WebDavFile webDavFile = new WebDavFile(null, file);
         List<WebDavFile> list = new ArrayList<WebDavFile>();
         list.add(webDavFile);
         urlToFileList.put(webDavFile.getUrl(), list);
@@ -42,7 +42,7 @@ public class MockWebDavClient extends WebDavClient {
             List<WebDavFile> webDavFileList =
                     new ArrayList<WebDavFile>(fileList.size());
             for (File file : fileList) {
-                webDavFileList.add(new WebDavFile(file));
+                webDavFileList.add(new WebDavFile(null, file));
             }
             urlToFileList.put(url, webDavFileList);
         }
@@ -64,6 +64,12 @@ public class MockWebDavClient extends WebDavClient {
     }
 
     @Override
+    public boolean isAvailable(URL url)
+            throws WebDavException {
+        return (urlToFileList.containsKey(url));
+    }
+
+    @Override
     public List<WebDavFile> findAllInternalFiles(URL url)
             throws WebDavException {
         return getFiles(url, true);
@@ -79,7 +85,7 @@ public class MockWebDavClient extends WebDavClient {
     public void createDirectory(URL directoryUrl)
             throws WebDavException {
         List<WebDavFile> webDavFileList = new ArrayList<WebDavFile>();
-        webDavFileList.add(new WebDavFile(new File(directoryUrl.getPath())));
+        webDavFileList.add(new WebDavFile(null, new File(directoryUrl.getPath())));
         urlToFileList.put(directoryUrl, webDavFileList);
     }
 
@@ -87,7 +93,7 @@ public class MockWebDavClient extends WebDavClient {
     public void saveFile(URL url,
                          File file) {
         List<WebDavFile> webDavFileList = new ArrayList<WebDavFile>();
-        webDavFileList.add(new WebDavFile(file));
+        webDavFileList.add(new WebDavFile(null, file));
         urlToFileList.put(url, webDavFileList);
     }
 

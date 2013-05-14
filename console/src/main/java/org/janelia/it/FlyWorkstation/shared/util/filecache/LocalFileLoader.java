@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,6 +21,8 @@ public class LocalFileLoader {
 
     private File activeDirectory;
     private boolean removeInvalidFilesAndEmptyDirectories;
+    private WebDavClient webDavClient;
+    private String standardDerivationBasePath;
 
     private List<CachedFile> locallyCachedFiles;
 
@@ -37,12 +41,34 @@ public class LocalFileLoader {
      *                                                with missing companions) and empty
      *                                                sub-directories should be removed during
      *                                                location.
+     * @param  webDavClient                           the session WebDAV client (for repairing
+     *                                                cache inconsistencies).
      */
     public LocalFileLoader(File activeDirectory,
-                           boolean removeInvalidFilesAndEmptyDirectories) {
+                           boolean removeInvalidFilesAndEmptyDirectories,
+                           WebDavClient webDavClient) {
         this.activeDirectory = activeDirectory;
         this.removeInvalidFilesAndEmptyDirectories = removeInvalidFilesAndEmptyDirectories;
+        this.webDavClient = webDavClient;
         this.locallyCachedFiles = new ArrayList<CachedFile>(1024);
+
+        StringBuilder sb = new StringBuilder(128);
+        final String activeDirectoryPath = activeDirectory.getAbsolutePath();
+        if (activeDirectoryPath.endsWith("/")) {
+            sb.append(activeDirectoryPath.substring(0, activeDirectoryPath.length() - 1));
+        } else {
+            sb.append(activeDirectoryPath);
+        }
+        String relativeRootPath = "/";
+        try {
+            URL rootUrl = webDavClient.getWebDavUrl("/");
+            relativeRootPath = rootUrl.getPath();
+        } catch (MalformedURLException e) {
+            LOG.warn("failed to derive root URL", e);
+        }
+        sb.append(relativeRootPath);
+
+        this.standardDerivationBasePath = sb.toString();
     }
 
     /**
@@ -92,50 +118,155 @@ public class LocalFileLoader {
                 for (File child : children) {
                     registerFile(child, unregisteredChildren);
                 }
-
-                if (removeInvalidFilesAndEmptyDirectories) {
-                    for (File unregisteredChild : unregisteredChildren) {
-                        if (unregisteredChild.isFile()) {
-                            if (! unregisteredChild.delete()) {
-                                LOG.warn("registerFile: failed to remove unregistered file " +
-                                         unregisteredChild.getAbsolutePath());
-                            }
-                        }
-                    }
-                }
+                repairOrphanFiles(unregisteredChildren);
             }
 
             if (removeInvalidFilesAndEmptyDirectories) {
-                // check directory files again since some may be been removed
-                children = file.listFiles();
-                if ((children == null) || (children.length == 0)) {
-                    if (! file.delete()) {
-                        LOG.warn("registerFile: failed to remove empty directory " +
-                                 file.getAbsolutePath());
-                    }
-                }
+                removeDirectoryIfEmpty(file);
             }
 
         } else if ((file.canRead() && CachedFile.isMetaFile(file))) {
+            registerMetaFile(file, unregisteredSiblings);
+        }
+    }
 
-            try {
-                CachedFile cachedFile = CachedFile.loadPreviouslyCachedFile(file);
-                locallyCachedFiles.add(cachedFile);
-                unregisteredSiblings.remove(file);
-                unregisteredSiblings.remove(cachedFile.getLocalFile());
-            } catch (Exception e) {
-                LOG.warn("registerFile: failed to load " + file.getAbsolutePath() + ", removing file", e);
-                try {
-                    if (file.delete()) {
-                        unregisteredSiblings.remove(file);
-                    } else {
-                        LOG.warn("registerFile: failed to remove problem meta-file " + file.getAbsolutePath());
+    private void repairOrphanFiles(List<File> unregisteredChildren) {
+        CachedFile rebuiltMetaFile;
+        for (File unregisteredChild : unregisteredChildren) {
+            if (unregisteredChild.isFile()) {
+
+                rebuiltMetaFile = rebuildMetaFile(unregisteredChild, true);
+
+                if (rebuiltMetaFile == null) {
+
+                    if (removeInvalidFilesAndEmptyDirectories) {
+                        if (unregisteredChild.delete()) {
+                            LOG.info("repairOrphanFiles: removed unregistered file " +
+                                     unregisteredChild.getAbsolutePath());
+                        } else {
+                            LOG.warn("repairOrphanFiles: failed to remove unregistered file " +
+                                     unregisteredChild.getAbsolutePath());
+                        }
                     }
-                } catch (Exception e2) {
-                    LOG.warn("registerFile: failed to remove problem meta-file " + file.getAbsolutePath(), e2);
+
+                } else {
+                    locallyCachedFiles.add(rebuiltMetaFile);
                 }
+
             }
         }
+    }
+
+    private void removeDirectoryIfEmpty(File directory) {
+        final File[] children = directory.listFiles();
+        if ((children == null) || (children.length == 0)) {
+            if (! directory.delete()) {
+                LOG.warn("removeDirectoryIfEmpty: failed to remove empty directory " +
+                         directory.getAbsolutePath());
+            }
+        }
+    }
+
+    private void registerMetaFile(File metaFile,
+                                  List<File> unregisteredSiblings) {
+
+        // remove meta file from the unregistered list regardless of
+        // what happens during load
+        unregisteredSiblings.remove(metaFile);
+
+        CachedFile cachedFile = CachedFile.loadPreviouslyCachedFile(metaFile);
+
+        if (cachedFile == null) {
+            cachedFile = repairMetaFile(metaFile);
+        }
+
+        if (cachedFile != null) {
+
+            final File localFile = cachedFile.getLocalFile();
+
+            if ((localFile != null) && localFile.exists()) {
+
+                locallyCachedFiles.add(cachedFile);
+                unregisteredSiblings.remove(localFile);
+
+            } else {
+
+                String localFilePath = null;
+                if (localFile != null) {
+                    localFilePath = localFile.getAbsolutePath();
+                }
+
+                LOG.warn("registerMetaFile: removing meta data loaded from " +
+                         metaFile.getAbsolutePath() +
+                         " because it identifies missing local file " + localFilePath);
+
+                if (! metaFile.delete()) {
+                    LOG.warn("registerMetaFile: failed to remove problem meta-file " +
+                             metaFile.getAbsolutePath());
+                }
+
+            }
+
+        }
+    }
+
+    private CachedFile repairMetaFile(File metaFile) {
+
+        CachedFile cachedFile = null;
+
+        if (metaFile.delete()) {
+
+            final File localFile = CachedFile.getLocalFileBasedUponMetaFileName(metaFile);
+
+            if (localFile.exists()) {
+                cachedFile = rebuildMetaFile(localFile, false);
+            } else {
+                LOG.warn("repairMetaFile: local file " + localFile.getAbsolutePath() +
+                         " missing for problem meta-file " + metaFile.getAbsolutePath() +
+                         ", meta-file has simply been removed");
+            }
+
+        } else {
+            LOG.warn("repairMetaFile: failed to remove problem meta-file " +
+                     metaFile.getAbsolutePath());
+        }
+
+        return cachedFile;
+    }
+
+    private CachedFile rebuildMetaFile(File localFile,
+                                       boolean confirmExistenceOnRemoteServer) {
+
+        CachedFile cachedFile = null;
+
+        final String localPath = localFile.getAbsolutePath();
+        if (localPath.length() > standardDerivationBasePath.length() &&
+            localPath.startsWith(standardDerivationBasePath)) {
+            final String remotePath = localPath.substring(standardDerivationBasePath.length() - 1);
+            URL url;
+            try {
+                url = webDavClient.getWebDavUrl(remotePath);
+                cachedFile = new CachedFile(new WebDavFile(url, localFile), localFile);
+                if (confirmExistenceOnRemoteServer && (! webDavClient.isAvailable(url))) {
+                    cachedFile = null;
+                    LOG.info("rebuildMetaFile: skipping creation of meta-file for " +
+                             localFile.getAbsolutePath() + " because " + url + " cannot be found");
+                } else {
+                    cachedFile.saveMetadata();
+                    LOG.info("rebuildMetaFile: saved " +
+                             cachedFile.getMetaFile().getAbsolutePath());
+                }
+            } catch (Exception e) {
+                cachedFile = null;
+                LOG.warn("rebuildMetaFile: failed to create meta-file for " +
+                         localFile.getAbsolutePath(), e);
+            }
+        } else {
+            LOG.warn("rebuildMetaFile: cannot derive remote path for " +
+                     localFile.getAbsolutePath());
+        }
+
+        return cachedFile;
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(LocalFileLoader.class);

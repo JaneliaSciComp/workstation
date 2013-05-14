@@ -17,6 +17,8 @@ import java.net.URL;
  */
 public class WebDavFile implements Serializable {
 
+    private static final long serialVersionUID = 5605749480890497607L;
+
     private URL url;
     private boolean isDirectory;
     private Long contentLength;
@@ -84,20 +86,26 @@ public class WebDavFile implements Serializable {
     }
 
     /**
-     * Constructs a WebDavFile from a local file (for testing).
+     * Constructs a WebDavFile instance that references the specified file.
      *
-     * @param  file  local file to wrap.
+     * @param  url   the remote URL for this file.
+     * @param  file  a copy of the remote file referenced by this instance.
      */
-    protected WebDavFile(File file) {
-        try {
-            this.url = file.toURI().toURL();
-        } catch (MalformedURLException e) {
-            throw new IllegalArgumentException(
-                    "failed to create URL for " + file.getAbsolutePath());
+    public WebDavFile(URL url,
+                      File file) {
+        if (url == null) {
+            try {
+                this.url = file.toURI().toURL();
+            } catch (MalformedURLException e) {
+                throw new IllegalArgumentException(
+                        "failed to create URL for " + file.getAbsolutePath());
+            }
+        } else {
+            this.url = url;
         }
         this.isDirectory = file.isDirectory();
         this.contentLength = file.length();
-        this.etag = String.valueOf(this.contentLength);
+        this.etag = "not-available";
     }
 
     /**

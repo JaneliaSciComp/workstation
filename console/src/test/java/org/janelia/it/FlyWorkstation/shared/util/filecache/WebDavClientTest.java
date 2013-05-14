@@ -120,6 +120,19 @@ public class WebDavClientTest extends TestCase {
                 client.isDirectory(testUrlWithSlash));
 
         // ----------------------------------------
+        // Test available check ...
+
+        Assert.assertTrue(testUrlWithSlash + " should be available",
+                          client.isAvailable(testUrlWithSlash));
+
+        Assert.assertTrue(testUrlWithoutSlash + " should be available",
+                          client.isAvailable(testUrlWithoutSlash));
+
+        final URL missingUrl = new URL(testUrlWithSlash, "missing");
+        Assert.assertFalse(missingUrl + " should NOT be available",
+                           client.isAvailable(missingUrl));
+
+        // ----------------------------------------
         // Test MKCOL and PUT ...
 
         Date now = new Date();

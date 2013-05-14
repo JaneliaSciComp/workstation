@@ -282,7 +282,7 @@ public class CachedFile implements Serializable {
         }
     }
 
-    private void saveMetadata()
+    protected void saveMetadata()
             throws IllegalStateException {
 
         ObjectOutputStream out = null;
@@ -324,29 +324,37 @@ public class CachedFile implements Serializable {
         return "." + localFile.getName() + META_FILE_SUFFIX;
     }
 
+    public static File getLocalFileBasedUponMetaFileName(File metaFile) {
+
+        File localFile = null;
+
+        final String metaFileName = metaFile.getName();
+        final int cachedFileNameEnd = metaFileName.length() - META_FILE_SUFFIX.length();
+        if ((cachedFileNameEnd > 1) && metaFileName.endsWith(META_FILE_SUFFIX)) {
+            final String cachedFileName = metaFileName.substring(1, cachedFileNameEnd);
+            localFile = new File(metaFile.getParentFile(), cachedFileName);
+        }
+
+        return localFile;
+    }
+
     /**
      * Parses the the specified metdata file and returns the corresponding
      * {@link CachedFile} instance.
      *
      * @param  metaFile  metdata file location.
      *
-     * @return {@link CachedFile} instance parsed from the specified file.
-     *
-     * @throws IllegalStateException
-     *   if any errors occur during parsing.
+     * @return {@link CachedFile} instance parsed from the specified file or null if parsing fails.
      */
-    public static CachedFile loadPreviouslyCachedFile(File metaFile)
-            throws IllegalStateException {
+    public static CachedFile loadPreviouslyCachedFile(File metaFile) {
 
-        CachedFile cachedFile;
+        CachedFile cachedFile = null;
         ObjectInputStream in = null;
         try {
             in = new ObjectInputStream(new FileInputStream(metaFile));
             cachedFile = (CachedFile) in.readObject();
         } catch (Exception e) {
-            throw new IllegalStateException(
-                    "failed to load cache file meta data from " + metaFile.getAbsolutePath(), e);
-
+            LOG.warn("failed to load cache file meta data from " + metaFile.getAbsolutePath(), e);
         } finally {
             if (in != null) {
                 try {
@@ -356,12 +364,6 @@ public class CachedFile implements Serializable {
                              e);
                 }
             }
-        }
-
-        if (! cachedFile.localFile.exists()) {
-            throw new IllegalStateException(
-                    "meta data loaded from " + metaFile.getAbsolutePath() +
-                    " identifies missing local file " + cachedFile.localFile.getAbsolutePath());
         }
 
         return cachedFile;

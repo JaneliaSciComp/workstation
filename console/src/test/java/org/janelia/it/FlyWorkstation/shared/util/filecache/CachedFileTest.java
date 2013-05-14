@@ -62,7 +62,7 @@ public class CachedFileTest extends TestCase {
 
     public void testLoadAndDelete() throws Exception {
 
-        WebDavFile webDavFile = new WebDavFile(testRemoteFile);
+        WebDavFile webDavFile = new WebDavFile(null, testRemoteFile);
         String urlPath = webDavFile.getUrl().getPath();
         File activeFile = new File(testCacheActiveDirectory, urlPath);
         File tempFile = new File(testCacheTempDirectory, "test-temp-file");
@@ -91,7 +91,7 @@ public class CachedFileTest extends TestCase {
 
         validateDirectoryFileCount("after remove", testCacheActiveDirectory, 0);
 
-        webDavFile = new WebDavFile(testRemoteDirectory);
+        webDavFile = new WebDavFile(null, testRemoteDirectory);
         urlPath = webDavFile.getUrl().getPath();
         activeFile = new File(testCacheActiveDirectory, urlPath);
         tempFile = new File(testCacheTempDirectory, "test-temp-dir");

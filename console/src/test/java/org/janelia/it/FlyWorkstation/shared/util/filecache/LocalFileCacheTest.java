@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +27,7 @@ public class LocalFileCacheTest extends TestCase {
     private int maxNumberOfCachedFiles;
     private File remoteTestDirectory;
     private List<File> filesToDeleteDuringTearDown;
+    private List<File> directoriesToDeleteDuringTearDown;
 
     private LocalFileCache cache;
 
@@ -87,13 +89,15 @@ public class LocalFileCacheTest extends TestCase {
         cache = new LocalFileCache(cacheRootParentDirectory, cacheKilobytes, mockClient);
 
         filesToDeleteDuringTearDown = new ArrayList<File>();
-        filesToDeleteDuringTearDown.add(cacheRootParentDirectory);
-        filesToDeleteDuringTearDown.add(cache.getRootDirectory());
-        filesToDeleteDuringTearDown.add(cache.getActiveDirectory());
-        filesToDeleteDuringTearDown.add(cache.getTempDirectory());
-        filesToDeleteDuringTearDown.add(remoteTestDirectory);
-        filesToDeleteDuringTearDown.add(nestedRemoteDirectory);
         filesToDeleteDuringTearDown.addAll(testRemoteFiles);
+
+        directoriesToDeleteDuringTearDown = new ArrayList<File>();
+        directoriesToDeleteDuringTearDown.add(cacheRootParentDirectory);
+        directoriesToDeleteDuringTearDown.add(cache.getRootDirectory());
+        directoriesToDeleteDuringTearDown.add(cache.getActiveDirectory());
+        directoriesToDeleteDuringTearDown.add(cache.getTempDirectory());
+        directoriesToDeleteDuringTearDown.add(remoteTestDirectory);
+        directoriesToDeleteDuringTearDown.add(nestedRemoteDirectory);
 
         LOG.info("setUp: exit ----------------------------------------");
     }
@@ -102,6 +106,10 @@ public class LocalFileCacheTest extends TestCase {
     protected void tearDown() throws Exception {
 
         LOG.info("tearDown: entry --------------------------------------");
+
+        for (File file : filesToDeleteDuringTearDown) {
+            CachedFileTest.deleteFile(file);
+        }
 
         try {
             if (cache.getNumberOfFiles() > 0) {
@@ -115,8 +123,8 @@ public class LocalFileCacheTest extends TestCase {
         }
 
         // remove in reverse order so that directories are empty before removal
-        for (int i = filesToDeleteDuringTearDown.size(); i > 0; i--) {
-            CachedFileTest.deleteFile(filesToDeleteDuringTearDown.get(i-1));
+        for (int i = directoriesToDeleteDuringTearDown.size(); i > 0; i--) {
+            CachedFileTest.deleteFile(directoriesToDeleteDuringTearDown.get(i-1));
         }
 
         LOG.info("tearDown: exit --------------------------------------");
@@ -263,41 +271,108 @@ public class LocalFileCacheTest extends TestCase {
                             testRemoteFiles.size(), numberOfFiles);
     }
 
-    public void testCleanUpCorruptMetaFile() throws Exception {
+    public void testCleanUpInconsistentData() throws Exception {
 
-        File remoteFile = testRemoteFiles.get(0);
-        final URL remoteUrl = remoteFile.toURI().toURL();
-        File cachedFile = cache.getFile(remoteUrl);
+        // ---------------------------------------
+        // special set-up for this test
 
-        Assert.assertEquals("should only be one cached files at start",
-                            1, cache.getNumberOfFiles());
+        final File firstNonNestedRemoteFile = testRemoteFiles.get(1);
+        final File cachedFileWithoutMeta = cache.getFile(firstNonNestedRemoteFile.toURI().toURL());
 
-        File metaFile = new File(cachedFile.getParentFile(),
-                                 CachedFile.getMetaFileName(cachedFile));
+        final File secondNonNestedRemoteFile = testRemoteFiles.get(2);
+        File deletedCachedFile = cache.getFile(secondNonNestedRemoteFile.toURI().toURL());
 
-        Assert.assertTrue("valid meta file " + metaFile.getAbsolutePath() + " is missing",
-                          metaFile.exists());
+        final File thirdNonNestedRemoteFile = testRemoteFiles.get(3);
+        final File cachedFileWithCorruptedMeta =
+                cache.getFile(thirdNonNestedRemoteFile.toURI().toURL());
 
-        File testFile = CachedFileTest.createFile(cachedFile.getParentFile(), 1);
-        File corruptMetaFile = new File(cachedFile.getParentFile(),
-                                        CachedFile.getMetaFileName(testFile));
-        if (! testFile.renameTo(corruptMetaFile)) {
-            fail("failed to rename " + testFile.getAbsolutePath() + " to " + corruptMetaFile.getAbsolutePath());
+        Assert.assertEquals("should be three cached files at start",
+                            3, cache.getNumberOfFiles());
+
+        final File parentDirectory = cachedFileWithoutMeta.getParentFile();
+
+        File deletedMetaFile = new File(parentDirectory,
+                                        CachedFile.getMetaFileName(cachedFileWithoutMeta));
+        if (! deletedMetaFile.delete()) {
+            Assert.fail("failed to remove cachedFileWithoutMeta meta file " +
+                        deletedMetaFile.getAbsolutePath());
         }
 
-        Assert.assertTrue("corrupt meta file " + corruptMetaFile.getAbsolutePath() + " is missing before test",
-                          corruptMetaFile.exists());
+        final File orphanedMetaFile = new File(parentDirectory,
+                                               CachedFile.getMetaFileName(deletedCachedFile));
+        if (! deletedCachedFile.delete()) {
+            Assert.fail("failed to remove cached file " + deletedCachedFile.getAbsolutePath());
+        }
+        Assert.assertTrue("meta file " + orphanedMetaFile.getAbsolutePath() +
+                          " is missing before starting test",
+                          orphanedMetaFile.exists());
 
-        // reset capacity to force cache reload (and clean-up of corrupt meta file)
+        File corruptMetaWithCacheFile =
+                new File(parentDirectory,
+                         CachedFile.getMetaFileName(cachedFileWithCorruptedMeta));
+        Assert.assertTrue("meta file " + corruptMetaWithCacheFile.getAbsolutePath() +
+                          " is missing",
+                          corruptMetaWithCacheFile.exists());
+
+        FileWriter writer = new FileWriter(corruptMetaWithCacheFile);
+        writer.write("Power tends to corrupt,");
+        writer.close();
+
+        final long lengthBeforeRepair = corruptMetaWithCacheFile.length();
+
+        File corruptMetaWithoutCacheFile = new File(parentDirectory,
+                                                    ".corrupt-meta-without-cache.jacs-cached-file");
+        writer = new FileWriter(corruptMetaWithoutCacheFile);
+        writer.write("and absolute power corrupts absolutely.");
+        writer.close();
+
+        File ignoredFile = new File(parentDirectory, "this-file-should-be-igonored-by-load.txt");
+        writer = new FileWriter(ignoredFile);
+        writer.write("Nothing to see here, please move on.");
+        writer.close();
+
+        filesToDeleteDuringTearDown.add(ignoredFile);
+
+        // ---------------------------------------
+        // reset capacity to force cache reload and clean-up of inconsistent data
+
         cache.setKilobyteCapacity(cache.getKilobyteCapacity() * 2);
 
         // give async reload a chance to complete
         Thread.sleep(500);
 
-        if (corruptMetaFile.exists()) {
-            CachedFileTest.deleteFile(corruptMetaFile);
-            fail("corrupt meta file " + corruptMetaFile.getAbsolutePath() + " was not removed after reload");
-        }
+        // ---------------------------------------
+        // verify results ...
+
+        Assert.assertTrue("meta file " + deletedMetaFile.getAbsolutePath() +
+                          " not restored for orphaned cache file",
+                          deletedMetaFile.exists());
+
+        Assert.assertFalse("valid but orphaned meta file " + orphanedMetaFile.getAbsolutePath() +
+                           " was not removed",
+                           orphanedMetaFile.exists());
+
+        Assert.assertTrue("corrupted meta file " + corruptMetaWithCacheFile.getAbsolutePath() +
+                          " is missing, but should have been repaired",
+                          corruptMetaWithCacheFile.exists());
+
+        Assert.assertTrue("corrupted meta file " + corruptMetaWithCacheFile.getAbsolutePath() +
+                          " was not repaired",
+                          lengthBeforeRepair != corruptMetaWithCacheFile.length());
+
+        Assert.assertFalse("corrupted and orphaned meta file " +
+                           corruptMetaWithoutCacheFile.getAbsolutePath() +
+                          " was not removed",
+                           corruptMetaWithoutCacheFile.exists());
+
+        Assert.assertTrue("file without meta data and not on remote server " +
+                          ignoredFile.getAbsolutePath() + " should have been left alone",
+                          ignoredFile.exists());
+
+        File ignoredMetaFile = new File(parentDirectory, CachedFile.getMetaFileName(ignoredFile));
+        Assert.assertFalse("meta data " + ignoredMetaFile.getAbsolutePath() +
+                           " should NOT have been created for file not on remote server",
+                           ignoredMetaFile.exists());
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(LocalFileCacheTest.class);
