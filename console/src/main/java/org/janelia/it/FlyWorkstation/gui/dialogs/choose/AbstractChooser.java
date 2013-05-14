@@ -30,16 +30,21 @@ public abstract class AbstractChooser<T> extends ModalDialog {
     private int returnValue = ERROR_OPTION;
     
     private final List<T> chosenElements = new ArrayList<T>();
-    
+
     public AbstractChooser() {
+        this("Choose", "Choose the selected elements");
+    }
+
+    public AbstractChooser(String okButtonText,
+                           String okToolTipText) {
 
     	super();
     	
         setPreferredSize(new Dimension(600, 800));
         setLayout(new BorderLayout());
 
-        JButton okButton = new JButton("Choose");
-        okButton.setToolTipText("Choose the selected elements");
+        JButton okButton = new JButton(okButtonText);
+        okButton.setToolTipText(okToolTipText);
         okButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {

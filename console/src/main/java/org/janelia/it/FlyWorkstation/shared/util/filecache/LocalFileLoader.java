@@ -8,7 +8,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This class traverses the local filesystem to identify files that were cached
@@ -20,11 +22,11 @@ import java.util.List;
 public class LocalFileLoader {
 
     private File activeDirectory;
-    private boolean removeInvalidFilesAndEmptyDirectories;
     private WebDavClient webDavClient;
     private String standardDerivationBasePath;
 
     private List<CachedFile> locallyCachedFiles;
+    private Set<File> unregisteredFiles;
 
     /**
      * Constructs a local file loader instance.
@@ -37,20 +39,15 @@ public class LocalFileLoader {
      * was acidentally provided, enabling this parameter would be a big problem.
      *
      * @param  activeDirectory                        the active directory for the local file cache.
-     * @param  removeInvalidFilesAndEmptyDirectories  indicates whether invalid files (e.g. files
-     *                                                with missing companions) and empty
-     *                                                sub-directories should be removed during
-     *                                                location.
      * @param  webDavClient                           the session WebDAV client (for repairing
      *                                                cache inconsistencies).
      */
     public LocalFileLoader(File activeDirectory,
-                           boolean removeInvalidFilesAndEmptyDirectories,
                            WebDavClient webDavClient) {
         this.activeDirectory = activeDirectory;
-        this.removeInvalidFilesAndEmptyDirectories = removeInvalidFilesAndEmptyDirectories;
         this.webDavClient = webDavClient;
         this.locallyCachedFiles = new ArrayList<CachedFile>(1024);
+        this.unregisteredFiles = new HashSet<File>(1024);
 
         StringBuilder sb = new StringBuilder(128);
         final String activeDirectoryPath = activeDirectory.getAbsolutePath();
@@ -72,10 +69,16 @@ public class LocalFileLoader {
     }
 
     /**
+     * @return set of files in the cache that could not be registered.
+     */
+    public Set<File> getUnregisteredFiles() {
+        return unregisteredFiles;
+    }
+
+    /**
      * Locates all cached files stored within the cache active directory.
      *
-     * If the {@link #removeInvalidFilesAndEmptyDirectories} attribute has been enabled,
-     * invalid files and empty directries will be removed during location.
+     * All empty sub-directories detected during location are removed.
      *
      * @return the list of locally cached files.
      */
@@ -121,9 +124,7 @@ public class LocalFileLoader {
                 repairOrphanFiles(unregisteredChildren);
             }
 
-            if (removeInvalidFilesAndEmptyDirectories) {
-                removeDirectoryIfEmpty(file);
-            }
+            removeDirectoryIfEmpty(file);
 
         } else if ((file.canRead() && CachedFile.isMetaFile(file))) {
             registerMetaFile(file, unregisteredSiblings);
@@ -138,17 +139,7 @@ public class LocalFileLoader {
                 rebuiltMetaFile = rebuildMetaFile(unregisteredChild, true);
 
                 if (rebuiltMetaFile == null) {
-
-                    if (removeInvalidFilesAndEmptyDirectories) {
-                        if (unregisteredChild.delete()) {
-                            LOG.info("repairOrphanFiles: removed unregistered file " +
-                                     unregisteredChild.getAbsolutePath());
-                        } else {
-                            LOG.warn("repairOrphanFiles: failed to remove unregistered file " +
-                                     unregisteredChild.getAbsolutePath());
-                        }
-                    }
-
+                    unregisteredFiles.add(unregisteredChild);
                 } else {
                     locallyCachedFiles.add(rebuiltMetaFile);
                 }
@@ -158,11 +149,15 @@ public class LocalFileLoader {
     }
 
     private void removeDirectoryIfEmpty(File directory) {
-        final File[] children = directory.listFiles();
-        if ((children == null) || (children.length == 0)) {
-            if (! directory.delete()) {
-                LOG.warn("removeDirectoryIfEmpty: failed to remove empty directory " +
-                         directory.getAbsolutePath());
+        if (directory.isDirectory()) {
+            final File[] children = directory.listFiles();
+            if ((children == null) || (children.length == 0)) {
+                if (directory.delete()) {
+                    LOG.info("removeDirectoryIfEmpty: removed {}", directory.getAbsolutePath());
+                } else {
+                    LOG.warn("removeDirectoryIfEmpty: failed to remove {}",
+                             directory.getAbsolutePath());
+                }
             }
         }
     }
