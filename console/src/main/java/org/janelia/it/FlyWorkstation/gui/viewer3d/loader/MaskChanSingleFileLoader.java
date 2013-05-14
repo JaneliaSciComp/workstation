@@ -419,15 +419,16 @@ public class MaskChanSingleFileLoader {
                 // WARNING: The use of offsets 0,1,2 below must remain in this loop, because moving them
                 // out of the loop could confound the walk-along-fastest-coord, which is not specific to any
                 // particular axis, across all runs of this code.
-                if ( renderableBean.isInvertedY() && axis == 1 ) {
-                    xyzCoords[ axis ] = sy - rayPosition - 1;
-                }
-                else {
-                    xyzCoords[ axis ] = rayPosition;   // Fastest-varying coord is the one walked by the pair-along-ray
+
+                xyzCoords[ axis ] = rayPosition;   // Fastest-varying coord is the one walked by the pair-along-ray
+
+                long finalYCoord = xyzCoords[ 1 ];
+                if ( renderableBean.isInvertedY() ) {
+                    finalYCoord = sy - finalYCoord - 1;
                 }
 
                 long zOffset = xyzCoords[ 2 ] * targetSliceSize;  // Consuming all slices to current.
-                long yOffset = xyzCoords[ 1 ] * volumeVoxels[0] + zOffset;  // Consuming lines to remainder.
+                long yOffset = finalYCoord * volumeVoxels[0] + zOffset;  // Consuming lines to remainder.
 
                 long final1DCoord = yOffset + xyzCoords[ 0 ];
 
@@ -572,9 +573,6 @@ public class MaskChanSingleFileLoader {
         }
         else {
             throw new IllegalArgumentException( "Unknown dimension order constant " + dimensionOrder );
-        }
-        if ( renderableBean.isInvertedY() ) {
-            returnVal[ 1 ] = sy - returnVal[ 1 ] - 1;
         }
 
         return returnVal;
