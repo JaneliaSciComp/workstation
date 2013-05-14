@@ -17,23 +17,12 @@ import org.slf4j.LoggerFactory;
 
 public class NumeralShader extends PassThroughTextureShader 
 {
-	protected static GLU glu = new GLU();
-	private static Logger logger = LoggerFactory.getLogger(NumeralShader.class);
 
 	private ImageColorModel imageColorModel;
 	private int numeralTextureId = 0;
 	private double micrometersPerPixel = 1.0;
 	private int textureWidth = 100;
 	private int textureHeight = 100;
-
-	private void checkGlError(GL2 gl, String message) 
-	{
-        int errorNum = gl.glGetError();
-        if (errorNum == GL2.GL_NO_ERROR)
-        		return;
-        String errorStr = glu.gluErrorString(errorNum);
-        logger.error( "OpenGL Error " + errorNum + ": " + errorStr + ": " + message );	
-	}	
 
 	public ImageColorModel getImageColorModel() {
 		return imageColorModel;

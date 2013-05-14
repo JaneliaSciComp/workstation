@@ -322,10 +322,11 @@ implements TextureDataI
 			result.add(new ChannelBrightnessStats());
 		// Read pixel values
 		ShortBuffer buf16 = bb.asShortBuffer(); // ...which might be 16-bit values...
-		for (int y = 0; y < height; ++y) {
-			for (int x = 0; x < width; ++x) {
-				for (int c = 0; c < channelCount; ++c) {
-					ChannelBrightnessStats chanStats = result.get(c);
+		// First set min/max
+		for (int c = 0; c < channelCount; ++c) {
+			ChannelBrightnessStats chanStats = result.get(c);
+			for (int y = 0; y < height; ++y) {
+				for (int x = 0; x < width; ++x) {
 					int val = 0;
 					if (getBitDepth() > 8)
 						val = (buf16.get() & 0xffff); // unsigned 16 bit value
@@ -335,6 +336,25 @@ implements TextureDataI
 						continue; // zero means "no data"
 					chanStats.setMax(Math.max(chanStats.getMax(), val));
 					chanStats.setMin(Math.min(chanStats.getMin(), val));
+				}
+			}
+		}
+		bb.rewind();
+		buf16.rewind();
+		// Next set histogram, now that min/max are set
+		for (int c = 0; c < channelCount; ++c) {
+			ChannelBrightnessStats chanStats = result.get(c);
+			chanStats.clearHistogram();
+			for (int y = 0; y < height; ++y) {
+				for (int x = 0; x < width; ++x) {
+					int val = 0;
+					if (getBitDepth() > 8)
+						val = (buf16.get() & 0xffff); // unsigned 16 bit value
+					else
+						val = (bb.get() & 0xff); // unsigned 8 bit value
+					if (val == 0)
+						continue; // zero means "no data"
+					chanStats.updateHistogram(val, 1);
 				}
 			}
 		}

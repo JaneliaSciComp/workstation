@@ -10,6 +10,7 @@ import java.awt.geom.Point2D;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.MouseModalWidget;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.RubberBand;
 
@@ -21,7 +22,7 @@ implements WheelMode, MouseMode
 
 	public ZoomMode() {
 		setHoverCursor(BasicMouseMode.createCursor("magnify_plus_cursor.png", 8, 8));
-		setDragCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+		setDragCursor(BasicMouseMode.createCursor("crosshair.png", 7, 7));
 		setAltCursor(BasicMouseMode.createCursor("magnify_minus_cursor.png", 8, 8));
 	}
 	
@@ -104,9 +105,9 @@ implements WheelMode, MouseMode
 			zoomRatio = 1.41421;
 		}
 		else {
-			Dimension vps = getComponent().getViewportSize();
-			int w = vps.width;
-			int h = vps.height;
+			Viewport vp = getComponent().getViewport();
+			int w = vp.getWidth();
+			int h = vp.getHeight();
 			zoomRatio = Math.max(dx/(double)(w), dy/(double)(h));
 		}
 		// recenter

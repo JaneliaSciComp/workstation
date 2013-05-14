@@ -13,6 +13,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.RecentFile
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ResetColorsAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ResetViewAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ResetZoomAction;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.TraceMouseModeAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZScanMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZScanScrollModeAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZoomInAction;
@@ -74,6 +75,7 @@ public class QuadViewUi extends JPanel
 		colorChannelWidget_2, 
 		colorChannelWidget_3
 	};
+	private JLabel statusLabel = new JLabel("status area");
 	
 	// Actions
 	private final Action openFolderAction = new OpenFolderAction(sliceViewer, sliceViewer);
@@ -97,6 +99,8 @@ public class QuadViewUi extends JPanel
 	private final Action previousZSliceAction = new PreviousZSliceAction(sliceViewer, sliceViewer);
 	private final Action advanceZSlicesAction = new AdvanceZSlicesAction(sliceViewer, sliceViewer, 10);
 	private final Action goBackZSlicesAction = new GoBackZSlicesAction(sliceViewer, sliceViewer, -10);
+	//
+	private final Action traceMouseModeAction = new TraceMouseModeAction(sliceViewer);
 	// 
 	private final Action clearCacheAction = new AbstractAction() {
 		private static final long serialVersionUID = 1L;
@@ -187,6 +191,13 @@ public class QuadViewUi extends JPanel
 		}
 		// TODO update zoom range too?
 	};
+	
+	public Slot1<String> setStatusMessageSlot = new Slot1<String>() {
+		@Override
+		public void execute(String message) {
+			statusLabel.setText(message);
+		}
+	};
 
 	/**
 	 * Create the frame.
@@ -209,6 +220,7 @@ public class QuadViewUi extends JPanel
 				"Optimize contrast for current view");
         // 
         collectGarbageAction.putValue(Action.NAME, "Collect Garbage");
+        sliceViewer.statusMessageChanged.connect(setStatusMessageSlot);
 	}
 
 	private void setupUi(JFrame parentFrame, boolean overrideFrameMenuBar) {
@@ -496,8 +508,7 @@ public class QuadViewUi extends JPanel
 		add(statusBar);
 		statusBar.setLayout(new BoxLayout(statusBar, BoxLayout.X_AXIS));
 		
-		JLabel lblNewLabel = new JLabel("status area");
-		statusBar.add(lblNewLabel);
+		statusBar.add(statusLabel);
 	}
 
 	private void interceptModifierKeyPresses() 
@@ -545,6 +556,15 @@ public class QuadViewUi extends JPanel
 		lblNewLabel_1.setFocusable(false);
 		lblNewLabel_1.setIcon(new ImageIcon(QuadViewUi.class.getResource("/images/mouse_left.png")));
 		toolBar.add(lblNewLabel_1);
+
+		// TODO - create a shared base class for these mode buttons
+		JToggleButton traceMouseModeButton = new JToggleButton("Trace");
+		mouseModeGroup.add(traceMouseModeButton);
+		traceMouseModeButton.setAction(traceMouseModeAction);
+		traceMouseModeButton.setMargin(new Insets(0, 0, 0, 0));
+		traceMouseModeButton.setHideActionText(true);
+		traceMouseModeButton.setFocusable(false);
+		toolBar.add(traceMouseModeButton);
 		
 		JToggleButton tglBtnPanMode = new JToggleButton("");
 		mouseModeGroup.add(tglBtnPanMode);

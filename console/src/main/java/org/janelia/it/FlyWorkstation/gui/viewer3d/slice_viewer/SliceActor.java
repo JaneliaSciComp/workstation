@@ -6,6 +6,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.NumeralShader;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.OutlineShader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.SliceColorShader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,7 @@ implements GLActor
 	private ImageColorModel imageColorModel;
 	private SliceColorShader shader = new SliceColorShader();
 	private NumeralShader numeralShader = new NumeralShader();
+	private OutlineShader outlineShader = new OutlineShader();
 	
 	private Slot clearDataSlot = new Slot() {
 		@Override
@@ -135,15 +137,23 @@ implements GLActor
 		// TODO - why are outlines black on Windows?
 		final boolean bOutlineTiles = false;
 		if (bOutlineTiles) {
+			// Use simplest possible shader, to get color to work on Windows
+			outlineShader.load(gl);
+			gl.glLineWidth(1.0f);
 			for (Tile2d tile: tiles) {
 				tile.displayBoundingBox(gl);
 			}
+			outlineShader.unload(gl);
 		}
 		
 		// Outline volume for debugging
-		final boolean bOutlineVolume = true;
-		if (bOutlineVolume)
+		final boolean bOutlineVolume = false;
+		if (bOutlineVolume) {
+			gl.glLineWidth(1.0f);
+			outlineShader.load(gl);
 			displayBoundingBox(gl);
+			outlineShader.unload(gl);
+		}
 	}
 	
 	private void displayBoundingBox(GL2 gl) {
@@ -153,13 +163,13 @@ implements GLActor
 		Vec3 a = getBoundingBox3d().getMin();
 		Vec3 b = getBoundingBox3d().getMax();
 		gl.glBegin(GL2.GL_LINE_STRIP);
-		gl.glColor3d(0.2, 1.0, 1.0); // zero line cyan
-		gl.glVertex3d(a.getX(), a.getY(), 0.0);
-		gl.glVertex3d(b.getX(), a.getY(), 0.0);
-		gl.glColor3d(1.0, 1.0, 0.2); // rest yellow
-		gl.glVertex3d(b.getX(), b.getY(), 0.0);
-		gl.glVertex3d(a.getX(), b.getY(), 0.0);
-		gl.glVertex3d(a.getX(), a.getY(), 0.0);
+			gl.glColor3d(0.2, 1.0, 1.0); // zero line cyan
+			gl.glVertex3d(a.getX(), a.getY(), 0.0);
+			gl.glVertex3d(b.getX(), a.getY(), 0.0);
+			gl.glColor3d(1.0, 1.0, 0.2); // rest yellow
+			gl.glVertex3d(b.getX(), b.getY(), 0.0);
+			gl.glVertex3d(a.getX(), b.getY(), 0.0);
+			gl.glVertex3d(a.getX(), a.getY(), 0.0);
 		gl.glEnd();
 		gl.glColor3d(1.0, 1.0, 1.0);		
 	}
@@ -193,6 +203,7 @@ implements GLActor
 		try {
 			shader.init(gl);
 			numeralShader.init(gl);
+			outlineShader.init(gl);
 		} catch (ShaderCreationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

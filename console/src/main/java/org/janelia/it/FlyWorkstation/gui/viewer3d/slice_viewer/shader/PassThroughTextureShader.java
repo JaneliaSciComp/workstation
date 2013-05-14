@@ -3,12 +3,26 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader;
 import java.nio.IntBuffer;
 
 import javax.media.opengl.GL2;
+import javax.media.opengl.glu.GLU;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PassThroughTextureShader extends AbstractShader 
 {
     protected int previousShader = 0;
+	protected static GLU glu = new GLU();
+	private static Logger logger = LoggerFactory.getLogger(PassThroughTextureShader.class);
+
+	static protected void checkGlError(GL2 gl, String message) 
+	{
+        int errorNum = gl.glGetError();
+        if (errorNum == GL2.GL_NO_ERROR)
+        		return;
+        String errorStr = glu.gluErrorString(errorNum);
+        logger.error( "OpenGL Error " + errorNum + ": " + errorStr + ": " + message );	
+	}	
 
 	@Override
 	public String getVertexShader() {

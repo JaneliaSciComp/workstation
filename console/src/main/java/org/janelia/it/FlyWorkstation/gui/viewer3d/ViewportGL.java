@@ -13,7 +13,9 @@ implements Viewport
 {
     private int width; // in pixels
     private int height; // in pixels
-    private int originX;
+    private int originX = 0;
+	private int originY = 0;
+
 
     public int getOriginX() {
 		return originX;
@@ -31,8 +33,6 @@ implements Viewport
 		this.originY = originY;
 	}
 
-	private int originY;
-
     public int getHeight() {
 		return height;
 	}
@@ -46,7 +46,7 @@ implements Viewport
 			return; // no change
 		setWidth(width);
 		setHeight(height);
-		gl.glViewport(0, 0, width, height);
+		gl.glViewport(originX, originY, width, height);
     }
 
 	public void setHeight(int height) {

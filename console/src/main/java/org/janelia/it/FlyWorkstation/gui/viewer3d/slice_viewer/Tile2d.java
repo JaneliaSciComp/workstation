@@ -218,7 +218,7 @@ implements GLActor
 		double tileWidth = texture.getUsedWidth() * zoomScale * tileFormat.getVoxelMicrometers()[0];
 		double tileHeight = texture.getHeight() * zoomScale * tileFormat.getVoxelMicrometers()[1];
 		gl.glBegin(GL2.GL_LINE_STRIP);
-			gl.glColor3d(1.0f, 1.0f, 0.3f);
+			gl.glColor3f(1.0f, 1.0f, 0.3f);
 			// draw quad
 	        double z = 0.0; // As far as OpenGL is concerned, all Z's are zero
 	        double x0 = getIndex().getX() * tileFormat.getTileSize()[0] * zoomScale * tileFormat.getVoxelMicrometers()[0];
@@ -228,9 +228,9 @@ implements GLActor
 	        double y0 = yMax - getIndex().getY() * tileFormat.getTileSize()[1] * zoomScale * tileFormat.getVoxelMicrometers()[1];
 	        double y1 = y0 - tileHeight; // y inverted in OpenGL relative to image convention
 	        gl.glVertex3d(x0, y0, z);
-	        gl.glVertex3d(x1, y0, z);
-	        gl.glVertex3d(x1, y1, z);
 	        gl.glVertex3d(x0, y1, z);
+	        gl.glVertex3d(x1, y1, z);
+	        gl.glVertex3d(x1, y0, z);
 	        gl.glVertex3d(x0, y0, z);
         gl.glEnd();
 		gl.glColor3d(1.0, 1.0, 1.0);

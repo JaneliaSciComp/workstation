@@ -10,18 +10,27 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.BasicMouseMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.MouseMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.PanMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.WheelMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZScanMode;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton;
 
 import javax.media.opengl.GLProfile;
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.JOptionPane;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Point2D;
 import java.net.URL;
+import java.text.DecimalFormat;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,12 +63,16 @@ implements MouseModalWidget, VolumeViewer
 	protected VolumeImage3d volumeImage = tileServer;
 	protected SliceActor volumeActor = new SliceActor(tileServer);
 	private ImageColorModel imageColorModel;
+	private BasicMouseMode pointComputer = new BasicMouseMode();
+	
+	private List<Skeleton> skeletons;
 	
 	public Signal1<URL> getFileLoadedSignal() {
 		return fileLoadedSignal;
 	}
 
 	protected Signal1<URL> fileLoadedSignal = new Signal1<URL>();
+	public Signal1<String> statusMessageChanged = new Signal1<String>();
 	
 	protected Slot1<URL> loadUrlSlot = new Slot1<URL>() {
 		@Override
@@ -99,6 +112,9 @@ implements MouseModalWidget, VolumeViewer
         renderer.addActor(volumeActor);
         tileServer.getViewTextureChangedSignal().connect(getRepaintSlot());
         imageColorModel.getColorModelChangedSignal().connect(getRepaintSlot());
+        // Initialize pointComputer for interconverting pixelXY <=> sceneXYZ
+		pointComputer.setCamera(getCamera());
+		pointComputer.setComponent(this);
         resetView();
 	}
 
@@ -117,14 +133,17 @@ implements MouseModalWidget, VolumeViewer
 				break;
 			ChannelColorModel chanModel = imageColorModel.getChannel(c);
 			ChannelBrightnessStats chanStats = bs.get(c);
-			chanModel.setBlackLevel(chanStats.getMin());
-			chanModel.setWhiteLevel(chanStats.getMax());
+			// int cMin = chanStats.getMin();
+			int cMin = chanStats.estimateQuantile(0.25);
+			int cMax = chanStats.estimateQuantile(0.999);
+			chanModel.setBlackLevel(cMin);
+			chanModel.setWhiteLevel(cMax);
 			if (chanStats.getMax() >= max) {
-				max = chanStats.getMax();
+				max = cMax;
 				maxChan = c;
 			}
-			if (chanStats.getMin() <= min) {
-				min = chanStats.getMin();
+			if (cMin <= min) {
+				min = cMin;
 				minChan = c;
 			}
 		}
@@ -178,8 +197,8 @@ implements MouseModalWidget, VolumeViewer
 	}
 
 	@Override
-	public Dimension getViewportSize() {
-		return getSize();
+	public Viewport getViewport() {
+		return viewport;
 	}
 
 	public WheelMode getWheelMode() {
@@ -206,6 +225,15 @@ implements MouseModalWidget, VolumeViewer
 	@Override
 	public void mouseMoved(MouseEvent event) {
 		mouseMode.mouseMoved(event);
+		Vec3 xyz = pointComputer.worldFromPixel(event.getPoint());
+		DecimalFormat fmt = new DecimalFormat("0.0");
+		String msg = "["
+				+ fmt.format(xyz.getX())
+				+ ", " + fmt.format(xyz.getY())
+				+ ", " + fmt.format(xyz.getZ())
+				+ "] \u00B5m"; // micrometers. Maybe I should use pixels (also?)?
+		statusMessageChanged.emit(msg);
+		// System.out.println(xyz);
 	}
 
 	@Override
@@ -299,6 +327,7 @@ implements MouseModalWidget, VolumeViewer
 		mouseMode.setCamera(camera);
 		wheelMode.setCamera(camera);
 		tileServer.setCamera(camera);
+		this.pointComputer.setCamera(camera);
 	}
 	
 	public void setWheelMode(WheelMode wheelMode) {
