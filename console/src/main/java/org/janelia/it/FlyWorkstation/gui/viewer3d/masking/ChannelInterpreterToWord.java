@@ -21,7 +21,7 @@ public class ChannelInterpreterToWord implements ChannelInterpreterI {
     }
 
     @Override
-    public void interpretChannelBytes(ChannelMetaData channelMetaData, byte[] channelData, int targetPos) {
+    public void interpretChannelBytes(ChannelMetaData channelMetaData, ChannelMetaData targetChannelMetaData, byte[] channelData, int targetPos) {
         int[] orderedRgbIndexes = channelMetaData.getOrderedRgbIndexes();
 
         for ( int i = 0; i < channelMetaData.rawChannelCount; i++ ) {

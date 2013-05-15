@@ -3,7 +3,6 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.FileExportLoadWorker;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.exporter.TiffExporter;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.CompletionListener;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.ControlsListener;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;

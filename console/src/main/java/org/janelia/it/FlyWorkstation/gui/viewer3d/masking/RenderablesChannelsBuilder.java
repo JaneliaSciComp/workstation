@@ -50,6 +50,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
 
         channelMetaData = new ChannelMetaData();
         channelMetaData.rawChannelCount = 3; // Forcing a good upper bound.
+        channelMetaData.channelCount = 4;
         channelMetaData.byteCount = 2; // Forcing a good upper bound.
         channelMetaData.redChannelInx = 0;
         channelMetaData.greenChannelInx = 1;
@@ -116,7 +117,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
         init();
 
         int targetPos = (int)( volumePosition * this.channelMetaData.channelCount * FIXED_BYTE_PER_CHANNEL );
-        channelInterpreter.interpretChannelBytes(channelMetaData, channelData, targetPos);
+        channelInterpreter.interpretChannelBytes(channelMetaData, this.channelMetaData, channelData, targetPos);
 
         return 1;
     }
@@ -288,12 +289,20 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
                 ChannelMetaData newChannelMetaData = cloneChannelMetaData();
                 newChannelMetaData.channelCount = channelMetaData.rawChannelCount + 1;
                 channelMetaData = newChannelMetaData;
+                logger.info(
+                        "Padding out the channel count from {} to {}.",
+                        channelMetaData.rawChannelCount, channelMetaData.channelCount
+                );
             }
             else if ( channelMetaData.rawChannelCount == 2 ) {
                 // Round out to four.
                 ChannelMetaData newChannelMetaData = cloneChannelMetaData();
                 newChannelMetaData.channelCount = channelMetaData.rawChannelCount + 2;
                 channelMetaData = newChannelMetaData;
+                logger.info(
+                        "Padding out the channel count from {} to {}.",
+                        channelMetaData.rawChannelCount, channelMetaData.channelCount
+                );
             }
             long arrayLength = paddedSx * paddedSy * paddedSz *
                                channelMetaData.byteCount * channelMetaData.channelCount;
@@ -322,6 +331,11 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
                 volumeData = new byte[ (int) arrayLength ];
             }
 
+            logger.info(
+                    "Raw channel count: {}, full channel count: {}.",
+                    channelMetaData.rawChannelCount,
+                    channelMetaData.channelCount
+            );
             channelInterpreter = new ChannelInterpreterToByte( volumeData );
 
             needsChannelInit = false;

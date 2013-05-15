@@ -43,12 +43,12 @@ public class AlignmentBoardControlsDialog extends JDialog {
             "to search other specimens and present the resulting overlappoing volume." +
             "</html>";
 
-    private static final String SAVE_AS_SEARCH_TIFF = "Save Search TIFF";
+    private static final String SAVE_AS_SEARCH_TIFF = "Save Search Mask";
     private static final String SAVE_AS_COLOR_TIFF = "Save Color TIFF";
 
     private static final String LAUNCH_AS = "Controls";
     private static final String LAUNCH_DESCRIPTION = "Present a dialog allowing users to change settings.";
-    private static final Dimension SIZE = new Dimension( 450, 530 );
+    private static final Dimension SIZE = new Dimension( 450, 600 );
     private static final String GAMMA_TOOLTIP = "Adjust the gamma level, or brightness.";
     private static final Dimension DN_SAMPLE_DROPDOWN_SIZE = new Dimension(130, 50);
     private static final String COMMIT_CHANGES = "Commit Changes";
@@ -473,16 +473,17 @@ public class AlignmentBoardControlsDialog extends JDialog {
                 0, 5, 3, 1, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
 
+        Insets buttonInsets = new Insets( 5, 5, 5, 5 );
         GridBagConstraints saveSearchConstraints = new GridBagConstraints(
-                0, 6, 1, 1, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
+                0, 6, 1, 1, 1.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, buttonInsets, 0, 0
         );
 
         GridBagConstraints saveColorConstraints = new GridBagConstraints(
-                1, 6, 1, 1, 1.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, insets, 0, 0
+                1, 6, 1, 1, 1.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, buttonInsets, 0, 0
         );
 
         GridBagConstraints saveScreenShotConstraints = new GridBagConstraints(
-                2, 6, 1, 1, 1.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, insets, 0, 0
+                2, 6, 1, 1, 1.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, buttonInsets, 0, 0
         );
 
         centralPanel.add( brightnessSlider, brightnessConstraints );

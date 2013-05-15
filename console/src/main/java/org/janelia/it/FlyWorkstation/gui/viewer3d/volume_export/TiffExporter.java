@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.exporter;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export;
 
 import com.sun.media.jai.codec.ImageCodec;
 import com.sun.media.jai.codec.ImageEncoder;
@@ -46,6 +46,7 @@ public class TiffExporter {
         if ( chosenFile != null ) {
             chosenFile = enforcePreferredExtension(chosenFile);
 
+            analyzeByteBuffer( texture.getTextureData() );
             int textureSize = texture.getSz() * texture.getSy() * texture.getSx();
             logger.info( "Exporting texture {}.  Size={}", texture.getFilename(), textureSize );
 
@@ -164,9 +165,8 @@ public class TiffExporter {
 
         ByteBuffer byteBuffer = ByteBuffer.wrap( textureData.getTextureData() );
         byteBuffer.rewind();
-        //byteBuffer.order( ByteOrder.LITTLE_ENDIAN );
+        byteBuffer.order( ByteOrder.LITTLE_ENDIAN );
         int[] intArr = getIntArray( textureSize, byteBuffer );
-        //analyzeIntBuff( intArr, sliceNum );
         rtnVal.setRGB( 0, 0, textureData.getSx(), textureData.getSy(), intArr, sliceOffset, textureData.getSx() );
         return rtnVal;
     }
@@ -283,6 +283,20 @@ public class TiffExporter {
             }
         }
 
+    }
+
+    private void analyzeByteBuffer( byte[] resultingArray ) {
+        int[] positionCount = new int[ 4 ];
+        for ( int i = 0; i < resultingArray.length; i += 4 ) {
+            for ( int pos = 0; pos < 4; pos++ ) {
+                if ( resultingArray[ i + pos ] != 0 ) {
+                    positionCount[ pos ]++;
+                }
+            }
+        }
+        for ( int i = 0; i < positionCount.length; i++ ) {
+            logger.info( "Position {} has {} non-zero bytes.", i, positionCount[ i ] );
+        }
     }
 
 }

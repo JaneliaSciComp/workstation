@@ -263,7 +263,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
      * @param nextTranslatedNum will be the target render-method id for this data
      * @param isCompartment for special treatment of compartments.
      * @param item being wrapped.
-     * @return
+     * @return number of correct files found for this "translated number".
      */
     private int getRenderableData(
             Collection<MaskChanRenderableData> maskChanRenderableDatas,

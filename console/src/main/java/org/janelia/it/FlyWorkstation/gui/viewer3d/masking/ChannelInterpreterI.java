@@ -11,6 +11,6 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
  * Implement this to help figure out what to do, as an acceptor of channel bytes read from input files.
  */
 public interface ChannelInterpreterI {
-    void interpretChannelBytes(ChannelMetaData channelMetaDatas, byte[] channelData, int targetPos);
+    void interpretChannelBytes(ChannelMetaData srcChannelMetaData, ChannelMetaData targetChannelMetaData, byte[] channelData, int targetPos);
     void close();
 }

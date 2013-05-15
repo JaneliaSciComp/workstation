@@ -26,30 +26,30 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
     }
 
     @Override
-    public void interpretChannelBytes(ChannelMetaData channelMetaData, byte[] channelData, int targetPos) {
-        if ( channelMetaData.byteCount == 1  &&  channelMetaData.channelCount == 1 ) {
+    public void interpretChannelBytes(ChannelMetaData srcChannelMetaData, ChannelMetaData targetChannelMetaData, byte[] channelData, int targetPos) {
+        if ( srcChannelMetaData.byteCount == 1  &&  srcChannelMetaData.channelCount == 1 ) {
             // 1:1 straight copy to volume.
-            for ( int channelInx = 0; channelInx < channelMetaData.rawChannelCount; channelInx++ ) {
+            for ( int channelInx = 0; channelInx < srcChannelMetaData.rawChannelCount; channelInx++ ) {
                 volumeData[ targetPos + channelInx ] = channelData[ channelInx ];
             }
         }
         else {
-            int[] orderedRgbIndexes = channelMetaData.getOrderedRgbIndexes();
+            int[] orderedRgbIndexes = srcChannelMetaData.getOrderedRgbIndexes();
 
             // N:1 divide by max-byte.
-            for ( int i = 0; i < channelMetaData.rawChannelCount; i++ ) {
+            for ( int i = 0; i < srcChannelMetaData.rawChannelCount; i++ ) {
                 int finalValue = 0;
                 // This is a local down-sample from N-bytes-per-channel to the required number only.
-                for ( int j = 0; j < channelMetaData.byteCount; j++ ) {
-                    int nextByte = channelData[ (i * channelMetaData.byteCount) + j ];
+                for ( int j = 0; j < srcChannelMetaData.byteCount; j++ ) {
+                    int nextByte = channelData[ (i * srcChannelMetaData.byteCount) + j ];
                     if ( nextByte < 0 )
                         nextByte += 256;
-                    int shifter = channelMetaData.byteCount - j - 1;
+                    int shifter = srcChannelMetaData.byteCount - j - 1;
                     finalValue += (nextByte << (8 * shifter));
                 }
-                if ( channelMetaData.byteCount == 2 )
+                if ( srcChannelMetaData.byteCount == 2 )
                     finalValue /= 256;
-                else if ( channelMetaData.byteCount == 3 )
+                else if ( srcChannelMetaData.byteCount == 3 )
                     finalValue /= 65535;
 
                 if ( finalValue > maxValue ) {
@@ -63,8 +63,8 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
         }
 
         // Pad out to the end, to create the alpha byte.
-        if ( channelMetaData.channelCount > channelMetaData.rawChannelCount ) {
-            volumeData[ targetPos + channelMetaData.channelCount - 1 ] = (byte)255;
+        if ( targetChannelMetaData.channelCount == ( srcChannelMetaData.channelCount + 1 ) ) {
+            volumeData[ targetPos + targetChannelMetaData.channelCount - 1 ] = (byte)255;
         }
     }
 
