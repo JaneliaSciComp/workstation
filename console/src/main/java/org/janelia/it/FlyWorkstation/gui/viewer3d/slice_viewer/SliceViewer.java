@@ -135,7 +135,7 @@ implements MouseModalWidget, VolumeViewer
 			ChannelColorModel chanModel = imageColorModel.getChannel(c);
 			ChannelBrightnessStats chanStats = bs.get(c);
 			// int cMin = chanStats.getMin();
-			int cMin = chanStats.estimateQuantile(0.25);
+			int cMin = chanStats.estimateQuantile(0.05);
 			int cMax = chanStats.estimateQuantile(0.999);
 			chanModel.setBlackLevel(cMin);
 			chanModel.setWhiteLevel(cMax);
