@@ -86,7 +86,7 @@ public class LocalFileCacheTest extends TestCase {
         // adding last file should force removal of first file
         final int cacheKilobytes =
                 (singleFileKilobytes + 1) * maxNumberOfCachedFiles;
-        cache = new LocalFileCache(cacheRootParentDirectory, cacheKilobytes, mockClient);
+        cache = new LocalFileCache(cacheRootParentDirectory, cacheKilobytes, mockClient, null);
 
         filesToDeleteDuringTearDown = new ArrayList<File>();
         filesToDeleteDuringTearDown.addAll(testRemoteFiles);

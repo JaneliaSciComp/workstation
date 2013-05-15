@@ -14,6 +14,7 @@ import org.janelia.it.FlyWorkstation.shared.filestore.PathTranslator;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.PropertyConfigurator;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.FlyWorkstation.shared.util.filecache.CacheLoadEventListener;
 import org.janelia.it.FlyWorkstation.shared.util.filecache.LocalFileCache;
 import org.janelia.it.FlyWorkstation.shared.util.filecache.WebDavClient;
 import org.janelia.it.FlyWorkstation.web.EmbeddedWebServer;
@@ -22,6 +23,7 @@ import org.janelia.it.FlyWorkstation.ws.ExternalClient;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.SubjectRelationship;
 import org.janelia.it.jacs.model.user_data.User;
+import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,8 +34,10 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.*;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.text.ParseException;
 import java.util.*;
 import java.util.List;
@@ -375,9 +379,56 @@ public class SessionMgr {
                         ConsoleProperties.getString("console.localCache.rootDirectory",
                                                     prefsDir);
                 final long kilobyteCapacity = getFileCacheGigabyteCapacity() * 1024 * 1024;
+
+                CacheLoadEventListener loadListener = new CacheLoadEventListener() {
+                    @Override
+                    public void loadCompleted(Set<File> unregisteredFiles) {
+                        final List<File> list = new ArrayList<File>();
+                        if (unregisteredFiles.size() > 0) {
+
+                            list.addAll(unregisteredFiles);
+                            Collections.sort(list);
+
+                            StringBuilder msg = new StringBuilder(100 * unregisteredFiles.size());
+                            msg.append("The following files could not be registered ");
+                            msg.append("in the local cache on ");
+
+                            String hostAddress;
+                            try {
+                                InetAddress address = InetAddress.getLocalHost();
+                                hostAddress = address.getHostAddress();
+                            } catch (UnknownHostException e) {
+                                hostAddress = "unknown";
+                                log.warn("failed to derive client host address, ignoring error", e);
+                            }
+
+                            msg.append(hostAddress);
+                            msg.append(":\n\n");
+
+                            for (File unregisteredFile : unregisteredFiles) {
+                                msg.append(" ");
+                                msg.append(unregisteredFile.getAbsolutePath());
+                                msg.append('\n');
+                            }
+
+                            final MailHelper helper = new MailHelper();
+                            final String from = (String) getModelProperty(USER_EMAIL);
+                            final String to = ConsoleProperties.getString("console.HelpEmail");
+                            final String subject = "unregistered files found in local cache";
+
+                            log.info("sending email to {} about {} unregistered cache files",
+                                     to, unregisteredFiles.size());
+
+                            helper.sendEmail(from, to, subject, msg.toString());
+                        }
+
+                    }
+                };
+
                 localFileCache = new LocalFileCache(new File(localCacheRoot),
                                                     kilobyteCapacity,
-                                                    webDavClient);
+                                                    webDavClient,
+                                                    loadListener);
             } catch (Exception e) {
                 localFileCache = null;
                 log.error("disabling local cache after initialization failure", e);

@@ -6,17 +6,13 @@ import com.google.common.cache.RemovalListener;
 import com.google.common.cache.RemovalListeners;
 import com.google.common.cache.RemovalNotification;
 import com.google.common.cache.Weigher;
-import org.janelia.it.FlyWorkstation.gui.dialogs.choose.ArbitraryFileChooser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -46,6 +42,8 @@ public class LocalFileCache {
 
     private LoadingCache<URL, CachedFile> urlToFileCache;
 
+    private CacheLoadEventListener cacheLoadEventListener;
+
     /**
      * Creates a new local cache whose physical storage is within the
      * specified parent directory.  The cache uses a Least Recently Used
@@ -60,12 +58,16 @@ public class LocalFileCache {
      *
      * @param  webDavClient          client for issuing WebDAV requests.
      *
+     * @param  cacheLoadEventListener  listener for cache load events
+     *                                 (or null if not needed).
+     *
      * @throws IllegalStateException
      *   if any errors occur while constructing a cache tied to the file system.
      */
     public LocalFileCache(File cacheParentDirectory,
                           long kilobyteCapacity,
-                          WebDavClient webDavClient)
+                          WebDavClient webDavClient,
+                          CacheLoadEventListener cacheLoadEventListener)
             throws IllegalStateException {
 
         this.rootDirectory = createAndValidateDirectoryAsNeeded(cacheParentDirectory,
@@ -82,6 +84,7 @@ public class LocalFileCache {
         }
 
         this.webDavClient = webDavClient;
+        this.cacheLoadEventListener = cacheLoadEventListener;
 
         // separate thread pool for async addition of files to the cache
         this.asyncLoadService = Executors.newFixedThreadPool(4);
@@ -490,46 +493,8 @@ public class LocalFileCache {
                 ", " + usedPercentage + "% full (" + getNumberOfKilobytes() + "/" +
                 getKilobyteCapacity() + " kilobytes)");
 
-        final List<File> unregisteredFiles = new ArrayList<File>(loader.getUnregisteredFiles());
-        if (unregisteredFiles.size() > 0) {
-            Collections.sort(unregisteredFiles);
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    displayUnregisteredFilesWarning(unregisteredFiles);
-                }
-            });
-        }
-    }
-
-    private void displayUnregisteredFilesWarning(List<File> unregisteredFiles) {
-        ArbitraryFileChooser chooser = new ArbitraryFileChooser("Unknown Files In Local Cache",
-                                                                UNKNOWN_FILES_DESCRIPTION,
-                                                                "Remove Selected Files",
-                                                                "Remove Selected Files",
-                                                                unregisteredFiles);
-        int returnVal = chooser.showDialog(null);
-        if (returnVal == ArbitraryFileChooser.CHOOSE_OPTION) {
-            final List<File> unregisteredFilesSelectedForRemoval = chooser.getChosenElements();
-            Thread cleanUpThread = new Thread(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            removeUnregisteredFiles(unregisteredFilesSelectedForRemoval);
-                        }
-                    }, "local-file-cache-remove-unregistered-files-thread");
-
-            cleanUpThread.start();
-        }
-    }
-
-    private void removeUnregisteredFiles(List<File> unregisteredFilesSelectedForRemoval) {
-        for (File file : unregisteredFilesSelectedForRemoval) {
-            if (file.delete()) {
-                LOG.info("removeUnregisteredFiles: removed {}", file.getAbsolutePath());
-            } else {
-                LOG.warn("removeUnregisteredFiles: failed to remove {}", file.getAbsolutePath());
-            }
+        if (cacheLoadEventListener != null) {
+            cacheLoadEventListener.loadCompleted(loader.getUnregisteredFiles());
         }
     }
 
@@ -552,25 +517,4 @@ public class LocalFileCache {
     private static final String ACTIVE_DIRECTORY_NAME = "active";
     private static final String TEMP_DIRECTORY_NAME = "temp";
 
-    private static final String UNKNOWN_FILES_DESCRIPTION =
-            "<html><br>" +
-            "<p>The Workstation locally caches files from remote file systems to improve " +
-            "performance and prevent the need to mount remote file systems.  " +
-            "The local cache directory is traversed at start-up to register all files cached " +
-            "during prior runs.  During this traversal, files were found in the local " +
-            "cache that do not exist on any of the Workstation remote file systems.  " +
-            "The full paths for these unknown files are listed in the selection box below.</p>" +
-            "<br><br>" +
-            "<p>The most likely reason these files remain in the local cache is because a " +
-            "pipeline was re-run.  In such cases, the files can be removed by selecting them " +
-            "below.  There is however a small chance that you manually created the files via " +
-            "another software tool.  If you manually created any of the listed files, leave the " +
-            "manually created files unselected below and move them out of the local cache " +
-            "directory at your earliest convenience.</p>" +
-            "<br><br>" +
-            "<p>Please select any and all files that you did not manually create so that they " +
-            "can be removed from the local cache directory.  " +
-            "Note that selection solely removes these files from the Workstation local cache " +
-            "directory and has no affect on remotely stored files.</p>" +
-            "<br><br></html>";
 }
