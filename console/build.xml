@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project name="console" default="build">
+<project name="console" default="build-run-jar">
 
     <!-- need to set this here to override standard location (parallel to src) -->
     <property name="test.src.dir" value="${basedir}/src/test/java"/>
