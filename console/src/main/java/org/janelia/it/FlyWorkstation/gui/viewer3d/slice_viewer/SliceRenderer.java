@@ -15,17 +15,17 @@ extends BaseRenderer
 	ViewportGL viewport = new ViewportGL();
 	GLOrthoCamera glCamera = new GLOrthoCamera(camera);
 	
+	public SliceRenderer() {
+		glCamera.setCamera(camera);
+		glCamera.setViewport(viewport);
+	}
+
 	public ViewportGL getViewport() {
 		return viewport;
 	}
 
 	public void setViewport(ViewportGL viewport) {
 		this.viewport = viewport;
-	}
-
-	public SliceRenderer() {
-		glCamera.setCamera(camera);
-		glCamera.setViewport(viewport);
 	}
 
     @Override

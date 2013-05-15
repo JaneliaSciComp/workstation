@@ -16,8 +16,8 @@ public class OutlineShader extends PassThroughTextureShader {
 	
 	@Override
 	public void load(GL2 gl) {
-		System.out.println("OutlineShader load");
+		// System.out.println("OutlineShader load");
 		super.load(gl);
-		checkGlError(gl, "OutlineShader load");
+		// checkGlError(gl, "OutlineShader load");
 	}
 }
