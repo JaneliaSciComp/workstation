@@ -383,13 +383,13 @@ public class SessionMgr {
                 CacheLoadEventListener loadListener = new CacheLoadEventListener() {
                     @Override
                     public void loadCompleted(Set<File> unregisteredFiles) {
-                        final List<File> list = new ArrayList<File>();
                         if (unregisteredFiles.size() > 0) {
 
-                            list.addAll(unregisteredFiles);
-                            Collections.sort(list);
+                            final List<File> sortedList = new ArrayList<File>();
+                            sortedList.addAll(unregisteredFiles);
+                            Collections.sort(sortedList);
 
-                            StringBuilder msg = new StringBuilder(100 * unregisteredFiles.size());
+                            StringBuilder msg = new StringBuilder(100 * sortedList.size());
                             msg.append("The following files could not be registered ");
                             msg.append("in the local cache on ");
 
@@ -405,7 +405,7 @@ public class SessionMgr {
                             msg.append(hostAddress);
                             msg.append(":\n\n");
 
-                            for (File unregisteredFile : unregisteredFiles) {
+                            for (File unregisteredFile : sortedList) {
                                 msg.append(" ");
                                 msg.append(unregisteredFile.getAbsolutePath());
                                 msg.append('\n');
@@ -414,10 +414,11 @@ public class SessionMgr {
                             final MailHelper helper = new MailHelper();
                             final String from = (String) getModelProperty(USER_EMAIL);
                             final String to = ConsoleProperties.getString("console.HelpEmail");
-                            final String subject = "unregistered files found in local cache";
+                            final String subject = hostAddress + " cache directory contains " +
+                                                   sortedList.size() + " unregistered files";
 
                             log.info("sending email to {} about {} unregistered cache files",
-                                     to, unregisteredFiles.size());
+                                     to, sortedList.size());
 
                             helper.sendEmail(from, to, subject, msg.toString());
                         }
