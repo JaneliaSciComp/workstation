@@ -22,10 +22,11 @@ public class ABContextDataSource implements RenderableDataSourceI {
     // where '9' above is the label number, the usual mask/chan extensions apply, and the number shown
     // should match the location for the previously-known files fetched from the older pipeline.
     private static final String MASK_EXTENSION = ".mask";
-    private static final byte COMPARTMENT_INTENSITY = (byte) 0f;
     private static final byte NON_RENDER_INTENSITY = (byte) 0f;
     private AlignmentBoardContext context;
     private String[] filenames;
+
+    private AlignedItem currentParentItem; // NOTE: use of this precludes multi-threaded use of this data source!
 
     private Logger logger = LoggerFactory.getLogger( ABContextDataSource.class );
     public ABContextDataSource(String[] filenames) {
@@ -57,6 +58,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
 
             EntityWrapper itemEntity = alignedItem.getItemWrapper();
             if ( itemEntity instanceof Sample) {
+                currentParentItem = alignedItem;
                 Sample sample = (Sample)itemEntity;
                 Entity internalEntity = sample.getInternalEntity();
 
@@ -66,16 +68,9 @@ public class ABContextDataSource implements RenderableDataSourceI {
 
                 Collection<AlignedItem> childItems = alignedItem.getAlignedItems();
                 if ( childItems != null ) {
-                    for ( AlignedItem item: childItems ) {
-                        if ( item.getItemWrapper() instanceof Neuron) {
-                            liveFileCount += getRenderableData(rtnVal, nextTranslatedNum++, false, item);
-                            if ( item.getColor() == null  &&  alignedItem.getColor() != null ) {
-                                try {
-                                    item.setColor( alignedItem.getColor() );
-                                } catch ( Exception ex ) {
-                                    throw new RuntimeException( ex );
-                                }
-                            }
+                    for ( AlignedItem childItem: childItems ) {
+                        if ( childItem.getItemWrapper() instanceof Neuron) {
+                            liveFileCount += getRenderableData(rtnVal, nextTranslatedNum++, false, childItem);
                         }
                     }
                 }
@@ -178,15 +173,6 @@ public class ABContextDataSource implements RenderableDataSourceI {
             for ( AlignedItem childItem: item.getAlignedItems() ) {
                 if ( childItem.isVisible() ) {
                     neuronFragments.add( childItem );
-                    // Inherit parent coloring from sample, if it exists.
-                    if ( childItem.getColor() == null  &&  ( item.getColor() != null ) ) {
-                        try {
-                            childItem.setColor( item.getColor() );
-                        } catch ( Exception ex ) {
-                            ex.printStackTrace();
-                            throw new RuntimeException( ex );
-                        }
-                    }
                 }
             }
         }
@@ -358,6 +344,13 @@ public class ABContextDataSource implements RenderableDataSourceI {
 
         // See to the appearance.
         Color renderColor = item.getColor();
+        if ( renderColor == null ) {
+            // Second chance at the render color, from the item parent.
+            if ( currentParentItem != null  &&  currentParentItem.getColor() != null ) {
+                renderColor = currentParentItem.getColor();
+            }
+        }
+
         if ( renderColor == null ) {
             // If visible, leave RGB as null, and allow downstream automated-color to take place.
             // Otherwise, if not visible, ensure that the bean has a non-render setting.
