@@ -49,6 +49,11 @@ public class EJBEntityFacade implements EntityFacade {
 
     @Override
     public ArrayList<Entity> getEntitiesByName(String entityName) throws Exception {
+        return new ArrayList<Entity>(EJBFactory.getRemoteEntityBean().getEntitiesByName(SessionMgr.getSubjectKey(), entityName));
+    }
+
+    @Override
+    public ArrayList<Entity> getOwnedEntitiesByName(String entityName) throws Exception {
         return new ArrayList<Entity>(EJBFactory.getRemoteEntityBean().getUserEntitiesByName(SessionMgr.getSubjectKey(), entityName));
     }
 

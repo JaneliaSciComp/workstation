@@ -487,15 +487,27 @@ public class EntityModel {
 		}
     }
 
+    /**
+     * Retrieve entities with the given name from the database, and cache all the entities. 
+     * 
+     * @param entityName
+     * @return canonical entity instances
+     * @throws Exception
+     */
+    public List<Entity> getEntitiesByName(String entityName) throws Exception {
+        List<Entity> entities = FacadeManager.getFacadeManager().getEntityFacade().getEntitiesByName(entityName);  
+        return putOrUpdateAll(entities);
+    }
+    
 	/**
-	 * Retrieve entities with the given name from the database, and cache all the entities. 
+	 * Retrieve entities owned by the current user, with the given name from the database, and cache all the entities. 
 	 * 
 	 * @param entityName
 	 * @return canonical entity instances
 	 * @throws Exception
 	 */
-	public List<Entity> getEntitiesByName(String entityName) throws Exception {
-		List<Entity> entities = FacadeManager.getFacadeManager().getEntityFacade().getEntitiesByName(entityName);	
+	public List<Entity> getOwnedEntitiesByName(String entityName) throws Exception {
+		List<Entity> entities = FacadeManager.getFacadeManager().getEntityFacade().getOwnedEntitiesByName(entityName);	
 		return putOrUpdateAll(entities);
 	}
 	
@@ -871,7 +883,7 @@ public class EntityModel {
             Entity boardEntity = annotationFacade.createAlignmentBoard(alignmentBoardName, alignmentSpace, opticalRes, pixelRes);
             Entity alignmentBoardFolder = getCommonRootFolder(EntityConstants.NAME_ALIGNMENT_BOARDS);
             if (alignmentBoardFolder==null) {
-                for(Entity entity : getEntitiesByName(EntityConstants.NAME_ALIGNMENT_BOARDS)) {
+                for(Entity entity : getOwnedEntitiesByName(EntityConstants.NAME_ALIGNMENT_BOARDS)) {
                     if (EntityUtils.isCommonRoot(entity) && ModelMgrUtils.isOwner(entity)) {
                         alignmentBoardFolder = entity;
                         log.info("Found aboard: "+alignmentBoardFolder.getId()+" "+alignmentBoardFolder.getOwnerKey());

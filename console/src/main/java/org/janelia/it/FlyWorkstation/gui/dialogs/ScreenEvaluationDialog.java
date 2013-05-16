@@ -172,7 +172,7 @@ public class ScreenEvaluationDialog extends ModalDialog implements Accessibility
 			protected void doStuff() throws Exception {
 				
 				Entity topLevelFolder = null;
-				for(Entity entity : ModelMgr.getModelMgr().getEntitiesByName(ScreenEvalConstants.TOP_LEVEL_FOLDER_NAME)) {
+				for(Entity entity : ModelMgr.getModelMgr().getOwnedEntitiesByName(ScreenEvalConstants.TOP_LEVEL_FOLDER_NAME)) {
 					if (ModelMgrUtils.isOwner(entity)) {
 						topLevelFolder = entity;
 					}

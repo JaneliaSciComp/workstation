@@ -27,6 +27,8 @@ public interface EntityFacade {
     public Entity getEntityTree(Long entityId) throws Exception;
 
     public List<Entity> getEntitiesByName(String entityName) throws Exception;
+    
+    public List<Entity> getOwnedEntitiesByName(String entityName) throws Exception;
 
     public List<Entity> getCommonRootEntities() throws Exception;
     

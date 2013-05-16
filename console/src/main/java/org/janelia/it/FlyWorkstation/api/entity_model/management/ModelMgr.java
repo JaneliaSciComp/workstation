@@ -498,6 +498,10 @@ public class ModelMgr {
     public List<Entity> getEntitiesByName(String entityName) throws Exception {
         return entityModel.getEntitiesByName(entityName);
     }
+    
+    public List<Entity> getOwnedEntitiesByName(String entityName) throws Exception {
+        return entityModel.getOwnedEntitiesByName(entityName);
+    }
 
     public List<List<EntityData>> getPathsToRoots(Long entityId) throws Exception {
         return FacadeManager.getFacadeManager().getEntityFacade().getPathsToRoots(entityId);

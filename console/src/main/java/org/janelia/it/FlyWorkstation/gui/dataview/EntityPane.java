@@ -176,7 +176,7 @@ public class EntityPane extends JPanel {
             private List<Entity> entities;
 
             protected void doStuff() throws Exception {
-                entities = ModelMgr.getModelMgr().getEntitiesByName(entityName);
+                entities = ModelMgr.getModelMgr().getOwnedEntitiesByName(entityName);
             }
 
             protected void hadSuccess() {
