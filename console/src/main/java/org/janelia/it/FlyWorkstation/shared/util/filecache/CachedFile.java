@@ -1,9 +1,27 @@
 package org.janelia.it.FlyWorkstation.shared.util.filecache;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.Serializable;
+import java.lang.reflect.Type;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 /**
@@ -89,10 +107,11 @@ public class CachedFile implements Serializable {
 
     @Override
     public String toString() {
+
         return "CachedFile{" +
                 "webDavFile=" + webDavFile +
-                ", localFile=" + localFile.getAbsolutePath() +
-                ", metaFile=" + metaFile.getAbsolutePath() +
+                ", localFile=" + (localFile == null ? null : localFile.getAbsolutePath()) +
+                ", metaFile=" + (metaFile == null ? null : metaFile.getAbsolutePath()) +
                 '}';
     }
 
@@ -145,7 +164,7 @@ public class CachedFile implements Serializable {
                 try {
                     input.close();
                 } catch (IOException e) {
-                    LOG.warn("loadRemoteFile: failed to close " + remoteFileUrl, e);
+                    LOG.warn("loadRemoteFile: failed to close {}", remoteFileUrl, e);
                 }
             }
 
@@ -153,7 +172,7 @@ public class CachedFile implements Serializable {
                 try {
                     output.close();
                 } catch (IOException e) {
-                    LOG.warn("loadRemoteFile: failed to close " + tempFile.getAbsolutePath(), e);
+                    LOG.warn("loadRemoteFile: failed to close {}", tempFile.getAbsolutePath(), e);
                 }
             }
         }
@@ -191,8 +210,9 @@ public class CachedFile implements Serializable {
         try {
             removeEmptyCacheParent(activeRootDirectory, localFile);
         } catch (IOException e) {
-            LOG.warn("remove: failed to remove empty parent directories for " +
-                     localFile.getAbsolutePath(), e);
+            LOG.warn("remove: failed to remove empty parent directories for {}",
+                     localFile.getAbsolutePath(),
+                     e);
         }
     }
 
@@ -205,7 +225,7 @@ public class CachedFile implements Serializable {
                     LOG.warn("removeFile: failed to remove {}", file.getAbsolutePath());
                 }
             } catch (Throwable t) {
-                LOG.warn("removeFile: failed to remove " + file.getAbsolutePath(), t);
+                LOG.warn("removeFile: failed to remove {}", file.getAbsolutePath(), t);
             }
         }
     }
@@ -285,10 +305,12 @@ public class CachedFile implements Serializable {
     protected void saveMetadata()
             throws IllegalStateException {
 
-        ObjectOutputStream out = null;
+        FileOutputStream out = null;
         try {
-            out = new ObjectOutputStream(new FileOutputStream(metaFile));
-            out.writeObject(this);
+            out = new FileOutputStream(metaFile);
+            final Gson gson = getGsonInstance();
+            final String jsonValue = gson.toJson(this);
+            out.write(jsonValue.getBytes());
         } catch (Exception e) {
             throw new IllegalStateException(
                     "failed to save cache file meta data to " + metaFile.getAbsolutePath(), e);
@@ -298,7 +320,8 @@ public class CachedFile implements Serializable {
                 try {
                     out.close();
                 } catch (IOException e) {
-                    LOG.warn("saveMetadata: failed to close meta data file " + metaFile.getAbsolutePath(),
+                    LOG.warn("saveMetadata: failed to close meta data file {}",
+                             metaFile.getAbsolutePath(),
                              e);
                 }
             }
@@ -349,24 +372,86 @@ public class CachedFile implements Serializable {
     public static CachedFile loadPreviouslyCachedFile(File metaFile) {
 
         CachedFile cachedFile = null;
+        FileReader reader = null;
+        try {
+            reader = new FileReader(metaFile);
+            final Gson gson = getGsonInstance();
+            cachedFile = gson.fromJson(reader, CachedFile.class);
+        } catch (Exception e) {
+            LOG.warn("failed to load JSON cache file meta data from {}, will attempt legacy load ...",
+                     metaFile.getAbsolutePath(),
+                     e);
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    LOG.warn("loadPreviouslyCachedFile: failed to close meta data file {}",
+                             metaFile.getAbsolutePath(),
+                             e);
+                }
+            }
+        }
+
+        // Try to load legacy format if JSON format load failed.
+        // TODO: remove block after all client caches are migrated to new format
+        if (cachedFile == null) {
+            cachedFile = loadJavaSerializedMetaFile(metaFile);
+            if (cachedFile != null) {
+                try {
+                    cachedFile.saveMetadata();
+                    LOG.info("replaced java serialized data in {} with JSON formatted data",
+                             metaFile.getAbsolutePath());
+                } catch (Exception e) {
+                    LOG.warn("failed to replace java serialized data in {}",
+                             metaFile.getAbsolutePath(), e);
+                }
+            }
+        }
+
+        return cachedFile;
+    }
+
+    /**
+     * Legacy method for loading using java serialized CacheFile.
+     * This should be removed after we are sure all client caches have
+     * been migrated to the new JSON format.
+     */
+    private static CachedFile loadJavaSerializedMetaFile(File metaFile) {
+
+        CachedFile cachedFile = null;
         ObjectInputStream in = null;
         try {
             in = new ObjectInputStream(new FileInputStream(metaFile));
             cachedFile = (CachedFile) in.readObject();
         } catch (Exception e) {
-            LOG.warn("failed to load cache file meta data from " + metaFile.getAbsolutePath(), e);
+            LOG.warn("failed to load cache file meta data from {}",
+                     metaFile.getAbsolutePath(), e);
         } finally {
             if (in != null) {
                 try {
                     in.close();
                 } catch (IOException e) {
-                    LOG.warn("loadPreviouslyCachedFile: failed to close meta data file " + metaFile.getAbsolutePath(),
+                    LOG.warn("loadPreviouslyCachedFile: failed to close meta data file {}",
+                             metaFile.getAbsolutePath(),
                              e);
                 }
             }
         }
 
         return cachedFile;
+    }
+
+    private static Gson getGsonInstance() {
+        if (gsonInstance == null) {
+            GsonBuilder builder = new GsonBuilder();
+            builder.registerTypeAdapter(File.class, new FileSerializer());
+            builder.registerTypeAdapter(File.class, new FileDeserializer());
+            builder.registerTypeAdapter(URL.class, new URLSerializer());
+            builder.registerTypeAdapter(URL.class, new URLDeserializer());
+            gsonInstance = builder.create();
+        }
+        return gsonInstance;
     }
 
     private static final Logger LOG = LoggerFactory.getLogger(CachedFile.class);
@@ -381,4 +466,40 @@ public class CachedFile implements Serializable {
     private static final int BUFFER_SIZE = 2 * 1024 * 1024; // 2Mb
 
     private static final String META_FILE_SUFFIX = ".jacs-cached-file";
+
+    private static Gson gsonInstance;
+
+    private static class FileSerializer implements JsonSerializer<File> {
+        public JsonElement serialize(File src, Type typeOfSrc, JsonSerializationContext context) {
+            return new JsonPrimitive(src.getAbsolutePath());
+        }
+    }
+
+    private static class FileDeserializer implements JsonDeserializer<File> {
+        public File deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+                throws JsonParseException {
+            return new File(json.getAsJsonPrimitive().getAsString());
+        }
+    }
+
+    private static class URLSerializer implements JsonSerializer<URL> {
+        public JsonElement serialize(URL src, Type typeOfSrc, JsonSerializationContext context) {
+            return new JsonPrimitive(src.toExternalForm());
+        }
+    }
+
+    private static class URLDeserializer implements JsonDeserializer<URL> {
+        public URL deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+                throws JsonParseException {
+            final String value = json.getAsJsonPrimitive().getAsString();
+            URL url;
+            try {
+                url = new URL(value);
+            } catch (MalformedURLException e) {
+                throw new JsonParseException("failed to parse URL string '" + value + "'", e);
+            }
+            return url;
+        }
+    }
+
 }
