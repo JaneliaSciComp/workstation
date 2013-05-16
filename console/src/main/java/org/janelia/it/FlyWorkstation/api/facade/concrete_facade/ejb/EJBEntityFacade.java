@@ -107,6 +107,11 @@ public class EJBEntityFacade implements EntityFacade {
 
     @Override
     public List<Entity> getEntitiesByTypeName(String entityTypeName) throws Exception {
+        return EJBFactory.getRemoteEntityBean().getEntitiesByTypeName(SessionMgr.getSubjectKey(), entityTypeName);
+    }
+    
+    @Override
+    public List<Entity> getOwnedEntitiesByTypeName(String entityTypeName) throws Exception {
         return EJBFactory.getRemoteEntityBean().getUserEntitiesByTypeName(SessionMgr.getSubjectKey(), entityTypeName);
     }
 

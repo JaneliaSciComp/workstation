@@ -960,7 +960,7 @@ public class EntityModel {
         }
         return entities;
     }
-    
+
     /**
      * Returns all of the entities of a given type. Be very careful calling this method, since certain types have 
      * many millions of members!
@@ -970,6 +970,17 @@ public class EntityModel {
      */
     public List<Entity> getEntitiesByTypeName(String entityTypeName) throws Exception {
         return putOrUpdateAll(entityFacade.getEntitiesByTypeName(entityTypeName));
+    }
+    
+    /**
+     * Returns all of the entities of a given type, owned by the current user. Be very careful calling this method, 
+     * since certain types have many millions of members!
+     * 
+     * @param entityTypeName
+     * @return canonical entity instances
+     */
+    public List<Entity> getOwnedEntitiesByTypeName(String entityTypeName) throws Exception {
+        return putOrUpdateAll(entityFacade.getOwnedEntitiesByTypeName(entityTypeName));
     }
 
     /**

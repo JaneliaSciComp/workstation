@@ -373,7 +373,7 @@ public class SplitPickingPanel extends JPanel implements Refreshable {
 			
 			@Override
 			protected void doStuff() throws Exception {
-				List<Entity> allCrosses = ModelMgr.getModelMgr().getEntitiesByTypeName(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS);
+				List<Entity> allCrosses = ModelMgr.getModelMgr().getOwnedEntitiesByTypeName(EntityConstants.TYPE_SCREEN_SAMPLE_CROSS);
 				for(Entity cross : allCrosses) {
 					if (!cross.getOwnerKey().equals(SessionMgr.getSubjectKey())) continue;
 					crosses.add(cross);

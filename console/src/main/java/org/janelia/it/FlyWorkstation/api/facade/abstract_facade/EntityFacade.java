@@ -45,6 +45,8 @@ public interface EntityFacade {
     public List<Entity> getParentEntities(Long childEntityId) throws Exception;
 
     public List<Entity> getEntitiesByTypeName(String entityTypeName) throws Exception;
+    
+    public List<Entity> getOwnedEntitiesByTypeName(String entityTypeName) throws Exception;
 
     public Entity saveEntity(Entity entity) throws Exception;
     

@@ -122,7 +122,7 @@ public abstract class EntityListPane extends JPanel implements SearchConfigurati
 
             @Override
             protected void doStuff() throws Exception {
-                List<Entity> entities = ModelMgr.getModelMgr().getEntitiesByTypeName(entityType.getName());
+                List<Entity> entities = ModelMgr.getModelMgr().getOwnedEntitiesByTypeName(entityType.getName());
                 if (isCancelled()) return;
                 setEntities(entities);
             }

@@ -518,9 +518,13 @@ public class ModelMgr {
     public Set<Long> getParentIdsForAttribute(long childEntityId, String attributeName) throws Exception {
     	return FacadeManager.getFacadeManager().getEntityFacade().getParentIdsForAttribute(childEntityId, attributeName);
     }
-    
+
     public List<Entity> getEntitiesByTypeName(String entityTypeName) throws Exception {
         return entityModel.getEntitiesByTypeName(entityTypeName);
+    }
+    
+    public List<Entity> getOwnedEntitiesByTypeName(String entityTypeName) throws Exception {
+        return entityModel.getOwnedEntitiesByTypeName(entityTypeName);
     }
 
     public List<Entity> getDataSets() throws Exception {
