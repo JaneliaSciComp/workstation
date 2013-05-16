@@ -85,6 +85,7 @@ public class LocalFileLoader {
     public List<CachedFile> locateCachedFiles() {
 
         locallyCachedFiles.clear();
+        unregisteredFiles.clear();
 
         File[] children = activeDirectory.listFiles();
         if (children != null) {
@@ -95,6 +96,10 @@ public class LocalFileLoader {
                     registerFile(child, unregisteredChildren);
                 }
             }
+        }
+
+        if (unregisteredFiles.size() > 0) {
+            repairOrphanFiles();
         }
 
         return locallyCachedFiles;
@@ -121,7 +126,12 @@ public class LocalFileLoader {
                 for (File child : children) {
                     registerFile(child, unregisteredChildren);
                 }
-                repairOrphanFiles(unregisteredChildren);
+                for (File unregisteredChild : unregisteredChildren) {
+                    // only add files to official unregistered list
+                    if (unregisteredChild.isFile()) {
+                        unregisteredFiles.add(unregisteredChild);
+                    }
+                }
             }
 
             removeDirectoryIfEmpty(file);
@@ -131,21 +141,43 @@ public class LocalFileLoader {
         }
     }
 
-    private void repairOrphanFiles(List<File> unregisteredChildren) {
-        CachedFile rebuiltMetaFile;
-        for (File unregisteredChild : unregisteredChildren) {
-            if (unregisteredChild.isFile()) {
+    private void repairOrphanFiles() {
 
-                rebuiltMetaFile = rebuildMetaFile(unregisteredChild, true);
-
-                if (rebuiltMetaFile == null) {
-                    unregisteredFiles.add(unregisteredChild);
-                } else {
-                    locallyCachedFiles.add(rebuiltMetaFile);
+        // credentials are set on a different thread
+        // wait here a bit for them to get set so that remote existence checks succeed
+        for (int i = 0; i < 5; i++) {
+            if (webDavClient.hasCredentials()) {
+                break;
+            } else {
+                LOG.info("repairOrphanFiles: waiting 1 second for WebDAV client credentials");
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    LOG.warn("repairOrphanFiles: credential wait interrupted", e);
+                    break;
                 }
-
             }
         }
+
+        List<File> repairedFiles = new ArrayList<File>(unregisteredFiles.size());
+        CachedFile rebuiltMetaFile;
+        for (File orphan : unregisteredFiles) {
+            if (orphan.isFile()) {
+
+                rebuiltMetaFile = rebuildMetaFile(orphan, true);
+
+                if (rebuiltMetaFile != null) {
+                    locallyCachedFiles.add(rebuiltMetaFile);
+                    repairedFiles.add(orphan);
+                }
+
+            } else {
+                // should never get here, but just in case mark any directories as repaired
+                repairedFiles.add(orphan);
+            }
+        }
+
+        unregisteredFiles.removeAll(repairedFiles);
     }
 
     private void removeDirectoryIfEmpty(File directory) {

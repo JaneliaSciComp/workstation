@@ -88,7 +88,7 @@ public class WebDavClient {
         final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd-HHmmss-SSS");
         this.uploadClientStartTimestamp = sdf.format(new Date());
 
-        this.userName = "anonymous";
+        this.userName = null;
         this.uploadCount = 0;
     }
 
@@ -137,11 +137,23 @@ public class WebDavClient {
         path.append("__");
         path.append(uploadClientHostAddress);
         path.append("__");
-        path.append(userName);
+        if (userName == null) {
+            path.append("anonymous");
+        } else {
+            path.append(userName);
+        }
         path.append("__");
         path.append(incrementUploadCount());
         path.append('/');
         return path.toString();
+    }
+
+    /**
+     * @return true if the credentials for this client have been set;
+     *         otherwise false.
+     */
+    public boolean hasCredentials() {
+        return userName != null;
     }
 
     /**

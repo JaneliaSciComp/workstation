@@ -49,6 +49,11 @@ public class MockWebDavClient extends WebDavClient {
     }
 
     @Override
+    public boolean hasCredentials() {
+        return true;
+    }
+
+    @Override
     public void setCredentials(UsernamePasswordCredentials credentials) {
         // ignore
     }

@@ -474,6 +474,8 @@ public class LocalFileCache {
      */
     private void loadCacheFromFilesystem() {
 
+        LOG.info("loadCacheFromFilesystem: starting load");
+
         LocalFileLoader loader = new LocalFileLoader(activeDirectory, webDavClient);
         final List<CachedFile> cachedFiles = loader.locateCachedFiles();
         for (CachedFile cachedFile : cachedFiles) {
