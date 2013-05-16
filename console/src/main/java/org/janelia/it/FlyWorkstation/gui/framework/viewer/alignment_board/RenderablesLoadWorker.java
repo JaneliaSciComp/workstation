@@ -173,7 +173,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         neuronFragmentLoader.setAcceptors(acceptors);
 
         compartmentLoader = new MaskChanMultiFileLoader();
-        compartmentLoader.setAcceptors(/*Arrays.<MaskChanDataAcceptorI>asList(maskTextureBuilder)*/ acceptors );
+        compartmentLoader.setAcceptors( acceptors );
 
         if ( loadFiles ) {
             multiThreadedDataLoad(renderableDatas);
@@ -214,8 +214,8 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
                 resolver = new CacheFileResolver();
             }
 
-            sequentialFileLoad( metaDatas );
-            //multiThreadedFileLoad( metaDatas, MAX_FILE_LOAD_THREADS );
+            //sequentialFileLoad( metaDatas );
+            multiThreadedFileLoad( metaDatas, MAX_FILE_LOAD_THREADS );
 
             compartmentLoader.close();
             neuronFragmentLoader.close();
