@@ -166,7 +166,12 @@ public class AlignedItem extends EntityWrapper {
      * @throws Exception
      */
     public void setColor(Color color) throws Exception {
-        final String rgbHex = Integer.toHexString(color.getRGB()).substring(2);    
-        setColorHex(rgbHex);
+        if ( color == null ) {
+            setColorHex( null );
+        }
+        else {
+            final String rgbHex = Integer.toHexString(color.getRGB()).substring(2);
+            setColorHex(rgbHex);
+        }
     }
 }
