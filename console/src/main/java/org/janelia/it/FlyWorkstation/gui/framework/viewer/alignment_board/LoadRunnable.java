@@ -23,7 +23,7 @@ public class LoadRunnable implements Runnable {
     public void run() {
         try {
             volumeLoader.loadVolume(metaData);
-            System.out.println( "Finished loading " + metaData.getMaskPath() );
+            //System.out.println( "Finished loading " + metaData.getMaskPath() );
         } catch ( Exception ex ) {
             ex.printStackTrace();
             if ( barrier != null )
