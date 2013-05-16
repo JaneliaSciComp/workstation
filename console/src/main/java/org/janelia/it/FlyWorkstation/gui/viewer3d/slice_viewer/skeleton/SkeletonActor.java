@@ -40,8 +40,8 @@ implements GLActor
 
 	private int vertexCount = 3;
 	private FloatBuffer vertices;
-	private int vbo;
-	private int vao, ibo;
+	private int vbo = -1;
+	private int ibo = -1;
 	private IntBuffer edgeIndices;
 	private boolean edgesNeedCopy = false;
 	private OutlineShader edgeShader = new OutlineShader();
@@ -99,14 +99,22 @@ implements GLActor
 	        edgesNeedCopy = false;
 	        // System.out.println("update buffer data");
 		}
-        gl.glColor4f(0, 1, 1, 1); // cyan
 		edgeShader.load(gl);
-		gl.glLineWidth(4.0f);
 
         gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, vbo );
         // TODO use vertex buffer object, not just a vertex array
         // gl.glDrawArrays(GL2.GL_LINE_STRIP, 0, vertexCount);
         gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, ibo); // This shouldn't be necessary
+        // wider black line
+		gl.glLineWidth(5.0f);
+        gl.glColor4f(0, 0, 0, 0.7f); // black
+        gl.glDrawElements(GL2.GL_LINES, 
+        		edgeIndices.capacity(), 
+        		GL2.GL_UNSIGNED_INT, 
+        		0L);
+        // narrower white line
+		gl.glLineWidth(3.0f);
+        gl.glColor4f(1, 1, 1, 0.7f); // white
         gl.glDrawElements(GL2.GL_LINES, 
         		edgeIndices.capacity(), 
         		GL2.GL_UNSIGNED_INT, 
@@ -158,6 +166,8 @@ implements GLActor
 	public void display(GL2 gl) {
 		if (vertexCount <= 0)
 			return;
+		if (vbo == -1)
+			init(gl);
 
 		// System.out.println("painting skeleton");
 		displayEdges(gl);
@@ -286,10 +296,9 @@ implements GLActor
         gl.glDisable(GL2.GL_TEXTURE_2D);
         // Create a buffer object for edge indices
         int ix[] = {0, 0, 0};
-        gl.glGenBuffers( 3, ix, 0 );
+        gl.glGenBuffers( 2, ix, 0 );
         vbo = ix[0];
-        vao = ix[1];
-        ibo = ix[2];
+        ibo = ix[1];
         //
 		PassThroughTextureShader.checkGlError(gl, "load anchor texture");
 	}
@@ -298,7 +307,8 @@ implements GLActor
 	public void dispose(GL2 gl) {
 		int ix1[] = {anchorTextureId};
 		gl.glDeleteTextures(1, ix1, 0);
-		int ix2[] = {vbo, vao, ibo};
-		gl.glDeleteBuffers(3, ix2, 0);
+		int ix2[] = {vbo, ibo};
+		gl.glDeleteBuffers(2, ix2, 0);
+		anchorTextureId = vbo = ibo = -1;
 	}
 }

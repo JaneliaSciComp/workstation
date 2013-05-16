@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action;
 import java.awt.event.MouseEvent;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Anchor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton;
 
 public class TraceMode extends BasicMouseMode implements MouseMode 
@@ -24,6 +25,33 @@ public class TraceMode extends BasicMouseMode implements MouseMode
 			// System.out.println("Trace click "+xyz);
 			skeleton.addAnchorAtXyz(xyz);
 		}
+	}
+	
+	// Amplify size of anchor when hovered
+	@Override
+	public void mouseMoved(MouseEvent event) {
+		super.mouseMoved(event);
+		Vec3 xyz = worldFromPixel(event.getPoint());
+		int pixelRadius = 3;
+		double worldRadius = pixelRadius / camera.getPixelsPerSceneUnit();
+		// TODO - if this gets slow, use a more efficient search structure, like an octree
+		// Find smallest squared distance
+		double cutoff = worldRadius * worldRadius;
+		double minDist2 = 10 * cutoff; // start too big
+		Anchor closest = null;
+		for (Anchor a : skeleton.getAnchors()) {
+			double d2 = (a.getLocation().minus(xyz)).normSqr();
+			if (d2 > cutoff)
+				continue;
+			if (d2 >= minDist2)
+				continue;
+			minDist2 = d2;
+			closest = a;
+		}
+		if (closest == null)
+			return;
+		System.out.println("Found close anchor");
+		// TODO
 	}
 
 }

@@ -1,7 +1,7 @@
 #version 120 // max supported on Snow Leopard
 
-// pass-through vertex shader intended to recapitulate the 
-// fixed-function OpenGL pipeline
+// Sometimes one anchor gets highlighted, when the mouse hovers over it.
+uniform int highlightAnchorIndex = -1;
 
 void main(void)
 {

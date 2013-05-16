@@ -1,6 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton;
 
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
