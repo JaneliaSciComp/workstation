@@ -69,6 +69,13 @@ public class ABContextDataSource implements RenderableDataSourceI {
                     for ( AlignedItem item: childItems ) {
                         if ( item.getItemWrapper() instanceof Neuron) {
                             liveFileCount += getRenderableData(rtnVal, nextTranslatedNum++, false, item);
+                            if ( item.getColor() == null  &&  alignedItem.getColor() != null ) {
+                                try {
+                                    item.setColor( alignedItem.getColor() );
+                                } catch ( Exception ex ) {
+                                    throw new RuntimeException( ex );
+                                }
+                            }
                         }
                     }
                 }
@@ -166,12 +173,21 @@ public class ABContextDataSource implements RenderableDataSourceI {
         }
 
         // Establish the fragment renderables.
-        //  TEMP: just using the aligned items for coloring, not data.
         Collection<AlignedItem> neuronFragments = new ArrayList<AlignedItem>();
         for ( AlignedItem item: context.getAlignedItems() ) {
             for ( AlignedItem childItem: item.getAlignedItems() ) {
-                if ( childItem.isVisible() )
+                if ( childItem.isVisible() ) {
                     neuronFragments.add( childItem );
+                    // Inherit parent coloring from sample, if it exists.
+                    if ( childItem.getColor() == null  &&  ( item.getColor() != null ) ) {
+                        try {
+                            childItem.setColor( item.getColor() );
+                        } catch ( Exception ex ) {
+                            ex.printStackTrace();
+                            throw new RuntimeException( ex );
+                        }
+                    }
+                }
             }
         }
 

@@ -63,7 +63,7 @@ public class ChannelInterpreterToByte implements ChannelInterpreterI {
         }
 
         // Pad out to the end, to create the alpha byte.
-        if ( targetChannelMetaData.channelCount == ( srcChannelMetaData.channelCount + 1 ) ) {
+        if ( targetChannelMetaData.channelCount >= ( srcChannelMetaData.channelCount + 1 ) ) {
             volumeData[ targetPos + targetChannelMetaData.channelCount - 1 ] = (byte)255;
         }
     }

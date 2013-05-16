@@ -357,12 +357,12 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     }
 
     private void printItemChanged(AlignedItem alignedItem, String changeType) {
-        log.info("Alignment board item changed");
-        log.info("* Change Type: "+changeType);
-        log.info("* Item Alias: "+alignedItem.getName());
-        log.info("* Item Name: "+alignedItem.getItemWrapper().getName());
-        log.info("* Item Visibility: "+alignedItem.isVisible());
-        log.info("* Item Color: "+alignedItem.getColor()+" (hex="+alignedItem.getColorHex()+")");
+        log.debug("Alignment board item changed");
+        log.debug("* Change Type: {}", changeType);
+        log.debug("* Item Alias: {}", alignedItem.getName());
+        log.debug("* Item Name: {}", alignedItem.getItemWrapper().getName());
+        log.debug("* Item Visibility: {}", alignedItem.isVisible());
+        log.debug("* Item Color: {} (hex={})", alignedItem.getColor(), alignedItem.getColorHex() );
     }
 
     private void establishObserver() {
