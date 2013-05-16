@@ -137,7 +137,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
             loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList(textureBuilder) );
         }
         else {
-            MaskChanDataAcceptorI filter = new FilteringAcceptorDecorator(textureBuilder, paramBean.getCropCoords() );
+            MaskChanDataAcceptorI filter = new FilteringAcceptorDecorator( textureBuilder, paramBean.getCropCoords() );
             loader.setAcceptors( Arrays.<MaskChanDataAcceptorI>asList( filter ) );
         }
 
