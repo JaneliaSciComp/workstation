@@ -21,6 +21,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZoomMaxAct
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZoomMouseModeAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZoomOutAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZoomScrollModeAction;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
@@ -100,7 +101,9 @@ public class QuadViewUi extends JPanel
 	private final Action advanceZSlicesAction = new AdvanceZSlicesAction(sliceViewer, sliceViewer, 10);
 	private final Action goBackZSlicesAction = new GoBackZSlicesAction(sliceViewer, sliceViewer, -10);
 	//
-	private final Action traceMouseModeAction = new TraceMouseModeAction(sliceViewer);
+	private Skeleton skeleton = new Skeleton();
+	private final Action traceMouseModeAction = new TraceMouseModeAction(
+			sliceViewer, skeleton);
 	// 
 	private final Action clearCacheAction = new AbstractAction() {
 		private static final long serialVersionUID = 1L;
@@ -221,6 +224,7 @@ public class QuadViewUi extends JPanel
         // 
         collectGarbageAction.putValue(Action.NAME, "Collect Garbage");
         sliceViewer.statusMessageChanged.connect(setStatusMessageSlot);
+        sliceViewer.setSkeleton(skeleton);
 	}
 
 	private void setupUi(JFrame parentFrame, boolean overrideFrameMenuBar) {

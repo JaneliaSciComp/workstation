@@ -15,7 +15,7 @@ public class PassThroughTextureShader extends AbstractShader
 	protected static GLU glu = new GLU();
 	private static Logger logger = LoggerFactory.getLogger(PassThroughTextureShader.class);
 
-	static protected void checkGlError(GL2 gl, String message) 
+	static public void checkGlError(GL2 gl, String message) 
 	{
         int errorNum = gl.glGetError();
         if (errorNum == GL2.GL_NO_ERROR)

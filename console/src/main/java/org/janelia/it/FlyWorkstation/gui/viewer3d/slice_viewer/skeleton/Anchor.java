@@ -28,16 +28,13 @@ public class Anchor {
 	}
 	
 	public boolean addNeighbor(Anchor neighbor) {
-		boolean result = true; // start optimistic
 		if (neighbor == null)
-			result = false;
-		else {
-			if (! neighbors.contains(this))
-				neighbors.add(neighbor);
-			if (! neighbor.addNeighbor(this))
-				result = false; // ensure reciprocity
-		}
-		return result;
+			return false;
+		if (neighbors.contains(neighbor))
+			return false;
+		neighbors.add(neighbor);
+		neighbor.addNeighbor(this); // ensure reciprocity
+		return true;
 	}
 
 	public Vec3 getLocation() {

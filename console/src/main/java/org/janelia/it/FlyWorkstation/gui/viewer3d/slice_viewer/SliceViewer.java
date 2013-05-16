@@ -16,6 +16,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.PanMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.WheelMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZScanMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.SkeletonActor;
 
 import javax.media.opengl.GLProfile;
 import javax.swing.JOptionPane;
@@ -52,6 +53,7 @@ implements MouseModalWidget, VolumeViewer
 	protected SliceRenderer renderer = new SliceRenderer();
 	protected Viewport viewport = renderer.getViewport();
 	protected RubberBand rubberBand = new RubberBand();
+	protected SkeletonActor skeletonActor = new SkeletonActor();
 	
 	// TODO - use a factory to choose the particular volumeimage
 	// protected PracticeBlueVolume volume0 = new PracticeBlueVolume();
@@ -64,8 +66,6 @@ implements MouseModalWidget, VolumeViewer
 	protected SliceActor volumeActor = new SliceActor(tileServer);
 	private ImageColorModel imageColorModel;
 	private BasicMouseMode pointComputer = new BasicMouseMode();
-	
-	private List<Skeleton> skeletons;
 	
 	public Signal1<URL> getFileLoadedSignal() {
 		return fileLoadedSignal;
@@ -103,19 +103,24 @@ implements MouseModalWidget, VolumeViewer
 		wheelMode.setComponent(this);
 		// gray background for testing
 		// this.renderer.setBackgroundColor(new Color(0.5f, 0.5f, 0.5f, 0.0f));
+		// renderer.setBackgroundColor(Color.white);
 		// black background for production
-		this.renderer.setBackgroundColor(Color.black);
+		renderer.setBackgroundColor(Color.black);
         setPreferredSize( new Dimension( 600, 600 ) );
         rubberBand.changed.connect(repaintSlot);
         setToolTipText("Double click to center on a point.");
         setImageColorModel(new ImageColorModel(volumeImage));
         renderer.addActor(volumeActor);
-        // renderer.addActor(new SkeletonActor());
         tileServer.getViewTextureChangedSignal().connect(getRepaintSlot());
         imageColorModel.getColorModelChangedSignal().connect(getRepaintSlot());
         // Initialize pointComputer for interconverting pixelXY <=> sceneXYZ
 		pointComputer.setCamera(getCamera());
 		pointComputer.setComponent(this);
+		//
+        renderer.addActor(skeletonActor);
+        System.out.println("emit skeletonActorChangedSignal");
+        skeletonActor.skeletonActorChangedSignal.connect(repaintSlot);
+		//
         resetView();
 	}
 
@@ -469,6 +474,14 @@ implements MouseModalWidget, VolumeViewer
 	public void setImageColorModel(ImageColorModel imageColorModel) {
 		this.imageColorModel = imageColorModel;
 		volumeActor.setImageColorModel(imageColorModel);
+	}
+	
+	public Skeleton getSkeleton() {
+		return skeletonActor.getSkeleton();
+	}
+	
+	public void setSkeleton(Skeleton skeleton) {
+		skeletonActor.setSkeleton(skeleton);
 	}
 
 }
