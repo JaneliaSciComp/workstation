@@ -26,7 +26,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
     private AlignmentBoardContext context;
     private String[] filenames;
 
-    private AlignedItem currentParentItem; // NOTE: use of this precludes multi-threaded use of this data source!
+    private AlignedItem currentSample; // NOTE: use of this precludes multi-threaded use of this data source!
 
     private Logger logger = LoggerFactory.getLogger( ABContextDataSource.class );
     public ABContextDataSource(String[] filenames) {
@@ -58,7 +58,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
 
             EntityWrapper itemEntity = alignedItem.getItemWrapper();
             if ( itemEntity instanceof Sample) {
-                currentParentItem = alignedItem;
+                currentSample = alignedItem;
                 Sample sample = (Sample)itemEntity;
                 Entity internalEntity = sample.getInternalEntity();
 
@@ -79,6 +79,8 @@ public class ABContextDataSource implements RenderableDataSourceI {
                 liveFileCount += getRenderableData(rtnVal, nextTranslatedNum, false, alignedItem);
             }
             else if ( itemEntity instanceof CompartmentSet) {
+                currentSample = null;
+
                 CompartmentSet compartmentSet = (CompartmentSet)itemEntity;
                 Entity internalEntity = compartmentSet.getInternalEntity();
 
@@ -346,8 +348,8 @@ public class ABContextDataSource implements RenderableDataSourceI {
         Color renderColor = item.getColor();
         if ( renderColor == null ) {
             // Second chance at the render color, from the item parent.
-            if ( currentParentItem != null  &&  currentParentItem.getColor() != null ) {
-                renderColor = currentParentItem.getColor();
+            if ( currentSample != null  &&  currentSample.getColor() != null ) {
+                renderColor = currentSample.getColor();
             }
         }
 
