@@ -118,7 +118,6 @@ implements MouseModalWidget, VolumeViewer
 		pointComputer.setComponent(this);
 		//
         renderer.addActor(skeletonActor);
-        System.out.println("emit skeletonActorChangedSignal");
         skeletonActor.skeletonActorChangedSignal.connect(repaintSlot);
 		//
         resetView();

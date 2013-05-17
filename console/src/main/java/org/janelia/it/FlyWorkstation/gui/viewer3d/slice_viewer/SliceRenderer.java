@@ -8,6 +8,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.ViewportGL;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.GLOrthoCamera;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLResource;
 
 public class SliceRenderer
 extends BaseRenderer

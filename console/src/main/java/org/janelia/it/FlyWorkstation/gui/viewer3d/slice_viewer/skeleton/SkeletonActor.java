@@ -131,6 +131,11 @@ implements GLActor
 		// Paint anchors as point sprites
 		if (vertexCount < 1)
 			return;
+		if (anchorTextureId == -1) {
+			int ids[] = {0};
+			gl.glGenTextures(1, ids, 0); // count, array, offset
+			anchorTextureId = ids[0];
+		}
 		// Vertex array is used for both lines and points
         gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
         vertices.rewind();
@@ -294,6 +299,7 @@ implements GLActor
                 GL2.GL_UNSIGNED_BYTE,
                 pixels);
         gl.glDisable(GL2.GL_TEXTURE_2D);
+
         // Create a buffer object for edge indices
         int ix[] = {0, 0, 0};
         gl.glGenBuffers( 2, ix, 0 );
@@ -305,6 +311,7 @@ implements GLActor
 
 	@Override
 	public void dispose(GL2 gl) {
+		System.out.println("dispose skeleton actor");
 		int ix1[] = {anchorTextureId};
 		gl.glDeleteTextures(1, ix1, 0);
 		int ix2[] = {vbo, ibo};

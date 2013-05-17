@@ -4,7 +4,9 @@ import javax.media.opengl.GL2;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 
-public interface GLActor {
+public interface GLActor
+extends GLResource
+{
 	/**
 	 * Renders this actor in the given OpenGL context
 	 * @param gl
