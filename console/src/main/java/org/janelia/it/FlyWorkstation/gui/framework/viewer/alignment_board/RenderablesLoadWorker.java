@@ -152,13 +152,12 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
         Collection<RenderableBean> renderableBeans = new ArrayList<RenderableBean>();
         for ( MaskChanRenderableData renderableData: renderableDatas ) {
-            renderableBeans.add( renderableData.getBean() );
+            renderableBeans.add(renderableData.getBean());
         }
 
         renderMapping.setRenderables( renderableBeans );
 
         /* Establish all volume builders for this test. */
-        ArrayList<MaskChanDataAcceptorI> acceptors = new ArrayList<MaskChanDataAcceptorI>();
 
         // Establish the means for extracting the volume mask.
         maskTextureBuilder = new RenderablesMaskBuilder( alignmentBoardSettings, renderableBeans );
@@ -166,10 +165,13 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
         // Establish the means for extracting the signal data.
         signalTextureBuilder = new RenderablesChannelsBuilder( alignmentBoardSettings, renderableBeans );
 
-        // Setup the loader to traverse all this data on demand.
-        neuronFragmentLoader = new MaskChanMultiFileLoader();
+        ArrayList<MaskChanDataAcceptorI> acceptors = new ArrayList<MaskChanDataAcceptorI>();
+
         acceptors.add(maskTextureBuilder);
         acceptors.add(signalTextureBuilder);
+
+        // Setup the loader to traverse all this data on demand.
+        neuronFragmentLoader = new MaskChanMultiFileLoader();
         neuronFragmentLoader.setAcceptors(acceptors);
 
         compartmentLoader = new MaskChanMultiFileLoader();
@@ -270,12 +272,29 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     }
 
     private void multiThreadedFileLoad( Collection<MaskChanRenderableData> metaDatas, int maxThreads ) {
-        ExecutorService threadPool = Executors.newFixedThreadPool( maxThreads );
+        ExecutorService compartmentsThreadPool = Executors.newFixedThreadPool( maxThreads );
         for ( MaskChanRenderableData metaData: metaDatas ) {
             logger.debug( "Scheduling mask path {} for load.", metaData.getMaskPath() );
-            LoadRunnable runnable = new LoadRunnable( metaData, this, null );
-            threadPool.execute( runnable );
+            if ( metaData.isCompartment() ) {
+                LoadRunnable runnable = new LoadRunnable( metaData, this, null );
+                compartmentsThreadPool.execute( runnable );
+            }
         }
+        awaitThreadpoolCompletion( compartmentsThreadPool );
+
+        ExecutorService neuronFragmentsThreadPool = Executors.newFixedThreadPool( maxThreads );
+        for ( MaskChanRenderableData metaData: metaDatas ) {
+            logger.debug( "Scheduling mask path {} for load.", metaData.getMaskPath() );
+            if ( ! metaData.isCompartment() ) {
+                LoadRunnable runnable = new LoadRunnable( metaData, this, null );
+                neuronFragmentsThreadPool.execute(runnable);
+            }
+        }
+        awaitThreadpoolCompletion( neuronFragmentsThreadPool );
+    }
+
+    /** Wait until the threadpool has completed all processing. */
+    private void awaitThreadpoolCompletion(ExecutorService threadPool) {
         try {
             // Now that the pools is laden, we call the milder shutdown, which lets us wait for completion of all.
             logger.info("Awaiting shutdown.");

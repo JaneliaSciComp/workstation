@@ -22,8 +22,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.concurrent.BrokenBarrierException;
-import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -174,7 +173,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
                 //resolver = new CacheFileResolver();
             }
 
-            multiThreadedFileLoad( metaDatas );
+            multiThreadedFileLoad( metaDatas, 10 );
 
             loader.close();
 
@@ -194,33 +193,64 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
     }
 
     private void multiThreadedFileLoad(Collection<MaskChanRenderableData> metaDatas) {
-        final CyclicBarrier loadBarrier = new CyclicBarrier( metaDatas.size() + 1 );
+        // First load the compartments.
+        final CyclicBarrier compartmentsLoadBarrier = new CyclicBarrier( metaDatas.size() + 1 );
         for ( MaskChanRenderableData metaData: metaDatas ) {
             // Multithreaded load.
-            LoadRunnable runnable = new LoadRunnable( metaData, this, loadBarrier );
-            new Thread( runnable ).start();
+            if ( metaData.isCompartment() ) {
+                LoadRunnable runnable = new LoadRunnable( metaData, this, compartmentsLoadBarrier );
+                new Thread( runnable ).start();
+            }
         }
 
+        awaitBarrier( compartmentsLoadBarrier );
+
+        // Once all compartments have been loaded, do the neuron fragments.  This gives
+        // the fragments a higher priority for volume writeback.
+        final CyclicBarrier fragmentsLoadBarrier = new CyclicBarrier( metaDatas.size() + 1 );
+        for ( MaskChanRenderableData metaData: metaDatas ) {
+            // Multithreaded load.
+            if ( ! metaData.isCompartment() ) {
+                LoadRunnable runnable = new LoadRunnable( metaData, this, fragmentsLoadBarrier );
+                new Thread( runnable ).start();
+            }
+        }
+
+        awaitBarrier( fragmentsLoadBarrier );
+    }
+
+    private void multiThreadedFileLoad( Collection<MaskChanRenderableData> metaDatas, int maxThreads ) {
+        ExecutorService compartmentsThreadPool = Executors.newFixedThreadPool(maxThreads);
+        for ( MaskChanRenderableData metaData: metaDatas ) {
+            logger.debug( "Scheduling mask path {} for load.", metaData.getMaskPath() );
+            if ( metaData.isCompartment() ) {
+                LoadRunnable runnable = new LoadRunnable( metaData, this, null );
+                compartmentsThreadPool.execute( runnable );
+            }
+        }
+        awaitThreadpoolCompletion( compartmentsThreadPool );
+
+        ExecutorService neuronFragmentsThreadPool = Executors.newFixedThreadPool( maxThreads );
+        for ( MaskChanRenderableData metaData: metaDatas ) {
+            logger.debug( "Scheduling mask path {} for load.", metaData.getMaskPath() );
+            if ( ! metaData.isCompartment() ) {
+                LoadRunnable runnable = new LoadRunnable( metaData, this, null );
+                neuronFragmentsThreadPool.execute(runnable);
+            }
+        }
+        awaitThreadpoolCompletion(neuronFragmentsThreadPool);
+    }
+
+    /** Wait until the threadpool has completed all processing. */
+    private void awaitThreadpoolCompletion(ExecutorService threadPool) {
         try {
-            loadBarrier.await();
-
-            if ( loadBarrier.isBroken() ) {
-                throw new Exception( "Load failed." );
-            }
-
-        } catch ( BrokenBarrierException bbe ) {
-            logger.error( "Barrier await failed during file load.", bbe );
-            bbe.printStackTrace();
+            // Now that the pools is laden, we call the milder shutdown, which lets us wait for completion of all.
+            logger.info("Awaiting shutdown.");
+            threadPool.shutdown();
+            threadPool.awaitTermination( 10, TimeUnit.MINUTES );
+            logger.info("Thread pool termination complete.");
         } catch ( InterruptedException ie ) {
-            logger.error( "Thread interrupted during file load.", ie );
             ie.printStackTrace();
-        } catch ( Exception ex ) {
-            logger.error( "Exception during file load.", ex );
-            ex.printStackTrace();
-        } finally {
-            if ( ! loadBarrier.isBroken() ) {
-                loadBarrier.reset(); // Signal to others.
-            }
         }
     }
 
@@ -275,6 +305,31 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
 
         public void setMethod(ControlsListener.ExportMethod method) {
             this.method = method;
+        }
+    }
+
+    /** Await completion of all other cyclic barrier players. */
+    private void awaitBarrier(CyclicBarrier loadBarrier) {
+        try {
+            loadBarrier.await();
+
+            if ( loadBarrier.isBroken() ) {
+                throw new Exception( "Load failed." );
+            }
+
+        } catch ( BrokenBarrierException bbe ) {
+            logger.error( "Barrier await failed during file load.", bbe );
+            bbe.printStackTrace();
+        } catch ( InterruptedException ie ) {
+            logger.error( "Thread interrupted during file load.", ie );
+            ie.printStackTrace();
+        } catch ( Exception ex ) {
+            logger.error( "Exception during file load.", ex );
+            ex.printStackTrace();
+        } finally {
+            if ( ! loadBarrier.isBroken() ) {
+                loadBarrier.reset(); // Signal to others.
+            }
         }
     }
 

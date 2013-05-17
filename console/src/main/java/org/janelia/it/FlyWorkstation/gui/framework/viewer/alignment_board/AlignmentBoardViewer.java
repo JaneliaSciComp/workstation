@@ -1,13 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import java.awt.BorderLayout;
+import java.awt.datatransfer.Transferable;
 import java.util.*;
 import java.util.concurrent.Callable;
 
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
@@ -34,6 +32,7 @@ import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.ArtifactType;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.Channels;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.Size;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,6 +73,44 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         ModelMgr.getModelMgr().registerOnEventBus(this);
         
         setTransferHandler(new EntityWrapperTransferHandler() {
+/*
+            @Override
+            public boolean canImport(TransferHandler.TransferSupport support) {
+                boolean rtnVal = super.canImport( support );
+                if ( rtnVal ) {
+                    Transferable transferable = support.getTransferable();
+                    try {
+                        Object o = transferable.getTransferData(getNodesFlavor());
+                        if ( o instanceof List  &&  ((List)o).size() > 0  &&  ((List) o).get( 0 ) instanceof EntityWrapper ) {
+                            List<EntityWrapper> wrappers =
+                                    (List<EntityWrapper>) o;
+                            for ( EntityWrapper wrapper: wrappers ) {
+                                if ( wrapper.getType().equals( EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
+                                    Neuron neuron = (Neuron)wrapper;
+                                }
+                                else if ( wrapper.getType().equals( EntityConstants.TYPE_COMPARTMENT ) ) {
+                                    Compartment compartment = (Compartment)wrapper;
+                                }
+                                else if ( wrapper.getType().equals( EntityConstants.TYPE_COMPARTMENT_SET ) ) {
+                                    CompartmentSet compartmentSet = (CompartmentSet)wrapper;
+                                }
+                                else if ( wrapper.getType().equals( EntityConstants.TYPE_SAMPLE ) ) {
+                                    Sample sample = (Sample)wrapper;
+                                }
+                                else {
+                                    rtnVal = false;
+                                }
+                            }
+                        }
+                    } catch ( Exception ex ) {
+                        ex.printStackTrace();
+                        ModelMgr.getModelMgr().handleException( ex );
+                    }
+                }
+                return rtnVal;
+            }
+            */
+
             @Override
             public JComponent getDropTargetComponent() {
                 return AlignmentBoardViewer.this;
