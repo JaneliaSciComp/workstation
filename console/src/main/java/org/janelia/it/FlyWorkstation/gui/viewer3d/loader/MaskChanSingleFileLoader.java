@@ -453,7 +453,7 @@ public class MaskChanSingleFileLoader {
                     }
                     for ( MaskChanDataAcceptorI acceptor: channelAcceptors ) {
                         acceptor.addChannelData(
-                                allChannelBytes, final1DCoord, xyzCoords[ 0 ], xyzCoords[ 1 ], xyzCoords[ 2 ],
+                                allChannelBytes, final1DCoord, xyzCoords[ 0 ], finalYCoord, xyzCoords[ 2 ],
                                 channelMetaData
                         );
                     }
