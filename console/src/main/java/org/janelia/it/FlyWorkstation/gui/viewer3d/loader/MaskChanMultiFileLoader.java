@@ -26,6 +26,7 @@ public class MaskChanMultiFileLoader {
 
     private VolumeConsistencyChecker checker = new VolumeConsistencyChecker();
     private boolean enforcePadding;
+    private boolean dimWriteback;
 
     private Logger logger = LoggerFactory.getLogger( MaskChanMultiFileLoader.class );
 
@@ -66,6 +67,9 @@ public class MaskChanMultiFileLoader {
         if ( ! enforcePadding ) {
             singleFileLoader.setAxialLengthDivisibility( 1 );
         }
+        if ( dimWriteback ) {
+            singleFileLoader.setIntensityDivisor(10);
+        }
         singleFileLoader.read( maskInputStream, channelStream );
 
         // Accumulate information for final sanity check.
@@ -103,5 +107,9 @@ public class MaskChanMultiFileLoader {
 
     public void setCheckForConsistency(boolean checkForConsistency) {
         this.checkForConsistency = checkForConsistency;
+    }
+
+    public void setDimWriteback(boolean dimWriteback) {
+        this.dimWriteback = dimWriteback;
     }
 }

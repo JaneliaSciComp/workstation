@@ -1,7 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.loader;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
-import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,11 +56,11 @@ public class MaskChanSingleFileLoader {
     private ChannelMetaData channelMetaData;
 
     private int dimensionOrder = -1;
+    private int intensityDivisor = 1;
     private Long totalVoxels;
 
     private long srcSliceSize;
     private long targetSliceSize;
-
 
     private Collection<MaskChanDataAcceptorI> maskAcceptors;
     private Collection<MaskChanDataAcceptorI> channelAcceptors;
@@ -109,6 +108,10 @@ public class MaskChanSingleFileLoader {
 
     public void setAxialLengthDivisibility( int minDivisibility ) {
         minimumAxialDivisibility = minDivisibility;
+    }
+
+    public void setIntensityDivisor(int intensityDivisor) {
+        this.intensityDivisor = intensityDivisor;
     }
 
     public void read( InputStream maskInputStream, InputStream channelStream )
@@ -444,7 +447,7 @@ public class MaskChanSingleFileLoader {
                             for ( int j=0; j < channelMetaData.byteCount; j++ ) {
                                 //                                                   REVERSING byte order for Java
                                 int targetOffset = (i * channelMetaData.byteCount) + channelMetaData.byteCount - j - 1;
-                                allChannelBytes[ targetOffset ] = nextChannelData[ (cummulativeVoxelsReadCount * channelMetaData.byteCount) + j ];
+                                allChannelBytes[ targetOffset ] = (byte)(nextChannelData[ (cummulativeVoxelsReadCount * channelMetaData.byteCount) + j ] / intensityDivisor);
                             }
                         }
                         else {

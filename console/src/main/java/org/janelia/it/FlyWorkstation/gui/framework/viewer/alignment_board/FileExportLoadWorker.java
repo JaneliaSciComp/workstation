@@ -94,6 +94,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
 
         // Iterating through these files will cause all the relevant data to be loaded into
         // the acceptors.
+        loader.setDimWriteback( maskChanRenderableData.isCompartment() );
         loader.read(maskChanRenderableData.getBean(), maskStream, channelStream);
         maskStream.close();
 
