@@ -55,6 +55,7 @@ public class ModelMgr {
     
     private static ModelMgr modelManager = new ModelMgr();
     private ThreadQueue threadQueue;
+    private ThreadQueue notificationQueue;
 
     private final EventBus modelEventBus;
     private final EntityModel entityModel;
@@ -998,5 +999,20 @@ public class ModelMgr {
         }
         return threadQueue;
     }
+
+    public ThreadQueue getNotificationQueue() {
+        if (notificationQueue==null)
+            if (isMultiThreaded())  notificationQueue=new ThreadQueue(1,"NotificationThreads",Thread.MIN_PRIORITY,false);
+            else notificationQueue=new ThreadQueue(0,"NotificationThreads",Thread.NORM_PRIORITY,false);
+        return notificationQueue;
+    }
+
+    public boolean isMultiThreaded() {
+//        String mt = modelMgrResourceBundle.getString("MultiThreadedServerCalls");
+//        return mt != null && mt.equalsIgnoreCase("TRUE");
+        return true;
+    }
+
+
 
 }

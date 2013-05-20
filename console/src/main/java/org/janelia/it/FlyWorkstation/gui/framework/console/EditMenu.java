@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
+import org.janelia.it.FlyWorkstation.api.entity_model.access.observer.ModifyManagerObserverAdapter;
+import org.janelia.it.FlyWorkstation.api.entity_model.management.ModifyMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.shared.file_chooser.FileChooser;
@@ -46,31 +48,31 @@ public class EditMenu extends JMenu {
         setText("Edit");
         this.browser = browser;
         this.setMnemonic('E');
-//        menuUnDo = new JMenuItem("Undo", 'U');
-//        menuUnDo.setHorizontalTextPosition(SwingConstants.RIGHT);
-//        menuUnDo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z,
-//                                                       InputEvent.CTRL_MASK,
-//                                                       false));
-//        menuUnDo.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent e) {
-//                unDo_actionPerformed(e);
-//            }
-//        });
-//        menuUnDo.setEnabled(false);
+        menuUnDo = new JMenuItem("Undo", 'U');
+        menuUnDo.setHorizontalTextPosition(SwingConstants.RIGHT);
+        menuUnDo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z,
+                                                       InputEvent.CTRL_MASK,
+                                                       false));
+        menuUnDo.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                unDo_actionPerformed(e);
+            }
+        });
+        menuUnDo.setEnabled(false);
 //        add(menuUnDo);
-//
-//        menuReDo = new JMenuItem("Redo", 'R');
-//        menuReDo.setHorizontalTextPosition(SwingConstants.RIGHT);
-//        menuReDo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Y,
-//                                                       InputEvent.CTRL_MASK,
-//                                                       false));
-//
-//        menuReDo.addActionListener(new ActionListener() {
-//            public void actionPerformed(ActionEvent e) {
-//                reDo_actionPerformed(e);
-//            }
-//        });
-//        menuReDo.setEnabled(false);
+
+        menuReDo = new JMenuItem("Redo", 'R');
+        menuReDo.setHorizontalTextPosition(SwingConstants.RIGHT);
+        menuReDo.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Y,
+                                                       InputEvent.CTRL_MASK,
+                                                       false));
+
+        menuReDo.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                reDo_actionPerformed(e);
+            }
+        });
+        menuReDo.setEnabled(false);
 //        add(menuReDo);
 //        add(new JSeparator());
         cutAction = new MyCutAction();
@@ -273,64 +275,64 @@ public class EditMenu extends JMenu {
         }
     }
 
-//    private void unDo_actionPerformed(ActionEvent e) {
-//        //  try{
-//        ModifyManager.getModifyMgr().undoCommand();
-//
-//        /*
-//                            }catch(Exception ex){
-//              JOptionPane.showMessageDialog(browser,
-//              ex.getMessage() ,
-//              "Warning!", JOptionPane.PLAIN_MESSAGE);
-//        }
-//        */
-//    }
-//
-//    private void reDo_actionPerformed(ActionEvent e) {
-//        // try{
-//        ModifyManager.getModifyMgr().redoCommand();
-//
-//        /*
-//        }catch(Exception ex){
-//         JOptionPane.showMessageDialog(browser,
-//         ex.getMessage() ,
-//         "Warning!", JOptionPane.PLAIN_MESSAGE);
-//
-//        }
-//        */
-//    }
+    private void unDo_actionPerformed(ActionEvent e) {
+        //  try{
+        ModifyMgr.getModifyMgr().undoCommand();
 
-//    class CommandObserver extends ModifyManagerObserverAdapter {
-//        public void noteCanUndo(String undoString) {
-//            if (undoString != null) {
-//                menuUnDo.setText("Undo " + undoString);
-//            } else {
-//                menuUnDo.setText("Undo");
-//            }
-//
-//            menuUnDo.setEnabled(true);
-//        }
-//
-//        public void noteCanRedo(String redoString) {
-//            if (redoString != null) {
-//                menuReDo.setText("Redo " + redoString);
-//            } else {
-//                menuReDo.setText("Redo");
-//            }
-//
-//            menuReDo.setEnabled(true);
-//        }
-//
-//        public void noteNoUndo() {
-//            menuUnDo.setText("Undo");
-//            menuUnDo.setEnabled(false);
-//        }
-//
-//        public void noteNoRedo() {
-//            menuReDo.setText("Redo");
-//            menuReDo.setEnabled(false);
-//        }
-//    }
+        /*
+                            }catch(Exception ex){
+              JOptionPane.showMessageDialog(browser,
+              ex.getMessage() ,
+              "Warning!", JOptionPane.PLAIN_MESSAGE);
+        }
+        */
+    }
+
+    private void reDo_actionPerformed(ActionEvent e) {
+        // try{
+        ModifyMgr.getModifyMgr().redoCommand();
+
+        /*
+        }catch(Exception ex){
+         JOptionPane.showMessageDialog(browser,
+         ex.getMessage() ,
+         "Warning!", JOptionPane.PLAIN_MESSAGE);
+
+        }
+        */
+    }
+
+    class CommandObserver extends ModifyManagerObserverAdapter {
+        public void noteCanUndo(String undoString) {
+            if (undoString != null) {
+                menuUnDo.setText("Undo " + undoString);
+            } else {
+                menuUnDo.setText("Undo");
+            }
+
+            menuUnDo.setEnabled(true);
+        }
+
+        public void noteCanRedo(String redoString) {
+            if (redoString != null) {
+                menuReDo.setText("Redo " + redoString);
+            } else {
+                menuReDo.setText("Redo");
+            }
+
+            menuReDo.setEnabled(true);
+        }
+
+        public void noteNoUndo() {
+            menuUnDo.setText("Undo");
+            menuUnDo.setEnabled(false);
+        }
+
+        public void noteNoRedo() {
+            menuReDo.setText("Redo");
+            menuReDo.setEnabled(false);
+        }
+    }
 
     class MyCopyAction extends DefaultEditorKit.CopyAction {
         public boolean isEnabled() {
