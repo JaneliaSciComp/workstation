@@ -74,7 +74,7 @@ public class DynamicImageButton extends AnnotatedImageButton {
             @Override
             public Void call() throws Exception {
                 // Register our image height
-                if (dynamicImagePanel.getMaxSizeImage()!=null) {
+                if (dynamicImagePanel.getMaxSizeImage()!=null && dynamicImagePanel.getImage()!=null) {
                     double w = dynamicImagePanel.getImage().getIconWidth();
                     double h = dynamicImagePanel.getImage().getIconHeight();
                     setAspectRatio(w, h);
