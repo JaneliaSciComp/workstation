@@ -64,6 +64,9 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private AlignmentBoardControlsDialog settings;
     private Logger logger = LoggerFactory.getLogger(AlignmentBoardViewer.class);
 
+    private boolean loadingInProgress = false;
+    private boolean outstandingLoadRequest = false;
+
     public AlignmentBoardViewer(ViewerPane viewerPane) {
         super(viewerPane);
 
@@ -125,6 +128,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
     @Override
     public void showLoadingIndicator() {
+        setLoading( true );
         removeAll();
         add(new JLabel(Icons.getLoadingIcon()));
         revalidate();
@@ -306,6 +310,30 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             SessionMgr.getSessionMgr().handleException(error);
         }
 
+        // Here, deal with synchronization of multiple incoming requests.
+        if ( isOutstandingLoadRequest() ) {
+            // AT THIS POINT:
+            //   We are still in a loading request that is just finishing.  The user made additional requests
+            //   by making changes to the Alignment Board model itself, while the current request was being honored.
+            //   We start up another update to cover those new requests.
+
+            // Invoke another load process.
+            AlignmentBoardContext abContext = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
+
+            // There are no more outstanding load requests.  If by chance, any came in during the short time
+            // required to initiate this one, they should be covered in the "current" update.
+            setOutstandingLoadRequest( false );
+
+            // Now launch the update-to-service-outstanding, which will be time-consuming
+            setLoading( false );
+            updateBoard( abContext );
+
+        }
+        else {
+            // No outstanding request.  Just turn off the currently-loading state.
+            setLoading( false );
+        }
+
     }
 
     //---------------------------------------HELPERS
@@ -424,6 +452,22 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         }
     }
 
+    private synchronized void setLoading( boolean loadingState ) {
+        this.loadingInProgress = loadingState;
+    }
+
+    private synchronized boolean isLoading() {
+        return loadingInProgress;
+    }
+
+    private boolean isOutstandingLoadRequest() {
+        return outstandingLoadRequest;
+    }
+
+    private synchronized void setOutstandingLoadRequest(boolean outstandingLoadRequest) {
+        this.outstandingLoadRequest = outstandingLoadRequest;
+    }
+
     /**
      * This is called when the board data has been updated.
      */
@@ -435,21 +479,26 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             //    brainGlow.isRunning = false;
             //} // TEMP
 
-            if (context != null) {
-                showLoadingIndicator();
-
-                if ( mip3d == null ) {
-                    mip3d = createMip3d();
-                    wrapperPanel = createWrapperPanel( mip3d );
+            if (context != null ) {
+                if ( isLoading() ) {
+                    setOutstandingLoadRequest( true );
                 }
+                else {
+                    showLoadingIndicator();
 
-                mip3d.refresh();
+                    if ( mip3d == null ) {
+                        mip3d = createMip3d();
+                        wrapperPanel = createWrapperPanel( mip3d );
+                    }
 
-                // Here, should load volumes, for all the different items given.
-                loadWorker = new RenderablesLoadWorker(
-                        new ABContextDataSource( context ), renderMapping, this, settings.getAlignmentBoardSettings()
-                );
-                loadWorker.execute();
+                    mip3d.refresh();
+
+                    // Here, should load volumes, for all the different items given.
+                    loadWorker = new RenderablesLoadWorker(
+                            new ABContextDataSource( context ), renderMapping, this, settings.getAlignmentBoardSettings()
+                    );
+                    loadWorker.execute();
+                }
 
             }
 
