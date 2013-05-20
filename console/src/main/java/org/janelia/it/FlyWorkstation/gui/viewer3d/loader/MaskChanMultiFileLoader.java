@@ -68,7 +68,7 @@ public class MaskChanMultiFileLoader {
             singleFileLoader.setAxialLengthDivisibility( 1 );
         }
         if ( dimWriteback ) {
-            singleFileLoader.setIntensityDivisor(10);
+            singleFileLoader.setIntensityDivisor( 5 );
         }
         singleFileLoader.read( maskInputStream, channelStream );
 
