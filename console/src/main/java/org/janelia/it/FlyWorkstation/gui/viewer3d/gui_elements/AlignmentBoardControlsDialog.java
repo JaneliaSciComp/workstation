@@ -304,11 +304,11 @@ public class AlignmentBoardControlsDialog extends JDialog {
                                 " and (Y): " + ySlider.getValue() + ".." + ySlider.getUpperValue() +
                                 " and (Z): " + zSlider.getValue() + ".." + zSlider.getUpperValue()
                 );
-                searchSaveButton.setEnabled(false);
+                setButtonBusy(searchSaveButton);
                 CompletionListener buttonEnableListener = new CompletionListener() {
                     @Override
                     public void complete() {
-                        searchSaveButton.setEnabled(true);
+                        setButtonRelaxed(searchSaveButton);
                     }
                 };
 
@@ -323,12 +323,12 @@ public class AlignmentBoardControlsDialog extends JDialog {
             CompletionListener buttonEnableListener = new CompletionListener() {
                 @Override
                 public void complete() {
-                    colorSaveButton.setEnabled( true );
+                    setButtonRelaxed(colorSaveButton);
                 }
             };
 
             public void actionPerformed(ActionEvent ae) {
-                colorSaveButton.setEnabled( false );
+                setButtonBusy(colorSaveButton);
                 Collection<float[]> acceptedCords = getCombinedCropCoords();
                 fireSavebackEvent(acceptedCords, buttonEnableListener, ControlsListener.ExportMethod.color);
             }
@@ -511,6 +511,18 @@ public class AlignmentBoardControlsDialog extends JDialog {
         bottomButtonPanel.add( cancel, BorderLayout.WEST );
         bottomButtonPanel.setBorder( new EmptyBorder( insets ) );
         add(bottomButtonPanel, BorderLayout.SOUTH);
+    }
+
+    private void setButtonRelaxed(JButton saveButton) {
+        saveButton.setCursor(Cursor.getDefaultCursor());
+        saveButton.setToolTipText( null );
+        saveButton.setEnabled(true);
+    }
+
+    private void setButtonBusy(JButton saveButton) {
+        saveButton.setEnabled(false);
+        saveButton.setToolTipText("Saving...");
+        saveButton.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
     }
 
     private void resetSelectionSliders() {
