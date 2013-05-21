@@ -44,7 +44,9 @@ public class AlignmentBoardControlsDialog extends JDialog {
             "</html>";
 
     private static final String SAVE_AS_SEARCH_TIFF = "Save Search Mask";
+    private static final String SAVE_AS_SEARCH_TIFF_TOOLTIP_TEXT = SAVE_AS_SEARCH_TIFF;
     private static final String SAVE_AS_COLOR_TIFF = "Save Color TIFF";
+    private static final String SAVE_AS_COLOR_TIFF_TOOLTIP_TEXT = SAVE_AS_COLOR_TIFF;
 
     private static final String LAUNCH_AS = "Controls";
     private static final String LAUNCH_DESCRIPTION = "Present a dialog allowing users to change settings.";
@@ -52,8 +54,10 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private static final String GAMMA_TOOLTIP = "Adjust the gamma level, or brightness.";
     private static final Dimension DN_SAMPLE_DROPDOWN_SIZE = new Dimension(130, 50);
     private static final String COMMIT_CHANGES = "Commit Changes";
+    private static final String COMMIT_CHANGES_TOOLTIP_TEXT = COMMIT_CHANGES;
     private static final String DISMISS_DIALOG = "Done";
     private static final String SAVE_SCREEN_SHOT_MIP = "Screen Shot/MIP";
+    private static final String SAVE_SCREEN_SHOT_TOOLTIP_TEXT = SAVE_SCREEN_SHOT_MIP;
     private static final String DOWN_SAMPLE_RATE = "Down Sample Rate";
     private static final String USE_SIGNAL_DATA = "Use Signal Data";
     private static final String OR_BUTTON_TIP = "<html>Combine <font color='red'>this</font> selection region<br>" +
@@ -61,6 +65,8 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private static final String OR_BUTTON_LABEL = "OR";
     private static final String CLEAR_BUTTON_LABEL = "Clear Selection";
     private static final String CLEAR_BUTTON_TOOLTIP_TEXT = "Drop all sub-volume selections made in this session.";
+    private static final String NON_SELECT_BLACKOUT = "Non-selected region blacked out";
+    private static final String NON_SELECT_BLACKOUT_TOOLTIP_TEXT = NON_SELECT_BLACKOUT;
 
     private Component centering;
     private JSlider brightnessSlider;
@@ -278,7 +284,8 @@ public class AlignmentBoardControlsDialog extends JDialog {
         ySlider.setBorder( new TitledBorder( "Selection Y Bounds" ) );
         zSlider.setBorder( new TitledBorder( "Selection Z Bounds" ) );
 
-        blackoutCheckbox = new JCheckBox( "Non-selected region blacked out" );
+        blackoutCheckbox = new JCheckBox( NON_SELECT_BLACKOUT );
+        blackoutCheckbox.setToolTipText( NON_SELECT_BLACKOUT_TOOLTIP_TEXT );
         blackoutCheckbox.setSelected( false );
         blackoutCheckbox.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent ae ) {
@@ -287,6 +294,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
         });
 
         final JButton commitButton = new JButton( COMMIT_CHANGES );
+        commitButton.setToolTipText( COMMIT_CHANGES_TOOLTIP_TEXT );
         commitButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
                 readyForOutput = true;
@@ -297,6 +305,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
         commitButton.setEnabled( false );
 
         final JButton searchSaveButton = new JButton( SAVE_AS_SEARCH_TIFF );
+        searchSaveButton.setToolTipText( SAVE_AS_SEARCH_TIFF_TOOLTIP_TEXT );
         searchSaveButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ae) {
                 logger.info(
@@ -319,6 +328,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
         });
 
         final JButton colorSaveButton = new JButton( SAVE_AS_COLOR_TIFF );
+        colorSaveButton.setToolTipText( SAVE_AS_COLOR_TIFF_TOOLTIP_TEXT );
         colorSaveButton.addActionListener(new ActionListener() {
             CompletionListener buttonEnableListener = new CompletionListener() {
                 @Override
@@ -335,6 +345,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
         });
 
         final JButton screenShotButton = new JButton( SAVE_SCREEN_SHOT_MIP );
+        screenShotButton.setToolTipText( SAVE_SCREEN_SHOT_TOOLTIP_TEXT );
         screenShotButton.addActionListener(new ActionListener() {
             CompletionListener buttonEnableListener = new CompletionListener() {
                 @Override
@@ -458,7 +469,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
         downSampleRateDropdown.setPreferredSize(DN_SAMPLE_DROPDOWN_SIZE);
 
         GridBagConstraints signalDataConstraints = new GridBagConstraints(
-                1, 1, 1, 1, 0.0, 0.0, GridBagConstraints.NORTHEAST, GridBagConstraints.VERTICAL, insets, 0, 0
+                1, 1, 2, 1, 0.0, 0.0, GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, insets, 0, 0
         );
 
         GridBagConstraints commitBtnConstraints = new GridBagConstraints(
