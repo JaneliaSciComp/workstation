@@ -495,7 +495,27 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         rtnVal.setLayout( new BorderLayout() );
         rtnVal.add( mip3d, BorderLayout.CENTER );
 
-        JPanel buttonPanel = new JPanel();
+        JPanel buttonPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics grphcs) {
+                Graphics2D g2d = (Graphics2D) grphcs;
+                g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON);
+
+                GradientPaint gp = new GradientPaint(
+                        0, 0,
+                        getBackground(),
+                        0, getHeight(),
+                        Color.black
+                );
+
+                g2d.setPaint(gp);
+                g2d.fillRect(0, 0, getWidth(), getHeight());
+
+                super.paintComponent(grphcs);
+            }
+        };
+        buttonPanel.setOpaque( false );
         buttonPanel.setLayout( new GridBagLayout() );
         JButton launchSettingsButton = new JButton();
         launchSettingsButton.setFocusable( false );
@@ -510,6 +530,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         );
 
         buttonPanel.add( launchSettingsButton, btnConstraints );
+//        buttonPanel.setBackground( new Color( 40, 40, 40 ) );
         rtnVal.add( buttonPanel, BorderLayout.NORTH );
         return rtnVal;
     }
