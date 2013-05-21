@@ -200,6 +200,12 @@ public class Icons {
         else if (EntityConstants.TYPE_ALIGNMENT_RESULT.equals(type)) {
             return getIcon(large ? "folder_files_large.png" : "folder_image.png");
         }
+        else if (EntityConstants.TYPE_COMPARTMENT_SET.equals(type)) {
+            return getIcon(large ? "file_large.png" : "matrix.png");
+        }
+        else if (EntityConstants.TYPE_COMPARTMENT.equals(type)) {
+            return getIcon(large ? "file_large.png" : "matrix.png");
+        }
         else if (EntityConstants.TYPE_NEURON_SEPARATOR_PIPELINE_RESULT.equals(type)) {
             return getIcon(large ? "folder_files_large.png" : "bricks.png");
         }
