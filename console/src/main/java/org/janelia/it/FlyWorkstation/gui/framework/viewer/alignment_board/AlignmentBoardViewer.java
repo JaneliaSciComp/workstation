@@ -1,8 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
-import java.awt.BorderLayout;
-import java.awt.datatransfer.Transferable;
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 import javax.swing.*;
@@ -32,7 +32,6 @@ import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.ArtifactType;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.Channels;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.Size;
 import org.janelia.it.jacs.model.entity.Entity;
-import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,44 +75,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         ModelMgr.getModelMgr().registerOnEventBus(this);
         
         setTransferHandler(new EntityWrapperTransferHandler() {
-/*
-            @Override
-            public boolean canImport(TransferHandler.TransferSupport support) {
-                boolean rtnVal = super.canImport( support );
-                if ( rtnVal ) {
-                    Transferable transferable = support.getTransferable();
-                    try {
-                        Object o = transferable.getTransferData(getNodesFlavor());
-                        if ( o instanceof List  &&  ((List)o).size() > 0  &&  ((List) o).get( 0 ) instanceof EntityWrapper ) {
-                            List<EntityWrapper> wrappers =
-                                    (List<EntityWrapper>) o;
-                            for ( EntityWrapper wrapper: wrappers ) {
-                                if ( wrapper.getType().equals( EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
-                                    Neuron neuron = (Neuron)wrapper;
-                                }
-                                else if ( wrapper.getType().equals( EntityConstants.TYPE_COMPARTMENT ) ) {
-                                    Compartment compartment = (Compartment)wrapper;
-                                }
-                                else if ( wrapper.getType().equals( EntityConstants.TYPE_COMPARTMENT_SET ) ) {
-                                    CompartmentSet compartmentSet = (CompartmentSet)wrapper;
-                                }
-                                else if ( wrapper.getType().equals( EntityConstants.TYPE_SAMPLE ) ) {
-                                    Sample sample = (Sample)wrapper;
-                                }
-                                else {
-                                    rtnVal = false;
-                                }
-                            }
-                        }
-                    } catch ( Exception ex ) {
-                        ex.printStackTrace();
-                        ModelMgr.getModelMgr().handleException( ex );
-                    }
-                }
-                return rtnVal;
-            }
-            */
-
             @Override
             public JComponent getDropTargetComponent() {
                 return AlignmentBoardViewer.this;
@@ -218,6 +179,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     public void handleBoardOpened(AlignmentBoardOpenEvent event) {
         
         AlignmentBoardContext abContext = event.getAlignmentBoardContext();
+        this.getViewerPane().setTitle( "Alignment Board: " + abContext.getInternalEntity().getName() );
         printAlignmentBoardContext(abContext);
 
         // The true update!
@@ -532,11 +494,22 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         JPanel rtnVal = new JPanel();
         rtnVal.setLayout( new BorderLayout() );
         rtnVal.add( mip3d, BorderLayout.CENTER );
+
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout( new BorderLayout() );
+        buttonPanel.setLayout( new GridBagLayout() );
         JButton launchSettingsButton = new JButton();
+        launchSettingsButton.setFocusable( false );
+        launchSettingsButton.setRequestFocusEnabled(false);
+        launchSettingsButton.setSelected(false);
+        launchSettingsButton.setFont(launchSettingsButton.getFont().deriveFont(9.0f));
         launchSettingsButton.setAction(settings.getLaunchAction());
-        buttonPanel.add(launchSettingsButton, BorderLayout.EAST);
+        buttonPanel.setBorder(null);
+
+        GridBagConstraints btnConstraints = new GridBagConstraints(
+                0, 0, 1, 1, 1.0, 1.0, GridBagConstraints.NORTHEAST, GridBagConstraints.NONE, new Insets(1,1,1,1), 0, 0
+        );
+
+        buttonPanel.add( launchSettingsButton, btnConstraints );
         rtnVal.add( buttonPanel, BorderLayout.NORTH );
         return rtnVal;
     }
