@@ -38,12 +38,13 @@ implements GLActor
 	final int intByteCount = 4;
 	final int edgeIntCount = 2;
 
+	private int hoverAnchorIndex = -1;
 	private boolean bIsGlInitialized = false;
 	
 	private int vertexCount = 3;
 	private FloatBuffer vertices;
 	private int vbo = -1;
-	private int ibo = -1;
+	private int edgeIbo = -1;
 	private IntBuffer edgeIndices;
 	private boolean edgesNeedCopy = false;
 	private OutlineShader edgeShader = new OutlineShader();
@@ -94,7 +95,7 @@ implements GLActor
 	        gl.glBufferData(GL2.GL_ARRAY_BUFFER, 
 	        		vertexCount * floatByteCount * vertexFloatCount, 
 	        		vertices, GL2.GL_STATIC_DRAW);
-	        gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, ibo);
+	        gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, edgeIbo);
 	        gl.glBufferData(GL2.GL_ELEMENT_ARRAY_BUFFER, 
 	        		edgeIndices.capacity() * intByteCount,
 	        		edgeIndices, GL2.GL_STATIC_DRAW);
@@ -106,7 +107,7 @@ implements GLActor
         gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, vbo );
         // TODO use vertex buffer object, not just a vertex array
         // gl.glDrawArrays(GL2.GL_LINE_STRIP, 0, vertexCount);
-        gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, ibo); // This shouldn't be necessary
+        gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, edgeIbo); // This shouldn't be necessary
         // wider black line
 		gl.glLineWidth(5.0f);
         gl.glColor4f(0, 0, 0, 0.7f); // black
@@ -138,8 +139,8 @@ implements GLActor
         vertices.rewind();
         gl.glVertexPointer(vertexFloatCount, GL2.GL_FLOAT, 0, vertices);			
         anchorShader.load(gl);
-        PassThroughTextureShader.checkGlError(gl, "1255");
-		anchorShader.setUniform(gl, "spriteTexture", (int)0);
+ 		anchorShader.setUniform(gl, "spriteTexture", (int)0);
+ 		anchorShader.setUniform(gl, "highlightAnchorIndex", hoverAnchorIndex);
         gl.glEnable(GL2.GL_POINT_SPRITE);
         gl.glEnable(GL2.GL_POINT_SMOOTH);
         gl.glEnable(GL2.GL_BLEND);
@@ -176,6 +177,12 @@ implements GLActor
         displayAnchors(gl);
 	}
 
+	public int getAnchorIndex(Anchor anchor) {
+		if (anchorIndices.containsKey(anchor))
+			return anchorIndices.get(anchor);
+		return -1;
+	}
+	
 	@Override
 	public BoundingBox3d getBoundingBox3d() {
 		return bb; // TODO actually populate bounding box
@@ -244,6 +251,7 @@ implements GLActor
 
 	@Override
 	public void init(GL2 gl) {
+		// Required for gl_VertexID to be found in shader
 		// System.out.println("init");
 		// compile shader
 		try {
@@ -304,7 +312,7 @@ implements GLActor
         int ix[] = {0, 0, 0};
         gl.glGenBuffers( 2, ix, 0 );
         vbo = ix[0];
-        ibo = ix[1];
+        edgeIbo = ix[1];
         //
 		PassThroughTextureShader.checkGlError(gl, "load anchor texture");
 	}
@@ -315,7 +323,14 @@ implements GLActor
 		bIsGlInitialized = false;
 		int ix1[] = {anchorTextureId};
 		gl.glDeleteTextures(1, ix1, 0);
-		int ix2[] = {vbo, ibo};
+		int ix2[] = {vbo, edgeIbo};
 		gl.glDeleteBuffers(2, ix2, 0);
+	}
+
+	public void setHoverAnchorIndex(int ix) {
+		if (ix == hoverAnchorIndex) 
+			return;
+		hoverAnchorIndex = ix;
+		// skeletonActorChangedSignal.emit(); // TODO leads to instability
 	}
 }

@@ -7,4 +7,10 @@ void main(void)
 {
     // gl_PointSize = 8.0;
     gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+    
+    /*
+    // Larger shape for hovered anchor
+    if (highlightAnchorIndex == gl_VertexID)
+        gl_PointSize = 2 * gl_PointSize;
+        */
 }

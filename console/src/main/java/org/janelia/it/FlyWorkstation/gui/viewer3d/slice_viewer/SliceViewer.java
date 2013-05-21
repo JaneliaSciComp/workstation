@@ -483,4 +483,12 @@ implements MouseModalWidget, VolumeViewer
 		skeletonActor.setSkeleton(skeleton);
 	}
 
+	public SkeletonActor getSkeletonActor() {
+		return skeletonActor;
+	}
+
+	public void setSkeletonActor(SkeletonActor skeletonActor) {
+		this.skeletonActor = skeletonActor;
+	}
+
 }

@@ -33,4 +33,12 @@ public class TraceMouseModeAction extends AbstractAction {
 		putValue(SELECTED_KEY, true);
 	}
 
+	public TraceMode getTraceMode() {
+		return traceMode;
+	}
+
+	public void setTraceMode(TraceMode traceMode) {
+		this.traceMode = traceMode;
+	}
+
 }

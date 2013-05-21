@@ -102,7 +102,7 @@ public class QuadViewUi extends JPanel
 	private final Action goBackZSlicesAction = new GoBackZSlicesAction(sliceViewer, sliceViewer, -10);
 	//
 	private Skeleton skeleton = new Skeleton();
-	private final Action traceMouseModeAction = new TraceMouseModeAction(
+	private final TraceMouseModeAction traceMouseModeAction = new TraceMouseModeAction(
 			sliceViewer, skeleton);
 	// 
 	private final Action clearCacheAction = new AbstractAction() {
@@ -225,6 +225,8 @@ public class QuadViewUi extends JPanel
         collectGarbageAction.putValue(Action.NAME, "Collect Garbage");
         sliceViewer.statusMessageChanged.connect(setStatusMessageSlot);
         sliceViewer.setSkeleton(skeleton);
+        //
+        traceMouseModeAction.getTraceMode().setActor(sliceViewer.getSkeletonActor());
 	}
 
 	private void setupUi(JFrame parentFrame, boolean overrideFrameMenuBar) {

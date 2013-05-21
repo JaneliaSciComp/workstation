@@ -5,10 +5,13 @@ import java.awt.event.MouseEvent;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Anchor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.SkeletonActor;
 
 public class TraceMode extends BasicMouseMode implements MouseMode 
 {
 	private Skeleton skeleton;
+	private SkeletonActor actor;
+	private int currentHover = -1;
 	
 	public TraceMode(Skeleton skeleton) {
 		this.skeleton = skeleton;
@@ -48,10 +51,24 @@ public class TraceMode extends BasicMouseMode implements MouseMode
 			minDist2 = d2;
 			closest = a;
 		}
-		if (closest == null)
-			return;
-		System.out.println("Found close anchor");
-		// TODO
+		int ix = -1;
+		if ((closest != null) && (actor != null))
+			ix = actor.getAnchorIndex(closest);
+		if (ix != currentHover) {
+			if (ix >= 0)
+				System.out.println("Hover anchor "+ix);
+			currentHover = ix;
+			actor.setHoverAnchorIndex(ix);
+			// TODO - update display
+		}
+	}
+
+	public void setActor(SkeletonActor actor) {
+		this.actor = actor;
+	}
+
+	public SkeletonActor getActor() {
+		return actor;
 	}
 
 }
