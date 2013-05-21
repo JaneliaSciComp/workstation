@@ -39,6 +39,7 @@ public class ViewerPane extends JPanel {
 	private String selectionCategory;
 	private JLabel titleLabel;
 	private Viewer viewer;
+    private JPanel mainTitlePane;
 
 	protected RootedEntity contextRootedEntity;
 	protected List<RootedEntity> rootedAncestors;
@@ -57,7 +58,7 @@ public class ViewerPane extends JPanel {
         titleLabel.setFont(titleLabelFont);
         titleLabel.setHorizontalAlignment(SwingConstants.LEFT);
         
-        JPanel mainTitlePane = new JPanel(new GridBagLayout());
+        mainTitlePane = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
 
         c.gridx = 0;
@@ -135,6 +136,15 @@ public class ViewerPane extends JPanel {
 	public Viewer getViewer() {
 		return viewer;
 	}
+
+    /**
+     * Exposes main title pane for adding things to that real-estate.
+     *
+     * @return pane setup in c'tor.
+     */
+    public JPanel getMainTitlePane() {
+        return mainTitlePane;
+    }
 
 	/**
 	 * Returns the selection category of this viewer in the EntitySelectionModel.
