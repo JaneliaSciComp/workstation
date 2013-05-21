@@ -61,12 +61,14 @@ public class EntityTree extends JPanel implements ActivatableView {
 
     @Override
     public void activate() {
+        log.debug("Register {} on event bus: {}",this.getClass().getName(),System.identityHashCode(this));
         ModelMgr.getModelMgr().registerOnEventBus(this);
         refresh();
     }
 
     @Override
     public void deactivate() {
+        log.debug("Unregister {} on event bus: {}",this.getClass().getName(),System.identityHashCode(this));
         ModelMgr.getModelMgr().unregisterOnEventBus(this);
     }
     
@@ -156,7 +158,7 @@ public class EntityTree extends JPanel implements ActivatableView {
 		Entity entity = event.getEntity();
 		Collection<DefaultMutableTreeNode> nodes = getNodesByEntityId(entity.getId());
 		if (nodes == null) return;
-		log.debug("Entity affecting {} nodes was changed: '{}'",nodes.size(),entity.getName());	
+		log.debug(System.identityHashCode(this)+" Entity affecting {} nodes was changed: '{}'",nodes.size(),entity.getName());	
 		
 		for(final DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
 			Entity treeEntity = getEntity(node);
@@ -175,7 +177,7 @@ public class EntityTree extends JPanel implements ActivatableView {
 		Entity entity = event.getEntity();
 		Collection<DefaultMutableTreeNode> nodes = getNodesByEntityId(entity.getId());
 		if (nodes == null) return;
-		log.debug("Entity affecting {} nodes was removed: '{}'",nodes.size(),entity.getName());	
+		log.debug(System.identityHashCode(this)+" Entity affecting {} nodes was removed: '{}'",nodes.size(),entity.getName());	
 		
 		for(DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
 			DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
@@ -193,7 +195,7 @@ public class EntityTree extends JPanel implements ActivatableView {
 		Entity entity = event.getEntity();
 		Collection<DefaultMutableTreeNode> nodes = getNodesByEntityId(entity.getId());
 		if (nodes == null) return;
-		log.debug("Entity affecting {} nodes had children loaded: '{}'",nodes.size(),entity.getName());	
+		log.debug(System.identityHashCode(this)+" Entity affecting {} nodes had children loaded: '{}'",nodes.size(),entity.getName());	
 		for(DefaultMutableTreeNode node : nodes) {
 			log.debug("Recreating children of {}",getDynamicTree().getUniqueId(node));
 			getDynamicTree().recreateChildNodes(node);	
@@ -286,9 +288,8 @@ public class EntityTree extends JPanel implements ActivatableView {
             		SwingUtilities.invokeLater(new Runnable() {
 						@Override
 						public void run() {
-		                	log.debug("expandNodeWithLazyChildren completed, from cache: {}",getEntity(node).getName());	
 		        			getDynamicTree().recreateChildNodes(node);
-		                    SwingUtilities.updateComponentTreeUI(EntityTree.this);
+		                    log.debug("expandNodeWithLazyChildren completed, from cache: {}",getEntity(node).getName());  
 		                    if (success!=null) {
 		                    	try {
 		                    		success.call();
@@ -305,7 +306,6 @@ public class EntityTree extends JPanel implements ActivatableView {
                 SimpleWorker loadingWorker = new LazyTreeNodeLoader(selectedTree, node) {
                     protected void doneLoading() {
                     	log.debug("expandNodeWithLazyChildren completed, from database: {}",getEntity(node).getName());	
-                        SwingUtilities.updateComponentTreeUI(EntityTree.this);
 	                    if (success!=null) {
 	                    	try {
 	                    		success.call();
@@ -324,13 +324,13 @@ public class EntityTree extends JPanel implements ActivatableView {
             public void loadLazyNodeData(DefaultMutableTreeNode node) throws Exception {
                 Entity entity = getEntity(node);
             	entity = ModelMgr.getModelMgr().loadLazyEntity(entity, false);
-
             }
 
             @Override
             public void recreateChildNodes(DefaultMutableTreeNode node) {
+                
                 Entity entity = getEntity(node);
-                log.debug("recreateChildNodes: {}",entity);
+                log.debug("recreateChildNodes for Node@{} (entity={})",System.identityHashCode(node),entity);
                 
                 ArrayList<EntityData> edList = new ArrayList<EntityData>(entity.getOrderedEntityData());
 
@@ -343,7 +343,6 @@ public class EntityTree extends JPanel implements ActivatableView {
                 log.trace("Adding {} children",edList.size());
                 EntityTree.this.addChildren(node, edList);
 
-                
                 // The old children (typically a LazyTreeNode) are not removed until after the new children are added
                 // in order to avoid a flickering on the tree when opening a lazy node.
                 
@@ -575,7 +574,7 @@ public class EntityTree extends JPanel implements ActivatableView {
 
         Entity entity = newEd.getChildEntity();
         String uniqueId = selectedTree.getUniqueId(newNode);
-    	log.trace("EntityTree.addNodes: {}, {}",entity,uniqueId);
+    	log.trace("EntityTree.addNodes: Node@{}, {}",System.identityHashCode(newNode),uniqueId);
 
         // Add to maps
         uniqueIdToNodeMap.put(uniqueId, newNode);
@@ -627,19 +626,24 @@ public class EntityTree extends JPanel implements ActivatableView {
     	for(int i=0; i<level; i++) {
     		indent.append("    ");
     	}
-    	
-		log.trace(indent+"EntityTree.addChildren - add to "+getEntityData(parentNode));
 
         // Test for proxies
         if (!EntityUtils.areLoaded(dataList)) {
+            log.trace(indent+"EntityTree.addChildren - add lazy node to Node@{}",System.identityHashCode(parentNode));
             selectedTree.addObject(parentNode, new LazyTreeNode());
             return 1;
+        }
+        else {
+            log.trace(indent+"EntityTree.addChildren - add children to Node@{}",System.identityHashCode(parentNode));
         }
     	
         int c = 0;
         for (EntityData entityData : dataList) {
             if (entityData.getChildEntity() != null) {
-            	if (EntityUtils.isHidden(entityData) || (entityData.getChildEntity() instanceof ForbiddenEntity) || !ModelMgrUtils.hasReadAccess(entityData.getChildEntity())) continue;
+            	if (EntityUtils.isHidden(entityData) || (entityData.getChildEntity() instanceof ForbiddenEntity) || !ModelMgrUtils.hasReadAccess(entityData.getChildEntity())) {
+            	    log.trace(indent+"EntityTree.addChildren - cannot add child because it is hidden or forbidden");
+            	    continue;
+            	}
                 addNodes(parentNode, entityData, c++, visitedEds, level+1);
             }
         }
@@ -663,7 +667,7 @@ public class EntityTree extends JPanel implements ActivatableView {
     	
     	if (entityData!=null && entity!=null) {
             String uniqueId = selectedTree.getUniqueId(node);
-        	log.trace("EntityTree.removeNode: {}, {}",entity,uniqueId);
+        	log.trace("EntityTree.removeNode: Node@{}, uniqueId={}",System.identityHashCode(node),uniqueId);
         	
         	// Remove from all maps
         	if (uniqueIdToNodeMap.get(uniqueId)==node) {

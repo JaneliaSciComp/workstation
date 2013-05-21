@@ -12,6 +12,8 @@ import javax.swing.tree.TreePath;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -22,6 +24,8 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
  */
 public class ExpansionState {
 
+    private static final Logger log = LoggerFactory.getLogger(ExpansionState.class);
+    
 	private final Set<String> expanded = new HashSet<String>();
 	private String selected;
 	
@@ -79,10 +83,15 @@ public class ExpansionState {
 		
     	if (!expand && !select) return;
     	
+    	log.debug("restoreExpansionState Node@{} ({})",System.identityHashCode(node),"expand="+expand+" select="+select);
+    	
 		if (!dynamicTree.childrenAreLoaded(node)) {
 		
-			Utils.setWaitingCursor(dynamicTree);
+		    log.debug("  children are NOT loaded, calling expandNodeWithLazyChildren");
 		    
+		    workers.add(uniqueId);
+			Utils.setWaitingCursor(dynamicTree);
+            
 			dynamicTree.expandNodeWithLazyChildren(node, new Callable<Void>() {
 				@Override
 				public Void call() throws Exception {
@@ -93,10 +102,7 @@ public class ExpansionState {
 					callSuccessFunction(success);
 					return null;
 				}
-				
 			});
-        	
-			workers.add(uniqueId);
 			
 			return;
 		}

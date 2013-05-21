@@ -131,6 +131,7 @@ public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
 								
 							});
 							expansion.restoreExpansionState(tree.getDynamicTree(), true);
+							tree.activate();
 							
 							trees.add(tree);
 							startingPaths.put(tree, selected);
@@ -139,6 +140,12 @@ public class SearchResultContextMenu extends AbstractContextMenu<Entity> {
 						entityChooser = new MultiTreeEntityChooser("Select relative", trees);
 						
 						int returnVal = entityChooser.showDialog(null);
+
+						// Dialog has closed, so we need to clean up subscriptions
+                        for(EntityTree entityTree : trees) {
+                            entityTree.deactivate();
+                        }
+                        
 		                if (returnVal != EntityChooser.CHOOSE_OPTION) return;
 						String uniqueId = entityChooser.getUniqueIds().get(0);
 						EntityTree selectedTree = entityChooser.getSelectedTree();

@@ -23,6 +23,8 @@ import javax.swing.event.TreeWillExpandListener;
 import javax.swing.tree.*;
 
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A reusable tree component with toolbar features and an extended API.
@@ -31,7 +33,9 @@ import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class DynamicTree extends JPanel implements Refreshable {
-
+    
+    private static final Logger log = LoggerFactory.getLogger(DynamicTree.class);
+    
     protected final JTree tree;
     protected boolean lazyLoading;
     protected DynamicTreeToolbar toolbar;
@@ -135,10 +139,13 @@ public class DynamicTree extends JPanel implements Refreshable {
 
         if (!isLazyLoading()) return true;
 
+        log.trace("Node@{} has {} children",System.identityHashCode(node),node.getChildCount());
+        
         boolean allLoaded = true;
         for (int i = 0; i < node.getChildCount(); i++) {
             DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) node.getChildAt(i);
             if (childNode instanceof LazyTreeNode) {
+                log.trace("Node@{} has a lazy child",System.identityHashCode(node));
                 allLoaded = false;
                 break;
             }
