@@ -3,7 +3,9 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export;
 import com.sun.media.jai.codec.ImageCodec;
 import com.sun.media.jai.codec.ImageEncoder;
 import com.sun.media.jai.codec.TIFFEncodeParam;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +19,10 @@ import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created with IntelliJ IDEA.
@@ -27,6 +33,7 @@ import java.util.Collection;
  * Allows caller to export image data suitable for GPU upload (raw volume as 1D byte array), as a TIF file.
  */
 public class TiffExporter {
+    private static final int MAX_WRITEBACK_THREADS = 5;
     private Logger logger = LoggerFactory.getLogger( TiffExporter.class );
 
     private enum VoxelType {
@@ -46,18 +53,22 @@ public class TiffExporter {
         if ( chosenFile != null ) {
             chosenFile = enforcePreferredExtension(chosenFile);
 
-            analyzeByteBuffer( texture.getTextureData() );
+            //analyzeByteBuffer( texture.getTextureData() );
             int textureSize = texture.getSz() * texture.getSy() * texture.getSx();
             logger.info( "Exporting texture {}.  Size={}", texture.getFilename(), textureSize );
 
-            VoxelType voxelType = getVoxelType( texture );
-
             Collection<BufferedImage> imageList = new ArrayList<BufferedImage>( texture.getSz() );
+            ExecutorService compartmentsThreadPool = Executors.newFixedThreadPool( MAX_WRITEBACK_THREADS );
             for ( int z = 0; z < texture.getSz(); z++ ) {
-                BufferedImage slice;
-                slice = createBufferedImage( texture, z, textureSize, voxelType );
-                imageList.add( slice );
+                SliceLoadWorker sliceLoadWorker = new SliceLoadWorker( texture, z, textureSize, imageList );
+                compartmentsThreadPool.execute( sliceLoadWorker );
+
             }
+
+            logger.info("Awaiting shutdown.");
+            compartmentsThreadPool.shutdown();
+            compartmentsThreadPool.awaitTermination( 10, TimeUnit.MINUTES );
+            logger.info("Thread pool termination complete.");
 
             OutputStream os = new BufferedOutputStream( new FileOutputStream( chosenFile ) );
             TIFFEncodeParam params = new TIFFEncodeParam();
@@ -296,6 +307,40 @@ public class TiffExporter {
         }
         for ( int i = 0; i < positionCount.length; i++ ) {
             logger.info( "Position {} has {} non-zero bytes.", i, positionCount[ i ] );
+        }
+    }
+
+    class SliceLoadWorker extends SimpleWorker {
+
+        private TextureDataI texture;
+        private int z;
+        private int textureSize;
+        private Collection<BufferedImage> imageList;
+
+        public SliceLoadWorker(
+                TextureDataI texture, int z, int textureSize, Collection<BufferedImage> imageList
+        ) {
+            this.texture = texture;
+            this.z = z;
+            this.textureSize = textureSize;
+            this.imageList = imageList;
+        }
+
+        @Override
+        protected void doStuff() throws Exception {
+            BufferedImage slice;
+            VoxelType voxelType = getVoxelType( texture );
+            slice = createBufferedImage( texture, z, textureSize, voxelType );
+            imageList.add( slice );
+        }
+
+        @Override
+        protected void hadSuccess() {
+        }
+
+        @Override
+        protected void hadError(Throwable error) {
+            SessionMgr.getSessionMgr().handleException( error );
         }
     }
 

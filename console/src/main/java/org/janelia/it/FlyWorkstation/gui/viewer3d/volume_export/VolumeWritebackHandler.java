@@ -168,7 +168,7 @@ public class VolumeWritebackHandler {
 
                 }
 
-                frequencyReport(texture);
+                //frequencyReport(texture);
             }
 
         }
