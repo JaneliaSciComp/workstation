@@ -210,24 +210,13 @@ vec4 crop(vec4 origColor)
     if ( ! inCrop )
     {
         // Not in the current user selection.  Try all saved selections.
-        int nextCoordSetLoc = 65536;
+        int nextCoordSetLoc = 65535 + 1;  // Weird OS X 4 Bug does not like 65536
 
         // Up to max possible crops, or bail-on-signal.
         for ( int i = 0; (! inCrop) && i < 192; i++ )
         {
 
             float axialStX = getAxialCoord(nextCoordSetLoc);
-//float dbgR = 0.0;
-//float dbgG = 0.0;
-//float dbgB = 0.0;
-//if ( axialStX > 0.06 )
-//{dbgR = 255.0; }
-//else if ( axialStX > 0.055 )
-//{dbgG = 255.0; }
-//else if ( axialStX > 0.05 )
-//{dbgB = 255.0;  }
-//if ( 0 == 0 )
-//{ return vec4(dbgR, dbgG, dbgB, 1.0); }
 
             float axialEnX = getAxialCoord(nextCoordSetLoc + 1);
             float axialStY = getAxialCoord(nextCoordSetLoc + 2);
@@ -256,44 +245,7 @@ vec4 crop(vec4 origColor)
         return vec4( cropOutLevel * origColor.x, cropOutLevel * origColor.y, cropOutLevel * origColor.z, 1.0 );
     }
 }
-/*
-if (nextCoordSetLoc==65560)
-return vec4(0.0,1.0,0.0,1.0);
-if (nextCoordSetLoc==65554)
-return vec4(1.0,0.0,0.0,1.0);
-if(nextCoordSetLoc==65548)
-return vec4(1.0,0.5,0.5,1.0);
-if (nextCoordSetLoc==65542)
-return vec4(0.0,1.0,1.0,1.0);
-if (nextCoordSetLoc==65536)
-return vec4(0.0,0.0,1.0,1.0);
 
-*/
-
-/*
-else{
-
-if (axialStX < 0.0001)
-{
-axialStY = 0.0;
-axialEnY = 1.0;
-axialStZ = 0.0;
-axialEnZ = 1.0;
-axialStX = 0.5;
-}
-if (axialEnX < 0.0000001)
-{
-axialStY = 0.0;
-axialEnY = 1.0;
-axialStZ = 0.0;
-axialEnZ = 1.0;
-axialEnX = 0.7;
-}
-
-}
-
-
-*/
 void main()
 {
     // NOTE: if the use of colorMask is commented away, the shader Java counterpart
