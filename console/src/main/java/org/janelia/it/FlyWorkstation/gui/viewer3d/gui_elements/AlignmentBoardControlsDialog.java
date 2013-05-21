@@ -317,7 +317,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
                 CompletionListener buttonEnableListener = new CompletionListener() {
                     @Override
                     public void complete() {
-                        setButtonRelaxed(searchSaveButton);
+                        setButtonRelaxed(searchSaveButton, SAVE_AS_SEARCH_TIFF_TOOLTIP_TEXT);
                     }
                 };
 
@@ -333,7 +333,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
             CompletionListener buttonEnableListener = new CompletionListener() {
                 @Override
                 public void complete() {
-                    setButtonRelaxed(colorSaveButton);
+                    setButtonRelaxed(colorSaveButton, SAVE_AS_COLOR_TIFF_TOOLTIP_TEXT);
                 }
             };
 
@@ -524,9 +524,9 @@ public class AlignmentBoardControlsDialog extends JDialog {
         add(bottomButtonPanel, BorderLayout.SOUTH);
     }
 
-    private void setButtonRelaxed(JButton saveButton) {
+    private void setButtonRelaxed(JButton saveButton, String tooltipText ) {
         saveButton.setCursor(Cursor.getDefaultCursor());
-        saveButton.setToolTipText( null );
+        saveButton.setToolTipText( tooltipText );
         saveButton.setEnabled(true);
     }
 
