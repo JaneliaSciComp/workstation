@@ -38,6 +38,8 @@ implements GLActor
 	final int intByteCount = 4;
 	final int edgeIntCount = 2;
 
+	private boolean bIsGlInitialized = false;
+	
 	private int vertexCount = 3;
 	private FloatBuffer vertices;
 	private int vbo = -1;
@@ -48,7 +50,7 @@ implements GLActor
 	private SpriteShader anchorShader = new SpriteShader();
 	private BoundingBox3d bb = new BoundingBox3d();
 	private BufferedImage anchorImage;
-	private int anchorTextureId;
+	private int anchorTextureId = -1;
 	private Skeleton skeleton;
 	// Vertex buffer objects need indices
 	private Map<Anchor, Integer> anchorIndices = new HashMap<Anchor, Integer>();
@@ -131,11 +133,6 @@ implements GLActor
 		// Paint anchors as point sprites
 		if (vertexCount < 1)
 			return;
-		if (anchorTextureId == -1) {
-			int ids[] = {0};
-			gl.glGenTextures(1, ids, 0); // count, array, offset
-			anchorTextureId = ids[0];
-		}
 		// Vertex array is used for both lines and points
         gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
         vertices.rewind();
@@ -171,7 +168,7 @@ implements GLActor
 	public void display(GL2 gl) {
 		if (vertexCount <= 0)
 			return;
-		if (vbo == -1)
+		if ( ! bIsGlInitialized )
 			init(gl);
 
 		// System.out.println("painting skeleton");
@@ -257,17 +254,20 @@ implements GLActor
 			return;
 		}
 		
-		// load anchor texture
-		String imageFileName = "SkeletonAnchor16.png";
-		ImageIcon anchorIcon = Icons.getIcon(imageFileName);
-		Image source = anchorIcon.getImage();
-		int w = source.getWidth(null);
-		int h = source.getHeight(null);
-		anchorImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g2d = (Graphics2D)anchorImage.getGraphics();
-		g2d.drawImage(source, 0, 0, null);
-		g2d.dispose();
-		// Generate an OpenGL texture handle for numeral distance field
+		if (anchorImage == null) {
+			// load anchor texture
+			String imageFileName = "SkeletonAnchor16.png";
+			ImageIcon anchorIcon = Icons.getIcon(imageFileName);
+			Image source = anchorIcon.getImage();
+			int w = source.getWidth(null);
+			int h = source.getHeight(null);
+			anchorImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+			Graphics2D g2d = (Graphics2D)anchorImage.getGraphics();
+			g2d.drawImage(source, 0, 0, null);
+			g2d.dispose();
+		}
+		int w = anchorImage.getWidth();
+		int h = anchorImage.getHeight();
 		int ids[] = {0};
 		gl.glGenTextures(1, ids, 0); // count, array, offset
 		anchorTextureId = ids[0];
@@ -311,11 +311,11 @@ implements GLActor
 
 	@Override
 	public void dispose(GL2 gl) {
-		System.out.println("dispose skeleton actor");
+		// System.out.println("dispose skeleton actor");
+		bIsGlInitialized = false;
 		int ix1[] = {anchorTextureId};
 		gl.glDeleteTextures(1, ix1, 0);
 		int ix2[] = {vbo, ibo};
 		gl.glDeleteBuffers(2, ix2, 0);
-		anchorTextureId = vbo = ibo = -1;
 	}
 }
