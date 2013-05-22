@@ -35,7 +35,7 @@ public class TraceMode extends BasicMouseMode implements MouseMode
 	public void mouseMoved(MouseEvent event) {
 		super.mouseMoved(event);
 		Vec3 xyz = worldFromPixel(event.getPoint());
-		int pixelRadius = 3;
+		int pixelRadius = 5;
 		double worldRadius = pixelRadius / camera.getPixelsPerSceneUnit();
 		// TODO - if this gets slow, use a more efficient search structure, like an octree
 		// Find smallest squared distance
@@ -55,8 +55,9 @@ public class TraceMode extends BasicMouseMode implements MouseMode
 		if ((closest != null) && (actor != null))
 			ix = actor.getAnchorIndex(closest);
 		if (ix != currentHover) {
-			if (ix >= 0)
-				System.out.println("Hover anchor "+ix);
+			if (ix >= 0) {
+				// System.out.println("Hover anchor "+ix);
+			}
 			currentHover = ix;
 			actor.setHoverAnchorIndex(ix);
 			// TODO - update display
