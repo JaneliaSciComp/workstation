@@ -15,7 +15,7 @@ import org.janelia.it.jacs.shared.utils.StringUtils;
  * This represents an alignment-space-specific compartment, or standardized sub volume suitable for gauging spacial
  * relationships when presented in a viewer, with other things aligned to the same space.
  */
-public class Compartment extends EntityWrapper implements Viewable2d, Masked3d, MaskIndexed {
+public class Compartment extends EntityWrapper implements Viewable2d, Masked3d, MaskIndexed, Comparable<Compartment> {
 
     public Compartment( RootedEntity compartmentEntity ) {
         super( compartmentEntity );
@@ -66,5 +66,10 @@ public class Compartment extends EntityWrapper implements Viewable2d, Masked3d, 
             rtnVal = childEntity.getValueByAttributeName( EntityConstants.ATTRIBUTE_FILE_PATH );
         }
         return rtnVal;
+    }
+
+    @Override
+    public int compareTo(Compartment o) {
+        return getName().compareTo( o.getName() );
     }
 }

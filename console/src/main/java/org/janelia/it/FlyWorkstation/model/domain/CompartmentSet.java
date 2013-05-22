@@ -65,7 +65,7 @@ public class CompartmentSet extends AlignedEntityWrapper implements Viewable2d, 
         String targetOpticalResolution = alignmentContext.getOpticalResolution();
         String targetPixelResolution = alignmentContext.getPixelResolution();
 
-        this.compartmentSet = new ArrayList<Compartment>();
+        this.compartmentSet = Collections.EMPTY_LIST;
 
         List<Entity> compartmentSets = ModelMgr.getModelMgr().getEntitiesByTypeName(EntityConstants.TYPE_COMPARTMENT_SET);
 
@@ -80,7 +80,7 @@ public class CompartmentSet extends AlignedEntityWrapper implements Viewable2d, 
             if ( targetAlignmentSpace.equals( alignmentSpaceName )  &&  targetOpticalResolution.equals( opticalResolution )  &&  targetPixelResolution.equals( pixelResolution ) ) {
                 // Found the right one.
                 log.info("Found compartment set '{}', (id={}).", compartmentSetEntity.getName(), compartmentSetEntity.getId());
-                compartmentSet = new HashSet<Compartment>();
+                compartmentSet = new TreeSet<Compartment>();
 
                 // Getting all the compartments.
                 compartmentSetEntity = ModelMgr.getModelMgr().getEntityAndChildren( compartmentSetEntity.getId() );
