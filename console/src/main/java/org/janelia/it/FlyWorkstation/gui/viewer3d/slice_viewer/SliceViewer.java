@@ -140,7 +140,7 @@ implements MouseModalWidget, VolumeViewer
 			ChannelBrightnessStats chanStats = bs.get(c);
 			// int cMin = chanStats.getMin();
 			int cMin = chanStats.estimateQuantile(0.05);
-			int cMax = chanStats.estimateQuantile(0.999);
+			int cMax = chanStats.estimateQuantile(1.0);
 			chanModel.setBlackLevel(cMin);
 			chanModel.setWhiteLevel(cMax);
 			if (chanStats.getMax() >= max) {

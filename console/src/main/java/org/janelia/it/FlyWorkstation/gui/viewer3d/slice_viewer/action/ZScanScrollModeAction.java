@@ -14,13 +14,13 @@ public class ZScanScrollModeAction extends AbstractAction
 	WheelMode zScanMode;
 	protected MouseModalWidget widget;
 
-	public ZScanScrollModeAction(MouseModalWidget widget, VolumeImage3d image) {
+	public ZScanScrollModeAction(MouseModalWidget widget, ZScanMode zScanMode) {
 		putValue(NAME, "Z-Scan");
 		putValue(SMALL_ICON, Icons.getIcon("z_stack.png"));
 		putValue(SHORT_DESCRIPTION, 
 				"Set scroll wheel mode to reveal different image slices.");
 		this.widget = widget;
-		zScanMode = new ZScanMode(image);
+		this.zScanMode = zScanMode;
 		zScanMode.setComponent(widget);
 	}
 	

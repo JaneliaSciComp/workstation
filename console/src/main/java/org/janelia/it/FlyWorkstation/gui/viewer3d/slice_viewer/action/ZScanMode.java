@@ -1,19 +1,19 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action;
 
 import java.awt.event.MouseWheelEvent;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.MouseModalWidget;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.TileFormat;
 
 public class ZScanMode 
 implements WheelMode
 {
 	BasicMouseMode mode = new BasicMouseMode();
-	private VolumeImage3d image;
+	ZScanAction zScanAction;
 
 	public ZScanMode(VolumeImage3d image) {
-		this.image = image;
+		this.zScanAction = new ZScanAction(image, mode.getCamera(), 1);
 	}
 	
 	@Override
@@ -36,33 +36,22 @@ implements WheelMode
 		if (notches == 0)
 			return;
 
-		Vec3 oldFocus = camera.getFocus();
-		double oldZ = oldFocus.getZ();
-		int oldZIndex = (int)(Math.round(oldZ / image.getZResolution()) + 0.1);
-		int sliceCount = notches;
-		int newZIndex = oldZIndex + sliceCount;
-		double newZ = newZIndex * image.getZResolution();
-		double maxZ = image.getBoundingBox3d().getMax().getZ();
-		double minZ = image.getBoundingBox3d().getMin().getZ();
-		assert maxZ >= minZ;
-		if (newZ > maxZ)
-			newZ = maxZ;
-		if (newZ < minZ)
-			newZ = minZ;
-		if (newZ == oldZ)
-			return; // no change
-		Vec3 newFocus = new Vec3(oldFocus.getX(), oldFocus.getY(), newZ);
-		// TODO - disallow camera.getFocus().setZ(), which bypasses camera signaling
-		camera.setFocus(newFocus);
+		zScanAction.setSliceCount(notches);
+		zScanAction.actionPerformed(null);
 	}
 
 	@Override
 	public void setCamera(Camera3d camera) {
 		mode.setCamera(camera);
+		zScanAction.setCamera(camera);
 	}
 
 	@Override
 	public void setComponent(MouseModalWidget widget) {
 		mode.setComponent(widget);
+	}
+	
+	public void setTileFormat(TileFormat tileFormat) {
+		zScanAction.setTileFormat(tileFormat);
 	}
 }

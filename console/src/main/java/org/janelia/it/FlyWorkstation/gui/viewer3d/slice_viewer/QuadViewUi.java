@@ -14,6 +14,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ResetColor
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ResetViewAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ResetZoomAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.TraceMouseModeAction;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZScanAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZScanMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZScanScrollModeAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZoomInAction;
@@ -78,6 +79,8 @@ public class QuadViewUi extends JPanel
 	};
 	private JLabel statusLabel = new JLabel("status area");
 	
+	ZScanMode zScanMode = new ZScanMode(sliceViewer);
+	
 	// Actions
 	private final Action openFolderAction = new OpenFolderAction(sliceViewer, sliceViewer);
 	private RecentFileList recentFileList;
@@ -87,7 +90,7 @@ public class QuadViewUi extends JPanel
 	private final Action zoomMouseModeAction = new ZoomMouseModeAction(sliceViewer);
 	private final Action panModeAction = new PanModeAction(sliceViewer);
 	private final ButtonGroup mouseModeGroup = new ButtonGroup();
-	private final Action zScanScrollModeAction = new ZScanScrollModeAction(sliceViewer, sliceViewer);
+	private final Action zScanScrollModeAction = new ZScanScrollModeAction(sliceViewer, zScanMode);
 	private final Action zoomScrollModeAction = new ZoomScrollModeAction(sliceViewer);
 	private final ButtonGroup scrollModeGroup = new ButtonGroup();
 	// zoom actions
@@ -96,10 +99,10 @@ public class QuadViewUi extends JPanel
 	private final Action zoomMaxAction = new ZoomMaxAction(camera, sliceViewer);
 	private final Action resetZoomAction = new ResetZoomAction(sliceViewer);
 	// Z scan actions
-	private final Action nextZSliceAction = new NextZSliceAction(sliceViewer, sliceViewer);
-	private final Action previousZSliceAction = new PreviousZSliceAction(sliceViewer, sliceViewer);
-	private final Action advanceZSlicesAction = new AdvanceZSlicesAction(sliceViewer, sliceViewer, 10);
-	private final Action goBackZSlicesAction = new GoBackZSlicesAction(sliceViewer, sliceViewer, -10);
+	private final ZScanAction nextZSliceAction = new NextZSliceAction(sliceViewer, sliceViewer);
+	private final ZScanAction previousZSliceAction = new PreviousZSliceAction(sliceViewer, sliceViewer);
+	private final ZScanAction advanceZSlicesAction = new AdvanceZSlicesAction(sliceViewer, sliceViewer, 10);
+	private final ZScanAction goBackZSlicesAction = new GoBackZSlicesAction(sliceViewer, sliceViewer, -10);
 	//
 	private Skeleton skeleton = new Skeleton();
 	private final TraceMouseModeAction traceMouseModeAction = new TraceMouseModeAction(
@@ -173,7 +176,7 @@ public class QuadViewUi extends JPanel
 			boolean useZScan = ((z1 - z0) > 1);
 			if (useZScan) {
 				zScanPanel.setVisible(true);
-				sliceViewer.setWheelMode(new ZScanMode(sliceViewer));
+				sliceViewer.setWheelMode(zScanMode);
 				zScanScrollModeAction.setEnabled(true);
 				zScanScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
 				int z = (int)Math.round(sliceViewer.getFocus().getZ() / sliceViewer.getZResolution());
@@ -185,6 +188,13 @@ public class QuadViewUi extends JPanel
 				zScanSlider.setMaximum(z1);
 				zScanSlider.setValue(z);
 				zScanSpinner.setModel(new SpinnerNumberModel(z, z0, z1, 1));
+				// Allow octree zsteps to depend on zoom
+				TileFormat tileFormat = sliceViewer.getTileServer().getLoadAdapter().getTileFormat();
+				zScanMode.setTileFormat(tileFormat);
+				nextZSliceAction.setTileFormat(tileFormat);
+				previousZSliceAction.setTileFormat(tileFormat);
+				advanceZSlicesAction.setTileFormat(tileFormat);
+				goBackZSlicesAction.setTileFormat(tileFormat);
 			}
 			else { // no Z scan
 				zScanPanel.setVisible(false);
@@ -227,6 +237,8 @@ public class QuadViewUi extends JPanel
         sliceViewer.setSkeleton(skeleton);
         //
         traceMouseModeAction.getTraceMode().setActor(sliceViewer.getSkeletonActor());
+        // 
+        sliceViewer.setWheelMode(zScanMode);
 	}
 
 	private void setupUi(JFrame parentFrame, boolean overrideFrameMenuBar) {
