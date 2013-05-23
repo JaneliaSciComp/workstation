@@ -84,7 +84,7 @@ void main()
     if ((tens_place > 0) && (intensity < p)) 
         discard; // number does not have this many digits
         // (except zero, which gets put in 1s place.
-    float digit = floor(10 * fract(intensity / (10*p)) + 0.01);
+    float digit = floor(10 * fract(intensity / (10*p)));
     
     vec4 pixel = texture2D(numeralTexture, vec2(0.1 * (digit + dx), dy));
     
