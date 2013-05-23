@@ -36,7 +36,7 @@ vec3 getMapCoord( float location )
 {
     float visY = floor(location / 256.0);
     float visX = (location - 256.0 * visY) / 256.0;
-    visY = visY / 260.0;
+    visY = visY / 259.1; // 260.0
     vec3 cmCoord = vec3( visX, visY, 0.0 );
     return cmCoord;
 }
@@ -160,7 +160,7 @@ float getAxialCoord(int coordSetLoc)
     // To get each coord across to the shader in a normalized float, its normalized version
     // was first multiplied by a standard value.   Note that there was an automatic division by
     // 255 in each float making up the axialCoordVec "color".  Therefore we do not divide overall
-    // by the number used to multiply on the CPU side, but rather by _that number_ dividied by 256.
+    // by the number used to multiply on the CPU side, but rather by _that number_ divided by 256.
     float axialCoord = (axialCoordVec[0]
                        + (axialCoordVec[1] * 255.1)
                        + (axialCoordVec[2] * 65535.1)
@@ -210,7 +210,7 @@ vec4 crop(vec4 origColor)
     if ( ! inCrop )
     {
         // Not in the current user selection.  Try all saved selections.
-        int nextCoordSetLoc = 65535 + 1;  // Weird OS X 4 Bug does not like 65536
+        int nextCoordSetLoc = 65535 + 1;  // Weird OS X Bug does not like 65536
 
         // Up to max possible crops, or bail-on-signal.
         for ( int i = 0; (! inCrop) && i < 192; i++ )
@@ -228,7 +228,6 @@ vec4 crop(vec4 origColor)
             {
                 break; // All-zero is NO crop-box.
             }
-
             inCrop = getInCrop(point, axialStX, axialEnX, axialStY, axialEnY, axialStZ, axialEnZ);
 
             nextCoordSetLoc += 6;
