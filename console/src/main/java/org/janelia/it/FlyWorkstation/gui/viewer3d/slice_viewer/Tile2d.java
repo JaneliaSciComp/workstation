@@ -189,7 +189,10 @@ implements GLActor
 		double tileHeight = texture.getHeight() * zoomScale * tileFormat.getVoxelMicrometers()[1];
 		gl.glBegin(GL2.GL_QUADS);
 			// draw quad
-	        double z = 0.0; // As far as OpenGL is concerned, all Z's are zero
+	        // double z = 0.0; // As far as OpenGL is concerned, all Z's are zero
+		    // Z index does not change with scale; XY do
+	        double z = getIndex().getZ() * tileFormat.getVoxelMicrometers()[2];
+	        // System.out.println("tile z "+z);
 	        double x0 = getIndex().getX() * tileFormat.getTileSize()[0] * zoomScale * tileFormat.getVoxelMicrometers()[0];
 	        double x1 = x0 + tileWidth;
 	        // Raveler tile index has origin at BOTTOM left, unlike TOP left for images and
@@ -220,7 +223,9 @@ implements GLActor
 		gl.glBegin(GL2.GL_LINE_STRIP);
 			gl.glColor3f(1.0f, 1.0f, 0.3f);
 			// draw quad
-	        double z = 0.0; // As far as OpenGL is concerned, all Z's are zero
+	        // double z = 0.0; // As far as OpenGL is concerned, all Z's are zero
+			// Z index does not change with scale; XY do
+	        double z = getIndex().getZ() * tileFormat.getVoxelMicrometers()[2];
 	        double x0 = getIndex().getX() * tileFormat.getTileSize()[0] * zoomScale * tileFormat.getVoxelMicrometers()[0];
 	        double x1 = x0 + tileWidth;
 	        // Raveler tile index has origin at BOTTOM left, unlike TOP left for images and

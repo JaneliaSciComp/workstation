@@ -1,5 +1,5 @@
 #version 120 // max supported on Snow Leopard
-#extension GL_EXT_gpu_shader4 : enable
+#extension GL_EXT_gpu_shader4 : enable // to get gl_VertexID
 
 // Sometimes one anchor gets highlighted, when the mouse hovers over it.
 uniform int highlightAnchorIndex = -1;
@@ -11,5 +11,5 @@ void main(void)
     // Larger shape for hovered anchor
     gl_PointSize = 12.0;
     if (highlightAnchorIndex == gl_VertexID)
-        gl_PointSize = 16.0; // No effect!
+        gl_PointSize = 16.0;
 }

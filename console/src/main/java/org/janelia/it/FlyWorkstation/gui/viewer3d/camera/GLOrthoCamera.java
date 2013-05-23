@@ -80,7 +80,8 @@ public class GLOrthoCamera
 		gl.glScaled(s, s, s);
 		// translate
 		Vec3 f = camera.getFocus();
-		gl.glTranslated(-f.x(),-f.y(), 0.0); // z is set by choice of tiles
+		// System.out.println("glTranslated "+f.z());
+		gl.glTranslated(-f.x(),-f.y(),-f.z());
 		isPushed = true;
 	}
 	
