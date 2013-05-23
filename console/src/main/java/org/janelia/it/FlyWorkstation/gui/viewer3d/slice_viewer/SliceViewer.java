@@ -108,7 +108,7 @@ implements MouseModalWidget, VolumeViewer
 		renderer.setBackgroundColor(Color.black);
         setPreferredSize( new Dimension( 600, 600 ) );
         rubberBand.changed.connect(repaintSlot);
-        setToolTipText("Double click to center on a point.");
+        // setToolTipText("Double click to center on a point.");
         setImageColorModel(new ImageColorModel(volumeImage));
         renderer.addActor(volumeActor);
         tileServer.getViewTextureChangedSignal().connect(getRepaintSlot());
