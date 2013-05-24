@@ -30,6 +30,7 @@ import java.util.concurrent.CyclicBarrier;
  * Time: 3:21 PM
  *
  * Takes on all tasks for pushing data into the Alignment Board Viewer, given its base entity.
+ * @deprecated now using RenderablesLoadWorker
  */
 public class ABLoadWorker extends SimpleWorker {
 
