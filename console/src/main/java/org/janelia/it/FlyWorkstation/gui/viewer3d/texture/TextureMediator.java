@@ -340,8 +340,8 @@ public class TextureMediator {
         return rtnVal;
     }
 
-    private static final int GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX = 0x9049; // NVidia
-    private static final int TEXTURE_FREE_MEMORY_ATI = 0x87FC;                      // Radeon
+    private static final int GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX = 0x9049;   // NVidia
+    private static final int TEXTURE_FREE_MEMORY_ATI = 0x87FC;                        // Radeon
 
     /**
      * Attempt to determine how much memory is free for use with textures.
@@ -356,6 +356,7 @@ public class TextureMediator {
             http://www.opengl.org/registry/specs/ATI/meminfo.txt
             http://developer.download.nvidia.com/opengl/specs/GL_NVX_gpu_memory_info.txt
          */
+        gl.glGetError(); // Clear any old errors.
         int rtnVal = Integer.MAX_VALUE;  // Default to max, in case neither returns.  No constraints against unknowns.
         IntBuffer rtnBuf = IntBuffer.allocate( 4 ); // Max required, under Radeon.
         gl.glGetIntegerv(GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX, rtnBuf);
@@ -364,14 +365,21 @@ public class TextureMediator {
             rtnVal = rtnBuf.array()[ 0 ];
         }
         else {
-            rtnBuf.rewind();
-            gl.glGetIntegerv(TEXTURE_FREE_MEMORY_ATI, rtnBuf);
-            errnum = gl.glGetError();
+            errnum = -1;
+            int stepCt = 0;
+            while ( errnum != 0 && stepCt < 10) {
+                rtnBuf.rewind();
+                gl.glGetIntegerv(TEXTURE_FREE_MEMORY_ATI + stepCt, rtnBuf);
+                errnum = gl.glGetError();
+                if ( errnum != 0 )
+                    stepCt ++;
+            }
             if ( errnum == 0 ) {
                 rtnVal = rtnBuf.array()[ 0 ];
+                logger.info( "Found a value at constant {}.", Integer.toHexString( TEXTURE_FREE_MEMORY_ATI + stepCt ) );
             }
             else {
-                logger.warn( "Neither NVidea nor Radeo video memory calls succeeded." );
+                logger.warn( "Neither NVidea nor Radeon video memory calls succeeded {}/{}.", errnum, rtnBuf.array()[0] );
             }
         }
 
