@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.util.panels;
 
 import org.janelia.it.FlyWorkstation.api.facade.facade_mgr.FacadeManager;
+import org.janelia.it.FlyWorkstation.gui.framework.console.Perspective;
 import org.janelia.it.FlyWorkstation.gui.framework.pref_controller.PrefController;
 import org.janelia.it.FlyWorkstation.gui.framework.roles.PrefEditor;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -153,7 +154,7 @@ public class DataSourceSettingsPanel extends JPanel implements PrefEditor {
             if (loginSuccess) {
                 runAsPanel.setVisible(SessionMgr.authenticatedSubjectIsInGroup("admin"));
             }
-
+            SessionMgr.getBrowser().setPerspective(Perspective.ImageBrowser);
             FacadeManager.addProtocolToUseList(FacadeManager.getEJBProtocolString());
         }
 
