@@ -88,6 +88,12 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     @Override
     public void clear() {
         clearObserver();
+        Component[] components = getViewerPane().getMainTitlePane().getComponents();
+        for ( Component component: components ) {
+            if ( component instanceof JButton ) {
+                getViewerPane().getMainTitlePane().remove( component );
+            }
+        }
     }
 
     @Override
