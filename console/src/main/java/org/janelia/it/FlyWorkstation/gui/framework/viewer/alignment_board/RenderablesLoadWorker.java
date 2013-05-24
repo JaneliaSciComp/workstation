@@ -327,6 +327,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
                 beans.add( metaData.getBean() );
             }
             renderMapping.setRenderables( beans );
+            controlCallback.renderModCompletion();
         }
 
     }

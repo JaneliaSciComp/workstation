@@ -37,4 +37,9 @@ public interface AlignmentBoardControllable {
      */
     void loadCompletion( boolean successful, boolean loadFiles, Throwable error );
 
+    /**
+     * Call this when the render update operation has been made.
+     */
+    void renderModCompletion();
+
 }

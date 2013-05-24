@@ -66,6 +66,9 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private boolean loadingInProgress = false;
     private boolean outstandingLoadRequest = false;
 
+    private boolean renderingInProgress = false;
+    private boolean outstandingRenderRequest = false;
+
     public AlignmentBoardViewer(ViewerPane viewerPane) {
         super(viewerPane);
 
@@ -298,6 +301,19 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
     }
 
+    @Override
+    public void renderModCompletion() {
+        if ( isOutstandingRenderRequest() ) {
+            setOutstandingLoadRequest( false );
+            AlignmentBoardContext abContext = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
+            setRendering( false );
+            updateRendering( abContext );
+        }
+        else {
+            setRendering( false );
+        }
+    }
+
     //---------------------------------------HELPERS
     private void printAlignmentBoardContext(AlignmentBoardContext abContext) {
         if ( log.isDebugEnabled() ) {
@@ -430,6 +446,23 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         this.outstandingLoadRequest = outstandingLoadRequest;
     }
 
+    /** Rendering synchronization, to avoid thread problems and overloading. */
+    private synchronized void setRendering( boolean rendering ) {
+        renderingInProgress = rendering;
+    }
+
+    private synchronized boolean isRendering() {
+        return renderingInProgress;
+    }
+
+    private boolean isOutstandingRenderRequest() {
+        return outstandingRenderRequest;
+    }
+
+    private synchronized void setOutstandingRenderRequest(boolean outstandingRenderRequest) {
+        this.outstandingRenderRequest = outstandingRenderRequest;
+    }
+
     /**
      * This is called when the board data has been updated.
      */
@@ -513,18 +546,24 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     /**
      * This is called when the board visibility or coloring has been change.
      */
-    private void updateRendering( AlignmentBoardContext context ) {
+    private synchronized void updateRendering( AlignmentBoardContext context ) {
         logger.info("Update-rendering called.");
 
         try {
             if (context != null) {
-                // Here, simply make the rendering change.
-                loadWorker = new RenderablesLoadWorker(
-                        new ABContextDataSource(context), renderMapping, this, settings.getAlignmentBoardSettings()
-                );
-                loadWorker.setLoadFilesFlag( Boolean.FALSE );
-                loadWorker.execute();
+                if ( isRendering() ) {
+                    setOutstandingRenderRequest( true );
+                }
+                else {
+                    setRendering( true );
 
+                    // Here, simply make the rendering change.
+                    loadWorker = new RenderablesLoadWorker(
+                            new ABContextDataSource(context), renderMapping, this, settings.getAlignmentBoardSettings()
+                    );
+                    loadWorker.setLoadFilesFlag( Boolean.FALSE );
+                    loadWorker.execute();
+                }
             }
         } catch ( Throwable th ) {
             SessionMgr.getSessionMgr().handleException( th );
