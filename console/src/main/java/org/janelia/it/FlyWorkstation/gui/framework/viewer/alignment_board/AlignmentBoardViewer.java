@@ -304,7 +304,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     @Override
     public void renderModCompletion() {
         if ( isOutstandingRenderRequest() ) {
-            setOutstandingLoadRequest( false );
+            setOutstandingRenderRequest( false );
             AlignmentBoardContext abContext = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
             setRendering( false );
             updateRendering( abContext );
@@ -546,7 +546,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     /**
      * This is called when the board visibility or coloring has been change.
      */
-    private synchronized void updateRendering( AlignmentBoardContext context ) {
+    private void updateRendering( AlignmentBoardContext context ) {
         logger.info("Update-rendering called.");
 
         try {
