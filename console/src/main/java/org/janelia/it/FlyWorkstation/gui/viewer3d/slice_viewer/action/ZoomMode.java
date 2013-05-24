@@ -25,7 +25,12 @@ implements WheelMode, MouseMode
 		setDragCursor(BasicMouseMode.createCursor("crosshair.png", 7, 7));
 		setAltCursor(BasicMouseMode.createCursor("magnify_minus_cursor.png", 8, 8));
 	}
-	
+
+	@Override
+	public String getToolTipText() {
+		return "Drag to zoom in.";
+	}
+
 	@Override
 	public MouseModalWidget getComponent() {
 		return mode.getComponent();
@@ -129,7 +134,7 @@ implements WheelMode, MouseMode
 		if (notches == 0)
 			return;
 		// compromise between sensitive wheel on my laptop and less sensitive wheel on my workstation
-		double zoomRatio = Math.pow(2.0, -notches/40.0);
+		double zoomRatio = Math.pow(2.0, -notches/20.0);
 		camera.incrementZoom(zoomRatio);
 		if (isCenterOnCursor()) {
 			Point2D dx = getComponent().getPixelOffsetFromCenter(event.getPoint());

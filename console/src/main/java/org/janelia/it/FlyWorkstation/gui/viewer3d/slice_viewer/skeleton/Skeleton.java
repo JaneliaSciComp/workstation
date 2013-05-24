@@ -9,6 +9,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal;
 public class Skeleton {
 	private Set<Anchor> anchors = new LinkedHashSet<Anchor>();
 	private Anchor nextParent = null;
+
 	public Signal skeletonChangedSignal = new Signal();
 	
 	public void addAnchor(Anchor anchor) {
@@ -19,6 +20,7 @@ public class Skeleton {
 			nextParent.addNeighbor(anchor);
 		}
 		nextParent = anchor;
+		anchor.anchorChangedSignal.connect(skeletonChangedSignal);
 		skeletonChangedSignal.emit();
 	}
 

@@ -16,13 +16,15 @@ import javax.swing.ImageIcon;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.OutlineShader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.PassThroughTextureShader;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.SpriteShader;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.AnchorShader;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.PathShader;
 
 /**
  * SkeletonActor is responsible for painting neuron traces in the slice viewer.
@@ -33,32 +35,42 @@ public class SkeletonActor
 implements GLActor
 {
 	// semantic constants for allocating byte arrays
-	final int floatByteCount = 4;
-	final int vertexFloatCount = 3;
-	final int intByteCount = 4;
-	final int edgeIntCount = 2;
+	private final int floatByteCount = 4;
+	private final int vertexFloatCount = 3;
+	private final int intByteCount = 4;
+	private final int edgeIntCount = 2;
+	private final int colorFloatCount = 3;
 
+	private float zThicknessInPixels = 20.0f;
 	private int hoverAnchorIndex = -1;
 	private boolean bIsGlInitialized = false;
 	
 	private int vertexCount = 3;
 	private FloatBuffer vertices;
+	private FloatBuffer colors;
 	private int vao = -1;
 	private int vbo = -1;
 	private int edgeIbo = -1;
 	private int pointIbo = -1;
+	private int colorBo = -1;
 	private IntBuffer edgeIndices;
 	private IntBuffer pointIndices;
 	private boolean edgesNeedCopy = false;
 	private boolean verticesNeedCopy = false;
-	private OutlineShader edgeShader = new OutlineShader();
-	private SpriteShader anchorShader = new SpriteShader();
+	private PathShader edgeShader = new PathShader();
+	private AnchorShader anchorShader = new AnchorShader();
 	private BoundingBox3d bb = new BoundingBox3d();
+	//
 	private BufferedImage anchorImage;
 	private int anchorTextureId = -1;
+	private BufferedImage parentAnchorImage;
+	private int parentAnchorTextureId = -1;
+	//
 	private Skeleton skeleton;
 	// Vertex buffer objects need indices
 	private Map<Anchor, Integer> anchorIndices = new HashMap<Anchor, Integer>();
+	private Map<Integer, Anchor> indexAnchors = new HashMap<Integer, Anchor>();
+	private Camera3d camera;
 	
 	public Signal skeletonActorChangedSignal = new Signal();
 	
@@ -67,20 +79,7 @@ implements GLActor
 		public void execute() {updateAnchors();}
 	};
 
-	public SkeletonActor() {
-		// Mock data for testing
-		// Create a vertex array to hold the anchor locations
-		// Need a "direct" buffer for native OpenGL use
-		ByteBuffer vertexBytes = ByteBuffer.allocateDirect(vertexCount * floatByteCount * vertexFloatCount);
-		vertexBytes.order(ByteOrder.nativeOrder()); // important!
-		// vertices = GLBuffers.newDirectFloatBuffer(vertexCount*vertexFloatCount); // when my allocation does not work...
-		vertices = vertexBytes.asFloatBuffer();
-		vertices.rewind();
-		// Hard code some anchor locations
-		vertices.put(10f); vertices.put(0f); vertices.put(100f);
-		vertices.put(30f); vertices.put(20f); vertices.put(100f);
-		vertices.put(110f); vertices.put(100f); vertices.put(100f);
-	}
+	public SkeletonActor() {}
 	
 	private void displayEdges(GL2 gl) {
 		// Line segments using vertex buffer objects
@@ -97,6 +96,14 @@ implements GLActor
 	        		vertexCount * floatByteCount * vertexFloatCount, 
 	        		vertices, GL2.GL_DYNAMIC_DRAW);
         		verticesNeedCopy = false;
+
+    		// colors
+	        colors.rewind();
+	        gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
+	        gl.glBufferData(GL2.GL_ARRAY_BUFFER, 
+	        		vertexCount * floatByteCount * colorFloatCount,
+	        		colors, 
+	        		GL2.GL_DYNAMIC_DRAW);
         }
 		// if (edgesNeedCopy) 
 		if (true) 
@@ -108,29 +115,40 @@ implements GLActor
 	        		edgeIndices, GL2.GL_DYNAMIC_DRAW);
 	        edgesNeedCopy = false;
 		}
+        gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
         gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, vbo );
         gl.glVertexPointer(vertexFloatCount, GL2.GL_FLOAT, 0, 0L);
-        gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
+        gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
+        gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
+        gl.glColorPointer(colorFloatCount, GL2.GL_FLOAT, 0, 0L);
         gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, edgeIbo);
 		edgeShader.load(gl);
+ 		float zThickness = zThicknessInPixels / (float)camera.getPixelsPerSceneUnit();
+ 		edgeShader.setUniform(gl, "zThickness", (float)(zThickness));
+ 		edgeShader.setUniform(gl, "focusZ", (float)camera.getFocus().getZ());
 		gl.glEnable(GL2.GL_LINE_SMOOTH);
 		gl.glHint(GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST);
         // wider black line
-		gl.glLineWidth(5.0f);
-        gl.glColor4f(0, 0, 0, 0.7f); // black
+		gl.glLineWidth(3.5f);
+		float blackColor[] = {0,0,0};
+		edgeShader.setUniform3v(gl, "baseColor", 1, blackColor);
+        // gl.glColor4f(0, 0, 0, 0.7f); // black
         gl.glDrawElements(GL2.GL_LINES, 
         		edgeIndices.capacity(), 
         		GL2.GL_UNSIGNED_INT, 
         		0L);
         // narrower white line
-		gl.glLineWidth(3.0f);
-        gl.glColor4f(1, 1, 1, 0.7f); // white
+		gl.glLineWidth(1.5f);
+		float whiteColor[] = {1,1,1};
+		edgeShader.setUniform3v(gl, "baseColor", 1, whiteColor);
+        // gl.glColor4f(1, 1, 1, 0.7f); // white
         gl.glDrawElements(GL2.GL_LINES, 
         		edgeIndices.capacity(), 
         		GL2.GL_UNSIGNED_INT, 
         		0L);
         //
         gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);	
+	    gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
         gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, 0 );
         gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, 0);
         edgeShader.unload(gl);
@@ -146,13 +164,32 @@ implements GLActor
         gl.glEnable(GL2.GL_POINT_SPRITE);
         gl.glEnable(GL2.GL_VERTEX_PROGRAM_POINT_SIZE);
         gl.glEnable(GL2.GL_TEXTURE_2D);
+        // parent anchor texture
+        gl.glActiveTexture(GL2.GL_TEXTURE1);
+        gl.glBindTexture(GL2.GL_TEXTURE_2D, parentAnchorTextureId);
         gl.glTexParameteri( GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MIN_FILTER, GL2.GL_LINEAR );
         gl.glTexParameteri( GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MAG_FILTER, GL2.GL_LINEAR );
+        // plain anchor texture
+        gl.glActiveTexture(GL2.GL_TEXTURE0);
         gl.glBindTexture(GL2.GL_TEXTURE_2D, anchorTextureId);
+        gl.glTexParameteri( GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MIN_FILTER, GL2.GL_LINEAR );
+        gl.glTexParameteri( GL2.GL_TEXTURE_2D, GL2.GL_TEXTURE_MAG_FILTER, GL2.GL_LINEAR );
+        //
         gl.glEnable(GL2.GL_BLEND);
         gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
         anchorShader.load(gl);
  		anchorShader.setUniform(gl, "highlightAnchorIndex", hoverAnchorIndex);
+ 		int parentIndex = -1;
+ 		Anchor parent = skeleton.getNextParent();
+ 		if (parent != null) {
+ 			parentIndex = anchorIndices.get(parent);
+ 		}
+ 		anchorShader.setUniform(gl, "parentAnchorIndex", parentIndex);
+ 		float zThickness = zThicknessInPixels / (float)camera.getPixelsPerSceneUnit();
+ 		anchorShader.setUniform(gl, "zThickness", (float)(zThickness));
+ 		anchorShader.setUniform(gl, "focusZ", (float)camera.getFocus().getZ());
+ 		anchorShader.setUniform(gl, "anchorTexture", 0);
+ 		anchorShader.setUniform(gl, "parentAnchorTexture", 1);
 
         // To ease transition to vbos...
 		boolean bUseVertexArray = false;
@@ -175,12 +212,21 @@ implements GLActor
 			// TODO - crashes unless glBufferData called every time.
 	        // if (verticesNeedCopy) {
 		    if (true) {
-	        		// vertices
-	        		vertices.rewind();
-	    			gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
+		    	// vertices
+		    	vertices.rewind();
+		    	gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
 		        gl.glBufferData(GL2.GL_ARRAY_BUFFER, 
 		        		vertexCount * floatByteCount * vertexFloatCount, 
 		        		vertices, GL2.GL_DYNAMIC_DRAW);
+		        
+		        // colors
+		        colors.rewind();
+		        gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
+		        gl.glBufferData(GL2.GL_ARRAY_BUFFER, 
+		        		vertexCount * floatByteCount * colorFloatCount,
+		        		colors, 
+		        		GL2.GL_DYNAMIC_DRAW);
+		        
 		        verticesNeedCopy = false;
 	        		// point indices
 				pointIndices.rewind();
@@ -189,9 +235,12 @@ implements GLActor
 	    	        		pointIndices.capacity() * intByteCount,
 	    	        		pointIndices, GL2.GL_DYNAMIC_DRAW);
 	        }
+	        gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
 			gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
 	        gl.glVertexPointer(vertexFloatCount, GL2.GL_FLOAT, 0, 0L);
-	        gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
+	        gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
+	        gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, colorBo);
+	        gl.glColorPointer(colorFloatCount, GL2.GL_FLOAT, 0, 0L);
 	        gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, pointIbo);
 			PassThroughTextureShader.checkGlError(gl, "paint anchors 1");
 	        gl.glDrawElements(GL2.GL_POINTS, 
@@ -202,6 +251,7 @@ implements GLActor
 	        gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, 0);
 			gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, 0);
 		    gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
+		    gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
 		}
 		// 
 	    anchorShader.unload(gl);
@@ -221,15 +271,27 @@ implements GLActor
         displayAnchors(gl);
 	}
 
-	public int getAnchorIndex(Anchor anchor) {
+	public int getIndexForAnchor(Anchor anchor) {
 		if (anchorIndices.containsKey(anchor))
 			return anchorIndices.get(anchor);
 		return -1;
 	}
 	
+	public Anchor getAnchorAtIndex(int index) {
+		return indexAnchors.get(index);
+	}
+	
 	@Override
 	public BoundingBox3d getBoundingBox3d() {
 		return bb; // TODO actually populate bounding box
+	}
+
+	public Camera3d getCamera() {
+		return camera;
+	}
+
+	public void setCamera(Camera3d camera) {
+		this.camera = camera;
 	}
 
 	public Skeleton getSkeleton() {
@@ -258,8 +320,14 @@ implements GLActor
 		vertices = vertexBytes.asFloatBuffer();
 		vertices.rewind();
 		int vertexIndex = 0;
+		//
+		ByteBuffer colorBytes = ByteBuffer.allocateDirect(vertexCount * floatByteCount * colorFloatCount);
+		colorBytes.order(ByteOrder.nativeOrder());
+		colors = colorBytes.asFloatBuffer();
+		colors.rewind();
 		// Track vertex index, to support vertex buffer object
 		anchorIndices.clear();
+		indexAnchors.clear();
 		int edgeCount = 0;
 		int pointCount = 0;
 		// Populate vertex array
@@ -268,7 +336,13 @@ implements GLActor
 			vertices.put((float)xyz.getX());
 			vertices.put((float)xyz.getY());
 			vertices.put((float)xyz.getZ());
+			//
+			colors.put(0.8f); // red
+			colors.put(1.0f); // green
+			colors.put(0.3f); // blue
+			//
 			anchorIndices.put(anchor, vertexIndex);
+			indexAnchors.put(vertexIndex, anchor);
 			vertexIndex += 1;
 			pointCount += 1;
 			edgeCount += anchor.getNeighbors().size();
@@ -331,11 +405,24 @@ implements GLActor
 			g2d.drawImage(source, 0, 0, null);
 			g2d.dispose();
 		}
+		if (parentAnchorImage == null) {
+			// load anchor texture
+			String imageFileName = "ParentAnchor16.png";
+			ImageIcon anchorIcon = Icons.getIcon(imageFileName);
+			Image source = anchorIcon.getImage();
+			int w = source.getWidth(null);
+			int h = source.getHeight(null);
+			parentAnchorImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+			Graphics2D g2d = (Graphics2D)parentAnchorImage.getGraphics();
+			g2d.drawImage(source, 0, 0, null);
+			g2d.dispose();
+		}
 		int w = anchorImage.getWidth();
 		int h = anchorImage.getHeight();
-		int ids[] = {0};
-		gl.glGenTextures(1, ids, 0); // count, array, offset
+		int ids[] = {0, 0};
+		gl.glGenTextures(2, ids, 0); // count, array, offset
 		anchorTextureId = ids[0];
+		parentAnchorTextureId = ids[1];
 		byte byteArray[] = new byte[w*h*4];
 		ByteBuffer pixels = ByteBuffer.wrap(byteArray);
 		pixels.order(ByteOrder.nativeOrder());
@@ -347,13 +434,28 @@ implements GLActor
 				intPixels.put(anchorImage.getRGB(x, y));
 			}
 		}
-		pixels.rewind();
 		// Upload anchor texture to video card
-		gl.glActiveTexture(GL2.GL_TEXTURE0);
 		gl.glEnable(GL2.GL_TEXTURE_2D);
 		gl.glBindTexture(GL2.GL_TEXTURE_2D, anchorTextureId);
 		pixels.rewind();
+        gl.glTexImage2D( GL2.GL_TEXTURE_2D,
+                0, // mipmap level
+                GL2.GL_RGBA,
+                w,
+                h,
+                0, // border
+                GL2.GL_RGBA,
+                GL2.GL_UNSIGNED_BYTE,
+                pixels);
+        // Parent texture is like anchor texture, but with a "P" in it.
+		gl.glBindTexture(GL2.GL_TEXTURE_2D, parentAnchorTextureId);
 		intPixels.rewind();
+		for (int y = 0; y < h; ++y) {
+			for (int x = 0; x < w; ++x) {
+				intPixels.put(parentAnchorImage.getRGB(x, y));
+			}
+		}
+		pixels.rewind();
         gl.glTexImage2D( GL2.GL_TEXTURE_2D,
                 0, // mipmap level
                 GL2.GL_RGBA,
@@ -371,11 +473,12 @@ implements GLActor
         vao = ix2[0];
         gl.glBindVertexArray(vao);
         //
-        int ix[] = {0, 0, 0};
-        gl.glGenBuffers( 3, ix, 0 );
+        int ix[] = {0, 0, 0, 0};
+        gl.glGenBuffers( 4, ix, 0 );
         vbo = ix[0];
         edgeIbo = ix[1];
         pointIbo = ix[2];
+        colorBo = ix[3];
         //
         gl.glBindVertexArray(0);
         //
@@ -386,10 +489,10 @@ implements GLActor
 	public void dispose(GL2 gl) {
 		// System.out.println("dispose skeleton actor");
 		bIsGlInitialized = false;
-		int ix1[] = {anchorTextureId};
-		gl.glDeleteTextures(1, ix1, 0);
-		int ix2[] = {vbo, edgeIbo, pointIbo};
-		gl.glDeleteBuffers(3, ix2, 0);
+		int ix1[] = {anchorTextureId, parentAnchorTextureId};
+		gl.glDeleteTextures(2, ix1, 0);
+		int ix2[] = {vbo, edgeIbo, pointIbo, colorBo};
+		gl.glDeleteBuffers(4, ix2, 0);
 		int ix3[] = {vao};
 		gl.glDeleteVertexArrays(1, ix3, 0);
 	}
@@ -399,5 +502,19 @@ implements GLActor
 			return;
 		hoverAnchorIndex = ix;
 		skeletonActorChangedSignal.emit(); // TODO leads to instability
+	}
+
+	/*
+	 * Change visual anchor position without actually changing the Skeleton model
+	 */
+	public void lightweightNudgeAnchor(Anchor dragAnchor, Vec3 dv) {
+		if (dragAnchor == null)
+			return;
+		int index = anchorIndices.get(dragAnchor);
+		int offset = index * vertexFloatCount;
+		for (int i = 0; i < 3; ++i) {
+			vertices.put( offset+i, (float)(vertices.get(offset+i) + dv.get(i)) );
+		}
+		skeletonActorChangedSignal.emit();
 	}
 }

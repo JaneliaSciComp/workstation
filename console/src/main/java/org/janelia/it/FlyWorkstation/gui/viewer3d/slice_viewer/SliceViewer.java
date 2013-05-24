@@ -318,6 +318,7 @@ implements MouseModalWidget, VolumeViewer
 		this.mouseMode = mouseMode;
 		this.mouseMode.setComponent(this);
 		this.mouseMode.setCamera(camera);
+		this.setToolTipText(mouseMode.getToolTipText());
 	}
 
 	public void setCamera(ObservableCamera3d camera) {
@@ -332,7 +333,8 @@ implements MouseModalWidget, VolumeViewer
 		mouseMode.setCamera(camera);
 		wheelMode.setCamera(camera);
 		tileServer.setCamera(camera);
-		this.pointComputer.setCamera(camera);
+		pointComputer.setCamera(camera);
+		skeletonActor.setCamera(camera);
 	}
 	
 	public void setWheelMode(WheelMode wheelMode) {

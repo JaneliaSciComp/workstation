@@ -21,4 +21,5 @@ extends MouseMotionListener, MouseListener
 	public void setComponent(MouseModalWidget widget);
 	Camera3d getCamera();
 	void setCamera(Camera3d camera);
+	public String getToolTipText();
 }

@@ -43,7 +43,7 @@ public class PassThroughTextureShader extends AbstractShader
         gl.glUseProgram(shaderProgram);
 	}
 
-	protected boolean setUniform(GL2 gl, String varName, float value) {
+	public boolean setUniform(GL2 gl, String varName, float value) {
         int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
         if ( uniformLoc < 0 ) 
         	return false;
@@ -60,7 +60,7 @@ public class PassThroughTextureShader extends AbstractShader
         return true;
 	}
 	
-	protected boolean setUniform2fv(GL2 gl, String varName, int vecCount, float[] data)
+	public boolean setUniform2fv(GL2 gl, String varName, int vecCount, float[] data)
 	{
         int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
         if ( uniformLoc < 0 ) 
@@ -69,7 +69,7 @@ public class PassThroughTextureShader extends AbstractShader
         return true;
 	}
 	
-	protected boolean setUniform3v(GL2 gl, String varName, int vecCount, float[] data)
+	public boolean setUniform3v(GL2 gl, String varName, int vecCount, float[] data)
 	{
         int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
         if ( uniformLoc < 0 ) 
@@ -78,7 +78,7 @@ public class PassThroughTextureShader extends AbstractShader
         return true;
 	}
 	
-	protected boolean setUniform4v(GL2 gl, String varName, int vecCount, float[] data)
+	public boolean setUniform4v(GL2 gl, String varName, int vecCount, float[] data)
 	{
         int uniformLoc = gl.glGetUniformLocation( getShaderProgram(), varName );
         if ( uniformLoc < 0 ) 

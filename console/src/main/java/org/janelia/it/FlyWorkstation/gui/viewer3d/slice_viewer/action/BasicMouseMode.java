@@ -202,4 +202,9 @@ public class BasicMouseMode implements MouseMode
 		return new Point((int)Math.round(result.getX()), (int)Math.round(result.getY()));
 	}
 
+	@Override
+	public String getToolTipText() {
+		return null;
+	}
+
 }
