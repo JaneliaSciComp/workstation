@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<eclipse-userlibraries version="2">
+    <library name="Apache Commons" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/Apache-Commons/commons-vfs-1.0.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Apache-Commons/commons-net-2.0.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Apache-Commons/commons-logging-1.1.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Apache-Commons/commons-io-2.0.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Apache-Commons/commons-httpclient-3.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Apache-Commons/commons-fileupload-1.2.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Apache-Commons/commons-collections-2.1.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Apache-Commons/commons-codec-1.3.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Apache-Commons/log4j-1.2.15.jar"/>
+    </library>
+    <library name="Axis" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/activation-1.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/antlr-2.7.7.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axiom-api-1.2.11.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axiom-dom-1.2.11.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axiom-impl-1.2.11.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axis2-adb-1.5.5.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axis2-adb-codegen-1.5.5.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axis2-ant-plugin-1.5.5.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axis2-clustering-1.5.5.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axis2-codegen-1.5.5.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axis2-corba-1.5.5.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axis2-fastinfoset-1.5.5.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axis2-java2wsdl-1.5.5.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axis2-jaxbri-1.5.5.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axis2-jaxws-1.5.5.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axis2-jibx-1.5.5.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axis2-json-1.5.5.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axis2-kernel-1.5.5.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axis2-metadata-1.5.5.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axis2-mtompolicy-1.5.5.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axis2-saaj-1.5.5.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axis2-soapmonitor-servlet-1.5.5.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axis2-spring-1.5.5.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axis2-transport-http-1.5.5.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axis2-transport-local-1.5.5.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/axis2-xmlbeans-1.5.5.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/bcel-5.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/commons-codec-1.3.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/commons-fileupload-1.2.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/commons-httpclient-3.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/commons-io-1.4.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/commons-logging-1.1.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/geronimo-annotation_1.0_spec-1.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/geronimo-jaxws_2.1_spec-1.0.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/geronimo-jta_1.1_spec-1.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/geronimo-saaj_1.3_spec-1.0.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/geronimo-stax-api_1.0_spec-1.0.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/geronimo-ws-metadata_2.0_spec-1.1.2.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/httpcore-4.0.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/jalopy-1.5rc3.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/jaxen-1.1.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/jettison-1.0-RC2.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/jibx-bind-1.2.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/jibx-run-1.2.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/juli-6.0.16.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/log4j-1.2.15.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/mail-1.4.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/mex-1.5.5-impl.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/neethi-2.0.5.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/regexp-1.2.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/tribes-6.0.16.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/woden-api-1.0M8.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/woden-impl-dom-1.0M8.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/wsdl4j-1.6.2.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/wstx-asl-3.2.9.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/xalan-2.7.0.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/xercesImpl-2.8.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/xml-resolver-1.2.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/xmlbeans-2.3.0.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Axis2-1.5.5/XmlSchema-1.4.3.jar"/>
+    </library>
+    <library name="Ehcache" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/ehcache/ehcache-core-2.5.1.jar" source="/Users/rokickik/Downloads/ehcache-core-2.5.1/src"/>
+    </library>
+    <library name="Guava" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/Guava/guava-13.0.1.jar" source="/Users/rokickik/dev/guava-libraries/guava/src"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Guava/gson-2.2.2.jar"/>
+    </library>
+    <library name="GWT" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/GWT/gwt-api-checker.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/GWT/gwt-dev.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/GWT/gwt-dnd-3.0.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/GWT/gwt-java-math-1.0.9.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/GWT/gwt-maps.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/GWT/gwt-servlet-deps.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/GWT/gwt-servlet.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/GWT/gwt-sl-1.0.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/GWT/gwt-soyc-vis.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/GWT/gwt-user.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/GWT/gwt-widgets-0.2.0.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/GWT/gwt-widgets-server-0.1.0.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/GWT/validation-api-1.0.0.GA-sources.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/GWT/validation-api-1.0.0.GA.jar"/>
+    </library>
+    <library name="GWT Serializable" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/GWT-Serializable/gwt-serializable.jar"/>
+    </library>
+    <library name="Hibernate" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/Hibernate-3.2/antlr-2.7.6.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Hibernate-3.2/asm.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Hibernate-3.2/cglib-2.1.3.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Hibernate-3.2/commons-logging-1.0.4.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Hibernate-3.2/hibernate3.jar"/>
+    </library>
+    <library name="JAXB" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/JAXB-2.1.5/activation.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JAXB-2.1.5/jaxb-api.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JAXB-2.1.5/jaxb-impl.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JAXB-2.1.5/jaxb-xjc.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JAXB-2.1.5/jaxb1-impl.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JAXB-2.1.5/jsr173_1.0_api.jar"/>
+    </library>
+    <library name="JBoss" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/activation.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/antlr.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/avalon-framework.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/commons-codec.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/commons-httpclient.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/commons-logging.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/concurrent.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/ejb3-persistence.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/FastInfoset.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/getopt.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/hibernate-annotations.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/hibernate-client.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jacorb.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/javassist.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-annotations-ejb3.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-aop-jdk50-client.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-aspect-jdk50-client.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-client.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-common-client.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-deployment.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-ejb3-client.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-ejb3.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-ejb3x.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-iiop-client.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-j2ee.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-jaxrpc.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-jaxws-ext.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-jaxws.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-jsr77-client.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-remoting.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-saaj.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-serialization.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-srp-client.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-system-client.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-transaction-client.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-xml-binding.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jbossall-client.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jbosscx-client.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jbossha-client.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jbossjmx-ant.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jbossmq-client.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jbosssx-client.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jbossws-client.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jbossws-common.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jbossws-framework.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jbossws-jboss42.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jbossws-spi.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jettison.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jmx-client.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jmx-invoker-adaptor-client.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jnp-client.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/log4j.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/logkit.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/mail.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/policy.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/quartz.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/scout.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/stax-api.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/stax-ex.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/streambuffer.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/trove.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/wsdl4j.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/wstx.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/xmlsec.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/servlet-api.jar"/>
+    </library>
+    <library name="JBoss Console" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jbossall-client.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/javassist.jar"/>
+    </library>
+    <library name="JBoss Minimal" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jbossall-client.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/antlr.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/concurrent.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/javassist.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-annotations-ejb3.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-ejb3x.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/jboss-ejb3.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/quartz.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JBoss-Server-4.2.3.GA/servlet-api.jar"/>
+    </library>
+    <library name="Jetty" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/Jetty/jetty-continuation-8.1.8.v20121106.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Jetty/jetty-http-8.1.8.v20121106.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Jetty/jetty-io-8.1.8.v20121106.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Jetty/jetty-server-8.1.8.v20121106.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Jetty/jetty-servlet-8.1.8.v20121106.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Jetty/jetty-util-8.1.8.v20121106.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Jetty/servlet-api-3.0.jar"/>
+    </library>
+    <library name="JKtx" systemlibrary="false">
+        <archive path="/common/JKtx/jktx-1.6.jar"/>
+    </library>
+    <library name="Jogl" systemlibrary="false">
+        <archive path="/console/lib/Jogl/gluegen-rt-natives-linux-amd64.jar"/>
+        <archive path="/console/lib/Jogl/gluegen-rt-natives-linux-i586.jar"/>
+        <archive path="/console/lib/Jogl/gluegen-rt-natives-macosx-universal.jar"/>
+        <archive path="/console/lib/Jogl/gluegen-rt-natives-windows-amd64.jar"/>
+        <archive path="/console/lib/Jogl/gluegen-rt-natives-windows-i586.jar"/>
+        <archive path="/console/lib/Jogl/gluegen-rt.jar"/>
+        <archive path="/console/lib/Jogl/jogl-all-natives-linux-amd64.jar"/>
+        <archive path="/console/lib/Jogl/jogl-all-natives-linux-i586.jar"/>
+        <archive path="/console/lib/Jogl/jogl-all-natives-macosx-universal.jar"/>
+        <archive path="/console/lib/Jogl/jogl-all-natives-windows-amd64.jar"/>
+        <archive path="/console/lib/Jogl/jogl-all-natives-windows-i586.jar"/>
+        <archive nativelibpaths="/Users/rokickik/dev/jacs/console/lib/Jogl" path="/console/lib/Jogl/jogl.all.jar"/>
+    </library>
+    <library name="JUnit" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/JUnit-Lib-3.8.1/clover.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/JUnit-Lib-3.8.1/junit.jar"/>
+    </library>
+    <library name="LOCI" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/LOCI/scifio.jar" source="/Users/rokickik/dev/bioformats/components/scifio/src"/>
+        <archive path="/Users/rokickik/dev/jacs/common/LOCI/ome-xml.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/LOCI/ome-io.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/LOCI/ome_plugins.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/LOCI/metakit.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/LOCI/loci-common.jar" source="/Users/rokickik/dev/bioformats/components/loci-legacy/src"/>
+        <archive path="/Users/rokickik/dev/jacs/common/LOCI/loci_plugins.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/LOCI/bio-formats.jar"/>
+    </library>
+    <library name="Logging" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/Logging/slf4j-api-1.6.6.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Logging/perf4j-0.9.16-logbackonly.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Logging/logback-core-1.0.7.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Logging/logback-classic-1.0.7.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Logging/logback-access-1.0.7.jar"/>
+    </library>
+    <library name="Lucene" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/Lucene-2.3.1/lucene-core-2.3.1.jar"/>
+    </library>
+    <library name="LZ4" systemlibrary="false">
+        <archive path="/common/LZ4/lz4-1.1.1.jar"/>
+    </library>
+    <library name="MongoDB" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/MongoDB/mongo-2.7.3.jar"/>
+    </library>
+    <library name="MySQL" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/MySQL/mysql-connector-java-5.1.22-bin.jar"/>
+    </library>
+    <library name="SAAJ" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/SAAJ/saaj-impl-1.3.2.jar"/>
+    </library>
+    <library name="Scripting" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/Scripting/groovy-all-1.8.6.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Scripting/jython.jar"/>
+    </library>
+    <library name="Snappy" systemlibrary="false">
+        <archive path="/common/Snappy/snappy-java-1.0.5-M3.jar"/>
+    </library>
+    <library name="Solrj" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/Solrj/apache-solr-solrj-3.5.0.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Solrj/wstx-asl-3.2.7.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Solrj/commons-io-1.4.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Solrj/commons-httpclient-3.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Solrj/commons-codec-1.5.jar"/>
+    </library>
+    <library name="Spring" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/Spring/standard.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring/spring.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring/spring-mock.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring/log4j-1.2.14.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring/jxl.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring/jta.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring/jstl.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring/jdom1.0.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring/jbossall-client.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring/hibernate3.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring/dom4j-1.6.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring/commons-logging.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring/commons-httpclient-3.0.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring/commons-fileupload.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring/commons-collections-2.1.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring/commons-beanutils.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring/cglib.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring/catalina.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring/c3p0-0.9.1.2.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring/ehcache-1.2.2.jar"/>
+    </library>
+    <library name="Spring3" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/spring-data-neo4j-cross-store-2.1.0.M1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/spring-data-neo4j-rest-2.1.0.M1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/spring-data-neo4j-aspects-2.1.0.M1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/spring-data-neo4j-2.1.0.M1.jar" source="/Users/rokickik/Downloads/spring-data-neo4j-2.1.0.M1"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/org.springframework.aspects-3.0.7.RELEASE.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/org.springframework.core-3.0.7.RELEASE.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/org.springframework.context-3.0.7.RELEASE.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/org.springframework.beans-3.0.7.RELEASE.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/org.springframework.aop-3.0.7.RELEASE.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/org.springframework.transaction-3.0.7.RELEASE.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/org.springframework.test-3.0.7.RELEASE.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/com.springsource.org.jboss.util-2.0.4.GA.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/neo4j-kernel-1.6.1.jar" source="/Users/rokickik/dev/neo4j-community"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/com.springsource.javax.validation-1.0.0.GA.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/com.springsource.org.aspectj.tools-1.6.8.RELEASE.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/com.springsource.org.codehaus.jackson-1.4.2.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/com.springsource.org.codehaus.jackson.mapper-1.4.2.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/geronimo-jta_1.1_spec-1.1.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/jersey-bundle-1.12.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/jsr311-api-1.1.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/lucene-core-3.5.0.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/neo4j-community-1.6.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/neo4j-cypher-1.6.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/neo4j-graph-algo-1.6.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/neo4j-graph-matching-1.6.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/neo4j-jmx-1.6.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/neo4j-kernel-1.6.1-tests.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/neo4j-kernel-1.6.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/neo4j-lucene-index-1.6.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/neo4j-rest-api.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/neo4j-shell-1.6.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/neo4j-udc-1.6.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/org.apache.servicemix.bundles.jline-0.9.94_1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/org.springframework.asm-3.0.7.RELEASE.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/org.springframework.expression-3.0.7.RELEASE.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/scala-library-2.9.0-1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/server-api-1.6.1.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/spring-data-commons-core-1.2.1.RELEASE.jar"/>
+        <archive path="/Users/rokickik/dev/jacs/common/Spring-3/spring-data-neo4j-2.1.0.M1.jar"/>
+    </library>
+    <library name="Xuggler" systemlibrary="false">
+        <archive path="/Users/rokickik/dev/jacs/common/Xuggler/xuggle-xuggler-5.4.jar"/>
+    </library>
+</eclipse-userlibraries>
