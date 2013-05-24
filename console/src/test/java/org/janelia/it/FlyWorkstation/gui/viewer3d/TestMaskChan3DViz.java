@@ -149,6 +149,11 @@ public class TestMaskChan3DViz {
                 throw new RuntimeException( error );
             }
         }
+
+        @Override
+        public void renderModCompletion() {
+            logger.info("Render Completion.");
+        }
     }
 
 }
