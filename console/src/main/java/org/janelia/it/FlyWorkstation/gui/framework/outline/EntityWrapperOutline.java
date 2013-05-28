@@ -26,6 +26,7 @@ import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.utils.ModelUtils;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -206,10 +207,20 @@ public abstract class EntityWrapperOutline extends EntityWrapperTree implements 
 
 		// Create context menu
 		final EntityOutlineContextMenu popupMenu = new EntityOutlineContextMenu(node, getDynamicTree().getUniqueId(node));
-			
-		if ("".equals(getRoot().getType())) return;
-		
-		if (node != null) {
+
+        // Special case (for now): no name implies should add only the pane-split item.
+		if ("".equals(getRoot().getType())) {
+            EntityWrapper wrappedRoot = getRoot();
+            Entity internalEntity = wrappedRoot.getInternalEntity();
+            if ( internalEntity.getEntityType().equals(EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
+                // Here: verify that the wrapped type is in the proper alignment space
+                popupMenu.add(popupMenu.getOpenInSecondViewerItem());
+            }
+            else {
+                return;
+            }
+        }
+		else if (node != null) {
 			final Entity entity = getEntity(node);
 			if (entity == null) return;
 			popupMenu.addMenuItems();
