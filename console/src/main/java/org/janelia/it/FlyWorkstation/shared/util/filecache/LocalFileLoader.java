@@ -137,7 +137,17 @@ public class LocalFileLoader {
             removeDirectoryIfEmpty(file);
 
         } else if ((file.canRead() && CachedFile.isMetaFile(file))) {
+
             registerMetaFile(file, unregisteredSiblings);
+
+        } else if (".DS_Store".equals(file.getName())) {
+
+            if (file.delete()) {
+                unregisteredFiles.remove(file);
+            } else {
+                LOG.warn("failed to delete Mac finder file {}", file.getAbsolutePath());
+            }
+
         }
     }
 
