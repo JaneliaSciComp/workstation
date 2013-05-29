@@ -147,28 +147,8 @@ public class DownSampler {
         for ( int z = 0; z < sz-zScale && outZ < outSz; z += zScale ) {
             int outY = 0;
             int zOffset = outZ * outSx * outSy * voxelBytes;
-            for ( int y = 0; y < sy-yScale && outY < outSy; y += yScale ) {
-                int yOffset = zOffset + outY * outSx * voxelBytes; //(outSy-outY) * outSx ;
-                int outX = 0;
-                for ( int x = 0; x < sx-xScale && outX < outSx; x += xScale ) {
-                    byte[] value = getNeighborHoodDownSampling(
-                            fullSizeVolume, voxelBytes, xScale, yScale, zScale, x, y, z
-                    );
-
-                    // Store the value into the output array.
-                    if ( value != null ) {
-                        for ( int pi = 0; pi < voxelBytes; pi ++ ) {
-                            //byte piByte = (byte)(value >>> (pi * 8) & 0x000000ff);
-                            byte piByte = value[ pi ];
-                            textureByteArray[yOffset + (outX * voxelBytes) + (pi)] = piByte;
-                        }
-                    }
-
-                    outX ++;
-                }
-
-                outY ++;
-            }
+            DownsampleParameter sliceParameter = new DownsampleParameter(fullSizeVolume, voxelBytes, xScale, yScale, zScale, outSx, outSy, textureByteArray, outY, zOffset);
+            getDownsampledSlice( sliceParameter, z );
 
             outZ ++;
         }
@@ -186,22 +166,42 @@ public class DownSampler {
         return rtnVal;
     }
 
+    private void getDownsampledSlice(DownsampleParameter sliceParameter, int z ) {
+
+        for ( int y = 0; y < sy- sliceParameter.getYScale() && sliceParameter.getOutY() < sliceParameter.getOutSy(); y += sliceParameter.getYScale()) {
+            int yOffset = sliceParameter.getZOffset() + sliceParameter.getOutY() * sliceParameter.getOutSx() * sliceParameter.getVoxelBytes(); //(outSy-outY) * outSx ;
+            int outX = 0;
+            for ( int x = 0; x < sx- sliceParameter.getXScale() && outX < sliceParameter.getOutSx(); x += sliceParameter.getXScale()) {
+                byte[] value = getNeighborHoodDownSampling( sliceParameter, x, y, z );
+
+                // Store the value into the output array.
+                if ( value != null ) {
+                    for ( int pi = 0; pi < sliceParameter.getVoxelBytes(); pi ++ ) {
+                        //byte piByte = (byte)(value >>> (pi * 8) & 0x000000ff);
+                        byte piByte = value[ pi ];
+                        sliceParameter.getTextureByteArray()[yOffset + (outX * sliceParameter.getVoxelBytes()) + (pi)] = piByte;
+                    }
+                }
+
+                outX ++;
+            }
+
+            sliceParameter.setOutY(sliceParameter.getOutY() + 1);
+        }
+    }
+
     /**
      * Computes the most-frequently-encountered-value among the "neighborhood" of adjacent voxel values, to
      * the target downsampled voxel.
      *
-     * @param fullSizeVolume the original non-downsampled full volume.
-     * @param voxelBytes number of bytes per voxel.  All dimensions must be multiplied by this exactly once.
-     * @param xScale this is the downsampling rate for x
-     * @param yScale this is the downsampling rate for y
-     * @param zScale this is the downsampling rate for z
-     * @param z input location under study.
+     * @param sliceParameter metadata about the slice being calculated.
      * @param y input location under study.
      * @param x input location under study.
      * @return computed value: all bytes of the voxel.
      */
     private byte[] getNeighborHoodDownSampling(
-            byte[] fullSizeVolume, int voxelBytes, double xScale, double yScale, double zScale, int x, int y, int z
+            DownsampleParameter sliceParameter, int x, int y, int z
+//            byte[] fullSizeVolume, int voxelBytes, double xScale, double yScale, double zScale, int x, int y, int z
     ) {
 
         byte[] value = null;
@@ -212,24 +212,24 @@ public class DownSampler {
         // Neighborhood starts at the x,y,z values of the loops.  There will be one
         // such neighborhood for each of these down-sampled coord sets: x,y,z
         int maxFreq = 0;
-        for ( int zNbh = z; zNbh < z + zScale && zNbh < sz; zNbh ++ ) {
-            int nbhZOffset = (int)(sy * sx * zNbh) * voxelBytes;
+        for ( int zNbh = z; zNbh < z + sliceParameter.getZScale() && zNbh < sz; zNbh ++ ) {
+            int nbhZOffset = (int)(sy * sx * zNbh) * sliceParameter.getVoxelBytes();
 
-            for ( int yNbh = y; yNbh < y + yScale && yNbh < sy; yNbh ++ ) {
-                int nbhYOffset = (int)(nbhZOffset + (sx * yNbh * voxelBytes ) );
+            for ( int yNbh = y; yNbh < y + sliceParameter.getYScale() && yNbh < sy; yNbh ++ ) {
+                int nbhYOffset = (int)(nbhZOffset + (sx * yNbh * sliceParameter.getVoxelBytes() ) );
 
-                for ( int xNbh = x; xNbh < x + xScale && xNbh < sx; xNbh++ ) {
-                    byte[] voxelVal = new byte[ voxelBytes ];
-                    int arrayCopyLoc = nbhYOffset + (xNbh * voxelBytes);
+                for ( int xNbh = x; xNbh < x + sliceParameter.getXScale() && xNbh < sx; xNbh++ ) {
+                    byte[] voxelVal = new byte[ sliceParameter.getVoxelBytes() ];
+                    int arrayCopyLoc = nbhYOffset + (xNbh * sliceParameter.getVoxelBytes());
                     try {
                     System.arraycopy(
-                            fullSizeVolume, arrayCopyLoc, voxelVal, 0, voxelBytes
+                            sliceParameter.getFullSizeVolume(), arrayCopyLoc, voxelVal, 0, sliceParameter.getVoxelBytes()
                     );
                     } catch ( Exception ex ) {
                         logger.error(
                                 "Exception while trying to copy to {} with max of {}.",
                                 arrayCopyLoc,
-                                fullSizeVolume.length
+                                sliceParameter.getFullSizeVolume().length
                         );
                         logger.info( "Expected dimensions are " + sx + " x " + sy + " x " + sz );
                         ex.printStackTrace();
