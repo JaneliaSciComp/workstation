@@ -181,6 +181,7 @@ public class DownSampler {
         DownsampledTextureData rtnVal = new DownsampledTextureData(
                 textureByteArray, outSx, outSy, outSz, voxelBytes, xScale, yScale, zScale
         );
+        logger.info("Downsampling complete.");
 
         return rtnVal;
     }

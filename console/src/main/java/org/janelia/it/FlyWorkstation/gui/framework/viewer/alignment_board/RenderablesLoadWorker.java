@@ -217,11 +217,13 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             }
 
             //sequentialFileLoad( metaDatas );
+            logger.info("Starting multithreaded file load.");
             multiThreadedFileLoad( metaDatas, MAX_FILE_LOAD_THREADS );
 
             compartmentLoader.close();
             neuronFragmentLoader.close();
 
+            logger.info("Starting multithreaded texture build.");
             multiThreadedTextureBuild();
 
 

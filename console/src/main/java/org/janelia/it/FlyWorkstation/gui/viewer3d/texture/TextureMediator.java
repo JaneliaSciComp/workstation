@@ -73,7 +73,7 @@ public class TextureMediator {
         if ( data != null ) {
             data.rewind();
 
-            logger.info(
+            logger.debug(
                     "[" +
                             textureData.getFilename() +
                             "]: Coords are " + textureData.getSx() + " * " + textureData.getSy() + " * " + textureData.getSz()
@@ -316,7 +316,7 @@ public class TextureMediator {
             }
         }
 
-        logger.info( "Got voxel component type of {} for {}.", getConstantName( rtnVal ), textureData.getFilename() );
+        logger.debug( "Got voxel component type of {} for {}.", getConstantName( rtnVal ), textureData.getFilename() );
 
         return rtnVal;
         // BLACK SCREEN. GL2.GL_UNSIGNED_BYTE_3_3_2,  // BLACK SCREEN for 143/266
@@ -366,17 +366,12 @@ public class TextureMediator {
         }
         else {
             errnum = -1;
-            int stepCt = 0;
-            while ( errnum != 0 && stepCt < 10) {
-                rtnBuf.rewind();
-                gl.glGetIntegerv(TEXTURE_FREE_MEMORY_ATI + stepCt, rtnBuf);
-                errnum = gl.glGetError();
-                if ( errnum != 0 )
-                    stepCt ++;
-            }
+            rtnBuf.rewind();
+            gl.glGetIntegerv(TEXTURE_FREE_MEMORY_ATI, rtnBuf);
+            errnum = gl.glGetError();
             if ( errnum == 0 ) {
                 rtnVal = rtnBuf.array()[ 0 ];
-                logger.info( "Found a value at constant {}.", Integer.toHexString( TEXTURE_FREE_MEMORY_ATI + stepCt ) );
+                logger.info( "Found a value at constant {}.", Integer.toHexString( TEXTURE_FREE_MEMORY_ATI ) );
             }
             else {
                 logger.warn( "Neither NVidea nor Radeon video memory calls succeeded {}/{}.", errnum, rtnBuf.array()[0] );
@@ -410,7 +405,7 @@ public class TextureMediator {
 
         }
 
-        logger.info( "internalFormat = {} for {}", getConstantName( internalFormat ), textureData.getFilename() );
+        logger.debug( "internalFormat = {} for {}", getConstantName( internalFormat ), textureData.getFilename() );
         return internalFormat;
     }
 
@@ -425,7 +420,7 @@ public class TextureMediator {
             }
         }
 
-        logger.info( "Voxel Component order/glTexImage3D 'format' {} for {}.", getConstantName( rtnVal ), textureData.getFilename() );
+        logger.debug( "Voxel Component order/glTexImage3D 'format' {} for {}.", getConstantName( rtnVal ), textureData.getFilename() );
         return rtnVal;
     }
 
