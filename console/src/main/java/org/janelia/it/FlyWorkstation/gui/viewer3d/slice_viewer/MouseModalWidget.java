@@ -6,6 +6,8 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelListener;
 import java.awt.geom.Point2D;
 
+import javax.swing.JComponent;
+
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.MouseMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.WheelMode;
@@ -23,4 +25,5 @@ extends MouseListener, MouseMotionListener, MouseWheelListener
 	public RubberBand getRubberBand();
 	// public Dimension getViewportSize();
 	public Viewport getViewport();
+	public JComponent getComponent();
 }

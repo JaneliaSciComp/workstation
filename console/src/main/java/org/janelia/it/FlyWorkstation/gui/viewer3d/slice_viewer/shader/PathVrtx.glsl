@@ -16,6 +16,6 @@ void main(void)
     pathColor = gl_Color * vec4(baseColor, 1);
     gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 
-    float relZ = (gl_Vertex.z - focusZ) * 0.5 / zThickness; // range -1:1
+    float relZ = 2.0 * (gl_Vertex.z - focusZ) / zThickness; // range -1:1
     fog = min(1.0, abs(relZ));    
 }

@@ -33,6 +33,8 @@ public class Anchor {
 	public boolean addNeighbor(Anchor neighbor) {
 		if (neighbor == null)
 			return false;
+		if (neighbor == this)
+			return false;
 		if (neighbors.contains(neighbor))
 			return false;
 		neighbors.add(neighbor);

@@ -19,6 +19,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.SkeletonActor;
 
 import javax.media.opengl.GLProfile;
+import javax.swing.JComponent;
 import javax.swing.JOptionPane;
 
 import java.awt.Color;
@@ -119,6 +120,7 @@ implements MouseModalWidget, VolumeViewer
 		//
         renderer.addActor(skeletonActor);
         skeletonActor.skeletonActorChangedSignal.connect(repaintSlot);
+        skeletonActor.setViewport(viewport);
 		//
         resetView();
 	}
@@ -491,6 +493,17 @@ implements MouseModalWidget, VolumeViewer
 
 	public void setSkeletonActor(SkeletonActor skeletonActor) {
 		this.skeletonActor = skeletonActor;
+		skeletonActor.setViewport(viewport);
 	}
 
+	@Override
+	public JComponent getComponent() {
+		return this;
+	}
+
+	@Override
+	public int getDepth() {
+		return viewport.getDepth();
+	}
+	
 }

@@ -6,4 +6,5 @@ public interface Viewport
 	int getOriginY();
 	int getWidth();
 	int getHeight();
+	int getDepth();
 }

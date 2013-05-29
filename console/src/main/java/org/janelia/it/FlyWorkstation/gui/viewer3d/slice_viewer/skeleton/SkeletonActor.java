@@ -18,10 +18,10 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.OutlineShader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.PassThroughTextureShader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.AnchorShader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.PathShader;
@@ -41,7 +41,7 @@ implements GLActor
 	private final int edgeIntCount = 2;
 	private final int colorFloatCount = 3;
 
-	private float zThicknessInPixels = 20.0f;
+	private Viewport viewport;
 	private int hoverAnchorIndex = -1;
 	private boolean bIsGlInitialized = false;
 	
@@ -123,7 +123,7 @@ implements GLActor
         gl.glColorPointer(colorFloatCount, GL2.GL_FLOAT, 0, 0L);
         gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, edgeIbo);
 		edgeShader.load(gl);
- 		float zThickness = zThicknessInPixels / (float)camera.getPixelsPerSceneUnit();
+ 		float zThickness = viewport.getDepth() / (float)camera.getPixelsPerSceneUnit();
  		edgeShader.setUniform(gl, "zThickness", (float)(zThickness));
  		edgeShader.setUniform(gl, "focusZ", (float)camera.getFocus().getZ());
 		gl.glEnable(GL2.GL_LINE_SMOOTH);
@@ -182,10 +182,10 @@ implements GLActor
  		int parentIndex = -1;
  		Anchor parent = skeleton.getNextParent();
  		if (parent != null) {
- 			parentIndex = anchorIndices.get(parent);
+ 			parentIndex = getIndexForAnchor(parent);
  		}
  		anchorShader.setUniform(gl, "parentAnchorIndex", parentIndex);
- 		float zThickness = zThicknessInPixels / (float)camera.getPixelsPerSceneUnit();
+ 		float zThickness = viewport.getDepth() / (float)camera.getPixelsPerSceneUnit();
  		anchorShader.setUniform(gl, "zThickness", (float)(zThickness));
  		anchorShader.setUniform(gl, "focusZ", (float)camera.getFocus().getZ());
  		anchorShader.setUniform(gl, "anchorTexture", 0);
@@ -272,6 +272,8 @@ implements GLActor
 	}
 
 	public int getIndexForAnchor(Anchor anchor) {
+		if (anchor == null)
+			return -1;
 		if (anchorIndices.containsKey(anchor))
 			return anchorIndices.get(anchor);
 		return -1;
@@ -311,6 +313,14 @@ implements GLActor
 		skeleton.skeletonChangedSignal.connect(updateAnchorsSlot);
 	}
 	
+	public Viewport getViewport() {
+		return viewport;
+	}
+
+	public void setViewport(Viewport viewport) {
+		this.viewport = viewport;
+	}
+
 	protected synchronized void updateAnchors() {
 		if (skeleton == null)
 			return;
@@ -354,9 +364,13 @@ implements GLActor
 		edgeIndices = edgeBytes.asIntBuffer();
 		edgeIndices.rewind();
 		for (Anchor anchor : skeleton.getAnchors()) {
-			int i1 = anchorIndices.get(anchor);
+			int i1 = getIndexForAnchor(anchor);
+			if (i1 < 0)
+				continue;
 			for (Anchor neighbor : anchor.getNeighbors()) {
-				int i2 = anchorIndices.get(neighbor);
+				int i2 = getIndexForAnchor(neighbor);
+				if (i2 < 0)
+					continue;
 				if (i1 < i2) {// only use ascending pairs, for uniqueness
 					edgeIndices.put(i1);
 					edgeIndices.put(i2);
@@ -510,7 +524,9 @@ implements GLActor
 	public void lightweightNudgeAnchor(Anchor dragAnchor, Vec3 dv) {
 		if (dragAnchor == null)
 			return;
-		int index = anchorIndices.get(dragAnchor);
+		int index = getIndexForAnchor(dragAnchor);
+		if (index < 0)
+			return;
 		int offset = index * vertexFloatCount;
 		for (int i = 0; i < 3; ++i) {
 			vertices.put( offset+i, (float)(vertices.get(offset+i) + dv.get(i)) );

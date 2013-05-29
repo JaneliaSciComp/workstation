@@ -237,6 +237,7 @@ public class QuadViewUi extends JPanel
         sliceViewer.setSkeleton(skeleton);
         //
         traceMouseModeAction.getTraceMode().setActor(sliceViewer.getSkeletonActor());
+        traceMouseModeAction.getTraceMode().setViewport(sliceViewer);
         // 
         sliceViewer.setWheelMode(zScanMode);
 	}
@@ -250,11 +251,13 @@ public class QuadViewUi extends JPanel
 
             @Override
             protected void popupTriggered(MouseEvent e) {
+            	// System.out.println("popup");
                 if (e.isConsumed()) return;
                 getButtonPopupMenu().show(e.getComponent(), e.getX(), e.getY());
                 e.consume();
             }
         };
+        // System.out.println("add ui mouse listener");
         sliceViewer.addMouseListener(buttonMouseListener);
 
 		// glassPane.setVisible(true);

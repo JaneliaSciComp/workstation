@@ -70,7 +70,11 @@ public class GLOrthoCamera
 			hw = 1;
 		if (hh == 0)
 			hh = 1;
-		gl.glOrtho(-hw, hw, hh, -hh, -100.0, 100.0);
+		int d = viewport.getDepth();
+		int hd = d/2;
+		if (hd == 0)
+			hd = 1;
+		gl.glOrtho(-hw, hw, hh, -hh, -hd, hd);
 		// model/view matrix
 		gl.glMatrixMode(GL2.GL_MODELVIEW);
 		gl.glPushMatrix();

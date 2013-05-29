@@ -20,8 +20,17 @@ public class TraceMouseModeAction extends AbstractAction {
 		KeyStroke accelerator = KeyStroke.getKeyStroke(acc);
 		putValue(ACCELERATOR_KEY, accelerator);
 		putValue(SHORT_DESCRIPTION, 
-				"Set mouse mode to trace neurons."
-				+ "\n (Shortcut: " + acc + ")");
+				"<html>"
+				+"Set mouse mode to trace neurons ["+acc+"]<br>"
+				+"<br>"
+				+"SHIFT-click to place a new anchor<br>" // done
+				+"Click and drag to move anchor<br>" // done
+				+"Click to designate parent anchor<br>" // done
+				+"Middle-button drag to Pan XY<br>" // done
+				+"Scroll wheel to scan Z<br>" // done
+				+"SHIFT-scroll wheel to zoom<br>" // done
+				+"Right-click for context menu" // TODO
+				+"</html>");
 		traceMode = new TraceMode(skeleton);
 		traceMode.setComponent(widget);
 		this.widget = widget;
