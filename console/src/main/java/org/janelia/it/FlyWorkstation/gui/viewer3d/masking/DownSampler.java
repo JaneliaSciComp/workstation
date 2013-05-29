@@ -1,7 +1,13 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
 
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created with IntelliJ IDEA.
@@ -13,6 +19,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DownSampler {
 
+    private static final int DOWNSAMPLE_THREAD_COUNT = 5;
     private Logger logger = LoggerFactory.getLogger( DownSampler.class );
     private long sx;
     private long sy;
@@ -61,64 +68,6 @@ public class DownSampler {
         return rtnVal;
     }
 
-    public static class DownsampledTextureData {
-        private byte[] volume;
-        private int sx;
-        private int sy;
-        private int sz;
-        private int voxelBytes;
-
-        private double xScale;
-        private double yScale;
-        private double zScale;
-
-        public DownsampledTextureData(
-                byte[] textureBytes, int sx, int sy, int sz, int voxelBytes,
-                double xScale, double yScale, double zScale
-        ) {
-            this.volume = textureBytes;
-            this.voxelBytes = voxelBytes;
-            this.sx = sx;
-            this.sy = sy;
-            this.sz = sz;
-            this.xScale = xScale;
-            this.yScale = yScale;
-            this.zScale = zScale;
-        }
-
-        public byte[] getVolume() {
-            return volume;
-        }
-
-        public int getSx() {
-            return sx;
-        }
-
-        public int getSy() {
-            return sy;
-        }
-
-        public int getSz() {
-            return sz;
-        }
-
-        public int getVoxelBytes() {
-            return voxelBytes;
-        }
-
-        public double getxScale() {
-            return xScale;
-        }
-
-        public double getyScale() {
-            return yScale;
-        }
-
-        public double getzScale() {
-            return zScale;
-        }
-    }
-
     /**
      * This method will "down-sample" the 3D (times pixel bytes) volume to a manageable size
      * using a frequency-of-occurence algorithm, into some fraction of the original size, of cells.
@@ -142,16 +91,39 @@ public class DownSampler {
         // Here, sample the neighborhoods (or _output_ voxels).
         // Java implicitly sets newly-allocated byte arrays to all zeros.
         byte[] textureByteArray = new byte[(outSx * outSy * outSz) * voxelBytes];
-        DownsampleParameter downsampleBean = new DownsampleParameter(fullSizeVolume, voxelBytes, xScale, yScale, zScale, outSx, outSy, textureByteArray);
+        final DownsampleParameter downsampleBean = new DownsampleParameter(fullSizeVolume, voxelBytes, xScale, yScale, zScale, outSx, outSy, textureByteArray);
+
+        // Making a thread pool, and submitting slice-downsampling steps to that pool.
+        ExecutorService downSamplingThreadPool = Executors.newFixedThreadPool( DOWNSAMPLE_THREAD_COUNT );
 
         int outZ = 0;
         for ( int z = 0; z < sz-zScale && outZ < outSz; z += zScale ) {
             int zOffset = outZ * outSx * outSy * voxelBytes;
-            SliceDownsampleParamBean sliceBean = new SliceDownsampleParamBean( z, zOffset );
-            getDownsampledSlice( downsampleBean, sliceBean );
+            final SliceDownsampleParamBean sliceBean = new SliceDownsampleParamBean( z, zOffset );
+
+            SimpleWorker simpleWorker = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    getDownsampledSlice( downsampleBean, sliceBean );
+                }
+
+                @Override
+                protected void hadSuccess() {
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    SessionMgr.getSessionMgr().handleException( error );
+                }
+            };
+            downSamplingThreadPool.execute( simpleWorker );
 
             outZ ++;
         }
+
+        // Post a shutdown, and wait for all requests to terminate.
+        downSamplingThreadPool.shutdown();
+        awaitThreadpoolCompletion( downSamplingThreadPool );
 
         // Post-adjust the x,y,z sizes to fit the target down-sampled array.
         sx = outSx;
@@ -164,6 +136,20 @@ public class DownSampler {
         logger.info("Downsampling complete.");
 
         return rtnVal;
+    }
+
+    /** Wait until the threadpool has completed all processing. */
+    private void awaitThreadpoolCompletion(ExecutorService threadPool) {
+        try {
+            // Now that the pools is laden, we call the milder shutdown, which lets us wait for completion of all.
+            logger.info("Awaiting shutdown.");
+            threadPool.shutdown();
+            threadPool.awaitTermination( 10, TimeUnit.MINUTES );
+            logger.info("Thread pool termination complete.");
+        } catch ( InterruptedException ie ) {
+            ie.printStackTrace();
+            SessionMgr.getSessionMgr().handleException( ie );
+        }
     }
 
     private void getDownsampledSlice(DownsampleParameter downSampleParam, SliceDownsampleParamBean sliceParam ) {
@@ -280,7 +266,10 @@ public class DownSampler {
         return rtnVal;
     }
 
-    public static class SliceDownsampleParamBean {
+    /**
+     * Parameter object to facilitate downsample method calls.
+     */
+    private static class SliceDownsampleParamBean {
         private int outY = 0;
         private int z;
         private int zOffset;
@@ -304,6 +293,67 @@ public class DownSampler {
 
         public int getZOffset() {
             return zOffset;
+        }
+    }
+
+    /**
+     * Return-value object to conveniently-collect various values about downsample output.
+     */
+    public static class DownsampledTextureData {
+        private byte[] volume;
+        private int sx;
+        private int sy;
+        private int sz;
+        private int voxelBytes;
+
+        private double xScale;
+        private double yScale;
+        private double zScale;
+
+        public DownsampledTextureData(
+                byte[] textureBytes, int sx, int sy, int sz, int voxelBytes,
+                double xScale, double yScale, double zScale
+        ) {
+            this.volume = textureBytes;
+            this.voxelBytes = voxelBytes;
+            this.sx = sx;
+            this.sy = sy;
+            this.sz = sz;
+            this.xScale = xScale;
+            this.yScale = yScale;
+            this.zScale = zScale;
+        }
+
+        public byte[] getVolume() {
+            return volume;
+        }
+
+        public int getSx() {
+            return sx;
+        }
+
+        public int getSy() {
+            return sy;
+        }
+
+        public int getSz() {
+            return sz;
+        }
+
+        public int getVoxelBytes() {
+            return voxelBytes;
+        }
+
+        public double getxScale() {
+            return xScale;
+        }
+
+        public double getyScale() {
+            return yScale;
+        }
+
+        public double getzScale() {
+            return zScale;
         }
     }
 

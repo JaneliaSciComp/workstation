@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.*;
@@ -305,6 +306,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             logger.info("Thread pool termination complete.");
         } catch ( InterruptedException ie ) {
             ie.printStackTrace();
+            SessionMgr.getSessionMgr().handleException(ie);
         }
     }
 
