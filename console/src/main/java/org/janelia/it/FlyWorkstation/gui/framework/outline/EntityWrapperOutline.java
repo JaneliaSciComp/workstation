@@ -210,14 +210,18 @@ public abstract class EntityWrapperOutline extends EntityWrapperTree implements 
 
         // Special case (for now): no name implies should add only the pane-split item.
 		if ("".equals(getRoot().getType())) {
-            EntityWrapper wrappedRoot = getRoot();
-            Entity internalEntity = wrappedRoot.getInternalEntity();
-            if ( internalEntity.getEntityType().equals(EntityConstants.TYPE_NEURON_FRAGMENT ) ) {
-                // Here: verify that the wrapped type is in the proper alignment space
-                popupMenu.add(popupMenu.getOpenInSecondViewerItem());
-            }
-            else {
-                return;
+            Object userObject = node.getUserObject();
+            if ( userObject instanceof EntityWrapper ) {
+                EntityWrapper userWrapperObject = (EntityWrapper)userObject;
+                String entityTypeName = userWrapperObject.getInternalEntity().getEntityType().getName();
+                if ( entityTypeName.equals(EntityConstants.TYPE_NEURON_FRAGMENT) ||
+                     entityTypeName.equals(EntityConstants.TYPE_SAMPLE) ) {
+                    // Here: verify that the wrapped type is in the proper alignment space
+                    popupMenu.add(popupMenu.getOpenInSecondViewerItem());
+                }
+                else {
+                    return;
+                }
             }
         }
 		else if (node != null) {
