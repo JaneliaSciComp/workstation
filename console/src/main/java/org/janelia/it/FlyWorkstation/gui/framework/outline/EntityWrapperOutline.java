@@ -216,7 +216,7 @@ public abstract class EntityWrapperOutline extends EntityWrapperTree implements 
                 String entityTypeName = userWrapperObject.getInternalEntity().getEntityType().getName();
                 if ( entityTypeName.equals(EntityConstants.TYPE_NEURON_FRAGMENT) ||
                      entityTypeName.equals(EntityConstants.TYPE_SAMPLE) ) {
-                    // Here: verify that the wrapped type is in the proper alignment space
+                    // Here: verify that the wrapped type is in the proper alignment space?
                     popupMenu.add(popupMenu.getOpenInSecondViewerItem());
                 }
                 else {
