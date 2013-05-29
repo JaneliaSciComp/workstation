@@ -142,12 +142,13 @@ public class DownSampler {
         // Here, sample the neighborhoods (or _output_ voxels).
         // Java implicitly sets newly-allocated byte arrays to all zeros.
         byte[] textureByteArray = new byte[(outSx * outSy * outSz) * voxelBytes];
+        DownsampleParameter downsampleBean = new DownsampleParameter(fullSizeVolume, voxelBytes, xScale, yScale, zScale, outSx, outSy, textureByteArray);
 
         int outZ = 0;
         for ( int z = 0; z < sz-zScale && outZ < outSz; z += zScale ) {
             int zOffset = outZ * outSx * outSy * voxelBytes;
-            DownsampleParameter sliceParameter = new DownsampleParameter(fullSizeVolume, voxelBytes, xScale, yScale, zScale, outSx, outSy, textureByteArray, zOffset);
-            getDownsampledSlice( sliceParameter, z );
+            SliceDownsampleParamBean sliceBean = new SliceDownsampleParamBean( z, zOffset );
+            getDownsampledSlice( downsampleBean, sliceBean );
 
             outZ ++;
         }
@@ -165,27 +166,27 @@ public class DownSampler {
         return rtnVal;
     }
 
-    private void getDownsampledSlice(DownsampleParameter sliceParameter, int z ) {
+    private void getDownsampledSlice(DownsampleParameter downSampleParam, SliceDownsampleParamBean sliceParam ) {
 
-        for ( int y = 0; y < sy- sliceParameter.getYScale() && sliceParameter.getOutY() < sliceParameter.getOutSy(); y += sliceParameter.getYScale()) {
-            int yOffset = sliceParameter.getZOffset() + sliceParameter.getOutY() * sliceParameter.getOutSx() * sliceParameter.getVoxelBytes(); //(outSy-outY) * outSx ;
+        for ( int y = 0; y < sy- downSampleParam.getYScale() && sliceParam.getOutY() < downSampleParam.getOutSy(); y += downSampleParam.getYScale()) {
+            int yOffset = sliceParam.getZOffset() + sliceParam.getOutY() * downSampleParam.getOutSx() * downSampleParam.getVoxelBytes(); //(outSy-outY) * outSx ;
             int outX = 0;
-            for ( int x = 0; x < sx- sliceParameter.getXScale() && outX < sliceParameter.getOutSx(); x += sliceParameter.getXScale()) {
-                byte[] value = getNeighborHoodDownSampling( sliceParameter, x, y, z );
+            for ( int x = 0; x < sx- downSampleParam.getXScale() && outX < downSampleParam.getOutSx(); x += downSampleParam.getXScale()) {
+                byte[] value = getNeighborHoodDownSampling( downSampleParam, x, y, sliceParam.getZ() );
 
                 // Store the value into the output array.
                 if ( value != null ) {
-                    for ( int pi = 0; pi < sliceParameter.getVoxelBytes(); pi ++ ) {
+                    for ( int pi = 0; pi < downSampleParam.getVoxelBytes(); pi ++ ) {
                         //byte piByte = (byte)(value >>> (pi * 8) & 0x000000ff);
                         byte piByte = value[ pi ];
-                        sliceParameter.getTextureByteArray()[yOffset + (outX * sliceParameter.getVoxelBytes()) + (pi)] = piByte;
+                        downSampleParam.getTextureByteArray()[yOffset + (outX * downSampleParam.getVoxelBytes()) + (pi)] = piByte;
                     }
                 }
 
                 outX ++;
             }
 
-            sliceParameter.setOutY(sliceParameter.getOutY() + 1);
+            sliceParam.setOutY(sliceParam.getOutY() + 1);
         }
     }
 
@@ -277,6 +278,33 @@ public class DownSampler {
             rtnVal += (voxelValue[ i ] << (8 * (arrLen - i - 1)));
         }
         return rtnVal;
+    }
+
+    public static class SliceDownsampleParamBean {
+        private int outY = 0;
+        private int z;
+        private int zOffset;
+
+        public SliceDownsampleParamBean( int z, int zOffset ) {
+            this.z = z;
+            this.zOffset = zOffset;
+        }
+
+        public int getOutY() {
+            return outY;
+        }
+
+        public void setOutY( int outY ) {
+            this.outY = outY;
+        }
+
+        public int getZ() {
+            return z;
+        }
+
+        public int getZOffset() {
+            return zOffset;
+        }
     }
 
 }
