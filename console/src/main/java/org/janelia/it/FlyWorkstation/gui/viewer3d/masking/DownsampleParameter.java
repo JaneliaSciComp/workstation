@@ -9,10 +9,10 @@ public class DownsampleParameter {
     private final int outSx;
     private final int outSy;
     private final byte[] textureByteArray;
-    private int outY;
+    private int outY = 0;  // Emphasis: set to zero intentionally.
     private final int zOffset;
 
-    public DownsampleParameter(byte[] fullSizeVolume, int voxelBytes, double xScale, double yScale, double zScale, int outSx, int outSy, byte[] textureByteArray, int outY, int zOffset) {
+    public DownsampleParameter(byte[] fullSizeVolume, int voxelBytes, double xScale, double yScale, double zScale, int outSx, int outSy, byte[] textureByteArray, int zOffset) {
         this.fullSizeVolume = fullSizeVolume;
         this.voxelBytes = voxelBytes;
         this.xScale = xScale;

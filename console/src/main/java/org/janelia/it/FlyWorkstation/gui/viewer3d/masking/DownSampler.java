@@ -145,9 +145,8 @@ public class DownSampler {
 
         int outZ = 0;
         for ( int z = 0; z < sz-zScale && outZ < outSz; z += zScale ) {
-            int outY = 0;
             int zOffset = outZ * outSx * outSy * voxelBytes;
-            DownsampleParameter sliceParameter = new DownsampleParameter(fullSizeVolume, voxelBytes, xScale, yScale, zScale, outSx, outSy, textureByteArray, outY, zOffset);
+            DownsampleParameter sliceParameter = new DownsampleParameter(fullSizeVolume, voxelBytes, xScale, yScale, zScale, outSx, outSy, textureByteArray, zOffset);
             getDownsampledSlice( sliceParameter, z );
 
             outZ ++;
@@ -201,7 +200,6 @@ public class DownSampler {
      */
     private byte[] getNeighborHoodDownSampling(
             DownsampleParameter sliceParameter, int x, int y, int z
-//            byte[] fullSizeVolume, int voxelBytes, double xScale, double yScale, double zScale, int x, int y, int z
     ) {
 
         byte[] value = null;
