@@ -14,6 +14,8 @@ import java.util.Map;
  * Supplies a color mapping, given a list of
  */
 public interface RenderMappingI {
+    public static final String PASSTHROUGH_RENDER_ATTRIBUTE = "Passthrough";
+
     public static final byte FRAGMENT_RENDERING = 1;
     public static final byte NON_RENDERING = 0;
     public static final byte COMPARTMENT_RENDERING = 2;

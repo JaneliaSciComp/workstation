@@ -252,6 +252,9 @@ public class ABContextDataSource implements RenderableDataSourceI {
             rgb[ 1 ] = (byte)renderColor.getGreen();
             rgb[ 2 ] = (byte)renderColor.getBlue();
             byte renderMethod = RenderMappingI.FRAGMENT_RENDERING;
+            if ( item.isPassthroughRendering() ) {
+                renderMethod = RenderMappingI.PASS_THROUGH_RENDERING;
+            }
             if ( ! item.isVisible() ) {
                 renderMethod = RenderMappingI.NON_RENDERING;
             }

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.domain.EntityWrapperFactory;
@@ -24,7 +25,7 @@ import org.slf4j.LoggerFactory;
 public class AlignedItem extends EntityWrapper {
 
     private static final Logger log = LoggerFactory.getLogger(AlignedItem.class);
-    
+
     private EntityWrapper itemWrapper;
     
     public AlignedItem(RootedEntity rootedEntity) {
@@ -174,4 +175,29 @@ public class AlignedItem extends EntityWrapper {
             setColorHex(rgbHex);
         }
     }
+
+    public boolean isPassthroughRendering() {
+        Entity entity = getInternalEntity();
+        return RenderMappingI.PASSTHROUGH_RENDER_ATTRIBUTE.equals(
+                entity.getValueByAttributeName(EntityConstants.ATTRIBUTE_RENDER_METHOD)
+        );
+    }
+
+    /**
+     * Note: at time of writing, there is only one override being used, even though there are several possible
+     * rendering attribute types.  If this is not used, the value will be Neuron or Compartment.
+     *
+     * @param passthroughRendering T to override rendering as passthrough
+     * @throws Exception for the setter.
+     */
+    public void setPassthroughRendering( boolean passthroughRendering ) throws Exception{
+        Entity entity = getInternalEntity();
+        String value = null;
+        if ( passthroughRendering ) {
+            value = RenderMappingI.PASSTHROUGH_RENDER_ATTRIBUTE;
+        }
+        entity.setValueByAttributeName(EntityConstants.ATTRIBUTE_RENDER_METHOD, value );
+        ModelMgr.getModelMgr().saveOrUpdateEntity(entity);
+    }
+
 }

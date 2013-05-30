@@ -59,6 +59,7 @@ public class LayerContextMenu extends JPopupMenu {
         setNextAddRequiresSeparator(true);
         add(getChooseColorItem());
         add(getDropColorItem());
+        add(getRawRenderToggle());
         add(getRenameItem());
         add(getDeleteItem());
     }
@@ -137,6 +138,36 @@ public class LayerContextMenu extends JPopupMenu {
             }
         });
         return copyMenuItem;
+    }
+
+    protected JMenuItem getRawRenderToggle() {
+        JMenuItem menuItem = new JMenuItem(
+                alignedItem.isPassthroughRendering() ? "  Monocolored Rendering" : "  Raw Rendering");
+        menuItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                SimpleWorker worker = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        alignedItem.setPassthroughRendering(!alignedItem.isPassthroughRendering());
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
+                                alignmentBoardContext, alignedItem, ChangeType.ColorChange);
+                        ModelMgr.getModelMgr().postOnEventBus(event);
+                    }
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                worker.execute();
+            }
+        });        return menuItem;
     }
 
     protected JMenuItem getDropColorItem() {
