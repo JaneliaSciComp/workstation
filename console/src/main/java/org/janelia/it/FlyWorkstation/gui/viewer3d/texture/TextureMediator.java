@@ -273,6 +273,44 @@ public class TextureMediator {
         this.textureData = textureData;
     }
 
+    /**
+     * Attempt to determine how much memory is free for use with textures.
+     *
+     * @param gl descriptor for OpenGL calls.
+     * @return value obtained from either NVidea or Radeon call.
+     */
+    public int getFreeTextureMemory(GL2 gl) {
+        /*
+           This technique is derived from information available at these sources:
+
+            http://www.opengl.org/registry/specs/ATI/meminfo.txt
+            http://developer.download.nvidia.com/opengl/specs/GL_NVX_gpu_memory_info.txt
+         */
+        gl.glGetError(); // Clear any old errors.
+        int rtnVal = 0;  // Default to 0, in case neither returns.  No constraints against unknowns.
+        IntBuffer rtnBuf = IntBuffer.allocate( 4 ); // Max required, under Radeon.
+        gl.glGetIntegerv(GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX, rtnBuf);
+        int errnum = gl.glGetError();
+        if ( errnum == 0 ) {
+            rtnVal = rtnBuf.array()[ 0 ];
+        }
+        else {
+            errnum = -1;
+            rtnBuf.rewind();
+            gl.glGetIntegerv(TEXTURE_FREE_MEMORY_ATI, rtnBuf);
+            errnum = gl.glGetError();
+            if ( errnum == 0 ) {
+                rtnVal = rtnBuf.array()[ 0 ];
+                logger.info( "Found a value at constant {}.", Integer.toHexString( TEXTURE_FREE_MEMORY_ATI ) );
+            }
+            else {
+                logger.warn( "Neither NVidea nor Radeon video memory calls succeeded {}/{}.", errnum, rtnBuf.array()[0] );
+            }
+        }
+
+        return rtnVal;
+    }
+
     private int getStorageFormatMultiplier() {
         int orderId =  getVoxelComponentOrder();
         if ( orderId == GL2.GL_BGRA ) {
@@ -342,44 +380,6 @@ public class TextureMediator {
 
     private static final int GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX = 0x9049;   // NVidia
     private static final int TEXTURE_FREE_MEMORY_ATI = 0x87FC;                        // Radeon
-
-    /**
-     * Attempt to determine how much memory is free for use with textures.
-     *
-     * @param gl descriptor for OpenGL calls.
-     * @return value obtained from either NVidea or Radeon call.
-     */
-    private int getFreeTextureMemory(GL2 gl) {
-        /*
-           This technique is derived from information available at these sources:
-
-            http://www.opengl.org/registry/specs/ATI/meminfo.txt
-            http://developer.download.nvidia.com/opengl/specs/GL_NVX_gpu_memory_info.txt
-         */
-        gl.glGetError(); // Clear any old errors.
-        int rtnVal = Integer.MAX_VALUE;  // Default to max, in case neither returns.  No constraints against unknowns.
-        IntBuffer rtnBuf = IntBuffer.allocate( 4 ); // Max required, under Radeon.
-        gl.glGetIntegerv(GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX, rtnBuf);
-        int errnum = gl.glGetError();
-        if ( errnum == 0 ) {
-            rtnVal = rtnBuf.array()[ 0 ];
-        }
-        else {
-            errnum = -1;
-            rtnBuf.rewind();
-            gl.glGetIntegerv(TEXTURE_FREE_MEMORY_ATI, rtnBuf);
-            errnum = gl.glGetError();
-            if ( errnum == 0 ) {
-                rtnVal = rtnBuf.array()[ 0 ];
-                logger.info( "Found a value at constant {}.", Integer.toHexString( TEXTURE_FREE_MEMORY_ATI ) );
-            }
-            else {
-                logger.warn( "Neither NVidea nor Radeon video memory calls succeeded {}/{}.", errnum, rtnBuf.array()[0] );
-            }
-        }
-
-        return rtnVal;
-    }
 
     private int getInternalFormat() {
         int internalFormat = GL2.GL_RGBA;
