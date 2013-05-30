@@ -69,6 +69,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private boolean renderingInProgress = false;
     private boolean outstandingRenderRequest = false;
 
+    private boolean boardOpen = false;
+
     public AlignmentBoardViewer(ViewerPane viewerPane) {
         super(viewerPane);
 
@@ -324,12 +326,16 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     }
 
     //---------------------------------------HELPERS
-    private void handleBoardOpened(AlignmentBoardContext abContext) {
-        this.getViewerPane().setTitle( "Alignment Board: " + abContext.getInternalEntity().getName() );
-        printAlignmentBoardContext(abContext);
+    /** This is synch'd because there may be a race between constructor and an externally-posted event. */
+    private synchronized void handleBoardOpened(AlignmentBoardContext abContext) {
+        if ( ! boardOpen ) {
+            this.getViewerPane().setTitle( "Alignment Board: " + abContext.getInternalEntity().getName() );
+            printAlignmentBoardContext(abContext);
 
-        // The true update!
-        this.updateBoard( abContext );
+            // The true update!
+            this.updateBoard( abContext );
+            boardOpen = true;
+        }
     }
 
     private void printAlignmentBoardContext(AlignmentBoardContext abContext) {
