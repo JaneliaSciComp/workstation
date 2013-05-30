@@ -72,6 +72,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     public AlignmentBoardViewer(ViewerPane viewerPane) {
         super(viewerPane);
 
+        logger.info( "C'tor" );
         renderMapping = new ConfigurableColorMapping();
         cropCoordSet = CropCoordSet.getDefaultCropCoordSet();
         setLayout(new BorderLayout());
@@ -83,6 +84,11 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 return AlignmentBoardViewer.this;
             }
         });
+
+        AlignmentBoardContext alignmentBoardContext = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
+        if ( alignmentBoardContext != null ) {
+            handleBoardOpened( alignmentBoardContext );
+        }
     }
 
     @Override
@@ -159,7 +165,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
     @Override
     public void close() {
-        logger.info("Closing");
+        logger.info( "Closing" );
         ModelMgr.getModelMgr().unregisterOnEventBus(this);
         deleteAll();
     }
@@ -186,16 +192,13 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
     @Subscribe
     public void handleBoardOpened(AlignmentBoardOpenEvent event) {
-        
-        AlignmentBoardContext abContext = event.getAlignmentBoardContext();
-        this.getViewerPane().setTitle( "Alignment Board: " + abContext.getInternalEntity().getName() );
-        printAlignmentBoardContext(abContext);
+        logger.info( "Board Opened" );
 
-        // The true update!
-        this.updateBoard( abContext );
+        AlignmentBoardContext abContext = event.getAlignmentBoardContext();
+        handleBoardOpened(abContext);
     }
 
-    @Subscribe 
+    @Subscribe
     public void handleItemChanged(AlignmentBoardItemChangeEvent event) {
 
         AlignmentBoardContext abContext = event.getAlignmentBoardContext();
@@ -321,6 +324,14 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     }
 
     //---------------------------------------HELPERS
+    private void handleBoardOpened(AlignmentBoardContext abContext) {
+        this.getViewerPane().setTitle( "Alignment Board: " + abContext.getInternalEntity().getName() );
+        printAlignmentBoardContext(abContext);
+
+        // The true update!
+        this.updateBoard( abContext );
+    }
+
     private void printAlignmentBoardContext(AlignmentBoardContext abContext) {
         if ( log.isDebugEnabled() ) {
             log.debug("Alignment board: "+abContext.getName());

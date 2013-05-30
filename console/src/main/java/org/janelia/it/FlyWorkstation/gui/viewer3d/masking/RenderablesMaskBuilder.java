@@ -123,7 +123,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
 
     @Override
     public TextureDataI getCombinedTextureData() {
-        logger.info( "Retrieving combined texture data." );
+        logger.debug( "Retrieving combined texture data." );
         TextureDataI textureData;
         double downSampleRate = settings.getDownSampleRate();
         if ( downSampleRate != 1.0 ) {
@@ -180,7 +180,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
      */
     public void init() {
         if ( ! isInitialized ) {
-            logger.info( "Initializing" );
+            logger.debug( "Initializing" );
             volumeData = new byte[ (int)(paddedSx * paddedSy * paddedSz) * byteCount ];
             isInitialized = true;
         }

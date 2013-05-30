@@ -183,7 +183,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
 
     @Override
     public void populateVolumeAcceptor(VolumeDataAcceptor dataAcceptor) {
-        logger.info( "Populating volume acceptor." );
+        logger.debug( "Populating volume acceptor." );
         dataAcceptor.setTextureData( buildTextureData() );
     }
 
@@ -281,7 +281,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
     private void init() {
         if ( needsChannelInit) {
             checkReady();
-            logger.info( "Initialize called..." );
+            logger.debug( "Initialize called..." );
 
             // The size of any one voxel will be the number of channels times the bytes per channel.
             if ( channelMetaData.rawChannelCount == 3 ) {

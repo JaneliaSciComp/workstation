@@ -148,7 +148,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     @Override
     protected void doStuff() throws Exception {
 
-        logger.info( "In load thread, before getting bean list." );
+        logger.debug( "In load thread, before getting bean list." );
         Collection<MaskChanRenderableData> renderableDatas = dataSource.getRenderableDatas();
 
         Collection<RenderableBean> renderableBeans = new ArrayList<RenderableBean>();
@@ -185,7 +185,7 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             renderChange(renderableDatas);
         }
 
-        logger.info( "Ending load thread." );
+        logger.debug( "Ending load thread." );
     }
 
     @Override
@@ -210,21 +210,20 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             logger.info( "No renderables found for alignment board " + dataSource.getName() );
         }
         else {
-            logger.info( "In load thread, after getting bean list." );
+            logger.debug( "In load thread, after getting bean list." );
 
             if ( resolver == null ) {
                 //resolver = new TrivialFileResolver();  // todo swap comments, in production.
                 resolver = new CacheFileResolver();
             }
 
-            //sequentialFileLoad( metaDatas );
-            logger.info("Starting multithreaded file load.");
+            logger.debug("Starting multithreaded file load.");
             multiThreadedFileLoad( metaDatas, MAX_FILE_LOAD_THREADS );
 
             compartmentLoader.close();
             neuronFragmentLoader.close();
 
-            logger.info("Starting multithreaded texture build.");
+            logger.debug("Starting multithreaded texture build.");
             multiThreadedTextureBuild();
 
 
@@ -300,10 +299,10 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
     private void awaitThreadpoolCompletion(ExecutorService threadPool) {
         try {
             // Now that the pools is laden, we call the milder shutdown, which lets us wait for completion of all.
-            logger.info("Awaiting shutdown.");
+            logger.debug("Awaiting shutdown.");
             threadPool.shutdown();
             threadPool.awaitTermination( 10, TimeUnit.MINUTES );
-            logger.info("Thread pool termination complete.");
+            logger.debug("Thread pool termination complete.");
         } catch ( InterruptedException ie ) {
             ie.printStackTrace();
             SessionMgr.getSessionMgr().handleException(ie);
