@@ -76,7 +76,7 @@ public class GpuSampler implements GLEventListener {
                                     logger.warn( "Exceeded max wait loops {} to estimate texture memory.  Returning the 0.", MAX_WAIT_LOOPS );
                                     return NO_ESTIMATE;
                                 }
-                                logger.info("Wait loop iteration {}.", numLoops );
+                                logger.debug("Wait loop iteration {}.", numLoops );
                             } catch ( Exception ex ) {
                                 logger.error( "Failed to obtain free texture memory estimate.  Returning the 0.");
                                 ex.printStackTrace();
@@ -106,7 +106,7 @@ public class GpuSampler implements GLEventListener {
             http://developer.download.nvidia.com/opengl/specs/GL_NVX_gpu_memory_info.txt
          */
         gl.glGetError(); // Clear any old errors.
-        int rtnVal = Integer.MAX_VALUE;  // Default to max, in case neither returns.  No constraints against unknowns.
+        int rtnVal = 0;  // Default to 0, in case neither returns.
         IntBuffer rtnBuf = IntBuffer.allocate( 4 ); // Max required, under Radeon.
         gl.glGetIntegerv(GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX, rtnBuf);
         int errnum = gl.glGetError();
