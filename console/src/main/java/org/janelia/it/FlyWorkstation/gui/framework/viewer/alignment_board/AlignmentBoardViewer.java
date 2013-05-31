@@ -515,7 +515,9 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
                     mip3d.refresh();
 
-                    final AlignmentBoardSettings alignmentBoardSettings = adjustDownsampleRateSetting();
+                    // When this is called from thread type X, and the "best guess" method is used, it blanks the screen.
+                    logger.info(" Calling adjust rate setting from {}.", Thread.currentThread().getName());
+                    AlignmentBoardSettings alignmentBoardSettings = adjustDownsampleRateSetting();
 
                     // Here, should load volumes, for all the different items given.
                     loadWorker = new RenderablesLoadWorker(
@@ -549,31 +551,49 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
      */
     private AlignmentBoardSettings adjustDownsampleRateSetting() throws Exception {
 
-        AlignmentBoardSettings alignmentBoardSettings = settings.getAlignmentBoardSettings();
-        if ( alignmentBoardSettings.getDownSampleRate() == 0.0 ) {
+        final AlignmentBoardSettings[] alignmentBoardSettings =
+                new AlignmentBoardSettings[] { settings.getAlignmentBoardSettings() };
+        if ( alignmentBoardSettings[ 0 ].getDownSampleRate() == 0.0 ) {
             // Do not backflush this setting into the caller.  Will not serialize estimated value.
-            alignmentBoardSettings = alignmentBoardSettings.clone();
+            alignmentBoardSettings[ 0 ] = alignmentBoardSettings[ 0 ].clone();
 
             // Must find the best downsample rate.
-            GpuSampler sampler = new GpuSampler( this.getBackground() );
+            final GpuSampler sampler = new GpuSampler( this.getBackground() );
             final GLJPanel feedbackPanel = new GLJPanel();
             feedbackPanel.setSize( new Dimension( 1, 1 ) );
             feedbackPanel.addGLEventListener( sampler );
             // DEBUG: feedbackPanel.setToolTipText( "Reading OpenGL values..." );
 
-            add(feedbackPanel, BorderLayout.SOUTH);
+            Runnable runnable = new Runnable() {
+                public void run() {
+                    add(feedbackPanel, BorderLayout.SOUTH);
+                    Future<Integer> freeGraphicsMemoryFuture = sampler.getEstimatedTextureMemory();
 
-            Future<Integer> freeGraphicsMemoryFuture = sampler.getEstimatedTextureMemory();
+                    final Integer[] freeGraphicsMemoryArr = new Integer[ 1 ];
+                    try {
+                        // Must set the down sample rate to the newly-discovered best.
+                        freeGraphicsMemoryArr[ 0 ] = freeGraphicsMemoryFuture.get( 2, TimeUnit.MINUTES );
+                    } catch ( Exception ex ) {
+                        ex.printStackTrace();
+                        SessionMgr.getSessionMgr().handleException( ex );
+                    }
 
-            // Must set the down sample rate to the newly-discovered best.
-            Integer freeGraphicsMemory = freeGraphicsMemoryFuture.get( 2, TimeUnit.MINUTES );
-            // 1.5Gb in Kb increments
-            if ( freeGraphicsMemory == 0   ||  freeGraphicsMemory < LEAST_FULLSIZE_MEM )
-                alignmentBoardSettings.setDownSampleRate( 2.0 );
-            else
-                alignmentBoardSettings.setDownSampleRate( 1.0 );
+                    // 1.5Gb in Kb increments
+                    if ( freeGraphicsMemoryArr[ 0 ] == 0  ||  freeGraphicsMemoryArr[ 0 ] < LEAST_FULLSIZE_MEM )
+                        alignmentBoardSettings[ 0 ].setDownSampleRate( 2.0 );
+                    else
+                        alignmentBoardSettings[ 0 ].setDownSampleRate( 1.0 );
+                }
+            };
+            if ( SwingUtilities.isEventDispatchThread() ) {
+                runnable.run();
+            }
+            else {
+                SwingUtilities.invokeAndWait(runnable);
+            }
+
         }
-        return alignmentBoardSettings;
+        return alignmentBoardSettings[ 0 ];
     }
 
     /**

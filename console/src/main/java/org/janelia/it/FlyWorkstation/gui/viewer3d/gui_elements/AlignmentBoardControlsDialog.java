@@ -55,7 +55,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private static final Dimension DN_SAMPLE_DROPDOWN_SIZE = new Dimension(130, 50);
     private static final String COMMIT_CHANGES = "Commit Changes";
     private static final String COMMIT_CHANGES_TOOLTIP_TEXT = COMMIT_CHANGES;
-    private static final String DISMISS_DIALOG = "Done";
+    private static final String DISMISS_DIALOG = "Dismiss";
     private static final String SAVE_SCREEN_SHOT_MIP = "Screen Shot/MIP";
     private static final String SAVE_SCREEN_SHOT_TOOLTIP_TEXT = SAVE_SCREEN_SHOT_MIP;
     private static final String DOWN_SAMPLE_RATE = "Down Sample Rate";
