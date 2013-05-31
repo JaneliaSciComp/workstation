@@ -603,7 +603,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private Mip3d createMip3d() {
         Mip3d rtnVal = new Mip3d();
         settings = new AlignmentBoardControlsDialog( rtnVal, cropCoordSet );
-        settings.setDownSampleRate( AlignmentBoardControlsDialog.UNSELECTED_DOWNSAMPLE_RATE);
         settings.addSettingsListener(
                 new AlignmentBoardControlsListener( rtnVal, renderMapping, this )
         );

@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements;
 
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CoordCropper3D;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CropCoordSet;
@@ -68,6 +69,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private static final String NON_SELECT_BLACKOUT = "Non-selected region blacked out";
     private static final String NON_SELECT_BLACKOUT_TOOLTIP_TEXT = NON_SELECT_BLACKOUT;
     private static final String ESTIMATED_BEST_RESOLUTION = "Best Guess";
+    private static final String DOWN_SAMPLE_PROP_NAME = "AlignmentBoard_Downsample_Rate";
 
     private Component centering;
     private JSlider brightnessSlider;
@@ -103,6 +105,11 @@ public class AlignmentBoardControlsDialog extends JDialog {
         this.cropCoordSet = cropCoordSet;
         this.setDefaultCloseOperation( WindowConstants.HIDE_ON_CLOSE );
         createGui();
+        Double downsampleRate = (Double)SessionMgr.getSessionMgr().getModelProperty(DOWN_SAMPLE_PROP_NAME);
+        if ( downsampleRate == null ) {
+            downsampleRate = AlignmentBoardControlsDialog.UNSELECTED_DOWNSAMPLE_RATE;
+        }
+        this.setNonSerializedDownSampleRate(downsampleRate);
     }
 
     /** Control who observes.  Synchronized for thread safety. */
@@ -120,9 +127,9 @@ public class AlignmentBoardControlsDialog extends JDialog {
      */
     public AlignmentBoardSettings getAlignmentBoardSettings() {
         AlignmentBoardSettings settings = new AlignmentBoardSettings();
-        settings.setDownSampleRate( getDownsampleRate() );
-        settings.setGammaFactor( getGammaFactor() );
-        settings.setShowChannelData( isUseSignalData() );
+        settings.setDownSampleRate(getDownsampleRate());
+        settings.setGammaFactor(getGammaFactor());
+        settings.setShowChannelData(isUseSignalData());
         return settings;
     }
 
@@ -186,17 +193,8 @@ public class AlignmentBoardControlsDialog extends JDialog {
     }
 
     public void setDownSampleRate( double downSampleRate ) {
-        int downSampleRateInt = (int)Math.round(downSampleRate);
-        Integer downsampleIndex = downSampleRateToIndex.get( downSampleRateInt );
-        if ( downsampleIndex == null ) {
-            JOptionPane.showMessageDialog(
-                    centering,
-                    "Invalid downsample rate of " + downSampleRate + " given.  Instead setting image size to 1/2."
-            );
-            downsampleIndex = 2;
-        }
-        downSampleRateDropdown.setSelectedIndex( downsampleIndex );
-        currentDownSampleRate = downSampleRate;
+        serializeDownsampleRate(downSampleRate);
+        setNonSerializedDownSampleRate(downSampleRate);
     }
 
     public void setUseSignalData( boolean use ) {
@@ -213,6 +211,24 @@ public class AlignmentBoardControlsDialog extends JDialog {
     }
 
     //--------------------------------------------HELPERS
+    /** Set the rate in the GUI, for now, only. */
+    private void setNonSerializedDownSampleRate(double downSampleRate) {
+        int downSampleRateInt = (int)Math.round(downSampleRate);
+        Integer downsampleIndex = downSampleRateToIndex.get( downSampleRateInt );
+        if ( downsampleIndex == null ) {
+            JOptionPane.showMessageDialog(
+                    centering,
+                    "Invalid downsample rate of " + downSampleRate + " given.  Instead setting image size to 1/2."
+            );
+            downsampleIndex = 2;
+        }
+        downSampleRateDropdown.setSelectedIndex( downsampleIndex );
+        currentDownSampleRate = downSampleRate;
+    }
+
+    private void serializeDownsampleRate(double downSampleRate) {
+        SessionMgr.getSessionMgr().setModelProperty( DOWN_SAMPLE_PROP_NAME, downSampleRate );
+    }
 
     /**
      * This will fire only those listener methods affected by the current user commitment.
@@ -231,6 +247,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
                 currentDownSampleRate = newDownSampleRate;
                 currentUseSignalData = newUseSignal;
+                serializeDownsampleRate( newDownSampleRate );
                 listener.updateSettings();
 
             }
