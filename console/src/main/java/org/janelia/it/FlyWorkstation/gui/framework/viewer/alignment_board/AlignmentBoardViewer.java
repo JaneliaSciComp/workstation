@@ -591,12 +591,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 }
             };
             new Thread( runnable ).start();
-//            if ( SwingUtilities.isEventDispatchThread() ) {
-//                runnable.run();
-//            }
-//            else {
-//                SwingUtilities.invokeAndWait(runnable);
-//            }
 
         }
         return alignmentBoardSettings[ 0 ];
