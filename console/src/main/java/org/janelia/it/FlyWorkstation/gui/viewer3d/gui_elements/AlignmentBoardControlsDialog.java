@@ -27,11 +27,11 @@ import java.util.List;
  * the Alignment Board Viewer.
  */
 public class AlignmentBoardControlsDialog extends JDialog {
-    public static final double DEFAULT_DOWNSAMPLE_RATE = 2.0;
+    public static final double UNSELECTED_DOWNSAMPLE_RATE = 0.0;
     private static final String DOWN_SAMPLE_TOOLTIP =
             "<html>" +
             "Data sent to screen may be too large for your graphics card.<br>" +
-            "Therefore, they are downsampled at a default rate of 1.0:" + DEFAULT_DOWNSAMPLE_RATE +
+            "Therefore, they are downsampled at the maximum rate found possible for your card." +
             ".<br>However, you may wish to move that rate up or down, depending on your knowledge of the<br>" +
             "advanced hardware on your system.  Higher values mean larger, blockier voxels, and less memory."
             + "</html>";
@@ -67,6 +67,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private static final String CLEAR_BUTTON_TOOLTIP_TEXT = "Drop all sub-volume selections made in this session.";
     private static final String NON_SELECT_BLACKOUT = "Non-selected region blacked out";
     private static final String NON_SELECT_BLACKOUT_TOOLTIP_TEXT = NON_SELECT_BLACKOUT;
+    private static final String ESTIMATED_BEST_RESOLUTION = "Best Guess";
 
     private Component centering;
     private JSlider brightnessSlider;
@@ -153,7 +154,11 @@ public class AlignmentBoardControlsDialog extends JDialog {
     public double getDownsampleRate() {
         if ( ! readyForOutput )
             return currentDownSampleRate;
-        return (Integer)downSampleRateDropdown.getItemAt( downSampleRateDropdown.getSelectedIndex() );
+        String selectedValue = downSampleRateDropdown.getItemAt( downSampleRateDropdown.getSelectedIndex() ).toString();
+        if ( Character.isDigit( selectedValue.charAt( 0 ) ) )
+            return Integer.parseInt( selectedValue );
+        else
+            return 0.0;
     }
 
     /**
@@ -409,10 +414,11 @@ public class AlignmentBoardControlsDialog extends JDialog {
         brightnessSlider.setBorder(new TitledBorder("Brightness"));
 
         downSampleRateToIndex = new HashMap<Integer,Integer>();
-        downSampleRateToIndex.put( 1, 0 );
-        downSampleRateToIndex.put( 2, 1 );
-        downSampleRateToIndex.put( 4, 2 );
-        downSampleRateToIndex.put( 8, 3 );
+        downSampleRateToIndex.put( 0, 0 );
+        downSampleRateToIndex.put( 1, 1 );
+        downSampleRateToIndex.put( 2, 2 );
+        downSampleRateToIndex.put( 4, 3 );
+        downSampleRateToIndex.put( 8, 4 );
 
         downSampleRateDropdown = new JComboBox(
                 new ABSDComboBoxModel( downSampleRateToIndex )
@@ -603,7 +609,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
             for ( Integer rate: rateToIndex.keySet() ) {
                 rates.add( rate );
             }
-            selectedItem = DEFAULT_DOWNSAMPLE_RATE;
+            selectedItem = UNSELECTED_DOWNSAMPLE_RATE;
         }
 
         @Override
@@ -613,7 +619,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
         @Override
         public Object getElementAt(int index) {
-            return rates.get( index );
+            return wrapWithDescription(rates.get(index));
         }
 
         @Override
@@ -634,6 +640,15 @@ public class AlignmentBoardControlsDialog extends JDialog {
         @Override
         public Object getSelectedItem() {
             return selectedItem;
+        }
+
+        private String wrapWithDescription( Object item ) {
+            if ( item.equals( new Integer( 0 ) ) ) {
+                return ESTIMATED_BEST_RESOLUTION;
+            }
+            else {
+                return item.toString();
+            }
         }
     }
 

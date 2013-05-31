@@ -14,6 +14,17 @@ public class AlignmentBoardSettings {
     private double gammaFactor;
     private boolean showChannelData;
 
+    public AlignmentBoardSettings() {
+        super();
+    }
+
+    public AlignmentBoardSettings( double downSampleRate, double gammaFactor, boolean showChannelData ) {
+        this();
+        this.downSampleRate = downSampleRate;
+        this.gammaFactor = gammaFactor;
+        this.showChannelData = showChannelData;
+    }
+
     public double getDownSampleRate() {
         return downSampleRate;
     }
@@ -36,5 +47,10 @@ public class AlignmentBoardSettings {
 
     public void setShowChannelData(boolean showChannelData) {
         this.showChannelData = showChannelData;
+    }
+
+    public AlignmentBoardSettings clone() throws CloneNotSupportedException {
+        //super.clone();
+        return new AlignmentBoardSettings( getDownSampleRate(), getGammaFactor(), isShowChannelData() );
     }
 }

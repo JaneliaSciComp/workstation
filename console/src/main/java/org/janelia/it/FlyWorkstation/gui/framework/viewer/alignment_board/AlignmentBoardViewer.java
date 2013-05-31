@@ -3,8 +3,9 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.Callable;
+import java.util.concurrent.*;
 
+import javax.media.opengl.awt.GLJPanel;
 import javax.swing.*;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
@@ -19,6 +20,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardControlsDialog;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.CompletionListener;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.ControlsListener;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.GpuSampler;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.ConfigurableColorMapping;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ABContextDataSource;
@@ -31,6 +33,7 @@ import org.janelia.it.FlyWorkstation.model.viewer.*;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.ArtifactType;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.Channels;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.Size;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +51,7 @@ import com.google.common.eventbus.Subscribe;
 public class AlignmentBoardViewer extends Viewer implements AlignmentBoardControllable {
 
     private static final Logger log = LoggerFactory.getLogger(AlignmentBoardViewer.class);
+    private static final int LEAST_FULLSIZE_MEM = 1500000;
 
     private Entity alignmentBoard;
     private RootedEntity albRootedEntity;
@@ -106,9 +110,9 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
     @Override
     public void showLoadingIndicator() {
-        setLoading( true );
+        setLoading(true);
         removeAll();
-        add(new JLabel(Icons.getLoadingIcon()));
+        add(new JLabel(Icons.getLoadingIcon()), BorderLayout.CENTER);
         revalidate();
         repaint();
     }
@@ -489,7 +493,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     /**
      * This is called when the board data has been updated.
      */
-    private void updateBoard( AlignmentBoardContext context ) {
+    private void updateBoard( final AlignmentBoardContext context ) {
         logger.info("Update-board called.");
         try {
             // TEMP
@@ -511,11 +515,17 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
                     mip3d.refresh();
 
+                    final AlignmentBoardSettings alignmentBoardSettings = adjustDownsampleRateSetting();
+
                     // Here, should load volumes, for all the different items given.
                     loadWorker = new RenderablesLoadWorker(
-                            new ABContextDataSource( context ), renderMapping, this, settings.getAlignmentBoardSettings()
+                            new ABContextDataSource( context ),
+                            renderMapping,
+                            AlignmentBoardViewer.this,
+                            alignmentBoardSettings
                     );
                     loadWorker.execute();
+
                 }
 
             }
@@ -531,13 +541,49 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     }
 
     /**
+     * Allows the downsample-rate setting used in populating the textures, to be adjusted based on user's
+     * platform.
+     *
+     * @return adjusted settings.
+     * @throws Exception from any called methods.
+     */
+    private AlignmentBoardSettings adjustDownsampleRateSetting() throws Exception {
+
+        AlignmentBoardSettings alignmentBoardSettings = settings.getAlignmentBoardSettings();
+        if ( alignmentBoardSettings.getDownSampleRate() == 0.0 ) {
+            // Do not backflush this setting into the caller.  Will not serialize estimated value.
+            alignmentBoardSettings = alignmentBoardSettings.clone();
+
+            // Must find the best downsample rate.
+            GpuSampler sampler = new GpuSampler( this.getBackground() );
+            final GLJPanel feedbackPanel = new GLJPanel();
+            feedbackPanel.setSize( new Dimension( 1, 1 ) );
+            feedbackPanel.addGLEventListener( sampler );
+            // DEBUG: feedbackPanel.setToolTipText( "Reading OpenGL values..." );
+
+            add(feedbackPanel, BorderLayout.SOUTH);
+
+            Future<Integer> freeGraphicsMemoryFuture = sampler.getEstimatedTextureMemory();
+
+            // Must set the down sample rate to the newly-discovered best.
+            Integer freeGraphicsMemory = freeGraphicsMemoryFuture.get( 2, TimeUnit.MINUTES );
+            // 1.5Gb in Kb increments
+            if ( freeGraphicsMemory == 0   ||  freeGraphicsMemory < LEAST_FULLSIZE_MEM )
+                alignmentBoardSettings.setDownSampleRate( 2.0 );
+            else
+                alignmentBoardSettings.setDownSampleRate( 1.0 );
+        }
+        return alignmentBoardSettings;
+    }
+
+    /**
      * Build out the Mip3D object for rendering all.  Make listeners on it so the viewer changes its data
      * as needed.
      */
     private Mip3d createMip3d() {
         Mip3d rtnVal = new Mip3d();
         settings = new AlignmentBoardControlsDialog( rtnVal, cropCoordSet );
-        settings.setDownSampleRate( AlignmentBoardControlsDialog.DEFAULT_DOWNSAMPLE_RATE );
+        settings.setDownSampleRate( AlignmentBoardControlsDialog.UNSELECTED_DOWNSAMPLE_RATE);
         settings.addSettingsListener(
                 new AlignmentBoardControlsListener( rtnVal, renderMapping, this )
         );
@@ -611,8 +657,17 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
         @Override
         public void updateSettings() {
-            AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
-            viewer.updateBoard(context);
+            try {
+                Thread thread = new Thread( new Runnable() {
+                    public void run() {
+                        AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
+                        viewer.updateBoard(context);
+                    }
+                });
+                thread.start();
+            } catch ( Exception ex ) {
+                SessionMgr.getSessionMgr().handleException( ex );
+            }
         }
 
         @Override
