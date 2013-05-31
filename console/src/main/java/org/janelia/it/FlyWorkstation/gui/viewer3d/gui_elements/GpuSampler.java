@@ -25,7 +25,7 @@ public class GpuSampler implements GLEventListener {
 
     private static final int NO_ESTIMATE = 0;
     private static final int WAIT_TIME_MS = 100;
-    private static int MAX_WAIT_LOOPS = 2000 / WAIT_TIME_MS; // Up to 2 seconds.
+    private static final int MAX_WAIT_LOOPS = 10 * 1000 / WAIT_TIME_MS; // Up to this many seconds.
 
     private Logger logger = LoggerFactory.getLogger( GpuSampler.class );
 
@@ -39,10 +39,12 @@ public class GpuSampler implements GLEventListener {
 
     @Override
     public void init(GLAutoDrawable glAutoDrawable) {
-        GL2 gl = glAutoDrawable.getGL().getGL2();
+        GL2 gl2 = glAutoDrawable.getGL().getGL2();
+        gl2.glClearColor( camoColor.getRed() / 255.0f, camoColor.getGreen() / 255.0f, camoColor.getBlue() / 255.0f, 1.0f );
+        gl2.glClear( GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT | GL2.GL_STENCIL_BUFFER_BIT );
 
-        freeTexMem = getFreeTextureMemory( gl );
-        isInitialized.set( true );
+        freeTexMem = getFreeTextureMemory( gl2 );
+        isInitialized.set(true);
     }
 
     @Override
@@ -50,10 +52,7 @@ public class GpuSampler implements GLEventListener {
     }
 
     @Override
-    public void display(GLAutoDrawable gl) {
-        GL2 gl2 = gl.getGL().getGL2();
-        gl2.glClearColor( camoColor.getRed() / 255.0f, camoColor.getGreen() / 255.0f, camoColor.getBlue() / 255.0f, 1.0f );
-        gl2.glClear( GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT | GL2.GL_STENCIL_BUFFER_BIT );
+    public void display(GLAutoDrawable glAutoDrawable) {
     }
 
     @Override
@@ -74,9 +73,10 @@ public class GpuSampler implements GLEventListener {
                                 Thread.sleep( WAIT_TIME_MS );
                                 numLoops ++;
                                 if ( numLoops > MAX_WAIT_LOOPS ) {
-                                    logger.warn( "Exceeded max wait time to estimate texture memory.  Returning the 0.");
+                                    logger.warn( "Exceeded max wait loops {} to estimate texture memory.  Returning the 0.", MAX_WAIT_LOOPS );
                                     return NO_ESTIMATE;
                                 }
+                                logger.info("Wait loop iteration {}.", numLoops );
                             } catch ( Exception ex ) {
                                 logger.error( "Failed to obtain free texture memory estimate.  Returning the 0.");
                                 ex.printStackTrace();
@@ -87,7 +87,7 @@ public class GpuSampler implements GLEventListener {
                     }
                 }
         );
-        ExecutorService executor = Executors.newSingleThreadExecutor();
+        ExecutorService executor = Executors.newFixedThreadPool( 1 );
         executor.execute(future);
         return future;
     }
@@ -125,6 +125,7 @@ public class GpuSampler implements GLEventListener {
             }
         }
 
+        logger.info( "Free texture memory {}.", rtnVal );
         return rtnVal;
     }
 

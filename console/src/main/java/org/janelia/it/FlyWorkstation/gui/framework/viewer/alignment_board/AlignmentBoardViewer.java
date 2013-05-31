@@ -51,7 +51,7 @@ import com.google.common.eventbus.Subscribe;
 public class AlignmentBoardViewer extends Viewer implements AlignmentBoardControllable {
 
     private static final Logger log = LoggerFactory.getLogger(AlignmentBoardViewer.class);
-    private static final int LEAST_FULLSIZE_MEM = 1500000;
+    private static final int LEAST_FULLSIZE_MEM = 1500000; // Ex: 1,565,620
 
     private Entity alignmentBoard;
     private RootedEntity albRootedEntity;
@@ -566,7 +566,11 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
             Runnable runnable = new Runnable() {
                 public void run() {
+
                     add(feedbackPanel, BorderLayout.SOUTH);
+                    revalidate();
+                    repaint();
+
                     Future<Integer> freeGraphicsMemoryFuture = sampler.getEstimatedTextureMemory();
 
                     final Integer[] freeGraphicsMemoryArr = new Integer[ 1 ];
@@ -579,18 +583,20 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     }
 
                     // 1.5Gb in Kb increments
+                    logger.info( "ABV seeing free memory estimate of {}.", freeGraphicsMemoryArr[ 0 ] );
                     if ( freeGraphicsMemoryArr[ 0 ] == 0  ||  freeGraphicsMemoryArr[ 0 ] < LEAST_FULLSIZE_MEM )
                         alignmentBoardSettings[ 0 ].setDownSampleRate( 2.0 );
                     else
                         alignmentBoardSettings[ 0 ].setDownSampleRate( 1.0 );
                 }
             };
-            if ( SwingUtilities.isEventDispatchThread() ) {
-                runnable.run();
-            }
-            else {
-                SwingUtilities.invokeAndWait(runnable);
-            }
+            new Thread( runnable ).start();
+//            if ( SwingUtilities.isEventDispatchThread() ) {
+//                runnable.run();
+//            }
+//            else {
+//                SwingUtilities.invokeAndWait(runnable);
+//            }
 
         }
         return alignmentBoardSettings[ 0 ];
