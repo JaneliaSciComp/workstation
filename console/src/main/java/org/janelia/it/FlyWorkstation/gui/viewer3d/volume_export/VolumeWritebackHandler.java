@@ -90,7 +90,7 @@ public class VolumeWritebackHandler {
                     ex.printStackTrace();
                     logger.error( ex.getMessage() );
                     SessionMgr.getSessionMgr().handleException( ex );
-                };
+                }
             };
             mipExportWorker.execute();
 

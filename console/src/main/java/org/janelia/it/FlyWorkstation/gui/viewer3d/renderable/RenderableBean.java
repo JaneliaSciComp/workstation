@@ -65,7 +65,7 @@ public class RenderableBean {
         boolean rtnVal = false;
         if ( o != null  &&  o instanceof RenderableBean ) {
             RenderableBean other = (RenderableBean)o;
-            if ( other.getRenderableEntity().getId() == getRenderableEntity().getId() ) {
+            if ( other.getRenderableEntity().getId().equals( getRenderableEntity().getId() ) ) {
                 rtnVal = true;
             }
         }

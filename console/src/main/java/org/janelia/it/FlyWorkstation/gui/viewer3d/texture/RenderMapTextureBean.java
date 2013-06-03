@@ -79,9 +79,7 @@ public class RenderMapTextureBean implements TextureDataI {
                 throw new IllegalArgumentException( "Invalid size of RGB color map target.  Must be 4." );
             }
             int entryOffset = maskNumber * BYTES_PER_ENTRY;
-            for ( int i = 0; i < BYTES_PER_ENTRY; i++ ) {
-                rawMap[ entryOffset + i ] = rendition[ i ];
-            }
+            System.arraycopy( rendition, 0, rawMap, entryOffset, BYTES_PER_ENTRY );
         }
 
         // Need de-normalized as-int values in the crop coords.

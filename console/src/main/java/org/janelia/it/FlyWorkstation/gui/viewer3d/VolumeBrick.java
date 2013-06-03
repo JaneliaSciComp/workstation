@@ -22,7 +22,7 @@ import javax.media.opengl.GL2;
  */
 public class VolumeBrick implements GLActor, VolumeDataAcceptor
 {
-    public enum RenderMethod {MAXIMUM_INTENSITY, ALPHA_BLENDING};
+    public enum RenderMethod {MAXIMUM_INTENSITY, ALPHA_BLENDING}
 
     private TextureMediator signalTextureMediator;
     private TextureMediator maskTextureMediator;

@@ -461,7 +461,7 @@ public class TextureMediator {
 
     /** Gets a string name of an OpenGL constant used in this class.  For debugging purposes. */
     private String getConstantName( Integer openGlEnumConstant ) {
-        String rtnVal = null;
+        String rtnVal;
         if ( glConstantToName == null ) {
             glConstantToName = new HashMap<Integer,String>();
             glConstantToName.put( GL2.GL_UNSIGNED_INT_8_8_8_8_REV, "GL2.GL_UNSIGNED_INT_8_8_8_8_REV" );
