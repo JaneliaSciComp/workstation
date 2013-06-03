@@ -89,6 +89,8 @@ vec4 volumeMask(vec4 origColor)
             else if ( renderMethod == 4.0 )
             {
                 rtnVal = origColor;
+                // Set alpha to max intensity of all colors.
+                rtnVal[ 3 ] = maxIntensity;
             }
             else if ( renderMethod == 3.0 )
             {
