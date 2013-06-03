@@ -55,7 +55,8 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
     private static final int COLUMN_WIDTH_COLOR = 32;
     private static final int COLUMN_WIDTH_TREE_NEGATIVE = 80;
     private static final int COLOR_SWATCH_SIZE = 12;
-    
+    private static final String RAW_RENDERING_INDICATOR = "RawRendering";
+
     private final JPanel treesPanel;
     private Outline outline;
     
@@ -641,15 +642,26 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
             JComponent cell = (JComponent)super.getTableCellRendererComponent(
                     table, value, selected, hasFocus, row, column);
             
-            if (value==null) return cell;
+            if (value==null) {
+                cell.setToolTipText( "Default rendering" );
+                return cell;
+            }
             
             JLabel label = (JLabel)cell;
             if (label==null) return null;
-            
+
             if (value instanceof Color) {
                 ColorSwatch swatch = new ColorSwatch(COLOR_SWATCH_SIZE, (Color)value, Color.white);
                 label.setIcon(swatch);
                 label.setText("");
+                label.setToolTipText( "Chosen (mono) color rendering" );
+            }
+            else if (RAW_RENDERING_INDICATOR.equals( value.toString() ) ) {
+                ColorSwatch swatch = new ColorSwatch(COLOR_SWATCH_SIZE, Color.pink, Color.black);
+                swatch.setMultiColor();
+                label.setIcon(swatch);
+                label.setText("");
+                label.setToolTipText( "Raw rendering" );
             }
             else {
                 log.warn("Unrecognized value type in LayersPanel color column: "+value.getClass().getName());
@@ -745,6 +757,8 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                 return alignedItem.isVisible();            
             case 1:
                 if (alignedItem==alignmentBoardContext) return null;
+                else if (alignedItem.isPassthroughRendering())
+                    return RAW_RENDERING_INDICATOR;
                 return alignedItem.getColor();
             default:
                 assert false;

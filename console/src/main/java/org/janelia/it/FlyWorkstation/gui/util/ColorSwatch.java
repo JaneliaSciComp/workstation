@@ -187,7 +187,7 @@ public class ColorSwatch implements Icon {
         Color oldColor = g.getColor();
 
         if (ourSwatchIsMultiColor) {
-            g.setColor(Color.white);
+            g.setColor(ourSwatchColor);
             g.fillRect(x, y, ourSwatchSize, ourSwatchSize);
             g.setColor(ourBorderColor);
             for (int i = 0; i < ourSwatchSize; i += 2) {
