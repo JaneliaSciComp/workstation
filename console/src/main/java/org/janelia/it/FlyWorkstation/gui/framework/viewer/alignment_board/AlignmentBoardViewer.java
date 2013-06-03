@@ -33,6 +33,7 @@ import org.janelia.it.FlyWorkstation.model.viewer.*;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.ArtifactType;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.Channels;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.Size;
+import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.slf4j.Logger;
@@ -526,6 +527,11 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                             AlignmentBoardViewer.this,
                             alignmentBoardSettings
                     );
+                    IndeterminateProgressMonitor monitor =
+                            new IndeterminateProgressMonitor(
+                                    SessionMgr.getBrowser(), "Updating alignment board...", context.getName()
+                            );
+                    loadWorker.setProgressMonitor( monitor );
                     loadWorker.execute();
 
                 }
