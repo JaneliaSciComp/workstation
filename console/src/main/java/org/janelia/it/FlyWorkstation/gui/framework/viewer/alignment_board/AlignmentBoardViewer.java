@@ -100,6 +100,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
     @Override
     public void clear() {
+        logger.info("Clearing the a-board.");
         clearObserver();
         Component[] components = getViewerPane().getMainTitlePane().getComponents();
         for ( Component component: components ) {

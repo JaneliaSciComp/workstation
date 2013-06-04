@@ -170,9 +170,9 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
     /**
      * Compute a factor suitable for gamma adjustment in the shader, given a range of 0..10 from the slider.
-     * Max-point of 10 yields 0.0 (exponent takes to 1.0 in shader).
+     * Max-point of 10 yields 0.0 (exponent takes output value to 1.0 in shader).
      * Mid-point of 5 yields 1.0, or same output.
-     * Low point of 0 yeilds 2.0.
+     * Low point of 0 yields 2.0.
      *
      * Smaller values get pushed more dim with lower slider pos.  Values close to 1.0 do not get diminished much.
      * May require further attention after testing.

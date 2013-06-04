@@ -8,8 +8,7 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.*;
 import java.util.List;
 
 /**
@@ -65,6 +64,8 @@ public class MaskChanSingleFileLoader {
     private Collection<MaskChanDataAcceptorI> maskAcceptors;
     private Collection<MaskChanDataAcceptorI> channelAcceptors;
     private RenderableBean renderableBean;
+
+    private ByteFrequencyDumper frequencyAnalyzer;
 
     // The input data is known to be little-endian or LSB.
     private byte[] longArray = new byte[ 8 ];
@@ -137,6 +138,12 @@ public class MaskChanSingleFileLoader {
             logger.debug( "Completed reading channel data." );
         }
 
+        frequencyAnalyzer = new ByteFrequencyDumper(
+                renderableBean.getRenderableEntity().getName() + " " + renderableBean.getLabelFileNum(),
+                channelMetaData.byteCount,
+                channelMetaData.channelCount
+        );
+
         while ( cummulativeVoxelsReadCount < totalVoxels ) {
             Long skippedRayCount = readLong(maskInputStream);
             assert saneSkipCount( skippedRayCount ) :
@@ -156,6 +163,7 @@ public class MaskChanSingleFileLoader {
         }
 
         logger.debug( "Read complete." );
+        frequencyAnalyzer.close();
     }
 
     private void createEmptyChannelMetaData() {
@@ -339,7 +347,7 @@ public class MaskChanSingleFileLoader {
         List<byte[]> returnValue = new ArrayList<byte[]>();
 
         // Open the file, and move pointers down to seek-ready point.
-        long totalIntensityVoxels = readLong( channelStream );
+        long totalIntensityVoxels = readLong(channelStream);
         if ( totalIntensityVoxels != totalVoxels ) {
             throw new IllegalArgumentException( "Mismatch in file contents: total voxels of "
                     + totalVoxels + " for mask, but total of " + totalIntensityVoxels + " for intensity/channel file."
@@ -470,6 +478,9 @@ public class MaskChanSingleFileLoader {
             totalPositionsAdded += positionsReadFromPair;
 
         }
+
+        // DEBUG CODE
+        frequencyAnalyzer.frequencyCapture( allChannelBytes );
 
         // Necessary to bump latest-ray, in order to move on to the "expected next" value.
         //   Here, it is assumed that if the next "addData" is called and the ray _after_
