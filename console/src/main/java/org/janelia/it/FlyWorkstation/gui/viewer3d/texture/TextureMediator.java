@@ -86,6 +86,7 @@ public class TextureMediator {
                 );
             }
 
+            data.rewind();
             int expectedRemaining = textureData.getSx() * textureData.getSy() * textureData.getSz()
                     * textureData.getPixelByteCount() * textureData.getChannelCount();
             if ( expectedRemaining != data.remaining() ) {
@@ -108,7 +109,6 @@ public class TextureMediator {
             //            ";  expected remaining is " + expectedRemaining
             //    );
             //}
-            data.rewind();
 
             gl.glActiveTexture( textureSymbolicId );
             reportError( "glActiveTexture", gl );

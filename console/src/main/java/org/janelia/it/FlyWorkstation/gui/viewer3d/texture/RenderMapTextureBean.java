@@ -6,9 +6,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CropCoordSet;
 
 import javax.media.opengl.GL2;
-import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.IntBuffer;
 import java.util.Collection;
 import java.util.Map;
 
@@ -25,12 +23,13 @@ public class RenderMapTextureBean implements TextureDataI {
 
     private static final int BYTES_PER_ENTRY = 4;
     private static final int MAP_SIZE = 65536;
-    private static final int MAX_COORD_SETS = 192;   // This number yields end Y value divisible by 4.
+    private static final int MAX_COORD_SETS = 170;   // This number yields end Y value divisible by 4.
     private static final int ENTRIES_PER_COORD_SET = 6;
     private static final int BYTES_PER_COORD_SET = ENTRIES_PER_COORD_SET * BYTES_PER_ENTRY;
     private static final String HEADER = "Map of Colors to Neuron Fragment Numbers and Crop Coord Sets";
     private static final int LINE_WIDTH = 256;
     private static final float CONVENTIONAL_COORD_MULTIPLIER = 2048.0f;
+    private static final int DIVISIBILITY_VALUE = 512;
 
     private RenderMappingI renderMapping;
     private CropCoordSet cropCoordSet;
@@ -86,7 +85,7 @@ public class RenderMapTextureBean implements TextureDataI {
         if ( cropCoordSet != null ) {
             Collection<float[]> acceptedCoordinates = cropCoordSet.getAcceptedCoordinates();
             if ( acceptedCoordinates.size() > MAX_COORD_SETS ) {
-                throw new IllegalArgumentException("Invalid inputs for crop coordinate sets");
+                throw new IllegalArgumentException( "Too many crop volumes.  Max is " + MAX_COORD_SETS );
             }
 
             int nextCropBoxOffset = BYTES_PER_ENTRY * MAP_SIZE;
@@ -222,7 +221,7 @@ public class RenderMapTextureBean implements TextureDataI {
 
     @Override
     public int getChannelCount() {
-        return 3;
+        return 1;
     }
 
     @Override
@@ -299,16 +298,17 @@ public class RenderMapTextureBean implements TextureDataI {
 
     private int getRawBufferSize() {
         //System.out.println("Returning raw buffer size of " + (MAP_SIZE * BYTES_PER_ENTRY + roundUp256( MAX_COORD_SETS * ENTRIES_PER_COORD_SET * BYTES_PER_ENTRY )));
-        return MAP_SIZE * BYTES_PER_ENTRY + roundUp256( MAX_COORD_SETS * ENTRIES_PER_COORD_SET * BYTES_PER_ENTRY );
+        return MAP_SIZE * BYTES_PER_ENTRY + roundUpForDivisbility(MAX_COORD_SETS * ENTRIES_PER_COORD_SET * BYTES_PER_ENTRY);
     }
 
-    private int roundUp256( int value ) {
-        if ( value % 256 == 0 ) {
+    private int roundUpForDivisbility(int value) {
+        if ( value % DIVISIBILITY_VALUE == 0 ) {
+            System.out.println("Returning even value.  No need to round up.");
             return value;
         }
         else {
-            System.out.println("Returning round-up of " + (((value / 256) + 1) * 256));
-            return ((value / 256) + 1) * 256;
+            System.out.println("Returning round-up of " + (((value / DIVISIBILITY_VALUE) + 1) * DIVISIBILITY_VALUE));
+            return ((value / DIVISIBILITY_VALUE) + 1) * DIVISIBILITY_VALUE;
         }
     }
 }
