@@ -43,7 +43,7 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
     protected boolean annotationsLoaded = false;
     protected DragSource source;
     protected double aspectRatio; 
-    protected final IconDemoPanel iconDemoPanel;
+    protected final IconPanel iconPanel;
     protected final RootedEntity rootedEntity;
     protected SimpleWorker annotationLoadingWorker;
     
@@ -77,12 +77,12 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
     	}
     }
     
-    public AnnotatedImageButton(final RootedEntity rootedEntity, final IconDemoPanel iconDemoPanel) {
+    public AnnotatedImageButton(final RootedEntity rootedEntity, final IconPanel iconPanel) {
     	    	
     	normalBackground = getBackground();
     	setBackground(normalBackground);
     	
-    	this.iconDemoPanel = iconDemoPanel;
+    	this.iconPanel = iconPanel;
     	this.rootedEntity = rootedEntity;
     	
     	Boolean disableImageDrag = (Boolean)SessionMgr.getSessionMgr().getModelProperty(ViewerSettingsPanel.DISABLE_IMAGE_DRAG_PROPERTY);
@@ -331,7 +331,7 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
 	public synchronized void setAspectRatio(double width, double height) {
 		double a = width/height;
 		if (a != this.aspectRatio) {
-			iconDemoPanel.getImagesPanel().registerAspectRatio(a);
+			iconPanel.getImagesPanel().registerAspectRatio(a);
 		}
 		this.aspectRatio = a;
 	}
@@ -347,13 +347,13 @@ public abstract class AnnotatedImageButton extends JPanel implements DragGesture
             }
         }
         if (!isSelected() && !keyDown) {
-        	ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(iconDemoPanel.getSelectionCategory(), rootedEntity.getId(), true);
+        	ModelMgr.getModelMgr().getEntitySelectionModel().selectEntity(iconPanel.getSelectionCategory(), rootedEntity.getId(), true);
         }
 		getTransferHandler().exportAsDrag(this, dge.getTriggerEvent(), TransferHandler.LINK);
 	}
 
-	public IconDemoPanel getIconDemoPanel() {
-		return iconDemoPanel;
+	public IconPanel getIconPanel() {
+		return iconPanel;
 	}
 	
 	private boolean selected;

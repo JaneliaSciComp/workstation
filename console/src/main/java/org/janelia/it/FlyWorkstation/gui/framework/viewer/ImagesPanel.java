@@ -41,7 +41,7 @@ public class ImagesPanel extends JScrollPane {
     private KeyListener buttonKeyListener;
     private MouseListener buttonMouseListener;
     
-    private final IconDemoPanel iconDemoPanel;
+    private final IconPanel iconPanel;
     private ScrollableGridPanel buttonsPanel;
 
     private Double lowestAspectRatio;
@@ -69,8 +69,8 @@ public class ImagesPanel extends JScrollPane {
         }
     };
     
-    public ImagesPanel(IconDemoPanel iconDemoPanel) {
-    	this.iconDemoPanel = iconDemoPanel;
+    public ImagesPanel(IconPanel iconPanel) {
+    	this.iconPanel = iconPanel;
     	buttonsPanel = new ScrollableGridPanel();
         setViewportView(buttonsPanel);
         setBorder(BorderFactory.createEmptyBorder());
@@ -139,16 +139,16 @@ public class ImagesPanel extends JScrollPane {
 
             AnnotatedImageButton button;
 
-            String filepath = EntityUtils.getImageFilePath(rootedEntity.getEntity(), iconDemoPanel.getCurrImageRole());
+            String filepath = EntityUtils.getImageFilePath(rootedEntity.getEntity(), iconPanel.getCurrImageRole());
             if (filepath != null) {
-                button = new DynamicImageButton(rootedEntity, iconDemoPanel);
+                button = new DynamicImageButton(rootedEntity, iconPanel);
                 ((DynamicImageButton) button).setCache(SessionMgr.getBrowser().getImageCache());
             } else {
-                button = new StaticImageButton(rootedEntity, iconDemoPanel);
+                button = new StaticImageButton(rootedEntity, iconPanel);
             }
 
-            button.setTitleVisible(iconDemoPanel.getToolbar().areTitlesVisible());
-            button.setTagsVisible(iconDemoPanel.getToolbar().areTagsVisible());
+            button.setTitleVisible(iconPanel.areTitlesVisible());
+            button.setTagsVisible(iconPanel.areTagsVisible());
 
             if (buttonKeyListener != null) button.addKeyListener(buttonKeyListener);
             if (buttonMouseListener != null) button.addMouseListener(buttonMouseListener);

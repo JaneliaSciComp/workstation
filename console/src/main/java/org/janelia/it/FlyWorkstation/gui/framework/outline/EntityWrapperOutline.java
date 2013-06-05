@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -45,9 +46,69 @@ public abstract class EntityWrapperOutline extends EntityWrapperTree implements 
     private ModelMgrAdapter mml;
 	private String currUniqueId;
     private AlignmentContext alignmentContext;
-
+    private EntityWrapperOutlineToolbar toolbar;
+    
     public EntityWrapperOutline() {
-		super(true);
+
+        super(true);
+        
+        this.toolbar = new EntityWrapperOutlineToolbar(this) {
+            @Override
+            protected JPopupMenu getPopupConfigureViewMenu() {
+                
+                JMenu viewStyleMenu = new JMenu("View style");
+                ButtonGroup viewStyleGroup = new ButtonGroup();
+                
+                JMenuItem samplesNeuronsItem = new JRadioButtonMenuItem("Samples/Neurons");
+                samplesNeuronsItem.setSelected(true);
+                samplesNeuronsItem.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        
+                    }
+                });
+                viewStyleMenu.add(samplesNeuronsItem);
+                viewStyleGroup.add(samplesNeuronsItem);
+                
+                JMenuItem allEntitiesItem = new JRadioButtonMenuItem("All Entities");
+                allEntitiesItem.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        
+                    }
+                });
+                viewStyleMenu.add(allEntitiesItem);
+                viewStyleGroup.add(allEntitiesItem);
+                
+                
+                JMenu alignmentSpaceMenu = new JMenu("Alignment space");
+                ButtonGroup alignmentSpaceGroup = new ButtonGroup();
+                
+                JMenuItem allDataItem = new JRadioButtonMenuItem("All Data");
+                allDataItem.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        
+                    }
+                });
+                alignmentSpaceGroup.add(allDataItem);
+                alignmentSpaceMenu.add(allDataItem);
+                
+                JMenuItem unifiedAlignmentSpaceItem = new JRadioButtonMenuItem("Unified Alignment Space");
+                unifiedAlignmentSpaceItem.setSelected(true);
+                unifiedAlignmentSpaceItem.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        
+                    }
+                });
+                alignmentSpaceGroup.add(unifiedAlignmentSpaceItem);
+                alignmentSpaceMenu.add(unifiedAlignmentSpaceItem);
+
+                final JPopupMenu configureViewMenu = new JPopupMenu();
+                configureViewMenu.add(viewStyleMenu);
+                configureViewMenu.add(alignmentSpaceMenu);
+                return configureViewMenu;
+            }
+        };
+        add(toolbar, BorderLayout.PAGE_START);
+		
 		this.setMinimumSize(new Dimension(400, 400));
 		showLoadingIndicator();
 
@@ -67,6 +128,7 @@ public abstract class EntityWrapperOutline extends EntityWrapperTree implements 
             }
         };
 		
+        
 		// TODO: these parameters should be picked from a list, by the user, when creating the alignment board
         AlignmentContext alignmentContext = new AlignmentContext(
                 "Unified 20x Alignment Space", "0.62x0.62x0.62", "1024x512x218");

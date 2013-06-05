@@ -102,12 +102,7 @@ public class SliceViewViewer extends Viewer {
     public RootedEntity getRootedEntityById(String uniqueId) {
         return slcRootedEntity;
     }
-
-    @Override
-    public Entity getEntityById(String id) {
-        return sliceSample;
-    }
-
+    
     @Override
     public void close() {
         logger.info("Closing");

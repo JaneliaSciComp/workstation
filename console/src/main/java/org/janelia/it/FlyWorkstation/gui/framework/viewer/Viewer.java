@@ -9,7 +9,6 @@ import javax.swing.JPanel;
 
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
-import org.janelia.it.jacs.model.entity.Entity;
 
 /**
  * A viewer panel that is refreshable and can be placed inside a ViewerPane.
@@ -73,7 +72,6 @@ public abstract class Viewer extends JPanel implements Refreshable {
 	 */
 	public abstract List<RootedEntity> getRootedEntities();
 	
-	
 	/**
 	 * Returns all RootedEntity objected which are currently selected in the viewer.
 	 * @return
@@ -87,13 +85,6 @@ public abstract class Viewer extends JPanel implements Refreshable {
 	 */
 	public abstract RootedEntity getRootedEntityById(String uniqueId);
 	
-	/**
-	 * Returns the Entity with the given id, assuming that its currently loaded in the viewer.
-	 * @param id
-	 * @return
-	 */
-	public abstract Entity getEntityById(String id);
-
 	/**
 	 * Called when the viewer is about to close forever. This is an opportunity to clean up any listeners or 
 	 * open resources. 

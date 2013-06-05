@@ -167,11 +167,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     }
 
     @Override
-    public Entity getEntityById(String id) {
-        return alignmentBoard;
-    }
-
-    @Override
     public void close() {
         logger.info( "Closing" );
         ModelMgr.getModelMgr().unregisterOnEventBus(this);

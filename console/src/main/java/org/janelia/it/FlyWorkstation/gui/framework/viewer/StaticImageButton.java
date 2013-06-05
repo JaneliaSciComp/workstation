@@ -21,8 +21,8 @@ public class StaticImageButton extends AnnotatedImageButton {
     private BufferedImage staticIcon;
     private JLabel label;
 
-    public StaticImageButton(final RootedEntity rootedEntity, final IconDemoPanel iconDemoPanel) {
-		super(rootedEntity, iconDemoPanel);
+    public StaticImageButton(final RootedEntity rootedEntity, final IconPanel iconPanel) {
+		super(rootedEntity, iconPanel);
 	}
 
 	public JComponent init(final RootedEntity rootedEntity) {
@@ -55,7 +55,7 @@ public class StaticImageButton extends AnnotatedImageButton {
 			double h = label.getIcon().getIconHeight();
 			setAspectRatio(w, h);
 			
-			int width = iconDemoPanel.getImagesPanel().getCurrImageSize();
+			int width = iconPanel.getImagesPanel().getCurrImageSize();
 			if (width<=staticIcon.getWidth()) { // Don't scale up icons
 				label.setIcon(new ImageIcon(Utils.getScaledImage(staticIcon, width)));	
 			}

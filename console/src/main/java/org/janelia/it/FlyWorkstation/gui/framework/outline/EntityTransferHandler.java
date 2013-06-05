@@ -18,7 +18,7 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.AnnotatedImageButton;
-import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconDemoPanel;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -93,9 +93,9 @@ public abstract class EntityTransferHandler extends TransferHandler {
             	List<String> selectedEntities = new ArrayList<String>(
             			ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(
             					SessionMgr.getBrowser().getViewerManager().getActiveViewer().getSelectionCategory()));
-            	IconDemoPanel iconDemoPanel = ((AnnotatedImageButton)sourceComponent).getIconDemoPanel();
+            	IconPanel iconPanel = ((AnnotatedImageButton)sourceComponent).getIconPanel();
 				for(String selectedId : selectedEntities) {
-					RootedEntity rootedEntity = iconDemoPanel.getRootedEntityById(selectedId);
+					RootedEntity rootedEntity = iconPanel.getRootedEntityById(selectedId);
 	            	DefaultMutableTreeNode node = entityOutline.getNodeByUniqueId(rootedEntity.getUniqueId());
 	            	sourcePaths.add(new TreePath(node.getPath()));
 				}				

@@ -6,7 +6,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.*;
-import javax.swing.text.Position.Bias;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;

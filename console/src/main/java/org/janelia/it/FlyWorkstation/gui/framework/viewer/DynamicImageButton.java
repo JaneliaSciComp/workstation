@@ -19,13 +19,13 @@ public class DynamicImageButton extends AnnotatedImageButton {
 
     private DynamicImagePanel dynamicImagePanel;
 
-    public DynamicImageButton(final RootedEntity rootedEntity, final IconDemoPanel iconDemoPanel) {
-		super(rootedEntity, iconDemoPanel);
+    public DynamicImageButton(final RootedEntity rootedEntity, final IconPanel iconPanel) {
+		super(rootedEntity, iconPanel);
 	}
     
     public JComponent init(final RootedEntity rootedEntity) {
 
-    	String imageRole = iconDemoPanel.getCurrImageRole();
+    	String imageRole = iconPanel.getCurrImageRole();
     	
         String filepath = EntityUtils.getImageFilePath(rootedEntity.getEntity(), imageRole);
         if (filepath == null) {
@@ -36,14 +36,14 @@ public class DynamicImageButton extends AnnotatedImageButton {
         // asyncronously within the the load image worker
         this.dynamicImagePanel = new DynamicImagePanel(filepath, ImagesPanel.MAX_THUMBNAIL_SIZE) {
             protected void syncToViewerState() {
-            	this.displaySize = iconDemoPanel.getImagesPanel().getCurrImageSize();
+            	this.displaySize = iconPanel.getImagesPanel().getCurrImageSize();
         		Boolean invertImages = (Boolean)SessionMgr.getSessionMgr().getModelProperty(
         				ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY);
                 if (invertImages!=null && invertImages) {
                 	setInvertedColors(true);
                 }
                 else {
-                	rescaleImage(iconDemoPanel.getImagesPanel().getCurrImageSize());
+                	rescaleImage(iconPanel.getImagesPanel().getCurrImageSize());
                 }
             }
         };

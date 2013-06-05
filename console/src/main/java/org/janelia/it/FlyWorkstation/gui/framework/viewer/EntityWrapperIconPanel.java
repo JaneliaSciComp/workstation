@@ -44,19 +44,13 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * This viewer shows images in a grid. It is modeled after OS X Finder. It wraps an ImagesPanel and provides a lot of 
- * functionality on top of it, such as:
- * 1) Asynchronous entity loading
- * 2) Entity selection and navigation
- * 3) Toolbar with various features 
- * 4) HUD display for currently selected image
- * 5) Pagination
+ * The same as EntityIconPanel panel, except for EntityWrappers.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class IconDemoPanel extends IconPanel {
+public class EntityWrapperIconPanel extends IconPanel {
 	
-	private static final Logger log = LoggerFactory.getLogger(IconDemoPanel.class);
+	private static final Logger log = LoggerFactory.getLogger(EntityWrapperIconPanel.class);
 	
 	protected final static int PAGE_SIZE = 500;
 	
@@ -302,7 +296,7 @@ public class IconDemoPanel extends IconPanel {
 		return (AnnotatedImageButton)c;
 	}
 	
-	public IconDemoPanel(ViewerPane viewerPane) {
+	public EntityWrapperIconPanel(ViewerPane viewerPane) {
 
 		super(viewerPane);
 		
@@ -326,7 +320,7 @@ public class IconDemoPanel extends IconPanel {
             @Override
             public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
                 if(key == "console.serverLogin"){
-                    IconDemoPanel.this.clear();
+                    EntityWrapperIconPanel.this.clear();
                 }
             }
         };
@@ -417,7 +411,7 @@ public class IconDemoPanel extends IconPanel {
 					public void actionPerformed(ActionEvent actionEvent) {
 
 						// Add button clicked
-						String folderName = (String) JOptionPane.showInputDialog(IconDemoPanel.this, "Folder Name:\n",
+						String folderName = (String) JOptionPane.showInputDialog(EntityWrapperIconPanel.this, "Folder Name:\n",
 								"Create folder under " + contextRootedEntity.getEntity().getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
 						if ((folderName == null) || (folderName.length() <= 0)) {
 							return;
@@ -463,14 +457,14 @@ public class IconDemoPanel extends IconPanel {
 			@Override
 			public void entitySelected(String category, String entityId, boolean clearAll) {
 				if (category.equals(getSelectionCategory())) {
-					IconDemoPanel.this.entitySelected(entityId, clearAll);
+					EntityWrapperIconPanel.this.entitySelected(entityId, clearAll);
 				}
 			}
 
 			@Override
 			public void entityDeselected(String category, String entityId) {
 				if (category.equals(getSelectionCategory())) {
-					IconDemoPanel.this.entityDeselected(entityId);
+					EntityWrapperIconPanel.this.entityDeselected(entityId);
 				}
 			}
 		};
@@ -508,12 +502,12 @@ public class IconDemoPanel extends IconPanel {
 			public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
 				
 				if (ViewerSettingsPanel.INVERT_IMAGE_COLORS_PROPERTY.equals(key)) {
-					Utils.setWaitingCursor(IconDemoPanel.this);
+					Utils.setWaitingCursor(EntityWrapperIconPanel.this);
 					try {
 						imagesPanel.setInvertedColors((Boolean)newValue);
 						imagesPanel.repaint();
 					} finally {
-						Utils.setDefaultCursor(IconDemoPanel.this);
+						Utils.setDefaultCursor(EntityWrapperIconPanel.this);
 					}	
 				}
 				else if (ViewerSettingsPanel.ONLY_SESSION_ANNOTATIONS_PROPERTY.equals(key)) {
@@ -649,7 +643,7 @@ public class IconDemoPanel extends IconPanel {
 			}
 
 			protected void refresh() {
-				IconDemoPanel.this.totalRefresh();
+				EntityWrapperIconPanel.this.totalRefresh();
 			}
 
 			protected void showTitlesButtonPressed() {
@@ -1356,7 +1350,7 @@ public class IconDemoPanel extends IconPanel {
 		}
 		return selectedEntities;
 	}
-	
+
 	public IconDemoToolbar getToolbar() {
 		return iconDemoToolbar;
 	}

@@ -110,7 +110,7 @@ public class EntityWrapperTree extends JPanel implements ActivatableView {
     protected void createNewTree(EntityWrapper root) {
 
         this.root = root;
-        selectedTree = new DynamicTree(root, true, lazy) {
+        selectedTree = new DynamicTree(root, false, lazy) {
 
             protected void showPopupMenu(MouseEvent e) {
                 EntityWrapperTree.this.showPopupMenu(e);
