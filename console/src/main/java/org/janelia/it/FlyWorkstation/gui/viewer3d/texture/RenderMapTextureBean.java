@@ -23,14 +23,14 @@ public class RenderMapTextureBean implements TextureDataI {
 
     private static final int BYTES_PER_ENTRY = 4;
     private static final int MAP_SIZE = 65536;
-    private static final int MAX_COORD_SETS = 256;   // This number yields end Y value divisible by 4.
+    private static final int MAX_COORD_SETS = 128;   // Yields even division into uploaded texture. No waste.
     private static final int ENTRIES_PER_COORD_SET = 6;
     private static final int BYTES_PER_COORD_SET = ENTRIES_PER_COORD_SET * BYTES_PER_ENTRY;
     private static final String HEADER = "Map of Colors to Neuron Fragment Numbers and Crop Coord Sets";
     private static final int LINE_WIDTH = 256;
     private static final float CONVENTIONAL_COORD_MULTIPLIER = 2048.0f;
     // This must be divisible by (4 x line-width) for the graphics card.  It must also be divisible by entries-per-set.
-    private static final int DIVISIBILITY_VALUE = (4 * LINE_WIDTH) * ENTRIES_PER_COORD_SET;
+    private static final int DIVISIBILITY_VALUE = ((4 * LINE_WIDTH) * ENTRIES_PER_COORD_SET) / 2; // Smallest size...
 
     private RenderMappingI renderMapping;
     private CropCoordSet cropCoordSet;
