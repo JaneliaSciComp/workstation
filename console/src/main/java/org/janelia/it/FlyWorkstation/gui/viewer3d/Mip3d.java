@@ -126,6 +126,23 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
     }
 
     /**
+     * A multi-thread-load-friendly overload of the set-volume method.  The texture objects may be
+     * built at the caller's leisure, rather than being requested of passed-in builders.
+     *
+     * @param signalTexture for the intensity data.
+     * @param maskTexture for the labels.
+     * @param renderMapping for the mapping of labels to rendering techniques.
+     * @return true if sufficient params passed.
+     */
+    public boolean setVolume(
+            TextureDataI signalTexture,
+            TextureDataI maskTexture,
+            RenderMappingI renderMapping,
+            CropCoordSet cropCoordSet) {
+        return setVolume( signalTexture, maskTexture, renderMapping, cropCoordSet, volumeModel.getGammaAdjustment() );
+    }
+
+    /**
      * Load a volume which may have a mask against it.
      *
      * @param fileName for signal file data.

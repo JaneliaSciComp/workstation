@@ -170,7 +170,6 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
         int value = (int)Math.round( ( ( settings.getGammaFactor() * -5.0 ) + 10.0 ) * 100.0 );
         brightnessSlider.setValue( value );
-
     }
 
     /**

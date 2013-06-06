@@ -8,7 +8,6 @@ import java.util.concurrent.*;
 import javax.media.opengl.awt.GLJPanel;
 import javax.swing.*;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityWrapperTransferHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
@@ -56,7 +55,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private RenderablesLoadWorker loadWorker;
     private JPanel wrapperPanel;
 
-    private ModelMgrObserver modelMgrObserver;
     private RenderMappingI renderMapping;
     private CropCoordSet cropCoordSet;
     private BrainGlow brainGlow;
@@ -210,13 +208,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     @Override
     public void loadVolume( TextureDataI signalTexture, TextureDataI maskTexture ) {
 
-        if ( ! mip3d.setVolume(
-                signalTexture,
-                maskTexture,
-                renderMapping,
-                cropCoordSet,
-                (float) AlignmentBoardSettings.DEFAULT_GAMMA
-        ) ) {
+        if ( ! mip3d.setVolume( signalTexture, maskTexture, renderMapping, cropCoordSet ) ) {
             logger.error( "Failed to load volume to mip3d." );
         }
         else {
@@ -471,8 +463,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                         wrapperPanel = createWrapperPanel( mip3d );
                     }
 
-                    mip3d.refresh();
-
                     // When this is called from thread type X, and the "best guess" method is used, it blanks the screen.
                     logger.info(" Calling adjust rate setting from {}.", Thread.currentThread().getName());
                     AlignmentBoardSettings alignmentBoardSettings = adjustDownsampleRateSetting();
@@ -483,6 +473,9 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     );
                     userSettingSerializer.deserializeSettings();
                     settings.updateControlsFromSettings();
+System.out.println( mip3d.getVolumeModel() + " is volume model.");
+System.out.println( mip3d.getVolumeModel().getGammaAdjustment() + " is GAMMA adjustment.");
+                    mip3d.refresh();
 
                     // Here, should load volumes, for all the different items given.
                     loadWorker = new RenderablesLoadWorker(
@@ -585,8 +578,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         JPanel rtnVal = new JPanel();
         rtnVal.setLayout(new BorderLayout());
         rtnVal.add(mip3d, BorderLayout.CENTER);
-
-        addSettingsLaunchButton();
         return rtnVal;
     }
 
