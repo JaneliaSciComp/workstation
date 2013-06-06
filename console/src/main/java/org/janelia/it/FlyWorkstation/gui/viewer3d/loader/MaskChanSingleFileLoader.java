@@ -25,6 +25,9 @@ public class MaskChanSingleFileLoader {
     public static final int REQUIRED_AXIAL_LENGTH_DIVISIBLE = 32;
     private static final int FLOAT_BYTES = Float.SIZE / 8;
     private static final int LONG_BYTES = Long.SIZE / 8;
+
+    private static final boolean DEBUG = false;
+
     private long sx;
     private long sy;
     private long sz;
@@ -138,11 +141,13 @@ public class MaskChanSingleFileLoader {
             logger.debug( "Completed reading channel data." );
         }
 
-        frequencyAnalyzer = new ByteFrequencyDumper(
-                renderableBean.getRenderableEntity().getName() + " " + renderableBean.getLabelFileNum(),
-                channelMetaData.byteCount,
-                channelMetaData.channelCount
-        );
+        if ( DEBUG ) {
+            frequencyAnalyzer = new ByteFrequencyDumper(
+                    renderableBean.getRenderableEntity().getName() + " " + renderableBean.getLabelFileNum(),
+                    channelMetaData.byteCount,
+                    channelMetaData.channelCount
+            );
+        }
 
         while ( cummulativeVoxelsReadCount < totalVoxels ) {
             Long skippedRayCount = readLong(maskInputStream);
@@ -163,7 +168,9 @@ public class MaskChanSingleFileLoader {
         }
 
         logger.debug( "Read complete." );
-        frequencyAnalyzer.close();
+        if ( DEBUG ) {
+            frequencyAnalyzer.close();
+        }
     }
 
     private void createEmptyChannelMetaData() {
@@ -479,8 +486,9 @@ public class MaskChanSingleFileLoader {
 
         }
 
-        // DEBUG CODE
-        frequencyAnalyzer.frequencyCapture( allChannelBytes );
+        if ( DEBUG ) {
+            frequencyAnalyzer.frequencyCapture( allChannelBytes );
+        }
 
         // Necessary to bump latest-ray, in order to move on to the "expected next" value.
         //   Here, it is assumed that if the next "addData" is called and the ray _after_

@@ -10,8 +10,10 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
  * multiple small settings can be kept together and cut down parameter list sizes.
  */
 public class AlignmentBoardSettings {
+    public static final double DEFAULT_GAMMA = 1.0;
+
     private double downSampleRate;
-    private double gammaFactor;
+    private double gammaFactor =  DEFAULT_GAMMA;
     private boolean showChannelData;
 
     public AlignmentBoardSettings() {

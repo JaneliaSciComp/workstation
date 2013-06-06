@@ -246,10 +246,10 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
     private void awaitThreadpoolCompletion(ExecutorService threadPool) {
         try {
             // Now that the pools is laden, we call the milder shutdown, which lets us wait for completion of all.
-            logger.info("Awaiting shutdown.");
+            logger.debug("Awaiting shutdown.");
             threadPool.shutdown();
             threadPool.awaitTermination( 10, TimeUnit.MINUTES );
-            logger.info("Thread pool termination complete.");
+            logger.debug("Thread pool termination complete.");
         } catch ( InterruptedException ie ) {
             ie.printStackTrace();
         }

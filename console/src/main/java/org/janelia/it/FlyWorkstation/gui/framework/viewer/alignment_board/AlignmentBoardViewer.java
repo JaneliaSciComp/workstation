@@ -34,7 +34,6 @@ import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.ArtifactType;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.Channels;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.Size;
 import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
-import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -167,6 +166,11 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     }
 
     @Override
+    public Entity getEntityById(String id) {
+        return alignmentBoard;
+    }
+
+    @Override
     public void close() {
         logger.info( "Closing" );
         ModelMgr.getModelMgr().unregisterOnEventBus(this);
@@ -242,7 +246,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 maskTexture,
                 renderMapping,
                 cropCoordSet,
-                (float) AlignmentBoardControlsDialog.DEFAULT_GAMMA
+                (float) AlignmentBoardSettings.DEFAULT_GAMMA
         ) ) {
             logger.error( "Failed to load volume to mip3d." );
         }

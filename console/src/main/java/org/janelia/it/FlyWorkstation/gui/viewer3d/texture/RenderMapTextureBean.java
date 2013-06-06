@@ -304,7 +304,7 @@ public class RenderMapTextureBean implements TextureDataI {
 
     private int roundUpForDivisbility(int value) {
         if ( value % DIVISIBILITY_VALUE == 0 ) {
-            System.out.println("Returning even value.  No need to round up.");
+            //System.out.println("Returning even value.  No need to round up.");
             return value;
         }
         else {

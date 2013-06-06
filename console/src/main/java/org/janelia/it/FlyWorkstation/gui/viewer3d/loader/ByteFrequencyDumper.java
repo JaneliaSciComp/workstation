@@ -121,9 +121,11 @@ public class ByteFrequencyDumper {
             if ( stdev < minStdev ) minStdev = stdev;
             if ( stdev > maxStdev ) maxStdev = stdev;
 
-            greenOverBlue += freq * (rgbInt[ 1 ] / rgbInt[ 2 ]);
-            redOverGreen += freq * (rgbInt[ 0 ] / rgbInt[ 1 ]);
-            redOverBlue += freq * (rgbInt[ 0 ] / rgbInt[ 2 ]);
+            if ( rgbInt[ 2 ] != 0  &&  rgbInt[ 1 ] != 0 ) {
+                greenOverBlue += freq * (rgbInt[ 1 ] / rgbInt[ 2 ]);
+                redOverGreen += freq * (rgbInt[ 0 ] / rgbInt[ 1 ]);
+                redOverBlue += freq * (rgbInt[ 0 ] / rgbInt[ 2 ]);
+            }
 
             counter+=freq;
         }
