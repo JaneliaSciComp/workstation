@@ -31,6 +31,10 @@ public class CropCoordSet {
         acceptedCoordinates = new HashSet<float[]>();
     }
 
+    public boolean isEmpty() {
+        return ( getCurrentCoordinates() == null && getAcceptedCoordinates().isEmpty() );
+    }
+
     /** Push the current, putative coord volume into the accepted collection.  */
     public void acceptCurrentCoordinates() {
         if ( currentCoordinates != null  &&  ! alreadyAccepted( getAcceptedCoordinates(), getCurrentCoordinates() ) ) {

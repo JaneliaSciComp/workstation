@@ -208,12 +208,11 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     @Override
     public void loadVolume( TextureDataI signalTexture, TextureDataI maskTexture ) {
 
-        if ( ! mip3d.setVolume( signalTexture, maskTexture, renderMapping, cropCoordSet ) ) {
+        if ( ! mip3d.setVolume( signalTexture, maskTexture, renderMapping ) ) {
             logger.error( "Failed to load volume to mip3d." );
         }
         else {
             settings.setVolumeMaxima(signalTexture.getSx(), signalTexture.getSy(), signalTexture.getSz());
-
         }
 
     }
@@ -296,11 +295,11 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     /** This is synch'd because there may be a race between constructor and an externally-posted event. */
     private synchronized void handleBoardOpened(AlignmentBoardContext abContext) {
         if ( ! boardOpen ) {
-            this.getViewerPane().setTitle( "Alignment Board: " + abContext.getInternalEntity().getName() );
+            this.getViewerPane().setTitle("Alignment Board: " + abContext.getInternalEntity().getName());
             printAlignmentBoardContext(abContext);
 
             // The true update!
-            this.updateBoard( abContext );
+            this.updateBoard(abContext);
             boardOpen = true;
         }
     }
@@ -698,7 +697,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     curTime = 50 - curTime;
                 }
                 gamma = 0.75f + (curTime / 100.0f);
-                mip3d.setGamma( gamma );
+                mip3d.setGamma(gamma);
                 try {
                     Thread.sleep( 60 );
                 } catch ( Exception ex ) {

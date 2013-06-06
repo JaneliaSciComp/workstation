@@ -2,7 +2,6 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Mip3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CropCoordSet;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -73,6 +72,7 @@ public class UserSettingSerializer implements Serializable {
                     this.alignmentBoard.getValueByAttributeName(
                             EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS
                     );
+            logger.info("SETTINGS: {} deserialized", settingString);
 
             parseSettings(settingString);
         } catch ( Exception ex ) {
@@ -125,6 +125,7 @@ public class UserSettingSerializer implements Serializable {
 
         str = settingToValue.get( SELECTION_BOUNDS_SETTING );
         if ( str != null ) {
+            float[] cropCoordArray = null;
             Collection<float[]> coordinateSets = new ArrayList<float[]>();
             String[] coordSetStrs = str.split( "]" );
             for ( String coordSetStr: coordSetStrs ) {
@@ -139,22 +140,24 @@ public class UserSettingSerializer implements Serializable {
                     );
                 }
                 else {
-                    float[] coordSet = new float[ 6 ];
+                    cropCoordArray = new float[ 6 ];
                     int offs = 0;
                     for ( String coordStr: coordStrs ) {
-                        coordSet[ offs++ ] = Float.parseFloat( coordStr );
+                        cropCoordArray[ offs++ ] = Float.parseFloat( coordStr );
                     }
-                    coordinateSets.add( coordSet );
+                    coordinateSets.add( cropCoordArray );
                 }
 
             }
 
             CropCoordSet cropCoordSet = new CropCoordSet();
+            if ( cropCoordArray != null ) {
+                cropCoordSet.setCurrentCoordinates( cropCoordArray );
+            }
             cropCoordSet.setAcceptedCoordinates( coordinateSets );
             volumeModel.setCropCoords( cropCoordSet );
 
         }
-        return;
     }
 
     String getSettingsString() {
@@ -174,18 +177,31 @@ public class UserSettingSerializer implements Serializable {
         CropCoordSet cropCoordSet = volumeModel.getCropCoords();
         builder.append(SELECTION_BOUNDS_SETTING + "=");
         for (float[] nextCoordSet : cropCoordSet.getAcceptedCoordinates()) {
-            builder.append("[");
-            for (int i = 0; i < nextCoordSet.length; i++) {
-                if (i > 0) {
-                    builder.append(",");
-                }
-                builder.append(String.format("%f", nextCoordSet[i]));
+            appendCoordinateArray(builder, nextCoordSet);
+        }
+        // May add on any current (on-ORed) coordinates.
+        if ( cropCoordSet.getCurrentCoordinates() != null ) {
+            StringBuilder currBuf = new StringBuilder();
+            String currCoordStr = currBuf.toString();
+            if ( ! currCoordStr.contains( currCoordStr ) ) {
+                appendCoordinateArray( currBuf, cropCoordSet.getCurrentCoordinates() );
+                builder.append( currCoordStr );
             }
-            builder.append("]");
         }
         builder.append("\n");
-
+        logger.info("SETTINGS: {} serialized", builder);
         return builder.toString();
+    }
+
+    private void appendCoordinateArray(StringBuilder builder, float[] coordArray) {
+        builder.append("[");
+        for (int i = 0; i < coordArray.length; i++) {
+            if (i > 0) {
+                builder.append(",");
+            }
+            builder.append(String.format("%f", coordArray[i]));
+        }
+        builder.append("]");
     }
 
 }

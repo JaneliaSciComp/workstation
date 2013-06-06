@@ -169,7 +169,27 @@ public class AlignmentBoardControlsDialog extends JDialog {
         useSignalDataCheckbox.setSelected( settings.isShowChannelData() );
 
         int value = (int)Math.round( ( ( settings.getGammaFactor() * -5.0 ) + 10.0 ) * 100.0 );
-        brightnessSlider.setValue( value );
+        brightnessSlider.setValue(value);
+/*
+        if (! cropCoordSet.isEmpty() ) {
+            float[] currentCoords = cropCoordSet.getCurrentCoordinates();
+            int[] maxima = new int[] {
+                    xSlider.getMaximum(), ySlider.getMaximum(), zSlider.getMaximum()
+            };
+            CoordCropper3D coordCropper = new CoordCropper3D();
+            float[] denormalizedCoords = coordCropper.getDenormalizedCropCoords(
+                    currentCoords, maxima, settings.getDownSampleRate()
+            );
+            xSlider.setUpperValue( Math.round( denormalizedCoords[ 0 ] ) );
+            xSlider.setValue( Math.round( denormalizedCoords[ 1 ] ) );
+
+            ySlider.setUpperValue( Math.round( denormalizedCoords[ 2 ] ) );
+            ySlider.setValue( Math.round( denormalizedCoords[ 3 ] ) );
+
+            zSlider.setUpperValue( Math.round( denormalizedCoords[ 4 ] ) );
+            zSlider.setValue( Math.round( denormalizedCoords[ 5 ] ) );
+        }
+*/
     }
 
     /**
@@ -224,7 +244,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
             downsampleIndex = 2;
         }
         downSampleRateDropdown.setSelectedIndex( downsampleIndex );
-        settings.setDownSampleRate( downSampleRate );
+        settings.setDownSampleRate(downSampleRate);
     }
 
     private void serializeDownsampleRate(double downSampleRate) {

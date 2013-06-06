@@ -137,9 +137,10 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
     public boolean setVolume(
             TextureDataI signalTexture,
             TextureDataI maskTexture,
-            RenderMappingI renderMapping,
-            CropCoordSet cropCoordSet) {
-        return setVolume( signalTexture, maskTexture, renderMapping, cropCoordSet, volumeModel.getGammaAdjustment() );
+            RenderMappingI renderMapping) {
+        return setVolume(
+                signalTexture, maskTexture, renderMapping, volumeModel.getCropCoords(), volumeModel.getGammaAdjustment()
+        );
     }
 
     /**
