@@ -36,7 +36,7 @@ vec3 getMapCoord( float location )
 {
     float visY = floor(location / 256.0);
     float visX = (location - 256.0 * visY) / 256.0;
-    visY = visY / 259.1; // 260.0
+    visY = visY / 258.1; // 259.0
     vec3 cmCoord = vec3( visX, visY, 0.0 );
     return cmCoord;
 }
