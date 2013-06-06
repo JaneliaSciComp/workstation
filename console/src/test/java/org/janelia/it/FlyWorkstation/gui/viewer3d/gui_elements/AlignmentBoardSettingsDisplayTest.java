@@ -18,7 +18,7 @@ import java.awt.event.WindowEvent;
 public class AlignmentBoardSettingsDisplayTest {
     public static void main(String[] args) {
         AlignmentBoardControlsDialog testDialog = new AlignmentBoardControlsDialog(
-                new JFrame(), CropCoordSet.getDefaultCropCoordSet()
+                new JFrame()
         );
         testDialog.addWindowListener( new WindowAdapter() {
             @Override
