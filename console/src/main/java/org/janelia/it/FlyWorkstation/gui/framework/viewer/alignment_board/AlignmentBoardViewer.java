@@ -53,9 +53,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private static final Logger log = LoggerFactory.getLogger(AlignmentBoardViewer.class);
     private static final int LEAST_FULLSIZE_MEM = 1500000; // Ex: 1,565,620
 
-    private Entity alignmentBoard;
-    private RootedEntity albRootedEntity;
-
     private Mip3d mip3d;
     private RenderablesLoadWorker loadWorker;
     private JPanel wrapperPanel;
@@ -100,7 +97,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     @Override
     public void clear() {
         logger.info("Clearing the a-board.");
-        clearObserver();
         Component[] components = getViewerPane().getMainTitlePane().getComponents();
         for ( Component component: components ) {
             if ( component instanceof JButton ) {
@@ -118,62 +114,42 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         repaint();
     }
 
+    /** These getters/setters are required to subclass Viewer, but unused, here. */
     @Override
-    public void loadEntity(RootedEntity rootedEntity) {
-        Entity newEntity = rootedEntity.getEntity();
-        if ( ! newEntity.equals( alignmentBoard ) ) {
-            // Stop any existing load, to free up the A-board.
-            if (loadWorker != null) {
-                loadWorker.disregard();
-                loadWorker.cancel( true );
-            }
-
-            deleteAll();
-        }
-        alignmentBoard = newEntity;
-
-        setTransferHandler( new ABTransferHandler( alignmentBoard ) );
-        refresh();
-
-        // Listen for further changes, so can refresh again later.
-        establishObserver();
-    }
-
+    public void loadEntity(RootedEntity rootedEntity) {}
     @Override
-    public void loadEntity(RootedEntity rootedEntity, Callable<Void> success) {
-        loadEntity(rootedEntity);
-        try {
-            if ( success != null )
-                success.call();
-        } catch (Exception ex) {
-            SessionMgr.getSessionMgr().handleException(ex);
-        }
-    }
+    public void loadEntity(RootedEntity rootedEntity, Callable<Void> success) {}
 
     @Override
     public List<RootedEntity> getRootedEntities() {
-        return Arrays.asList( albRootedEntity );
+        return null;
     }
-
     @Override
     public List<RootedEntity> getSelectedEntities() {
-        return Collections.EMPTY_LIST;
+        return null;
     }
-
     @Override
     public RootedEntity getRootedEntityById(String uniqueId) {
-        return albRootedEntity;
+        return null;
     }
-
     @Override
     public Entity getEntityById(String id) {
-        return alignmentBoard;
+        return null;
     }
 
     @Override
     public void close() {
         logger.info( "Closing" );
+
         ModelMgr.getModelMgr().unregisterOnEventBus(this);
+        AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
+        Entity alignmentBoard = context.getInternalEntity();
+        UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
+                alignmentBoard, mip3d.getVolumeModel(), settings.getAlignmentBoardSettings()
+        );
+
+        userSettingSerializer.serializeSettings();
+
         deleteAll();
     }
 
@@ -181,15 +157,13 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     public void refresh() {
         logger.info("Refresh called.");
 
-        if (alignmentBoard != null) {
-            showLoadingIndicator();
+        showLoadingIndicator();
 
-            if ( mip3d == null ) {
-                mip3d = createMip3d();
-            }
-
-            mip3d.refresh();
+        if ( mip3d == null ) {
+            mip3d = createMip3d();
         }
+
+        mip3d.refresh();
     }
 
     @Override
@@ -437,26 +411,12 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         log.debug("* Item Color: {} (hex={})", alignedItem.getColor(), alignedItem.getColorHex() );
     }
 
-    private void establishObserver() {
-        modelMgrObserver = new ModelMgrListener( this, alignmentBoard );
-        ModelMgr.getModelMgr().addModelMgrObserver(modelMgrObserver);
-    }
-
     private void deleteAll() {
-        clearObserver();
         if (loadWorker != null) {
             loadWorker.disregard();
         }
-        alignmentBoard = null;
-        albRootedEntity = null;
         removeAll();
         mip3d = null;
-    }
-
-    private void clearObserver() {
-        if ( modelMgrObserver != null ) {
-            ModelMgr.getModelMgr().removeModelMgrObserver(modelMgrObserver);
-        }
     }
 
     private synchronized void setLoading( boolean loadingState ) {
@@ -503,7 +463,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             //    brainGlow.isRunning = false;
             //} // TEMP
 
-            if (context != null ) {
+            if  (context != null ) {
+
                 if ( isLoading() ) {
                     setOutstandingLoadRequest( true );
                 }
@@ -514,6 +475,13 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                         mip3d = createMip3d();
                         wrapperPanel = createWrapperPanel( mip3d );
                     }
+
+                    Entity alignmentBoard = context.getInternalEntity();
+                    UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
+                            alignmentBoard, mip3d.getVolumeModel(), settings.getAlignmentBoardSettings()
+                    );
+                    userSettingSerializer.deserializeSettings();
+                    settings.updateControlsFromSettings();
 
                     mip3d.refresh();
 
@@ -725,23 +693,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         @Override
         public void setCropBlackout( boolean blackout ) {
             mip3d.setCropOutLevel( blackout ? 0.0f : Mip3d.DEFAULT_CROPOUT );
-        }
-    }
-
-    /** Listens for changes to the child-set of the heard-entity. */
-    public static class ModelMgrListener extends ModelMgrAdapter {
-        private Entity heardEntity;
-        private AlignmentBoardViewer viewer;
-        ModelMgrListener( AlignmentBoardViewer viewer, Entity e ) {
-            heardEntity = e;
-            this.viewer = viewer;
-        }
-
-        @Override
-        public void entityChildrenChanged(long entityId) {
-            if (heardEntity.getId() == entityId) {
-                viewer.refresh();
-            }
         }
     }
 
