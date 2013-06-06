@@ -8,7 +8,6 @@ import java.util.concurrent.*;
 import javax.media.opengl.awt.GLJPanel;
 import javax.swing.*;
 
-import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrObserver;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityWrapperTransferHandler;
@@ -130,10 +129,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     }
     @Override
     public RootedEntity getRootedEntityById(String uniqueId) {
-        return null;
-    }
-    @Override
-    public Entity getEntityById(String id) {
         return null;
     }
 
@@ -476,18 +471,18 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                         wrapperPanel = createWrapperPanel( mip3d );
                     }
 
+                    mip3d.refresh();
+
+                    // When this is called from thread type X, and the "best guess" method is used, it blanks the screen.
+                    logger.info(" Calling adjust rate setting from {}.", Thread.currentThread().getName());
+                    AlignmentBoardSettings alignmentBoardSettings = adjustDownsampleRateSetting();
+
                     Entity alignmentBoard = context.getInternalEntity();
                     UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
                             alignmentBoard, mip3d.getVolumeModel(), settings.getAlignmentBoardSettings()
                     );
                     userSettingSerializer.deserializeSettings();
                     settings.updateControlsFromSettings();
-
-                    mip3d.refresh();
-
-                    // When this is called from thread type X, and the "best guess" method is used, it blanks the screen.
-                    logger.info(" Calling adjust rate setting from {}.", Thread.currentThread().getName());
-                    AlignmentBoardSettings alignmentBoardSettings = adjustDownsampleRateSetting();
 
                     // Here, should load volumes, for all the different items given.
                     loadWorker = new RenderablesLoadWorker(
