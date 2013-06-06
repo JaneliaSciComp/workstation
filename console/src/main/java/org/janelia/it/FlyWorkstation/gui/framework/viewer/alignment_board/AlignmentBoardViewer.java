@@ -461,20 +461,19 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     if ( mip3d == null ) {
                         mip3d = createMip3d();
                         wrapperPanel = createWrapperPanel( mip3d );
+
+                        Entity alignmentBoard = context.getInternalEntity();
+                        UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
+                                alignmentBoard, mip3d.getVolumeModel(), settings.getAlignmentBoardSettings()
+                        );
+                        userSettingSerializer.deserializeSettings();
+                        settings.updateControlsFromSettings();
                     }
 
                     // When this is called from thread type X, and the "best guess" method is used, it blanks the screen.
                     logger.info(" Calling adjust rate setting from {}.", Thread.currentThread().getName());
                     AlignmentBoardSettings alignmentBoardSettings = adjustDownsampleRateSetting();
 
-                    Entity alignmentBoard = context.getInternalEntity();
-                    UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
-                            alignmentBoard, mip3d.getVolumeModel(), settings.getAlignmentBoardSettings()
-                    );
-                    userSettingSerializer.deserializeSettings();
-                    settings.updateControlsFromSettings();
-System.out.println( mip3d.getVolumeModel() + " is volume model.");
-System.out.println( mip3d.getVolumeModel().getGammaAdjustment() + " is GAMMA adjustment.");
                     mip3d.refresh();
 
                     // Here, should load volumes, for all the different items given.
