@@ -59,7 +59,7 @@ public class TestMaskChan3DViz {
                     // mip3d.
                     AlignmentBoardSettings settings = new AlignmentBoardSettings();
                     settings.setShowChannelData( true );
-                    settings.setGammaFactor( AlignmentBoardControlsDialog.DEFAULT_GAMMA );
+                    settings.setGammaFactor( AlignmentBoardSettings.DEFAULT_GAMMA );
                     settings.setDownSampleRate( AlignmentBoardControlsDialog.UNSELECTED_DOWNSAMPLE_RATE);
 
                     RenderMappingI renderMapping = new ConfigurableColorMapping();
@@ -107,7 +107,7 @@ public class TestMaskChan3DViz {
         public void loadVolume(TextureDataI signalTexture, TextureDataI maskTexture) {
 
             if ( ! mip3d.setVolume(
-                    signalTexture, maskTexture, renderMapping, null, (float) AlignmentBoardControlsDialog.DEFAULT_GAMMA
+                    signalTexture, maskTexture, renderMapping, null, (float) AlignmentBoardSettings.DEFAULT_GAMMA
             ) ) {
                 logger.error( "Failed to load volume to mip3d." );
             }

@@ -64,7 +64,7 @@ public class MaskReadTest {
         logger.info( "Reading channel data." );
         AlignmentBoardSettings settings = new AlignmentBoardSettings();
         settings.setShowChannelData( true );
-        settings.setGammaFactor( AlignmentBoardControlsDialog.DEFAULT_GAMMA );
+        settings.setGammaFactor( AlignmentBoardSettings.DEFAULT_GAMMA );
         settings.setDownSampleRate( AlignmentBoardControlsDialog.UNSELECTED_DOWNSAMPLE_RATE);
         RenderablesMaskBuilder renderablesMaskBuilder = new RenderablesMaskBuilder( settings, null );
         Collection<MaskChanDataAcceptorI> acceptors = new ArrayList<MaskChanDataAcceptorI>();
