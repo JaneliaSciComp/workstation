@@ -266,6 +266,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
         // Add this last.  "show-loading" removes it.  This way, it is shown only
         // when it becomes un-busy.
+        addSettingsLaunchButton();
         add( wrapperPanel, BorderLayout.CENTER );
 
     }
@@ -326,7 +327,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             updateRendering( abContext );
         }
         else {
-            setRendering( false );
+            setRendering(false);
         }
     }
 
@@ -345,10 +346,10 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
     private void printAlignmentBoardContext(AlignmentBoardContext abContext) {
         if ( log.isDebugEnabled() ) {
-            log.debug("Alignment board: "+abContext.getName());
-            log.debug("* Alignment space: "+abContext.getAlignmentContext().getAlignmentSpaceName());
+            log.debug("Alignment board: " + abContext.getName());
+            log.debug("* Alignment space: " + abContext.getAlignmentContext().getAlignmentSpaceName());
             log.debug("* Optical resolution: "+abContext.getAlignmentContext().getOpticalResolution());
-            log.debug("* Pixel resolution: "+abContext.getAlignmentContext().getPixelResolution());
+            log.debug("* Pixel resolution: " + abContext.getAlignmentContext().getPixelResolution());
 
             for(AlignedItem alignedItem : abContext.getAlignedItems()) {
 
@@ -495,7 +496,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
      * This is called when the board data has been updated.
      */
     private void updateBoard( final AlignmentBoardContext context ) {
-        logger.info("Update-board called.");
+        logger.warn("Update-board called.");
         try {
             // TEMP
             //if ( brainGlow != null ) {
@@ -613,17 +614,23 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 new AlignmentBoardControlsListener( rtnVal, renderMapping, this )
         );
 
-        rtnVal.addMenuAction( settings.getLaunchAction() );
+        rtnVal.addMenuAction(settings.getLaunchAction());
         return rtnVal;
     }
 
     private JPanel createWrapperPanel( Mip3d mip3d ) {
         JPanel rtnVal = new JPanel();
-        rtnVal.setLayout( new BorderLayout() );
-        rtnVal.add( mip3d, BorderLayout.CENTER );
+        rtnVal.setLayout(new BorderLayout());
+        rtnVal.add(mip3d, BorderLayout.CENTER);
 
+        addSettingsLaunchButton();
+        return rtnVal;
+    }
+
+    /** This must be called to add the button on re-entry to this widget. */
+    private void addSettingsLaunchButton() {
         JButton launchSettingsButton = new JButton();
-        launchSettingsButton.setFocusable( false );
+        launchSettingsButton.setFocusable(false);
         launchSettingsButton.setRequestFocusEnabled(false);
         launchSettingsButton.setSelected(false);
         launchSettingsButton.setAction(settings.getLaunchAction());
@@ -634,7 +641,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         );
 
         buttonHolder.add( launchSettingsButton, btnConstraints );
-        return rtnVal;
     }
 
     /**
