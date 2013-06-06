@@ -56,7 +56,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private JPanel wrapperPanel;
 
     private RenderMappingI renderMapping;
-    private CropCoordSet cropCoordSet;
     private BrainGlow brainGlow;
     private AlignmentBoardControlsDialog settings;
     private Logger logger = LoggerFactory.getLogger(AlignmentBoardViewer.class);
@@ -74,7 +73,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
         logger.info( "C'tor" );
         renderMapping = new ConfigurableColorMapping();
-        cropCoordSet = CropCoordSet.getDefaultCropCoordSet();
         setLayout(new BorderLayout());
         ModelMgr.getModelMgr().registerOnEventBus(this);
         
@@ -563,7 +561,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
      */
     private Mip3d createMip3d() {
         Mip3d rtnVal = new Mip3d();
-        settings = new AlignmentBoardControlsDialog( rtnVal, cropCoordSet );
+        settings = new AlignmentBoardControlsDialog( rtnVal );
         settings.addSettingsListener(
                 new AlignmentBoardControlsListener( rtnVal, renderMapping, this )
         );

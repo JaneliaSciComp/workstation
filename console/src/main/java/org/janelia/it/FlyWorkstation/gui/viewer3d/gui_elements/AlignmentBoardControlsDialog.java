@@ -93,13 +93,13 @@ public class AlignmentBoardControlsDialog extends JDialog {
     /**
      * @param centering this dialog will be centered over the "centering" component.
      */
-    public AlignmentBoardControlsDialog(Component centering, CropCoordSet cropCoordSet ) {
+    public AlignmentBoardControlsDialog(Component centering ) {
         this.setModal( false );
         this.setSize(SIZE);
         this.centering = centering;
         this.listeners = new ArrayList<ControlsListener>();
-        this.cropCoordSet = cropCoordSet;
         this.setDefaultCloseOperation( WindowConstants.HIDE_ON_CLOSE );
+        this.cropCoordSet = CropCoordSet.getDefaultCropCoordSet();
         createGui();
         Double downsampleRate = (Double)SessionMgr.getSessionMgr().getModelProperty(DOWN_SAMPLE_PROP_NAME);
         if ( downsampleRate == null ) {
@@ -138,6 +138,8 @@ public class AlignmentBoardControlsDialog extends JDialog {
         zSlider.setValue( 0 );
         zSlider.setMaximum(z);
         zSlider.setUpperValue(z);
+
+        updateSlidersFromSettings();
     }
 
     /**
@@ -170,26 +172,6 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
         int value = (int)Math.round( ( ( settings.getGammaFactor() * -5.0 ) + 10.0 ) * 100.0 );
         brightnessSlider.setValue(value);
-/*
-        if (! cropCoordSet.isEmpty() ) {
-            float[] currentCoords = cropCoordSet.getCurrentCoordinates();
-            int[] maxima = new int[] {
-                    xSlider.getMaximum(), ySlider.getMaximum(), zSlider.getMaximum()
-            };
-            CoordCropper3D coordCropper = new CoordCropper3D();
-            float[] denormalizedCoords = coordCropper.getDenormalizedCropCoords(
-                    currentCoords, maxima, settings.getDownSampleRate()
-            );
-            xSlider.setUpperValue( Math.round( denormalizedCoords[ 0 ] ) );
-            xSlider.setValue( Math.round( denormalizedCoords[ 1 ] ) );
-
-            ySlider.setUpperValue( Math.round( denormalizedCoords[ 2 ] ) );
-            ySlider.setValue( Math.round( denormalizedCoords[ 3 ] ) );
-
-            zSlider.setUpperValue( Math.round( denormalizedCoords[ 4 ] ) );
-            zSlider.setValue( Math.round( denormalizedCoords[ 5 ] ) );
-        }
-*/
     }
 
     /**
@@ -248,7 +230,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
     }
 
     private void serializeDownsampleRate(double downSampleRate) {
-        SessionMgr.getSessionMgr().setModelProperty( DOWN_SAMPLE_PROP_NAME, downSampleRate );
+        SessionMgr.getSessionMgr().setModelProperty(DOWN_SAMPLE_PROP_NAME, downSampleRate);
     }
 
     /**
@@ -566,6 +548,30 @@ public class AlignmentBoardControlsDialog extends JDialog {
         bottomButtonPanel.add( cancel, BorderLayout.WEST );
         bottomButtonPanel.setBorder( new EmptyBorder( insets ) );
         add(bottomButtonPanel, BorderLayout.SOUTH);
+    }
+
+    private void updateSlidersFromSettings() {
+        if ( cropCoordSet.isEmpty() ) {
+            resetSelectionSliders();
+        }
+        else {
+            float[] currentCoords = cropCoordSet.getCurrentCoordinates();
+            int[] maxima = new int[] {
+                    xSlider.getMaximum(), ySlider.getMaximum(), zSlider.getMaximum()
+            };
+            CoordCropper3D coordCropper = new CoordCropper3D();
+            float[] denormalizedCoords = coordCropper.getDenormalizedCropCoords(
+                    currentCoords, maxima, settings.getDownSampleRate()
+            );
+            xSlider.setUpperValue( Math.round( denormalizedCoords[ 0 ] ) );
+            xSlider.setValue( Math.round( denormalizedCoords[ 1 ] ) );
+
+            ySlider.setUpperValue( Math.round( denormalizedCoords[ 2 ] ) );
+            ySlider.setValue( Math.round( denormalizedCoords[ 3 ] ) );
+
+            zSlider.setUpperValue( Math.round( denormalizedCoords[ 4 ] ) );
+            zSlider.setValue(Math.round(denormalizedCoords[5]));
+        }
     }
 
     private void setButtonRelaxed(JButton saveButton, String tooltipText ) {
