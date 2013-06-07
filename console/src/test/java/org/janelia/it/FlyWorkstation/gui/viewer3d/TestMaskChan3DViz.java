@@ -60,7 +60,7 @@ public class TestMaskChan3DViz {
                     AlignmentBoardSettings settings = new AlignmentBoardSettings();
                     settings.setShowChannelData( true );
                     settings.setGammaFactor( AlignmentBoardSettings.DEFAULT_GAMMA );
-                    settings.setDownSampleRate( AlignmentBoardControlsDialog.UNSELECTED_DOWNSAMPLE_RATE);
+                    settings.setChosenDownSampleRate(AlignmentBoardControlsDialog.UNSELECTED_DOWNSAMPLE_RATE);
 
                     RenderMappingI renderMapping = new ConfigurableColorMapping();
                     RenderablesLoadWorker loadWorker = new RenderablesLoadWorker(
