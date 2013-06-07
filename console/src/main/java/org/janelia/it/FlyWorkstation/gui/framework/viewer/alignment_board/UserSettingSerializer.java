@@ -124,7 +124,7 @@ public class UserSettingSerializer implements Serializable {
         }
 
         str = settingToValue.get( SELECTION_BOUNDS_SETTING );
-        if ( str != null ) {
+        if ( str != null  &&  str.trim().length() > 0 ) {
             float[] cropCoordArray = null;
             Collection<float[]> coordinateSets = new ArrayList<float[]>();
             String[] coordSetStrs = str.split( "]" );
@@ -175,20 +175,22 @@ public class UserSettingSerializer implements Serializable {
         builder.append("\n");
 
         CropCoordSet cropCoordSet = volumeModel.getCropCoords();
-        builder.append(SELECTION_BOUNDS_SETTING + "=");
-        for (float[] nextCoordSet : cropCoordSet.getAcceptedCoordinates()) {
-            appendCoordinateArray(builder, nextCoordSet);
-        }
-        // May add on any current (on-ORed) coordinates.
-        if ( cropCoordSet.getCurrentCoordinates() != null ) {
-            StringBuilder currBuf = new StringBuilder();
-            String currCoordStr = currBuf.toString();
-            if ( ! currCoordStr.contains( currCoordStr ) ) {
-                appendCoordinateArray( currBuf, cropCoordSet.getCurrentCoordinates() );
-                builder.append( currCoordStr );
+        if (! cropCoordSet.isEmpty() ) {
+            builder.append(SELECTION_BOUNDS_SETTING + "=");
+            for (float[] nextCoordSet : cropCoordSet.getAcceptedCoordinates()) {
+                appendCoordinateArray(builder, nextCoordSet);
             }
+            // May add on any current (on-ORed) coordinates.
+            if ( cropCoordSet.getCurrentCoordinates() != null ) {
+                StringBuilder currBuf = new StringBuilder();
+                String currCoordStr = currBuf.toString();
+                if ( ! currCoordStr.contains( currCoordStr ) ) {
+                    appendCoordinateArray( currBuf, cropCoordSet.getCurrentCoordinates() );
+                    builder.append( currCoordStr );
+                }
+            }
+            builder.append("\n");
         }
-        builder.append("\n");
         logger.info("SETTINGS: {} serialized", builder);
         return builder.toString();
     }

@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CoordCropper3D;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CropCoordSet;
 import org.slf4j.Logger;
@@ -79,13 +80,17 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private RangeSlider ySlider;
     private RangeSlider zSlider;
 
+    private int xMax;
+    private int yMax;
+    private int zMax;
+
     private JCheckBox blackoutCheckbox;
 
     private boolean readyForOutput = false;
 
     private Map<Integer,Integer> downSampleRateToIndex;
-    private CropCoordSet cropCoordSet;
     private Collection<ControlsListener> listeners;
+    private VolumeModel volumeModel;
     private AlignmentBoardSettings settings = new AlignmentBoardSettings();
 
     private Logger logger = LoggerFactory.getLogger( AlignmentBoardControlsDialog.class );
@@ -93,19 +98,28 @@ public class AlignmentBoardControlsDialog extends JDialog {
     /**
      * @param centering this dialog will be centered over the "centering" component.
      */
-    public AlignmentBoardControlsDialog(Component centering ) {
+    public AlignmentBoardControlsDialog( Component centering, VolumeModel volumeModel ) {
         this.setModal( false );
         this.setSize(SIZE);
         this.centering = centering;
         this.listeners = new ArrayList<ControlsListener>();
         this.setDefaultCloseOperation( WindowConstants.HIDE_ON_CLOSE );
-        this.cropCoordSet = CropCoordSet.getDefaultCropCoordSet();
+        this.volumeModel = volumeModel;
         createGui();
         Double downsampleRate = (Double)SessionMgr.getSessionMgr().getModelProperty(DOWN_SAMPLE_PROP_NAME);
         if ( downsampleRate == null ) {
             downsampleRate = AlignmentBoardControlsDialog.UNSELECTED_DOWNSAMPLE_RATE;
         }
         this.setNonSerializedDownSampleRate(downsampleRate);
+    }
+
+    /** Take the launch method as the place to update all controls. */
+    public void setVisible( boolean visible ) {
+        if ( visible ) {
+            updateControlsFromSettings();
+            updateSlidersFromSettings();
+        }
+        super.setVisible( visible );
     }
 
     /** Control who observes.  Synchronized for thread safety. */
@@ -126,20 +140,10 @@ public class AlignmentBoardControlsDialog extends JDialog {
     }
 
     public void setVolumeMaxima( int x, int y, int z ) {
-        logger.info("Volume maxima provided {}, {}, " + z , x, y );
-        xSlider.setValue(0);
-        xSlider.setMaximum(x);
-        xSlider.setUpperValue(x);
-
-        ySlider.setValue(0);
-        ySlider.setMaximum(y);
-        ySlider.setUpperValue(y);
-
-        zSlider.setValue( 0 );
-        zSlider.setMaximum(z);
-        zSlider.setUpperValue(z);
-
-        updateSlidersFromSettings();
+        logger.info("Volume maxima provided {}, {}, " + z, x, y);
+        xMax = x;
+        yMax = y;
+        zMax = z;
     }
 
     /**
@@ -154,24 +158,12 @@ public class AlignmentBoardControlsDialog extends JDialog {
     /** These getters may be called after successful launch. */
     public double getDownsampleRate() {
         if ( ! readyForOutput )
-            return settings.getDownSampleRate();
+            return settings.getChosenDownSampleRate();
         String selectedValue = downSampleRateDropdown.getItemAt( downSampleRateDropdown.getSelectedIndex() ).toString();
         if ( Character.isDigit( selectedValue.charAt( 0 ) ) )
             return Integer.parseInt( selectedValue );
         else
             return 0.0;
-    }
-
-    /**
-     * Causes the controls to be updated, per information in the settings.  Does not fire any listener updates.
-     * Use this when a listener is causing the update, rather than receiving it.
-     * @see #getGammaFactor()
-     */
-    public void updateControlsFromSettings() {
-        useSignalDataCheckbox.setSelected( settings.isShowChannelData() );
-
-        int value = (int)Math.round( ( ( settings.getGammaFactor() * -5.0 ) + 10.0 ) * 100.0 );
-        brightnessSlider.setValue(value);
     }
 
     /**
@@ -214,6 +206,64 @@ public class AlignmentBoardControlsDialog extends JDialog {
     }
 
     //--------------------------------------------HELPERS
+    /**
+     * Causes the controls to be updated, per information in the settings.  Does not fire any listener updates.
+     * Use this when a listener is causing the update, rather than receiving it.
+     * @see #getGammaFactor()
+     */
+    private void updateControlsFromSettings() {
+        useSignalDataCheckbox.setSelected( settings.isShowChannelData() );
+
+        int value = (int)Math.round( ( ( settings.getGammaFactor() * -5.0 ) + 10.0 ) * 100.0 );
+        brightnessSlider.setValue(value);
+    }
+
+    /** Call this when sufficient info is avail to get the sliders positions initialized off crop-coords. */
+    private void updateSlidersFromSettings() {
+        if ( xMax == 0 || yMax == 0 || zMax == 0 ) {
+            logger.error( "Updating sliders before maxima have been set." );
+        }
+        xSlider.setValue(0);
+        xSlider.setMaximum(xMax);
+        xSlider.setUpperValue(xMax);
+
+        ySlider.setValue(0);
+        ySlider.setMaximum(yMax);
+        ySlider.setUpperValue(yMax);
+
+        zSlider.setValue( 0 );
+        zSlider.setMaximum(zMax);
+        zSlider.setUpperValue(zMax);
+
+        CropCoordSet cropCoordSet = volumeModel.getCropCoords();
+        if ( cropCoordSet.isEmpty() ) {
+            resetSelectionSliders();
+        }
+        else {
+            float[] currentCoords = cropCoordSet.getCurrentCoordinates();
+            // Roll back to an accepted coordinate set.
+            if ( currentCoords == null  ||  currentCoords[ 0 ] == -1  ||  CropCoordSet.allMaxCoords( currentCoords ) ) {
+                currentCoords = cropCoordSet.getAcceptedCoordinates().iterator().next();
+            }
+
+            int[] maxima = new int[] {
+                    xMax, yMax, zMax
+            };
+            CoordCropper3D coordCropper = new CoordCropper3D();
+            float[] denormalizedCoords = coordCropper.getDenormalizedCropCoords(
+                    currentCoords, maxima, settings.getAcceptedDownsampleRate()
+            );
+            xSlider.setValue(Math.round(denormalizedCoords[0]));
+            xSlider.setUpperValue(Math.round(denormalizedCoords[1]));
+
+            ySlider.setValue(Math.round(denormalizedCoords[2]));
+            ySlider.setUpperValue(Math.round(denormalizedCoords[3]));
+
+            zSlider.setValue(Math.round(denormalizedCoords[4]));
+            zSlider.setUpperValue(Math.round(denormalizedCoords[5]));
+        }
+    }
+
     /** Set the rate in the GUI, for now, only. */
     private void setNonSerializedDownSampleRate(double downSampleRate) {
         int downSampleRateInt = (int)Math.round(downSampleRate);
@@ -226,7 +276,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
             downsampleIndex = 2;
         }
         downSampleRateDropdown.setSelectedIndex( downsampleIndex );
-        settings.setDownSampleRate(downSampleRate);
+        settings.setChosenDownSampleRate(downSampleRate);
     }
 
     private void serializeDownsampleRate(double downSampleRate) {
@@ -245,10 +295,10 @@ public class AlignmentBoardControlsDialog extends JDialog {
             }
             double newDownSampleRate = getDownsampleRate();
             boolean newUseSignal = isUseSignalData();
-            if ( newDownSampleRate != settings.getDownSampleRate()  ||
+            if ( newDownSampleRate != settings.getChosenDownSampleRate()  ||
                     newUseSignal != settings.isShowChannelData() ) {
 
-                settings.setDownSampleRate( newDownSampleRate );
+                settings.setChosenDownSampleRate(newDownSampleRate);
                 settings.setShowChannelData( newUseSignal );
                 serializeDownsampleRate( newDownSampleRate );
                 listener.updateSettings();
@@ -293,12 +343,12 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private void createGui() {
         setLayout( new BorderLayout() );
 
-        xSlider = new RangeSlider( 0, 100 );  // Dummy starting ranges.
-        ySlider = new RangeSlider( 0, 100 );
-        zSlider = new RangeSlider( 0, 100 );
+        xSlider = new RangeSlider();
+        ySlider = new RangeSlider();
+        zSlider = new RangeSlider();
 
         ChangeListener listener = new SliderChangeListener(
-                new RangeSlider[]{ xSlider, ySlider, zSlider }, cropCoordSet, this
+                new RangeSlider[]{ xSlider, ySlider, zSlider }, volumeModel, this
         );
 
         xSlider.addChangeListener( listener );
@@ -397,6 +447,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
         clearButton.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent ae ) {
                 resetSelectionSliders();
+                CropCoordSet cropCoordSet = volumeModel.getCropCoords();
                 cropCoordSet.setCurrentCoordinates( getCurrentCropCoords() );
                 cropCoordSet.setAcceptedCoordinates(new ArrayList<float[]>());
                 fireForceCropEvent(cropCoordSet);
@@ -407,6 +458,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
         orButton.setToolTipText( OR_BUTTON_TIP );
         orButton.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent ae ) {
+                CropCoordSet cropCoordSet = volumeModel.getCropCoords();
                 cropCoordSet.acceptCurrentCoordinates();
                 fireSettingsEvent( cropCoordSet );
             }
@@ -550,30 +602,6 @@ public class AlignmentBoardControlsDialog extends JDialog {
         add(bottomButtonPanel, BorderLayout.SOUTH);
     }
 
-    private void updateSlidersFromSettings() {
-        if ( cropCoordSet.isEmpty() ) {
-            resetSelectionSliders();
-        }
-        else {
-            float[] currentCoords = cropCoordSet.getCurrentCoordinates();
-            int[] maxima = new int[] {
-                    xSlider.getMaximum(), ySlider.getMaximum(), zSlider.getMaximum()
-            };
-            CoordCropper3D coordCropper = new CoordCropper3D();
-            float[] denormalizedCoords = coordCropper.getDenormalizedCropCoords(
-                    currentCoords, maxima, settings.getDownSampleRate()
-            );
-            xSlider.setUpperValue( Math.round( denormalizedCoords[ 0 ] ) );
-            xSlider.setValue( Math.round( denormalizedCoords[ 1 ] ) );
-
-            ySlider.setUpperValue( Math.round( denormalizedCoords[ 2 ] ) );
-            ySlider.setValue( Math.round( denormalizedCoords[ 3 ] ) );
-
-            zSlider.setUpperValue( Math.round( denormalizedCoords[ 4 ] ) );
-            zSlider.setValue(Math.round(denormalizedCoords[5]));
-        }
-    }
-
     private void setButtonRelaxed(JButton saveButton, String tooltipText ) {
         saveButton.setCursor(Cursor.getDefaultCursor());
         saveButton.setToolTipText( tooltipText );
@@ -598,6 +626,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
     }
 
     private Collection<float[]> getMicrometerCropCoords() {
+        CropCoordSet cropCoordSet = volumeModel.getCropCoords();
         Collection<float[]> micrometerCropCoords = new HashSet<float[]>( cropCoordSet.getAcceptedCoordinates().size() );
         int[] maxima = new int[] {
                 xSlider.getMaximum(), ySlider.getMaximum(), zSlider.getMaximum()
@@ -731,20 +760,21 @@ public class AlignmentBoardControlsDialog extends JDialog {
     public static class SliderChangeListener implements ChangeListener {
         private RangeSlider[] sliders;
         private AlignmentBoardControlsDialog dialog;
-        private CropCoordSet cropCoordSet;
+        private VolumeModel volumeModel;
 
         public SliderChangeListener(
                 RangeSlider[] rangeSliders,
-                CropCoordSet cropCoordSet,
+                VolumeModel volumeModel,
                 AlignmentBoardControlsDialog dialog
         ) {
             this.sliders = rangeSliders;
-            this.cropCoordSet = cropCoordSet;
+            this.volumeModel = volumeModel;
             this.dialog = dialog;
         }
 
         public void stateChanged(ChangeEvent e) {
             float[] cropCoords = new CoordCropper3D().getNormalizedCropCoords( sliders );
+            CropCoordSet cropCoordSet = volumeModel.getCropCoords();
             cropCoordSet.setCurrentCoordinates( cropCoords );
             dialog.fireSettingsEvent( cropCoordSet );
         }

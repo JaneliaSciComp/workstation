@@ -12,27 +12,53 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 public class AlignmentBoardSettings {
     public static final double DEFAULT_GAMMA = 1.0;
 
-    private double downSampleRate;
+    private double chosenDownSampleRate;
     private double gammaFactor =  DEFAULT_GAMMA;
     private boolean showChannelData;
+    private double downSampleGuess;
 
     public AlignmentBoardSettings() {
         super();
     }
 
-    public AlignmentBoardSettings( double downSampleRate, double gammaFactor, boolean showChannelData ) {
+    public AlignmentBoardSettings( double downSampleRate, double downSampleGuess, double gammaFactor, boolean showChannelData ) {
         this();
-        this.downSampleRate = downSampleRate;
+        this.chosenDownSampleRate = downSampleRate;
         this.gammaFactor = gammaFactor;
         this.showChannelData = showChannelData;
+        this.downSampleGuess = downSampleGuess;
     }
 
-    public double getDownSampleRate() {
-        return downSampleRate;
+    public double getChosenDownSampleRate() {
+        return chosenDownSampleRate;
     }
 
-    public void setDownSampleRate(double downSampleRate) {
-        this.downSampleRate = downSampleRate;
+    public void setChosenDownSampleRate(double downSampleRate) {
+        this.chosenDownSampleRate = downSampleRate;
+    }
+
+    /**
+     * This "guess" is determined from graphics card, but never serialized.  If the user picks something
+     * in particular, that will be used.  But if not, their guess will be used instead.
+     *
+     * @param downSampleRate
+     */
+    public void setDownSampleGuess(double downSampleRate) {
+        this.downSampleGuess = downSampleRate;
+    }
+
+    public double getDownSampleGuess() {
+        return downSampleGuess;
+    }
+
+    /** Call this to get the downsample rate that is actually used onscreen. */
+    public double getAcceptedDownsampleRate() {
+        if ( chosenDownSampleRate == 0.0 ) {
+            return getDownSampleGuess();
+        }
+        else {
+            return getChosenDownSampleRate();
+        }
     }
 
     public double getGammaFactor() {
@@ -53,6 +79,6 @@ public class AlignmentBoardSettings {
 
     public AlignmentBoardSettings clone() throws CloneNotSupportedException {
         //super.clone();
-        return new AlignmentBoardSettings( getDownSampleRate(), getGammaFactor(), isShowChannelData() );
+        return new AlignmentBoardSettings( getChosenDownSampleRate(), getDownSampleGuess(), getGammaFactor(), isShowChannelData() );
     }
 }

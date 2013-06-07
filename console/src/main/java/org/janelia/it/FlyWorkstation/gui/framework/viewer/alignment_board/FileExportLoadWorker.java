@@ -115,7 +115,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
 
         // Establish the means for extracting the volume mask.
         AlignmentBoardSettings customWritebackSettings = new AlignmentBoardSettings();
-        customWritebackSettings.setDownSampleRate(1.0);
+        customWritebackSettings.setChosenDownSampleRate(1.0);
         customWritebackSettings.setGammaFactor(1.0);
 
         if ( paramBean.getMethod() == ControlsListener.ExportMethod.binary ) {

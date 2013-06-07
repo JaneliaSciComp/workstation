@@ -87,4 +87,14 @@ public class CropCoordSet {
 
         return rtnVal;
     }
+
+    public static boolean allMaxCoords( float[] currentCoordinates ) {
+        boolean max = true;
+        for ( int i = 0; i < currentCoordinates.length  &&  max; i+= 2 ) {
+            if ( Math.round( currentCoordinates[ i ] ) != 0  ||  Math.round( currentCoordinates[ i + 1 ] ) != 1 ) {
+                max = false;
+            }
+        }
+        return max;
+    }
 }

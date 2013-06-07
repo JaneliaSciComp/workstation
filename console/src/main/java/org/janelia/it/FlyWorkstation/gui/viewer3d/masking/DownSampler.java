@@ -57,7 +57,7 @@ public class DownSampler {
         }
         else {
             rtnVal = getDownSampledVolumeHelper(
-                    oneDVolume, //create3DVolume( oneDVolume, voxelBytes ),
+                    oneDVolume,
                     voxelBytes,
                     xScale,
                     yScale,

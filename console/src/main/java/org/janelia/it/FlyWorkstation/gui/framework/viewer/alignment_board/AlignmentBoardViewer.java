@@ -464,7 +464,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                                 alignmentBoard, mip3d.getVolumeModel(), settings.getAlignmentBoardSettings()
                         );
                         userSettingSerializer.deserializeSettings();
-                        settings.updateControlsFromSettings();
                     }
 
                     // When this is called from thread type X, and the "best guess" method is used, it blanks the screen.
@@ -512,10 +511,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
         final AlignmentBoardSettings[] alignmentBoardSettings =
                 new AlignmentBoardSettings[] { settings.getAlignmentBoardSettings() };
-        if ( alignmentBoardSettings[ 0 ].getDownSampleRate() == 0.0 ) {
-            // Do not backflush this setting into the caller.  Will not serialize estimated value.
-            alignmentBoardSettings[ 0 ] = alignmentBoardSettings[ 0 ].clone();
-
+        if ( alignmentBoardSettings[ 0 ].getChosenDownSampleRate() == 0.0 ) {
             // Must find the best downsample rate.
             final GpuSampler sampler = new GpuSampler( this.getBackground() );
             final GLJPanel feedbackPanel = new GLJPanel();
@@ -544,9 +540,9 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     // 1.5Gb in Kb increments
                     logger.info( "ABV seeing free memory estimate of {}.", freeGraphicsMemoryArr[ 0 ] );
                     if ( freeGraphicsMemoryArr[ 0 ] == 0  ||  freeGraphicsMemoryArr[ 0 ] < LEAST_FULLSIZE_MEM )
-                        alignmentBoardSettings[ 0 ].setDownSampleRate( 2.0 );
+                        alignmentBoardSettings[ 0 ].setDownSampleGuess(2.0);
                     else
-                        alignmentBoardSettings[ 0 ].setDownSampleRate( 1.0 );
+                        alignmentBoardSettings[ 0 ].setDownSampleGuess(1.0);
                 }
             };
             new Thread( runnable ).start();
@@ -561,7 +557,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
      */
     private Mip3d createMip3d() {
         Mip3d rtnVal = new Mip3d();
-        settings = new AlignmentBoardControlsDialog( rtnVal );
+        settings = new AlignmentBoardControlsDialog( rtnVal, rtnVal.getVolumeModel() );
         settings.addSettingsListener(
                 new AlignmentBoardControlsListener( rtnVal, renderMapping, this )
         );
