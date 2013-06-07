@@ -451,8 +451,9 @@ implements VolumeImage3d
 		// Sniff which back end we need
 		AbstractTextureLoadAdapter testLoadAdapter = null;
 		URL testUrl;
+
+		// Is this a PAM octree folder?
 		if (testLoadAdapter == null) {
-			// Is this a PAM octree folder?
 			try {
 				testUrl = new URL(folderUrl, "slice_00000.pam");
 				InputStream is = testUrl.openStream();
@@ -467,6 +468,20 @@ implements VolumeImage3d
 			catch (TileLoadError e) {}
 		}
 		
+		// Is this a MP4 octree folder?
+		if (testLoadAdapter == null) {
+			try {
+				// diagnostic mp4 file
+				testUrl = new URL(folderUrl, "default.0.mp4");
+				testUrl.openStream();
+				Mp4OctreeLoadAdapter btola = new Mp4OctreeLoadAdapter();
+				btola.setTopFolder(folderUrl);
+				getTileSetChangedSignal().connect(getUpdateFuturePreFetchSlot());
+				testLoadAdapter = btola;
+			} catch (MalformedURLException e1) {} 
+			catch (IOException e) {} 
+		}
+
 		// Is this a Block tiff octree folder?
 		if (testLoadAdapter == null) {
 			try {
@@ -571,4 +586,10 @@ implements VolumeImage3d
 		return result;
 	}
 
+	@Override
+	public double getResolution(int ix) {
+		if (ix == 0) return getXResolution();
+		else if (ix == 1) return getYResolution();
+		else return getZResolution();
+	}
 }

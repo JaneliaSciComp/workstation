@@ -14,4 +14,5 @@ public interface VolumeImage3d
 	public double getZResolution(); // in scene units
 	public int getNumberOfChannels(); // e.g. "3" for RGB
 	public boolean loadURL(URL url);
+	public double getResolution(int ix);
 }

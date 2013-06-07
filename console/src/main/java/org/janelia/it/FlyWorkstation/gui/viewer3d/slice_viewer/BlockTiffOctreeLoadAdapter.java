@@ -3,6 +3,8 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.List;
 import java.util.Vector;
 
@@ -186,6 +188,7 @@ extends AbstractTextureLoadAdapter
 		
 		TextureData2dGL result = loadSlice(relativeZ,
 				decoders);
+		localLoadTimer.mark("finished slice load");
 
 		loadTimer.putAll(localLoadTimer);
 		return result;
@@ -237,8 +240,17 @@ extends AbstractTextureLoadAdapter
 			if (! tiff.exists())
 				throw new MissingTileException();
 			try {
-				SeekableStream s = new FileSeekableStream(tiff);
-				decoders[c] = ImageCodec.createImageDecoder("tiff", s, null);
+				boolean useUrl = false;
+				if (useUrl) { // So SLOW
+					// test URL stream vs (seekable) file stream
+					URL url = tiff.toURI().toURL();
+					InputStream inputStream = url.openStream();
+					decoders[c] = ImageCodec.createImageDecoder("tiff", inputStream, null);
+				}
+				else {
+					SeekableStream s = new FileSeekableStream(tiff);
+					decoders[c] = ImageCodec.createImageDecoder("tiff", s, null);
+				}
 			} catch (IOException e) {
 				throw new TileLoadError(e);
 			}

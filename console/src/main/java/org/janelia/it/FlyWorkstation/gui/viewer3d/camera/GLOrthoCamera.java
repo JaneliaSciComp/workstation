@@ -74,7 +74,10 @@ public class GLOrthoCamera
 		int hd = d/2;
 		if (hd == 0)
 			hd = 1;
-		gl.glOrtho(-hw, hw, hh, -hh, -hd, hd);
+		// glOrtho() is where OpenGL Y convention (Bottom origin) gets flipped to
+		// image Y convention (Top origin).
+		// (Flip Z too, to keep right handed)
+		gl.glOrtho(-hw, hw, hh, -hh, hd, -hd);
 		// model/view matrix
 		gl.glMatrixMode(GL2.GL_MODELVIEW);
 		gl.glPushMatrix();

@@ -192,5 +192,12 @@ public class Basic2dImageVolume implements VolumeImage3d, GLActor
 		}
 		return true;
 	}
+	
+	@Override
+	public double getResolution(int ix) {
+		if (ix == 0) return getXResolution();
+		else if (ix == 1) return getYResolution();
+		else return getZResolution();
+	}
 
 }

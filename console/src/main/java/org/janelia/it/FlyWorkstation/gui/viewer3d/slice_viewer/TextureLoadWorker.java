@@ -24,23 +24,34 @@ public class TextureLoadWorker implements Runnable
 		this.textureCache = textureCache;
 	}
 
+	public TileTexture getTexture() {
+		return texture;
+	}
+
 	@Override
 	public void run() 
 	{
+		TileIndex index = texture.getIndex();
+		
+		// TODO 
+		
+		if (textureCache.containsKey(index)) {
+			log.info("Skipping duplicate load of texture (2) "+index);
+		}
 		// Don't load this texture if it is already loaded
-		if (texture.getStage().ordinal() == TileTexture.Stage.RAM_LOADING.ordinal())
+		else if (texture.getStage().ordinal() == TileTexture.Stage.RAM_LOADING.ordinal())
 		{
 			log.info("Skipping duplicate load of texture "+texture.getIndex());
-			return; // already loading
+			// return; // already loading
 		}
 		else if (texture.getStage().ordinal() > TileTexture.Stage.RAM_LOADING.ordinal())
 		{
 			// log.info("Skipping duplicate load of texture "+texture.getIndex());
-			return; // already loaded or loading
+			// return; // already loaded or loading
 		}
 		// Load file
 		// log.info("Loading texture "+texture.getIndex());
-		if (texture.loadImageToRam()) {
+		else if (texture.loadImageToRam()) {
 			textureCache.add(texture);
 			texture.getRamLoadedSignal().emit(texture.getIndex()); // inform consumers (RavelerTileServer?)
 			// log.info("Loaded texture "+texture.getIndex());
@@ -48,6 +59,7 @@ public class TextureLoadWorker implements Runnable
 		else {
 			log.warn("Failed to load texture " + texture.getIndex());
 		}
+		textureCache.getQueuedRequests().remove(index);
 	}
 
 }

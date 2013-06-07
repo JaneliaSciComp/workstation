@@ -13,7 +13,7 @@ implements Viewport
 {
     private int width; // in pixels
     private int height; // in pixels
-    private int depth = 30; // in pixels
+    private int depth = 80; // in pixels
     private int originX = 0;
 	private int originY = 0;
 

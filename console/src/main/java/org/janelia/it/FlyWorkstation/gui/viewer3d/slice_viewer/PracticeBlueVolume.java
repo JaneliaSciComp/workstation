@@ -64,4 +64,11 @@ implements VolumeImage3d, GLActor
 		// The blue square you want is already "loaded"
 		return false;
 	}
+
+	@Override
+	public double getResolution(int ix) {
+		if (ix == 0) return getXResolution();
+		else if (ix == 1) return getYResolution();
+		else return getZResolution();
+	}
 }

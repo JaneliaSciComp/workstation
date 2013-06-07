@@ -17,7 +17,8 @@ public class TextureCache
 	private HistoryCache historyCache = new HistoryCache(1000); // textures that have been displayed, ordered by LRU
 	private HistoryCache futureCache = new HistoryCache(3000); // textures we predict will be displayed
 	private PersistentCache persistentCache = new PersistentCache(); // lowest resolution textures for everything
-	
+	private Set<TileIndex> queuedRequests = new HashSet<TileIndex>();
+
 	public Signal getCacheClearedSignal() {
 		return cacheClearedSignal;
 	}
@@ -45,6 +46,7 @@ public class TextureCache
 		futureCache.clear();
 		historyCache.clear();
 		persistentCache.clear();
+		queuedRequests.clear();
 		cacheClearedSignal.emit();
 	}
 
@@ -110,6 +112,10 @@ public class TextureCache
 			i += 1;
 		}
 		return result;
+	}
+
+	public Set<TileIndex> getQueuedRequests() {
+		return queuedRequests;
 	}
 
 }
