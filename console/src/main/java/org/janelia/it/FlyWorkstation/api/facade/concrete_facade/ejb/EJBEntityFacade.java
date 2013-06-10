@@ -1,14 +1,15 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.janelia.it.FlyWorkstation.api.facade.abstract_facade.EntityFacade;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.model.entity.*;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by IntelliJ IDEA.
@@ -198,4 +199,74 @@ public class EJBEntityFacade implements EntityFacade {
     public EntityActorPermission saveOrUpdatePermission(EntityActorPermission eap) throws Exception {
     	return EJBFactory.getRemoteEntityBean().saveOrUpdatePermission(SessionMgr.getSubjectKey(), eap);
     }
+
+
+    // Addition of the interface for the Tiled Microscope Data
+    @Override
+    public TmWorkspace createTiledMicroscopeWorkspace(Long brainSampleId, String name, String ownerKey) throws Exception {
+        return EJBFactory.getRemoteTiledMicroscopeBean().createTiledMicroscopeWorkspace(brainSampleId, name, ownerKey);
+    }
+
+    @Override
+    public TmNeuron createTiledMicroscopeNeuron(Long workspaceId, String name) throws Exception {
+        return EJBFactory.getRemoteTiledMicroscopeBean().createTiledMicroscopeNeuron(workspaceId, name);
+    }
+
+    @Override
+    public TmGeoAnnotation addGeometricAnnotation(Long neuronId, Long parentAnnotationId, int index,
+                                                  double x, double y, double z, String comment) throws Exception {
+        return EJBFactory.getRemoteTiledMicroscopeBean().addGeometricAnnotation(neuronId, parentAnnotationId, index, x, y, z, comment);
+    }
+
+    @Override
+    public void updateGeometricAnnotation(TmGeoAnnotation geoAnnotation,
+                                          int index, double x, double y, double z, String comment) throws Exception {
+        EJBFactory.getRemoteTiledMicroscopeBean().updateGeometricAnnotation(geoAnnotation, index, x, y, z, comment);
+    }
+
+    @Override
+    public List<TmWorkspaceDescriptor> getWorkspacesForBrainSample(Long brainSampleId, String ownerKey) throws Exception {
+        return EJBFactory.getRemoteTiledMicroscopeBean().getWorkspacesForBrainSample(brainSampleId, ownerKey);
+    }
+
+    @Override
+    public List<TmNeuronDescriptor> getNeuronsForWorkspace(Long workspaceId, String ownerKey) throws Exception {
+        return EJBFactory.getRemoteTiledMicroscopeBean().getNeuronsForWorkspace(workspaceId, ownerKey);
+    }
+
+    @Override
+    public void removeWorkspacePreference(Long workspaceId, String key) throws Exception {
+        EJBFactory.getRemoteTiledMicroscopeBean().removeWorkspacePreference(workspaceId, key);
+    }
+
+    @Override
+    public void createOrUpdateWorkspacePreference(Long workspaceId, String key, String value) throws Exception {
+        EJBFactory.getRemoteTiledMicroscopeBean().createOrUpdateWorkspacePreference(workspaceId, key, value);
+    }
+
+    @Override
+    public void deleteNeuron(String ownerKey, Long neuronId) throws Exception {
+        EJBFactory.getRemoteTiledMicroscopeBean().deleteNeuron(ownerKey, neuronId);
+    }
+
+    @Override
+    public void deleteWorkspace(String ownerKey, Long workspaceId) throws Exception {
+        EJBFactory.getRemoteTiledMicroscopeBean().deleteWorkspace(ownerKey, workspaceId);
+    }
+
+    @Override
+    public void deleteGeometricAnnotation(Long geoId) throws Exception {
+        EJBFactory.getRemoteTiledMicroscopeBean().deleteGeometricAnnotation(geoId);
+    }
+
+    @Override
+    public TmWorkspace loadWorkspace(Long workspaceId) throws Exception {
+        return EJBFactory.getRemoteTiledMicroscopeBean().loadWorkspace(workspaceId);
+    }
+
+    @Override
+    public TmNeuron loadNeuron(Long neuronId) throws Exception {
+        return EJBFactory.getRemoteTiledMicroscopeBean().loadNeuron(neuronId);
+    }
+
 }

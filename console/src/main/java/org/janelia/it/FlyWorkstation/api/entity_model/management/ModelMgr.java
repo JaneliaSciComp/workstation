@@ -32,6 +32,7 @@ import org.janelia.it.jacs.model.tasks.annotation.AnnotationSessionTask;
 import org.janelia.it.jacs.model.tasks.utility.ContinuousExecutionTask;
 import org.janelia.it.jacs.model.user_data.Subject;
 import org.janelia.it.jacs.model.user_data.prefs.SubjectPreference;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 import org.janelia.it.jacs.shared.annotation.DataDescriptor;
 import org.janelia.it.jacs.shared.annotation.DataFilter;
 import org.janelia.it.jacs.shared.annotation.FilterResult;
@@ -1013,6 +1014,61 @@ public class ModelMgr {
         return true;
     }
 
+
+    // Methods associated with the 3D Tiled Microscope viewer
+    public TmWorkspace createTiledMicroscopeWorkspace(Long brainSampleId, String name, String ownerKey) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeWorkspace(brainSampleId, name, ownerKey);
+    }
+
+    public TmNeuron createTiledMicroscopeNeuron(Long workspaceId, String name) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeNeuron(workspaceId, name);
+    }
+
+    public TmGeoAnnotation addGeometricAnnotation(Long neuronId, Long parentAnnotationId, int index,
+                                                  double x, double y, double z, String comment) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().addGeometricAnnotation(neuronId, parentAnnotationId, index, x, y, z, comment);
+    }
+
+    public void updateGeometricAnnotation(TmGeoAnnotation geoAnnotation,
+                                          int index, double x, double y, double z, String comment) throws Exception {
+        FacadeManager.getFacadeManager().getEntityFacade().updateGeometricAnnotation(geoAnnotation, index, x, y, z, comment);
+    }
+
+    public List<TmWorkspaceDescriptor> getWorkspacesForBrainSample(Long brainSampleId, String ownerKey) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().getWorkspacesForBrainSample(brainSampleId, ownerKey);
+    }
+
+    public List<TmNeuronDescriptor> getNeuronsForWorkspace(Long workspaceId, String ownerKey) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().getNeuronsForWorkspace(workspaceId, ownerKey);
+    }
+
+    public void removeWorkspacePreference(Long workspaceId, String key) throws Exception {
+        FacadeManager.getFacadeManager().getEntityFacade().removeWorkspacePreference(workspaceId, key);
+    }
+
+    public void createOrUpdateWorkspacePreference(Long workspaceId, String key, String value) throws Exception {
+        FacadeManager.getFacadeManager().getEntityFacade().createOrUpdateWorkspacePreference(workspaceId, key, value);
+    }
+
+    public void deleteNeuron(String ownerKey, Long neuronId) throws Exception {
+        FacadeManager.getFacadeManager().getEntityFacade().deleteNeuron(ownerKey, neuronId);
+    }
+
+    public void deleteWorkspace(String ownerKey, Long workspaceId) throws Exception {
+        FacadeManager.getFacadeManager().getEntityFacade().deleteWorkspace(ownerKey, workspaceId);
+    }
+
+    public void deleteGeometricAnnotation(Long geoId) throws Exception {
+        FacadeManager.getFacadeManager().getEntityFacade().deleteGeometricAnnotation(geoId);
+    }
+
+    public TmWorkspace loadWorkspace(Long workspaceId) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().loadWorkspace(workspaceId);
+    }
+
+    public TmNeuron loadNeuron(Long neuronId) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().loadNeuron(neuronId);
+    }
 
 
 }

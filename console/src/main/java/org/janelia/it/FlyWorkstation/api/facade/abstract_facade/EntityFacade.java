@@ -1,10 +1,11 @@
 package org.janelia.it.FlyWorkstation.api.facade.abstract_facade;
 
-import java.util.List;
-import java.util.Set;
-
 import org.janelia.it.jacs.compute.api.support.MappedId;
 import org.janelia.it.jacs.model.entity.*;
+import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
+
+import java.util.List;
+import java.util.Set;
 
 /**
  * Created by IntelliJ IDEA.
@@ -83,4 +84,33 @@ public interface EntityFacade {
     public void revokePermissions(Long entityId, String revokeeKey, boolean recursive) throws Exception;
 
 	public EntityActorPermission saveOrUpdatePermission(EntityActorPermission eap) throws Exception;
+
+    public TmWorkspace createTiledMicroscopeWorkspace(Long brainSampleId, String name, String ownerKey) throws Exception;
+
+    public TmNeuron createTiledMicroscopeNeuron(Long workspaceId, String name) throws Exception;
+
+    public TmGeoAnnotation addGeometricAnnotation(Long neuronId, Long parentAnnotationId, int index,
+                                                  double x, double y, double z, String comment) throws Exception;
+
+    public void updateGeometricAnnotation(TmGeoAnnotation geoAnnotation,
+                                          int index, double x, double y, double z, String comment) throws Exception;
+
+    public List<TmWorkspaceDescriptor> getWorkspacesForBrainSample(Long brainSampleId, String ownerKey) throws Exception;
+
+    public List<TmNeuronDescriptor> getNeuronsForWorkspace(Long workspaceId, String ownerKey) throws Exception;
+
+    public void removeWorkspacePreference(Long workspaceId, String key) throws Exception;
+
+    public void createOrUpdateWorkspacePreference(Long workspaceId, String key, String value) throws Exception;
+
+    public void deleteNeuron(String ownerKey, Long neuronId) throws Exception;
+
+    public void deleteWorkspace(String ownerKey, Long workspaceId) throws Exception;
+
+    public void deleteGeometricAnnotation(Long geoId) throws Exception;
+
+    public TmWorkspace loadWorkspace(Long workspaceId) throws Exception;
+
+    public TmNeuron loadNeuron(Long neuronId) throws Exception;
+
 }

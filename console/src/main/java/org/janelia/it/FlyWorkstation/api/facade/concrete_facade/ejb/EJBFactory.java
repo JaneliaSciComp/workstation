@@ -1,17 +1,16 @@
 package org.janelia.it.FlyWorkstation.api.facade.concrete_facade.ejb;
 
-import java.util.Properties;
-
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModel;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.jacs.compute.api.*;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import java.util.Properties;
 
 public class EJBFactory {
 	
@@ -30,7 +29,8 @@ public class EJBFactory {
     private static final String REMOTE_SEARCH_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.search.jndi.name");
     private static final String REMOTE_GENOME_CONTEXT_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.genome.context.jndi.name");
     private static final String REMOTE_JOB_CONTROL_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.job.control.jndi.name");
-    
+    private static final String REMOTE_TILED_MICROSCOPE_JNDI_NAME = ConsoleProperties.getInstance().getProperty("remote.tiled.microscope.jndi.name");
+
     private static Properties icInteractiveServerProperties = new Properties();
     private static Properties icPipelineServerProperties = new Properties();
     
@@ -153,6 +153,10 @@ public class EJBFactory {
 
     public static JobControlBeanRemote getRemoteJobControlBean() {
         return (JobControlBeanRemote) getRemoteInterface(REMOTE_JOB_CONTROL_JNDI_NAME);
+    }
+
+    public static TiledMicroscopeBeanRemote getRemoteTiledMicroscopeBean() {
+        return (TiledMicroscopeBeanRemote) getRemoteInterface(REMOTE_TILED_MICROSCOPE_JNDI_NAME);
     }
 
 
