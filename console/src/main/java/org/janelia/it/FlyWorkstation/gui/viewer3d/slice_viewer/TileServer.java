@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
@@ -282,7 +283,7 @@ implements VolumeImage3d
 		for (int x = xMin; x <= xMax; ++x) {
 			for (int y = yMin; y <= yMax; ++y) {
 				TileIndex key = new TileIndex(x, y, z, zoom, 
-						zoomMax, indexStyle);
+						zoomMax, indexStyle, CoordinateAxis.Z);
 				Tile2d tile = new Tile2d(key, tileFormat);
 				tile.setYMax(getBoundingBox3d().getMax().getY()); // To help flip y
 				result.add(tile);

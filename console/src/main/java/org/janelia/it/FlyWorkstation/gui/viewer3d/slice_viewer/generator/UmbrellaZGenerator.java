@@ -63,7 +63,8 @@ implements Iterable<TileIndex>, Iterator<TileIndex>
 				baseIndex.getZ(),
 				baseIndex.getZoom(),
 				baseIndex.getMaxZoom(),
-				baseIndex.getIndexStyle());
+				baseIndex.getIndexStyle(),
+				baseIndex.getSliceAxis());
 		return result;
 	}
 	

@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator;
 
 import java.util.Iterator;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.TileFormat;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.TileIndex;
 
@@ -28,7 +29,8 @@ implements Iterable<TileIndex>, Iterator<TileIndex>
 		// Start at center and move out
 		int z0 = (zMin + zMax)/2;
 		index1 = new TileIndex(x, y, z0, maxZoom, 
-				maxZoom, tileFormat.getIndexStyle());
+				maxZoom, tileFormat.getIndexStyle(),
+				CoordinateAxis.Z);
 		index2 = index1.nextZ();		
 	}
 

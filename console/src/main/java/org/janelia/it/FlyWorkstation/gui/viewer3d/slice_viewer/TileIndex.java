@@ -3,6 +3,8 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 import java.util.List;
 import java.util.Vector;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
+
 /**
  * An efficiently hashable key that uniquely identifies a particular
  * Tile2d or TileTexture in a RavelerTileServer.
@@ -17,22 +19,30 @@ public class TileIndex
 		OCTREE
 	}
 
+	/*
 	private final int x;
 	private final int y;
 	private final int z;
+	*/
+	private final int xyz[] = new int[3];
+	
 	private final int zoom;
 	private final int canonicalZ; // Uniquified on octree zoom level
 	// Perhaps the following items should be in some sort of shared format type
 	private final int maxZoom;
 	private final IndexStyle indexStyle;
 	private final int deltaZ;
+	private final CoordinateAxis sliceAxis;
 	
 	public TileIndex(int x, int y, int z, 
-			int zoom, int maxZoom, IndexStyle indexStyle) 
+			int zoom, int maxZoom, 
+			IndexStyle indexStyle,
+			CoordinateAxis axis) 
 	{
-		this.x = x;
-		this.y = y;
-		this.z = z;
+		this.sliceAxis = axis;
+		this.xyz[0] = x;
+		this.xyz[1] = y;
+		this.xyz[2] = z;
 		this.zoom = zoom;
 		this.maxZoom = maxZoom;
 		this.indexStyle = indexStyle;
@@ -52,10 +62,14 @@ public class TileIndex
 		if (getClass() != obj.getClass())
 			return false;
 		TileIndex other = (TileIndex) obj;
-		if (x != other.x)
+		if (sliceAxis != other.sliceAxis)
 			return false;
-		if (y != other.y)
-			return false;
+		for (int i = 0; i < 3; ++i) {
+			if (i == sliceAxis.index())
+				continue; // We will compare canonicalSliceAxis below
+			if (xyz[i] != other.xyz[i])
+				return false;
+		}
 		if (canonicalZ != other.canonicalZ)
 			return false;
 		if (zoom != other.zoom)
@@ -77,15 +91,15 @@ public class TileIndex
 	}
 
 	public int getX() {
-		return x;
+		return xyz[0];
 	}
 
 	public int getY() {
-		return y;
+		return xyz[1];
 	}
 
 	public int getZ() {
-		return z;
+		return xyz[2];
 	}
 
 	public int getZoom() {
@@ -111,46 +125,57 @@ public class TileIndex
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + x;
-		result = prime * result + y;
+		for (int i = 0; i < 3; ++i) {
+			if (i == sliceAxis.index())
+				continue; // We will compare canonicalSliceAxis below
+			result = prime * result + xyz[i];
+		}
 		result = prime * result + canonicalZ;
 		result = prime * result + zoom;
+		result = prime * result + sliceAxis.index();
 		return result;
 	}
 
 	@Override
 	public String toString() {
-		return "TileIndex [x="+x+"; y="+y+"; z="+z+"; zoom="+zoom+"]";
+		return "TileIndex [x="+getX()+"; y="+getY()+"; z="+getZ()+"; zoom="+zoom+"]";
 	}
 
 	public TileIndex clone() {
 		return new TileIndex(
-				x, 
-				y, 
-				z, 
+				getX(), 
+				getY(), 
+				getZ(), 
 				zoom, 
 				maxZoom, 
-				indexStyle);
+				indexStyle,
+				sliceAxis);
 	}
 
 	public TileIndex nextZ() {
+		int newXyz[] = {getX(), getY(), getZ()};
+		newXyz[sliceAxis.index()] += deltaZ;
 		return new TileIndex(
-		x, 
-		y, 
-		z + deltaZ, 
+		newXyz[0], 
+		newXyz[1], 
+		newXyz[2], 
 		zoom, 
 		maxZoom, 
-		indexStyle);
+		indexStyle,
+		sliceAxis);
 	}
 	
 	public TileIndex previousZ() {
+		int newXyz[] = {getX(), getY(), getZ()};
+		newXyz[sliceAxis.index()] -= deltaZ;
 		return new TileIndex(
-		x, 
-		y, 
-		z - deltaZ, 
+		newXyz[0], 
+		newXyz[1], 
+		newXyz[2], 
 		zoom, 
 		maxZoom, 
-		indexStyle);
+		indexStyle,
+		sliceAxis);
 	}
 	
 	/**
@@ -162,12 +187,19 @@ public class TileIndex
 	public TileIndex zoomOut() {
 		if (getZoom() >= maxZoom)
 			return null; // Cannot zoom farther out than zero
-		int x = getX()/2;
-		int y = getY()/2;
-		int z = getZ();
+		int newXyz[] = {getX(), getY(), getZ()};
+		for (int i = 0; i < 3; ++i) {
+			if (i == sliceAxis.index())
+				continue;
+			newXyz[i] = newXyz[i]/2;
+		}
 		int zoom = getZoom() + 1;
-		return new TileIndex(x, y, z, zoom, 
-				maxZoom, indexStyle);
+		return new TileIndex(
+				newXyz[0], 
+				newXyz[1], 
+				newXyz[2], 
+				zoom, 
+				maxZoom, indexStyle, sliceAxis);
 	}
 
 	// Retarded Java philosophy eschews built-in Pair type nor multiple return values
@@ -192,6 +224,10 @@ public class TileIndex
 		public void setScore(double score) {
 			this.score = score;
 		}
+	}
+
+	public CoordinateAxis getSliceAxis() {
+		return sliceAxis;
 	}
 
 }
