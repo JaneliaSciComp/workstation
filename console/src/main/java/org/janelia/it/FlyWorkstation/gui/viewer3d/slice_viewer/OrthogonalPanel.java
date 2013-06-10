@@ -1,5 +1,9 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
+import java.awt.Dimension;
+
+import javax.swing.BoxLayout;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JSpinner;
@@ -33,6 +37,30 @@ extends JPanel
 		this.axis = axis;
 		viewer = new OrthogonalViewer(axis);
 		spinner.setModel(spinnerNumberModel);
+		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+		add(viewer); // TODO make viewer a Component
+		scanPanel.setLayout(new BoxLayout(scanPanel, BoxLayout.X_AXIS));
+		if (axis == CoordinateAxis.X)
+			scanPanel.add(new JLabel(" X"));
+		else if (axis == CoordinateAxis.Y)
+			scanPanel.add(new JLabel(" Y"));
+		else if (axis == CoordinateAxis.Z)
+			scanPanel.add(new JLabel(" Z"));
+		// TODO add buttons to scan panel
+		slider.setMajorTickSpacing(10);
+		slider.setPaintTicks(true); // Avoid windows slider display bug
+		scanPanel.add(slider);
+		spinner.setPreferredSize(new Dimension(
+				60, // good value for showing up to thousands place
+				spinner.getPreferredSize().height));
+		spinner.setMaximumSize(new Dimension(
+				spinner.getPreferredSize().width,
+				spinner.getPreferredSize().height));
+		spinner.setMinimumSize(new Dimension(
+				spinner.getPreferredSize().width,
+				spinner.getPreferredSize().height));
+		scanPanel.add(spinner);
+		add(scanPanel);
 	}	
 	
 	/**

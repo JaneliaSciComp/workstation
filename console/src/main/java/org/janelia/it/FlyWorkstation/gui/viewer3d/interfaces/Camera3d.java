@@ -14,8 +14,8 @@ public interface Camera3d
     public boolean incrementZoom(double zoomRatio); // Relative zoom
     public boolean resetFocus(); // Move focus to 0,0,0
     public boolean resetRotation(); // Set rotation to X-right, Y-up, Z-out
-    public boolean setFocus(double x, double y, double z); // in screen units
-    public boolean setFocus(Vec3 focus); // in screen units
+    public boolean setFocus(double x, double y, double z); // in scene units
+    public boolean setFocus(Vec3 focus); // in scene units
     public boolean setRotation(Rotation r); // unitless
     public boolean setPixelsPerSceneUnit(double pixelsPerSceneUnit); // zoom
 }

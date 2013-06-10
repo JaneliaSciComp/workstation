@@ -1,12 +1,15 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.AdvanceZSlicesAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.GoBackZSlicesAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.NextZSliceAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.OpenFolderAction;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.OrthogonalModeAction;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.OrthogonalModeAction.OrthogonalMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.PanModeAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.PreviousZSliceAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.RecentFileList;
@@ -78,6 +81,7 @@ public class QuadViewUi extends JPanel
 		colorChannelWidget_3
 	};
 	private JLabel statusLabel = new JLabel("status area");
+	JPanel zViewerPanel = new JPanel();
 	
 	ZScanMode zScanMode = new ZScanMode(sliceViewer);
 	
@@ -93,6 +97,7 @@ public class QuadViewUi extends JPanel
 	private final Action zScanScrollModeAction = new ZScanScrollModeAction(sliceViewer, zScanMode);
 	private final Action zoomScrollModeAction = new ZoomScrollModeAction(sliceViewer);
 	private final ButtonGroup scrollModeGroup = new ButtonGroup();
+	private final OrthogonalModeAction orthogonalModeAction = new OrthogonalModeAction();
 	// zoom actions
 	private final Action zoomInAction = new ZoomInAction(camera);
 	private final Action zoomOutAction = new ZoomOutAction(camera);
@@ -211,7 +216,7 @@ public class QuadViewUi extends JPanel
 			statusLabel.setText(message);
 		}
 	};
-
+	
 	/**
 	 * Create the frame.
 	 */
@@ -240,8 +245,41 @@ public class QuadViewUi extends JPanel
         traceMouseModeAction.getTraceMode().setViewport(sliceViewer);
         // 
         sliceViewer.setWheelMode(zScanMode);
+        // Respond to orthogonal mode changes
+        orthogonalModeAction.orthogonalModeChanged.connect(new Slot1<OrthogonalMode>() {
+        	@Override
+    		public void execute(OrthogonalMode mode) {
+    			if (mode == OrthogonalMode.ORTHOGONAL) 
+    				setOrthogonalMode();
+    			else if (mode == OrthogonalMode.Z_VIEW) 
+    				setZViewMode();
+    			// repaint(); // not necessary.
+    		}
+        });
+        setZViewMode();
 	}
 
+	// Four quadrants for orthogonal views
+	// TODO obsolete zViewerPanel in favor of OrthogonalPanel
+	JComponent nwViewer = zViewerPanel; // should be same as Z...
+	JComponent neViewer = new OrthogonalPanel(CoordinateAxis.X);
+	JComponent swViewer = new OrthogonalPanel(CoordinateAxis.Y);
+	JComponent seViewer = new OrthogonalPanel(CoordinateAxis.Z); // TODO 3D view
+	
+	private void setOrthogonalMode() {
+		nwViewer.setVisible(true);
+		neViewer.setVisible(true);
+		swViewer.setVisible(true);
+		seViewer.setVisible(true);
+	}
+	
+	private void setZViewMode() {
+		nwViewer.setVisible(true);
+		neViewer.setVisible(false);
+		swViewer.setVisible(false);
+		seViewer.setVisible(false);		
+	}
+	
 	private void setupUi(JFrame parentFrame, boolean overrideFrameMenuBar) {
         setBounds(100, 100, 994, 653);
         setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -377,19 +415,38 @@ public class QuadViewUi extends JPanel
 
 		JPanel viewerPanel = new JPanel();
 		splitPane_1.setLeftComponent(viewerPanel);
-		viewerPanel.setLayout(new BoxLayout(viewerPanel, BoxLayout.Y_AXIS));
+		viewerPanel.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		c.gridx = 0; c.gridy = 0;
+		c.gridwidth = 1; c.gridheight = 1;
+		c.fill = GridBagConstraints.BOTH;
+		c.weightx = 1.0;
+		c.weighty = 1.0;
+		c.insets = new Insets(1,1,1,1);
+		
+		// Four quadrants for orthogonal views
+		// One panel for Z slice viewer (upper left northwest)
+		viewerPanel.add(nwViewer, c);
+		zViewerPanel.setLayout(new BoxLayout(zViewerPanel, BoxLayout.Y_AXIS));
+		// TODO - other three quadrants
+		c.gridx = 1; c.gridy = 0;
+		viewerPanel.add(neViewer, c);
+		c.gridx = 0; c.gridy = 1;
+		viewerPanel.add(swViewer, c);
+		c.gridx = 1; c.gridy = 1;
+		viewerPanel.add(seViewer, c);
 		
 		// SliceViewer sliceViewer = new SliceViewer();
 		sliceViewer.setCamera(camera);
 		sliceViewer.setBackground(Color.DARK_GRAY);
-		viewerPanel.add(sliceViewer);
+		zViewerPanel.add(sliceViewer);
         sliceViewer.getTileServer().getVolumeInitializedSignal().connect(updateRangesSlot);
 		sliceViewer.getZoomChangedSignal().connect(changeZoom);
         sliceViewer.getCamera().getFocusChangedSignal().connect(changeZ);
 		sliceViewer.getFileLoadedSignal().connect(rememberLoadedFileSlot);
 		
 		// JPanel zScanPanel = new JPanel();
-		viewerPanel.add(zScanPanel);
+		zViewerPanel.add(zScanPanel);
 		zScanPanel.setLayout(new BoxLayout(zScanPanel, BoxLayout.X_AXIS));
 	
         ToolButton button_2 = new ToolButton(goBackZSlicesAction);
@@ -629,6 +686,13 @@ public class QuadViewUi extends JPanel
 		toolBar.add(toggleButton_1);
 		
 		toolBar.addSeparator();
+		
+		JButton orthogonalModeButton = new JButton("");
+		orthogonalModeButton.setAction(orthogonalModeAction);
+		orthogonalModeButton.setMargin(new Insets(0, 0, 0, 0));
+		orthogonalModeButton.setHideActionText(true);
+		orthogonalModeButton.setFocusable(false);
+		toolBar.add(orthogonalModeButton);
 		return toolBarPanel;
 	}
 
