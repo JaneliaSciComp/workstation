@@ -99,4 +99,20 @@ public class Rotation extends SizedVector<UnitVec3>
 	public void setElementAt(UnitVec3 element, int index) {
 		throw new UnsupportedOperationException();
 	}
+
+    /**
+     * AT time of writing, this is designed for use only with deserialized values.  Values across all three vectors
+     * handed in through three calls to this method, must be sum-of-squares==1, dot-product-any-row-col==0,
+     * determinant==+1.
+     *
+     * Therefore, only call this when those conditions are met, and then call with all three vectors, serially.
+     *
+     * @author fosterl@janelia.hhmi.org
+     * @param index which of the three vectors to set.
+     * @param element a unit vector for the chosen position.
+     */
+    public void setWithCaution(int index, UnitVec3 element) {
+        super.get( index ).setElements( element.getX(), element.getY(), element.getZ() );
+
+    }
 }

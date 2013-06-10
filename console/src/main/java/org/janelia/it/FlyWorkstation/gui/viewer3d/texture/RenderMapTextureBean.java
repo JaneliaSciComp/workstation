@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.texture;
 
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
@@ -86,7 +87,10 @@ public class RenderMapTextureBean implements TextureDataI {
         if ( cropCoordSet != null ) {
             Collection<float[]> acceptedCoordinates = cropCoordSet.getAcceptedCoordinates();
             if ( acceptedCoordinates.size() > MAX_COORD_SETS ) {
-                throw new IllegalArgumentException( "Too many crop volumes.  Max is " + MAX_COORD_SETS );
+                acceptedCoordinates.clear();
+                SessionMgr.getSessionMgr().handleException(
+                        new IllegalArgumentException( "Too many crop volumes.  Max is " + MAX_COORD_SETS + ". Rejecting all saved coords.")
+                );
             }
 
             int nextCropBoxOffset = BYTES_PER_ENTRY * MAP_SIZE;

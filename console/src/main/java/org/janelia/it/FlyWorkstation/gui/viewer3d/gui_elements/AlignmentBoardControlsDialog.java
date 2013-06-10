@@ -243,7 +243,8 @@ public class AlignmentBoardControlsDialog extends JDialog {
             float[] currentCoords = cropCoordSet.getCurrentCoordinates();
             // Roll back to an accepted coordinate set.
             if ( currentCoords == null  ||  currentCoords[ 0 ] == -1  ||  CropCoordSet.allMaxCoords( currentCoords ) ) {
-                currentCoords = cropCoordSet.getAcceptedCoordinates().iterator().next();
+                if ( cropCoordSet.getAcceptedCoordinates().size() > 0 )
+                    currentCoords = cropCoordSet.getAcceptedCoordinates().iterator().next();
             }
 
             int[] maxima = new int[] {
