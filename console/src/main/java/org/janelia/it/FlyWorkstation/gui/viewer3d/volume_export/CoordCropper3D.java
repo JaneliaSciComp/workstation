@@ -67,6 +67,34 @@ public class CoordCropper3D {
             cropCoords[ i * 2 + 1 ] = maxima[ i ] * normalizedCoords[ i * 2 + 1 ] * (int)downSampleRate;
         }
 
+        for ( int i = 0; i < cropCoords.length; i++ ) {
+            System.out.print( cropCoords[ i ] + "  ");
+        }
+        System.out.println();
+
+        return cropCoords;
+    }
+
+    /**
+     * Given coords already normalized to 0..1 range, this method back-converts them to absolute, micrometer
+     * based coordinates.  This makes them compatible with the original volume, rather than with the GPU.
+     *
+     * @param normalizedCoords 0..1.0 range, start/stop in x,y,z
+     * @param maxima maximum values in x, y, z.
+     * @return de-fractional versions along axes.
+     */
+    public float[] getDenormalizedCropCoords( float[] normalizedCoords, int[] maxima ) {
+        float[] cropCoords = new float[ 6 ];
+        for ( int i = 0; i < 3; i++ ) {
+            cropCoords[ i * 2 ] = maxima[ i ] * normalizedCoords[ i * 2 ];
+            cropCoords[ i * 2 + 1 ] = maxima[ i ] * normalizedCoords[ i * 2 + 1 ];
+        }
+
+        for ( int i = 0; i < cropCoords.length; i++ ) {
+            System.out.print( cropCoords[ i ] + "  ");
+        }
+        System.out.println();
+
         return cropCoords;
     }
 

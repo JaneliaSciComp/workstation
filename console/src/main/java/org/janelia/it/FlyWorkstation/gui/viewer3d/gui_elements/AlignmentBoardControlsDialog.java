@@ -251,7 +251,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
             };
             CoordCropper3D coordCropper = new CoordCropper3D();
             float[] denormalizedCoords = coordCropper.getDenormalizedCropCoords(
-                    currentCoords, maxima, settings.getAcceptedDownsampleRate()
+                    currentCoords, maxima
             );
             xSlider.setValue(Math.round(denormalizedCoords[0]));
             xSlider.setUpperValue(Math.round(denormalizedCoords[1]));
