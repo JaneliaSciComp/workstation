@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicCamera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.error_trap.JaneliaDebugGL2;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 
@@ -10,23 +11,25 @@ import java.awt.*;
  
 class MipRenderer 
     extends BaseRenderer
-    implements RotationState
 {
     private static final double DEFAULT_CAMERA_FOCUS_DISTANCE = 20.0;
 
     // camera parameters
     Vec3 focusInGround = new Vec3(0,0,0);
     private Vec3 upInCamera = new Vec3(0,-1,0);
-    private Rotation R_ground_camera = new Rotation();
     double cameraFocusDistance = DEFAULT_CAMERA_FOCUS_DISTANCE;
     private double distanceToScreenInPixels = 2000;
     private double defaultHeightInPixels = 400.0;
     private double widthInPixels = defaultHeightInPixels;
     private double heightInPixels = defaultHeightInPixels;
+    private VolumeModel volumeModel;
+
     // scene objects
     public MipRenderer() {
 		// actors.add(new TeapotActor()); // solid shading is not supported right now
-        addActor( new VolumeBrick( this, new VolumeModel() ) );
+        volumeModel = new VolumeModel();
+        volumeModel.setCamera3d( new BasicCamera3d() );
+        addActor( new VolumeBrick( volumeModel ) );
     }
     
     public void centerOnPixel(Point p) {
@@ -58,8 +61,9 @@ class MipRenderer
 
         gLDrawable.getWidth();
         Vec3 f = focusInGround;
-        Vec3 u = R_ground_camera.times(upInCamera);
-        Vec3 c = f.plus(R_ground_camera.times(new Vec3(0,0,-cameraFocusDistance)));
+        Rotation rotation = volumeModel.getCamera3d().getRotation();
+        Vec3 u = rotation.times(upInCamera);
+        Vec3 c = f.plus(rotation.times(new Vec3(0, 0, -cameraFocusDistance)));
         glu.gluLookAt(c.x(), c.y(), c.z(), // camera in ground
                 f.x(), f.y(), f.z(), // focus in ground
                 u.x(), u.y(), u.z()); // up vector in ground
@@ -81,10 +85,6 @@ class MipRenderer
         gl.glFlush();
     }
  
-    public Rotation getRotation() {
-    		return R_ground_camera;
-    }
-
     public double glUnitsPerPixel() {
     		return cameraFocusDistance / distanceToScreenInPixels;
     }
@@ -94,7 +94,7 @@ class MipRenderer
         // Adjust view to fit the actual objects present
         BoundingBox3d boundingBox = getBoundingBox();
         focusInGround = boundingBox.getCenter();
-        R_ground_camera = new Rotation();
+        volumeModel.getCamera3d().resetRotation();
         resetCameraFocus(boundingBox);
     }
 
@@ -141,14 +141,14 @@ class MipRenderer
 		Rotation rotation = new Rotation().setFromAngleAboutUnitVector(
 				rotationAngle, rotationAxis);
 		// System.out.println(rotation);
-		R_ground_camera = R_ground_camera.times(rotation.transpose());
+        volumeModel.getCamera3d().setRotation( volumeModel.getCamera3d().getRotation().times( rotation.transpose() ) );
 		// System.out.println(R_ground_camera);
 	}
 
 	public void translatePixels(double dx, double dy, double dz) {
 		// trackball translate
 		Vec3 t = new Vec3(-dx, -dy, -dz).times(glUnitsPerPixel());
-		focusInGround.plusEquals(R_ground_camera.times(t));
+		focusInGround.plusEquals(volumeModel.getCamera3d().getRotation().times(t));
 	}
 	
 	public void updateProjection(GL2 gl) {

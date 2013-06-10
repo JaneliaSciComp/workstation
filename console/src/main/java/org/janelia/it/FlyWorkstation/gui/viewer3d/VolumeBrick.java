@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.jogamp.common.nio.Buffers;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.VolumeBrickShader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
@@ -51,7 +52,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     private VolumeBrickShader volumeBrickShader = new VolumeBrickShader();
 
-    private RotationState rotationState;
     private VolumeModel.UpdateListener updateVolumeListener;
     private boolean bIsInitialized;
     private boolean bUseSyntheticData = false;
@@ -60,8 +60,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     private Logger logger = LoggerFactory.getLogger( VolumeBrick.class );
 
-    VolumeBrick(MipRenderer mipRenderer, VolumeModel volumeModel) {
-        rotationState = mipRenderer;
+    VolumeBrick(VolumeModel volumeModel) {
         setVolumeModel( volumeModel );
     }
 
@@ -225,7 +224,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 		// or backward.
 		// "InGround" means in the WORLD object reference frame.
 		// (the view vector in the EYE reference frame is always [0,0,-1])
-		Vec3 viewVectorInGround = rotationState.getRotation().times(new Vec3(0,0,1));
+		Vec3 viewVectorInGround = volumeModel.getCamera3d().getRotation().times(new Vec3(0,0,1));
 		// Compute the principal axis of the view direction; that's the direction we will slice along.
 		CoordinateAxis a1 = CoordinateAxis.X; // First guess principal axis is X.  Who knows?
 		Vec3 vv = viewVectorInGround;

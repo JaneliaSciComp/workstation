@@ -34,7 +34,8 @@ public class UserSettingSerializer implements Serializable {
      * @param volumeModel for manipulating 3D settings.
      * @param alignmentBoardSettings for user-click settings.
      */
-    public UserSettingSerializer( Entity alignmentBoard, VolumeModel volumeModel, AlignmentBoardSettings alignmentBoardSettings ) {
+    public UserSettingSerializer(
+            Entity alignmentBoard, VolumeModel volumeModel, AlignmentBoardSettings alignmentBoardSettings ) {
         this.alignmentBoard = alignmentBoard;
         this.alignmentBoardSettings = alignmentBoardSettings;
         this.volumeModel = volumeModel;

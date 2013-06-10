@@ -77,7 +77,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
     public boolean loadVolume(String fileName, FileResolver resolver) {
         VolumeLoader volumeLoader = new VolumeLoader(resolver);
         if (volumeLoader.loadVolume(fileName)) {
-            VolumeBrick brick = new VolumeBrick(renderer, volumeModel);
+            VolumeBrick brick = new VolumeBrick(volumeModel);
             volumeLoader.populateVolumeAcceptor(brick);
 
             addActorToRenderer(brick);
@@ -104,7 +104,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
             CropCoordSet cropCoordSet,
             float gamma ) {
         if ( signalTexture != null ) {
-            VolumeBrick brick = new VolumeBrick( renderer, volumeModel );
+            VolumeBrick brick = new VolumeBrick( volumeModel );
             volumeModel.setGammaAdjustment( gamma );
             brick.setTextureData( signalTexture );
             if ( maskTexture != null ) {
@@ -161,7 +161,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
     ) {
 		VolumeLoader volumeLoader = new VolumeLoader(resolver);
 		if (volumeLoader.loadVolume(fileName)) {
-            VolumeBrick brick = new VolumeBrick(renderer, volumeModel);
+            VolumeBrick brick = new VolumeBrick( volumeModel );
             volumeModel.setGammaAdjustment(gamma);
 			volumeLoader.populateVolumeAcceptor(brick);
             if ( maskBuilder != null ) {
@@ -194,7 +194,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
     ) {
         VolumeLoader volumeLoader = new VolumeLoader(resolver);
         if (volumeLoader.loadVolume(fileName)) {
-            VolumeBrick brick = new VolumeBrick(renderer, volumeModel);
+            VolumeBrick brick = new VolumeBrick( volumeModel );
             volumeModel.setColorMask( colorMask );
             volumeModel.setGammaAdjustment( gamma );
             volumeLoader.populateVolumeAcceptor(brick);

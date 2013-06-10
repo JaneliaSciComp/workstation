@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicCamera3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CropCoordSet;
 
 import java.util.ArrayList;
@@ -19,6 +21,7 @@ public class VolumeModel {
     private CropCoordSet cropCoordSet = CropCoordSet.getDefaultCropCoordSet();
     private float gammaAdjustment = 1.0f;
     private float cropOutLevel = Mip3d.DEFAULT_CROPOUT;
+    private Camera3d camera3d;
     private float[] colorMask = { 1.0f, 1.0f, 1.0f };
 
     private Collection<UpdateListener> listeners = new ArrayList<UpdateListener>();
@@ -79,7 +82,7 @@ public class VolumeModel {
 
     /** Listener management methods. */
     public synchronized void addUpdateListener( UpdateListener listener ) {
-        listeners.add( listener );
+        listeners.add(listener);
     }
 
     public synchronized void removeUpdateListener( UpdateListener listener ) {
@@ -88,6 +91,17 @@ public class VolumeModel {
 
     public synchronized void removeAllListeners() {
         listeners.clear();
+    }
+
+    public Camera3d getCamera3d() {
+        if ( camera3d == null ) {
+            camera3d = new BasicCamera3d();
+        }
+        return camera3d;
+    }
+
+    public void setCamera3d(Camera3d camera3d) {
+        this.camera3d = camera3d;
     }
 
     public static interface UpdateListener {
