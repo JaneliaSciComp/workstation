@@ -117,14 +117,14 @@ class MipRenderer
         {
             height = 1;
         }
-        if (zoomRatio != 1.0)
-        		zoom(zoomRatio);
+        if (zoomRatio != 1.0  &&  volumeModel.getCamera3d().getFocus().getY() != DEFAULT_CAMERA_FOCUS_DISTANCE )
+        	zoom(zoomRatio);
         updateProjection(gl);
         gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glLoadIdentity();
 
         double previousFocusDistance = volumeModel.getCamera3d().getFocus().getZ();
-        if ( previousFocusDistance != DEFAULT_CAMERA_FOCUS_DISTANCE ) {
+        if ( previousFocusDistance == DEFAULT_CAMERA_FOCUS_DISTANCE ) {
             BoundingBox3d boundingBox = getBoundingBox();
             resetCameraFocus( boundingBox );
         }
