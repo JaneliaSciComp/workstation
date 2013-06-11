@@ -17,7 +17,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.net.URL;
 
 /**
  * A persistent heads-up display for a synchronized image. 
@@ -150,6 +149,7 @@ public class Hud extends ModalDialog {
                     render3DCheckbox.setSelected(false);
                     hud3DController.entityUpdate();
                 }
+                setAllColorsOn();
                 setTitle(entity.getName());
 
                 if ( toggle ) {
@@ -227,10 +227,7 @@ public class Hud extends ModalDialog {
     }
 
     private void renderIn3D() {
-        this.remove( previewLabel );
-        for (Component component : rgbMenu.getMenuComponents()) {
-            ((JCheckBoxMenuItem)component).setSelected(true);
-        }
+        this.remove(previewLabel);
         if ( dirtyEntityFor3D ) {
             try {
                 if ( hud3DController != null ) {
@@ -252,6 +249,15 @@ public class Hud extends ModalDialog {
                 hud3DController.set3dWidget();
             }
         }
+    }
+
+    private void setAllColorsOn() {
+        for (Component component : rgbMenu.getMenuComponents()) {
+            ((JCheckBoxMenuItem)component).setSelected(true);
+        }
+        mip3d.toggleRGBValue( COLOR_CHANNEL.RED.ordinal(), true );
+        mip3d.toggleRGBValue( COLOR_CHANNEL.GREEN.ordinal(), true );
+        mip3d.toggleRGBValue( COLOR_CHANNEL.BLUE.ordinal(), true );
     }
 
     private void init3dGui() {
