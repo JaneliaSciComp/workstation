@@ -68,7 +68,7 @@ public class UserSettingSerializer implements Serializable {
                 );
                 settingsString = "";
             }
-            logger.info( "Setting string: " + settingsString );
+            logger.info( "Save-back Setting string: {}.", settingsString );
 
             // Write back.
             alignmentBoard.setValueByAttributeName(
@@ -93,7 +93,7 @@ public class UserSettingSerializer implements Serializable {
                     this.alignmentBoard.getValueByAttributeName(
                             EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS
                     );
-            logger.info("SETTINGS: {} deserialized", settingString);
+            logger.info("Read-Up Setting string: {} deserialized", settingString);
 
             parseSettings(settingString);
         } catch ( Exception ex ) {
@@ -176,7 +176,7 @@ public class UserSettingSerializer implements Serializable {
                 for ( double[] coordinateSet: coordinateSets ) {
                     volumeModel.getCamera3d().getRotation().setWithCaution(
                             i++,
-                            new UnitVec3( coordinateSet[ X_OFFS ], coordinateSet[ Y_OFFS ], coordinateSet[ Z_OFFS ] )
+                            new UnitVec3(coordinateSet[X_OFFS], coordinateSet[Y_OFFS], coordinateSet[Z_OFFS])
                     );
                 }
             }
@@ -245,6 +245,9 @@ public class UserSettingSerializer implements Serializable {
                 appendVec3(builder, nextVec);
             }
             builder.append( "\n" );
+        }
+        else {
+            logger.info("Null rotation in Volume Model.");
         }
 
         Vec3 focus = volumeModel.getCamera3d().getFocus();

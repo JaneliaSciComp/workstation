@@ -20,7 +20,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
 
     private static final long serialVersionUID = 1L;
 	private MipRenderer renderer = new MipRenderer();
-    private VolumeModel volumeModel = new VolumeModel();
+    private VolumeModel volumeModel = renderer.getVolumeModel();
 
 	public enum InteractionMode {
 		ROTATE,
@@ -89,7 +89,8 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
 
     /**
      * A multi-thread-load-friendly overload of the set-volume method.  The texture objects may be
-     * built at the caller's leisure, rather than being requested of passed-in builders.
+     * built at the caller's leisure, rather than being requested of passed-in builders.  This
+     * method does NOT reset the view.
      *
      * @param signalTexture for the intensity data.
      * @param maskTexture for the labels.
@@ -116,8 +117,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
                 brick.setColorMapTextureData( renderMapTextureData );
             }
 
-            addActorToRenderer(brick);
-
+            this.renderer.addActor( brick );
             return true;
         }
         else {

@@ -51,7 +51,7 @@ public class Rotation extends SizedVector<UnitVec3>
 	}
 
 	public Rotation times(Rotation rhs) {
-		Rotation result = new Rotation();
+        Rotation result = new Rotation();
 		int[] indices = {0, 1, 2};
 		for (int i : indices) {
 			double[] row = {0.0, 0.0, 0.0};

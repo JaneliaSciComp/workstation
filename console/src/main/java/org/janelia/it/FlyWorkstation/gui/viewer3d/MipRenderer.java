@@ -28,8 +28,8 @@ class MipRenderer
     public MipRenderer() {
 		// actors.add(new TeapotActor()); // solid shading is not supported right now
         volumeModel = new VolumeModel();
-        volumeModel.setCamera3d( new BasicCamera3d() );
-        addActor( new VolumeBrick( volumeModel ) );
+        getVolumeModel().setCamera3d(new BasicCamera3d());
+        addActor( new VolumeBrick( getVolumeModel() ) );
     }
     
     public void centerOnPixel(Point p) {
@@ -61,7 +61,7 @@ class MipRenderer
 
         gLDrawable.getWidth();
         Vec3 f = focusInGround;
-        Rotation rotation = volumeModel.getCamera3d().getRotation();
+        Rotation rotation = getVolumeModel().getCamera3d().getRotation();
         Vec3 u = rotation.times(upInCamera);
         Vec3 c = f.plus(rotation.times(new Vec3(0, 0, -cameraFocusDistance)));
         glu.gluLookAt(c.x(), c.y(), c.z(), // camera in ground
@@ -94,7 +94,7 @@ class MipRenderer
         // Adjust view to fit the actual objects present
         BoundingBox3d boundingBox = getBoundingBox();
         focusInGround = boundingBox.getCenter();
-        volumeModel.getCamera3d().resetRotation();
+        getVolumeModel().getCamera3d().resetRotation();
         resetCameraFocus(boundingBox);
     }
 
@@ -141,14 +141,14 @@ class MipRenderer
 		Rotation rotation = new Rotation().setFromAngleAboutUnitVector(
 				rotationAngle, rotationAxis);
 		// System.out.println(rotation);
-        volumeModel.getCamera3d().setRotation( volumeModel.getCamera3d().getRotation().times( rotation.transpose() ) );
+        getVolumeModel().getCamera3d().setRotation( getVolumeModel().getCamera3d().getRotation().times( rotation.transpose() ) );
 		// System.out.println(R_ground_camera);
 	}
 
 	public void translatePixels(double dx, double dy, double dz) {
 		// trackball translate
 		Vec3 t = new Vec3(-dx, -dy, -dz).times(glUnitsPerPixel());
-		focusInGround.plusEquals(volumeModel.getCamera3d().getRotation().times(t));
+		focusInGround.plusEquals(getVolumeModel().getCamera3d().getRotation().times(t));
 	}
 	
 	public void updateProjection(GL2 gl) {
@@ -187,6 +187,10 @@ class MipRenderer
 		double zoomRatio = 1.0 + dC/denom;
 		zoom(zoomRatio);
 	}
+
+    public VolumeModel getVolumeModel() {
+        return volumeModel;
+    }
 
     private double maxAspectRatio(BoundingBox3d boundingBox) {
 
