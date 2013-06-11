@@ -7,6 +7,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.media.jai.NullOpImage;
 import javax.media.jai.OpImage;
@@ -25,6 +27,8 @@ public class PermuteTiff {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		walk(args[0]);
+		/*
 		String fileName = args[0];
 		File tiff = new File(fileName);
 		File outTiff = new File(args[1]);
@@ -37,6 +41,64 @@ public class PermuteTiff {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		*/
+	}
+	
+    public static void walk( String path ) 
+    {
+        File root = new File( path );
+        File[] list = root.listFiles();
+
+    	Pattern filePattern = Pattern.compile("^default\\.(\\d+)\\.tif$");
+        for ( File f : list ) {
+            if ( f.isDirectory() ) {
+            	// only want subdirectories "1", "2", ..., "8"
+            	// (we get top directory files automatically)
+            	if (! (f.getName().length() == 1))
+            		continue;
+            	int ix = Integer.parseInt(f.getName());
+            	if (ix < 1)
+            		continue;
+            	if (ix > 8)
+            		continue;
+                walk( f.getAbsolutePath() );
+                // System.out.println( "Dir:" + f.getAbsoluteFile() );
+            }
+            else {
+            	// Only want to convert default.?.tif
+            	Matcher matcher = filePattern.matcher(f.getName());
+            	if (! matcher.matches())
+            		continue;
+            	int channel = Integer.parseInt(matcher.group(1));
+                File yzFile = new File(f.getParentFile(), "YZ."+channel+".tif");
+                File zxFile = new File(f.getParentFile(), "ZX."+channel+".tif");
+                // System.out.println( "File:" + f.getAbsoluteFile());
+                // System.out.println( "  YZ:" + yzFile.getAbsoluteFile());
+                // System.out.println( "  ZX:" + zxFile.getAbsoluteFile());
+                if (! yzFile.exists()) {
+					try {
+		                System.out.println( "Creating:" + yzFile.getAbsoluteFile());
+						permuteTiff(f, yzFile, 1);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+                }
+                if (! zxFile.exists()) {
+					try {
+		                System.out.println( "Creating:" + zxFile.getAbsoluteFile());
+						permuteTiff(f, zxFile, 2);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+                }
+            }
+        }
+    }
+	
+	public static void permuteOctree(File folder) {
+		// TODO
 	}
 	
 	public static void permuteTiff(File inTiff, File outTiff, int permuteSteps) 
@@ -82,6 +144,7 @@ public class PermuteTiff {
 		// Write output tiff
 		TIFFEncodeParam params = new TIFFEncodeParam();
 		Iterator<BufferedImage> it = Iterators.forArray(outSlices);
+		if (it.hasNext()) it.next(); // Avoid duplicate first slice
 		params.setExtraImages(it); 
 		OutputStream out = new FileOutputStream(outTiff); 
 		ImageEncoder encoder = ImageCodec.createImageEncoder("tiff", out, params);
@@ -96,11 +159,11 @@ public class PermuteTiff {
 	}
 	
 	private static void permute1(int[] in) {
-		int last = in[in.length-1];
-		for (int i = in.length-1; i > 0; --i) {
-			in[i] = in[i-1];
+		int first = in[0];
+		for (int i = 0; i < (in.length-1); ++i) {
+			in[i] = in[i+1];
 		}
-		in[0] = last;
+		in[in.length-1] = first;
 	}
 
 }
