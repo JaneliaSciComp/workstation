@@ -83,10 +83,10 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             }
         });
 
-        AlignmentBoardContext alignmentBoardContext = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
-        if ( alignmentBoardContext != null ) {
-            handleBoardOpened( alignmentBoardContext );
-        }
+//        AlignmentBoardContext alignmentBoardContext = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
+//        if ( alignmentBoardContext != null ) {
+//            handleBoardOpened( alignmentBoardContext );
+//        }
     }
 
     @Override
@@ -135,11 +135,13 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         ModelMgr.getModelMgr().unregisterOnEventBus(this);
         AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
         Entity alignmentBoard = context.getInternalEntity();
-        UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
-                alignmentBoard, mip3d.getVolumeModel(), settings.getAlignmentBoardSettings()
-        );
+        if ( mip3d != null && settings != null ) {
+            UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
+                    alignmentBoard, mip3d.getVolumeModel(), settings.getAlignmentBoardSettings()
+            );
 
-        userSettingSerializer.serializeSettings();
+            userSettingSerializer.serializeSettings();
+        }
 
         deleteAll();
     }

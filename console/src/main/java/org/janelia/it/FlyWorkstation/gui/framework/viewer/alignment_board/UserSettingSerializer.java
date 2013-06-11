@@ -93,7 +93,7 @@ public class UserSettingSerializer implements Serializable {
                     this.alignmentBoard.getValueByAttributeName(
                             EntityConstants.ATTRIBUTE_ALIGNMENT_BOARD_USER_SETTINGS
                     );
-            logger.info("Read-Up Setting string: {} deserialized", settingString);
+            logger.info( "Read-Up Setting string: {}deserialized, from {}", settingString, alignmentBoard.getId() );
 
             parseSettings(settingString);
         } catch ( Exception ex ) {

@@ -17,7 +17,6 @@ class MipRenderer
     // camera parameters
     Vec3 focusInGround = new Vec3(0,0,0);
     private Vec3 upInCamera = new Vec3(0,-1,0);
-    double cameraFocusDistance = DEFAULT_CAMERA_FOCUS_DISTANCE;
     private double distanceToScreenInPixels = 2000;
     private double defaultHeightInPixels = 400.0;
     private double widthInPixels = defaultHeightInPixels;
@@ -28,7 +27,9 @@ class MipRenderer
     public MipRenderer() {
 		// actors.add(new TeapotActor()); // solid shading is not supported right now
         volumeModel = new VolumeModel();
-        getVolumeModel().setCamera3d(new BasicCamera3d());
+        BasicCamera3d camera3d = new BasicCamera3d();
+        camera3d.setFocus( 0.0, 0.0, -DEFAULT_CAMERA_FOCUS_DISTANCE );
+        getVolumeModel().setCamera3d(camera3d);
         addActor( new VolumeBrick( getVolumeModel() ) );
     }
     
@@ -63,7 +64,7 @@ class MipRenderer
         Vec3 f = focusInGround;
         Rotation rotation = getVolumeModel().getCamera3d().getRotation();
         Vec3 u = rotation.times(upInCamera);
-        Vec3 c = f.plus(rotation.times(new Vec3(0, 0, -cameraFocusDistance)));
+        Vec3 c = f.plus(rotation.times( volumeModel.getCamera3d().getFocus()) );
         glu.gluLookAt(c.x(), c.y(), c.z(), // camera in ground
                 f.x(), f.y(), f.z(), // focus in ground
                 u.x(), u.y(), u.z()); // up vector in ground
@@ -86,7 +87,7 @@ class MipRenderer
     }
  
     public double glUnitsPerPixel() {
-    		return cameraFocusDistance / distanceToScreenInPixels;
+    		return Math.abs( volumeModel.getCamera3d().getFocus().getZ() ) / distanceToScreenInPixels;
     }
 
     public void resetView()
@@ -122,8 +123,11 @@ class MipRenderer
         gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glLoadIdentity();
 
-        BoundingBox3d boundingBox = getBoundingBox();
-        resetCameraFocus( boundingBox );
+        double previousFocusDistance = volumeModel.getCamera3d().getFocus().getZ();
+        if ( previousFocusDistance != DEFAULT_CAMERA_FOCUS_DISTANCE ) {
+            BoundingBox3d boundingBox = getBoundingBox();
+            resetCameraFocus( boundingBox );
+        }
     }
 
 	public void rotatePixels(double dx, double dy, double dz) {
@@ -159,6 +163,7 @@ class MipRenderer
         gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glLoadIdentity();
         final float h = (float) widthInPixels / (float) heightInPixels;
+        double cameraFocusDistance = Math.abs(volumeModel.getCamera3d().getFocus().getZ());
         glu.gluPerspective(verticalApertureInDegrees,
         		h, 
         		0.5 * cameraFocusDistance, 
@@ -171,7 +176,9 @@ class MipRenderer
 			return;
 		if (zoomRatio == 1.0)
 			return;
+        double cameraFocusDistance = volumeModel.getCamera3d().getFocus().getZ();
 		cameraFocusDistance /= zoomRatio;
+        volumeModel.getCamera3d().setFocus( 0.0, 0.0, cameraFocusDistance );
 	}
 	
 	public void zoomPixels(Point newPoint, Point oldPoint) {
@@ -224,7 +231,9 @@ class MipRenderer
         // System.out.println("Focus = " + focusInGround);
         // cameraFocusDistance = DEFAULT_CAMERA_FOCUS_DISTANCE * defaultHeightInPixels / heightInPixels;
         double finalAspectRatio = maxAspectRatio(boundingBox);
-        cameraFocusDistance = finalAspectRatio * 1.05 * distanceToScreenInPixels * heightInMicrometers / heightInPixels;
+        double cameraFocusDistance = finalAspectRatio * 1.05 * distanceToScreenInPixels * heightInMicrometers / heightInPixels;
+        volumeModel.getCamera3d().setFocus( 0.0, 0.0, -cameraFocusDistance );
+
     }
 
     private BoundingBox3d getBoundingBox() {
