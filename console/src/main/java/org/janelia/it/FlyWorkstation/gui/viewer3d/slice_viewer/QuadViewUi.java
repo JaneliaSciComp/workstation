@@ -693,6 +693,10 @@ public class QuadViewUi extends JPanel
 		orthogonalModeButton.setHideActionText(true);
 		orthogonalModeButton.setFocusable(false);
 		toolBar.add(orthogonalModeButton);
+		// Temporarily disable orthogonal mode button for next release
+		// (until feature is done)
+		orthogonalModeButton.setEnabled(false);
+		
 		return toolBarPanel;
 	}
 
