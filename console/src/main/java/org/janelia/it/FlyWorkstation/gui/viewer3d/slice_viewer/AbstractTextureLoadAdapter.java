@@ -2,7 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 public abstract class AbstractTextureLoadAdapter 
 {
-	private TextureCache textureCache = new TextureCache();
+	// private TextureCache textureCache = new TextureCache();
 
 	public static class MissingTileException extends Exception {
 		private static final long serialVersionUID = 1L;
@@ -27,8 +27,10 @@ public abstract class AbstractTextureLoadAdapter
 		return tileFormat;
 	}
 
+	/*
 	public TextureCache getTextureCache() {
 		return textureCache;
 	}
+	*/
 
 }

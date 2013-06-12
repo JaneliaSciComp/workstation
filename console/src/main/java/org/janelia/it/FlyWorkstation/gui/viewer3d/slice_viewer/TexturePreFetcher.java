@@ -1,8 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -79,7 +76,11 @@ public class TexturePreFetcher
 	}
 	
 	public synchronized void clear() {
+		if (textureCache == null)
+			return;
 		BlockingQueue<Runnable> blockingQueue = textureLoadExecutor.getQueue();
+		if (blockingQueue == null)
+			return;
 		//synchronize on it to prevent tasks from being polled
 		synchronized (blockingQueue) {
 			//clear the Queue
@@ -88,10 +89,13 @@ public class TexturePreFetcher
 					TextureLoadWorker tlw = (TextureLoadWorker) r;
 					TileIndex ix = tlw.getTexture().getIndex();
 					textureCache.getQueuedRequests().remove(ix);
-				}				
+				}
 			}
 			blockingQueue.clear();
-			textureCache.getQueuedRequests().clear(); // removes too many...		
+			Set<TileIndex> queued = textureCache.getQueuedRequests();
+			if (queued == null)
+				return;
+			queued.clear(); // removes too many...		
 			//or else copy its contents here with a while loop and remove()
 		}
 	}

@@ -1,10 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -15,9 +12,6 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.AbstractTextureLoadAdapter.MissingTileException;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.AbstractTextureLoadAdapter.TileLoadError;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.LodGenerator;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.MinResZGenerator;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.UmbrellaZGenerator;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.ZGenerator;
@@ -83,14 +77,16 @@ implements VolumeImage3d
 	// One thread pool to load current and prefetch textures
 	private TexturePreFetcher futurePreFetcher = new TexturePreFetcher(10);
 
-	private BoundingBox3d boundingBox3d = new BoundingBox3d();
 	//
 	private Camera3d camera;
 	private Viewport viewport;
 	// signal for tile loaded
 	private double zoomOffset = 0.5; // tradeoff between optimal resolution (0.0) and speed.
-	private AbstractTextureLoadAdapter loadAdapter;
 	private TileSet previousTiles;
+	
+	// Refactoring 6/12/2013
+	private SharedVolumeImage sharedVolumeImage = new SharedVolumeImage();
+	private TextureCache textureCache = new TextureCache();
 	
 	private Signal viewTextureChangedSignal = new Signal();
 	private Signal1<TileSet> tileSetChangedSignal = new Signal1<TileSet>();
@@ -100,11 +96,11 @@ implements VolumeImage3d
 	private Slot startMinResPreFetchSlot = new Slot() {
 		@Override
 		public void execute() {
-			if (loadAdapter == null)
+			if (sharedVolumeImage.getLoadAdapter() == null)
 				return;
 			// queue load of all low resolution textures
 			minResPreFetcher.clear();
-			MinResZGenerator g = new MinResZGenerator(loadAdapter.getTileFormat());
+			MinResZGenerator g = new MinResZGenerator(sharedVolumeImage.getLoadAdapter().getTileFormat());
 			for (TileIndex i : g)
 				minResPreFetcher.loadDisplayedTexture(i, TileServer.this);
 		}
@@ -204,6 +200,7 @@ implements VolumeImage3d
 	}
 
 	public TileServer(String folderName) {
+		tileSetChangedSignal.connect(updateFuturePreFetchSlot);
         try {
 			loadURL(new File(folderName).toURI().toURL());
 		} catch (MalformedURLException e) {
@@ -228,7 +225,7 @@ implements VolumeImage3d
 	public TileSet createLatestTiles(Camera3d camera, Viewport viewport)
 	{
 		TileSet result = new TileSet();
-		if (loadAdapter == null)
+		if (sharedVolumeImage.getLoadAdapter() == null)
 			return result;
 
 		// Need to loop over x and y
@@ -242,7 +239,7 @@ implements VolumeImage3d
 			zoom = (int)(topZoom + zoomOffset);
 		}
 		int zoomMin = 0;
-		TileFormat tileFormat = loadAdapter.getTileFormat();
+		TileFormat tileFormat = sharedVolumeImage.getLoadAdapter().getTileFormat();
 		int zoomMax = tileFormat.getZoomLevelCount() - 1;
 		zoom = Math.max(zoom, zoomMin);
 		zoom = Math.min(zoom, zoomMax);
@@ -307,7 +304,7 @@ implements VolumeImage3d
 
 	@Override
 	public BoundingBox3d getBoundingBox3d() {
-		return boundingBox3d;
+		return sharedVolumeImage.getBoundingBox3d();
 	}
 
 	public Camera3d getCamera() {
@@ -316,16 +313,12 @@ implements VolumeImage3d
 
 	@Override
 	public int getMaximumIntensity() {
-		if (loadAdapter == null)
-			return 0;
-		return loadAdapter.getTileFormat().getIntensityMax();
+		return sharedVolumeImage.getMaximumIntensity();
 	}
 
 	@Override
 	public int getNumberOfChannels() {
-		if (loadAdapter == null)
-			return 0;
-		return loadAdapter.getTileFormat().getChannelCount();
+		return sharedVolumeImage.getNumberOfChannels();
 	}
 
 	public Slot1<TileSet> getUpdateFuturePreFetchSlot() {
@@ -409,9 +402,7 @@ implements VolumeImage3d
 	}	
 
 	public TextureCache getTextureCache() {
-		if (loadAdapter == null)
-			return null;
-		return loadAdapter.getTextureCache();
+		return textureCache;
 	}
 	
 	public Viewport getViewport() {
@@ -424,109 +415,31 @@ implements VolumeImage3d
 
 	@Override
 	public double getXResolution() {
-		if (loadAdapter == null)
-			return 0;
-		return loadAdapter.getTileFormat().getVoxelMicrometers()[0];
+		return sharedVolumeImage.getXResolution();
 	}
 
 	@Override
 	public double getYResolution() {
-		if (loadAdapter == null)
-			return 0;
-		return loadAdapter.getTileFormat().getVoxelMicrometers()[1];
+		return sharedVolumeImage.getYResolution();
 	}
 
 	@Override
 	public double getZResolution() {
-		if (loadAdapter == null)
-			return 0;
-		return loadAdapter.getTileFormat().getVoxelMicrometers()[2];
+		return sharedVolumeImage.getZResolution();
 	}	
 
 	@Override
 	public boolean loadURL(URL folderUrl) {
-		// Sanity check before overwriting current view
-		if (folderUrl == null)
+		if (! sharedVolumeImage.loadURL(folderUrl))
 			return false;
 		
-		// Sniff which back end we need
-		AbstractTextureLoadAdapter testLoadAdapter = null;
-		URL testUrl;
-
-		// Is this a PAM octree folder?
-		if (testLoadAdapter == null) {
-			try {
-				testUrl = new URL(folderUrl, "slice_00000.pam");
-				InputStream is = testUrl.openStream();
-				is.close();
-				PamOctreeLoadAdapter pola = new PamOctreeLoadAdapter();
-				pola.setTopFolder(folderUrl);
-				getTileSetChangedSignal().connect(getUpdateFuturePreFetchSlot());
-				testLoadAdapter = pola;
-			} 
-			catch (IOException e2) {} // not a PAM folder
-			catch (MissingTileException e) {} 
-			catch (TileLoadError e) {}
-		}
-		
-		// Is this a MP4 octree folder?
-		if (testLoadAdapter == null) {
-			try {
-				// diagnostic mp4 file
-				testUrl = new URL(folderUrl, "default.0.mp4");
-				testUrl.openStream();
-				Mp4OctreeLoadAdapter btola = new Mp4OctreeLoadAdapter();
-				btola.setTopFolder(folderUrl);
-				getTileSetChangedSignal().connect(getUpdateFuturePreFetchSlot());
-				testLoadAdapter = btola;
-			} catch (MalformedURLException e1) {} 
-			catch (IOException e) {} 
-		}
-
-		// Is this a Block tiff octree folder?
-		if (testLoadAdapter == null) {
-			try {
-				// Look for diagnostic block tiff file
-				testUrl = new URL(folderUrl, "default.0.tif");
-				testUrl.openStream();
-				File fileFolder = new File(folderUrl.toURI());
-				BlockTiffOctreeLoadAdapter btola = new BlockTiffOctreeLoadAdapter();
-				btola.setTopFolder(fileFolder);
-				getTileSetChangedSignal().connect(getUpdateFuturePreFetchSlot());
-				testLoadAdapter = btola;
-			} catch (MalformedURLException e1) {} 
-			catch (IOException e) {} 
-			catch (URISyntaxException e) {}
-		}
-
-		// Is this a Raveler format?
-		if (testLoadAdapter == null) {
-			try {
-				testLoadAdapter = new RavelerLoadAdapter(folderUrl);
-			} catch (IOException e) {}
-		}
-
-		// Did we identify a folder format?
-		if (testLoadAdapter == null)
-			return false; // NO
-		
-		loadAdapter = testLoadAdapter;
 		// Initialize pre-fetchers
 		minResPreFetcher.setTextureCache(getTextureCache());
-		minResPreFetcher.setLoadAdapter(loadAdapter);
+		minResPreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
 		futurePreFetcher.setTextureCache(getTextureCache());
-		futurePreFetcher.setLoadAdapter(loadAdapter);
+		futurePreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
 		// Don't pre-fetch before cache is cleared...
 		getTextureCache().getCacheClearedSignal().connect(startMinResPreFetchSlot);
-		// Compute bounding box
-		TileFormat tf = loadAdapter.getTileFormat();
-		double sv[] = tf.getVoxelMicrometers();
-		int s0[] = tf.getOrigin();
-		int s1[] = tf.getVolumeSize();
-		Vec3 b0 = new Vec3(sv[0]*s0[0], sv[1]*s0[1], sv[2]*s0[2]);
-		Vec3 b1 = new Vec3(sv[0]*(s0[0]+s1[0]), sv[1]*(s0[1]+s1[1]), sv[2]*(s0[2]+s1[2]));
-		boundingBox3d.setMin(b0);
-		boundingBox3d.setMax(b1);
 		// remove old data
 		emergencyTiles = null;
 		if (latestTiles != null)
@@ -545,7 +458,7 @@ implements VolumeImage3d
 			log.warn("Combined cache sizes are larger than max heap size.");
 		Runtime rt = Runtime.getRuntime();
 		long maxHeapBytes = rt.maxMemory();
-		TileFormat format = loadAdapter.getTileFormat();
+		TileFormat format = sharedVolumeImage.getLoadAdapter().getTileFormat();
 		long tileBytes = format.getTileBytes();
 		int historyTileMax = (int)(historyFraction * maxHeapBytes / tileBytes);
 		int futureTileMax = (int)(futureFraction * maxHeapBytes / tileBytes);
@@ -564,7 +477,7 @@ implements VolumeImage3d
 	}
 
 	public AbstractTextureLoadAdapter getLoadAdapter() {
-		return loadAdapter;
+		return sharedVolumeImage.getLoadAdapter();
 	}
 
 	public synchronized void setNeededTextures(Set<TileIndex> neededTextures) {
@@ -590,8 +503,6 @@ implements VolumeImage3d
 
 	@Override
 	public double getResolution(int ix) {
-		if (ix == 0) return getXResolution();
-		else if (ix == 1) return getYResolution();
-		else return getZResolution();
+		return sharedVolumeImage.getResolution(ix);
 	}
 }
