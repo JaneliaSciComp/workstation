@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
+import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 
@@ -22,9 +24,12 @@ public class OrthogonalViewer extends BaseGLViewer
 	private Viewport viewport;
 	private VolumeImage3d volume;
 	private CoordinateAxis viewAxis;
+	private SliceRenderer renderer = new SliceRenderer();
 	
 	public OrthogonalViewer(CoordinateAxis axis) {
 		this.viewAxis = axis;
+		addGLEventListener(renderer);
+		renderer.setBackgroundColor(Color.pink); // TODO set to black
 	}
 	
 	public void setCamera(ObservableCamera3d camera) {

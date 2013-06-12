@@ -18,6 +18,7 @@ import net.jpountz.lz4.LZ4Factory;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.AbstractTextureLoadAdapter.MissingTileException;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.AbstractTextureLoadAdapter.TileLoadError;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 
 import com.sun.media.jai.codec.ImageDecoder;
 
@@ -70,7 +71,8 @@ public class TiffToPam {
 		// Open tiff files, one per channel
 		ImageDecoder decoder[];
 		try {
-			decoder = loadAdapter.createImageDecoders(inputFolder);
+			// TODO - also non-z slices
+			decoder = loadAdapter.createImageDecoders(inputFolder, CoordinateAxis.Z);
 		} catch (MissingTileException e) {
 			return false;
 		} catch (TileLoadError e) {

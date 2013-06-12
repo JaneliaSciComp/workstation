@@ -19,6 +19,7 @@ import com.sun.media.jai.codec.FileSeekableStream;
 import com.sun.media.jai.codec.ImageCodec;
 import com.sun.media.jai.codec.ImageDecoder;
 import com.sun.media.jai.codec.SeekableStream;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 
 /*
  * Loader for slice viewer format negotiated with Nathan Clack
@@ -64,25 +65,28 @@ extends AbstractTextureLoadAdapter
 		// That must occur AFTER volume initialized signal is sent.
 	}
 
-	protected List<Integer> getOctreePath(TileIndex tileIndex) {
+	protected List<Integer> getOctreePath(TileIndex tileIndex) 
+	{
 		Vector<Integer> result = new Vector<Integer>();
-		
+
 		int octreeDepth = tileFormat.getZoomLevelCount();
 		int depth = octreeDepth - tileIndex.getZoom();
 		assert(depth >= 0);
 		assert(depth <= octreeDepth);
 		// x and y are already corrected for tile size
-		int x = tileIndex.getX();
-		int y = tileIndex.getY();
+		int xyz[] = {tileIndex.getX(), tileIndex.getY(), tileIndex.getZ()};
+		// Correct view axis index for tile size
 		// ***NOTE Raveler Z is slice count, not tile count***
-		int z = tileIndex.getZ() / tileFormat.getTileSize()[2];
+		// Different X/Y/Z orthogonal views must be corrected differently
+		int viewIx = tileIndex.getSliceAxis().index();
+		xyz[viewIx] = xyz[viewIx] / tileFormat.getTileSize()[viewIx];
 		// start at lowest zoom to build up octree coordinates
 		for (int d = 0; d < (depth - 1); ++d) {
 			// How many Raveler tiles per octant at this zoom?
 			int scale = (int)(Math.pow(2, d)+0.1);
-			int dx = x / scale;
-			int dy = y / scale;
-			int dz = z / scale;
+			int dx = xyz[0] / scale;
+			int dy = xyz[1] / scale;
+			int dz = xyz[2] / scale;
 			// Each dimension makes a binary contribution to the 
 			// octree index.
 			assert(dx >= 0);
@@ -92,9 +96,9 @@ extends AbstractTextureLoadAdapter
 			assert(dy <= 1);
 			assert(dz <= 1);
 			// offset x/y/z for next deepest level
-			x = x % scale;
-			y = y % scale;
-			z = z % scale;
+			xyz[0] = xyz[0] % scale;
+			xyz[1] = xyz[1] % scale;
+			xyz[2] = xyz[2] % scale;
 			// Octree coordinates are in z-order
 			int octreeCoord = 1 + dx 
 					// TODO - investigate possible ragged edge problems
@@ -181,12 +185,13 @@ extends AbstractTextureLoadAdapter
 				getOctreeFilePath(tileIndex, tileFormat).toString());
 		// Compute local z slice
 		int zoomScale = (int)Math.pow(2, tileIndex.getZoom());
-		int tileDepth = tileFormat.getTileSize()[2];
-		int relativeZ = (tileIndex.getZ() / zoomScale) % tileDepth;
+		int axisIx = tileIndex.getSliceAxis().index();
+		int tileDepth = tileFormat.getTileSize()[axisIx];
+		int relativeSlice = (tileIndex.getCoordinate(axisIx) / zoomScale) % tileDepth;
 		
-		ImageDecoder[] decoders = createImageDecoders(folder);
+		ImageDecoder[] decoders = createImageDecoders(folder, tileIndex.getSliceAxis());
 		
-		TextureData2dGL result = loadSlice(relativeZ,
+		TextureData2dGL result = loadSlice(relativeSlice,
 				decoders);
 		localLoadTimer.mark("finished slice load");
 
@@ -229,13 +234,18 @@ extends AbstractTextureLoadAdapter
 	}
 
 	// TODO - cache decoders if folder has not changed
-	public ImageDecoder[] createImageDecoders(File folder)
+	public ImageDecoder[] createImageDecoders(File folder, CoordinateAxis axis)
 			throws MissingTileException, TileLoadError 
 	{
+		String tiffBase = "default"; // Z-view; XY plane
+		if (axis == CoordinateAxis.Y)
+			tiffBase = "ZX";
+		else if (axis == CoordinateAxis.X)
+			tiffBase = "YZ";
 		int sc = tileFormat.getChannelCount();
 		ImageDecoder decoders[] = new ImageDecoder[sc];
 		for (int c = 0; c < sc; ++c) {
-			File tiff = new File(folder, "default."+c+".tif");
+			File tiff = new File(folder, tiffBase+"."+c+".tif");
 			// System.out.println(tileIndex+", "+tiff.toString());
 			if (! tiff.exists())
 				throw new MissingTileException();

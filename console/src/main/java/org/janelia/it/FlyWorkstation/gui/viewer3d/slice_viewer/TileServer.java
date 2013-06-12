@@ -539,6 +539,7 @@ implements VolumeImage3d
 		return true;
 	}
 
+	// TODO - could move this to TextureCache class?
 	public void setCacheSizesAsFractionOfMaxHeap(double historyFraction, double futureFraction) {
 		if ((historyFraction + futureFraction) >= 1.0)
 			log.warn("Combined cache sizes are larger than max heap size.");

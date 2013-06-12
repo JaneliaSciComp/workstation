@@ -2,7 +2,6 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.util.List;
 import java.util.Vector;
-
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 
 /**
@@ -100,6 +99,10 @@ public class TileIndex
 
 	public int getZ() {
 		return xyz[2];
+	}
+	
+	public int getCoordinate(int index) {
+		return xyz[index];
 	}
 
 	public int getZoom() {
