@@ -4,6 +4,7 @@ import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicObservableCamera3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.AdvanceZSlicesAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.GoBackZSlicesAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.NextZSliceAction;
@@ -262,9 +263,9 @@ public class QuadViewUi extends JPanel
 	// Four quadrants for orthogonal views
 	// TODO obsolete zViewerPanel in favor of OrthogonalPanel
 	JComponent nwViewer = zViewerPanel; // should be same as Z...
-	JComponent neViewer = new OrthogonalPanel(CoordinateAxis.X);
-	JComponent swViewer = new OrthogonalPanel(CoordinateAxis.Y);
-	JComponent seViewer = new OrthogonalPanel(CoordinateAxis.Z); // TODO 3D view
+	OrthogonalPanel neViewer = new OrthogonalPanel(CoordinateAxis.X);
+	OrthogonalPanel swViewer = new OrthogonalPanel(CoordinateAxis.Y);
+	OrthogonalPanel seViewer = new OrthogonalPanel(CoordinateAxis.Z); // TODO 3D view
 	
 	private void setOrthogonalMode() {
 		nwViewer.setVisible(true);
@@ -436,7 +437,6 @@ public class QuadViewUi extends JPanel
 		c.gridx = 1; c.gridy = 1;
 		viewerPanel.add(seViewer, c);
 		
-		// SliceViewer sliceViewer = new SliceViewer();
 		sliceViewer.setCamera(camera);
 		sliceViewer.setBackground(Color.DARK_GRAY);
 		zViewerPanel.add(sliceViewer);
@@ -444,6 +444,14 @@ public class QuadViewUi extends JPanel
 		sliceViewer.getZoomChangedSignal().connect(changeZoom);
         sliceViewer.getCamera().getFocusChangedSignal().connect(changeZ);
 		sliceViewer.getFileLoadedSignal().connect(rememberLoadedFileSlot);
+		
+		neViewer.setCamera(camera);
+		swViewer.setCamera(camera);
+		seViewer.setCamera(camera);
+		SharedVolumeImage vi = sliceViewer.getTileServer().getSharedVolumeImage();
+		neViewer.setSharedVolumeImage(vi);
+		swViewer.setSharedVolumeImage(vi);
+		seViewer.setSharedVolumeImage(vi);
 		
 		// JPanel zScanPanel = new JPanel();
 		zViewerPanel.add(zScanPanel);

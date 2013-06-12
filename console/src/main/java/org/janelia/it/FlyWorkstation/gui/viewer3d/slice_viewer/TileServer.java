@@ -1,7 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
-import java.io.File;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -85,12 +83,11 @@ implements VolumeImage3d
 	private TileSet previousTiles;
 	
 	// Refactoring 6/12/2013
-	private SharedVolumeImage sharedVolumeImage = new SharedVolumeImage();
+	private SharedVolumeImage sharedVolumeImage;
 	private TextureCache textureCache = new TextureCache();
 	
 	private Signal viewTextureChangedSignal = new Signal();
 	private Signal1<TileSet> tileSetChangedSignal = new Signal1<TileSet>();
-	private Signal volumeInitializedSignal = new Signal();
 	
 	// Initiate loading of low resolution textures
 	private Slot startMinResPreFetchSlot = new Slot() {
@@ -111,8 +108,6 @@ implements VolumeImage3d
 		public void execute(TileSet tileSet) {
 			if (tileSet == null)
 				return;
-			
-			long startTime = System.nanoTime();
 			
 			// log.info("updatePreFetchSlot");
 			futurePreFetcher.clear();
@@ -168,10 +163,7 @@ implements VolumeImage3d
 					cacheableTextures.add(ix);
 			}
 
-			// log.info("Number of queued textures = "+cacheableTextures.size());			
-			
-			long endTime = System.nanoTime();
-			// log.info("Prefetch fill elapsed time = "+(endTime-startTime)/1e6+" ms");
+			// log.info("Number of queued textures = "+cacheableTextures.size());						
 		}
 	};
 	
@@ -194,18 +186,37 @@ implements VolumeImage3d
 			*/
 		}
 	};
-	
+
 	public Slot1<TileIndex> getOnTextureLoadedSlot() {
 		return onTextureLoadedSlot;
 	}
 
-	public TileServer(String folderName) {
-		tileSetChangedSignal.connect(updateFuturePreFetchSlot);
-        try {
-			loadURL(new File(folderName).toURI().toURL());
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
+	public Slot onVolumeInitializedSlot = new Slot() {
+		@Override
+		public void execute() {
+			if (sharedVolumeImage == null)
+				return;
+			// Initialize pre-fetchers
+			minResPreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
+			futurePreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
+			// remove old data
+			emergencyTiles = null;
+			if (latestTiles != null)
+				latestTiles.clear();
+			if (lastGoodTiles != null)
+				lastGoodTiles.clear();
+			// queue disposal of textures on next display event
+			setCacheSizesAsFractionOfMaxHeap(0.15, 0.35);
 		}
+	};
+	
+	public TileServer(SharedVolumeImage sharedVolumeImage) {
+		setSharedVolumeImage(sharedVolumeImage);
+		tileSetChangedSignal.connect(updateFuturePreFetchSlot);
+		minResPreFetcher.setTextureCache(getTextureCache());
+		futurePreFetcher.setTextureCache(getTextureCache());
+		// Don't pre-fetch before cache is cleared...
+		getTextureCache().getCacheClearedSignal().connect(startMinResPreFetchSlot);
 	}
 
 	public void clearCache() {
@@ -401,6 +412,17 @@ implements VolumeImage3d
 		return result;
 	}	
 
+	public SharedVolumeImage getSharedVolumeImage() {
+		return sharedVolumeImage;
+	}
+
+	public void setSharedVolumeImage(SharedVolumeImage sharedVolumeImage) {
+		if (this.sharedVolumeImage == sharedVolumeImage)
+			return;
+		this.sharedVolumeImage = sharedVolumeImage;
+		sharedVolumeImage.volumeInitializedSignal.connect(onVolumeInitializedSlot);
+	}
+
 	public TextureCache getTextureCache() {
 		return textureCache;
 	}
@@ -410,7 +432,7 @@ implements VolumeImage3d
 	}
 
 	public Signal getVolumeInitializedSignal() {
-		return volumeInitializedSignal;
+		return sharedVolumeImage.volumeInitializedSignal;
 	}
 
 	@Override
@@ -432,23 +454,6 @@ implements VolumeImage3d
 	public boolean loadURL(URL folderUrl) {
 		if (! sharedVolumeImage.loadURL(folderUrl))
 			return false;
-		
-		// Initialize pre-fetchers
-		minResPreFetcher.setTextureCache(getTextureCache());
-		minResPreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
-		futurePreFetcher.setTextureCache(getTextureCache());
-		futurePreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
-		// Don't pre-fetch before cache is cleared...
-		getTextureCache().getCacheClearedSignal().connect(startMinResPreFetchSlot);
-		// remove old data
-		emergencyTiles = null;
-		if (latestTiles != null)
-			latestTiles.clear();
-		if (lastGoodTiles != null)
-			lastGoodTiles.clear();
-		// queue disposal of textures on next display event
-		setCacheSizesAsFractionOfMaxHeap(0.15, 0.35);
-		getVolumeInitializedSignal().emit();
 		return true;
 	}
 

@@ -27,4 +27,12 @@ public enum CoordinateAxis {
 	public CoordinateAxis previous() {
 		return fromIndex(index() + 2);
 	}
+
+	public String getName() {
+		if (this == CoordinateAxis.X) 
+			return "X";
+		else if (this == CoordinateAxis.Y) 
+			return "Y";
+		return "Z";
+	}
 }

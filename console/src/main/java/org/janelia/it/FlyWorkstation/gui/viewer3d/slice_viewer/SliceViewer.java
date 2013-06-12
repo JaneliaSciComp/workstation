@@ -60,9 +60,7 @@ implements MouseModalWidget, VolumeViewer
 	// protected PracticeBlueVolume volume0 = new PracticeBlueVolume();
 	// protected Simple2dImageVolume volume0 = new Simple2dImageVolume(
 	// 		"/Users/brunsc/svn/jacs/console/src/main/java/images/kittens.jpg");	
-	protected TileServer tileServer = new TileServer(
-//            "Q:\\\\brunsTest\\clack_test16\\Z");
-			"/groups/scicomp/jacsData/brunsTest/clack_test16/Z");
+	protected TileServer tileServer = new TileServer(new SharedVolumeImage());
 	protected VolumeImage3d volumeImage = tileServer;
 	protected SliceActor volumeActor = new SliceActor(tileServer);
 	private ImageColorModel imageColorModel;

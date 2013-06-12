@@ -19,6 +19,8 @@ implements VolumeImage3d
 	private AbstractTextureLoadAdapter loadAdapter;
 	private BoundingBox3d boundingBox3d = new BoundingBox3d();
 
+	public Signal volumeInitializedSignal = new Signal();
+
 	@Override
 	public BoundingBox3d getBoundingBox3d() {
 		return boundingBox3d;
@@ -135,6 +137,8 @@ implements VolumeImage3d
 		Vec3 b1 = new Vec3(sv[0]*(s0[0]+s1[0]), sv[1]*(s0[1]+s1[1]), sv[2]*(s0[2]+s1[2]));
 		boundingBox3d.setMin(b0);
 		boundingBox3d.setMax(b1);
+		
+		volumeInitializedSignal.emit();
 		
 		return true;
 	}
