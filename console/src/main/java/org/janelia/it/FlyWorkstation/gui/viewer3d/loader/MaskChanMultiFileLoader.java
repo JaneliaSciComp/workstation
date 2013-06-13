@@ -25,7 +25,7 @@ public class MaskChanMultiFileLoader {
     private Collection<MaskChanDataAcceptorI> channelAcceptors;
 
     private VolumeConsistencyChecker checker = new VolumeConsistencyChecker();
-    private boolean enforcePadding;
+    private boolean enforcePadding = true;
     private boolean dimWriteback;
 
     private Logger logger = LoggerFactory.getLogger( MaskChanMultiFileLoader.class );

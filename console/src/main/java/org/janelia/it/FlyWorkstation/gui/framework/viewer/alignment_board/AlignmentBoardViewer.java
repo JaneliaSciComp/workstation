@@ -529,11 +529,14 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     repaint();
 
                     Future<Integer> freeGraphicsMemoryFuture = sampler.getEstimatedTextureMemory();
+                    Future<String> highestSupportedFuture = sampler.getHighestGlslVersion();
 
                     final Integer[] freeGraphicsMemoryArr = new Integer[ 1 ];
+                    final String[] highestSupportedArr = new String[ 1 ];
                     try {
                         // Must set the down sample rate to the newly-discovered best.
                         freeGraphicsMemoryArr[ 0 ] = freeGraphicsMemoryFuture.get( 2, TimeUnit.MINUTES );
+                        highestSupportedArr[ 0 ] = highestSupportedFuture.get( 2, TimeUnit.MINUTES );
                     } catch ( Exception ex ) {
                         ex.printStackTrace();
                         SessionMgr.getSessionMgr().handleException( ex );
@@ -541,6 +544,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
                     // 1.5Gb in Kb increments
                     logger.info( "ABV seeing free memory estimate of {}.", freeGraphicsMemoryArr[ 0 ] );
+                    logger.info( "ABV seeting highest supported version of {}.", highestSupportedArr[ 0 ] );
                     if ( freeGraphicsMemoryArr[ 0 ] == 0  ||  freeGraphicsMemoryArr[ 0 ] < LEAST_FULLSIZE_MEM )
                         alignmentBoardSettings[ 0 ].setDownSampleGuess(2.0);
                     else

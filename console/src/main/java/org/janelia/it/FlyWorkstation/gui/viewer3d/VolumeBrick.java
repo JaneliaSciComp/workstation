@@ -15,6 +15,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.media.opengl.GL2;
+import javax.media.opengl.GLCapabilities;
+import javax.media.opengl.GLProfile;
+import javax.swing.*;
 
 /**
  * VolumeTexture class draws a transparent rectangular volume with a 3D opengl texture
@@ -59,6 +62,19 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     private VolumeModel volumeModel;
 
     private Logger logger = LoggerFactory.getLogger( VolumeBrick.class );
+
+    static {
+        GLProfile profile = GLProfile.get(GLProfile.GL3);
+        final GLCapabilities capabilities = new GLCapabilities(profile);
+        capabilities.setGLProfile( profile );
+//        SwingUtilities.invokeLater(new Runnable() {
+//            public void run() {
+//                new JOCLSimpleGL3(capabilities);
+//            }
+//        });
+//
+
+    }
 
     VolumeBrick(VolumeModel volumeModel) {
         setVolumeModel( volumeModel );
@@ -266,7 +282,11 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 		double x0 = -direction * (signalTextureMediator.getVoxelMicrometers()[a1.index()] - signalTextureMediator.getVolumeMicrometers()[a1.index()]) / 2.0;
 		// compute distance between slices
 		double dx = -direction * signalTextureMediator.getVoxelMicrometers()[a1.index()];
-		// deal out the slices, like cards from a deck
+
+        reportError(gl, "Volume Brick, before setting coords.");
+
+        // deal out the slices, like cards from a deck
+        gl.glBegin(GL2.GL_TRIANGLE_STRIP);
 		for (int xi = 0; xi < sx; ++xi) {
 			// insert final coordinate into corner vectors
 			double x = x0 + xi * dx;
@@ -282,9 +302,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 			// gl.glColor3d(c, c, c);
 			// draw the quadrilateral as a triangle strip with 4 points
             // (somehow GL_QUADS never works correctly for me)
-            reportError(gl, "Volume Brick, before setting coords.");
-
-            gl.glBegin(GL2.GL_TRIANGLE_STRIP);
             setTextureCoordinates(gl, t00[0], t00[1], t00[2]);
             gl.glVertex3d(p00[0], p00[1], p00[2]);
             setTextureCoordinates(gl, t10[0], t10[1], t10[2]);
@@ -293,15 +310,14 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
             gl.glVertex3d(p01[0], p01[1], p01[2]);
             setTextureCoordinates(gl, t11[0], t11[1], t11[2]);
             gl.glVertex3d(p11[0], p11[1], p11[2]);
-            gl.glEnd();
-
-            reportError(gl, "Volume Brick, after setting coords.");
 
 			boolean bDebug = false;
 			if (bDebug)
 				printPoints(t00, t10, t01, t11);
 
 		}
+        gl.glEnd();
+        reportError(gl, "Volume Brick, after setting coords.");
 
     }
 

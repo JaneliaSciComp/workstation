@@ -22,7 +22,7 @@ import java.util.List;
  */
 public class MaskChanSingleFileLoader {
 
-    public static final int REQUIRED_AXIAL_LENGTH_DIVISIBLE = 32;
+    public static final int REQUIRED_AXIAL_LENGTH_DIVISIBLE = 64;
     private static final int FLOAT_BYTES = Float.SIZE / 8;
     private static final int LONG_BYTES = Long.SIZE / 8;
 
@@ -513,7 +513,7 @@ public class MaskChanSingleFileLoader {
                 long newVoxelCount = voxels[ i ] + voxelModCount;
                 coordCoverage[ i ] = ((float)voxels[ i ]) / ((float)newVoxelCount);
                 voxels[ i ] = newVoxelCount;
-                logger.debug("Expanding edge by " + voxelModCount);
+                logger.debug("Expanding edge by {} to {}.", voxelModCount, voxels[ i ] );
             }
         }
 

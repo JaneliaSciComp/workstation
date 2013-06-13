@@ -30,6 +30,7 @@ public class GpuSampler implements GLEventListener {
     private Logger logger = LoggerFactory.getLogger( GpuSampler.class );
 
     private int freeTexMem = 0;
+    private String highestSupportedGlsl = "";
     private AtomicBoolean isInitialized = new AtomicBoolean( false );
     private Color camoColor;
 
@@ -44,6 +45,8 @@ public class GpuSampler implements GLEventListener {
         gl2.glClear( GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT | GL2.GL_STENCIL_BUFFER_BIT );
 
         freeTexMem = getFreeTextureMemory( gl2 );
+        highestSupportedGlsl = gl2.glGetString( GL2.GL_SHADING_LANGUAGE_VERSION );
+
         isInitialized.set(true);
     }
 
@@ -87,6 +90,35 @@ public class GpuSampler implements GLEventListener {
                     }
                 }
         );
+        ExecutorService executor = Executors.newFixedThreadPool( 1 );
+        executor.execute(future);
+        return future;
+    }
+
+    public Future<String> getHighestGlslVersion() {
+        FutureTask<String> future =
+                new FutureTask<String>(new Callable<String>() {
+                    public String call() {
+                        int numLoops = 0;
+                        while ( ! isInitialized.get() ) {
+                            try {
+                                Thread.sleep( WAIT_TIME_MS );
+                                numLoops ++;
+                                if ( numLoops > MAX_WAIT_LOOPS ) {
+                                    logger.warn( "Exceeded max wait loops {} to get support level.  Returning the empty string.", MAX_WAIT_LOOPS );
+                                    return "";
+                                }
+                                logger.debug("Wait loop iteration {}.", numLoops );
+                            } catch ( Exception ex ) {
+                                logger.error( "Failed to obtain max support level.  Returning the empty string.");
+                                ex.printStackTrace();
+                                return "";
+                            }
+                        }
+                        return highestSupportedGlsl;
+                    }
+                }
+                );
         ExecutorService executor = Executors.newFixedThreadPool( 1 );
         executor.execute(future);
         return future;
