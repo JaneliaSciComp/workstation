@@ -2,7 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
+import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,8 +37,8 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     // Buffer objects for setting geometry on the GPU side.  Trying GL_TRIANGLE_STRIP at first.
     //   I need one per starting direction (x,y,z) times one for positive, one for negative.
     //
-    private FloatBuffer texCoordBuf[] = new FloatBuffer[ 6 ];
-    private FloatBuffer geometryCoordBuf[] = new FloatBuffer[ 6 ];
+    private DoubleBuffer texCoordBuf[] = new DoubleBuffer[ 6 ];
+    private DoubleBuffer geometryCoordBuf[] = new DoubleBuffer[ 6 ];
 
     // Vary these parameters to taste
 	// Rendering variables
@@ -86,7 +86,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     VolumeBrick(VolumeModel volumeModel) {
         setVolumeModel( volumeModel );
-        buildVertexBuffers();
     }
 
     /**
@@ -112,6 +111,8 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     @Override
 	public void init(GL2 gl) {
+        //buildVertexBuffers();
+
         // Avoid carrying out any operations if there is no real data.
         if ( signalTextureMediator == null  &&  maskTextureMediator == null ) {
             logger.warn("No textures for volume brick.");
@@ -570,6 +571,10 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
      * The arrays are indexed as follows:
      * 1. Offsets [ 0..2 ] are for positive direction.
      * 2. Offsets 0,3 are X; 1,4 are Y and 2,5 are Z.
+     *
+     * NOTE: where I am, I need to work when to upload the buffers, and how to differentiate texture vertex and
+     *       geometric vertex buffer values.  The calls are likely  glVertexAttribPointer and glEnableVertexAttribArray,
+     *       followed by glDrawArrays with argument of GL_TRIANGLE_STRIP.  Example seems to upload prior.
      */
     private void buildVertexBuffers() {
         /*
@@ -592,12 +597,12 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
             int numCoords = 3 * numVertices;
 
             for ( int i = 0; i < 6; i++ ) {
-                ByteBuffer texByteBuffer = ByteBuffer.allocate(numCoords * 4);
+                ByteBuffer texByteBuffer = ByteBuffer.allocate(numCoords * 8);
                 texByteBuffer.order( ByteOrder.nativeOrder() );
-                texCoordBuf[ i ] = texByteBuffer.asFloatBuffer();
-                ByteBuffer geoByteBuffer = ByteBuffer.allocate(numCoords * 4);
+                texCoordBuf[ i ] = texByteBuffer.asDoubleBuffer();
+                ByteBuffer geoByteBuffer = ByteBuffer.allocate(numCoords * 8);
                 geoByteBuffer.order(ByteOrder.nativeOrder());
-                geometryCoordBuf[ i ] = geoByteBuffer.asFloatBuffer();
+                geometryCoordBuf[ i ] = geoByteBuffer.asDoubleBuffer();
             }
 
             // Now produce the vertexes to stuff into all of the buffers.
@@ -634,21 +639,84 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
                 double third1 = -third0;
 
                 // Four points for four slice corners
-                double[] p00 = {0,0,0};
-                double[] p10 = {0,0,0};
-                double[] p11 = {0,0,0};
-                double[] p01 = {0,0,0};
+                double[] p00p = {0,0,0};
+                double[] p10p = {0,0,0};
+                double[] p11p = {0,0,0};
+                double[] p01p = {0,0,0};
 
                 // reswizzle coordinate axes back to actual X, Y, Z (except x, saved for later)
-                p00[ secondInx ] = p01[ secondInx ] = second0;
-                p10[ secondInx ] = p11[ secondInx ] = second1;
-                p00[ thirdInx ] = p10[ thirdInx ] = third0;
-                p01[ thirdInx ] = p11[ thirdInx ] = third1;
+                p00p[ secondInx ] = p01p[ secondInx ] = second0;
+                p10p[ secondInx ] = p11p[ secondInx ] = second1;
+                p00p[ thirdInx ] = p10p[ thirdInx ] = third0;
+                p01p[ thirdInx ] = p11p[ thirdInx ] = third1;
 
+                // Four negated points for four slice corners
+                double[] p00n = {0,0,0};
+                double[] p10n = {0,0,0};
+                double[] p11n = {0,0,0};
+                double[] p01n = {0,0,0};
+
+                // reswizzle coordinate axes back to actual X, Y, Z (except x, saved for later)
+                p00n[ secondInx ] = p01n[ secondInx ] = -second0;
+                p10n[ secondInx ] = p11n[ secondInx ] = -second1;
+                p00n[ thirdInx ] = p10n[ thirdInx ] = -third0;
+                p01n[ thirdInx ] = p11n[ thirdInx ] = -third1;
+
+                texCoordBuf[ firstInx ].rewind();
                 for (int sliceInx = 0; sliceInx < sliceCount; ++sliceInx) {
-                    // insert final coordinate into corner vectors
+                    // insert final coordinate into buffers
                     double sliceLoc = slice0 + sliceInx * sliceSep;
-                    p00[ firstInx ] = p01[firstInx] = p10[firstInx] = p11[firstInx] = sliceLoc;
+                    p00p[ firstInx ] = p01p[firstInx] = p10p[firstInx] = p11p[firstInx] = sliceLoc;
+
+                    double[] t00 = signalTextureMediator.textureCoordFromVoxelCoord( p00p );
+                    double[] t01 = signalTextureMediator.textureCoordFromVoxelCoord( p01p );
+                    double[] t10 = signalTextureMediator.textureCoordFromVoxelCoord( p10p );
+                    double[] t11 = signalTextureMediator.textureCoordFromVoxelCoord( p11p );
+
+
+                    /*
+                    			// Compute texture coordinates
+			// color from black(back) to white(front) for debugging.
+			// double c = xi / (double)sx;
+			// gl.glColor3d(c, c, c);
+			// draw the quadrilateral as a triangle strip with 4 points
+            // (somehow GL_QUADS never works correctly for me)
+            setTextureCoordinates(gl, t00[0], t00[1], t00[2]);
+            gl.glVertex3d(p00[0], p00[1], p00[2]);
+            setTextureCoordinates(gl, t10[0], t10[1], t10[2]);
+            gl.glVertex3d(p10[0], p10[1], p10[2]);
+            setTextureCoordinates(gl, t01[0], t01[1], t01[2]);
+            gl.glVertex3d(p01[0], p01[1], p01[2]);
+            setTextureCoordinates(gl, t11[0], t11[1], t11[2]);
+            gl.glVertex3d(p11[0], p11[1], p11[2]);
+
+                     */
+                    texCoordBuf[ firstInx ].put( p00p );
+                    texCoordBuf[ firstInx ].put( p10p );
+                    texCoordBuf[ firstInx ].put( p01p );
+                    texCoordBuf[ firstInx ].put( p11p );
+
+                    geometryCoordBuf[ firstInx ].put( t00 );
+                    geometryCoordBuf[ firstInx ].put( t10 );
+                    geometryCoordBuf[ firstInx ].put( t01 );
+                    geometryCoordBuf[ firstInx ].put( t11 );
+
+                    // Now, take care of the negative-direction alternate to this buffer pair.
+                    t00 = signalTextureMediator.textureCoordFromVoxelCoord( p00n );
+                    t01 = signalTextureMediator.textureCoordFromVoxelCoord( p01n );
+                    t10 = signalTextureMediator.textureCoordFromVoxelCoord( p10n );
+                    t11 = signalTextureMediator.textureCoordFromVoxelCoord( p11n );
+
+                    texCoordBuf[ firstInx + 3 ].put( p00n );
+                    texCoordBuf[ firstInx + 3 ].put( p10n );
+                    texCoordBuf[ firstInx + 3 ].put( p01n );
+                    texCoordBuf[ firstInx + 3 ].put( p11n );
+
+                    geometryCoordBuf[ firstInx + 3 ].put( t00 );
+                    geometryCoordBuf[ firstInx + 3 ].put( t10 );
+                    geometryCoordBuf[ firstInx + 3 ].put( t01 );
+                    geometryCoordBuf[ firstInx + 3 ].put( t11 );
+
                 }
 
                 /*
