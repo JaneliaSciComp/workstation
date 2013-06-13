@@ -128,7 +128,19 @@ public class ViewerManager {
 		viewerContainer.setSecViewerVisible(true);
 		showEntityInViewerPane(rootedEntity, viewerContainer.getSecViewerPane(), callable);
 	}
-	
+
+    public void showLoadingIndicatorInInspector() {
+        SessionMgr.getBrowser().getEntityDetailsPanel().showLoadingIndicator();
+    }
+    
+    public void showLoadingIndicatorInActiveViewer() {
+        SessionMgr.getBrowser().getViewerManager().getActiveViewer().showLoadingIndicator();
+    }
+    
+    public void showEntityInInspector(RootedEntity rootedEntity) {
+        SessionMgr.getBrowser().getEntityDetailsPanel().loadRootedEntity(rootedEntity, null);
+    }
+    
 	public void showEntityInActiveViewer(RootedEntity rootedEntity) {
 		showEntityInActiveViewer(rootedEntity, null);
 	}

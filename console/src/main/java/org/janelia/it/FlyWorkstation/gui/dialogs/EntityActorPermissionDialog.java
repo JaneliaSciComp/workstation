@@ -12,6 +12,7 @@ import net.miginfocom.swing.MigLayout;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.access.Accessibility;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityDetailsPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
@@ -28,7 +29,7 @@ import org.janelia.it.jacs.model.user_data.Subject;
  */
 public class EntityActorPermissionDialog extends ModalDialog implements Accessibility {
     
-	private EntityDetailsDialog parentDialog;
+	private EntityDetailsPanel parent;
 	
     private JPanel attrPanel;
     private JComboBox subjectCombobox;
@@ -39,9 +40,9 @@ public class EntityActorPermissionDialog extends ModalDialog implements Accessib
     private Entity entity;
     private EntityActorPermission eap;
     
-    public EntityActorPermissionDialog(EntityDetailsDialog parentDialog) {
+    public EntityActorPermissionDialog(EntityDetailsPanel parent) {
 
-    	this.parentDialog = parentDialog;
+    	this.parent = parent;
     	
         setTitle("Add permission");
         
@@ -116,7 +117,7 @@ public class EntityActorPermissionDialog extends ModalDialog implements Accessib
 		model.removeAllElements();
 		
 		Subject currSubject = null;
-		for(Subject subject : parentDialog.getUnusedSubjects()) {
+		for(Subject subject : parent.getUnusedSubjects()) {
 			if (entity!=null && !entity.getOwnerKey().equals(subject.getKey())) {
 				model.addElement(subject);
 			}
@@ -153,7 +154,7 @@ public class EntityActorPermissionDialog extends ModalDialog implements Accessib
     
     private void saveAndClose() {
         
-    	Utils.setWaitingCursor(parentDialog);
+    	Utils.setWaitingCursor(parent);
     	
     	final Subject subject = (Subject)subjectCombobox.getSelectedItem();
     	final boolean recursive = recursiveCheckbox.isSelected();
@@ -176,17 +177,17 @@ public class EntityActorPermissionDialog extends ModalDialog implements Accessib
 			
 			@Override
 			protected void hadSuccess() {	
-				parentDialog.refresh();
-				Utils.setDefaultCursor(parentDialog);
+				parent.refresh();
+				Utils.setDefaultCursor(parent);
 			}
 			
 			@Override
 			protected void hadError(Throwable error) {
 				SessionMgr.getSessionMgr().handleException(error);
-				Utils.setDefaultCursor(parentDialog);
+				Utils.setDefaultCursor(parent);
 			}
 		};
-		worker.setProgressMonitor(new IndeterminateProgressMonitor(parentDialog, "Granting permissions...", ""));
+		worker.setProgressMonitor(new IndeterminateProgressMonitor(parent, "Granting permissions...", ""));
 		worker.execute();
 
         setVisible(false);

@@ -1,6 +1,18 @@
 package org.janelia.it.FlyWorkstation.gui.framework.console;
 
-import com.google.common.collect.ComparisonChain;
+import java.awt.*;
+import java.awt.event.WindowEvent;
+import java.awt.print.PageFormat;
+import java.awt.print.PrinterJob;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+import javax.swing.*;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.access.TaskRequestStatusObserverAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskRequestState;
 import org.janelia.it.FlyWorkstation.api.entity_model.fundtype.TaskRequestStatus;
@@ -19,36 +31,18 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.ImageCache;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.LayersPanel;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.gui.util.JOutlookBar;
-import org.janelia.it.FlyWorkstation.gui.util.JOutlookBar2;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.SliceViewViewer;
-import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
-import org.janelia.it.FlyWorkstation.model.domain.EntityWrapperFactory;
-import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.shared.util.FreeMemoryWatcher;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableComponent;
 import org.janelia.it.FlyWorkstation.shared.util.PrintableImage;
 import org.janelia.it.FlyWorkstation.shared.util.SystemInfo;
 import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.jacs.model.entity.EntityConstants;
-import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.WindowEvent;
-import java.awt.print.PageFormat;
-import java.awt.print.PrinterJob;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.io.File;
-import java.io.FilenameFilter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import com.google.common.collect.ComparisonChain;
 
 /**
  * Created by IntelliJ IDEA.
@@ -92,6 +86,8 @@ public class Browser extends JFrame implements Cloneable {
     private static Class menuBarClass;
     private JSplitPane centerLeftHorizontalSplitPane;
     private JSplitPane centerRightHorizontalSplitPane;
+    private JSplitPane leftVerticalSplitPane;
+    
     private JSplitPane jSplitPaneBottom;
     private JSplitPane jSplitPaneMain;
     private JPanel allPanelsView = new JPanel();
@@ -112,11 +108,12 @@ public class Browser extends JFrame implements Cloneable {
     private BorderLayout borderLayout = new BorderLayout();
     //    private Editor masterEditor;
 //    private Editor subEditor;
-    private JOutlookBar outlookBar;
+//    private JOutlookBar outlookBar;
     //    private FileOutline fileOutline;
     private SessionOutline sessionOutline;
     private EntityOutline entityOutline;
-    private EntityWrapperOutline entityWrapperOutline;
+    private EntityDetailsPanel entityDetailsPanel;
+//    private EntityWrapperOutline entityWrapperOutline;
     private TaskOutline taskOutline;
 
     private VerticalPanelPicker rightPanel;
@@ -270,27 +267,29 @@ public class Browser extends JFrame implements Cloneable {
 			}
 		};
 		
-        entityWrapperOutline = new EntityWrapperOutline() {
-            @Override
-            public List<EntityWrapper> loadRootList() throws Exception {
-                List<Entity> roots = ModelMgr.getModelMgr().getCommonRootEntities();
-                Collections.sort(roots, commonRootComparator);
-                List<EntityWrapper> wrappers = new ArrayList<EntityWrapper>();
-                for(Entity rootEntity : roots) {
-                    if (rootEntity.getName().equals(EntityConstants.NAME_ALIGNMENT_BOARDS)) continue;
-                    EntityData ed = new EntityData();
-                    ed.setChildEntity(rootEntity);
-                    RootedEntity rootedEntity = new RootedEntity("/e_"+rootEntity.getId(), ed);
-                    try {
-                        wrappers.add(EntityWrapperFactory.wrap(rootedEntity));
-                    }
-                    catch (IllegalArgumentException e) {
-                        log.warn("Can't add child: "+rootedEntity.getName()+", "+e);
-                    }
-                }
-                return wrappers;
-            }
-        };
+		entityDetailsPanel = new EntityDetailsPanel();
+		
+//        entityWrapperOutline = new EntityWrapperOutline() {
+//            @Override
+//            public List<EntityWrapper> loadRootList() throws Exception {
+//                List<Entity> roots = ModelMgr.getModelMgr().getCommonRootEntities();
+//                Collections.sort(roots, commonRootComparator);
+//                List<EntityWrapper> wrappers = new ArrayList<EntityWrapper>();
+//                for(Entity rootEntity : roots) {
+//                    if (rootEntity.getName().equals(EntityConstants.NAME_ALIGNMENT_BOARDS)) continue;
+//                    EntityData ed = new EntityData();
+//                    ed.setChildEntity(rootEntity);
+//                    RootedEntity rootedEntity = new RootedEntity("/e_"+rootEntity.getId(), ed);
+//                    try {
+//                        wrappers.add(EntityWrapperFactory.wrap(rootedEntity));
+//                    }
+//                    catch (IllegalArgumentException e) {
+//                        log.warn("Can't add child: "+rootedEntity.getName()+", "+e);
+//                    }
+//                }
+//                return wrappers;
+//            }
+//        };
 		
         taskOutline = new TaskOutline(this);
         
@@ -315,58 +314,58 @@ public class Browser extends JFrame implements Cloneable {
         dataSetListDialog = new DataSetListDialog();
         
         ontologyOutline.setPreferredSize(new Dimension());
-
-        outlookBar = new JOutlookBar2();
-        outlookBar.addBar(BAR_DATA, Icons.getIcon("folders_explorer_medium.png"), entityOutline);
-        outlookBar.addBar(BAR_SAMPLES, Icons.getIcon("folders_explorer_medium.png"), entityWrapperOutline);
-        outlookBar.addBar(BAR_SESSIONS, Icons.getIcon("cart_medium.png"), sessionOutline);
-        outlookBar.addBar(BAR_TASKS, Icons.getIcon("cog_medium.png"), taskOutline);
         
-        outlookBar.addPropertyChangeListener("visibleBar", new PropertyChangeListener() {
-        	public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
-
-        	    log.info("Changing viewable outline to: "+outlookBar.getVisibleBarName());
-                
-        	    Integer oldValue = (Integer)propertyChangeEvent.getOldValue();
-        	    String oldBarName = oldValue>=0 ? outlookBar.getBarNames().get(oldValue) : null;
-        	    
-        	    // Set the perspective
-        	    String n = outlookBar.getVisibleBarName();
-        	    if (n.equals(BAR_DATA)) {
-        	        setPerspective(Perspective.ImageBrowser);
-        	    } 
-        	    else if (n.equals(BAR_SAMPLES)) {
-        	        setPerspective(Perspective.AlignmentBoard);
-        	    }
-        	    else if (n.equals(BAR_SESSIONS)) {
-        	        setPerspective(Perspective.AnnotationSession);
-        	    }
-        	    else if (n.equals(BAR_TASKS)) {
-        	        setPerspective(Perspective.TaskMonitoring);
-        	    }
-        	    else {
-        	        log.warn("Unrecognized bar: "+n);
-        	    }
-				
-        	    // Activate the outline, and deactivate all others
-				for(String bar : outlookBar.getBarNames()) {
-				    JComponent comp = outlookBar.getBar(bar);
-                    if (!(comp instanceof ActivatableView)) continue;
-				    if (bar.equals(outlookBar.getVisibleBarName())) {
-				        ((ActivatableView)comp).activate();
-				    }
-				    else if (bar.equals(oldBarName)){
-	                    ((ActivatableView)comp).deactivate();    
-				    }
-				}
-				
-        		// clear annotation session whenever the user moves away from the session outline
-				JComponent activeComp = outlookBar.getBar(outlookBar.getVisibleBarName());
-        		if (!(activeComp instanceof SessionOutline)) {
-        			ModelMgr.getModelMgr().setCurrentAnnotationSession(null);
-        		}
-            }
-        });
+//        outlookBar = new JOutlookBar2();
+//        outlookBar.addBar(BAR_DATA, Icons.getIcon("folders_explorer_medium.png"), entityOutline);
+//        outlookBar.addBar(BAR_SAMPLES, Icons.getIcon("folders_explorer_medium.png"), entityWrapperOutline);
+//        outlookBar.addBar(BAR_SESSIONS, Icons.getIcon("cart_medium.png"), sessionOutline);
+//        outlookBar.addBar(BAR_TASKS, Icons.getIcon("cog_medium.png"), taskOutline);
+//        
+//        outlookBar.addPropertyChangeListener("visibleBar", new PropertyChangeListener() {
+//        	public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
+//
+//        	    log.info("Changing viewable outline to: "+outlookBar.getVisibleBarName());
+//                
+//        	    Integer oldValue = (Integer)propertyChangeEvent.getOldValue();
+//        	    String oldBarName = oldValue>=0 ? outlookBar.getBarNames().get(oldValue) : null;
+//        	    
+//        	    // Set the perspective
+//        	    String n = outlookBar.getVisibleBarName();
+//        	    if (n.equals(BAR_DATA)) {
+//        	        setPerspective(Perspective.ImageBrowser);
+//        	    } 
+//        	    else if (n.equals(BAR_SAMPLES)) {
+//        	        setPerspective(Perspective.AlignmentBoard);
+//        	    }
+//        	    else if (n.equals(BAR_SESSIONS)) {
+//        	        setPerspective(Perspective.AnnotationSession);
+//        	    }
+//        	    else if (n.equals(BAR_TASKS)) {
+//        	        setPerspective(Perspective.TaskMonitoring);
+//        	    }
+//        	    else {
+//        	        log.warn("Unrecognized bar: "+n);
+//        	    }
+//				
+//        	    // Activate the outline, and deactivate all others
+//				for(String bar : outlookBar.getBarNames()) {
+//				    JComponent comp = outlookBar.getBar(bar);
+//                    if (!(comp instanceof ActivatableView)) continue;
+//				    if (bar.equals(outlookBar.getVisibleBarName())) {
+//				        ((ActivatableView)comp).activate();
+//				    }
+//				    else if (bar.equals(oldBarName)){
+//	                    ((ActivatableView)comp).deactivate();    
+//				    }
+//				}
+//				
+//        		// clear annotation session whenever the user moves away from the session outline
+//				JComponent activeComp = outlookBar.getBar(outlookBar.getVisibleBarName());
+//        		if (!(activeComp instanceof SessionOutline)) {
+//        			ModelMgr.getModelMgr().setCurrentAnnotationSession(null);
+//        		}
+//            }
+//        });
           
         BrowserPosition consolePosition = (BrowserPosition) SessionMgr.getSessionMgr().getModelProperty(BROWSER_POSITION);
         if (null == consolePosition) {
@@ -395,8 +394,14 @@ public class Browser extends JFrame implements Cloneable {
         centerRightHorizontalSplitPane.setOneTouchExpandable(true);
         centerRightHorizontalSplitPane.setDividerLocation(consolePosition.getHorizontalRightDividerLocation());
         centerRightHorizontalSplitPane.setBorder(BorderFactory.createEmptyBorder());
+
+        leftVerticalSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, false, entityOutline, entityDetailsPanel);
+        leftVerticalSplitPane.setMinimumSize(new Dimension(0, 400));
+        leftVerticalSplitPane.setOneTouchExpandable(true);
+        leftVerticalSplitPane.setDividerLocation(consolePosition.getVerticalDividerLocation());
+        leftVerticalSplitPane.setBorder(BorderFactory.createEmptyBorder());
         
-        centerLeftHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, outlookBar, centerRightHorizontalSplitPane);
+        centerLeftHorizontalSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, false, leftVerticalSplitPane, centerRightHorizontalSplitPane);
         centerLeftHorizontalSplitPane.setMinimumSize(new Dimension(400, 0));
         centerLeftHorizontalSplitPane.setOneTouchExpandable(true);
         centerLeftHorizontalSplitPane.setDividerLocation(consolePosition.getHorizontalLeftDividerLocation());
@@ -427,6 +432,8 @@ public class Browser extends JFrame implements Cloneable {
         SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
+		        entityOutline.activate();
+		        
 			    setPerspective(Perspective.ImageBrowser);
 //
 //			    // Temporary code for testing with a single alignment board
@@ -1267,6 +1274,7 @@ public class Browser extends JFrame implements Cloneable {
 //                    dataSplitPaneVertical.getDividerLocation());
             position.setHorizontalLeftDividerLocation(centerLeftHorizontalSplitPane.getDividerLocation());
             position.setHorizontalRightDividerLocation(centerRightHorizontalSplitPane.getDividerLocation());
+            position.setVerticalDividerLocation(leftVerticalSplitPane.getDividerLocation());
             
             SessionMgr.getSessionMgr().setModelProperty(BROWSER_POSITION, position);
             SessionMgr.getSessionMgr().setModelProperty(SEARCH_HISTORY, generalSearchDialog.getSearchHistory());
@@ -1332,18 +1340,19 @@ public class Browser extends JFrame implements Cloneable {
 		return viewerManager;
 	}
 
-    public Refreshable getActiveOutline() {
-    	return (Refreshable)outlookBar.getVisibleBarComponent();
-    }
-
     public EntityOutline getEntityOutline() {
         return entityOutline;
     }
     
     public EntityWrapperOutline getEntityWrapperOutline() {
-        return entityWrapperOutline;
+//        return entityWrapperOutline;
+        throw new UnsupportedOperationException();
     }
     
+    public EntityDetailsPanel getEntityDetailsPanel() {
+        return entityDetailsPanel;
+    }
+
     public OntologyOutline getOntologyOutline() {
         return ontologyOutline;
     }
@@ -1483,33 +1492,33 @@ public class Browser extends JFrame implements Cloneable {
 //        sessionOutline.selectSession(currentAnnotationSessionTaskId);
 //    }
 
-    public JOutlookBar getOutlookBar() {
-        return outlookBar;
-    }
+//    public JOutlookBar getOutlookBar() {
+//        return outlookBar;
+//    }
     
     public void setPerspective(Perspective perspective) {
         log.info("Setting perspective: {}",perspective);
         switch (perspective) {
         case AlignmentBoard:
-            outlookBar.setVisibleBarByName(Browser.BAR_SAMPLES);
+//            outlookBar.setVisibleBarByName(Browser.BAR_SAMPLES);
             selectRightPanel(OUTLINE_LAYERS);
             viewerManager.clearAllViewers();
             viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), AlignmentBoardViewer.class);
             break;
         case SplitPicker:
-            outlookBar.setVisibleBarByName(Browser.BAR_DATA);
+//            outlookBar.setVisibleBarByName(Browser.BAR_DATA);
             selectRightPanel(OUTLINE_SPLIT_PICKER);
             viewerManager.clearAllViewers();
             viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), IconDemoPanel.class);
             break;
         case AnnotationSession:
-            outlookBar.setVisibleBarByName(Browser.BAR_SESSIONS);
+//            outlookBar.setVisibleBarByName(Browser.BAR_SESSIONS);
             selectRightPanel(OUTLINE_ONTOLOGY);
             viewerManager.clearAllViewers();
             viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), IconDemoPanel.class);
             break;
         case TaskMonitoring:
-            outlookBar.setVisibleBarByName(Browser.BAR_TASKS);
+//            outlookBar.setVisibleBarByName(Browser.BAR_TASKS);
             selectRightPanel(OUTLINE_ONTOLOGY);
             viewerManager.clearAllViewers();
             break;
@@ -1521,7 +1530,7 @@ public class Browser extends JFrame implements Cloneable {
             break;
         case ImageBrowser:
         default:
-            outlookBar.setVisibleBarByName(Browser.BAR_DATA);
+//            outlookBar.setVisibleBarByName(Browser.BAR_DATA);
             selectRightPanel(OUTLINE_ONTOLOGY);
             viewerManager.clearAllViewers();
             viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), IconDemoPanel.class);

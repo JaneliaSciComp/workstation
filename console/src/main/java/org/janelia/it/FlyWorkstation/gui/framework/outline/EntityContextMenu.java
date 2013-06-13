@@ -119,7 +119,7 @@ public class EntityContextMenu extends JPopupMenu {
         setNextAddRequiresSeparator(true);
         add(getMergeItem());
         add(getSortBySimilarityItem());
-        add(getCreateSessionItem());
+//        add(getCreateSessionItem());
 
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
@@ -237,7 +237,7 @@ public class EntityContextMenu extends JPopupMenu {
         detailsMenuItem.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                new EntityDetailsDialog().showForRootedEntity(rootedEntity, EntityDetailsDialog.TAB_NAME_PERMISSIONS);
+                new EntityDetailsDialog().showForRootedEntity(rootedEntity, EntityDetailsPanel.TAB_NAME_PERMISSIONS);
             }
         });
         return detailsMenuItem;

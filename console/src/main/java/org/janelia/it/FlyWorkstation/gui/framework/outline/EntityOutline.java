@@ -607,26 +607,29 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 		// TODO: should decouple this somehow
 		
 		if (!getDynamicTree().childrenAreLoaded(node)) {
-			SessionMgr.getBrowser().getViewerManager().getActiveViewer().showLoadingIndicator();
+		    
+		    SessionMgr.getBrowser().getViewerManager().showLoadingIndicatorInActiveViewer();
+		    SessionMgr.getBrowser().getViewerManager().showLoadingIndicatorInInspector();
+			
 			// Load the children before displaying them
         	getDynamicTree().expandNodeWithLazyChildren(node, new Callable<Void>() {
 				@Override
 				public Void call() throws Exception {
 				    log.debug("Got lazy nodes, loading entity in viewer");
-					loadEntityInViewer(finalCurrUniqueId);
+					loadEntityInViewers(finalCurrUniqueId);
 					return null;
 				}
 				
 			});
 		} 
 		else {
-			loadEntityInViewer(finalCurrUniqueId);
+			loadEntityInViewers(finalCurrUniqueId);
 		}
 	}
 	
-	private void loadEntityInViewer(String uniqueId) {
+	private void loadEntityInViewers(String uniqueId) {
 		
-	    log.debug("loadEntityInViewer: "+uniqueId);
+	    log.debug("loadEntityInViewers: "+uniqueId);
 		if (uniqueId==null) return;
 
 		DefaultMutableTreeNode node = getNodeByUniqueId(uniqueId);
@@ -640,5 +643,6 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 		RootedEntity rootedEntity = new RootedEntity(uniqueId, getEntityData(node));
 		log.debug("showEntityInActiveViewer: "+rootedEntity.getName());
 		SessionMgr.getBrowser().getViewerManager().showEntityInActiveViewer(rootedEntity);
+		SessionMgr.getBrowser().getViewerManager().showEntityInInspector(rootedEntity);
 	}
 }
