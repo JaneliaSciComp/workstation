@@ -55,7 +55,7 @@ class MipRenderer
         gl.glPushAttrib(GL2.GL_TRANSFORM_BIT);
         gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glPushMatrix();
-        //updateProjection(gl);
+        updateProjection(gl);
         gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glPushMatrix();
         gl.glLoadIdentity();
