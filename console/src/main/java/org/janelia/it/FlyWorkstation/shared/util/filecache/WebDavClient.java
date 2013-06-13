@@ -26,7 +26,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.*;
+import java.net.Authenticator;
+import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.PasswordAuthentication;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -41,7 +48,9 @@ public class WebDavClient {
 
     public static final String JACS_WEBDAV_BASE_URL = "http://jacs.int.janelia.org/WebDAV";
 
-    private String baseUrl;
+    private String protocol;
+    private String host;
+    private String basePath;
     private HttpClient httpClient;
     private String uploadClientHostAddress;
     private String uploadClientStartTimestamp;
@@ -56,11 +65,22 @@ public class WebDavClient {
      * @param  maxConnectionsPerHost  the default maximum number of connections
      *                                allowed for a given host config.
      * @param  maxTotalConnections    the maximum number of connections allowed.
+     *
+     * @throws IllegalArgumentException
+     *   if the baseUrl cannot be parsed.
      */
     public WebDavClient(String baseUrl,
                         int maxConnectionsPerHost,
                         int maxTotalConnections) {
-        this.baseUrl = baseUrl;
+        try {
+            final URL url = new URL(baseUrl);
+            this.protocol = url.getProtocol();
+            this.host = url.getHost();
+            this.basePath = url.getPath();
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("failed to parse base URL: " + baseUrl, e);
+        }
+
         MultiThreadedHttpConnectionManager mgr = new MultiThreadedHttpConnectionManager();
         HttpConnectionManagerParams managerParams = mgr.getParams();
         managerParams.setDefaultMaxConnectionsPerHost(maxConnectionsPerHost); // default is 2
@@ -96,7 +116,9 @@ public class WebDavClient {
      * Constructs an empty client for testing.
      */
     protected WebDavClient() {
-        this.baseUrl = "file:";
+        this.protocol = "file";
+        this.host = "";
+        this.basePath = "";
         this.httpClient = null;
     }
 
@@ -117,8 +139,22 @@ public class WebDavClient {
      * @throws MalformedURLException
      *   if the URL cannot be constructed.
      */
-    public URL getWebDavUrl(String standardPath) throws MalformedURLException {
-        return new URL(baseUrl + standardPath);
+    public URL getWebDavUrl(String standardPath)
+            throws MalformedURLException {
+        URL url;
+        try {
+            // create URI so that path is properly encoded
+            final URI uri = new URI(protocol,
+                                    host,
+                                    basePath + standardPath,
+                                    null);
+            url = uri.toURL();
+        } catch (URISyntaxException e) {
+            MalformedURLException wrapped = new MalformedURLException(e.getMessage());
+            wrapped.initCause(e);
+            throw wrapped;
+        }
+        return url;
     }
 
     /**

@@ -157,4 +157,14 @@ public class WebDavClientTest extends TestCase {
                 webDavFile.getKilobytes());
     }
 
+    public void testGetWebDavUrl() throws Exception {
+        final String path = "/path with 25% /bad/ \\chars\\.txt";
+        final String expectedUrlString =
+                "http://jacs.int.janelia.org/WebDAV/path%20with%2025%25%20/bad/%20%5Cchars%5C.txt";
+        final URL url = client.getWebDavUrl(path);
+        Assert.assertEquals("invalid URL string returned for path '" + path + "'",
+                            expectedUrlString,
+                            url.toString());
+    }
+
 }
