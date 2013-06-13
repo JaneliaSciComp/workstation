@@ -30,6 +30,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
+import javax.media.opengl.GLProfile;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.EtchedBorder;
@@ -56,6 +57,7 @@ public class QuadViewUi extends JPanel
 	private static final long serialVersionUID = 1L;
 	// private static final Logger log = LoggerFactory.getLogger(QuadViewUi.class);
 
+	private boolean bAllowOrthoView = false;
 	// One shared camera for all viewers.
 	// (there's only one viewer now actually, but you know...)
 	private BasicObservableCamera3d camera = new BasicObservableCamera3d();
@@ -261,11 +263,13 @@ public class QuadViewUi extends JPanel
 	}
 
 	// Four quadrants for orthogonal views
+	//
+	GLContextSharer orthoViewContextSharer = new GLContextSharer(GLProfile.get(GLProfile.GL2));
 	// TODO obsolete zViewerPanel in favor of OrthogonalPanel
 	JComponent nwViewer = zViewerPanel; // should be same as Z...
-	OrthogonalPanel neViewer = new OrthogonalPanel(CoordinateAxis.X);
-	OrthogonalPanel swViewer = new OrthogonalPanel(CoordinateAxis.Y);
-	OrthogonalPanel seViewer = new OrthogonalPanel(CoordinateAxis.Z); // TODO 3D view
+	OrthogonalPanel neViewer = new OrthogonalPanel(CoordinateAxis.X, orthoViewContextSharer);
+	OrthogonalPanel swViewer = new OrthogonalPanel(CoordinateAxis.Y, orthoViewContextSharer);
+	OrthogonalPanel seViewer = new OrthogonalPanel(CoordinateAxis.Z, orthoViewContextSharer); // TODO 3D view
 	
 	private void setOrthogonalMode() {
 		nwViewer.setVisible(true);
@@ -695,15 +699,18 @@ public class QuadViewUi extends JPanel
 		
 		toolBar.addSeparator();
 		
-		JButton orthogonalModeButton = new JButton("");
-		orthogonalModeButton.setAction(orthogonalModeAction);
-		orthogonalModeButton.setMargin(new Insets(0, 0, 0, 0));
-		orthogonalModeButton.setHideActionText(true);
-		orthogonalModeButton.setFocusable(false);
-		toolBar.add(orthogonalModeButton);
 		// Temporarily disable orthogonal mode button for next release
 		// (until feature is done)
-		orthogonalModeButton.setEnabled(false);
+		if (bAllowOrthoView) {
+			JButton orthogonalModeButton = new JButton("");
+			orthogonalModeButton.setAction(orthogonalModeAction);
+			orthogonalModeButton.setMargin(new Insets(0, 0, 0, 0));
+			orthogonalModeButton.setHideActionText(true);
+			orthogonalModeButton.setFocusable(false);
+			toolBar.add(orthogonalModeButton);
+		} else {
+			// orthogonalModeButton.setEnabled(false);
+		}
 		
 		return toolBarPanel;
 	}

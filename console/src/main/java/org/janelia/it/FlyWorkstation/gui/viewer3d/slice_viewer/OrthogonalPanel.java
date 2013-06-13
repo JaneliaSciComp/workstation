@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 
+import javax.media.opengl.GLContext;
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
@@ -41,6 +42,19 @@ extends JPanel
 	public OrthogonalPanel(CoordinateAxis axis) {
 		this.axis = axis;
 		viewer = new OrthogonalViewer(axis);
+		init();
+	}	
+	
+	public OrthogonalPanel(CoordinateAxis axis, GLContextSharer contextSharer) {
+		this.axis = axis;
+		viewer = new OrthogonalViewer(axis,
+				contextSharer.getCapabilities(),
+				contextSharer.getChooser(),
+				contextSharer.getContext());
+		init();
+	}
+
+	private void init() {
 		spinner.setModel(spinnerNumberModel);
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		add(viewer);
@@ -73,7 +87,7 @@ extends JPanel
 				setSlice(slider.getValue());
 			}
 		});
-	}	
+	}
 	
 	/**
 	 * Update slider and spinner after camera motion

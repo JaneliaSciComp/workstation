@@ -5,6 +5,12 @@ import java.awt.Dimension;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 
+import javax.media.opengl.GLCapabilities;
+import javax.media.opengl.GLCapabilitiesChooser;
+import javax.media.opengl.GLContext;
+import javax.media.opengl.GLProfile;
+import javax.media.opengl.awt.GLJPanel;
+
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BaseGLViewer;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d;
@@ -18,7 +24,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
  * @author brunsc
  *
  */
-public class OrthogonalViewer extends BaseGLViewer
+public class OrthogonalViewer // extends BaseGLViewer
+extends GLJPanel
 {
 	private Camera3d camera;
 	private Viewport viewport;
@@ -27,40 +34,29 @@ public class OrthogonalViewer extends BaseGLViewer
 	private SliceRenderer renderer = new SliceRenderer();
 	
 	public OrthogonalViewer(CoordinateAxis axis) {
-		this.viewAxis = axis;
-		addGLEventListener(renderer);
-		renderer.setBackgroundColor(Color.pink); // TODO set to black
+		init(axis);
 	}
 	
+	public OrthogonalViewer(CoordinateAxis axis, 
+			GLCapabilities capabilities,
+			GLCapabilitiesChooser chooser,
+			GLContext sharedContext) 
+	{
+		super(capabilities, chooser, sharedContext);
+		init(axis);
+	}
+	
+	private void init(CoordinateAxis axis) {
+		this.viewAxis = axis;
+		addGLEventListener(renderer);
+		renderer.setBackgroundColor(Color.pink); // TODO set to black		
+	}
+
 	public void setCamera(ObservableCamera3d camera) {
 		this.camera = camera;
 	}
 	
 	public void setVolumeImage3d(VolumeImage3d volume) {
 		this.volume = volume;
-	}
-
-	@Override
-	public void mouseClicked(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void mouseDragged(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void mouseMoved(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void mouseWheelMoved(MouseWheelEvent e) {
-		// TODO Auto-generated method stub
-		
 	}
 }
