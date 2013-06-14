@@ -273,6 +273,9 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                 ModelMgr.getModelMgr().loadLazyEntity(commonRoot, false);
                 RootedEntity commonRootedEntity = new RootedEntity(commonRoot);
                 RootedEntity abRootedEntity = commonRootedEntity.getChildById(alignmentBoardId);
+                if (abRootedEntity==null) {
+                    throw new IllegalStateException("Alignment board does not exist");
+                }
                 this.abContext = new AlignmentBoardContext(abRootedEntity);
                 log.debug("loading ancestors for alignment board: {}",abContext);
                 loadAncestors(abContext);
@@ -306,10 +309,16 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                     List<Entity> compartmentSets =
                             ModelMgr.getModelMgr().getEntitiesByTypeName(EntityConstants.TYPE_COMPARTMENT_SET);
                     if ( compartmentSets != null  &&  compartmentSets.size() > 0 ) {
-                        CompartmentSet set = new CompartmentSet( new RootedEntity( compartmentSets.get( 0 ) ) );
-                        set.loadContextualizedChildren( context.getAlignmentContext() );
-                        alignmentBoardContext = abContext; // Set this up early, as it is needed here.
-                        getAlignmentBoardContext().addNewAlignedEntity( set );
+                        
+                        for(Entity compartmentSetEntity : compartmentSets) {
+                            CompartmentSet compartmentSet = new CompartmentSet( new RootedEntity( compartmentSetEntity ) );
+                            compartmentSet.loadContextualizedChildren( context.getAlignmentContext() );
+                            if (!compartmentSet.getChildren().isEmpty()) {
+                                abContext.addNewAlignedEntity( compartmentSet );
+                                return;
+                            }
+                        }
+                        
                     }
                 }
             }

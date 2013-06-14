@@ -91,6 +91,7 @@ public class CompartmentSet extends AlignedEntityWrapper implements Viewable2d, 
                         ModelMgr.getModelMgr().loadLazyEntity( child, false );
                         Compartment compartmentWrapper = new Compartment( new RootedEntity( child ) );
                         compartmentSet.add( compartmentWrapper );
+                        addChild(compartmentWrapper);
 
                     }
                 }

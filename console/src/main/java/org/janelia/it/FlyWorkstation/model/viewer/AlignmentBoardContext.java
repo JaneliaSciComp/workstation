@@ -186,7 +186,6 @@ public class AlignmentBoardContext extends AlignedItem {
                     AlignedItem alignedItem = ModelMgr.getModelMgr().addAlignedItem(parentAlignedItem, child);
                     alignedItem.loadContextualizedChildren(getAlignmentContext());
                     alignedItem.setIsVisible(true);
-
                 }
 
                 events.add(new AlignmentBoardItemChangeEvent(this, parentAlignedItem, ChangeType.Added) );

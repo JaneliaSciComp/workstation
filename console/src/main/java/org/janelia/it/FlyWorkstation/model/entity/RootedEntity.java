@@ -84,6 +84,7 @@ public class RootedEntity {
     }
     
 	public RootedEntity getChild(EntityData childEd) {
+	    if (childEd==null) return null;
 		return new RootedEntity(getUniqueId()+"/ed_"+childEd.getId()+"/e_"+childEd.getChildEntity().getId(), childEd);
 	}
 	
