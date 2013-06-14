@@ -88,115 +88,72 @@ public class WebDavUploaderTest extends TestCase {
     }
 
     public void testDerivePathsForUnix() throws Exception {
-
-
-        List<File> fileList = new ArrayList<File>();
-        final String[] clientPaths = {
-                "/a/b/c/root/d/e/f1.mip",
-                "/a/b/c/root/d/e/f2.mip",
-                "/a/b/c/root/d/f3.mip",
-                "/a/b/c/root/f4.mip",
-                "/a/b/c/root/g/f5.mip"
-        };
-        for (String path : clientPaths) {
-            fileList.add(new File(path));
-        }
-
-        final String localPathRoot = "/a/b/c/root";
-        final String remoteUploadDirectoryPath = "/remote/upload/123";
-        Map<String, File> remotePathToFileMap = new HashMap<String, File>();
-        List<String> orderedDirectoryPaths = new ArrayList<String>(fileList.size());
-
-        uploader.derivePaths(fileList,
-                             new File(localPathRoot),
-                             remoteUploadDirectoryPath,
-                             orderedDirectoryPaths,
-                             remotePathToFileMap);
-
-        Assert.assertEquals("incorrect remote path map size, map=" + remotePathToFileMap,
-                            clientPaths.length,
-                            remotePathToFileMap.size());
-
-        File localFile;
-        String expectedPath;
-        for (String remotePath : remotePathToFileMap.keySet()) {
-            localFile = remotePathToFileMap.get(remotePath);
-            expectedPath = remoteUploadDirectoryPath + "/" +
-                           localFile.getAbsolutePath().substring(localPathRoot.length() + 1);
-            Assert.assertEquals("incorrect file path derived", expectedPath, remotePath);
-        }
-
-        final String[] expectedOrderedDirPaths = {
-                "/remote/upload/123/",
-                "/remote/upload/123/d/",
-                "/remote/upload/123/d/e/",
-                "/remote/upload/123/g/"
-        };
-
-        Assert.assertEquals("incorrect directory list size, list=" + orderedDirectoryPaths,
-                            expectedOrderedDirPaths.length,
-                            orderedDirectoryPaths.size());
-
-        for (int i = 0; i < expectedOrderedDirPaths.length; i++) {
-            Assert.assertEquals("incorrect dir path " + i + " derived",
-                                expectedOrderedDirPaths[i], orderedDirectoryPaths.get(i));
-        }
+        commonTestDerivePaths("/a/b/c/root", true);
     }
 
     public void testDerivePathsForWindows() throws Exception {
+        commonTestDerivePaths("C:\\a\\b\\c\\root", false);
+    }
 
-        final String[] relativePaths = {
-                "\\d\\e\\f1.mip",
-                "\\d\\e\\f2.mip",
-                "\\d\\f3.mip",
-                "\\f4.mip",
-                "\\g\\f5.mip"
+    private void commonTestDerivePaths(String localRoot,
+                                       boolean isUnix) throws Exception {
+
+        String localRootPathWithTrailingSeparator;
+        if (isUnix) {
+            localRootPathWithTrailingSeparator = localRoot + "/";
+        } else {
+            localRootPathWithTrailingSeparator = localRoot + "\\";
+        }
+
+        final String remoteRoot = "/remote/upload/123";
+        final String remoteRootWithTrailingSeparator = remoteRoot + "/";
+
+        final String[] relativeUnixPaths = {
+                "/d/e/f1.mip",
+                "/d/e/f2.mip",
+                "/d/f3.mip",
+                "/f4.mip",
+                "/g/f5.mip",
         };
 
         final String[] expectedOrderedDirPaths = {
-                "/remote/upload/123/",
                 "/remote/upload/123/d/",
                 "/remote/upload/123/d/e/",
                 "/remote/upload/123/g/"
         };
 
-        commonTestDerivePaths("C:\\a\\b\\c\\root",
-                              relativePaths,
-                              "/remote/upload/123",
-                              expectedOrderedDirPaths);
+        List<String> relativePaths = new ArrayList<String>();
+        for (String unixPath : relativeUnixPaths) {
+            if (isUnix) {
+                relativePaths.add(unixPath);
+            } else {
+                relativePaths.add(unixPath.replace('/', '\\'));
+            }
+        }
 
-    }
-
-    private void commonTestDerivePaths(String localRoot,
-                                       String[] relativePaths,
-                                       String remoteRoot,
-                                       String[] expectedOrderedDirPaths) throws Exception {
-
-
-        List<File> fileList = new ArrayList<File>();
-
+        List<String> localFilePaths = new ArrayList<String>();
         for (String relativePath : relativePaths) {
-            fileList.add(new File(localRoot + relativePath));
+            localFilePaths.add(localRoot + relativePath);
         }
 
         // use LHM to preserve order
         Map<String, File> remotePathToFileMap = new LinkedHashMap<String, File>();
-        List<String> orderedDirectoryPaths = new ArrayList<String>(fileList.size());
+        List<String> orderedDirectoryPaths = new ArrayList<String>();
 
-        uploader.derivePaths(fileList,
-                             new File(localRoot),
-                             remoteRoot,
+        uploader.derivePaths(localRootPathWithTrailingSeparator,
+                             localFilePaths,
+                             remoteRootWithTrailingSeparator,
                              orderedDirectoryPaths,
                              remotePathToFileMap);
 
         Assert.assertEquals("incorrect remote path map size, map=" + remotePathToFileMap,
-                            fileList.size(),
+                            localFilePaths.size(),
                             remotePathToFileMap.size());
 
         int index = 0;
         String expectedPath;
         for (String remotePath : remotePathToFileMap.keySet()) {
-            expectedPath = remoteRoot + relativePaths[index];
+            expectedPath = remoteRoot + relativePaths.get(index);
             expectedPath = expectedPath.replace('\\', '/');
             Assert.assertEquals("incorrect file path derived", expectedPath, remotePath);
             index++;

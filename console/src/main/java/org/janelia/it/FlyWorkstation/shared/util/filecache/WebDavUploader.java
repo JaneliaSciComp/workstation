@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
@@ -47,7 +48,7 @@ public class WebDavUploader {
      *
      * @param  file  file to upload.
      *
-     * @return the server path for the uploaded file.
+     * @return the server path for the parent directory of the uploaded file.
      *
      * @throws WebDavException
      *   if the file cannot be uploaded.
@@ -61,7 +62,7 @@ public class WebDavUploader {
 
         LOG.info("uploaded {} to {}", file.getAbsolutePath(), remoteFilePath);
 
-        return remoteFilePath;
+        return remoteUploadDirectoryPath;
     }
 
     /**
@@ -103,7 +104,8 @@ public class WebDavUploader {
             for (File file : fileList) {
                 path = remoteUploadDirectoryPath + file.getName();
                 if (remotePathToFileMap.containsKey(path)) {
-                    throw new IllegalArgumentException("multiple files share the name '" + file.getName() + "'");
+                    throw new IllegalArgumentException("multiple files share the name '" +
+                                                       file.getName() + "'");
                 }
                 remotePathToFileMap.put(path, file);
             }
@@ -112,11 +114,24 @@ public class WebDavUploader {
 
             List<String> orderedDirectoryPaths = new ArrayList<String>(fileList.size());
 
-            derivePaths(fileList,
-                        localRootDirectory,
+            List<String> localFilePaths = new ArrayList<String>(fileList.size());
+
+            try {
+            for (File file : fileList) {
+                if (file.isFile()) {
+                    localFilePaths.add(file.getCanonicalPath());
+                }
+            }
+
+            derivePaths(localRootDirectory.getCanonicalPath() + File.separator,
+                        localFilePaths,
                         remoteUploadDirectoryPath,
                         orderedDirectoryPaths,
                         remotePathToFileMap);
+
+            } catch (IOException e) {
+                throw new IllegalArgumentException("canonical path could not be derived", e);
+            }
 
             if (orderedDirectoryPaths.size() > 0) {
                 for (String dirPath : orderedDirectoryPaths) {
@@ -146,8 +161,10 @@ public class WebDavUploader {
      * ordered list of directories that need to be created.
      * This method is protected to support testing.
      *
-     * @param  fileList                   list of local files.
-     * @param  localRootDirectory         common parent directory for local files.
+     * @param  localRootPath              common parent path for local files
+     *                                    (should end with the file separator).
+     * @param  localFilePaths             list of local file paths
+     *                                    (should only contain files - no directories).
      * @param  remoteUploadDirectoryPath  base upload directory path on remote server.
      * @param  orderedDirectoryPaths      ordered list of directories to be created on server
      *                                    (returned to caller).
@@ -157,32 +174,29 @@ public class WebDavUploader {
      * @throws IllegalArgumentException
      *   if any path cannot be derived.
      */
-    protected void derivePaths(List<File> fileList,
-                               File localRootDirectory,
+    protected void derivePaths(String localRootPath,
+                               List<String> localFilePaths,
                                String remoteUploadDirectoryPath,
                                List<String> orderedDirectoryPaths,
                                Map<String, File> remotePathToFileMap)
             throws IllegalArgumentException {
 
-        Set<String> relativeDirectoryPaths = new HashSet<String>(fileList.size());
+        Set<String> relativeDirectoryPaths = new HashSet<String>(localFilePaths.size());
 
-        final String relativeLocalPathRoot = localRootDirectory.toURI().getPath();
-        final int rootLen = relativeLocalPathRoot.length();
+        final int relativeStart = localRootPath.length();
 
-        String path;
         String relativePath;
-        for (File file : fileList) {
-            path = file.toURI().getPath();
-            if (path.startsWith(relativeLocalPathRoot)) {
-                relativePath = path.substring(rootLen);
+        String remotePath;
+        for (String localPath : localFilePaths) {
+            if ((localPath.length() > relativeStart) && (localPath.startsWith(localRootPath))) {
+                relativePath = localPath.substring(relativeStart);
                 relativePath = relativePath.replace('\\', '/');
                 addDirectoryPaths(relativePath, relativeDirectoryPaths);
-                path = remoteUploadDirectoryPath + relativePath;
-                remotePathToFileMap.put(path, file);
+                remotePath = remoteUploadDirectoryPath + relativePath;
+                remotePathToFileMap.put(remotePath, new File(localPath));
             } else {
                 throw new IllegalArgumentException(
-                        path + " does not start with specified relative local path root " +
-                        relativeLocalPathRoot);
+                        localPath + " does not start with specified root " + localRootPath);
             }
         }
 
@@ -230,7 +244,8 @@ public class WebDavUploader {
             throws WebDavException {
         URL url;
         try {
-            url = client.getWebDavUrl(path);
+            // replace spaces with '-' so that launch of external tools is not broken
+            url = client.getWebDavUrl(path.replace(' ','-'));
         } catch (MalformedURLException e) {
             throw new WebDavException("failed to create URL for " + path, e);
         }
