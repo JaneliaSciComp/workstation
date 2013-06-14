@@ -48,7 +48,6 @@ implements GLActor
 	private int vertexCount = 3;
 	private FloatBuffer vertices;
 	private FloatBuffer colors;
-	private int vao = -1;
 	private int vbo = -1;
 	private int edgeIbo = -1;
 	private int pointIbo = -1;
@@ -88,7 +87,7 @@ implements GLActor
 		if (edgeIndices.capacity() < 2)
 			return;
 
-		// if (verticesNeedCopy) {
+		// if (verticesNeedCopy) { // TODO
         if (true) {
             gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, vbo );
         		vertices.rewind();
@@ -105,7 +104,7 @@ implements GLActor
 	        		colors, 
 	        		GL2.GL_DYNAMIC_DRAW);
         }
-		// if (edgesNeedCopy) 
+		// if (edgesNeedCopy) // TODO
 		if (true) 
 		{
 	        gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, edgeIbo);
@@ -212,9 +211,9 @@ implements GLActor
 			// TODO - crashes unless glBufferData called every time.
 	        // if (verticesNeedCopy) {
 		    if (true) {
-		    	// vertices
-		    	vertices.rewind();
-		    	gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
+        		    	// vertices
+        		    	vertices.rewind();
+        		    	gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, vbo);
 		        gl.glBufferData(GL2.GL_ARRAY_BUFFER, 
 		        		vertexCount * floatByteCount * vertexFloatCount, 
 		        		vertices, GL2.GL_DYNAMIC_DRAW);
@@ -399,6 +398,7 @@ implements GLActor
 		// Required for gl_VertexID to be found in shader
 		// System.out.println("init");
 		// compile shader
+        PassThroughTextureShader.checkGlError(gl, "load anchor texture 000");
 		try {
 			edgeShader.init(gl);
 			anchorShader.init(gl);
@@ -482,10 +482,6 @@ implements GLActor
         gl.glDisable(GL2.GL_TEXTURE_2D);
 
         // Create a buffer object for edge indices
-        int ix2[] = {0};
-        gl.glGenVertexArrays(1, ix2, 0);
-        vao = ix2[0];
-        gl.glBindVertexArray(vao);
         //
         int ix[] = {0, 0, 0, 0};
         gl.glGenBuffers( 4, ix, 0 );
@@ -494,9 +490,10 @@ implements GLActor
         pointIbo = ix[2];
         colorBo = ix[3];
         //
-        gl.glBindVertexArray(0);
-        //
 		PassThroughTextureShader.checkGlError(gl, "load anchor texture");
+		edgesNeedCopy = true;
+		verticesNeedCopy = true;
+        bIsGlInitialized = true;
 	}
 
 	@Override
@@ -507,8 +504,6 @@ implements GLActor
 		gl.glDeleteTextures(2, ix1, 0);
 		int ix2[] = {vbo, edgeIbo, pointIbo, colorBo};
 		gl.glDeleteBuffers(4, ix2, 0);
-		int ix3[] = {vao};
-		gl.glDeleteVertexArrays(1, ix3, 0);
 	}
 
 	public synchronized void setHoverAnchorIndex(int ix) {

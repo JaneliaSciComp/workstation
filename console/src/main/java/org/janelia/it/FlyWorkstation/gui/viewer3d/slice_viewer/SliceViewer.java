@@ -378,6 +378,7 @@ implements MouseModalWidget, VolumeViewer
         else if (modeId == MouseMode.Mode.TRACE) {
             TraceMode traceMode = new TraceMode(getSkeleton());
             traceMode.setViewport(getViewport());
+            traceMode.setActor(skeletonActor);
             this.mouseMode = traceMode;
         }
         else if (modeId == MouseMode.Mode.ZOOM) {

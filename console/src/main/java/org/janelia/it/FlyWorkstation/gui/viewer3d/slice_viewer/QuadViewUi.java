@@ -97,8 +97,7 @@ public class QuadViewUi extends JPanel
 	private final ZoomMouseModeAction zoomMouseModeAction = new ZoomMouseModeAction();
 	private final PanModeAction panModeAction = new PanModeAction();
     private Skeleton skeleton = new Skeleton();
-    private final TraceMouseModeAction traceMouseModeAction = new TraceMouseModeAction(
-            skeleton);
+    private final TraceMouseModeAction traceMouseModeAction = new TraceMouseModeAction();
     // 
 	private final ButtonGroup mouseModeGroup = new ButtonGroup();
 	private final Action zScanScrollModeAction = new ZScanScrollModeAction(sliceViewer, zScanMode);
@@ -247,9 +246,6 @@ public class QuadViewUi extends JPanel
         sliceViewer.statusMessageChanged.connect(setStatusMessageSlot);
         sliceViewer.setSkeleton(skeleton);
         //
-        traceMouseModeAction.getTraceMode().setActor(sliceViewer.getSkeletonActor());
-        traceMouseModeAction.getTraceMode().setViewport(sliceViewer);
-        // 
         sliceViewer.setWheelMode(zScanMode);
         // Respond to orthogonal mode changes
         orthogonalModeAction.orthogonalModeChanged.connect(new Slot1<OrthogonalMode>() {

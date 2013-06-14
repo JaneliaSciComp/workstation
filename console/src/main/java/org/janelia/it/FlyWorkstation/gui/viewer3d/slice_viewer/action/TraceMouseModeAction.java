@@ -5,17 +5,14 @@ import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.MouseModalWidget;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal1;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton;
 
 public class TraceMouseModeAction extends AbstractAction {
 	private static final long serialVersionUID = 1L;
-	protected TraceMode traceMode;
 	
 	public Signal1<MouseMode.Mode> setMouseModeSignal = new Signal1<MouseMode.Mode>();
 
-	public TraceMouseModeAction(Skeleton skeleton) {
+	public TraceMouseModeAction() {
 		putValue(NAME, "Trace");
 		putValue(SMALL_ICON, Icons.getIcon("nib.png"));
 		String acc = "P";
@@ -33,21 +30,12 @@ public class TraceMouseModeAction extends AbstractAction {
 				+"SHIFT-scroll wheel to zoom<br>" // done
 				+"Right-click for context menu" // TODO
 				+"</html>");
-		traceMode = new TraceMode(skeleton);
 	}
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
 	    setMouseModeSignal.emit(MouseMode.Mode.TRACE);
 		putValue(SELECTED_KEY, true);
-	}
-
-	public TraceMode getTraceMode() {
-		return traceMode;
-	}
-
-	public void setTraceMode(TraceMode traceMode) {
-		this.traceMode = traceMode;
 	}
 
 }
