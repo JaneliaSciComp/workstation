@@ -15,15 +15,12 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.WheelMode;
 public interface MouseModalWidget 
 extends MouseListener, MouseMotionListener, MouseWheelListener
 {
-	public MouseMode getMouseMode();
 	public void setMouseMode(MouseMode.Mode mode);
-	public WheelMode getWheelMode();
-	public void setWheelMode(WheelMode mode);
+	public void setWheelMode(WheelMode.Mode mode);
 	public Cursor getCursor();
 	public void setCursor(Cursor cursor);
 	public Point2D getPixelOffsetFromCenter(Point2D point);
 	public RubberBand getRubberBand();
-	// public Dimension getViewportSize();
 	public Viewport getViewport();
 	public JComponent getComponent();
 }

@@ -3,7 +3,6 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 
-import javax.media.opengl.GLContext;
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
@@ -30,7 +29,7 @@ import com.jogamp.newt.event.KeyEvent;
 public class OrthogonalPanel 
 extends JPanel
 {
-	private JPanel scanPanel = new JPanel();
+    private JPanel scanPanel = new JPanel();
 	private OrthogonalViewer viewer;
 	private JSlider slider = new JSlider();
 	private JSpinner spinner = new JSpinner();
@@ -38,8 +37,8 @@ extends JPanel
 	private CoordinateAxis axis;	
 	private ObservableCamera3d camera;
 	private SharedVolumeImage volume;
-
-	public OrthogonalPanel(CoordinateAxis axis) {
+	
+    public OrthogonalPanel(CoordinateAxis axis) {
 		this.axis = axis;
 		viewer = new OrthogonalViewer(axis);
 		init();
@@ -60,7 +59,6 @@ extends JPanel
 		add(viewer);
 		scanPanel.setLayout(new BoxLayout(scanPanel, BoxLayout.X_AXIS));
 		scanPanel.add(new JLabel(" "+axis.getName()));
-		// TODO add buttons to scan panel
 		scanPanel.add(new ToolButton(new PreviousSliceAction()));
 		slider.setMajorTickSpacing(10);
 		slider.setPaintTicks(true); // Avoid windows slider display bug
@@ -78,12 +76,12 @@ extends JPanel
 		scanPanel.add(spinner);
 		add(scanPanel);
 		spinner.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent arg0) {
+			public void stateChanged(ChangeEvent event) {
 				setSlice((Integer)spinner.getValue());
 			}
 		});
 		slider.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent arg0) {
+			public void stateChanged(ChangeEvent event) {
 				setSlice(slider.getValue());
 			}
 		});
@@ -231,4 +229,5 @@ extends JPanel
 					);		
 		}
 	}
+
 }

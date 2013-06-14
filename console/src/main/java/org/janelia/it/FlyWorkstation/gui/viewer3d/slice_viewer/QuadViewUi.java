@@ -17,6 +17,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ResetColor
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ResetViewAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ResetZoomAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.TraceMouseModeAction;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.WheelMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZScanAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZScanMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZScanScrollModeAction;
@@ -100,8 +101,8 @@ public class QuadViewUi extends JPanel
     private final TraceMouseModeAction traceMouseModeAction = new TraceMouseModeAction();
     // 
 	private final ButtonGroup mouseModeGroup = new ButtonGroup();
-	private final Action zScanScrollModeAction = new ZScanScrollModeAction(sliceViewer, zScanMode);
-	private final Action zoomScrollModeAction = new ZoomScrollModeAction(sliceViewer);
+	private final ZScanScrollModeAction zScanScrollModeAction = new ZScanScrollModeAction();
+	private final ZoomScrollModeAction zoomScrollModeAction = new ZoomScrollModeAction(sliceViewer);
 	private final ButtonGroup scrollModeGroup = new ButtonGroup();
 	private final OrthogonalModeAction orthogonalModeAction = new OrthogonalModeAction();
 	// zoom actions
@@ -183,7 +184,7 @@ public class QuadViewUi extends JPanel
 			boolean useZScan = ((z1 - z0) > 1);
 			if (useZScan) {
 				zScanPanel.setVisible(true);
-				sliceViewer.setWheelMode(zScanMode);
+				sliceViewer.setWheelMode(WheelMode.Mode.SCAN);
 				zScanScrollModeAction.setEnabled(true);
 				zScanScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
 				int z = (int)Math.round(sliceViewer.getFocus().getZ() / sliceViewer.getZResolution());
@@ -221,7 +222,9 @@ public class QuadViewUi extends JPanel
 	
 	public Signal1<MouseMode.Mode> mouseModeChangedSignal = 
 	    new Signal1<MouseMode.Mode>();
-	
+    public Signal1<WheelMode.Mode> wheelModeChangedSignal = 
+        new Signal1<WheelMode.Mode>();
+
 	/**
 	 * Create the frame.
 	 */
@@ -246,7 +249,7 @@ public class QuadViewUi extends JPanel
         sliceViewer.statusMessageChanged.connect(setStatusMessageSlot);
         sliceViewer.setSkeleton(skeleton);
         //
-        sliceViewer.setWheelMode(zScanMode);
+        sliceViewer.setWheelMode(WheelMode.Mode.SCAN);
         // Respond to orthogonal mode changes
         orthogonalModeAction.orthogonalModeChanged.connect(new Slot1<OrthogonalMode>() {
             	@Override
@@ -264,8 +267,11 @@ public class QuadViewUi extends JPanel
         panModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
         zoomMouseModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
         traceMouseModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
+        zoomScrollModeAction.setWheelModeSignal.connect(wheelModeChangedSignal);
+        zScanScrollModeAction.setWheelModeSignal.connect(wheelModeChangedSignal);
         // Next connect that signal to various widgets
         mouseModeChangedSignal.connect(sliceViewer.setMouseModeSlot);
+        wheelModeChangedSignal.connect(sliceViewer.setWheelModeSlot);
         // TODO other orthogonal viewers
 	}
 

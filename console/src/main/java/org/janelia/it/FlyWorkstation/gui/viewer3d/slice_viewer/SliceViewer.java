@@ -19,6 +19,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.TraceMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.WheelMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZScanMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZoomMode;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZoomScrollModeAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.SkeletonActor;
 
@@ -54,9 +55,10 @@ implements MouseModalWidget, VolumeViewer
 	}
 	
 	protected MouseMode mouseMode;
-	protected MouseMode.Mode modeId;
+	protected MouseMode.Mode mouseModeId;
 	
 	protected WheelMode wheelMode;
+	protected WheelMode.Mode wheelModeId;
 	protected ObservableCamera3d camera;
 	protected SliceRenderer renderer = new SliceRenderer();
 	protected Viewport viewport = renderer.getViewport();
@@ -107,19 +109,23 @@ implements MouseModalWidget, VolumeViewer
 	public Slot1<MouseMode.Mode> setMouseModeSlot =
 	    new Slot1<MouseMode.Mode>() {
             @Override
-            public void execute(Mode modeId) {
+            public void execute(MouseMode.Mode modeId) {
                 SliceViewer.this.setMouseMode(modeId);
             }
 	};
-	
+    public Slot1<WheelMode.Mode> setWheelModeSlot =
+        new Slot1<WheelMode.Mode>() {
+            @Override
+            public void execute(WheelMode.Mode modeId) {
+                SliceViewer.this.setWheelMode(modeId);
+            }
+    };	
 	public SliceViewer() {
 	    setMouseMode(MouseMode.Mode.PAN);
-		wheelMode = new ZScanMode(this);
+	    setWheelMode(WheelMode.Mode.SCAN);
 		addGLEventListener(renderer);
 		setCamera(new BasicObservableCamera3d());
 		tileServer.setViewport(viewport);
-		mouseMode.setComponent(this);
-		wheelMode.setComponent(this);
 		// gray background for testing
 		// this.renderer.setBackgroundColor(new Color(0.5f, 0.5f, 0.5f, 0.0f));
 		// renderer.setBackgroundColor(Color.white);
@@ -237,10 +243,6 @@ implements MouseModalWidget, VolumeViewer
 		return imageColorModel;
 	}
 
-	public MouseMode getMouseMode() {
-		return mouseMode;
-	}
-
 	@Override
 	public Point2D getPixelOffsetFromCenter(Point2D point) {
 		double dx = point.getX() - getWidth() / 2.0;
@@ -259,10 +261,6 @@ implements MouseModalWidget, VolumeViewer
 	@Override
 	public Viewport getViewport() {
 		return viewport;
-	}
-
-	public WheelMode getWheelMode() {
-		return wheelMode;
 	}
 
 	@Override
@@ -369,9 +367,9 @@ implements MouseModalWidget, VolumeViewer
 	
     @Override
     public void setMouseMode(MouseMode.Mode modeId) {
-        if (modeId == this.modeId)
+        if (modeId == this.mouseModeId)
             return; // no change
-        this.modeId = modeId;
+        this.mouseModeId = modeId;
         if (modeId == MouseMode.Mode.PAN) {
             this.mouseMode = new PanMode();
         }
@@ -410,8 +408,16 @@ implements MouseModalWidget, VolumeViewer
 		skeletonActor.setCamera(camera);
 	}
 	
-	public void setWheelMode(WheelMode wheelMode) {
-		this.wheelMode = wheelMode;
+	public void setWheelMode(WheelMode.Mode wheelModeId) {
+	    if (this.wheelModeId == wheelModeId)
+	        return;
+	    this.wheelModeId = wheelModeId;
+	    if (wheelModeId == WheelMode.Mode.ZOOM) {
+	        this.wheelMode = new ZoomMode();
+	    }
+	    else if (wheelModeId == WheelMode.Mode.SCAN) {
+	        this.wheelMode = new ZScanMode(this);
+	    }
 		this.wheelMode.setComponent(this);
 		this.wheelMode.setCamera(camera);
 	}

@@ -8,6 +8,10 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.MouseModalWidget;
 public interface WheelMode
 extends MouseWheelListener
 {
+    enum Mode {
+        ZOOM,
+        SCAN
+    }
 	public MouseModalWidget getComponent();
 	public void setComponent(MouseModalWidget widget);
 	Camera3d getCamera();

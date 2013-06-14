@@ -5,13 +5,14 @@ import javax.swing.AbstractAction;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.MouseModalWidget;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal1;
 
 // PanModeAction puts the slice viewer into Pan mode.
 public class ZoomScrollModeAction extends AbstractAction 
 {
-	private static final long serialVersionUID = 1L;
-	protected MouseModalWidget widget;
 	protected ZoomMode zoomMode = new ZoomMode();
+
+    public Signal1<WheelMode.Mode> setWheelModeSignal = new Signal1<WheelMode.Mode>();
 
 	public ZoomScrollModeAction(MouseModalWidget widget) {
 		putValue(NAME, "Zoom");
@@ -19,13 +20,11 @@ public class ZoomScrollModeAction extends AbstractAction
 		putValue(SHORT_DESCRIPTION, 
 				"Set scroll wheel mode to Zoom in and out."
 				+ "\n (hold SHIFT key to activate)");
-		this.widget = widget;
-		zoomMode.setComponent(widget);
 	}
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		widget.setWheelMode(zoomMode);
+		setWheelModeSignal.emit(WheelMode.Mode.ZOOM);
 		putValue(SELECTED_KEY, true); // this mode is now selected
 	}
 }
