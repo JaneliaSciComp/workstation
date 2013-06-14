@@ -158,7 +158,7 @@ public class EntityTree extends JPanel implements ActivatableView {
 		Entity entity = event.getEntity();
 		Collection<DefaultMutableTreeNode> nodes = getNodesByEntityId(entity.getId());
 		if (nodes == null) return;
-		log.debug(System.identityHashCode(this)+" Entity affecting {} nodes was changed: '{}'",nodes.size(),entity.getName());	
+		log.debug("Entity affecting {} nodes was changed: {}",nodes.size(),entity.getName()+" ("+entity.getId()+")");	
 		
 		for(final DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
 			Entity treeEntity = getEntity(node);
@@ -177,7 +177,7 @@ public class EntityTree extends JPanel implements ActivatableView {
 		Entity entity = event.getEntity();
 		Collection<DefaultMutableTreeNode> nodes = getNodesByEntityId(entity.getId());
 		if (nodes == null) return;
-		log.debug(System.identityHashCode(this)+" Entity affecting {} nodes was removed: '{}'",nodes.size(),entity.getName());	
+		log.debug("Entity affecting {} nodes was removed: '{}'",nodes.size(),entity.getName());	
 		
 		for(DefaultMutableTreeNode node : new HashSet<DefaultMutableTreeNode>(nodes)) {
 			DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode) node.getParent();
@@ -195,7 +195,7 @@ public class EntityTree extends JPanel implements ActivatableView {
 		Entity entity = event.getEntity();
 		Collection<DefaultMutableTreeNode> nodes = getNodesByEntityId(entity.getId());
 		if (nodes == null) return;
-		log.debug(System.identityHashCode(this)+" Entity affecting {} nodes had children loaded: '{}'",nodes.size(),entity.getName());	
+		log.debug("Entity affecting {} nodes had children loaded: '{}'",nodes.size(),entity.getName());	
 		for(DefaultMutableTreeNode node : nodes) {
 			log.debug("Recreating children of {}",getDynamicTree().getUniqueId(node));
 			getDynamicTree().recreateChildNodes(node);	

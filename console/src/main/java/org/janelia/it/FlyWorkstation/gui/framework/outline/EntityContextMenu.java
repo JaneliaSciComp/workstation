@@ -1,22 +1,41 @@
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.util.*;
+import java.util.concurrent.Callable;
+
+import javax.swing.*;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.EntitySelectionModel;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.dialogs.EntityDetailsDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.SpecialAnnotationChooserDialog;
 import org.janelia.it.FlyWorkstation.gui.dialogs.TaskDetailsDialog;
-import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.actions.*;
+import org.janelia.it.FlyWorkstation.gui.framework.actions.Action;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Browser;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Perspective;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tool_manager.ToolMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Hud;
+import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
+import org.janelia.it.FlyWorkstation.model.domain.EntityWrapperFactory;
+import org.janelia.it.FlyWorkstation.model.domain.Sample;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.utils.AnnotationSession;
+import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.FlyWorkstation.shared.util.ConsoleProperties;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.FlyWorkstation.ws.ExternalClient;
 import org.janelia.it.jacs.model.entity.Entity;
@@ -35,19 +54,6 @@ import org.janelia.it.jacs.shared.utils.MailHelper;
 import org.janelia.it.jacs.shared.utils.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.*;
-import java.awt.*;
-import java.awt.datatransfer.StringSelection;
-import java.awt.datatransfer.Transferable;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.util.*;
-import java.util.List;
-import java.util.concurrent.Callable;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Context pop up menu for entities.
@@ -124,6 +130,7 @@ public class EntityContextMenu extends JPopupMenu {
         setNextAddRequiresSeparator(true);
         add(getHudMenuItem());
         add(getOpenAlignmentBoardItem());
+        add(getOpenInNewAlignmentBoardItem());
         add(getOpenSliceViewerItem());
 
         if ((SessionMgr.getSubjectKey().equals("user:simpsonj") || SessionMgr.getSubjectKey()
@@ -392,6 +399,105 @@ public class EntityContextMenu extends JPopupMenu {
         return alignBrdVwItem;
     }
 
+    public JMenuItem getOpenInNewAlignmentBoardItem() {
+        
+        if (multiple) return null;
+        
+        JMenuItem alignmentBoardItem = null;
+        
+        if (rootedEntity != null && rootedEntity.getEntityData() != null) {
+            Entity entity = rootedEntity.getEntity();
+            
+            if (entity!=null && (entity.getEntityType().getName().equals(EntityConstants.TYPE_SAMPLE))) {
+                
+                alignmentBoardItem = new JMenuItem("  Open In New Alignment Board Viewer");
+                alignmentBoardItem.addActionListener(new ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+
+                        SimpleWorker worker = new SimpleWorker() {
+                            
+                            private Sample sample;
+                            private List<AlignmentContext> contexts;
+                            
+                            @Override
+                            protected void doStuff() throws Exception {
+                                this.sample = (Sample)EntityWrapperFactory.wrap(rootedEntity);
+                                this.contexts = sample.getAvailableAlignmentContexts();
+                            }
+                            
+                            @Override
+                            protected void hadSuccess() {
+                                
+                                if (contexts.isEmpty()) {
+                                    JOptionPane.showMessageDialog(SessionMgr.getBrowser(),
+                                            "Sample is not aligned to a compatible alignment space", "Error", JOptionPane.ERROR_MESSAGE);
+                                    return;
+                                }
+                                
+                                // Pick an alignment context for the new board
+                                AlignmentContext values[] = new AlignmentContext[contexts.size()];
+                                contexts.toArray(values);
+                                final AlignmentContext alignmentContext = (AlignmentContext)JOptionPane.showInputDialog(SessionMgr.getBrowser(), "Choose an alignment space for this sample", 
+                                        "Choose alignment space", JOptionPane.QUESTION_MESSAGE, Icons.getIcon("folder_graphite_palette.png"), 
+                                        values, values[0]);
+                                if (alignmentContext==null) return;
+                                
+                                // Pick a name for the new board
+                                final String boardName = (String) JOptionPane.showInputDialog(browser, "Board Name:\n",
+                                        "Open In New Alignment Board", JOptionPane.PLAIN_MESSAGE, null, null, null);
+                                if (StringUtils.isEmpty(boardName)) return;
+                                
+                                SimpleWorker worker = new SimpleWorker() {
+                                    
+                                    private RootedEntity newBoard;
+                                    
+                                    @Override
+                                    protected void doStuff() throws Exception {
+                                        newBoard = ModelMgr.getModelMgr().createAlignmentBoard(boardName, 
+                                                alignmentContext.getAlignmentSpaceName(), alignmentContext.getOpticalResolution(), alignmentContext.getPixelResolution());
+                                        AlignmentBoardContext alignmentBoardContext = new AlignmentBoardContext(newBoard);
+                                        alignmentBoardContext.addNewAlignedEntity(sample);
+                                    }
+                                    
+                                    @Override
+                                    protected void hadSuccess() {
+                                        // Update Tree UI
+                                        SessionMgr.getBrowser().getEntityOutline().totalRefresh(true, new Callable<Void>() {
+                                            @Override
+                                            public Void call() throws Exception {
+                                                SessionMgr.getBrowser().getEntityOutline().selectEntityByUniqueId(newBoard.getUniqueId());
+                                                SessionMgr.getBrowser().setPerspective(Perspective.AlignmentBoard);
+                                                SessionMgr.getBrowser().getLayersPanel().openAlignmentBoard(newBoard.getEntityId());
+                                                return null;
+                                            }
+                                        });
+                                    }
+                                    
+                                    @Override
+                                    protected void hadError(Throwable error) {
+                                        SessionMgr.getSessionMgr().handleException(error);
+                                    }
+                                };
+                                worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Adding aligned entities...", ""));
+                                worker.execute();
+                            }
+                            
+                            @Override
+                            protected void hadError(Throwable error) {
+                                SessionMgr.getSessionMgr().handleException(error);
+                            }
+                        };
+                        worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Finding alignments...", ""));
+                        worker.execute();
+                    }
+                });
+            }
+        }
+
+        return alignmentBoardItem;
+    }
+       
     public JMenuItem getOpenSliceViewerItem() {
         JMenuItem sliceVwItem = null;
         if (rootedEntity != null && rootedEntity.getEntityData() != null) {

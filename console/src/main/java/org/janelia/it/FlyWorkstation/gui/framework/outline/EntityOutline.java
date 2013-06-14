@@ -6,7 +6,23 @@
  */
 package org.janelia.it.FlyWorkstation.gui.framework.outline;
 
-import com.google.common.eventbus.Subscribe;
+import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import javax.swing.*;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreePath;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.access.ModelMgrAdapter;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityCreateEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationEvent;
@@ -15,8 +31,10 @@ import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgrUtils;
 import org.janelia.it.FlyWorkstation.gui.dialogs.ScreenEvaluationDialog;
 import org.janelia.it.FlyWorkstation.gui.framework.console.Perspective;
+import org.janelia.it.FlyWorkstation.gui.framework.console.ViewerManager;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.tree.ExpansionState;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.*;
@@ -24,18 +42,7 @@ import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreePath;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.util.HashSet;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicBoolean;
+import com.google.common.eventbus.Subscribe;
 
 /**
  * The entity tree which lives in the right-hand "Data" panel and drives the viewers. 
@@ -215,15 +222,6 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
                                     selectEntityByUniqueId("/e_"+newFolder.getId());
                                 }
                             });
-						    
-							// Update Tree UI
-//							totalRefresh(true, new Callable<Void>() {
-//								@Override
-//								public Void call() throws Exception {
-//									selectEntityByUniqueId("/e_"+newFolder.getId());
-//									return null;
-//								}
-//							});
 						}
 						@Override
 						protected void hadError(Throwable error) {
@@ -411,13 +409,31 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
     }
 	
 	private AtomicBoolean refreshInProgress = new AtomicBoolean(false);
+	private Queue<Callable<Void>> callbacks = new ConcurrentLinkedQueue<Callable<Void>>();
+	
+	private synchronized void executeCallBacks() {
+	    synchronized(this) {
+    	    for(Iterator<Callable<Void>> iterator = callbacks.iterator(); iterator.hasNext(); ) {
+    	        try {
+    	            iterator.next().call();
+    	        }
+    	        catch (Exception e) {
+    	            log.error("Error executing callback",e);
+    	        }
+    	        iterator.remove();
+    	    }
+	    }
+	}
 	
 	public void refresh(final boolean invalidateCache, final ExpansionState expansionState, final Callable<Void> success) {
 		
-		if (refreshInProgress.getAndSet(true)) {
-			log.debug("Skipping refresh, since there is one already in progress");
-			return;
-		}
+	    synchronized (this) {
+    	    if (success!=null) callbacks.add(success);
+    		if (refreshInProgress.getAndSet(true)) {
+    			log.debug("Skipping refresh, since there is one already in progress");
+    			return;
+    		}
+	    }
 		
 		log.debug("Starting whole tree refresh (invalidateCache={}, restoreState={})",invalidateCache,expansionState!=null);
 		
@@ -445,7 +461,7 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 							@Override
 							public Void call() throws Exception {
 								showTree();
-								if (success!=null) success.call();
+								executeCallBacks();
 								log.debug("Tree refresh complete");
 								return null;
 							}
@@ -642,7 +658,16 @@ public abstract class EntityOutline extends EntityTree implements Refreshable, A
 		
 		RootedEntity rootedEntity = new RootedEntity(uniqueId, getEntityData(node));
 		log.debug("showEntityInActiveViewer: "+rootedEntity.getName());
-		SessionMgr.getBrowser().getViewerManager().showEntityInActiveViewer(rootedEntity);
+		
+		ViewerManager viewerManager = SessionMgr.getBrowser().getViewerManager();
+		
+		if (viewerManager.getActiveViewerPane()==viewerManager.getSecViewerPane() && viewerManager.getActiveViewer() instanceof AlignmentBoardViewer) {
+	        SessionMgr.getBrowser().getViewerManager().showEntityInMainViewer(rootedEntity);
+		}
+		else {
+	        SessionMgr.getBrowser().getViewerManager().showEntityInActiveViewer(rootedEntity);
+		}
+		
 		SessionMgr.getBrowser().getViewerManager().showEntityInInspector(rootedEntity);
 	}
 }

@@ -37,7 +37,6 @@ public class AlignmentContext {
 
     @Override
     public String toString() {
-        return "AlignmentContext [alignmentSpaceName=" + alignmentSpaceName + ", opticalResolution=" + opticalResolution
-                + ", pixelResolution=" + pixelResolution + "]";
+        return getAlignmentSpaceName()+" "+getOpticalResolution()+" "+getPixelResolution();
     }
 }

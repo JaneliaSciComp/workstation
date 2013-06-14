@@ -1503,7 +1503,8 @@ public class Browser extends JFrame implements Cloneable {
 //            outlookBar.setVisibleBarByName(Browser.BAR_SAMPLES);
             selectRightPanel(OUTLINE_LAYERS);
             viewerManager.clearAllViewers();
-            viewerManager.ensureViewerClass(viewerManager.getMainViewerPane(), AlignmentBoardViewer.class);
+            viewerManager.getViewerContainer().setSecViewerVisible(true);
+            viewerManager.ensureViewerClass(viewerManager.getSecViewerPane(), AlignmentBoardViewer.class);
             break;
         case SplitPicker:
 //            outlookBar.setVisibleBarByName(Browser.BAR_DATA);

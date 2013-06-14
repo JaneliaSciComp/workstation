@@ -1,14 +1,14 @@
 package org.janelia.it.FlyWorkstation.model.domain;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A wrapper for Sample entities. Provides access to common features of Samples, and loads separated Neurons as 
@@ -26,6 +26,48 @@ public class Sample extends AlignedEntityWrapper implements Viewable2d, Viewable
 
     public Sample(RootedEntity entity) {
         super(entity);
+    }
+    
+    public List<AlignmentContext> getAvailableAlignmentContexts() throws Exception  {
+
+        log.debug("Loading alignment contexts for sample (id={})",getName(),getId());
+        List<AlignmentContext> contexts = new ArrayList<AlignmentContext>();
+        
+        ModelMgr.getModelMgr().loadLazyEntity(getInternalEntity(), false);
+
+        for(RootedEntity pipelineRun : getInternalRootedEntity().getChildrenOfType(EntityConstants.TYPE_PIPELINE_RUN)) {
+            log.debug("Checking pipeline run '{}' (id={})",pipelineRun.getName(),pipelineRun.getEntityId());
+            ModelMgr.getModelMgr().loadLazyEntity(pipelineRun.getEntity(), false);
+            
+            for(RootedEntity pipelineResult : pipelineRun.getChildrenForAttribute(EntityConstants.ATTRIBUTE_RESULT)) {
+                if (pipelineResult.getEntity().getValueByAttributeName(EntityConstants.TYPE_ALIGNMENT_SPACE)!=null) {
+                
+                    log.debug("  Checking '{}'",pipelineResult.getName());    
+                    ModelMgr.getModelMgr().loadLazyEntity(pipelineResult.getEntity(), false);
+                                        
+                    if (pipelineResult.getType().equals(EntityConstants.TYPE_ALIGNMENT_RESULT)) {
+                        RootedEntity supportingFiles = pipelineResult.getChildForAttribute(EntityConstants.ATTRIBUTE_SUPPORTING_FILES);
+                        ModelMgr.getModelMgr().loadLazyEntity(supportingFiles.getEntity(), false);
+                        
+                        for(RootedEntity alignedVolume : supportingFiles.getChildrenOfType(EntityConstants.TYPE_IMAGE_3D)) {
+                            log.debug("    Checking aligned volume '{}' (id={})",alignedVolume.getName(),alignedVolume.getEntityId());
+                            ModelMgr.getModelMgr().loadLazyEntity(alignedVolume.getEntity(), false);
+                            
+                            String alignmentSpaceName = alignedVolume.getValueByAttributeName(EntityConstants.TYPE_ALIGNMENT_SPACE);
+                            String opticalResolution = alignedVolume.getValueByAttributeName(EntityConstants.ATTRIBUTE_OPTICAL_RESOLUTION);
+                            String pixelResolution = alignedVolume.getValueByAttributeName(EntityConstants.ATTRIBUTE_PIXEL_RESOLUTION);
+                            if (alignmentSpaceName!=null && opticalResolution!=null && pixelResolution!=null) {
+
+                                log.debug("    Found alignment {} on image with id={}",alignmentSpaceName,alignedVolume.getEntityId());
+                                contexts.add(new AlignmentContext(alignmentSpaceName, opticalResolution, pixelResolution));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return contexts;
     }
 
     @Override

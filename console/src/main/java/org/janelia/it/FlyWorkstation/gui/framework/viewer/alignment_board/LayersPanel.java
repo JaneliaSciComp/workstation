@@ -4,8 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.event.*;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -20,13 +18,14 @@ import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityInvalidationE
 import org.janelia.it.FlyWorkstation.api.entity_model.events.EntityRemoveEvent;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.ActivatableView;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityWrapperTransferHandler;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.Refreshable;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardItemChangeEvent.ChangeType;
 import org.janelia.it.FlyWorkstation.gui.util.ColorSwatch;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.model.domain.*;
+import org.janelia.it.FlyWorkstation.model.domain.CompartmentSet;
+import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
@@ -154,7 +153,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
             }
         });
         
-        setTransferHandler(new EntityWrapperTransferHandler() {
+        setTransferHandler(new EntityTransferHandler() {
             @Override
             public JComponent getDropTargetComponent() {
                 return LayersPanel.this;
@@ -229,9 +228,8 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
     public AlignmentBoardContext getAlignmentBoardContext() {
         return alignmentBoardContext;
     }
-
+    
     public void openAlignmentBoard(long alignmentBoardId) {
-        
         log.debug("openAlignmentBoard: {}",alignmentBoardId);
         loadAlignmentBoard(alignmentBoardId, new Callable<Void>() {
             @Override
@@ -243,6 +241,12 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
         });
     }
 
+    public void closeAlignmentBoard() {
+        log.debug("closeAlignmentBoard");
+        this.alignmentBoardContext = null;
+        showNothing();
+    }
+    
     private AtomicBoolean loadInProgress = new AtomicBoolean(false);
     
     public void loadAlignmentBoard(final long alignmentBoardId, final Callable<Void> success) {
@@ -305,7 +309,7 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                         CompartmentSet set = new CompartmentSet( new RootedEntity( compartmentSets.get( 0 ) ) );
                         set.loadContextualizedChildren( context.getAlignmentContext() );
                         alignmentBoardContext = abContext; // Set this up early, as it is needed here.
-                        addNewAlignedEntity( set );
+                        getAlignmentBoardContext().addNewAlignedEntity( set );
                     }
                 }
             }
@@ -347,146 +351,6 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                 worker.execute();   
             }
         });   
-    }
-
-    /**
-     * Add a new aligned entity to the board. This method must be called from a worker thread.
-     * 
-     * @param wrapper to be added to the board
-     * @throws Exception
-     */
-    public void addNewAlignedEntity(EntityWrapper wrapper) throws Exception {
-
-        final Collection<AlignmentBoardEvent> events = new ArrayList<AlignmentBoardEvent>();
-        
-        if (wrapper instanceof Sample) {
-            Sample parent = (Sample)wrapper;
-            AlignedItem parentAlignedItem = alignmentBoardContext.getAlignedItemWithEntityId(parent.getId());
-
-            if (parentAlignedItem==null) {
-                if (parent.getChildren()==null) {
-                    parent.loadContextualizedChildren(alignmentBoardContext.getAlignmentContext());
-                }
-                
-                parentAlignedItem = ModelMgr.getModelMgr().addAlignedItem(alignmentBoardContext, parent);
-                parentAlignedItem.loadContextualizedChildren(alignmentBoardContext.getAlignmentContext());
-                
-                for (Neuron child : parent.getNeuronSet()) {
-                    AlignedItem neuronItem = ModelMgr.getModelMgr().addAlignedItem(parentAlignedItem, child);
-                    neuronItem.loadContextualizedChildren(alignmentBoardContext.getAlignmentContext());
-                    neuronItem.setIsVisible(true);
-                }
-
-                events.add(new AlignmentBoardItemChangeEvent(alignmentBoardContext, parentAlignedItem, ChangeType.Added));
-            }
-            else {
-                events.add(new AlignmentBoardItemChangeEvent(alignmentBoardContext, parentAlignedItem, ChangeType.VisibilityChange));
-            }
-            
-            parentAlignedItem.setIsVisible(true);
-        }
-        else if (wrapper instanceof Neuron) {
-            handleChildWrapper(wrapper, events);
-        }
-        else if (wrapper instanceof CompartmentSet) {
-            CompartmentSet parent = (CompartmentSet) wrapper;
-            AlignedItem parentAlignedItem = alignmentBoardContext.getAlignedItemWithEntityId(parent.getId());
-            if ( parentAlignedItem == null ) {
-                if (parent.getChildren()==null) {
-                    parent.loadContextualizedChildren(alignmentBoardContext.getAlignmentContext());
-                }
-
-                parentAlignedItem = ModelMgr.getModelMgr().addAlignedItem(alignmentBoardContext, parent);
-                parentAlignedItem.loadContextualizedChildren(alignmentBoardContext.getAlignmentContext());
-
-                for (Compartment child : parent.getCompartmentSet()) {
-                    log.info("Adding compartment {}.", child.getName());
-                    AlignedItem alignedItem = ModelMgr.getModelMgr().addAlignedItem(parentAlignedItem, child);
-                    alignedItem.loadContextualizedChildren(alignmentBoardContext.getAlignmentContext());
-                    alignedItem.setIsVisible(true);
-
-                }
-
-                events.add(new AlignmentBoardItemChangeEvent(alignmentBoardContext, parentAlignedItem, ChangeType.Added) );
-            }
-            else {
-                events.add(new AlignmentBoardItemChangeEvent(alignmentBoardContext, parentAlignedItem, ChangeType.VisibilityChange));
-            }
-
-            parentAlignedItem.setIsVisible( true );
-
-        }
-        else if (wrapper instanceof Compartment) {
-            log.info("Handling compartment " + wrapper.getName());
-            handleChildWrapper(wrapper, events);
-        }
-        else {
-            throw new IllegalStateException("Cannot add entity of type "+wrapper.getType()+" to the alignment board.");
-        }
-
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                refresh();
-                for (AlignmentBoardEvent event : events) {
-                    ModelMgr.getModelMgr().postOnEventBus(event);
-                }
-            }
-        });
-    }
-
-    /**
-     * Removes an aligned entity from the board. This method must be called from a worker thread.
-     * 
-     * @param alignedItem
-     * @throws Exception
-     */
-    public void removeAlignedEntity(final AlignedItem alignedItem) throws Exception {
-
-        RootedEntity rootedEntity = alignedItem.getInternalRootedEntity();
-        log.debug("DELETE");
-        ModelMgr.getModelMgr().deleteEntityTree(rootedEntity.getEntityId());
-        log.debug("POST DELETE");
-        
-        final AlignmentBoardItemChangeEvent event = new AlignmentBoardItemChangeEvent(
-                alignmentBoardContext, alignedItem, ChangeType.Removed);
-        
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                log.debug("POSTING DELETION EVENT");
-                ModelMgr.getModelMgr().postOnEventBus(event);
-            }
-        });
-    }
-
-    private void handleChildWrapper(EntityWrapper wrapper, Collection<AlignmentBoardEvent> events) throws Exception {
-        EntityWrapper child = wrapper;
-        EntityWrapper parent = wrapper.getParent();
-
-        AlignedItem parentAlignedItem = alignmentBoardContext.getAlignedItemWithEntityId(parent.getId());
-        if (parentAlignedItem==null) {
-            parentAlignedItem = ModelMgr.getModelMgr().addAlignedItem(alignmentBoardContext, parent);
-            parentAlignedItem.loadContextualizedChildren(alignmentBoardContext.getAlignmentContext());
-            log.info("No parent found for {}.", parent.getName());
-        }
-        else {
-            log.info("Found parent item for {}, of {}.", parent.getName(), parentAlignedItem.getName() );
-        }
-
-        parentAlignedItem.setIsVisible(true);
-
-        AlignedItem childAlignedItem = parentAlignedItem.getAlignedItemWithEntityId(child.getId());
-        if (childAlignedItem == null) {
-            childAlignedItem = ModelMgr.getModelMgr().addAlignedItem(parentAlignedItem, child);
-            childAlignedItem.loadContextualizedChildren(alignmentBoardContext.getAlignmentContext());
-            events.add(new AlignmentBoardItemChangeEvent(alignmentBoardContext, childAlignedItem, ChangeType.Added));
-        }
-        else {
-            events.add(new AlignmentBoardItemChangeEvent(alignmentBoardContext, childAlignedItem, ChangeType.VisibilityChange));
-        }
-
-        childAlignedItem.setIsVisible(true);
     }
 
     private void updateTableModel(OutlineModel outlineModel) {
@@ -570,6 +434,12 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
                 }
             });
         }
+    }
+    
+    @Subscribe 
+    public void itemChanged(AlignmentBoardItemChangeEvent event) {
+        OutlineModel outlineModel = DefaultOutlineModel.createOutlineModel(new SampleTreeModel(), new AlignedEntityRowModel(), true, "Name");
+        updateTableModel(outlineModel);
     }
     
     @Override
@@ -827,4 +697,5 @@ public class LayersPanel extends JPanel implements Refreshable, ActivatableView 
             worker.execute();
         }
     }
+
 }

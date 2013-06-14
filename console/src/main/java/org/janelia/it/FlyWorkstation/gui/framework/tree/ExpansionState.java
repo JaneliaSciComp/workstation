@@ -53,7 +53,9 @@ public class ExpansionState {
 	public void storeExpansionState(DynamicTree dynamicTree, DefaultMutableTreeNode node) {
 	    if (dynamicTree==null) return;
     	if (dynamicTree.getTree().isExpanded(new TreePath(node.getPath()))) {
-    		expanded.add(dynamicTree.getUniqueId(node));
+    	    String uniqueId = dynamicTree.getUniqueId(node);
+            log.debug("storeExpansionState Node@{} ({})",System.identityHashCode(node),uniqueId);
+    		expanded.add(uniqueId);
     	}
 
         for (Enumeration e = node.children(); e.hasMoreElements(); ) {

@@ -1,15 +1,20 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import java.awt.*;
-import java.util.*;
+import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import javax.media.opengl.awt.GLJPanel;
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
-import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityWrapperTransferHandler;
+import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTransferHandler;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerPane;
@@ -25,7 +30,10 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.ABContextDataSource;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.CropCoordSet;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_export.VolumeWritebackHandler;
-import org.janelia.it.FlyWorkstation.model.domain.*;
+import org.janelia.it.FlyWorkstation.model.domain.CompartmentSet;
+import org.janelia.it.FlyWorkstation.model.domain.EntityWrapper;
+import org.janelia.it.FlyWorkstation.model.domain.Neuron;
+import org.janelia.it.FlyWorkstation.model.domain.Sample;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.*;
 import org.janelia.it.FlyWorkstation.model.viewer.MaskedVolume.ArtifactType;
@@ -76,7 +84,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         setLayout(new BorderLayout());
         ModelMgr.getModelMgr().registerOnEventBus(this);
         
-        setTransferHandler(new EntityWrapperTransferHandler() {
+        setTransferHandler(new EntityTransferHandler() {
             @Override
             public JComponent getDropTargetComponent() {
                 return AlignmentBoardViewer.this;
@@ -144,6 +152,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         }
 
         deleteAll();
+        SessionMgr.getBrowser().getLayersPanel().closeAlignmentBoard();
     }
 
     @Override
@@ -295,7 +304,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     /** This is synch'd because there may be a race between constructor and an externally-posted event. */
     private synchronized void handleBoardOpened(AlignmentBoardContext abContext) {
         if ( ! boardOpen ) {
-            this.getViewerPane().setTitle("Alignment Board: " + abContext.getInternalEntity().getName());
+            this.getViewerPane().setTitle("Alignment Board: " + abContext.getInternalEntity().getName()+" ("+abContext.getAlignmentContext()+")");
             printAlignmentBoardContext(abContext);
 
             // The true update!
@@ -443,6 +452,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
      */
     private void updateBoard( final AlignmentBoardContext context ) {
         logger.warn("Update-board called.");
+        if (true) return;
         try {
             // TEMP
             //if ( brainGlow != null ) {

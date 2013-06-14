@@ -100,8 +100,6 @@ public class ViewerSplitPanel extends JPanel implements ViewerContainer {
 
 	public void setSecViewerVisible(boolean visible) {
 
-		secViewerPane.setVisible(visible);
-		
 		if (visible) {
 			if (mainViewerOnly) {
 				remove(mainViewerPane);
@@ -120,6 +118,7 @@ public class ViewerSplitPanel extends JPanel implements ViewerContainer {
 			}
 		}
 		else {
+		    secViewerPane.closeViewer();
 			mainViewerOnly = true;
 			activeViewerPane = mainViewerPane;
 			remove(mainSplitPane);

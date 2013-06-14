@@ -9,6 +9,7 @@ import java.util.Enumeration;
 import java.util.List;
 
 import javax.swing.JComponent;
+import javax.swing.JOptionPane;
 import javax.swing.JTree;
 import javax.swing.TransferHandler;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -20,9 +21,19 @@ import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.AnnotatedImageButton;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.IconPanel;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardViewer;
+import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.LayersPanel;
+import org.janelia.it.FlyWorkstation.model.domain.AlignmentContext;
+import org.janelia.it.FlyWorkstation.model.domain.EntityWrapperFactory;
+import org.janelia.it.FlyWorkstation.model.domain.Neuron;
+import org.janelia.it.FlyWorkstation.model.domain.Sample;
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
+import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.FlyWorkstation.shared.util.Utils;
+import org.janelia.it.FlyWorkstation.shared.workers.IndeterminateProgressMonitor;
+import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.entity.EntityData;
 import org.janelia.it.jacs.shared.utils.EntityUtils;
 import org.slf4j.Logger;
@@ -57,7 +68,54 @@ public abstract class EntityTransferHandler extends TransferHandler {
 	}
 	
 	public abstract JComponent getDropTargetComponent();
-	
+
+    @Override
+    protected Transferable createTransferable(JComponent sourceComponent) {
+
+        log.debug("EntityTransferHandler.createTransferable");
+        
+        List<RootedEntity> entityList = new ArrayList<RootedEntity>();
+        
+        if (sourceComponent instanceof JTree) {
+            
+            JTree tree = (JTree) sourceComponent;
+            TreePath[] paths = tree.getSelectionPaths();
+            if (paths == null) return null;
+            
+            for(TreePath path : paths) {
+                DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
+                String parentUniqueId = entityOutline.getDynamicTree().getUniqueId(node);
+                entityList.add(new RootedEntity(parentUniqueId, entityOutline.getEntityData(node)));
+            }
+        }
+        else if (sourceComponent instanceof AnnotatedImageButton) {
+            Viewer viewer = SessionMgr.getBrowser().getViewerManager().getActiveViewer();
+            final List<String> selectedEntities = new ArrayList<String>(
+                    ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(viewer.getSelectionCategory()));
+            for(String selectedId : selectedEntities) {
+                RootedEntity matchingEntity = viewer.getRootedEntityById(selectedId);
+                if (matchingEntity == null) {
+                    throw new IllegalStateException("Entity not found in viewer: "+selectedId);
+                }
+                entityList.add(matchingEntity);
+            }       
+
+        }
+        else if (sourceComponent instanceof LayersPanel) {
+            log.warn("No transfer handling defined from a LayersPanel");
+        }
+        else {
+            throw new IllegalStateException("Unsupported component type for transfer: "+sourceComponent.getClass().getName());
+        }
+        
+        return new TransferableEntityList(entityList);
+    }
+
+    @Override
+    public int getSourceActions(JComponent c) {
+        return LINK;
+    }
+    
 	@Override
 	public boolean canImport(TransferHandler.TransferSupport support) {
 		
@@ -75,92 +133,106 @@ public abstract class EntityTransferHandler extends TransferHandler {
 			DropLocation dropLocation = support.getDropLocation();
 			JComponent dropTarget = getDropTargetComponent();
 			
-			if (!(dropTarget instanceof EntityTree)) return false;
-			if (!(dropLocation instanceof JTree.DropLocation)) return false;
-			
-			JTree tree = entityOutline.getTree();
-			int[] selRows = tree.getSelectionRows();			
-			JTree.DropLocation dl = (JTree.DropLocation)dropLocation;
-			TreePath targetPath = dl.getPath();
-			DefaultMutableTreeNode targetNode = (DefaultMutableTreeNode)targetPath.getLastPathComponent();
-			
-			// Derive unique TreePaths for the entities. It will allow us to enforce some tree-based rules.
-			List<TreePath> sourcePaths = new ArrayList<TreePath>();			
-			if (sourceComponent instanceof JTree) {
-				sourcePaths.add(tree.getPathForRow(selRows[0]));
-			}
-			else if (sourceComponent instanceof AnnotatedImageButton) {
-            	List<String> selectedEntities = new ArrayList<String>(
-            			ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(
-            					SessionMgr.getBrowser().getViewerManager().getActiveViewer().getSelectionCategory()));
-            	IconPanel iconPanel = ((AnnotatedImageButton)sourceComponent).getIconPanel();
-				for(String selectedId : selectedEntities) {
-					RootedEntity rootedEntity = iconPanel.getRootedEntityById(selectedId);
-	            	DefaultMutableTreeNode node = entityOutline.getNodeByUniqueId(rootedEntity.getUniqueId());
-	            	sourcePaths.add(new TreePath(node.getPath()));
-				}				
-			}
-			else {
-				throw new IllegalStateException("Unknown component for transfer: "+sourceComponent.getClass().getName());
-			}
+			if (dropTarget instanceof EntityTree) {
+			    // Drag to the entity tree
+			    
+	            JTree tree = entityOutline.getTree();
+	            int[] selRows = tree.getSelectionRows();
+	            JTree.DropLocation dl = (JTree.DropLocation)dropLocation;
+	            TreePath targetPath = dl.getPath();
+	            DefaultMutableTreeNode targetNode = (DefaultMutableTreeNode)targetPath.getLastPathComponent();
+	            
+	            // Derive unique TreePaths for the entities. It will allow us to enforce some tree-based rules.
+	            List<TreePath> sourcePaths = new ArrayList<TreePath>();         
+	            if (sourceComponent instanceof JTree) {
+	                sourcePaths.add(tree.getPathForRow(selRows[0]));
+	            }
+	            else if (sourceComponent instanceof AnnotatedImageButton) {
+	                List<String> selectedEntities = new ArrayList<String>(
+	                        ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(
+	                                SessionMgr.getBrowser().getViewerManager().getActiveViewer().getSelectionCategory()));
+	                IconPanel iconPanel = ((AnnotatedImageButton)sourceComponent).getIconPanel();
+	                for(String selectedId : selectedEntities) {
+	                    RootedEntity rootedEntity = iconPanel.getRootedEntityById(selectedId);
+	                    DefaultMutableTreeNode node = entityOutline.getNodeByUniqueId(rootedEntity.getUniqueId());
+	                    sourcePaths.add(new TreePath(node.getPath()));
+	                }               
+	            }
+	            else {
+	                throw new IllegalStateException("Unknown component for transfer: "+sourceComponent.getClass().getName());
+	            }
 
-			// Can't moved to the root
-			if (targetNode.isRoot()) {
-				log.debug("Disallow transfer because target node is a root");
-				return false;
-			}
-			
-			for(TreePath sourcePath : sourcePaths) {
+	            // Can't moved to the root
+	            if (targetNode.isRoot()) {
+	                log.debug("Disallow transfer because target node is a root");
+	                return false;
+	            }
+	            
+	            for(TreePath sourcePath : sourcePaths) {
 
-				// Can't move to a descendant
-				if (sourcePath.isDescendant(targetPath)) {
-					log.debug("Disallow transfer because source node descendant of target");
-					return false;
-				}
+	                // Can't move to a descendant
+	                if (sourcePath.isDescendant(targetPath)) {
+	                    log.debug("Disallow transfer because source node descendant of target");
+	                    return false;
+	                }
 
-				// Can't move the root
-				DefaultMutableTreeNode sourceNode = (DefaultMutableTreeNode)sourcePath.getLastPathComponent();
-				if (sourceNode.isRoot()) {
-					log.debug("Disallow transfer because source node is a root");
-					return false;
-				}
-				
-				DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode)sourceNode.getParent();
-				int sourceIndex = parentNode.getIndex(sourceNode);
-				int targetIndex = dl.getChildIndex();
-				
-				// Do not allow a drop in the same location 
-				if ((targetPath.equals(sourcePath) || targetPath.equals(sourcePath.getParentPath())) 
-						&& (sourceIndex==targetIndex || (targetIndex<0 && sourceIndex==parentNode.getChildCount()-1))) {
-					log.debug("Disallow transfer to the same location");
-					return false;
-				}
+	                // Can't move the root
+	                DefaultMutableTreeNode sourceNode = (DefaultMutableTreeNode)sourcePath.getLastPathComponent();
+	                if (sourceNode.isRoot()) {
+	                    log.debug("Disallow transfer because source node is a root");
+	                    return false;
+	                }
+	                
+	                DefaultMutableTreeNode parentNode = (DefaultMutableTreeNode)sourceNode.getParent();
+	                int sourceIndex = parentNode.getIndex(sourceNode);
+	                int targetIndex = dl.getChildIndex();
+	                
+	                // Do not allow a drop in the same location 
+	                if ((targetPath.equals(sourcePath) || targetPath.equals(sourcePath.getParentPath())) 
+	                        && (sourceIndex==targetIndex || (targetIndex<0 && sourceIndex==parentNode.getChildCount()-1))) {
+	                    log.debug("Disallow transfer to the same location");
+	                    return false;
+	                }
+	            }
+	            
+	            // Do not allow a drop on the drag source selections
+	            int dropRow = tree.getRowForPath(targetPath);
+	            for (int i = 0; i < selRows.length; i++) {
+	                if (selRows[i] == dropRow) {
+	                    log.debug("Disallow transfer drag and drop rows are identical");
+	                    return false;
+	                }
+	            }
+	    
+	            // Enforce some Entity-specific rules
+	            List<RootedEntity> entities = (List<RootedEntity>)support.getTransferable().getTransferData(nodesFlavor);
+	            if (!allowTransfer(targetNode, entities)) {
+	                log.debug("Disallow transfer because of entity rules");
+	                return false;
+	            }
+	            
+	            return true;
+			    
 			}
-			
-			// Do not allow a drop on the drag source selections
-			int dropRow = tree.getRowForPath(targetPath);
-			for (int i = 0; i < selRows.length; i++) {
-				if (selRows[i] == dropRow) {
-					log.debug("Disallow transfer drag and drop rows are identical");
-					return false;
-				}
-			}
-	
-			// Enforce some Entity-specific rules
-			List<Entity> entities = (List<Entity>)support.getTransferable().getTransferData(nodesFlavor);
-			if (!allowTransfer(targetNode, entities)) {
-				log.debug("Disallow transfer because of entity rules");
-				return false;
-			}
-			
-			return true;
-			
+			else if ((dropTarget instanceof LayersPanel) || (dropTarget instanceof AlignmentBoardViewer)) {
+                // Drag to the alignment board
+
+	            Transferable transferable = support.getTransferable();
+	            List<RootedEntity> entities = (List<RootedEntity>)transferable.getTransferData(nodesFlavor);
+	            
+//	            if (entities.size()>1) {
+//	                log.error("Cannot transfer more than one entity at a time");
+//	                return false;
+//	            }
+	            
+	            return true;
+            }
 		}
 		catch (Exception e) {
 			SessionMgr.getSessionMgr().handleException(e);
-			return false;
 		}
-		
+
+        return false;
 	}
 
 	/**
@@ -169,7 +241,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
 	 * @param entitiesToAdd list of entities to add to the the new parentv
 	 * @return true if transfer is allowed
 	 */
-	protected boolean allowTransfer(DefaultMutableTreeNode targetNode, List<Entity> entitiesToAdd) {
+	protected boolean allowTransfer(DefaultMutableTreeNode targetNode, List<RootedEntity> entitiesToAdd) {
 		
 		// Disallow transfer if target node is not owned by the user
 		Entity targetEntity = entityOutline.getEntity(targetNode);
@@ -178,7 +250,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
 			return false;
 		}
 
-		for(Entity entity : entitiesToAdd) {
+		for(RootedEntity entity : entitiesToAdd) {
 			// Disallow transfer if the entity is in the ancestor chain
 			DefaultMutableTreeNode nextParent = (DefaultMutableTreeNode)targetNode.getParent();
 			if (nextParent!=null) {
@@ -186,7 +258,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
 			}
 			while (nextParent != null) {
 				Entity ancestor = entityOutline.getEntity(nextParent);
-				if (Utils.areSameEntity(entity, ancestor)) {
+				if (Utils.areSameEntity(entity.getEntity(), ancestor)) {
 					log.debug("Disallow transfer because entity is an ancestor of target");
 					return false;
 				}
@@ -204,49 +276,6 @@ public abstract class EntityTransferHandler extends TransferHandler {
 		
 		return true;
 	}
-	
-	@Override
-	protected Transferable createTransferable(JComponent sourceComponent) {
-
-		log.debug("EntityTransferHandler.createTransferable");
-		
-		List<Entity> entityList = new ArrayList<Entity>();
-		
-		if (sourceComponent instanceof JTree) {
-			
-			JTree tree = (JTree) sourceComponent;
-			TreePath[] paths = tree.getSelectionPaths();
-			if (paths == null) return null;
-			
-			for(TreePath path : paths) {
-				DefaultMutableTreeNode node = (DefaultMutableTreeNode) path.getLastPathComponent();
-				entityList.add(entityOutline.getEntity(node));
-			}
-		}
-		else if (sourceComponent instanceof AnnotatedImageButton) {
-			Viewer viewer = SessionMgr.getBrowser().getViewerManager().getActiveViewer();
-			final List<String> selectedEntities = new ArrayList<String>(
-        			ModelMgr.getModelMgr().getEntitySelectionModel().getSelectedEntitiesIds(viewer.getSelectionCategory()));
-			for(String selectedId : selectedEntities) {
-				RootedEntity matchingEntity = viewer.getRootedEntityById(selectedId);
-				if (matchingEntity == null) {
-					throw new IllegalStateException("Entity not found in viewer: "+selectedId);
-				}
-				entityList.add(matchingEntity.getEntity());
-			}		
-
-		}
-		else {
-			throw new IllegalStateException("Unsupported component type for transfer: "+sourceComponent.getClass().getName());
-		}
-		
-		return new TransferableEntityList(entityList);
-	}
-
-	@Override
-	public int getSourceActions(JComponent c) {
-		return LINK;
-	}
 
 	@Override
 	public boolean importData(TransferHandler.TransferSupport support) {
@@ -256,24 +285,53 @@ public abstract class EntityTransferHandler extends TransferHandler {
 		try {
 			// Extract transfer data
 			Transferable t = support.getTransferable();
-			List<Entity> entities = (List<Entity>)t.getTransferData(nodesFlavor);
+			final List<RootedEntity> rootedEntities = (List<RootedEntity>)t.getTransferData(nodesFlavor);
 		
-			// Get drop location info
-			JTree.DropLocation dl = (JTree.DropLocation) support.getDropLocation();
-			int childIndex = dl.getChildIndex();
-			TreePath targetPath = dl.getPath();
-			DefaultMutableTreeNode parent = (DefaultMutableTreeNode) targetPath.getLastPathComponent();
-			
-			// Get drop index
-			int index = childIndex; // DropMode.INSERT
-			if (childIndex == -1) { // DropMode.ON
-				EntityData parentEd = (EntityData)parent.getUserObject();
-				Entity parentEntity = parentEd.getChildEntity();
-				index = parentEntity.getChildren().size();
-			}
-					
-			// Actually perform the transfer
-			addEntities(parent, entities, index);
+			JComponent dropTarget = getDropTargetComponent();
+            if (dropTarget instanceof EntityTree) {
+
+                // Get drop location info
+                JTree.DropLocation dl = (JTree.DropLocation) support.getDropLocation();
+                int childIndex = dl.getChildIndex();
+                TreePath targetPath = dl.getPath();
+                DefaultMutableTreeNode parent = (DefaultMutableTreeNode) targetPath.getLastPathComponent();
+                
+                // Get drop index
+                int index = childIndex; // DropMode.INSERT
+                if (childIndex == -1) { // DropMode.ON
+                    EntityData parentEd = (EntityData)parent.getUserObject();
+                    Entity parentEntity = parentEd.getChildEntity();
+                    index = parentEntity.getChildren().size();
+                }
+                        
+                // Actually perform the transfer
+                addEntities(parent, rootedEntities, index);
+            }
+            else if ((dropTarget instanceof LayersPanel) || (dropTarget instanceof AlignmentBoardViewer)) {
+
+                SimpleWorker worker = new SimpleWorker() {
+                    @Override
+                    protected void doStuff() throws Exception {
+                        addEntities(SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext(), rootedEntities);
+                        for(RootedEntity rootedEntity : rootedEntities) {
+                            EntityWrapperFactory.wrap(rootedEntity);
+                        }
+                           
+                    }
+                    
+                    @Override
+                    protected void hadSuccess() {
+                        //SessionMgr.getBrowser().getLayersPanel().refresh();
+                    }
+                    
+                    @Override
+                    protected void hadError(Throwable error) {
+                        SessionMgr.getSessionMgr().handleException(error);
+                    }
+                };
+                worker.setProgressMonitor(new IndeterminateProgressMonitor(SessionMgr.getBrowser(), "Adding aligned entities...", ""));
+                worker.execute();
+            }
 		}
 		catch (Exception e) {
 			SessionMgr.getSessionMgr().handleException(e);
@@ -290,13 +348,13 @@ public abstract class EntityTransferHandler extends TransferHandler {
 	 * @param destIndex child insertion index in the new parent
 	 * @throws Exception
 	 */
-	protected void addEntities(DefaultMutableTreeNode targetNode, List<Entity> entitiesToAdd, int destIndex) throws Exception {
+	protected void addEntities(DefaultMutableTreeNode targetNode, List<RootedEntity> entitiesToAdd, int destIndex) throws Exception {
 
 		Entity parentEntity = entityOutline.getEntity(targetNode);
 		
 		int i = destIndex;
-		for(Entity entity : entitiesToAdd) {
-			log.debug("will add {} to {}",entity.getName(),parentEntity.getName());
+		for(RootedEntity rootedEntity : entitiesToAdd) {
+			log.debug("will add {} to {}",rootedEntity.getName(),parentEntity.getName());
 			i++;
 		}
 		log.debug("updating entity model");
@@ -309,10 +367,10 @@ public abstract class EntityTransferHandler extends TransferHandler {
 		int origSize = eds.size();
 		int currIndex = destIndex;		
 		
-		for(Entity entity : entitiesToAdd) {
+		for(RootedEntity rootedEntity : entitiesToAdd) {
 			// Add the entity to the new parent, generating the ED
-			EntityData newEd = ModelMgr.getModelMgr().addEntityToParent(parentEntity, entity);
-			log.debug("created new child {}",entity.getName());
+			EntityData newEd = ModelMgr.getModelMgr().addEntityToParent(parentEntity, rootedEntity.getEntity());
+			log.debug("created new child {}",rootedEntity.getName());
 			
 			if (destIndex > origSize) {
 				eds.add(newEd);
@@ -329,7 +387,7 @@ public abstract class EntityTransferHandler extends TransferHandler {
 		        while (enumeration.hasMoreElements()) {
 		            DefaultMutableTreeNode childNode = (DefaultMutableTreeNode) enumeration.nextElement();
 		            EntityData ed = entityOutline.getEntityData(childNode);
-					if (ed!=null && ed.getChildEntity()!=null && Utils.areSameEntity(entity, ed.getChildEntity()) && ed.getId()!=newEd.getId()) {
+					if (ed!=null && ed.getChildEntity()!=null && Utils.areSameEntity(rootedEntity.getEntity(), ed.getChildEntity()) && ed.getId()!=newEd.getId()) {
 						toRemove.add(childNode);
 					}
 		        }
@@ -380,21 +438,32 @@ public abstract class EntityTransferHandler extends TransferHandler {
 			}
 		}
 	}
-	
+    
+    /**
+     * Add the given entities to the specified alignment board, if possible.
+     * @param alignmentBoardContext
+     * @param entitiesToAdd
+     */
+    protected void addEntities(AlignmentBoardContext alignmentBoardContext, List<RootedEntity> entitiesToAdd) throws Exception {
+        for(RootedEntity rootedEntity : entitiesToAdd) {
+            alignmentBoardContext.addRootedEntity(rootedEntity);
+        }
+    }
+    
 	/**
 	 * List of entities being transferred.  
 	 */
 	public class TransferableEntityList implements Transferable {
 		
-		private List<Entity> entities;
+		private List<RootedEntity> entities;
 
-		public TransferableEntityList(Entity entity) {
-			this.entities = new ArrayList<Entity>();
-			entities.add(entity);
+		public TransferableEntityList(RootedEntity rootedEntity) {
+			this.entities = new ArrayList<RootedEntity>();
+			entities.add(rootedEntity);
 		}
 		
-		public TransferableEntityList(List<Entity> entities) {
-			this.entities = entities;
+		public TransferableEntityList(List<RootedEntity> rootedEntities) {
+			this.entities = rootedEntities;
 		}
 		
 		@Override

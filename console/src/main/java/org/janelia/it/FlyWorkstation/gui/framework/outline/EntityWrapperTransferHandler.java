@@ -187,7 +187,7 @@ public abstract class EntityWrapperTransferHandler extends TransferHandler {
 	protected void addEntityWrapper(EntityWrapper wrapper) throws Exception {
 	    log.info("add entity wrapper : "+wrapper.getName());
 	    LayersPanel layersPanel = SessionMgr.getBrowser().getLayersPanel();
-	    layersPanel.addNewAlignedEntity(wrapper);
+	    layersPanel.getAlignmentBoardContext().addNewAlignedEntity(wrapper);
 	}
 	
 	/**

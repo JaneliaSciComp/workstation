@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.model.domain;
 
 import org.janelia.it.FlyWorkstation.model.entity.RootedEntity;
 import org.janelia.it.FlyWorkstation.model.viewer.AlignedItem;
+import org.janelia.it.FlyWorkstation.model.viewer.AlignmentBoardContext;
 import org.janelia.it.jacs.model.entity.EntityConstants;
 
 /**
@@ -31,7 +32,10 @@ public class EntityWrapperFactory {
         else if (EntityConstants.TYPE_COMPARTMENT.equals(type)) {
             return new Compartment(rootedEntity);
         }
-         
+        else if (EntityConstants.TYPE_ALIGNMENT_BOARD.equals(type)) {
+            return new AlignmentBoardContext(rootedEntity);
+        }
+        
         throw new IllegalArgumentException("Cannot wrap entity type: "+type);
     }
 }
