@@ -1,14 +1,13 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
 import com.jogamp.common.nio.Buffers;
 
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.buffering.VtxCoordBufMgr;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.VolumeBrickShader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
@@ -33,12 +32,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     private TextureMediator maskTextureMediator;
     private TextureMediator colorMapTextureMediator;
     private List<TextureMediator> textureMediators = new ArrayList<TextureMediator>();
-
-    // Buffer objects for setting geometry on the GPU side.  Trying GL_TRIANGLE_STRIP at first.
-    //   I need one per starting direction (x,y,z) times one for positive, one for negative.
-    //
-    private DoubleBuffer texCoordBuf[] = new DoubleBuffer[ 6 ];
-    private DoubleBuffer geometryCoordBuf[] = new DoubleBuffer[ 6 ];
 
     // Vary these parameters to taste
 	// Rendering variables
@@ -66,25 +59,30 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     private boolean bIsInitialized;
     private boolean bUseSyntheticData = false;
 
+    private VtxCoordBufMgr bufferManager;
     private VolumeModel volumeModel;
 
     private Logger logger = LoggerFactory.getLogger( VolumeBrick.class );
 
-//    static {
-//        GLProfile profile = GLProfile.get(GLProfile.GL3);
-//        final GLCapabilities capabilities = new GLCapabilities(profile);
-//        capabilities.setGLProfile( profile );
+    static {
+        try {
+            GLProfile profile = GLProfile.get(GLProfile.GL3);
+            final GLCapabilities capabilities = new GLCapabilities(profile);
+            capabilities.setGLProfile( profile );
 
-//        SwingUtilities.invokeLater(new Runnable() {
-//            public void run() {
-//                new JOCLSimpleGL3(capabilities);
-//            }
-//        });
-//
+            //        SwingUtilities.invokeLater(new Runnable() {
+            //            public void run() {
+            //                new JOCLSimpleGL3(capabilities);
+            //            }
+            //        });
+        } catch ( Throwable th ) {
+            System.out.println( "INFO: " + new java.util.Date() + VolumeBrick.class.getName() + ": No GL3 profile available" );
+        }
 
-//    }
+    }
 
     VolumeBrick(VolumeModel volumeModel) {
+        bufferManager = new VtxCoordBufMgr();
         setVolumeModel( volumeModel );
     }
 
@@ -111,7 +109,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     @Override
 	public void init(GL2 gl) {
-        //buildVertexBuffers();
 
         // Avoid carrying out any operations if there is no real data.
         if ( signalTextureMediator == null  &&  maskTextureMediator == null ) {
@@ -128,6 +125,15 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
         if (bSignalTextureNeedsUpload) {
             uploadSignalTexture(gl);
+            try {
+                // This vertex-build must be done here, now that all information is set.
+                bufferManager.buildBuffers();
+                reportError( gl, "building buffers" );
+                bufferManager.enableBuffers( gl );
+                reportError( gl, "uploading buffers" );
+            } catch ( Exception ex ) {
+                SessionMgr.getSessionMgr().handleException( ex );
+            }
         }
 		if (bUseShader) {
             if ( maskTextureMediator != null  &&  bMaskTextureNeedsUpload ) {
@@ -243,7 +249,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 	 * order.
 	 * @param gl
 	 */
-	public void displayVolumeSlices(GL2 gl) {
+	public void displayVolumeSlicesBuffered(GL2 gl) {
 
 		// Get the view vector, so we can choose the slice direction,
 		// along one of the three principal axes(X,Y,Z), and either forward
@@ -251,6 +257,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 		// "InGround" means in the WORLD object reference frame.
 		// (the view vector in the EYE reference frame is always [0,0,-1])
 		Vec3 viewVectorInGround = volumeModel.getCamera3d().getRotation().times(new Vec3(0,0,1));
+
 		// Compute the principal axis of the view direction; that's the direction we will slice along.
 		CoordinateAxis a1 = CoordinateAxis.X; // First guess principal axis is X.  Who knows?
 		Vec3 vv = viewVectorInGround;
@@ -258,59 +265,92 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 			a1 = CoordinateAxis.Y; // OK, maybe Y axis is principal
 		if ( Math.abs(vv.z()) > Math.abs(vv.get(a1.index())) )
 			a1 = CoordinateAxis.Z; // Alright, it's definitely Z principal.
-		// Choose the other two axes in right-handed convention
-		CoordinateAxis a2 = a1.next();
-		CoordinateAxis a3 = a2.next();
+
 		// If principal axis points away from viewer, draw slices front to back,
 		// instead of back to front.
 		double direction = 1.0; // points away from viewer, render back to front, n to 0
 		if (vv.get(a1.index()) < 0.0) 
 			direction = -1.0; // points toward, front to back, 0 to n
-		// Below "x", "y", and "z" actually refer to a1, a2, and a3, respectively;
-		// These axes might be permuted from the real world XYZ
-		// Each slice cuts through an exact voxel center,
-		// but slice edges extend all the way to voxel edges.
-		// Compute dimensions of one x slice: y0-y1 and z0-z1
-		// Pad edges of rectangles by one voxel to support oblique ray tracing past edges
-		double y0 = direction * (signalTextureMediator.getVolumeMicrometers()[a2.index()] / 2.0 + signalTextureMediator.getVoxelMicrometers()[a2.index()]);
-		double y1 = -y0;
-		double z0 = direction * (signalTextureMediator.getVolumeMicrometers()[a3.index()] / 2.0 + signalTextureMediator.getVoxelMicrometers()[a3.index()]);
-		double z1 = -z0;
-		// Four points for four slice corners
-		double[] p00 = {0,0,0};
-		double[] p10 = {0,0,0};
-		double[] p11 = {0,0,0};
-		double[] p01 = {0,0,0};
-		// reswizzle coordinate axes back to actual X, Y, Z (except x, saved for later)
-		p00[a2.index()] = p01[a2.index()] = y0;
-		p10[a2.index()] = p11[a2.index()] = y1;
-		p00[a3.index()] = p10[a3.index()] = z0;
-		p01[a3.index()] = p11[a3.index()] = z1;
-		// compute number of slices
-		int sx = (int)(0.5 + signalTextureMediator.getVolumeMicrometers()[a1.index()] / signalTextureMediator.getVoxelMicrometers()[a1.index()]);
-		// compute position of first slice
-		double x0 = -direction * (signalTextureMediator.getVoxelMicrometers()[a1.index()] - signalTextureMediator.getVolumeMicrometers()[a1.index()]) / 2.0;
-		// compute distance between slices
-		double dx = -direction * signalTextureMediator.getVoxelMicrometers()[a1.index()];
+        bufferManager.draw( gl, a1, direction );
+        reportError(gl, "Volume Brick, after draw.");
+
+    }
+
+    /**
+     * Volume rendering by painting a series of transparent,
+     * one-voxel-thick slices, in back-to-front painter's algorithm
+     * order.
+     * @param gl
+     */
+    public void displayVolumeSlices(GL2 gl) {
+
+        // Get the view vector, so we can choose the slice direction,
+        // along one of the three principal axes(X,Y,Z), and either forward
+        // or backward.
+        // "InGround" means in the WORLD object reference frame.
+        // (the view vector in the EYE reference frame is always [0,0,-1])
+        Vec3 viewVectorInGround = volumeModel.getCamera3d().getRotation().times(new Vec3(0,0,1));
+        // Compute the principal axis of the view direction; that's the direction we will slice along.
+        CoordinateAxis a1 = CoordinateAxis.X; // First guess principal axis is X.  Who knows?
+        Vec3 vv = viewVectorInGround;
+        if ( Math.abs(vv.y()) > Math.abs(vv.get(a1.index())) )
+            a1 = CoordinateAxis.Y; // OK, maybe Y axis is principal
+        if ( Math.abs(vv.z()) > Math.abs(vv.get(a1.index())) )
+            a1 = CoordinateAxis.Z; // Alright, it's definitely Z principal.
+        // Choose the other two axes in right-handed convention
+        CoordinateAxis a2 = a1.next();
+        CoordinateAxis a3 = a2.next();
+        // If principal axis points away from viewer, draw slices front to back,
+        // instead of back to front.
+        double direction = 1.0; // points away from viewer, render back to front, n to 0
+        if (vv.get(a1.index()) < 0.0)
+            direction = -1.0; // points toward, front to back, 0 to n
+
+        // Below "x", "y", and "z" actually refer to a1, a2, and a3, respectively;
+        // These axes might be permuted from the real world XYZ
+        // Each slice cuts through an exact voxel center,
+        // but slice edges extend all the way to voxel edges.
+        // Compute dimensions of one x slice: y0-y1 and z0-z1
+        // Pad edges of rectangles by one voxel to support oblique ray tracing past edges
+        double y0 = direction * (signalTextureMediator.getVolumeMicrometers()[a2.index()] / 2.0 + signalTextureMediator.getVoxelMicrometers()[a2.index()]);
+        double y1 = -y0;
+        double z0 = direction * (signalTextureMediator.getVolumeMicrometers()[a3.index()] / 2.0 + signalTextureMediator.getVoxelMicrometers()[a3.index()]);
+        double z1 = -z0;
+        // Four points for four slice corners
+        double[] p00 = {0,0,0};
+        double[] p10 = {0,0,0};
+        double[] p11 = {0,0,0};
+        double[] p01 = {0,0,0};
+        // reswizzle coordinate axes back to actual X, Y, Z (except x, saved for later)
+        p00[a2.index()] = p01[a2.index()] = y0;
+        p10[a2.index()] = p11[a2.index()] = y1;
+        p00[a3.index()] = p10[a3.index()] = z0;
+        p01[a3.index()] = p11[a3.index()] = z1;
+        // compute number of slices
+        int sx = (int)(0.5 + signalTextureMediator.getVolumeMicrometers()[a1.index()] / signalTextureMediator.getVoxelMicrometers()[a1.index()]);
+        // compute position of first slice
+        double x0 = -direction * (signalTextureMediator.getVoxelMicrometers()[a1.index()] - signalTextureMediator.getVolumeMicrometers()[a1.index()]) / 2.0;
+        // compute distance between slices
+        double dx = -direction * signalTextureMediator.getVoxelMicrometers()[a1.index()];
 
         reportError(gl, "Volume Brick, before setting coords.");
 
         // deal out the slices, like cards from a deck
         gl.glBegin(GL2.GL_TRIANGLE_STRIP);
-		for (int xi = 0; xi < sx; ++xi) {
-			// insert final coordinate into corner vectors
-			double x = x0 + xi * dx;
-			int a = a1.index();
-			p00[a] = p01[a] = p10[a] = p11[a] = x;
-			// Compute texture coordinates
-			double[] t00 = signalTextureMediator.textureCoordFromVoxelCoord( p00 );
-			double[] t01 = signalTextureMediator.textureCoordFromVoxelCoord( p01 );
-			double[] t10 = signalTextureMediator.textureCoordFromVoxelCoord( p10 );
-			double[] t11 = signalTextureMediator.textureCoordFromVoxelCoord( p11 );
-			// color from black(back) to white(front) for debugging.
-			// double c = xi / (double)sx;
-			// gl.glColor3d(c, c, c);
-			// draw the quadrilateral as a triangle strip with 4 points
+        for (int xi = 0; xi < sx; ++xi) {
+            // insert final coordinate into corner vectors
+            double x = x0 + xi * dx;
+            int a = a1.index();
+            p00[a] = p01[a] = p10[a] = p11[a] = x;
+            // Compute texture coordinates
+            double[] t00 = signalTextureMediator.textureCoordFromVoxelCoord( p00 );
+            double[] t01 = signalTextureMediator.textureCoordFromVoxelCoord( p01 );
+            double[] t10 = signalTextureMediator.textureCoordFromVoxelCoord( p10 );
+            double[] t11 = signalTextureMediator.textureCoordFromVoxelCoord( p11 );
+            // color from black(back) to white(front) for debugging.
+            // double c = xi / (double)sx;
+            // gl.glColor3d(c, c, c);
+            // draw the quadrilateral as a triangle strip with 4 points
             // (somehow GL_QUADS never works correctly for me)
             setTextureCoordinates(gl, t00[0], t00[1], t00[2]);
             gl.glVertex3d(p00[0], p00[1], p00[2]);
@@ -321,11 +361,11 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
             setTextureCoordinates(gl, t11[0], t11[1], t11[2]);
             gl.glVertex3d(p11[0], p11[1], p11[2]);
 
-			boolean bDebug = false;
-			if (bDebug)
-				printPoints(t00, t10, t01, t11);
+            boolean bDebug = false;
+            if (bDebug)
+                printPoints(t00, t10, t01, t11);
 
-		}
+        }
         gl.glEnd();
         reportError(gl, "Volume Brick, after setting coords.");
 
@@ -451,6 +491,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         }
         signalTextureMediator.setTextureData( textureData );
         bSignalTextureNeedsUpload = true;
+        bufferManager.setTextureMediator( signalTextureMediator );
     }
 
     //---------------------------------END: IMPLEMENT VolumeDataAcceptor
@@ -562,173 +603,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     private void setupColorMapTexture(GL2 gl) {
         if ( colorMapTextureMediator != null ) {
             colorMapTextureMediator.setupTexture( gl );
-        }
-    }
-
-    /**
-     * This method builds the buffers of vertices for both geometry and texture.  These are calculated similarly,
-     * but with different ranges.  There are multiple such buffers of both types, and they are kept in arrays.
-     * The arrays are indexed as follows:
-     * 1. Offsets [ 0..2 ] are for positive direction.
-     * 2. Offsets 0,3 are X; 1,4 are Y and 2,5 are Z.
-     *
-     * NOTE: where I am, I need to work when to upload the buffers, and how to differentiate texture vertex and
-     *       geometric vertex buffer values.  The calls are likely  glVertexAttribPointer and glEnableVertexAttribArray,
-     *       followed by glDrawArrays with argument of GL_TRIANGLE_STRIP.  Example seems to upload prior.
-     */
-    private void buildVertexBuffers() {
-        /*
-        // compute number of slices
-		int sx = (int)(0.5 + signalTextureMediator.getVolumeMicrometers()[a1.index()] / signalTextureMediator.getVoxelMicrometers()[a1.index()]);
-		// compute position of first slice
-		double x0 = -direction * (signalTextureMediator.getVoxelMicrometers()[a1.index()] - signalTextureMediator.getVolumeMicrometers()[a1.index()]) / 2.0;
-		// compute distance between slices
-		double dx = -direction * signalTextureMediator.getVoxelMicrometers()[a1.index()];
-
-         */
-        if ( texCoordBuf[ 0 ] == null  &&  volumeModel != null  &&  signalTextureMediator != null ) {
-            // Compute sizes, and allocate buffers.
-            int numVertices = (int)
-                    (
-                            signalTextureMediator.getVolumeMicrometers()[ 0 ] *
-                            signalTextureMediator.getVolumeMicrometers()[ 1 ] *
-                            signalTextureMediator.getVolumeMicrometers()[ 2 ]
-                    );
-            int numCoords = 3 * numVertices;
-
-            for ( int i = 0; i < 6; i++ ) {
-                ByteBuffer texByteBuffer = ByteBuffer.allocate(numCoords * 8);
-                texByteBuffer.order( ByteOrder.nativeOrder() );
-                texCoordBuf[ i ] = texByteBuffer.asDoubleBuffer();
-                ByteBuffer geoByteBuffer = ByteBuffer.allocate(numCoords * 8);
-                geoByteBuffer.order(ByteOrder.nativeOrder());
-                geometryCoordBuf[ i ] = geoByteBuffer.asDoubleBuffer();
-            }
-
-            // Now produce the vertexes to stuff into all of the buffers.
-            //  Making sets of four.
-            // FORWARD axes.
-            for ( int firstInx = 0; firstInx < 3; firstInx++ ) {
-                double firstAxisLen = signalTextureMediator.getVolumeMicrometers()[ firstInx ];
-                int secondInx = (firstInx + 1) % 3;
-                double secondAxisLen = signalTextureMediator.getVolumeMicrometers()[ secondInx ];
-                int thirdInx = (firstInx + 2) % 3;
-                double thirdAxisLen = signalTextureMediator.getVolumeMicrometers()[ thirdInx ];
-                // compute number of slices
-                int sliceCount = (int)(0.5 + firstAxisLen / signalTextureMediator.getVoxelMicrometers()[ firstInx ]);
-                double slice0 = (signalTextureMediator.getVoxelMicrometers()[ firstInx ] - firstAxisLen) / 2.0;
-                double sliceSep = signalTextureMediator.getVoxelMicrometers()[ firstInx ];
-
-                /*
-                		// Below "x", "y", and "z" actually refer to a1, a2, and a3, respectively;
-		// These axes might be permuted from the real world XYZ
-		// Each slice cuts through an exact voxel center,
-		// but slice edges extend all the way to voxel edges.
-		// Compute dimensions of one x slice: y0-y1 and z0-z1
-		// Pad edges of rectangles by one voxel to support oblique ray tracing past edges
-		double y0 = direction * (signalTextureMediator.getVolumeMicrometers()[a2.index()] / 2.0 + signalTextureMediator.getVoxelMicrometers()[a2.index()]);
-		double y1 = -y0;
-		double z0 = direction * (signalTextureMediator.getVolumeMicrometers()[a3.index()] / 2.0 + signalTextureMediator.getVoxelMicrometers()[a3.index()]);
-		double z1 = -z0;
-
-                 */
-                double second0 = secondAxisLen / 2.0 + signalTextureMediator.getVoxelMicrometers()[secondInx];
-                double second1 = -second0;
-
-                double third0 = thirdAxisLen / 2.0 + signalTextureMediator.getVoxelMicrometers()[thirdInx];
-                double third1 = -third0;
-
-                // Four points for four slice corners
-                double[] p00p = {0,0,0};
-                double[] p10p = {0,0,0};
-                double[] p11p = {0,0,0};
-                double[] p01p = {0,0,0};
-
-                // reswizzle coordinate axes back to actual X, Y, Z (except x, saved for later)
-                p00p[ secondInx ] = p01p[ secondInx ] = second0;
-                p10p[ secondInx ] = p11p[ secondInx ] = second1;
-                p00p[ thirdInx ] = p10p[ thirdInx ] = third0;
-                p01p[ thirdInx ] = p11p[ thirdInx ] = third1;
-
-                // Four negated points for four slice corners
-                double[] p00n = {0,0,0};
-                double[] p10n = {0,0,0};
-                double[] p11n = {0,0,0};
-                double[] p01n = {0,0,0};
-
-                // reswizzle coordinate axes back to actual X, Y, Z (except x, saved for later)
-                p00n[ secondInx ] = p01n[ secondInx ] = -second0;
-                p10n[ secondInx ] = p11n[ secondInx ] = -second1;
-                p00n[ thirdInx ] = p10n[ thirdInx ] = -third0;
-                p01n[ thirdInx ] = p11n[ thirdInx ] = -third1;
-
-                texCoordBuf[ firstInx ].rewind();
-                for (int sliceInx = 0; sliceInx < sliceCount; ++sliceInx) {
-                    // insert final coordinate into buffers
-                    double sliceLoc = slice0 + sliceInx * sliceSep;
-                    p00p[ firstInx ] = p01p[firstInx] = p10p[firstInx] = p11p[firstInx] = sliceLoc;
-
-                    double[] t00 = signalTextureMediator.textureCoordFromVoxelCoord( p00p );
-                    double[] t01 = signalTextureMediator.textureCoordFromVoxelCoord( p01p );
-                    double[] t10 = signalTextureMediator.textureCoordFromVoxelCoord( p10p );
-                    double[] t11 = signalTextureMediator.textureCoordFromVoxelCoord( p11p );
-
-
-                    /*
-                    			// Compute texture coordinates
-			// color from black(back) to white(front) for debugging.
-			// double c = xi / (double)sx;
-			// gl.glColor3d(c, c, c);
-			// draw the quadrilateral as a triangle strip with 4 points
-            // (somehow GL_QUADS never works correctly for me)
-            setTextureCoordinates(gl, t00[0], t00[1], t00[2]);
-            gl.glVertex3d(p00[0], p00[1], p00[2]);
-            setTextureCoordinates(gl, t10[0], t10[1], t10[2]);
-            gl.glVertex3d(p10[0], p10[1], p10[2]);
-            setTextureCoordinates(gl, t01[0], t01[1], t01[2]);
-            gl.glVertex3d(p01[0], p01[1], p01[2]);
-            setTextureCoordinates(gl, t11[0], t11[1], t11[2]);
-            gl.glVertex3d(p11[0], p11[1], p11[2]);
-
-                     */
-                    texCoordBuf[ firstInx ].put( p00p );
-                    texCoordBuf[ firstInx ].put( p10p );
-                    texCoordBuf[ firstInx ].put( p01p );
-                    texCoordBuf[ firstInx ].put( p11p );
-
-                    geometryCoordBuf[ firstInx ].put( t00 );
-                    geometryCoordBuf[ firstInx ].put( t10 );
-                    geometryCoordBuf[ firstInx ].put( t01 );
-                    geometryCoordBuf[ firstInx ].put( t11 );
-
-                    // Now, take care of the negative-direction alternate to this buffer pair.
-                    t00 = signalTextureMediator.textureCoordFromVoxelCoord( p00n );
-                    t01 = signalTextureMediator.textureCoordFromVoxelCoord( p01n );
-                    t10 = signalTextureMediator.textureCoordFromVoxelCoord( p10n );
-                    t11 = signalTextureMediator.textureCoordFromVoxelCoord( p11n );
-
-                    texCoordBuf[ firstInx + 3 ].put( p00n );
-                    texCoordBuf[ firstInx + 3 ].put( p10n );
-                    texCoordBuf[ firstInx + 3 ].put( p01n );
-                    texCoordBuf[ firstInx + 3 ].put( p11n );
-
-                    geometryCoordBuf[ firstInx + 3 ].put( t00 );
-                    geometryCoordBuf[ firstInx + 3 ].put( t10 );
-                    geometryCoordBuf[ firstInx + 3 ].put( t01 );
-                    geometryCoordBuf[ firstInx + 3 ].put( t11 );
-
-                }
-
-                /*
-                		for (int xi = 0; xi < sx; ++xi) {
-			// insert final coordinate into corner vectors
-			double x = x0 + xi * dx;
-			int a = a1.index();
-			p00[a] = p01[a] = p10[a] = p11[a] = x;
-
-                 */
-            }
-
         }
     }
 
