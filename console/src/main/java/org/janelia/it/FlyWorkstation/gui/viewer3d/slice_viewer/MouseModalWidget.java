@@ -16,7 +16,7 @@ public interface MouseModalWidget
 extends MouseListener, MouseMotionListener, MouseWheelListener
 {
 	public MouseMode getMouseMode();
-	public void setMouseMode(MouseMode mode);
+	public void setMouseMode(MouseMode.Mode mode);
 	public WheelMode getWheelMode();
 	public void setWheelMode(WheelMode mode);
 	public Cursor getCursor();

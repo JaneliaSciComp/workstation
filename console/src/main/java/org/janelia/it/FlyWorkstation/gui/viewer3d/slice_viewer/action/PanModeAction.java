@@ -5,15 +5,16 @@ import javax.swing.AbstractAction;
 import javax.swing.KeyStroke;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.MouseModalWidget;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal1;
 
 // PanModeAction puts the slice viewer into Pan mode.
 public class PanModeAction extends AbstractAction 
 {
 	private static final long serialVersionUID = 1L;
-	protected MouseModalWidget widget;
+	
+	public Signal1<MouseMode.Mode> setMouseModeSignal = new Signal1<MouseMode.Mode>();
 
-	public PanModeAction(MouseModalWidget widget) {
+	public PanModeAction() {
 		putValue(NAME, "Pan");
 		putValue(SMALL_ICON, Icons.getIcon("grab_opened.png"));
 		String acc = "H";
@@ -22,15 +23,12 @@ public class PanModeAction extends AbstractAction
 		putValue(SHORT_DESCRIPTION, 
 				"Set mouse mode to Pan left right up or down."
 				+ "\n (Shortcut: " + acc + ")");
-		this.widget = widget;
 	}
 	
 	@Override
 	public void actionPerformed(ActionEvent e) 
 	{
-		MouseMode mode = new PanMode();
-		mode.setComponent(widget);
-		widget.setMouseMode(mode);
+		setMouseModeSignal.emit(MouseMode.Mode.PAN);
 		putValue(SELECTED_KEY, true);
 	}
 }

@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
+import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BaseGLViewer;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation;
@@ -12,15 +13,20 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.BasicMouseMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.MouseMode;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.MouseMode.Mode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.PanMode;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.TraceMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.WheelMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZScanMode;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZoomMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.SkeletonActor;
 
 import javax.media.opengl.GLProfile;
 import javax.swing.JComponent;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -32,7 +38,6 @@ import java.awt.geom.Point2D;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +53,9 @@ implements MouseModalWidget, VolumeViewer
 		glProfile = BaseGLViewer.profile;
 	}
 	
-	protected MouseMode mouseMode = new PanMode();
+	protected MouseMode mouseMode;
+	protected MouseMode.Mode modeId;
+	
 	protected WheelMode wheelMode;
 	protected ObservableCamera3d camera;
 	protected SliceRenderer renderer = new SliceRenderer();
@@ -65,6 +72,10 @@ implements MouseModalWidget, VolumeViewer
 	protected SliceActor volumeActor = new SliceActor(tileServer);
 	private ImageColorModel imageColorModel;
 	private BasicMouseMode pointComputer = new BasicMouseMode();
+	
+	// Popup menu
+	MenuItemGenerator systemMenuItemGenerator;
+	MenuItemGenerator modeMenuItemGenerator;
 	
 	public Signal1<URL> getFileLoadedSignal() {
 		return fileLoadedSignal;
@@ -93,7 +104,16 @@ implements MouseModalWidget, VolumeViewer
 		}
 	};
 	
+	public Slot1<MouseMode.Mode> setMouseModeSlot =
+	    new Slot1<MouseMode.Mode>() {
+            @Override
+            public void execute(Mode modeId) {
+                SliceViewer.this.setMouseMode(modeId);
+            }
+	};
+	
 	public SliceViewer() {
+	    setMouseMode(MouseMode.Mode.PAN);
 		wheelMode = new ZScanMode(this);
 		addGLEventListener(renderer);
 		setCamera(new BasicObservableCamera3d());
@@ -120,6 +140,41 @@ implements MouseModalWidget, VolumeViewer
         skeletonActor.skeletonActorChangedSignal.connect(repaintSlot);
         skeletonActor.setViewport(viewport);
 		//
+        // PopupMenu
+        addMouseListener(new MouseHandler() {
+            @Override
+            protected void popupTriggered(MouseEvent e) {
+                // System.out.println("popup");
+                if (e.isConsumed()) 
+                    return;
+                JPopupMenu popupMenu = new JPopupMenu();
+                // Mode specific menu items first
+                List<JMenuItem> modeItems = modeMenuItemGenerator.getMenus(e);
+                List<JMenuItem> systemMenuItems = systemMenuItemGenerator.getMenus(e);
+                if ((modeItems.size() == 0) && (systemMenuItems.size() == 0))
+                    return;
+                if ((modeItems != null) && (modeItems.size() > 0)) {
+                    for (JMenuItem item : modeItems) {
+                        if (item == null)
+                            popupMenu.addSeparator();
+                        else
+                            popupMenu.add(item);
+                    }
+                    if (systemMenuItems.size() > 0)
+                        popupMenu.addSeparator();
+                }
+                // Generic menu items last
+                for (JMenuItem item : systemMenuItems) {
+                    if (item == null)
+                        popupMenu.addSeparator();
+                    else
+                        popupMenu.add(item);
+                }
+                popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                e.consume();
+            }
+        });
+        //
         resetView();
 	}
 
@@ -312,15 +367,32 @@ implements MouseModalWidget, VolumeViewer
 		return true;
 	}
 	
-	public void setMouseMode(MouseMode mouseMode) {
-		if (mouseMode == this.mouseMode)
-			return;
-		this.mouseMode = mouseMode;
-		this.mouseMode.setComponent(this);
-		this.mouseMode.setCamera(camera);
-		this.setToolTipText(mouseMode.getToolTipText());
-	}
-
+    @Override
+    public void setMouseMode(MouseMode.Mode modeId) {
+        if (modeId == this.modeId)
+            return; // no change
+        this.modeId = modeId;
+        if (modeId == MouseMode.Mode.PAN) {
+            this.mouseMode = new PanMode();
+        }
+        else if (modeId == MouseMode.Mode.TRACE) {
+            TraceMode traceMode = new TraceMode(getSkeleton());
+            traceMode.setViewport(getViewport());
+            this.mouseMode = traceMode;
+        }
+        else if (modeId == MouseMode.Mode.ZOOM) {
+            this.mouseMode = new ZoomMode();
+        }
+        else {
+            log.error("Unknown mouse mode");
+            return;
+        }
+        this.mouseMode.setCamera(camera);
+        this.mouseMode.setComponent(this);
+        this.setToolTipText(mouseMode.getToolTipText());        
+        this.modeMenuItemGenerator = mouseMode.getMenuItemGenerator();
+    }
+    
 	public void setCamera(ObservableCamera3d camera) {
 		if (camera == null)
 			return;
@@ -494,7 +566,11 @@ implements MouseModalWidget, VolumeViewer
 		skeletonActor.setViewport(viewport);
 	}
 
-	@Override
+	public void setSystemMenuItemGenerator(MenuItemGenerator systemMenuItemGenerator) {
+        this.systemMenuItemGenerator = systemMenuItemGenerator;
+    }
+
+    @Override
 	public JComponent getComponent() {
 		return this;
 	}

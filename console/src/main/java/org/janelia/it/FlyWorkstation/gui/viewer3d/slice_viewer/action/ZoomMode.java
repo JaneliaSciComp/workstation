@@ -1,16 +1,20 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action;
 
 import java.awt.Cursor;
-import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Point2D;
+import java.util.List;
+import java.util.Vector;
+
+import javax.swing.JMenuItem;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.MenuItemGenerator;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.MouseModalWidget;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.RubberBand;
 
@@ -188,4 +192,15 @@ implements WheelMode, MouseMode
 	public void setAltCursor(Cursor altCursor) {
 		mode.setAltCursor(altCursor);
 	}
+
+    @Override
+    public MenuItemGenerator getMenuItemGenerator() {
+        return new MenuItemGenerator() {
+            @Override
+            public List<JMenuItem> getMenus(MouseEvent event) {
+                return new Vector<JMenuItem>(); // empty list
+            }
+        };
+    }
+
 }

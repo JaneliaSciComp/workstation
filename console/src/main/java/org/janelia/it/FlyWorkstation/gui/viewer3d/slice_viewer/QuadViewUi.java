@@ -1,12 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
-import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicObservableCamera3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.AdvanceZSlicesAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.GoBackZSlicesAction;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.MouseMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.NextZSliceAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.OpenFolderAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.OrthogonalModeAction;
@@ -40,10 +39,11 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Vector;
+import java.util.List;
 
 /** 
  * Main window for QuadView application.
@@ -57,7 +57,7 @@ public class QuadViewUi extends JPanel
 	private static final long serialVersionUID = 1L;
 	// private static final Logger log = LoggerFactory.getLogger(QuadViewUi.class);
 
-	private boolean bAllowOrthoView = false;
+	private boolean bAllowOrthoView = true;
 	// One shared camera for all viewers.
 	// (there's only one viewer now actually, but you know...)
 	private BasicObservableCamera3d camera = new BasicObservableCamera3d();
@@ -94,8 +94,12 @@ public class QuadViewUi extends JPanel
 	private final Action resetViewAction = new ResetViewAction(sliceViewer);
 	private final Action resetColorsAction = new ResetColorsAction(sliceViewer.getImageColorModel());
 	// mode actions (and groups)
-	private final Action zoomMouseModeAction = new ZoomMouseModeAction(sliceViewer);
-	private final Action panModeAction = new PanModeAction(sliceViewer);
+	private final ZoomMouseModeAction zoomMouseModeAction = new ZoomMouseModeAction();
+	private final PanModeAction panModeAction = new PanModeAction();
+    private Skeleton skeleton = new Skeleton();
+    private final TraceMouseModeAction traceMouseModeAction = new TraceMouseModeAction(
+            skeleton);
+    // 
 	private final ButtonGroup mouseModeGroup = new ButtonGroup();
 	private final Action zScanScrollModeAction = new ZScanScrollModeAction(sliceViewer, zScanMode);
 	private final Action zoomScrollModeAction = new ZoomScrollModeAction(sliceViewer);
@@ -112,10 +116,6 @@ public class QuadViewUi extends JPanel
 	private final ZScanAction advanceZSlicesAction = new AdvanceZSlicesAction(sliceViewer, sliceViewer, 10);
 	private final ZScanAction goBackZSlicesAction = new GoBackZSlicesAction(sliceViewer, sliceViewer, -10);
 	//
-	private Skeleton skeleton = new Skeleton();
-	private final TraceMouseModeAction traceMouseModeAction = new TraceMouseModeAction(
-			sliceViewer, skeleton);
-	// 
 	private final Action clearCacheAction = new AbstractAction() {
 		private static final long serialVersionUID = 1L;
 		@Override
@@ -220,6 +220,9 @@ public class QuadViewUi extends JPanel
 		}
 	};
 	
+	public Signal1<MouseMode.Mode> mouseModeChangedSignal = 
+	    new Signal1<MouseMode.Mode>();
+	
 	/**
 	 * Create the frame.
 	 */
@@ -250,16 +253,24 @@ public class QuadViewUi extends JPanel
         sliceViewer.setWheelMode(zScanMode);
         // Respond to orthogonal mode changes
         orthogonalModeAction.orthogonalModeChanged.connect(new Slot1<OrthogonalMode>() {
-        	@Override
-    		public void execute(OrthogonalMode mode) {
-    			if (mode == OrthogonalMode.ORTHOGONAL) 
-    				setOrthogonalMode();
-    			else if (mode == OrthogonalMode.Z_VIEW) 
-    				setZViewMode();
-    			// repaint(); // not necessary.
-    		}
+            	@Override
+        		public void execute(OrthogonalMode mode) {
+        			if (mode == OrthogonalMode.ORTHOGONAL) 
+        				setOrthogonalMode();
+        			else if (mode == OrthogonalMode.Z_VIEW) 
+        				setZViewMode();
+        			// repaint(); // not necessary.
+        		}
         });
         setZViewMode();
+        // Connect mode changes to widgets
+        // First connect mode actions to one signal
+        panModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
+        zoomMouseModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
+        traceMouseModeAction.setMouseModeSignal.connect(mouseModeChangedSignal);
+        // Next connect that signal to various widgets
+        mouseModeChangedSignal.connect(sliceViewer.setMouseModeSlot);
+        // TODO other orthogonal viewers
 	}
 
 	// Four quadrants for orthogonal views
@@ -289,19 +300,6 @@ public class QuadViewUi extends JPanel
         setBounds(100, 100, 994, 653);
         setBorder(new EmptyBorder(5, 5, 5, 5));
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-
-        MouseListener buttonMouseListener = new MouseHandler() {
-
-            @Override
-            protected void popupTriggered(MouseEvent e) {
-            	// System.out.println("popup");
-                if (e.isConsumed()) return;
-                getButtonPopupMenu().show(e.getComponent(), e.getX(), e.getY());
-                e.consume();
-            }
-        };
-        // System.out.println("add ui mouse listener");
-        sliceViewer.addMouseListener(buttonMouseListener);
 
 		// glassPane.setVisible(true);
         setupMenu(parentFrame, overrideFrameMenuBar);
@@ -599,6 +597,17 @@ public class QuadViewUi extends JPanel
 		statusBar.setLayout(new BoxLayout(statusBar, BoxLayout.X_AXIS));
 		
 		statusBar.add(statusLabel);
+		
+        // For slice viewer popup menu.
+        sliceViewer.setSystemMenuItemGenerator(new MenuItemGenerator() {
+            @Override
+            public List<JMenuItem> getMenus(MouseEvent event) {
+                List<JMenuItem> result = new Vector<JMenuItem>();
+                result.add(addFileMenuItem());
+                result.add(addViewMenuItem());
+                return result;
+            }
+        });
 	}
 
 	private void interceptModifierKeyPresses() 

@@ -26,6 +26,19 @@ public class Rotation extends SizedVector<UnitVec3>
 		return this;
 	}
 	
+	/**
+	 * Rotate counterclockwise a multiple of 90 degrees about a principal axis.
+	 * @param quadrantCount
+	 * @param axis
+	 * @return
+	 */
+	public Rotation setFromCanonicalRotationAboutPrincipalAxis(int quadrantCount, CoordinateAxis axis)
+	{
+	    UnitVec3 uv = new UnitVec3(axis);
+	    double angle = 0.5 * Math.PI * quadrantCount;
+	    return setFromAngleAboutUnitVector(angle, uv);
+	}
+	
 	public Rotation setFromAngleAboutUnitVector(double angle, UnitVec3 axis) {
 		Quaternion q = new Quaternion(angle, axis);
 		setFromQuaternion(q);

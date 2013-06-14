@@ -9,13 +9,17 @@ import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.util.List;
+import java.util.Vector;
 
 import javax.swing.ImageIcon;
+import javax.swing.JMenuItem;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.MenuItemGenerator;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.MouseModalWidget;
 
 public class BasicMouseMode implements MouseMode 
@@ -206,5 +210,15 @@ public class BasicMouseMode implements MouseMode
 	public String getToolTipText() {
 		return null;
 	}
+
+    @Override
+    public MenuItemGenerator getMenuItemGenerator() {
+        return new MenuItemGenerator() {
+            @Override
+            public List<JMenuItem> getMenus(MouseEvent event) {
+                return new Vector<JMenuItem>(); // empty list
+            }
+        };
+    }
 
 }

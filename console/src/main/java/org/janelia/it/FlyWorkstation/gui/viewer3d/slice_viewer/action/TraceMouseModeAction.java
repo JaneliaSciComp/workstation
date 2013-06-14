@@ -6,14 +6,16 @@ import javax.swing.KeyStroke;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.MouseModalWidget;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal1;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton;
 
 public class TraceMouseModeAction extends AbstractAction {
 	private static final long serialVersionUID = 1L;
-	protected MouseModalWidget widget;
 	protected TraceMode traceMode;
 	
-	public TraceMouseModeAction(MouseModalWidget widget, Skeleton skeleton) {
+	public Signal1<MouseMode.Mode> setMouseModeSignal = new Signal1<MouseMode.Mode>();
+
+	public TraceMouseModeAction(Skeleton skeleton) {
 		putValue(NAME, "Trace");
 		putValue(SMALL_ICON, Icons.getIcon("nib.png"));
 		String acc = "P";
@@ -32,13 +34,11 @@ public class TraceMouseModeAction extends AbstractAction {
 				+"Right-click for context menu" // TODO
 				+"</html>");
 		traceMode = new TraceMode(skeleton);
-		traceMode.setComponent(widget);
-		this.widget = widget;
 	}
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		widget.setMouseMode(traceMode);
+	    setMouseModeSignal.emit(MouseMode.Mode.TRACE);
 		putValue(SELECTED_KEY, true);
 	}
 
