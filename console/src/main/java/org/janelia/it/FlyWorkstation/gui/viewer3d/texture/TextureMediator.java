@@ -182,6 +182,23 @@ public class TextureMediator {
         return tc;
     }
 
+    public float[] textureCoordFromVoxelCoord(float[] voxelCoord) {
+        float[] tc = {voxelCoord[0], voxelCoord[1], voxelCoord[2]}; // micrometers, origin at center
+        int[] voxels = { textureData.getSx(), textureData.getSy(), textureData.getSz() };
+        Double[] volumeMicrometers = textureData.getVolumeMicrometers();
+        Double[] voxelMicrometers = textureData.getVoxelMicrometers();
+        for (int i =0; i < 3; ++i) {
+            // Move origin to upper left corner
+            tc[i] += volumeMicrometers[i] / 2.0; // micrometers, origin at corner
+            // Rescale from micrometers to voxels
+            tc[i] /= voxelMicrometers[i]; // voxels, origin at corner
+            // Rescale from voxels to texture units (range 0-1)
+            tc[i] /= voxels[i]; // texture units
+        }
+
+        return tc;
+    }
+
     /**
      * Set the coords for the texture.  Note that we may not call glGetError here, as this is done
      * between glBegin and glGetEnd calls.
