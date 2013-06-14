@@ -1315,15 +1315,8 @@ public class EntityContextMenu extends JPopupMenu {
             newAttachmentItem.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
                     try {
-//                        // Update database
-//                        Entity parentFolder = rootedEntity.getEntity();
-//                        Entity newFolder = ModelMgr.getModelMgr().createEntity(EntityConstants.TYPE_FOLDER, folderName);
-//                        ModelMgr.getModelMgr().addEntityToParent(parentFolder, newFolder,
-//                                parentFolder.getMaxOrderIndex() + 1, EntityConstants.ATTRIBUTE_ENTITY);
-//
-                        browser.getImportDialog().showDialog();
-                    }
-                    catch (Exception ex) {
+                        browser.getImportDialog().showDialog(rootedEntity);
+                    } catch (Exception ex) {
                         SessionMgr.getSessionMgr().handleException(ex);
                     }
                 }
