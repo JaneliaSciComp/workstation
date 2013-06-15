@@ -263,13 +263,16 @@ public class ImportDialog extends ModalDialog {
         String msg;
 
         final double transferGigabytes = transferMegabytes / 1000.0;
-        if (transferGigabytes > 1) {
+        if (transferGigabytes > 0.999999999) {
             msg = form.format(new Object[] {fileCount, transferGigabytes, "giga"});
-        } else if (transferMegabytes > 1) {
+        } else if (transferMegabytes > 0.999999) {
             msg = form.format(new Object[] {fileCount, (int) transferMegabytes, "mega"});
-        } else {
+        } else if (transferMegabytes > 0.000999) {
             final int transferKilobytes = (int) (transferMegabytes * 1000);
             msg = form.format(new Object[] {fileCount, transferKilobytes, "kilo"});
+        } else {
+            final int transferBytes = (int) (transferMegabytes * 1000000);
+            msg = form.format(new Object[] {fileCount, transferBytes, ""});
         }
 
         final int maxGigabytes = 20;
