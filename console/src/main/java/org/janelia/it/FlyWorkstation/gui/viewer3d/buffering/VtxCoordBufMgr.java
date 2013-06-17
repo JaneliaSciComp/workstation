@@ -58,10 +58,6 @@ public class VtxCoordBufMgr {
      * The arrays are indexed as follows:
      * 1. Offsets [ 0..2 ] are for positive direction.
      * 2. Offsets 0,3 are X; 1,4 are Y and 2,5 are Z.
-     *
-     * NOTE: where I am, I need to work when to upload the buffers, and how to differentiate texture vertex and
-     *       geometric vertex buffer values.  The calls are likely  glVertexAttribPointer and glEnableVertexAttribArray,
-     *       followed by glDrawArrays with argument of GL_TRIANGLES.  Example seems to upload prior.
      */
     public void buildBuffers() {
         /*
@@ -106,7 +102,7 @@ public class VtxCoordBufMgr {
                 float thirdAxisLen = textureMediator.getVolumeMicrometers()[ thirdInx ].floatValue();
                 // compute number of slices
                 int sliceCount = computeEffectiveAxisLen(firstInx);
-                float slice0 = (textureMediator.getVoxelMicrometers()[ firstInx ].floatValue() - firstAxisLen) / 2.0f;
+                float slice0 = firstAxisLen / 2.0f + textureMediator.getVoxelMicrometers()[ firstInx ].floatValue();
                 float sliceSep = textureMediator.getVoxelMicrometers()[ firstInx ].floatValue();
 
         		// Below "x", "y", and "z" actually refer to a1, a2, and a3, respectively;
@@ -145,8 +141,8 @@ public class VtxCoordBufMgr {
                     // insert final coordinate into buffers
 
                     // FORWARD axes.
-                    double sliceLoc = slice0 + sliceInx * sliceSep;
-                    p00p[ firstInx ] = p01p[firstInx] = p10p[firstInx] = p11p[firstInx] = (float)sliceLoc;
+                    float sliceLoc = slice0 + sliceInx * sliceSep;
+                    p00p[ firstInx ] = p01p[firstInx] = p10p[firstInx] = p11p[firstInx] = sliceLoc;
 
                     float[] t00 = textureMediator.textureCoordFromVoxelCoord( p00p );
                     float[] t01 = textureMediator.textureCoordFromVoxelCoord( p01p );
@@ -223,18 +219,21 @@ public class VtxCoordBufMgr {
      * @param direction inwards/outwards [-1.0, 1.0]
      */
     public void draw( GL2 gl, CoordinateAxis axis, double direction ) {
+        gl.glDisable(GL2.GL_CULL_FACE);
+        gl.glFrontFace(GL2.GL_CCW);
+
         // Point to the right vertex set.
         int handle = bindBuffer( gl, axis, geometryVertexBufferHandles, direction );
+
+        // 3 floats per vertex.  Stride is 0, offset to first is 0.
         gl.glEnableClientState( GL2.GL_VERTEX_ARRAY );
-        // 3 doubles per vertex.  Stride is 0, offset to first is 0.
-        //   NOTE, omitting this creates a SIGSEGV segmentation fault on Mac
-        gl.glVertexPointer( 3, GL2.GL_DOUBLE, 0, 0 );
+        gl.glVertexPointer( 3, GL2.GL_FLOAT, 0, 0 );
 
         // Point to the right texture coordinate set.
         handle = bindBuffer( gl, axis, textureCoordBufferHandles, direction );
         gl.glEnableClientState( GL2.GL_TEXTURE_COORD_ARRAY );
-        // 3 doubles per texture coord.  Stride is 0, offset to first is 0.
-        gl.glTexCoordPointer( 3, GL2.GL_DOUBLE, 0, 0 );
+        // 3 floats per texture coord.  Stride is 0, offset to first is 0.
+        gl.glTexCoordPointer( 3, GL2.GL_FLOAT, 0, 0 );
 
         gl.glDrawArrays(GL2.GL_TRIANGLES, 0, getVertexCount( axis ));
 
@@ -248,8 +247,12 @@ public class VtxCoordBufMgr {
         int[] rtnVal = new int[ NUM_BUFFERS_PER_TYPE ];
         gl.glGenBuffers( 6, rtnVal, 0 );
 
+        // DEBUG
+        System.out.println("DUMPING THE BUFFERS");
+
         // Bind data to the handles, and upload it to the GPU.
         for ( int i = 0; i < NUM_BUFFERS_PER_TYPE; i++ ) {
+            System.out.println("BUFFER " + i);
             buffers[ i ].rewind();
             gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, rtnVal[ i ]);
             // NOTE: this operates on the most recent "bind".  Therefore unless
@@ -261,6 +264,14 @@ public class VtxCoordBufMgr {
                     buffers[ i ],
                     GL2.GL_STATIC_DRAW
             );
+
+            // DEBUG
+//            buffers[ i ].rewind();
+//            for (int j = 0; j < buffers[i].capacity(); j++) {
+//                float f = buffers[i].get();
+//                System.out.print( f + " " );
+//            }
+//            System.out.println();
         }
 
         return rtnVal;
@@ -287,7 +298,7 @@ public class VtxCoordBufMgr {
             int bufferOffset = directionOffset + axis.index();
             gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, handles[ bufferOffset ] );
 
-            logger.info("Returning buffer offset of {} for {}.", bufferOffset, axis.getName() + ":" + direction);
+            logger.debug("Returning buffer offset of {} for {}.", bufferOffset, axis.getName() + ":" + direction);
             return handles[ bufferOffset ];
         }
 
@@ -299,7 +310,7 @@ public class VtxCoordBufMgr {
 
     private int computeEffectiveAxisLen(int firstInx) {
         double firstAxisLen = textureMediator.getVolumeMicrometers()[ firstInx % 3 ];
-        return (int)(0.5 + firstAxisLen / textureMediator.getVoxelMicrometers()[ firstInx ]);
+        return (int)(0.5 + firstAxisLen / textureMediator.getVoxelMicrometers()[ firstInx % 3 ]);
     }
 
 }

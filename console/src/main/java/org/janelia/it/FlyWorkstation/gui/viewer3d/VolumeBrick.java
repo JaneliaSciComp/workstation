@@ -52,6 +52,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     private boolean bSignalTextureNeedsUpload = false;
     private boolean bMaskTextureNeedsUpload = false;
     private boolean bColorMapTextureNeedsUpload = false;
+    private boolean bBuffersNeedUpload = false;
 
     private VolumeBrickShader volumeBrickShader = new VolumeBrickShader();
 
@@ -125,15 +126,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
         if (bSignalTextureNeedsUpload) {
             uploadSignalTexture(gl);
-            try {
-                // This vertex-build must be done here, now that all information is set.
-                bufferManager.buildBuffers();
-                reportError( gl, "building buffers" );
-                bufferManager.enableBuffers( gl );
-                reportError( gl, "uploading buffers" );
-            } catch ( Exception ex ) {
-                SessionMgr.getSessionMgr().handleException( ex );
-            }
         }
 		if (bUseShader) {
             if ( maskTextureMediator != null  &&  bMaskTextureNeedsUpload ) {
@@ -152,6 +144,19 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
             } catch ( Exception ex ) {
                 ex.printStackTrace();
                 bUseShader = false;
+            }
+        }
+        if (bBuffersNeedUpload) {
+            try {
+                // This vertex-build must be done here, now that all information is set.
+                bufferManager.buildBuffers();
+                reportError( gl, "building buffers" );
+                bufferManager.enableBuffers( gl );
+                reportError( gl, "uploading buffers" );
+
+                bBuffersNeedUpload = false;
+            } catch ( Exception ex ) {
+                SessionMgr.getSessionMgr().handleException( ex );
             }
         }
 		// tidy up
@@ -364,6 +369,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
             boolean bDebug = false;
             if (bDebug)
                 printPoints(t00, t10, t01, t11);
+//            printPoints(p00, p10, p01, p11);
 
         }
         gl.glEnd();
@@ -491,6 +497,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         }
         signalTextureMediator.setTextureData( textureData );
         bSignalTextureNeedsUpload = true;
+        bBuffersNeedUpload = true;
         bufferManager.setTextureMediator( signalTextureMediator );
     }
 
