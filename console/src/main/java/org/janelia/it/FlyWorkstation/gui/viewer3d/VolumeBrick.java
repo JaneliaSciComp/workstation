@@ -341,7 +341,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         reportError(gl, "Volume Brick, before setting coords.");
 
         // deal out the slices, like cards from a deck
-        gl.glBegin(GL2.GL_TRIANGLE_STRIP);
+        gl.glBegin(GL2.GL_TRIANGLES);
         for (int xi = 0; xi < sx; ++xi) {
             // insert final coordinate into corner vectors
             double x = x0 + xi * dx;
@@ -355,16 +355,24 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
             // color from black(back) to white(front) for debugging.
             // double c = xi / (double)sx;
             // gl.glColor3d(c, c, c);
-            // draw the quadrilateral as a triangle strip with 4 points
-            // (somehow GL_QUADS never works correctly for me)
+            // draw the quadrilateral as a triangle pair with 6 points
+            // (GL_QUADS is deprecated)
+
+            // First triangle.
             setTextureCoordinates(gl, t00[0], t00[1], t00[2]);
             gl.glVertex3d(p00[0], p00[1], p00[2]);
             setTextureCoordinates(gl, t10[0], t10[1], t10[2]);
             gl.glVertex3d(p10[0], p10[1], p10[2]);
             setTextureCoordinates(gl, t01[0], t01[1], t01[2]);
             gl.glVertex3d(p01[0], p01[1], p01[2]);
+
+            // Second triangle.  Re-using some of the values cranked out above.
+            setTextureCoordinates(gl, t10[0], t10[1], t10[2]);
+            gl.glVertex3d(p10[0], p10[1], p10[2]);
             setTextureCoordinates(gl, t11[0], t11[1], t11[2]);
             gl.glVertex3d(p11[0], p11[1], p11[2]);
+            setTextureCoordinates(gl, t01[0], t01[1], t01[2]);
+            gl.glVertex3d(p01[0], p01[1], p01[2]);
 
             boolean bDebug = false;
             if (bDebug)
