@@ -452,7 +452,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
      */
     private void updateBoard( final AlignmentBoardContext context ) {
         logger.warn("Update-board called.");
-        if (true) return;
         try {
             // TEMP
             //if ( brainGlow != null ) {
