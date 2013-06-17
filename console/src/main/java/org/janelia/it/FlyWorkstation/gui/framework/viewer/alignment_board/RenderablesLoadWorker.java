@@ -226,7 +226,6 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
             logger.debug("Starting multithreaded texture build.");
             multiThreadedTextureBuild();
 
-
         }
 
         controlCallback.displayReady();

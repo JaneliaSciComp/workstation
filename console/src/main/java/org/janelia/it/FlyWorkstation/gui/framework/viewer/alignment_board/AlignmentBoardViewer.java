@@ -237,7 +237,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         // when it becomes un-busy.
         addSettingsLaunchButton();
         add( wrapperPanel, BorderLayout.CENTER );
-
+        mip3d.resetView();
     }
 
     @Override
@@ -470,11 +470,16 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                         mip3d = createMip3d();
                         wrapperPanel = createWrapperPanel( mip3d );
 
+                        /*
+
+                        LLF: commented out for release.  Not yet working correctly.
+
                         Entity alignmentBoard = context.getInternalEntity();
                         UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
                                 alignmentBoard, mip3d.getVolumeModel(), settings.getAlignmentBoardSettings()
                         );
                         userSettingSerializer.deserializeSettings();
+                        */
                     }
 
                     // When this is called from thread type X, and the "best guess" method is used, it blanks the screen.

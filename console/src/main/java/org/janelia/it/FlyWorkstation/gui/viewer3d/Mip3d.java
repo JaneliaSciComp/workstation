@@ -63,9 +63,13 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		// System.out.println("reset view");
-		renderer.resetView();
-		repaint();
+        resetView();
 	}
+
+    public void resetView() {
+        renderer.resetView();
+        repaint();
+    }
 
     /**
      * Load a simple signal volume.

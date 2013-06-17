@@ -505,7 +505,13 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         }
         signalTextureMediator.setTextureData( textureData );
         bSignalTextureNeedsUpload = true;
+
+        /*
+        Commenting this out prior to release.  The render technique this supports, is not yet ready.
+
         bBuffersNeedUpload = true;
+
+         */
         bufferManager.setTextureMediator( signalTextureMediator );
     }
 

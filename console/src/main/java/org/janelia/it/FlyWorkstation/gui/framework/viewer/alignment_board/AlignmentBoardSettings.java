@@ -14,7 +14,7 @@ public class AlignmentBoardSettings {
 
     private double chosenDownSampleRate;
     private double gammaFactor =  DEFAULT_GAMMA;
-    private boolean showChannelData;
+    private boolean showChannelData = true;
     private double downSampleGuess;
 
     public AlignmentBoardSettings() {
