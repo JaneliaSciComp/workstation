@@ -19,6 +19,9 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.MouseMode;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.MouseMode.Mode;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.WheelMode;
 
 import com.jogamp.newt.event.KeyEvent;
 
@@ -38,6 +41,22 @@ extends JPanel
 	private ObservableCamera3d camera;
 	private SharedVolumeImage volume;
 	
+	public Slot1<MouseMode.Mode> setMouseModeSlot = new Slot1<MouseMode.Mode>() 
+	{
+        @Override
+        public void execute(MouseMode.Mode modeId) {
+            viewer.setMouseMode(modeId);
+        }
+	};
+	
+    public Slot1<WheelMode.Mode> setWheelModeSlot = new Slot1<WheelMode.Mode>() 
+    {
+        @Override
+        public void execute(WheelMode.Mode modeId) {
+            viewer.setWheelMode(modeId);
+        }
+    };
+    
     public OrthogonalPanel(CoordinateAxis axis) {
 		this.axis = axis;
 		viewer = new OrthogonalViewer(axis);
@@ -100,11 +119,12 @@ extends JPanel
 			// Update ranges of slider and spinner
 			BoundingBox3d bb = volume.getBoundingBox3d();
 			int ix = axis.index(); // X, Y, or Z
-			double sMin = bb.getMin().get(ix);
-			double sMax = bb.getMax().get(ix);
-			double res = volume.getResolution(ix);
-			int s0 = (int)Math.round(sMin / res);
-			int s1 = (int)Math.round(sMax / res) - 1;
+            double res = volume.getResolution(ix);
+            double halfVoxel = 0.5 * res;
+			double sMin = bb.getMin().get(ix) + halfVoxel;
+			double sMax = bb.getMax().get(ix) - halfVoxel;
+			int s0 = (int)Math.round(sMin / res - 0.5);
+			int s1 = (int)Math.round(sMax / res - 0.5);
 			if (s0 > s1)
 				s1 = s0;
 			// Need at least 2 slices for slice scanning to be relevant
@@ -129,7 +149,9 @@ extends JPanel
 			spinnerNumberModel.setMinimum(s0);
 			spinnerNumberModel.setMaximum(s1);
 			// Update slice value
-			int s = (int)Math.round(camera.getFocus().get(ix) / res);
+			int s = (int)Math.round(camera.getFocus().get(ix) / res - 0.5);
+			if (s < s0) s = s0;
+			if (s > s1) s = s1;
 			slider.setValue(s);
 			spinner.setValue(s);
 		}
@@ -171,12 +193,13 @@ extends JPanel
 			return false;
 		Vec3 oldFocus = camera.getFocus();
 		int ix = axis.index();
-		int oldValue = (int)Math.round(oldFocus.get(ix) / volume.getResolution(ix));
+		int oldValue = (int)Math.round(oldFocus.get(ix) / volume.getResolution(ix) - 0.5);
 		if (oldValue == s)
 			return false; // camera is already pretty close
-		double newS = s * volume.getResolution(ix);
-		double minS = volume.getBoundingBox3d().getMin().get(ix);
-		double maxS = volume.getBoundingBox3d().getMax().get(ix);
+		double halfVoxel = 0.5 * volume.getResolution(ix);
+		double newS = s * volume.getResolution(ix) + halfVoxel;
+		double minS = volume.getBoundingBox3d().getMin().get(ix) + halfVoxel;
+		double maxS = volume.getBoundingBox3d().getMax().get(ix) - halfVoxel;
 		newS = Math.max(newS, minS);
 		newS = Math.min(newS, maxS);
 		Vec3 newFocus = new Vec3(oldFocus.x(), oldFocus.y(), oldFocus.z());
@@ -229,5 +252,9 @@ extends JPanel
 					);		
 		}
 	}
+
+    public OrthogonalViewer getViewer() {
+        return viewer;
+    }
 
 }

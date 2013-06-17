@@ -27,10 +27,4 @@ public abstract class AbstractTextureLoadAdapter
 		return tileFormat;
 	}
 
-	/*
-	public TextureCache getTextureCache() {
-		return textureCache;
-	}
-	*/
-
 }

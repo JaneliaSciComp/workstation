@@ -256,7 +256,7 @@ implements VolumeImage3d
 		zoom = Math.min(zoom, zoomMax);
 		// 2) z
 		Vec3 focus = camera.getFocus();
-		int z = (int)Math.floor(focus.getZ() / getZResolution() + 0.5);
+		int z = (int)Math.round(focus.getZ() / getZResolution() - 0.5);
 		// 3) x and y range
 		// In scene units
 		// Clip to screen space
@@ -510,4 +510,9 @@ implements VolumeImage3d
 	public double getResolution(int ix) {
 		return sharedVolumeImage.getResolution(ix);
 	}
+
+    @Override
+    public Vec3 getVoxelCenter() {
+        return sharedVolumeImage.getVoxelCenter();
+    }
 }

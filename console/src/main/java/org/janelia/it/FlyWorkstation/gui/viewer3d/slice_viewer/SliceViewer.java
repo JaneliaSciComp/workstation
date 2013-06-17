@@ -13,13 +13,11 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.BasicMouseMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.MouseMode;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.MouseMode.Mode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.PanMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.TraceMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.WheelMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZScanMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZoomMode;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZoomScrollModeAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.SkeletonActor;
 
@@ -331,7 +329,7 @@ implements MouseModalWidget, VolumeViewer
 	public boolean resetView() {
 		// Compute the smallest bounding box that holds all actors
 		BoundingBox3d bb = getBoundingBox3d();
-		if (! resetFocus(bb))
+		if (! camera.setFocus(volumeImage.getVoxelCenter()))
 			return false;
 		if (! resetZoom(bb))
 			return false;
@@ -534,6 +532,11 @@ implements MouseModalWidget, VolumeViewer
 		return Math.min(minZoomX, minZoomY);
 	}
 
+    @Override
+    public Vec3 getVoxelCenter() {
+        return volumeImage.getVoxelCenter();
+    }
+    
 	@Override
 	public Signal1<Double> getZoomChangedSignal() {
 		return camera.getZoomChangedSignal();

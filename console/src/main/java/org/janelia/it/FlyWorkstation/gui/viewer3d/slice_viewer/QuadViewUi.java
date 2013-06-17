@@ -18,7 +18,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ResetViewA
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ResetZoomAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.TraceMouseModeAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.WheelMode;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZScanAction;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.SliceScanAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZScanMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZScanScrollModeAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZoomInAction;
@@ -102,7 +102,7 @@ public class QuadViewUi extends JPanel
     // 
 	private final ButtonGroup mouseModeGroup = new ButtonGroup();
 	private final ZScanScrollModeAction zScanScrollModeAction = new ZScanScrollModeAction();
-	private final ZoomScrollModeAction zoomScrollModeAction = new ZoomScrollModeAction(sliceViewer);
+	private final ZoomScrollModeAction zoomScrollModeAction = new ZoomScrollModeAction();
 	private final ButtonGroup scrollModeGroup = new ButtonGroup();
 	private final OrthogonalModeAction orthogonalModeAction = new OrthogonalModeAction();
 	// zoom actions
@@ -111,10 +111,10 @@ public class QuadViewUi extends JPanel
 	private final Action zoomMaxAction = new ZoomMaxAction(camera, sliceViewer);
 	private final Action resetZoomAction = new ResetZoomAction(sliceViewer);
 	// Z scan actions
-	private final ZScanAction nextZSliceAction = new NextZSliceAction(sliceViewer, sliceViewer);
-	private final ZScanAction previousZSliceAction = new PreviousZSliceAction(sliceViewer, sliceViewer);
-	private final ZScanAction advanceZSlicesAction = new AdvanceZSlicesAction(sliceViewer, sliceViewer, 10);
-	private final ZScanAction goBackZSlicesAction = new GoBackZSlicesAction(sliceViewer, sliceViewer, -10);
+	private final SliceScanAction nextZSliceAction = new NextZSliceAction(sliceViewer, sliceViewer);
+	private final SliceScanAction previousZSliceAction = new PreviousZSliceAction(sliceViewer, sliceViewer);
+	private final SliceScanAction advanceZSlicesAction = new AdvanceZSlicesAction(sliceViewer, sliceViewer, 10);
+	private final SliceScanAction goBackZSlicesAction = new GoBackZSlicesAction(sliceViewer, sliceViewer, -10);
 	//
 	private final Action clearCacheAction = new AbstractAction() {
 		private static final long serialVersionUID = 1L;
@@ -142,7 +142,7 @@ public class QuadViewUi extends JPanel
 	protected Slot1<Vec3> changeZ = new Slot1<Vec3>() {
 		@Override
 		public void execute(Vec3 focus) {
-			int z = (int)Math.round(focus.getZ() / sliceViewer.getZResolution());
+			int z = (int)Math.round((focus.getZ()-0.5) / sliceViewer.getZResolution());
 			zScanSlider.setValue(z);
 			zScanSpinner.setValue(z);
 		}
@@ -187,7 +187,7 @@ public class QuadViewUi extends JPanel
 				sliceViewer.setWheelMode(WheelMode.Mode.SCAN);
 				zScanScrollModeAction.setEnabled(true);
 				zScanScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
-				int z = (int)Math.round(sliceViewer.getFocus().getZ() / sliceViewer.getZResolution());
+				int z = (int)Math.round((sliceViewer.getFocus().getZ()-0.5) / sliceViewer.getZResolution());
 				if (z < z0)
 					z = z0;
 				if (z > z1)
@@ -246,6 +246,7 @@ public class QuadViewUi extends JPanel
 				"Optimize contrast for current view");
         // 
         collectGarbageAction.putValue(Action.NAME, "Collect Garbage");
+        //
         sliceViewer.statusMessageChanged.connect(setStatusMessageSlot);
         sliceViewer.setSkeleton(skeleton);
         //
@@ -273,6 +274,19 @@ public class QuadViewUi extends JPanel
         mouseModeChangedSignal.connect(sliceViewer.setMouseModeSlot);
         wheelModeChangedSignal.connect(sliceViewer.setWheelModeSlot);
         // TODO other orthogonal viewers
+        OrthogonalPanel viewPanels[] = {neViewer, swViewer, seViewer};
+        SharedVolumeImage vi = sliceViewer.getTileServer().getSharedVolumeImage();
+        for (OrthogonalPanel v : viewPanels) {
+            mouseModeChangedSignal.connect(v.setMouseModeSlot);
+            wheelModeChangedSignal.connect(v.setWheelModeSlot);
+            v.getViewer().setSkeletonActor(sliceViewer.getSkeletonActor());
+            v.getViewer().statusMessageChanged.connect(setStatusMessageSlot);
+            v.setCamera(camera);
+            v.setSharedVolumeImage(vi);
+        }
+        // Set starting interaction modes
+        panModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
+        zoomScrollModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
 	}
 
 	// Four quadrants for orthogonal views
@@ -448,14 +462,6 @@ public class QuadViewUi extends JPanel
 		sliceViewer.getZoomChangedSignal().connect(changeZoom);
         sliceViewer.getCamera().getFocusChangedSignal().connect(changeZ);
 		sliceViewer.getFileLoadedSignal().connect(rememberLoadedFileSlot);
-		
-		neViewer.setCamera(camera);
-		swViewer.setCamera(camera);
-		seViewer.setCamera(camera);
-		SharedVolumeImage vi = sliceViewer.getTileServer().getSharedVolumeImage();
-		neViewer.setSharedVolumeImage(vi);
-		swViewer.setSharedVolumeImage(vi);
-		seViewer.setSharedVolumeImage(vi);
 		
 		// JPanel zScanPanel = new JPanel();
 		zViewerPanel.add(zScanPanel);
@@ -741,12 +747,13 @@ public class QuadViewUi extends JPanel
 	
 	private boolean setZSlice(int z) {
 		Vec3 oldFocus = sliceViewer.getFocus();
-		int oldValue = (int)Math.round(oldFocus.getZ() / sliceViewer.getZResolution());
+		int oldValue = (int)Math.round(oldFocus.getZ() / sliceViewer.getZResolution() - 0.5);
 		if (oldValue == z)
 			return false; // camera is already pretty close
-		double newZ = z * sliceViewer.getZResolution();
-		double minZ = sliceViewer.getBoundingBox3d().getMin().getZ();
-		double maxZ = sliceViewer.getBoundingBox3d().getMax().getZ();
+		double halfVoxel = 0.5 * sliceViewer.getZResolution();
+		double newZ = z * sliceViewer.getZResolution() + halfVoxel;
+		double minZ = sliceViewer.getBoundingBox3d().getMin().getZ() + halfVoxel;
+		double maxZ = sliceViewer.getBoundingBox3d().getMax().getZ() - halfVoxel;
 		newZ = Math.max(newZ, minZ);
 		newZ = Math.min(newZ, maxZ);
 		sliceViewer.setFocus(new Vec3(oldFocus.getX(), oldFocus.getY(), newZ));

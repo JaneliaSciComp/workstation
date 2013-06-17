@@ -191,7 +191,7 @@ implements GLActor
 			// draw quad
 	        // double z = 0.0; // As far as OpenGL is concerned, all Z's are zero
 		    // Z index does not change with scale; XY do
-	        double z = getIndex().getZ() * tileFormat.getVoxelMicrometers()[2];
+	        double z = (getIndex().getZ() + 0.5) * tileFormat.getVoxelMicrometers()[2];
 	        // System.out.println("tile z "+z);
 	        double x0 = getIndex().getX() * tileFormat.getTileSize()[0] * zoomScale * tileFormat.getVoxelMicrometers()[0];
 	        double x1 = x0 + tileWidth;

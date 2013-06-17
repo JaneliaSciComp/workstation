@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
@@ -16,15 +17,16 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.TileIndex;
  * @author Christopher M. Bruns
  *
  */
-public class ZScanAction extends AbstractAction 
+public class SliceScanAction extends AbstractAction 
 {
 	private static final long serialVersionUID = 1L;
 	private VolumeImage3d image;
 	private Camera3d camera;
 	private int sliceCount;
 	private TileFormat tileFormat;
+	private CoordinateAxis sliceAxis = CoordinateAxis.Z;
 	
-	ZScanAction(VolumeImage3d image, Camera3d camera, int sliceCount)
+	SliceScanAction(VolumeImage3d image, Camera3d camera, int sliceCount)
 	{
 		this.image = image;
 		this.camera = camera;
@@ -34,15 +36,16 @@ public class ZScanAction extends AbstractAction
 	@Override
 	public void actionPerformed(ActionEvent e) 
 	{
+	    int axisIx = sliceAxis.index();
 		Vec3 oldFocus = camera.getFocus();
-		double oldZ = oldFocus.getZ();
-		int oldZIndex = (int)(Math.round(oldZ / image.getZResolution()) + 0.1);
+		double oldVal = oldFocus.get(axisIx);
+		int oldSliceIndex = (int)(Math.round(oldVal / image.getResolution(axisIx)) - 0.5);
 
 		// Take larger steps at lower octree zoom levels
 		int zoomedSliceCount = sliceCount;
 		if ((tileFormat != null) && (tileFormat.getIndexStyle() == TileIndex.IndexStyle.OCTREE))
 		{
-			double maxRes = Math.min(image.getXResolution(), image.getYResolution());
+			double maxRes = Math.min(image.getXResolution(), Math.min(image.getYResolution(), image.getZResolution()));
 			double voxelsPerPixel = 1.0 / (camera.getPixelsPerSceneUnit() * maxRes);
 			int zoom = 20; // default to very coarse zoom
 			if (voxelsPerPixel > 0.0) {
@@ -53,38 +56,49 @@ public class ZScanAction extends AbstractAction
 			int zoomMax = tileFormat.getZoomLevelCount() - 1;
 			zoom = Math.max(zoom, zoomMin);
 			zoom = Math.min(zoom, zoomMax);
-			int deltaZ = (int)Math.pow(2, zoom);
-			zoomedSliceCount = sliceCount * deltaZ;
+			int deltaSlice = (int)Math.pow(2, zoom);
+			zoomedSliceCount = sliceCount * deltaSlice;
 		}
 		
-		int newZIndex = oldZIndex + zoomedSliceCount;
+		int newSliceIndex = oldSliceIndex + zoomedSliceCount;
 		
 		// Scoot to next multiple of 10, for (apparent) performance
 		int sliceIncrement = Math.abs(sliceCount);
 		if (sliceIncrement == 10) {
-			int dz = newZIndex % sliceIncrement;
-			if (dz > sliceIncrement/2.0)
-				dz -= sliceIncrement;
-			newZIndex -= dz; // newZIndex is now a multiple of sliceCount
-			assert newZIndex % sliceIncrement == 0;
+			int dSlice = newSliceIndex % sliceIncrement;
+			if (dSlice > sliceIncrement/2.0)
+				dSlice -= sliceIncrement;
+			newSliceIndex -= dSlice; // newZIndex is now a multiple of sliceCount
+			assert newSliceIndex % sliceIncrement == 0;
 		}
 
-		double newZ = newZIndex * image.getZResolution();
-		double maxZ = image.getBoundingBox3d().getMax().getZ();
-		double minZ = image.getBoundingBox3d().getMin().getZ();
-		assert maxZ >= minZ;
-		if (newZ > maxZ)
-			newZ = maxZ;
-		if (newZ < minZ)
-			newZ = minZ;
-		if (newZ == oldZ)
+		double halfVoxel = 0.5 * image.getResolution(axisIx);
+		double newSlice = newSliceIndex * image.getResolution(axisIx) + halfVoxel;
+		double maxSlice = image.getBoundingBox3d().getMax().get(axisIx) - halfVoxel;
+		double minSlice = image.getBoundingBox3d().getMin().get(axisIx) + halfVoxel;
+		assert maxSlice >= minSlice;
+		if (newSlice > maxSlice)
+			newSlice = maxSlice;
+		if (newSlice < minSlice)
+			newSlice = minSlice;
+		if (newSlice == oldVal)
 			return; // no change
-		Vec3 newFocus = new Vec3(oldFocus.getX(), oldFocus.getY(), newZ);
+		Vec3 newFocus = new Vec3(oldFocus.getX(), oldFocus.getY(), oldFocus.getZ());
+		newFocus.set(axisIx, newSlice);
+		// System.out.println(newFocus.get(axisIx)+", "+newSliceIndex);
 		// TODO - disallow camera.getFocus().setZ(), which bypasses camera signaling
 		camera.setFocus(newFocus);
 	}
 
-	public int getSliceCount() {
+	public CoordinateAxis getSliceAxis() {
+        return sliceAxis;
+    }
+
+    public void setSliceAxis(CoordinateAxis sliceAxis) {
+        this.sliceAxis = sliceAxis;
+    }
+
+    public int getSliceCount() {
 		return sliceCount;
 	}
 

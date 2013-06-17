@@ -9,7 +9,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 import com.jogamp.newt.event.KeyEvent;
 
 public class NextZSliceAction
-extends ZScanAction
+extends SliceScanAction
 {
 	private static final long serialVersionUID = 1L;
 

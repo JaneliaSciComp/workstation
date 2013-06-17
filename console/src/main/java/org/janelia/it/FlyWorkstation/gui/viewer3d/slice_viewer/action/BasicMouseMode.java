@@ -16,6 +16,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
@@ -40,7 +41,7 @@ public class BasicMouseMode implements MouseMode
 	protected Cursor currentCursor = hoverCursor;
 	protected MouseModalWidget widget;
 	protected Camera3d camera;
-
+	protected Rotation viewerInGround = new Rotation();
 	
 	public static Cursor createCursor(String fileName, int x, int y) {
 		Toolkit toolkit = Toolkit.getDefaultToolkit();
@@ -178,7 +179,15 @@ public class BasicMouseMode implements MouseMode
 		this.previousPoint = previousPoint;
 	}
 	
-	public Vec3 worldFromPixel(Point pixel) {
+	public Rotation getViewerInGround() {
+        return viewerInGround;
+    }
+
+    public void setViewerInGround(Rotation viewerInGround) {
+        this.viewerInGround = viewerInGround;
+    }
+
+    public Vec3 worldFromPixel(Point pixel) {
 		// Initialize to screen space position
 		Vec3 result = new Vec3(pixel.getX(), pixel.getY(), 0);
 		// Normalize to screen viewport center
@@ -188,6 +197,8 @@ public class BasicMouseMode implements MouseMode
 		result = result.minus(new Vec3(vp.getWidth()/2.0, vp.getHeight()/2.0, 0)); // center
 		// Convert from pixel units to world units
 		result = result.times(1.0/getCamera().getPixelsPerSceneUnit());
+		// Apply viewer orientation, e.g. X/Y/Z orthogonal viewers
+		result = viewerInGround.times(result);
 		// TODO - apply rotation, but only for rotatable viewers, UNLIKE slice viewer
 		// Apply camera focus
 		result = result.plus(getCamera().getFocus());
@@ -198,6 +209,8 @@ public class BasicMouseMode implements MouseMode
 	public Point pixelFromWorld(Vec3 v) {
 		Vec3 result = v;
 		result = result.minus(getCamera().getFocus());
+		// Apply viewer orientation, e.g. X/Y/Z orthogonal viewers
+		result = viewerInGround.inverse().times(result);
 		result = result.times(getCamera().getPixelsPerSceneUnit());
 		// TODO - apply rotation, but only for rotatable viewers, UNLIKE slice viewer
 		Viewport vp = getComponent().getViewport();

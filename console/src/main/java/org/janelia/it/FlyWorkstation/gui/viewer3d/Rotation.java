@@ -15,7 +15,11 @@ public class Rotation extends SizedVector<UnitVec3>
 		return get(i).get(j);
 	}
 
-	protected Rotation setElements(
+    public Rotation inverse() {
+        return this.transpose();
+    }
+
+    protected Rotation setElements(
 			double e00, double e01, double e02,
 			double e10, double e11, double e12,
 			double e20, double e21, double e22) 

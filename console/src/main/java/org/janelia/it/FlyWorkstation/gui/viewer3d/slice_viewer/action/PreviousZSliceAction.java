@@ -8,7 +8,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 
 import com.jogamp.newt.event.KeyEvent;
 
-public class PreviousZSliceAction extends ZScanAction {
+public class PreviousZSliceAction extends SliceScanAction {
 	private static final long serialVersionUID = 1L;
 
 	public PreviousZSliceAction(VolumeImage3d image, Camera3d camera) {

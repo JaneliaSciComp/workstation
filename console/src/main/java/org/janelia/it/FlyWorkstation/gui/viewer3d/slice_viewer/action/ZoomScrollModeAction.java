@@ -14,7 +14,7 @@ public class ZoomScrollModeAction extends AbstractAction
 
     public Signal1<WheelMode.Mode> setWheelModeSignal = new Signal1<WheelMode.Mode>();
 
-	public ZoomScrollModeAction(MouseModalWidget widget) {
+	public ZoomScrollModeAction() {
 		putValue(NAME, "Zoom");
 		putValue(SMALL_ICON, Icons.getIcon("magnify_glass.png"));
 		putValue(SHORT_DESCRIPTION, 

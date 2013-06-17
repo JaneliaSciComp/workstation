@@ -5,6 +5,7 @@ import java.net.URL;
 import javax.media.opengl.GL2;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 
@@ -29,6 +30,19 @@ implements VolumeImage3d, GLActor
 		return 0.10;
 	}
 
+    @Override
+    public Vec3 getVoxelCenter() {
+        Vec3 result = new Vec3();
+        for (int i = 0; i < 3; ++i) {
+            double range = getBoundingBox3d().getMax().get(i) - getBoundingBox3d().getMin().get(i);
+            int voxelCount = (int)Math.round(range/getResolution(i));
+            int midVoxel = voxelCount/2;
+            double center = (midVoxel+0.5)*getResolution(i);
+            result.set(i, center);
+        }
+        return result;
+    }
+    
 	@Override
 	public double getZResolution() {
 		return 0.10;

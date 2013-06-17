@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 
@@ -10,23 +11,13 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 public class PanMode
 extends BasicMouseMode 
 {
-    // Viewer orientation relative to canonical orientation.
-    // Canonical orientation is x-right, y-down, z-away
-    Rotation rotation = new Rotation();
-
+    private BoundingBox3d boundingBox;
+    
     public PanMode() {
 		setHoverCursor(BasicMouseMode.createCursor("grab_opened.png", 8, 8));
 		setDragCursor(BasicMouseMode.createCursor("grab_closed.png", 8, 8));
 	}
 	
-	public Rotation getRotation() {
-        return rotation;
-    }
-
-    public void setRotation(Rotation rotation) {
-        this.rotation = rotation;
-    }
-
     @Override
 	public void mouseDragged(MouseEvent event) {
 		super.mouseDragged(event);
@@ -38,8 +29,36 @@ extends BasicMouseMode
 		Point p2 = getPoint();
 		// Point dx = new Point(p2.x - p1.x, p2.y - p1.y);
 		Vec3 dx = new Vec3(p2.x - p1.x, p2.y - p1.y, 0.0);
-		dx = rotation.times(dx);
-		if (getCamera() != null)
-			getCamera().incrementFocusPixels(-dx.x(), -dx.y(), -dx.z());
+		dx = getViewerInGround().times(dx);
+		if (getCamera() != null) {
+		    Vec3 oldFocus = getCamera().getFocus();
+		    // How much to move camera focus?
+		    Vec3 dFocus = new Vec3(-dx.x(), -dx.y(), -dx.z());
+		    // Convert from pixels to scene units
+		    dFocus = dFocus.times(1.0/getCamera().getPixelsPerSceneUnit());
+		    // Nudge focus
+		    Vec3 newFocus = oldFocus.plus(dFocus);
+		    // Restrict to bounding box
+		    if (boundingBox != null) {
+        		    for (int i = 0; i < 3; ++i) {
+        		        double x = newFocus.get(i);
+        		        double min = boundingBox.getMin().get(i);
+        		        double max = boundingBox.getMax().get(i);
+        		        if (x < min)
+        		            newFocus.set(i, min);
+        		        if (x > max)
+        		            newFocus.set(i, max);
+        		    }
+		    }
+		    getCamera().setFocus(newFocus);
+		}
 	}
+
+    public BoundingBox3d getBoundingBox() {
+        return boundingBox;
+    }
+
+    public void setBoundingBox(BoundingBox3d boundingBox) {
+        this.boundingBox = boundingBox;
+    }
 }

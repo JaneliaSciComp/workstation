@@ -34,6 +34,19 @@ implements VolumeImage3d
 	}
 
 	@Override
+	public Vec3 getVoxelCenter() {
+	    Vec3 result = new Vec3();
+	    for (int i = 0; i < 3; ++i) {
+	        double range = getBoundingBox3d().getMax().get(i) - getBoundingBox3d().getMin().get(i);
+	        int voxelCount = (int)Math.round(range/getResolution(i));
+	        int midVoxel = voxelCount/2;
+	        double center = (midVoxel+0.5)*getResolution(i);
+	        result.set(i, center);
+	    }
+	    return result;
+	}
+	
+	@Override
 	public double getXResolution() {
 		if (getLoadAdapter() == null)
 			return 0;

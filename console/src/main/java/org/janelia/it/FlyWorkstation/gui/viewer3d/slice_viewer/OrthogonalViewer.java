@@ -46,13 +46,13 @@ implements MouseModalWidget
     private static final Logger log = LoggerFactory.getLogger(OrthogonalViewer.class);
 
 	private Camera3d camera;
-	private Viewport viewport;
 	private VolumeImage3d volume;
 	private CoordinateAxis viewAxis;
 	private SliceRenderer renderer = new SliceRenderer();
+    private Viewport viewport = renderer.getViewport();
     // Viewer orientation relative to canonical orientation.
     // Canonical orientation is x-right, y-down, z-away
-    Rotation viewerInGround = new Rotation();
+    private Rotation viewerInGround = new Rotation();
 
     private MouseMode mouseMode;
     private MouseMode.Mode mouseModeId;
@@ -99,10 +99,16 @@ implements MouseModalWidget
 		    viewerInGround.setFromCanonicalRotationAboutPrincipalAxis(
 		            3, CoordinateAxis.X);
 		addGLEventListener(renderer);
-		renderer.setBackgroundColor(Color.pink); // TODO set to black		
+		renderer.setBackgroundColor(Color.black);		
         setMouseMode(MouseMode.Mode.PAN);
         setWheelMode(WheelMode.Mode.ZOOM);
         rubberBand.changed.connect(repaintSlot);
+        addMouseListener(this);
+        addMouseMotionListener(this);
+        addMouseWheelListener(this);
+        pointComputer.setCamera(camera);
+        pointComputer.setComponent(this);
+        pointComputer.setViewerInGround(viewerInGround);
 	}
 
     @Override
@@ -113,11 +119,27 @@ implements MouseModalWidget
     }
     
 	public void setCamera(ObservableCamera3d camera) {
-		this.camera = camera;
+        if (camera == null)
+            return;
+        if (camera == this.camera)
+            return;
+        this.camera = camera;
+        // Update image whenever camera changes
+        camera.getViewChangedSignal().connect(repaintSlot);
+        renderer.setCamera(camera);
+        mouseMode.setCamera(camera);
+        wheelMode.setCamera(camera);
+        // tileServer.setCamera(camera); TODO
+        pointComputer.setCamera(camera);
+        if (skeletonActor != null)
+            skeletonActor.setCamera(camera);
 	}
 	
 	public void setVolumeImage3d(VolumeImage3d volume) {
 		this.volume = volume;
+		if (mouseModeId == MouseMode.Mode.PAN) {
+		    ((PanMode)mouseMode).setBoundingBox(volume.getBoundingBox3d());
+		}
 	}
     @Override
     public void mouseClicked(MouseEvent event) {
@@ -174,7 +196,11 @@ implements MouseModalWidget
             return; // no change
         this.mouseModeId = modeId;
         if (modeId == MouseMode.Mode.PAN) {
-            this.mouseMode = new PanMode();
+            PanMode panMode = new PanMode();
+            panMode.setViewerInGround(getViewerInGround());
+            if (volume != null)
+                panMode.setBoundingBox(volume.getBoundingBox3d());
+            this.mouseMode = panMode;
         }
         else if (modeId == MouseMode.Mode.TRACE) {
             TraceMode traceMode = new TraceMode(skeletonActor.getSkeleton());
@@ -195,6 +221,22 @@ implements MouseModalWidget
         this.modeMenuItemGenerator = mouseMode.getMenuItemGenerator();
     }
 
+    public SkeletonActor getSkeletonActor() {
+        return skeletonActor;
+    }
+
+    public void setSkeletonActor(SkeletonActor skeletonActor) {
+        this.skeletonActor = skeletonActor;
+    }
+
+    public Rotation getViewerInGround() {
+        return viewerInGround;
+    }
+
+    public void setViewerInGround(Rotation viewerInGround) {
+        this.viewerInGround = viewerInGround;
+    }
+
     @Override
     public void setWheelMode(WheelMode.Mode mode) {
         if (this.wheelModeId == mode)
@@ -204,7 +246,9 @@ implements MouseModalWidget
             this.wheelMode = new ZoomMode();
         }
         else if (wheelModeId == WheelMode.Mode.SCAN) {
-            this.wheelMode = new ZScanMode(volume);
+            ZScanMode scanMode = new ZScanMode(volume);
+            scanMode.setSliceAxis(viewAxis);
+            this.wheelMode = scanMode;
         }
         this.wheelMode.setComponent(this);
         this.wheelMode.setCamera(camera);

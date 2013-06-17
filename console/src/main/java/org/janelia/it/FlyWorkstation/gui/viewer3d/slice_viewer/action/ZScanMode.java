@@ -1,6 +1,8 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action;
 
 import java.awt.event.MouseWheelEvent;
+
+import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.MouseModalWidget;
@@ -10,10 +12,10 @@ public class ZScanMode
 implements WheelMode
 {
 	BasicMouseMode mode = new BasicMouseMode();
-	ZScanAction zScanAction;
+	SliceScanAction sliceScanAction;
 
 	public ZScanMode(VolumeImage3d image) {
-		this.zScanAction = new ZScanAction(image, mode.getCamera(), 1);
+		this.sliceScanAction = new SliceScanAction(image, mode.getCamera(), 1);
 	}
 	
 	@Override
@@ -36,14 +38,14 @@ implements WheelMode
 		if (notches == 0)
 			return;
 
-		zScanAction.setSliceCount(notches);
-		zScanAction.actionPerformed(null);
+		sliceScanAction.setSliceCount(notches);
+		sliceScanAction.actionPerformed(null);
 	}
 
 	@Override
 	public void setCamera(Camera3d camera) {
 		mode.setCamera(camera);
-		zScanAction.setCamera(camera);
+		sliceScanAction.setCamera(camera);
 	}
 
 	@Override
@@ -52,6 +54,10 @@ implements WheelMode
 	}
 	
 	public void setTileFormat(TileFormat tileFormat) {
-		zScanAction.setTileFormat(tileFormat);
+		sliceScanAction.setTileFormat(tileFormat);
+	}
+	
+	public void setSliceAxis(CoordinateAxis axis) {
+	    sliceScanAction.setSliceAxis(axis);
 	}
 }
