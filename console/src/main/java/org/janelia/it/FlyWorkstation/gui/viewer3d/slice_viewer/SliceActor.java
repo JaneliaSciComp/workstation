@@ -104,11 +104,11 @@ implements GLActor
 		shader.load(gl);
 		for (Tile2d tile: tiles) {
 			tile.setFilter(filter);
-			tile.display(gl);
+			tile.display(gl, tileServer.getCamera());
 		}
 		shader.unload(gl);
 
-		// Optional numeral display at high zoom			
+		// Numeral display at high zoom			
 		if (pixelsPerVoxel > 40.0) {
 			numeralShader.setMicrometersPerPixel(1.0/pixelsPerVoxel);
 			// fetch (typical?) texture dimensions
@@ -128,7 +128,7 @@ implements GLActor
 			for (Tile2d tile: tiles) {
 				tile.setFilter(GL2.GL_NEAREST);
 				// numeralShader.setTexturePixels(???);
-				tile.display(gl);
+				tile.display(gl, tileServer.getCamera());
 			}
 			numeralShader.unload(gl);
 		}
@@ -141,7 +141,7 @@ implements GLActor
 			outlineShader.load(gl);
 			gl.glLineWidth(1.0f);
 			for (Tile2d tile: tiles) {
-				tile.displayBoundingBox(gl);
+				tile.displayBoundingBox(gl, tileServer.getCamera());
 			}
 			outlineShader.unload(gl);
 		}

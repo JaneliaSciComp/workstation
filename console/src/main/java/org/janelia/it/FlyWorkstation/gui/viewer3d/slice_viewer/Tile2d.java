@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import javax.media.opengl.GL2;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -146,6 +147,10 @@ implements GLActor
 
 	@Override
 	public void display(GL2 gl) {
+		display(gl, null);
+	}
+	
+	public void display(GL2 gl, Camera3d camera) {
 		if (bestTexture == null) {
 			log.info("tile with no texture "+getIndex());
 			return;
@@ -192,6 +197,10 @@ implements GLActor
 	        // double z = 0.0; // As far as OpenGL is concerned, all Z's are zero
 		    // Z index does not change with scale; XY do
 	        double z = (getIndex().getZ() + 0.5) * tileFormat.getVoxelMicrometers()[2];
+	        // Avoid blanking at high zoom by placing tile at exact focus center
+	        if (camera != null) {
+	        	z = camera.getFocus().getZ();
+	        }
 	        // System.out.println("tile z "+z);
 	        double x0 = getIndex().getX() * tileFormat.getTileSize()[0] * zoomScale * tileFormat.getVoxelMicrometers()[0];
 	        double x1 = x0 + tileWidth;
@@ -214,6 +223,11 @@ implements GLActor
 
 	public void displayBoundingBox(GL2 gl) 
 	{
+		displayBoundingBox(gl, null);
+	}
+	
+	public void displayBoundingBox(GL2 gl, Camera3d camera) 
+	{
 		if (bestTexture == null)
 			return;
 		PyramidTexture texture = bestTexture.getTexture();
@@ -225,7 +239,9 @@ implements GLActor
 			// draw quad
 	        // double z = 0.0; // As far as OpenGL is concerned, all Z's are zero
 			// Z index does not change with scale; XY do
-	        double z = getIndex().getZ() * tileFormat.getVoxelMicrometers()[2];
+	        double z = (getIndex().getZ()+0.5) * tileFormat.getVoxelMicrometers()[2];
+	        if (camera != null)
+	        	z = camera.getFocus().getZ();
 	        double x0 = getIndex().getX() * tileFormat.getTileSize()[0] * zoomScale * tileFormat.getVoxelMicrometers()[0];
 	        double x1 = x0 + tileWidth;
 	        // Raveler tile index has origin at BOTTOM left, unlike TOP left for images and
