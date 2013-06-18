@@ -24,6 +24,8 @@ public class VtxCoordBufMgr {
     public static final int COORDS_PER_VERTEX = 3;
     public static final int NUM_AXES = 3;
 
+    private boolean useVBO = false;
+
     // Buffer objects for setting geometry on the GPU side.
     //   I need one per starting direction (x,y,z) times one for positive, one for negative.
     //
@@ -41,6 +43,11 @@ public class VtxCoordBufMgr {
     private Logger logger = LoggerFactory.getLogger(VtxCoordBufMgr.class);
 
     public VtxCoordBufMgr() {
+    }
+
+    /** Can control whether vertex and tex coord buffers are virtualized or always uploaded. */
+    public VtxCoordBufMgr( boolean useVBO ) {
+        this.useVBO = useVBO;
     }
 
     public VtxCoordBufMgr( TextureMediator textureMediator ) {
@@ -103,7 +110,11 @@ public class VtxCoordBufMgr {
                 // compute number of slices
                 int sliceCount = computeEffectiveAxisLen(firstInx);
                 float slice0 = firstAxisLen / 2.0f + textureMediator.getVoxelMicrometers()[ firstInx ].floatValue();
-                float sliceSep = textureMediator.getVoxelMicrometers()[ firstInx ].floatValue();
+                float direction = -1.0f;
+                if ( firstInx > 2 ) {
+                    direction = 1.0f;
+                }
+                float sliceSep = direction * textureMediator.getVoxelMicrometers()[ firstInx ].floatValue();
 
         		// Below "x", "y", and "z" actually refer to a1, a2, and a3, respectively;
                 float second0 = secondAxisLen / 2.0f + textureMediator.getVoxelMicrometers()[secondInx].floatValue();
@@ -131,17 +142,17 @@ public class VtxCoordBufMgr {
                 float[] p01n = {0,0,0};
 
                 // reswizzle coordinate axes back to actual X, Y, Z (except x, saved for later)
-                p00n[ secondInx ] = p01n[ secondInx ] = -second0;
-                p10n[ secondInx ] = p11n[ secondInx ] = -second1;
-                p00n[ thirdInx ] = p10n[ thirdInx ] = -third0;
-                p01n[ thirdInx ] = p11n[ thirdInx ] = -third1;
+                p00n[ secondInx ] = p01n[ secondInx ] = second0;
+                p10n[ secondInx ] = p11n[ secondInx ] = second1;
+                p00n[ thirdInx ] = p10n[ thirdInx ] = third0;
+                p01n[ thirdInx ] = p11n[ thirdInx ] = third1;
 
                 texCoordBuf[ firstInx ].rewind();
                 for (int sliceInx = 0; sliceInx < sliceCount; ++sliceInx) {
                     // insert final coordinate into buffers
 
                     // FORWARD axes.
-                    float sliceLoc = slice0 + sliceInx * sliceSep;
+                    float sliceLoc = slice0 + (sliceInx * sliceSep);
                     p00p[ firstInx ] = p01p[firstInx] = p10p[firstInx] = p11p[firstInx] = sliceLoc;
 
                     float[] t00 = textureMediator.textureCoordFromVoxelCoord( p00p );
@@ -169,6 +180,8 @@ public class VtxCoordBufMgr {
                     geometryCoordBuf[ firstInx ].put( t01 );
 
                     // Now, take care of the negative-direction alternate to this buffer pair.
+                    p00n[ firstInx ] = p01n[firstInx] = p10n[firstInx] = p11n[firstInx] = -sliceLoc;
+
                     t00 = textureMediator.textureCoordFromVoxelCoord( p00n );
                     t01 = textureMediator.textureCoordFromVoxelCoord( p01n );
                     t10 = textureMediator.textureCoordFromVoxelCoord( p10n );
@@ -179,9 +192,9 @@ public class VtxCoordBufMgr {
                     texCoordBuf[ firstInx + NUM_AXES ].put( p10n );
                     texCoordBuf[ firstInx + NUM_AXES ].put( p01n );
                     // Triangle 2
-                    texCoordBuf[ firstInx + NUM_AXES ].put( p10p );
-                    texCoordBuf[ firstInx + NUM_AXES ].put( p11p );
-                    texCoordBuf[ firstInx + NUM_AXES ].put( p01p );
+                    texCoordBuf[ firstInx + NUM_AXES ].put( p10n );
+                    texCoordBuf[ firstInx + NUM_AXES ].put( p11n );
+                    texCoordBuf[ firstInx + NUM_AXES ].put( p01n );
 
                     // Triangle 1
                     geometryCoordBuf[ firstInx + NUM_AXES ].put( t00 );
@@ -197,6 +210,15 @@ public class VtxCoordBufMgr {
             }
 
         }
+    }
+
+    /**
+     * If statical (no repeated-upload) is used for the vertices, then this may be called to reduce
+     * memory.
+     */
+    public void dropBuffers() {
+        geometryCoordBuf = null;
+        this.texCoordBuf = null;
     }
 
     /**
@@ -222,37 +244,71 @@ public class VtxCoordBufMgr {
         gl.glDisable(GL2.GL_CULL_FACE);
         gl.glFrontFace(GL2.GL_CCW);
 
-        // Point to the right vertex set.
-        int handle = bindBuffer( gl, axis, geometryVertexBufferHandles, direction );
+        //gl.glPolygonMode(GL2.GL_FRONT_AND_BACK,GL2.GL_FILL);
 
-        // 3 floats per vertex.  Stride is 0, offset to first is 0.
-        gl.glEnableClientState( GL2.GL_VERTEX_ARRAY );
-        gl.glVertexPointer( 3, GL2.GL_FLOAT, 0, 0 );
+        if ( useVBO ) {
+            logger.info("Using VBO");
+            // Point to the right vertex set.
 
-        // Point to the right texture coordinate set.
-        handle = bindBuffer( gl, axis, textureCoordBufferHandles, direction );
-        gl.glEnableClientState( GL2.GL_TEXTURE_COORD_ARRAY );
-        // 3 floats per texture coord.  Stride is 0, offset to first is 0.
-        gl.glTexCoordPointer( 3, GL2.GL_FLOAT, 0, 0 );
+            // 3 floats per texture coord.  Stride is 0, offset to first is 0.
+            bindBuffer( gl, axis, geometryVertexBufferHandles, direction );
 
+            gl.glEnableClientState( GL2.GL_VERTEX_ARRAY );
+            gl.glVertexPointer( 3, GL2.GL_FLOAT, 0, 0 );
+            gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
+
+            // Point to the right texture coordinate set.
+            bindBuffer( gl, axis, textureCoordBufferHandles, direction );
+
+            gl.glEnableClientState( GL2.GL_TEXTURE_COORD_ARRAY );
+            gl.glTexCoordPointer( 3, GL2.GL_FLOAT, 0, 0 );
+            gl.glDisableClientState( GL2.GL_TEXTURE_COORD_ARRAY );
+
+            int err = gl.glGetError();
+            if ( err != 0 ) {
+                logger.error("GL Error {}.", err);
+            }
+
+        }
+        else {
+            logger.info("Not using VBO: pushing data for each draw.");
+            // Push the right vertex set.
+
+            // 3 floats per texture coord.  Stride is 0, offset to first is 0.
+
+            FloatBuffer geometryBuff = geometryCoordBuf[convertAxisDirectionToOffset(axis, direction)];
+            geometryBuff.rewind();
+            gl.glEnableClientState( GL2.GL_VERTEX_ARRAY );
+            gl.glVertexPointer( 3, GL2.GL_FLOAT, 0, geometryBuff );
+            gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
+
+            FloatBuffer texBuff = texCoordBuf[convertAxisDirectionToOffset(axis, direction)];
+            texBuff.rewind();
+            gl.glEnableClientState( GL2.GL_TEXTURE_COORD_ARRAY );
+            gl.glTexCoordPointer( 3, GL2.GL_FLOAT, 0, texBuff );
+            gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
+
+        }
+
+        // Tell GPU to draw triangles (interpret every three vertices as a triangle), starting at pos 0,
+        //  and expect vertex-count worth of vertices to examine.
         gl.glDrawArrays(GL2.GL_TRIANGLES, 0, getVertexCount( axis ));
 
-        gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
-        gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
     }
 
     /** Convenience method to cut down on repeated code. */
     private int[] enableBuffersOfType(GL2 gl, FloatBuffer[] buffers ) throws Exception {
         // Make handles for subsequent use.
         int[] rtnVal = new int[ NUM_BUFFERS_PER_TYPE ];
-        gl.glGenBuffers( 6, rtnVal, 0 );
+        gl.glGenBuffers( NUM_BUFFERS_PER_TYPE, rtnVal, 0 );
 
         // DEBUG
         System.out.println("DUMPING THE BUFFERS");
 
         // Bind data to the handles, and upload it to the GPU.
         for ( int i = 0; i < NUM_BUFFERS_PER_TYPE; i++ ) {
-            System.out.println("BUFFER " + i);
+            String label = ((i < 3) ? " +1.0 " : " -1.0 ") + ("XYZ".charAt( i%3 ));
+            System.out.println("BUFFER " + label);
             buffers[ i ].rewind();
             gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, rtnVal[ i ]);
             // NOTE: this operates on the most recent "bind".  Therefore unless
@@ -266,12 +322,26 @@ public class VtxCoordBufMgr {
             );
 
             // DEBUG
-//            buffers[ i ].rewind();
-//            for (int j = 0; j < buffers[i].capacity(); j++) {
-//                float f = buffers[i].get();
-//                System.out.print( f + " " );
-//            }
-//            System.out.println();
+            buffers[ i ].rewind();
+            for (int j = 0; j < 180; j++) {
+                if ( j % 18 == 0 )
+                    System.out.print("  SHEET: " + j/18);
+                if ( j % 3 == 0 ) {
+                    System.out.print(" [" );
+                }
+                else if ( j > 0 ) {
+                    System.out.print(",");
+                }
+                float f = buffers[i].get();
+                System.out.print(f);
+                if ( j % 3 == 2 ) {
+                    System.out.print( "]" );
+                }
+                if ( j % 18 == 17 ) {
+                    System.out.print( "\n" );
+                }
+            }
+            System.out.println();
         }
 
         return rtnVal;
@@ -284,24 +354,28 @@ public class VtxCoordBufMgr {
      * @param direction for positive/negative view perspective.
      */
     private int bindBuffer( GL2 gl, CoordinateAxis axis, int[] handles, double direction ) {
+        int bufferOffset = convertAxisDirectionToOffset(axis, direction);
+        gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, handles[ bufferOffset ] );
+        logger.info("Returning buffer offset of {} for {}.", bufferOffset, axis.getName() + ":" + direction);
+        logger.debug("Buffer handle is {}.", handles[ bufferOffset ]);
+        return handles[ bufferOffset ];
+    }
+
+    private int convertAxisDirectionToOffset(CoordinateAxis axis, double direction) {
+        int directionOffset = 0;
         if ( axis == null  ||  (direction != 1.0  &&  direction != -1.0) ) {
             logger.error("Failed to bind buffer for {}, {}.", axis.getName(), direction);
             return -1;
         }
         else {
             // Change direction from -1.0 or 1.0 to 0 or 3 as offset into arrays.
-            int directionOffset = 0;
             if ( direction == -1.0 ) {
                 directionOffset = 3;
             }
 
-            int bufferOffset = directionOffset + axis.index();
-            gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, handles[ bufferOffset ] );
-
-            logger.debug("Returning buffer offset of {} for {}.", bufferOffset, axis.getName() + ":" + direction);
-            return handles[ bufferOffset ];
         }
 
+        return directionOffset + axis.index();
     }
 
     private int getVertexCount( CoordinateAxis axis ) {

@@ -59,7 +59,7 @@ vec4 volumeMask(vec4 origColor)
     if (hasMaskingTexture > 0)
     {
         // texture3D returns vec4.
-        vec4 maskingColor = texture3D(maskingTexture, gl_TexCoord[1].xyz);
+        vec4 maskingColor = texture3D(maskingTexture, gl_TexCoord[0].xyz);
 
         if ( ( ( origColor[0] + origColor[1] + origColor[2] ) == 0.0 ) )
         {
