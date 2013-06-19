@@ -5,10 +5,9 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
+import java.nio.*;
 
 /**
  * Created with IntelliJ IDEA.
@@ -31,12 +30,14 @@ public class VtxCoordBufMgr {
     //
     private FloatBuffer texCoordBuf[] = new FloatBuffer[ NUM_BUFFERS_PER_TYPE ];
     private FloatBuffer geometryCoordBuf[] = new FloatBuffer[ NUM_BUFFERS_PER_TYPE ];
+    private ShortBuffer indexBuf[] = new ShortBuffer[ NUM_BUFFERS_PER_TYPE ];
 
     private int[] vertexCountByAxis;
 
     // Int pointers to use as handles when dealing with GPU.
     private int[] geometryVertexBufferHandles;
     private int[] textureCoordBufferHandles;
+    private int[] indexBufferHandles;
 
     private TextureMediator textureMediator;
 
@@ -97,6 +98,11 @@ public class VtxCoordBufMgr {
                 ByteBuffer geoByteBuffer = ByteBuffer.allocateDirect(numCoords * Float.SIZE / 8);
                 geoByteBuffer.order(ByteOrder.nativeOrder());
                 geometryCoordBuf[ i ] = geoByteBuffer.asFloatBuffer();
+
+                // One index per vertex.  Not one per coord.  No need for x,y,z.
+                ByteBuffer inxByteBuffer = ByteBuffer.allocateDirect(numVertices * Short.SIZE / 8);
+                inxByteBuffer.order(ByteOrder.nativeOrder());
+                indexBuf[ i ] = inxByteBuffer.asShortBuffer();
             }
 
             // Now produce the vertexes to stuff into all of the buffers.
@@ -148,6 +154,7 @@ public class VtxCoordBufMgr {
                 p01n[ thirdInx ] = p11n[ thirdInx ] = third1;
 
                 texCoordBuf[ firstInx ].rewind();
+                short inxOffset = 0;
                 for (int sliceInx = 0; sliceInx < sliceCount; ++sliceInx) {
                     // insert final coordinate into buffers
 
@@ -162,22 +169,31 @@ public class VtxCoordBufMgr {
 
                     // Only need four definitions, but making six vertexes.
                     // Triangle 1
-                    texCoordBuf[ firstInx ].put( p00p );
-                    texCoordBuf[ firstInx ].put( p10p );
-                    texCoordBuf[ firstInx ].put( p01p );
+                    geometryCoordBuf[ firstInx ].put( p00p );
+                    geometryCoordBuf[ firstInx ].put( p10p );
+                    geometryCoordBuf[ firstInx ].put( p01p );
                     // Triangle 2
-                    texCoordBuf[ firstInx ].put( p10p );
-                    texCoordBuf[ firstInx ].put( p11p );
-                    texCoordBuf[ firstInx ].put( p01p );
+                    geometryCoordBuf[ firstInx ].put( p10p );
+                    geometryCoordBuf[ firstInx ].put( p11p );
+                    geometryCoordBuf[ firstInx ].put( p01p );
 
                     // Triangle 1
-                    geometryCoordBuf[ firstInx ].put( t00 );
-                    geometryCoordBuf[ firstInx ].put( t10 );
-                    geometryCoordBuf[ firstInx ].put( t01 );
+                    texCoordBuf[ firstInx ].put( t00 );
+                    texCoordBuf[ firstInx ].put( t10 );
+                    texCoordBuf[ firstInx ].put( t01 );
                     // Triangle 2
-                    geometryCoordBuf[ firstInx ].put( t10 );
-                    geometryCoordBuf[ firstInx ].put( t11 );
-                    geometryCoordBuf[ firstInx ].put( t01 );
+                    texCoordBuf[ firstInx ].put( t10 );
+                    texCoordBuf[ firstInx ].put( t11 );
+                    texCoordBuf[ firstInx ].put( t01 );
+
+                    // Indices
+                    indexBuf[ firstInx ].put( inxOffset );
+                    indexBuf[ firstInx ].put( (short)(inxOffset + 1) );
+                    indexBuf[ firstInx ].put( (short)(inxOffset + 2) );
+
+                    indexBuf[ firstInx ].put( (short)(inxOffset + 3) );
+                    indexBuf[ firstInx ].put( (short)(inxOffset + 4) );
+                    indexBuf[ firstInx ].put( (short)(inxOffset + 5) );
 
                     // Now, take care of the negative-direction alternate to this buffer pair.
                     p00n[ firstInx ] = p01n[firstInx] = p10n[firstInx] = p11n[firstInx] = -sliceLoc;
@@ -188,22 +204,33 @@ public class VtxCoordBufMgr {
                     t11 = textureMediator.textureCoordFromVoxelCoord( p11n );
 
                     // Triangle 1
-                    texCoordBuf[ firstInx + NUM_AXES ].put( p00n );
-                    texCoordBuf[ firstInx + NUM_AXES ].put( p10n );
-                    texCoordBuf[ firstInx + NUM_AXES ].put( p01n );
+                    geometryCoordBuf[ firstInx + NUM_AXES ].put( p00n );
+                    geometryCoordBuf[ firstInx + NUM_AXES ].put( p10n );
+                    geometryCoordBuf[ firstInx + NUM_AXES ].put( p01n );
                     // Triangle 2
-                    texCoordBuf[ firstInx + NUM_AXES ].put( p10n );
-                    texCoordBuf[ firstInx + NUM_AXES ].put( p11n );
-                    texCoordBuf[ firstInx + NUM_AXES ].put( p01n );
+                    geometryCoordBuf[ firstInx + NUM_AXES ].put( p10n );
+                    geometryCoordBuf[ firstInx + NUM_AXES ].put( p11n );
+                    geometryCoordBuf[ firstInx + NUM_AXES ].put( p01n );
 
                     // Triangle 1
-                    geometryCoordBuf[ firstInx + NUM_AXES ].put( t00 );
-                    geometryCoordBuf[ firstInx + NUM_AXES ].put( t10 );
-                    geometryCoordBuf[ firstInx + NUM_AXES ].put( t01 );
+                    texCoordBuf[ firstInx + NUM_AXES ].put( t00 );
+                    texCoordBuf[ firstInx + NUM_AXES ].put( t10 );
+                    texCoordBuf[ firstInx + NUM_AXES ].put( t01 );
                     // Triangle 2
-                    geometryCoordBuf[ firstInx + NUM_AXES ].put( t10 );
-                    geometryCoordBuf[ firstInx + NUM_AXES ].put( t11 );
-                    geometryCoordBuf[ firstInx + NUM_AXES ].put( t01 );
+                    texCoordBuf[ firstInx + NUM_AXES ].put( t10 );
+                    texCoordBuf[ firstInx + NUM_AXES ].put( t11 );
+                    texCoordBuf[ firstInx + NUM_AXES ].put( t01 );
+
+                    // Indices
+                    indexBuf[ firstInx + NUM_AXES ].put( inxOffset );
+                    indexBuf[ firstInx + NUM_AXES ].put( (short)(inxOffset + 1) );
+                    indexBuf[ firstInx + NUM_AXES ].put( (short)(inxOffset + 2) );
+
+                    indexBuf[ firstInx + NUM_AXES ].put( (short)(inxOffset + 3) );
+                    indexBuf[ firstInx + NUM_AXES ].put( (short)(inxOffset + 4) );
+                    indexBuf[ firstInx + NUM_AXES ].put( (short)(inxOffset + 5) );
+
+                    inxOffset += 6;
 
                 }
 
@@ -219,6 +246,8 @@ public class VtxCoordBufMgr {
     public void dropBuffers() {
         geometryCoordBuf = null;
         this.texCoordBuf = null;
+        // Later, after index buf is no longer fed for each draw call, can drop it here.
+        // indexBuf = null;
     }
 
     /**
@@ -229,8 +258,37 @@ public class VtxCoordBufMgr {
      * @throws Exception thrown by any called code.
      */
     public void enableBuffers(GL2 gl) throws Exception {
-        geometryVertexBufferHandles = enableBuffersOfType(gl, geometryCoordBuf);
-        textureCoordBufferHandles = enableBuffersOfType(gl, texCoordBuf);
+        geometryVertexBufferHandles = enableBuffersOfType(gl, geometryCoordBuf, GL2.GL_ARRAY_BUFFER);
+        textureCoordBufferHandles = enableBuffersOfType(gl, texCoordBuf, GL2.GL_ARRAY_BUFFER);
+        //indexBufferHandles = enableBuffersOfType(gl, indexBuf, GL2.GL_ELEMENT_ARRAY_BUFFER);
+    }
+
+    public void drawNoTex( GL2 gl, CoordinateAxis axis, double direction ) {
+
+        logger.info("Using VBO");
+        // Point to the right vertex set.
+
+        gl.glShadeModel (GL2.GL_SMOOTH);
+        gl.glEnableClientState( GL2.GL_VERTEX_ARRAY );
+        gl.glDisable(GL2.GL_CULL_FACE);
+        gl.glFrontFace(GL2.GL_CW);
+
+        // 3 floats per coord.  Stride is 0, offset to first is 0.
+        bindBuffer( gl, axis, geometryVertexBufferHandles, direction );
+
+        gl.glVertexPointer(3, GL2.GL_FLOAT, 0, 0);
+
+        int err = gl.glGetError();
+        if ( err != 0 ) {
+            logger.error("GL Error {}.", err);
+        }
+
+        // Tell GPU to draw triangles (interpret every three vertices as a triangle), starting at pos 0,
+        //  and expect vertex-count worth of vertices to examine.
+        indexBuf[ convertAxisDirectionToOffset( axis, direction) ].rewind();
+        gl.glColor4f(1.0f, 0.0f, 0.5f, 1.0f);
+        gl.glDrawElements(GL2.GL_TRIANGLES, getVertexCount(axis), GL2.GL_UNSIGNED_SHORT, indexBuf[convertAxisDirectionToOffset(axis, direction)]);
+        gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
     }
 
     /**
@@ -242,33 +300,48 @@ public class VtxCoordBufMgr {
      */
     public void draw( GL2 gl, CoordinateAxis axis, double direction ) {
         gl.glDisable(GL2.GL_CULL_FACE);
-        gl.glFrontFace(GL2.GL_CCW);
+        gl.glFrontFace(GL2.GL_CW);
 
         //gl.glPolygonMode(GL2.GL_FRONT_AND_BACK,GL2.GL_FILL);
 
         if ( useVBO ) {
             logger.info("Using VBO");
             // Point to the right vertex set.
-
-            // 3 floats per texture coord.  Stride is 0, offset to first is 0.
             bindBuffer( gl, axis, geometryVertexBufferHandles, direction );
 
             gl.glEnableClientState( GL2.GL_VERTEX_ARRAY );
-            gl.glVertexPointer( 3, GL2.GL_FLOAT, 0, 0 );
-            gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
+            // 3 floats per coord.  Stride is 0, offset to first is 0.
+            gl.glVertexPointer(3, GL2.GL_FLOAT, 0, 0);
 
             // Point to the right texture coordinate set.
-            bindBuffer( gl, axis, textureCoordBufferHandles, direction );
+            bindBuffer(gl, axis, textureCoordBufferHandles, direction);
 
             gl.glEnableClientState( GL2.GL_TEXTURE_COORD_ARRAY );
-            gl.glTexCoordPointer( 3, GL2.GL_FLOAT, 0, 0 );
-            gl.glDisableClientState( GL2.GL_TEXTURE_COORD_ARRAY );
+            gl.glTexCoordPointer(3, GL2.GL_FLOAT, 0, 0);
+
+
+            // Point to the right index coordinate set.
+            //NO buffer binding for indices at this time. LLF
+            //    bindBuffer( gl, axis, indexBufferHandles, direction );
+
+            //gl.glEnableClientState( GL2.GL_INDEX_ARRAY );
+            //gl.glIndexPointer( 0, 0, indexBuf[ convertAxisDirectionToOffset(axis, direction) ]);
+            //gl.glIndexCoordPointer(3, GL2.GL_FLOAT, 0, 0);
+            //gl.glDisableClientState(GL2.GL_INDEX_ARRAY );
 
             int err = gl.glGetError();
             if ( err != 0 ) {
                 logger.error("GL Error {}.", err);
             }
 
+            // Tell GPU to draw triangles (interpret every three vertices as a triangle), starting at pos 0,
+            //  and expect vertex-count worth of vertices to examine.
+            indexBuf[ convertAxisDirectionToOffset( axis, direction) ].rewind();
+            gl.glColor4f(1.0f, 0.0f, 0.5f, 1.0f);
+//            gl.glDrawElements( GL2.GL_TRIANGLES, 12 * 3, GL2.GL_UNSIGNED_SHORT, mTriangles);
+            gl.glDrawElements( GL2.GL_TRIANGLES, getVertexCount( axis ), GL2.GL_UNSIGNED_SHORT, indexBuf[ convertAxisDirectionToOffset(axis, direction) ] );
+            gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
+            gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
         }
         else {
             logger.info("Not using VBO: pushing data for each draw.");
@@ -278,50 +351,56 @@ public class VtxCoordBufMgr {
 
             FloatBuffer geometryBuff = geometryCoordBuf[convertAxisDirectionToOffset(axis, direction)];
             geometryBuff.rewind();
-            gl.glEnableClientState( GL2.GL_VERTEX_ARRAY );
-            gl.glVertexPointer( 3, GL2.GL_FLOAT, 0, geometryBuff );
+            gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
+            gl.glVertexPointer(3, GL2.GL_FLOAT, 0, geometryBuff);
             gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
 
             FloatBuffer texBuff = texCoordBuf[convertAxisDirectionToOffset(axis, direction)];
             texBuff.rewind();
-            gl.glEnableClientState( GL2.GL_TEXTURE_COORD_ARRAY );
-            gl.glTexCoordPointer( 3, GL2.GL_FLOAT, 0, texBuff );
+            gl.glEnableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
+            gl.glTexCoordPointer(3, GL2.GL_FLOAT, 0, texBuff);
             gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
 
+            // Tell GPU to draw triangles (interpret every three vertices as a triangle), starting at pos 0,
+            //  and expect vertex-count worth of vertices to examine.
+            gl.glDrawArrays(GL2.GL_TRIANGLES, 0, getVertexCount( axis ));
         }
 
-        // Tell GPU to draw triangles (interpret every three vertices as a triangle), starting at pos 0,
-        //  and expect vertex-count worth of vertices to examine.
-        gl.glDrawArrays(GL2.GL_TRIANGLES, 0, getVertexCount( axis ));
 
     }
 
     /** Convenience method to cut down on repeated code. */
-    private int[] enableBuffersOfType(GL2 gl, FloatBuffer[] buffers ) throws Exception {
+    private int[] enableBuffersOfType(GL2 gl, Buffer[] buffers, int type ) throws Exception {
         // Make handles for subsequent use.
         int[] rtnVal = new int[ NUM_BUFFERS_PER_TYPE ];
         gl.glGenBuffers( NUM_BUFFERS_PER_TYPE, rtnVal, 0 );
 
-        // DEBUG
-        System.out.println("DUMPING THE BUFFERS");
-
         // Bind data to the handles, and upload it to the GPU.
         for ( int i = 0; i < NUM_BUFFERS_PER_TYPE; i++ ) {
-            String label = ((i < 3) ? " +1.0 " : " -1.0 ") + ("XYZ".charAt( i%3 ));
-            System.out.println("BUFFER " + label);
             buffers[ i ].rewind();
             gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, rtnVal[ i ]);
             // NOTE: this operates on the most recent "bind".  Therefore unless
             // synchronization is in use, this makes the method un-thread-safe.
             // Imagine multiple "bind" and "buffer-data" calls in parallel threads...disaster!
             gl.glBufferData(
-                    GL2.GL_ARRAY_BUFFER,
-                    (long)(buffers[ i ].capacity()),
+                    type,
+                    (long)(buffers[ i ].capacity() * (Float.SIZE/8)),
                     buffers[ i ],
                     GL2.GL_STATIC_DRAW
             );
 
-            // DEBUG
+        }
+
+        dumpBuffer( buffers );
+        return rtnVal;
+    }
+
+    private void dumpBuffer( Buffer[] buffers ) {
+        System.out.println("DUMPING THE BUFFERS");
+
+        for ( int i = 0; i < buffers.length; i++ ) {
+            String label = ((i < 3) ? " +1.0 " : " -1.0 ") + ("XYZ".charAt( i%3 ));
+            System.out.println("BUFFER " + label);
             buffers[ i ].rewind();
             for (int j = 0; j < 180; j++) {
                 if ( j % 18 == 0 )
@@ -332,8 +411,14 @@ public class VtxCoordBufMgr {
                 else if ( j > 0 ) {
                     System.out.print(",");
                 }
-                float f = buffers[i].get();
-                System.out.print(f);
+                if ( buffers[ i ] instanceof FloatBuffer ) {
+                    float f = ((FloatBuffer)buffers[i]).get();
+                    System.out.print(f);
+                }
+                else if ( buffers[ i ] instanceof ShortBuffer ) {
+                    short f = ((ShortBuffer)buffers[i]).get();
+                    System.out.print(f);
+                }
                 if ( j % 3 == 2 ) {
                     System.out.print( "]" );
                 }
@@ -344,7 +429,6 @@ public class VtxCoordBufMgr {
             System.out.println();
         }
 
-        return rtnVal;
     }
 
     /**
@@ -357,7 +441,7 @@ public class VtxCoordBufMgr {
         int bufferOffset = convertAxisDirectionToOffset(axis, direction);
         gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, handles[ bufferOffset ] );
         logger.info("Returning buffer offset of {} for {}.", bufferOffset, axis.getName() + ":" + direction);
-        logger.debug("Buffer handle is {}.", handles[ bufferOffset ]);
+        logger.debug("Buffer handle is {}.", handles[bufferOffset]);
         return handles[ bufferOffset ];
     }
 
