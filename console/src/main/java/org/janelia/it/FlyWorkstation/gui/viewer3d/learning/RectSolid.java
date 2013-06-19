@@ -156,32 +156,26 @@ public class RectSolid implements GLActor {
         gl.glShadeModel (GL2.GL_SMOOTH);
 
         //gl.glTranslatef(0.0f, 0.0f, 800.0f); // Push back into screen to make it visible to user.
-        gl.glScalef(2.0f, 2.0f, 2.0f); 			//Scale the glyph to make a good fit to screen
+        //gl.glScalef(2.0f, 2.0f, 2.0f); 			//Scale the glyph to make a good fit to screen
         gl.glTranslatef(0.0f, 0.7f, 0.0f); // Move up.
         //gl.glRotatef(yDegrees, 0.0f, 0.0f, 1.0f);	//Z
         errorCheck( gl, "Positioning");
-
-//		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureID);
         appearance( gl );
 
         //Enable the vertex and texture state
         gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
-//		gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
         gl.glFrontFace(GL2.GL_CCW);
 
         gl.glBindBuffer(GL.GL_ARRAY_BUFFER, vertexBufHandle);
         errorCheck(gl, "Bind Vertex Buffer");
         gl.glVertexPointer(3, GL2.GL_FLOAT, 0, 0);
+
         errorCheck( gl, "Vertex Pointer");
-//		gl.glTexCoordPointer(2, GL11.GL_FLOAT, 0, mFTexVtxBuffer);
         gl.glColor4f(1.0f, 1.0f, 0.5f, 1.0f);
         gl.glDrawElements( GL2.GL_TRIANGLES, 12 * 3, GL2.GL_UNSIGNED_SHORT, mTriangles);
         errorCheck(gl, "Draw Elements");
         gl.glColor4f(0.0f, 0.0f, 0.0f, 0.0f);
-//        gl.glDrawElements( GL2.GL_TRIANGLES, 12 * 3, GL2.GL_UNSIGNED_BYTE, mTriangles);
-
         gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
-        gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
 
         errorCheck( gl, "After all RectSolid Drawing");
     }
