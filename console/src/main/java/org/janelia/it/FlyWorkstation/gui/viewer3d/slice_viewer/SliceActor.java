@@ -24,7 +24,8 @@ implements GLActor
 {
 	private static final Logger log = LoggerFactory.getLogger(SliceActor.class);
 
-	private TileServer tileServer;
+	private ViewTileManager viewTileManager;
+	
 	private boolean needsGlDisposal = false; // flag for deferred OpenGL data reset
 	private boolean needsTextureCacheClear = false; // flag for deferred clear of texture cache
 	
@@ -41,16 +42,16 @@ implements GLActor
 		}
 	};
 	
-	public SliceActor(TileServer tileServer)
+	public SliceActor(ViewTileManager viewTileManager)
 	{
-		this.tileServer = tileServer;
-		tileServer.getVolumeInitializedSignal().connect(clearDataSlot);
+		this.viewTileManager = viewTileManager;
+		viewTileManager.getVolumeImage().volumeInitializedSignal.connect(clearDataSlot);
 	}
 
 	@Override
 	public void display(GL2 gl) {
 		// Fetch the best set of tiles to represent this volume
-		display(gl, tileServer.getDisplayTiles());
+		display(gl, viewTileManager.updateDisplayTiles());
 	}
 
 	public void display(GL2 gl, TileSet tiles) 
@@ -58,23 +59,15 @@ implements GLActor
 		if (tiles == null)
 			return;
 		
-		// Delete uncached textures
-		if ( (tileServer != null) && (tileServer.getTextureCache() != null) ) {
-			int obsoleteIds[] = tileServer.getTextureCache().popObsoleteTextureIds();
-			if (obsoleteIds.length > 0) {
-				// log.info("deleting "+obsoleteIds.length+" OpenGL textures");
-				gl.glDeleteTextures(obsoleteIds.length, obsoleteIds, 0);
-			}
-		}
-		
 		// Possibly eliminate texture cache
 		if (needsGlDisposal) {
+			TextureCache textureCache = viewTileManager.getTextureCache();
 			// log.info("Clearing tile cache");
 			dispose(gl);
 			if (needsTextureCacheClear) {
-				tileServer.getTextureCache().clear();
+				textureCache.clear();
 				// delete texture opengl ids
-				int obsoleteIds[] = tileServer.getTextureCache().popObsoleteTextureIds();
+				int obsoleteIds[] = textureCache.popObsoleteTextureIds();
 				if (obsoleteIds.length > 0) {
 					log.info("deleting "+obsoleteIds.length+" OpenGL textures");
 					gl.glDeleteTextures(obsoleteIds.length, obsoleteIds, 0);
@@ -95,9 +88,9 @@ implements GLActor
 		
 		// Render tile textures.
 		// Pixelate at high zoom.
-		Camera3d camera = tileServer.getTileConsumers().iterator().next().getCamera();
+		Camera3d camera = viewTileManager.getTileConsumer().getCamera();
 		double ppu = camera.getPixelsPerSceneUnit();
-		double upv = tileServer.getSharedVolumeImage().getXResolution();
+		double upv = viewTileManager.getVolumeImage().getXResolution();
 		double pixelsPerVoxel = ppu*upv;
 		// log.info("pixelsPerVoxel = "+pixelsPerVoxel);
 		int filter = GL2.GL_LINEAR; // blended voxels at lower zoom
@@ -179,21 +172,20 @@ implements GLActor
 	@Override
 	public void dispose(GL2 gl) {
 		// System.out.println("dispose RavelerTileServer");
-		if ((tileServer != null) && (tileServer.getTextureCache() != null)) {
-			for (TileTexture tileTexture : tileServer.getTextureCache().values()) {
-				if (tileTexture.getStage().ordinal() < TileTexture.Stage.GL_LOADED.ordinal())
-					continue;
-				PyramidTexture joglTexture = tileTexture.getTexture();
-				joglTexture.destroy(gl);
-				tileTexture.setStage(TileTexture.Stage.RAM_LOADED);
-			}
+		TextureCache textureCache = viewTileManager.getTextureCache();
+		for (TileTexture tileTexture : textureCache.values()) {
+			if (tileTexture.getStage().ordinal() < TileTexture.Stage.GL_LOADED.ordinal())
+				continue;
+			PyramidTexture joglTexture = tileTexture.getTexture();
+			joglTexture.destroy(gl);
+			tileTexture.setStage(TileTexture.Stage.RAM_LOADED);
 		}
 		needsGlDisposal = false;
 	}
 
 	@Override
 	public BoundingBox3d getBoundingBox3d() {
-		return tileServer.getSharedVolumeImage().getBoundingBox3d();
+		return viewTileManager.getVolumeImage().getBoundingBox3d();
 	}
 	
 	public ImageColorModel getImageColorModel() {
@@ -217,11 +209,12 @@ implements GLActor
 	}
 	
 	public void reportTextureTimings() {
-		if (tileServer.getTextureCache().size() == 0) {
+		TextureCache textureCache = viewTileManager.getTextureCache();
+		if (textureCache.size() == 0) {
 			System.out.println("(No textures were loaded)");
 			return;
 		}
-		for (TileTexture texture : tileServer.getTextureCache().values()) {
+		for (TileTexture texture : textureCache.values()) {
 			// Time to download image bytes
 			long value = texture.getDownloadDataTime();
 			if (value != texture.getInvalidTime()) {

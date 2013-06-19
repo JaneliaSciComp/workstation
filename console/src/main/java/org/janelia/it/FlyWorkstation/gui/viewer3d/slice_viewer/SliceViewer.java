@@ -64,14 +64,11 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
 	protected RubberBand rubberBand = new RubberBand();
 	protected SkeletonActor skeletonActor = new SkeletonActor();
 	
-	// TODO - use a factory to choose the particular volumeimage
-	// protected PracticeBlueVolume volume0 = new PracticeBlueVolume();
-	// protected Simple2dImageVolume volume0 = new Simple2dImageVolume(
-	// 		"/Users/brunsc/svn/jacs/console/src/main/java/images/kittens.jpg");
+
 	SharedVolumeImage sharedVolumeImage = new SharedVolumeImage();
 	protected TileServer tileServer = new TileServer(sharedVolumeImage);
 	protected VolumeImage3d volumeImage = sharedVolumeImage;
-	protected SliceActor volumeActor = new SliceActor(tileServer);
+	protected SliceActor sliceActor;
 	private ImageColorModel imageColorModel;
 	private BasicMouseMode pointComputer = new BasicMouseMode();
 	
@@ -113,19 +110,27 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
                 SliceViewer.this.setMouseMode(modeId);
             }
 	};
+	
     public Slot1<WheelMode.Mode> setWheelModeSlot =
         new Slot1<WheelMode.Mode>() {
             @Override
             public void execute(WheelMode.Mode modeId) {
                 SliceViewer.this.setWheelMode(modeId);
             }
-    };	
+    };
+    
 	public SliceViewer() {
 	    setMouseMode(MouseMode.Mode.PAN);
 	    setWheelMode(WheelMode.Mode.SCAN);
 		addGLEventListener(renderer);
 		setCamera(new BasicObservableCamera3d());
-		tileServer.getTileConsumers().add(this);
+		//
+		ViewTileManager viewTileManager = new ViewTileManager(this);
+		viewTileManager.setVolumeImage(tileServer.getSharedVolumeImage());
+		viewTileManager.setTextureCache(tileServer.getTextureCache());
+		tileServer.addViewTileManager(viewTileManager);
+		sliceActor = new SliceActor(viewTileManager);
+		//
 		// gray background for testing
 		// this.renderer.setBackgroundColor(new Color(0.5f, 0.5f, 0.5f, 0.0f));
 		// renderer.setBackgroundColor(Color.white);
@@ -135,7 +140,7 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
         rubberBand.changed.connect(repaintSlot);
         // setToolTipText("Double click to center on a point.");
         setImageColorModel(new ImageColorModel(volumeImage));
-        renderer.addActor(volumeActor);
+        renderer.addActor(sliceActor);
         tileServer.getViewTextureChangedSignal().connect(getRepaintSlot());
         imageColorModel.getColorModelChangedSignal().connect(getRepaintSlot());
         // Initialize pointComputer for interconverting pixelXY <=> sceneXYZ
@@ -557,7 +562,7 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
 	
 	public void setImageColorModel(ImageColorModel imageColorModel) {
 		this.imageColorModel = imageColorModel;
-		volumeActor.setImageColorModel(imageColorModel);
+		sliceActor.setImageColorModel(imageColorModel);
 	}
 	
 	public Skeleton getSkeleton() {
