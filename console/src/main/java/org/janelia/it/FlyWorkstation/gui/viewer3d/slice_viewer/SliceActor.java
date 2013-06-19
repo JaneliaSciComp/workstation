@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 import javax.media.opengl.GL2;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.NumeralShader;
@@ -94,8 +95,9 @@ implements GLActor
 		
 		// Render tile textures.
 		// Pixelate at high zoom.
-		double ppu = tileServer.getCamera().getPixelsPerSceneUnit();
-		double upv = tileServer.getXResolution();
+		Camera3d camera = tileServer.getTileConsumers().iterator().next().getCamera();
+		double ppu = camera.getPixelsPerSceneUnit();
+		double upv = tileServer.getSharedVolumeImage().getXResolution();
 		double pixelsPerVoxel = ppu*upv;
 		// log.info("pixelsPerVoxel = "+pixelsPerVoxel);
 		int filter = GL2.GL_LINEAR; // blended voxels at lower zoom
@@ -104,7 +106,7 @@ implements GLActor
 		shader.load(gl);
 		for (Tile2d tile: tiles) {
 			tile.setFilter(filter);
-			tile.display(gl, tileServer.getCamera());
+			tile.display(gl, camera);
 		}
 		shader.unload(gl);
 
@@ -128,7 +130,7 @@ implements GLActor
 			for (Tile2d tile: tiles) {
 				tile.setFilter(GL2.GL_NEAREST);
 				// numeralShader.setTexturePixels(???);
-				tile.display(gl, tileServer.getCamera());
+				tile.display(gl, camera);
 			}
 			numeralShader.unload(gl);
 		}
@@ -141,7 +143,7 @@ implements GLActor
 			outlineShader.load(gl);
 			gl.glLineWidth(1.0f);
 			for (Tile2d tile: tiles) {
-				tile.displayBoundingBox(gl, tileServer.getCamera());
+				tile.displayBoundingBox(gl, camera);
 			}
 			outlineShader.unload(gl);
 		}
@@ -191,7 +193,7 @@ implements GLActor
 
 	@Override
 	public BoundingBox3d getBoundingBox3d() {
-		return tileServer.getBoundingBox3d();
+		return tileServer.getSharedVolumeImage().getBoundingBox3d();
 	}
 	
 	public ImageColorModel getImageColorModel() {

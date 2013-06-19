@@ -43,15 +43,15 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d;
  *
  */
 public class Transform3d {
-    private Rotation rotation = new Rotation();
+    private Rotation3d rotation = new Rotation3d();
     private Vec3 translation = new Vec3();
 
     public Transform3d() {
-        rotation = new Rotation();
+        rotation = new Rotation3d();
         translation = new Vec3();
     }
     
-    public Transform3d(Rotation rotation, Vec3 translation) {
+    public Transform3d(Rotation3d rotation, Vec3 translation) {
         this.rotation = rotation;
         this.translation = translation;
     }

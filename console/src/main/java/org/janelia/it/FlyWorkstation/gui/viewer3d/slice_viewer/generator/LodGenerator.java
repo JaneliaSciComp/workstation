@@ -5,6 +5,7 @@ import java.util.Iterator;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicCamera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Tile2d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.TileConsumer;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.TileIndex;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.TileServer;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.TileSet;
@@ -52,17 +53,19 @@ implements Iterable<TileIndex>, Iterator<TileIndex>
 			return tileIter.next().getIndex();
 		// outer loop over zoom levels
 		zoom = allLod.next();
-		Camera3d c0 = tileServer.getCamera();
+		TileConsumer tileConsumer1 = tileServer.getTileConsumers().iterator().next();
+		Camera3d c0 = tileConsumer1.getCamera(); // assume all TileConsumers have the same camera...
 		Camera3d camera = new BasicCamera3d();
 		camera.setFocus(c0.getFocus());
 		camera.setPixelsPerSceneUnit(c0.getPixelsPerSceneUnit());
 		camera.setRotation(c0.getRotation());
-		TileSet tileSet = tileServer.createLatestTiles(camera, tileServer.getViewport());
+		TileSet tileSet = tileServer.createLatestTiles();
 		int testZoom = tileSet.iterator().next().getIndex().getZoom();
 		while (testZoom != zoom) {
 			double factor = Math.pow(2, testZoom - zoom);
 			camera.setPixelsPerSceneUnit(factor * camera.getPixelsPerSceneUnit());
-			tileSet = tileServer.createLatestTiles(camera, tileServer.getViewport());
+			for (TileConsumer tileConsumer : tileServer.getTileConsumers())
+				tileSet.addAll(tileServer.createLatestTiles(tileConsumer));
 			testZoom = tileSet.iterator().next().getIndex().getZoom();
 		}
 		tileIter = tileSet.iterator();

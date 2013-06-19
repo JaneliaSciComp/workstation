@@ -186,6 +186,11 @@ extends JPanel
 		volume.volumeInitializedSignal.connect(setSliceSlot);
 	}
 	
+	public void setSystemMenuItemGenerator(MenuItemGenerator systemMenuItemGenerator) 
+	{
+		viewer.setSystemMenuItemGenerator(systemMenuItemGenerator);
+	}
+
 	private boolean setSlice(int s) {
 		if (camera == null)
 			return false;

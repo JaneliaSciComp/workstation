@@ -3,7 +3,8 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BaseGLViewer;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d;
@@ -43,7 +44,7 @@ import org.slf4j.LoggerFactory;
 // Viewer widget for viewing 2D quadtree tiles from pyramid data structure
 public class SliceViewer 
 extends BaseGLViewer
-implements MouseModalWidget, VolumeViewer
+implements MouseModalWidget, VolumeViewer, TileConsumer
 {
 	private static final long serialVersionUID = 1L;
 	private static final Logger log = LoggerFactory.getLogger(SliceViewer.class);
@@ -66,9 +67,10 @@ implements MouseModalWidget, VolumeViewer
 	// TODO - use a factory to choose the particular volumeimage
 	// protected PracticeBlueVolume volume0 = new PracticeBlueVolume();
 	// protected Simple2dImageVolume volume0 = new Simple2dImageVolume(
-	// 		"/Users/brunsc/svn/jacs/console/src/main/java/images/kittens.jpg");	
-	protected TileServer tileServer = new TileServer(new SharedVolumeImage());
-	protected VolumeImage3d volumeImage = tileServer;
+	// 		"/Users/brunsc/svn/jacs/console/src/main/java/images/kittens.jpg");
+	SharedVolumeImage sharedVolumeImage = new SharedVolumeImage();
+	protected TileServer tileServer = new TileServer(sharedVolumeImage);
+	protected VolumeImage3d volumeImage = sharedVolumeImage;
 	protected SliceActor volumeActor = new SliceActor(tileServer);
 	private ImageColorModel imageColorModel;
 	private BasicMouseMode pointComputer = new BasicMouseMode();
@@ -123,7 +125,7 @@ implements MouseModalWidget, VolumeViewer
 	    setWheelMode(WheelMode.Mode.SCAN);
 		addGLEventListener(renderer);
 		setCamera(new BasicObservableCamera3d());
-		tileServer.setViewport(viewport);
+		tileServer.getTileConsumers().add(this);
 		// gray background for testing
 		// this.renderer.setBackgroundColor(new Color(0.5f, 0.5f, 0.5f, 0.0f));
 		// renderer.setBackgroundColor(Color.white);
@@ -142,7 +144,7 @@ implements MouseModalWidget, VolumeViewer
 		//
         renderer.addActor(skeletonActor);
         skeletonActor.skeletonActorChangedSignal.connect(repaintSlot);
-        skeletonActor.setViewport(viewport);
+        skeletonActor.setZThicknessInPixels(viewport.getDepth());
 		//
         // PopupMenu
         addMouseListener(new MouseHandler() {
@@ -401,7 +403,6 @@ implements MouseModalWidget, VolumeViewer
 		renderer.setCamera(camera);
 		mouseMode.setCamera(camera);
 		wheelMode.setCamera(camera);
-		tileServer.setCamera(camera);
 		pointComputer.setCamera(camera);
 		skeletonActor.setCamera(camera);
 	}
@@ -431,7 +432,7 @@ implements MouseModalWidget, VolumeViewer
 	}
 
 	@Override
-	public Rotation getRotation() {
+	public Rotation3d getRotation() {
 		return camera.getRotation();
 	}
 
@@ -470,7 +471,7 @@ implements MouseModalWidget, VolumeViewer
 	}
 
 	@Override
-	public boolean setRotation(Rotation r) {
+	public boolean setRotation(Rotation3d r) {
 		return camera.setRotation(r);
 	}
 
@@ -573,7 +574,7 @@ implements MouseModalWidget, VolumeViewer
 
 	public void setSkeletonActor(SkeletonActor skeletonActor) {
 		this.skeletonActor = skeletonActor;
-		skeletonActor.setViewport(viewport);
+		skeletonActor.setZThicknessInPixels(viewport.getDepth());
 	}
 
 	public void setSystemMenuItemGenerator(MenuItemGenerator systemMenuItemGenerator) {
@@ -595,5 +596,15 @@ implements MouseModalWidget, VolumeViewer
 		if (ix == 0) return getXResolution();
 		else if (ix == 1) return getYResolution();
 		else return getZResolution();
+	}
+
+	@Override
+	public CoordinateAxis getSliceAxis() {
+		return CoordinateAxis.Z;
+	}
+
+	@Override
+	public Rotation3d getViewerInGround() {
+		return new Rotation3d(); // identity matrix
 	}
 }

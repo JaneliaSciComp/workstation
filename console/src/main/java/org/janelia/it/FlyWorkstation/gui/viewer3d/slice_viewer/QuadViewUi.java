@@ -27,6 +27,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZoomMouseM
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZoomOutAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZoomScrollModeAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.SkeletonActor;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
@@ -276,13 +277,26 @@ public class QuadViewUi extends JPanel
         // TODO other orthogonal viewers
         OrthogonalPanel viewPanels[] = {neViewer, swViewer, seViewer};
         SharedVolumeImage vi = sliceViewer.getTileServer().getSharedVolumeImage();
+        SkeletonActor sharedSkeletonActor = new SkeletonActor();
+        sharedSkeletonActor.setSkeleton(sliceViewer.getSkeleton());
         for (OrthogonalPanel v : viewPanels) {
             mouseModeChangedSignal.connect(v.setMouseModeSlot);
             wheelModeChangedSignal.connect(v.setWheelModeSlot);
-            v.getViewer().setSkeletonActor(sliceViewer.getSkeletonActor());
-            v.getViewer().statusMessageChanged.connect(setStatusMessageSlot);
             v.setCamera(camera);
+            // TODO - shared skeleton actor does not work.
+            // (at least not shared between SliceViewer and orthogonal viewers)
+            v.getViewer().setSkeletonActor(sharedSkeletonActor);
+            v.getViewer().statusMessageChanged.connect(setStatusMessageSlot);
             v.setSharedVolumeImage(vi);
+            v.setSystemMenuItemGenerator(new MenuItemGenerator() {
+                @Override
+                public List<JMenuItem> getMenus(MouseEvent event) {
+                    List<JMenuItem> result = new Vector<JMenuItem>();
+                    result.add(addFileMenuItem());
+                    result.add(addViewMenuItem());
+                    return result;
+                }
+            });
         }
         // Set starting interaction modes
         panModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));

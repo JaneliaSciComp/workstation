@@ -4,6 +4,7 @@ import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BaseRenderer;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.ViewportGL;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.GLOrthoCamera;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
@@ -54,4 +55,14 @@ extends BaseRenderer
     		super.setCamera(camera);
     		glCamera.setCamera(camera);
     }
+    
+    public Rotation3d getViewerInGround() {
+        return glCamera.getViewerInGround();
+    }
+
+    public void setViewerInGround(Rotation3d viewerInGround) {
+        glCamera.setViewerInGround(viewerInGround);
+    }
+
+
 }

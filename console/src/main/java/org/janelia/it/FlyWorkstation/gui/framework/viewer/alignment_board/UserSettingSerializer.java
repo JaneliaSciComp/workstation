@@ -2,7 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.UnitVec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeModel;
@@ -237,7 +237,7 @@ public class UserSettingSerializer implements Serializable {
             builder.append("\n");
         }
 
-        Rotation rotation = volumeModel.getCamera3d().getRotation();
+        Rotation3d rotation = volumeModel.getCamera3d().getRotation();
         if ( rotation != null ) {
             builder.append( CAMERA_ROTATION_SETTING ).append( "=" );
             for ( int i = 0; i < 3; i++ ) {

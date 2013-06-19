@@ -1,25 +1,71 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
-public class Rotation extends SizedVector<UnitVec3> 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Quaternion.AngleAxis;
+
+public class Rotation3d extends SizedVector<UnitVec3> 
 {
 	private static final long serialVersionUID = 1L;
 
-	public Rotation() {
+	public Rotation3d() {
 		super(3);
 		super.set(0, new UnitVec3(CoordinateAxis.X));
 		super.set(1, new UnitVec3(CoordinateAxis.Y));
 		super.set(2, new UnitVec3(CoordinateAxis.Z));
 	}
 
+	public AngleAxis convertRotationToAngleAxis() {
+		return convertRotationToQuaternion().convertQuaternionToAngleAxis();
+	}
+
+	private Quaternion convertRotationToQuaternion() {
+	    // Stores the return values [cos(theta/2), lambda1*sin(theta/2), lambda2*sin(theta/2), lambda3*sin(theta/2)]
+	    double q[] = new double[4];
+
+	    // Check if the trace is larger than any diagonal
+	    double tr = this.trace();
+	    if( tr >= this.get(0,0)  &&  tr >= this.get(1,1)  &&  tr >= this.get(2,2) ) {
+	        q[0] = 1 + tr;
+	        q[1] = this.get(2,1) - this.get(1,2);
+	        q[2] = this.get(0,2) - this.get(2,0);
+	        q[3] = this.get(1,0) - this.get(0,1);
+
+	    // Check if this.get(0,0) is largest along the diagonal
+	    } else if( this.get(0,0) >= this.get(1,1)  &&  this.get(0,0) >= this.get(2,2)  ) {
+	        q[0] = this.get(2,1) - this.get(1,2);
+	        q[1] = 1 - (tr - 2*this.get(0,0));
+	        q[2] = this.get(0,1)+this.get(1,0);
+	        q[3] = this.get(0,2)+this.get(2,0);
+
+	    // Check if this.get(1,1) is largest along the diagonal
+	    } else if( this.get(1,1) >= this.get(2,2) ) {
+	        q[0] = this.get(0,2) - this.get(2,0);
+	        q[1] = this.get(0,1) + this.get(1,0);
+	        q[2] = 1 - (tr - 2*this.get(1,1));
+	        q[3] = this.get(1,2) + this.get(2,1);
+
+	    // this.get(2,2) is largest along the diagonal
+	    } else {
+	        q[0] = this.get(1,0) - this.get(0,1);
+	        q[1] = this.get(0,2) + this.get(2,0);
+	        q[2] = this.get(1,2) + this.get(2,1);
+	        q[3] = 1 - (tr - 2*this.get(2,2));
+	    }
+	    return new Quaternion(q[0], q[1], q[2], q[3], false); // re-normalize
+	}
+
+	private double trace() {
+		return this.get(0,0) + this.get(1,1) + this.get(2,2);
+	}
+
 	public double get(int i, int j) {
 		return get(i).get(j);
 	}
 
-    public Rotation inverse() {
+    public Rotation3d inverse() {
         return this.transpose();
     }
 
-    protected Rotation setElements(
+    protected Rotation3d setElements(
 			double e00, double e01, double e02,
 			double e10, double e11, double e12,
 			double e20, double e21, double e22) 
@@ -36,14 +82,14 @@ public class Rotation extends SizedVector<UnitVec3>
 	 * @param axis
 	 * @return
 	 */
-	public Rotation setFromCanonicalRotationAboutPrincipalAxis(int quadrantCount, CoordinateAxis axis)
+	public Rotation3d setFromCanonicalRotationAboutPrincipalAxis(int quadrantCount, CoordinateAxis axis)
 	{
 	    UnitVec3 uv = new UnitVec3(axis);
 	    double angle = 0.5 * Math.PI * quadrantCount;
 	    return setFromAngleAboutUnitVector(angle, uv);
 	}
 	
-	public Rotation setFromAngleAboutUnitVector(double angle, UnitVec3 axis) {
+	public Rotation3d setFromAngleAboutUnitVector(double angle, UnitVec3 axis) {
 		Quaternion q = new Quaternion(angle, axis);
 		setFromQuaternion(q);
 		if (new Double(get(0,0)).isNaN()) {
@@ -52,7 +98,7 @@ public class Rotation extends SizedVector<UnitVec3>
 		return this;
 	}
 	
-	public Rotation setFromQuaternion(Quaternion q) {
+	public Rotation3d setFromQuaternion(Quaternion q) {
 		double q0 = q.w();
 		double q1 = q.x();
 		double q2 = q.y();
@@ -67,8 +113,8 @@ public class Rotation extends SizedVector<UnitVec3>
 		return this;
 	}
 
-	public Rotation times(Rotation rhs) {
-        Rotation result = new Rotation();
+	public Rotation3d times(Rotation3d rhs) {
+        Rotation3d result = new Rotation3d();
 		int[] indices = {0, 1, 2};
 		for (int i : indices) {
 			double[] row = {0.0, 0.0, 0.0};
@@ -100,8 +146,8 @@ public class Rotation extends SizedVector<UnitVec3>
 			+get(2).toString()+"]";
 	}
 	
-	public Rotation transpose() {
-		return new Rotation().setElements(
+	public Rotation3d transpose() {
+		return new Rotation3d().setElements(
 				get(0,0), get(1,0), get(2,0),
 				get(0,1), get(1,1), get(2,1),
 				get(0,2), get(1,2), get(2,2));
@@ -132,4 +178,5 @@ public class Rotation extends SizedVector<UnitVec3>
         super.get( index ).setElements( element.getX(), element.getY(), element.getZ() );
 
     }
+
 }

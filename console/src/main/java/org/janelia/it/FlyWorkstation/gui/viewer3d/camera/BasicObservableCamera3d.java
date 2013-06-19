@@ -2,7 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.camera;
 
 import java.util.Observable;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal;
@@ -79,7 +79,7 @@ implements Camera3d, ObservableCamera3d
 	}
 
 	@Override
-	public Rotation getRotation() {
+	public Rotation3d getRotation() {
 		return camera.getRotation();
 	}
 
@@ -113,7 +113,7 @@ implements Camera3d, ObservableCamera3d
 	}
 
 	@Override
-	public boolean setRotation(Rotation r) {
+	public boolean setRotation(Rotation3d r) {
 		return markAndNotify(camera.setRotation(r));
 	}
 

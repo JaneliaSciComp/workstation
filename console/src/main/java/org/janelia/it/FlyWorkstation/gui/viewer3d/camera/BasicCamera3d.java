@@ -1,6 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.camera;
 
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 
@@ -9,7 +9,7 @@ implements Camera3d
 {
 	// View center
     private Vec3 focus = new Vec3(0,0,0); // in scene units
-    private Rotation rotation = new Rotation();
+    private Rotation3d rotation = new Rotation3d();
     private double pixelsPerSceneUnit = 1.0; // zoom
 
 	public Vec3 getFocus() {
@@ -20,7 +20,7 @@ implements Camera3d
 		return pixelsPerSceneUnit;
 	}
 
-	public Rotation getRotation() {
+	public Rotation3d getRotation() {
 		return rotation;
 	}
 	
@@ -49,7 +49,7 @@ implements Camera3d
     }
     
     public boolean resetRotation() {
-    		return setRotation(new Rotation());
+    		return setRotation(new Rotation3d());
     }
     
     public boolean setFocus(Vec3 f) {
@@ -65,7 +65,7 @@ implements Camera3d
 		return setFocus(new Vec3(x, y, z));
 	}
 
-    public boolean setRotation(Rotation r) {
+    public boolean setRotation(Rotation3d r) {
 		if (r == rotation)
 			return false; // no change
 		rotation = r;

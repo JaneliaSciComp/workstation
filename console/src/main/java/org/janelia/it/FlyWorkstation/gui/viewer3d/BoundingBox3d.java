@@ -6,6 +6,20 @@ public class BoundingBox3d
 	protected Vec3 max = new Vec3(Double.NaN, Double.NaN, Double.NaN);
 	protected PhysicalUnit physicalUnit = SIUnit.micrometer;
 
+	public Vec3 clip(Vec3 point) {
+		Vec3 result = new Vec3(point.x(), point.y(), point.z());
+	    for (int i = 0; i < 3; ++i) {
+	        double x = result.get(i);
+	        double min = this.getMin().get(i);
+	        double max = this.getMax().get(i);
+	        if (x < min)
+	            result.set(i, min);
+	        if (x > max)
+	            result.set(i, max);
+	    }
+	    return result;
+	}
+	
 	public Vec3 getCenter() {
 		return max.plus(min).times(0.5);
 	}

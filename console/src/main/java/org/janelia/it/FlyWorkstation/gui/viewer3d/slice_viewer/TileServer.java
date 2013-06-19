@@ -6,6 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
@@ -17,7 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TileServer 
-implements VolumeImage3d
+// implements VolumeImage3d
 {
 	private static final Logger log = LoggerFactory.getLogger(TileServer.class);
 	
@@ -75,9 +76,6 @@ implements VolumeImage3d
 	// One thread pool to load current and prefetch textures
 	private TexturePreFetcher futurePreFetcher = new TexturePreFetcher(10);
 
-	//
-	private Camera3d camera;
-	private Viewport viewport;
 	// signal for tile loaded
 	private double zoomOffset = 0.5; // tradeoff between optimal resolution (0.0) and speed.
 	private TileSet previousTiles;
@@ -85,6 +83,7 @@ implements VolumeImage3d
 	// Refactoring 6/12/2013
 	private SharedVolumeImage sharedVolumeImage;
 	private TextureCache textureCache = new TextureCache();
+	private Set<TileConsumer> tileConsumers = new HashSet<TileConsumer>();
 	
 	private Signal viewTextureChangedSignal = new Signal();
 	private Signal1<TileSet> tileSetChangedSignal = new Signal1<TileSet>();
@@ -228,12 +227,26 @@ implements VolumeImage3d
 		viewTextureChangedSignal.emit(); // start loading current view
 	}
 	
-	public TileSet createLatestTiles()
-	{
-		return createLatestTiles(getCamera(), getViewport());
+	public TileSet createLatestTiles() {
+		TileSet result = new TileSet();
+		for (TileConsumer tileConsumer : tileConsumers) {
+			if (! tileConsumer.isVisible())
+				continue;
+			result.addAll(createLatestTiles(tileConsumer));
+		}
+		return result;
 	}
 	
-	public TileSet createLatestTiles(Camera3d camera, Viewport viewport)
+	public TileSet createLatestTiles(TileConsumer tileConsumer)
+	{
+		return createLatestTiles(tileConsumer.getCamera(), 
+				tileConsumer.getViewport(),
+				tileConsumer.getSliceAxis(),
+				tileConsumer.getViewerInGround());
+	}
+	
+	public TileSet createLatestTiles(Camera3d camera, Viewport viewport,
+			CoordinateAxis sliceAxis, Rotation3d viewerInGround)
 	{
 		TileSet result = new TileSet();
 		if (sharedVolumeImage.getLoadAdapter() == null)
@@ -242,7 +255,10 @@ implements VolumeImage3d
 		// Need to loop over x and y
 		// Need to compute z, and zoom
 		// 1) zoom
-		double maxRes = Math.min(getXResolution(), getYResolution());
+		double maxRes = Math.min(
+				sharedVolumeImage.getXResolution(), 
+				Math.min(sharedVolumeImage.getYResolution(), 
+						sharedVolumeImage.getZResolution()));
 		double voxelsPerPixel = 1.0 / (camera.getPixelsPerSceneUnit() * maxRes);
 		int zoom = 20; // default to very coarse zoom
 		if (voxelsPerPixel > 0.0) {
@@ -256,7 +272,7 @@ implements VolumeImage3d
 		zoom = Math.min(zoom, zoomMax);
 		// 2) z
 		Vec3 focus = camera.getFocus();
-		int z = (int)Math.round(focus.getZ() / getZResolution() - 0.5);
+		int z = (int)Math.round(focus.getZ() / sharedVolumeImage.getZResolution() - 0.5);
 		// 3) x and y range
 		// In scene units
 		// Clip to screen space
@@ -268,22 +284,23 @@ implements VolumeImage3d
 		// Subtract one half pixel to avoid loading an extra layer of tiles
 		double dx = 0.25 * tileFormat.getVoxelMicrometers()[0];
 		double dy = 0.25 * tileFormat.getVoxelMicrometers()[1];
-		xFMin = Math.max(xFMin, getBoundingBox3d().getMin().getX() + dx);
-		yFMin = Math.max(yFMin, getBoundingBox3d().getMin().getY() + dy);
-		xFMax = Math.min(xFMax, getBoundingBox3d().getMax().getX() - dx);
-		yFMax = Math.min(yFMax, getBoundingBox3d().getMax().getY() - dy);
+		BoundingBox3d bb = sharedVolumeImage.getBoundingBox3d();
+		xFMin = Math.max(xFMin, bb.getMin().getX() + dx);
+		yFMin = Math.max(yFMin, bb.getMin().getY() + dy);
+		xFMax = Math.min(xFMax, bb.getMax().getX() - dx);
+		yFMax = Math.min(yFMax, bb.getMax().getY() - dy);
 		double zoomFactor = Math.pow(2.0, zoom);
 		// get tile pixel size 1024 from loadAdapter
 		int tileSize[] = tileFormat.getTileSize();
-		double tileWidth = tileSize[0] * zoomFactor * getXResolution();
-		double tileHeight = tileSize[1] * zoomFactor * getYResolution();
+		double tileWidth = tileSize[0] * zoomFactor * sharedVolumeImage.getXResolution();
+		double tileHeight = tileSize[1] * zoomFactor * sharedVolumeImage.getYResolution();
 		// In tile units
 		int xMin = (int)Math.floor(xFMin / tileWidth);
 		int xMax = (int)Math.floor(xFMax / tileWidth);
 		
 		// Correct for bottom Y origin of Raveler tile coordinate system
 		// (everything else is top Y origin: image, our OpenGL, user facing coordinate system)
-		double bottomY = getBoundingBox3d().getMax().getY();
+		double bottomY = bb.getMax().getY();
 		int yMin = (int)Math.floor((bottomY - yFMax) / tileHeight);
 		int yMax = (int)Math.floor((bottomY - yFMin) / tileHeight);
 		
@@ -293,7 +310,7 @@ implements VolumeImage3d
 				TileIndex key = new TileIndex(x, y, z, zoom, 
 						zoomMax, indexStyle, CoordinateAxis.Z);
 				Tile2d tile = new Tile2d(key, tileFormat);
-				tile.setYMax(getBoundingBox3d().getMax().getY()); // To help flip y
+				tile.setYMax(bb.getMax().getY()); // To help flip y
 				result.add(tile);
 			}
 		}
@@ -305,31 +322,16 @@ implements VolumeImage3d
 		return neededTextures;
 	}
 
+	public Set<TileConsumer> getTileConsumers() {
+		return tileConsumers;
+	}
+
 	public Signal1<TileSet> getTileSetChangedSignal() {
 		return tileSetChangedSignal;
 	}
 
 	public Signal getViewTextureChangedSignal() {
 		return viewTextureChangedSignal;
-	}
-
-	@Override
-	public BoundingBox3d getBoundingBox3d() {
-		return sharedVolumeImage.getBoundingBox3d();
-	}
-
-	public Camera3d getCamera() {
-		return camera;
-	}
-
-	@Override
-	public int getMaximumIntensity() {
-		return sharedVolumeImage.getMaximumIntensity();
-	}
-
-	@Override
-	public int getNumberOfChannels() {
-		return sharedVolumeImage.getNumberOfChannels();
 	}
 
 	public Slot1<TileSet> getUpdateFuturePreFetchSlot() {
@@ -342,7 +344,7 @@ implements VolumeImage3d
 		// Update latest tile set
 		latestTiles = createLatestTiles();
 		latestTiles.assignTextures(getTextureCache());
-		
+
 		// Push latest textures to front of LRU cache
 		for (Tile2d tile : latestTiles) {
 			TileTexture texture = tile.getBestTexture();
@@ -350,7 +352,7 @@ implements VolumeImage3d
 				continue;
 			getTextureCache().markHistorical(texture);
 		}
-		
+
 		// Need to assign textures to emergency tiles too...
 		if (emergencyTiles != null)
 			emergencyTiles.assignTextures(getTextureCache());
@@ -427,34 +429,8 @@ implements VolumeImage3d
 		return textureCache;
 	}
 	
-	public Viewport getViewport() {
-		return viewport;
-	}
-
 	public Signal getVolumeInitializedSignal() {
 		return sharedVolumeImage.volumeInitializedSignal;
-	}
-
-	@Override
-	public double getXResolution() {
-		return sharedVolumeImage.getXResolution();
-	}
-
-	@Override
-	public double getYResolution() {
-		return sharedVolumeImage.getYResolution();
-	}
-
-	@Override
-	public double getZResolution() {
-		return sharedVolumeImage.getZResolution();
-	}	
-
-	@Override
-	public boolean loadURL(URL folderUrl) {
-		if (! sharedVolumeImage.loadURL(folderUrl))
-			return false;
-		return true;
 	}
 
 	// TODO - could move this to TextureCache class?
@@ -473,14 +449,6 @@ implements VolumeImage3d
 		log.info("Future cache size = "+futureTileMax);
 	}
 	
-	public void setCamera(Camera3d camera) {
-		this.camera = camera;
-	}
-
-	public void setViewport(Viewport viewport) {
-		this.viewport = viewport;
-	}
-
 	public AbstractTextureLoadAdapter getLoadAdapter() {
 		return sharedVolumeImage.getLoadAdapter();
 	}
@@ -506,13 +474,4 @@ implements VolumeImage3d
 		return result;
 	}
 
-	@Override
-	public double getResolution(int ix) {
-		return sharedVolumeImage.getResolution(ix);
-	}
-
-    @Override
-    public Vec3 getVoxelCenter() {
-        return sharedVolumeImage.getVoxelCenter();
-    }
 }

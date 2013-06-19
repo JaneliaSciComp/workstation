@@ -62,7 +62,7 @@ class MipRenderer
 
         gLDrawable.getWidth();
         Vec3 f = focusInGround;
-        Rotation rotation = getVolumeModel().getCamera3d().getRotation();
+        Rotation3d rotation = getVolumeModel().getCamera3d().getRotation();
         Vec3 u = rotation.times(upInCamera);
         Vec3 c = f.plus(rotation.times( volumeModel.getCamera3d().getFocus()) );
         glu.gluLookAt(c.x(), c.y(), c.z(), // camera in ground
@@ -142,7 +142,7 @@ class MipRenderer
 		// Drag across the entire window to rotate all the way around
 		double rotationAngle = 2.0 * Math.PI * dragDistance/windowSize;
 		// System.out.println(rotationAxis.toString() + rotationAngle);
-		Rotation rotation = new Rotation().setFromAngleAboutUnitVector(
+		Rotation3d rotation = new Rotation3d().setFromAngleAboutUnitVector(
 				rotationAngle, rotationAxis);
 		// System.out.println(rotation);
         getVolumeModel().getCamera3d().setRotation( getVolumeModel().getCamera3d().getRotation().times( rotation.transpose() ) );

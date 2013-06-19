@@ -2,6 +2,8 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.camera;
 
 import javax.media.opengl.GL2;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Quaternion.AngleAxis;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.ViewportGL;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
@@ -12,7 +14,18 @@ public class GLOrthoCamera
 	protected Camera3d camera;
 	protected ViewportGL viewport;
 	protected boolean isPushed = false; // Help manage RAII in crippled Java language
+    // Viewer orientation relative to canonical orientation.
+    // Canonical orientation is x-right, y-down, z-away
+	protected Rotation3d viewerInGround = new Rotation3d();
 	
+	public Rotation3d getViewerInGround() {
+		return viewerInGround;
+	}
+
+	public void setViewerInGround(Rotation3d viewerInGround) {
+		this.viewerInGround = viewerInGround;
+	}
+
 	public ViewportGL getViewport() {
 		return viewport;
 	}
@@ -88,6 +101,13 @@ public class GLOrthoCamera
 		// translate
 		Vec3 f = camera.getFocus();
 		// System.out.println("glTranslated "+f.z());
+		// Apply viewer rotation
+		AngleAxis angleAxis = viewerInGround.inverse().convertRotationToAngleAxis();
+		gl.glRotated(angleAxis.angle * 180.0/Math.PI, 
+				angleAxis.axis.x(),
+				angleAxis.axis.y(),
+				angleAxis.axis.z());
+		// 
 		gl.glTranslated(-f.x(),-f.y(),-f.z());
 		isPushed = true;
 	}

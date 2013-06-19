@@ -5,7 +5,7 @@
 uniform int highlightAnchorIndex = -1;
 uniform int parentAnchorIndex = -1;
 uniform float zThickness = 100.0;
-uniform float focusZ = 0.0;
+uniform vec3 focus = vec3(0,0,0);
 
 varying vec3 anchorColor;
 varying float fog;
@@ -19,8 +19,11 @@ void main(void)
     // Set color from skeleton
     anchorColor = gl_Color.rgb;
 
-    // Points fade away above and below current Z position    
-    float relZ = 2.0 * (gl_Vertex.z - focusZ) / zThickness; // range -1:1
+    // Points fade away above and below current Z position
+    // Note that gl_ModelViewMatrix includes scale pixelsPerSceneUnit
+    vec4 vertexM = gl_ModelViewMatrix * gl_Vertex;
+    vec4 focusM = gl_ModelViewMatrix * vec4(focus, 1);
+    float relZ = 2.0 * (vertexM.z - focusM.z) / zThickness; // range -1:1
     fog = min(1.0, abs(relZ));
     
     // smaller points are further away; bigger ones closer

@@ -16,7 +16,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JMenuItem;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
@@ -41,7 +41,7 @@ public class BasicMouseMode implements MouseMode
 	protected Cursor currentCursor = hoverCursor;
 	protected MouseModalWidget widget;
 	protected Camera3d camera;
-	protected Rotation viewerInGround = new Rotation();
+	protected Rotation3d viewerInGround = new Rotation3d();
 	
 	public static Cursor createCursor(String fileName, int x, int y) {
 		Toolkit toolkit = Toolkit.getDefaultToolkit();
@@ -179,11 +179,11 @@ public class BasicMouseMode implements MouseMode
 		this.previousPoint = previousPoint;
 	}
 	
-	public Rotation getViewerInGround() {
+	public Rotation3d getViewerInGround() {
         return viewerInGround;
     }
 
-    public void setViewerInGround(Rotation viewerInGround) {
+    public void setViewerInGround(Rotation3d viewerInGround) {
         this.viewerInGround = viewerInGround;
     }
 

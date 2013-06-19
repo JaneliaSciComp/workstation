@@ -18,13 +18,14 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.shader.AbstractShader.ShaderCreationException;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.PassThroughTextureShader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.AnchorShader;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.PathShader;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 
 /**
  * SkeletonActor is responsible for painting neuron traces in the slice viewer.
@@ -34,6 +35,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.shader.PathShader
 public class SkeletonActor 
 implements GLActor
 {
+	// private static final Logger log = LoggerFactory.getLogger(SkeletonActor.class);
+	
 	// semantic constants for allocating byte arrays
 	private final int floatByteCount = 4;
 	private final int vertexFloatCount = 3;
@@ -41,7 +44,6 @@ implements GLActor
 	private final int edgeIntCount = 2;
 	private final int colorFloatCount = 3;
 
-	private Viewport viewport;
 	private int hoverAnchorIndex = -1;
 	private boolean bIsGlInitialized = false;
 	
@@ -70,6 +72,7 @@ implements GLActor
 	private Map<Anchor, Integer> anchorIndices = new HashMap<Anchor, Integer>();
 	private Map<Integer, Anchor> indexAnchors = new HashMap<Integer, Anchor>();
 	private Camera3d camera;
+	private float zThicknessInPixels = 100;
 	
 	public Signal skeletonActorChangedSignal = new Signal();
 	
@@ -122,9 +125,13 @@ implements GLActor
         gl.glColorPointer(colorFloatCount, GL2.GL_FLOAT, 0, 0L);
         gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, edgeIbo);
 		edgeShader.load(gl);
- 		float zThickness = viewport.getDepth() / (float)camera.getPixelsPerSceneUnit();
- 		edgeShader.setUniform(gl, "zThickness", (float)(zThickness));
- 		edgeShader.setUniform(gl, "focusZ", (float)camera.getFocus().getZ());
+ 		edgeShader.setUniform(gl, "zThickness", zThicknessInPixels);
+ 		// log.info("zThickness = "+zThickness);
+ 		float focus[] = {
+ 			(float)camera.getFocus().getX(),
+ 			(float)camera.getFocus().getY(),
+ 			(float)camera.getFocus().getZ()};
+ 		edgeShader.setUniform3v(gl, "focus", 1, focus);
 		gl.glEnable(GL2.GL_LINE_SMOOTH);
 		gl.glHint(GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST);
         // wider black line
@@ -184,9 +191,14 @@ implements GLActor
  			parentIndex = getIndexForAnchor(parent);
  		}
  		anchorShader.setUniform(gl, "parentAnchorIndex", parentIndex);
- 		float zThickness = viewport.getDepth() / (float)camera.getPixelsPerSceneUnit();
- 		anchorShader.setUniform(gl, "zThickness", (float)(zThickness));
- 		anchorShader.setUniform(gl, "focusZ", (float)camera.getFocus().getZ());
+ 		// float zThickness = viewport.getDepth(); //  / (float)camera.getPixelsPerSceneUnit();
+ 		anchorShader.setUniform(gl, "zThickness", zThicknessInPixels);
+ 		float focus[] = {
+ 	 			(float)camera.getFocus().getX(),
+ 	 			(float)camera.getFocus().getY(),
+ 	 			(float)camera.getFocus().getZ()};
+ 	 	anchorShader.setUniform3v(gl, "focus", 1, focus);
+ 		// anchorShader.setUniform(gl, "focusZ", (float)camera.getFocus().getZ());
  		anchorShader.setUniform(gl, "anchorTexture", 0);
  		anchorShader.setUniform(gl, "parentAnchorTexture", 1);
 
@@ -312,12 +324,12 @@ implements GLActor
 		skeleton.skeletonChangedSignal.connect(updateAnchorsSlot);
 	}
 	
-	public Viewport getViewport() {
-		return viewport;
+	public float getZThicknessInPixels() {
+		return zThicknessInPixels;
 	}
 
-	public void setViewport(Viewport viewport) {
-		this.viewport = viewport;
+	public void setZThicknessInPixels(float zThicknessInPixels) {
+		this.zThicknessInPixels = zThicknessInPixels;
 	}
 
 	protected synchronized void updateAnchors() {

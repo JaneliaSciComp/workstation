@@ -12,6 +12,8 @@ import java.util.Vector;
 import javax.swing.AbstractAction;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
+
+import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.MenuItemGenerator;
@@ -37,6 +39,7 @@ implements MouseMode, KeyListener
 	private Cursor penPlusCursor = BasicMouseMode.createCursor("nib_plus.png", 7, 0);
 	private Point pressPoint;
 	private Viewport viewport;
+	private BoundingBox3d boundingBox;
 	
 	public TraceMode(Skeleton skeleton) {
 		this.skeleton = skeleton;
@@ -98,15 +101,20 @@ implements MouseMode, KeyListener
 			Point dx = new Point(p2.x - p1.x, p2.y - p1.y);
 			Vec3 dv = new Vec3(dx.x, dx.y, 0);
 			dv = dv.times(1.0/camera.getPixelsPerSceneUnit()); // convert to scene units
+			dv = viewerInGround.times(dv); // Rotate for viewer orientation
 			skeletonActor.lightweightNudgeAnchor(dragAnchor, dv);
 		}
 		// Middle button drag to pan
 		if ((event.getModifiers() & InputEvent.BUTTON2_MASK) != 0) {
+			// TODO reuse pan code
 			checkCursor(grabHandCursor);
 			Point p1 = getPreviousPoint();
 			Point p2 = getPoint();
-			Point dx = new Point(p2.x - p1.x, p2.y - p1.y);
-			getCamera().incrementFocusPixels(-dx.x, -dx.y, 0);
+			Vec3 dx = new Vec3(p1.x - p2.x, p1.y - p2.y, 0);
+			dx = viewerInGround.times(dx);
+			getCamera().incrementFocusPixels(dx);
+			if (boundingBox != null)
+				getCamera().setFocus(boundingBox.clip(getCamera().getFocus()));
 		}
 	}
 	
@@ -124,11 +132,13 @@ implements MouseMode, KeyListener
 		Anchor closest = null;
 		for (Anchor a : skeleton.getAnchors()) {
 			double dz = xyz.getZ() - a.getLocation().getZ();
-			if (Math.abs(2.0 * dz) >= 0.7 * viewport.getDepth())
+			if (Math.abs(2.0 * dz) >= 0.9 * viewport.getDepth())
 				continue; // outside of Z (most of) range
 			// Use X/Y (not Z) for distance comparison
-			double dx = xyz.getX() - a.getLocation().getX();
-			double dy = xyz.getY() - a.getLocation().getY();
+			Vec3 dv = xyz.minus(a.getLocation());
+			dv = viewerInGround.inverse().times(dv); // rotate into screen space
+			double dx = dv.getX();
+			double dy = dv.getY();
 			double d2 = dx*dx + dy*dy;
 			if (d2 > cutoff)
 				continue;
@@ -205,7 +215,15 @@ implements MouseMode, KeyListener
 		return skeletonActor;
 	}
 	
-    @Override
+    public BoundingBox3d getBoundingBox() {
+		return boundingBox;
+	}
+
+	public void setBoundingBox(BoundingBox3d boundingBox) {
+		this.boundingBox = boundingBox;
+	}
+
+	@Override
     public MenuItemGenerator getMenuItemGenerator() {
         return new MenuItemGenerator() {
             @Override

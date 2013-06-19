@@ -7,15 +7,19 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Point2D;
 import java.text.DecimalFormat;
+import java.util.List;
 
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLCapabilitiesChooser;
 import javax.media.opengl.GLContext;
 import javax.media.opengl.awt.GLJPanel;
 import javax.swing.JComponent;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 
+import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
@@ -41,18 +45,14 @@ import org.slf4j.LoggerFactory;
  */
 public class OrthogonalViewer
 extends GLJPanel
-implements MouseModalWidget
+implements MouseModalWidget, TileConsumer
 {
     private static final Logger log = LoggerFactory.getLogger(OrthogonalViewer.class);
 
 	private Camera3d camera;
 	private VolumeImage3d volume;
-	private CoordinateAxis viewAxis;
+	private CoordinateAxis sliceAxis;
 	private SliceRenderer renderer = new SliceRenderer();
-    private Viewport viewport = renderer.getViewport();
-    // Viewer orientation relative to canonical orientation.
-    // Canonical orientation is x-right, y-down, z-away
-    private Rotation viewerInGround = new Rotation();
 
     private MouseMode mouseMode;
     private MouseMode.Mode mouseModeId;
@@ -89,17 +89,16 @@ implements MouseModalWidget
 	}
 	
 	private void init(CoordinateAxis axis) {
-		this.viewAxis = axis;
+		this.sliceAxis = axis;
 		if (axis == CoordinateAxis.Z)
-		    viewerInGround = new Rotation(); // identity rotation, canonical orientation
+		    setViewerInGround(new Rotation3d()); // identity rotation, canonical orientation
 		else if (axis == CoordinateAxis.X) // y-down, z-left, x-away
-		    viewerInGround.setFromCanonicalRotationAboutPrincipalAxis(
+		    getViewerInGround().setFromCanonicalRotationAboutPrincipalAxis(
 		            1, CoordinateAxis.Y);
 		else // Y-away, x-right, z-up
-		    viewerInGround.setFromCanonicalRotationAboutPrincipalAxis(
+		    getViewerInGround().setFromCanonicalRotationAboutPrincipalAxis(
 		            3, CoordinateAxis.X);
 		addGLEventListener(renderer);
-		renderer.setBackgroundColor(Color.black);		
         setMouseMode(MouseMode.Mode.PAN);
         setWheelMode(WheelMode.Mode.ZOOM);
         rubberBand.changed.connect(repaintSlot);
@@ -108,7 +107,43 @@ implements MouseModalWidget
         addMouseWheelListener(this);
         pointComputer.setCamera(camera);
         pointComputer.setComponent(this);
-        pointComputer.setViewerInGround(viewerInGround);
+        pointComputer.setViewerInGround(getViewerInGround());
+        //
+		renderer.setBackgroundColor(Color.black);
+        // PopupMenu
+        addMouseListener(new MouseHandler() {
+            @Override
+            protected void popupTriggered(MouseEvent e) {
+                // System.out.println("popup");
+                if (e.isConsumed()) 
+                    return;
+                JPopupMenu popupMenu = new JPopupMenu();
+                // Mode specific menu items first
+                List<JMenuItem> modeItems = modeMenuItemGenerator.getMenus(e);
+                List<JMenuItem> systemMenuItems = systemMenuItemGenerator.getMenus(e);
+                if ((modeItems.size() == 0) && (systemMenuItems.size() == 0))
+                    return;
+                if ((modeItems != null) && (modeItems.size() > 0)) {
+                    for (JMenuItem item : modeItems) {
+                        if (item == null)
+                            popupMenu.addSeparator();
+                        else
+                            popupMenu.add(item);
+                    }
+                    if (systemMenuItems.size() > 0)
+                        popupMenu.addSeparator();
+                }
+                // Generic menu items last
+                for (JMenuItem item : systemMenuItems) {
+                    if (item == null)
+                        popupMenu.addSeparator();
+                    else
+                        popupMenu.add(item);
+                }
+                popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                e.consume();
+            }
+        });
 	}
 
     @Override
@@ -135,10 +170,19 @@ implements MouseModalWidget
             skeletonActor.setCamera(camera);
 	}
 	
+	public void setSystemMenuItemGenerator(MenuItemGenerator systemMenuItemGenerator) 
+	{
+		this.systemMenuItemGenerator = systemMenuItemGenerator;
+	}
+
 	public void setVolumeImage3d(VolumeImage3d volume) {
 		this.volume = volume;
+		// TODO put bounding box in BasicMouseMode
 		if (mouseModeId == MouseMode.Mode.PAN) {
 		    ((PanMode)mouseMode).setBoundingBox(volume.getBoundingBox3d());
+		}
+		if (mouseModeId == MouseMode.Mode.TRACE) {
+		    ((TraceMode)mouseMode).setBoundingBox(volume.getBoundingBox3d());
 		}
 	}
     @Override
@@ -206,6 +250,9 @@ implements MouseModalWidget
             TraceMode traceMode = new TraceMode(skeletonActor.getSkeleton());
             traceMode.setViewport(getViewport());
             traceMode.setActor(skeletonActor);
+            traceMode.setViewerInGround(getViewerInGround());
+            if (volume != null)
+                traceMode.setBoundingBox(volume.getBoundingBox3d());
             this.mouseMode = traceMode;
         }
         else if (modeId == MouseMode.Mode.ZOOM) {
@@ -221,20 +268,15 @@ implements MouseModalWidget
         this.modeMenuItemGenerator = mouseMode.getMenuItemGenerator();
     }
 
-    public SkeletonActor getSkeletonActor() {
-        return skeletonActor;
+    public Rotation3d getViewerInGround() {
+        return renderer.getViewerInGround();
     }
 
-    public void setSkeletonActor(SkeletonActor skeletonActor) {
-        this.skeletonActor = skeletonActor;
-    }
-
-    public Rotation getViewerInGround() {
-        return viewerInGround;
-    }
-
-    public void setViewerInGround(Rotation viewerInGround) {
-        this.viewerInGround = viewerInGround;
+    public void setViewerInGround(Rotation3d viewerInGround) {
+        renderer.setViewerInGround(viewerInGround);
+        pointComputer.setViewerInGround(viewerInGround);
+        if (this.mouseMode instanceof BasicMouseMode)
+        	((BasicMouseMode)this.mouseMode).setViewerInGround(viewerInGround);
     }
 
     @Override
@@ -247,7 +289,7 @@ implements MouseModalWidget
         }
         else if (wheelModeId == WheelMode.Mode.SCAN) {
             ZScanMode scanMode = new ZScanMode(volume);
-            scanMode.setSliceAxis(viewAxis);
+            scanMode.setSliceAxis(sliceAxis);
             this.wheelMode = scanMode;
         }
         this.wheelMode.setComponent(this);
@@ -268,11 +310,31 @@ implements MouseModalWidget
 
     @Override
     public Viewport getViewport() {
-        return viewport;
+        return renderer.getViewport();
     }
 
     @Override
     public JComponent getComponent() {
         return this;
     }
+
+	public void setSkeletonActor(SkeletonActor skeletonActor) {
+		if (this.skeletonActor == skeletonActor)
+			return;
+		this.skeletonActor = skeletonActor;
+		skeletonActor.setZThicknessInPixels(getViewport().getDepth());
+		skeletonActor.setCamera(camera);
+		skeletonActor.skeletonActorChangedSignal.connect(repaintSlot);
+        renderer.addActor(skeletonActor);
+	}
+
+	@Override
+	public Camera3d getCamera() {
+		return camera;
+	}
+
+	@Override
+	public CoordinateAxis getSliceAxis() {
+		return sliceAxis;
+	}
 }

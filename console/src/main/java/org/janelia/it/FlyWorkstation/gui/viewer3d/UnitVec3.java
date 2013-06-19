@@ -27,6 +27,13 @@ public class UnitVec3 extends Vec3
 		super.set(2, z * scale);
 	}
 
+	public UnitVec3(Vec3 v) {
+		double scale = 1.0 / v.norm();
+		super.set(0, v.x() * scale);
+		super.set(1, v.y() * scale);
+		super.set(2, v.z() * scale);
+	}
+
 	/**
 	 * Negation is one of the few operations that preserves magnitude
 	 */
@@ -41,7 +48,7 @@ public class UnitVec3 extends Vec3
 		return this;
 	}
 	
-	// turn of methods that might set elements to arbitrary values
+	// turn off methods that might set elements to arbitrary values
 	@Override
 	public Double set(int index, Double element) {
 		throw new UnsupportedOperationException();
