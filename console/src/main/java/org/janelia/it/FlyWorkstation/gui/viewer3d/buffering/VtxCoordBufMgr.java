@@ -433,14 +433,14 @@ public class VtxCoordBufMgr {
     }
 
     private void addIndices(int firstInx, short inxOffset) {
-        // Indices
+        // Indices:  making six vertices from four definitions.
         indexBuf[ firstInx ].put( inxOffset );
         indexBuf[ firstInx ].put( (short)(inxOffset + 1) );
         indexBuf[ firstInx ].put( (short)(inxOffset + 2) );
 
+        indexBuf[ firstInx ].put( (short)(inxOffset + 1) );
         indexBuf[ firstInx ].put( (short)(inxOffset + 3) );
-        indexBuf[ firstInx ].put( (short)(inxOffset + 4) );
-        indexBuf[ firstInx ].put( (short)(inxOffset + 5) );
+        indexBuf[ firstInx ].put( (short)(inxOffset + 2) );
     }
 
     private void addTextureCoords(int firstInx, float[] t00, float[] t01, float[] t10, float[] t11) {
@@ -449,21 +449,17 @@ public class VtxCoordBufMgr {
         texCoordBuf[ firstInx ].put( t10 );
         texCoordBuf[ firstInx ].put( t01 );
         // Triangle 2
-        texCoordBuf[ firstInx ].put( t10 );
         texCoordBuf[ firstInx ].put( t11 );
-        texCoordBuf[ firstInx ].put( t01 );
     }
 
     private void addGeometry(int firstInx, float[] p00p, float[] p10p, float[] p11p, float[] p01p) {
-        // Only need four definitions, but making six vertexes.
+        // Only need four definitions.
         // Triangle 1
         geometryCoordBuf[ firstInx ].put( p00p );
         geometryCoordBuf[ firstInx ].put( p10p );
         geometryCoordBuf[ firstInx ].put( p01p );
         // Triangle 2
-        geometryCoordBuf[ firstInx ].put( p10p );
         geometryCoordBuf[ firstInx ].put( p11p );
-        geometryCoordBuf[ firstInx ].put( p01p );
     }
 
 }
