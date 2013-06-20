@@ -204,39 +204,6 @@ public class VtxCoordBufMgr {
         indexBufferHandles = enableBuffersOfType(gl, indexBuf, GL2.GL_ELEMENT_ARRAY_BUFFER);
     }
 
-    public void drawNoTex( GL2 gl, CoordinateAxis axis, double direction ) {
-
-        logger.info("Using VBO");
-        // Point to the right vertex set.
-
-        gl.glShadeModel (GL2.GL_SMOOTH);
-        gl.glEnableClientState( GL2.GL_VERTEX_ARRAY );
-        gl.glDisable(GL2.GL_CULL_FACE);
-        gl.glFrontFace(GL2.GL_CW);
-
-        // 3 floats per coord.  Stride is 0, offset to first is 0.
-        bindCoordsBuffer(gl, axis, geometryVertexBufferHandles, direction);
-
-        gl.glVertexPointer(3, GL2.GL_FLOAT, 0, 0);
-
-        int err = gl.glGetError();
-        if ( err != 0 ) {
-            logger.error("GL Error {}.", err);
-        }
-
-        // Tell GPU to draw triangles (interpret every three vertices as a triangle), starting at pos 0,
-        //  and expect vertex-count worth of vertices to examine.
-        indexBuf[ convertAxisDirectionToOffset( axis, direction) ].rewind();
-        gl.glColor4f(1.0f, 1.0f, 0.5f, 1.0f);
-        if ( drawWithElements ) {
-            gl.glDrawElements(GL2.GL_TRIANGLES, getVertexCount(axis), GL2.GL_UNSIGNED_SHORT, indexBuf[convertAxisDirectionToOffset(axis, direction)]);
-        }
-        else {
-            gl.glDrawArrays(GL2.GL_TRIANGLES, 0, getVertexCount(axis));
-        }
-        gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
-    }
-
     /**
      * Draw the contents of the buffer as needed. Call this from another draw method.
      *
@@ -311,6 +278,40 @@ public class VtxCoordBufMgr {
         }
 
 
+    }
+
+    /** This is used ONLY for non-textured rendering.  Shapes only. */
+    public void drawNoTex( GL2 gl, CoordinateAxis axis, double direction ) {
+
+        logger.info("Using VBO");
+        // Point to the right vertex set.
+
+        gl.glShadeModel(GL2.GL_SMOOTH);
+        gl.glEnableClientState( GL2.GL_VERTEX_ARRAY );
+        gl.glEnable(GL2.GL_CULL_FACE);
+        gl.glFrontFace(GL2.GL_CW);
+
+        // 3 floats per coord.  Stride is 0, offset to first is 0.
+        bindCoordsBuffer(gl, axis, geometryVertexBufferHandles, direction);
+
+        gl.glVertexPointer(3, GL2.GL_FLOAT, 0, 0);
+
+        int err = gl.glGetError();
+        if ( err != 0 ) {
+            logger.error("GL Error {}.", err);
+        }
+
+        // Tell GPU to draw triangles (interpret every three vertices as a triangle), starting at pos 0,
+        //  and expect vertex-count worth of vertices to examine.
+        indexBuf[ convertAxisDirectionToOffset( axis, direction) ].rewind();
+        gl.glColor4f(1.0f, 1.0f, 0.5f, 1.0f);
+        if ( drawWithElements ) {
+            gl.glDrawElements(GL2.GL_TRIANGLES, getVertexCount(axis), GL2.GL_UNSIGNED_SHORT, indexBuf[convertAxisDirectionToOffset(axis, direction)]);
+        }
+        else {
+            gl.glDrawArrays(GL2.GL_TRIANGLES, 0, getVertexCount(axis));
+        }
+        gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
     }
 
     /** Convenience method to cut down on repeated code. */
