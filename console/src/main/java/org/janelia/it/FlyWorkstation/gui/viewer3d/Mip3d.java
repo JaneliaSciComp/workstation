@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.MaskBuilderI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderMappingI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
@@ -13,7 +14,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
-import java.util.Collection;
 
 public class Mip3d extends BaseGLViewer implements ActionListener {
     public static final float DEFAULT_CROPOUT = 0.05f;
@@ -293,7 +293,7 @@ public class Mip3d extends BaseGLViewer implements ActionListener {
     }
 
     /** Special synchronized method, for adding actors. Supports multi-threaded brick-add. */
-    private void addActorToRenderer(VolumeBrick brick) {
+    private void addActorToRenderer(GLActor brick) {
         synchronized ( this ) {
             renderer.addActor(brick);
             renderer.resetView();
