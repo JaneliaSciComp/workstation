@@ -5,7 +5,6 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureMediator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 import java.nio.*;
 
@@ -286,7 +285,7 @@ public class VtxCoordBufMgr {
         // Tell GPU to draw triangles (interpret every three vertices as a triangle), starting at pos 0,
         //  and expect vertex-count worth of vertices to examine.
         indexBuf[ convertAxisDirectionToOffset( axis, direction) ].rewind();
-        gl.glColor4f(1.0f, 0.0f, 0.5f, 1.0f);
+        gl.glColor4f(1.0f, 1.0f, 0.5f, 1.0f);
         gl.glDrawElements(GL2.GL_TRIANGLES, getVertexCount(axis), GL2.GL_UNSIGNED_SHORT, indexBuf[convertAxisDirectionToOffset(axis, direction)]);
         gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
     }
@@ -305,7 +304,7 @@ public class VtxCoordBufMgr {
         //gl.glPolygonMode(GL2.GL_FRONT_AND_BACK,GL2.GL_FILL);
 
         if ( useVBO ) {
-            logger.info("Using VBO");
+            logger.debug("Using VBO");
             // Point to the right vertex set.
             bindBuffer( gl, axis, geometryVertexBufferHandles, direction );
 
@@ -337,14 +336,14 @@ public class VtxCoordBufMgr {
             // Tell GPU to draw triangles (interpret every three vertices as a triangle), starting at pos 0,
             //  and expect vertex-count worth of vertices to examine.
             indexBuf[ convertAxisDirectionToOffset( axis, direction) ].rewind();
-            gl.glColor4f(1.0f, 0.0f, 0.5f, 1.0f);
+            gl.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 //            gl.glDrawElements( GL2.GL_TRIANGLES, 12 * 3, GL2.GL_UNSIGNED_SHORT, mTriangles);
             gl.glDrawElements( GL2.GL_TRIANGLES, getVertexCount( axis ), GL2.GL_UNSIGNED_SHORT, indexBuf[ convertAxisDirectionToOffset(axis, direction) ] );
             gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
             gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
         }
         else {
-            logger.info("Not using VBO: pushing data for each draw.");
+            logger.debug("Not using VBO: pushing data for each draw.");
             // Push the right vertex set.
 
             // 3 floats per texture coord.  Stride is 0, offset to first is 0.
@@ -440,7 +439,7 @@ public class VtxCoordBufMgr {
     private int bindBuffer( GL2 gl, CoordinateAxis axis, int[] handles, double direction ) {
         int bufferOffset = convertAxisDirectionToOffset(axis, direction);
         gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, handles[ bufferOffset ] );
-        logger.info("Returning buffer offset of {} for {}.", bufferOffset, axis.getName() + ":" + direction);
+        logger.debug("Returning buffer offset of {} for {}.", bufferOffset, axis.getName() + ":" + direction);
         logger.debug("Buffer handle is {}.", handles[bufferOffset]);
         return handles[ bufferOffset ];
     }
