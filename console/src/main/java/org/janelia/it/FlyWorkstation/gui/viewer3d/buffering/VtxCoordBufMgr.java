@@ -23,6 +23,7 @@ public class VtxCoordBufMgr {
     public static final int NUM_AXES = 3;
 
     private boolean useVBO = false;
+    private boolean drawWithElements = false;
 
     // Buffer objects for setting geometry on the GPU side.
     //   I need one per starting direction (x,y,z) times one for positive, one for negative.
@@ -36,7 +37,7 @@ public class VtxCoordBufMgr {
     // Int pointers to use as handles when dealing with GPU.
     private int[] geometryVertexBufferHandles;
     private int[] textureCoordBufferHandles;
-    private int[] indexBufferHandles;
+    //private int[] indexBufferHandles;
 
     private TextureMediator textureMediator;
 
@@ -67,15 +68,6 @@ public class VtxCoordBufMgr {
      * 2. Offsets 0,3 are X; 1,4 are Y and 2,5 are Z.
      */
     public void buildBuffers() {
-        /*
-        // compute number of slices
-		int sx = (int)(0.5 + signalTextureMediator.getVolumeMicrometers()[a1.index()] / signalTextureMediator.getVoxelMicrometers()[a1.index()]);
-		// compute position of first slice
-		double x0 = -direction * (signalTextureMediator.getVoxelMicrometers()[a1.index()] - signalTextureMediator.getVolumeMicrometers()[a1.index()]) / 2.0;
-		// compute distance between slices
-		double dx = -direction * signalTextureMediator.getVoxelMicrometers()[a1.index()];
-
-         */
         vertexCountByAxis = new int[ NUM_AXES ];
         if ( texCoordBuf[ 0 ] == null  &&  textureMediator != null ) {
             // Compute sizes, and allocate buffers.
@@ -99,9 +91,11 @@ public class VtxCoordBufMgr {
                 geometryCoordBuf[ i ] = geoByteBuffer.asFloatBuffer();
 
                 // One index per vertex.  Not one per coord.  No need for x,y,z.
-                ByteBuffer inxByteBuffer = ByteBuffer.allocateDirect(numVertices * Short.SIZE / 8);
-                inxByteBuffer.order(ByteOrder.nativeOrder());
-                indexBuf[ i ] = inxByteBuffer.asShortBuffer();
+                if ( drawWithElements ) {
+                    ByteBuffer inxByteBuffer = ByteBuffer.allocateDirect(numVertices * Short.SIZE / 8);
+                    inxByteBuffer.order(ByteOrder.nativeOrder());
+                    indexBuf[ i ] = inxByteBuffer.asShortBuffer();
+                }
             }
 
             // Now produce the vertexes to stuff into all of the buffers.
@@ -129,28 +123,16 @@ public class VtxCoordBufMgr {
                 float third1 = -third0;
 
                 // Four points for four slice corners
-                float[] p00p = {0,0,0};
-                float[] p10p = {0,0,0};
-                float[] p11p = {0,0,0};
-                float[] p01p = {0,0,0};
+                float[] p00 = {0,0,0};
+                float[] p10 = {0,0,0};
+                float[] p11 = {0,0,0};
+                float[] p01 = {0,0,0};
 
                 // reswizzle coordinate axes back to actual X, Y, Z (except x, saved for later)
-                p00p[ secondInx ] = p01p[ secondInx ] = second0;
-                p10p[ secondInx ] = p11p[ secondInx ] = second1;
-                p00p[ thirdInx ] = p10p[ thirdInx ] = third0;
-                p01p[ thirdInx ] = p11p[ thirdInx ] = third1;
-
-                // Four negated points for four slice corners
-                float[] p00n = {0,0,0};
-                float[] p10n = {0,0,0};
-                float[] p11n = {0,0,0};
-                float[] p01n = {0,0,0};
-
-                // reswizzle coordinate axes back to actual X, Y, Z (except x, saved for later)
-                p00n[ secondInx ] = p01n[ secondInx ] = second0;
-                p10n[ secondInx ] = p11n[ secondInx ] = second1;
-                p00n[ thirdInx ] = p10n[ thirdInx ] = third0;
-                p01n[ thirdInx ] = p11n[ thirdInx ] = third1;
+                p00[ secondInx ] = p01[ secondInx ] = second0;
+                p10[ secondInx ] = p11[ secondInx ] = second1;
+                p00[ thirdInx ] = p10[ thirdInx ] = third0;
+                p01[ thirdInx ] = p11[ thirdInx ] = third1;
 
                 texCoordBuf[ firstInx ].rewind();
                 short inxOffset = 0;
@@ -159,75 +141,35 @@ public class VtxCoordBufMgr {
 
                     // FORWARD axes.
                     float sliceLoc = slice0 + (sliceInx * sliceSep);
-                    p00p[ firstInx ] = p01p[firstInx] = p10p[firstInx] = p11p[firstInx] = sliceLoc;
+                    // NOTE: only one of the three axes need change for each slice.  Other two remain same.
+                    p00[ firstInx ] = p01[firstInx] = p10[firstInx] = p11[firstInx] = sliceLoc;
 
-                    float[] t00 = textureMediator.textureCoordFromVoxelCoord( p00p );
-                    float[] t01 = textureMediator.textureCoordFromVoxelCoord( p01p );
-                    float[] t10 = textureMediator.textureCoordFromVoxelCoord( p10p );
-                    float[] t11 = textureMediator.textureCoordFromVoxelCoord( p11p );
-
-                    // Only need four definitions, but making six vertexes.
-                    // Triangle 1
-                    geometryCoordBuf[ firstInx ].put( p00p );
-                    geometryCoordBuf[ firstInx ].put( p10p );
-                    geometryCoordBuf[ firstInx ].put( p01p );
-                    // Triangle 2
-                    geometryCoordBuf[ firstInx ].put( p10p );
-                    geometryCoordBuf[ firstInx ].put( p11p );
-                    geometryCoordBuf[ firstInx ].put( p01p );
-
-                    // Triangle 1
-                    texCoordBuf[ firstInx ].put( t00 );
-                    texCoordBuf[ firstInx ].put( t10 );
-                    texCoordBuf[ firstInx ].put( t01 );
-                    // Triangle 2
-                    texCoordBuf[ firstInx ].put( t10 );
-                    texCoordBuf[ firstInx ].put( t11 );
-                    texCoordBuf[ firstInx ].put( t01 );
-
-                    // Indices
-                    indexBuf[ firstInx ].put( inxOffset );
-                    indexBuf[ firstInx ].put( (short)(inxOffset + 1) );
-                    indexBuf[ firstInx ].put( (short)(inxOffset + 2) );
-
-                    indexBuf[ firstInx ].put( (short)(inxOffset + 3) );
-                    indexBuf[ firstInx ].put( (short)(inxOffset + 4) );
-                    indexBuf[ firstInx ].put( (short)(inxOffset + 5) );
+                    addGeometry(firstInx, p00, p10, p11, p01);
+                    addTextureCoords(
+                            firstInx,
+                            textureMediator.textureCoordFromVoxelCoord( p00 ),
+                            textureMediator.textureCoordFromVoxelCoord( p01 ),
+                            textureMediator.textureCoordFromVoxelCoord( p10 ),
+                            textureMediator.textureCoordFromVoxelCoord( p11 )
+                    );
+                    if ( drawWithElements ) {
+                        addIndices(firstInx, inxOffset);
+                    }
 
                     // Now, take care of the negative-direction alternate to this buffer pair.
-                    p00n[ firstInx ] = p01n[firstInx] = p10n[firstInx] = p11n[firstInx] = -sliceLoc;
+                    p00[ firstInx ] = p01[firstInx] = p10[firstInx] = p11[firstInx] = -sliceLoc;
 
-                    t00 = textureMediator.textureCoordFromVoxelCoord( p00n );
-                    t01 = textureMediator.textureCoordFromVoxelCoord( p01n );
-                    t10 = textureMediator.textureCoordFromVoxelCoord( p10n );
-                    t11 = textureMediator.textureCoordFromVoxelCoord( p11n );
-
-                    // Triangle 1
-                    geometryCoordBuf[ firstInx + NUM_AXES ].put( p00n );
-                    geometryCoordBuf[ firstInx + NUM_AXES ].put( p10n );
-                    geometryCoordBuf[ firstInx + NUM_AXES ].put( p01n );
-                    // Triangle 2
-                    geometryCoordBuf[ firstInx + NUM_AXES ].put( p10n );
-                    geometryCoordBuf[ firstInx + NUM_AXES ].put( p11n );
-                    geometryCoordBuf[ firstInx + NUM_AXES ].put( p01n );
-
-                    // Triangle 1
-                    texCoordBuf[ firstInx + NUM_AXES ].put( t00 );
-                    texCoordBuf[ firstInx + NUM_AXES ].put( t10 );
-                    texCoordBuf[ firstInx + NUM_AXES ].put( t01 );
-                    // Triangle 2
-                    texCoordBuf[ firstInx + NUM_AXES ].put( t10 );
-                    texCoordBuf[ firstInx + NUM_AXES ].put( t11 );
-                    texCoordBuf[ firstInx + NUM_AXES ].put( t01 );
-
-                    // Indices
-                    indexBuf[ firstInx + NUM_AXES ].put( inxOffset );
-                    indexBuf[ firstInx + NUM_AXES ].put( (short)(inxOffset + 1) );
-                    indexBuf[ firstInx + NUM_AXES ].put( (short)(inxOffset + 2) );
-
-                    indexBuf[ firstInx + NUM_AXES ].put( (short)(inxOffset + 3) );
-                    indexBuf[ firstInx + NUM_AXES ].put( (short)(inxOffset + 4) );
-                    indexBuf[ firstInx + NUM_AXES ].put( (short)(inxOffset + 5) );
+                    addGeometry(firstInx + NUM_AXES, p00, p10, p11, p01);
+                    addTextureCoords(
+                            firstInx + NUM_AXES,
+                            textureMediator.textureCoordFromVoxelCoord( p00 ),
+                            textureMediator.textureCoordFromVoxelCoord( p01 ),
+                            textureMediator.textureCoordFromVoxelCoord( p10 ),
+                            textureMediator.textureCoordFromVoxelCoord( p11 )
+                    );
+                    if ( drawWithElements ) {
+                        addIndices(firstInx + NUM_AXES, inxOffset);
+                    }
 
                     inxOffset += 6;
 
@@ -286,7 +228,12 @@ public class VtxCoordBufMgr {
         //  and expect vertex-count worth of vertices to examine.
         indexBuf[ convertAxisDirectionToOffset( axis, direction) ].rewind();
         gl.glColor4f(1.0f, 1.0f, 0.5f, 1.0f);
-        gl.glDrawElements(GL2.GL_TRIANGLES, getVertexCount(axis), GL2.GL_UNSIGNED_SHORT, indexBuf[convertAxisDirectionToOffset(axis, direction)]);
+        if ( drawWithElements ) {
+            gl.glDrawElements(GL2.GL_TRIANGLES, getVertexCount(axis), GL2.GL_UNSIGNED_SHORT, indexBuf[convertAxisDirectionToOffset(axis, direction)]);
+        }
+        else {
+            gl.glDrawArrays(GL2.GL_TRIANGLES, 0, getVertexCount(axis));
+        }
         gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
     }
 
@@ -300,8 +247,6 @@ public class VtxCoordBufMgr {
     public void draw( GL2 gl, CoordinateAxis axis, double direction ) {
         gl.glDisable(GL2.GL_CULL_FACE);
         gl.glFrontFace(GL2.GL_CW);
-
-        //gl.glPolygonMode(GL2.GL_FRONT_AND_BACK,GL2.GL_FILL);
 
         if ( useVBO ) {
             logger.debug("Using VBO");
@@ -323,40 +268,39 @@ public class VtxCoordBufMgr {
             //NO buffer binding for indices at this time. LLF
             //    bindBuffer( gl, axis, indexBufferHandles, direction );
 
-            //gl.glEnableClientState( GL2.GL_INDEX_ARRAY );
-            //gl.glIndexPointer( 0, 0, indexBuf[ convertAxisDirectionToOffset(axis, direction) ]);
-            //gl.glIndexCoordPointer(3, GL2.GL_FLOAT, 0, 0);
-            //gl.glDisableClientState(GL2.GL_INDEX_ARRAY );
-
             int err = gl.glGetError();
             if ( err != 0 ) {
                 logger.error("GL Error {}.", err);
             }
 
+            gl.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+
             // Tell GPU to draw triangles (interpret every three vertices as a triangle), starting at pos 0,
             //  and expect vertex-count worth of vertices to examine.
-            indexBuf[ convertAxisDirectionToOffset( axis, direction) ].rewind();
-            gl.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-//            gl.glDrawElements( GL2.GL_TRIANGLES, 12 * 3, GL2.GL_UNSIGNED_SHORT, mTriangles);
-            gl.glDrawElements( GL2.GL_TRIANGLES, getVertexCount( axis ), GL2.GL_UNSIGNED_SHORT, indexBuf[ convertAxisDirectionToOffset(axis, direction) ] );
+            if ( drawWithElements ) {
+                indexBuf[ convertAxisDirectionToOffset( axis, direction) ].rewind();
+                gl.glDrawElements( GL2.GL_TRIANGLES, getVertexCount( axis ), GL2.GL_UNSIGNED_SHORT, indexBuf[ convertAxisDirectionToOffset(axis, direction) ] );
+            }
+            else {
+                gl.glDrawArrays(GL2.GL_TRIANGLES, 0, getVertexCount(axis));
+            }
             gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
             gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
         }
         else {
             logger.debug("Not using VBO: pushing data for each draw.");
             // Push the right vertex set.
-
-            // 3 floats per texture coord.  Stride is 0, offset to first is 0.
-
             FloatBuffer geometryBuff = geometryCoordBuf[convertAxisDirectionToOffset(axis, direction)];
             geometryBuff.rewind();
             gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
+            // 3 floats per coord.  Stride is 0, offset to first is 0.
             gl.glVertexPointer(3, GL2.GL_FLOAT, 0, geometryBuff);
             gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
 
             FloatBuffer texBuff = texCoordBuf[convertAxisDirectionToOffset(axis, direction)];
             texBuff.rewind();
             gl.glEnableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
+            // 3 floats per coord.  Stride is 0, offset to first is 0.
             gl.glTexCoordPointer(3, GL2.GL_FLOAT, 0, texBuff);
             gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
 
@@ -438,7 +382,7 @@ public class VtxCoordBufMgr {
      */
     private int bindBuffer( GL2 gl, CoordinateAxis axis, int[] handles, double direction ) {
         int bufferOffset = convertAxisDirectionToOffset(axis, direction);
-        gl.glBindBuffer( GL2.GL_ARRAY_BUFFER, handles[ bufferOffset ] );
+        gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, handles[bufferOffset]);
         logger.debug("Returning buffer offset of {} for {}.", bufferOffset, axis.getName() + ":" + direction);
         logger.debug("Buffer handle is {}.", handles[bufferOffset]);
         return handles[ bufferOffset ];
@@ -468,6 +412,40 @@ public class VtxCoordBufMgr {
     private int computeEffectiveAxisLen(int firstInx) {
         double firstAxisLen = textureMediator.getVolumeMicrometers()[ firstInx % 3 ];
         return (int)(0.5 + firstAxisLen / textureMediator.getVoxelMicrometers()[ firstInx % 3 ]);
+    }
+
+    private void addIndices(int firstInx, short inxOffset) {
+        // Indices
+        indexBuf[ firstInx ].put( inxOffset );
+        indexBuf[ firstInx ].put( (short)(inxOffset + 1) );
+        indexBuf[ firstInx ].put( (short)(inxOffset + 2) );
+
+        indexBuf[ firstInx ].put( (short)(inxOffset + 3) );
+        indexBuf[ firstInx ].put( (short)(inxOffset + 4) );
+        indexBuf[ firstInx ].put( (short)(inxOffset + 5) );
+    }
+
+    private void addTextureCoords(int firstInx, float[] t00, float[] t01, float[] t10, float[] t11) {
+        // Triangle 1
+        texCoordBuf[ firstInx ].put( t00 );
+        texCoordBuf[ firstInx ].put( t10 );
+        texCoordBuf[ firstInx ].put( t01 );
+        // Triangle 2
+        texCoordBuf[ firstInx ].put( t10 );
+        texCoordBuf[ firstInx ].put( t11 );
+        texCoordBuf[ firstInx ].put( t01 );
+    }
+
+    private void addGeometry(int firstInx, float[] p00p, float[] p10p, float[] p11p, float[] p01p) {
+        // Only need four definitions, but making six vertexes.
+        // Triangle 1
+        geometryCoordBuf[ firstInx ].put( p00p );
+        geometryCoordBuf[ firstInx ].put( p10p );
+        geometryCoordBuf[ firstInx ].put( p01p );
+        // Triangle 2
+        geometryCoordBuf[ firstInx ].put( p10p );
+        geometryCoordBuf[ firstInx ].put( p11p );
+        geometryCoordBuf[ firstInx ].put( p01p );
     }
 
 }
