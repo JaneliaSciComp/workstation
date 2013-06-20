@@ -23,7 +23,7 @@ public class VtxCoordBufMgr {
     public static final int NUM_AXES = 3;
 
     private boolean useVBO = false;
-    private boolean drawWithElements = false;
+    private boolean drawWithElements = true;
 
     // Buffer objects for setting geometry on the GPU side.
     //   I need one per starting direction (x,y,z) times one for positive, one for negative.
@@ -37,7 +37,7 @@ public class VtxCoordBufMgr {
     // Int pointers to use as handles when dealing with GPU.
     private int[] geometryVertexBufferHandles;
     private int[] textureCoordBufferHandles;
-    //private int[] indexBufferHandles;
+    private int[] indexBufferHandles;
 
     private TextureMediator textureMediator;
 
@@ -201,7 +201,7 @@ public class VtxCoordBufMgr {
     public void enableBuffers(GL2 gl) throws Exception {
         geometryVertexBufferHandles = enableBuffersOfType(gl, geometryCoordBuf, GL2.GL_ARRAY_BUFFER);
         textureCoordBufferHandles = enableBuffersOfType(gl, texCoordBuf, GL2.GL_ARRAY_BUFFER);
-        //indexBufferHandles = enableBuffersOfType(gl, indexBuf, GL2.GL_ELEMENT_ARRAY_BUFFER);
+        indexBufferHandles = enableBuffersOfType(gl, indexBuf, GL2.GL_ELEMENT_ARRAY_BUFFER);
     }
 
     public void drawNoTex( GL2 gl, CoordinateAxis axis, double direction ) {
@@ -215,7 +215,7 @@ public class VtxCoordBufMgr {
         gl.glFrontFace(GL2.GL_CW);
 
         // 3 floats per coord.  Stride is 0, offset to first is 0.
-        bindBuffer( gl, axis, geometryVertexBufferHandles, direction );
+        bindCoordsBuffer(gl, axis, geometryVertexBufferHandles, direction);
 
         gl.glVertexPointer(3, GL2.GL_FLOAT, 0, 0);
 
@@ -251,22 +251,23 @@ public class VtxCoordBufMgr {
         if ( useVBO ) {
             logger.debug("Using VBO");
             // Point to the right vertex set.
-            bindBuffer( gl, axis, geometryVertexBufferHandles, direction );
+            bindCoordsBuffer(gl, axis, geometryVertexBufferHandles, direction);
 
             gl.glEnableClientState( GL2.GL_VERTEX_ARRAY );
             // 3 floats per coord.  Stride is 0, offset to first is 0.
             gl.glVertexPointer(3, GL2.GL_FLOAT, 0, 0);
 
             // Point to the right texture coordinate set.
-            bindBuffer(gl, axis, textureCoordBufferHandles, direction);
+            bindCoordsBuffer(gl, axis, textureCoordBufferHandles, direction);
 
             gl.glEnableClientState( GL2.GL_TEXTURE_COORD_ARRAY );
+            // 3 floats per coord.  Stride is 0, offset to first is 0.
             gl.glTexCoordPointer(3, GL2.GL_FLOAT, 0, 0);
 
 
             // Point to the right index coordinate set.
             //NO buffer binding for indices at this time. LLF
-            //    bindBuffer( gl, axis, indexBufferHandles, direction );
+            //    bindCoordsBuffer( gl, axis, indexBufferHandles, direction );
 
             int err = gl.glGetError();
             if ( err != 0 ) {
@@ -278,13 +279,13 @@ public class VtxCoordBufMgr {
             // Tell GPU to draw triangles (interpret every three vertices as a triangle), starting at pos 0,
             //  and expect vertex-count worth of vertices to examine.
             if ( drawWithElements ) {
-                indexBuf[ convertAxisDirectionToOffset( axis, direction) ].rewind();
-                gl.glDrawElements( GL2.GL_TRIANGLES, getVertexCount( axis ), GL2.GL_UNSIGNED_SHORT, indexBuf[ convertAxisDirectionToOffset(axis, direction) ] );
+                logger.debug("Drawing with elements");
+                bindIndexBuffer( gl, axis, indexBufferHandles, direction );
+                gl.glDrawElements( GL2.GL_TRIANGLES, getVertexCount( axis ), GL2.GL_UNSIGNED_SHORT, 0 );
             }
             else {
                 gl.glDrawArrays(GL2.GL_TRIANGLES, 0, getVertexCount(axis));
             }
-            gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
             gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
         }
         else {
@@ -321,7 +322,7 @@ public class VtxCoordBufMgr {
         // Bind data to the handles, and upload it to the GPU.
         for ( int i = 0; i < NUM_BUFFERS_PER_TYPE; i++ ) {
             buffers[ i ].rewind();
-            gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, rtnVal[ i ]);
+            gl.glBindBuffer(type, rtnVal[ i ]);
             // NOTE: this operates on the most recent "bind".  Therefore unless
             // synchronization is in use, this makes the method un-thread-safe.
             // Imagine multiple "bind" and "buffer-data" calls in parallel threads...disaster!
@@ -334,7 +335,9 @@ public class VtxCoordBufMgr {
 
         }
 
-        dumpBuffer( buffers );
+        if ( logger.isDebugEnabled() ) {
+            dumpBuffer( buffers );
+        }
         return rtnVal;
     }
 
@@ -380,9 +383,24 @@ public class VtxCoordBufMgr {
      * @param axis tells the primary axis.
      * @param direction for positive/negative view perspective.
      */
-    private int bindBuffer( GL2 gl, CoordinateAxis axis, int[] handles, double direction ) {
+    private int bindCoordsBuffer(GL2 gl, CoordinateAxis axis, int[] handles, double direction) {
+        return bindBuffer(gl, axis, handles, direction, GL2.GL_ARRAY_BUFFER);
+    }
+
+    /**
+     * Here the buffer is actually used, to establish the indices for drawing.
+     *
+     * @param axis tells the primary axis.
+     * @param direction for positive/negative view perspective.
+     */
+    private int bindIndexBuffer( GL2 gl, CoordinateAxis axis, int[] handles, double direction ) {
+        return bindBuffer(gl, axis, handles, direction, GL2.GL_ELEMENT_ARRAY_BUFFER);
+    }
+
+    /** Reduced code redundancy. ALl types of buffers bound here. */
+    private int bindBuffer(GL2 gl, CoordinateAxis axis, int[] handles, double direction, int bufferType ) {
         int bufferOffset = convertAxisDirectionToOffset(axis, direction);
-        gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, handles[bufferOffset]);
+        gl.glBindBuffer(bufferType, handles[bufferOffset]);
         logger.debug("Returning buffer offset of {} for {}.", bufferOffset, axis.getName() + ":" + direction);
         logger.debug("Buffer handle is {}.", handles[bufferOffset]);
         return handles[ bufferOffset ];
