@@ -182,6 +182,13 @@ public class TextureMediator {
         return tc;
     }
 
+    /**
+     * NOTE: Forcing coord back to 1, if greater, or back to 0, if lower, does not change appearance noticeably,
+     * nor alleviate the end-on-X rendering problem.
+     *
+     * @param voxelCoord a voxel coordinate set for geometry.
+     * @return texture coordinate set that corresponds, in range 0..1
+     */
     public float[] textureCoordFromVoxelCoord(float[] voxelCoord) {
         float[] tc = {voxelCoord[0], voxelCoord[1], voxelCoord[2]}; // micrometers, origin at center
         int[] voxels = { textureData.getSx(), textureData.getSy(), textureData.getSz() };

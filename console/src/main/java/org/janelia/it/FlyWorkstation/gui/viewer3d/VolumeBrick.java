@@ -188,9 +188,9 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
             uploadColorMapTexture(gl);
 
 		// debugging objects showing useful boundaries of what we want to render
-		gl.glColor3d(1,1,1);
+		//gl.glColor3d(1,1,1);
 		// displayVoxelCenterBox(gl);
-		gl.glColor3d(1,1,0.3);
+		//gl.glColor3d(1,1,0.3);
 		// displayVoxelCornerBox(gl);
 		// a stack of transparent slices looks like a volume
 		gl.glPushAttrib(GL2.GL_LIGHTING_BIT | GL2.GL_TEXTURE_BIT | GL2.GL_ENABLE_BIT);
@@ -237,27 +237,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         }
 		gl.glPopAttrib();
 	}
-
-    // Debugging object with corners at the center of
-	// the corner voxels of this volume.
-//	public void displayVoxelCenterBox(GL2 gl) {
-//		gl.glPushMatrix();
-//		double[] v = volumeMicrometers;
-//		double[] pad = voxelMicrometers;
-//		gl.glScaled(v[0]-pad[0], v[1]-pad[1], v[2]-pad[2]);
-//		glut.glutWireCube(1);
-//		gl.glPopMatrix();
-//	}
-
-	// Debugging object with corners at the outer corners of
-	// the corner voxels of this volume.
-//	public void displayVoxelCornerBox(GL2 gl) {
-//		gl.glPushMatrix();
-//		double[] v = volumeMicrometers;
-//		gl.glScaled(v[0], v[1], v[2]);
-//		glut.glutWireCube(1);
-//		gl.glPopMatrix();
-//	}
 
 	/**
 	 * Volume rendering by painting a series of transparent,
@@ -352,7 +331,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         reportError(gl, "Volume Brick, before setting coords.");
 
         // deal out the slices, like cards from a deck
-        System.out.println("Use of vertices: <p00,p10,p01>; <p10,p11,p01>");
+        logger.debug("Use of vertices: <p00,p10,p01>; <p10,p11,p01>");
         gl.glBegin(GL2.GL_TRIANGLES);
         for (int xi = 0; xi < sx; ++xi) {
             // insert final coordinate into corner vectors
@@ -391,106 +370,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
                 //printPoints("Vtx "+direction+" "+a1.getName() + " p00,p10,p01,p11", p00, p10, p01, p11);
                 printPoints("Tex "+direction+" "+a1.getName() + " t00,t10,t01,t11", t00, t10, t01, t11);
             }
-
-        }
-        gl.glEnd();
-        reportError(gl, "Volume Brick, after setting coords.");
-
-    }
-
-    /**
-     * Volume rendering by painting a series of transparent,
-     * one-voxel-thick slices, in back-to-front painter's algorithm
-     * order.
-     * @param gl
-     */
-    public void displayVolumeSlicesUpload(GL2 gl) {
-
-        // Get the view vector, so we can choose the slice direction,
-        // along one of the three principal axes(X,Y,Z), and either forward
-        // or backward.
-        // "InGround" means in the WORLD object reference frame.
-        // (the view vector in the EYE reference frame is always [0,0,-1])
-        Vec3 viewVectorInGround = volumeModel.getCamera3d().getRotation().times(new Vec3(0,0,1));
-        // Compute the principal axis of the view direction; that's the direction we will slice along.
-        CoordinateAxis a1 = CoordinateAxis.X; // First guess principal axis is X.  Who knows?
-        Vec3 vv = viewVectorInGround;
-        if ( Math.abs(vv.y()) > Math.abs(vv.get(a1.index())) )
-            a1 = CoordinateAxis.Y; // OK, maybe Y axis is principal
-        if ( Math.abs(vv.z()) > Math.abs(vv.get(a1.index())) )
-            a1 = CoordinateAxis.Z; // Alright, it's definitely Z principal.
-        // Choose the other two axes in right-handed convention
-        CoordinateAxis a2 = a1.next();
-        CoordinateAxis a3 = a2.next();
-        // If principal axis points away from viewer, draw slices front to back,
-        // instead of back to front.
-        double direction = 1.0; // points away from viewer, render back to front, n to 0
-        if (vv.get(a1.index()) < 0.0)
-            direction = -1.0; // points toward, front to back, 0 to n
-
-        // Below "x", "y", and "z" actually refer to a1, a2, and a3, respectively;
-        // These axes might be permuted from the real world XYZ
-        // Each slice cuts through an exact voxel center,
-        // but slice edges extend all the way to voxel edges.
-        // Compute dimensions of one x slice: y0-y1 and z0-z1
-        // Pad edges of rectangles by one voxel to support oblique ray tracing past edges
-        double y0 = direction * (signalTextureMediator.getVolumeMicrometers()[a2.index()] / 2.0 + signalTextureMediator.getVoxelMicrometers()[a2.index()]);
-        double y1 = -y0;
-        double z0 = direction * (signalTextureMediator.getVolumeMicrometers()[a3.index()] / 2.0 + signalTextureMediator.getVoxelMicrometers()[a3.index()]);
-        double z1 = -z0;
-        // Four points for four slice corners
-        double[] p00 = {0,0,0};
-        double[] p10 = {0,0,0};
-        double[] p11 = {0,0,0};
-        double[] p01 = {0,0,0};
-        // reswizzle coordinate axes back to actual X, Y, Z (except x, saved for later)
-        p00[a2.index()] = p01[a2.index()] = y0;
-        p10[a2.index()] = p11[a2.index()] = y1;
-        p00[a3.index()] = p10[a3.index()] = z0;
-        p01[a3.index()] = p11[a3.index()] = z1;
-        // compute number of slices
-        int sx = (int)(0.5 + signalTextureMediator.getVolumeMicrometers()[a1.index()] / signalTextureMediator.getVoxelMicrometers()[a1.index()]);
-        // compute position of first slice
-        double x0 = -direction * (signalTextureMediator.getVoxelMicrometers()[a1.index()] - signalTextureMediator.getVolumeMicrometers()[a1.index()]) / 2.0;
-        // compute distance between slices
-        double dx = -direction * signalTextureMediator.getVoxelMicrometers()[a1.index()];
-
-        reportError(gl, "Volume Brick, before setting coords.");
-
-        // deal out the slices, like cards from a deck
-        System.out.println("Use of vertices: <p00,p10,p01>; <p10,p11,p01>");
-        gl.glBegin(GL2.GL_TRIANGLES);
-        for (int xi = 0; xi < sx; ++xi) {
-            // insert final coordinate into corner vectors
-            double x = x0 + xi * dx;
-            int a = a1.index();
-            p00[a] = p01[a] = p10[a] = p11[a] = x;
-            // Compute texture coordinates
-            double[] t00 = signalTextureMediator.textureCoordFromVoxelCoord( p00 );
-            double[] t01 = signalTextureMediator.textureCoordFromVoxelCoord( p01 );
-            double[] t10 = signalTextureMediator.textureCoordFromVoxelCoord( p10 );
-            double[] t11 = signalTextureMediator.textureCoordFromVoxelCoord( p11 );
-            // color from black(back) to white(front) for debugging.
-            // double c = xi / (double)sx;
-            // gl.glColor3d(c, c, c);
-            // draw the quadrilateral as a triangle pair with 6 points
-            // (GL_QUADS is deprecated)
-
-            // First triangle.
-            setTextureCoordinates(gl, t00[0], t00[1], t00[2]);
-            gl.glVertex3d(p00[0], p00[1], p00[2]);
-            setTextureCoordinates(gl, t10[0], t10[1], t10[2]);
-            gl.glVertex3d(p10[0], p10[1], p10[2]);
-            setTextureCoordinates(gl, t01[0], t01[1], t01[2]);
-            gl.glVertex3d(p01[0], p01[1], p01[2]);
-
-            // Second triangle.  Re-using some of the values cranked out above.
-            setTextureCoordinates(gl, t10[0], t10[1], t10[2]);
-            gl.glVertex3d(p10[0], p10[1], p10[2]);
-            setTextureCoordinates(gl, t11[0], t11[1], t11[2]);
-            gl.glVertex3d(p11[0], p11[1], p11[2]);
-            setTextureCoordinates(gl, t01[0], t01[1], t01[2]);
-            gl.glVertex3d(p01[0], p01[1], p01[2]);
 
         }
         gl.glEnd();
@@ -698,21 +577,27 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 
     /** Uploading the signal texture. */
     private void uploadSignalTexture(GL2 gl) {
-        if ( signalTextureMediator != null )
+        if ( signalTextureMediator != null ) {
+            signalTextureMediator.deleteTexture( gl );
             signalTextureMediator.uploadTexture( gl );
+        }
         bSignalTextureNeedsUpload = false;
     }
 
     /** Upload the masking texture to open GL "state". */
     private void uploadMaskingTexture(GL2 gl) {
-        if ( maskTextureMediator != null )
+        if ( maskTextureMediator != null ) {
+            maskTextureMediator.deleteTexture( gl );
             maskTextureMediator.uploadTexture( gl );
+        }
         bMaskTextureNeedsUpload = false;
     }
 
     private void uploadColorMapTexture(GL2 gl) {
-        if ( colorMapTextureMediator != null )
+        if ( colorMapTextureMediator != null ) {
+            colorMapTextureMediator.deleteTexture( gl );
             colorMapTextureMediator.uploadTexture( gl );
+        }
         bColorMapTextureNeedsUpload = false;
     }
 

@@ -144,17 +144,6 @@ public class VtxCoordBufMgr {
 
                     // NOTE: only one of the three axes need change for each slice.  Other two remain same.
                     p00[ firstInx ] = p01[firstInx] = p10[firstInx] = p11[firstInx] = sliceLoc;
-//                    if ( (firstInx == 0 || firstInx == 3) && sliceInx > 100 ) {
-//                        // Bend corner helps?
-//                        float sliceLocAlt =  slice0 + ((sliceInx - 100) * sliceSep);
-//                        p00[ firstInx ] = sliceLocAlt;
-//                    }
-//
-//                    if ( (firstInx == 0 || firstInx == 3) && sliceInx < (sliceCount - 101) ) {
-//                        // Bend corner helps?
-//                        float sliceLocAlt =  slice0 + ((sliceInx + 100) * sliceSep);
-//                        p11[ firstInx ] = sliceLocAlt;
-//                    }
 
                     addGeometry(firstInx, p00, p10, p11, p01);
                     addTextureCoords(
