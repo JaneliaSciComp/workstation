@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,7 +34,11 @@ public class TextureLoadWorker implements Runnable
 	{
 		TileIndex index = texture.getIndex();
 		
-		// TODO 
+		// log.info("Loading texture "+index+"...");
+		
+		if (index.getSliceAxis() == CoordinateAxis.Y) {
+			// System.out.println("Y");
+		}
 		
 		if (textureCache.containsKey(index)) {
 			log.info("Skipping duplicate load of texture (2) "+index);

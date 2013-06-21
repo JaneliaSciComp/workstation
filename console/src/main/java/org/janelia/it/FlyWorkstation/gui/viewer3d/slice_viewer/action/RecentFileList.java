@@ -9,8 +9,8 @@ import java.util.prefs.Preferences;
 import javax.swing.JMenu;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal1;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 
 /**
  *  Memorized list of recently opened files for display in a menu.
@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 public class RecentFileList 
 {
 	static final int maxItems = 10;
-	private static final Logger log = LoggerFactory.getLogger(RecentFileList.class);
+	// private static final Logger log = LoggerFactory.getLogger(RecentFileList.class);
 	
 	private Preferences prefs;
 	private JMenu menu;

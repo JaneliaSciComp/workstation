@@ -121,6 +121,15 @@ extends AbstractTextureLoadAdapter
 		assert(depth >= 0);
 		assert(depth <= octreeDepth);
 		// x and y are already corrected for tile size and zoom level
+		int xyz[] = {tileIndex.getX(), tileIndex.getY(), tileIndex.getZ()};
+		int axIx = tileIndex.getSliceAxis().index(); // slice axis index
+		// ***NOTE Raveler Z is slice count, not tile count***
+		// so divide by tile Z dimension, to make z act like x and y
+		xyz[axIx] = xyz[axIx] / tileFormat.getTileSize()[axIx];
+		// and divide by zoom scale
+		xyz[axIx] = xyz[axIx] / (int)Math.pow(2, tileIndex.getZoom());
+		
+		/*
 		int x = tileIndex.getX();
 		int y = tileIndex.getY();
 		// ***NOTE Raveler Z is slice count, not tile count***
@@ -128,17 +137,24 @@ extends AbstractTextureLoadAdapter
 		int z = tileIndex.getZ() / tileFormat.getTileSize()[2];
 		// and divide by zoom scale
 		z = z / (int)Math.pow(2, tileIndex.getZoom());
+		*/
 		// start at lowest zoom to build up octree coordinates
 		for (int d = 0; d < (depth - 1); ++d) {
 			// How many Raveler tiles per octant at this zoom?
 			int scale = (int)(Math.pow(2, depth - 2 - d)+0.1);
+			int ds[] = {
+					xyz[0]/scale,
+					xyz[1]/scale,
+					xyz[2]/scale};
+			/*
 			int dx = x / scale;
 			int dy = y / scale;
 			int dz = z / scale;
+			*/
 			// Each dimension makes a binary contribution to the 
 			// octree index.
 			// Watch for illegal values
-			int ds[] = {dx, dy, dz};
+			// int ds[] = {dx, dy, dz};
 			boolean indexOk = true;
 			for (int index : ds) {
 				if (index < 0)
@@ -150,21 +166,19 @@ extends AbstractTextureLoadAdapter
 				System.out.println("Bad tile index "+tileIndex);
 				return null;
 			}
-			assert(dx >= 0);
-			assert(dy >= 0);
-			assert(dz >= 0);
-			assert(dx <= 1);
-			assert(dy <= 1);
-			assert(dz <= 1);
 			// offset x/y/z for next deepest level
+			for (int i = 0; i < 3; ++i)
+				xyz[i] = xyz[i] % scale;
+			/*
 			x = x % scale;
 			y = y % scale;
 			z = z % scale;
+			*/
 			// Octree coordinates are in z-order
-			int octreeCoord = 1 + dx 
+			int octreeCoord = 1 + ds[0]
 					// TODO - investigate possible ragged edge problems
-					+ 2*(1 - dy) // Raveler Y is at bottom; octree Y is at top
-					+ 4*dz;
+					+ 2*(1 - ds[1]) // Raveler Y is at bottom; octree Y is at top
+					+ 4*ds[2];
 
 			path = new File(path, ""+octreeCoord);
 		}

@@ -23,6 +23,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.BasicMouseMode;
@@ -65,6 +66,7 @@ implements MouseModalWidget, TileConsumer
     //
     protected RubberBand rubberBand = new RubberBand();
     protected SkeletonActor skeletonActor;
+    protected SliceActor sliceActor;
 
     public Signal1<String> statusMessageChanged = new Signal1<String>();
     protected Slot repaintSlot = new Slot() {
@@ -88,6 +90,10 @@ implements MouseModalWidget, TileConsumer
 		init(axis);
 	}
 	
+	public void addActor(GLActor actor) {
+		renderer.addActor(actor);
+	}
+
 	private void init(CoordinateAxis axis) {
 		this.sliceAxis = axis;
 		if (axis == CoordinateAxis.Z)

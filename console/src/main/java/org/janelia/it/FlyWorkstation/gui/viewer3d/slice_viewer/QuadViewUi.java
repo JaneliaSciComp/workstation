@@ -60,17 +60,22 @@ import java.util.List;
  */
 public class QuadViewUi extends JPanel
 {
-	private static final long serialVersionUID = 1L;
+	public static GLProfile glProfile = GLProfile.get(GLProfile.GL2);
 	// private static final Logger log = LoggerFactory.getLogger(QuadViewUi.class);
 
-	private boolean bAllowOrthoView = true;
+	private boolean bAllowOrthoView = false; // false until ready for release
+	
     // this is the entity that's selected when the viewer is created:
     private Entity initialEntity;
     
 	// One shared camera for all viewers.
 	// (there's only one viewer now actually, but you know...)
 	private BasicObservableCamera3d camera = new BasicObservableCamera3d();
-	private SliceViewer sliceViewer = new SliceViewer();
+	GLContextSharer orthoViewContextSharer = new GLContextSharer(glProfile);
+	private SliceViewer sliceViewer = new SliceViewer(
+			orthoViewContextSharer.getCapabilities(),
+			orthoViewContextSharer.getChooser(),
+			orthoViewContextSharer.getContext());
 	private boolean modifierKeyPressed = false;
 	private JPanel zScanPanel = new JPanel();
 	private JSlider zScanSlider = new JSlider();
@@ -103,7 +108,7 @@ public class QuadViewUi extends JPanel
 
 	// Actions
 	private final Action openFolderAction = new OpenFolderAction(sliceViewer, sliceViewer);
-	private RecentFileList recentFileList;
+	private RecentFileList recentFileList = new RecentFileList(new JMenu());
 	private final Action resetViewAction = new ResetViewAction(sliceViewer);
 	private final Action resetColorsAction = new ResetColorsAction(sliceViewer.getImageColorModel());
 	// mode actions (and groups)
@@ -132,7 +137,7 @@ public class QuadViewUi extends JPanel
 		private static final long serialVersionUID = 1L;
 		@Override
 		public void actionPerformed(ActionEvent arg0) {
-			sliceViewer.getTileServer().clearCache();
+			clearCache();
 		}
 	};
 	private final Action autoContrastAction = new AbstractAction() {
@@ -293,13 +298,15 @@ public class QuadViewUi extends JPanel
         SharedVolumeImage vi = sliceViewer.getTileServer().getSharedVolumeImage();
         SkeletonActor sharedSkeletonActor = new SkeletonActor();
         sharedSkeletonActor.setSkeleton(sliceViewer.getSkeleton());
+        TileServer tileServer = 
+        		sliceViewer.getTileServer(); // now that context is shared...
+        		// new TileServer(vi);
         for (OrthogonalPanel v : viewPanels) {
             mouseModeChangedSignal.connect(v.setMouseModeSlot);
             wheelModeChangedSignal.connect(v.setWheelModeSlot);
             v.setCamera(camera);
             // TODO - shared skeleton actor does not work.
             // (at least not shared between SliceViewer and orthogonal viewers)
-            v.getViewer().setSkeletonActor(sharedSkeletonActor);
             v.getViewer().statusMessageChanged.connect(setStatusMessageSlot);
             v.setSharedVolumeImage(vi);
             v.setSystemMenuItemGenerator(new MenuItemGenerator() {
@@ -311,15 +318,30 @@ public class QuadViewUi extends JPanel
                     return result;
                 }
             });
+            ViewTileManager viewTileManager = new ViewTileManager(v.getViewer());
+            viewTileManager.setVolumeImage(vi);
+            viewTileManager.setTextureCache(tileServer.getTextureCache());
+            SliceActor sliceActor = new SliceActor(viewTileManager);
+            ImageColorModel imageColorModel = sliceViewer.getImageColorModel();
+            sliceActor.setImageColorModel(imageColorModel);
+            imageColorModel.getColorModelChangedSignal().connect(v.getViewer().repaintSlot);
+            tileServer.getViewTextureChangedSignal().connect(v.getViewer().repaintSlot);
+            v.getViewer().addActor(sliceActor);
+            tileServer.addViewTileManager(viewTileManager);
+            // Add skeleton actor AFTER slice actor
+            v.getViewer().setSkeletonActor(sharedSkeletonActor);
         }
         // Set starting interaction modes
         panModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
         zoomScrollModeAction.actionPerformed(new ActionEvent(this, ActionEvent.ACTION_PERFORMED, null));
 	}
 
+	public void clearCache() {
+		sliceViewer.getTileServer().clearCache();
+	}
+	
 	// Four quadrants for orthogonal views
 	//
-	GLContextSharer orthoViewContextSharer = new GLContextSharer(GLProfile.get(GLProfile.GL2));
 	// TODO obsolete zViewerPanel in favor of OrthogonalPanel
 	JComponent nwViewer = zViewerPanel; // should be same as Z...
 	OrthogonalPanel neViewer = new OrthogonalPanel(CoordinateAxis.X, orthoViewContextSharer);
@@ -920,6 +942,30 @@ public class QuadViewUi extends JPanel
 
     public void loadURL(String pathToFile) throws MalformedURLException {
         File tmpFile = new File(pathToFile);
+        // Hard code path translation for Nathan
+        boolean fileMissing = ! tmpFile.exists();
+        String osName = System.getProperty("os.name").toLowerCase();
+        String mbmPrefix = "/groups/mousebrainmicro/mousebrainmicro/";
+        boolean isLinuxMouseBrainPath = pathToFile.startsWith(mbmPrefix);
+        if ( fileMissing
+        		&& osName.contains("win")
+        		&& isLinuxMouseBrainPath ) 
+        {
+        	String fileSuffix = pathToFile.replace(mbmPrefix, "");
+        	List<String> prefixesToTry = new Vector<String>();
+        	for (File fileRoot : File.listRoots()) {
+        		String p = fileRoot.getAbsolutePath();
+        		prefixesToTry.add(p);
+        	}
+        	prefixesToTry.add("M:/"); // On my Windows computer
+        	prefixesToTry.add("X:/"); // On Nathan's computer
+        	for (String prefix : prefixesToTry) {
+        		tmpFile = new File(prefix + fileSuffix);
+        		if (tmpFile.exists())
+        			break;
+        	}
+        }
+        
         if (!tmpFile.exists()) {
             JOptionPane.showMessageDialog(this.getParent(),
                     "Error opening folder " + tmpFile.getName(),

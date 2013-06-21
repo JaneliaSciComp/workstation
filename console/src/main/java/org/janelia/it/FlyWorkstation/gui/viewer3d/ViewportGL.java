@@ -11,8 +11,8 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 public class ViewportGL 
 implements Viewport
 {
-    private int width; // in pixels
-    private int height; // in pixels
+    private int width = 1000; // in pixels
+    private int height = 600; // in pixels
     private int depth = 80; // in pixels
     private int originX = 0;
 	private int originY = 0;

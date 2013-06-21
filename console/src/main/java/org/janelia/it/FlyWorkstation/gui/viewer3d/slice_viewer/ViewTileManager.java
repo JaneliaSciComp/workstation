@@ -103,7 +103,7 @@ public class ViewTileManager {
 				tileConsumer.getViewerInGround());
 	}
 	
-	// TODO generalize for non-Z axes
+	// June 20, 2013 Generalized for non-Z axes
 	public TileSet createLatestTiles(Camera3d camera, Viewport viewport,
 			CoordinateAxis sliceAxis, Rotation3d viewerInGround)
 	{
@@ -111,6 +111,10 @@ public class ViewTileManager {
 		if (volumeImage.getLoadAdapter() == null)
 			return result;
 
+		if (sliceAxis == CoordinateAxis.X) {
+			// System.out.println("X");
+		}
+		
 		// Need to loop over x and y
 		// Need to compute z, and zoom
 		// 1) zoom
@@ -129,47 +133,93 @@ public class ViewTileManager {
 		int zoomMax = tileFormat.getZoomLevelCount() - 1;
 		zoom = Math.max(zoom, zoomMin);
 		zoom = Math.min(zoom, zoomMax);
-		// 2) z
+
+		int xyzFromWhd[] = {0,1,2}; 
+		// Rearrange from rotation matrix
+		// Which axis (x,y,z) corresponds to width, height, and depth?
+		for (int whd = 0; whd < 3; ++whd) {
+			Vec3 vWhd = new Vec3(0,0,0);
+			vWhd.set(whd, 1.0);
+			Vec3 vXyz = viewerInGround.times(vWhd);
+			double max = 0.0;
+			for (int xyz = 0; xyz < 3; ++xyz) {
+				double test = Math.abs(vXyz.get(xyz));
+				if (test > max) {
+					xyzFromWhd[whd] = xyz;
+					max = test;
+				}
+			}
+		}
+		
+		// 2) z or other slice axisIndex (d: depth)
 		Vec3 focus = camera.getFocus();
-		int z = (int)Math.round(focus.getZ() / volumeImage.getZResolution() - 0.5);
-		// 3) x and y range
+		double fD = focus.get(xyzFromWhd[2]);
+		// Correct for bottom Y origin of Raveler tile coordinate system
+		// (everything else is top Y origin: image, our OpenGL, user facing coordinate system)
+		BoundingBox3d bb = volumeImage.getBoundingBox3d();
+		double bottomY = bb.getMax().getY();
+		if (xyzFromWhd[2] == 1) {
+			fD = bottomY - fD;
+		}
+		int d = (int)Math.round(fD / volumeImage.getResolution(xyzFromWhd[2]) - 0.5);
+		
+		// 3) x and y tile index range
+		
 		// In scene units
 		// Clip to screen space
-		double xFMin = focus.getX() - 0.5*viewport.getWidth()/camera.getPixelsPerSceneUnit();
-		double xFMax = focus.getX() + 0.5*viewport.getWidth()/camera.getPixelsPerSceneUnit();
-		double yFMin = focus.getY() - 0.5*viewport.getHeight()/camera.getPixelsPerSceneUnit();
-		double yFMax = focus.getY() + 0.5*viewport.getHeight()/camera.getPixelsPerSceneUnit();
+		double wFMin = focus.get(xyzFromWhd[0]) - 0.5*viewport.getWidth()/camera.getPixelsPerSceneUnit();
+		double wFMax = focus.get(xyzFromWhd[0]) + 0.5*viewport.getWidth()/camera.getPixelsPerSceneUnit();
+		double hFMin = focus.get(xyzFromWhd[1]) - 0.5*viewport.getHeight()/camera.getPixelsPerSceneUnit();
+		double hFMax = focus.get(xyzFromWhd[1]) + 0.5*viewport.getHeight()/camera.getPixelsPerSceneUnit();
 		// Clip to volume space
 		// Subtract one half pixel to avoid loading an extra layer of tiles
-		double dx = 0.25 * tileFormat.getVoxelMicrometers()[0];
-		double dy = 0.25 * tileFormat.getVoxelMicrometers()[1];
-		BoundingBox3d bb = volumeImage.getBoundingBox3d();
-		xFMin = Math.max(xFMin, bb.getMin().getX() + dx);
-		yFMin = Math.max(yFMin, bb.getMin().getY() + dy);
-		xFMax = Math.min(xFMax, bb.getMax().getX() - dx);
-		yFMax = Math.min(yFMax, bb.getMax().getY() - dy);
+		double dw = 0.25 * tileFormat.getVoxelMicrometers()[xyzFromWhd[0]];
+		double dh = 0.25 * tileFormat.getVoxelMicrometers()[xyzFromWhd[1]];
+		wFMin = Math.max(wFMin, bb.getMin().getX() + dw);
+		hFMin = Math.max(hFMin, bb.getMin().getY() + dh);
+		wFMax = Math.min(wFMax, bb.getMax().getX() - dw);
+		hFMax = Math.min(hFMax, bb.getMax().getY() - dh);
 		double zoomFactor = Math.pow(2.0, zoom);
 		// get tile pixel size 1024 from loadAdapter
 		int tileSize[] = tileFormat.getTileSize();
-		double tileWidth = tileSize[0] * zoomFactor * volumeImage.getXResolution();
-		double tileHeight = tileSize[1] * zoomFactor * volumeImage.getYResolution();
-		// In tile units
-		int xMin = (int)Math.floor(xFMin / tileWidth);
-		int xMax = (int)Math.floor(xFMax / tileWidth);
-		
+		double tileWidth = tileSize[xyzFromWhd[0]] * zoomFactor * volumeImage.getResolution(xyzFromWhd[0]);
+		double tileHeight = tileSize[xyzFromWhd[1]] * zoomFactor * volumeImage.getResolution(xyzFromWhd[1]);
+
 		// Correct for bottom Y origin of Raveler tile coordinate system
 		// (everything else is top Y origin: image, our OpenGL, user facing coordinate system)
-		double bottomY = bb.getMax().getY();
-		int yMin = (int)Math.floor((bottomY - yFMax) / tileHeight);
-		int yMax = (int)Math.floor((bottomY - yFMin) / tileHeight);
+		if (xyzFromWhd[0] == 1) { // Y axis left-right
+			double temp = wFMin;
+			wFMin = bottomY - wFMax;
+			wFMax = bottomY - temp;
+		}
+		else if (xyzFromWhd[1] == 1) { // Y axis top-bottom
+			double temp = hFMin;
+			hFMin = bottomY - hFMax;
+			hFMax = bottomY - temp;
+		}
+		else {
+			// TODO - invert slice axis? (already inverted above)
+		}
+
+		// In tile units
+		int wMin = (int)Math.floor(wFMin / tileWidth);
+		int wMax = (int)Math.floor(wFMax / tileWidth);
+		
+		int hMin = (int)Math.floor(hFMin / tileHeight);
+		int hMax = (int)Math.floor(hFMax / tileHeight);
 		
 		TileIndex.IndexStyle indexStyle = tileFormat.getIndexStyle();
-		for (int x = xMin; x <= xMax; ++x) {
-			for (int y = yMin; y <= yMax; ++y) {
-				TileIndex key = new TileIndex(x, y, z, zoom, 
-						zoomMax, indexStyle, CoordinateAxis.Z);
+		for (int w = wMin; w <= wMax; ++w) {
+			for (int h = hMin; h <= hMax; ++h) {
+				int whd[] = {w, h, d};
+				TileIndex key = new TileIndex(
+						whd[xyzFromWhd[0]], 
+						whd[xyzFromWhd[1]], 
+						whd[xyzFromWhd[2]], 
+						zoom, 
+						zoomMax, indexStyle, sliceAxis);
 				Tile2d tile = new Tile2d(key, tileFormat);
-				tile.setYMax(bb.getMax().getY()); // To help flip y
+				tile.setYMax(bb.getMax().getY()); // To help flip y; Always actual Y! (right?)
 				result.add(tile);
 			}
 		}
@@ -268,9 +318,12 @@ public class ViewTileManager {
 		// queueTextureLoad(getNeededTextures());
 		
 		// put tile set changed signal here
-		if (! latestTiles.equals(previousTiles)) {
+		if ( (! latestTiles.equals(previousTiles)) 
+				&& (latestTiles != null)
+				&& (latestTiles.size() > 0)
+				) {
 			previousTiles = latestTiles;
-			tileSetChangedSignal.emit(result);
+			tileSetChangedSignal.emit(latestTiles);
 		}
 		
 		return result;

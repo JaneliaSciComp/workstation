@@ -194,7 +194,7 @@ public class Basic2dImageVolume implements VolumeImage3d, GLActor
 				return false;
 			}
 			textureData = AWTTextureIO.newTextureData(
-					SliceViewer.glProfile,
+					QuadViewUi.glProfile,
 					image,
 					internalFormat,
 					pixelFormat,

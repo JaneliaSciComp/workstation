@@ -143,6 +143,8 @@ public class SliceViewViewer extends Viewer {
         sliceSample = null;
         slcRootedEntity = null;
         removeAll();
+        if (viewUI != null)
+        	viewUI.clearCache();
         viewUI = null;
     }
 

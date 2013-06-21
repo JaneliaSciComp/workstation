@@ -1,7 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.vendor_demo;
 
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.UnitVec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 
@@ -219,7 +219,7 @@ public class Renderer3D extends GLJPanel // in case lightweight widget is requir
         // Drag across the entire window to rotate all the way around
         double rotationAngle = 2.0 * Math.PI * dragDistance/windowSize;
         // System.out.println(rotationAxis.toString() + rotationAngle);
-        Rotation rotation = new Rotation().setFromAngleAboutUnitVector(
+        Rotation3d rotation = new Rotation3d().setFromAngleAboutUnitVector(
                 rotationAngle, rotationAxis);
         // System.out.println(rotation);
 //        getVolumeModel().getCamera3d().setRotation( getVolumeModel().getCamera3d().getRotation().times( rotation.transpose() ) );

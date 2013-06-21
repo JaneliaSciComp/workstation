@@ -141,7 +141,7 @@ public class TileIndex
 
 	@Override
 	public String toString() {
-		return "TileIndex [x="+getX()+"; y="+getY()+"; z="+getZ()+"; zoom="+zoom+"]";
+		return "TileIndex [x="+getX()+"; y="+getY()+"; z="+getZ()+"; zoom="+zoom+"; sliceAxis="+sliceAxis.getName()+"]";
 	}
 
 	public TileIndex clone() {

@@ -1,7 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import org.janelia.it.FlyWorkstation.gui.util.MouseHandler;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.BaseGLViewer;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
@@ -22,7 +21,10 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZoomMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.SkeletonActor;
 
-import javax.media.opengl.GLProfile;
+import javax.media.opengl.GLCapabilities;
+import javax.media.opengl.GLCapabilitiesChooser;
+import javax.media.opengl.GLContext;
+import javax.media.opengl.awt.GLJPanel;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -43,16 +45,11 @@ import org.slf4j.LoggerFactory;
 
 // Viewer widget for viewing 2D quadtree tiles from pyramid data structure
 public class SliceViewer 
-extends BaseGLViewer
+extends GLJPanel
 implements MouseModalWidget, VolumeViewer, TileConsumer
 {
-	private static final long serialVersionUID = 1L;
 	private static final Logger log = LoggerFactory.getLogger(SliceViewer.class);
-	static public GLProfile glProfile;
-	static {
-		glProfile = BaseGLViewer.profile;
-	}
-	
+
 	protected MouseMode mouseMode;
 	protected MouseMode.Mode mouseModeId;
 	
@@ -119,7 +116,22 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
             }
     };
     
-	public SliceViewer() {
+	public SliceViewer(GLCapabilities capabilities,
+			GLCapabilitiesChooser chooser,
+			GLContext sharedContext) 
+	{
+		super(capabilities, chooser, sharedContext);
+		init();
+	}
+	
+	private SliceViewer() {
+		init();
+	}
+	
+	private void init() {
+        addMouseListener(this);
+        addMouseMotionListener(this);
+        addMouseWheelListener(this);
 	    setMouseMode(MouseMode.Mode.PAN);
 	    setWheelMode(WheelMode.Mode.SCAN);
 		addGLEventListener(renderer);
@@ -301,13 +313,11 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
 
 	@Override
 	public void mousePressed(MouseEvent event) {
-		super.mousePressed(event); // Activate context menu
 		mouseMode.mousePressed(event);
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent event) {
-		super.mouseReleased(event); // Activate context menu
 		mouseMode.mouseReleased(event);
 	}
 
@@ -535,7 +545,10 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
 		BoundingBox3d box = getBoundingBox3d();
 		double minZoomX = 0.5 * viewport.getWidth() / box.getWidth();
 		double minZoomY = 0.5 * viewport.getHeight() / box.getHeight();
-		return Math.min(minZoomX, minZoomY);
+		double result = Math.min(minZoomX, minZoomY);
+		if (result <= 0)
+			result = 1.0;
+		return result;
 	}
 
     @Override
@@ -550,6 +563,7 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
 
 	@Override
 	public boolean loadURL(URL url) {
+		// System.out.println("Opening URL "+url);
 		boolean result = volumeImage.loadURL(url);
 		if (result) {
 			getImageColorModel().reset(volumeImage);
@@ -611,5 +625,15 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
 	@Override
 	public Rotation3d getViewerInGround() {
 		return new Rotation3d(); // identity matrix
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent event) {
+		mouseMode.mouseEntered(event);
+	}
+
+	@Override
+	public void mouseExited(MouseEvent event) {
+		mouseMode.mouseExited(event);
 	}
 }

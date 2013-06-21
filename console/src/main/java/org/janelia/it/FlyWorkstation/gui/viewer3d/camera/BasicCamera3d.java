@@ -55,6 +55,10 @@ implements Camera3d
     public boolean setFocus(Vec3 f) {
 		if (f == focus)
 			return false; // no change
+		if (Double.isNaN(f.getX())) {
+			System.out.println("Camera NaN");
+			return false;
+		}
 		focus = f;
 		// System.out.println(f);
 		return true;
@@ -75,6 +79,10 @@ implements Camera3d
 	public boolean setPixelsPerSceneUnit(double pixelsPerSceneUnit) {
 		if (this.pixelsPerSceneUnit == pixelsPerSceneUnit)
 			return false; // no change
+		if (Double.isNaN(pixelsPerSceneUnit)) {
+			System.out.println("Camera zoom NaN");
+			return false;
+		}
 		this.pixelsPerSceneUnit = pixelsPerSceneUnit;
 		return true;
 	}

@@ -42,16 +42,11 @@ public class TileServer
 		}
 	};
 
-	private Slot1<TileSet> updateFuturePreFetchSlot = new Slot1<TileSet>() {
+	private Slot updateFuturePreFetchSlot = new Slot() {
 		@Override
-		public void execute(TileSet tileSet) {
-			if (tileSet == null)
-				return;
-			
+		public void execute() {
 			// log.info("updatePreFetchSlot");
 			futurePreFetcher.clear();
-			if (tileSet.size() < 1)
-				return;
 			
 			Set<TileIndex> cacheableTextures = new HashSet<TileIndex>();
 			int maxCacheable = (int)(0.90 * getTextureCache().getFutureCache().getMaxSize());
@@ -68,6 +63,16 @@ public class TileServer
 						cacheableTextures.add(ix);
 				}
 			}
+			
+			TileSet currentTiles = new TileSet();
+			for (ViewTileManager vtm : viewTileManagers) {
+				if (vtm == null)
+					continue;
+				TileSet t = vtm.getLatestTiles();
+				if (t == null)
+					continue;
+				currentTiles.addAll(t);
+			}
 
 			/* TODO - LOD tiles are not working yet...
 			// Get level-of-detail tiles
@@ -82,8 +87,11 @@ public class TileServer
 			}
 			*/
 			
+			// return; // TODO - temporarily disabling cacheing
+			
+			
 			// Get nearby Z-tiles, with decreasing LOD
-			Iterable<TileIndex> zGen = new UmbrellaZGenerator(getLoadAdapter().getTileFormat(), tileSet);
+			Iterable<TileIndex> zGen = new UmbrellaZGenerator(getLoadAdapter().getTileFormat(), currentTiles);
 			for (TileIndex ix : zGen) {
 				if (cacheableTextures.contains(ix))
 					continue;
@@ -94,7 +102,7 @@ public class TileServer
 			}
 			
 			// Get more Z-tiles, at current LOD
-			zGen = new ZGenerator(getLoadAdapter().getTileFormat(), tileSet);
+			zGen = new ZGenerator(getLoadAdapter().getTileFormat(), currentTiles);
 			for (TileIndex ix : zGen) {
 				if (cacheableTextures.contains(ix))
 					continue;
@@ -104,7 +112,7 @@ public class TileServer
 					cacheableTextures.add(ix);
 			}
 
-			// log.info("Number of queued textures = "+cacheableTextures.size());						
+			// log.info("Number of queued textures = "+cacheableTextures.size());	
 		}
 	};
 	
@@ -187,7 +195,7 @@ public class TileServer
 		return viewTileManagers;
 	}
 
-	public Slot1<TileSet> getUpdateFuturePreFetchSlot() {
+	public Slot getUpdateFuturePreFetchSlot() {
 		return updateFuturePreFetchSlot;
 	}
 
@@ -233,6 +241,11 @@ public class TileServer
 	public ImageBrightnessStats getCurrentBrightnessStats() {
 		ImageBrightnessStats result = null;
 		for (ViewTileManager vtm : viewTileManagers) {
+			if (vtm == null)
+				continue;
+			TileSet tiles = vtm.getLatestTiles();
+			if (tiles == null)
+				continue;
 			for (Tile2d tile : vtm.getLatestTiles()) {
 				ImageBrightnessStats bs = tile.getBrightnessStats();
 				if (result == null)
