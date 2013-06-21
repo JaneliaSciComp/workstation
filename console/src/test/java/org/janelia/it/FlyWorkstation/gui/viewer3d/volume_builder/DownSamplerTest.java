@@ -1,6 +1,7 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder;
 
 import junit.framework.Assert;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.DownSampler;
 import org.junit.Test;
 
 /**

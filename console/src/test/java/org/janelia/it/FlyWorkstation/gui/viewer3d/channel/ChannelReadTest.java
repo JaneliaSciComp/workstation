@@ -4,7 +4,7 @@ import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.Alignm
 import org.janelia.it.FlyWorkstation.gui.viewer3d.gui_elements.AlignmentBoardControlsDialog;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanDataAcceptorI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.MaskChanMultiFileLoader;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.RenderablesChannelsBuilder;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.RenderablesChannelsBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
 
 import org.junit.After;
