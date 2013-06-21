@@ -198,10 +198,6 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         gl.glDisable(GL2.GL_LIGHTING);
         gl.glEnable(GL2.GL_TEXTURE_3D);
 
-        setupSignalTexture(gl);
-        setupMaskingTexture(gl);
-        setupColorMapTexture(gl);
-
         // set blending to enable transparent voxels
         if (renderMethod == RenderMethod.ALPHA_BLENDING) {
             gl.glEnable(GL2.GL_BLEND);
@@ -260,6 +256,10 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 			a1 = CoordinateAxis.Y; // OK, maybe Y axis is principal
 		if ( Math.abs(vv.z()) > Math.abs(vv.get(a1.index())) )
 			a1 = CoordinateAxis.Z; // Alright, it's definitely Z principal.
+
+        setupSignalTexture(gl);
+        setupMaskingTexture(gl);
+        setupColorMapTexture(gl);
 
 		// If principal axis points away from viewer, draw slices front to back,
 		// instead of back to front.
@@ -329,6 +329,10 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         double dx = -direction * signalTextureMediator.getVoxelMicrometers()[a1.index()];
 
         reportError(gl, "Volume Brick, before setting coords.");
+
+        setupSignalTexture(gl);
+        setupMaskingTexture(gl);
+        setupColorMapTexture(gl);
 
         // deal out the slices, like cards from a deck
         logger.debug("Use of vertices: <p00,p10,p01>; <p10,p11,p01>");

@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder;
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;

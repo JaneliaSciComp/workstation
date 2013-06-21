@@ -309,13 +309,11 @@ public class MaskChanSingleFileLoader {
         this.dimensionOrder = dimensionOrder;
 
         // Expected orderings are:  0=yz(x), 1=xz(y), 2=xy(z)
-        long fastestSrcVaryingCoord;
         if ( dimensionOrder == 0 ) {
             fastestSrcVaryingMax = sx;
             secondFastestSrcVaryingMax = sz;
             slowestSrcVaryingMax = sy;
 
-            fastestSrcVaryingCoord = 0;
             secondFastestSrcVaryingCoord = 2;
             slowestSrcVaryingCoord = 1;
         }
@@ -324,7 +322,6 @@ public class MaskChanSingleFileLoader {
             secondFastestSrcVaryingMax = sz;
             slowestSrcVaryingMax = sx;
 
-            fastestSrcVaryingCoord = 1;
             secondFastestSrcVaryingCoord = 2;
             slowestSrcVaryingCoord = 0;
         }
@@ -333,7 +330,6 @@ public class MaskChanSingleFileLoader {
             secondFastestSrcVaryingMax = sy;
             slowestSrcVaryingMax = sx;
 
-            fastestSrcVaryingCoord = 2;
             secondFastestSrcVaryingCoord = 1;
             slowestSrcVaryingCoord = 0;
         }

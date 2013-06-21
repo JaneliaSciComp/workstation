@@ -1,16 +1,18 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder;
 
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board.AlignmentBoardSettings;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.loader.ChannelMetaData;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.MaskBuilderI;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.masking.TextureBuilderI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.renderable.RenderableBean;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataBean;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 
 import javax.media.opengl.GL2;
 import java.nio.ByteOrder;
 import java.util.Collection;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataBean;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 /**

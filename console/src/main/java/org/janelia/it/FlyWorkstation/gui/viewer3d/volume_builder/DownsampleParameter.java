@@ -1,4 +1,4 @@
-package org.janelia.it.FlyWorkstation.gui.viewer3d.masking;
+package org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder;
 
 public class DownsampleParameter {
     private final byte[] fullSizeVolume;

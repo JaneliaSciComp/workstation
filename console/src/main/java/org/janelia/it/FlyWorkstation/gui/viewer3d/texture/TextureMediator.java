@@ -66,10 +66,7 @@ public class TextureMediator {
             throw new RuntimeException("Failed to upload texture");
         }
 
-        // DEBUG
-        //testRawBufferContents( textureData.getPixelByteCount(), textureData.getTextureData() );
         ByteBuffer data = ByteBuffer.wrap( textureData.getTextureData() );
-        //System.out.println( "Loading texture data of capacity: " + data.capacity() );
         if ( data != null ) {
             data.rewind();
 
@@ -99,16 +96,6 @@ public class TextureMediator {
                              ";  expected remaining is " + expectedRemaining
                 );
             }
-            //else {
-            //    logger.info( "Remainder vs texture data dimensions matches.  Sx=" + textureData.getSx() +
-            //            " Sy=" + textureData.getSy() + " Sz=" + textureData.getSz() +
-            //            " storageFmtReq=" + getStorageFormatMultiplier() +
-            //            " pixelByteCount=" + textureData.getPixelByteCount() +
-            //            ";  total remaining is " +
-            //            data.remaining() + " " + textureData.getFilename() +
-            //            ";  expected remaining is " + expectedRemaining
-            //    );
-            //}
 
             gl.glActiveTexture( textureSymbolicId );
             reportError( "glActiveTexture", gl );
