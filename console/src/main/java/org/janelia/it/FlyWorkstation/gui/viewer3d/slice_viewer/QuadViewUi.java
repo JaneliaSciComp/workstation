@@ -26,7 +26,11 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZoomMaxAct
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZoomMouseModeAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZoomOutAction;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.ZoomScrollModeAction;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.annotation.AnnotationManager;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.annotation.AnnotationModel;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.annotation.AnnotationPanel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.Skeleton;
+import org.janelia.it.jacs.model.entity.Entity;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.skeleton.SkeletonActor;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
@@ -60,6 +64,9 @@ public class QuadViewUi extends JPanel
 	// private static final Logger log = LoggerFactory.getLogger(QuadViewUi.class);
 
 	private boolean bAllowOrthoView = true;
+    // this is the entity that's selected when the viewer is created:
+    private Entity initialEntity;
+    
 	// One shared camera for all viewers.
 	// (there's only one viewer now actually, but you know...)
 	private BasicObservableCamera3d camera = new BasicObservableCamera3d();
@@ -90,6 +97,10 @@ public class QuadViewUi extends JPanel
 	
 	ZScanMode zScanMode = new ZScanMode(sliceViewer);
 	
+	// annotation things
+	private AnnotationModel annotationModel = new AnnotationModel();
+	private AnnotationManager annotationMgr = new AnnotationManager(annotationModel);
+
 	// Actions
 	private final Action openFolderAction = new OpenFolderAction(sliceViewer, sliceViewer);
 	private RecentFileList recentFileList;
@@ -229,8 +240,11 @@ public class QuadViewUi extends JPanel
 	/**
 	 * Create the frame.
 	 */
-	public QuadViewUi(JFrame parentFrame, boolean overrideFrameMenuBar)
+	public QuadViewUi(JFrame parentFrame, Entity initialEntity, boolean overrideFrameMenuBar)
 	{
+		this.initialEntity = initialEntity;
+		annotationMgr.setInitialEntity(initialEntity);
+
 		colorChannelWidget_3.setVisible(false);
 		colorChannelWidget_2.setVisible(false);
 		colorChannelWidget_1.setVisible(false);
@@ -612,6 +626,9 @@ public class QuadViewUi extends JPanel
 		resetColorsButton.setAction(resetColorsAction);
 		buttonsPanel.add(resetColorsButton);
 		
+        AnnotationPanel annotationPanel = new AnnotationPanel(annotationMgr, annotationModel);
+        controlsPanel.add(annotationPanel);
+
 		JPanel statusBar = new JPanel();
 		statusBar.setMaximumSize(new Dimension(32767, 30));
 		statusBar.setMinimumSize(new Dimension(10, 30));

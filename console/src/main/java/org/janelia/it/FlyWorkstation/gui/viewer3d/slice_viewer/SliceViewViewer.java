@@ -118,7 +118,7 @@ public class SliceViewViewer extends Viewer {
             showLoadingIndicator();
 
             if ( viewUI == null ) {
-                viewUI = new QuadViewUi(SessionMgr.getBrowser(), false);
+                viewUI = new QuadViewUi(SessionMgr.getBrowser(), sliceSample, false);
             }
             removeAll();
             viewUI.setVisible(true);

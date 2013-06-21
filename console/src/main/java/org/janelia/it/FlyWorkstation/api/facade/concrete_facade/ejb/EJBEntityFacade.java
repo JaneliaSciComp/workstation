@@ -203,8 +203,8 @@ public class EJBEntityFacade implements EntityFacade {
 
     // Addition of the interface for the Tiled Microscope Data
     @Override
-    public TmWorkspace createTiledMicroscopeWorkspace(Long brainSampleId, String name, String ownerKey) throws Exception {
-        return EJBFactory.getRemoteTiledMicroscopeBean().createTiledMicroscopeWorkspace(brainSampleId, name, ownerKey);
+    public TmWorkspace createTiledMicroscopeWorkspace(Long parentId, Long brainSampleId, String name, String ownerKey) throws Exception {
+        return EJBFactory.getRemoteTiledMicroscopeBean().createTiledMicroscopeWorkspace(parentId, brainSampleId, name, ownerKey);
     }
 
     @Override

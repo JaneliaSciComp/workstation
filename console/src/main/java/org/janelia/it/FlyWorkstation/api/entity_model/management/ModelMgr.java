@@ -1016,8 +1016,8 @@ public class ModelMgr {
 
 
     // Methods associated with the 3D Tiled Microscope viewer
-    public TmWorkspace createTiledMicroscopeWorkspace(Long brainSampleId, String name, String ownerKey) throws Exception {
-        return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeWorkspace(brainSampleId, name, ownerKey);
+    public TmWorkspace createTiledMicroscopeWorkspace(Long parentId, Long brainSampleId, String name, String ownerKey) throws Exception {
+        return FacadeManager.getFacadeManager().getEntityFacade().createTiledMicroscopeWorkspace(parentId, brainSampleId, name, ownerKey);
     }
 
     public TmNeuron createTiledMicroscopeNeuron(Long workspaceId, String name) throws Exception {

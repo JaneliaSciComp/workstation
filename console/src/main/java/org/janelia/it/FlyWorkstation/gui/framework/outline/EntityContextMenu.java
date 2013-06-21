@@ -502,7 +502,8 @@ public class EntityContextMenu extends JPopupMenu {
         JMenuItem sliceVwItem = null;
         if (rootedEntity != null && rootedEntity.getEntityData() != null) {
             Entity entity = rootedEntity.getEntity();
-            if (entity.getEntityType().getName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+            if (entity.getEntityType().getName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE) || 
+                entity.getEntityType().getName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
                 sliceVwItem = new JMenuItem("  Open Slice Viewer");
                 sliceVwItem.addActionListener(new ActionListener() {
                     @Override

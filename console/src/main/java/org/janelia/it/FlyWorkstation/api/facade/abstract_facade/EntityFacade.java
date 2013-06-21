@@ -85,7 +85,7 @@ public interface EntityFacade {
 
 	public EntityActorPermission saveOrUpdatePermission(EntityActorPermission eap) throws Exception;
 
-    public TmWorkspace createTiledMicroscopeWorkspace(Long brainSampleId, String name, String ownerKey) throws Exception;
+    public TmWorkspace createTiledMicroscopeWorkspace(Long parentId, Long brainSampleId, String name, String ownerKey) throws Exception;
 
     public TmNeuron createTiledMicroscopeNeuron(Long workspaceId, String name) throws Exception;
 

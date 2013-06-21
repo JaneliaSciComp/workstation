@@ -25,7 +25,7 @@ public class QuadViewApp extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(true);
         setBounds(100, 100, 994, 653);
-        QuadViewUi contentPane = new QuadViewUi(this, true);
+        QuadViewUi contentPane = new QuadViewUi(this, null, true);
         setContentPane(contentPane);
 	}
 	
