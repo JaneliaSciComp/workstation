@@ -102,6 +102,7 @@ public class GLOrthoCamera
 		Vec3 f = camera.getFocus();
 		// System.out.println("glTranslated "+f.z());
 		// Apply viewer rotation
+		// TODO - before or after translation?
 		AngleAxis angleAxis = viewerInGround.inverse().convertRotationToAngleAxis();
 		gl.glRotated(angleAxis.angle * 180.0/Math.PI, 
 				angleAxis.axis.x(),

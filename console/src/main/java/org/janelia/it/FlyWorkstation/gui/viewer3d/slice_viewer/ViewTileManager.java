@@ -175,10 +175,10 @@ public class ViewTileManager {
 		// Subtract one half pixel to avoid loading an extra layer of tiles
 		double dw = 0.25 * tileFormat.getVoxelMicrometers()[xyzFromWhd[0]];
 		double dh = 0.25 * tileFormat.getVoxelMicrometers()[xyzFromWhd[1]];
-		wFMin = Math.max(wFMin, bb.getMin().getX() + dw);
-		hFMin = Math.max(hFMin, bb.getMin().getY() + dh);
-		wFMax = Math.min(wFMax, bb.getMax().getX() - dw);
-		hFMax = Math.min(hFMax, bb.getMax().getY() - dh);
+		wFMin = Math.max(wFMin, bb.getMin().get(xyzFromWhd[0]) + dw);
+		hFMin = Math.max(hFMin, bb.getMin().get(xyzFromWhd[1]) + dh);
+		wFMax = Math.min(wFMax, bb.getMax().get(xyzFromWhd[0]) - dw);
+		hFMax = Math.min(hFMax, bb.getMax().get(xyzFromWhd[1]) - dh);
 		double zoomFactor = Math.pow(2.0, zoom);
 		// get tile pixel size 1024 from loadAdapter
 		int tileSize[] = tileFormat.getTileSize();

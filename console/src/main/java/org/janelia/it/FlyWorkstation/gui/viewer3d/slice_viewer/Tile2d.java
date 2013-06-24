@@ -1,8 +1,11 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
+import java.awt.geom.Point2D;
+
 import javax.media.opengl.GL2;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.slf4j.Logger;
@@ -173,65 +176,16 @@ implements GLActor
 		texture.setTexParameteri(gl, GL2.GL_TEXTURE_WRAP_T, GL2.GL_CLAMP_TO_EDGE);
 		texture.setTexParameteri(gl, GL2.GL_TEXTURE_MIN_FILTER, filter);
 		texture.setTexParameteri(gl, GL2.GL_TEXTURE_MAG_FILTER, filter);
-		TextureCoords tc0 = texture.getImageTexCoords();
-		// Adjust texture coordinates for relative zoom level
-		int dZoom = bestTexture.getIndex().getZoom() - getIndex().getZoom();
-		int textureScale = (int)(Math.pow(2, dZoom) + 0.1);
-		// Remember texture coordinates might already not go from 0->1
-		double tcXTotal = tc0.right() - tc0.left();
-		assert(tcXTotal > 0.0);
-		double tcYTotal = tc0.top() - tc0.bottom();
-		// assert(tcYTotal > 0.0); // no, it's -1.0
-		// Permute coordinates for tiles that have non-Z orientations.
-		CoordinateAxis sliceAxis = getIndex().getSliceAxis();
-		int axisOrder[] = {0,1,2};
-		if (sliceAxis == CoordinateAxis.X) axisOrder = new int[]{1,2,0};
-		else if (sliceAxis == CoordinateAxis.Y) axisOrder = new int[]{2,0,1};
-		// Compute texture coordinate offset due to tile not being at upper left of texture
-		double dXTex = tcXTotal * (getIndex().getCoordinate(axisOrder[0]) % textureScale) / (double)textureScale;
-		double dYTex = tcYTotal * (getIndex().getCoordinate(axisOrder[1]) % textureScale) / (double)textureScale;
-		double tcLeft = tc0.left() + dXTex;
-		double tcRight = tcLeft + tcXTotal/textureScale;
-		double tcBottom = tc0.bottom() + dYTex;
-		double tcTop = tcBottom + tcYTotal/textureScale;
-		// compute corner vertices for tile, not for texture
-		int zoomScale = (int)(Math.pow(2.0, getIndex().getZoom()) + 0.1);
-		double tileWidth = texture.getUsedWidth() * zoomScale * tileFormat.getVoxelMicrometers()[axisOrder[0]];
-		double tileHeight = texture.getHeight() * zoomScale * tileFormat.getVoxelMicrometers()[axisOrder[1]];
 		gl.glBegin(GL2.GL_QUADS);
 			// draw quad
-	        // double z = 0.0; // As far as OpenGL is concerned, all Z's are zero
-		    // Z index does not change with scale; XY do
-	        double z = (getIndex().getCoordinate(axisOrder[2]) + 0.5) * tileFormat.getVoxelMicrometers()[axisOrder[2]];
-	        // Avoid blanking at high zoom by placing tile at exact focus center
-	        if (camera != null) {
-	        	z = camera.getFocus().get(axisOrder[2]);
+	        Vec3 corners[] = computeCornerPositions(camera);
+	        Point2D texCoords[] = computeTextureCoordinates();
+	        int cornerOrder[] = {0, 1, 2, 3};
+	        for (int c : cornerOrder) {
+		        gl.glTexCoord2d(texCoords[c].getX(), texCoords[c].getY());
+		        gl.glVertex3d(corners[c].getX(), corners[c].getY(), corners[c].getZ());
 	        }
-	        if (axisOrder[2] == 1) {
-	        	z = yMax - z;
-	        	// y inverted in OpenGL relative to image convention
-	        }
-	        // System.out.println("tile z "+z);
-	        double x0 = getIndex().getCoordinate(axisOrder[0]) * tileFormat.getTileSize()[axisOrder[0]] * zoomScale * tileFormat.getVoxelMicrometers()[axisOrder[0]];
-	        double x1 = x0 + tileWidth;
-	        if (axisOrder[0] == 1) {
-	        	// y inverted in OpenGL relative to image convention
-	        	x0 = yMax - x0;
-	        	x1 = x0 - tileWidth;
-	        }
-	        // Raveler tile index has origin at BOTTOM left, unlike TOP left for images and
-	        // our coordinate system
-	        double y0 = getIndex().getCoordinate(axisOrder[1]) * tileFormat.getTileSize()[axisOrder[1]] * zoomScale * tileFormat.getVoxelMicrometers()[axisOrder[1]];
-	        double y1 = y0 + tileHeight;
-	        if (axisOrder[1] == 1) {
-	        	// y inverted in OpenGL relative to image convention
-	        	y0 = yMax - y0;
-	        	y1 = y0 - tileHeight;
-	        }
-	        gl.glTexCoord2d(tcLeft, tcBottom); gl.glVertex3d(x0, y0, z);
-	        gl.glTexCoord2d(tcRight, tcBottom); gl.glVertex3d(x1, y0, z);
-	        gl.glTexCoord2d(tcRight, tcTop); gl.glVertex3d(x1, y1, z);
-	        gl.glTexCoord2d(tcLeft, tcTop); gl.glVertex3d(x0, y1, z);
+	        
 		gl.glEnd();
 		texture.disable(gl);
 		
@@ -248,40 +202,108 @@ implements GLActor
 	
 	public void displayBoundingBox(GL2 gl, Camera3d camera) 
 	{
-		if (bestTexture == null)
-			return;
-		PyramidTexture texture = bestTexture.getTexture();
-		int zoomScale = (int)(Math.pow(2.0, getIndex().getZoom()) + 0.1);
-		// Permute coordinates for tiles that have non-Z orientations.
-		CoordinateAxis sliceAxis = getIndex().getSliceAxis();
-		int axisOrder[] = {0,1,2};
-		if (sliceAxis == CoordinateAxis.X) axisOrder = new int[]{1,2,0};
-		else if (sliceAxis == CoordinateAxis.Y) axisOrder = new int[]{2,0,1};
-		double tileWidth = texture.getUsedWidth() * zoomScale * tileFormat.getVoxelMicrometers()[axisOrder[0]];
-		double tileHeight = texture.getHeight() * zoomScale * tileFormat.getVoxelMicrometers()[axisOrder[1]];
+		Vec3 corners[] = computeCornerPositions(camera);
+		int cornerOrder[] = {0, 1, 2, 3, 0};
 		gl.glBegin(GL2.GL_LINE_STRIP);
 			gl.glColor3f(1.0f, 1.0f, 0.3f);
-			// draw quad
-	        // double z = 0.0; // As far as OpenGL is concerned, all Z's are zero
-			// Z index does not change with scale; XY do
-	        double z = (getIndex().getCoordinate(axisOrder[2])+0.5) * tileFormat.getVoxelMicrometers()[axisOrder[2]];
-	        if (camera != null)
-	        	z = camera.getFocus().get(axisOrder[2]);
-	        double x0 = getIndex().getCoordinate(axisOrder[0]) * tileFormat.getTileSize()[axisOrder[0]] * zoomScale * tileFormat.getVoxelMicrometers()[axisOrder[0]];
-	        double x1 = x0 + tileWidth;
-	        // Raveler tile index has origin at BOTTOM left, unlike TOP left for images and
-	        // our coordinate system
-	        double y0 = yMax - getIndex().getCoordinate(axisOrder[1]) * tileFormat.getTileSize()[axisOrder[1]] * zoomScale * tileFormat.getVoxelMicrometers()[axisOrder[1]];
-	        double y1 = y0 - tileHeight; // y inverted in OpenGL relative to image convention
-	        gl.glVertex3d(x0, y0, z);
-	        gl.glVertex3d(x0, y1, z);
-	        gl.glVertex3d(x1, y1, z);
-	        gl.glVertex3d(x1, y0, z);
-	        gl.glVertex3d(x0, y0, z);
+			for (int c : cornerOrder)
+		        gl.glVertex3d(corners[c].x(), corners[c].y(), corners[c].z());				
         gl.glEnd();
 		gl.glColor3d(1.0, 1.0, 1.0);
 	}
 
+	private Point2D[] computeTextureCoordinates() {
+		PyramidTexture texture = bestTexture.getTexture();
+		assert(texture != null);
+		TextureCoords tc0 = texture.getImageTexCoords();
+		// Adjust texture coordinates for relative zoom level
+		int dZoom = bestTexture.getIndex().getZoom() - getIndex().getZoom();
+		int textureScale = (int)(Math.pow(2, dZoom) + 0.1);
+		// Remember texture coordinates might already not go from 0->1
+		double tcXTotal = tc0.right() - tc0.left();
+		assert(tcXTotal > 0.0);
+		double tcYTotal = tc0.top() - tc0.bottom();
+		// assert(tcYTotal > 0.0); // no, it's -1.0
+		
+		// Permute coordinates for tiles that have non-Z orientations.
+		int whdToXyz[] = getWhdToXyz();
+		// Compute texture coordinate offset due to tile not being at upper left of texture
+		double dXTex = tcXTotal * (getIndex().getCoordinate(whdToXyz[0]) % textureScale) / (double)textureScale;
+		double dYTex = tcYTotal * (getIndex().getCoordinate(whdToXyz[1]) % textureScale) / (double)textureScale;
+		double tcLeft = tc0.left() + dXTex;
+		double tcRight = tcLeft + tcXTotal/textureScale;
+		double tcBottom = tc0.bottom() + dYTex;
+		double tcTop = tcBottom + tcYTotal/textureScale;
+		
+		Point2D[] textureCoordinates = new Point2D[4];
+		textureCoordinates[0] = new Point2D.Double(tcLeft, tcBottom);
+		textureCoordinates[1] = new Point2D.Double(tcRight, tcBottom);
+		textureCoordinates[2] = new Point2D.Double(tcRight, tcTop);
+		textureCoordinates[3] = new Point2D.Double(tcLeft, tcTop);
+		
+		return textureCoordinates;
+	}
+	
+	private int[] getWhdToXyz() {
+		int whdToXyz[] = {0,1,2};
+		CoordinateAxis sliceAxis = getIndex().getSliceAxis();
+		if (sliceAxis == CoordinateAxis.X) whdToXyz = new int[]{2,1,0};
+		else if (sliceAxis == CoordinateAxis.Y) whdToXyz = new int[]{0,2,1};
+		return whdToXyz;
+	}
+	
+	private Vec3[] computeCornerPositions(Camera3d camera) {
+		// Permute coordinates for tiles that have non-Z orientations.
+		int zoomScale = (int)(Math.pow(2.0, getIndex().getZoom()) + 0.1);
+		// Permute coordinates for tiles that have non-Z orientations.
+		int whdToXyz[] = getWhdToXyz();
+		double tileWidth = tileFormat.getTileSize()[whdToXyz[0]] * zoomScale * tileFormat.getVoxelMicrometers()[whdToXyz[0]];
+		double tileHeight = tileFormat.getTileSize()[whdToXyz[1]] * zoomScale * tileFormat.getVoxelMicrometers()[whdToXyz[1]];
+		// Actual tile image might be smaller than tile size at edges...
+		if (bestTexture != null) {
+			tileWidth = bestTexture.getTexture().getUsedWidth() * zoomScale * tileFormat.getVoxelMicrometers()[whdToXyz[0]];
+			tileHeight = bestTexture.getTexture().getHeight() * zoomScale * tileFormat.getVoxelMicrometers()[whdToXyz[1]];
+		}
+		// draw quad
+        // double z = 0.0; // As far as OpenGL is concerned, all Z's are zero
+		// Z index does not change with scale; XY do
+        double z = (getIndex().getCoordinate(whdToXyz[2])+0.5) * tileFormat.getVoxelMicrometers()[whdToXyz[2]];
+        if (camera != null)
+        	z = camera.getFocus().get(whdToXyz[2]);
+        double x0 = getIndex().getCoordinate(whdToXyz[0]) * tileFormat.getTileSize()[whdToXyz[0]] * zoomScale * tileFormat.getVoxelMicrometers()[whdToXyz[0]];
+        double x1 = x0 + tileWidth;
+        if (whdToXyz[0] == 1) {
+        	x0 = yMax - x0;
+        	x1 = x0 - tileWidth;
+        }
+        // Raveler tile index has origin at BOTTOM left, unlike TOP left for images and
+        // our coordinate system
+        double y0 = getIndex().getCoordinate(whdToXyz[1]) * tileFormat.getTileSize()[whdToXyz[1]] * zoomScale * tileFormat.getVoxelMicrometers()[whdToXyz[1]];
+        double y1 = y0 + tileHeight; // y inverted in OpenGL relative to image convention
+        if (whdToXyz[1] == 1) {
+        	y0 = yMax - y0;
+        	y1 = y0 - tileHeight;
+        }
+		Vec3 corners[] = new Vec3[4];
+        corners[0] = permutedVertex3d(x0, y0, z, whdToXyz);
+        corners[1] = permutedVertex3d(x1, y0, z, whdToXyz);
+        corners[2] = permutedVertex3d(x1, y1, z, whdToXyz);
+        corners[3] = permutedVertex3d(x0, y1, z, whdToXyz);
+		return corners;
+	}
+
+	private Vec3 permutedVertex3d(double x, double y, double z, int whdToXyz[]) {
+		double xyzIn[] = {x, y, z};
+		int xyzToWhd[] = {0, 1, 2};
+		for (int i = 0; i < 3; ++i)
+			xyzToWhd[whdToXyz[i]] = i;
+		Vec3 result = new Vec3(
+				xyzIn[xyzToWhd[0]],
+				xyzIn[xyzToWhd[1]],
+				xyzIn[xyzToWhd[2]]);
+		return result;
+	}
+	
 	@Override
 	public BoundingBox3d getBoundingBox3d() {
 		// TODO Auto-generated method stub

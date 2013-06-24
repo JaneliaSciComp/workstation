@@ -153,6 +153,7 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
         // setToolTipText("Double click to center on a point.");
         setImageColorModel(new ImageColorModel(volumeImage));
         renderer.addActor(sliceActor);
+        // renderer.addActor(new TileOutlineActor(viewTileManager));
         tileServer.getViewTextureChangedSignal().connect(getRepaintSlot());
         imageColorModel.getColorModelChangedSignal().connect(getRepaintSlot());
         // Initialize pointComputer for interconverting pixelXY <=> sceneXYZ

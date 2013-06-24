@@ -325,8 +325,9 @@ public class QuadViewUi extends JPanel
             ImageColorModel imageColorModel = sliceViewer.getImageColorModel();
             sliceActor.setImageColorModel(imageColorModel);
             imageColorModel.getColorModelChangedSignal().connect(v.getViewer().repaintSlot);
+            // v.getViewer().addActor(sliceActor);
             tileServer.getViewTextureChangedSignal().connect(v.getViewer().repaintSlot);
-            v.getViewer().addActor(sliceActor);
+            v.getViewer().addActor(new TileOutlineActor(viewTileManager));
             tileServer.addViewTileManager(viewTileManager);
             // Add skeleton actor AFTER slice actor
             v.getViewer().setSkeletonActor(sharedSkeletonActor);

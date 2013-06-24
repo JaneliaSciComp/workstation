@@ -88,7 +88,7 @@ public class TileServer
 			*/
 			
 			// return; // TODO - temporarily disabling cacheing
-			
+						
 			
 			// Get nearby Z-tiles, with decreasing LOD
 			Iterable<TileIndex> zGen = new UmbrellaZGenerator(getLoadAdapter().getTileFormat(), currentTiles);
@@ -111,6 +111,7 @@ public class TileServer
 				if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
 					cacheableTextures.add(ix);
 			}
+			
 
 			// log.info("Number of queued textures = "+cacheableTextures.size());	
 		}

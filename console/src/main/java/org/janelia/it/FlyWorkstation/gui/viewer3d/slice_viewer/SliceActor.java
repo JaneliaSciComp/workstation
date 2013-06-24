@@ -139,6 +139,7 @@ implements GLActor
 				tile.displayBoundingBox(gl, camera);
 			}
 			outlineShader.unload(gl);
+			// System.out.println("paint tile outline(1)");
 		}
 		
 		// Outline volume for debugging
