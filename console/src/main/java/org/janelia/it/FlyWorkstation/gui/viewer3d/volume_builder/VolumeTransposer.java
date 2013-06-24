@@ -30,8 +30,8 @@ public class VolumeTransposer {
         if ( transposedMaskTextureBean == null ) {
             transposedMaskTextureBean = new MaskTextureDataBean();
             transposedMaskTextureBean.setSx( maskTextureBean.getSy() );
-            transposedMaskTextureBean.setSy( maskTextureBean.getSx() );
-            transposedMaskTextureBean.setSz( maskTextureBean.getSz() );
+            transposedMaskTextureBean.setSy( maskTextureBean.getSz() );
+            transposedMaskTextureBean.setSz( maskTextureBean.getSx() );
             transposedMaskTextureBean.setCoordCoverage( transposeArr(maskTextureBean.getCoordCoverage()) );
             transposedMaskTextureBean.setVolumeMicrometers( transposeArr(maskTextureBean.getVolumeMicrometers()) );
             transposedMaskTextureBean.setVoxelMicrometers( transposeArr(maskTextureBean.getVoxelMicrometers()) );
@@ -55,7 +55,7 @@ public class VolumeTransposer {
                     signalTextureBean.getSy(),
                     signalTextureBean.getSz()
             );
-            transposedSignalTextureBean = new TextureDataBean( textureData, signalTextureBean.getSy(), signalTextureBean.getSx(), signalTextureBean.getSz() );
+            transposedSignalTextureBean = new TextureDataBean( textureData, signalTextureBean.getSy(), signalTextureBean.getSz(), signalTextureBean.getSx() );
             transposedSignalTextureBean.setCoordCoverage( transposeArr( signalTextureBean.getCoordCoverage()) );
             transposedSignalTextureBean.setVoxelMicrometers( transposeArr( signalTextureBean.getVoxelMicrometers()) );
             transposedSignalTextureBean.setVolumeMicrometers( transposeArr( signalTextureBean.getVolumeMicrometers()) );
@@ -78,16 +78,16 @@ public class VolumeTransposer {
     private float[] transposeArr(float[] input) {
         float[] output = new float[ 3 ];
         output[ 0 ] = input[ 1 ];
-        output[ 1 ] = input[ 0 ];
-        output[ 2 ] = input[ 2 ];
+        output[ 1 ] = input[ 2 ];
+        output[ 2 ] = input[ 0 ];
         return output;
     }
 
     private Double[] transposeArr( Double[] input ) {
         Double[] output = new Double[ 3 ];
         output[ 0 ] = input[ 1 ];
-        output[ 1 ] = input[ 0 ];
-        output[ 2 ] = input[ 2 ];
+        output[ 1 ] = input[ 2 ];
+        output[ 2 ] = input[ 0 ];
         return output;
     }
 
@@ -129,6 +129,7 @@ public class VolumeTransposer {
                         rtnVal, outputOffset * bytesPerPosition,
                         bytesPerPosition
                 );
+                outputOffset ++;
             }
         }
         return rtnVal;
