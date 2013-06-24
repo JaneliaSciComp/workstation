@@ -125,6 +125,9 @@ public class TextureDataBean implements TextureDataI {
     }
 
     public Double[] getVolumeMicrometers() {
+        if ( volumeMicrometers == null ) {
+            volumeMicrometers = new Double[] {  (double)getSx(), (double)getSy(), (double)getSz() };
+        }
         return volumeMicrometers;
     }
 
@@ -133,6 +136,9 @@ public class TextureDataBean implements TextureDataI {
     }
 
     public Double[] getVoxelMicrometers() {
+        if ( voxelMicrometers == null ) {
+            voxelMicrometers = new Double[] { 1.0, 1.0, 1.0 };
+        }
         return voxelMicrometers;
     }
 
