@@ -23,7 +23,7 @@ public class VtxCoordBufMgr {
     public static final int NUM_AXES = 3;
 
     private boolean useVBO = false;
-    private boolean drawWithElements = true;
+    private boolean drawWithElements = false;
 
     // Buffer objects for setting geometry on the GPU side.
     //   I need one per starting direction (x,y,z) times one for positive, one for negative.
@@ -71,6 +71,7 @@ public class VtxCoordBufMgr {
         vertexCountByAxis = new int[ NUM_AXES ];
         if ( texCoordBuf[ 0 ] == null  &&  textureMediator != null ) {
             // Compute sizes, and allocate buffers.
+            logger.info("Allocating buffers");
             for ( int i = 0; i < NUM_BUFFERS_PER_TYPE; i++ ) {
                 // Three coords per vertex.  Six vertexes per slice.  Times number of slices.
                 int numVertices = VERTICES_PER_SLICE * computeEffectiveAxisLen(i % NUM_AXES);
@@ -189,10 +190,11 @@ public class VtxCoordBufMgr {
      * memory.
      */
     public void dropBuffers() {
-        geometryCoordBuf = null;
-        this.texCoordBuf = null;
-        // Later, after index buf is no longer fed for each draw call, can drop it here.
-        // indexBuf = null;
+        for ( int i = 0; i < NUM_BUFFERS_PER_TYPE; i++ ) {
+            geometryCoordBuf[ i ] = null;
+            texCoordBuf[ i ] = null;
+            indexBuf[ i ] = null;
+        }
     }
 
     /**
@@ -205,7 +207,16 @@ public class VtxCoordBufMgr {
     public void enableBuffers(GL2 gl) throws Exception {
         geometryVertexBufferHandles = enableBuffersOfType(gl, geometryCoordBuf, GL2.GL_ARRAY_BUFFER);
         textureCoordBufferHandles = enableBuffersOfType(gl, texCoordBuf, GL2.GL_ARRAY_BUFFER);
-        indexBufferHandles = enableBuffersOfType(gl, indexBuf, GL2.GL_ELEMENT_ARRAY_BUFFER);
+        if ( drawWithElements ) {
+            indexBufferHandles = enableBuffersOfType(gl, indexBuf, GL2.GL_ELEMENT_ARRAY_BUFFER);
+        }
+    }
+
+    public void releaseBuffers(GL2 gl) {
+        releaseBuffers(gl, geometryVertexBufferHandles);
+        releaseBuffers(gl, textureCoordBufferHandles);
+        releaseBuffers(gl, indexBufferHandles);
+
     }
 
     /**
@@ -220,8 +231,8 @@ public class VtxCoordBufMgr {
         gl.glFrontFace(GL2.GL_CW);
 
         if ( useVBO ) {
-            logger.info("Using VBO");
             // Point to the right vertex set.
+            logger.info("Bind Coords");
             bindCoordsBuffer(gl, axis, geometryVertexBufferHandles, direction);
 
             gl.glEnableClientState( GL2.GL_VERTEX_ARRAY );
@@ -229,12 +240,12 @@ public class VtxCoordBufMgr {
             gl.glVertexPointer(3, GL2.GL_FLOAT, 0, 0);
 
             // Point to the right texture coordinate set.
+            logger.info("Bind Coords");
             bindCoordsBuffer(gl, axis, textureCoordBufferHandles, direction);
 
             gl.glEnableClientState( GL2.GL_TEXTURE_COORD_ARRAY );
             // 3 floats per coord.  Stride is 0, offset to first is 0.
             gl.glTexCoordPointer(3, GL2.GL_FLOAT, 0, 0);
-
 
             // Point to the right index coordinate set.
             //NO buffer binding for indices at this time. LLF
@@ -250,14 +261,16 @@ public class VtxCoordBufMgr {
             // Tell GPU to draw triangles (interpret every three vertices as a triangle), starting at pos 0,
             //  and expect vertex-count worth of vertices to examine.
             if ( drawWithElements ) {
-                logger.debug("Drawing with elements");
+                logger.info("Bind for draw");
                 bindIndexBuffer( gl, axis, indexBufferHandles, direction );
+                logger.info("Draw Elements");
                 gl.glDrawElements( GL2.GL_TRIANGLES, getVertexCount( axis ), GL2.GL_UNSIGNED_SHORT, 0 );
             }
             else {
                 gl.glDrawArrays(GL2.GL_TRIANGLES, 0, getVertexCount(axis));
             }
             gl.glDisableClientState(GL2.GL_TEXTURE_COORD_ARRAY);
+            gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
         }
         else {
             logger.debug("Not using VBO: pushing data for each draw.");
@@ -346,6 +359,12 @@ public class VtxCoordBufMgr {
         return rtnVal;
     }
 
+    private void releaseBuffers( GL2 gl, int[] bufferHandles ) {
+        if ( bufferHandles != null ) {
+            gl.glDeleteBuffers( bufferHandles.length, bufferHandles, 0 );
+        }
+    }
+
     private void dumpBuffer( Buffer[] buffers ) {
         System.out.println("DUMPING THE BUFFERS");
 
@@ -432,39 +451,39 @@ public class VtxCoordBufMgr {
         return vertexCountByAxis[ axis.index() ];
     }
 
-    private int computeEffectiveAxisLen(int firstInx) {
-        double firstAxisLen = textureMediator.getVolumeMicrometers()[ firstInx % 3 ];
-        return (int)(0.5 + firstAxisLen / textureMediator.getVoxelMicrometers()[ firstInx % 3 ]);
+    private int computeEffectiveAxisLen(int index) {
+        double firstAxisLen = textureMediator.getVolumeMicrometers()[ index % 3 ];
+        return (int)(0.5 + firstAxisLen / textureMediator.getVoxelMicrometers()[ index % 3 ]);
     }
 
-    private void addIndices(int firstInx, short inxOffset) {
+    private void addIndices(int index, short inxOffset) {
         // Indices:  making six vertices from four definitions.
-        indexBuf[ firstInx ].put( inxOffset );
-        indexBuf[ firstInx ].put( (short)(inxOffset + 1) );
-        indexBuf[ firstInx ].put( (short)(inxOffset + 2) );
+        indexBuf[ index ].put(inxOffset);
+        indexBuf[ index ].put((short) (inxOffset + 1));
+        indexBuf[ index ].put((short) (inxOffset + 2));
 
-        indexBuf[ firstInx ].put( (short)(inxOffset + 1) );
-        indexBuf[ firstInx ].put( (short)(inxOffset + 3) );
-        indexBuf[ firstInx ].put( (short)(inxOffset + 2) );
+        indexBuf[ index ].put((short) (inxOffset + 1));
+        indexBuf[ index ].put((short) (inxOffset + 3));
+        indexBuf[ index ].put((short) (inxOffset + 2));
     }
 
-    private void addTextureCoords(int firstInx, float[] t00, float[] t01, float[] t10, float[] t11) {
+    private void addTextureCoords(int index, float[] t00, float[] t01, float[] t10, float[] t11) {
         // Triangle 1
-        texCoordBuf[ firstInx ].put( t00 );
-        texCoordBuf[ firstInx ].put( t10 );
-        texCoordBuf[ firstInx ].put( t01 );
+        texCoordBuf[ index ].put(t00);
+        texCoordBuf[ index ].put(t10);
+        texCoordBuf[ index ].put(t01);
         // Triangle 2
-        texCoordBuf[ firstInx ].put( t11 );
+        texCoordBuf[ index ].put(t11);
     }
 
-    private void addGeometry(int firstInx, float[] p00p, float[] p10p, float[] p11p, float[] p01p) {
+    private void addGeometry(int index, float[] p00p, float[] p10p, float[] p11p, float[] p01p) {
         // Only need four definitions.
         // Triangle 1
-        geometryCoordBuf[ firstInx ].put( p00p );
-        geometryCoordBuf[ firstInx ].put( p10p );
-        geometryCoordBuf[ firstInx ].put( p01p );
+        geometryCoordBuf[ index ].put(p00p);
+        geometryCoordBuf[ index ].put(p10p);
+        geometryCoordBuf[ index ].put(p01p);
         // Triangle 2
-        geometryCoordBuf[ firstInx ].put( p11p );
+        geometryCoordBuf[ index ].put(p11p);
     }
 
 }

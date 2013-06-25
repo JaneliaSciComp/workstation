@@ -385,7 +385,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
 	public void dispose(GL2 gl) {
         // Were the volume model listener removed at this point, it would leave NO listener available to it,
         // and it would never subsequently be restored.
-		gl.glDeleteTextures(1, textureIds, 0);
+		gl.glDeleteTextures(textureIds.length, textureIds, 0);
 		// Retarded JOGL GLJPanel frequently reallocates the GL context
 		// during resize. So we need to be ready to reinitialize everything.
         textureIds = null;
@@ -393,6 +393,8 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         bMaskTextureNeedsUpload = true;
         bColorMapTextureNeedsUpload = true;
         bIsInitialized = false;
+
+        bufferManager.releaseBuffers(gl);
 	}
 
     @Override
