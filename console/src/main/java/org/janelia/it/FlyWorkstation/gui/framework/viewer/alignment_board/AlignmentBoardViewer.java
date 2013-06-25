@@ -465,7 +465,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 }
                 else {
                     showLoadingIndicator();
-
                     if ( mip3d == null ) {
                         mip3d = createMip3d();
                         wrapperPanel = createWrapperPanel( mip3d );
@@ -480,6 +479,9 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                         );
                         userSettingSerializer.deserializeSettings();
                         */
+                    }
+                    else {
+                        mip3d.clear();
                     }
 
                     // When this is called from thread type X, and the "best guess" method is used, it blanks the screen.
