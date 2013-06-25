@@ -38,7 +38,7 @@ public class ABContextDataSource implements RenderableDataSourceI {
 
     @Override
     public Collection<MaskChanRenderableData> getRenderableDatas() {
-        logger.info( "Getting renderable datas." );
+        logger.debug( "Getting renderable datas." );
         Collection<MaskChanRenderableData> rtnVal = new ArrayList<MaskChanRenderableData>();
 
         int nextTranslatedNum = 1;

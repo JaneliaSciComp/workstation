@@ -60,7 +60,7 @@ public class FileExportLoadWorker extends SimpleWorker implements VolumeLoader {
         );
 
         // Mask file is always needed.
-        if ( maskChanRenderableData.getMaskPath() == null  &&  maskChanRenderableData.getBean().getTranslatedNum() > 0 ) {
+        if ( maskChanRenderableData.getMaskPath() == null  &&  maskChanRenderableData.getBean().getLabelFileNum() > 0 ) {
             logger.warn(
                     "Renderable {} has a missing mask file -- {}.",
                     maskChanRenderableData.getBean().getTranslatedNum(),

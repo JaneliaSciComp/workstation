@@ -615,7 +615,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
      * This is called when the board visibility or coloring has been change.
      */
     private void updateRendering( AlignmentBoardContext context ) {
-        logger.info("Update-rendering called.");
+        logger.debug("Update-rendering called.");
 
         try {
             if (context != null) {
