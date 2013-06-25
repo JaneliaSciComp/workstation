@@ -65,12 +65,12 @@ public class VolumeTransposer {
         }
     }
 
-    public TextureDataI getSignalYXZOrder( ) {
+    public TextureDataI getSignalYZXOrder() {
         execute();
         return transposedSignalTextureBean;
     }
 
-    public TextureDataI getMaskYXZOrder( ) {
+    public TextureDataI getMaskYZXOrder() {
         execute();
         return transposedMaskTextureBean;
     }
