@@ -12,6 +12,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.resolver.FileResolver;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.texture.TextureDataI;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.RenderablesChannelsBuilder;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.RenderablesMaskBuilder;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.volume_builder.VolumeTransposer;
 import org.janelia.it.FlyWorkstation.shared.workers.SimpleWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -257,6 +258,11 @@ public class RenderablesLoadWorker extends SimpleWorker implements VolumeLoader 
 
             controlCallback.loadVolume(signalTexture, maskTexture);
 
+//            VolumeTransposer transposer = new VolumeTransposer( signalTexture, maskTexture );
+//            transposer.execute();
+//
+//            controlCallback.loadVolume( transposer.getSignalYZXOrder(), transposer.getMaskYZXOrder() );
+//
         } catch ( BrokenBarrierException bbe ) {
             logger.error( "Barrier await failed during texture build.", bbe );
             bbe.printStackTrace();
