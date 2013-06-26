@@ -288,22 +288,31 @@ public class AlignmentBoardControlsDialog extends JDialog {
      * This will fire only those listener methods affected by the current user commitment.
      */
     private synchronized void fireSettingsEvent() {
+        double newGamma = getGammaFactor();
+        boolean deltaBrightness = false;
+        boolean deltaSettings = false;
+        if ( newGamma != settings.getGammaFactor() ) {
+            settings.setGammaFactor( newGamma );
+            deltaBrightness = true;
+        }
+        double newDownSampleRate = getDownsampleRate();
+        boolean newUseSignal = isUseSignalData();
+        if ( newDownSampleRate != settings.getChosenDownSampleRate()  ||
+                newUseSignal != settings.isShowChannelData() ) {
+
+            settings.setChosenDownSampleRate(newDownSampleRate);
+            settings.setShowChannelData( newUseSignal );
+            serializeDownsampleRate( newDownSampleRate );
+            deltaSettings = true;
+
+        }
+
         for ( ControlsListener listener: listeners ) {
-            double newGamma = getGammaFactor();
-            if ( newGamma != settings.getGammaFactor() ) {
-                settings.setGammaFactor( newGamma );
+            if ( deltaBrightness )
                 listener.setBrightness( settings.getGammaFactor() );
-            }
-            double newDownSampleRate = getDownsampleRate();
-            boolean newUseSignal = isUseSignalData();
-            if ( newDownSampleRate != settings.getChosenDownSampleRate()  ||
-                    newUseSignal != settings.isShowChannelData() ) {
-
-                settings.setChosenDownSampleRate(newDownSampleRate);
-                settings.setShowChannelData( newUseSignal );
-                serializeDownsampleRate( newDownSampleRate );
+            if ( deltaSettings ) {
+                logger.info("Serializing show-channel as {}", settings.isShowChannelData() );
                 listener.updateSettings();
-
             }
 
         }

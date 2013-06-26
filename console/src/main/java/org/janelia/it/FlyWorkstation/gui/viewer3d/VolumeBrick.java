@@ -54,7 +54,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     private boolean bColorMapTextureNeedsUpload = false;
     private boolean bBuffersNeedUpload = true;
 
-    private boolean bUseVBO = false;
+    private boolean bUseVBO = true;
 
     private VolumeBrickShader volumeBrickShader = new VolumeBrickShader();
 

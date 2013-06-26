@@ -22,8 +22,8 @@ public class VtxCoordBufMgr {
     public static final int COORDS_PER_VERTEX = 3;
     public static final int NUM_AXES = 3;
 
-    private boolean useVBO = false;
-    private boolean drawWithElements = false;
+    private boolean useVBO = true;
+    private boolean drawWithElements = true;
 
     // Buffer objects for setting geometry on the GPU side.
     //   I need one per starting direction (x,y,z) times one for positive, one for negative.

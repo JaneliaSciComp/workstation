@@ -662,6 +662,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 Thread thread = new Thread( new Runnable() {
                     public void run() {
                         AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
+                        viewer.serialize();
                         viewer.updateBoard(context);
                     }
                 });
