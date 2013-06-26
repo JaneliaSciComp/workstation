@@ -75,6 +75,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private boolean outstandingRenderRequest = false;
 
     private boolean boardOpen = false;
+    private Thread shutdownHook;
 
     public AlignmentBoardViewer(ViewerPane viewerPane) {
         super(viewerPane);
@@ -141,15 +142,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         logger.info( "Closing" );
 
         ModelMgr.getModelMgr().unregisterOnEventBus(this);
-        AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
-        Entity alignmentBoard = context.getInternalEntity();
-        if ( mip3d != null && settings != null ) {
-            UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
-                    alignmentBoard, mip3d.getVolumeModel(), settings.getAlignmentBoardSettings()
-            );
-
-            userSettingSerializer.serializeSettings();
-        }
+        serialize();
 
         deleteAll();
         SessionMgr.getBrowser().getLayersPanel().closeAlignmentBoard();
@@ -222,6 +215,16 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         }
         else {
             settings.setVolumeMaxima(signalTexture.getSx(), signalTexture.getSy(), signalTexture.getSz());
+            if ( shutdownHook == null ) {
+                shutdownHook = new Thread() {
+                    @Override
+                    public void run() {
+                        // Need to serialize settings.
+                        serialize();
+                    }
+                };
+            }
+            Runtime.getRuntime().addShutdownHook( shutdownHook );
         }
 
     }
@@ -301,6 +304,18 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     }
 
     //---------------------------------------HELPERS
+    private void serialize() {
+        AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
+        Entity alignmentBoard = context.getInternalEntity();
+        if ( mip3d != null && settings != null ) {
+            UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
+                    alignmentBoard, mip3d.getVolumeModel(), settings.getAlignmentBoardSettings()
+            );
+
+            userSettingSerializer.serializeSettings();
+        }
+    }
+
     /** This is synch'd because there may be a race between constructor and an externally-posted event. */
     private synchronized void handleBoardOpened(AlignmentBoardContext abContext) {
         if ( ! boardOpen ) {
@@ -469,20 +484,16 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                         mip3d = createMip3d();
                         wrapperPanel = createWrapperPanel( mip3d );
 
-                        /*
-
-                        LLF: commented out for release.  Not yet working correctly.
-
-                        Entity alignmentBoard = context.getInternalEntity();
-                        UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
-                                alignmentBoard, mip3d.getVolumeModel(), settings.getAlignmentBoardSettings()
-                        );
-                        userSettingSerializer.deserializeSettings();
-                        */
                     }
                     else {
                         mip3d.clear();
                     }
+
+                    Entity alignmentBoard = context.getInternalEntity();
+                    UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
+                            alignmentBoard, mip3d.getVolumeModel(), settings.getAlignmentBoardSettings()
+                    );
+                    userSettingSerializer.deserializeSettings();
 
                     // When this is called from thread type X, and the "best guess" method is used, it blanks the screen.
                     logger.info(" Calling adjust rate setting from {}.", Thread.currentThread().getName());
