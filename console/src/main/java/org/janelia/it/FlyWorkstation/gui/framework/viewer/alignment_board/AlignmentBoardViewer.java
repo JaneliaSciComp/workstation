@@ -15,7 +15,9 @@ import javax.swing.JPanel;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 import org.janelia.it.FlyWorkstation.gui.framework.outline.EntityTransferHandler;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.BrowserModel;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionModelListener;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.Viewer;
 import org.janelia.it.FlyWorkstation.gui.framework.viewer.ViewerPane;
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
@@ -75,7 +77,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private boolean outstandingRenderRequest = false;
 
     private boolean boardOpen = false;
-    private Thread shutdownHook;
 
     public AlignmentBoardViewer(ViewerPane viewerPane) {
         super(viewerPane);
@@ -92,6 +93,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             }
         });
 
+        // Saveback settings.
+        SessionMgr.getSessionMgr().addSessionModelListener( new ShutdownListener() );
 //        AlignmentBoardContext alignmentBoardContext = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
 //        if ( alignmentBoardContext != null ) {
 //            handleBoardOpened( alignmentBoardContext );
@@ -215,16 +218,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         }
         else {
             settings.setVolumeMaxima(signalTexture.getSx(), signalTexture.getSy(), signalTexture.getSz());
-            if ( shutdownHook == null ) {
-                shutdownHook = new Thread() {
-                    @Override
-                    public void run() {
-                        // Need to serialize settings.
-                        serialize();
-                    }
-                };
-            }
-            Runtime.getRuntime().addShutdownHook( shutdownHook );
         }
 
     }
@@ -732,6 +725,27 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 }
             }
         }
+    }
+
+    private class ShutdownListener implements SessionModelListener {
+
+        @Override
+        public void browserAdded(BrowserModel browserModel) {
+        }
+
+        @Override
+        public void browserRemoved(BrowserModel browserModel) {
+        }
+
+        @Override
+        public void sessionWillExit() {
+            serialize();
+        }
+
+        @Override
+        public void modelPropertyChanged(Object key, Object oldValue, Object newValue) {
+        }
+
     }
 
 }
