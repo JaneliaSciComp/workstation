@@ -63,7 +63,7 @@ public class QuadViewUi extends JPanel
 	public static GLProfile glProfile = GLProfile.get(GLProfile.GL2);
 	// private static final Logger log = LoggerFactory.getLogger(QuadViewUi.class);
 
-	private boolean bAllowOrthoView = false; // false until ready for release
+	private boolean bAllowOrthoView = true; // false until ready for release
 	
     // this is the entity that's selected when the viewer is created:
     private Entity initialEntity;
@@ -325,7 +325,7 @@ public class QuadViewUi extends JPanel
             ImageColorModel imageColorModel = sliceViewer.getImageColorModel();
             sliceActor.setImageColorModel(imageColorModel);
             imageColorModel.getColorModelChangedSignal().connect(v.getViewer().repaintSlot);
-            // v.getViewer().addActor(sliceActor);
+            v.getViewer().addActor(sliceActor);
             tileServer.getViewTextureChangedSignal().connect(v.getViewer().repaintSlot);
             v.getViewer().addActor(new TileOutlineActor(viewTileManager));
             tileServer.addViewTileManager(viewTileManager);
@@ -943,28 +943,36 @@ public class QuadViewUi extends JPanel
 
     public void loadURL(String pathToFile) throws MalformedURLException {
         File tmpFile = new File(pathToFile);
-        // Hard code path translation for Nathan
+
+        // Hard code temporary path translation for Nathan
         boolean fileMissing = ! tmpFile.exists();
-        String osName = System.getProperty("os.name").toLowerCase();
-        String mbmPrefix = "/groups/mousebrainmicro/mousebrainmicro/";
-        boolean isLinuxMouseBrainPath = pathToFile.startsWith(mbmPrefix);
-        if ( fileMissing
-        		&& osName.contains("win")
-        		&& isLinuxMouseBrainPath ) 
-        {
-        	String fileSuffix = pathToFile.replace(mbmPrefix, "");
-        	List<String> prefixesToTry = new Vector<String>();
-        	for (File fileRoot : File.listRoots()) {
-        		String p = fileRoot.getAbsolutePath();
-        		prefixesToTry.add(p);
-        	}
-        	prefixesToTry.add("M:/"); // On my Windows computer
-        	prefixesToTry.add("X:/"); // On Nathan's computer
-        	for (String prefix : prefixesToTry) {
-        		tmpFile = new File(prefix + fileSuffix);
-        		if (tmpFile.exists())
-        			break;
-        	}
+        if (fileMissing) {
+	        String osName = System.getProperty("os.name").toLowerCase();
+	        String mbmPrefix = "/groups/mousebrainmicro/mousebrainmicro/";
+	        boolean isLinuxMouseBrainPath = pathToFile.startsWith(mbmPrefix);
+	    	List<String> prefixesToTry = new Vector<String>();
+	    	if (osName.contains("win")) {
+	        	prefixesToTry.add("M:/"); // On my Windows computer
+	        	prefixesToTry.add("X:/"); // On Nathan's computer    		
+	        	for (File fileRoot : File.listRoots()) { // other drive letters
+	        		String p = fileRoot.getAbsolutePath();
+	        		prefixesToTry.add(p);
+	        		System.out.println(p);
+	        	}
+	    	}
+	    	if (osName.contains("os x")) {
+	    		prefixesToTry.add("/Volumes/mousebrainmicro/");
+	    	}
+	        if ( (prefixesToTry.size() > 0)
+	        		&& isLinuxMouseBrainPath ) 
+	        {
+	        	String fileSuffix = pathToFile.replace(mbmPrefix, "");
+	        	for (String prefix : prefixesToTry) {
+	        		tmpFile = new File(prefix + fileSuffix);
+	        		if (tmpFile.exists())
+	        			break;
+	        	}
+	        }
         }
         
         if (!tmpFile.exists()) {

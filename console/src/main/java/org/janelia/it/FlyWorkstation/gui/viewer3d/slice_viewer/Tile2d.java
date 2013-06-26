@@ -43,10 +43,10 @@ implements GLActor
 	private Stage stage = Stage.NO_TEXTURE_LOADED;
 	private TileTexture bestTexture;
 	private TileIndex index;
-	private double yMax; // To help flip Raveler tiles in Y
+	private double yMax = 0; // To help flip Raveler tiles in Y
 	private TileFormat tileFormat;
 	private int filter = GL2.GL_LINEAR;
-
+	private BoundingBox3d boundingBox3d;
 	
 	public Tile2d(TileIndex key, TileFormat tileFormat) {
 		if (key == null) {
@@ -54,6 +54,7 @@ implements GLActor
 		}
 		this.index = key;
 		this.tileFormat = tileFormat;
+		this.boundingBox3d = computeBoundingBox();
 	}
 
 	// Choose the best available texture for this tile
@@ -147,6 +148,7 @@ implements GLActor
 
 	public void setBestTexture(TileTexture bestTexture) {
 		this.bestTexture = bestTexture;
+		boundingBox3d = computeBoundingBox();
 	}
 
 	@Override
@@ -236,10 +238,10 @@ implements GLActor
 		double tcTop = tcBottom + tcYTotal/textureScale;
 		
 		Point2D[] textureCoordinates = new Point2D[4];
-		textureCoordinates[0] = new Point2D.Double(tcLeft, tcBottom);
-		textureCoordinates[1] = new Point2D.Double(tcRight, tcBottom);
-		textureCoordinates[2] = new Point2D.Double(tcRight, tcTop);
-		textureCoordinates[3] = new Point2D.Double(tcLeft, tcTop);
+		textureCoordinates[0] = new Point2D.Double(tcLeft, tcTop);
+		textureCoordinates[1] = new Point2D.Double(tcRight, tcTop);
+		textureCoordinates[2] = new Point2D.Double(tcRight, tcBottom);
+		textureCoordinates[3] = new Point2D.Double(tcLeft, tcBottom);
 		
 		return textureCoordinates;
 	}
@@ -252,7 +254,7 @@ implements GLActor
 		return whdToXyz;
 	}
 	
-	private Vec3[] computeCornerPositions(Camera3d camera) {
+	private BoundingBox3d computeBoundingBox() {
 		// Permute coordinates for tiles that have non-Z orientations.
 		int zoomScale = (int)(Math.pow(2.0, getIndex().getZoom()) + 0.1);
 		// Permute coordinates for tiles that have non-Z orientations.
@@ -268,11 +270,9 @@ implements GLActor
         // double z = 0.0; // As far as OpenGL is concerned, all Z's are zero
 		// Z index does not change with scale; XY do
         double z = (getIndex().getCoordinate(whdToXyz[2])+0.5) * tileFormat.getVoxelMicrometers()[whdToXyz[2]];
-        if (camera != null)
-        	z = camera.getFocus().get(whdToXyz[2]);
         double x0 = getIndex().getCoordinate(whdToXyz[0]) * tileFormat.getTileSize()[whdToXyz[0]] * zoomScale * tileFormat.getVoxelMicrometers()[whdToXyz[0]];
         double x1 = x0 + tileWidth;
-        if (whdToXyz[0] == 1) {
+        if ((whdToXyz[0] == 1) && (yMax != 0)) {
         	x0 = yMax - x0;
         	x1 = x0 - tileWidth;
         }
@@ -280,10 +280,30 @@ implements GLActor
         // our coordinate system
         double y0 = getIndex().getCoordinate(whdToXyz[1]) * tileFormat.getTileSize()[whdToXyz[1]] * zoomScale * tileFormat.getVoxelMicrometers()[whdToXyz[1]];
         double y1 = y0 + tileHeight; // y inverted in OpenGL relative to image convention
-        if (whdToXyz[1] == 1) {
+        if ((whdToXyz[1] == 1) && (yMax != 0)) {
         	y0 = yMax - y0;
         	y1 = y0 - tileHeight;
         }
+        BoundingBox3d result = new BoundingBox3d();
+        // Bounding box will be one-voxel thick in slice direction
+        double dz = 0.50 * tileFormat.getTileSize()[whdToXyz[2]];
+        result.include(permutedVertex3d(x0, y0, z-dz, whdToXyz));
+        result.include(permutedVertex3d(x1, y1, z+dz, whdToXyz));
+		return result;
+	}
+	
+	private Vec3[] computeCornerPositions(Camera3d camera) {
+		// Permute coordinates for tiles that have non-Z orientations.
+		int whdToXyz[] = getWhdToXyz();
+        double z0 = getBoundingBox3d().getMin().get(whdToXyz[2]);
+        double z1 = getBoundingBox3d().getMax().get(whdToXyz[2]);
+        double z = 0.5 * (z0 + z1); // Center in depth
+        if (camera != null)
+        	z = camera.getFocus().get(whdToXyz[2]);
+        double x0 = getBoundingBox3d().getMin().get(whdToXyz[0]);
+        double x1 = getBoundingBox3d().getMax().get(whdToXyz[0]);
+        double y0 = getBoundingBox3d().getMin().get(whdToXyz[1]);
+        double y1 = getBoundingBox3d().getMax().get(whdToXyz[1]);
 		Vec3 corners[] = new Vec3[4];
         corners[0] = permutedVertex3d(x0, y0, z, whdToXyz);
         corners[1] = permutedVertex3d(x1, y0, z, whdToXyz);
@@ -306,8 +326,7 @@ implements GLActor
 	
 	@Override
 	public BoundingBox3d getBoundingBox3d() {
-		// TODO Auto-generated method stub
-		return null;
+		return boundingBox3d;
 	}
 
 	@Override
@@ -327,6 +346,7 @@ implements GLActor
 
 	public void setYMax(double yMax) {
 		this.yMax  = yMax;
+		boundingBox3d = computeBoundingBox();
 	}
 
 	public ImageBrightnessStats getBrightnessStats() {

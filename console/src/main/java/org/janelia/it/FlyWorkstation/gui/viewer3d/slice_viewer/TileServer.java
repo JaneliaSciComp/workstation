@@ -13,6 +13,8 @@ public class TileServer
 {
 	private static final Logger log = LoggerFactory.getLogger(TileServer.class);
 	
+	private boolean doPrefetch = false;
+	
 	// One thread pool to load minimal representation of volume
 	private TexturePreFetcher minResPreFetcher = new TexturePreFetcher(10);
 	// One thread pool to load current and prefetch textures
@@ -74,44 +76,42 @@ public class TileServer
 				currentTiles.addAll(t);
 			}
 
-			/* TODO - LOD tiles are not working yet...
-			// Get level-of-detail tiles
-			Iterable<TileIndex> lodGen = new LodGenerator(TileServer.this);
-			for (TileIndex ix : lodGen) {
-				if (cacheableTextures.contains(ix))
-					continue;
-				if (cacheableTextures.size() >= maxCacheable)
-					break;
-				if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
-					cacheableTextures.add(ix);
-			}
-			*/
-			
-			// return; // TODO - temporarily disabling cacheing
-						
-			
-			// Get nearby Z-tiles, with decreasing LOD
-			Iterable<TileIndex> zGen = new UmbrellaZGenerator(getLoadAdapter().getTileFormat(), currentTiles);
-			for (TileIndex ix : zGen) {
-				if (cacheableTextures.contains(ix))
-					continue;
-				if (cacheableTextures.size() >= maxCacheable)
-					break;
-				if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
-					cacheableTextures.add(ix);
-			}
-			
-			// Get more Z-tiles, at current LOD
-			zGen = new ZGenerator(getLoadAdapter().getTileFormat(), currentTiles);
-			for (TileIndex ix : zGen) {
-				if (cacheableTextures.contains(ix))
-					continue;
-				if (cacheableTextures.size() >= maxCacheable)
-					break;
-				if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
-					cacheableTextures.add(ix);
-			}
-			
+			if (doPrefetch) {
+				/* TODO - LOD tiles are not working yet...
+				// Get level-of-detail tiles
+				Iterable<TileIndex> lodGen = new LodGenerator(TileServer.this);
+				for (TileIndex ix : lodGen) {
+					if (cacheableTextures.contains(ix))
+						continue;
+					if (cacheableTextures.size() >= maxCacheable)
+						break;
+					if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
+						cacheableTextures.add(ix);
+				}
+				*/
+				
+				// Get nearby Z-tiles, with decreasing LOD
+				Iterable<TileIndex> zGen = new UmbrellaZGenerator(getLoadAdapter().getTileFormat(), currentTiles);
+				for (TileIndex ix : zGen) {
+					if (cacheableTextures.contains(ix))
+						continue;
+					if (cacheableTextures.size() >= maxCacheable)
+						break;
+					if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
+						cacheableTextures.add(ix);
+				}
+				
+				// Get more Z-tiles, at current LOD
+				zGen = new ZGenerator(getLoadAdapter().getTileFormat(), currentTiles);
+				for (TileIndex ix : zGen) {
+					if (cacheableTextures.contains(ix))
+						continue;
+					if (cacheableTextures.size() >= maxCacheable)
+						break;
+					if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
+						cacheableTextures.add(ix);
+				}
+			}			
 
 			// log.info("Number of queued textures = "+cacheableTextures.size());	
 		}
