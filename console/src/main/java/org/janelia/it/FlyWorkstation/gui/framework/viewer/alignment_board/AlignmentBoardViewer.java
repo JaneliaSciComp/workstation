@@ -232,6 +232,10 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         // Add this last.  "show-loading" removes it.  This way, it is shown only
         // when it becomes un-busy.
         addSettingsLaunchButton();
+        if ( wrapperPanel != null ) {
+            remove( wrapperPanel );
+        }
+
         add( wrapperPanel, BorderLayout.CENTER );
         mip3d.resetView();
     }
@@ -473,14 +477,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 }
                 else {
                     showLoadingIndicator();
-                    if ( mip3d == null ) {
-                        mip3d = createMip3d();
-                        wrapperPanel = createWrapperPanel( mip3d );
-
-                    }
-                    else {
-                        mip3d.clear();
-                    }
+                    mip3d = createMip3d();
+                    wrapperPanel = createWrapperPanel( mip3d );
 
                     Entity alignmentBoard = context.getInternalEntity();
                     UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
