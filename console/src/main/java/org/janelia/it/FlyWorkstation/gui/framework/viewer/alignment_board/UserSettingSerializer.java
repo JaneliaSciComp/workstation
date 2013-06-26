@@ -198,9 +198,9 @@ public class UserSettingSerializer implements Serializable {
             parseTuples(str, 3, doubleParseAcceptor);
             if ( coordinateSets.size() >= 1 ) {
                 double[] cameraFocusArr = coordinateSets.iterator().next();
-                volumeModel.getCamera3d().setFocus(
-                        cameraFocusArr[ X_OFFS ], cameraFocusArr[ Y_OFFS ], cameraFocusArr[ Z_OFFS ]
-                );
+//                volumeModel.getCamera3d().setFocus(
+//                        cameraFocusArr[ X_OFFS ], cameraFocusArr[ Y_OFFS ], cameraFocusArr[ Z_OFFS ]
+//                );
             }
         }
 
