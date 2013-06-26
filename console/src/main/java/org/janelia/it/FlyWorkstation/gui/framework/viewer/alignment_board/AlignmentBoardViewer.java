@@ -238,6 +238,10 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
         add( wrapperPanel, BorderLayout.CENTER );
         mip3d.resetView();
+
+        // Pull settings back in from last time.
+        AlignmentBoardContext abContext = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
+        deserializeSettings( abContext );
     }
 
     @Override
@@ -290,7 +294,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     @Override
     public void renderModCompletion() {
         if ( isOutstandingRenderRequest() ) {
-            setOutstandingRenderRequest( false );
+            setOutstandingRenderRequest(false);
             AlignmentBoardContext abContext = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
             setRendering( false );
             updateRendering( abContext );
@@ -480,14 +484,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     mip3d = createMip3d();
                     wrapperPanel = createWrapperPanel( mip3d );
 
-                    Entity alignmentBoard = context.getInternalEntity();
-                    UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
-                            alignmentBoard, mip3d.getVolumeModel(), settings.getAlignmentBoardSettings()
-                    );
-                    userSettingSerializer.deserializeSettings();
-
-                    // When this is called from thread type X, and the "best guess" method is used, it blanks the screen.
-                    logger.info(" Calling adjust rate setting from {}.", Thread.currentThread().getName());
+                    deserializeSettings(context);
                     AlignmentBoardSettings alignmentBoardSettings = adjustDownsampleRateSetting();
 
                     mip3d.refresh();
@@ -518,6 +515,14 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             SessionMgr.getSessionMgr().handleException( th );
         }
 
+    }
+
+    private void deserializeSettings(AlignmentBoardContext context) {
+        Entity alignmentBoard = context.getInternalEntity();
+        UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
+                alignmentBoard, mip3d.getVolumeModel(), settings.getAlignmentBoardSettings()
+        );
+        userSettingSerializer.deserializeSettings();
     }
 
     /**

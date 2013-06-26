@@ -49,6 +49,7 @@ public class UserSettingSerializer implements Serializable {
         this.alignmentBoard = alignmentBoard;
         this.alignmentBoardSettings = alignmentBoardSettings;
         this.volumeModel = volumeModel;
+        logger.debug("Serializer: with VolumeModel {}, with cam3D {}.", volumeModel, volumeModel.getCamera3d() );
     }
 
     /**
