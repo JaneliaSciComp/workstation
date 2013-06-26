@@ -31,7 +31,7 @@ implements Iterable<TileIndex>, Iterator<TileIndex>
 		index1 = new TileIndex(x, y, z0, maxZoom, 
 				maxZoom, tileFormat.getIndexStyle(),
 				CoordinateAxis.Z);
-		index2 = index1.nextZ();		
+		index2 = index1.nextSlice();		
 	}
 
 	@Override
@@ -55,9 +55,9 @@ implements Iterable<TileIndex>, Iterator<TileIndex>
 			result = index1; // because index2 is out of bounds
 		// increment for next time
 		if (result == index1)
-			index1 = index1.previousZ();
+			index1 = index1.previousSlice();
 		else
-			index2 = index2.nextZ();
+			index2 = index2.nextSlice();
 		// switch to other direction for next time
 		useFirst = ! useFirst;
 		return result;

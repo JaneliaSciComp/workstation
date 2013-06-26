@@ -72,7 +72,6 @@ implements MouseModalWidget, TileConsumer
     protected Slot repaintSlot = new Slot() {
         @Override
         public void execute() {
-            // System.out.println("repaint slot");
             repaint();
         }
     };

@@ -12,6 +12,10 @@ implements Camera3d
     private Rotation3d rotation = new Rotation3d();
     private double pixelsPerSceneUnit = 1.0; // zoom
 
+    public BasicCamera3d() {
+    	// System.out.println("construct camera");
+    }
+    
 	public Vec3 getFocus() {
 		return focus;
 	}

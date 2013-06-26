@@ -26,11 +26,11 @@ public class TileIndex
 	private final int xyz[] = new int[3];
 	
 	private final int zoom;
-	private final int canonicalZ; // Uniquified on octree zoom level
+	private final int canonicalSlice; // Uniquified on octree zoom level
 	// Perhaps the following items should be in some sort of shared format type
 	private final int maxZoom;
 	private final IndexStyle indexStyle;
-	private final int deltaZ;
+	private final int deltaSlice;
 	private final CoordinateAxis sliceAxis;
 	
 	public TileIndex(int x, int y, int z, 
@@ -46,10 +46,11 @@ public class TileIndex
 		this.maxZoom = maxZoom;
 		this.indexStyle = indexStyle;
 		if (indexStyle == IndexStyle.OCTREE)
-			deltaZ = (int)Math.pow(2, zoom);
+			deltaSlice = (int)Math.pow(2, zoom);
 		else
-			deltaZ = 1;
-		canonicalZ = (z/deltaZ)*deltaZ;
+			deltaSlice = 1;
+		int slice = xyz[axis.index()];
+		canonicalSlice = (slice/deltaSlice)*deltaSlice;
 	}
 
 	@Override
@@ -69,20 +70,20 @@ public class TileIndex
 			if (xyz[i] != other.xyz[i])
 				return false;
 		}
-		if (canonicalZ != other.canonicalZ)
+		if (canonicalSlice != other.canonicalSlice)
 			return false;
 		if (zoom != other.zoom)
 			return false;
 		return true;
 	}
 
-	public int getCanonicalZ() {
-		return canonicalZ;
+	public int getCanonicalSlice() {
+		return canonicalSlice;
 	}
 	
 	// How many fine Z-slices represent a single step at this zoom level?
-	public int getDeltaZ() {
-		return deltaZ;
+	public int getDeltaSlice() {
+		return deltaSlice;
 	}
 	
 	public int getMaxZoom() {
@@ -133,7 +134,7 @@ public class TileIndex
 				continue; // We will compare canonicalSliceAxis below
 			result = prime * result + xyz[i];
 		}
-		result = prime * result + canonicalZ;
+		result = prime * result + canonicalSlice;
 		result = prime * result + zoom;
 		result = prime * result + sliceAxis.index();
 		return result;
@@ -155,9 +156,9 @@ public class TileIndex
 				sliceAxis);
 	}
 
-	public TileIndex nextZ() {
+	public TileIndex nextSlice() {
 		int newXyz[] = {getX(), getY(), getZ()};
-		newXyz[sliceAxis.index()] += deltaZ;
+		newXyz[sliceAxis.index()] += deltaSlice;
 		return new TileIndex(
 		newXyz[0], 
 		newXyz[1], 
@@ -168,9 +169,9 @@ public class TileIndex
 		sliceAxis);
 	}
 	
-	public TileIndex previousZ() {
+	public TileIndex previousSlice() {
 		int newXyz[] = {getX(), getY(), getZ()};
-		newXyz[sliceAxis.index()] -= deltaZ;
+		newXyz[sliceAxis.index()] -= deltaSlice;
 		return new TileIndex(
 		newXyz[0], 
 		newXyz[1], 

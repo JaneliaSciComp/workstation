@@ -12,13 +12,14 @@ import javax.media.jai.JAI;
 import javax.media.jai.ParameterBlockJAI;
 import javax.media.jai.RenderedImageAdapter;
 
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sun.media.jai.codec.FileSeekableStream;
 import com.sun.media.jai.codec.ImageCodec;
 import com.sun.media.jai.codec.ImageDecoder;
 import com.sun.media.jai.codec.SeekableStream;
+
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 
 /*
@@ -34,7 +35,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 public class BlockTiffOctreeLoadAdapter 
 extends AbstractTextureLoadAdapter 
 {
-	// private static final Logger log = LoggerFactory.getLogger(BlockTiffOctreeLoadAdapter.class);
+	private static final Logger log = LoggerFactory.getLogger(BlockTiffOctreeLoadAdapter.class);
 
 	// Metadata
 	private File topFolder;
@@ -197,13 +198,20 @@ extends AbstractTextureLoadAdapter
 		// Compute octree path from Raveler-style tile indices
 		File folder = new File(topFolder, 
 				getOctreeFilePath(tileIndex, tileFormat).toString());
+		// TODO for debugging, show file name for X tiles
 		// Compute local z slice
 		int zoomScale = (int)Math.pow(2, tileIndex.getZoom());
 		int axisIx = tileIndex.getSliceAxis().index();
 		int tileDepth = tileFormat.getTileSize()[axisIx];
-		int relativeSlice = (tileIndex.getCoordinate(axisIx) / zoomScale) % tileDepth;
+		int absoluteSlice = tileIndex.getCoordinate(axisIx) / zoomScale;
+		int relativeSlice = absoluteSlice % tileDepth;
+		// Raveller y is flipped so flip when slicing in Y (right?)
+		if (axisIx == 1)
+			relativeSlice = tileDepth - relativeSlice - 1;
 		
 		ImageDecoder[] decoders = createImageDecoders(folder, tileIndex.getSliceAxis());
+		
+		// log.info(tileIndex + "" + folder + " : " + relativeSlice);
 		
 		TextureData2dGL result = loadSlice(relativeSlice,
 				decoders);
@@ -260,6 +268,7 @@ extends AbstractTextureLoadAdapter
 		ImageDecoder decoders[] = new ImageDecoder[sc];
 		for (int c = 0; c < sc; ++c) {
 			File tiff = new File(folder, tiffBase+"."+c+".tif");
+			// log.info(tiff.getAbsolutePath());
 			// System.out.println(tileIndex+", "+tiff.toString());
 			if (! tiff.exists())
 				throw new MissingTileException();

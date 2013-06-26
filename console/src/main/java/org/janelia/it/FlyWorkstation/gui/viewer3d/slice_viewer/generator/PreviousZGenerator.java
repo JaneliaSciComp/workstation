@@ -17,7 +17,7 @@ implements Iterator<TileIndex>, Iterable<TileIndex>
 	
 	public PreviousZGenerator(TileIndex seed, int zMin) {
 		this.zMin = zMin;
-		index = seed.previousZ();
+		index = seed.previousSlice();
 	}
 	
 	@Override
@@ -34,7 +34,7 @@ implements Iterator<TileIndex>, Iterable<TileIndex>
 	public TileIndex next() {
 		TileIndex result = index;
 		// Increment Z for next time.
-		index = index.previousZ();
+		index = index.previousSlice();
 		return result;
 	}
 

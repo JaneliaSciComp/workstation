@@ -2,6 +2,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import javax.media.opengl.GL2;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
@@ -59,26 +60,6 @@ implements GLActor
 		if (tiles == null)
 			return;
 		
-		// Possibly eliminate texture cache
-		if (needsGlDisposal) {
-			TextureCache textureCache = viewTileManager.getTextureCache();
-			// log.info("Clearing tile cache");
-			dispose(gl);
-			if (needsTextureCacheClear) {
-				textureCache.clear();
-				// delete texture opengl ids
-				int obsoleteIds[] = textureCache.popObsoleteTextureIds();
-				if (obsoleteIds.length > 0) {
-					log.info("deleting "+obsoleteIds.length+" OpenGL textures");
-					gl.glDeleteTextures(obsoleteIds.length, obsoleteIds, 0);
-				}
-				// Note that tiles now have no textures
-				for (Tile2d tile : tiles) {
-					tile.setBestTexture(null);
-					tile.setStage(Tile2d.Stage.NO_TEXTURE_LOADED);
-				}
-			}
-		}
 		if (! tiles.canDisplay())
 			return;
 		// upload textures to video card, if needed

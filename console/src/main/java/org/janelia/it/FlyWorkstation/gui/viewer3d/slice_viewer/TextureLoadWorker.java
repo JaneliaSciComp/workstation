@@ -36,7 +36,7 @@ public class TextureLoadWorker implements Runnable
 		
 		// log.info("Loading texture "+index+"...");
 		
-		if (index.getSliceAxis() == CoordinateAxis.Y) {
+		if (index.getSliceAxis() == CoordinateAxis.X) {
 			// System.out.println("Y");
 		}
 		

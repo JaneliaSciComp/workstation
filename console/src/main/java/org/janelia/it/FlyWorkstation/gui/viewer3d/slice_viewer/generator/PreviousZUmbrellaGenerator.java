@@ -18,7 +18,7 @@ implements Iterator<TileIndex>, Iterable<TileIndex>
 	
 	public PreviousZUmbrellaGenerator(TileIndex seed, int zMin) {
 		this.zMin = zMin;
-		index = seed.previousZ();
+		index = seed.previousSlice();
 	}
 	
 	@Override
@@ -47,7 +47,7 @@ implements Iterator<TileIndex>, Iterable<TileIndex>
 		}
 		stepCount += 1;
 		// Increment Z for next time.
-		index = index.previousZ();
+		index = index.previousSlice();
 		return result;
 	}
 

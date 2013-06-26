@@ -243,7 +243,30 @@ implements GLActor
 		textureCoordinates[2] = new Point2D.Double(tcRight, tcBottom);
 		textureCoordinates[3] = new Point2D.Double(tcLeft, tcBottom);
 		
-		return textureCoordinates;
+		Point2D[] result = {
+				textureCoordinates[0],
+				textureCoordinates[1],
+				textureCoordinates[2],
+				textureCoordinates[3]};
+
+		// Reorder texture coordinates for X and Y viewers.
+		// Sorry I don't have a theory for this, I just want it to work.
+		// X
+		if (getIndex().getSliceAxis() == CoordinateAxis.X) {
+			result[0] = textureCoordinates[0];
+			result[1] = textureCoordinates[3];
+			result[2] = textureCoordinates[2];
+			result[3] = textureCoordinates[1];
+		}
+		// Y
+		else if (getIndex().getSliceAxis() == CoordinateAxis.Y) {
+			result[0] = textureCoordinates[0];
+			result[1] = textureCoordinates[3];
+			result[2] = textureCoordinates[2];
+			result[3] = textureCoordinates[1];
+		}
+		
+		return result;
 	}
 	
 	private int[] getWhdToXyz() {

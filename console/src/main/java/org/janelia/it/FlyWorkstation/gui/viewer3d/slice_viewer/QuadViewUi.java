@@ -72,7 +72,8 @@ public class QuadViewUi extends JPanel
 	private SliceViewer sliceViewer = new SliceViewer(
 			orthoViewContextSharer.getCapabilities(),
 			orthoViewContextSharer.getChooser(),
-			orthoViewContextSharer.getContext());
+			orthoViewContextSharer.getContext(),
+			camera);
 	private boolean modifierKeyPressed = false;
 	private JPanel zScanPanel = new JPanel();
 	private JSlider zScanSlider = new JSlider();
@@ -326,7 +327,7 @@ public class QuadViewUi extends JPanel
             imageColorModel.getColorModelChangedSignal().connect(v.getViewer().repaintSlot);
             v.getViewer().addActor(sliceActor);
             tileServer.getViewTextureChangedSignal().connect(v.getViewer().repaintSlot);
-            v.getViewer().addActor(new TileOutlineActor(viewTileManager));
+            // v.getViewer().addActor(new TileOutlineActor(viewTileManager)); // for debugging
             tileServer.addViewTileManager(viewTileManager);
             // Add skeleton actor AFTER slice actor
             v.getViewer().setSkeletonActor(sharedSkeletonActor);
@@ -957,7 +958,7 @@ public class QuadViewUi extends JPanel
 	        	for (File fileRoot : File.listRoots()) { // other drive letters
 	        		String p = fileRoot.getAbsolutePath();
 	        		prefixesToTry.add(p);
-	        		System.out.println(p);
+	        		// System.out.println(p);
 	        	}
 	    	}
 	    	if (osName.contains("os x")) {

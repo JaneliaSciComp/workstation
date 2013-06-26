@@ -69,23 +69,23 @@ implements GLEventListener
 
 	@Override
 	public void display(GLAutoDrawable arg0) {
-		log.info("display");
+		// log.info("display");
 	}
 
 	@Override
 	public void dispose(GLAutoDrawable arg0) {
-		log.info("dispose");
+		// log.info("dispose");
 	}
 
 	@Override
 	public void init(GLAutoDrawable arg0) {
-		log.info("init");
+		// log.info("init");
 	}
 
 	@Override
 	public void reshape(GLAutoDrawable arg0, int arg1, int arg2, int arg3,
 			int arg4) {
-		log.info("reshape");
+		// log.info("reshape");
 	}
 
 	public GLCapabilities getCapabilities() {

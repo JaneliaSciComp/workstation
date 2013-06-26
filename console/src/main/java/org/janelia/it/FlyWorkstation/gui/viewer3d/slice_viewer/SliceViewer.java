@@ -118,24 +118,21 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
     
 	public SliceViewer(GLCapabilities capabilities,
 			GLCapabilitiesChooser chooser,
-			GLContext sharedContext) 
+			GLContext sharedContext,
+			ObservableCamera3d camera) 
 	{
 		super(capabilities, chooser, sharedContext);
-		init();
+		init(camera);
 	}
 	
-	private SliceViewer() {
-		init();
-	}
-	
-	private void init() {
+	private void init(ObservableCamera3d camera) {
         addMouseListener(this);
         addMouseMotionListener(this);
         addMouseWheelListener(this);
 	    setMouseMode(MouseMode.Mode.PAN);
 	    setWheelMode(WheelMode.Mode.SCAN);
 		addGLEventListener(renderer);
-		setCamera(new BasicObservableCamera3d());
+		setCamera(camera);
 		//
 		ViewTileManager viewTileManager = new ViewTileManager(this);
 		viewTileManager.setVolumeImage(tileServer.getSharedVolumeImage());
@@ -153,7 +150,7 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
         // setToolTipText("Double click to center on a point.");
         setImageColorModel(new ImageColorModel(volumeImage));
         renderer.addActor(sliceActor);
-        renderer.addActor(new TileOutlineActor(viewTileManager));
+        // renderer.addActor(new TileOutlineActor(viewTileManager));
         tileServer.getViewTextureChangedSignal().connect(getRepaintSlot());
         imageColorModel.getColorModelChangedSignal().connect(getRepaintSlot());
         // Initialize pointComputer for interconverting pixelXY <=> sceneXYZ
