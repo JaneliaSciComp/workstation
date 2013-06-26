@@ -65,9 +65,6 @@ public class QuadViewUi extends JPanel
 
 	private boolean bAllowOrthoView = true; // false until ready for release
 	
-    // this is the entity that's selected when the viewer is created:
-    private Entity initialEntity;
-    
 	// One shared camera for all viewers.
 	// (there's only one viewer now actually, but you know...)
 	private BasicObservableCamera3d camera = new BasicObservableCamera3d();
@@ -247,15 +244,17 @@ public class QuadViewUi extends JPanel
 	 */
 	public QuadViewUi(JFrame parentFrame, Entity initialEntity, boolean overrideFrameMenuBar)
 	{
-		this.initialEntity = initialEntity;
-		annotationMgr.setInitialEntity(initialEntity);
-
 		colorChannelWidget_3.setVisible(false);
 		colorChannelWidget_2.setVisible(false);
 		colorChannelWidget_1.setVisible(false);
 		colorChannelWidget_0.setVisible(false);
 		setupUi(parentFrame, overrideFrameMenuBar);
         interceptModifierKeyPresses();
+
+		// must come after setupUi(), since it triggers UI changes:
+		annotationMgr.setInitialEntity(initialEntity);
+
+
         // 
         clearCacheAction.putValue(Action.NAME, "Clear Cache");
         clearCacheAction.putValue(Action.SHORT_DESCRIPTION, 
@@ -651,6 +650,7 @@ public class QuadViewUi extends JPanel
 		
         AnnotationPanel annotationPanel = new AnnotationPanel(annotationMgr, annotationModel);
         controlsPanel.add(annotationPanel);
+
 
 		JPanel statusBar = new JPanel();
 		statusBar.setMaximumSize(new Dimension(32767, 30));

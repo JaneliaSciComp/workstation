@@ -10,6 +10,7 @@ import java.awt.*;
 
 // workstation imports
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot1;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 /**
@@ -21,6 +22,14 @@ public class WorkspaceInfoPanel extends JPanel
 {
 
     JLabel workspaceNameLabel;
+
+    public Slot1<TmWorkspace> updateWorkspaceSlot = new Slot1<TmWorkspace>() {
+        @Override
+        public void execute(TmWorkspace workspace) {
+            updateWorkspace(workspace);
+        }
+    };
+
 
 
     public WorkspaceInfoPanel() {
@@ -46,7 +55,7 @@ public class WorkspaceInfoPanel extends JPanel
     }
 
 
-    public void update(TmWorkspace workspace) {
+    public void updateWorkspace(TmWorkspace workspace) {
         workspaceNameLabel.setText(workspace.getName());
     }
 

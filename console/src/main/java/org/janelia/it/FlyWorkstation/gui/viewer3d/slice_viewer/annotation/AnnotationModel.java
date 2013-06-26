@@ -4,6 +4,8 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.annotation;
 // workstation imports
 
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
+
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal1;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
@@ -25,16 +27,21 @@ public class AnnotationModel
     private ModelMgr modelMgr;
     private SessionMgr sessionMgr;
 
+    private TmWorkspace currentWorkspace;
+    private TmNeuron currentNeuron;
+
+    // signals
+    public Signal1<TmWorkspace> workspaceChangedSignal = new Signal1<TmWorkspace>();
+
+
     public TmWorkspace getCurrentWorkspace() {
         return currentWorkspace;
     }
 
     public void setCurrentWorkspace(TmWorkspace currentWorkspace) {
         this.currentWorkspace = currentWorkspace;
+        loadWorkspace(currentWorkspace);
     }
-
-    private TmWorkspace currentWorkspace;
-    private TmNeuron currentNeuron;
 
     public AnnotationModel() {
 
@@ -91,17 +98,19 @@ public class AnnotationModel
 
         // notify listeners
 
+
         return currentNeuron;
         
     }
 
     public TmWorkspace createWorkspace(Entity parentEntity, Entity brainSample, String name) {
-    
+        TmWorkspace workspace;
+
         // do stuff
         Subject subject = sessionMgr.getSubject();
 
         try {
-            currentWorkspace = modelMgr.createTiledMicroscopeWorkspace(parentEntity.getId(),
+            workspace = modelMgr.createTiledMicroscopeWorkspace(parentEntity.getId(),
                 brainSample.getId(), name, subject.getKey());
         }  catch (Exception e) {
             e.printStackTrace();
@@ -110,10 +119,11 @@ public class AnnotationModel
 
 
 
-        // notify listeners
+        // trigger workspace load
+        loadWorkspace(workspace);
 
 
-        return currentWorkspace;
+        return workspace;
 
     }
 
@@ -134,6 +144,14 @@ public class AnnotationModel
         // probably will actually get more info passed in, eg, which neurite to export
 
         return false;
+
+    }
+
+    private void loadWorkspace(TmWorkspace workspace) {
+        currentWorkspace = workspace;
+
+        // notify listeners
+        workspaceChangedSignal.emit(currentWorkspace);
 
     }
 

@@ -10,11 +10,14 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.api.entity_model.management.ModelMgr;
 
 import org.janelia.it.jacs.model.entity.Entity;
+import org.janelia.it.jacs.model.entity.EntityConstants;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
+import sun.awt.ModalityListener;
+
+import javax.swing.*;
 
 
-
-public class AnnotationManager 
+public class AnnotationManager
 {
 
     // annotation model object
@@ -28,6 +31,8 @@ public class AnnotationManager
     // current neurite (?)
 
     // current annotation
+
+
 
 
     public AnnotationManager(AnnotationModel annotationModel) {
@@ -44,7 +49,41 @@ public class AnnotationManager
     }
 
     public void setInitialEntity(Entity initialEntity) {
+        TmWorkspace workspace;
+
+        if (initialEntity.getEntityType().getName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+            // pass
+        }
+
+        else if (initialEntity.getEntityType().getName().equals(EntityConstants.TYPE_TILE_MICROSCOPE_WORKSPACE)) {
+            // get associated brain sample and load it
+            // not done yet
+
+            // load the workspace itself
+            try {
+                workspace = new TmWorkspace(initialEntity);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return;
+            }
+            annotationModel.setCurrentWorkspace(workspace);
+        }
+
         this.initialEntity = initialEntity;
+
+
+
+
+
+        // (eventually) update state to saved state (selection, visibility, etc)
+
+
+
+        // (now) update (populate) neuron list; or: model does this, notifies?
+
+
+
+
     }
     
 
@@ -72,7 +111,7 @@ public class AnnotationManager
 
     }
 
-    public boolean createNeuronFromButton() {
+    public void createNeuron() {
         // is there a workspace?  if not, fail; actually, doesn't the model know?
         //  yes; who should test?  who should pop up UI feedback to user?
         //  model shouldn't, but should annMgr? 
@@ -80,25 +119,49 @@ public class AnnotationManager
         if (annotationModel.getCurrentWorkspace() == null) {
             // dialog?
 
-            return false;
+            return;
+        }
+
+        // ask user for name; you *can* rename on the sidebar, but that will 
+        //  trigger a need to reload the slice viewer, so don't make the user go 
+        //  through that
+        String neuronName = (String)JOptionPane.showInputDialog(
+            null,
+            "Neuron name:",
+            "Create neuron",
+            JOptionPane.PLAIN_MESSAGE,
+            null,                           // icon
+            null,                           // choice list; absent = freeform
+            "new neuron");
+
+        // validate neuron name;  are there any rules for entity names?
+        if ((neuronName == null) || (neuronName.length() == 0)) {
+            neuronName = "new neuron";
         }
 
 
-        // create it; you can rename entities in the sidebar, so don't bother prompting
-        //  for a name when you created it
-        TmNeuron neuron = annotationModel.createNeuron("untitled");
+
+        // create it:
+        TmNeuron neuron = annotationModel.createNeuron(neuronName);
         if (neuron == null) {
-            return false;
+            // dialog
+            // failure dialog
+            JOptionPane.showMessageDialog(null, 
+                "Could not create neuron!",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
         }
 
-        return true;
 
     }
 
-    public boolean createWorkspaceFromButton() {
+    public void createWorkspace() {
 
         // are we in a workspace now?  if so, is it saved before 
         //  we create a new one?
+        if (annotationModel.getCurrentWorkspace() != null) {
+            // dialog
+        }
 
 
         // get current entity; make sure it's a sample, or if it's a workspace,
@@ -129,17 +192,20 @@ public class AnnotationManager
             sampleEntity = modelMgr.getEntityById(1872744417371095216L);
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
+            return;
         }
 
         TmWorkspace workspace = annotationModel.createWorkspace(parentEntity, sampleEntity, "untitled");
         if (workspace == null) {
-            return false;
+            // failure dialog
+            JOptionPane.showMessageDialog(null, 
+                "Could not create workspace!",
+                "Error",
+                JOptionPane.ERROR_MESSAGE);
         }
 
-        System.out.println("workspace created with ID " + workspace.getId());
+        // System.out.println("workspace created with ID " + workspace.getId());
 
-        return true;
 
     }
 

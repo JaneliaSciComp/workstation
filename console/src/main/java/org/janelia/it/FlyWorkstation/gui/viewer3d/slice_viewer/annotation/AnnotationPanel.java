@@ -27,7 +27,7 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
  *
  * djo, 5/13
  */
-public class AnnotationPanel extends JPanel implements TreeSelectionListener, ActionListener
+public class AnnotationPanel extends JPanel implements TreeSelectionListener
 {
 
     // things we get data from
@@ -38,6 +38,7 @@ public class AnnotationPanel extends JPanel implements TreeSelectionListener, Ac
 
 
 
+    // UI components
     private JTree neuriteTree;
 
     private JLabel nodeLabel;
@@ -46,22 +47,57 @@ public class AnnotationPanel extends JPanel implements TreeSelectionListener, Ac
     private NeuriteTreePanel neuriteTreePanel;
     private WorkspaceInfoPanel workspaceInfoPanel;
 
+    // actions
+    private final Action createNeuronAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            annotationMgr.createNeuron();
+            }
+        };
+
+    private final Action createWorkspaceAction = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            annotationMgr.createWorkspace();
+            }
+        };
+
+    private final Action testItem1Action = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            // do test thing 1
+            // test: have we retrieved the initial entity properly?  yes!
+            System.out.println("initialEntity = " + annotationMgr.getInitialEntity());
+            System.out.println("initialEntity ID = " + annotationMgr.getInitialEntity().getId());
+
+            // can we get user?  yes, this works:
+            SessionMgr sessionMgr = SessionMgr.getSessionMgr();
+            Subject subject = sessionMgr.getSubject();
+            System.out.println("logged in subject name = " + subject.getName());
+            System.out.println("logged in subject key = " + subject.getKey());
+            }
+        };
+
+    private final Action testItem2Action = new AbstractAction() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            // do test thing 2
+            System.out.println("test item 2");
+            }
+        };
+
+
     public AnnotationPanel(AnnotationManager annotationMgr, AnnotationModel annotationModel) {
         this.annotationMgr = annotationMgr;
         this.annotationModel = annotationModel;
 
         setupUI();
+        setupSignals();
+
     }
 
-    private void clearTestData() {
-        neuronInfoPanel.clear();
-    }
-
-    private void loadTestData() {
-        // this is just stuff to put into info panels
-        TmNeuron neuron = new TmNeuron(1L, "test neuron");
-
-        neuronInfoPanel.update(neuron);
+    private void setupSignals() {
+        annotationModel.workspaceChangedSignal.connect(workspaceInfoPanel.updateWorkspaceSlot);
     }
 
     private void setupUI() {
@@ -121,33 +157,30 @@ public class AnnotationPanel extends JPanel implements TreeSelectionListener, Ac
         add(Box.createRigidArea(new Dimension(0, 20)));
         add(new JLabel("Menu proxy"));
 
-        /* 
         JButton createWorkspaceButton = new JButton("Create workspace");
-        createWorkspaceButton.setActionCommand("create workspace");
-        createWorkspaceButton.addActionListener(this);
+        createWorkspaceAction.putValue(Action.NAME, "Create workspace");
+        createWorkspaceAction.putValue(Action.SHORT_DESCRIPTION, "Create a new workspace");
+        createWorkspaceButton.setAction(createWorkspaceAction);        
         add(createWorkspaceButton);
 
         JButton createNeuronButton = new JButton("Create neuron");
-        createNeuronButton.setActionCommand("create neuron");
-        createNeuronButton.addActionListener(this);
+        createNeuronAction.putValue(Action.NAME, "Create neuron");
+        createNeuronAction.putValue(Action.SHORT_DESCRIPTION, "Create a new neuron");
+        createNeuronButton.setAction(createNeuronAction);        
         add(createNeuronButton);
 
-        // export swc
-        JButton exportSWCButton = new JButton("Export SWC file...");
-        exportSWCButton.setActionCommand("export swc");
-        exportSWCButton.addActionListener(this);
-        add(exportSWCButton);
-
         JButton testItem1Button = new JButton("Test item 1");
-        testItem1Button.setActionCommand("test item 1");
-        testItem1Button.addActionListener(this);
+        testItem1Action.putValue(Action.NAME, "Test item 1");
+        testItem1Action.putValue(Action.SHORT_DESCRIPTION, "Test item 1");
+        testItem1Button.setAction(testItem1Action);
         add(testItem1Button);
 
         JButton testItem2Button = new JButton("Test item 2");
-        testItem2Button.setActionCommand("test item 2");
-        testItem2Button.addActionListener(this);
+        testItem2Action.putValue(Action.NAME, "Test item 2");
+        testItem2Action.putValue(Action.SHORT_DESCRIPTION, "Test item 2");
+        testItem2Button.setAction(testItem2Action);
         add(testItem2Button);
-        */
+
 
 
         // the bilge...
@@ -156,68 +189,6 @@ public class AnnotationPanel extends JPanel implements TreeSelectionListener, Ac
 
     }
 
-    public void actionPerformed(ActionEvent e) {
-        // all this will be replaced by a menu with properly defined actions;
-        //  for now, just do it quickly for testing and development:
-
-        // would you believe you can't switch on a String until Java 7?
-        String commandString = e.getActionCommand();
-
-        if (commandString.equals("load test data")) {
-            loadTestData();
-        } 
-        else if (commandString.equals("clear test data")) {
-            clearTestData();
-        }
-        else if (commandString.equals("create workspace")) {
-            // this will someday become a menu item
-            if (!annotationMgr.createWorkspaceFromButton()) {
-                // failure dialog
-                JOptionPane.showMessageDialog(this.getParent(),
-                    "Failed to create workspace!",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            }
-        }
-        else if (commandString.equals("create neuron")) {
-            // this will someday become a menu item
-            if (!annotationMgr.createNeuronFromButton()) {
-                // failure dialog
-                JOptionPane.showMessageDialog(this.getParent(),
-                    "Failed to create neuron!",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            }
-        }
-        else if (commandString.equals("test item 1")) {
-            // do test thing 1
-            // test: have we retrieved the initial entity properly?  yes!
-            System.out.println("initialEntity = " + annotationMgr.getInitialEntity());
-            System.out.println("initialEntity ID = " + annotationMgr.getInitialEntity().getId());
-
-            // can we get user?  yes, this works:
-            SessionMgr sessionMgr = SessionMgr.getSessionMgr();
-            Subject subject = sessionMgr.getSubject();
-            System.out.println("logged in subject name = " + subject.getName());
-            System.out.println("logged in subject key = " + subject.getKey());
-
-        }
-        else if (commandString.equals("test item 2")) {
-            // do test thing 2
-        }
-        else if (commandString.equals("export swc")) {
-            // export swc file
-
-            // pop file save as dialog
-            // see OpenFolderAction.java for hints on how to do that
-
-            // send filename to annmodel to do the work; how will it report success?
-            // will need some way to signal which structure if it's ambiguous? (ie, if
-            //  we have multiple neurites and swc can't handle more than one?)
-            // annotationModel.exportSWC(filename);
-        }
-
-    }
 
     private void setupNeuriteTreeNavigator() {
         add(Box.createRigidArea(new Dimension(0, 20)));
