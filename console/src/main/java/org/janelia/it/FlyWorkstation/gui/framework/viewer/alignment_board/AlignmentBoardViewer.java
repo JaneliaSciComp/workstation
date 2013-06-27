@@ -77,6 +77,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private boolean outstandingRenderRequest = false;
 
     private boolean boardOpen = false;
+    private Double cachedDownSampleGuess = null;
 
     public AlignmentBoardViewer(ViewerPane viewerPane) {
         super(viewerPane);
@@ -539,6 +540,12 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         final AlignmentBoardSettings[] alignmentBoardSettings =
                 new AlignmentBoardSettings[] { settings.getAlignmentBoardSettings() };
         if ( alignmentBoardSettings[ 0 ].getChosenDownSampleRate() == 0.0 ) {
+            // Short-cut: do not expect card to be swapped out during the session!
+            if ( cachedDownSampleGuess != null ) {
+                alignmentBoardSettings[ 0 ].setDownSampleGuess(cachedDownSampleGuess);
+                return alignmentBoardSettings[ 0 ];
+            }
+
             // Must find the best downsample rate.
             final GpuSampler sampler = new GpuSampler( this.getBackground() );
             final GLJPanel feedbackPanel = new GLJPanel();
@@ -555,13 +562,27 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
                     Future<Integer> freeGraphicsMemoryFuture = sampler.getEstimatedTextureMemory();
                     Future<String> highestSupportedFuture = sampler.getHighestGlslVersion();
+                    Future<GpuSampler.GpuID> gpuIdFuture = sampler.getGpuId();
+
+                    GpuSampler.GpuID gpuId = null;
 
                     final Integer[] freeGraphicsMemoryArr = new Integer[ 1 ];
                     final String[] highestSupportedArr = new String[ 1 ];
+
                     try {
                         // Must set the down sample rate to the newly-discovered best.
                         freeGraphicsMemoryArr[ 0 ] = freeGraphicsMemoryFuture.get( 2, TimeUnit.MINUTES );
                         highestSupportedArr[ 0 ] = highestSupportedFuture.get( 2, TimeUnit.MINUTES );
+
+                        gpuId = gpuIdFuture.get();
+                        if ( gpuIdFuture != null ) {
+                            logger.info(
+                                    "GPU vendor {}, renderer {} version " + gpuId.version, gpuId.vender, gpuId.renderer
+                            );
+                        }
+                        else {
+                            logger.warn( "No vender data returned." );
+                        }
                     } catch ( Exception ex ) {
                         ex.printStackTrace();
                         SessionMgr.getSessionMgr().handleException( ex );
@@ -570,15 +591,33 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     // 1.5Gb in Kb increments
                     logger.info( "ABV seeing free memory estimate of {}.", freeGraphicsMemoryArr[ 0 ] );
                     logger.info( "ABV seeting highest supported version of {}.", highestSupportedArr[ 0 ] );
-                    if ( freeGraphicsMemoryArr[ 0 ] == 0  ||  freeGraphicsMemoryArr[ 0 ] < LEAST_FULLSIZE_MEM )
-                        alignmentBoardSettings[ 0 ].setDownSampleGuess(2.0);
-                    else
+
+                    if ( freeGraphicsMemoryArr[ 0 ] > LEAST_FULLSIZE_MEM ) {
                         alignmentBoardSettings[ 0 ].setDownSampleGuess(1.0);
+                    }
+                    else if ( gpuId != null  &&  GpuSampler.isDeptStandardGpu( gpuId.renderer ) ) {
+                        alignmentBoardSettings[ 0 ].setDownSampleGuess(1.0);
+                    }
+                    else {
+                        Future<Boolean> isDeptPreferred = sampler.isDepartmentStandardGraphicsMac();
+                        try {
+                            if ( isDeptPreferred.get() ) {
+                                logger.info("User has preferred card.");
+                                alignmentBoardSettings[ 0 ].setDownSampleGuess(1.0);
+                            }
+                            else {
+                                alignmentBoardSettings[ 0 ].setDownSampleGuess(2.0);
+                            }
+                        } catch ( Exception ex ) {
+                            logger.warn( "Ignore this message if this system is not a Mac: department-preferred grapchics detection not working on this platform." );
+                        }
+                    }
                 }
             };
             new Thread( runnable ).start();
 
         }
+        cachedDownSampleGuess = alignmentBoardSettings[ 0 ].getDownSampleGuess();
         return alignmentBoardSettings[ 0 ];
     }
 
