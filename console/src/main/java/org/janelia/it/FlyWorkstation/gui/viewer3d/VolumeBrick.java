@@ -65,7 +65,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
     private VtxCoordBufMgr bufferManager;
     private VolumeModel volumeModel;
 
-    private Logger logger = LoggerFactory.getLogger( VolumeBrick.class );
+    private static Logger logger = LoggerFactory.getLogger( VolumeBrick.class );
 
     static {
         try {
@@ -79,7 +79,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
             //            }
             //        });
         } catch ( Throwable th ) {
-            System.out.println( "INFO: " + new java.util.Date() + VolumeBrick.class.getName() + ": No GL3 profile available" );
+            logger.error( "No GL3 profile available" );
         }
 
     }
