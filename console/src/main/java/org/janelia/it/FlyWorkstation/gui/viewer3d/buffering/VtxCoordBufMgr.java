@@ -214,9 +214,11 @@ public class VtxCoordBufMgr {
 
     public void releaseBuffers(GL2 gl) {
         releaseBuffers(gl, geometryVertexBufferHandles);
+        geometryVertexBufferHandles = null;
         releaseBuffers(gl, textureCoordBufferHandles);
+        textureCoordBufferHandles = null;
         releaseBuffers(gl, indexBufferHandles);
-
+        indexBufferHandles = null;
     }
 
     /**
