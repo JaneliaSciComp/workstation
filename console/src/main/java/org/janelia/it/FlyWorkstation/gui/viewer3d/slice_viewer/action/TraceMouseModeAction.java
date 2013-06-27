@@ -28,7 +28,8 @@ public class TraceMouseModeAction extends AbstractAction {
 				+"Middle-button drag to Pan XY<br>" // done
 				+"Scroll wheel to scan Z<br>" // done
 				+"SHIFT-scroll wheel to zoom<br>" // done
-				+"Right-click for context menu" // TODO
+				+"Double-click to recenter on a point<br>"
+				+"Right-click for context menu"
 				+"</html>");
 	}
 	

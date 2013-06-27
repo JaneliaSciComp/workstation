@@ -296,7 +296,7 @@ public class QuadViewUi extends JPanel
         // TODO other orthogonal viewers
         OrthogonalPanel viewPanels[] = {neViewer, swViewer, seViewer};
         SharedVolumeImage vi = sliceViewer.getTileServer().getSharedVolumeImage();
-        SkeletonActor sharedSkeletonActor = new SkeletonActor();
+        SkeletonActor sharedSkeletonActor = sliceViewer.getSkeletonActor();
         sharedSkeletonActor.setSkeleton(sliceViewer.getSkeleton());
         TileServer tileServer = 
         		sliceViewer.getTileServer(); // now that context is shared...
@@ -305,8 +305,7 @@ public class QuadViewUi extends JPanel
             mouseModeChangedSignal.connect(v.setMouseModeSlot);
             wheelModeChangedSignal.connect(v.setWheelModeSlot);
             v.setCamera(camera);
-            // TODO - shared skeleton actor does not work.
-            // (at least not shared between SliceViewer and orthogonal viewers)
+            // TODO - move most of this setup into OrthogonalViewer class.
             v.getViewer().statusMessageChanged.connect(setStatusMessageSlot);
             v.setSharedVolumeImage(vi);
             v.setSystemMenuItemGenerator(new MenuItemGenerator() {

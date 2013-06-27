@@ -280,14 +280,7 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
 
 	@Override
 	public void mouseClicked(MouseEvent event) {
-		if (event.getClickCount() == 1) {
-			mouseMode.mouseClicked(event);
-		}
-		else if (event.getClickCount() == 2) {
-			Point2D p = getPixelOffsetFromCenter(event.getPoint());
-			camera.incrementFocusPixels(p.getX(), p.getY(), 0.0);
-		}
-		requestFocusInWindow();
+		mouseMode.mouseClicked(event);
 	}
 	
 	@Override

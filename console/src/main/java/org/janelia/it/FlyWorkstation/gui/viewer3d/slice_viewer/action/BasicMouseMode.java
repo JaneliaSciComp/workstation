@@ -100,6 +100,7 @@ public class BasicMouseMode implements MouseMode
 	public void mouseClicked(MouseEvent event) {
 		setPoint(event.getPoint());
 		setPreviousPoint(null);
+		widget.getComponent().requestFocusInWindow();
 	}
 
 	@Override

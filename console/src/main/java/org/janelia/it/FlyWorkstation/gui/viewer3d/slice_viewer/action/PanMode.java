@@ -18,6 +18,14 @@ extends BasicMouseMode
 	}
 	
     @Override
+    public void mouseClicked(MouseEvent event) {
+    	super.mouseClicked(event);
+		if (event.getClickCount() == 2)
+			// center on slice point
+			camera.setFocus(worldFromPixel(event.getPoint()));
+    }
+
+    @Override
 	public void mouseDragged(MouseEvent event) {
 		super.mouseDragged(event);
 		if (getPreviousPoint() == null)

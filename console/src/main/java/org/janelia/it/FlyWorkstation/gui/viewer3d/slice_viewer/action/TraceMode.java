@@ -28,7 +28,7 @@ implements MouseMode, KeyListener
 	private Skeleton skeleton;
 	private SkeletonActor skeletonActor;
 	private int currentHover = -1;
-	private Anchor hoverAnchor = null;
+	// private Anchor hoverAnchor = null;
 	private Vec3 popupXyz = null;
 	// Sometimes users move an anchor with the mouse
 	private Anchor dragAnchor = null;
@@ -40,6 +40,7 @@ implements MouseMode, KeyListener
 	private Point pressPoint;
 	private Viewport viewport;
 	private BoundingBox3d boundingBox;
+	// private Anchor nextParent = null;
 	
 	public TraceMode(Skeleton skeleton) {
 		this.skeleton = skeleton;
@@ -60,6 +61,7 @@ implements MouseMode, KeyListener
 				+"Middle-button drag to Pan XY<br>" // done
 				+"Scroll wheel to scan Z<br>" // done
 				+"SHIFT-scroll wheel to zoom<br>" // done
+				+"Double-click to recenter on a point<br>"
 				+"Right-click for context menu" // TODO
 				+"</html>";
 				*/
@@ -70,6 +72,31 @@ implements MouseMode, KeyListener
 		super.mouseClicked(event);
 		// Java swing mouseClicked() requires zero motion and is therefore stupid.
 		// onMouseActuallyClicked(event);
+		// 
+		// But this will have to do for double clicking...
+		// Double click to center; on anchor or on slice point
+		if (event.getClickCount() == 2) {
+            if (currentHover >= 0) {
+                Anchor hoverAnchor = skeletonActor.getAnchorAtIndex(currentHover);
+                camera.setFocus(hoverAnchor.getLocation());
+            }
+            else {
+				// center on slice point
+				camera.setFocus(worldFromPixel(event.getPoint()));
+			}
+		}
+	}
+	
+	private void appendAnchor(Vec3 xyz) {
+		Anchor anchor = skeleton.addAnchorAtXyz(xyz, skeletonActor.getNextParent());
+		skeletonActor.setNextParent(anchor);
+		camera.setFocus(anchor.getLocation());
+	}
+	
+	private void seedAnchor(Vec3 xyz) {
+		Anchor anchor = skeleton.addAnchorAtXyz(xyz, null);
+		skeletonActor.setNextParent(anchor);
+		camera.setFocus(anchor.getLocation());		
 	}
 	
 	private void onMouseActuallyClicked(MouseEvent event) {
@@ -79,13 +106,12 @@ implements MouseMode, KeyListener
 			// Place new anchor
 			Vec3 xyz = worldFromPixel(event.getPoint());
 			// System.out.println("Trace click "+xyz);
-			skeleton.addAnchorAtXyz(xyz);
+			appendAnchor(xyz);
 		}
 		else if (event.getButton() == MouseEvent.BUTTON1) {
 			if (currentHover >= 0) {
 				Anchor anchor = skeletonActor.getAnchorAtIndex(currentHover);
-				if (skeleton.setNextParent(anchor))
-					skeletonActor.skeletonActorChangedSignal.emit(); // marker changes
+				skeletonActor.setNextParent(anchor);
 				// System.out.println("select parent anchor "+currentHover);
 			}
 		}
@@ -223,6 +249,12 @@ implements MouseMode, KeyListener
 		this.boundingBox = boundingBox;
 	}
 
+	private Anchor getHoverAnchor() {
+        if (currentHover >= 0)
+            return skeletonActor.getAnchorAtIndex(currentHover);
+		return null;
+	}
+	
 	@Override
     public MenuItemGenerator getMenuItemGenerator() {
         return new MenuItemGenerator() {
@@ -230,10 +262,6 @@ implements MouseMode, KeyListener
             public List<JMenuItem> getMenus(MouseEvent event) 
             {
             	    List<JMenuItem> result = new Vector<JMenuItem>();
-                    if (currentHover >= 0)
-                        hoverAnchor = skeletonActor.getAnchorAtIndex(currentHover);
-                    else
-                        hoverAnchor = null;
                     popupXyz = worldFromPixel(event.getPoint());
                     // Cancel 
                     result.add(new JMenuItem(new AbstractAction("Cancel [Escape]") {
@@ -243,14 +271,14 @@ implements MouseMode, KeyListener
                     }));
                     // TODO - top level File, Edit, etc.
                     ///// Popup menu items that require an anchor under the mouse /////
-                    if (hoverAnchor != null) {
+                    if (getHoverAnchor() != null) {
                         result.add(null); // separator
                         // Center
                         result.add(new JMenuItem(new AbstractAction("Center on this anchor") {
                             private static final long serialVersionUID = 1L;
                             @Override
                             public void actionPerformed(ActionEvent e) {
-                                camera.setFocus(hoverAnchor.getLocation());
+                                camera.setFocus(getHoverAnchor().getLocation());
                             }
                         }));                    
                         // Make Parent
@@ -258,18 +286,18 @@ implements MouseMode, KeyListener
                             private static final long serialVersionUID = 1L;
                             @Override
                             public void actionPerformed(ActionEvent e) {
-                                skeleton.setNextParent(hoverAnchor);
+                                skeletonActor.setNextParent(getHoverAnchor());
                             }
                         }));
                         // Connect to current parent
-                        if ( (skeleton.getNextParent() != null) 
-                                && (skeleton.getNextParent() != hoverAnchor) )
+                        if ( (skeletonActor.getNextParent() != null) 
+                                && (skeletonActor.getNextParent() != getHoverAnchor()) )
                         {
                             result.add(new JMenuItem(new AbstractAction("Connect parent anchor to this anchor") {
                                 private static final long serialVersionUID = 1L;
                                 @Override
                                 public void actionPerformed(ActionEvent e) {
-                                    skeleton.connect(hoverAnchor, skeleton.getNextParent());
+                                    skeleton.connect(getHoverAnchor(), skeletonActor.getNextParent());
                                 }
                             }));                     
                         }
@@ -278,28 +306,26 @@ implements MouseMode, KeyListener
                             private static final long serialVersionUID = 1L;
                             @Override
                             public void actionPerformed(ActionEvent e) {
-                                skeleton.delete(hoverAnchor);
+                                skeleton.delete(getHoverAnchor());
                             }
                         }));
                     }
                     ///// Popup menu items that do not require an anchor under the mouse /////
                     result.add(null); // separator
                     // Add branch to tree
-                    if (skeleton.getNextParent() != null) {
+                    if (skeletonActor.getNextParent() != null) {
                         result.add(new JMenuItem(new AbstractAction("Append new anchor here [Shift-click]") {
                             private static final long serialVersionUID = 1L;
                             @Override
                             public void actionPerformed(ActionEvent e) {
-                                skeleton.addAnchorAtXyz(popupXyz);
+                            	appendAnchor(popupXyz);
                             }
                         }));                 
                         // Start new tree
                         result.add(new JMenuItem(new AbstractAction("Begin new neurite here") {
-                            private static final long serialVersionUID = 1L;
                             @Override
                             public void actionPerformed(ActionEvent e) {
-                                skeleton.setNextParent(null);
-                                skeleton.addAnchorAtXyz(popupXyz);
+                                seedAnchor(popupXyz);
                             }
                         }));
                     }
@@ -309,8 +335,7 @@ implements MouseMode, KeyListener
                             private static final long serialVersionUID = 1L;
                             @Override
                             public void actionPerformed(ActionEvent e) {
-                                skeleton.setNextParent(null);
-                                skeleton.addAnchorAtXyz(popupXyz);
+                                seedAnchor(popupXyz);
                             }
                         }));
                     }

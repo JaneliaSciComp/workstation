@@ -21,8 +21,15 @@ public class PanModeAction extends AbstractAction
 		KeyStroke accelerator = KeyStroke.getKeyStroke(acc);
 		putValue(ACCELERATOR_KEY, accelerator);
 		putValue(SHORT_DESCRIPTION, 
-				"Set mouse mode to Pan left right up or down."
-				+ "\n (Shortcut: " + acc + ")");
+				"<html>"
+				+"Set mouse mode to Pan left right up or down.["+acc+"]<br>"
+				+"<br>"
+				+"Click and drag to move image<br>"
+				+"Scroll wheel to scan Z<br>" // done
+				+"SHIFT-scroll wheel to zoom<br>" // done
+				+"Double-click to recenter on a point<br>"
+				+"Right-click for context menu"
+				+"</html>");
 	}
 	
 	@Override

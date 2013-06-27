@@ -6,7 +6,10 @@ import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.Point;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.AwtActor;
+
 public class RubberBand
+implements AwtActor
 {
 	// private static final Logger log = LoggerFactory.getLogger(RubberBand.class);
 

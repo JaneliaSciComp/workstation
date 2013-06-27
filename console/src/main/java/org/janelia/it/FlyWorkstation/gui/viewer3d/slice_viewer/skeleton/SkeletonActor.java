@@ -73,6 +73,8 @@ implements GLActor
 	private Map<Integer, Anchor> indexAnchors = new HashMap<Integer, Anchor>();
 	private Camera3d camera;
 	private float zThicknessInPixels = 100;
+	//
+	private Anchor nextParent = null;	
 	
 	public Signal skeletonActorChangedSignal = new Signal();
 	
@@ -185,11 +187,7 @@ implements GLActor
         gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
         anchorShader.load(gl);
  		anchorShader.setUniform(gl, "highlightAnchorIndex", hoverAnchorIndex);
- 		int parentIndex = -1;
- 		Anchor parent = skeleton.getNextParent();
- 		if (parent != null) {
- 			parentIndex = getIndexForAnchor(parent);
- 		}
+ 		int parentIndex = getIndexForAnchor(nextParent);
  		anchorShader.setUniform(gl, "parentAnchorIndex", parentIndex);
  		// float zThickness = viewport.getDepth(); //  / (float)camera.getPixelsPerSceneUnit();
  		anchorShader.setUniform(gl, "zThickness", zThicknessInPixels);
@@ -522,7 +520,19 @@ implements GLActor
 		if (ix == hoverAnchorIndex) 
 			return;
 		hoverAnchorIndex = ix;
-		skeletonActorChangedSignal.emit(); // TODO leads to instability
+		skeletonActorChangedSignal.emit(); // TODO leads to instability?
+	}
+
+	public Anchor getNextParent() {
+		return nextParent;
+	}
+	
+	public boolean setNextParent(Anchor parent) {
+		if (parent == nextParent)
+			return false;
+		nextParent = parent;
+		skeletonActorChangedSignal.emit(); // marker changes
+		return true;
 	}
 
 	/*

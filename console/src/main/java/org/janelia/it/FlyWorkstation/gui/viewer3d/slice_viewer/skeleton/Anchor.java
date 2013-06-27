@@ -26,8 +26,9 @@ public class Anchor {
 	
 	public Signal anchorChangedSignal = new Signal();
 	
-	public Anchor(Vec3 location) {
+	public Anchor(Vec3 location, Anchor parent) {
 		this.location = location;
+		addNeighbor(parent);
 	}
 	
 	public boolean addNeighbor(Anchor neighbor) {

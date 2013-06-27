@@ -8,43 +8,24 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal;
 
 public class Skeleton {
 	private Set<Anchor> anchors = new LinkedHashSet<Anchor>();
-	private Anchor nextParent = null;
 
 	public Signal skeletonChangedSignal = new Signal();
 	
-	public void addAnchor(Anchor anchor) {
+	public Anchor addAnchor(Anchor anchor) {
 		if (anchors.contains(anchor))
-			return;
+			return anchor;
 		anchors.add(anchor);
-		if (nextParent != null) {
-			nextParent.addNeighbor(anchor);
-		}
-		nextParent = anchor;
 		anchor.anchorChangedSignal.connect(skeletonChangedSignal);
 		skeletonChangedSignal.emit();
-	}
-
-	public Anchor getNextParent() {
-		return nextParent;
+		return anchor;
 	}
 
 	public Set<Anchor> getAnchors() {
 		return anchors;
 	}
 
-	public boolean setNextParent(Anchor nextParent) {
-		if (nextParent == null) {
-			this.nextParent = null; // Will start a new tree next time
-			return true;
-		}
-		if (! anchors.contains(nextParent))
-			return false; // exception?
-		this.nextParent = nextParent;
-		return true;
-	}
-
-	public void addAnchorAtXyz(Vec3 xyz) {
-		addAnchor(new Anchor(xyz));
+	public Anchor addAnchorAtXyz(Vec3 xyz, Anchor parent) {
+		return addAnchor(new Anchor(xyz, parent));
 	}
 
 	public boolean connect(Anchor anchor1, Anchor anchor2) {

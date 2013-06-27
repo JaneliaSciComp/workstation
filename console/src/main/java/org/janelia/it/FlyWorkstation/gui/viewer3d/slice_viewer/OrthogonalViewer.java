@@ -8,6 +8,7 @@ import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Point2D;
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Vector;
 
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLCapabilitiesChooser;
@@ -22,6 +23,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.AwtActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
@@ -67,6 +69,9 @@ implements MouseModalWidget, TileConsumer
     protected RubberBand rubberBand = new RubberBand();
     protected SkeletonActor skeletonActor;
     protected SliceActor sliceActor;
+    private ReticleActor reticleActor;
+    // 
+    private List<AwtActor> hudActors = new Vector<AwtActor>();
 
     public Signal1<String> statusMessageChanged = new Signal1<String>();
     protected Slot repaintSlot = new Slot() {
@@ -91,6 +96,10 @@ implements MouseModalWidget, TileConsumer
 	
 	public void addActor(GLActor actor) {
 		renderer.addActor(actor);
+	}
+
+	public void addActor(AwtActor actor) {
+		hudActors.add(actor);
 	}
 
 	private void init(CoordinateAxis axis) {
@@ -149,13 +158,19 @@ implements MouseModalWidget, TileConsumer
                 e.consume();
             }
         });
+        hudActors.add(rubberBand);
+        reticleActor = new ReticleActor(getViewport());
+        reticleActor.setVisible(false);
+        hudActors.add(reticleActor);
 	}
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D)g;
-        rubberBand.paint(g2);
+        for (AwtActor actor : hudActors)
+        	if (actor.isVisible())
+        		actor.paint(g2);
     }
     
 	public void setCamera(ObservableCamera3d camera) {
@@ -199,11 +214,19 @@ implements MouseModalWidget, TileConsumer
     @Override
     public void mouseEntered(MouseEvent event) {
         mouseMode.mouseEntered(event);
+        if (! reticleActor.isVisible()) {
+        	reticleActor.setVisible(true);
+        	repaint();
+        }
     }
 
     @Override
     public void mouseExited(MouseEvent event) {
         mouseMode.mouseExited(event);
+        if (reticleActor.isVisible()) {
+        	reticleActor.setVisible(false);
+        	repaint();
+        }
     }
 
     @Override
@@ -273,7 +296,11 @@ implements MouseModalWidget, TileConsumer
         this.modeMenuItemGenerator = mouseMode.getMenuItemGenerator();
     }
 
-    public Rotation3d getViewerInGround() {
+	public AwtActor getReticle() {
+		return reticleActor;
+	}
+
+	public Rotation3d getViewerInGround() {
         return renderer.getViewerInGround();
     }
 
