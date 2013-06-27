@@ -307,13 +307,15 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     //---------------------------------------HELPERS
     private void serialize() {
         AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
-        Entity alignmentBoard = context.getInternalEntity();
-        if ( mip3d != null && settings != null ) {
-            UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
-                    alignmentBoard, mip3d.getVolumeModel(), settings.getAlignmentBoardSettings()
-            );
+        if ( context != null ) {
+            Entity alignmentBoard = context.getInternalEntity();
+            if ( mip3d != null && settings != null ) {
+                UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
+                        alignmentBoard, mip3d.getVolumeModel(), settings.getAlignmentBoardSettings()
+                );
 
-            userSettingSerializer.serializeSettings();
+                userSettingSerializer.serializeSettings();
+            }
         }
     }
 
