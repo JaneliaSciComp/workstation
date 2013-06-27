@@ -10,6 +10,8 @@ import java.awt.*;
 
 // workstation imports
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot1;
+
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
 /**
@@ -23,12 +25,17 @@ public class NeuronInfoPanel extends JPanel
     JLabel neuronNameLabel;
 
 
+    public Slot1<TmNeuron> updateNeuronSlot = new Slot1<TmNeuron>() {
+        @Override
+        public void execute(TmNeuron neuron) {
+            updateNeuron(neuron);
+        }
+    };
+
+
+
     public NeuronInfoPanel() {
         setupUI();
-    }
-
-    public void clear() {
-        neuronNameLabel.setText("(no neuron)");
     }
 
     private void setupUI() {
@@ -38,16 +45,20 @@ public class NeuronInfoPanel extends JPanel
         add(Box.createRigidArea(new Dimension(0, 20)));
         add(new JLabel("Neuron information panel"));
 
-        neuronNameLabel = new JLabel("(no neuron)");
+        neuronNameLabel = new JLabel("");
         add(neuronNameLabel);
 
 
-        clear();
+        updateNeuron(null);
     }
 
 
-    public void update(TmNeuron neuron) {
-        neuronNameLabel.setText(neuron.getName());
+    public void updateNeuron(TmNeuron neuron) {
+        if (neuron == null) {
+            neuronNameLabel.setText("(no neuron)");
+        } else {
+            neuronNameLabel.setText(neuron.getName());
+        }
     }
 
 }

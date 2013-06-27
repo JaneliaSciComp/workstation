@@ -6,6 +6,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.annotation;
 import javax.swing.*;
 
 import java.awt.*;
+import java.util.Vector;
 
 
 // workstation imports
@@ -21,7 +22,11 @@ import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 public class WorkspaceInfoPanel extends JPanel 
 {
 
-    JLabel workspaceNameLabel;
+    private JLabel workspaceNameLabel;
+
+    private JList neuronList;
+    private JScrollPane neuronScrollPane;
+
 
     public Slot1<TmWorkspace> updateWorkspaceSlot = new Slot1<TmWorkspace>() {
         @Override
@@ -36,10 +41,6 @@ public class WorkspaceInfoPanel extends JPanel
         setupUI();
     }
 
-    public void clear() {
-        workspaceNameLabel.setText("(untitled)");
-    }
-
     private void setupUI() {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
     
@@ -47,16 +48,33 @@ public class WorkspaceInfoPanel extends JPanel
         add(Box.createRigidArea(new Dimension(0, 20)));
         add(new JLabel("Workspace information panel"));
 
-        workspaceNameLabel = new JLabel("(untitled)");
+        workspaceNameLabel = new JLabel("");
         add(workspaceNameLabel);
 
+        // list of neurons
 
-        clear();
+        neuronList = new JList();
+        neuronScrollPane = new JScrollPane(neuronList);
+        add(neuronScrollPane);
+
+        updateWorkspace(null);
     }
 
 
     public void updateWorkspace(TmWorkspace workspace) {
-        workspaceNameLabel.setText(workspace.getName());
+        if (workspace == null) {
+            // clear
+            workspaceNameLabel.setText("(no workspace)");
+        } else {
+            // normal update
+            workspaceNameLabel.setText(workspace.getName());
+
+            // repopulate neuron list
+            neuronList.setListData(new Vector<TmNeuron>(workspace.getNeuronList()));
+
+            }
+        }
+
+
     }
 
-}

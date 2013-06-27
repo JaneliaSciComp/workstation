@@ -98,6 +98,7 @@ public class AnnotationPanel extends JPanel implements TreeSelectionListener
 
     private void setupSignals() {
         annotationModel.workspaceChangedSignal.connect(workspaceInfoPanel.updateWorkspaceSlot);
+        annotationModel.neuronChangedSignal.connect(neuronInfoPanel.updateNeuronSlot);
     }
 
     private void setupUI() {
@@ -136,8 +137,8 @@ public class AnnotationPanel extends JPanel implements TreeSelectionListener
 
         // neurite information; show name, type (axon, dendrite, etc), other attributes
         //  of selected (current) neurite
-        add(Box.createRigidArea(new Dimension(0, 20)));
-        add(new JLabel("Neurite information"));
+        // add(Box.createRigidArea(new Dimension(0, 20)));
+        // add(new JLabel("Neurite information"));
 
 
 
@@ -149,11 +150,12 @@ public class AnnotationPanel extends JPanel implements TreeSelectionListener
         //  would be a separate list
 
         // ...but for testing node selection, this is where we will put it:
-        nodeLabel = new JLabel("no selection");
-        add(nodeLabel);
+        // nodeLabel = new JLabel("no selection");
+        // add(nodeLabel);
 
 
-        // testing stuff
+        // at some point, we'll have our own sliceviewer menu; until then, attach those actions
+        //  to buttons in plain view
         add(Box.createRigidArea(new Dimension(0, 20)));
         add(new JLabel("Menu proxy"));
 

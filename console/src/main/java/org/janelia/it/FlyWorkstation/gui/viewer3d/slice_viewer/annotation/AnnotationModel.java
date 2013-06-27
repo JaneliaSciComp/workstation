@@ -32,6 +32,7 @@ public class AnnotationModel
 
     // signals
     public Signal1<TmWorkspace> workspaceChangedSignal = new Signal1<TmWorkspace>();
+    public Signal1<TmNeuron> neuronChangedSignal = new Signal1<TmNeuron>();
 
 
     public TmWorkspace getCurrentWorkspace() {
@@ -41,6 +42,10 @@ public class AnnotationModel
     public void setCurrentWorkspace(TmWorkspace currentWorkspace) {
         this.currentWorkspace = currentWorkspace;
         loadWorkspace(currentWorkspace);
+    }
+
+    public TmNeuron getCurrentNeuron() {
+        return currentNeuron;
     }
 
     public AnnotationModel() {
@@ -97,7 +102,7 @@ public class AnnotationModel
         }
 
         // notify listeners
-
+        neuronChangedSignal.emit(currentNeuron);
 
         return currentNeuron;
         
@@ -150,8 +155,12 @@ public class AnnotationModel
     private void loadWorkspace(TmWorkspace workspace) {
         currentWorkspace = workspace;
 
+        // clear current neuron 
+        currentNeuron = null;
+
         // notify listeners
         workspaceChangedSignal.emit(currentWorkspace);
+        neuronChangedSignal.emit(currentNeuron);
 
     }
 
