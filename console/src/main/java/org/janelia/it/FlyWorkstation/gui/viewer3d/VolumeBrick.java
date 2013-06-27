@@ -395,6 +395,7 @@ public class VolumeBrick implements GLActor, VolumeDataAcceptor
         bIsInitialized = false;
 
         bufferManager.releaseBuffers(gl);
+        bBuffersNeedUpload = true;
 	}
 
     @Override
