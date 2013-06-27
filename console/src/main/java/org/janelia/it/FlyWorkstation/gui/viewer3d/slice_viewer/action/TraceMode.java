@@ -345,15 +345,8 @@ implements MouseMode, KeyListener
     }
 	
 	@Override
-	public void setComponent(MouseModalWidget widget) {
-		boolean widgetChanged = (widget != this.widget);
-		super.setComponent(widget);
-		if (! widgetChanged)
-			return;
-		// Respond to shift up/down
-		JComponent component = widget.getComponent();
-		component.addKeyListener(this);
-		// Use custom context menu
+	public void setComponent(MouseModalWidget widget, boolean updateCursor) {
+		super.setComponent(widget, updateCursor);
 	}
 
 	public Viewport getViewport() {

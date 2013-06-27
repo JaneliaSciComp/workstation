@@ -4,7 +4,6 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 
 import org.janelia.it.FlyWorkstation.gui.util.Icons;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.MouseModalWidget;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Signal1;
 
 // PanModeAction puts the slice viewer into Pan mode.

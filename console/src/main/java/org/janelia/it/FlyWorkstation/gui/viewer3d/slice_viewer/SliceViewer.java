@@ -5,7 +5,6 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
@@ -34,6 +33,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Point2D;
@@ -129,6 +129,7 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
         addMouseListener(this);
         addMouseMotionListener(this);
         addMouseWheelListener(this);
+        addKeyListener(this);
 	    setMouseMode(MouseMode.Mode.PAN);
 	    setWheelMode(WheelMode.Mode.SCAN);
 		addGLEventListener(renderer);
@@ -155,7 +156,7 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
         imageColorModel.getColorModelChangedSignal().connect(getRepaintSlot());
         // Initialize pointComputer for interconverting pixelXY <=> sceneXYZ
 		pointComputer.setCamera(getCamera());
-		pointComputer.setComponent(this);
+		pointComputer.setComponent(this, false);
 		//
         renderer.addActor(skeletonActor);
         skeletonActor.skeletonActorChangedSignal.connect(repaintSlot);
@@ -393,7 +394,7 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
             return;
         }
         this.mouseMode.setCamera(camera);
-        this.mouseMode.setComponent(this);
+        this.mouseMode.setComponent(this, true);
         this.setToolTipText(mouseMode.getToolTipText());        
         this.modeMenuItemGenerator = mouseMode.getMenuItemGenerator();
     }
@@ -423,7 +424,7 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
 	    else if (wheelModeId == WheelMode.Mode.SCAN) {
 	        this.wheelMode = new ZScanMode(this);
 	    }
-		this.wheelMode.setComponent(this);
+		this.wheelMode.setComponent(this, false);
 		this.wheelMode.setCamera(camera);
 	}
 
@@ -602,6 +603,11 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
 	}
 
 	@Override
+	public MouseMode getMouseMode() {
+		return mouseMode;
+	}
+
+	@Override
 	public double getResolution(int ix) {
 		if (ix == 0) return getXResolution();
 		else if (ix == 1) return getYResolution();
@@ -627,4 +633,21 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
 	public void mouseExited(MouseEvent event) {
 		mouseMode.mouseExited(event);
 	}
+
+	// KeyListener interface
+	@Override
+	public void keyTyped(KeyEvent event) {
+		mouseMode.keyTyped(event);
+	}
+
+	@Override
+	public void keyPressed(KeyEvent event) {
+		mouseMode.keyPressed(event);
+	}
+
+	@Override
+	public void keyReleased(KeyEvent event) {
+		mouseMode.keyPressed(event);
+	}
+
 }

@@ -49,8 +49,8 @@ implements WheelMode
 	}
 
 	@Override
-	public void setComponent(MouseModalWidget widget) {
-		mode.setComponent(widget);
+	public void setComponent(MouseModalWidget widget, boolean updateCursor) {
+		mode.setComponent(widget, updateCursor);
 	}
 	
 	public void setTileFormat(TileFormat tileFormat) {

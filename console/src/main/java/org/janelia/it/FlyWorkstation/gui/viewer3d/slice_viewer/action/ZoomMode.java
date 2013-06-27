@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action;
 import java.awt.Cursor;
 import java.awt.Point;
 import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Point2D;
@@ -21,7 +22,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.RubberBand;
 public class ZoomMode 
 implements WheelMode, MouseMode
 {
-	protected boolean centerOnCursor = true;
+	protected boolean centerOnCursor = false;
 	BasicMouseMode mode = new BasicMouseMode();
 
 	public ZoomMode() {
@@ -158,8 +159,8 @@ implements WheelMode, MouseMode
 	}
 
 	@Override
-	public void setComponent(MouseModalWidget widget) {
-		mode.setComponent(widget);
+	public void setComponent(MouseModalWidget widget, boolean updateCursor) {
+		mode.setComponent(widget, updateCursor);
 	}
 
 
@@ -202,5 +203,14 @@ implements WheelMode, MouseMode
             }
         };
     }
+
+	@Override
+	public void keyTyped(KeyEvent e) {}
+
+	@Override
+	public void keyPressed(KeyEvent e) {}
+
+	@Override
+	public void keyReleased(KeyEvent e) {}
 
 }

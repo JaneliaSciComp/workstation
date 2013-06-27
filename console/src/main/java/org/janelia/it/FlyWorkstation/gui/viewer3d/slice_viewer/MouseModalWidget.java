@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
 import java.awt.Cursor;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelListener;
@@ -13,7 +14,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.MouseMode;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action.WheelMode;
 
 public interface MouseModalWidget 
-extends MouseListener, MouseMotionListener, MouseWheelListener
+extends MouseListener, MouseMotionListener, MouseWheelListener, KeyListener
 {
 	public void setMouseMode(MouseMode.Mode mode);
 	public void setWheelMode(WheelMode.Mode mode);
@@ -23,4 +24,5 @@ extends MouseListener, MouseMotionListener, MouseWheelListener
 	public RubberBand getRubberBand();
 	public Viewport getViewport();
 	public JComponent getComponent();
+	public MouseMode getMouseMode();
 }

@@ -1,6 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.action;
 
 import java.awt.Cursor;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
@@ -9,7 +10,7 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.MouseModalWidget;
 
 // MouseMode manages the current mouse Mode for a Widget, e.g. Pan, Zoom, Rotate...
 public interface MouseMode
-extends MouseMotionListener, MouseListener
+extends MouseMotionListener, MouseListener, KeyListener
 {
     static enum Mode {
         PAN,
@@ -23,9 +24,9 @@ extends MouseMotionListener, MouseListener
 	public Cursor getHoverCursor();
 	public void setHoverCursor(Cursor hoverCursor);
 	public MouseModalWidget getComponent();
-	public void setComponent(MouseModalWidget widget);
 	Camera3d getCamera();
 	void setCamera(Camera3d camera);
 	public String getToolTipText();
     public MenuItemGenerator getMenuItemGenerator();
+	void setComponent(MouseModalWidget widget, boolean updateCursor);
 }

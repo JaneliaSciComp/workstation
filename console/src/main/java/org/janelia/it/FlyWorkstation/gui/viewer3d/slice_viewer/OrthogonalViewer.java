@@ -3,6 +3,7 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Point2D;
@@ -119,8 +120,9 @@ implements MouseModalWidget, TileConsumer
         addMouseListener(this);
         addMouseMotionListener(this);
         addMouseWheelListener(this);
+        addKeyListener(this);
         pointComputer.setCamera(camera);
-        pointComputer.setComponent(this);
+        pointComputer.setComponent(this, false);
         pointComputer.setViewerInGround(getViewerInGround());
         //
 		renderer.setBackgroundColor(Color.black);
@@ -291,7 +293,7 @@ implements MouseModalWidget, TileConsumer
             return;
         }
         this.mouseMode.setCamera(camera);
-        this.mouseMode.setComponent(this);
+        this.mouseMode.setComponent(this, true);
         this.setToolTipText(mouseMode.getToolTipText());        
         this.modeMenuItemGenerator = mouseMode.getMenuItemGenerator();
     }
@@ -324,7 +326,7 @@ implements MouseModalWidget, TileConsumer
             scanMode.setSliceAxis(sliceAxis);
             this.wheelMode = scanMode;
         }
-        this.wheelMode.setComponent(this);
+        this.wheelMode.setComponent(this, false);
         this.wheelMode.setCamera(camera);
     }
 
@@ -366,7 +368,28 @@ implements MouseModalWidget, TileConsumer
 	}
 
 	@Override
+	public MouseMode getMouseMode() {
+		return mouseMode;
+	}
+
+	@Override
 	public CoordinateAxis getSliceAxis() {
 		return sliceAxis;
 	}
+
+	@Override
+	public void keyTyped(KeyEvent event) {
+		mouseMode.keyTyped(event);
+	}
+
+	@Override
+	public void keyPressed(KeyEvent event) {
+		mouseMode.keyPressed(event);
+	}
+
+	@Override
+	public void keyReleased(KeyEvent event) {
+		mouseMode.keyPressed(event);
+	}
+
 }

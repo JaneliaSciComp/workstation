@@ -251,6 +251,7 @@ public class QuadViewUi extends JPanel
 		colorChannelWidget_0.setVisible(false);
 		setupUi(parentFrame, overrideFrameMenuBar);
         interceptModifierKeyPresses();
+        interceptModeChangeGestures();
 
 		// must come after setupUi(), since it triggers UI changes:
 		annotationMgr.setInitialEntity(initialEntity);
@@ -704,6 +705,27 @@ public class QuadViewUi extends JPanel
             }
         });
 	}
+	
+	private void interceptModeChangeGestures()
+	{
+        // Press "H" (hand) for Pan mode, etc.
+        Action modeActions[] = {
+        		panModeAction, 
+        		zoomMouseModeAction, 
+        		traceMouseModeAction,
+        		zoomInAction,
+        		zoomOutAction,
+        		nextZSliceAction,
+        		previousZSliceAction
+        		};
+        InputMap inputMap = getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        for (Action action : modeActions) {
+        	KeyStroke accelerator = (KeyStroke)action.getValue(Action.ACCELERATOR_KEY);
+        	String actionName = (String)action.getValue(Action.NAME);
+        	inputMap.put(accelerator, actionName);
+        	getActionMap().put(actionName, action);
+        }
+	}
 
 	private JPanel setupToolBar() {
 		add(toolBarPanel);
@@ -850,6 +872,10 @@ public class QuadViewUi extends JPanel
         zoomMouseModeItem.setAction(zoomMouseModeAction);
         mnMouseMode.add(zoomMouseModeItem);
 
+        JRadioButtonMenuItem traceMouseModeItem = new JRadioButtonMenuItem();
+        traceMouseModeItem.setAction(traceMouseModeAction);
+        mnMouseMode.add(traceMouseModeItem);
+        
         JMenu mnScrollMode = new JMenu("Scroll Mode");
         mnScrollMode.setIcon(new ImageIcon(QuadViewUi.class.getResource("/images/mouse_scroll.png")));
         mnView.add(mnScrollMode);

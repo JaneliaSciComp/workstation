@@ -7,6 +7,7 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Toolkit;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.util.List;
@@ -155,11 +156,12 @@ public class BasicMouseMode implements MouseMode
 	}
 
 	@Override
-	public void setComponent(MouseModalWidget widget) {
+	public void setComponent(MouseModalWidget widget, boolean updateCursor) {
 		if (this.widget == widget)
 			return;
 		this.widget = widget;
-		checkCursor(currentCursor);
+		if (updateCursor)
+			checkCursor(currentCursor);
 	}
 
 	@Override
@@ -234,5 +236,14 @@ public class BasicMouseMode implements MouseMode
             }
         };
     }
+
+	@Override
+	public void keyTyped(KeyEvent e) {}
+
+	@Override
+	public void keyPressed(KeyEvent e) {}
+
+	@Override
+	public void keyReleased(KeyEvent e) {}
 
 }

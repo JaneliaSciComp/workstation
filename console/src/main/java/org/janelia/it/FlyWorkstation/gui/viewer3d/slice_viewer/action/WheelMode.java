@@ -13,7 +13,7 @@ extends MouseWheelListener
         SCAN
     }
 	public MouseModalWidget getComponent();
-	public void setComponent(MouseModalWidget widget);
+	public void setComponent(MouseModalWidget widget, boolean updateCursor);
 	Camera3d getCamera();
 	void setCamera(Camera3d camera);
 }
