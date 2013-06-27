@@ -232,7 +232,7 @@ public class VtxCoordBufMgr {
 
         if ( useVBO ) {
             // Point to the right vertex set.
-            logger.info("Bind Coords");
+            logger.debug("Bind Coords");
             bindCoordsBuffer(gl, axis, geometryVertexBufferHandles, direction);
 
             gl.glEnableClientState( GL2.GL_VERTEX_ARRAY );
@@ -240,7 +240,7 @@ public class VtxCoordBufMgr {
             gl.glVertexPointer(3, GL2.GL_FLOAT, 0, 0);
 
             // Point to the right texture coordinate set.
-            logger.info("Bind Coords");
+            logger.debug("Bind Coords");
             bindCoordsBuffer(gl, axis, textureCoordBufferHandles, direction);
 
             gl.glEnableClientState( GL2.GL_TEXTURE_COORD_ARRAY );
@@ -261,9 +261,9 @@ public class VtxCoordBufMgr {
             // Tell GPU to draw triangles (interpret every three vertices as a triangle), starting at pos 0,
             //  and expect vertex-count worth of vertices to examine.
             if ( drawWithElements ) {
-                logger.info("Bind for draw");
+                logger.debug("Bind for draw");
                 bindIndexBuffer( gl, axis, indexBufferHandles, direction );
-                logger.info("Draw Elements");
+                logger.debug("Draw Elements");
                 gl.glDrawElements( GL2.GL_TRIANGLES, getVertexCount( axis ), GL2.GL_UNSIGNED_SHORT, 0 );
             }
             else {
