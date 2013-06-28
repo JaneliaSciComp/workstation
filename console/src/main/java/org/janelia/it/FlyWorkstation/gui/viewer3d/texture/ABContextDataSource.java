@@ -233,6 +233,14 @@ public class ABContextDataSource implements RenderableDataSourceI {
                 rgb[ 3 ] = RenderMappingI.NON_RENDERING;
                 renderableBean.setRgb(rgb);
             }
+            else if ( item.isPassthroughRendering() ) {
+                byte[] rgb = new byte[ 4 ];
+                rgb[ 0 ] = 0;
+                rgb[ 1 ] = 0;
+                rgb[ 2 ] = 0;
+                rgb[ 3 ] = RenderMappingI.PASS_THROUGH_RENDERING;
+                renderableBean.setRgb(rgb);
+            }
             else if ( isCompartment ) {
                 Compartment compartment = (Compartment)item.getItemWrapper();
                 byte[] rgb = new byte[ 4 ];
