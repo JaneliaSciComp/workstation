@@ -31,7 +31,7 @@ public class GpuSampler implements GLEventListener {
 
     private static final int NO_ESTIMATE = 0;
     private static final int WAIT_TIME_MS = 100;
-    private static final int MAX_WAIT_LOOPS = 10 * 1000 / WAIT_TIME_MS; // Up to this many seconds.
+    private static final int MAX_WAIT_LOOPS = 2 * 1000 / WAIT_TIME_MS; // Up to this many seconds.
 
     private Logger logger = LoggerFactory.getLogger( GpuSampler.class );
 
@@ -116,10 +116,8 @@ public class GpuSampler implements GLEventListener {
                             try {
                                 Thread.sleep( WAIT_TIME_MS );
                                 numLoops ++;
-                                if ( numLoops > MAX_WAIT_LOOPS ) {
-                                    logger.warn( "Exceeded max wait loops {} to estimate texture memory.  Returning the 0.", MAX_WAIT_LOOPS );
+                                if (loopMaxTest(numLoops))
                                     return NO_ESTIMATE;
-                                }
                                 logger.debug("Wait loop iteration {}.", numLoops );
                             } catch ( Exception ex ) {
                                 logger.error( "Failed to obtain free texture memory estimate.  Returning the 0.");
@@ -129,6 +127,7 @@ public class GpuSampler implements GLEventListener {
                         }
                         return freeTexMem;
                     }
+
                 }
         );
         ExecutorService executor = Executors.newFixedThreadPool( 1 );
@@ -145,10 +144,9 @@ public class GpuSampler implements GLEventListener {
                             try {
                                 Thread.sleep( WAIT_TIME_MS );
                                 numLoops ++;
-                                if ( numLoops > MAX_WAIT_LOOPS ) {
-                                    logger.warn( "Exceeded max wait loops {} to get support level.  Returning the empty string.", MAX_WAIT_LOOPS );
+                                if (loopMaxTest(numLoops))
                                     return "";
-                                }
+
                                 logger.debug("Wait loop iteration {}.", numLoops );
                             } catch ( Exception ex ) {
                                 logger.error( "Failed to obtain max support level.  Returning the empty string.");
@@ -174,8 +172,7 @@ public class GpuSampler implements GLEventListener {
                             try {
                                 Thread.sleep( WAIT_TIME_MS );
                                 numLoops ++;
-                                if ( numLoops > MAX_WAIT_LOOPS ) {
-                                    logger.warn( "Exceeded max wait loops {} to get gpu id.  Returning null.", MAX_WAIT_LOOPS );
+                                if ( loopMaxTest( numLoops ) ) {
                                     return null;
                                 }
                                 logger.debug("Wait loop iteration {}.", numLoops );
@@ -250,6 +247,14 @@ public class GpuSampler implements GLEventListener {
         ExecutorService executor = Executors.newFixedThreadPool( 1 );
         executor.execute( future );
         return future;
+    }
+
+    private boolean loopMaxTest(int numLoops) {
+        if ( numLoops > MAX_WAIT_LOOPS ) {
+            logger.warn( "Exceeded max wait loops {} to estimate texture memory.  Returning the not-found value.", MAX_WAIT_LOOPS );
+            return true;
+        }
+        return false;
     }
 
     /** Processor thread to collect all output from stdout or sterr. */
