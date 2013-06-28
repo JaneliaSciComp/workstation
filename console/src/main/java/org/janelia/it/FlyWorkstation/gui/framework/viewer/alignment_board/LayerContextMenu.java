@@ -167,7 +167,8 @@ public class LayerContextMenu extends JPopupMenu {
                 };
                 worker.execute();
             }
-        });        return menuItem;
+        });
+        return menuItem;
     }
 
     protected JMenuItem getDropColorItem() {
