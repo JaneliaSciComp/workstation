@@ -6,11 +6,14 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.annotation;
 import javax.swing.*;
 
 import java.awt.*;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Vector;
 
 
 // workstation imports
 
+import org.janelia.it.FlyWorkstation.gui.util.swing_models.CollectionJListModel;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.Slot1;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
 
@@ -24,7 +27,7 @@ public class WorkspaceInfoPanel extends JPanel
 
     private JLabel workspaceNameLabel;
 
-    private JList neuronList;
+    private JList neuronListBox;
     private JScrollPane neuronScrollPane;
 
 
@@ -53,8 +56,8 @@ public class WorkspaceInfoPanel extends JPanel
 
         // list of neurons
 
-        neuronList = new JList();
-        neuronScrollPane = new JScrollPane(neuronList);
+        neuronListBox = new JList();
+        neuronScrollPane = new JScrollPane(neuronListBox);
         add(neuronScrollPane);
 
         updateWorkspace(null);
@@ -70,8 +73,14 @@ public class WorkspaceInfoPanel extends JPanel
             workspaceNameLabel.setText(workspace.getName());
 
             // repopulate neuron list
-            neuronList.setListData(new Vector<TmNeuron>(workspace.getNeuronList()));
-
+            Vector<TmNeuron> neuronVector = new Vector<TmNeuron>(workspace.getNeuronList());
+            Collections.sort(neuronVector, new Comparator<TmNeuron>() {
+                @Override
+                public int compare(TmNeuron tmNeuron, TmNeuron tmNeuron2) {
+                    return tmNeuron.getName().compareTo(tmNeuron2.getName());
+                }
+            });
+            neuronListBox.setListData(neuronVector);
             }
         }
 
