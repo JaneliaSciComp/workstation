@@ -508,7 +508,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
                     deserializeSettings(context);
                     AlignmentBoardSettings alignmentBoardSettings = adjustDownsampleRateSetting();
-
                     mip3d.refresh();
 
                     // Here, should load volumes, for all the different items given.
@@ -572,7 +571,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             feedbackPanel.addGLEventListener( sampler );
             // DEBUG: feedbackPanel.setToolTipText( "Reading OpenGL values..." );
 
-            add(feedbackPanel, BorderLayout.SOUTH);
+            this.getViewerPane().add(feedbackPanel, BorderLayout.SOUTH);
             revalidate();
             repaint();
 
@@ -628,6 +627,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     logger.warn( "Ignore this message if this system is not a Mac: department-preferred grapchics detection not working on this platform." );
                 }
             }
+            this.getViewerPane().remove( feedbackPanel );
         }
 
         cachedDownSampleGuess = alignmentBoardSettings[ 0 ].getDownSampleGuess();
