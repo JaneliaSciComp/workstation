@@ -20,6 +20,8 @@ import javax.swing.*;
 public class AnnotationManager
 {
 
+    ModelMgr modelMgr;
+
     // annotation model object
     private AnnotationModel annotationModel;
     
@@ -39,6 +41,9 @@ public class AnnotationManager
 
 
         this.annotationModel = annotationModel;
+
+        modelMgr = ModelMgr.getModelMgr();
+
 
 
     }
@@ -66,7 +71,7 @@ public class AnnotationManager
                 e.printStackTrace();
                 return;
             }
-            annotationModel.setCurrentWorkspace(workspace);
+            annotationModel.loadWorkspace(workspace);
         }
 
         this.initialEntity = initialEntity;
@@ -140,72 +145,89 @@ public class AnnotationManager
         }
 
 
-
         // create it:
-        TmNeuron neuron = annotationModel.createNeuron(neuronName);
-        if (neuron == null) {
-            // dialog
-            // failure dialog
+        if (!annotationModel.createNeuron(neuronName)) {
             JOptionPane.showMessageDialog(null, 
                 "Could not create neuron!",
                 "Error",
                 JOptionPane.ERROR_MESSAGE);
         }
 
-
     }
 
     public void createWorkspace() {
+        // currently we create workspaces under a brain sample; since you can
+        //  open the slice viewer from either a brain sample or a workspace, if
+        //  it's the latter, grab its brain sample
 
-        // are we in a workspace now?  if so, is it saved before 
-        //  we create a new one?
+        Entity sampleEntity;
+
+        // NOTE: ask the user if you're creating a new workspace when one is
+        //  already active
         if (annotationModel.getCurrentWorkspace() != null) {
             // dialog
+            int ans = JOptionPane.showConfirmDialog(null,
+                "You already have an active workspace!  Close and create another?",
+                "Workspace exists",
+                JOptionPane.YES_NO_OPTION);
+            if (ans == JOptionPane.YES_OPTION) {
+                Long sampleID = annotationModel.getCurrentWorkspace().getId();
+                try {
+                    sampleEntity = modelMgr.getEntityById(sampleID);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return;
+                }
+            } else {
+                // users says no
+                return;
+            }
+        } else {
+            // no workspace, look at initial entity; it must be a brain sample!
+            if (!initialEntity.getEntityType().getName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
+                JOptionPane.showMessageDialog(null,
+                        "You must load a brain sample before creating a workspace!",
+                        "No brain sample!",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            sampleEntity= initialEntity;
         }
 
 
-        // get current entity; make sure it's a sample, or if it's a workspace,
-        //  get its sample
+        // get a name
+        String workspaceName = (String)JOptionPane.showInputDialog(
+            null,
+            "Workspace name:",
+            "Create workspace",
+            JOptionPane.PLAIN_MESSAGE,
+            null,                           // icon
+            null,                           // choice list; absent = freeform
+            "new workspace");
+
+        // validate workspace name;  are there any rules for entity names?
+        if ((workspaceName == null) || (workspaceName.length() == 0)) {
+            workspaceName = "new workspace";
+        }
 
 
-
-
-        // dialog: where to put workspace?  (must be a folder?)
-        // EntityConstants.TYPE_FOLDER
-
-
-
-
-        // create it; you can rename entities in the sidebar, so don't bother prompting
-        //  for a name when you created it
-
-        // for testing, hardcode both the parent and sample entities, until I can have
-        //  the user provide them;
-
-        ModelMgr modelMgr = ModelMgr.getModelMgr();
+        // for testing, hardcode the parent:
         Entity parentEntity;
-        Entity sampleEntity;
         try {
             // olbris tests folder:
             parentEntity = modelMgr.getEntityById(1884682659553083568L);
-            // 2013-04-01 data:
-            sampleEntity = modelMgr.getEntityById(1872744417371095216L);
         } catch (Exception e) {
             e.printStackTrace();
             return;
         }
 
-        TmWorkspace workspace = annotationModel.createWorkspace(parentEntity, sampleEntity, "untitled");
-        if (workspace == null) {
-            // failure dialog
+        // create it
+        if (!annotationModel.createWorkspace(parentEntity, sampleEntity, workspaceName)) {
             JOptionPane.showMessageDialog(null, 
                 "Could not create workspace!",
                 "Error",
                 JOptionPane.ERROR_MESSAGE);
         }
-
-        // System.out.println("workspace created with ID " + workspace.getId());
-
 
     }
 

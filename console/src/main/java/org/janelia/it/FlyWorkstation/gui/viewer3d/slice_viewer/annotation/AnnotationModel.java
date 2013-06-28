@@ -27,8 +27,9 @@ public class AnnotationModel
     private ModelMgr modelMgr;
     private SessionMgr sessionMgr;
 
-    private TmWorkspace currentWorkspace;
-    private TmNeuron currentNeuron;
+
+    private Long currentWorkspaceID;
+    private Long currentNeuronID;
 
     // signals
     public Signal1<TmWorkspace> workspaceChangedSignal = new Signal1<TmWorkspace>();
@@ -36,79 +37,76 @@ public class AnnotationModel
 
 
     public TmWorkspace getCurrentWorkspace() {
-        return currentWorkspace;
+        if (currentWorkspaceID != null) {
+            try {
+                return modelMgr.loadWorkspace(currentWorkspaceID);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+        } else {
+            return null;
+        }
     }
 
-    public void setCurrentWorkspace(TmWorkspace currentWorkspace) {
-        this.currentWorkspace = currentWorkspace;
-        loadWorkspace(currentWorkspace);
+    private void setCurrentWorkspace(TmWorkspace workspace) {
+        if (workspace != null) {
+            currentWorkspaceID = workspace.getId();
+        } else {
+            currentWorkspaceID = null;
+        }
     }
 
     public TmNeuron getCurrentNeuron() {
-        return currentNeuron;
+        if (currentNeuronID != null) {
+            try {
+                return modelMgr.loadNeuron(currentNeuronID);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+        } else {
+            return null;
+        }
+    }
+
+    private void setCurrentNeuron(TmNeuron neuron) {
+        if (neuron != null) {
+            currentNeuronID = neuron.getId();
+        } else {
+            currentNeuronID = null;
+        }
     }
 
     public AnnotationModel() {
-
-
-        /* we've got to do two things here; first, create empty stuff and 
-            hook up as needed; second, we need to retrieve what just happened
-            to start us up (what the user clicked on), and load the data
-            corresponding to the context we're in
-
-           for testing, we'll hard-code some stuff
-        */
-
-
         // set up
-        // presumably this is where we'll grab the Model Manager?
         modelMgr = ModelMgr.getModelMgr();
         sessionMgr = SessionMgr.getSessionMgr();
 
-         // presumably this is where we'll grab the Model Manager?
-
-
-        // this might be a valid sample ID: 1872744417572421808
-        // public List<TmWorkspaceDescriptor> getWorkspacesForBrainSample(Long brainSampleId, String ownerKey)
-        /* 
-        // sample code:
-        try {
-            List<TmWorkspaceDescriptor> temp = modelMgr.getWorkspacesForBrainSample(1872744417572421808L, "clackn");
-            if (temp == null) {
-                System.out.println("getWorkspacesForBrainSample() returned null");
-            } else {
-                System.out.println("got " + temp.size() + " workspaces");
-            }
-
-        }
-        catch (Exception e) {
-            // pass, testing
-            System.err.println("ModelMgr Exception: " + e.getMessage());
-        }
-        */
-
-
-        // get current data
-
     }
 
-    public TmNeuron createNeuron(String name) {
+    public boolean createNeuron(String name) {
 
+        TmNeuron currentNeuron;
         try {
-            currentNeuron = modelMgr.createTiledMicroscopeNeuron(currentWorkspace.getId(), name);
+            currentNeuron = modelMgr.createTiledMicroscopeNeuron(getCurrentWorkspace().getId(), name);
+            setCurrentNeuron(currentNeuron);
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return false;
         }
 
         // notify listeners
         neuronChangedSignal.emit(currentNeuron);
 
-        return currentNeuron;
+        // workspace info panel has neuron list, so it needs poking, too:
+        workspaceChangedSignal.emit(getCurrentWorkspace());
+
+        return true;
         
     }
 
-    public TmWorkspace createWorkspace(Entity parentEntity, Entity brainSample, String name) {
+    public boolean createWorkspace(Entity parentEntity, Entity brainSample, String name) {
         TmWorkspace workspace;
 
         // do stuff
@@ -119,7 +117,7 @@ public class AnnotationModel
                 brainSample.getId(), name, subject.getKey());
         }  catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return false;
         }
 
 
@@ -128,7 +126,7 @@ public class AnnotationModel
         loadWorkspace(workspace);
 
 
-        return workspace;
+        return true;
 
     }
 
@@ -152,15 +150,15 @@ public class AnnotationModel
 
     }
 
-    private void loadWorkspace(TmWorkspace workspace) {
-        currentWorkspace = workspace;
+    public void loadWorkspace(TmWorkspace workspace) {
+        setCurrentWorkspace(workspace);
 
-        // clear current neuron 
-        currentNeuron = null;
+        // clear current neuron
+        setCurrentNeuron(null);
 
         // notify listeners
-        workspaceChangedSignal.emit(currentWorkspace);
-        neuronChangedSignal.emit(currentNeuron);
+        workspaceChangedSignal.emit(workspace);
+        neuronChangedSignal.emit(null);
 
     }
 
