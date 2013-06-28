@@ -105,12 +105,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     @Override
     public void clear() {
         logger.info("Clearing the a-board.");
-        Component[] components = getViewerPane().getMainTitlePane().getComponents();
-        for ( Component component: components ) {
-            if ( component instanceof JButton ) {
-                getViewerPane().getMainTitlePane().remove( component );
-            }
-        }
+        removeSettingsLaunchButton();
     }
 
     @Override
@@ -442,8 +437,19 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             loadWorker.disregard();
         }
         settings.removeAllSettingsListeners();
+        removeSettingsLaunchButton();
         removeAll();
+        boardOpen = false;
         mip3d = null;
+    }
+
+    private void removeSettingsLaunchButton() {
+        Component[] components = getViewerPane().getMainTitlePane().getComponents();
+        for ( Component component: components ) {
+            if ( component instanceof JButton) {
+                getViewerPane().getMainTitlePane().remove( component );
+            }
+        }
     }
 
     private synchronized void setLoading( boolean loadingState ) {
@@ -704,7 +710,8 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         }
         @Override
         public void setBrightness(double brightness) {
-            viewer.mip3d.setGamma( (float)brightness );
+            System.out.println("A-brdcontrolslistener setting brightness to " + brightness);
+            viewer.mip3d.setGamma((float) brightness);
         }
 
         @Override
@@ -726,7 +733,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         @Override
         public void setSelectedCoords( CropCoordSet cropCoordSet ) {
             if ( cropCoordSet.getCurrentCoordinates() != null  ||  cropCoordSet.getAcceptedCoordinates().size() > 0 ) {
-                viewer.mip3d.setCropCoords( cropCoordSet );
+                viewer.mip3d.setCropCoords(cropCoordSet);
 
                 AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
                 viewer.updateRendering( context );
@@ -746,7 +753,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
         @Override
         public void setCropBlackout( boolean blackout ) {
-            viewer.mip3d.setCropOutLevel( blackout ? 0.0f : Mip3d.DEFAULT_CROPOUT );
+            viewer.mip3d.setCropOutLevel(blackout ? 0.0f : Mip3d.DEFAULT_CROPOUT);
         }
     }
 

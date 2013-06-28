@@ -313,6 +313,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
 
         for ( ControlsListener listener: listeners ) {
             if ( deltaBrightness )
+                logger.info("Setting brightness to {}.", settings.getGammaFactor() );
                 listener.setBrightness( settings.getGammaFactor() );
             if ( deltaSettings ) {
                 logger.info("Serializing show-channel as {}", settings.isShowChannelData() );
