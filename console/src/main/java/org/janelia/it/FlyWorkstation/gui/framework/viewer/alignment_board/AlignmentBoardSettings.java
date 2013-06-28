@@ -1,5 +1,7 @@
 package org.janelia.it.FlyWorkstation.gui.framework.viewer.alignment_board;
 
+import java.util.Date;
+
 /**
  * Created with IntelliJ IDEA.
  * User: fosterl
@@ -17,8 +19,14 @@ public class AlignmentBoardSettings {
     private boolean showChannelData = true;
     private double downSampleGuess;
 
+    private Date creationStamp;
+    public String toString() {
+        return "AlignmentBoardSettings created at " + creationStamp + " with guess of " + downSampleGuess;
+    }
+
     public AlignmentBoardSettings() {
         super();
+        creationStamp = new Date();
     }
 
     public AlignmentBoardSettings( double downSampleRate, double downSampleGuess, double gammaFactor, boolean showChannelData ) {
@@ -41,7 +49,7 @@ public class AlignmentBoardSettings {
      * This "guess" is determined from graphics card, but never serialized.  If the user picks something
      * in particular, that will be used.  But if not, their guess will be used instead.
      *
-     * @param downSampleRate
+     * @param downSampleRate will be used in cases where the "best guess" choice has been accepted by user.
      */
     public void setDownSampleGuess(double downSampleRate) {
         this.downSampleGuess = downSampleRate;

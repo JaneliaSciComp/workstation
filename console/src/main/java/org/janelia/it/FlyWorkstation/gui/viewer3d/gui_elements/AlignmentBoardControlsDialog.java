@@ -131,6 +131,10 @@ public class AlignmentBoardControlsDialog extends JDialog {
         listeners.remove(listener);
     }
 
+    public synchronized void removeAllSettingsListeners() {
+        listeners.clear();
+    }
+
     /**
      * Returns all settings here, at one swoop.
      * @return user input.

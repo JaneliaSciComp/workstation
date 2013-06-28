@@ -128,6 +128,7 @@ public class RenderablesMaskBuilder extends RenderablesVolumeBuilder implements 
         logger.debug( "Retrieving combined texture data." );
         TextureDataI textureData;
         double downSampleRate = settings.getAcceptedDownsampleRate();
+logger.info("Building texture from settings " + settings);
         if ( downSampleRate != 1.0 ) {
             DownSampler downSampler = new DownSampler( paddedSx, paddedSy, paddedSz );
             DownSampler.DownsampledTextureData downSampling = downSampler.getDownSampledVolume(

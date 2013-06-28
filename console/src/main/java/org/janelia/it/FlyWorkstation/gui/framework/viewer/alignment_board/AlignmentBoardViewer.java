@@ -159,7 +159,9 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         showLoadingIndicator();
 
         if ( mip3d == null ) {
+            logger.warn( "Have to create a new mip3d on refresh." );
             mip3d = createMip3d();
+            wrapperPanel = createWrapperPanel( mip3d );
         }
 
         mip3d.refresh();
@@ -180,22 +182,25 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
     @Subscribe
     public void handleItemChanged(AlignmentBoardItemChangeEvent event) {
+        // Check this, to prevent this being completed until the board has been first initialized.
+        // Redundant events may be posted at startup.
+        if ( boardOpen ) {
+            AlignmentBoardContext abContext = event.getAlignmentBoardContext();
 
-        AlignmentBoardContext abContext = event.getAlignmentBoardContext();
-        
-        printItemChanged(event.getAlignedItem(), event.getChangeType().toString());
-        printAlignmentBoardContext(abContext);
-        
-        if ( event.getChangeType().equals( AlignmentBoardItemChangeEvent.ChangeType.VisibilityChange )  ||
-             event.getChangeType().equals( AlignmentBoardItemChangeEvent.ChangeType.ColorChange ) ) {
+            printItemChanged(event.getAlignedItem(), event.getChangeType().toString());
+            printAlignmentBoardContext(abContext);
 
-            // Changing the render mapping values.
-            if ( settings != null )
-                this.updateRendering( abContext );
+            if ( event.getChangeType().equals( AlignmentBoardItemChangeEvent.ChangeType.VisibilityChange )  ||
+                    event.getChangeType().equals( AlignmentBoardItemChangeEvent.ChangeType.ColorChange ) ) {
 
-        }
-        else {
-            this.updateBoard( abContext );
+                // Changing the render mapping values.
+                if ( settings != null )
+                    this.updateRendering( abContext );
+
+            }
+            else {
+                this.updateBoard( abContext );
+            }
         }
     }
 
@@ -255,7 +260,14 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 mip3d.refresh();
             }
             else {
-                mip3d.refreshRendering();
+                if ( mip3d != null ) {
+                    mip3d.refreshRendering();
+                }
+                else {
+                    logger.info("Have to create a new MIP3d at load completion.");
+                    mip3d = createMip3d();
+                    wrapperPanel = createWrapperPanel( mip3d );
+                }
             }
 
         }
@@ -429,6 +441,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         if (loadWorker != null) {
             loadWorker.disregard();
         }
+        settings.removeAllSettingsListeners();
         removeAll();
         mip3d = null;
     }
@@ -553,70 +566,64 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             feedbackPanel.addGLEventListener( sampler );
             // DEBUG: feedbackPanel.setToolTipText( "Reading OpenGL values..." );
 
-            Runnable runnable = new Runnable() {
-                public void run() {
+            add(feedbackPanel, BorderLayout.SOUTH);
+            revalidate();
+            repaint();
 
-                    add(feedbackPanel, BorderLayout.SOUTH);
-                    revalidate();
-                    repaint();
+            Future<Integer> freeGraphicsMemoryFuture = sampler.getEstimatedTextureMemory();
+            Future<String> highestSupportedFuture = sampler.getHighestGlslVersion();
+            Future<GpuSampler.GpuID> gpuIdFuture = sampler.getGpuId();
 
-                    Future<Integer> freeGraphicsMemoryFuture = sampler.getEstimatedTextureMemory();
-                    Future<String> highestSupportedFuture = sampler.getHighestGlslVersion();
-                    Future<GpuSampler.GpuID> gpuIdFuture = sampler.getGpuId();
+            GpuSampler.GpuID gpuId = null;
 
-                    GpuSampler.GpuID gpuId = null;
+            final Integer[] freeGraphicsMemoryArr = new Integer[ 1 ];
+            final String[] highestSupportedArr = new String[ 1 ];
 
-                    final Integer[] freeGraphicsMemoryArr = new Integer[ 1 ];
-                    final String[] highestSupportedArr = new String[ 1 ];
+            try {
+                // Must set the down sample rate to the newly-discovered best.
+                freeGraphicsMemoryArr[ 0 ] = freeGraphicsMemoryFuture.get( 2, TimeUnit.MINUTES );
+                highestSupportedArr[ 0 ] = highestSupportedFuture.get( 2, TimeUnit.MINUTES );
 
-                    try {
-                        // Must set the down sample rate to the newly-discovered best.
-                        freeGraphicsMemoryArr[ 0 ] = freeGraphicsMemoryFuture.get( 2, TimeUnit.MINUTES );
-                        highestSupportedArr[ 0 ] = highestSupportedFuture.get( 2, TimeUnit.MINUTES );
+                gpuId = gpuIdFuture.get();
+                if ( gpuId != null ) {
+                    logger.info(
+                            "GPU vendor {}, renderer {} version " + gpuId.version, gpuId.vender, gpuId.renderer
+                    );
+                }
+                else {
+                    logger.warn( "No vender data returned." );
+                }
+            } catch ( Exception ex ) {
+                ex.printStackTrace();
+                SessionMgr.getSessionMgr().handleException( ex );
+            }
 
-                        gpuId = gpuIdFuture.get();
-                        if ( gpuIdFuture != null ) {
-                            logger.info(
-                                    "GPU vendor {}, renderer {} version " + gpuId.version, gpuId.vender, gpuId.renderer
-                            );
-                        }
-                        else {
-                            logger.warn( "No vender data returned." );
-                        }
-                    } catch ( Exception ex ) {
-                        ex.printStackTrace();
-                        SessionMgr.getSessionMgr().handleException( ex );
-                    }
+            // 1.5Gb in Kb increments
+            logger.info( "ABV seeing free memory estimate of {}.", freeGraphicsMemoryArr[ 0 ] );
+            logger.info( "ABV seeting highest supported version of {}.", highestSupportedArr[ 0 ] );
 
-                    // 1.5Gb in Kb increments
-                    logger.info( "ABV seeing free memory estimate of {}.", freeGraphicsMemoryArr[ 0 ] );
-                    logger.info( "ABV seeting highest supported version of {}.", highestSupportedArr[ 0 ] );
-
-                    if ( freeGraphicsMemoryArr[ 0 ] > LEAST_FULLSIZE_MEM ) {
-                        alignmentBoardSettings[ 0 ].setDownSampleGuess(1.0);
-                    }
-                    else if ( gpuId != null  &&  GpuSampler.isDeptStandardGpu( gpuId.renderer ) ) {
+            if ( freeGraphicsMemoryArr[ 0 ] > LEAST_FULLSIZE_MEM ) {
+                alignmentBoardSettings[ 0 ].setDownSampleGuess(1.0);
+            }
+            else if ( gpuId != null  &&  GpuSampler.isDeptStandardGpu( gpuId.renderer ) ) {
+                alignmentBoardSettings[ 0 ].setDownSampleGuess(1.0);
+            }
+            else {
+                Future<Boolean> isDeptPreferred = sampler.isDepartmentStandardGraphicsMac();
+                try {
+                    if ( isDeptPreferred.get() ) {
+                        logger.info("User has preferred card.");
                         alignmentBoardSettings[ 0 ].setDownSampleGuess(1.0);
                     }
                     else {
-                        Future<Boolean> isDeptPreferred = sampler.isDepartmentStandardGraphicsMac();
-                        try {
-                            if ( isDeptPreferred.get() ) {
-                                logger.info("User has preferred card.");
-                                alignmentBoardSettings[ 0 ].setDownSampleGuess(1.0);
-                            }
-                            else {
-                                alignmentBoardSettings[ 0 ].setDownSampleGuess(2.0);
-                            }
-                        } catch ( Exception ex ) {
-                            logger.warn( "Ignore this message if this system is not a Mac: department-preferred grapchics detection not working on this platform." );
-                        }
+                        alignmentBoardSettings[ 0 ].setDownSampleGuess(2.0);
                     }
+                } catch ( Exception ex ) {
+                    logger.warn( "Ignore this message if this system is not a Mac: department-preferred grapchics detection not working on this platform." );
                 }
-            };
-            new Thread( runnable ).start();
-
+            }
         }
+
         cachedDownSampleGuess = alignmentBoardSettings[ 0 ].getDownSampleGuess();
         return alignmentBoardSettings[ 0 ];
     }
@@ -629,7 +636,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         Mip3d rtnVal = new Mip3d();
         settings = new AlignmentBoardControlsDialog( rtnVal, rtnVal.getVolumeModel() );
         settings.addSettingsListener(
-                new AlignmentBoardControlsListener( rtnVal, renderMapping, this )
+                new AlignmentBoardControlsListener( renderMapping, this )
         );
 
         rtnVal.addMenuAction(settings.getLaunchAction());
@@ -689,17 +696,15 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
     //------------------------------Inner Classes
     public static class AlignmentBoardControlsListener implements ControlsListener {
-        private Mip3d mip3d;
         private AlignmentBoardViewer viewer;
         private RenderMappingI renderMapping;
-        public AlignmentBoardControlsListener(Mip3d mip3d, RenderMappingI renderMapping, AlignmentBoardViewer viewer) {
-            this.mip3d = mip3d;
+        public AlignmentBoardControlsListener(RenderMappingI renderMapping, AlignmentBoardViewer viewer) {
             this.viewer = viewer;
             this.renderMapping = renderMapping;
         }
         @Override
         public void setBrightness(double brightness) {
-            mip3d.setGamma( (float)brightness );
+            viewer.mip3d.setGamma( (float)brightness );
         }
 
         @Override
@@ -721,7 +726,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
         @Override
         public void setSelectedCoords( CropCoordSet cropCoordSet ) {
             if ( cropCoordSet.getCurrentCoordinates() != null  ||  cropCoordSet.getAcceptedCoordinates().size() > 0 ) {
-                mip3d.setCropCoords( cropCoordSet );
+                viewer.mip3d.setCropCoords( cropCoordSet );
 
                 AlignmentBoardContext context = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
                 viewer.updateRendering( context );
@@ -734,14 +739,14 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 CompletionListener completionListener,
                 ControlsListener.ExportMethod method ) {
             VolumeWritebackHandler writebackHandler = new VolumeWritebackHandler(
-                    renderMapping, absoluteCropCoords, completionListener, mip3d
+                    renderMapping, absoluteCropCoords, completionListener, viewer.mip3d
             );
             writebackHandler.writeBackVolumeSelection(method);
         }
 
         @Override
         public void setCropBlackout( boolean blackout ) {
-            mip3d.setCropOutLevel( blackout ? 0.0f : Mip3d.DEFAULT_CROPOUT );
+            viewer.mip3d.setCropOutLevel( blackout ? 0.0f : Mip3d.DEFAULT_CROPOUT );
         }
     }
 

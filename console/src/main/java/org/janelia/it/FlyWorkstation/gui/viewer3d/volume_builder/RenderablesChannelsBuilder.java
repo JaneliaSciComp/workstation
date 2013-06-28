@@ -195,6 +195,7 @@ public class RenderablesChannelsBuilder extends RenderablesVolumeBuilder impleme
             channelInterpreter.close();
 
         TextureDataI textureData = null;
+logger.info("Building texture from settings " + settings);
         double downSampleRate = settings.getAcceptedDownsampleRate();
         if ( downSampleRate != 0.0 ) {
             DownSampler downSampler = new DownSampler( paddedSx, paddedSy, paddedSz );
