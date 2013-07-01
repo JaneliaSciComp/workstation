@@ -59,7 +59,6 @@ import com.google.common.eventbus.Subscribe;
 public class AlignmentBoardViewer extends Viewer implements AlignmentBoardControllable {
 
     private static final Logger log = LoggerFactory.getLogger(AlignmentBoardViewer.class);
-    private static final int LEAST_FULLSIZE_MEM = 1500000; // Ex: 1,565,620
 
     private Mip3d mip3d;
     private RenderablesLoadWorker loadWorker;
@@ -506,17 +505,29 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                     mip3d = createMip3d();
                     wrapperPanel = createWrapperPanel( mip3d );
 
-                    deserializeSettings(context);
-                    AlignmentBoardSettings alignmentBoardSettings = adjustDownsampleRateSetting();
                     mip3d.refresh();
 
+                    GpuSampler sampler = getGpuSampler();
+
                     // Here, should load volumes, for all the different items given.
-                    loadWorker = new RenderablesLoadWorker(
-                            new ABContextDataSource( context ),
-                            renderMapping,
-                            AlignmentBoardViewer.this,
-                            alignmentBoardSettings
-                    );
+                    if ( cachedDownSampleGuess == null ) {
+                        loadWorker = new RenderablesLoadWorker(
+                                new ABContextDataSource( context ),
+                                renderMapping,
+                                AlignmentBoardViewer.this,
+                                settings.getAlignmentBoardSettings(),
+                                sampler
+                        );
+                    }
+                    else {
+                        loadWorker = new RenderablesLoadWorker(
+                                new ABContextDataSource( context ),
+                                renderMapping,
+                                AlignmentBoardViewer.this,
+                                settings.getAlignmentBoardSettings()
+                        );
+                    }
+
                     IndeterminateProgressMonitor monitor =
                             new IndeterminateProgressMonitor(
                                     SessionMgr.getBrowser(), "Updating alignment board...", context.getName()
@@ -538,94 +549,26 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
     }
 
+    private GpuSampler getGpuSampler() {
+        // Must find the best downsample rate.
+        GpuSampler sampler = new GpuSampler( Color.red );//this.getBackground() );
+        GLJPanel feedbackPanel = new GLJPanel();
+        feedbackPanel.setSize( new Dimension( 1, 1 ) );
+        feedbackPanel.addGLEventListener( sampler );
+        feedbackPanel.setToolTipText( "Reading OpenGL values..." );
+
+        this.add(feedbackPanel, BorderLayout.SOUTH);
+        revalidate();
+        repaint();
+        return sampler;
+    }
+
     private void deserializeSettings(AlignmentBoardContext context) {
         Entity alignmentBoard = context.getInternalEntity();
         UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
                 alignmentBoard, mip3d.getVolumeModel(), settings.getAlignmentBoardSettings()
         );
         userSettingSerializer.deserializeSettings();
-    }
-
-    /**
-     * Allows the downsample-rate setting used in populating the textures, to be adjusted based on user's
-     * platform.
-     *
-     * @return adjusted settings.
-     * @throws Exception from any called methods.
-     */
-    private AlignmentBoardSettings adjustDownsampleRateSetting() throws Exception {
-
-logger.info( "Adjusting downsample rate from {}.", Thread.currentThread().getName() );
-        final AlignmentBoardSettings[] alignmentBoardSettings =
-                new AlignmentBoardSettings[] { settings.getAlignmentBoardSettings() };
-        if ( alignmentBoardSettings[ 0 ].getChosenDownSampleRate() == 0.0 ) {
-            // Short-cut: do not expect card to be swapped out during the session!
-            if ( cachedDownSampleGuess != null ) {
-                alignmentBoardSettings[ 0 ].setDownSampleGuess(cachedDownSampleGuess);
-                return alignmentBoardSettings[ 0 ];
-            }
-
-            // Must find the best downsample rate.
-            final GpuSampler sampler = new GpuSampler( Color.red );//this.getBackground() );
-            final GLJPanel feedbackPanel = new GLJPanel();
-            feedbackPanel.setSize( new Dimension( 1, 1 ) );
-            feedbackPanel.addGLEventListener( sampler );
-            feedbackPanel.setToolTipText( "Reading OpenGL values..." );
-
-            this.add(feedbackPanel, BorderLayout.SOUTH);
-            revalidate();
-            repaint();
-
-            try {
-                GpuSampler.GpuInfo gpuInfo = sampler.getGpuInfo();
-
-                // Must set the down sample rate to the newly-discovered best.
-                if ( gpuInfo != null ) {
-                    logger.info(
-                            "GPU vendor {}, renderer {} version " + gpuInfo.getVersion(), gpuInfo.getVender(), gpuInfo.getRenderer()
-                    );
-
-                    // 1.5Gb in Kb increments
-                    logger.info( "ABV seeing free memory estimate of {}.", gpuInfo.getFreeTexMem() );
-                    logger.info( "ABV seeting highest supported version of {}.", gpuInfo.getHighestGlslVersion() );
-
-                    if ( gpuInfo.getFreeTexMem() > LEAST_FULLSIZE_MEM ) {
-                        alignmentBoardSettings[ 0 ].setDownSampleGuess(1.0);
-                    }
-                    else if ( GpuSampler.isDeptStandardGpu( gpuInfo.getRenderer() ) ) {
-                        alignmentBoardSettings[ 0 ].setDownSampleGuess(1.0);
-                    }
-                    else {
-                        Future<Boolean> isDeptPreferred = sampler.isDepartmentStandardGraphicsMac();
-                        try {
-                            if ( isDeptPreferred.get() ) {
-                                logger.info("User has preferred card.");
-                                alignmentBoardSettings[ 0 ].setDownSampleGuess(1.0);
-                            }
-                            else {
-                                alignmentBoardSettings[ 0 ].setDownSampleGuess(2.0);
-                            }
-                        } catch ( Exception ex ) {
-                            logger.warn( "Ignore this message if this system is not a Mac: department-preferred grapchics detection not working on this platform." );
-                        }
-                    }
-                }
-                else {
-                    logger.warn( "No vender data returned.  Forcing 'safe guess'." );
-                    alignmentBoardSettings[ 0 ].setDownSampleGuess(2.0);
-                }
-
-            } catch ( Exception ex ) {
-                ex.printStackTrace();
-                SessionMgr.getSessionMgr().handleException( ex );
-            }
-
-            //this.remove( feedbackPanel );
-
-        }
-
-        cachedDownSampleGuess = alignmentBoardSettings[ 0 ].getDownSampleGuess();
-        return alignmentBoardSettings[ 0 ];
     }
 
     /**
