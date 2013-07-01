@@ -77,11 +77,13 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
     private boolean boardOpen = false;
     private Double cachedDownSampleGuess = null;
+    private AlignmentBoardSettings settingsData;
 
     public AlignmentBoardViewer(ViewerPane viewerPane) {
         super(viewerPane);
 
         logger.info( "C'tor" );
+        settingsData = new AlignmentBoardSettings();
         renderMapping = new ConfigurableColorMapping();
         setLayout(new BorderLayout());
         ModelMgr.getModelMgr().registerOnEventBus(this);
@@ -95,10 +97,6 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
         // Saveback settings.
         SessionMgr.getSessionMgr().addSessionModelListener( new ShutdownListener() );
-//        AlignmentBoardContext alignmentBoardContext = SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext();
-//        if ( alignmentBoardContext != null ) {
-//            handleBoardOpened( alignmentBoardContext );
-//        }
     }
 
     @Override
@@ -154,7 +152,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
         if ( mip3d == null ) {
             logger.warn( "Have to create a new mip3d on refresh." );
-            mip3d = createMip3d();
+            createMip3d();
             wrapperPanel = createWrapperPanel( mip3d );
         }
 
@@ -259,7 +257,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 }
                 else {
                     logger.info("Have to create a new MIP3d at load completion.");
-                    mip3d = createMip3d();
+                    createMip3d();
                     wrapperPanel = createWrapperPanel( mip3d );
                 }
             }
@@ -318,7 +316,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             Entity alignmentBoard = context.getInternalEntity();
             if ( mip3d != null && settings != null ) {
                 UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
-                        alignmentBoard, mip3d.getVolumeModel(), settings.getAlignmentBoardSettings()
+                        alignmentBoard, mip3d.getVolumeModel(), settingsData
                 );
 
                 userSettingSerializer.serializeSettings();
@@ -502,7 +500,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                 }
                 else {
                     showLoadingIndicator();
-                    mip3d = createMip3d();
+                    createMip3d();
                     wrapperPanel = createWrapperPanel( mip3d );
 
                     mip3d.refresh();
@@ -515,7 +513,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                                 new ABContextDataSource( context ),
                                 renderMapping,
                                 AlignmentBoardViewer.this,
-                                settings.getAlignmentBoardSettings(),
+                                settingsData,
                                 sampler
                         );
                     }
@@ -524,7 +522,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
                                 new ABContextDataSource( context ),
                                 renderMapping,
                                 AlignmentBoardViewer.this,
-                                settings.getAlignmentBoardSettings()
+                                settingsData
                         );
                     }
 
@@ -566,7 +564,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
     private void deserializeSettings(AlignmentBoardContext context) {
         Entity alignmentBoard = context.getInternalEntity();
         UserSettingSerializer userSettingSerializer = new UserSettingSerializer(
-                alignmentBoard, mip3d.getVolumeModel(), settings.getAlignmentBoardSettings()
+                alignmentBoard, mip3d.getVolumeModel(), settingsData
         );
         userSettingSerializer.deserializeSettings();
     }
@@ -575,15 +573,15 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
      * Build out the Mip3D object for rendering all.  Make listeners on it so the viewer changes its data
      * as needed.
      */
-    private Mip3d createMip3d() {
-        Mip3d rtnVal = new Mip3d();
-        settings = new AlignmentBoardControlsDialog( rtnVal, rtnVal.getVolumeModel() );
+    private void createMip3d() {
+        mip3d = new Mip3d();
+        settings = new AlignmentBoardControlsDialog( mip3d, mip3d.getVolumeModel(), settingsData );
         settings.addSettingsListener(
                 new AlignmentBoardControlsListener( renderMapping, this )
         );
+        deserializeSettings(SessionMgr.getBrowser().getLayersPanel().getAlignmentBoardContext());
 
-        rtnVal.addMenuAction(settings.getLaunchAction());
-        return rtnVal;
+        mip3d.addMenuAction(settings.getLaunchAction());
     }
 
     private JPanel createWrapperPanel( Mip3d mip3d ) {
@@ -625,7 +623,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
 
                     // Here, simply make the rendering change.
                     loadWorker = new RenderablesLoadWorker(
-                            new ABContextDataSource(context), renderMapping, this, settings.getAlignmentBoardSettings()
+                            new ABContextDataSource(context), renderMapping, this, settingsData
                     );
                     loadWorker.setLoadFilesFlag( Boolean.FALSE );
                     loadWorker.execute();

@@ -258,7 +258,7 @@ public class UserSettingSerializer implements Serializable {
             builder.append("\n");
         }
 
-        logger.info("SETTINGS: {} serialized", builder);
+        logger.debug("SETTINGS: {} serialized", builder);
         return builder.toString();
     }
 

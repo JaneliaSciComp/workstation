@@ -91,7 +91,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
     private Map<Integer,Integer> downSampleRateToIndex;
     private Collection<ControlsListener> listeners;
     private VolumeModel volumeModel;
-    private AlignmentBoardSettings settings = new AlignmentBoardSettings();
+    private AlignmentBoardSettings settings;
 
     private Logger logger = LoggerFactory.getLogger( AlignmentBoardControlsDialog.class );
 
@@ -99,6 +99,15 @@ public class AlignmentBoardControlsDialog extends JDialog {
      * @param centering this dialog will be centered over the "centering" component.
      */
     public AlignmentBoardControlsDialog( Component centering, VolumeModel volumeModel ) {
+        this( centering, volumeModel, new AlignmentBoardSettings() );
+    }
+
+    /**
+     * @param centering this dialog will be centered over the "centering" component.  Push externally-created settings
+     *                  in here as a seed.
+     */
+    public AlignmentBoardControlsDialog( Component centering, VolumeModel volumeModel, AlignmentBoardSettings settings ) {
+        this.settings = settings;
         this.setModal( false );
         this.setSize(SIZE);
         this.centering = centering;
@@ -135,14 +144,6 @@ public class AlignmentBoardControlsDialog extends JDialog {
         listeners.clear();
     }
 
-    /**
-     * Returns all settings here, at one swoop.
-     * @return user input.
-     */
-    public AlignmentBoardSettings getAlignmentBoardSettings() {
-        return settings;
-    }
-
     public void setVolumeMaxima( int x, int y, int z ) {
         logger.info("Volume maxima provided {}, {}, " + z, x, y);
         xMax = x;
@@ -159,15 +160,14 @@ public class AlignmentBoardControlsDialog extends JDialog {
         return new LaunchAction();
     }
 
-    /** These getters may be called after successful launch. */
-    public double getDownsampleRate() {
-        if ( ! readyForOutput )
-            return settings.getChosenDownSampleRate();
-        String selectedValue = downSampleRateDropdown.getItemAt( downSampleRateDropdown.getSelectedIndex() ).toString();
-        if ( Character.isDigit( selectedValue.charAt( 0 ) ) )
-            return Integer.parseInt( selectedValue );
-        else
-            return 0.0;
+    //--------------------------------------------HELPERS
+    private boolean isUseSignalData() {
+        if ( ! readyForOutput ) {
+            return this.settings.isShowChannelData();
+        }
+        else {
+            return useSignalDataCheckbox.isSelected();
+        }
     }
 
     /**
@@ -182,7 +182,7 @@ public class AlignmentBoardControlsDialog extends JDialog {
      * @return computation above
      * @see #updateControlsFromSettings()
      */
-    public double getGammaFactor() {
+    private double getGammaFactor() {
         if ( ! readyForOutput )
             return settings.getGammaFactor();
         int value = brightnessSlider.getValue();
@@ -191,25 +191,17 @@ public class AlignmentBoardControlsDialog extends JDialog {
         return rtnVal;
     }
 
-    public boolean isReadyForOutput() {
-        return readyForOutput;
+    /** These getters may be called after successful launch. */
+    private double getDownsampleRate() {
+        if ( ! readyForOutput )
+            return settings.getChosenDownSampleRate();
+        String selectedValue = downSampleRateDropdown.getItemAt( downSampleRateDropdown.getSelectedIndex() ).toString();
+        if ( Character.isDigit( selectedValue.charAt( 0 ) ) )
+            return Integer.parseInt( selectedValue );
+        else
+            return 0.0;
     }
 
-    public void setDownSampleRate( double downSampleRate ) {
-        serializeDownsampleRate(downSampleRate);
-        setNonSerializedDownSampleRate(downSampleRate);
-    }
-
-    public boolean isUseSignalData() {
-        if ( ! readyForOutput ) {
-            return this.settings.isShowChannelData();
-        }
-        else {
-            return useSignalDataCheckbox.isSelected();
-        }
-    }
-
-    //--------------------------------------------HELPERS
     /**
      * Causes the controls to be updated, per information in the settings.  Does not fire any listener updates.
      * Use this when a listener is causing the update, rather than receiving it.
@@ -299,24 +291,27 @@ public class AlignmentBoardControlsDialog extends JDialog {
             settings.setGammaFactor( newGamma );
             deltaBrightness = true;
         }
-        double newDownSampleRate = getDownsampleRate();
-        boolean newUseSignal = isUseSignalData();
-        if ( newDownSampleRate != settings.getChosenDownSampleRate()  ||
-                newUseSignal != settings.isShowChannelData() ) {
 
-            settings.setChosenDownSampleRate(newDownSampleRate);
+        boolean newUseSignal = isUseSignalData();
+        if ( newUseSignal != settings.isShowChannelData() ) {
             settings.setShowChannelData( newUseSignal );
+            deltaSettings = true;
+        }
+
+        double newDownSampleRate = getDownsampleRate();
+        if ( newDownSampleRate != settings.getChosenDownSampleRate() ) {
+            settings.setChosenDownSampleRate(newDownSampleRate);
             serializeDownsampleRate( newDownSampleRate );
             deltaSettings = true;
-
         }
 
         for ( ControlsListener listener: listeners ) {
-            if ( deltaBrightness )
+            if ( deltaBrightness ) {
                 logger.info("Setting brightness to {}.", settings.getGammaFactor() );
                 listener.setBrightness( settings.getGammaFactor() );
+            }
             if ( deltaSettings ) {
-                logger.info("Serializing show-channel as {}", settings.isShowChannelData() );
+                logger.info("Serializing show-channel as {} / {}.", settings.isShowChannelData(), newUseSignal );
                 listener.updateSettings();
             }
 
