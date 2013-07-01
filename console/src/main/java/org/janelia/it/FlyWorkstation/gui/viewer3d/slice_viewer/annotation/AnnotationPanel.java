@@ -18,8 +18,6 @@ import java.awt.event.ActionListener;
 import org.janelia.it.FlyWorkstation.gui.framework.session_mgr.SessionMgr;
 import org.janelia.it.jacs.model.user_data.Subject;
 
-import org.janelia.it.jacs.model.user_data.tiledMicroscope.*;
-
 
 
 /**

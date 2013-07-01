@@ -34,6 +34,8 @@ public class AnnotationManager
 
     // current annotation
 
+    // constants
+    public static final String WORKSPACES_FOLDER_NAME = "Workspaces";
 
 
 
@@ -156,14 +158,15 @@ public class AnnotationManager
     }
 
     public void createWorkspace() {
-        // currently we create workspaces under a brain sample; since you can
-        //  open the slice viewer from either a brain sample or a workspace, if
-        //  it's the latter, grab its brain sample
 
-        Entity sampleEntity;
+        // first we need to figure out the brain sample; the user may
+        //  open the slice viewer from either a brain sample or a workspace; if
+        //  it's the latter, grab its brain sample
+        // (currently can't open Slice Viewer without an initial entity)
 
         // NOTE: ask the user if you're creating a new workspace when one is
         //  already active
+        Entity sampleEntity;
         if (annotationModel.getCurrentWorkspace() != null) {
             // dialog
             int ans = JOptionPane.showConfirmDialog(null,
@@ -171,7 +174,7 @@ public class AnnotationManager
                 "Workspace exists",
                 JOptionPane.YES_NO_OPTION);
             if (ans == JOptionPane.YES_OPTION) {
-                Long sampleID = annotationModel.getCurrentWorkspace().getId();
+                Long sampleID = annotationModel.getCurrentWorkspace().getSampleID();
                 try {
                     sampleEntity = modelMgr.getEntityById(sampleID);
                 } catch (Exception e) {
@@ -194,8 +197,32 @@ public class AnnotationManager
             sampleEntity= initialEntity;
         }
 
+        // for now, we'll put the new workspace into a default, top-level folder
+        //  named "Workspaces", which we will create if it does not exit; later,
+        //  we'll create a dialog to let the user choose the location of the
+        //  new workspace, and perhaps the brain sample, too
+        Entity workspaceRootEntity;
+        try {
+            workspaceRootEntity = modelMgr.getCommonRootEntityByName(WORKSPACES_FOLDER_NAME);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+        if (workspaceRootEntity == null) {
+            try {
+                workspaceRootEntity = modelMgr.createCommonRoot(WORKSPACES_FOLDER_NAME);
+            } catch (Exception e) {
+                e.printStackTrace();
+                // fail: dialog
+                JOptionPane.showMessageDialog(null,
+                    "Could not create Workspaces top-level folder!",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        }
 
-        // get a name
+        // get a name for the new workspace and validate (are there any rules for entity names?)
         String workspaceName = (String)JOptionPane.showInputDialog(
             null,
             "Workspace name:",
@@ -204,25 +231,12 @@ public class AnnotationManager
             null,                           // icon
             null,                           // choice list; absent = freeform
             "new workspace");
-
-        // validate workspace name;  are there any rules for entity names?
         if ((workspaceName == null) || (workspaceName.length() == 0)) {
             workspaceName = "new workspace";
         }
 
-
-        // for testing, hardcode the parent:
-        Entity parentEntity;
-        try {
-            // olbris tests folder:
-            parentEntity = modelMgr.getEntityById(1884682659553083568L);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return;
-        }
-
         // create it
-        if (!annotationModel.createWorkspace(parentEntity, sampleEntity, workspaceName)) {
+        if (!annotationModel.createWorkspace(workspaceRootEntity, sampleEntity, workspaceName)) {
             JOptionPane.showMessageDialog(null, 
                 "Could not create workspace!",
                 "Error",
