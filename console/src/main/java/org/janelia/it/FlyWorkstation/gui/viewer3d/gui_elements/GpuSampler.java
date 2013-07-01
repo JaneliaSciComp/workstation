@@ -30,8 +30,8 @@ public class GpuSampler implements GLEventListener {
     private static final int TEXTURE_FREE_MEMORY_ATI = 0x87FC;                        // Radeon
 
     private static final int NO_ESTIMATE = 0;
-    private static final int WAIT_TIME_MS = 100;
-    private static final int MAX_WAIT_LOOPS = 2 * 1000 / WAIT_TIME_MS; // Up to this many seconds.
+    private static final int WAIT_TIME_MS = 1000;
+    private static final int MAX_WAIT_LOOPS = 10 * 1000 / WAIT_TIME_MS; // Up to this many seconds.
 
     private Logger logger = LoggerFactory.getLogger( GpuSampler.class );
 
@@ -55,6 +55,7 @@ public class GpuSampler implements GLEventListener {
         freeTexMem = getFreeTextureMemory(gl2);
         highestSupportedGlsl = gl2.glGetString( GL2.GL_SHADING_LANGUAGE_VERSION );
         venderIdString = getGpuIdString( gl2 );
+logger.info( "Vender id {} found in init method.", venderIdString );
 
         isInitialized.set(true);
     }
@@ -89,8 +90,8 @@ public class GpuSampler implements GLEventListener {
         return rtnVal;
     }
 
-    public static GpuID parseGpuID( String idString ) {
-        GpuID id = new GpuID();
+    public static GpuInfo parseGpuID( String idString ) {
+        GpuInfo id = new GpuInfo();
         if ( idString == null )
             return null;
         String[] parts = idString.split( "" + GUI_ID_SEPARATOR );
@@ -104,71 +105,17 @@ public class GpuSampler implements GLEventListener {
     }
 
     /**
-     * Return the free texture memory found below.
-     * @return the estimate, when it becomes ready.
+     * Get a future-handle on the info from the GPU.
+     *
+     * @return all relevant info from GPU.
      */
-    public Future<Integer> getEstimatedTextureMemory() {
-        FutureTask<Integer> future =
-                new FutureTask<Integer>(new Callable<Integer>() {
-                    public Integer call() {
+    public GpuInfo getGpuInfo() throws Exception {
+        FutureTask<GpuInfo> future =
+                new FutureTask<GpuInfo>(new Callable<GpuInfo>() {
+                    public GpuInfo call() {
                         int numLoops = 0;
                         while ( ! isInitialized.get() ) {
-                            try {
-                                Thread.sleep( WAIT_TIME_MS );
-                                numLoops ++;
-                                if (loopMaxTest(numLoops))
-                                    return NO_ESTIMATE;
-                                logger.debug("Wait loop iteration {}.", numLoops );
-                            } catch ( Exception ex ) {
-                                logger.error( "Failed to obtain free texture memory estimate.  Returning the 0.");
-                                ex.printStackTrace();
-                                return NO_ESTIMATE;
-                            }
-                        }
-                        return freeTexMem;
-                    }
-
-                }
-        );
-        ExecutorService executor = Executors.newFixedThreadPool( 1 );
-        executor.execute(future);
-        return future;
-    }
-
-    public Future<String> getHighestGlslVersion() {
-        FutureTask<String> future =
-                new FutureTask<String>(new Callable<String>() {
-                    public String call() {
-                        int numLoops = 0;
-                        while ( ! isInitialized.get() ) {
-                            try {
-                                Thread.sleep( WAIT_TIME_MS );
-                                numLoops ++;
-                                if (loopMaxTest(numLoops))
-                                    return "";
-
-                                logger.debug("Wait loop iteration {}.", numLoops );
-                            } catch ( Exception ex ) {
-                                logger.error( "Failed to obtain max support level.  Returning the empty string.");
-                                ex.printStackTrace();
-                                return "";
-                            }
-                        }
-                        return highestSupportedGlsl;
-                    }
-                }
-                );
-        ExecutorService executor = Executors.newFixedThreadPool( 1 );
-        executor.execute(future);
-        return future;
-    }
-
-    public Future<GpuID> getGpuId() {
-        FutureTask<GpuID> future =
-                new FutureTask<GpuID>(new Callable<GpuID>() {
-                    public GpuID call() {
-                        int numLoops = 0;
-                        while ( ! isInitialized.get() ) {
+logger.info("On loop {}.  Got value {}.", numLoops, venderIdString);
                             try {
                                 Thread.sleep( WAIT_TIME_MS );
                                 numLoops ++;
@@ -182,12 +129,15 @@ public class GpuSampler implements GLEventListener {
                                 return null;
                             }
                         }
-                        return parseGpuID( venderIdString );
+                        GpuInfo info = parseGpuID( venderIdString );
+                        info.setFreeTexMem( freeTexMem );
+                        info.setHighestGlslVersion( highestSupportedGlsl );
+                        return info;
                     }
                 });
         ExecutorService executor = Executors.newFixedThreadPool( 1 );
         executor.execute( future );
-        return future;
+        return future.get( 2, TimeUnit.MINUTES );
     }
 
     /**
@@ -363,10 +313,52 @@ public class GpuSampler implements GLEventListener {
         return rtnVal;
     }
 
-    public static class GpuID {
-        public String vender;
-        public String renderer;
-        public String version;
+    public static class GpuInfo {
+        private String vender;
+        private String renderer;
+        private String version;
+        private String highestGlslVersion;
+        private int freeTexMem;
+
+        public String getVender() {
+            return vender;
+        }
+
+        public void setVender(String vender) {
+            this.vender = vender;
+        }
+
+        public String getRenderer() {
+            return renderer;
+        }
+
+        public void setRenderer(String renderer) {
+            this.renderer = renderer;
+        }
+
+        public String getVersion() {
+            return version;
+        }
+
+        public void setVersion(String version) {
+            this.version = version;
+        }
+
+        public String getHighestGlslVersion() {
+            return highestGlslVersion;
+        }
+
+        public void setHighestGlslVersion(String highestGlslVersion) {
+            this.highestGlslVersion = highestGlslVersion;
+        }
+
+        public int getFreeTexMem() {
+            return freeTexMem;
+        }
+
+        public void setFreeTexMem(int freeTexMem) {
+            this.freeTexMem = freeTexMem;
+        }
     }
 
 }

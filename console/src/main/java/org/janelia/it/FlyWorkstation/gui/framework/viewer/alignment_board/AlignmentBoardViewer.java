@@ -555,6 +555,7 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
      */
     private AlignmentBoardSettings adjustDownsampleRateSetting() throws Exception {
 
+logger.info( "Adjusting downsample rate from {}.", Thread.currentThread().getName() );
         final AlignmentBoardSettings[] alignmentBoardSettings =
                 new AlignmentBoardSettings[] { settings.getAlignmentBoardSettings() };
         if ( alignmentBoardSettings[ 0 ].getChosenDownSampleRate() == 0.0 ) {
@@ -565,69 +566,62 @@ public class AlignmentBoardViewer extends Viewer implements AlignmentBoardContro
             }
 
             // Must find the best downsample rate.
-            final GpuSampler sampler = new GpuSampler( this.getBackground() );
+            final GpuSampler sampler = new GpuSampler( Color.red );//this.getBackground() );
             final GLJPanel feedbackPanel = new GLJPanel();
             feedbackPanel.setSize( new Dimension( 1, 1 ) );
             feedbackPanel.addGLEventListener( sampler );
-            // DEBUG: feedbackPanel.setToolTipText( "Reading OpenGL values..." );
+            feedbackPanel.setToolTipText( "Reading OpenGL values..." );
 
-            this.getViewerPane().add(feedbackPanel, BorderLayout.SOUTH);
+            this.add(feedbackPanel, BorderLayout.SOUTH);
             revalidate();
             repaint();
 
-            Future<Integer> freeGraphicsMemoryFuture = sampler.getEstimatedTextureMemory();
-            Future<String> highestSupportedFuture = sampler.getHighestGlslVersion();
-            Future<GpuSampler.GpuID> gpuIdFuture = sampler.getGpuId();
-
-            GpuSampler.GpuID gpuId = null;
-
-            final Integer[] freeGraphicsMemoryArr = new Integer[ 1 ];
-            final String[] highestSupportedArr = new String[ 1 ];
-
             try {
-                // Must set the down sample rate to the newly-discovered best.
-                freeGraphicsMemoryArr[ 0 ] = freeGraphicsMemoryFuture.get( 2, TimeUnit.MINUTES );
-                highestSupportedArr[ 0 ] = highestSupportedFuture.get( 2, TimeUnit.MINUTES );
+                GpuSampler.GpuInfo gpuInfo = sampler.getGpuInfo();
 
-                gpuId = gpuIdFuture.get();
-                if ( gpuId != null ) {
+                // Must set the down sample rate to the newly-discovered best.
+                if ( gpuInfo != null ) {
                     logger.info(
-                            "GPU vendor {}, renderer {} version " + gpuId.version, gpuId.vender, gpuId.renderer
+                            "GPU vendor {}, renderer {} version " + gpuInfo.getVersion(), gpuInfo.getVender(), gpuInfo.getRenderer()
                     );
+
+                    // 1.5Gb in Kb increments
+                    logger.info( "ABV seeing free memory estimate of {}.", gpuInfo.getFreeTexMem() );
+                    logger.info( "ABV seeting highest supported version of {}.", gpuInfo.getHighestGlslVersion() );
+
+                    if ( gpuInfo.getFreeTexMem() > LEAST_FULLSIZE_MEM ) {
+                        alignmentBoardSettings[ 0 ].setDownSampleGuess(1.0);
+                    }
+                    else if ( GpuSampler.isDeptStandardGpu( gpuInfo.getRenderer() ) ) {
+                        alignmentBoardSettings[ 0 ].setDownSampleGuess(1.0);
+                    }
+                    else {
+                        Future<Boolean> isDeptPreferred = sampler.isDepartmentStandardGraphicsMac();
+                        try {
+                            if ( isDeptPreferred.get() ) {
+                                logger.info("User has preferred card.");
+                                alignmentBoardSettings[ 0 ].setDownSampleGuess(1.0);
+                            }
+                            else {
+                                alignmentBoardSettings[ 0 ].setDownSampleGuess(2.0);
+                            }
+                        } catch ( Exception ex ) {
+                            logger.warn( "Ignore this message if this system is not a Mac: department-preferred grapchics detection not working on this platform." );
+                        }
+                    }
                 }
                 else {
-                    logger.warn( "No vender data returned." );
+                    logger.warn( "No vender data returned.  Forcing 'safe guess'." );
+                    alignmentBoardSettings[ 0 ].setDownSampleGuess(2.0);
                 }
+
             } catch ( Exception ex ) {
                 ex.printStackTrace();
                 SessionMgr.getSessionMgr().handleException( ex );
             }
 
-            // 1.5Gb in Kb increments
-            logger.info( "ABV seeing free memory estimate of {}.", freeGraphicsMemoryArr[ 0 ] );
-            logger.info( "ABV seeting highest supported version of {}.", highestSupportedArr[ 0 ] );
+            //this.remove( feedbackPanel );
 
-            if ( freeGraphicsMemoryArr[ 0 ] > LEAST_FULLSIZE_MEM ) {
-                alignmentBoardSettings[ 0 ].setDownSampleGuess(1.0);
-            }
-            else if ( gpuId != null  &&  GpuSampler.isDeptStandardGpu( gpuId.renderer ) ) {
-                alignmentBoardSettings[ 0 ].setDownSampleGuess(1.0);
-            }
-            else {
-                Future<Boolean> isDeptPreferred = sampler.isDepartmentStandardGraphicsMac();
-                try {
-                    if ( isDeptPreferred.get() ) {
-                        logger.info("User has preferred card.");
-                        alignmentBoardSettings[ 0 ].setDownSampleGuess(1.0);
-                    }
-                    else {
-                        alignmentBoardSettings[ 0 ].setDownSampleGuess(2.0);
-                    }
-                } catch ( Exception ex ) {
-                    logger.warn( "Ignore this message if this system is not a Mac: department-preferred grapchics detection not working on this platform." );
-                }
-            }
-            this.getViewerPane().remove( feedbackPanel );
         }
 
         cachedDownSampleGuess = alignmentBoardSettings[ 0 ].getDownSampleGuess();
