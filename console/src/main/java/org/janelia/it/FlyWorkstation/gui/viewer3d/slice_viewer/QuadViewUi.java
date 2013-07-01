@@ -1,5 +1,6 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.BoundingBox3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.BasicObservableCamera3d;
@@ -48,6 +49,7 @@ import java.awt.event.MouseEvent;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Vector;
 import java.util.List;
 
@@ -69,11 +71,35 @@ public class QuadViewUi extends JPanel
 	// (there's only one viewer now actually, but you know...)
 	private BasicObservableCamera3d camera = new BasicObservableCamera3d();
 	GLContextSharer orthoViewContextSharer = new GLContextSharer(glProfile);
+
 	private SliceViewer sliceViewer = new SliceViewer(
 			orthoViewContextSharer.getCapabilities(),
 			orthoViewContextSharer.getChooser(),
 			orthoViewContextSharer.getContext(),
 			camera);
+
+	// TODO - promote volumeImage, colorModel out of sliceviewer
+	TileServer tileServer = sliceViewer.getTileServer();
+	private SharedVolumeImage volumeImage = tileServer.getSharedVolumeImage(); // TODO - volume does not belong down there!
+	private ImageColorModel imageColorModel = new ImageColorModel(volumeImage);
+
+	// Four quadrants for orthogonal views
+	OrthogonalPanel neViewer = new OrthogonalPanel(CoordinateAxis.X, orthoViewContextSharer);
+	OrthogonalPanel swViewer = new OrthogonalPanel(CoordinateAxis.Y, orthoViewContextSharer);
+	OrthogonalPanel nwViewer = new OrthogonalPanel(CoordinateAxis.Z, orthoViewContextSharer);
+	// TODO 3D view
+	// TODO obsolete zViewerPanel in favor of OrthogonalPanel
+	JPanel zViewerPanel = new JPanel();
+	JComponent seViewer = zViewerPanel; // should be same as Z...
+
+	// Group orthogonal viewers for use in action constructors
+	List<TileConsumer> allSliceViewers = Arrays.asList(new TileConsumer[] {
+			nwViewer.getViewer(),
+			neViewer.getViewer(),
+			swViewer.getViewer(),
+			sliceViewer			
+		});
+	
 	private boolean modifierKeyPressed = false;
 	private JPanel zScanPanel = new JPanel();
 	private JSlider zScanSlider = new JSlider();
@@ -85,10 +111,10 @@ public class QuadViewUi extends JPanel
     private JMenuBar menuBar = new JMenuBar();
     private JPanel toolBarPanel = new JPanel();
 	private JSplitPane splitPane = new JSplitPane();
-	private ColorChannelWidget colorChannelWidget_0 = new ColorChannelWidget(0, sliceViewer.getImageColorModel());
-	private ColorChannelWidget colorChannelWidget_1 = new ColorChannelWidget(1, sliceViewer.getImageColorModel());
-	private ColorChannelWidget colorChannelWidget_2 = new ColorChannelWidget(2, sliceViewer.getImageColorModel());
-	private ColorChannelWidget colorChannelWidget_3 = new ColorChannelWidget(3, sliceViewer.getImageColorModel());
+	private ColorChannelWidget colorChannelWidget_0 = new ColorChannelWidget(0, imageColorModel);
+	private ColorChannelWidget colorChannelWidget_1 = new ColorChannelWidget(1, imageColorModel);
+	private ColorChannelWidget colorChannelWidget_2 = new ColorChannelWidget(2, imageColorModel);
+	private ColorChannelWidget colorChannelWidget_3 = new ColorChannelWidget(3, imageColorModel);
 	private final ColorChannelWidget colorWidgets[]  = {
 		colorChannelWidget_0, 
 		colorChannelWidget_1, 
@@ -96,19 +122,18 @@ public class QuadViewUi extends JPanel
 		colorChannelWidget_3
 	};
 	private JLabel statusLabel = new JLabel("status area");
-	JPanel zViewerPanel = new JPanel();
 	
-	ZScanMode zScanMode = new ZScanMode(sliceViewer);
+	ZScanMode zScanMode = new ZScanMode(volumeImage);
 	
 	// annotation things
 	private AnnotationModel annotationModel = new AnnotationModel();
 	private AnnotationManager annotationMgr = new AnnotationManager(annotationModel);
 
 	// Actions
-	private final Action openFolderAction = new OpenFolderAction(sliceViewer, sliceViewer);
+	private final Action openFolderAction = new OpenFolderAction(volumeImage, sliceViewer);
 	private RecentFileList recentFileList = new RecentFileList(new JMenu());
-	private final Action resetViewAction = new ResetViewAction(sliceViewer);
-	private final Action resetColorsAction = new ResetColorsAction(sliceViewer.getImageColorModel());
+	private final Action resetViewAction = new ResetViewAction(allSliceViewers, volumeImage);
+	private final Action resetColorsAction = new ResetColorsAction(imageColorModel);
 	// mode actions (and groups)
 	private final ZoomMouseModeAction zoomMouseModeAction = new ZoomMouseModeAction();
 	private final PanModeAction panModeAction = new PanModeAction();
@@ -123,13 +148,13 @@ public class QuadViewUi extends JPanel
 	// zoom actions
 	private final Action zoomInAction = new ZoomInAction(camera);
 	private final Action zoomOutAction = new ZoomOutAction(camera);
-	private final Action zoomMaxAction = new ZoomMaxAction(camera, sliceViewer);
-	private final Action resetZoomAction = new ResetZoomAction(sliceViewer);
+	private final Action zoomMaxAction = new ZoomMaxAction(camera, volumeImage);
+	private final Action resetZoomAction = new ResetZoomAction(allSliceViewers, volumeImage);
 	// Z scan actions
-	private final SliceScanAction nextZSliceAction = new NextZSliceAction(sliceViewer, sliceViewer);
-	private final SliceScanAction previousZSliceAction = new PreviousZSliceAction(sliceViewer, sliceViewer);
-	private final SliceScanAction advanceZSlicesAction = new AdvanceZSlicesAction(sliceViewer, sliceViewer, 10);
-	private final SliceScanAction goBackZSlicesAction = new GoBackZSlicesAction(sliceViewer, sliceViewer, -10);
+	private final SliceScanAction nextZSliceAction = new NextZSliceAction(volumeImage, camera);
+	private final SliceScanAction previousZSliceAction = new PreviousZSliceAction(volumeImage, camera);
+	private final SliceScanAction advanceZSlicesAction = new AdvanceZSlicesAction(volumeImage, camera, 10);
+	private final SliceScanAction goBackZSlicesAction = new GoBackZSlicesAction(volumeImage, camera, -10);
 	//
 	private final Action clearCacheAction = new AbstractAction() {
 		private static final long serialVersionUID = 1L;
@@ -153,11 +178,23 @@ public class QuadViewUi extends JPanel
 		}
 	};
 
+	public Signal1<MouseMode.Mode> mouseModeChangedSignal = 
+		    new Signal1<MouseMode.Mode>();
+	    public Signal1<WheelMode.Mode> wheelModeChangedSignal = 
+	        new Signal1<WheelMode.Mode>();
+	
 	// Slots
+	private Slot1<URL> loadUrlSlot = new Slot1<URL>() {
+		@Override
+		public void execute(URL url) {
+			loadURL(url);
+		}
+	};
+	    
 	protected Slot1<Vec3> changeZ = new Slot1<Vec3>() {
 		@Override
 		public void execute(Vec3 focus) {
-			int z = (int)Math.round((focus.getZ()-0.5) / sliceViewer.getZResolution());
+			int z = (int)Math.round((focus.getZ()-0.5) / volumeImage.getZResolution());
 			zScanSlider.setValue(z);
 			zScanSpinner.setValue(z);
 		}
@@ -166,21 +203,12 @@ public class QuadViewUi extends JPanel
 	protected Slot1<Double> changeZoom = new Slot1<Double>() {
 		@Override
 		public void execute(Double zoom) {
-			double zoomMin = Math.log(sliceViewer.getMinZoom()) / Math.log(2.0);
-			double zoomMax = Math.log(sliceViewer.getMaxZoom()) / Math.log(2.0);
+			double zoomMin = Math.log(getMinZoom()) / Math.log(2.0);
+			double zoomMax = Math.log(getMaxZoom()) / Math.log(2.0);
 			double zoomLog = Math.log(zoom) / Math.log(2.0);
 			double relativeZoom = (zoomLog - zoomMin) / (zoomMax - zoomMin);
 			int sliderValue = (int)Math.round(relativeZoom * 1000.0);
 			zoomSlider.setValue(sliderValue);
-		}
-	};
-	
-	protected Slot1<URL> rememberLoadedFileSlot = new Slot1<URL>() {
-		@Override
-		public void execute(URL url) {
-			if (recentFileList == null)
-				return;
-			recentFileList.add(url);
 		}
 	};
 	
@@ -189,10 +217,10 @@ public class QuadViewUi extends JPanel
 		public void execute() 
 		{
 			// Z range
-			double zMin = sliceViewer.getBoundingBox3d().getMin().getZ();
-			double zMax = sliceViewer.getBoundingBox3d().getMax().getZ();
-			int z0 = (int)Math.round(zMin / sliceViewer.getZResolution());
-			int z1 = (int)Math.round(zMax / sliceViewer.getZResolution()) - 1;
+			double zMin = volumeImage.getBoundingBox3d().getMin().getZ();
+			double zMax = volumeImage.getBoundingBox3d().getMax().getZ();
+			int z0 = (int)Math.round(zMin / volumeImage.getZResolution());
+			int z1 = (int)Math.round(zMax / volumeImage.getZResolution()) - 1;
 			if (z0 > z1)
 				z1 = z0;
 			// Z-scan is only relevant if there is more than one slice.
@@ -202,7 +230,7 @@ public class QuadViewUi extends JPanel
 				sliceViewer.setWheelMode(WheelMode.Mode.SCAN);
 				zScanScrollModeAction.setEnabled(true);
 				zScanScrollModeAction.actionPerformed(new ActionEvent(this, 0, ""));
-				int z = (int)Math.round((sliceViewer.getFocus().getZ()-0.5) / sliceViewer.getZResolution());
+				int z = (int)Math.round((camera.getFocus().getZ()-0.5) / volumeImage.getZResolution());
 				if (z < z0)
 					z = z0;
 				if (z > z1)
@@ -212,7 +240,7 @@ public class QuadViewUi extends JPanel
 				zScanSlider.setValue(z);
 				zScanSpinner.setModel(new SpinnerNumberModel(z, z0, z1, 1));
 				// Allow octree zsteps to depend on zoom
-				TileFormat tileFormat = sliceViewer.getTileServer().getLoadAdapter().getTileFormat();
+				TileFormat tileFormat = tileServer.getLoadAdapter().getTileFormat();
 				zScanMode.setTileFormat(tileFormat);
 				nextZSliceAction.setTileFormat(tileFormat);
 				previousZSliceAction.setTileFormat(tileFormat);
@@ -235,16 +263,13 @@ public class QuadViewUi extends JPanel
 		}
 	};
 	
-	public Signal1<MouseMode.Mode> mouseModeChangedSignal = 
-	    new Signal1<MouseMode.Mode>();
-    public Signal1<WheelMode.Mode> wheelModeChangedSignal = 
-        new Signal1<WheelMode.Mode>();
-
 	/**
 	 * Create the frame.
 	 */
 	public QuadViewUi(JFrame parentFrame, Entity initialEntity, boolean overrideFrameMenuBar)
 	{
+		sliceViewer.setImageColorModel(imageColorModel);
+		
 		colorChannelWidget_3.setVisible(false);
 		colorChannelWidget_2.setVisible(false);
 		colorChannelWidget_1.setVisible(false);
@@ -295,20 +320,16 @@ public class QuadViewUi extends JPanel
         mouseModeChangedSignal.connect(sliceViewer.setMouseModeSlot);
         wheelModeChangedSignal.connect(sliceViewer.setWheelModeSlot);
         // TODO other orthogonal viewers
-        OrthogonalPanel viewPanels[] = {neViewer, swViewer, seViewer};
-        SharedVolumeImage vi = sliceViewer.getTileServer().getSharedVolumeImage();
+        OrthogonalPanel viewPanels[] = {neViewer, swViewer, nwViewer};
         SkeletonActor sharedSkeletonActor = sliceViewer.getSkeletonActor();
         sharedSkeletonActor.setSkeleton(sliceViewer.getSkeleton());
-        TileServer tileServer = 
-        		sliceViewer.getTileServer(); // now that context is shared...
-        		// new TileServer(vi);
         for (OrthogonalPanel v : viewPanels) {
             mouseModeChangedSignal.connect(v.setMouseModeSlot);
             wheelModeChangedSignal.connect(v.setWheelModeSlot);
             v.setCamera(camera);
             // TODO - move most of this setup into OrthogonalViewer class.
             v.getViewer().statusMessageChanged.connect(setStatusMessageSlot);
-            v.setSharedVolumeImage(vi);
+            v.setSharedVolumeImage(volumeImage);
             v.setSystemMenuItemGenerator(new MenuItemGenerator() {
                 @Override
                 public List<JMenuItem> getMenus(MouseEvent event) {
@@ -319,10 +340,9 @@ public class QuadViewUi extends JPanel
                 }
             });
             ViewTileManager viewTileManager = new ViewTileManager(v.getViewer());
-            viewTileManager.setVolumeImage(vi);
+            viewTileManager.setVolumeImage(volumeImage);
             viewTileManager.setTextureCache(tileServer.getTextureCache());
             SliceActor sliceActor = new SliceActor(viewTileManager);
-            ImageColorModel imageColorModel = sliceViewer.getImageColorModel();
             sliceActor.setImageColorModel(imageColorModel);
             imageColorModel.getColorModelChangedSignal().connect(v.getViewer().repaintSlot);
             v.getViewer().addActor(sliceActor);
@@ -338,16 +358,39 @@ public class QuadViewUi extends JPanel
 	}
 
 	public void clearCache() {
-		sliceViewer.getTileServer().clearCache();
+		tileServer.clearCache();
 	}
 	
-	// Four quadrants for orthogonal views
-	//
-	// TODO obsolete zViewerPanel in favor of OrthogonalPanel
-	JComponent nwViewer = zViewerPanel; // should be same as Z...
-	OrthogonalPanel neViewer = new OrthogonalPanel(CoordinateAxis.X, orthoViewContextSharer);
-	OrthogonalPanel swViewer = new OrthogonalPanel(CoordinateAxis.Y, orthoViewContextSharer);
-	OrthogonalPanel seViewer = new OrthogonalPanel(CoordinateAxis.Z, orthoViewContextSharer); // TODO 3D view
+	private double getMaxZoom() {
+		double maxRes = Math.min(volumeImage.getXResolution(), Math.min(
+				volumeImage.getYResolution(),
+				volumeImage.getZResolution()));
+		return 300.0 / maxRes; // 300 pixels per voxel is probably zoomed enough...
+	}
+	
+	private double getMinZoom() {
+		double result = getMaxZoom();
+		BoundingBox3d box = volumeImage.getBoundingBox3d();
+		Vec3 volSize = new Vec3(box.getWidth(), box.getHeight(), box.getDepth());
+		for (TileConsumer viewer : allSliceViewers) {
+			if (! viewer.isShowing())
+				continue;
+			int w = viewer.getViewport().getWidth();
+			int h = viewer.getViewport().getHeight();
+			if (w <= 0)
+				continue;
+			if (h <= 0)
+				continue;
+			// Fit two of the whole volume on the screen
+			// Rotate volume to match viewer orientation
+			Vec3 rotSize = viewer.getViewerInGround().inverse().times(volSize);
+			double zx = 0.5 * w / Math.abs(rotSize.x());
+			double zy = 0.5 * h / Math.abs(rotSize.y());
+			double z = Math.min(zx, zy);
+			result = Math.min(z, result);	
+		}
+		return result;
+	}
 	
 	private void setOrthogonalMode() {
 		nwViewer.setVisible(true);
@@ -406,7 +449,7 @@ public class QuadViewUi extends JPanel
 		lockBlackButton.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent event) {
-				ImageColorModel colorModel = sliceViewer.getImageColorModel();
+				ImageColorModel colorModel = imageColorModel;
 				if (colorModel == null)
 					return;
 				AbstractButton button = (AbstractButton)event.getSource();
@@ -428,7 +471,7 @@ public class QuadViewUi extends JPanel
 		lockGrayButton.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent event) {
-				ImageColorModel colorModel = sliceViewer.getImageColorModel();
+				ImageColorModel colorModel = imageColorModel;
 				if (colorModel == null)
 					return;
 				AbstractButton button = (AbstractButton)event.getSource();
@@ -450,7 +493,7 @@ public class QuadViewUi extends JPanel
 		lockWhiteButton.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent event) {
-				ImageColorModel colorModel = sliceViewer.getImageColorModel();
+				ImageColorModel colorModel = imageColorModel;
 				if (colorModel == null)
 					return;
 				AbstractButton button = (AbstractButton)event.getSource();
@@ -460,11 +503,11 @@ public class QuadViewUi extends JPanel
 		
 		colorLockPanel.add(Box.createHorizontalStrut(30));
 
-		sliceViewer.getImageColorModel().getColorModelInitializedSignal().connect(new Slot() {
+		imageColorModel.getColorModelInitializedSignal().connect(new Slot() {
 			@Override
 			public void execute() {
 				// System.out.println("Updating slider visibility");
-				int sc = sliceViewer.getImageColorModel().getChannelCount();
+				int sc = imageColorModel.getChannelCount();
 				colorPanel.setVisible(sc > 0);
 				int c = 0;
 				for (ColorChannelWidget w : colorWidgets) {
@@ -509,10 +552,9 @@ public class QuadViewUi extends JPanel
 		sliceViewer.setCamera(camera);
 		sliceViewer.setBackground(Color.DARK_GRAY);
 		zViewerPanel.add(sliceViewer);
-        sliceViewer.getTileServer().getVolumeInitializedSignal().connect(updateRangesSlot);
-		sliceViewer.getZoomChangedSignal().connect(changeZoom);
-        sliceViewer.getCamera().getFocusChangedSignal().connect(changeZ);
-		sliceViewer.getFileLoadedSignal().connect(rememberLoadedFileSlot);
+		volumeImage.volumeInitializedSignal.connect(updateRangesSlot);
+		camera.getZoomChangedSignal().connect(changeZoom);
+        camera.getFocusChangedSignal().connect(changeZ);
 		
 		// JPanel zScanPanel = new JPanel();
 		zViewerPanel.add(zScanPanel);
@@ -599,11 +641,11 @@ public class QuadViewUi extends JPanel
 				int value = zoomSlider.getValue();
 				double relativeZoom = value / 1000.0;
 				// log scale
-				double zoomMin = Math.log(sliceViewer.getMinZoom()) / Math.log(2.0);
-				double zoomMax = Math.log(sliceViewer.getMaxZoom()) / Math.log(2.0);
+				double zoomMin = Math.log(getMinZoom()) / Math.log(2.0);
+				double zoomMax = Math.log(getMaxZoom()) / Math.log(2.0);
 				double zoom = zoomMin + relativeZoom * (zoomMax - zoomMin);
 				zoom = Math.pow(2.0, zoom);
-				sliceViewer.setPixelsPerSceneUnit(zoom);
+				camera.setPixelsPerSceneUnit(zoom);
 			}
 		});
 		
@@ -822,17 +864,17 @@ public class QuadViewUi extends JPanel
 	}
 	
 	private boolean setZSlice(int z) {
-		Vec3 oldFocus = sliceViewer.getFocus();
-		int oldValue = (int)Math.round(oldFocus.getZ() / sliceViewer.getZResolution() - 0.5);
+		Vec3 oldFocus = camera.getFocus();
+		int oldValue = (int)Math.round(oldFocus.getZ() / volumeImage.getZResolution() - 0.5);
 		if (oldValue == z)
 			return false; // camera is already pretty close
-		double halfVoxel = 0.5 * sliceViewer.getZResolution();
-		double newZ = z * sliceViewer.getZResolution() + halfVoxel;
-		double minZ = sliceViewer.getBoundingBox3d().getMin().getZ() + halfVoxel;
-		double maxZ = sliceViewer.getBoundingBox3d().getMax().getZ() - halfVoxel;
+		double halfVoxel = 0.5 * volumeImage.getZResolution();
+		double newZ = z * volumeImage.getZResolution() + halfVoxel;
+		double minZ = volumeImage.getBoundingBox3d().getMin().getZ() + halfVoxel;
+		double maxZ = volumeImage.getBoundingBox3d().getMax().getZ() - halfVoxel;
 		newZ = Math.max(newZ, minZ);
 		newZ = Math.min(newZ, maxZ);
-		sliceViewer.setFocus(new Vec3(oldFocus.getX(), oldFocus.getY(), newZ));
+		camera.setFocus(new Vec3(oldFocus.getX(), oldFocus.getY(), newZ));
 		return true;
 	}
 
@@ -943,8 +985,7 @@ public class QuadViewUi extends JPanel
         mnNewMenu.setVisible(false);
         mnFile.add(mnNewMenu);
         recentFileList = new RecentFileList(mnNewMenu);
-        sliceViewer.getFileLoadedSignal().connect(rememberLoadedFileSlot);
-        recentFileList.getOpenUrlRequestedSignal().connect(sliceViewer.getLoadUrlSlot());
+        recentFileList.getOpenUrlRequestedSignal().connect(loadUrlSlot);
         return mnFile;
     }
 
@@ -967,7 +1008,7 @@ public class QuadViewUi extends JPanel
         return popupMenu;
     }
 
-    public void loadURL(String pathToFile) throws MalformedURLException {
+    public boolean loadFile(String pathToFile) throws MalformedURLException {
         File tmpFile = new File(pathToFile);
 
         // Hard code temporary path translation for Nathan
@@ -1006,8 +1047,21 @@ public class QuadViewUi extends JPanel
                     "Error opening folder " + tmpFile.getName(),
                     "Could not load folder.",
                     JOptionPane.ERROR_MESSAGE);
-            return;
+            return false;
         }
-        sliceViewer.loadURL(tmpFile.toURI().toURL());
+
+        // July 1, 2013 elevate url loading from SliceViewer to QuadViewUi.
+        URL url = tmpFile.toURI().toURL();
+        return loadURL(url);
+    }
+    
+    public boolean loadURL(URL url) {
+    	boolean result = volumeImage.loadURL(url);
+    	if (result) {
+			recentFileList.add(url);
+			imageColorModel.reset(volumeImage);
+			resetViewAction.actionPerformed(null);
+    	}
+    	return result;
     }
 }

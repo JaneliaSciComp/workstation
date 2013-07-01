@@ -36,10 +36,14 @@ implements Iterator<E>, Iterable<E>
 			secondary = first;
 		}
 		useFirst = ! useFirst; // swap for next time
-		if (primary.hasNext())
-			return primary.next();
-		else
-			return secondary.next(); // because primary is exhausted
+		if (primary.hasNext()) {
+			E result = primary.next();
+			return result;
+		}
+		else {
+			E result = secondary.next();
+			return result; // because primary is exhausted
+		}
 	}
 
 	@Override

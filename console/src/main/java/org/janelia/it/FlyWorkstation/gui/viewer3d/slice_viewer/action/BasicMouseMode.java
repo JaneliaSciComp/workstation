@@ -72,9 +72,9 @@ public class BasicMouseMode implements MouseMode
 		currentCursor = newCursor;
 		if (widget == null)
 			return;
-		if (widget.getCursor() == currentCursor)
+		if (widget.getComponent().getCursor() == currentCursor)
 			return;
-		widget.setCursor(currentCursor);
+		widget.getComponent().setCursor(currentCursor);
 	}
 	
 	public Point getPoint() {

@@ -1,6 +1,5 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
-import java.awt.Cursor;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -18,8 +17,6 @@ extends MouseListener, MouseMotionListener, MouseWheelListener, KeyListener
 {
 	public void setMouseMode(MouseMode.Mode mode);
 	public void setWheelMode(WheelMode.Mode mode);
-	public Cursor getCursor();
-	public void setCursor(Cursor cursor);
 	public Point2D getPixelOffsetFromCenter(Point2D point);
 	public RubberBand getRubberBand();
 	public Viewport getViewport();

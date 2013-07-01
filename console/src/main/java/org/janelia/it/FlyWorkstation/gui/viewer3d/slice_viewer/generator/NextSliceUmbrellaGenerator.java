@@ -2,23 +2,24 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator;
 
 import java.util.Iterator;
 
+import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.TileIndex;
 
 /**
- * Generate positive offset Z indices, as part of UmbrellaZGenerator
+ * Generate positive offset slice indices, as part of UmbrellaZGenerator
  * @author brunsc
  *
  */
-public class PreviousZUmbrellaGenerator 
+public class NextSliceUmbrellaGenerator 
 implements Iterator<TileIndex>, Iterable<TileIndex>
 {
-	private int zMin;
+	private int sliceMax;
 	private TileIndex index;
 	private int stepCount = 0;
 	
-	public PreviousZUmbrellaGenerator(TileIndex seed, int zMin) {
-		this.zMin = zMin;
-		index = seed.previousSlice();
+	public NextSliceUmbrellaGenerator(TileIndex seed, int sliceMax) {
+		this.sliceMax = sliceMax;
+		index = seed.nextSlice();
 	}
 	
 	@Override
@@ -28,13 +29,14 @@ implements Iterator<TileIndex>, Iterable<TileIndex>
 
 	@Override
 	public boolean hasNext() {
-		return index.getZ() >= zMin;
+		int axIx = index.getSliceAxis().index();
+		return index.getCoordinate(axIx) <= sliceMax;
 	}
 
 	@Override
 	public TileIndex next() {
 		TileIndex result = index;
-		// Lower resolution as we get farther from center Z
+		// Lower resolution as we get farther from center slice
 		if (stepCount == 5) { // lower resolution farther from center
 			TileIndex i = index.zoomOut();
 			if (i != null)
@@ -46,8 +48,8 @@ implements Iterator<TileIndex>, Iterable<TileIndex>
 				index = i;
 		}
 		stepCount += 1;
-		// Increment Z for next time.
-		index = index.previousSlice();
+		// Increment slice for next time.
+		index = index.nextSlice();
 		return result;
 	}
 

@@ -13,26 +13,27 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.TileSet;
  * @author brunsc
  *
  */
-public class ZGenerator 
+public class SliceGenerator 
 implements Iterable<TileIndex>, Iterator<TileIndex>
 {
-	// Outer loop iterates over Z
-	private Iterator<TileIndex> zGenerator;
+	// Outer loop iterates over slice
+	private Iterator<TileIndex> sliceGenerator;
 	private TileIndex baseIndex;
 	// Inner loop iterates over tiles
 	private TileSet tileSet;
 	private Iterator<Tile2d> tileIter;
 	private Tile2d tile;
 
-	public ZGenerator(TileFormat tileFormat, TileSet tileSet) {
-		// Identify Z boundaries
-		int zMin = tileFormat.getOrigin()[2];
-		int zMax = zMin + tileFormat.getVolumeSize()[2] - 1;
-		// Choose one tile to initialize search area in Z
+	public SliceGenerator(TileFormat tileFormat, TileSet tileSet) {
+		// Identify slice boundaries
 		TileIndex ix1 = tileSet.iterator().next().getIndex();
-		PreviousZGenerator down = new PreviousZGenerator(ix1, zMin);
-		NextZGenerator up = new NextZGenerator(ix1, zMax);
-		zGenerator = new InterleavedIterator<TileIndex>(down, up);
+		int axisIx = ix1.getSliceAxis().index();
+		int sliceMin = tileFormat.getOrigin()[axisIx];
+		int sliceMax = sliceMin + tileFormat.getVolumeSize()[axisIx] - 1;
+		// Choose one tile to initialize search area in slice
+		PreviousSliceGenerator down = new PreviousSliceGenerator(ix1, sliceMin);
+		NextSliceGenerator up = new NextSliceGenerator(ix1, sliceMax);
+		sliceGenerator = new InterleavedIterator<TileIndex>(down, up);
 		this.tileSet = tileSet;
 		tileIter = this.tileSet.iterator();
 		baseIndex = tileSet.iterator().next().getIndex();
@@ -43,8 +44,8 @@ implements Iterable<TileIndex>, Iterator<TileIndex>
 		// Are more tiles available? (inner loop)
 		if (tileIter.hasNext())
 			return true;
-		// No more tiles?, how about Z values? (outer loop)
-		return zGenerator.hasNext();
+		// No more tiles?, how about slice values? (outer loop)
+		return sliceGenerator.hasNext();
 	}
 
 	/**
@@ -56,11 +57,15 @@ implements Iterable<TileIndex>, Iterator<TileIndex>
 		// First correct zoom
 		while (result.getZoom() < baseIndex.getZoom())
 			result = result.zoomOut();
+		int xyz[] = {result.getX(), result.getY(), result.getZ()};
+		// Take slice index from baseIndex
+		int sliceIx = result.getSliceAxis().index();
+		xyz[sliceIx] = baseIndex.getCoordinate(sliceIx);
 		// Now merge baseIndex with tile index
 		result = new TileIndex(
-				result.getX(),
-				result.getY(),
-				baseIndex.getZ(),
+				xyz[0],
+				xyz[1],
+				xyz[2],
 				baseIndex.getZoom(),
 				baseIndex.getMaxZoom(),
 				baseIndex.getIndexStyle(),
@@ -75,7 +80,7 @@ implements Iterable<TileIndex>, Iterator<TileIndex>
 			tile = tileIter.next();
 		else { // How about more Z values? (outer loop)
 			tileIter = tileSet.iterator(); // reset tiles
-			baseIndex = zGenerator.next();
+			baseIndex = sliceGenerator.next();
 		}
 		return currentIndex();
 	}

@@ -71,7 +71,7 @@ public class SliceViewViewer extends Viewer {
         // the rooted entity may be data or may be a workspace; only load URL if it's data:
         if (newEntity.getEntityType().getName().equals(EntityConstants.TYPE_3D_TILE_MICROSCOPE_SAMPLE)) {
             try {
-                viewUI.loadURL(sliceSample.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH));
+                viewUI.loadFile(sliceSample.getValueByAttributeName(EntityConstants.ATTRIBUTE_FILE_PATH));
             }
             catch (MalformedURLException e) {
                 SessionMgr.getSessionMgr().handleException(e);

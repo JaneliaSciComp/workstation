@@ -6,7 +6,6 @@ import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.camera.ObservableCamera3d;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.GLActor;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Viewport;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.VolumeImage3d;
@@ -26,7 +25,6 @@ import javax.media.opengl.GLContext;
 import javax.media.opengl.awt.GLJPanel;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 
 import java.awt.Color;
@@ -37,7 +35,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.Point2D;
-import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.List;
 import org.slf4j.Logger;
@@ -46,7 +43,7 @@ import org.slf4j.LoggerFactory;
 // Viewer widget for viewing 2D quadtree tiles from pyramid data structure
 public class SliceViewer 
 extends GLJPanel
-implements MouseModalWidget, VolumeViewer, TileConsumer
+implements MouseModalWidget, TileConsumer
 {
 	private static final Logger log = LoggerFactory.getLogger(SliceViewer.class);
 
@@ -73,24 +70,7 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
 	MenuItemGenerator systemMenuItemGenerator;
 	MenuItemGenerator modeMenuItemGenerator;
 	
-	public Signal1<URL> getFileLoadedSignal() {
-		return fileLoadedSignal;
-	}
-
-	protected Signal1<URL> fileLoadedSignal = new Signal1<URL>();
 	public Signal1<String> statusMessageChanged = new Signal1<String>();
-	
-	protected Slot1<URL> loadUrlSlot = new Slot1<URL>() {
-		@Override
-		public void execute(URL url) {
-			// log.info("loadUrlSlot");
-			if (! loadURL(url)) {
-				JOptionPane.showMessageDialog(SliceViewer.this, 
-						"Error loading volume from\n  "+url
-						+"\nIs the share mounted?");
-			}
-		}
-	};
 	
 	protected Slot repaintSlot = new Slot() {
 		@Override
@@ -149,11 +129,9 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
         setPreferredSize( new Dimension( 600, 600 ) );
         rubberBand.changed.connect(repaintSlot);
         // setToolTipText("Double click to center on a point.");
-        setImageColorModel(new ImageColorModel(volumeImage));
         renderer.addActor(sliceActor);
         // renderer.addActor(new TileOutlineActor(viewTileManager));
         tileServer.getViewTextureChangedSignal().connect(getRepaintSlot());
-        imageColorModel.getColorModelChangedSignal().connect(getRepaintSlot());
         // Initialize pointComputer for interconverting pixelXY <=> sceneXYZ
 		pointComputer.setCamera(getCamera());
 		pointComputer.setComponent(this, false);
@@ -197,7 +175,6 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
             }
         });
         //
-        resetView();
 	}
 
 	public void autoContrastNow() {
@@ -236,10 +213,6 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
 			imageColorModel.getChannel(minChan).setBlackLevel(min);
 			log.info("max = "+max+"; min = "+min);
 		}
-	}
-
-	public Slot1<URL> getLoadUrlSlot() {
-		return loadUrlSlot;
 	}
 
 	public BoundingBox3d getBoundingBox3d() 
@@ -325,53 +298,6 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
 		rubberBand.paint(g2);
 	}
 	
-	public boolean resetFocus() {
-		return resetFocus(getBoundingBox3d());
-	}
-	
-	public boolean resetFocus(BoundingBox3d box) {
-		if (box.isEmpty())
-			return false;
-		return camera.setFocus(box.getCenter());
-	}
-	
-	public boolean resetView() {
-		// Compute the smallest bounding box that holds all actors
-		BoundingBox3d bb = getBoundingBox3d();
-		if (! camera.setFocus(volumeImage.getVoxelCenter()))
-			return false;
-		if (! resetZoom(bb))
-			return false;
-		return true;
-	}
-	
-	public boolean resetZoom() 
-	{
-		return resetZoom(getBoundingBox3d());
-	}
-
-	public boolean resetZoom(BoundingBox3d box) 
-	{
-		if (box.isEmpty())
-			return false;
-		// Need to fit entire bounding box
-		double sx = box.getWidth();
-		double sy = box.getHeight();
-		// ... plus offset from center
-		Vec3 bc = box.getCenter();
-		Camera3d camera = getCamera();		
-		Vec3 focus = camera.getFocus();
-		sx += 2.0 * Math.abs(bc.getX() - focus.getX());
-		sy += 2.0 * Math.abs(bc.getY() - focus.getY());
-		// Use minimum of X and Y zoom
-		double zx = getWidth() / sx;
-		double zy = getHeight() / sy;
-		double zoom = Math.min(zx, zy);
-		if (! camera.setPixelsPerSceneUnit(zoom))
-			return false;
-		return true;
-	}
-	
     @Override
     public void setMouseMode(MouseMode.Mode modeId) {
         if (modeId == this.mouseModeId)
@@ -422,152 +348,21 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
 	        this.wheelMode = new ZoomMode();
 	    }
 	    else if (wheelModeId == WheelMode.Mode.SCAN) {
-	        this.wheelMode = new ZScanMode(this);
+	        this.wheelMode = new ZScanMode(volumeImage);
 	    }
 		this.wheelMode.setComponent(this, false);
 		this.wheelMode.setCamera(camera);
-	}
-
-	@Override
-	public Vec3 getFocus() {
-		return camera.getFocus();
-	}
-
-	@Override
-	public double getPixelsPerSceneUnit() {
-		return camera.getPixelsPerSceneUnit();
-	}
-
-	@Override
-	public Rotation3d getRotation() {
-		return camera.getRotation();
 	}
 
 	public TileServer getTileServer() {
 		return tileServer;
 	}
 
-	@Override
-	public boolean incrementFocusPixels(double dx, double dy, double dz) {
-		return camera.incrementFocusPixels(dx, dy, dz);
-	}
-
-	@Override
-	public boolean incrementFocusPixels(Vec3 offset) {
-		return camera.incrementFocusPixels(offset);
-	}
-
-	@Override
-	public boolean incrementZoom(double zoomRatio) {
-		return camera.incrementZoom(zoomRatio);
-	}
-
-	@Override
-	public boolean resetRotation() {
-		return camera.resetRotation();
-	}
-
-	@Override
-	public boolean setFocus(double x, double y, double z) {
-		return camera.setFocus(x, y, z);
-	}
-
-	@Override
-	public boolean setFocus(Vec3 focus) {
-		return camera.setFocus(focus);
-	}
-
-	@Override
-	public boolean setRotation(Rotation3d r) {
-		return camera.setRotation(r);
-	}
-
-	@Override
-	public boolean setPixelsPerSceneUnit(double pixelsPerSceneUnit) {
-		return camera.setPixelsPerSceneUnit(pixelsPerSceneUnit);
-	}
-
-	@Override
-	public double getXResolution() {
-		return volumeImage.getXResolution();
-	}
-
-	@Override
-	public double getYResolution() {
-		return volumeImage.getYResolution();
-	}
-
-	@Override
-	public double getZResolution() {
-		return volumeImage.getZResolution();
-	}
-
-	@Override
-	public int getOriginX() {
-		return viewport.getOriginX();
-	}
-
-	@Override
-	public int getOriginY() {
-		return viewport.getOriginY();
-	}
-
-	@Override
-	public int getNumberOfChannels() {
-		return volumeImage.getNumberOfChannels();
-	}
-
-	@Override
-	public int getMaximumIntensity() {
-		return volumeImage.getMaximumIntensity();
-	}
-
-	@Override
-	public double getMaxZoom()
-	{
-		// 300 screen pixels per image pixel
-		// Yes, I mean min, because high resolution is a small distance value
-		double maxRes = Math.min(getXResolution(), getYResolution());
-		return 300.0 / maxRes;
-	}
-
-	@Override
-	public double getMinZoom() {
-		// Fit two of the whole volume on the screen
-		BoundingBox3d box = getBoundingBox3d();
-		double minZoomX = 0.5 * viewport.getWidth() / box.getWidth();
-		double minZoomY = 0.5 * viewport.getHeight() / box.getHeight();
-		double result = Math.min(minZoomX, minZoomY);
-		if (result <= 0)
-			result = 1.0;
-		return result;
-	}
-
-    @Override
-    public Vec3 getVoxelCenter() {
-        return volumeImage.getVoxelCenter();
-    }
-    
-	@Override
-	public Signal1<Double> getZoomChangedSignal() {
-		return camera.getZoomChangedSignal();
-	}
-
-	@Override
-	public boolean loadURL(URL url) {
-		// System.out.println("Opening URL "+url);
-		boolean result = volumeImage.loadURL(url);
-		if (result) {
-			getImageColorModel().reset(volumeImage);
-			resetView();
-			// log.info("emitting file loaded signal");
-			getFileLoadedSignal().emit(url);
-		}
-		return result;
-	}
-	
 	public void setImageColorModel(ImageColorModel imageColorModel) {
+		if (this.imageColorModel == imageColorModel)
+			return;
 		this.imageColorModel = imageColorModel;
+        imageColorModel.getColorModelChangedSignal().connect(getRepaintSlot());
 		sliceActor.setImageColorModel(imageColorModel);
 	}
 	
@@ -598,20 +393,8 @@ implements MouseModalWidget, VolumeViewer, TileConsumer
 	}
 
 	@Override
-	public int getDepth() {
-		return viewport.getDepth();
-	}
-
-	@Override
 	public MouseMode getMouseMode() {
 		return mouseMode;
-	}
-
-	@Override
-	public double getResolution(int ix) {
-		if (ix == 0) return getXResolution();
-		else if (ix == 1) return getYResolution();
-		else return getZResolution();
 	}
 
 	@Override

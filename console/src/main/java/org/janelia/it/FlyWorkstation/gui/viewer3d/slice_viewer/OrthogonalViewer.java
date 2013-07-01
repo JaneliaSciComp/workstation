@@ -302,6 +302,7 @@ implements MouseModalWidget, TileConsumer
 		return reticleActor;
 	}
 
+	@Override
 	public Rotation3d getViewerInGround() {
         return renderer.getViewerInGround();
     }

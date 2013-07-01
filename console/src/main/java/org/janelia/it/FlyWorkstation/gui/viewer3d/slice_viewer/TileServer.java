@@ -1,10 +1,18 @@
 package org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.Vector;
+
+import org.janelia.it.FlyWorkstation.gui.viewer3d.CoordinateAxis;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.InterleavedIterator;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.MinResZGenerator;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.UmbrellaZGenerator;
-import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.ZGenerator;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.UmbrellaSliceGenerator;
+import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.generator.SliceGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +21,7 @@ public class TileServer
 {
 	private static final Logger log = LoggerFactory.getLogger(TileServer.class);
 	
-	private boolean doPrefetch = false;
+	private boolean doPrefetch = true;
 	
 	// One thread pool to load minimal representation of volume
 	private TexturePreFetcher minResPreFetcher = new TexturePreFetcher(10);
@@ -34,6 +42,7 @@ public class TileServer
 	private Slot startMinResPreFetchSlot = new Slot() {
 		@Override
 		public void execute() {
+			// TODO - X and Y slices too, if available
 			if (sharedVolumeImage.getLoadAdapter() == null)
 				return;
 			// queue load of all low resolution textures
@@ -90,9 +99,76 @@ public class TileServer
 				}
 				*/
 				
+				// Sort tiles into X, Y, and Z slices to help with generators
+				Map<CoordinateAxis, TileSet> axisTiles = new HashMap<CoordinateAxis, TileSet>();
+				for (Tile2d tile : currentTiles) {
+					CoordinateAxis axis = tile.getIndex().getSliceAxis();
+					if (! axisTiles.containsKey(axis))
+						axisTiles.put(axis, new TileSet());
+					axisTiles.get(axis).add(tile);
+				}
+				// Create one umbrella generator for each (used) direction.
+				List<Iterator<TileIndex>> umbrellas = new Vector<Iterator<TileIndex>>();
+				List<Iterator<TileIndex>> fullSlices = new Vector<Iterator<TileIndex>>();
+				for (CoordinateAxis axis : axisTiles.keySet()) {
+					TileSet tiles = axisTiles.get(axis);
+					// Umbrella Z scan
+					Iterator<TileIndex> sliceGen = new UmbrellaSliceGenerator(getLoadAdapter().getTileFormat(), tiles);
+					umbrellas.add(sliceGen);
+					// Full resolution Z scan
+					sliceGen = new SliceGenerator(getLoadAdapter().getTileFormat(), tiles);
+					fullSlices.add(sliceGen);
+				}
+				// Interleave the various umbrella generators
+				if (umbrellas.size() > 0) {
+					Iterator<TileIndex> combinedUmbrella;
+					Iterator<TileIndex> combinedFullSlice;
+					if (umbrellas.size() == 1) {
+						combinedUmbrella = umbrellas.get(0);
+						combinedFullSlice = fullSlices.get(0);
+					}
+					else { // more than one axis
+						Iterator<Iterator<TileIndex>> sliceIter = umbrellas.iterator();
+						combinedUmbrella = new InterleavedIterator<TileIndex>(sliceIter.next(), sliceIter.next());
+						while (sliceIter.hasNext())
+							combinedUmbrella = new InterleavedIterator<TileIndex>(combinedUmbrella, sliceIter.next());
+						//
+						sliceIter = fullSlices.iterator();
+						combinedFullSlice = new InterleavedIterator<TileIndex>(sliceIter.next(), sliceIter.next());
+						while (sliceIter.hasNext())
+							combinedFullSlice = new InterleavedIterator<TileIndex>(combinedFullSlice, sliceIter.next());
+					}
+					
+					// Load umbrella slices
+					while (combinedUmbrella.hasNext()) {
+						TileIndex ix = combinedUmbrella.next();
+						if (cacheableTextures.contains(ix))
+							continue;
+						if (cacheableTextures.size() >= maxCacheable)
+							break;
+						if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
+							cacheableTextures.add(ix);						
+					}
+
+					// Load full resolution slices
+					while (combinedFullSlice.hasNext()) {
+						TileIndex ix = combinedFullSlice.next();
+						if (cacheableTextures.contains(ix))
+							continue;
+						if (cacheableTextures.size() >= maxCacheable)
+							break;
+						if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
+							cacheableTextures.add(ix);						
+					}
+				}
+				
+				/*
+				Iterable<TileIndex> zGen = new UmbrellaSliceGenerator(getLoadAdapter().getTileFormat(), currentTiles);
 				// Get nearby Z-tiles, with decreasing LOD
-				Iterable<TileIndex> zGen = new UmbrellaZGenerator(getLoadAdapter().getTileFormat(), currentTiles);
 				for (TileIndex ix : zGen) {
+					// TODO - restrict to Z tiles for testing
+					if (ix.getSliceAxis() != CoordinateAxis.Z) // TODO remove test
+						continue;
 					if (cacheableTextures.contains(ix))
 						continue;
 					if (cacheableTextures.size() >= maxCacheable)
@@ -100,7 +176,9 @@ public class TileServer
 					if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
 						cacheableTextures.add(ix);
 				}
+				*/
 				
+				/*
 				// Get more Z-tiles, at current LOD
 				zGen = new ZGenerator(getLoadAdapter().getTileFormat(), currentTiles);
 				for (TileIndex ix : zGen) {
@@ -111,6 +189,8 @@ public class TileServer
 					if (futurePreFetcher.loadDisplayedTexture(ix, TileServer.this))
 						cacheableTextures.add(ix);
 				}
+				*/
+
 			}			
 
 			// log.info("Number of queued textures = "+cacheableTextures.size());	

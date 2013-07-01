@@ -3,10 +3,14 @@ package org.janelia.it.FlyWorkstation.gui.viewer3d.camera;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Rotation3d;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.Vec3;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.interfaces.Camera3d;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class BasicCamera3d
 implements Camera3d
 {
+	private static final Logger log = LoggerFactory.getLogger(BasicCamera3d.class);
+
 	// View center
     private Vec3 focus = new Vec3(0,0,0); // in scene units
     private Rotation3d rotation = new Rotation3d();
@@ -60,7 +64,7 @@ implements Camera3d
 		if (f == focus)
 			return false; // no change
 		if (Double.isNaN(f.getX())) {
-			System.out.println("Camera NaN");
+			log.warn("Camera NaN");
 			return false;
 		}
 		focus = f;
@@ -84,7 +88,11 @@ implements Camera3d
 		if (this.pixelsPerSceneUnit == pixelsPerSceneUnit)
 			return false; // no change
 		if (Double.isNaN(pixelsPerSceneUnit)) {
-			System.out.println("Camera zoom NaN");
+			log.warn("Camera zoom NaN");
+			return false;
+		}
+		if (pixelsPerSceneUnit == 0) {
+			log.warn("Camera zoom 0.0");
 			return false;
 		}
 		this.pixelsPerSceneUnit = pixelsPerSceneUnit;

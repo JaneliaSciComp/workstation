@@ -5,19 +5,19 @@ import java.util.Iterator;
 import org.janelia.it.FlyWorkstation.gui.viewer3d.slice_viewer.TileIndex;
 
 /**
- * Generate positive offset Z indices, as part of UmbrellaZGenerator
+ * Generate positive offset slice indices, as part of SliceGenerator
  * @author brunsc
  *
  */
-public class PreviousZGenerator 
+public class NextSliceGenerator 
 implements Iterator<TileIndex>, Iterable<TileIndex>
 {
-	private int zMin;
+	private int sliceMax;
 	private TileIndex index;
 	
-	public PreviousZGenerator(TileIndex seed, int zMin) {
-		this.zMin = zMin;
-		index = seed.previousSlice();
+	public NextSliceGenerator(TileIndex seed, int sliceMax) {
+		this.sliceMax = sliceMax;
+		index = seed.nextSlice();
 	}
 	
 	@Override
@@ -27,14 +27,14 @@ implements Iterator<TileIndex>, Iterable<TileIndex>
 
 	@Override
 	public boolean hasNext() {
-		return index.getZ() >= zMin;
+		return index.getCoordinate(index.getSliceAxis().index()) <= sliceMax;
 	}
 
 	@Override
 	public TileIndex next() {
 		TileIndex result = index;
-		// Increment Z for next time.
-		index = index.previousSlice();
+		// Increment slice for next time.
+		index = index.nextSlice();
 		return result;
 	}
 

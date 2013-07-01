@@ -10,5 +10,5 @@ public interface TileConsumer {
 	Viewport getViewport();
 	CoordinateAxis getSliceAxis();
 	Rotation3d getViewerInGround();
-	boolean isVisible();
+	boolean isShowing();
 }
