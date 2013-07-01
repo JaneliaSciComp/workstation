@@ -30,7 +30,7 @@ public class GpuSampler implements GLEventListener {
     private static final int TEXTURE_FREE_MEMORY_ATI = 0x87FC;                        // Radeon
 
     private static final int NO_ESTIMATE = 0;
-    private static final int WAIT_TIME_MS = 1000;
+    private static final int WAIT_TIME_MS = 100;
     private static final int MAX_WAIT_LOOPS = 10 * 1000 / WAIT_TIME_MS; // Up to this many seconds.
 
     private Logger logger = LoggerFactory.getLogger( GpuSampler.class );
@@ -55,7 +55,6 @@ public class GpuSampler implements GLEventListener {
         freeTexMem = getFreeTextureMemory(gl2);
         highestSupportedGlsl = gl2.glGetString( GL2.GL_SHADING_LANGUAGE_VERSION );
         venderIdString = getGpuIdString( gl2 );
-logger.info( "Vender id {} found in init method.", venderIdString );
 
         isInitialized.set(true);
     }
@@ -115,7 +114,6 @@ logger.info( "Vender id {} found in init method.", venderIdString );
                     public GpuInfo call() {
                         int numLoops = 0;
                         while ( ! isInitialized.get() ) {
-logger.info("On loop {}.  Got value {}.", numLoops, venderIdString);
                             try {
                                 Thread.sleep( WAIT_TIME_MS );
                                 numLoops ++;
@@ -245,12 +243,15 @@ logger.info("On loop {}.  Got value {}.", numLoops, venderIdString);
     }
 
     private String getGpuIdString(GL2 gl) {
-        // http://www.opengl.org/discussion_boards/showthread.php/165320-Get-amount-of-graphics-memory
         /*
-        For the name, you can use
-        GLubyte *vendor=glGetString(GL_VENDOR);
-        GLubyte *renderer=glGetString(GL_RENDERER);
-        GLubyte *version=glGetString(GL_VERSION);
+         http://www.opengl.org/discussion_boards/showthread.php/165320-Get-amount-of-graphics-memory
+
+         For the name, you can use
+
+         GLubyte *vendor=glGetString(GL_VENDOR);
+         GLubyte *renderer=glGetString(GL_RENDERER);
+         GLubyte *version=glGetString(GL_VERSION);
+
          */
         gl.glGetError(); // Clear any old errors.
         String rtnVal = null;
